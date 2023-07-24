@@ -6,6 +6,7 @@ package explore.tabs
 import cats.syntax.all.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.GlobalPreferences
 import explore.model.ObsTabTilesIds
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
@@ -22,12 +23,13 @@ import java.time.Instant
 object ElevationPlotTile:
 
   def elevationPlotTile(
-    uid:           Option[User.Id],
-    tid:           Option[Target.Id],
-    site:          Option[Site],
-    coordinates:   Option[CoordinatesAtVizTime],
-    vizTime:       Option[Instant],
-    timingWindows: List[TimingWindow] = List.empty
+    uid:               Option[User.Id],
+    tid:               Option[Target.Id],
+    site:              Option[Site],
+    coordinates:       Option[CoordinatesAtVizTime],
+    vizTime:           Option[Instant],
+    timingWindows:     List[TimingWindow] = List.empty,
+    globalPreferences: GlobalPreferences
   ) =
     Tile(
       ObsTabTilesIds.PlotId.id,
@@ -37,7 +39,14 @@ object ElevationPlotTile:
     ) { _ =>
       (uid, tid, coordinates)
         .mapN { (uid, targetId, coordinates) =>
-          ElevationPlotSection(uid, targetId, site, vizTime, coordinates, timingWindows): VdomNode
+          ElevationPlotSection(uid,
+                               targetId,
+                               site,
+                               vizTime,
+                               coordinates,
+                               timingWindows,
+                               globalPreferences
+          ): VdomNode
         }
         .getOrElse {
           <.div(

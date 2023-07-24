@@ -4,7 +4,7 @@
 package explore.aladin
 
 import cats.syntax.all.*
-import crystal.react.ViewOpt
+import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
@@ -44,7 +44,7 @@ object AladinZoomControl {
 }
 
 case class AladinFullScreenControl(
-  fullScreen: ViewOpt[AladinFullScreen]
+  fullScreen: View[AladinFullScreen]
 ) extends ReactFnProps(AladinFullScreenControl.component)
 
 object AladinFullScreenControl {
@@ -55,8 +55,8 @@ object AladinFullScreenControl {
       Button(onClick = p.fullScreen.mod(_.flip))
         .withMods(
           ExploreStyles.ButtonOnAladin |+| ExploreStyles.AladinFullScreenButton,
-          Icons.ExpandDiagonal.unless(p.fullScreen.get.map(_.value).getOrElse(true)),
-          Icons.ContractDiagonal.when(p.fullScreen.get.map(_.value).getOrElse(false))
+          Icons.ExpandDiagonal.unless(p.fullScreen.get.value),
+          Icons.ContractDiagonal.when(p.fullScreen.get.value)
         )
         .small
     )

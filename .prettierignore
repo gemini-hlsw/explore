@@ -1,9 +1,13 @@
 common/src/main/webapp/less/vendor
 common/src/main/webapp/suithemes
 common/src/main/webapp/themes
+hasura/user-prefs/
 
 .github/
 .mergify.yml
+.direnv/
+.bloop/
+.bsp/
 node_modules
 target
 heroku/static

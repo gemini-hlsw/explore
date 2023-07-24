@@ -9,6 +9,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
+import explore.model.GlobalPreferences
 import explore.model.ObsTabTilesIds
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoSetter
@@ -24,13 +25,14 @@ import java.time.Instant
 object SiderealTargetEditorTile {
 
   def noObsSiderealTargetEditorTile(
-    userId:     Option[User.Id],
-    targetId:   Target.Id,
-    target:     UndoSetter[Target.Sidereal],
-    searching:  View[Set[Target.Id]],
-    title:      String,
-    fullScreen: View[AladinFullScreen],
-    backButton: Option[VdomNode] = none
+    userId:            Option[User.Id],
+    targetId:          Target.Id,
+    target:            UndoSetter[Target.Sidereal],
+    searching:         View[Set[Target.Id]],
+    title:             String,
+    fullScreen:        View[AladinFullScreen],
+    globalPreferences: View[GlobalPreferences],
+    backButton:        Option[VdomNode] = none
   ) =
     Tile(
       ObsTabTilesIds.TargetId.id,
@@ -53,7 +55,8 @@ object SiderealTargetEditorTile {
               none,
               searching,
               renderInTitle = renderInTitle.some,
-              fullScreen = fullScreen
+              fullScreen = fullScreen,
+              globalPreferences = globalPreferences
             )
           )
         )

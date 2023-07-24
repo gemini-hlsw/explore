@@ -64,7 +64,7 @@ case class ObsTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
-  userPreferences:  UserPreferences,
+  userPreferences:  View[UserPreferences],
   focused:          Focused,
   searching:        View[Set[Target.Id]],
   expandedGroups:   View[Set[Group.Id]]
@@ -155,10 +155,11 @@ object ObsTabContents extends TwoPanels:
               props.focusedTarget,
               props.searching,
               ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
-              props.userPreferences.observationsTabLayout,
+              props.userPreferences.get.observationsTabLayout,
               resize,
               props.obsAttachments,
-              props.obsAttachmentAssignments
+              props.obsAttachmentAssignments,
+              props.userPreferences.zoom(UserPreferences.globalPreferences)
             ).withKey(s"${obsId.show}")
           )
       )

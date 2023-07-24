@@ -11,7 +11,8 @@ import explore.model.layout.LayoutsMap
 import monocle.Focus
 
 case class UserPreferences(
-  private val gridLayouts: Map[GridLayoutSection, LayoutsMap]
+  private val gridLayouts: Map[GridLayoutSection, LayoutsMap],
+  globalPreferences:       GlobalPreferences
 ) derives Eq {
   private def tabLayout(l: GridLayoutSection) =
     gridLayouts.getOrElse(l, ExploreGridLayouts.sectionLayout(l))
@@ -36,5 +37,7 @@ case class UserPreferences(
 }
 
 object UserPreferences:
-  val Default     = UserPreferences(ExploreGridLayouts.DefaultLayouts)
-  val gridLayouts = Focus[UserPreferences](_.gridLayouts)
+  val Default = UserPreferences(ExploreGridLayouts.DefaultLayouts, GlobalPreferences.Default)
+
+  val gridLayouts       = Focus[UserPreferences](_.gridLayouts)
+  val globalPreferences = Focus[UserPreferences](_.globalPreferences)

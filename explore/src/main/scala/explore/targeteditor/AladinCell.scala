@@ -54,7 +54,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import monocle.Focus
 import monocle.Lens
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
@@ -65,12 +64,13 @@ import java.time.Instant
 import scala.concurrent.duration.*
 
 case class AladinCell(
-  uid:        User.Id,
-  tid:        Target.Id,
-  vizTime:    Instant,
-  obsConf:    Option[ObsConfiguration],
-  asterism:   Asterism,
-  fullScreen: View[AladinFullScreen]
+  uid:               User.Id,
+  tid:               Target.Id,
+  vizTime:           Instant,
+  obsConf:           Option[ObsConfiguration],
+  asterism:          Asterism,
+  fullScreen:        View[AladinFullScreen],
+  globalPreferences: View[GlobalPreferences]
 ) extends ReactFnProps(AladinCell.component):
   val anglesToTest: Option[NonEmptyList[Angle]] =
     for {
@@ -79,22 +79,20 @@ case class AladinCell(
       paConstraint  <- conf.posAngleConstraint
       angles        <-
         paConstraint.anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime)
-    } yield
-    // We sort the angles or we could end up in a loop where the angles are tested back and forth
-    // This is rare but can happen if each angle finds an equivalent guide star
-    angles.sorted(using Angle.AngleOrder)
+      // We sort the angles or we could end up in a loop where the angles are tested back and forth
+      // This is rare but can happen if each angle finds an equivalent guide star
+    } yield angles.sorted(using Angle.AngleOrder)
 
   val positions: Option[NonEmptyList[AgsPosition]] =
     val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
       case Some(offsets) => offsets.prepend(Offset.Zero).distinct
       case None          => NonEmptyList.of(Offset.Zero)
 
-    anglesToTest.map { anglesToTest =>
+    anglesToTest.map: anglesToTest =>
       for {
         pa  <- anglesToTest
         off <- offsets
       } yield AgsPosition(pa, off)
-    }
 
   def canRunAGS: Boolean = obsConf.exists(o =>
     o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined && positions.isDefined
@@ -123,28 +121,24 @@ object AladinCell extends ModelOptics with AladinCommon:
   }
 
   private given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.get))
+    Reusability.by(x =>
+      (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.get, x.globalPreferences.get)
+    )
 
   private val fovLens: Lens[TargetVisualOptions, Fov] =
     Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
       t => t.copy(fovRA = f.x, fovDec = f.y)
     )
 
-  private val targetPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), TargetVisualOptions] =
-    Focus[(UserGlobalPreferences, TargetVisualOptions)](_._2)
-
-  private val userPrefs: Lens[(UserGlobalPreferences, TargetVisualOptions), UserGlobalPreferences] =
-    Focus[(UserGlobalPreferences, TargetVisualOptions)](_._1)
-
   private def offsetViews(
     props:   Props,
-    options: View[Pot[(UserGlobalPreferences, TargetVisualOptions)]]
+    options: View[Pot[TargetVisualOptions]]
   )(ctx: AppContext[IO]) = {
     import ctx.given
 
     val offsetView =
       options.zoom(
-        Pot.readyPrism.andThen(targetPrefs).andThen(TargetVisualOptions.viewOffset)
+        Pot.readyPrism.andThen(TargetVisualOptions.viewOffset)
       )
 
     val offsetChangeInAladin = (newOffset: Offset) => {
@@ -152,8 +146,8 @@ object AladinCell extends ModelOptics with AladinCommon:
         true,
         _ => true,
         o => {
-          val diffP = newOffset.p.toAngle.difference(o._2.viewOffset.p.toAngle)
-          val diffQ = newOffset.q.toAngle.difference(o._2.viewOffset.q.toAngle)
+          val diffP = newOffset.p.toAngle.difference(o.viewOffset.p.toAngle)
+          val diffQ = newOffset.q.toAngle.difference(o.viewOffset.q.toAngle)
           // Don't save if the change is less than 1 arcse
           diffP.toMicroarcseconds < 1e6 && diffQ.toMicroarcseconds < 1e6
         }
@@ -180,7 +174,7 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
-  def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
+  private def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
     root
       .map(root =>
         Callback(
@@ -216,7 +210,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // target options, will be read from the user preferences
-      .useStateViewWithReuse(Pot.pending[(UserGlobalPreferences, TargetVisualOptions)])
+      .useStateViewWithReuse(Pot.pending[TargetVisualOptions])
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Analysis results
@@ -250,8 +244,8 @@ object AladinCell extends ModelOptics with AladinCommon:
           import ctx.given
           TargetPreferences
             .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
-            .flatMap { (up, tp) =>
-              (options.set((up, tp).ready) *>
+            .flatMap { tp =>
+              (options.set(tp.ready) *>
                 setVariable(root, "saturation", tp.saturation) *>
                 setVariable(root, "brightness", tp.brightness)).toAsync
             }
@@ -414,7 +408,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             acquisitionOffsets: Option[Visible] = None
           ): Callback =
             GlobalUserPreferences
-              .storePreferences[IO](
+              .storeAladinPreferences[IO](
                 props.uid,
                 showCatalog = showCatalog,
                 agsOverlay = agsOverlay,
@@ -426,34 +420,32 @@ object AladinCell extends ModelOptics with AladinCommon:
               .void
 
           def visiblePropView(
-            get:   Lens[UserGlobalPreferences, Visible],
-            onMod: Option[Visible] => Callback
+            get:   Lens[GlobalPreferences, Visible],
+            onMod: Visible => Callback
           ) =
-            options
-              .zoom(Pot.readyPrism.andThen(userPrefs).andThen(get))
+            props.globalPreferences
+              .zoom(get)
               .withOnMod(onMod)
               .zoom(Visible.value.asLens)
 
           val agsCandidatesView =
-            visiblePropView(UserGlobalPreferences.aladinShowCatalog,
-                            v => userSetter(showCatalog = v)
-            )
+            visiblePropView(GlobalPreferences.showCatalog, v => userSetter(showCatalog = v.some))
 
           val agsOverlayView =
-            visiblePropView(UserGlobalPreferences.aladinAgsOverlay, v => userSetter(agsOverlay = v))
+            visiblePropView(GlobalPreferences.agsOverlay, v => userSetter(agsOverlay = v.some))
 
           val scienceOffsetsView =
-            visiblePropView(UserGlobalPreferences.aladinScienceOffsets,
-                            v => userSetter(scienceOffsets = v)
+            visiblePropView(GlobalPreferences.scienceOffsets,
+                            v => userSetter(scienceOffsets = v.some)
             )
 
           val acquisitionOffsetsView =
-            visiblePropView(UserGlobalPreferences.aladinAcquisitionOffsets,
-                            v => userSetter(acquisitionOffsets = v)
+            visiblePropView(GlobalPreferences.acquisitionOffsets,
+                            v => userSetter(acquisitionOffsets = v.some)
             )
 
           val fovView =
-            options.zoom(Pot.readyPrism.andThen(targetPrefs).andThen(fovLens))
+            options.zoom(Pot.readyPrism.andThen(fovLens))
 
           def cssVarView(
             varLens:        Lens[TargetVisualOptions, TargetVisualOptions.ImageFilterRange],
@@ -461,9 +453,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             updateCallback: Int => Callback
           ) =
             options
-              .zoom(
-                Pot.readyPrism.andThen(targetPrefs).andThen(varLens)
-              )
+              .zoom(Pot.readyPrism.andThen(varLens))
               .withOnMod(s =>
                 s.map(s => setVariable(root, variableName, s) *> updateCallback(s)).getOrEmpty
               )
@@ -480,22 +470,15 @@ object AladinCell extends ModelOptics with AladinCommon:
             )
 
           val fullScreenView =
-            options
-              .zoom(
-                Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.fullScreen)
-              )
-              .withOnMod(v =>
-                v.map(v => props.fullScreen.set(v)).getOrEmpty *> userSetter(fullScreen = v)
-              )
+            props.globalPreferences
+              .zoom(GlobalPreferences.fullScreen)
+              .withOnMod(v => props.fullScreen.set(v) *> userSetter(fullScreen = v.some))
 
           val allowMouseZoomView =
-            options
-              .zoom(
-                Pot.readyPrism.andThen(userPrefs).andThen(UserGlobalPreferences.aladinMouseScroll)
-              )
+            props.globalPreferences
+              .zoom(GlobalPreferences.aladinMouseScroll)
               .withOnMod(z =>
-                z.map(z => GlobalUserPreferences.storePreferences[IO](props.uid, z.some).runAsync)
-                  .getOrEmpty
+                GlobalUserPreferences.storeAladinPreferences[IO](props.uid, z.some).runAsync
               )
 
           val coordinatesSetter =
@@ -507,7 +490,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               _ => true,
               o =>
                 // Don't save if the change is less than 1 arcse
-                o._2.fov.isDifferentEnough(newFov)
+                o.fov.isDifferentEnough(newFov)
             )
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
@@ -525,13 +508,13 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
 
-          val renderCell: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
-            case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
+          val renderCell: TargetVisualOptions => VdomNode =
+            (t: TargetVisualOptions) =>
               AladinContainer(
                 props.asterism,
                 props.vizTime,
                 props.obsConf,
-                u,
+                props.globalPreferences.get,
                 t,
                 coordinatesSetter,
                 fovSetter.reuseAlways,
@@ -540,8 +523,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                 agsResults.value
               )
 
-          val renderToolbar: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
-            case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
+          val renderToolbar: (TargetVisualOptions) => VdomNode =
+            (t: TargetVisualOptions) =>
               val agsState = props.obsConf
                 .flatMap(_.agsState.map(_.get))
                 .getOrElse(AgsState.Idle)
@@ -549,13 +532,13 @@ object AladinCell extends ModelOptics with AladinCommon:
                             mouseCoords.value,
                             agsState,
                             selectedGuideStar,
-                            u.aladinAgsOverlay,
+                            props.globalPreferences.get.agsOverlay,
                             offsetOnCenter
               )
 
-          val renderAgsOverlay: ((UserGlobalPreferences, TargetVisualOptions)) => VdomNode =
-            case (u: UserGlobalPreferences, t: TargetVisualOptions) =>
-              if (u.aladinAgsOverlay.isVisible) {
+          val renderAgsOverlay: TargetVisualOptions => VdomNode =
+            (t: TargetVisualOptions) =>
+              if (props.globalPreferences.get.agsOverlay.isVisible) {
                 props.obsConf
                   .flatMap(_.agsState)
                   .map(agsState =>
@@ -574,44 +557,32 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val menuItems = List(
             MenuItem.Custom(
-              agsCandidatesView.asView
-                .map(view =>
-                  CheckboxView(
-                    id = "ags-candidates".refined,
-                    value = view,
-                    label = "Show Catalog"
-                  )
-                )
+              CheckboxView(
+                id = "ags-candidates".refined,
+                value = agsCandidatesView,
+                label = "Show Catalog"
+              )
             ),
             MenuItem.Custom(
-              agsOverlayView.asView
-                .map(view =>
-                  CheckboxView(
-                    id = "ags-overlay".refined,
-                    value = view,
-                    label = "AGS"
-                  )
-                )
+              CheckboxView(
+                id = "ags-overlay".refined,
+                value = agsOverlayView,
+                label = "AGS"
+              )
             ),
             MenuItem.Custom(
-              scienceOffsetsView.asView
-                .map(view =>
-                  CheckboxView(
-                    id = "science-offsets".refined,
-                    value = view,
-                    label = "Sci. Offsets"
-                  )
-                )
+              CheckboxView(
+                id = "science-offsets".refined,
+                value = scienceOffsetsView,
+                label = "Sci. Offsets"
+              )
             ),
             MenuItem.Custom(
-              acquisitionOffsetsView.asView
-                .map(view =>
-                  CheckboxView(
-                    id = "acq-offsets".refined,
-                    value = view,
-                    label = "Acq. Offsets"
-                  )
-                )
+              CheckboxView(
+                id = "acq-offsets".refined,
+                value = acquisitionOffsetsView,
+                label = "Acq. Offsets"
+              )
             ),
             MenuItem.Separator,
             MenuItem.Custom(
@@ -642,16 +613,12 @@ object AladinCell extends ModelOptics with AladinCommon:
             ),
             MenuItem.Separator,
             MenuItem.Custom(
-              allowMouseZoomView
-                .zoom(AladinMouseScroll.value.asLens)
-                .asView
-                .map(view =>
-                  CheckboxView(
-                    id = "allow-zoom".refined,
-                    value = view,
-                    label = "Scroll to zoom"
-                  )
-                )
+              CheckboxView(
+                id = "allow-zoom".refined,
+                value = allowMouseZoomView
+                  .zoom(AladinMouseScroll.value.asLens),
+                label = "Scroll to zoom"
+              )
             )
           )
 
@@ -659,7 +626,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             ExploreStyles.TargetAladinCell,
             <.div(
               ExploreStyles.AladinContainerColumn,
-              AladinFullScreenControl(fullScreenView.value),
+              AladinFullScreenControl(fullScreenView),
               <.div(
                 ExploreStyles.AladinToolbox,
                 Button(onClickE = menuRef.toggle).withMods(

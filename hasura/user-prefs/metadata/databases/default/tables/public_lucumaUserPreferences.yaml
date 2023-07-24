@@ -2,6 +2,6 @@ table:
   name: lucumaUserPreferences
   schema: public
 object_relationships:
-  - name: lucuma_user
-    using:
-      foreign_key_constraint_on: userId
+- name: lucuma_user
+  using:
+    foreign_key_constraint_on: userId

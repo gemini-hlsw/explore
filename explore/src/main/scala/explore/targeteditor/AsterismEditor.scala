@@ -15,6 +15,7 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.AsterismIds
+import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.TargetList
@@ -43,18 +44,19 @@ import react.primereact.Button
 import java.time.Instant
 
 case class AsterismEditor(
-  userId:          User.Id,
-  programId:       Program.Id,
-  obsIds:          ObsIdSet,
-  asterismIds:     View[AsterismIds],
-  allTargets:      UndoSetter[TargetList],
-  vizTime:         View[Option[Instant]],
-  configuration:   ObsConfiguration,
-  focusedTargetId: Option[Target.Id],
-  setTarget:       (Option[Target.Id], SetRouteVia) => Callback,
-  otherObsCount:   Target.Id => Int,
-  searching:       View[Set[Target.Id]],
-  renderInTitle:   Tile.RenderInTitle
+  userId:            User.Id,
+  programId:         Program.Id,
+  obsIds:            ObsIdSet,
+  asterismIds:       View[AsterismIds],
+  allTargets:        UndoSetter[TargetList],
+  vizTime:           View[Option[Instant]],
+  configuration:     ObsConfiguration,
+  focusedTargetId:   Option[Target.Id],
+  setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
+  otherObsCount:     Target.Id => Int,
+  searching:         View[Set[Target.Id]],
+  renderInTitle:     Tile.RenderInTitle,
+  globalPreferences: View[GlobalPreferences]
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AsterismEditor extends AsterismModifier:
@@ -209,7 +211,8 @@ object AsterismEditor extends AsterismModifier:
                       if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
                         props.obsIds.some
                       else none,
-                    fullScreen = fullScreen
+                    fullScreen = fullScreen,
+                    globalPreferences = props.globalPreferences
                   )
                 )
               )

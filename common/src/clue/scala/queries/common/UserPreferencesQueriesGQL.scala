@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import queries.schemas.UserPreferencesDB
+import explore.model.GlobalPreferences
 // gql: import queries.schemas.UserPreferencesDB.given
 
 object UserPreferencesQueriesGQL {
@@ -125,6 +126,14 @@ object UserPreferencesQueriesGQL {
           saturation
           brightness
         }
+      }
+    """
+  }
+
+  @GraphQL
+  trait UserPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query userPreferences($userId: String!) {
         lucumaUserPreferencesByPk(userId: $userId) {
           aladinMouseScroll
           showCatalog
@@ -132,21 +141,35 @@ object UserPreferencesQueriesGQL {
           agsOverlay
           scienceOffsets
           acquisitionOffsets
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait UserElevationPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
-    val document = """
-      query plotPreferences($userId: String! = "") {
-        lucumaUserPreferencesByPk(userId: $userId) {
           elevationPlotRange
           elevationPlotTime
         }
       }
     """
+
+    object Data:
+      type LucumaUserPreferencesByPk = GlobalPreferences
+  }
+
+  @GraphQL
+  trait UserPreferencesUpdates extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      subscription userPreferences($userId: String!) {
+        lucumaUserPreferencesByPk(userId: $userId) {
+          aladinMouseScroll
+          showCatalog
+          fullScreen
+          agsOverlay
+          scienceOffsets
+          acquisitionOffsets
+          elevationPlotRange
+          elevationPlotTime
+        }
+      }
+    """
+
+    object Data:
+      type LucumaUserPreferencesByPk = GlobalPreferences
   }
 
   @GraphQL

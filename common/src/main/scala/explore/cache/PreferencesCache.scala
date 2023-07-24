@@ -8,8 +8,10 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import explore.DefaultErrorPolicy
+import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.common.UserPreferencesQueries.GridLayouts
 import explore.model.ExploreGridLayouts
+import explore.model.GlobalPreferences
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
 import explore.model.layout
@@ -18,6 +20,7 @@ import japgolly.scalajs.react.*
 import lucuma.core.model.User
 import lucuma.ui.reusability.given
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates
+import queries.common.UserPreferencesQueriesGQL.UserPreferencesUpdates
 import queries.schemas.UserPreferencesDB
 import react.common.ReactFnProps
 
@@ -45,7 +48,9 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
           )
         )
 
-    grids.map(UserPreferences.apply)
+    val userPrefs = GlobalUserPreferences.loadPreferences[IO](props.userId)
+
+    (grids, userPrefs).parMapN(UserPreferences.apply)
 
   override protected val updateStream: PreferencesCache => Resource[
     cats.effect.IO,
@@ -53,9 +58,7 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
   ] = props =>
     import props.given
 
-    Resource.eval(IO(fs2.Stream.eval(IO(identity))))
-
-    val updateLayouts =
+    val updateLayouts: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
       UserGridLayoutUpdates
         .subscribe[IO](props.userId.show)
         .map(
@@ -65,4 +68,14 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
           )
         )
 
-    List(updateLayouts).sequence.map(_.reduceLeft(_.merge(_)))
+    val updateGlobalPreferences: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
+      UserPreferencesUpdates
+        .subscribe[IO](props.userId.show)
+        .map(
+          _.map(data =>
+            UserPreferences.globalPreferences
+              .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
+          )
+        )
+
+    List(updateLayouts, updateGlobalPreferences).sequence.map(_.reduceLeft(_.merge(_)))

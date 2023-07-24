@@ -23,6 +23,7 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ExploreModelValidators
+import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.syntax.ui.*
@@ -56,17 +57,18 @@ import queries.common.TargetQueriesGQL
 import java.time.Instant
 
 case class SiderealTargetEditor(
-  userId:        User.Id,
-  targetId:      Target.Id,        // Used to call DB mutations and focus in Aladin.
-  target:        UndoSetter[Target.Sidereal],
-  asterism:      Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
-  vizTime:       Option[Instant],
-  obsConf:       Option[ObsConfiguration],
-  searching:     View[Set[Target.Id]],
-  obsIdSubset:   Option[ObsIdSet] = None,
-  onClone:       TargetWithId => Callback = _ => Callback.empty,
-  renderInTitle: Option[Tile.RenderInTitle] = None,
-  fullScreen:    View[AladinFullScreen]
+  userId:            User.Id,
+  targetId:          Target.Id,        // Used to call DB mutations and focus in Aladin.
+  target:            UndoSetter[Target.Sidereal],
+  asterism:          Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
+  vizTime:           Option[Instant],
+  obsConf:           Option[ObsConfiguration],
+  searching:         View[Set[Target.Id]],
+  obsIdSubset:       Option[ObsIdSet] = None,
+  onClone:           TargetWithId => Callback = _ => Callback.empty,
+  renderInTitle:     Option[Tile.RenderInTitle] = None,
+  fullScreen:        View[AladinFullScreen],
+  globalPreferences: View[GlobalPreferences]
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor:
@@ -265,7 +267,8 @@ object SiderealTargetEditor:
                 vt,
                 props.obsConf,
                 asterism,
-                props.fullScreen
+                props.fullScreen,
+                props.globalPreferences
               )
             ),
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(

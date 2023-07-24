@@ -13,9 +13,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.Constants
+import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.TargetVisualOptions
-import explore.model.UserGlobalPreferences
 import explore.model.enums.Visible
 import explore.model.reusability.given
 import explore.visualization.*
@@ -50,7 +50,7 @@ case class AladinContainer(
   asterism:               Asterism,
   vizTime:                Instant,
   obsConf:                Option[ObsConfiguration],
-  userPreferences:        UserGlobalPreferences,
+  globalPreferences:      GlobalPreferences,
   options:                TargetVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
   updateFov:              Fov => Callback,
@@ -74,7 +74,7 @@ object AladinContainer extends AladinCommon {
   })
   private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
   private given Reusability[Props]               =
-    Reusability.by(x => (x.asterism, x.obsConf, x.userPreferences, x.options))
+    Reusability.by(x => (x.asterism, x.obsConf, x.globalPreferences, x.options))
   private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
@@ -146,7 +146,7 @@ object AladinContainer extends AladinCommon {
       }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf, p.userPreferences, p.selectedGuideStar)
+        (allCoordinates, p.obsConf, p.globalPreferences, p.selectedGuideStar)
       ) {
         (_, _, _, _) => (
           allCoordinates,
@@ -155,7 +155,7 @@ object AladinContainer extends AladinCommon {
           gs
         ) =>
           val candidatesVisibilityCss =
-            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.aladinAgsOverlay.isVisible)
+            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.agsOverlay.isVisible)
 
           GmosGeometry.gmosGeometry(
             allCoordinates.value._1.value,
@@ -171,8 +171,8 @@ object AladinContainer extends AladinCommon {
       // memoized catalog targets with their proper motions corrected
       .useMemoBy((props, allCoordinates, _, _, _, _) =>
         (props.guideStarCandidates,
-         props.userPreferences.aladinShowCatalog.isVisible,
-         props.userPreferences.fullScreen,
+         props.globalPreferences.showCatalog,
+         props.globalPreferences.fullScreen,
          props.options.fovRA,
          props.vizTime,
          props.obsConf.flatMap(_.configuration),
@@ -199,7 +199,7 @@ object AladinContainer extends AladinCommon {
               def calcSize(size: Double): Double = size.max(size * (225 / fov))
 
               val candidatesVisibility =
-                ExploreStyles.GuideStarCandidateVisible.when_(visible)
+                ExploreStyles.GuideStarCandidateVisible.when_(visible.isVisible)
 
               candidates
                 // TODO This should be done in AGS proper
@@ -354,14 +354,14 @@ object AladinContainer extends AladinCommon {
             offsetIndicators(_.scienceOffsets,
                              SequenceType.Science,
                              ExploreStyles.ScienceOffsetPosition,
-                             props.userPreferences.aladinScienceOffsets
+                             props.globalPreferences.scienceOffsets
             )
 
           val acquisitionOffsetIndicators =
             offsetIndicators(_.acquisitionOffsets,
                              SequenceType.Acquisition,
                              ExploreStyles.AcquisitionOffsetPosition,
-                             props.userPreferences.aladinAcquisitionOffsets
+                             props.globalPreferences.acquisitionOffsets
             )
 
           val offsetTargets =
@@ -372,7 +372,7 @@ object AladinContainer extends AladinCommon {
             currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
 
           val key =
-            s"aladin-${resize.width}-${resize.height}-${props.userPreferences.aladinShowCatalog}"
+            s"aladin-${resize.width}-${resize.height}-${props.globalPreferences.showCatalog}"
 
           <.div(
             ExploreStyles.AladinContainerBody,
@@ -414,7 +414,7 @@ object AladinContainer extends AladinCommon {
                   .withRef(aladinRef) {
                     Aladin(
                       ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
-                        .unless_(props.userPreferences.aladinMouseScroll.value),
+                        .unless_(props.globalPreferences.aladinMouseScroll.value),
                       showReticle = false,
                       showLayersControl = false,
                       target = baseCoordinatesForAladin,

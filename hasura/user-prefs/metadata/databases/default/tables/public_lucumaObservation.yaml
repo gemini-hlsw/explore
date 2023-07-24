@@ -2,17 +2,17 @@ table:
   name: lucumaObservation
   schema: public
 array_relationships:
-  - name: exploreFinderCharts
-    using:
-      foreign_key_constraint_on:
-        column: observationId
-        table:
-          name: exploreFinderChart
-          schema: public
-  - name: lucuma_itc_plot_preferences
-    using:
-      foreign_key_constraint_on:
-        column: observationId
-        table:
-          name: lucumaItcPlotPreferences
-          schema: public
+- name: exploreFinderCharts
+  using:
+    foreign_key_constraint_on:
+      column: observationId
+      table:
+        name: exploreFinderChart
+        schema: public
+- name: lucuma_itc_plot_preferences
+  using:
+    foreign_key_constraint_on:
+      column: observationId
+      table:
+        name: lucumaItcPlotPreferences
+        schema: public

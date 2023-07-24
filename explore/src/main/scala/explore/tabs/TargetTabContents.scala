@@ -60,12 +60,15 @@ case class TargetTabContents(
   userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
-  userPreferences:  UserPreferences,
+  userPreferences:  View[UserPreferences],
   focused:          Focused,
   searching:        View[Set[Target.Id]],
   expandedIds:      View[SortedSet[ObsIdSet]]
 ) extends ReactFnProps(TargetTabContents.component):
   val targets: UndoSetter[TargetList] = props.programSummaries.zoom(ProgramSummaries.targets)
+
+  val globalPreferences: View[GlobalPreferences] =
+    userPreferences.zoom(UserPreferences.globalPreferences)
 
 object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
@@ -276,7 +279,8 @@ object TargetTabContents extends TwoPanels:
           setCurrentTarget(props.programId, idsToEdit) _,
           otherObsCount(idsToEdit) _,
           props.searching,
-          title
+          title,
+          props.globalPreferences
         )
 
       val selectedCoordinates: Option[Coordinates] =
@@ -297,7 +301,9 @@ object TargetTabContents extends TwoPanels:
           props.focused.target,
           configuration.map(_.siteFor),
           selectedCoordinates.map(CoordinatesAtVizTime(_)),
-          vizTimeView.get
+          vizTimeView.get,
+          Nil,
+          props.globalPreferences.get
         )
 
       List(asterismEditorTile, skyPlotTile)
@@ -324,7 +330,8 @@ object TargetTabContents extends TwoPanels:
         props.targets.zoom(getTarget, modTarget),
         props.searching,
         title,
-        fullScreen
+        fullScreen,
+        props.globalPreferences
       )
 
       val skyPlotTile =
@@ -334,7 +341,9 @@ object TargetTabContents extends TwoPanels:
           none,
           // TODO PM correct the coordinates
           CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
-          none
+          none,
+          Nil,
+          props.globalPreferences.get
         )
 
       List(renderSummary(false), targetTile, skyPlotTile)
@@ -379,7 +388,7 @@ object TargetTabContents extends TwoPanels:
           ExploreGridLayouts.targets.defaultTargetLayouts
         ),
         tileList.fold(ExploreGridLayouts.targets.defaultSingleLayouts)(_ =>
-          props.userPreferences.targetTabLayout
+          props.userPreferences.get.targetTabLayout
         ),
         tileList.getOrElse(List(renderSummary(true))),
         GridLayoutSection.TargetLayout,
