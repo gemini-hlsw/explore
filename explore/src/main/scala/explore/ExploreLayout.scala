@@ -7,6 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.*
+import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
 import explore.components.ui.ExploreStyles
@@ -87,7 +89,7 @@ object ExploreLayout:
               _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
             )
       )
-      .useEffectOnMountBy { (props, _, ctx, toastRef) =>
+      .useEffectOnMountBy: (props, _, ctx, toastRef) =>
         Callback {
           ctx.broadcastChannel.onmessage = (
             (x: ExploreEvent) =>
@@ -123,8 +125,8 @@ object ExploreLayout:
 
           ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
         }
-      }
-      .render { (props, helpCtx, ctx, toastRef) =>
+      .useStateView(none[NonEmptyString]) // userSelectionMessage
+      .render: (props, helpCtx, ctx, toastRef, userSelectionMessage) =>
         import ctx.given
 
         // Creates a "profile" for user preferences.
@@ -139,6 +141,7 @@ object ExploreLayout:
           allowGuest = true,
           ctx.sso,
           props.view.zoom(RootModel.vault),
+          userSelectionMessage,
           ctx.clients.init(_),
           ctx.clients.close(),
           createUserPrefs,
@@ -173,9 +176,10 @@ object ExploreLayout:
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
               // selection popup.
-              ProgramCache(routingInfo.programId,
-                           props.view.zoom(RootModel.user).get.map(_.role.name),
-                           props.view.zoom(RootModel.programSummaries).async.set
+              ProgramCache(
+                routingInfo.programId,
+                props.view.zoom(RootModel.user).get.map(_.role.name),
+                props.view.zoom(RootModel.programSummaries).async.set
               ),
               PreferencesCache(vault.user.id, props.view.zoom(RootModel.userPreferences).async.set),
               props.view
@@ -203,4 +207,3 @@ object ExploreLayout:
             )
           )
         )
-      }
