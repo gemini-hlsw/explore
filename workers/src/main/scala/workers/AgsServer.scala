@@ -38,7 +38,7 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
                      r.params,
                      r.candidates
         )
-        .sortUsablePositions(r.positions)
+        .sortUsablePositions
     )
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =

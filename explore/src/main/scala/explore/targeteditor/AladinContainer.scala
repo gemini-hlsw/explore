@@ -24,7 +24,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
-import lucuma.ags.AgsPosition
 import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
@@ -69,7 +68,7 @@ object AladinContainer extends AladinCommon {
     case Some(AgsAnalysis.Usable(_, target, _, _, v)) => ((target.id, v)).some
     // simulate vignetting for reusability it only matters if it changes
     case Some(t)                                      =>
-      (t.target.id, NonEmptyList.of((AgsPosition(Angle.Angle0, Offset.Zero), Area.MaxArea))).some
+      (t.target.id, NonEmptyList.of((Angle.Angle0, Area.MaxArea))).some
     case _                                            => None
   })
   private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
