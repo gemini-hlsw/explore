@@ -195,7 +195,7 @@ object AladinCell extends ModelOptics with AladinCommon:
     manualOverride: View[ManualAgsOverride]
   ): Option[AgsAnalysis] => Callback =
     case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
-      val angle = pos.head._1.posAngle
+      val angle = pos.head._1
       props.obsConf.flatMap(_.posAngleConstraint) match
         case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
           props.obsConf
