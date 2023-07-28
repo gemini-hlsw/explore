@@ -140,13 +140,15 @@ object ObsTabTiles:
         import ctx.given
 
         ObsItcQuery[IO]
-          .query(props.programId, props.obsId)(ErrorPolicy.RaiseOnNoData)
+          .query(props.obsId)(ErrorPolicy.RaiseOnNoData)
           .map(
-            _.data.itc.map(i =>
-              OdbItcResult.Success(
-                i.result.exposureTime,
-                i.result.exposures,
-                i.result.signalToNoise
+            _.data.observation.flatMap(
+              _.itc.map(i =>
+                OdbItcResult.Success(
+                  i.result.exposureTime,
+                  i.result.exposures,
+                  i.result.signalToNoise
+                )
               )
             )
           )
@@ -157,14 +159,16 @@ object ObsTabTiles:
         import ctx.given
 
         SequenceOffsets[IO]
-          .query(props.programId, props.obsId)
+          .query(props.obsId)
           .map(data =>
             Offsets(
               science = NonEmptyList.fromList(
-                data.sequence.foldMap(_.executionConfig.allScienceOffsets).distinct
+                data.observation
+                  .foldMap(_.execution.config.allScienceOffsets)
+                  .distinct
               ),
               acquisition = NonEmptyList.fromList(
-                data.sequence.foldMap(_.executionConfig.allAcquisitionOffsets).distinct
+                data.observation.foldMap(_.execution.config.allAcquisitionOffsets).distinct
               )
             )
           )

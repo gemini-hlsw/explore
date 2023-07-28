@@ -39,7 +39,7 @@ object GeneratedSequenceViewer:
 
         SequenceQuery[IO]
           .query(props.obsId)
-          .map(_.observation.flatMap(_.sequence.map(_.executionConfig)))
+          .map(_.observation.map(_.execution.config))
           .attemptPot
           .resetOnResourceSignals(
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
