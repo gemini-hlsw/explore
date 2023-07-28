@@ -26,23 +26,26 @@ object ObsQueriesGQL:
   @GraphQL
   trait ObsItcQuery extends GraphQLOperation[ObservationDB]:
     val document = s"""
-      query($$programId: ProgramId!, $$obsId: ObservationId!) {
-        itc(programId: $$programId, observationId: $$obsId) {
-          result {
-            exposureTime {
-              milliseconds
+      query($$obsId: ObservationId!) {
+        observation(observationId: $$obsId) {
+          itc{
+            result {
+              exposureTime {
+                milliseconds
+              }
+              exposures
+              signalToNoise
             }
-            exposures
-            signalToNoise
           }
         }
       }
     """
 
     object Data:
-      object Itc:
-        object Result:
-          type ExposureTime = lucuma.core.util.TimeSpan
+      object Observation:
+        object Itc:
+          object Result:
+            type ExposureTime = lucuma.core.util.TimeSpan
 
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
@@ -65,57 +68,59 @@ object ObsQueriesGQL:
         }
       }
 
-      query($$programId: ProgramId!, $$obsId: ObservationId!) {
-        sequence(programId: $$programId, observationId: $$obsId) {
-          executionConfig {
-            ... on GmosSouthExecutionConfig {
-              acquisition {
-                nextAtom {
-                  steps {
-                    ...stepDataGS
+      query($$obsId: ObservationId!) {
+        observation(observationId: $$obsId) {
+          execution {
+            config {
+              ... on GmosSouthExecutionConfig {
+                acquisition {
+                  nextAtom {
+                    steps {
+                      ...stepDataGS
+                    }
+                  }
+                  possibleFuture {
+                    steps {
+                      ...stepDataGS
+                    }
                   }
                 }
-                possibleFuture {
-                  steps {
-                    ...stepDataGS
+                science {
+                  nextAtom {
+                    steps {
+                      ...stepDataGS
+                    }
                   }
-                }
-              }
-              science {
-                nextAtom {
-                  steps {
-                    ...stepDataGS
-                  }
-                }
-                possibleFuture {
-                  steps {
-                    ...stepDataGS
-                  }
-                }
-              }
-            }
-            ... on GmosNorthExecutionConfig {
-              acquisition {
-                nextAtom {
-                  steps {
-                    ...stepDataGN
-                  }
-                }
-                possibleFuture {
-                  steps {
-                    ...stepDataGN
+                  possibleFuture {
+                    steps {
+                      ...stepDataGS
+                    }
                   }
                 }
               }
-              science {
-                nextAtom {
-                  steps {
-                    ...stepDataGN
+              ... on GmosNorthExecutionConfig {
+                acquisition {
+                  nextAtom {
+                    steps {
+                      ...stepDataGN
+                    }
+                  }
+                  possibleFuture {
+                    steps {
+                      ...stepDataGN
+                    }
                   }
                 }
-                possibleFuture {
-                  steps {
-                    ...stepDataGN
+                science {
+                  nextAtom {
+                    steps {
+                      ...stepDataGN
+                    }
+                  }
+                  possibleFuture {
+                    steps {
+                      ...stepDataGN
+                    }
                   }
                 }
               }
@@ -126,8 +131,9 @@ object ObsQueriesGQL:
     """
 
     object Data:
-      object Sequence:
-        type ExecutionConfig = explore.model.ExecutionOffsets
+      object Observation:
+        object Execution:
+          type Config = explore.model.ExecutionOffsets
 
   @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:
