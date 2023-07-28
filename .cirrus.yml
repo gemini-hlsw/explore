@@ -18,5 +18,5 @@ task:
     - sbt -v -J-Xmx15g stage
     - npm clean-install
     - npm run build 
-    - npx bundlemon
-    - firebase deploy --only hosting:staging
+    # - npx bundlemon
+    - firebase deploy --only hosting:dev
