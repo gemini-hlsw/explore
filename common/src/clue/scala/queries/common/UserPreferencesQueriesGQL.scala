@@ -143,6 +143,7 @@ object UserPreferencesQueriesGQL {
           acquisitionOffsets
           elevationPlotRange
           elevationPlotTime
+          elevationPlotScheduling
         }
       }
     """
@@ -164,6 +165,7 @@ object UserPreferencesQueriesGQL {
           acquisitionOffsets
           elevationPlotRange
           elevationPlotTime
+          elevationPlotScheduling
         }
       }
     """
@@ -185,18 +187,20 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesElevPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation userPreferencesUpsert($userId: String = "", $elevationPlotRange: ExplorePlotRangeEnum, $elevationPlotTime: ExplorePlotTimeEnum) {
+      mutation userPreferencesUpsert($userId: String = "", $elevationPlotRange: ExplorePlotRangeEnum!, $elevationPlotTime: ExplorePlotTimeEnum!, $elevationPlotScheduling: Boolean!) {
         insertLucumaUserPreferencesOne(
           object: {
             userId: $userId,
             elevationPlotRange: $elevationPlotRange,
-            elevationPlotTime: $elevationPlotTime
+            elevationPlotTime: $elevationPlotTime,
+            elevationPlotScheduling: $elevationPlotScheduling
           },
           onConflict: {
             constraint: lucuma_user_preferences_pkey,
             update_columns: [
               elevationPlotRange,
-              elevationPlotTime
+              elevationPlotTime,
+              elevationPlotScheduling
             ]
           }
         ) {

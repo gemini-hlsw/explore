@@ -18,11 +18,11 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ElevationPlotOptions
+import explore.model.ElevationPlotScheduling
 import explore.model.GlobalPreferences
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
-import explore.model.enums.Visible
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -68,7 +68,8 @@ object ElevationPlotSection:
           .default(props.site, props.visualizationTime, props.coords)
           .copy(
             range = props.globalPreferences.elevationPlotRange,
-            timeDisplay = props.globalPreferences.elevationPlotTime
+            timeDisplay = props.globalPreferences.elevationPlotTime,
+            showScheduling = props.globalPreferences.elevationPlotScheduling
           )
       )
       // If predefined site changes, switch to it.
@@ -84,7 +85,11 @@ object ElevationPlotSection:
 
         val options = elevationPlotOptions.withOnMod(opts =>
           ElevationPlotPreference
-            .updatePlotPreferences[IO](props.uid, opts.range, opts.timeDisplay)
+            .updatePlotPreferences[IO](props.uid,
+                                       opts.range,
+                                       opts.timeDisplay,
+                                       opts.showScheduling.value
+            )
             .runAsync
         )
 
@@ -115,9 +120,9 @@ object ElevationPlotSection:
 
         val windowsNetExcludeIntervals: List[BoundedInterval[Instant]] =
           (props.timingWindows, showSchedulingView.get) match
-            case (Nil, _)            => Nil // No exclusions if no windows are defined.
-            case (_, Visible.Hidden) => Nil
-            case (_, _)              =>
+            case (Nil, _)                         => Nil // No exclusions if no windows are defined.
+            case (_, ElevationPlotScheduling.Off) => Nil
+            case (_, _)                           =>
               (IntervalSeq(opt.interval) & ~windowsNetIncludeIntervals).intervals.toList
                 .map(BoundedInterval.fromInterval)
                 .flattenOption
@@ -200,8 +205,8 @@ object ElevationPlotSection:
             ToggleButton(
               onLabel = "Scheduling: On",
               offLabel = "Scheduling: Off",
-              checked = showSchedulingView.get.isVisible,
-              onChange = showSchedulingView.set.compose(Visible.value.reverseGet),
+              checked = showSchedulingView.get.value,
+              onChange = showSchedulingView.set.compose(ElevationPlotScheduling.value.reverseGet),
               clazz = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
             )
           )

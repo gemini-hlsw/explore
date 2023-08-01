@@ -3503,6 +3503,7 @@ type LucumaUserPreferences {
   aladinMouseScroll: Boolean!
   createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum!
+  elevationPlotScheduling: Boolean!
   elevationPlotTime: ExplorePlotTimeEnum!
   fullScreen: Boolean!
 
@@ -3545,6 +3546,7 @@ input LucumaUserPreferencesBoolExp {
   aladinMouseScroll: BooleanComparisonExp
   createdAt: TimestamptzComparisonExp
   elevationPlotRange: ExplorePlotRangeEnumComparisonExp
+  elevationPlotScheduling: BooleanComparisonExp
   elevationPlotTime: ExplorePlotTimeEnumComparisonExp
   fullScreen: BooleanComparisonExp
   lucuma_user: LucumaUserBoolExp
@@ -3573,6 +3575,7 @@ input LucumaUserPreferencesInsertInput {
   aladinMouseScroll: Boolean
   createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotScheduling: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
   lucuma_user: LucumaUserObjRelInsertInput
@@ -3633,6 +3636,7 @@ input LucumaUserPreferencesOrderBy {
   aladinMouseScroll: OrderBy
   createdAt: OrderBy
   elevationPlotRange: OrderBy
+  elevationPlotScheduling: OrderBy
   elevationPlotTime: OrderBy
   fullScreen: OrderBy
   lucuma_user: LucumaUserOrderBy
@@ -3681,6 +3685,11 @@ enum LucumaUserPreferencesSelectColumn {
   """
   column name
   """
+  elevationPlotScheduling
+
+  """
+  column name
+  """
   elevationPlotTime
 
   """
@@ -3718,6 +3727,7 @@ input LucumaUserPreferencesSetInput {
   aladinMouseScroll: Boolean
   createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotScheduling: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
   scienceOffsets: Boolean
@@ -3754,6 +3764,11 @@ enum LucumaUserPreferencesUpdateColumn {
   column name
   """
   elevationPlotRange
+
+  """
+  column name
+  """
+  elevationPlotScheduling
 
   """
   column name
@@ -4549,6 +4564,7 @@ input lucumaUserPreferences_streamCursorValueInput {
   aladinMouseScroll: Boolean
   createdAt: timestamptz
   elevationPlotRange: ExplorePlotRangeEnum
+  elevationPlotScheduling: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
   scienceOffsets: Boolean

@@ -8,7 +8,6 @@ import cats.derived.*
 import cats.syntax.option.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
-import explore.model.enums.Visible
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
@@ -27,7 +26,7 @@ case class ElevationPlotOptions(
   date:           LocalDate,
   semester:       Semester,
   timeDisplay:    TimeDisplay,
-  showScheduling: Visible
+  showScheduling: ElevationPlotScheduling
 ) derives Eq:
   def withDateAndSemesterOf(visualizationTime: Instant): ElevationPlotOptions =
     val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(visualizationTime.some, site)
@@ -87,5 +86,5 @@ object ElevationPlotOptions:
       date,
       Semester.fromLocalDate(date),
       TimeDisplay.Site,
-      Visible.Shown
+      ElevationPlotScheduling.On
     )
