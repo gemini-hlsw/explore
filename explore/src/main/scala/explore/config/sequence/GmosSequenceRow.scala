@@ -18,9 +18,9 @@ import lucuma.schemas.model.Visit
 
 import java.time.Instant
 
-sealed trait GmosSequenceRow:
+sealed trait GmosSequenceRow[+S, +D]:
   def id: String
-  protected def instrumentConfig: Option[DynamicConfig]
+  protected def instrumentConfig: Option[D]
   protected def stepConfig: Option[StepConfig]
 
   private def componentToArcSec[A]: Offset.Component[A] => BigDecimal =
@@ -90,26 +90,26 @@ sealed trait GmosSequenceRow:
 
 object GmosSequenceRow:
 
-  case class FutureStep(
+  case class FutureStep[D](
     stepId:                     Step.Id,
-    futureStepInstrumentConfig: DynamicConfig,
+    futureStepInstrumentConfig: D,
     futureStepConfig:           StepConfig,
     atomId:                     Atom.Id,
     firstOf:                    Option[Int]
-  ) extends GmosSequenceRow:
-    override lazy val id: String                              = stepId.toString
-    override lazy val instrumentConfig: Option[DynamicConfig] = futureStepInstrumentConfig.some
-    override lazy val stepConfig: Option[StepConfig]          = futureStepConfig.some
+  ) extends GmosSequenceRow[Nothing, D]:
+    override lazy val id: String                     = stepId.toString
+    override lazy val instrumentConfig: Option[D]    = futureStepInstrumentConfig.some
+    override lazy val stepConfig: Option[StepConfig] = futureStepConfig.some
 
   object FutureStep:
-    def fromStep[D <: DynamicConfig](
+    def fromStep[D](
       step:    Step[D],
       atomId:  Atom.Id,
       firstOf: Option[Int]
-    ): GmosSequenceRow.FutureStep =
+    ): GmosSequenceRow.FutureStep[D] =
       FutureStep(step.id, step.instrumentConfig, step.stepConfig, atomId, firstOf)
 
-  sealed trait Executed extends GmosSequenceRow:
+  sealed trait Executed[S, D] extends GmosSequenceRow[S, D]:
     def created: Instant
     def startTime: Option[Instant]
     def endTime: Option[Instant]
@@ -118,17 +118,18 @@ object GmosSequenceRow:
     lazy val durationSecs: Option[Long] = duration.map(_.toSeconds.toLong)
 
   object Executed:
-    case class ExecutedVisit(protected val visit: Visit) extends Executed:
-      lazy val id: String                                        = visit.id.toString
-      protected lazy val instrumentConfig: Option[DynamicConfig] = none
-      protected lazy val stepConfig: Option[StepConfig]          = none
+    case class ExecutedVisit[S, D](protected val visit: Visit[S, D]) extends Executed[S, D]:
+      lazy val id: String                               = visit.id.toString
+      protected lazy val instrumentConfig: Option[D]    = none
+      protected lazy val stepConfig: Option[StepConfig] = none
 
       export visit.{created, duration, endTime, startTime}
 
-    case class ExecutedStep(protected val stepRecord: StepRecord) extends Executed:
-      lazy val id: String                                        = stepRecord.id.toString
-      protected lazy val instrumentConfig: Option[DynamicConfig] = stepRecord.instrumentConfig.some
-      protected lazy val stepConfig: Option[StepConfig]          = stepRecord.stepConfig.some
+    case class ExecutedStep[D](protected val stepRecord: StepRecord[D])
+        extends Executed[Nothing, D]:
+      lazy val id: String                               = stepRecord.id.toString
+      protected lazy val instrumentConfig: Option[D]    = stepRecord.instrumentConfig.some
+      protected lazy val stepConfig: Option[StepConfig] = stepRecord.stepConfig.some
 
       export stepRecord.{
         created,
