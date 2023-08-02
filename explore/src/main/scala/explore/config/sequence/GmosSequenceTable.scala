@@ -19,22 +19,21 @@ import lucuma.ui.table.*
 import react.common.Css
 import react.common.ReactFnProps
 
-sealed trait GmosSequenceTable[D] {
+sealed trait GmosSequenceTable[D]:
   def atoms: List[Atom[D]]
-}
 
 case class GmosNorthSequenceTable(atoms: List[Atom[DynamicConfig.GmosNorth]])
-    extends ReactFnProps(GmosSequenceTable.gmosNorthComponent)
+    extends ReactFnProps(GmosNorthSequenceTable.component)
     with GmosSequenceTable[DynamicConfig.GmosNorth]
 
 case class GmosSouthSequenceTable(atoms: List[Atom[DynamicConfig.GmosSouth]])
-    extends ReactFnProps(GmosSequenceTable.gmosSouthComponent)
+    extends ReactFnProps(GmosSouthSequenceTable.component)
     with GmosSequenceTable[DynamicConfig.GmosSouth]
 
-object GmosSequenceTable:
-  private type Props[D] = GmosSequenceTable[D]
+private sealed trait GmosSequenceTableBuilder[D: Eq]:
+  private type Props = GmosSequenceTable[D]
 
-  private val ColDef = ColumnDef[GmosSequenceRow.FutureStep]
+  private val ColDef = ColumnDef[GmosSequenceRow.FutureStep[D]]
 
   private def drawBracket(rows: Int): VdomElement =
     svg(^.width := "1px", ^.height := "15px")(
@@ -46,18 +45,19 @@ object GmosSequenceTable:
 
   private val AtomStepsColumnId: ColumnId = ColumnId("atomSteps")
 
-  private val columns: List[ColumnDef[GmosSequenceRow.FutureStep, ?]] =
-    ColDef(AtomStepsColumnId,
-           _.firstOf,
-           header = " ",
-           cell = _.value.map(drawBracket),
-           size = 30.toPx
+  private val columns: List[ColumnDef[GmosSequenceRow.FutureStep[D], ?]] =
+    ColDef(
+      AtomStepsColumnId,
+      _.firstOf,
+      header = " ",
+      cell = _.value.map(drawBracket),
+      size = 30.toPx
     )
       +: SequenceColumns.gmosColumns(ColDef, _.some)
 
-  private def buildLines[D <: DynamicConfig](
+  private def buildLines(
     atoms: List[Atom[D]]
-  ): List[GmosSequenceRow.FutureStep] =
+  ): List[GmosSequenceRow.FutureStep[D]] =
     atoms
       .map(atom =>
         GmosSequenceRow.FutureStep
@@ -66,9 +66,9 @@ object GmosSequenceTable:
       )
       .flatten
 
-  private def componentBuilder[D <: DynamicConfig: Eq] =
+  protected[sequence] val component =
     ScalaFnComponent
-      .withHooks[Props[D]]
+      .withHooks[Props]
       .useMemo(())(_ => columns)
       .useMemoBy((props, _) => props.atoms)((_, _) => buildLines)
       .useReactTableBy((props, cols, rows) =>
@@ -98,6 +98,6 @@ object GmosSequenceTable:
         )
       }
 
-  protected[sequence] val gmosNorthComponent = componentBuilder[DynamicConfig.GmosNorth]
+object GmosNorthSequenceTable extends GmosSequenceTableBuilder[DynamicConfig.GmosNorth]
 
-  protected[sequence] val gmosSouthComponent = componentBuilder[DynamicConfig.GmosSouth]
+object GmosSouthSequenceTable extends GmosSequenceTableBuilder[DynamicConfig.GmosSouth]

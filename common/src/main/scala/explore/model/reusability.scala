@@ -111,9 +111,9 @@ object reusability:
 
   given Reusability[TimingWindow] = Reusability.byEq
 
-  given Reusability[Visit] = Reusability.byEq
+  given [S: Eq, D: Eq]: Reusability[Visit[S, D]] = Reusability.byEq
 
-  given Reusability[StepRecord] = Reusability.byEq
+  given [D: Eq]: Reusability[StepRecord[D]] = Reusability.byEq
 
   given Reusability[ApiKey] = Reusability.byEq
 

@@ -3,6 +3,7 @@
 
 package explore.config.sequence
 
+import cats.Eq
 import cats.syntax.all.*
 import explore.*
 import explore.components.ui.ExploreStyles
@@ -11,6 +12,7 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.DatasetQaState
+import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.StepRecord
@@ -18,16 +20,25 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import react.common.ReactFnProps
 
-final case class VisitTable(steps: List[StepRecord]) extends ReactFnProps(VisitTable.component)
+sealed trait VisitTable[D]:
+  def steps: List[StepRecord[D]]
 
-object VisitTable:
-  private type Props = VisitTable
+case class GmosNorthVisitTable(steps: List[StepRecord[DynamicConfig.GmosNorth]])
+    extends ReactFnProps(GmosNorthVisitTable.component)
+    with VisitTable[DynamicConfig.GmosNorth]
 
-  private val ColDef = ColumnDef[(GmosSequenceRow.Executed.ExecutedStep, Int)]
+case class GmosSouthVisitTable(steps: List[StepRecord[DynamicConfig.GmosSouth]])
+    extends ReactFnProps(GmosSouthVisitTable.component)
+    with VisitTable[DynamicConfig.GmosSouth]
+
+private sealed trait VisitTableBuilder[D: Eq]:
+  private type Props = VisitTable[D]
+
+  private val ColDef = ColumnDef[(GmosSequenceRow.Executed.ExecutedStep[D], Int)]
 
   val IndexColumnId: ColumnId = ColumnId("stepIndex")
 
-  private val component =
+  protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
       .useMemo(())(_ =>
@@ -87,3 +98,7 @@ object VisitTable:
             ): VdomNode).some
         )
       )
+
+object GmosNorthVisitTable extends VisitTableBuilder[DynamicConfig.GmosNorth]
+
+object GmosSouthVisitTable extends VisitTableBuilder[DynamicConfig.GmosSouth]

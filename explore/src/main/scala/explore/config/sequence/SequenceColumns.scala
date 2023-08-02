@@ -33,10 +33,10 @@ object SequenceColumns:
 
   private val offsetFormat = new DecimalFormat("#.0")
 
-  def gmosColumns[D](
-    colDef:  ColumnDef.Applied[D],
-    getStep: D => Option[GmosSequenceRow]
-  ): List[ColumnDef[D, ?]] =
+  def gmosColumns[D, T, R <: GmosSequenceRow[?, D]](
+    colDef:  ColumnDef.Applied[T],
+    getStep: T => Option[R]
+  ): List[ColumnDef[T, ?]] =
     List(
       colDef(
         StepTypeColumnId,
