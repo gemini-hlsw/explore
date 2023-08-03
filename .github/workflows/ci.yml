@@ -27,13 +27,8 @@ jobs:
     name: Build and Test
     strategy:
       matrix:
-<<<<<<< HEAD
-        os: [ubuntu-latest]
-        scala: [3]
-=======
         os: [macos-latest]
-        scala: [3.2.2]
->>>>>>> 810bc4fd6 (Switch to build on macos)
+        scala: [3]
         java: [temurin@17]
         project: [rootJS, rootJVM]
     runs-on: ${{ matrix.os }}
@@ -78,7 +73,7 @@ jobs:
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck lucumaScalafmtCheck lucumaScalafixCheck
 
       - name: Check scalafix lints
-        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
 
       - name: scalaJSLink
@@ -88,13 +83,6 @@ jobs:
       - name: Test
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
-<<<<<<< HEAD
-=======
-      - name: Check scalafix lints
-        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
-        run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
-
->>>>>>> 810bc4fd6 (Switch to build on macos)
       - name: Aggregate coverage reports
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' coverageReport coverageAggregate
 
@@ -107,6 +95,7 @@ jobs:
     strategy:
       matrix:
 <<<<<<< HEAD
+<<<<<<< HEAD
         os: [ubuntu-latest]
 <<<<<<< HEAD
         scala: [3.3.1]
@@ -117,6 +106,10 @@ jobs:
         scala: [3.2.2]
 >>>>>>> c02b65945 (Use `macOS` for `full` job)
 >>>>>>> 3df0cabea (Use `macOS` for `full` job)
+=======
+        os: [macos-latest]
+        scala: [3.3.0]
+>>>>>>> 36b052681 (Rebased onto master)
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -261,23 +254,6 @@ jobs:
       - name: Run linters in dark mode
         uses: wearerequired/lint-action@v2.3.0
         with:
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-          stylelint: true
-          stylelint_extensions: css,less
-          stylelint_args: common/src/main/webapp/less
-<<<<<<< HEAD
-          git_no_verify: true
->>>>>>> 1b8c3519c (Switch to esbuild)
-=======
->>>>>>> e68f67a3e (Rebased onto master)
-=======
->>>>>>> a59d103d9 (Rebase onto master)
-          github_token: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
           stylelint_extensions: css,sass,scss
           stylelint_args: common/src/main/webapp/sass
@@ -294,23 +270,6 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: wearerequired/lint-action@v2.3.0
         with:
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
-          stylelint: true
-          stylelint_extensions: css,less
-          stylelint_args: common/src/main/webapp/less
-<<<<<<< HEAD
-          git_no_verify: true
->>>>>>> 1b8c3519c (Switch to esbuild)
-=======
->>>>>>> e68f67a3e (Rebased onto master)
-=======
->>>>>>> a59d103d9 (Rebase onto master)
-          github_token: ${{ secrets.GITHUB_TOKEN }}
->>>>>>> b48e41c5c (Switch to esbuild)
           stylelint: true
           stylelint_extensions: css,sass,scss
           stylelint_args: common/src/main/webapp/sass
