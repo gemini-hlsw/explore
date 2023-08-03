@@ -1,12 +1,14 @@
 // @ts-check
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 import fs from 'fs/promises';
 import mkcert from 'vite-plugin-mkcert';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import { VitePWA } from 'vite-plugin-pwa';
+import { dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 // import wasm from "vite-plugin-wasm";
 // import topLevelAwait from "vite-plugin-top-level-await";
 
@@ -97,17 +99,21 @@ const pathExists = async (path) => {
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
-  const scalaClassesDir = path.resolve(__dirname, `explore/target/scala-3.3.0`);
+
+  const _dirname = typeof __dirname !== 'undefined'
+    ? __dirname
+    : dirname(fileURLToPath(import.meta.url))
+  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.3.0`);
   const isProduction = mode === 'production';
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, `explore-opt`)
     : path.resolve(scalaClassesDir, `explore-fastopt`);
-  const workersScalaClassesDir = path.resolve(__dirname, 'workers/target/scala-3.3.0');
+  const workersScalaClassesDir = path.resolve(_dirname, 'workers/target/scala-3.3.0');
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');
   const rollupPlugins = isProduction ? [] : [visualizer()];
-  const common = path.resolve(__dirname, 'common/');
+  const common = path.resolve(_dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
   const imagesCommon = path.resolve(webappCommon, 'images');
   const themeConfig = path.resolve(webappCommon, 'theme/theme.config');
@@ -115,7 +121,7 @@ export default defineConfig(async ({ mode }) => {
   const suithemes = path.resolve(webappCommon, 'suithemes');
   const publicDirProd = path.resolve(common, 'src/main/public');
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
-  const lucumaCss = path.resolve(__dirname, `explore/target/lucuma-css`);
+  const lucumaCss = path.resolve(_dirname, `explore/target/lucuma-css`);
 
   if (!(await pathExists(publicDirDev))) {
     await fs.mkdir(publicDirDev);
@@ -234,7 +240,7 @@ export default defineConfig(async ({ mode }) => {
         plugins: rollupPlugins,
       },
       minify: 'terser',
-      outDir: path.resolve(__dirname, 'heroku/static'),
+      outDir: path.resolve(_dirname, 'heroku/static'),
     },
     worker: {
       format: 'es', // We need this for workers to be able to do dynamic imports.
@@ -248,7 +254,6 @@ export default defineConfig(async ({ mode }) => {
       // wasm(),
       // topLevelAwait(),
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
-      react(),
       fontImport,
       VitePWA({
         injectRegister: 'inline',
