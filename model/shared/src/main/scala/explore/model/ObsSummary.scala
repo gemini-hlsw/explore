@@ -23,7 +23,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
-import lucuma.odb.json.time.decoder.given
 import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
@@ -41,7 +40,6 @@ case class ObsSummary(
   subtitle:            Option[NonEmptyString],
   status:              ObsStatus,
   activeStatus:        ObsActiveStatus,
-  executionTime:       TimeSpan,
   scienceTargetIds:    AsterismIds,
   constraints:         ConstraintSet,
   timingWindows:       List[TimingWindow],
@@ -59,6 +57,8 @@ case class ObsSummary(
       s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
     case _                                                              =>
       none
+
+  val executionTime = TimeSpan.Zero // TODO Read from the odb
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
@@ -94,7 +94,6 @@ object ObsSummary:
       subtitle            <- c.get[Option[NonEmptyString]]("subtitle")
       status              <- c.get[ObsStatus]("status")
       activeStatus        <- c.get[ObsActiveStatus]("activeStatus")
-      executionTime       <- c.downField("plannedTime").get[TimeSpan]("execution")
       scienceTargetIds    <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
       constraints         <- c.get[ConstraintSet]("constraintSet")
       timingWindows       <- c.get[List[TimingWindow]]("timingWindows")
@@ -112,7 +111,6 @@ object ObsSummary:
       subtitle,
       status,
       activeStatus,
-      executionTime,
       SortedSet.from(scienceTargetIds.map(_.id)),
       constraints,
       timingWindows,

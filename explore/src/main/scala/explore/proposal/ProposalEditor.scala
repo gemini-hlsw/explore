@@ -67,7 +67,7 @@ case class ProposalEditor(
   programId:     Program.Id,
   proposal:      View[Proposal],
   undoStacks:    View[UndoStacks[IO, Proposal]],
-  executionTime: TimeSpan,
+  executionTime: Option[TimeSpan],
   band3Time:     TimeSpan
 ) extends ReactFnProps(ProposalEditor.component)
 
@@ -487,7 +487,9 @@ object ProposalEditor:
           proposalClassType,
           showDialog,
           splitsList,
-          props.executionTime,
+          props.executionTime.getOrElse(
+            TimeSpan.Zero
+          ), // this is not correct, we need to be able to handle a missing execution time
           props.band3Time
         )
       }
