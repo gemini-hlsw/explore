@@ -51,7 +51,7 @@ object ProposalTabContents:
   private def createProposal(
     programId:       Program.Id,
     optProposalView: View[Option[ProposalInfo]],
-    executionTime:   TimeSpan
+    executionTime:   Option[TimeSpan]
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
@@ -127,7 +127,8 @@ object ProposalTabContents:
       ProgramProposalQuery[IO]
         .query(props.programId)
         .map(data =>
-          data.program.map(prog => ProposalInfo(prog.proposal, prog.plannedTime.execution))
+          data.program
+            .map(prog => ProposalInfo(prog.proposal, prog.plannedTimeRange.map(_.maximum)))
         )
         .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO](props.programId.assign))
     }
@@ -135,8 +136,8 @@ object ProposalTabContents:
       optPropInfo.renderPotOption(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
     }
 
-case class ProposalInfo(optProposal: Option[Proposal], executionTime: TimeSpan)
+case class ProposalInfo(optProposal: Option[Proposal], executionTime: Option[TimeSpan])
 
 object ProposalInfo:
-  val optProposal: Lens[ProposalInfo, Option[Proposal]] = Focus[ProposalInfo](_.optProposal)
-  val executionTime: Lens[ProposalInfo, TimeSpan]       = Focus[ProposalInfo](_.executionTime)
+  val optProposal: Lens[ProposalInfo, Option[Proposal]]   = Focus[ProposalInfo](_.optProposal)
+  val executionTime: Lens[ProposalInfo, Option[TimeSpan]] = Focus[ProposalInfo](_.executionTime)

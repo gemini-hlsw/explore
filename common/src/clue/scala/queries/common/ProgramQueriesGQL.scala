@@ -80,9 +80,11 @@ object ProgramQueriesGQL {
               percent
             }
           }
-          plannedTime {
-            execution {
-              microseconds
+          plannedTimeRange {
+            maximum {
+              total {
+                microseconds
+              }
             }
           }
         }
@@ -92,8 +94,8 @@ object ProgramQueriesGQL {
     object Data {
       object Program {
         type Proposal = model.Proposal
-        object PlannedTime {
-          type Execution = TimeSpan
+        object PlannedTimeRange {
+          type Maximum = TimeSpan
         }
       }
     }

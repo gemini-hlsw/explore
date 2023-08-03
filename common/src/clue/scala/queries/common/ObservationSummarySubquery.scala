@@ -22,9 +22,6 @@ object ObservationSummarySubquery
           activeStatus
           visualizationTime
           posAngleConstraint $PosAngleConstraintSubquery
-          plannedTime {
-            execution $TimeSpanSubquery
-          }
           targetEnvironment {
             asterism {
               id
