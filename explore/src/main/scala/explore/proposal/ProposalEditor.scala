@@ -487,7 +487,9 @@ object ProposalEditor:
           proposalClassType,
           showDialog,
           splitsList,
-          props.executionTime.getOrElse(TimeSpan.Zero), // this is not correct, we need to be able to handle a missing execution time
+          props.executionTime.getOrElse(
+            TimeSpan.Zero
+          ), // this is not correct, we need to be able to handle a missing execution time
           props.band3Time
         )
       }

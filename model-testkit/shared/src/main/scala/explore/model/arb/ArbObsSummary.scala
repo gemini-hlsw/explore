@@ -19,10 +19,8 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
 import lucuma.core.model.arb.ArbConstraintSet.given
 import lucuma.core.model.arb.ArbTimingWindow.given
-import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
-import lucuma.core.util.arb.ArbTimeSpan
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
@@ -36,7 +34,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.arb.ArbObservingMode
 
 trait ArbObsSummary:
-  import ArbTimeSpan.given
   import ArbTime.given
   import ArbScienceRequirements.given
   import ArbObservingMode.given
@@ -49,7 +46,6 @@ trait ArbObsSummary:
         subtitle            <- arbitrary[Option[NonEmptyString]]
         status              <- arbitrary[ObsStatus]
         activeStatus        <- arbitrary[ObsActiveStatus]
-        executionTime       <- arbitrary[TimeSpan]
         scienceTargetIds    <- arbitrary[Set[Target.Id]]
         constraints         <- arbitrary[ConstraintSet]
         timingWindows       <- arbitrary[List[TimingWindow]]
@@ -65,7 +61,6 @@ trait ArbObsSummary:
         subtitle,
         status,
         activeStatus,
-        executionTime,
         SortedSet.from(scienceTargetIds),
         constraints,
         timingWindows,
@@ -85,7 +80,6 @@ trait ArbObsSummary:
        Option[String],
        ObsStatus,
        ObsActiveStatus,
-       TimeSpan,
        List[Target.Id],
        ConstraintSet,
        List[TimingWindow],
@@ -102,7 +96,6 @@ trait ArbObsSummary:
          o.subtitle.map(_.value),
          o.status,
          o.activeStatus,
-         o.executionTime,
          o.scienceTargetIds.toList,
          o.constraints,
          o.timingWindows,
