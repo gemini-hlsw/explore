@@ -24,6 +24,8 @@ import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.GmosSpectroscopyOverrides
+import explore.modes.InstrumentOverrides
 import explore.modes.InstrumentRow
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
@@ -41,7 +43,8 @@ case class ItcProps(
   obsSummary:         ObsSummary,
   remoteExposureTime: Option[ItcExposureTime],   // time provided by the db
   selectedConfig:     Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  allTargets:         TargetList
+  allTargets:         TargetList,
+  modeOverrides:      Option[InstrumentOverrides]
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
     ScienceRequirements.spectroscopy.getOption(obsSummary.scienceRequirements)
@@ -76,9 +79,17 @@ case class ItcProps(
 
   private val instrumentRow: Option[InstrumentRow] = finalConfig.map {
     case BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _) =>
-      GmosNorthSpectroscopyRow(c.grating, c.fpu, c.filter)
+      val gmosOverride: Option[GmosSpectroscopyOverrides] = modeOverrides match {
+        case Some(o: GmosSpectroscopyOverrides) => o.some
+        case _                                  => none
+      }
+      GmosNorthSpectroscopyRow(c.grating, c.fpu, c.filter, gmosOverride)
     case BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _) =>
-      GmosSouthSpectroscopyRow(c.grating, c.fpu, c.filter)
+      val gmosOverride: Option[GmosSpectroscopyOverrides] = modeOverrides match {
+        case Some(o: GmosSpectroscopyOverrides) => o.some
+        case _                                  => none
+      }
+      GmosSouthSpectroscopyRow(c.grating, c.fpu, c.filter, gmosOverride)
   }
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =

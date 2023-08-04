@@ -298,7 +298,7 @@ private object SpectroscopyModesTable extends TableHooks:
     private def rowToConf(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
       val config = cw.flatMap(row.entry.intervalCenter).flatMap { cc =>
         row.entry.instrument match
-          case GmosNorthSpectroscopyRow(grating, fpu, filter)
+          case GmosNorthSpectroscopyRow(grating, fpu, filter, _)
               if row.entry.focalPlane === FocalPlane.SingleSlit =>
             BasicConfiguration
               .GmosNorthLongSlit(
@@ -308,7 +308,7 @@ private object SpectroscopyModesTable extends TableHooks:
                 centralWavelength = cc
               )
               .some
-          case GmosSouthSpectroscopyRow(grating, fpu, filter)
+          case GmosSouthSpectroscopyRow(grating, fpu, filter, _)
               if row.entry.focalPlane === FocalPlane.SingleSlit =>
             BasicConfiguration
               .GmosSouthLongSlit(

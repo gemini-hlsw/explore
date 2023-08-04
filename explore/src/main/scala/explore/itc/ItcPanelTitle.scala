@@ -31,14 +31,15 @@ case class ItcPanelTitle(
 object ItcPanelTitle:
   private type Props = ItcPanelTitle
 
-  val MissingInfoMsg                   = "Not enough information to call ITC"
-  val MissingInfo: Pot[ItcChartResult] =
-    Pot.error(new RuntimeException(MissingInfoMsg))
-  val MissingInfoIcon                  = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
-  val pendingChart                     = Pot.pending[ItcChartResult]
+  private val MissingInfoMsg  = "Not enough information to call ITC"
+  private val MissingInfoIcon =
+    Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
+  private val pendingChart    =
+    Pot.pending[ItcChartResult]
 
   private val component =
     ScalaFnComponent[Props] { props =>
+      println(s"panel props: ${props.itcPanelProps.modeOverrides}")
       def newSelected(p: Int): Option[ItcTarget] =
         props.itcPanelProps.targets.lift(p)
 

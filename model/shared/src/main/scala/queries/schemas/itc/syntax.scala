@@ -22,9 +22,17 @@ trait syntax:
   extension (row: InstrumentRow)
     def toItcClientMode: Option[InstrumentMode] = row match {
       case g: GmosNorthSpectroscopyRow =>
-        InstrumentMode.GmosNorthSpectroscopy(g.grating, g.filter, GmosFpu.North(g.fpu.asRight)).some
+        val roi = g.modeOverrides.flatMap(_.roi)
+        val ccd = g.modeOverrides.flatMap(_.ccdMode)
+        InstrumentMode
+          .GmosNorthSpectroscopy(g.grating, g.filter, GmosFpu.North(g.fpu.asRight), ccd, roi)
+          .some
       case g: GmosSouthSpectroscopyRow =>
-        InstrumentMode.GmosSouthSpectroscopy(g.grating, g.filter, GmosFpu.South(g.fpu.asRight)).some
+        val roi = g.modeOverrides.flatMap(_.roi)
+        val ccd = g.modeOverrides.flatMap(_.ccdMode)
+        InstrumentMode
+          .GmosSouthSpectroscopy(g.grating, g.filter, GmosFpu.South(g.fpu.asRight), ccd, roi)
+          .some
       case _                           => None
     }
 

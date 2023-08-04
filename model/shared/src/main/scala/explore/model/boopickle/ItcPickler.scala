@@ -43,6 +43,7 @@ import lucuma.core.model.EmissionLine
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Of
 import lucuma.core.util.TimeSpan
 import lucuma.itc.FinalSN
@@ -61,6 +62,10 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[FinalSN]  = transformPickler((s: SignalToNoise) => FinalSN(s))(_.value)
   given Pickler[SingleSN] = transformPickler((s: SignalToNoise) => SingleSN(s))(_.value)
+
+  given Pickler[GmosCcdMode] = generatePickler
+
+  given Pickler[GmosSpectroscopyOverrides] = generatePickler
 
   given Pickler[GmosNorthSpectroscopyRow] = generatePickler
 

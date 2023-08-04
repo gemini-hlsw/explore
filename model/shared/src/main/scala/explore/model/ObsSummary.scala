@@ -9,9 +9,16 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.modes.GmosSpectroscopyOverrides
+import explore.modes.InstrumentOverrides
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
+import lucuma.core.enums.GmosAmpCount
+import lucuma.core.enums.GmosAmpGain
+import lucuma.core.enums.GmosAmpReadMode
+import lucuma.core.enums.GmosXBinning
+import lucuma.core.enums.GmosYBinning
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
@@ -21,6 +28,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.odb.json.wavelength.decoder.given
@@ -59,6 +67,56 @@ case class ObsSummary(
       none
 
   val executionTime = TimeSpan.Zero // TODO Read from the odb
+
+  val toModeOverride: Option[InstrumentOverrides] = observingMode.map {
+    case n: ObservingMode.GmosNorthLongSlit =>
+      val defaultMode   = GmosCcdMode(n.defaultXBin,
+                                    n.defaultYBin,
+                                    GmosAmpCount.Twelve,
+                                    n.defaultAmpGain,
+                                    n.defaultAmpReadMode
+      )
+      val overridenMode =
+        List(n.explicitXBin, n.explicitYBin, n.explicitAmpGain, n.explicitAmpReadMode).foldLeft(
+          defaultMode
+        ) {
+          case (mode, Some(x: GmosXBinning))    =>
+            mode.copy(xBin = x)
+          case (mode, Some(x: GmosYBinning))    =>
+            mode.copy(yBin = x)
+          case (mode, Some(x: GmosAmpGain))     =>
+            mode.copy(ampGain = x)
+          case (mode, Some(x: GmosAmpReadMode)) =>
+            mode.copy(ampReadMode = x)
+          case (mode, _)                        =>
+            mode
+        }
+
+      GmosSpectroscopyOverrides(overridenMode.some, n.explicitRoi)
+    case s: ObservingMode.GmosSouthLongSlit =>
+      val defaultMode   = GmosCcdMode(s.defaultXBin,
+                                    s.defaultYBin,
+                                    GmosAmpCount.Twelve,
+                                    s.defaultAmpGain,
+                                    s.defaultAmpReadMode
+      )
+      val overridenMode =
+        List(s.explicitXBin, s.explicitYBin, s.explicitAmpGain, s.explicitAmpReadMode).foldLeft(
+          defaultMode
+        ) {
+          case (mode, Some(x: GmosXBinning))    =>
+            mode.copy(xBin = x)
+          case (mode, Some(x: GmosYBinning))    =>
+            mode.copy(yBin = x)
+          case (mode, Some(x: GmosAmpGain))     =>
+            mode.copy(ampGain = x)
+          case (mode, Some(x: GmosAmpReadMode)) =>
+            mode.copy(ampReadMode = x)
+          case (mode, _)                        =>
+            mode
+        }
+      GmosSpectroscopyOverrides(overridenMode.some, s.explicitRoi)
+  }
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
