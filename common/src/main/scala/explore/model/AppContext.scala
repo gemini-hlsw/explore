@@ -20,13 +20,13 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.feature.Context
 import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
+import lucuma.react.primereact.ToastRef
 import lucuma.schemas.ObservationDB
 import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.sso.SSOClient
 import org.typelevel.log4cats.Logger
 import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
-import react.primereact.ToastRef
 import workers.WorkerClient
 
 case class AppContext[F[_]](

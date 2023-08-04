@@ -37,6 +37,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
+import lucuma.react.gridlayout.*
 import lucuma.react.table.*
 import lucuma.ui.table.TableStateStore
 import org.typelevel.log4cats.Logger
@@ -49,8 +50,6 @@ import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
-import react.gridlayout.BreakpointName
-import react.gridlayout.{BreakpointName => _, _}
 
 import scala.collection.immutable.SortedMap
 
@@ -96,7 +95,7 @@ object UserPreferencesQueries:
   end GlobalUserPreferences
 
   object GridLayouts:
-    extension (e: react.gridlayout.BreakpointName)
+    extension (e: BreakpointName)
       def toGridBreakpointName: GridBreakpointName =
         Enumerated[GridBreakpointName].unsafeFromTag(e.name)
 
@@ -118,7 +117,7 @@ object UserPreferencesQueries:
 
     private def positions2LayoutMap[A](
       g: (GridBreakpointName, List[A])
-    )(using dbPos: DBLayoutPosition[A]): (react.gridlayout.BreakpointName, (Int, Int, Layout)) =
+    )(using dbPos: DBLayoutPosition[A]): (BreakpointName, (Int, Int, Layout)) =
       val bn = breakpointNameFromString(g._1.tag)
       bn -> ((breakpointWidth(bn),
               breakpointCols(bn),
@@ -135,9 +134,7 @@ object UserPreferencesQueries:
         uid <- OptionT.fromOption[F](userId)
         r   <-
           OptionT
-            .liftF[F, Map[GridLayoutSection, SortedMap[react.gridlayout.BreakpointName,
-                                                       (Int, Int, Layout)
-            ]]] {
+            .liftF[F, Map[GridLayoutSection, SortedMap[BreakpointName, (Int, Int, Layout)]]] {
               UserGridLayoutQuery[F].query(uid.show).map { r =>
                 r.lucumaGridLayoutPositions match {
                   case l if l.isEmpty => Map.empty

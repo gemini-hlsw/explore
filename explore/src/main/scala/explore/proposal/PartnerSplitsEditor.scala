@@ -15,6 +15,10 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Partner
 import lucuma.core.model.ZeroTo100
 import lucuma.core.validation.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Dialog
+import lucuma.react.primereact.Message
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.ui.input.*
@@ -23,10 +27,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Dialog
-import react.primereact.Message
 
 case class PartnerSplitsEditor(
   show:    Boolean,

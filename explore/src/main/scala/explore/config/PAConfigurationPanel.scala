@@ -17,6 +17,8 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownView
@@ -25,8 +27,6 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Lens
-import react.common.Css
-import react.common.ReactFnProps
 
 case class PAConfigurationPanel(
   programId:    Program.Id,

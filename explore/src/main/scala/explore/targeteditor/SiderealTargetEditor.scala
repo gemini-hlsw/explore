@@ -3,8 +3,6 @@
 
 package explore.targeteditor
 
-import _root_.react.common.*
-import _root_.react.primereact.Message
 import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
@@ -38,6 +36,8 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.validation.*
+import lucuma.react.common.*
+import lucuma.react.primereact.Message
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*

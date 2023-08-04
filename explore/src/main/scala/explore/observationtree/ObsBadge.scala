@@ -20,14 +20,14 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.InputSwitch
+import lucuma.react.primereact.TooltipOptions
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.InputSwitch
-import react.primereact.TooltipOptions
 
 case class ObsBadge(
   obs:               ObsSummary,

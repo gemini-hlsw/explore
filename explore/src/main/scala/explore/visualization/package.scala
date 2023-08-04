@@ -7,8 +7,8 @@ import cats.Semigroup
 import explore.components.ui.ExploreStyles
 import lucuma.core.math.Offset
 import lucuma.core.util.NewType
+import lucuma.react.aladin.Fov
 import org.locationtech.jts.geom.Geometry
-import react.aladin.Fov
 
 import scala.math.*
 

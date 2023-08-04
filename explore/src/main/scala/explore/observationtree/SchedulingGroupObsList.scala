@@ -33,6 +33,10 @@ import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
 import lucuma.core.syntax.display.*
+import lucuma.react.beautifuldnd.*
+import lucuma.react.common.*
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.floatingui.syntax.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.render.*
@@ -40,10 +44,6 @@ import lucuma.ui.utils.Render
 import monocle.Iso
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import react.beautifuldnd.*
-import react.common.*
-import react.fa.FontAwesomeIcon
-import react.floatingui.syntax.*
 
 import scala.collection.immutable.SortedSet
 

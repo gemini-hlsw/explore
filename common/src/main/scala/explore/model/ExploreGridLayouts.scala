@@ -11,10 +11,10 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.model.layout.*
+import lucuma.react.gridlayout.BreakpointName
+import lucuma.react.gridlayout.Layout
+import lucuma.react.gridlayout.LayoutItem
 import lucuma.refined.*
-import react.gridlayout.BreakpointName
-import react.gridlayout.Layout
-import react.gridlayout.LayoutItem
 
 import scala.collection.immutable.SortedMap
 

@@ -38,6 +38,14 @@ import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.Css
+import lucuma.react.floatingui.Placement
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.ConfirmPopup
+import lucuma.react.primereact.Dialog
+import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
@@ -50,14 +58,6 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
-import react.common.ReactFnProps
-import react.common.style.Css
-import react.floatingui.Placement
-import react.floatingui.syntax.*
-import react.primereact.Button
-import react.primereact.ConfirmPopup
-import react.primereact.Dialog
-import react.primereact.PrimeStyles
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet

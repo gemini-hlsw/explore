@@ -42,6 +42,11 @@ import lucuma.core.model.ZeroTo100
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Divider
+import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -54,11 +59,6 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL
-import react.common.Css
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Divider
-import react.primereact.SelectItem
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap

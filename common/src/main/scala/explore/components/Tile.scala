@@ -12,11 +12,11 @@ import explore.model.enums.TileSizeState
 import explore.model.layout
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.*
+import lucuma.react.primereact.Button
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
-import react.common.ReactFnProps
-import react.common.style.*
-import react.primereact.Button
 
 case class Tile(
   id:                 Tile.TileId,

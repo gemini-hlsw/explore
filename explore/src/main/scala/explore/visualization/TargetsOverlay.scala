@@ -16,13 +16,13 @@ import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
+import lucuma.react.aladin.Fov
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.*
+import lucuma.react.floatingui.hooks.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.svg.SVG
-import react.aladin.Fov
-import react.common.Css
-import react.common.ReactFnProps
-import react.floatingui.*
-import react.floatingui.hooks.*
 
 import scala.math.*
 

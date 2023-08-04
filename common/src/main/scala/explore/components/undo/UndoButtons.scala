@@ -8,10 +8,11 @@ import explore.components.ui.ExploreStyles
 import explore.undo.Undoer
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.Css
+import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.primereact.Button
 
 case class UndoButtons(
   undoer:   Undoer,
@@ -27,7 +28,7 @@ object UndoButtons:
       <.div(
         ExploreStyles.ButtonsUndo,
         <.span(
-          react.common.style.Css("p-buttonset"),
+          Css("p-buttonset"),
           Button(
             severity = Button.Severity.Secondary,
             outlined = true,

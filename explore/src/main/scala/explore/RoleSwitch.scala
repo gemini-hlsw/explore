@@ -14,12 +14,12 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
+import lucuma.react.common.*
+import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.ui.primereact.FormDropdown
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import react.common.*
-import react.primereact.SelectItem
 
 case class RoleSwitch(
   vault: View[UserVault]

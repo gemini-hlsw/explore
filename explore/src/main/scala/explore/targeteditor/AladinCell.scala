@@ -3,13 +3,6 @@
 
 package explore.targeteditor
 
-import _root_.react.aladin.Fov
-import _root_.react.common.*
-import _root_.react.primereact.Button
-import _root_.react.primereact.MenuItem
-import _root_.react.primereact.PopupMenu
-import _root_.react.primereact.PopupMenuRef
-import _root_.react.primereact.hooks.all.*
 import boopickle.DefaultBasic.*
 import cats.data.NonEmptyList
 import cats.effect.IO
@@ -48,6 +41,13 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.react.aladin.Fov
+import lucuma.react.common.*
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.MenuItem
+import lucuma.react.primereact.PopupMenu
+import lucuma.react.primereact.PopupMenuRef
+import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given

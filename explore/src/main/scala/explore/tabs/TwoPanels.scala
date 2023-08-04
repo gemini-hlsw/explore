@@ -15,12 +15,12 @@ import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.react.common.Css
+import lucuma.react.primereact.Button
+import lucuma.react.resizeDetector.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.window
-import react.common.Css
-import react.primereact.Button
-import react.resizeDetector.*
 
 enum RightSideCardinality:
   case Single, Multi

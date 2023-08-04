@@ -33,16 +33,16 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
+import lucuma.react.beautifuldnd.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.primereact.Button
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
-import react.beautifuldnd.*
-import react.common.ReactFnProps
-import react.fa.FontAwesomeIcon
-import react.primereact.Button
 
 import scala.collection.immutable.SortedSet
 

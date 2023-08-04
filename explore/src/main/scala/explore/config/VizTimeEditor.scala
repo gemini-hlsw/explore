@@ -10,10 +10,10 @@ import explore.components.ui.ExploreStyles
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.datepicker.*
 import lucuma.refined.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.datepicker.*
 
 import java.time.Instant
 

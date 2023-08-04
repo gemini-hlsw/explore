@@ -3,7 +3,6 @@
 
 package explore.syntax.ui
 
-import _root_.react.primereact.Message
 import cats.*
 import cats.effect.MonadCancelThrow
 import cats.syntax.all.*
@@ -15,6 +14,7 @@ import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
+import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger

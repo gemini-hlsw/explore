@@ -27,18 +27,18 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
+import lucuma.react.aladin.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Dialog
+import lucuma.react.primereact.DialogPosition
 import lucuma.refined.*
 import lucuma.schemas.model.TargetWithOptId
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import react.aladin.*
-import react.common.ReactFnProps
-import react.fa.FontAwesomeIcon
-import react.primereact.Button
-import react.primereact.Dialog
-import react.primereact.DialogPosition
 
 import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*

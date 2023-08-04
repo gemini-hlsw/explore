@@ -9,9 +9,9 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Panel
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.primereact.Panel
 
 sealed trait GeneratedSequenceTables[S, D] {
   def obsId: Observation.Id

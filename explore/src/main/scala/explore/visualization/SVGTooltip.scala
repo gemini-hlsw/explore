@@ -3,10 +3,10 @@
 
 package explore.visualization
 
+import lucuma.react.common.Style
+import lucuma.react.floatingui.*
+import lucuma.react.floatingui.hooks.*
 import org.scalajs.dom.svg.SVG
-import react.common.Style
-import react.floatingui.*
-import react.floatingui.hooks.*
 
 object SVGTooltip {
 

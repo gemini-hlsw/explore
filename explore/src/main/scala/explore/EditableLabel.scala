@@ -9,16 +9,16 @@ import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.Css
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.InputText
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import org.scalajs.dom
-import react.common.ReactFnProps
-import react.common.style.Css
-import react.fa.FontAwesomeIcon
-import react.floatingui.syntax.*
-import react.primereact.Button
-import react.primereact.InputText
 
 import scalajs.js.JSConverters.*
 

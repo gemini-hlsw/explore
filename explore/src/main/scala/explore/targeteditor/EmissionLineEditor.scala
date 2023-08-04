@@ -33,6 +33,9 @@ import lucuma.core.model.EmissionLine
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Panel
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -43,9 +46,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Panel
 
 import scala.collection.immutable.SortedMap
 import scala.math.BigDecimal.RoundingMode

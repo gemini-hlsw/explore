@@ -24,6 +24,7 @@ import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
+import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
@@ -35,7 +36,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import monocle.Lens
-import react.common.ReactFnProps
 
 case class ConstraintsPanel(
   programId:     Program.Id,

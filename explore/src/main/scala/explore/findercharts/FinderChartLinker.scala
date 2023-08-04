@@ -21,15 +21,15 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Checkbox
+import lucuma.react.primereact.Divider
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import react.common.ReactFnProps
-import react.primereact.Checkbox
-import react.primereact.Divider
-import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 

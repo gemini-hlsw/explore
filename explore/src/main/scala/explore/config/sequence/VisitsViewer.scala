@@ -30,9 +30,9 @@
 // import lucuma.ui.table.*
 // import queries.common.ObsQueriesGQL
 // import queries.common.VisitsSQL.*
-// import react.common.ReactFnProps
-// import react.primereact.AccordionMultiple
-// import react.primereact.AccordionTab
+// import lucuma.react.common.ReactFnProps
+// import lucuma.react.primereact.AccordionMultiple
+// import lucuma.react.primereact.AccordionTab
 
 // import java.time.Duration
 // import java.time.ZoneOffset

@@ -6,8 +6,8 @@ package explore
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.fa.IconSize
 import lucuma.ui.syntax.all.given
-import react.fa.IconSize
 
 object UnderConstruction:
   protected val component =

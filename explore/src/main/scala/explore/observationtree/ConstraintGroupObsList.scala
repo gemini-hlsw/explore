@@ -29,6 +29,10 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
+import lucuma.react.beautifuldnd.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.primereact.Button
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
@@ -36,10 +40,6 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import react.beautifuldnd.*
-import react.common.ReactFnProps
-import react.fa.FontAwesomeIcon
-import react.primereact.Button
 
 import scala.collection.immutable.SortedSet
 

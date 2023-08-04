@@ -28,6 +28,11 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.Placement
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.components.SolarProgress
@@ -35,11 +40,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
-import react.common.ReactFnProps
-import react.floatingui.Placement
-import react.floatingui.syntax.*
-import react.primereact.Button
-import react.primereact.SelectItem
 
 import scala.collection.immutable.SortedSet
 

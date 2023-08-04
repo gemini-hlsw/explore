@@ -24,6 +24,8 @@ import lucuma.core.model.StandardRole
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -39,8 +41,6 @@ import lucuma.ui.table.*
 import org.typelevel.log4cats.Logger
 import queries.common.SSOQueriesGQL.*
 import queries.schemas.SSO
-import react.common.ReactFnProps
-import react.primereact.*
 
 case class UserPreferencesPopup(vault: UserVault, onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesPopup.component)

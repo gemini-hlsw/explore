@@ -8,12 +8,12 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CatalogName
+import lucuma.react.common.*
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.primereact.Button
 import lucuma.react.table.*
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
-import react.common.*
-import react.fa.FontAwesomeIcon
-import react.primereact.Button
 
 case class TargetSelectionTable(
   source:              TargetSource[?],

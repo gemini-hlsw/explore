@@ -14,8 +14,8 @@ import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.react.beautifuldnd.*
 import lucuma.ui.syntax.all.given
-import react.beautifuldnd.*
 
 trait ViewCommon {
   def programId: Program.Id

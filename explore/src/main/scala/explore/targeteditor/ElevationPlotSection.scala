@@ -3,10 +3,6 @@
 
 package explore.targeteditor
 
-import _root_.react.common.ReactFnProps
-import _root_.react.datepicker.*
-import _root_.react.primereact.Button
-import _root_.react.primereact.ToggleButton
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -33,6 +29,10 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.display.given
+import lucuma.react.common.ReactFnProps
+import lucuma.react.datepicker.*
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.ToggleButton
 import lucuma.refined.*
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.SelectButtonEnumView

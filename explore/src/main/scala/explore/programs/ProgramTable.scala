@@ -26,6 +26,8 @@ import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -37,8 +39,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
-import react.common.ReactFnProps
-import react.primereact.Button
 
 case class ProgramTable(
   currentProgramId: Option[Program.Id],
