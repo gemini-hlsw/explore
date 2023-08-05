@@ -24,6 +24,14 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
+import lucuma.react.common.*
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Image
+import lucuma.react.primereact.MenuItem
+import lucuma.react.primereact.PopupTieredMenu
+import lucuma.react.primereact.Toolbar
+import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.ui.Resources
 import lucuma.ui.components.About
@@ -35,14 +43,6 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.window
-import react.common.*
-import react.fa.FontAwesomeIcon
-import react.primereact.Button
-import react.primereact.Image
-import react.primereact.MenuItem
-import react.primereact.PopupTieredMenu
-import react.primereact.Toolbar
-import react.primereact.hooks.all.*
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(

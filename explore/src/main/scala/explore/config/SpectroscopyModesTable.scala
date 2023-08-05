@@ -45,6 +45,12 @@ import lucuma.core.model.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
+import lucuma.react.circularprogressbar.CircularProgressbar
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.Placement
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -56,12 +62,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.TableHooks
 import lucuma.ui.table.*
-import react.circularprogressbar.CircularProgressbar
-import react.common.Css
-import react.common.ReactFnProps
-import react.floatingui.Placement
-import react.floatingui.syntax.*
-import react.primereact.Button
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*

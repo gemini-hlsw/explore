@@ -52,6 +52,8 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -61,8 +63,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
-import react.common.ReactFnProps
-import react.primereact.PrimeStyles
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap

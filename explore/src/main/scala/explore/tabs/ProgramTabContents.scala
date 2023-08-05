@@ -13,10 +13,10 @@ import explore.model.enums.GridLayoutSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import lucuma.core.model.Program
+import lucuma.react.common.ReactFnProps
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.resizeDetector.hooks.*
 
 case class ProgramTabContents(
   programId:       Program.Id,

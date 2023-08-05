@@ -6,7 +6,7 @@ package explore.components.ui
 import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.Interval
-import react.common.style.*
+import lucuma.react.common.style.*
 
 object ExploreStyles:
   val FadeIn: Css = Css("fade-in")

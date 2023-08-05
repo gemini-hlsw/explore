@@ -49,6 +49,12 @@ import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.IconSize
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.ObservationDB.Types.*
@@ -64,12 +70,6 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import react.common.Css
-import react.common.ReactFnProps
-import react.fa.IconSize
-import react.floatingui.syntax.*
-import react.primereact.Button
-import react.primereact.PrimeStyles
 
 import scalajs.js
 import scalajs.js.JSConverters.*

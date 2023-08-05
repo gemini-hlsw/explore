@@ -19,6 +19,8 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.refined.*
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.*
@@ -28,8 +30,6 @@ import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.HTMLButtonElement
 import org.scalajs.dom.ext.KeyValue
-import react.common.ReactFnProps
-import react.primereact.Button
 
 import scalajs.js.timers
 import scalajs.js.JSConverters.*

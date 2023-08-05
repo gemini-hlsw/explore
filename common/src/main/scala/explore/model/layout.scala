@@ -7,12 +7,12 @@ import cats.Order.*
 import cats.*
 import cats.syntax.all.*
 import explore.model.enums.GridLayoutSection
+import lucuma.react.gridlayout.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Traversal
 import monocle.function.At.*
 import monocle.function.Each.*
-import react.gridlayout.*
 
 import scala.collection.immutable.SortedMap
 

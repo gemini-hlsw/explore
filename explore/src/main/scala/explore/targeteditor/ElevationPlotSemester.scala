@@ -20,12 +20,12 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
+import lucuma.react.common.ReactFnProps
+import lucuma.react.highcharts.ResizingChart
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.highcharts.ResizingChart
-import react.resizeDetector.hooks.*
 
 import java.time.Duration
 import java.time.Instant

@@ -4,9 +4,9 @@
 package explore.highcharts
 
 import japgolly.scalajs.react.*
+import lucuma.react.common.style.Css
 import lucuma.typed.highcharts.highchartsStrings
 import lucuma.typed.highcharts.mod.*
-import react.common.style.Css
 
 extension (c: Chart_)
   inline def showLoadingCB: Callback = CallbackTo(c.showLoading())

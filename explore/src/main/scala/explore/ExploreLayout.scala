@@ -24,18 +24,18 @@ import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
+import lucuma.react.common.*
+import lucuma.react.hotkeys.*
+import lucuma.react.hotkeys.hooks.*
+import lucuma.react.primereact.Sidebar
+import lucuma.react.primereact.Toast
+import lucuma.react.primereact.ToastRef
+import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL.*
-import react.common.*
-import react.hotkeys.*
-import react.hotkeys.hooks.*
-import react.primereact.Sidebar
-import react.primereact.Toast
-import react.primereact.ToastRef
-import react.primereact.hooks.all.*
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]

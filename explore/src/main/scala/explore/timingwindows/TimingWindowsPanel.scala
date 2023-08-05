@@ -27,6 +27,10 @@ import lucuma.core.syntax.display.given
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.react.common.ReactFnProps
+import lucuma.react.datepicker.Datepicker
+import lucuma.react.primereact.*
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -41,10 +45,6 @@ import lucuma.ui.utils.Render
 import monocle.Iso
 import monocle.function.Index
 import monocle.function.Index.*
-import react.common.ReactFnProps
-import react.datepicker.Datepicker
-import react.primereact.*
-import react.resizeDetector.hooks.*
 
 import java.time.Duration
 import java.time.Instant

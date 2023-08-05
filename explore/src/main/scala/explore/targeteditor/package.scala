@@ -5,7 +5,7 @@ package explore.targeteditor
 
 import explore.model.TargetVisualOptions
 import lucuma.core.util.NewType
-import react.aladin.Fov
+import lucuma.react.aladin.Fov
 
 extension (options: TargetVisualOptions) inline def fov: Fov = Fov(options.fovRA, options.fovDec)
 

@@ -3,10 +3,6 @@
 
 package explore.itc
 
-import _root_.react.common.ReactFnProps
-import _root_.react.floatingui.syntax.*
-import _root_.react.primereact.Dropdown
-import _root_.react.primereact.SelectItem
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
@@ -18,6 +14,10 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.SelectItem
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 

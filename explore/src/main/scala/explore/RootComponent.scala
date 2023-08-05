@@ -12,7 +12,7 @@ import explore.model.RootModel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.RouterWithProps
 import japgolly.scalajs.react.vdom.html_<^.*
-import react.common.*
+import lucuma.react.common.*
 
 case class RootComponent(
   ctx:          AppContext[IO],

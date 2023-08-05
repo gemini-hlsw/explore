@@ -3,10 +3,6 @@
 
 package explore.config.sequence
 
-import _root_.react.common.ReactFnProps
-import _root_.react.primereact.Button
-import _root_.react.primereact.Dialog
-import _root_.react.primereact.DialogPosition
 import crystal.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -17,6 +13,10 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Dialog
+import lucuma.react.primereact.DialogPosition
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given

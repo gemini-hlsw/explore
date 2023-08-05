@@ -6,8 +6,8 @@ package explore.shortcuts
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.*
 import lucuma.core.util.NewType
-import react.hotkeys.HotkeysCallback
-import react.hotkeys.HotkeysEvent
+import lucuma.react.hotkeys.HotkeysCallback
+import lucuma.react.hotkeys.HotkeysEvent
 
 import scala.scalajs.js.JSConverters.*
 

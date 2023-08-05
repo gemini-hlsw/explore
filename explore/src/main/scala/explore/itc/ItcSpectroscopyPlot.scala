@@ -17,14 +17,14 @@ import lucuma.itc.ChartType
 import lucuma.itc.ItcCcd
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.math.roundToSignificantFigures
+import lucuma.react.common.ReactFnProps
+import lucuma.react.highcharts.ResizingChart
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.DashStyleValue
 import lucuma.typed.highcharts.mod.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.highcharts.ResizingChart
-import react.resizeDetector.hooks.*
 
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*

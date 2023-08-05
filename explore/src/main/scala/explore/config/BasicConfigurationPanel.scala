@@ -30,16 +30,16 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Message
 import lucuma.refined.*
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import react.common.ReactFnProps
-import react.fa.FontAwesomeIcon
-import react.primereact.Button
-import react.primereact.Message
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],

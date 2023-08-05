@@ -4,9 +4,9 @@
 package explore
 
 import explore.components.ui.ExploreStyles
-import react.fa.FAIcon
-import react.fa.FontAwesomeIcon
-import react.fa.IconLibrary
+import lucuma.react.fa.FAIcon
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.fa.IconLibrary
 
 import scala.annotation.nowarn
 import scala.scalajs.js

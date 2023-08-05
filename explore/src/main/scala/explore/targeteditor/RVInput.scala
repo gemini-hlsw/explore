@@ -18,6 +18,7 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
+import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
@@ -26,7 +27,6 @@ import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
 
 case class RVInput(
   rv:       View[Option[RadialVelocity]],

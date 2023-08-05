@@ -15,8 +15,8 @@ import explore.model.GroupingElement
 import explore.model.ObsSummary
 import explore.model.syntax.all.*
 import lucuma.core.model.Observation
-import react.primereact.Tree
-import react.primereact.Tree.Node
+import lucuma.react.primereact.Tree
+import lucuma.react.primereact.Tree.Node
 
 enum ObsNode derives Eq:
   case Obs(value: ObsSummary)

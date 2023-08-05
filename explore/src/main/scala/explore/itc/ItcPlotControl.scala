@@ -12,14 +12,14 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.refined.*
 import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Prism
-import react.common.ReactFnProps
-import react.primereact.Button
 
 case class ItcPlotControl(
   chartType:   ViewOpt[ChartType],

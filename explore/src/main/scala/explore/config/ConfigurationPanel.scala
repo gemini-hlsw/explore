@@ -3,7 +3,6 @@
 
 package explore.config
 
-import _root_.react.common.ReactFnProps
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -36,6 +35,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.BasicConfiguration

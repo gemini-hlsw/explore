@@ -19,18 +19,18 @@ import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
+import lucuma.react.datepicker.*
+import lucuma.react.fa.IconSize
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Message
+import lucuma.react.primereact.MessageItem
+import lucuma.react.primereact.ToastRef
 import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
-import react.datepicker.*
-import react.fa.IconSize
-import react.primereact.Button
-import react.primereact.Message
-import react.primereact.MessageItem
-import react.primereact.ToastRef
 
 import java.time.Instant
 import java.time.ZoneOffset

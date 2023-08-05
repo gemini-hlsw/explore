@@ -31,6 +31,9 @@ import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Tree
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -40,9 +43,6 @@ import monocle.Lens
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Tree
 
 import scala.annotation.tailrec
 import scala.scalajs.js

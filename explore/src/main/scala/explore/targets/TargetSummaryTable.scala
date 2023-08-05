@@ -29,6 +29,13 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.ConfirmDialog
+import lucuma.react.primereact.DialogPosition
+import lucuma.react.primereact.PrimeStyles
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -39,13 +46,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import org.scalajs.dom.{File => DOMFile}
-import react.common.Css
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.ConfirmDialog
-import react.primereact.DialogPosition
-import react.primereact.PrimeStyles
-import react.resizeDetector.hooks.*
 
 import scala.collection.immutable.SortedSet
 

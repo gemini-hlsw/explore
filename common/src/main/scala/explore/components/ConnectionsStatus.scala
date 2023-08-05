@@ -13,10 +13,10 @@ import explore.components.ui.ExploreStyles.*
 import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.Placement
+import lucuma.react.floatingui.syntax.*
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.floatingui.Placement
-import react.floatingui.syntax.*
 
 case class ConnectionsStatus() extends ReactFnProps(ConnectionsStatus.component)
 

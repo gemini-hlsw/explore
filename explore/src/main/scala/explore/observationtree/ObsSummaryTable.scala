@@ -30,6 +30,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
@@ -42,8 +44,6 @@ import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
 import org.scalajs.dom.html.Anchor
 import queries.schemas.odb.ObsQueries.ObservationList
-import react.common.ReactFnProps
-import react.resizeDetector.hooks.*
 
 import scala.scalajs.js
 

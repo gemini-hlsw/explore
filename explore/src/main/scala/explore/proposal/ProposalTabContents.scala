@@ -24,6 +24,9 @@ import lucuma.core.model.Proposal
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.core.util.TimeSpan
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Image
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -37,9 +40,6 @@ import monocle.Focus
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
-import react.common.ReactFnProps
-import react.primereact.Button
-import react.primereact.Image
 
 case class ProposalTabContents(
   programId:  Program.Id,

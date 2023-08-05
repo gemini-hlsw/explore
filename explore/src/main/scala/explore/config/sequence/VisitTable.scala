@@ -13,12 +13,12 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.DatasetQaState
 import lucuma.core.model.sequence.gmos.DynamicConfig
+import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.StepRecord
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import react.common.ReactFnProps
 
 sealed trait VisitTable[D]:
   def steps: List[StepRecord[D]]

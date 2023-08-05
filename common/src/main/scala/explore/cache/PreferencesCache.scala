@@ -18,11 +18,11 @@ import explore.model.layout
 import explore.model.layout.LayoutsMap
 import japgolly.scalajs.react.*
 import lucuma.core.model.User
+import lucuma.react.common.ReactFnProps
 import lucuma.ui.reusability.given
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesUpdates
 import queries.schemas.UserPreferencesDB
-import react.common.ReactFnProps
 
 case class PreferencesCache(
   userId:            User.Id,

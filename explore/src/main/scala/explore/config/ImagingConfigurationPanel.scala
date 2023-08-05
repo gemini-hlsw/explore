@@ -22,6 +22,12 @@ import lucuma.core.enums.FilterType
 import lucuma.core.math.units.*
 import lucuma.core.util.Display
 import lucuma.core.validation.*
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.MultiSelect
+import lucuma.react.primereact.SelectItem
+import lucuma.react.primereact.SelectItemGroup
+import lucuma.react.primereact.SelectItemGroups
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownOptionalView
@@ -29,12 +35,6 @@ import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import react.common.Css
-import react.common.ReactFnProps
-import react.primereact.MultiSelect
-import react.primereact.SelectItem
-import react.primereact.SelectItemGroup
-import react.primereact.SelectItemGroups
 
 import scala.collection.immutable.SortedSet
 

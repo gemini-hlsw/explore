@@ -23,14 +23,14 @@ import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.react.primereact.Message
+import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
-import react.primereact.Message
-import react.primereact.PrimeStyles
 
 import java.time.Instant
 

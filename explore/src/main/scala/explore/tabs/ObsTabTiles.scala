@@ -3,10 +3,6 @@
 
 package explore.tabs
 
-import _root_.react.common.ReactFnProps
-import _root_.react.primereact.Dropdown
-import _root_.react.primereact.SelectItem
-import _root_.react.resizeDetector.*
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -55,6 +51,10 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.SelectItem
+import lucuma.react.resizeDetector.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId

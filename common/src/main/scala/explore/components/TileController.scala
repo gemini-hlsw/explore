@@ -21,14 +21,14 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect.Dispatch
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
+import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.Css
+import lucuma.react.gridlayout.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Traversal
 import queries.schemas.UserPreferencesDB
-import react.common.ReactFnProps
-import react.common.style.Css
-import react.gridlayout.*
 
 import scala.scalajs.js.JSConverters.*
 

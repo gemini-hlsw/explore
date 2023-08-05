@@ -30,6 +30,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.refined.*
 import lucuma.schemas.model.*
 import lucuma.ui.primereact.*
@@ -38,8 +40,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.schemas.odb.ObsQueries
-import react.common.ReactFnProps
-import react.primereact.Button
 
 import java.time.Instant
 

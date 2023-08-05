@@ -10,12 +10,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.aladin.Aladin
+import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.Css
+import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import react.aladin.Aladin
-import react.common.ReactFnProps
-import react.common.style.Css
-import react.primereact.Button
 
 case class AladinZoomControl(
   aladinRef: Ref.ToScalaComponent[Aladin, Aladin.State, Aladin.Backend],

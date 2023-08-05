@@ -16,6 +16,7 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.CatalogInfo
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile.*
+import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -26,7 +27,6 @@ import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
 
 case class SourceProfileEditor(
   sourceProfile: Aligner[SourceProfile, SourceProfileInput],

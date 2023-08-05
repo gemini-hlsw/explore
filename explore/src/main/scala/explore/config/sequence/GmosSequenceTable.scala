@@ -12,12 +12,12 @@ import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import react.common.Css
-import react.common.ReactFnProps
 
 sealed trait GmosSequenceTable[D]:
   def atoms: List[Atom[D]]

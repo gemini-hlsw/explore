@@ -13,13 +13,13 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import react.common.Css
-import react.common.ReactFnProps
 
 case class SideTabs(routingInfo: RoutingInfo) extends ReactFnProps(SideTabs.component)
 

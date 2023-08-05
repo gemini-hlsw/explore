@@ -12,15 +12,15 @@ import explore.model.Help
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.react.common.ReactFnProps
+import lucuma.react.markdown.ReactMarkdown
+import lucuma.react.markdown.RehypePlugin
+import lucuma.react.markdown.RemarkPlugin
+import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
-import react.common.ReactFnProps
-import react.markdown.ReactMarkdown
-import react.markdown.RehypePlugin
-import react.markdown.RemarkPlugin
-import react.primereact.Button
 
 import scala.concurrent.duration.*
 import scala.util.Try

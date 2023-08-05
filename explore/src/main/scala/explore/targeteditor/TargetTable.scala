@@ -29,6 +29,9 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
@@ -40,9 +43,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableHooks
 import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
-import react.common.Css
-import react.common.ReactFnProps
-import react.primereact.Button
 
 import java.time.Instant
 

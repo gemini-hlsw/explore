@@ -15,8 +15,8 @@ import lucuma.core.geom.syntax.shapeexpression.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
+import lucuma.react.common.style.Css
 import lucuma.schemas.model.BasicConfiguration
-import react.common.style.Css
 
 import scala.collection.immutable.SortedMap
 

@@ -15,11 +15,11 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.sequence.InstrumentExecutionConfig
+import lucuma.react.common.ReactFnProps
 import lucuma.schemas.odb.SequenceSQL.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
-import react.common.ReactFnProps
 
 case class GeneratedSequenceViewer(
   programId: Program.Id,

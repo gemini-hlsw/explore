@@ -3,11 +3,6 @@
 
 package explore.tabs
 
-import _root_.react.common.ReactFnProps
-import _root_.react.hotkeys.*
-import _root_.react.hotkeys.hooks.*
-import _root_.react.resizeDetector.*
-import _root_.react.resizeDetector.hooks.*
 import cats.effect.IO
 import crystal.*
 import crystal.react.*
@@ -38,6 +33,11 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
+import lucuma.react.common.ReactFnProps
+import lucuma.react.hotkeys.*
+import lucuma.react.hotkeys.hooks.*
+import lucuma.react.resizeDetector.*
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso

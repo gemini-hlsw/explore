@@ -5,8 +5,8 @@ package explore.model
 
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
+import lucuma.react.gridlayout.*
 import munit.FunSuite
-import react.gridlayout.*
 
 import scala.collection.immutable.SortedMap
 

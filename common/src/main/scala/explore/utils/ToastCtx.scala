@@ -8,8 +8,8 @@ import cats.effect.Deferred
 import cats.effect.Sync
 import cats.syntax.all.given
 import crystal.react.*
-import react.primereact.Message
-import react.primereact.ToastRef
+import lucuma.react.primereact.Message
+import lucuma.react.primereact.ToastRef
 
 class ToastCtx[F[_]: Sync](toastRef: Deferred[F, ToastRef]):
   def showToast(

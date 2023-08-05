@@ -33,6 +33,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
+import lucuma.react.primereact.ToastRef
 import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.enums.Theme
 import lucuma.ui.sso.UserVault
@@ -42,7 +43,6 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
-import react.primereact.ToastRef
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.*
@@ -103,8 +103,8 @@ object ExploreMain {
   def setupHighCharts[F[_]: Sync]: F[Unit] = Sync[F].delay {
     // This may seem like a no-op but it is in fact triggering the npm import
     // Order is important you need to import Highcharts first
-    react.highcharts.Highcharts
-    react.highcharts.HighchartsAccesibility
+    lucuma.react.highcharts.Highcharts
+    lucuma.react.highcharts.HighchartsAccesibility
   }.void
 
   def broadcastChannel[F[_]: Sync]: Resource[F, BroadcastChannel[ExploreEvent]] =

@@ -20,6 +20,8 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownOptionalView
@@ -29,8 +31,6 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.clearable
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import react.common.Css
-import react.common.ReactFnProps
 
 case class SpectroscopyConfigurationPanel(
   options: View[ScienceRequirements.Spectroscopy]

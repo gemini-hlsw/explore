@@ -25,12 +25,12 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnProps
 import lucuma.react.table.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import react.common.Css
-import react.common.ReactFnProps
 
 import scala.collection.immutable.SortedSet
 

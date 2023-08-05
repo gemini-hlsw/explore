@@ -23,6 +23,7 @@ import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.Existence
@@ -33,7 +34,6 @@ import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
-import react.common.ReactFnProps
 
 case class ProgramCache(
   programId:           Program.Id,

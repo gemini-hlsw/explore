@@ -21,6 +21,9 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
+import lucuma.react.common.ReactFnProps
+import lucuma.react.highcharts.ResizingChart
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.typed.highcharts.highchartsStrings.area
 import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.typed.highcharts.mod.*
@@ -28,9 +31,6 @@ import lucuma.ui.components.MoonPhase
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.scalajs.dom
-import react.common.ReactFnProps
-import react.highcharts.ResizingChart
-import react.resizeDetector.hooks.*
 
 import java.time.Duration
 import java.time.Instant

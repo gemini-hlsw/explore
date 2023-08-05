@@ -15,14 +15,14 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.*
+import lucuma.react.aladin.Fov
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.Transform
+import lucuma.react.floatingui.Placement
+import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import react.aladin.Fov
-import react.common.ReactFnProps
-import react.fa.Transform
-import react.floatingui.Placement
-import react.floatingui.syntax.*
-import react.primereact.Button
 
 case class AladinToolbar(
   fov:               Fov,

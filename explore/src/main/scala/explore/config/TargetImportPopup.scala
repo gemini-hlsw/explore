@@ -20,6 +20,12 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.catalog.csv.TargetImport
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.IconSize
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Dialog
+import lucuma.react.primereact.DialogPosition
+import lucuma.react.primereact.ProgressSpinner
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
@@ -34,12 +40,6 @@ import org.http4s.syntax.all.*
 import org.scalajs.dom.{File => DOMFile}
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
-import react.common.ReactFnProps
-import react.fa.IconSize
-import react.primereact.Button
-import react.primereact.Dialog
-import react.primereact.DialogPosition
-import react.primereact.ProgressSpinner
 
 import scala.concurrent.duration.*
 

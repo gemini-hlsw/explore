@@ -15,9 +15,9 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.GuideSpeed
+import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.IconSize
 import lucuma.ui.syntax.all.given
-import react.common.ReactFnProps
-import react.fa.IconSize
 
 import scala.math.BigDecimal.RoundingMode
 

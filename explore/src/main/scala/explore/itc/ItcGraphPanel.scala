@@ -3,7 +3,6 @@
 
 package explore.itc
 
-import _root_.react.common.ReactFnProps
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -21,6 +20,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.itc.ChartType
+import lucuma.react.common.ReactFnProps
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*

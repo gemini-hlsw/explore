@@ -6,9 +6,9 @@ package explore.components
 import cats.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import react.common.Css
-import react.common.ReactFnPropsWithChildren
-import react.resizeDetector.hooks.*
+import lucuma.react.common.Css
+import lucuma.react.common.ReactFnPropsWithChildren
+import lucuma.react.resizeDetector.hooks.*
 
 case class ResponsiveComponent(
   widthBreakpoints:  List[(Int, Css)],
