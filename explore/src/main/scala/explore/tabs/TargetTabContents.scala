@@ -75,11 +75,11 @@ object TargetTabContents extends TwoPanels:
 
   private def renderFn(
     props:             Props,
+    ctx:               AppContext[IO],
     selectedView:      View[SelectedPanel],
-    resize:            UseResizeDetectorReturn,
-    fullScreen:        View[AladinFullScreen],
     selectedTargetIds: View[List[Target.Id]],
-    ctx:               AppContext[IO]
+    fullScreen:        View[AladinFullScreen],
+    resize:            UseResizeDetectorReturn
   ): VdomNode = {
     import ctx.given
 
@@ -451,15 +451,13 @@ object TargetTabContents extends TwoPanels:
             case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
             case _                                           => Callback.empty
       }
-      // Measure its size
-      .useResizeDetector()
-      .useStateViewBy((props, _, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _, _) => props.focused.target)((_, _, _, _, selIds) =>
+      .useStateViewBy((props, _, _) => props.focused.target.toList)
+      .useEffectWithDepsBy((props, _, _, _) => props.focused.target)((_, _, _, selIds) =>
         _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, selIds) =>
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, selIds) =>
         (props.focused, props.programSummaries.get.asterismGroups, selIds.get)
-      ) { (props, ctx, _, _, _) => (target, asterismGroups, selectedIds) =>
+      ) { (props, ctx, _, _) => (target, asterismGroups, selectedIds) =>
         import ctx.given
 
         def selectObsIds: ObsIdSet => IO[Unit] =
@@ -539,21 +537,6 @@ object TargetTabContents extends TwoPanels:
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
-      .render {
-        (
-          props,
-          ctx,
-          twoPanelState,
-          resize,
-          selectedTargetIds,
-          fullScreen
-        ) =>
-          renderFn(
-            props,
-            twoPanelState,
-            resize,
-            fullScreen,
-            selectedTargetIds,
-            ctx
-          )
-      }
+      // Measure its size
+      .useResizeDetector()
+      .render(renderFn)

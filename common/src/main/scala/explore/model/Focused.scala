@@ -40,9 +40,12 @@ object Focused {
   def singleObs(obsId: Observation.Id, targetId: Option[Target.Id] = none): Focused =
     Focused(ObsIdSet.one(obsId).some, targetId)
 
-  implicit val eqFocused: Eq[Focused] = Eq.by(x => (x.obsSet, x.target))
+  def fromAsterismGroup(group: AsterismGroup): Focused =
+    Focused(group.obsIds.some, group.targetIds.headOption)
 
-  implicit val reuseFocused: Reusability[Focused] = Reusability.byEq
+  given Eq[Focused] = Eq.by(x => (x.obsSet, x.target))
+
+  given Reusability[Focused] = Reusability.byEq
 
   val obsSet: Lens[Focused, Option[ObsIdSet]] = Focus[Focused](_.obsSet)
 

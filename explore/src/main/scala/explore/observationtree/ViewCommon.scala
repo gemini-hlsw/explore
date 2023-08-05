@@ -53,13 +53,13 @@ trait ViewCommon {
           provided.draggableProps,
           getDraggedStyle(provided.draggableStyle, snapshot),
           (^.onClick ==> { (e: ReactMouseEvent) =>
-            e.stopPropagationCB >>
+            e.preventDefaultCB *> e.stopPropagationCB >>
               (if (e.ctrlKey || e.metaKey)
                  onCtrlClick(obs.id)
                else onSelect(obs.id))
           }).when(selectable),
           (^.onDoubleClick ==> { (e: ReactEvent) =>
-            e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
+            e.preventDefaultCB *> e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
         )(
           <.span(provided.dragHandleProps)(
