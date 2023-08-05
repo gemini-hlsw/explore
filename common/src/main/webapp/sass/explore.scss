@@ -2025,8 +2025,9 @@ $help-title-height: 40px;
 .timing-windows-body {
   padding: 0.5em;
   display: grid;
+  min-height: 100%;
   grid-template:
-    'table table' min-content
+    'table table' 1fr
     'editor add' min-content / 1fr min-content;
 
   .timing-windows-header {
