@@ -205,7 +205,7 @@ object ElevationPlotSection:
             ToggleButton(
               onLabel = "Scheduling: On",
               offLabel = "Scheduling: Off",
-              checked = showSchedulingView.get.value,
+              checked = showSchedulingView.when(_.value),
               onChange = showSchedulingView.set.compose(ElevationPlotScheduling.value.reverseGet),
               clazz = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
             )
