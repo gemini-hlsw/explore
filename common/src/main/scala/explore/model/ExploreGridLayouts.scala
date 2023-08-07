@@ -157,8 +157,7 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = 0, // This doesn't matter, we are forcing 100%.
-          minH = SummaryMinHeight.value,
+          h = 100, // This doesn't matter, we are forcing 100%.
           minW = TileMinWidth.value,
           static = true
         )

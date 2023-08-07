@@ -322,6 +322,10 @@ object AsterismGroupObsList:
               <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
             )
 
+            val clickFocus = props.focused.target.fold(Focused.fromAsterismGroup(asterismGroup))(
+              _ => props.focused.withObsSet(obsIds)
+            )
+
             <.div(
               provided.innerRef,
               provided.droppableProps,
@@ -329,7 +333,7 @@ object AsterismGroupObsList:
                 snapshot.draggingOverWith.exists(id => parseDragId(id).isDefined)
               )
             )(
-              <.div(
+              <.a(
                 ExploreStyles.ObsTreeGroup |+| Option
                   .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
                   .orElse(
@@ -338,7 +342,10 @@ object AsterismGroupObsList:
                   .orEmpty
               )(
                 ^.cursor.pointer,
-                ^.onClick --> setFocused(props.focused.withObsSet(obsIds))
+                ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
+                ^.onClick ==> { (e: ReactEvent) =>
+                  e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
+                }
               )(
                 csHeader,
                 TagMod.when(props.expandedIds.get.contains(obsIds))(
