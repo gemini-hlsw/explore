@@ -32,7 +32,7 @@ sealed abstract class AvailableFilter {
 }
 
 object AvailableFilter {
-  implicit val order: Order[AvailableFilter] = Order.by(x => (x.centralWavelength, x.tag))
+  given Order[AvailableFilter] = Order.by(x => (x.centralWavelength, x.tag))
 }
 
 case class ImagingConfigurationOptions(
@@ -101,6 +101,5 @@ object ImagingConfigurationOptions {
   val availableOptions: List[AvailableFilter] =
     (gmosNorthFilters ++ gmosSouthFilters).distinctBy(_.tag)
 
-  implicit val eqImagingConfigurationOptions: Eq[ImagingConfigurationOptions] =
-    Eq.fromUniversalEquals
+  given Eq[ImagingConfigurationOptions] = Eq.fromUniversalEquals
 }

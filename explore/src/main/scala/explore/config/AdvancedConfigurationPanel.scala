@@ -239,11 +239,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): Option[ModeData] =
     reqsWavelength.flatMap(cw =>
       (mode, row.instrument) match
-        case (m: ObservingMode.GmosNorthLongSlit, GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter))
-            if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
+        case (m: ObservingMode.GmosNorthLongSlit,
+              GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter, _)
+            ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
-        case (m: ObservingMode.GmosSouthLongSlit, GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter))
-            if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
+        case (m: ObservingMode.GmosSouthLongSlit,
+              GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter, _)
+            ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
         case _ => none
     )

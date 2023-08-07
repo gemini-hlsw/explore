@@ -122,7 +122,8 @@ object ObsTabTiles:
       obs,
       odbItc.map(_.toItcExposureTime),
       selectedConfig,
-      targetsList
+      targetsList,
+      obs.toModeOverride
     )
 
   private case class Offsets(

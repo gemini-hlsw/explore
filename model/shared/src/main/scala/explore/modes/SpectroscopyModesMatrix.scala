@@ -24,6 +24,7 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units._
+import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Enumerated
 import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
@@ -47,39 +48,51 @@ sealed trait InstrumentRow derives Eq {
 
   def hasFilter: Boolean
 
+  type Override
+  def modeOverrides: Option[Override] = None
+
   override def toString(): String = s"Mode: ${instrument.shortName}, $grating, $filter, $fpu"
 }
 
+sealed trait InstrumentOverrides derives Eq
+case class GmosSpectroscopyOverrides(ccdMode: Option[GmosCcdMode], roi: Option[GmosRoi])
+    extends InstrumentOverrides derives Eq
+
 case class GmosNorthSpectroscopyRow(
-  grating: GmosNorthGrating,
-  fpu:     GmosNorthFpu,
-  filter:  Option[GmosNorthFilter]
+  grating:                    GmosNorthGrating,
+  fpu:                        GmosNorthFpu,
+  filter:                     Option[GmosNorthFilter],
+  override val modeOverrides: Option[GmosSpectroscopyOverrides]
 ) extends InstrumentRow {
-  type Grating = GmosNorthGrating
-  type Filter  = Option[GmosNorthFilter]
-  type FPU     = GmosNorthFpu
+  type Grating  = GmosNorthGrating
+  type Filter   = Option[GmosNorthFilter]
+  type FPU      = GmosNorthFpu
+  type Override = GmosSpectroscopyOverrides
   val instrument = Instrument.GmosNorth
   val site       = Site.GN
   val hasFilter  = filter.isDefined
 }
 
 case class GmosSouthSpectroscopyRow(
-  grating: GmosSouthGrating,
-  fpu:     GmosSouthFpu,
-  filter:  Option[GmosSouthFilter]
+  grating:                    GmosSouthGrating,
+  fpu:                        GmosSouthFpu,
+  filter:                     Option[GmosSouthFilter],
+  override val modeOverrides: Option[GmosSpectroscopyOverrides]
 ) extends InstrumentRow {
-  type Grating = GmosSouthGrating
-  type Filter  = Option[GmosSouthFilter]
-  type FPU     = GmosSouthFpu
+  type Grating  = GmosSouthGrating
+  type Filter   = Option[GmosSouthFilter]
+  type FPU      = GmosSouthFpu
+  type Override = GmosSpectroscopyOverrides
   val instrument = Instrument.GmosSouth
   val site       = Site.GS
   val hasFilter  = filter.isDefined
 }
 
 case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter) extends InstrumentRow {
-  type Grating = F2Disperser
-  type Filter  = F2Filter
-  type FPU     = Unit
+  type Grating  = F2Disperser
+  type Filter   = F2Filter
+  type FPU      = Unit
+  type Override = Unit
   val fpu        = ()
   val instrument = Instrument.Flamingos2
   val site       = Site.GS
@@ -87,9 +100,10 @@ case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter) ext
 }
 
 case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter) extends InstrumentRow {
-  type Grating = GpiDisperser
-  type Filter  = GpiFilter
-  type FPU     = Unit
+  type Grating  = GpiDisperser
+  type Filter   = GpiFilter
+  type FPU      = Unit
+  type Override = Unit
   val fpu        = ()
   val instrument = Instrument.Gpi
   val site       = Site.GN
@@ -98,9 +112,10 @@ case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter) extends 
 
 case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
     extends InstrumentRow {
-  type Grating = GnirsDisperser
-  type Filter  = GnirsFilter
-  type FPU     = Unit
+  type Grating  = GnirsDisperser
+  type Filter   = GnirsFilter
+  type FPU      = Unit
+  type Override = Unit
   val fpu        = ()
   val instrument = Instrument.Gnirs
   val site       = Site.GN
@@ -110,9 +125,10 @@ case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
 // Used for Instruments not fully defined
 case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: NonEmptyString)
     extends InstrumentRow {
-  type Grating = String
-  type Filter  = NonEmptyString
-  type FPU     = Unit
+  type Grating  = String
+  type Filter   = NonEmptyString
+  type FPU      = Unit
+  type Override = Unit
   val fpu        = ()
   val instrument = i
   val site       = Site.GN
@@ -180,12 +196,12 @@ object InstrumentRow {
       case Instrument.GmosNorth  =>
         (decodeGmosNorthGrating(grating0), decodeGmosNorthFPU(fpu0), decodeGmosNorthFilter(filter0))
           .mapN(
-            GmosNorthSpectroscopyRow.apply
+            GmosNorthSpectroscopyRow(_, _, _, none)
           )
       case Instrument.GmosSouth  =>
         (decodeGmosSouthGrating(grating0), decodeGmosSouthFPU(fpu0), decodeGmosSouthFilter(filter0))
           .mapN(
-            GmosSouthSpectroscopyRow.apply
+            GmosSouthSpectroscopyRow(_, _, _, none)
           )
       case Instrument.Flamingos2 =>
         (decodeF2Disperser(grating0), decodeF2Filter(filter0)).mapN(

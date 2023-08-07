@@ -117,7 +117,7 @@ object ITCGraphRequests:
     val cacheableRequest =
       Cacheable(
         CacheName("itcGraphQuery"),
-        CacheVersion(9),
+        CacheVersion(10),
         doRequest,
         (r, g) =>
           r.target.forall(t =>
