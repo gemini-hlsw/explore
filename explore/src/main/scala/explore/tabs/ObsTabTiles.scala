@@ -340,7 +340,8 @@ object ObsTabTiles:
               props.allTargets.get,
               itcProps.value,
               itcChartResults.value,
-              itcLoading.value
+              itcLoading.value,
+              props.globalPreferences
             )
 
           val constraints: View[ConstraintSet] =

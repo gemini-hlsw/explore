@@ -1,4 +1,4 @@
-- "!include public_exploreChartType.yaml"
+- "!include public_ItcChartType.yaml"
 - "!include public_exploreFinderChart.yaml"
 - "!include public_explorePlotRange.yaml"
 - "!include public_explorePlotTime.yaml"
@@ -6,7 +6,6 @@
 - "!include public_lucumaGridBreakpointName.yaml"
 - "!include public_lucumaGridLayoutId.yaml"
 - "!include public_lucumaGridLayoutPositions.yaml"
-- "!include public_lucumaItcPlotPreferences.yaml"
 - "!include public_lucumaObservation.yaml"
 - "!include public_lucumaSortDirection.yaml"
 - "!include public_lucumaTableColumnPreferences.yaml"

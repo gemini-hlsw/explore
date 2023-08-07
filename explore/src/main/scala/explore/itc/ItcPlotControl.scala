@@ -4,7 +4,7 @@
 package explore.itc
 
 import cats.syntax.all.*
-import crystal.react.ViewOpt
+import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.model.itc.PlotDetails
 import japgolly.scalajs.react.*
@@ -22,8 +22,8 @@ import lucuma.ui.syntax.all.given
 import monocle.Prism
 
 case class ItcPlotControl(
-  chartType:   ViewOpt[ChartType],
-  showDetails: ViewOpt[PlotDetails]
+  chartType:   View[ChartType],
+  showDetails: View[PlotDetails]
 ) extends ReactFnProps[ItcPlotControl](ItcPlotControl.component)
 
 enum AllowedChartType(val tag: String) derives Enumerated:
@@ -48,7 +48,7 @@ object ItcPlotControl:
   }
 
   private val component = ScalaFnComponent[Props] { props =>
-    val descText     = if (props.showDetails.get.exists(_.value)) "Hide details" else "Show details"
+    val descText     = if (props.showDetails.get.value) "Hide details" else "Show details"
     val allowedChart = props.chartType.zoom(typePrism).asView
 
     <.div(

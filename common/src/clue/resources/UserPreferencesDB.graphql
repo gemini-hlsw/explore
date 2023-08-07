@@ -59,160 +59,6 @@ enum CursorOrdering {
 }
 
 """
-columns and relationships of "exploreChartType"
-"""
-type ExploreChartType {
-  id: String!
-}
-
-"""
-aggregated selection of "exploreChartType"
-"""
-type ExploreChartTypeAggregate {
-  aggregate: ExploreChartTypeAggregateFields
-  nodes: [ExploreChartType!]!
-}
-
-"""
-aggregate fields of "exploreChartType"
-"""
-type ExploreChartTypeAggregateFields {
-  count(columns: [ExploreChartTypeSelectColumn!], distinct: Boolean): Int!
-  max: ExploreChartTypeMaxFields
-  min: ExploreChartTypeMinFields
-}
-
-"""
-Boolean expression to filter rows from the table "exploreChartType". All fields are combined with a logical 'AND'.
-"""
-input ExploreChartTypeBoolExp {
-  _and: [ExploreChartTypeBoolExp!]
-  _not: ExploreChartTypeBoolExp
-  _or: [ExploreChartTypeBoolExp!]
-  id: StringComparisonExp
-}
-
-"""
-unique or primary key constraints on table "exploreChartType"
-"""
-enum ExploreChartTypeConstraint {
-  """
-  unique or primary key constraint on columns "id"
-  """
-  exploreChartType_pkey
-}
-
-enum ExploreChartTypeEnum {
-  S2N_CHART
-  SIGNAL_CHART
-}
-
-"""
-Boolean expression to compare columns of type "ExploreChartTypeEnum". All fields are combined with logical 'AND'.
-"""
-input ExploreChartTypeEnumComparisonExp {
-  _eq: ExploreChartTypeEnum
-  _in: [ExploreChartTypeEnum!]
-  _isNull: Boolean
-  _neq: ExploreChartTypeEnum
-  _nin: [ExploreChartTypeEnum!]
-}
-
-"""
-input type for inserting data into table "exploreChartType"
-"""
-input ExploreChartTypeInsertInput {
-  id: String
-}
-
-"""
-aggregate max on columns
-"""
-type ExploreChartTypeMaxFields {
-  id: String
-}
-
-"""
-aggregate min on columns
-"""
-type ExploreChartTypeMinFields {
-  id: String
-}
-
-"""
-response of any mutation on the table "exploreChartType"
-"""
-type ExploreChartTypeMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
-  affected_rows: Int!
-
-  """
-  data from the rows affected by the mutation
-  """
-  returning: [ExploreChartType!]!
-}
-
-"""
-on_conflict condition type for table "exploreChartType"
-"""
-input ExploreChartTypeOnConflict {
-  constraint: ExploreChartTypeConstraint!
-  update_columns: [ExploreChartTypeUpdateColumn!]! = []
-  where: ExploreChartTypeBoolExp
-}
-
-"""
-Ordering options when selecting data from "exploreChartType".
-"""
-input ExploreChartTypeOrderBy {
-  id: OrderBy
-}
-
-"""
-primary key columns input for table: exploreChartType
-"""
-input ExploreChartTypePkColumnsInput {
-  id: String!
-}
-
-"""
-select columns of table "exploreChartType"
-"""
-enum ExploreChartTypeSelectColumn {
-  """
-  column name
-  """
-  id
-}
-
-"""
-input type for updating data in table "exploreChartType"
-"""
-input ExploreChartTypeSetInput {
-  id: String
-}
-
-"""
-update columns of table "exploreChartType"
-"""
-enum ExploreChartTypeUpdateColumn {
-  """
-  column name
-  """
-  id
-}
-
-input ExploreChartTypeUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
-  _set: ExploreChartTypeSetInput
-  where: ExploreChartTypeBoolExp!
-}
-
-"""
 columns and relationships of "exploreFinderChart"
 """
 type ExploreFinderChart {
@@ -1362,6 +1208,182 @@ input IntComparisonExp {
 }
 
 """
+columns and relationships of "ItcChartType"
+"""
+type ItcChartType {
+  id: String!
+}
+
+"""
+aggregated selection of "ItcChartType"
+"""
+type ItcChartTypeAggregate {
+  aggregate: ItcChartTypeAggregateFields
+  nodes: [ItcChartType!]!
+}
+
+"""
+aggregate fields of "ItcChartType"
+"""
+type ItcChartTypeAggregateFields {
+  count(columns: [ItcChartTypeSelectColumn!], distinct: Boolean): Int!
+  max: ItcChartTypeMaxFields
+  min: ItcChartTypeMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "ItcChartType". All fields are combined with a logical 'AND'.
+"""
+input ItcChartTypeBoolExp {
+  _and: [ItcChartTypeBoolExp!]
+  _not: ItcChartTypeBoolExp
+  _or: [ItcChartTypeBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "ItcChartType"
+"""
+enum ItcChartTypeConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  exploreChartType_pkey
+}
+
+enum ItcChartTypeEnum {
+  S2N_CHART
+  SIGNAL_CHART
+}
+
+"""
+Boolean expression to compare columns of type "ItcChartTypeEnum". All fields are combined with logical 'AND'.
+"""
+input ItcChartTypeEnumComparisonExp {
+  _eq: ItcChartTypeEnum
+  _in: [ItcChartTypeEnum!]
+  _isNull: Boolean
+  _neq: ItcChartTypeEnum
+  _nin: [ItcChartTypeEnum!]
+}
+
+"""
+input type for inserting data into table "ItcChartType"
+"""
+input ItcChartTypeInsertInput {
+  id: String
+}
+
+"""
+aggregate max on columns
+"""
+type ItcChartTypeMaxFields {
+  id: String
+}
+
+"""
+aggregate min on columns
+"""
+type ItcChartTypeMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "ItcChartType"
+"""
+type ItcChartTypeMutationResponse {
+  """
+  number of rows affected by the mutation
+  """
+  affected_rows: Int!
+
+  """
+  data from the rows affected by the mutation
+  """
+  returning: [ItcChartType!]!
+}
+
+"""
+on_conflict condition type for table "ItcChartType"
+"""
+input ItcChartTypeOnConflict {
+  constraint: ItcChartTypeConstraint!
+  update_columns: [ItcChartTypeUpdateColumn!]! = []
+  where: ItcChartTypeBoolExp
+}
+
+"""
+Ordering options when selecting data from "ItcChartType".
+"""
+input ItcChartTypeOrderBy {
+  id: OrderBy
+}
+
+"""
+primary key columns input for table: ItcChartType
+"""
+input ItcChartTypePkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "ItcChartType"
+"""
+enum ItcChartTypeSelectColumn {
+  """
+  column name
+  """
+  id
+}
+
+"""
+input type for updating data in table "ItcChartType"
+"""
+input ItcChartTypeSetInput {
+  id: String
+}
+
+"""
+update columns of table "ItcChartType"
+"""
+enum ItcChartTypeUpdateColumn {
+  """
+  column name
+  """
+  id
+}
+
+input ItcChartTypeUpdates {
+  """
+  sets the columns of the filtered rows to the given values
+  """
+  _set: ItcChartTypeSetInput
+  where: ItcChartTypeBoolExp!
+}
+
+"""
+Streaming cursor of the table "ItcChartType"
+"""
+input ItcChartType_streamCursorInput {
+  """
+  Stream column input with initial value
+  """
+  initialValue: ItcChartType_streamCursorValueInput!
+
+  """
+  cursor ordering
+  """
+  ordering: CursorOrdering
+}
+
+"""
+Initial value of the column from where the streaming should start
+"""
+input ItcChartType_streamCursorValueInput {
+  id: String
+}
+
+"""
 columns and relationships of "lucumaGridBreakpointName"
 """
 type LucumaGridBreakpointName {
@@ -2038,221 +2060,6 @@ type LucumaGridLayoutPositionsVarianceFields {
 }
 
 """
-columns and relationships of "lucumaItcPlotPreferences"
-"""
-type LucumaItcPlotPreferences {
-  chartType: ExploreChartTypeEnum!
-  detailsOpen: Boolean!
-
-  """
-  An object relationship
-  """
-  lucuma_observation: LucumaObservation!
-  observationId: String!
-  userId: String!
-}
-
-"""
-aggregated selection of "lucumaItcPlotPreferences"
-"""
-type LucumaItcPlotPreferencesAggregate {
-  aggregate: LucumaItcPlotPreferencesAggregateFields
-  nodes: [LucumaItcPlotPreferences!]!
-}
-
-"""
-aggregate fields of "lucumaItcPlotPreferences"
-"""
-type LucumaItcPlotPreferencesAggregateFields {
-  count(columns: [LucumaItcPlotPreferencesSelectColumn!], distinct: Boolean): Int!
-  max: LucumaItcPlotPreferencesMaxFields
-  min: LucumaItcPlotPreferencesMinFields
-}
-
-"""
-order by aggregate values of table "lucumaItcPlotPreferences"
-"""
-input LucumaItcPlotPreferencesAggregateOrderBy {
-  count: OrderBy
-  max: lucumaItcPlotPreferences_max_order_by
-  min: lucumaItcPlotPreferences_min_order_by
-}
-
-"""
-input type for inserting array relation for remote table "lucumaItcPlotPreferences"
-"""
-input LucumaItcPlotPreferencesArrRelInsertInput {
-  data: [LucumaItcPlotPreferencesInsertInput!]!
-
-  """
-  upsert condition
-  """
-  onConflict: LucumaItcPlotPreferencesOnConflict
-}
-
-"""
-Boolean expression to filter rows from the table "lucumaItcPlotPreferences". All fields are combined with a logical 'AND'.
-"""
-input LucumaItcPlotPreferencesBoolExp {
-  _and: [LucumaItcPlotPreferencesBoolExp!]
-  _not: LucumaItcPlotPreferencesBoolExp
-  _or: [LucumaItcPlotPreferencesBoolExp!]
-  chartType: ExploreChartTypeEnumComparisonExp
-  detailsOpen: BooleanComparisonExp
-  lucuma_observation: LucumaObservationBoolExp
-  observationId: StringComparisonExp
-  userId: StringComparisonExp
-}
-
-"""
-unique or primary key constraints on table "lucumaItcPlotPreferences"
-"""
-enum LucumaItcPlotPreferencesConstraint {
-  """
-  unique or primary key constraint on columns "observationId", "userId"
-  """
-  lucuma_itc_plot_preferences_pkey
-}
-
-"""
-input type for inserting data into table "lucumaItcPlotPreferences"
-"""
-input LucumaItcPlotPreferencesInsertInput {
-  chartType: ExploreChartTypeEnum
-  detailsOpen: Boolean
-  lucuma_observation: LucumaObservationObjRelInsertInput
-  observationId: String
-  userId: String
-}
-
-"""
-aggregate max on columns
-"""
-type LucumaItcPlotPreferencesMaxFields {
-  observationId: String
-  userId: String
-}
-
-"""
-aggregate min on columns
-"""
-type LucumaItcPlotPreferencesMinFields {
-  observationId: String
-  userId: String
-}
-
-"""
-response of any mutation on the table "lucumaItcPlotPreferences"
-"""
-type LucumaItcPlotPreferencesMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
-  affected_rows: Int!
-
-  """
-  data from the rows affected by the mutation
-  """
-  returning: [LucumaItcPlotPreferences!]!
-}
-
-"""
-on_conflict condition type for table "lucumaItcPlotPreferences"
-"""
-input LucumaItcPlotPreferencesOnConflict {
-  constraint: LucumaItcPlotPreferencesConstraint!
-  update_columns: [LucumaItcPlotPreferencesUpdateColumn!]! = []
-  where: LucumaItcPlotPreferencesBoolExp
-}
-
-"""
-Ordering options when selecting data from "lucumaItcPlotPreferences".
-"""
-input LucumaItcPlotPreferencesOrderBy {
-  chartType: OrderBy
-  detailsOpen: OrderBy
-  lucuma_observation: LucumaObservationOrderBy
-  observationId: OrderBy
-  userId: OrderBy
-}
-
-"""
-primary key columns input for table: lucumaItcPlotPreferences
-"""
-input LucumaItcPlotPreferencesPkColumnsInput {
-  observationId: String!
-  userId: String!
-}
-
-"""
-select columns of table "lucumaItcPlotPreferences"
-"""
-enum LucumaItcPlotPreferencesSelectColumn {
-  """
-  column name
-  """
-  chartType
-
-  """
-  column name
-  """
-  detailsOpen
-
-  """
-  column name
-  """
-  observationId
-
-  """
-  column name
-  """
-  userId
-}
-
-"""
-input type for updating data in table "lucumaItcPlotPreferences"
-"""
-input LucumaItcPlotPreferencesSetInput {
-  chartType: ExploreChartTypeEnum
-  detailsOpen: Boolean
-  observationId: String
-  userId: String
-}
-
-"""
-update columns of table "lucumaItcPlotPreferences"
-"""
-enum LucumaItcPlotPreferencesUpdateColumn {
-  """
-  column name
-  """
-  chartType
-
-  """
-  column name
-  """
-  detailsOpen
-
-  """
-  column name
-  """
-  observationId
-
-  """
-  column name
-  """
-  userId
-}
-
-input LucumaItcPlotPreferencesUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
-  _set: LucumaItcPlotPreferencesSetInput
-  where: LucumaItcPlotPreferencesBoolExp!
-}
-
-"""
 columns and relationships of "lucumaObservation"
 """
 type LucumaObservation {
@@ -2315,66 +2122,6 @@ type LucumaObservation {
     """
     where: ExploreFinderChartBoolExp
   ): ExploreFinderChartAggregate!
-
-  """
-  An aggregate relationship
-  """
-  lucumaItcPlotPreferencesAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaItcPlotPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaItcPlotPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): LucumaItcPlotPreferencesAggregate!
-
-  """
-  An array relationship
-  """
-  lucuma_itc_plot_preferences(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaItcPlotPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaItcPlotPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): [LucumaItcPlotPreferences!]!
   observationId: String!
 }
 
@@ -2403,7 +2150,6 @@ input LucumaObservationBoolExp {
   _not: LucumaObservationBoolExp
   _or: [LucumaObservationBoolExp!]
   exploreFinderCharts: ExploreFinderChartBoolExp
-  lucuma_itc_plot_preferences: LucumaItcPlotPreferencesBoolExp
   observationId: StringComparisonExp
 }
 
@@ -2422,7 +2168,6 @@ input type for inserting data into table "lucumaObservation"
 """
 input LucumaObservationInsertInput {
   exploreFinderCharts: ExploreFinderChartArrRelInsertInput
-  lucuma_itc_plot_preferences: LucumaItcPlotPreferencesArrRelInsertInput
   observationId: String
 }
 
@@ -2456,18 +2201,6 @@ type LucumaObservationMutationResponse {
 }
 
 """
-input type for inserting object relation for remote table "lucumaObservation"
-"""
-input LucumaObservationObjRelInsertInput {
-  data: LucumaObservationInsertInput!
-
-  """
-  upsert condition
-  """
-  onConflict: LucumaObservationOnConflict
-}
-
-"""
 on_conflict condition type for table "lucumaObservation"
 """
 input LucumaObservationOnConflict {
@@ -2481,7 +2214,6 @@ Ordering options when selecting data from "lucumaObservation".
 """
 input LucumaObservationOrderBy {
   exploreFinderChartsAggregate: ExploreFinderChartAggregateOrderBy
-  lucuma_itc_plot_preferencesAggregate: LucumaItcPlotPreferencesAggregateOrderBy
   observationId: OrderBy
 }
 
@@ -3506,6 +3238,8 @@ type LucumaUserPreferences {
   elevationPlotScheduling: Boolean!
   elevationPlotTime: ExplorePlotTimeEnum!
   fullScreen: Boolean!
+  itcChartType: ItcChartTypeEnum!
+  itcDetailsOpen: Boolean!
 
   """
   An object relationship
@@ -3549,6 +3283,8 @@ input LucumaUserPreferencesBoolExp {
   elevationPlotScheduling: BooleanComparisonExp
   elevationPlotTime: ExplorePlotTimeEnumComparisonExp
   fullScreen: BooleanComparisonExp
+  itcChartType: ItcChartTypeEnumComparisonExp
+  itcDetailsOpen: BooleanComparisonExp
   lucuma_user: LucumaUserBoolExp
   scienceOffsets: BooleanComparisonExp
   showCatalog: BooleanComparisonExp
@@ -3578,6 +3314,8 @@ input LucumaUserPreferencesInsertInput {
   elevationPlotScheduling: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
+  itcChartType: ItcChartTypeEnum
+  itcDetailsOpen: Boolean
   lucuma_user: LucumaUserObjRelInsertInput
   scienceOffsets: Boolean
   showCatalog: Boolean
@@ -3639,6 +3377,8 @@ input LucumaUserPreferencesOrderBy {
   elevationPlotScheduling: OrderBy
   elevationPlotTime: OrderBy
   fullScreen: OrderBy
+  itcChartType: OrderBy
+  itcDetailsOpen: OrderBy
   lucuma_user: LucumaUserOrderBy
   scienceOffsets: OrderBy
   showCatalog: OrderBy
@@ -3700,6 +3440,16 @@ enum LucumaUserPreferencesSelectColumn {
   """
   column name
   """
+  itcChartType
+
+  """
+  column name
+  """
+  itcDetailsOpen
+
+  """
+  column name
+  """
   scienceOffsets
 
   """
@@ -3730,6 +3480,8 @@ input LucumaUserPreferencesSetInput {
   elevationPlotScheduling: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
+  itcChartType: ItcChartTypeEnum
+  itcDetailsOpen: Boolean
   scienceOffsets: Boolean
   showCatalog: Boolean
   updatedAt: timestamptz
@@ -3779,6 +3531,16 @@ enum LucumaUserPreferencesUpdateColumn {
   column name
   """
   fullScreen
+
+  """
+  column name
+  """
+  itcChartType
+
+  """
+  column name
+  """
+  itcDetailsOpen
 
   """
   column name
@@ -3960,28 +3722,6 @@ input TimestamptzComparisonExp {
 }
 
 scalar bigint
-
-"""
-Streaming cursor of the table "exploreChartType"
-"""
-input exploreChartType_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
-  initialValue: exploreChartType_streamCursorValueInput!
-
-  """
-  cursor ordering
-  """
-  ordering: CursorOrdering
-}
-
-"""
-Initial value of the column from where the streaming should start
-"""
-input exploreChartType_streamCursorValueInput {
-  id: String
-}
 
 """
 order by avg() on columns of table "exploreFinderChart"
@@ -4383,47 +4123,6 @@ input lucumaGridLayoutPositions_streamCursorValueInput {
 }
 
 """
-order by max() on columns of table "lucumaItcPlotPreferences"
-"""
-input lucumaItcPlotPreferences_max_order_by {
-  observationId: OrderBy
-  userId: OrderBy
-}
-
-"""
-order by min() on columns of table "lucumaItcPlotPreferences"
-"""
-input lucumaItcPlotPreferences_min_order_by {
-  observationId: OrderBy
-  userId: OrderBy
-}
-
-"""
-Streaming cursor of the table "lucumaItcPlotPreferences"
-"""
-input lucumaItcPlotPreferences_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
-  initialValue: lucumaItcPlotPreferences_streamCursorValueInput!
-
-  """
-  cursor ordering
-  """
-  ordering: CursorOrdering
-}
-
-"""
-Initial value of the column from where the streaming should start
-"""
-input lucumaItcPlotPreferences_streamCursorValueInput {
-  chartType: ExploreChartTypeEnum
-  detailsOpen: Boolean
-  observationId: String
-  userId: String
-}
-
-"""
 Streaming cursor of the table "lucumaObservation"
 """
 input lucumaObservation_streamCursorInput {
@@ -4567,6 +4266,8 @@ input lucumaUserPreferences_streamCursorValueInput {
   elevationPlotScheduling: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
+  itcChartType: ItcChartTypeEnum
+  itcDetailsOpen: Boolean
   scienceOffsets: Boolean
   showCatalog: Boolean
   updatedAt: timestamptz
@@ -4599,21 +4300,6 @@ input lucumaUser_streamCursorValueInput {
 mutation root
 """
 type Mutation {
-  """
-  delete data from the table: "exploreChartType"
-  """
-  deleteExploreChartType(
-    """
-    filter the rows which have to be deleted
-    """
-    where: ExploreChartTypeBoolExp!
-  ): ExploreChartTypeMutationResponse
-
-  """
-  delete single row from the table: "exploreChartType"
-  """
-  deleteExploreChartTypeByPk(id: String!): ExploreChartType
-
   """
   delete data from the table: "exploreFinderChart"
   """
@@ -4675,6 +4361,21 @@ type Mutation {
   deleteExploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
 
   """
+  delete data from the table: "ItcChartType"
+  """
+  deleteItcChartType(
+    """
+    filter the rows which have to be deleted
+    """
+    where: ItcChartTypeBoolExp!
+  ): ItcChartTypeMutationResponse
+
+  """
+  delete single row from the table: "ItcChartType"
+  """
+  deleteItcChartTypeByPk(id: String!): ItcChartType
+
+  """
   delete data from the table: "lucumaGridBreakpointName"
   """
   deleteLucumaGridBreakpointName(
@@ -4723,24 +4424,6 @@ type Mutation {
     tile: String!
     userId: String!
   ): LucumaGridLayoutPositions
-
-  """
-  delete data from the table: "lucumaItcPlotPreferences"
-  """
-  deleteLucumaItcPlotPreferences(
-    """
-    filter the rows which have to be deleted
-    """
-    where: LucumaItcPlotPreferencesBoolExp!
-  ): LucumaItcPlotPreferencesMutationResponse
-
-  """
-  delete single row from the table: "lucumaItcPlotPreferences"
-  """
-  deleteLucumaItcPlotPreferencesByPk(
-    observationId: String!
-    userId: String!
-  ): LucumaItcPlotPreferences
 
   """
   delete data from the table: "lucumaObservation"
@@ -4850,36 +4533,6 @@ type Mutation {
   delete single row from the table: "lucumaUserPreferences"
   """
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
-
-  """
-  insert data into the table: "exploreChartType"
-  """
-  insertExploreChartType(
-    """
-    the rows to be inserted
-    """
-    objects: [ExploreChartTypeInsertInput!]!
-
-    """
-    upsert condition
-    """
-    onConflict: ExploreChartTypeOnConflict
-  ): ExploreChartTypeMutationResponse
-
-  """
-  insert a single row into the table: "exploreChartType"
-  """
-  insertExploreChartTypeOne(
-    """
-    the row to be inserted
-    """
-    object: ExploreChartTypeInsertInput!
-
-    """
-    upsert condition
-    """
-    onConflict: ExploreChartTypeOnConflict
-  ): ExploreChartType
 
   """
   insert data into the table: "exploreFinderChart"
@@ -5002,6 +4655,36 @@ type Mutation {
   ): ExploreTargetPreferences
 
   """
+  insert data into the table: "ItcChartType"
+  """
+  insertItcChartType(
+    """
+    the rows to be inserted
+    """
+    objects: [ItcChartTypeInsertInput!]!
+
+    """
+    upsert condition
+    """
+    onConflict: ItcChartTypeOnConflict
+  ): ItcChartTypeMutationResponse
+
+  """
+  insert a single row into the table: "ItcChartType"
+  """
+  insertItcChartTypeOne(
+    """
+    the row to be inserted
+    """
+    object: ItcChartTypeInsertInput!
+
+    """
+    upsert condition
+    """
+    onConflict: ItcChartTypeOnConflict
+  ): ItcChartType
+
+  """
   insert data into the table: "lucumaGridBreakpointName"
   """
   insertLucumaGridBreakpointName(
@@ -5090,36 +4773,6 @@ type Mutation {
     """
     onConflict: LucumaGridLayoutPositionsOnConflict
   ): LucumaGridLayoutPositions
-
-  """
-  insert data into the table: "lucumaItcPlotPreferences"
-  """
-  insertLucumaItcPlotPreferences(
-    """
-    the rows to be inserted
-    """
-    objects: [LucumaItcPlotPreferencesInsertInput!]!
-
-    """
-    upsert condition
-    """
-    onConflict: LucumaItcPlotPreferencesOnConflict
-  ): LucumaItcPlotPreferencesMutationResponse
-
-  """
-  insert a single row into the table: "lucumaItcPlotPreferences"
-  """
-  insertLucumaItcPlotPreferencesOne(
-    """
-    the row to be inserted
-    """
-    object: LucumaItcPlotPreferencesInsertInput!
-
-    """
-    upsert condition
-    """
-    onConflict: LucumaItcPlotPreferencesOnConflict
-  ): LucumaItcPlotPreferences
 
   """
   insert data into the table: "lucumaObservation"
@@ -5332,42 +4985,6 @@ type Mutation {
   ): LucumaUserPreferences
 
   """
-  update data of the table: "exploreChartType"
-  """
-  updateExploreChartType(
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: ExploreChartTypeSetInput
-
-    """
-    filter the rows which have to be updated
-    """
-    where: ExploreChartTypeBoolExp!
-  ): ExploreChartTypeMutationResponse
-
-  """
-  update single row of the table: "exploreChartType"
-  """
-  updateExploreChartTypeByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: ExploreChartTypeSetInput
-    pk_columns: ExploreChartTypePkColumnsInput!
-  ): ExploreChartType
-
-  """
-  update multiples rows of table: "exploreChartType"
-  """
-  updateExploreChartTypeMany(
-    """
-    updates to execute, in order
-    """
-    updates: [ExploreChartTypeUpdates!]!
-  ): [ExploreChartTypeMutationResponse]
-
-  """
   update data of the table: "exploreFinderChart"
   """
   updateExploreFinderChart(
@@ -5532,6 +5149,42 @@ type Mutation {
   ): [ExploreTargetPreferencesMutationResponse]
 
   """
+  update data of the table: "ItcChartType"
+  """
+  updateItcChartType(
+    """
+    sets the columns of the filtered rows to the given values
+    """
+    _set: ItcChartTypeSetInput
+
+    """
+    filter the rows which have to be updated
+    """
+    where: ItcChartTypeBoolExp!
+  ): ItcChartTypeMutationResponse
+
+  """
+  update single row of the table: "ItcChartType"
+  """
+  updateItcChartTypeByPk(
+    """
+    sets the columns of the filtered rows to the given values
+    """
+    _set: ItcChartTypeSetInput
+    pk_columns: ItcChartTypePkColumnsInput!
+  ): ItcChartType
+
+  """
+  update multiples rows of table: "ItcChartType"
+  """
+  updateItcChartTypeMany(
+    """
+    updates to execute, in order
+    """
+    updates: [ItcChartTypeUpdates!]!
+  ): [ItcChartTypeMutationResponse]
+
+  """
   update data of the table: "lucumaGridBreakpointName"
   """
   updateLucumaGridBreakpointName(
@@ -5648,42 +5301,6 @@ type Mutation {
     """
     updates: [LucumaGridLayoutPositionsUpdates!]!
   ): [LucumaGridLayoutPositionsMutationResponse]
-
-  """
-  update data of the table: "lucumaItcPlotPreferences"
-  """
-  updateLucumaItcPlotPreferences(
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: LucumaItcPlotPreferencesSetInput
-
-    """
-    filter the rows which have to be updated
-    """
-    where: LucumaItcPlotPreferencesBoolExp!
-  ): LucumaItcPlotPreferencesMutationResponse
-
-  """
-  update single row of the table: "lucumaItcPlotPreferences"
-  """
-  updateLucumaItcPlotPreferencesByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: LucumaItcPlotPreferencesSetInput
-    pk_columns: LucumaItcPlotPreferencesPkColumnsInput!
-  ): LucumaItcPlotPreferences
-
-  """
-  update multiples rows of table: "lucumaItcPlotPreferences"
-  """
-  updateLucumaItcPlotPreferencesMany(
-    """
-    updates to execute, in order
-    """
-    updates: [LucumaItcPlotPreferencesUpdates!]!
-  ): [LucumaItcPlotPreferencesMutationResponse]
 
   """
   update data of the table: "lucumaObservation"
@@ -5950,71 +5567,6 @@ type Mutation {
 
 type Query {
   """
-  fetch data from the table: "exploreChartType"
-  """
-  exploreChartType(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreChartTypeSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreChartTypeOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreChartTypeBoolExp
-  ): [ExploreChartType!]!
-
-  """
-  fetch aggregated fields from the table: "exploreChartType"
-  """
-  exploreChartTypeAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreChartTypeSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreChartTypeOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreChartTypeBoolExp
-  ): ExploreChartTypeAggregate!
-
-  """
-  fetch data from the table: "exploreChartType" using primary key columns
-  """
-  exploreChartTypeByPk(id: String!): ExploreChartType
-
-  """
   fetch data from the table: "exploreFinderChart"
   """
   exploreFinderChart(
@@ -6275,6 +5827,71 @@ type Query {
   exploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
 
   """
+  fetch data from the table: "ItcChartType"
+  """
+  itcChartType(
+    """
+    distinct select on columns
+    """
+    distinctOn: [ItcChartTypeSelectColumn!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    orderBy: [ItcChartTypeOrderBy!]
+
+    """
+    filter the rows returned
+    """
+    where: ItcChartTypeBoolExp
+  ): [ItcChartType!]!
+
+  """
+  fetch aggregated fields from the table: "ItcChartType"
+  """
+  itcChartTypeAggregate(
+    """
+    distinct select on columns
+    """
+    distinctOn: [ItcChartTypeSelectColumn!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    orderBy: [ItcChartTypeOrderBy!]
+
+    """
+    filter the rows returned
+    """
+    where: ItcChartTypeBoolExp
+  ): ItcChartTypeAggregate!
+
+  """
+  fetch data from the table: "ItcChartType" using primary key columns
+  """
+  itcChartTypeByPk(id: String!): ItcChartType
+
+  """
   fetch data from the table: "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointName(
@@ -6473,71 +6090,6 @@ type Query {
     tile: String!
     userId: String!
   ): LucumaGridLayoutPositions
-
-  """
-  fetch data from the table: "lucumaItcPlotPreferences"
-  """
-  lucumaItcPlotPreferences(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaItcPlotPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaItcPlotPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): [LucumaItcPlotPreferences!]!
-
-  """
-  An aggregate relationship
-  """
-  lucumaItcPlotPreferencesAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaItcPlotPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaItcPlotPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): LucumaItcPlotPreferencesAggregate!
-
-  """
-  fetch data from the table: "lucumaItcPlotPreferences" using primary key columns
-  """
-  lucumaItcPlotPreferencesByPk(observationId: String!, userId: String!): LucumaItcPlotPreferences
 
   """
   fetch data from the table: "lucumaObservation"
@@ -7001,91 +6553,6 @@ type Query {
 
 type Subscription {
   """
-  fetch data from the table: "exploreChartType"
-  """
-  exploreChartType(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreChartTypeSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreChartTypeOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreChartTypeBoolExp
-  ): [ExploreChartType!]!
-
-  """
-  fetch aggregated fields from the table: "exploreChartType"
-  """
-  exploreChartTypeAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreChartTypeSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreChartTypeOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreChartTypeBoolExp
-  ): ExploreChartTypeAggregate!
-
-  """
-  fetch data from the table: "exploreChartType" using primary key columns
-  """
-  exploreChartTypeByPk(id: String!): ExploreChartType
-
-  """
-  fetch data from the table in a streaming manner : "exploreChartType"
-  """
-  exploreChartTypeStream(
-    """
-    maximum number of rows returned in a single batch
-    """
-    batchSize: Int!
-
-    """
-    cursor to stream the results returned by the query
-    """
-    cursor: [exploreChartType_streamCursorInput]!
-
-    """
-    filter the rows returned
-    """
-    where: ExploreChartTypeBoolExp
-  ): [ExploreChartType!]!
-
-  """
   fetch data from the table: "exploreFinderChart"
   """
   exploreFinderChart(
@@ -7426,6 +6893,91 @@ type Subscription {
   ): [ExploreTargetPreferences!]!
 
   """
+  fetch data from the table: "ItcChartType"
+  """
+  itcChartType(
+    """
+    distinct select on columns
+    """
+    distinctOn: [ItcChartTypeSelectColumn!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    orderBy: [ItcChartTypeOrderBy!]
+
+    """
+    filter the rows returned
+    """
+    where: ItcChartTypeBoolExp
+  ): [ItcChartType!]!
+
+  """
+  fetch aggregated fields from the table: "ItcChartType"
+  """
+  itcChartTypeAggregate(
+    """
+    distinct select on columns
+    """
+    distinctOn: [ItcChartTypeSelectColumn!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    orderBy: [ItcChartTypeOrderBy!]
+
+    """
+    filter the rows returned
+    """
+    where: ItcChartTypeBoolExp
+  ): ItcChartTypeAggregate!
+
+  """
+  fetch data from the table: "ItcChartType" using primary key columns
+  """
+  itcChartTypeByPk(id: String!): ItcChartType
+
+  """
+  fetch data from the table in a streaming manner : "ItcChartType"
+  """
+  itcChartTypeStream(
+    """
+    maximum number of rows returned in a single batch
+    """
+    batchSize: Int!
+
+    """
+    cursor to stream the results returned by the query
+    """
+    cursor: [ItcChartType_streamCursorInput]!
+
+    """
+    filter the rows returned
+    """
+    where: ItcChartTypeBoolExp
+  ): [ItcChartType!]!
+
+  """
   fetch data from the table: "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointName(
@@ -7684,91 +7236,6 @@ type Subscription {
     """
     where: LucumaGridLayoutPositionsBoolExp
   ): [LucumaGridLayoutPositions!]!
-
-  """
-  fetch data from the table: "lucumaItcPlotPreferences"
-  """
-  lucumaItcPlotPreferences(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaItcPlotPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaItcPlotPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): [LucumaItcPlotPreferences!]!
-
-  """
-  An aggregate relationship
-  """
-  lucumaItcPlotPreferencesAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaItcPlotPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaItcPlotPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): LucumaItcPlotPreferencesAggregate!
-
-  """
-  fetch data from the table: "lucumaItcPlotPreferences" using primary key columns
-  """
-  lucumaItcPlotPreferencesByPk(observationId: String!, userId: String!): LucumaItcPlotPreferences
-
-  """
-  fetch data from the table in a streaming manner : "lucumaItcPlotPreferences"
-  """
-  lucumaItcPlotPreferencesStream(
-    """
-    maximum number of rows returned in a single batch
-    """
-    batchSize: Int!
-
-    """
-    cursor to stream the results returned by the query
-    """
-    cursor: [lucumaItcPlotPreferences_streamCursorInput]!
-
-    """
-    filter the rows returned
-    """
-    where: LucumaItcPlotPreferencesBoolExp
-  ): [LucumaItcPlotPreferences!]!
 
   """
   fetch data from the table: "lucumaObservation"

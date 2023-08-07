@@ -1,0 +1,4 @@
+table:
+  name: ItcChartType
+  schema: public
+is_enum: true

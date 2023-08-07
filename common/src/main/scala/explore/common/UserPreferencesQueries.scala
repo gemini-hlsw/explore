@@ -48,7 +48,6 @@ import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Scalars.*
-import queries.schemas.UserPreferencesDB.Types.LucumaObservationInsertInput
 import queries.schemas.UserPreferencesDB.Types.*
 
 import scala.collection.immutable.SortedMap
@@ -350,54 +349,20 @@ object UserPreferencesQueries:
         .void
 
   object ItcPlotPreferences:
-    // Gets the prefs for the itc plot
-    def queryWithDefault[F[_]: ApplicativeThrow](
-      uid: User.Id,
-      oid: Observation.Id
-    )(using FetchClient[F, UserPreferencesDB]): F[(ChartType, PlotDetails)] =
-      for r <-
-          ItcPlotPreferencesQuery[F]
-            .query(uid.show, oid.show)
-            .map { r =>
-              r.lucumaItcPlotPreferencesByPk.map(result => (result.chartType, result.detailsOpen))
-            }
-            .handleError(_ => none)
-      yield
-        val chartType = r.map(_._1).getOrElse(ChartType.S2NChart)
-        val details   = r.map(x => PlotDetails(x._2)).getOrElse(PlotDetails.Shown)
-
-        (chartType, details)
-
     def updatePlotPreferences[F[_]: ApplicativeThrow](
-      uid:       User.Id,
-      oid:       Observation.Id,
-      chartType: ChartType,
-      details:   PlotDetails
+      userId:         User.Id,
+      itcChartType:   ChartType,
+      itcDetailsOpen: PlotDetails
     )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
-      ItcPlotObservationUpsert[F]
+      UserPreferencesItcPlotUpdate[F]
         .execute(
-          LucumaObservationInsertInput(
-            observationId = oid.show.assign,
-            lucuma_itc_plot_preferences = LucumaItcPlotPreferencesArrRelInsertInput(
-              data = List(
-                LucumaItcPlotPreferencesInsertInput(
-                  userId = uid.show.assign,
-                  chartType = chartType.assign,
-                  detailsOpen = details.value.assign
-                )
-              ),
-              onConflict = LucumaItcPlotPreferencesOnConflict(
-                constraint = LucumaItcPlotPreferencesConstraint.LucumaItcPlotPreferencesPkey,
-                update_columns = List(
-                  LucumaItcPlotPreferencesUpdateColumn.ChartType,
-                  LucumaItcPlotPreferencesUpdateColumn.DetailsOpen
-                )
-              ).assign
-            ).assign
-          )
+          userId = userId.show.assign,
+          itcChartType = itcChartType,
+          itcDetailsOpen = itcDetailsOpen.value
         )
         .attempt
         .void
+  end ItcPlotPreferences
 
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](

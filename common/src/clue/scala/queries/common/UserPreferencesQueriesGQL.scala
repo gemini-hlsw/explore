@@ -144,6 +144,8 @@ object UserPreferencesQueriesGQL {
           elevationPlotRange
           elevationPlotTime
           elevationPlotScheduling
+          itcChartType
+          itcDetailsOpen
         }
       }
     """
@@ -166,6 +168,8 @@ object UserPreferencesQueriesGQL {
           elevationPlotRange
           elevationPlotTime
           elevationPlotScheduling
+          itcChartType
+          itcDetailsOpen
         }
       }
     """
@@ -211,6 +215,30 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
+  trait UserPreferencesItcPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation userPreferencesUpsert($userId: String = "", $itcChartType: ItcChartTypeEnum!, $itcDetailsOpen: Boolean!) {
+        insertLucumaUserPreferencesOne(
+          object: {
+            userId: $userId,
+            itcChartType: $itcChartType
+            itcDetailsOpen: $itcDetailsOpen
+          },
+          onConflict: {
+            constraint: lucuma_user_preferences_pkey,
+            update_columns: [
+              itcChartType,
+              itcDetailsOpen
+            ]
+          }
+        ) {
+          userId
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document =
       """mutation targetPreferencesUpsert($objects: LucumaTargetInsertInput! = {}) {
@@ -235,28 +263,6 @@ object UserPreferencesQueriesGQL {
           }
         ) {
           targetId
-        }
-      }"""
-  }
-
-  @GraphQL
-  trait ItcPlotPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
-    val document = """
-      query itcPlotPreferences($userId: String! = "", $observationId: String! = "") {
-        lucumaItcPlotPreferencesByPk(observationId: $observationId, userId: $userId) {
-          chartType
-          detailsOpen
-        }
-      }
-    """
-  }
-
-  @GraphQL
-  trait ItcPlotObservationUpsert extends GraphQLOperation[UserPreferencesDB] {
-    val document =
-      """mutation observationPreferencesUpsert($objects: LucumaObservationInsertInput! = {}) {
-        insertLucumaObservation(objects: [$objects], onConflict: {constraint: lucuma_observation_pkey, update_columns: observationId}) {
-          affected_rows
         }
       }"""
   }
