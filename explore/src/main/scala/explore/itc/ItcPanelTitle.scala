@@ -39,7 +39,6 @@ object ItcPanelTitle:
 
   private val component =
     ScalaFnComponent[Props] { props =>
-      println(s"panel props: ${props.itcPanelProps.modeOverrides}")
       def newSelected(p: Int): Option[ItcTarget] =
         props.itcPanelProps.targets.lift(p)
 
