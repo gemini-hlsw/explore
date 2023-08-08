@@ -67,6 +67,7 @@ import queries.schemas.odb.ObsQueries.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import lucuma.core.enums.ObsStatus
 
 case class ObsTabTiles(
   vault:                    Option[UserVault],
@@ -318,11 +319,14 @@ object ObsTabTiles:
               selectedAttachment
             )
 
+          val showSequenceTile = props.observation.get.status === ObsStatus.Ready
+
           val notesTile =
             Tile(
               ObsTabTilesIds.NotesId.id,
               s"Note for Observer",
-              canMinimize = true
+              canMinimize = true,
+              hidden = !showSequenceTile
             )(_ =>
               <.div(
                 ExploreStyles.NotesWrapper,

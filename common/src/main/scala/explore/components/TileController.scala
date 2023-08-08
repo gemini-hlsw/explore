@@ -81,12 +81,15 @@ object TileController:
       .filter(_.i === id.value)
       .andThen(layoutItemResizable)
 
-  private def updateResizableState(p: LayoutsMap): LayoutsMap =
+  private def updateResizableState(tiles: List[Tile], p: LayoutsMap): LayoutsMap =
     allLayouts
       .andThen(layoutItems)
       .modify {
-        case r if r.h === 1 => r.copy(isResizable = false, minH = 1)
-        case r              => r
+        case r if r.h === 1                                         => r.copy(isResizable = false, minH = 1)
+        case r if tiles.exists(t => t.id.value === r.i && t.hidden) =>
+          // height to 0 for hidden tiles
+          r.copy(isResizable = false, minH = 0, h = 0)
+        case r                                                      => r
       }(p)
 
   private val component =
@@ -98,10 +101,11 @@ object TileController:
         getBreakpointFromWidth(p.layoutMap.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
       }
       // Make a local copy of the layout fixing the state of minimized layouts
-      .useStateViewBy((p, _, _) => updateResizableState(p.layoutMap))
+      .useStateViewBy((p, _, _) => updateResizableState(p.tiles, p.layoutMap))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _) => p.layoutMap)((_, _, _, currentLayout) =>
-        layout => currentLayout.set(updateResizableState(layout))
+      .useEffectWithDepsBy((p, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap))(
+        (p, _, _, currentLayout) =>
+          (_, layout) => currentLayout.set(updateResizableState(p.tiles, layout))
       )
       .render { (p, ctx, breakpoint, currentLayout) =>
         import ctx.given
@@ -155,7 +159,8 @@ object TileController:
           onBreakpointChange = (bk: BreakpointName, _: Int) => breakpoint.setState(bk),
           onLayoutChange = (m: Layout, newLayouts: Layouts) =>
             // Store the current layout in the state for debugging
-            currentLayout.mod(breakpointLayout(breakpoint.value).replace(m)) *>
+            currentLayout
+              .mod(breakpointLayout(breakpoint.value).replace(m)) *>
               storeLayouts(p.userId, p.section, newLayouts)
                 .when_(p.storeLayout),
           layouts = currentLayout.get,
