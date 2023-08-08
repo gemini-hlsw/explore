@@ -30,6 +30,8 @@ case class GeneratedSequenceViewer(
 object GeneratedSequenceViewer:
   private type Props = GeneratedSequenceViewer
 
+  private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -45,8 +47,8 @@ object GeneratedSequenceViewer:
             ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
           )
       }
-      .useEffectWithDepsBy((_, _, config) => config.toPot.void)((props, _, _) =>
-        changedPot => props.changed.set(changedPot)
+      .useEffectWithDepsBy((_, _, config) => config.toPot.flatten)((props, _, _) =>
+        changedPot => props.changed.set(changedPot.void)
       )
       .render((props, _, config) =>
         props.changed.get

@@ -330,7 +330,6 @@ object ExploreStyles:
   val TargetImportDescription: Css = Css("explore-target-import-description")
   val TargetImportErrors: Css      = Css("explore-target-import-errors")
   val TargetImportDialog: Css      = Css("explore-target-import-dialog")
-  val SeqGenParametersForm: Css    = Css("seq-gen-parameters-form")
 
   // Configuration tile
   val ConfigurationTileBody: Css        = Css("explore-configuration-tile-body")
@@ -369,7 +368,6 @@ object ExploreStyles:
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
 
   // Sequence Viewer
-  val SequenceObsSutitle               = Css("explore-sequence-obs-subtitle")
   val SequencesPanel                   = Css("explore-sequences-panel")
   val SequenceTable                    = Css("explore-sequence-table")
   val CellHideBorder                   = Css("explore-table-cell-hide-border")

@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.ErrorPolicy
 import clue.FetchClient
+import crystal.Pot.Ready
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -16,6 +17,7 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
 import explore.model.LoadingState
@@ -37,6 +39,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
+import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
@@ -67,7 +70,6 @@ import queries.schemas.odb.ObsQueries.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import lucuma.core.enums.ObsStatus
 
 case class ObsTabTiles(
   vault:                    Option[UserVault],
@@ -242,6 +244,8 @@ object ObsTabTiles:
       )
       // selected attachment
       .useStateView(none[ObsAtt.Id])
+      // Signal that the sequence has changed
+      .useStateView(().ready)
       .render {
         (
           props,
@@ -255,7 +259,8 @@ object ObsTabTiles:
           itcChartResults,
           itcLoading,
           selectedItcTarget,
-          selectedAttachment
+          selectedAttachment,
+          sequenceState
         ) =>
           import ctx.given
 
@@ -319,14 +324,13 @@ object ObsTabTiles:
               selectedAttachment
             )
 
-          val showSequenceTile = props.observation.get.status === ObsStatus.Ready
+          val showSequenceTile = props.observation.get.status >= ObsStatus.Approved
 
           val notesTile =
             Tile(
               ObsTabTilesIds.NotesId.id,
               s"Note for Observer",
-              canMinimize = true,
-              hidden = !showSequenceTile
+              canMinimize = true
             )(_ =>
               <.div(
                 ExploreStyles.NotesWrapper,
@@ -335,6 +339,14 @@ object ObsTabTiles:
                   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
                 )
               )
+            )
+
+          val sequenceTile =
+            SequenceEditorTile.sequenceTile(
+              props.programId,
+              props.obsId,
+              showSequenceTile,
+              sequenceState
             )
 
           val itcTile: Tile =
@@ -468,8 +480,6 @@ object ObsTabTiles:
               props.userId,
               props.programId,
               props.obsId,
-              props.observation.get.title,
-              props.observation.get.subtitle,
               props.observation.zoom(ObsSummary.scienceRequirements),
               props.observation.zoom(ObsSummary.observingMode),
               posAngleConstraintView,
@@ -477,7 +487,11 @@ object ObsTabTiles:
               targetCoords,
               obsConf,
               selectedConfig,
-              props.allTargets.get
+              props.allTargets.get,
+              sequenceState.mod {
+                case Ready(x) => Pot.pending
+                case x        => x
+              }
             )
 
           TileController(
@@ -493,6 +507,7 @@ object ObsTabTiles:
               constraintsTile,
               timingWindowsTile,
               configurationTile,
+              sequenceTile,
               itcTile
             ),
             GridLayoutSection.ObservationsLayout,

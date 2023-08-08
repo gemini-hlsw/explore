@@ -181,6 +181,8 @@ object ExploreGridLayouts:
     private val SkyPlotMinHeight: NonNegInt       = 6.refined
     private val ConstraintsMinHeight: NonNegInt   = 4.refined
     private val ConstraintsMaxHeight: NonNegInt   = 7.refined
+    private val SequenceMinHeight: NonNegInt      = 10.refined
+    private val SequenceMaxHeight: NonNegInt      = 14.refined
     private val TimingWindowsMinHeight: NonNegInt = 8.refined
     private val TimingWindowsMaxHeight: NonNegInt = 12.refined
     private val ConfigurationMaxHeight: NonNegInt = 10.refined
@@ -261,6 +263,15 @@ object ExploreGridLayouts:
           x = 0,
           y =
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
+          w = DefaultWidth.value,
+          h = SequenceMaxHeight.value,
+          minH = SequenceMinHeight.value,
+          i = ObsTabTilesIds.SequenceId.id.value
+        ),
+        LayoutItem(
+          x = 0,
+          y =
+            (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| SequenceMaxHeight).value,
           w = DefaultWidth.value,
           h = ItcMaxHeight.value,
           i = ObsTabTilesIds.ItcId.id.value

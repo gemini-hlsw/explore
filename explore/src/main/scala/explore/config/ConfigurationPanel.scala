@@ -50,15 +50,14 @@ case class ConfigurationPanel(
   userId:          Option[User.Id],
   programId:       Program.Id,
   obsId:           Observation.Id,
-  title:           String,
-  subtitle:        Option[NonEmptyString],
   requirements:    UndoSetter[ScienceRequirements],
   mode:            UndoSetter[Option[ObservingMode]],
   posAngle:        View[PosAngleConstraint],
   obsConf:         ObsConfiguration,
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
-  selectedConfig:  View[Option[BasicConfigAndItc]]
+  selectedConfig:  View[Option[BasicConfigAndItc]],
+  sequenceChanged: Callback
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel:
@@ -230,13 +229,12 @@ object ConfigurationPanel:
                         .GmosNorthLongSlit(
                           props.programId,
                           props.obsId,
-                          props.title,
-                          props.subtitle,
                           northAligner,
                           spectroscopyRequirements,
                           deleteConfiguration,
                           confMatrix,
-                          props.selectedConfig
+                          props.selectedConfig,
+                          props.sequenceChanged
                         )
                     ),
                     // Gmos South Long Slit
@@ -245,13 +243,12 @@ object ConfigurationPanel:
                         .GmosSouthLongSlit(
                           props.programId,
                           props.obsId,
-                          props.title,
-                          props.subtitle,
                           southAligner,
                           spectroscopyRequirements,
                           deleteConfiguration,
                           confMatrix,
-                          props.selectedConfig
+                          props.selectedConfig,
+                          props.sequenceChanged
                         )
                     )
                   )

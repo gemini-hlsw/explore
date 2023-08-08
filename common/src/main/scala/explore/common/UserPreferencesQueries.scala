@@ -173,7 +173,7 @@ object UserPreferencesQueries:
           .execute(
             layouts.layouts.flatMap { bl =>
               bl.layout.asList.collect {
-                case i if i.i.nonEmpty && i.h > 0=>
+                case i if i.i.nonEmpty && i.h > 0 =>
                   LucumaGridLayoutPositionsInsertInput(
                     userId = uid.show.assign,
                     section = section.assign,

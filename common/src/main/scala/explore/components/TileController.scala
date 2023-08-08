@@ -85,10 +85,10 @@ object TileController:
     allLayouts
       .andThen(layoutItems)
       .modify {
-        case r if r.h === 1                                         => r.copy(isResizable = false, minH = 1)
         case r if tiles.exists(t => t.id.value === r.i && t.hidden) =>
           // height to 0 for hidden tiles
           r.copy(isResizable = false, minH = 0, h = 0)
+        case r if r.h === 1                                         => r.copy(isResizable = false, minH = 1)
         case r                                                      => r
       }(p)
 
