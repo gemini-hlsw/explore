@@ -8,8 +8,10 @@ import cats.derived.*
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
+import explore.model.itc.PlotDetails
 import io.circe.Decoder
 import lucuma.core.util.NewType
+import lucuma.itc.ChartType
 import monocle.Focus
 
 object AladinMouseScroll extends NewType[Boolean]:
@@ -39,7 +41,9 @@ case class GlobalPreferences(
   acquisitionOffsets:      Visible,
   elevationPlotRange:      PlotRange,
   elevationPlotTime:       TimeDisplay,
-  elevationPlotScheduling: ElevationPlotScheduling
+  elevationPlotScheduling: ElevationPlotScheduling,
+  itcChartType:            ChartType,
+  itcDetailsOpen:          PlotDetails
 ) derives Eq,
       Decoder
 
@@ -53,6 +57,8 @@ object GlobalPreferences:
   val elevationPlotRange      = Focus[GlobalPreferences](_.elevationPlotRange)
   val elevationPlotTime       = Focus[GlobalPreferences](_.elevationPlotTime)
   val elevationPlotScheduling = Focus[GlobalPreferences](_.elevationPlotScheduling)
+  val itcChartType            = Focus[GlobalPreferences](_.itcChartType)
+  val itcDetailsOpen          = Focus[GlobalPreferences](_.itcDetailsOpen)
 
   val Default =
     GlobalPreferences(
@@ -64,5 +70,7 @@ object GlobalPreferences:
       Visible.Shown,
       PlotRange.Night,
       TimeDisplay.Site,
-      ElevationPlotScheduling.On
+      ElevationPlotScheduling.On,
+      ChartType.S2NChart,
+      PlotDetails.Hidden
     )

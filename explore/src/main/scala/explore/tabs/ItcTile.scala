@@ -11,6 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.itc.ItcGraphPanel
 import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
+import explore.model.GlobalPreferences
 import explore.model.LoadingState
 import explore.model.ObsTabTilesIds
 import explore.model.TargetList
@@ -24,13 +25,14 @@ import lucuma.ui.syntax.all.given
 object ItcTile:
 
   def itcTile(
-    uid:             Option[User.Id],
-    oid:             Observation.Id,
-    selectedTarget:  View[Option[ItcTarget]],
-    allTargets:      TargetList,
-    itcProps:        ItcProps,
-    itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
-    itcLoading:      LoadingState
+    uid:               Option[User.Id],
+    oid:               Observation.Id,
+    selectedTarget:    View[Option[ItcTarget]],
+    allTargets:        TargetList,
+    itcProps:          ItcProps,
+    itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
+    itcLoading:        LoadingState,
+    globalPreferences: View[GlobalPreferences]
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
@@ -52,7 +54,8 @@ object ItcTile:
           selectedTarget,
           itcProps,
           itcChartResults,
-          itcLoading
+          itcLoading,
+          globalPreferences
         )
       )
     )
