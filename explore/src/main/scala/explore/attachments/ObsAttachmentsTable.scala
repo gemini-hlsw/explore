@@ -115,19 +115,17 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                                  oa.description,
                                  dom.readReadableStream(IO(f.stream()))
             ) *>
-            props.obsAttachments
-              .mod(
-                _.updatedWith(oa.id)(
-                  _.map(
-                    _.copy(fileName = name,
-                           updatedAt = Timestamp.unsafeFromInstantTruncated(Instant.now()),
-                           checked = false
+            IO(Timestamp.unsafeFromInstantTruncated(Instant.now())).flatMap { now =>
+              props.obsAttachments
+                .mod(
+                  _.updatedWith(oa.id)(
+                    _.map(
+                      _.copy(fileName = name, updatedAt = now, checked = false)
                     )
                   )
                 )
-              )
-              .toAsync
-              .toastErrors
+                .toAsync
+            }.toastErrors
         }
       )
       .orEmpty

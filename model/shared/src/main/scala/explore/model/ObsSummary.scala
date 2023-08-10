@@ -121,8 +121,6 @@ case class ObsSummary(
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
-  def visualizationTimeOrNow: Instant = visualizationTime.getOrElse(Instant.now())
-
 object ObsSummary:
   val id                  = Focus[ObsSummary](_.id)
   val title               = Focus[ObsSummary](_.title)

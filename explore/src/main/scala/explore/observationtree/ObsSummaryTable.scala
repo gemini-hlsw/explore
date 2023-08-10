@@ -187,6 +187,7 @@ object ObsSummaryTable extends TableHooks:
           .setCell(_.value),
         column(
           RAColumnId,
+          // at visualization time, defaults to base coordinates
           r => r.coordsAtVizTime.map(_.ra),
           r => r.coordsAtVizTime.map(_.ra)
         )
@@ -194,6 +195,7 @@ object ObsSummaryTable extends TableHooks:
           .sortable,
         column(
           DecColumnId,
+          // at visualization time, defaults to base coordinates
           r => r.coordsAtVizTime.map(_.dec),
           r => r.coordsAtVizTime.map(_.dec)
         )
@@ -254,7 +256,7 @@ object ObsSummaryTable extends TableHooks:
               if (targets.sizeIs > 1)
                 targets.map(target =>
                   Expandable(
-                    ExpandedTargetRow(obs.id, target, obs.visualizationTimeOrNow)
+                    ExpandedTargetRow(obs.id, target, obs.visualizationTime)
                   )
                 )
               else Nil
@@ -327,7 +329,7 @@ object ObsSummaryTable extends TableHooks:
     case ExpandedTargetRow(
       obsId:        Observation.Id,
       targetWithId: TargetWithId,
-      vizTime:      Instant
+      vizTime:      Option[Instant]
     ) extends ObsSummaryRow
 
     case ObsRow(
@@ -345,16 +347,18 @@ object ObsSummaryTable extends TableHooks:
       this match
         case r: ExpandedTargetRow => targetCoords(r.targetWithId, r.vizTime)
         case r: ObsRow            =>
-          asterismCoords(r.asterism, r.obs.visualizationTimeOrNow)
-            .orElse(r.targetWithId.flatMap(t => targetCoords(t, r.obs.visualizationTimeOrNow)))
+          asterismCoords(r.asterism, r.obs.visualizationTime)
+            .orElse(r.targetWithId.flatMap(t => targetCoords(t, r.obs.visualizationTime)))
 
-    private def targetCoords(twid: TargetWithId, vizTime: Instant): Option[Coordinates] =
+    private def targetCoords(twid: TargetWithId, vizTime: Option[Instant]): Option[Coordinates] =
       Target.sidereal
         .getOption(twid.target)
-        .flatMap(_.tracking.at(vizTime))
+        .flatMap(t => vizTime.fold(t.tracking.baseCoordinates.some)(t.tracking.at))
 
-    private def asterismCoords(asterism: Option[Asterism], vizTime: Instant): Option[Coordinates] =
+    private def asterismCoords(
+      asterism: Option[Asterism],
+      vizTime:  Option[Instant]
+    ): Option[Coordinates] =
       asterism
         .map(_.baseTracking)
-        .flatMap(_.at(vizTime))
-        .map(_.value)
+        .flatMap(bt => vizTime.fold(bt.baseCoordinates.some)(v => bt.at(v).map(_.value)))

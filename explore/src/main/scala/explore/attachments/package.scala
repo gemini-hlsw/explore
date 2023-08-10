@@ -121,21 +121,23 @@ trait ObsAttachmentUtils:
             )
             .toastErrors
             .flatMap(id =>
-              (onSuccess(id) *>
-                obsAttachments
-                  .mod(
-                    _.updated(id,
-                              ObsAttachment(
-                                id,
-                                attType,
-                                name,
-                                None,
-                                false,
-                                f.size.toLong,
-                                Timestamp.unsafeFromInstantTruncated(Instant.now())
-                              )
-                    )
-                  )).toAsync
+              IO(Timestamp.unsafeFromInstantTruncated(Instant.now())).flatMap { now =>
+                (onSuccess(id) *>
+                  obsAttachments
+                    .mod(
+                      _.updated(id,
+                                ObsAttachment(
+                                  id,
+                                  attType,
+                                  name,
+                                  None,
+                                  false,
+                                  f.size.toLong,
+                                  now
+                                )
+                      )
+                    )).toAsync
+              }
             )
         }
       )
