@@ -291,16 +291,12 @@ object ObsTabTiles:
           // asterism base coordinates at viz time or default to base coordinates
           val targetCoords: Option[CoordinatesAtVizTime] =
             (vizTime, asterismAsNel)
-              .mapN((instant, asterismNel) =>
-                asterismNel.baseTrackingAt(instant).flatMap(_.at(instant))
-              )
+              .mapN((instant, asterismNel) => asterismNel.baseTracking.at(instant))
               .flatten
               // If e.g. vizTime isn't defined default to the asterism base coordinates
               .orElse(
                 asterismAsNel
-                  .map(asterismNel =>
-                    CoordinatesAtVizTime(asterismNel.baseTracking.baseCoordinates)
-                  )
+                  .map(t => CoordinatesAtVizTime(t.baseTracking.baseCoordinates))
               )
 
           val attachmentsView =

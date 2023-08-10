@@ -88,9 +88,8 @@ object AladinContainer extends AladinCommon {
         ExploreStyles.GuideSpeedSlow
 
   private def baseAndScience(p: Props) = {
-    val base: CoordinatesAtVizTime = p.asterism
-      .baseTrackingAt(p.vizTime)
-      .flatMap(_.at(p.vizTime))
+    val base: CoordinatesAtVizTime = p.asterism.baseTracking
+      .at(p.vizTime)
       .getOrElse(CoordinatesAtVizTime(p.asterism.baseTracking.baseCoordinates))
 
     val science = p.asterism.toSidereal

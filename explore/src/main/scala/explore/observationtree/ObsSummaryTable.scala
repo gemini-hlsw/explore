@@ -24,6 +24,7 @@ import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Coordinates
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -45,6 +46,7 @@ import lucuma.ui.table.*
 import org.scalajs.dom.html.Anchor
 import queries.schemas.odb.ObsQueries.ObservationList
 
+import java.time.Instant
 import scala.scalajs.js
 
 final case class ObsSummaryTable(
@@ -185,21 +187,15 @@ object ObsSummaryTable extends TableHooks:
           .setCell(_.value),
         column(
           RAColumnId,
-          r =>
-            r.asterism
-              .map(_.baseTracking.baseCoordinates.ra) // TODO: baseTrackingAt
-              .orElse(r.targetWithId.map(_.target).flatMap(Target.baseRA.getOption)),
-          r => Target.baseRA.getOption(r.targetWithId.target)
+          r => r.coordsAtVizTime.map(_.ra),
+          r => r.coordsAtVizTime.map(_.ra)
         )
           .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
           .sortable,
         column(
           DecColumnId,
-          v =>
-            v.asterism
-              .map(_.baseTracking.baseCoordinates.dec)
-              .orElse(v.targetWithId.map(_.target).flatMap(Target.baseDec.getOption)),
-          r => Target.baseDec.getOption(r.targetWithId.target)
+          r => r.coordsAtVizTime.map(_.dec),
+          r => r.coordsAtVizTime.map(_.dec)
         )
           .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
           .sortable,
@@ -256,7 +252,11 @@ object ObsSummaryTable extends TableHooks:
               ObsRow(obs, targets.headOption, asterism),
               // Only expand if there are multiple targets
               if (targets.sizeIs > 1)
-                targets.map(target => Expandable(ExpandedTargetRow(obs.id, target)))
+                targets.map(target =>
+                  Expandable(
+                    ExpandedTargetRow(obs.id, target, obs.visualizationTimeOrNow)
+                  )
+                )
               else Nil
             )
           )
@@ -324,14 +324,37 @@ object ObsSummaryTable extends TableHooks:
   // Helper ADT for table rows type
   enum ObsSummaryRow:
 
-    case ExpandedTargetRow(obsId: Observation.Id, targetWithId: TargetWithId) extends ObsSummaryRow
+    case ExpandedTargetRow(
+      obsId:        Observation.Id,
+      targetWithId: TargetWithId,
+      vizTime:      Instant
+    ) extends ObsSummaryRow
+
     case ObsRow(
       obs:          ObsSummary,
       targetWithId: Option[TargetWithId],
       asterism:     Option[Asterism]
-    )                                                                         extends ObsSummaryRow
+    ) extends ObsSummaryRow
 
     def fold[A](f: ExpandedTargetRow => A, g: ObsRow => A): A =
       this match
         case r: ExpandedTargetRow => f(r)
         case r: ObsRow            => g(r)
+
+    def coordsAtVizTime: Option[Coordinates] =
+      this match
+        case r: ExpandedTargetRow => targetCoords(r.targetWithId, r.vizTime)
+        case r: ObsRow            =>
+          asterismCoords(r.asterism, r.obs.visualizationTimeOrNow)
+            .orElse(r.targetWithId.flatMap(t => targetCoords(t, r.obs.visualizationTimeOrNow)))
+
+    private def targetCoords(twid: TargetWithId, vizTime: Instant): Option[Coordinates] =
+      Target.sidereal
+        .getOption(twid.target)
+        .flatMap(_.tracking.at(vizTime))
+
+    private def asterismCoords(asterism: Option[Asterism], vizTime: Instant): Option[Coordinates] =
+      asterism
+        .map(_.baseTracking)
+        .flatMap(_.at(vizTime))
+        .map(_.value)

@@ -51,10 +51,8 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
   def focusOn(tid: Target.Id): Asterism =
     targets.findFocus(_.id === tid).map(Asterism.apply).getOrElse(this)
 
-  def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
-    targets.toNel.baseTrackingAt(vizTime)
-
-  def baseTracking: ObjectTracking = targets.toNel.baseTracking
+  def baseTracking: ObjectTracking =
+    ObjectTracking.fromAsterism(targets.toNel.map(_.target))
 
   def hasId(id: Target.Id): Boolean = targets.exists(_.id === id)
 }

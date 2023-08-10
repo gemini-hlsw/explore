@@ -5,7 +5,6 @@ package explore.model
 
 import cats.data.NonEmptyList
 import cats.syntax.all.given
-import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
@@ -41,36 +40,8 @@ object extensions:
       Target.sidereal.getOption(target)
 
   extension (targets: NonEmptyList[TargetWithId])
-    // We calculate the coordinates at a given time by doing PM
-    // correction of each target and finding the center
-    def centerOfAt(vizTime: Instant): Option[Coordinates] =
-      val coords = targets
-        .map(TargetWithId.target.get)
-        .map(Target.sidereal.getOption)
-        .collect { case Some(target) =>
-          target.tracking.at(vizTime)
-        }
-        .sequence
-      coords.map(Coordinates.centerOf(_))
-
-    def centerOf: Coordinates =
-      val coords = targets.map(TargetWithId.target.get).map(Target.sidereal.getOption).collect {
-        case Some(target) =>
-          target.tracking.baseCoordinates
-      }
-      Coordinates.centerOf(coords)
-
-    def baseTrackingAt(vizTime: Instant): Option[ObjectTracking] =
-      if (targets.length > 1)
-        targets.centerOfAt(vizTime).map(ObjectTracking.const(_))
-      else
-        ObjectTracking.fromTarget(targets.head.target).some
-
     def baseTracking: ObjectTracking =
-      if (targets.length > 1)
-        ObjectTracking.const(centerOf)
-      else
-        ObjectTracking.fromTarget(targets.head.target)
+      ObjectTracking.fromAsterism(targets.map(_.target))
 
     def toSidereal: List[SiderealTargetWithId] =
       targets.toList.map(_.toSidereal).flattenOption
