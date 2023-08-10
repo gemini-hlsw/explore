@@ -13,6 +13,7 @@ import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsAttachment
 import explore.model.ObsAttachmentList
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
 import explore.utils.*
@@ -31,8 +32,6 @@ import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
-
-import java.time.Instant
 
 // TEMPORARY until we get the graphql enums worked out
 enum AttachmentType(
@@ -121,21 +120,23 @@ trait ObsAttachmentUtils:
             )
             .toastErrors
             .flatMap(id =>
-              (onSuccess(id) *>
-                obsAttachments
-                  .mod(
-                    _.updated(id,
-                              ObsAttachment(
-                                id,
-                                attType,
-                                name,
-                                None,
-                                false,
-                                f.size.toLong,
-                                Timestamp.unsafeFromInstantTruncated(Instant.now())
-                              )
-                    )
-                  )).toAsync
+              IO.now().flatMap { now =>
+                (onSuccess(id) *>
+                  obsAttachments
+                    .mod(
+                      _.updated(id,
+                                ObsAttachment(
+                                  id,
+                                  attType,
+                                  name,
+                                  None,
+                                  false,
+                                  f.size.toLong,
+                                  Timestamp.unsafeFromInstantTruncated(now)
+                                )
+                      )
+                    )).toAsync
+              }
             )
         }
       )

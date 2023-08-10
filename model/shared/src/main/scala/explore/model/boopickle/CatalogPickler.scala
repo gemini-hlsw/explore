@@ -105,14 +105,14 @@ trait CatalogPicklers extends CommonPicklers {
       .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
       .addConcreteType[AgsAnalysis.Usable]
 
-  given Pickler[ObjectTracking.ConstantTracking] = generatePickler
-
   given Pickler[ObjectTracking.SiderealObjectTracking] = generatePickler
+
+  given Pickler[ObjectTracking.SiderealAsterismTracking] = generatePickler
 
   given Pickler[ObjectTracking] =
     compositePickler[ObjectTracking]
-      .addConcreteType[ObjectTracking.ConstantTracking]
       .addConcreteType[ObjectTracking.SiderealObjectTracking]
+      .addConcreteType[ObjectTracking.SiderealAsterismTracking]
 }
 
 object CatalogPicklers extends CatalogPicklers

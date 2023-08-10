@@ -3,6 +3,7 @@
 
 package explore.model.syntax
 
+import cats.effect.IO
 import cats.syntax.all.*
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
@@ -22,6 +23,7 @@ import lucuma.core.model.Target
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 
+import java.time.Instant
 import java.time.ZoneOffset
 import scala.annotation.targetName
 import scala.collection.immutable.SortedMap
@@ -93,3 +95,5 @@ object all:
     def formatUtcWithZone: String =
       s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
         s"${Constants.GppTimeTZFormatterWithZone.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
+
+  extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)

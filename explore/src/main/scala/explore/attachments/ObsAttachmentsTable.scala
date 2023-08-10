@@ -25,6 +25,7 @@ import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.enums.AppTab
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
 import explore.utils.*
@@ -59,7 +60,6 @@ import lucuma.ui.utils.*
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
 
-import java.time.Instant
 import scala.collection.immutable.SortedSet
 
 case class ObsAttachmentsTable(
@@ -115,18 +115,21 @@ object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
                                  oa.description,
                                  dom.readReadableStream(IO(f.stream()))
             ) *>
-            props.obsAttachments
-              .mod(
-                _.updatedWith(oa.id)(
-                  _.map(
-                    _.copy(fileName = name,
-                           updatedAt = Timestamp.unsafeFromInstantTruncated(Instant.now()),
-                           checked = false
+            IO.now()
+              .flatMap { now =>
+                props.obsAttachments
+                  .mod(
+                    _.updatedWith(oa.id)(
+                      _.map(
+                        _.copy(fileName = name,
+                               updatedAt = Timestamp.unsafeFromInstantTruncated(now),
+                               checked = false
+                        )
+                      )
                     )
                   )
-                )
-              )
-              .toAsync
+                  .toAsync
+              }
               .toastErrors
         }
       )
