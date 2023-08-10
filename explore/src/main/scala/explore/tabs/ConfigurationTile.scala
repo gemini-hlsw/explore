@@ -16,6 +16,7 @@ import explore.model.ObsTabTilesIds
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.undo.*
+import japgolly.scalajs.react.Callback
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -31,8 +32,6 @@ object ConfigurationTile {
     userId:           Option[User.Id],
     programId:        Program.Id,
     obsId:            Observation.Id,
-    title:            String,
-    subtitle:         Option[NonEmptyString],
     requirements:     UndoSetter[ScienceRequirements],
     mode:             UndoSetter[Option[ObservingMode]],
     posAngle:         View[PosAngleConstraint],
@@ -40,7 +39,8 @@ object ConfigurationTile {
     baseCoordinates:  Option[CoordinatesAtVizTime],
     obsConf:          ObsConfiguration,
     selectedConfig:   View[Option[BasicConfigAndItc]],
-    allTargets:       TargetList
+    allTargets:       TargetList,
+    sequenceChanged:  Callback
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -52,15 +52,14 @@ object ConfigurationTile {
         userId,
         programId,
         obsId,
-        title,
-        subtitle,
         requirements,
         mode,
         posAngle,
         obsConf,
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
-        selectedConfig
+        selectedConfig,
+        sequenceChanged
       )
     )
 }

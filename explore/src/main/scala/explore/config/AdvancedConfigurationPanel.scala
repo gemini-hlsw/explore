@@ -19,7 +19,6 @@ import explore.Icons
 import explore.common.Aligner
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.config.sequence.SequenceEditorPopup
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
@@ -77,13 +76,12 @@ import scalajs.js.JSConverters.*
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id
   def obsId: Observation.Id
-  def title: String
-  def subtitle: Option[NonEmptyString]
   def observingMode: Aligner[T, Input]
   def spectroscopyRequirements: ScienceRequirements.Spectroscopy
   def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
   def selectedConfig: View[Option[BasicConfigAndItc]]
+  def sequenceChanged: Callback
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ObservingMode,
@@ -598,7 +596,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               original = initialFpuLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit
             ),
-            offsetsControl(Callback.empty)
+            offsetsControl(props.sequenceChanged)
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
             customizableInputText(
@@ -613,7 +611,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               originalValue = initialCentralWavelength,
               disabled = disableSimpleEdit
             ),
-            dithersControl(Callback.empty)
+            dithersControl(props.sequenceChanged)
             // FormLabel(htmlFor = "exposureMode".refined)(
             //   "Exposure Mode",
             //   HelpIcon("configuration/exposure-mode.md".refined)
@@ -763,18 +761,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
-            SequenceEditorPopup(
-              props.programId,
-              props.obsId,
-              props.title,
-              props.subtitle,
-              dithersControl,
-              offsetsControl,
-              trigger = Button(
-                label = "View Sequence",
-                severity = Button.Severity.Secondary
-              ).compact.small
-            ),
             Button(
               label = "Revert Configuration",
               icon = Icons.ListIcon,
@@ -792,7 +778,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "Revert Customizations",
               icon = Icons.TrashUnstyled,
               severity = Button.Severity.Danger,
-              onClick = editState.set(ConfigEditState.View) >>
+              onClick = props.sequenceChanged *> editState.set(ConfigEditState.View) >>
                 // exposureModeEnum.set(none) >>
                 invalidateITC >>
                 revertCustomizations(props.observingMode)
@@ -845,13 +831,12 @@ object AdvancedConfigurationPanel {
   case class GmosNorthLongSlit(
     programId:                Program.Id,
     obsId:                    Observation.Id,
-    title:                    String,
-    subtitle:                 Option[NonEmptyString],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: ScienceRequirements.Spectroscopy,
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
-    selectedConfig:           View[Option[BasicConfigAndItc]]
+    selectedConfig:           View[Option[BasicConfigAndItc]],
+    sequenceChanged:          Callback
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
@@ -1048,13 +1033,12 @@ object AdvancedConfigurationPanel {
   case class GmosSouthLongSlit(
     programId:                Program.Id,
     obsId:                    Observation.Id,
-    title:                    String,
-    subtitle:                 Option[NonEmptyString],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: ScienceRequirements.Spectroscopy,
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
-    selectedConfig:           View[Option[BasicConfigAndItc]]
+    selectedConfig:           View[Option[BasicConfigAndItc]],
+    sequenceChanged:          Callback
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )

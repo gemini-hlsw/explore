@@ -10,7 +10,6 @@ import lucuma.core.model.Observation
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.*
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.Panel
 import lucuma.ui.syntax.all.given
 
 sealed trait GeneratedSequenceTables[S, D] {
@@ -37,15 +36,12 @@ object GeneratedSequenceTables:
     ScalaFnComponent
       .withHooks[Props[S, D]]
       .render(props =>
-        Panel()(
-          <.div(ExploreStyles.SequencesPanel)(
-            // VisitsViewer(props.obsId),
-            <.h3("Acquisition"),
-            props.config.acquisition
-              .map(seq => tableComponent(seq.nextAtom +: seq.possibleFuture)),
-            <.h3("Science"),
-            props.config.science.map(seq => tableComponent(seq.nextAtom +: seq.possibleFuture))
-          )
+        <.div(ExploreStyles.SequencesPanel)(
+          <.h3("Acquisition"),
+          props.config.acquisition
+            .map(seq => tableComponent(seq.nextAtom +: seq.possibleFuture)),
+          <.h3("Science"),
+          props.config.science.map(seq => tableComponent(seq.nextAtom +: seq.possibleFuture))
         )
       )
 

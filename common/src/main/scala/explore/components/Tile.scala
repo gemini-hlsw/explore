@@ -25,6 +25,7 @@ case class Tile(
   control:            TileSizeState => Option[VdomNode] = _ => None,
   canMinimize:        Boolean = false,
   canMaximize:        Boolean = false,
+  hidden:             Boolean = false,
   state:              TileSizeState = TileSizeState.Normal,
   sizeStateCallback:  TileSizeState => Callback = _ => Callback.empty,
   controllerClass:    Css = Css.Empty, // applied to wrapping div when in a TileController.
@@ -45,22 +46,22 @@ case class Tile(
 }
 
 object Tile {
-  type Props  = Tile
-  type TileId = NonEmptyString
-
+  type TileId        = NonEmptyString
   type RenderInTitle = VdomNode => VdomNode
 
-  val heightBreakpoints =
+  private type Props = Tile
+
+  private val heightBreakpoints =
     List((200, TileXSH), 700 -> TileSMH, 1024 -> TileMDH)
 
-  val widthBreakpoints =
+  private val widthBreakpoints =
     List(layout.XtraSmallCutoff -> TileXSW,
          layout.SmallCutoff     -> TileSMW,
          layout.MediumCutoff    -> TileMDW,
          layout.LargeCutoff     -> TileLGW
     )
 
-  val component =
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
@@ -95,48 +96,50 @@ object Tile {
             .modState(_.fold(Option(node.asInstanceOf[dom.html.Element]))(_.some))
             .runNow()
 
-        <.div(
-          ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass,
-          ^.key := p.id.value
-        )(
-          // Tile title, set classes based on size
-          ResponsiveComponent(
-            widthBreakpoints,
-            heightBreakpoints,
-            clazz = ExploreStyles.TileTitle |+| p.tileTitleClass
+        if (!p.hidden) {
+          <.div(
+            ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass,
+            ^.key := p.id.value
           )(
-            React.Fragment(
-              <.div(
-                ExploreStyles.TileTitleMenu,
-                p.back.map(b => <.div(ExploreStyles.TileButton, b)),
-                <.span(ExploreStyles.TileTitleControlArea, p.title)
-              ),
-              <.div(
-                p.control(p.state)
-                  .map(b => <.div(ExploreStyles.TileControl, b)),
-                <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
-                  ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
-                  ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
+            // Tile title, set classes based on size
+            ResponsiveComponent(
+              widthBreakpoints,
+              heightBreakpoints,
+              clazz = ExploreStyles.TileTitle |+| p.tileTitleClass
+            )(
+              React.Fragment(
+                <.div(
+                  ExploreStyles.TileTitleMenu,
+                  p.back.map(b => <.div(ExploreStyles.TileButton, b)),
+                  <.span(ExploreStyles.TileTitleControlArea, p.title)
+                ),
+                <.div(
+                  p.control(p.state)
+                    .map(b => <.div(ExploreStyles.TileControl, b)),
+                  <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
+                    ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
+                    ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
+                  )
+                ),
+                <.div(ExploreStyles.TileControlButtons,
+                      minimizeButton.when(p.showMinimize),
+                      maximizeButton.when(p.showMaximize)
                 )
-              ),
-              <.div(ExploreStyles.TileControlButtons,
-                    minimizeButton.when(p.showMinimize),
-                    maximizeButton.when(p.showMaximize)
               )
-            )
-          ),
-          // Tile body
-          infoRef.value
-            .map(node =>
-              ResponsiveComponent(
-                widthBreakpoints,
-                heightBreakpoints,
-                clazz = ExploreStyles.TileBody |+| p.bodyClass
-              )(
-                p.render(info => ReactPortal(info, node))
-              ).when(p.state =!= TileSizeState.Minimized)
-            )
-            .whenDefined
-        )
+            ),
+            // Tile body
+            infoRef.value
+              .map(node =>
+                ResponsiveComponent(
+                  widthBreakpoints,
+                  heightBreakpoints,
+                  clazz = ExploreStyles.TileBody |+| p.bodyClass
+                )(
+                  p.render(info => ReactPortal(info, node))
+                ).when(p.state =!= TileSizeState.Minimized)
+              )
+              .whenDefined
+          )
+        } else EmptyVdom
       }
 }
