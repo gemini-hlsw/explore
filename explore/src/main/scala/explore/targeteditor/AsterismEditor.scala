@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.Icons
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.VizTimeEditor
@@ -19,9 +18,6 @@ import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.TargetList
-import explore.syntax.ui.*
-import explore.targets.TargetSelectionPopup
-import explore.targets.TargetSource
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -30,10 +26,10 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.Button
 import lucuma.refined.*
-import lucuma.schemas.model.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -59,6 +55,9 @@ case class AsterismEditor(
   globalPreferences: View[GlobalPreferences]
 ) extends ReactFnProps(AsterismEditor.component)
 
+object AreAdding extends NewType[Boolean]
+type AreAdding = AreAdding.Type
+
 object AsterismEditor extends AsterismModifier:
   private type Props = AsterismEditor
 
@@ -67,8 +66,6 @@ object AsterismEditor extends AsterismModifier:
     inline def CurrentOnly: EditScope  = EditScope(false)
 
   private type EditScope = EditScope.Type
-
-  private object AreAdding extends NewType[Boolean]
 
   private def onCloneTarget(
     asterismIds: View[AsterismIds],
@@ -129,30 +126,14 @@ object AsterismEditor extends AsterismModifier:
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
           props.renderInTitle(
-            TargetSelectionPopup(
-              "Add Target",
-              TargetSource.FromProgram[IO](props.programId) :: TargetSource.forAllCatalogs[IO],
-              selectExistingLabel = "Link",
-              selectExistingIcon = Icons.Link,
-              selectNewLabel = "Add",
-              selectNewIcon = Icons.New,
-              trigger = Button(
-                severity = Button.Severity.Success,
-                disabled = adding.get.value,
-                icon = Icons.New,
-                loading = adding.get.value,
-                label = "Add"
-              ).tiny.compact,
-              onSelected = targetWithOptId =>
-                insertSiderealTarget(
-                  props.programId,
-                  props.obsIds,
-                  props.asterismIds,
-                  props.allTargets.model,
-                  targetWithOptId
-                ).flatMap(oTargetId => targetView.async.set(oTargetId))
-                  .switching(adding.async, AreAdding(_))
-                  .runAsync
+            targetSelectionPopup(
+              "Add",
+              props.programId,
+              props.obsIds,
+              props.asterismIds,
+              props.allTargets.model,
+              adding,
+              targetView.async.set
             )
           ),
           props.renderInTitle(VizTimeEditor(vizTimeView)),
@@ -161,7 +142,7 @@ object AsterismEditor extends AsterismModifier:
             props.programId,
             props.obsIds,
             props.asterismIds,
-            props.allTargets.get,
+            props.allTargets.model,
             selectedTargetView,
             vizTime,
             props.renderInTitle,
