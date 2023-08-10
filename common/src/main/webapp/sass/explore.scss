@@ -454,10 +454,8 @@ a:hover {
   .p-datatable-tfoot {
     position: sticky;
     inset-block-end: 0;
-    height: 100%;
 
     > tr > td {
-      vertical-align: bottom;
       padding: 0 !important; // Reset default padding
     }
   }
@@ -634,7 +632,7 @@ a:hover {
 
 .explore-brightnesses-footer {
   padding: 0.2em;
-  border-top: 0.2px solid var(--under-tab-border-color);
+  outline: 0.2px solid var(--under-tab-border-color);
   background-color: var(--table-footer-background);
 
   .pl-form-field-label {
