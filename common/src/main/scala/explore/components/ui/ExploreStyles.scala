@@ -369,6 +369,7 @@ object ExploreStyles:
 
   // Sequence Viewer
   val SequencesPanel                   = Css("explore-sequences-panel")
+  val SequencesPanelError              = Css("explore-sequences-panel-error")
   val SequenceTable                    = Css("explore-sequence-table")
   val CellHideBorder                   = Css("explore-table-cell-hide-border")
   val SequenceBracketCell              = Css("explore-sequence-bracket-cell")

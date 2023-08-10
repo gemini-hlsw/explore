@@ -19,12 +19,10 @@ object SequenceEditorTile:
   def sequenceTile(
     programId: Program.Id,
     obsId:     Observation.Id,
-    displayed: Boolean,
     changed:   View[Pot[Unit]]
   ) =
     Tile(
       ObsTabTilesIds.SequenceId.id,
       s"Sequence",
-      canMinimize = true,
-      hidden = !displayed
+      canMinimize = true
     )(_ => GeneratedSequenceViewer(programId, obsId, changed))

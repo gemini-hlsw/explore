@@ -39,7 +39,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
-import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
@@ -324,8 +323,6 @@ object ObsTabTiles:
               selectedAttachment
             )
 
-          val showSequenceTile = props.observation.get.status >= ObsStatus.Approved
-
           val notesTile =
             Tile(
               ObsTabTilesIds.NotesId.id,
@@ -345,7 +342,6 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(
               props.programId,
               props.obsId,
-              showSequenceTile,
               sequenceState
             )
 

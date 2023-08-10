@@ -9,6 +9,7 @@ import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import explore.*
+import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -16,6 +17,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Message
 import lucuma.schemas.odb.SequenceSQL.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -59,6 +61,16 @@ object GeneratedSequenceViewer:
                 GmosNorthGeneratedSequenceTables(props.obsId, config)
               case InstrumentExecutionConfig.GmosSouth(config) =>
                 GmosSouthGeneratedSequenceTables(props.obsId, config)
+            },
+            errorRender = _ => {
+              val msg = "No sequence avaialble, you may need to setup a configuration"
+              <.div(
+                ExploreStyles.SequencesPanelError,
+                Message(text = msg,
+                        severity = Message.Severity.Warning,
+                        icon = Icons.ExclamationTriangle
+                )
+              )
             }
           )
       )
