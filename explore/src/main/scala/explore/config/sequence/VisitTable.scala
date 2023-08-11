@@ -17,6 +17,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.StepRecord
+import lucuma.ui.sequence.SequenceRow
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 
@@ -34,7 +35,7 @@ case class GmosSouthVisitTable(steps: List[StepRecord[DynamicConfig.GmosSouth]])
 private sealed trait VisitTableBuilder[D: Eq]:
   private type Props = VisitTable[D]
 
-  private val ColDef = ColumnDef[(GmosSequenceRow.Executed.ExecutedStep[D], Int)]
+  private val ColDef = ColumnDef[(SequenceRow.Executed.ExecutedStep[D], Int)]
 
   val IndexColumnId: ColumnId = ColumnId("stepIndex")
 
@@ -46,7 +47,7 @@ private sealed trait VisitTableBuilder[D: Eq]:
           SequenceColumns.gmosColumns(ColDef, _._1.some)
       )
       .useMemoBy((props, _) => props.steps)((_, _) =>
-        _.map(step => GmosSequenceRow.Executed.ExecutedStep(step))
+        _.map(step => SequenceRow.Executed.ExecutedStep(step))
       )
       .useReactTableBy((_, cols, rows) =>
         TableOptions(
