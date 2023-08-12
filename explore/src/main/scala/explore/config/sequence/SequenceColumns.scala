@@ -9,9 +9,9 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.table.*
+import lucuma.ui.sequence.SequenceRow
+import lucuma.ui.sequence.SequenceRowFormatters.*
 import lucuma.ui.syntax.all.given
-
-import java.text.DecimalFormat
 
 object SequenceColumns:
   val StepTypeColumnId: ColumnId   = ColumnId("stepType")
@@ -31,9 +31,7 @@ object SequenceColumns:
   private def rightAligned(value: Any) =
     <.div(^.textAlign.right)(value.toString)
 
-  private val offsetFormat = new DecimalFormat("#.0")
-
-  def gmosColumns[D, T, R <: GmosSequenceRow[?, D]](
+  def gmosColumns[D, T, R <: SequenceRow[D]](
     colDef:  ColumnDef.Applied[T],
     getStep: T => Option[R]
   ): List[ColumnDef[T, ?]] =
@@ -46,13 +44,15 @@ object SequenceColumns:
       ),
       colDef(
         ExposureColumnId,
-        getStep(_).flatMap(_.exposureSecs),
+        getStep(_).flatMap(_.exposureTime),
         header = _ => rightAligned("Exp (sec)"),
-        cell = _.value.map(rightAligned)
+        cell = c =>
+          (c.value, getStep(c.row.original).flatMap(_.instrument)).mapN: (e, i) =>
+            rightAligned(FormatExposureTime(i)(e))
       ),
       colDef(
         GuideColumnId,
-        getStep(_).map(_.guided),
+        getStep(_).map(_.hasGuiding),
         header = "",
         cell = _.value
           .filter(identity) // Only render on Some(true)
@@ -62,19 +62,19 @@ object SequenceColumns:
         PColumnId,
         getStep(_).flatMap(_.p),
         header = _ => rightAligned("p"),
-        cell = _.value.map(v => rightAligned(offsetFormat.format(v)))
+        cell = _.value.map(rightAligned.compose(FormatOffsetP))
       ),
       colDef(
         QColumnId,
         getStep(_).flatMap(_.q),
         header = _ => rightAligned("q"),
-        cell = _.value.map(v => rightAligned(offsetFormat.format(v)))
+        cell = _.value.map(rightAligned.compose(FormatOffsetQ))
       ),
       colDef(
         WavelengthColumnId,
         getStep(_).flatMap(_.wavelength),
         header = _ => rightAligned("λ (nm)"),
-        cell = _.value.map((rightAligned _).compose(_.toInt))
+        cell = _.value.map(rightAligned.compose(FormatWavelength))
       ),
       colDef(
         FPUColumnId,
