@@ -39,7 +39,7 @@ import lucuma.core.util.Enumerated
 import lucuma.itc.ChartType
 import lucuma.react.gridlayout.*
 import lucuma.react.table.*
-import lucuma.ui.table.TableStateStore
+import lucuma.ui.table.hooks.*
 import org.typelevel.log4cats.Logger
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates.Data.LucumaGridLayoutPositions
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery

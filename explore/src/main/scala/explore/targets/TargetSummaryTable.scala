@@ -45,6 +45,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 import org.scalajs.dom.{File => DOMFile}
 
 import scala.collection.immutable.SortedSet
@@ -61,7 +62,7 @@ case class TargetSummaryTable(
   undoCtx:               UndoContext[ProgramSummaries]
 ) extends ReactFnProps(TargetSummaryTable.component)
 
-object TargetSummaryTable extends TableHooks:
+object TargetSummaryTable:
   private type Props = TargetSummaryTable
 
   private val ColDef = ColumnDef[TargetWithId]

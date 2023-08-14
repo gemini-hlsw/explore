@@ -60,8 +60,8 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.ColumnSize.*
-import lucuma.ui.table.TableHooks
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*
@@ -87,7 +87,7 @@ case class SpectroscopyModesTable(
       if b.canQueryITC
     yield b
 
-private object SpectroscopyModesTable extends TableHooks:
+private object SpectroscopyModesTable:
   private type Props = SpectroscopyModesTable
 
   type ScrollTo = ScrollTo.Type
