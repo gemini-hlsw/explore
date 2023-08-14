@@ -40,9 +40,8 @@ import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.table.TableHooks
-import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 import org.scalajs.dom.html.Anchor
 import queries.schemas.odb.ObsQueries.ObservationList
 
@@ -57,7 +56,7 @@ final case class ObsSummaryTable(
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
 
-object ObsSummaryTable extends TableHooks:
+object ObsSummaryTable:
   import ObsSummaryRow.*
 
   private type Props = ObsSummaryTable

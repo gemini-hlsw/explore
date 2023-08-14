@@ -70,7 +70,7 @@ case class ObsAttachmentsTable(
   renderInTitle:            Tile.RenderInTitle
 ) extends ReactFnProps(ObsAttachmentsTable.component)
 
-object ObsAttachmentsTable extends TableHooks with ObsAttachmentUtils:
+object ObsAttachmentsTable extends ObsAttachmentUtils:
   private type Props = ObsAttachmentsTable
 
   private val ColDef = ColumnDef[View[ObsAttachment]]

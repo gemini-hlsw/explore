@@ -31,6 +31,7 @@ import lucuma.react.table.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 
 import scala.collection.immutable.SortedSet
 
@@ -42,7 +43,7 @@ case class ConstraintsSummaryTable(
   renderInTitle:  Tile.RenderInTitle
 ) extends ReactFnProps(ConstraintsSummaryTable.component)
 
-object ConstraintsSummaryTable extends TableHooks:
+object ConstraintsSummaryTable:
   private type Props = ConstraintsSummaryTable
 
   private val ColDef = ColumnDef[ConstraintGroup]

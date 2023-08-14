@@ -40,9 +40,8 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.table.TableHooks
-import lucuma.ui.table.TableOptionsWithStateStore
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 
 import java.time.Instant
 
@@ -59,7 +58,7 @@ case class TargetTable(
   fullScreen:     AladinFullScreen
 ) extends ReactFnProps(TargetTable.component)
 
-object TargetTable extends TableHooks:
+object TargetTable:
   private type Props = TargetTable
 
   private val ColDef = ColumnDef[SiderealTargetWithId]
