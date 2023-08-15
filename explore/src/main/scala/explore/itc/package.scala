@@ -25,6 +25,10 @@ def requiredForITC: TagMod =
     <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
   ).withTooltip("Required for ITC")
 
+def formatDurationSeconds(ts: TimeSpan): String =
+  val seconds = ts.toSeconds
+  f"$seconds%.0f sec"
+
 def formatDuration(ts: TimeSpan): String =
   val seconds = ts.toSeconds
   if (seconds < 60)
@@ -35,7 +39,7 @@ def formatDuration(ts: TimeSpan): String =
     f"${seconds / 3600.0}%.2f hr"
 
 def format(time: TimeSpan, count: PosInt): String =
-  s"$count × ${formatDuration(time)} = ${formatDuration(time *| count.value)}"
+  s"$count × ${formatDurationSeconds(time)} = ${formatDuration(time *| count.value)}"
 
 def formatCcds(
   ccds:      Option[NonEmptyList[ItcCcd]],

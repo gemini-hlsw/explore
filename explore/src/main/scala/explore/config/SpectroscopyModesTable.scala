@@ -212,7 +212,7 @@ private object SpectroscopyModesTable:
         <.span(formatDuration(r.duration))
           .withTooltip(
             placement = Placement.RightStart,
-            tooltip = s"${r.exposures} × ${formatDuration(r.exposureTime)}"
+            tooltip = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
           )
       case Right(ItcResult.Pending)   =>
         Icons.Spinner.withSpin(true)
