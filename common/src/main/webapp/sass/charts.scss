@@ -171,7 +171,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   overflow: hidden;
   min-height: 0;
   grid-template: 'description plot' minmax(0, 1fr) // minmax is required to properly shrink
-    'description plot-controls' / minmax(min-content, 2fr) minmax(0, 5fr);
+    'description plot-controls' / minmax(max-content, 2fr) minmax(0, 5fr);
 }
 
 .itc-plot-body {
