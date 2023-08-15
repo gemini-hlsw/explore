@@ -209,7 +209,7 @@ private object SpectroscopyModesTable:
           <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
       case Right(r: ItcResult.Result) =>
-        <.span(formatDuration(r.duration))
+        <.span(formatDurationHours(r.duration))
           .withTooltip(
             placement = Placement.RightStart,
             tooltip = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
