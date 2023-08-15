@@ -51,14 +51,14 @@ case class TargetTable(
   obsIds:         ObsIdSet, // Only used to invoke DB
   // Targets are not modified here, we only modify which ones belong to the Asterism.
   targetIds:      View[AsterismIds],
-  targetInfo:     TargetList,
+  targetInfo:     View[TargetList],
   selectedTarget: View[Option[Target.Id]],
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen
 ) extends ReactFnProps(TargetTable.component)
 
-object TargetTable:
+object TargetTable extends AsterismModifier:
   private type Props = TargetTable
 
   private val ColDef = ColumnDef[SiderealTargetWithId]
@@ -118,7 +118,7 @@ object TargetTable:
         IO(vizTime.getOrElse(Instant.now()))
       }
       // rows
-      .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo, vizTime))(
+      .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo.get, vizTime))(
         (_, _, _, _) =>
           case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
             targetIds.toList
@@ -147,7 +147,10 @@ object TargetTable:
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
       )
-      .render((props, _, _, _, rows, table) =>
+      .useStateView(AreAdding(false))
+      .render((props, ctx, _, _, rows, table, adding) =>
+        import ctx.given
+
         React.Fragment(
           props.renderInTitle(
             <.span(ExploreStyles.TitleSelectColumns)(
@@ -157,8 +160,16 @@ object TargetTable:
           ),
           if (rows.isEmpty) {
             <.div(
-              ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-              <.div("Add a target")
+              ExploreStyles.HVCenter,
+              AsterismEditor.targetSelectionPopup(
+                "Add a target",
+                props.programId,
+                props.obsIds,
+                props.targetIds,
+                props.targetInfo,
+                adding,
+                buttonClass = LucumaPrimeStyles.Massive
+              )
             )
           } else {
             <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(

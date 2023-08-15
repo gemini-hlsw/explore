@@ -7,16 +7,23 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
+import explore.Icons
 import explore.common.AsterismQueries
 import explore.common.TargetQueries
 import explore.model.AsterismIds
 import explore.model.ObsIdSet
 import explore.model.TargetList
+import explore.syntax.ui.*
+import explore.targets.TargetSelectionPopup
+import explore.targets.TargetSource
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.common.Css
+import lucuma.react.primereact.Button
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.TargetWithOptId
+import lucuma.ui.primereact.*
 import org.typelevel.log4cats.Logger
 
 trait AsterismModifier:
@@ -51,3 +58,44 @@ trait AsterismModifier:
           .map(_.some)
       case _                                                                =>
         IO(none)
+
+  def targetSelectionPopup(
+    label:       String,
+    programId:   Program.Id,
+    obsIds:      ObsIdSet,
+    targetIds:   View[AsterismIds],
+    targetInfo:  View[TargetList],
+    adding:      View[AreAdding],
+    after:       Option[Target.Id] => IO[Unit] = _ => IO.unit,
+    buttonClass: Css = Css.Empty
+  )(using
+    FetchClient[IO, ObservationDB],
+    Logger[IO],
+    ToastCtx[IO]
+  ): TargetSelectionPopup =
+    TargetSelectionPopup(
+      "Add Target",
+      TargetSource.FromProgram[IO](programId) :: TargetSource.forAllCatalogs[IO],
+      selectExistingLabel = "Link",
+      selectExistingIcon = Icons.Link,
+      selectNewLabel = label,
+      selectNewIcon = Icons.New,
+      trigger = Button(
+        severity = Button.Severity.Success,
+        icon = Icons.New,
+        disabled = adding.get.value,
+        loading = adding.get.value,
+        label = label,
+        clazz = buttonClass
+      ).tiny.compact,
+      onSelected = targetWithOptId =>
+        insertSiderealTarget(
+          programId,
+          obsIds,
+          targetIds,
+          targetInfo,
+          targetWithOptId
+        ).flatMap(after)
+          .switching(adding.async, AreAdding(_))
+          .runAsync
+    )
