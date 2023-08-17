@@ -12,6 +12,7 @@ import explore.findercharts.finderChartsSelector
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Angle
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
@@ -27,7 +28,8 @@ object FinderChartsTile:
     obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
     authToken:        Option[NonEmptyString],
     obsAttachments:   View[ObsAttachmentList],
-    selected:         View[Option[ObsAtt.Id]]
+    selected:         View[Option[ObsAtt.Id]],
+    parallacticAngle: Option[Angle]
   ) =
     val control = <.div(ExploreStyles.JustifiedEndTileControl,
                         finderChartsSelector(obsAttachments.get, obsAttachmentIds.get, selected)
@@ -49,6 +51,7 @@ object FinderChartsTile:
                        obsAttachmentIds,
                        obsAttachments,
                        selected,
+                       parallacticAngle,
                        renderInTitle
           ): VdomNode
         )

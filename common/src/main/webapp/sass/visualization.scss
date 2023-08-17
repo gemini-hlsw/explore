@@ -477,26 +477,44 @@ $brightness: var(--aladin-image-brightness);
 }
 
 .finder-charts-tools {
-  @include hud;
-
   display: grid;
   user-select: none;
   grid-template-columns: min-content 1fr min-content 6ch;
-  grid-template-rows: [header] min-content [divider] min-content [zoom] min-content [rotate] min-content [flip] min-content [reset] min-content [invert] min-content;
+  grid-template-rows:
+    [header] min-content
+    [divider] min-content
+    [zoom] min-content
+    [rotate] min-content
+    [flip] min-content
+    [rotate-pa] min-content
+    [reset] min-content
+    [invert] min-content;
   justify-items: center;
   color: var(--text-color);
   left: 0;
 
+  // pa row
+  :nth-child(14) {
+    grid-row-start: rotate-pa;
+    grid-column-end: span 4;
+    justify-self: start;
+    align-self: baseline;
+  }
+
   // reset row
-  :nth-child(14),
-  :nth-child(15) {
+  :nth-child(15),
+  :nth-child(16) {
     grid-row-start: reset;
   }
 
   // invert row
-  :nth-child(16),
-  :nth-child(17) {
+  :nth-child(17),
+  :nth-child(18) {
     grid-row-start: invert;
+  }
+
+  .finder-charts-button-pa {
+    display: flex;
   }
 }
 

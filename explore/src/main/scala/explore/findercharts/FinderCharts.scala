@@ -24,6 +24,7 @@ import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Angle
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
@@ -50,6 +51,7 @@ case class FinderCharts(
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
   selected:         View[Option[ObsAtt.Id]],
+  parallacticAngle: Option[Angle],
   renderInTitle:    Tile.RenderInTitle
 ) extends ReactFnProps(FinderCharts.component)
 
@@ -242,7 +244,7 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             SolarProgress(ExploreStyles.FinderChartsLoadProgress)
               .unless(action.get === Action.None)
           ),
-          ControlOverlay(ops),
+          ControlOverlay(props.parallacticAngle, ops),
           if (selector.value.value) {
             FinderChartLinker(props.programId,
                               client,

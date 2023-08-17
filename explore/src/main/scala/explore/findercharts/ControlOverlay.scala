@@ -10,6 +10,7 @@ import explore.model.Transformation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Angle
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.core.validation.InputValidWedge
 import lucuma.react.common.ReactFnProps
@@ -21,8 +22,10 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
-case class ControlOverlay(ops: View[Transformation])
-    extends ReactFnProps[ControlOverlay](ControlOverlay.component)
+case class ControlOverlay(
+  parallacticAngle: Option[Angle],
+  ops:              View[Transformation]
+) extends ReactFnProps[ControlOverlay](ControlOverlay.component)
 
 object ControlOverlay {
   type Props = ControlOverlay
@@ -82,6 +85,15 @@ object ControlOverlay {
                 .withBorder(true)
                 .withFixedWidth(true)
                 .withTransform(Transform(rotate = 90))
+            ),
+            <.div(
+              ExploreStyles.FinderChartsButton,
+              ^.onClick --> p.ops
+                .mod(r => p.parallacticAngle.fold(r)(r.rotateTo(_))),
+              <.div(ExploreStyles.FinderChartsButtonPA,
+                    "Align to PA",
+                    Icons.Angle.withBorder(true).withFixedWidth(true)
+              )
             ),
             <.div(
               ExploreStyles.FinderChartsButton,
