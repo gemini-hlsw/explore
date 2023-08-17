@@ -38,7 +38,6 @@ object ExploreStyles:
 
   val Accented: Css    = Css("explore-accented")
   val TextPlain: Css   = Css("explore-text-plain")
-  val TextNoWrap: Css  = Css("explore-text-nowrap")
   val UpgradeLink: Css = Css("explore-upgrade-link")
 
   val FlexContainer: Css = Css("explore-flex-container")

@@ -613,6 +613,8 @@ a:hover {
 }
 
 .pl-form-column.target-source-profile-editor {
+  --brightness-wrapper-start: 5;
+
   align-self: stretch;
   grid-template-rows: repeat(3, auto) 1fr;
 
@@ -621,12 +623,16 @@ a:hover {
     grid-template-rows: repeat(4, auto) 1fr;
 
     > .explore-brightnesses-wrapper {
-      grid-row-start: 5;
+      grid-row-start: var(--brightness-wrapper-start);
     }
   }
 
   &.with-gaussian.with-catalog-info {
     grid-template-rows: repeat(5, auto) 1fr;
+
+    > .explore-brightnesses-wrapper {
+      grid-row-start: calc(var(--brightness-wrapper-start) + 1);
+    }
   }
 }
 
