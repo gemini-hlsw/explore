@@ -31,6 +31,9 @@ object SequenceColumns:
   private def rightAligned(value: Any) =
     <.div(^.textAlign.right)(value.toString)
 
+  private def leftAligned(value: Any) =
+    <.div(^.marginLeft := 100.pct)(value.toString)
+
   def gmosColumns[D, T, R <: SequenceRow[D]](
     colDef:  ColumnDef.Applied[T],
     getStep: T => Option[R]
@@ -74,25 +77,25 @@ object SequenceColumns:
         WavelengthColumnId,
         getStep(_).flatMap(_.wavelength),
         header = _ => rightAligned("λ (nm)"),
-        cell = _.value.map(rightAligned.compose(FormatWavelength))
+        cell = _.value.map(rightAligned.compose(FormatWavelength)).getOrElse(leftAligned("-"))
       ),
       colDef(
         FPUColumnId,
         getStep(_).flatMap(_.fpuName),
         header = _ => rightAligned("FPU"),
-        cell = _.value.map(rightAligned)
+        cell = _.value.map(rightAligned).getOrElse("None")
       ),
       colDef(
         GratingColumnId,
         getStep(_).flatMap(_.gratingName),
         header = "Grating",
-        cell = _.value.orEmpty
+        cell = _.value.getOrElse("None")
       ),
       colDef(
         FilterColumnId,
         getStep(_).flatMap(_.filterName),
         header = "Filter",
-        cell = _.value.orEmpty
+        cell = _.value.getOrElse("None")
       ),
       colDef(
         XBinColumnId,
