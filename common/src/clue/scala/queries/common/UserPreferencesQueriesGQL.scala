@@ -56,11 +56,26 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait FinderChartUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation finderChartUpsert($object: ExploreFinderChartInsertInput!) {
-        insertExploreFinderChartOne(onConflict: {constraint: exploreFinderChart_pkey, update_columns: [flipX, flipY, rotate, scaleX, scaleY, inverted]}, object: $object) {
-          attachmentId
+      mutation finderChartUpsert($observationId: String!, $exploreFinderCharts: ExploreFinderChartInsertInput!) {
+        insertLucumaObservationOne(
+          object: {
+            observationId: $observationId,
+            exploreFinderCharts: {
+              data: [$exploreFinderCharts],
+              onConflict: {
+                constraint: exploreFinderChart_pkey,
+                update_columns: [flipX, flipY, rotate, scaleX, scaleY, inverted]
+              }
+            }
+          }, 
+          onConflict: {
+            constraint: lucuma_observation_pkey, 
+            update_columns: observationId
+          }
+        ) {
+            observationId
+          }
         }
-      }
       """
   }
 

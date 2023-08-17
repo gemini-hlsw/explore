@@ -66,6 +66,11 @@ type ExploreFinderChart {
   flipX: Boolean!
   flipY: Boolean!
   inverted: Boolean!
+
+  """
+  An object relationship
+  """
+  lucumaObservation: LucumaObservation!
   observationId: String!
   rotate: Int!
   scaleX: Int!
@@ -146,6 +151,7 @@ input ExploreFinderChartBoolExp {
   flipX: BooleanComparisonExp
   flipY: BooleanComparisonExp
   inverted: BooleanComparisonExp
+  lucumaObservation: LucumaObservationBoolExp
   observationId: StringComparisonExp
   rotate: IntComparisonExp
   scaleX: IntComparisonExp
@@ -179,6 +185,7 @@ input ExploreFinderChartInsertInput {
   flipX: Boolean
   flipY: Boolean
   inverted: Boolean
+  lucumaObservation: LucumaObservationObjRelInsertInput
   observationId: String
   rotate: Int
   scaleX: Int
@@ -239,6 +246,7 @@ input ExploreFinderChartOrderBy {
   flipX: OrderBy
   flipY: OrderBy
   inverted: OrderBy
+  lucumaObservation: LucumaObservationOrderBy
   observationId: OrderBy
   rotate: OrderBy
   scaleX: OrderBy
@@ -2198,6 +2206,18 @@ type LucumaObservationMutationResponse {
   data from the rows affected by the mutation
   """
   returning: [LucumaObservation!]!
+}
+
+"""
+input type for inserting object relation for remote table "lucumaObservation"
+"""
+input LucumaObservationObjRelInsertInput {
+  data: LucumaObservationInsertInput!
+
+  """
+  upsert condition
+  """
+  onConflict: LucumaObservationOnConflict
 }
 
 """

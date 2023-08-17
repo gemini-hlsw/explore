@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import lucuma.core.math.Angle
 import lucuma.core.util.NewType
 import monocle.Focus
 import monocle.Lens
@@ -85,6 +86,9 @@ case class Transformation(
 
   inline def rotateRight: Transformation =
     copy(rotate = ChartOp.Rotate((this.rotate.deg + 90) % 360))
+
+  inline def rotateTo(angle: Angle): Transformation =
+    copy(rotate = ChartOp.Rotate(angle.toSignedDoubleDegrees.toInt))
 
   inline def vflip: Transformation =
     copy(flipY = ChartOp.FlipY(!this.flipY.flip))

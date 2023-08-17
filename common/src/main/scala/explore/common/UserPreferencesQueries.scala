@@ -334,8 +334,8 @@ object UserPreferencesQueries:
     )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       FinderChartUpsert[F]
         .execute(
+          observationId = oid.show,
           ExploreFinderChartInsertInput(
-            observationId = oid.show.assign,
             attachmentId = aid.show.assign,
             flipX = transform.flipX.flip.assign,
             flipY = transform.flipY.flip.assign,
