@@ -51,6 +51,7 @@ import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
 import lucuma.itc.ItcWarning
 import lucuma.itc.SingleSN
+import lucuma.itc.client.ItcVersions
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.client.OptimizedSeriesResult
 import lucuma.itc.client.OptimizedSpectroscopyGraphResult
@@ -229,6 +230,8 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcCcd] = generatePickler
 
   given Pickler[OptimizedSpectroscopyGraphResult] = generatePickler
+
+  given Pickler[ItcVersions] = generatePickler
 }
 
 object ItcPicklers extends ItcPicklers

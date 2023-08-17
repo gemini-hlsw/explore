@@ -46,16 +46,27 @@ case class Cacheable[F[_], I, O](
  * Generic cache interface.
  */
 sealed trait Cache[F[_]](using F: Sync[F]):
+  def get[I: Pickler, O: Pickler](name: CacheName, version: CacheVersion, key: I): F[Option[O]]
+
   def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O]
-  def evict(until:                              Instant): F[Unit]
+
+  def evict(until: Instant): F[Unit]
+
   def evict(retention: Duration): F[Unit] =
     F.delay(Instant.now) >>= (now => evict(now.minus(retention)))
-  def clear: F[Unit]                      = F.unit
+
+  def clear: F[Unit] = F.unit
 
 /**
  * `NoCache` is used when, for some reason, a cache could not be initialized.
  */
 case class NoCache[F[_]]()(using F: Sync[F]) extends Cache[F]:
+  override def get[I: Pickler, O: Pickler](
+    name:    CacheName,
+    version: CacheVersion,
+    key:     I
+  ): F[Option[O]] = none.pure[F]
+
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] =
     computation.invoke
 
@@ -73,6 +84,26 @@ case class IDBCache[F[_]](
 )(using
   F:         Async[F]
 ) extends Cache[F]:
+
+  override def get[I: Pickler, O: Pickler](
+    name:    CacheName,
+    version: CacheVersion,
+    key:     I
+  ): F[Option[O]] = {
+    val pickledKey: Pickled = Pickled(asBytes((name.value, version.value, key)))
+
+    cacheDB
+      .get(store)(pickledKey)
+      .toF
+      .attempt
+      .map(_.toOption.flatten) // Treat errors as cache misses
+      .map(
+        _.fold(
+          none
+        )(pickledOutput => fromBytes[O](pickledOutput.value).toOption)
+      )
+  }
+
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] = { input =>
     val pickledInput: Pickled = Pickled(
       asBytes((computation.name.value, computation.version.value, input))

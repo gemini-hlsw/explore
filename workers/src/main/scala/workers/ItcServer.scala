@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import explore.events.*
 import explore.itc.ITCGraphRequests
 import explore.itc.ITCRequests
+import explore.itc.ITCVersionsRequests
 import explore.model.StaticData
 import explore.model.boopickle.ItcPicklers
 import explore.modes.SpectroscopyModesMatrix
@@ -50,7 +51,11 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
     } yield { invocation =>
       invocation.data match
         case ItcMessage.Initialize(itcURI) =>
-          ItcClient.create[IO](itcURI, createClient) >>= (client => itcClient.complete(client).void)
+          for {
+            client <- ItcClient.create[IO](itcURI, createClient)
+            _      <- itcClient.complete(client).void
+            _      <- ITCVersionsRequests.queryItc[IO](cache, client).andWait(1.hour).foreverM.start
+          } yield ()
 
         case ItcMessage.CleanCache =>
           cache.clear *> invocation.respond(())
