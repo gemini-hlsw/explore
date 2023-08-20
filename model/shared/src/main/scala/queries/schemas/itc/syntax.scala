@@ -5,6 +5,7 @@ package queries.schemas.itc
 
 import cats.Hash
 import cats.syntax.all.*
+import eu.timepit.refined.types.numeric.PosDouble
 import explore.model.AsterismIds
 import explore.model.TargetList
 import explore.model.itc.ItcTarget
@@ -12,24 +13,57 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.all.*
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosSouthFpu
+import lucuma.core.enums.GmosXBinning
+import lucuma.core.enums.GmosYBinning
+import lucuma.core.enums.ImageQuality
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
+import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
 
 trait syntax:
 
   extension (row: InstrumentRow)
-    def toItcClientMode: Option[InstrumentMode] = row match {
+    def toItcClientMode(p: SourceProfile, iq: ImageQuality): Option[InstrumentMode] = row match {
       case g: GmosNorthSpectroscopyRow =>
-        val roi = g.modeOverrides.flatMap(_.roi)
-        val ccd = g.modeOverrides.flatMap(_.ccdMode)
+        val isFPU =
+          g.fpu === GmosNorthFpu.Ifu2Slits || g.fpu === GmosNorthFpu.IfuBlue || g.fpu === GmosNorthFpu.IfuRed
+        val roi   = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
+        val ccd   = g.modeOverrides
+          .flatMap(_.ccdMode)
+          .orElse(
+            GmosCcdMode(
+              if (isFPU) GmosXBinning.One
+              else xbinNorth(g.fpu, p, iq, PosDouble.unsafeFrom(2.0)),
+              if (isFPU) GmosYBinning.One else DefaultYBinning,
+              DefaultAmpCount,
+              DefaultAmpGain,
+              DefaultAmpReadMode
+            ).some
+          )
         InstrumentMode
           .GmosNorthSpectroscopy(g.grating, g.filter, GmosFpu.North(g.fpu.asRight), ccd, roi)
           .some
       case g: GmosSouthSpectroscopyRow =>
-        val roi = g.modeOverrides.flatMap(_.roi)
-        val ccd = g.modeOverrides.flatMap(_.ccdMode)
+        val isFPU =
+          g.fpu === GmosSouthFpu.Ifu2Slits || g.fpu === GmosSouthFpu.IfuBlue || g.fpu === GmosSouthFpu.IfuRed
+        val roi   = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
+        val ccd   = g.modeOverrides
+          .flatMap(_.ccdMode)
+          .orElse(
+            GmosCcdMode(
+              if (isFPU) GmosXBinning.One
+              else xbinSouth(g.fpu, p, iq, PosDouble.unsafeFrom(2.0)),
+              if (isFPU) GmosYBinning.One else DefaultYBinning,
+              DefaultAmpCount,
+              DefaultAmpGain,
+              DefaultAmpReadMode
+            ).some
+          )
         InstrumentMode
           .GmosSouthSpectroscopy(g.grating, g.filter, GmosFpu.South(g.fpu.asRight), ccd, roi)
           .some

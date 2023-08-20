@@ -62,7 +62,7 @@ object ITCRequests:
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.target.name.value}"
         ) *> (selectedBand(params.target.profile, params.wavelength.value),
-              params.mode.toItcClientMode
+              params.mode.toItcClientMode(params.target.profile, params.constraints.imageQuality)
       )
         .traverseN { (band, mode) =>
           ItcClient[F]
@@ -92,7 +92,7 @@ object ITCRequests:
             }
         }
 
-    val cacheVersion = CacheVersion(9)
+    val cacheVersion = CacheVersion(10)
 
     val cacheableRequest =
       Cacheable(
