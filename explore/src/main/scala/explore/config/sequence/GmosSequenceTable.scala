@@ -16,6 +16,7 @@ import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.ui.sequence.SequenceColumns
 import lucuma.ui.sequence.SequenceRow
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -34,7 +35,7 @@ case class GmosSouthSequenceTable(atoms: List[Atom[DynamicConfig.GmosSouth]])
 private sealed trait GmosSequenceTableBuilder[D: Eq]:
   private type Props = GmosSequenceTable[D]
 
-  private val ColDef = ColumnDef[SequenceRow.FutureStep[D]]
+  private val ColDef = ColumnDef[(SequenceRow.FutureStep[D], Int)]
 
   private def drawBracket(rows: Int): VdomElement =
     svg(^.width := "1px", ^.height := "15px")(
@@ -46,26 +47,27 @@ private sealed trait GmosSequenceTableBuilder[D: Eq]:
 
   private val AtomStepsColumnId: ColumnId = ColumnId("atomSteps")
 
-  private val columns: List[ColumnDef[SequenceRow.FutureStep[D], ?]] =
+  private val columns: List[ColumnDef[(SequenceRow.FutureStep[D], Int), ?]] =
     ColDef(
       AtomStepsColumnId,
-      _.firstOf,
+      _._1.firstOf,
       header = " ",
       cell = _.value.map(drawBracket),
       size = 30.toPx
-    )
-      +: SequenceColumns.gmosColumns(ColDef, _.some)
+    ) +: SequenceColumns.gmosColumns(ColDef, _._1.some, _._2.some.map(_ + 1))
 
   protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
       .useMemo(())(_ => columns)
-      .useMemoBy((props, _) => props.atoms)((_, _) => SequenceRow.FutureStep.fromAtoms)
+      .useMemoBy((props, _) => props.atoms)((_, _) =>
+        atoms => SequenceRow.FutureStep.fromAtoms(atoms).zipWithIndex
+      )
       .useReactTableBy((props, cols, rows) =>
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => RowId(row.id.toString),
+          getRowId = (row, _, _) => RowId(row._1.id.toString),
           enableColumnResizing = false,
           enableSorting = false
         )

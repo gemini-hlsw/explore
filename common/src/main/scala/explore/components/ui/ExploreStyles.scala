@@ -292,11 +292,12 @@ object ExploreStyles:
   val OrcidIconMenu: Css = Css("explore-orcid-icon-menu")
 
   // Labels
-  val WarningLabel: Css = Css("explore-warning-label")
-  val WarningIcon: Css  = Css("explore-warning-icon")
-  val WarningInput: Css = Css("explore-warning-input")
-  val ErrorIcon: Css    = Css("explore-error-icon")
-  val IndentLabel: Css  = Css("explore-indent-label")
+  val WarningLabel: Css       = Css("explore-warning-label")
+  val WarningIcon: Css        = Css("explore-warning-icon")
+  val WarningInput: Css       = Css("explore-warning-input")
+  val ErrorIcon: Css          = Css("explore-error-icon")
+  val IndentLabel: Css        = Css("explore-indent-label")
+  val RequiredForItcText: Css = Css("required-for-itc-text")
 
   val BrightnessesTableWrapper: Css            = Css("explore-brightnesses-wrapper")
   val BrightnessesContainer: Css               = Css("explore-brightnesses-container")
@@ -323,8 +324,6 @@ object ExploreStyles:
   val HelpTitleLabel: Css   = Css("explore-help-title-label")
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
-
-  val StepGuided: Css = Css("step-guided")
 
   val TargetImportForm: Css        = Css("explore-target-import-form")
   val TargetImportDescription: Css = Css("explore-target-import-description")

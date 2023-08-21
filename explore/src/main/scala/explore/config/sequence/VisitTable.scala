@@ -17,6 +17,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.StepRecord
+import lucuma.ui.sequence.SequenceColumns
 import lucuma.ui.sequence.SequenceRow
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -44,7 +45,7 @@ private sealed trait VisitTableBuilder[D: Eq]:
       .withHooks[Props]
       .useMemo(())(_ =>
         ColDef(IndexColumnId, _._2 + 1, header = "Step", cell = _.value.toString, size = 30.toPx) +:
-          SequenceColumns.gmosColumns(ColDef, _._1.some)
+          SequenceColumns.gmosColumns(ColDef, _._1.some, _._2.some.map(_ + 1))
       )
       .useMemoBy((props, _) => props.steps)((_, _) =>
         _.map(step => SequenceRow.Executed.ExecutedStep(step))

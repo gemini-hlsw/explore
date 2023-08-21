@@ -1,5 +1,6 @@
 import '/common/sass/explore-primereact.scss';
 import '/lucuma-css/lucuma-ui-login.scss';
+import '/lucuma-css/lucuma-ui-sequence.scss';
 import '/lucuma-css/lucuma-ui-table.scss';
 import '/lucuma-css/solar-system.scss';
 import '/lucuma-css/moon.scss';
