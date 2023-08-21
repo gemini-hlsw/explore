@@ -6,6 +6,8 @@ package explore.config.sequence
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ObserveClass
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Observation
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.*
@@ -18,15 +20,17 @@ sealed trait GeneratedSequenceTables[S, D] {
 }
 
 case class GmosNorthGeneratedSequenceTables(
-  obsId:  Observation.Id,
-  config: ExecutionConfig[StaticConfig.GmosNorth, DynamicConfig.GmosNorth]
-) extends ReactFnProps(GeneratedSequenceTables.gmosNorthComponent)
+  obsId:      Observation.Id,
+  config:     ExecutionConfig[StaticConfig.GmosNorth, DynamicConfig.GmosNorth],
+  snPerClass: Map[ObserveClass, SignalToNoise]
+) extends ReactFnProps(GeneratedSequenceTables.gmosNorthComponent(snPerClass))
     with GeneratedSequenceTables[StaticConfig.GmosNorth, DynamicConfig.GmosNorth]
 
 case class GmosSouthGeneratedSequenceTables(
-  obsId:  Observation.Id,
-  config: ExecutionConfig[StaticConfig.GmosSouth, DynamicConfig.GmosSouth]
-) extends ReactFnProps(GeneratedSequenceTables.gmosSouthComponent)
+  obsId:      Observation.Id,
+  config:     ExecutionConfig[StaticConfig.GmosSouth, DynamicConfig.GmosSouth],
+  snPerClass: Map[ObserveClass, SignalToNoise]
+) extends ReactFnProps(GeneratedSequenceTables.gmosSouthComponent(snPerClass))
     with GeneratedSequenceTables[StaticConfig.GmosSouth, DynamicConfig.GmosSouth]
 
 object GeneratedSequenceTables:
@@ -45,8 +49,12 @@ object GeneratedSequenceTables:
         )
       )
 
-  protected[sequence] val gmosNorthComponent =
-    componentBuilder[StaticConfig.GmosNorth, DynamicConfig.GmosNorth](GmosNorthSequenceTable(_))
+  protected[sequence] def gmosNorthComponent(snPerClass: Map[ObserveClass, SignalToNoise]) =
+    componentBuilder[StaticConfig.GmosNorth, DynamicConfig.GmosNorth](x =>
+      GmosNorthSequenceTable(x, x.head.observeClass, snPerClass.get(x.head.observeClass))
+    )
 
-  protected[sequence] val gmosSouthComponent =
-    componentBuilder[StaticConfig.GmosSouth, DynamicConfig.GmosSouth](GmosSouthSequenceTable(_))
+  protected[sequence] def gmosSouthComponent(snPerClass: Map[ObserveClass, SignalToNoise]) =
+    componentBuilder[StaticConfig.GmosSouth, DynamicConfig.GmosSouth](x =>
+      GmosSouthSequenceTable(x, x.head.observeClass, snPerClass.get(x.head.observeClass))
+    )

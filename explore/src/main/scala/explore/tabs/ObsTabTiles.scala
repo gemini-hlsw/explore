@@ -151,7 +151,8 @@ object ObsTabTiles:
               OdbItcResult.Success(
                 o.itc.science.selected.exposureTime,
                 o.itc.science.selected.exposures,
-                o.itc.science.selected.signalToNoise
+                o.itc.science.selected.signalToNoise,
+                o.itc.acquisition.selected.signalToNoise
               )
             )
           )
@@ -346,6 +347,7 @@ object ObsTabTiles:
               props.programId,
               props.obsId,
               asterismIds.get.toList,
+              itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
               sequenceChanged
             )
 

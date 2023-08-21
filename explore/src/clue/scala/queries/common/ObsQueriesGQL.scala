@@ -38,6 +38,11 @@ object ObsQueriesGQL:
                 signalToNoise
               }
             }
+            acquisition {
+              selected {
+                signalToNoise
+              }
+            }
           }
         }
       }

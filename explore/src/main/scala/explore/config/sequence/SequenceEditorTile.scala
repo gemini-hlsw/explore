@@ -10,6 +10,8 @@ import explore.components.Tile
 import explore.model.ObsTabTilesIds
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ObserveClass
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -21,10 +23,11 @@ object SequenceEditorTile:
     programId:       Program.Id,
     obsId:           Observation.Id,
     targetIds:       List[Target.Id],
+    snPerClass:      Map[ObserveClass, SignalToNoise],
     sequenceChanged: View[Pot[Unit]]
   ) =
     Tile(
       ObsTabTilesIds.SequenceId.id,
       s"Sequence",
       canMinimize = true
-    )(_ => GeneratedSequenceViewer(programId, obsId, targetIds, sequenceChanged))
+    )(_ => GeneratedSequenceViewer(programId, obsId, targetIds, snPerClass, sequenceChanged))

@@ -11,6 +11,7 @@ import explore.model.Constants
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.DatasetQaState
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
@@ -46,7 +47,7 @@ private sealed trait VisitTableBuilder[D: Eq]:
     ScalaFnComponent
       .withHooks[Props]
       .useMemo(()): _ => // cols
-        SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
+        SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some, _ => SignalToNoise.Min.some)
       .useMemoBy((props, _) => props.rows): (_, _) => // rows
         _.zipWithStepIndex.map(ExecutedStepRow.apply)
       .useReactTableBy: (_, cols, rows) =>

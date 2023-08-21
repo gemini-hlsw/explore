@@ -39,7 +39,7 @@ object ObsQueries:
 
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposureMode =
-      FixedExposureMode(PosInt.unsafeFrom(self.exposures.value), self.exposureTime)
+      FixedExposureMode(PosInt.unsafeFrom(self.sciExposures.value), self.sciExposureTime)
 
   def updateObservationConstraintSet[F[_]: Async](
     programId:   Program.Id,

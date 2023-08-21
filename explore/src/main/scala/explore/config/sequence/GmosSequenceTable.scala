@@ -10,25 +10,36 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ObserveClass
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.ui.reusability.given
 import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 
 sealed trait GmosSequenceTable[D]:
   def atoms: List[Atom[D]]
+  def obsClass: ObserveClass
+  def sn: Option[SignalToNoise]
 
-case class GmosNorthSequenceTable(atoms: List[Atom[DynamicConfig.GmosNorth]])
-    extends ReactFnProps(GmosNorthSequenceTable.component)
+case class GmosNorthSequenceTable(
+  atoms:    List[Atom[DynamicConfig.GmosNorth]],
+  obsClass: ObserveClass,
+  sn:       Option[SignalToNoise]
+) extends ReactFnProps(GmosNorthSequenceTable.component)
     with GmosSequenceTable[DynamicConfig.GmosNorth]
 
-case class GmosSouthSequenceTable(atoms: List[Atom[DynamicConfig.GmosSouth]])
-    extends ReactFnProps(GmosSouthSequenceTable.component)
+case class GmosSouthSequenceTable(
+  atoms:    List[Atom[DynamicConfig.GmosSouth]],
+  obsClass: ObserveClass,
+  sn:       Option[SignalToNoise]
+) extends ReactFnProps(GmosSouthSequenceTable.component)
     with GmosSequenceTable[DynamicConfig.GmosSouth]
 
 private sealed trait GmosSequenceTableBuilder[D: Eq]:
@@ -48,19 +59,31 @@ private sealed trait GmosSequenceTableBuilder[D: Eq]:
 
   private val AtomStepsColumnId: ColumnId = ColumnId("atomSteps")
 
-  private val columns: List[ColumnDef[SequenceTableRow, ?]] =
+  private def columns(
+    obsClass: ObserveClass,
+    sn:       Option[SignalToNoise]
+  ): List[ColumnDef[SequenceTableRow, ?]] =
     ColDef(
       AtomStepsColumnId,
       _.step.firstOf,
       header = " ",
       cell = _.value.map(drawBracket),
       size = 30.toPx
-    ) +: SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
+    ) +: SequenceColumns.gmosColumns(
+      ColDef,
+      _.step.some,
+      _.index.some,
+      r => {
+        val showScience = obsClass === ObserveClass.Science && r.flatMap(_.science).isDefined
+        val showAcq     = obsClass === ObserveClass.Acquisition && r.flatMap(_.fpuName).isEmpty
+        sn.filter(_ => showScience || showAcq)
+      }
+    )
 
   protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemo(())(_ => columns) // cols
+      .useMemoBy(p => (p.obsClass, p.sn))(_ => Function.tupled(columns)) // cols
       .useMemoBy((props, _) => props.atoms): (_, _) => // rows
         atoms =>
           SequenceRow.FutureStep.fromAtoms(atoms).zipWithStepIndex.map(SequenceTableRow.apply)
