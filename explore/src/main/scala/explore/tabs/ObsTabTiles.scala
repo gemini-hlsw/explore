@@ -39,15 +39,13 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
-import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.math.skycalc.averageParallacticAngle
+import lucuma.core.math.skycalc.parallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -311,20 +309,6 @@ object ObsTabTiles:
             props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
               obsEditAttachments(props.programId, props.obsId, ids).runAsync
             }
-
-          // TODO Move to lucuma-core
-          def parallacticAngle(
-            site:     Site,
-            tracking: ObjectTracking,
-            vizTime:  Instant
-          ): Angle = {
-            val skycalc = new ImprovedSkyCalc(site.place)
-            val c       = tracking
-              .at(vizTime)
-              .map(_.value)
-              .getOrElse(tracking.baseCoordinates)
-            skycalc.calculate(c, vizTime, false).parallacticAngle
-          }
 
           val pa: Option[Angle] =
             (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)

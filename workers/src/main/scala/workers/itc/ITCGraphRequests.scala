@@ -67,7 +67,9 @@ object ITCGraphRequests:
     ): F[Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]] =
       request.target
         .traverse(t =>
-          (selectedBand(t.profile, request.wavelength.value), request.mode.toItcClientMode)
+          (selectedBand(t.profile, request.wavelength.value),
+           request.mode.toItcClientMode(t.profile, request.constraints.imageQuality)
+          )
             .traverseN { (band, mode) =>
               ItcClient[F]
                 .spectroscopyIntegrationTimeAndGraph(
@@ -117,7 +119,7 @@ object ITCGraphRequests:
     val cacheableRequest =
       Cacheable(
         CacheName("itcGraphQuery"),
-        CacheVersion(10),
+        CacheVersion(11),
         doRequest,
         (r, g) =>
           r.target.forall(t =>
