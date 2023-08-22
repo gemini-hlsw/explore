@@ -186,7 +186,7 @@ private object SpectroscopyModesTable:
     val content: TagMod = c match
       case Left(nel)                  =>
         if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
-          <.span(Icons.Ban.withColor("red"))
+          <.span(Icons.Ban(^.color.red))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else
           val content = nel
