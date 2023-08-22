@@ -112,7 +112,7 @@ object UserPreferencesContent:
       } yield ()).switching(active.async, IsActive(_)).runAsync,
       acceptClass = PrimeStyles.ButtonSmall,
       rejectClass = PrimeStyles.ButtonSmall,
-      icon = Icons.SkullCrossBones.withColor("red")
+      icon = Icons.SkullCrossBones(^.color.red)
     )
 
   private def createNewKey(

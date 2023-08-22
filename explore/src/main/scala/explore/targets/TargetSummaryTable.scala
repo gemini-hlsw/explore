@@ -259,7 +259,7 @@ object TargetSummaryTable:
                 .runAsyncAndForget,
             acceptClass = PrimeStyles.ButtonSmall,
             rejectClass = PrimeStyles.ButtonSmall,
-            icon = Icons.SkullCrossBones.withColor("red")
+            icon = Icons.SkullCrossBones(^.color.red)
           )
 
         def onTextChange(e: ReactEventFromInput): Callback =

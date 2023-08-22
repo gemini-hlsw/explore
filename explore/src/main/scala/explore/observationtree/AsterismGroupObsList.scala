@@ -298,17 +298,14 @@ object AsterismGroupObsList:
 
         val icon: FontAwesomeIcon = props.expandedIds.get
           .exists(_ === obsIds)
-          .fold(Icons.ChevronDown, Icons.ChevronRight)
-          .addModifiers(
-            Seq(
-              ^.cursor.pointer,
-              ^.onClick ==> { (e: ReactEvent) =>
-                e.stopPropagationCB >>
-                  toggleExpanded(obsIds, props.expandedIds)
-                    .asEventDefault(e)
-                    .void
-              }
-            )
+          .fold(Icons.ChevronDown, Icons.ChevronRight)(
+            ^.cursor.pointer,
+            ^.onClick ==> { (e: ReactEvent) =>
+              e.stopPropagationCB >>
+                toggleExpanded(obsIds, props.expandedIds)
+                  .asEventDefault(e)
+                  .void
+            }
           )
           .withFixedWidth()
 

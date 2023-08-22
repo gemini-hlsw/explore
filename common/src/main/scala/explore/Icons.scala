@@ -6,7 +6,7 @@ package explore
 import explore.components.ui.ExploreStyles
 import lucuma.react.fa.FAIcon
 import lucuma.react.fa.FontAwesomeIcon
-import lucuma.react.fa.IconLibrary
+import lucuma.react.fa.FontAwesome
 
 import scala.annotation.nowarn
 import scala.scalajs.js
@@ -331,7 +331,7 @@ object Icons {
   val faAngle: FAIcon = js.native
 
   // This is tedious but lets us do proper tree-shaking
-  IconLibrary.add(
+  FontAwesome.library.add(
     faArrowDownLeft,
     faArrowLeftFromLine,
     faArrowRight,
