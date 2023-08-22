@@ -34,9 +34,11 @@ import lucuma.react.primereact.ToastRef
 import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.ui.components.state.IfLogged
+import lucuma.ui.components.SideTabs
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL.*
+import lucuma.core.util.Display
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -155,6 +157,10 @@ object ExploreLayout:
 
           val helpView = helpCtx.displayedHelp
 
+          given Display[AppTab] = _.title
+
+          val tabView =
+            View(routingInfo.appTab, ctx.pushPage(_, routingInfo.programId, routingInfo.focused))
           React.Fragment(
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
             Sidebar(
@@ -197,9 +203,10 @@ object ExploreLayout:
                     onLogout >> props.view.zoom(RootModel.vault).set(none).toAsync
                   )
                 ),
-              <.div(
-                ExploreStyles.SideTabs,
-                SideTabs(routingInfo)
+              SideTabs(
+                tabView,
+                ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
+                _.separatorAfter
               ),
               <.div(
                 ExploreStyles.MainBody,

@@ -6,6 +6,7 @@ import '/lucuma-css/solar-system.scss';
 import '/lucuma-css/moon.scss';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
+import '/lucuma-css/side-tabs.scss';
 import '/common/less/style.less';
 import '/common/sass/visualization.scss';
 import '/common/sass/tooltips.scss';
