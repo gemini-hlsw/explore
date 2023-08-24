@@ -70,7 +70,7 @@ async function runTerserOn(fileName, length) {
 }
 
 (async () => {
-  const rollupOutput = await build(config({mode: 'production'}));
+  const rollupOutput = await build(config({ mode: 'production' }));
   const jsChunks = rollupOutput.output
     .map((chunk) => chunk.fileName)
     .filter((fileName) => fileName.endsWith('.js'));

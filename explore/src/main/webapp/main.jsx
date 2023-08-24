@@ -31,20 +31,18 @@ if (import.meta.env.DEV) {
 
 // Get dynamic enums static data from ODB rest point and into a global variable.
 // ODB rest URL is resolved from environments.conf.json.
-fetch("/environments.conf.json").then(response => {
-
-  response.json().then(environments => {
-
-    const getODBRestURLForHost = host => {
-      const filtered = environments.filter(e => e.hostName === host)
+fetch('/environments.conf.json').then((response) => {
+  response.json().then((environments) => {
+    const getODBRestURLForHost = (host) => {
+      const filtered = environments.filter((e) => e.hostName === host);
       return filtered.length ? filtered[0].odbRestURI : null;
-    }
+    };
 
     const specificHostURL = getODBRestURLForHost(window.location.host);
     const url = specificHostURL ? specificHostURL : getODBRestURLForHost('*');
 
     // Suppress vite warning about dynamic imports it can't handle.
-    import(/* @vite-ignore */ `${url}/export/enumMetadata`).then(enumMetadataModule => {
+    import(/* @vite-ignore */ `${url}/export/enumMetadata`).then((enumMetadataModule) => {
       // Set it globally so it can be read in Scala code.
       window.enumMetadataString = enumMetadataModule.enumMetadata;
 
@@ -60,8 +58,6 @@ fetch("/environments.conf.json").then(response => {
       if (import.meta.hot) {
         import.meta.hot.accept();
       }
-    })
-
-  })
-
-})
+    });
+  });
+});
