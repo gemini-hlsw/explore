@@ -8,14 +8,12 @@ import cats.effect.*
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
-import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
@@ -120,13 +118,6 @@ extension (toastRef: ToastRef)
 extension [F[_]: Sync: ToastCtx](f: F[Unit])
   def withToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
     f <* ToastCtx[F].showToast(text, severity)
-
-extension (f:       Callback)
-  def showToastCB(
-    ctx: AppContext[IO]
-  )(text: String, severity: Message.Severity = Message.Severity.Info): Callback =
-    import ctx.given
-    f.toAsync.withToast(text, severity).runAsync
 
 // TODO Move these to react-datetime
 extension (instant: Instant)

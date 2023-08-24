@@ -54,7 +54,8 @@ import js.annotation.*
 object ExploreMain {
 
   @JSExport
-  def runIOApp(): Unit = run.unsafeRunAndForget()
+  def runIOApp(): Unit =
+    run.unsafeRunAndForget()
 
   def setupLogger[F[_]: Sync](p: ExploreLocalPreferences): F[Logger[F]] = Sync[F].delay {
     LogLevelLogger.setLevel(p.level)

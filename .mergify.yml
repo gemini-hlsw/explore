@@ -25,14 +25,6 @@ pull_request_rules:
       add:
       - common
       remove: []
-- name: Label common-clue PRs
-  conditions:
-  - files~=^common-clue/
-  actions:
-    label:
-      add:
-      - common-clue
-      remove: []
 - name: Label explore PRs
   conditions:
   - files~=^explore/
@@ -40,6 +32,14 @@ pull_request_rules:
     label:
       add:
       - explore
+      remove: []
+- name: Label explore-clue PRs
+  conditions:
+  - files~=^explore-clue/
+  actions:
+    label:
+      add:
+      - explore-clue
       remove: []
 - name: Label model PRs
   conditions:

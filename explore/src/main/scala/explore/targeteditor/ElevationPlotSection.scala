@@ -9,6 +9,7 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.*
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles

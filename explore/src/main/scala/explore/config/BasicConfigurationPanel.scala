@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
+import explore.common.ScienceQueries
 import explore.common.ScienceQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles

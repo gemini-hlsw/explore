@@ -7,6 +7,7 @@ import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles

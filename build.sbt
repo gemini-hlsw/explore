@@ -125,7 +125,7 @@ lazy val common = project
     ),
     buildInfoPackage := "explore"
   )
-  .enablePlugins(ScalaJSPlugin, BuildInfoPlugin, CluePlugin)
+  .enablePlugins(ScalaJSPlugin, BuildInfoPlugin)
 
 lazy val explore: Project = project
   .in(file("explore"))
@@ -133,7 +133,7 @@ lazy val explore: Project = project
   .settings(commonSettings: _*)
   .settings(commonJsLibSettings: _*)
   .settings(esModule: _*)
-  .enablePlugins(ScalaJSPlugin, LucumaCssPlugin)
+  .enablePlugins(ScalaJSPlugin, LucumaCssPlugin, CluePlugin)
   .settings(
     Test / test          := {},
     coverageEnabled      := false,

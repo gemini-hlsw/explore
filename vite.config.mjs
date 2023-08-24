@@ -6,8 +6,8 @@ import fs from 'fs/promises';
 import mkcert from 'vite-plugin-mkcert';
 import { VitePluginFonts } from 'vite-plugin-fonts';
 import { VitePWA } from 'vite-plugin-pwa';
-import { dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // import wasm from "vite-plugin-wasm";
 // import topLevelAwait from "vite-plugin-top-level-await";
@@ -99,10 +99,8 @@ const pathExists = async (path) => {
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
-
-  const _dirname = typeof __dirname !== 'undefined'
-    ? __dirname
-    : dirname(fileURLToPath(import.meta.url))
+  const _dirname =
+    typeof __dirname !== 'undefined' ? __dirname : dirname(fileURLToPath(import.meta.url));
   const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.3.0`);
   const isProduction = mode === 'production';
   const sjs = isProduction
@@ -167,6 +165,10 @@ export default defineConfig(async ({ mode }) => {
         {
           find: '@workers',
           replacement: workersSjs,
+        },
+        {
+          find: '@odbRestURL',
+          replacement: 'hello',
         },
         {
           find: '/common',

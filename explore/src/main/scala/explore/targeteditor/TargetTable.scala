@@ -12,6 +12,7 @@ import crystal.react.given
 import crystal.react.hooks.*
 import explore.Icons
 import explore.common.AsterismQueries
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
 import explore.components.ui.ExploreStyles

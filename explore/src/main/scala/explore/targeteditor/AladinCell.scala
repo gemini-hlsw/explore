@@ -19,10 +19,12 @@ import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.aladin.AladinFullScreenControl
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.common.UserPreferencesQueries.TargetPreferences
 import explore.components.ui.ExploreStyles
 import explore.events.*
+import explore.model.AppContext
 import explore.model.WorkerClients.*
 import explore.model.*
 import explore.model.boopickle.CatalogPicklers.given

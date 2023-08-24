@@ -8,6 +8,7 @@ import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 // gql: import lucuma.schemas.decoders.given
+// gql: import explore.DynamicEnums.given
 
 object ProgramSummaryQueriesGQL {
   @GraphQL

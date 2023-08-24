@@ -12,6 +12,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
+import explore.model.AppContext
 import explore.model.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource

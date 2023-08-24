@@ -14,6 +14,7 @@ import explore.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
+import explore.model.AppContext
 import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab

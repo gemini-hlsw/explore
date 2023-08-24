@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
+import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.Tile

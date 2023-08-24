@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.SelectedPanel

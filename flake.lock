@@ -99,14 +99,8 @@
     },
     "root": {
       "inputs": {
-        "flake-utils": [
-          "typelevel-nix",
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "typelevel-nix",
-          "nixpkgs"
-        ],
+        "flake-utils": ["typelevel-nix", "flake-utils"],
+        "nixpkgs": ["typelevel-nix", "nixpkgs"],
         "typelevel-nix": "typelevel-nix"
       }
     },

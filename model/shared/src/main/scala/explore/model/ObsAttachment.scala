@@ -7,12 +7,10 @@ import cats.Eq
 import cats.derived.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import io.circe.Decoder
+import explore.model.enums.ObsAttachmentType
 import io.circe.generic.semiauto.*
-import io.circe.refined.given
 import lucuma.core.model
 import lucuma.core.util.Timestamp
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import monocle.Focus
 import monocle.Lens
 
@@ -35,5 +33,3 @@ object ObsAttachment:
   val checked: Lens[ObsAttachment, Boolean]                    = Focus[ObsAttachment](_.checked)
   val fileSize: Lens[ObsAttachment, Long]                      = Focus[ObsAttachment](_.fileSize)
   val updatedAt: Lens[ObsAttachment, Timestamp]                = Focus[ObsAttachment](_.updatedAt)
-
-  given Decoder[ObsAttachment] = deriveDecoder

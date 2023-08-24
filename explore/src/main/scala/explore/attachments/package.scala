@@ -13,6 +13,7 @@ import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsAttachment
 import explore.model.ObsAttachmentList
+import explore.model.enums.ObsAttachmentType
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
@@ -21,42 +22,14 @@ import fs2.dom
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
-import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Enums.ObsAttachmentType
 import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
-
-// TEMPORARY until we get the graphql enums worked out
-enum AttachmentType(
-  val tag:        String,
-  val name:       String,
-  val gql:        ObsAttachmentType,
-  val extensions: List[String]
-) derives Enumerated {
-  case Finder
-      extends AttachmentType("FINDER",
-                             "Finder Chart",
-                             ObsAttachmentType.Finder,
-                             List("jpeg", "jpg", "png")
-      )
-  case MosMask
-      extends AttachmentType("MOS_MASK", "MOS Mask", ObsAttachmentType.MosMask, List("fits"))
-  case PreImaging
-      extends AttachmentType("PRE_IMAGING",
-                             "Pre-Imaging",
-                             ObsAttachmentType.PreImaging,
-                             List("fits")
-      )
-
-  def accept: String = extensions.map("." + _).mkString(",")
-}
 
 trait ObsAttachmentUtils:
   type UrlMapKey = (ObsAtt.Id, Timestamp)
@@ -71,8 +44,6 @@ trait ObsAttachmentUtils:
   val ObservationsColumnId: ColumnId   = ColumnId("observations")
   val DescriptionColumnId: ColumnId    = ColumnId("description")
   val CheckedColumnId: ColumnId        = ColumnId("checked")
-
-  given Display[AttachmentType] = Display.byShortName(_.name)
 
   val LabelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
@@ -145,7 +116,7 @@ trait ObsAttachmentUtils:
   def onInsertFileSelected(
     programId:      Program.Id,
     obsAttachments: View[ObsAttachmentList],
-    newAttType:     AttachmentType,
+    newAttType:     ObsAttachmentType,
     client:         OdbRestClient[IO],
     action:         View[Action],
     onSuccess:      ObsAtt.Id => Callback = _ => Callback.empty
@@ -155,7 +126,7 @@ trait ObsAttachmentUtils:
   ): Callback =
     val files = e.target.files.toList
     (Callback(e.target.value = null) *>
-      insertAttachment(programId, obsAttachments, client, newAttType.gql, files, onSuccess)
+      insertAttachment(programId, obsAttachments, client, newAttType, files, onSuccess)
         .switching(action.async, Action.Insert, Action.None)
         .runAsync)
       .when_(files.nonEmpty)
