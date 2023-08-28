@@ -155,12 +155,18 @@ object ExploreLayout:
         )((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
+          val routingInfoView: View[RoutingInfo] =
+            View(
+              routingInfo,
+              (mod, cb) =>
+                val newRoute = mod(routingInfo)
+                ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >> cb(newRoute)
+            )
+
           val helpView = helpCtx.displayedHelp
 
           given Display[AppTab] = _.title
 
-          val tabView =
-            View(routingInfo.appTab, ctx.pushPage(_, routingInfo.programId, routingInfo.focused))
           React.Fragment(
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
             Sidebar(
@@ -204,7 +210,7 @@ object ExploreLayout:
                   )
                 ),
               SideTabs(
-                tabView,
+                routingInfoView.zoom(RoutingInfo.appTab),
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                 _.separatorAfter
               ),

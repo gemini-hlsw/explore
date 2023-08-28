@@ -9,6 +9,8 @@ import explore.model.Page.*
 import explore.model.enums.AppTab
 import lucuma.core.model.Program
 import lucuma.refined.*
+import monocle.Lens
+import monocle.Focus
 
 case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused) {
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of forcing everyplace to deal
@@ -17,6 +19,10 @@ case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused
 }
 
 object RoutingInfo {
+  var appTab: Lens[RoutingInfo, AppTab]                   = Focus[RoutingInfo](_.appTab)
+  var optProgramId: Lens[RoutingInfo, Option[Program.Id]] = Focus[RoutingInfo](_.optProgramId)
+  var focused: Lens[RoutingInfo, Focused]                 = Focus[RoutingInfo](_.focused)
+
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of polluting RoutingInfo with
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
   private val dummyProgramId = Program.Id(Long.MaxValue.refined)
