@@ -25,6 +25,7 @@ import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
+import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
@@ -33,6 +34,7 @@ import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
 import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
+import lucuma.ui.components.SideTabs
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
@@ -153,7 +155,17 @@ object ExploreLayout:
         )((vault: UserVault, onLogout: IO[Unit]) =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
+          val routingInfoView: View[RoutingInfo] =
+            View(
+              routingInfo,
+              (mod, cb) =>
+                val newRoute = mod(routingInfo)
+                ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >> cb(newRoute)
+            )
+
           val helpView = helpCtx.displayedHelp
+
+          given Display[AppTab] = _.title
 
           React.Fragment(
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
@@ -197,9 +209,11 @@ object ExploreLayout:
                     onLogout >> props.view.zoom(RootModel.vault).set(none).toAsync
                   )
                 ),
-              <.div(
-                ExploreStyles.SideTabs,
-                SideTabs(routingInfo)
+              SideTabs(
+                "side-tabs".refined,
+                routingInfoView.zoom(RoutingInfo.appTab),
+                ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
+                _.separatorAfter
               ),
               <.div(
                 ExploreStyles.MainBody,
