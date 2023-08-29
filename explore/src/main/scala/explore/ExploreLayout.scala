@@ -25,6 +25,7 @@ import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.broadcastchannel.*
+import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
@@ -33,12 +34,11 @@ import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
 import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
-import lucuma.ui.components.state.IfLogged
 import lucuma.ui.components.SideTabs
+import lucuma.ui.components.state.IfLogged
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL.*
-import lucuma.core.util.Display
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -210,6 +210,7 @@ object ExploreLayout:
                   )
                 ),
               SideTabs(
+                "side-tabs".refined,
                 routingInfoView.zoom(RoutingInfo.appTab),
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                 _.separatorAfter

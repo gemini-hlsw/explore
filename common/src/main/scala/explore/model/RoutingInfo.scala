@@ -9,8 +9,8 @@ import explore.model.Page.*
 import explore.model.enums.AppTab
 import lucuma.core.model.Program
 import lucuma.refined.*
-import monocle.Lens
 import monocle.Focus
+import monocle.Lens
 
 case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused) {
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of forcing everyplace to deal
