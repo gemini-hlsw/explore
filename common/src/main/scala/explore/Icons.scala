@@ -71,10 +71,6 @@ object Icons {
   val faTrashUndo: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faCrosshairs")
-  val faCrosshairs: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faBullseye")
   val faBullseye: FAIcon = js.native
 
@@ -352,7 +348,6 @@ object Icons {
     faTrash,
     faTrashUndo,
     faBullseye,
-    faCrosshairs,
     faEdit,
     faEraser,
     faSearch,
@@ -434,7 +429,6 @@ object Icons {
   val Trash                = TrashUnstyled.withClass(ExploreStyles.TrashIcon)
   val TrashUndo            = FontAwesomeIcon(faTrashUndo)
   val Bullseye             = FontAwesomeIcon(faBullseye)
-  val Crosshairs           = FontAwesomeIcon(faCrosshairs)
   val Edit                 = FontAwesomeIcon(faEdit)
   val Eraser               = FontAwesomeIcon(faEraser).withClass(ExploreStyles.EraserIcon)
   val Search               = FontAwesomeIcon(faSearch)

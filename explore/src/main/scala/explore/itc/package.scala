@@ -11,18 +11,17 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.util.TimeSpan
 import lucuma.itc.ItcCcd
-import lucuma.react.fa.IconSize
+import lucuma.react.fa.*
 import lucuma.react.floatingui.syntax.*
 import lucuma.ui.syntax.all.given
 
 // Icon to indicate a field is required to do ITC calculations
 def requiredForITC: TagMod =
   <.span(
-    ^.cls := "fa-layers fa-fw",
-    Icons.StarExclamation
-      .withClass(ExploreStyles.WarningIcon)
-      .withSize(IconSize.X1),
-    <.span(^.cls := "fa-layers-text fa-inverse", "ITC")
+    LayeredIcon(fixedWidth = true, clazz = ExploreStyles.WarningIcon)(
+      Icons.StarExclamation.withSize(IconSize.X1),
+      TextLayer("ITC", clazz = ExploreStyles.RequiredForItcText, inverse = true)
+    )
   ).withTooltip("Required for ITC")
 
 def formatDurationSeconds(ts: TimeSpan): String =
