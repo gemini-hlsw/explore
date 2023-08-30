@@ -138,12 +138,14 @@ $brightness: var(--aladin-image-brightness);
 
   .circle-target {
     display: none;
+    pointer-events: fill;
   }
 
   .science-target {
     fill: hsl(240deg 100% 60.2%);
     stroke: hsl(240deg 100% 60.2%);
     stroke-width: 1px;
+    pointer-events: stroke;
   }
 
   .science-selected-target {
@@ -175,6 +177,7 @@ $brightness: var(--aladin-image-brightness);
     stroke-dasharray: 0 1.5 0;
     stroke-linejoin: bevel;
     fill: none;
+    pointer-events: stroke;
   }
 
   .acquisition-offset-position {
@@ -219,6 +222,7 @@ $brightness: var(--aladin-image-brightness);
     stroke-width: 1px;
     stroke: hsl(9deg 100% 83.9% / 80%);
     fill: none;
+    pointer-events: fill;
 
     &.guide-star-candidate-target-crowded {
       stroke-width: 0.5px;
