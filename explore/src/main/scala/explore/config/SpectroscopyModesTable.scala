@@ -82,11 +82,10 @@ case class SpectroscopyModesTable(
 ) extends ReactFnProps(SpectroscopyModesTable.component):
   val brightestTarget: Option[ItcTarget] =
     for
-      w  <- spectroscopyRequirements.wavelength
-      tg <- targets
-      b  <- tg.brightestAt(w)
-      if b.canQueryITC
-    yield b
+      w <- spectroscopyRequirements.wavelength
+      t <- targets.flatMap(_.brightestProfileAt(_.profile)(w))
+      if t.canQueryITC
+    yield t
 
 private object SpectroscopyModesTable:
   private type Props = SpectroscopyModesTable
