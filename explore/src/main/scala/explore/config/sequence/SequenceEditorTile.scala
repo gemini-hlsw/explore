@@ -18,13 +18,13 @@ import lucuma.ui.syntax.all.given
 object SequenceEditorTile:
 
   def sequenceTile(
-    programId: Program.Id,
-    obsId:     Observation.Id,
-    targetIds: List[Target.Id],
-    changed:   View[Pot[Unit]]
+    programId:       Program.Id,
+    obsId:           Observation.Id,
+    targetIds:       List[Target.Id],
+    sequenceChanged: View[Pot[Unit]]
   ) =
     Tile(
       ObsTabTilesIds.SequenceId.id,
       s"Sequence",
       canMinimize = true
-    )(_ => GeneratedSequenceViewer(programId, obsId, targetIds, changed))
+    )(_ => GeneratedSequenceViewer(programId, obsId, targetIds, sequenceChanged))

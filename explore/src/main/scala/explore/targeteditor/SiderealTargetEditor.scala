@@ -57,19 +57,19 @@ import queries.common.TargetQueriesGQL
 import java.time.Instant
 
 case class SiderealTargetEditor(
-  userId:            User.Id,
-  targetId:          Target.Id,        // Used to call DB mutations and focus in Aladin.
-  target:            UndoSetter[Target.Sidereal],
-  asterism:          Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
-  vizTime:           Option[Instant],
-  obsConf:           Option[ObsConfiguration],
-  searching:         View[Set[Target.Id]],
-  obsIdSubset:       Option[ObsIdSet] = None,
-  onClone:           TargetWithId => Callback = _ => Callback.empty,
-  renderInTitle:     Option[Tile.RenderInTitle] = None,
-  fullScreen:        View[AladinFullScreen],
-  globalPreferences: View[GlobalPreferences],
-  sequenceChanged:   Callback = Callback.empty
+  userId:             User.Id,
+  targetId:           Target.Id,        // Used to call DB mutations and focus in Aladin.
+  target:             UndoSetter[Target.Sidereal],
+  asterism:           Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
+  vizTime:            Option[Instant],
+  obsConf:            Option[ObsConfiguration],
+  searching:          View[Set[Target.Id]],
+  obsIdSubset:        Option[ObsIdSet] = None,
+  onClone:            TargetWithId => Callback = _ => Callback.empty,
+  renderInTitle:      Option[Tile.RenderInTitle] = None,
+  fullScreen:         View[AladinFullScreen],
+  globalPreferences:  View[GlobalPreferences],
+  invalidateSequence: Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor:
@@ -154,7 +154,7 @@ object SiderealTargetEditor:
               SET = TargetPropertiesInput()
             ),
             // Invalidate the sequence if the target changes
-            u => props.sequenceChanged.to[IO] *> remoteOnMod(u)
+            u => props.invalidateSequence.to[IO] *> remoteOnMod(u)
           )
 
         val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)

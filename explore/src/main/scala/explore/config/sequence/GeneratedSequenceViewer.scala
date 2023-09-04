@@ -27,10 +27,10 @@ import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 
 case class GeneratedSequenceViewer(
-  programId: Program.Id,
-  obsId:     Observation.Id,
-  targetIds: List[Target.Id],
-  changed:   View[Pot[Unit]]
+  programId:       Program.Id,
+  obsId:           Observation.Id,
+  targetIds:       List[Target.Id],
+  sequenceChanged: View[Pot[Unit]]
 ) extends ReactFnProps(GeneratedSequenceViewer.component)
 
 object GeneratedSequenceViewer:
@@ -60,9 +60,9 @@ object GeneratedSequenceViewer:
             } yield o.merge(t.sequence)
           )
       .useEffectWithDepsBy((_, _, config) => config.toPot.flatten): (props, _, _) =>
-        changedPot => props.changed.set(changedPot.void)
+        changedPot => props.sequenceChanged.set(changedPot.void)
       .render: (props, _, config) =>
-        props.changed.get
+        props.sequenceChanged.get
           .flatMap(_ => config.toPot.flatten)
           .renderPot(
             _.fold[VdomNode](<.div("Default observation not found")) {
