@@ -52,7 +52,7 @@
     "stylelint": "^15.10.3",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-standard-scss": "^10.0.0",
-    "terser": "5.19.2",
+    "terser": "5.19.3",
     "vite": "4.4.9",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-mkcert": "^1.16.0",
