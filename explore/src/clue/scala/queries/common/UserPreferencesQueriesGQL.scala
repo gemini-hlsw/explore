@@ -67,9 +67,9 @@ object UserPreferencesQueriesGQL {
                 update_columns: [flipX, flipY, rotate, scaleX, scaleY, inverted]
               }
             }
-          }, 
+          },
           onConflict: {
-            constraint: lucuma_observation_pkey, 
+            constraint: lucuma_observation_pkey,
             update_columns: observationId
           }
         ) {
@@ -196,9 +196,9 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesAladinUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-    mutation aladinUserPreferences($objects: LucumaUserPreferencesInsertInput! = {}) {
-      insertLucumaUserPreferences(objects: [$objects], onConflict: {constraint: lucuma_user_preferences_pkey, update_columns: [fullScreen, showCatalog, aladinMouseScroll, agsOverlay, scienceOffsets, acquisitionOffsets]}) {
-        affected_rows
+    mutation aladinUserPreferences($objects: LucumaUserPreferencesInsertInput! = {}, $update_columns: [LucumaUserPreferencesUpdateColumn!]) {
+      insertLucumaUserPreferencesOne(object: $objects, onConflict: {constraint: lucuma_user_preferences_pkey, update_columns: $update_columns}) {
+        userId
       }
     }"""
   }

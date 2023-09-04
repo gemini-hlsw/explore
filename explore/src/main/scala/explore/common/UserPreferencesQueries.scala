@@ -86,7 +86,20 @@ object UserPreferencesQueries:
             scienceOffsets = scienceOffsets.map(_.isVisible).orIgnore,
             acquisitionOffsets = acquisitionOffsets.map(_.isVisible).orIgnore,
             fullScreen = fullScreen.map(_.value).orIgnore
-          )
+          ),
+          update_columns = List(
+            LucumaUserPreferencesUpdateColumn.AladinMouseScroll.some
+              .filter(_ => aladinMouseScroll.isDefined),
+            LucumaUserPreferencesUpdateColumn.ShowCatalog.some.filter(_ => showCatalog.isDefined),
+            LucumaUserPreferencesUpdateColumn.AgsOverlay.some.filter(_ => agsOverlay.isDefined),
+            LucumaUserPreferencesUpdateColumn.ScienceOffsets.some.filter(_ =>
+              scienceOffsets.isDefined
+            ),
+            LucumaUserPreferencesUpdateColumn.AcquisitionOffsets.some.filter(_ =>
+              acquisitionOffsets.isDefined
+            ),
+            LucumaUserPreferencesUpdateColumn.FullScreen.some.filter(_ => fullScreen.isDefined)
+          ).flattenOption.widen[LucumaUserPreferencesUpdateColumn].assign
         )
         .attempt
         .void
