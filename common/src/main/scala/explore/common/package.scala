@@ -26,7 +26,7 @@ package object common {
 
   type ReuseAligner[A, T] = Reuse[Aligner[A, T]]
 
-  implicit class ReuseAlignerOps[A, T](val self: ReuseAligner[A, T]) extends AnyVal {
+  extension [A, T](self: ReuseAligner[A, T])
     def get: A = self.value.get
 
     def viewMod(toInput: A => T => T)(implicit
@@ -69,5 +69,4 @@ package object common {
       remoteMod: (S => S) => T => T
     ): Option[ReuseAligner[B, S]] =
       zoomOpt(optional.getOption _, optional.modify _, remoteMod)
-  }
 }

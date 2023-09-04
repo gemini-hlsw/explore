@@ -12,17 +12,19 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.Target
 import lucuma.ui.syntax.all.given
 
 object SequenceEditorTile:
 
   def sequenceTile(
-    programId: Program.Id,
-    obsId:     Observation.Id,
-    changed:   View[Pot[Unit]]
+    programId:       Program.Id,
+    obsId:           Observation.Id,
+    targetIds:       List[Target.Id],
+    sequenceChanged: View[Pot[Unit]]
   ) =
     Tile(
       ObsTabTilesIds.SequenceId.id,
       s"Sequence",
       canMinimize = true
-    )(_ => GeneratedSequenceViewer(programId, obsId, changed))
+    )(_ => GeneratedSequenceViewer(programId, obsId, targetIds, sequenceChanged))

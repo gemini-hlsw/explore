@@ -261,7 +261,7 @@ object ObsTabTiles:
           itcLoading,
           selectedItcTarget,
           selectedAttachment,
-          sequenceState
+          sequenceChanged
         ) =>
           import ctx.given
 
@@ -347,7 +347,8 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(
               props.programId,
               props.obsId,
-              sequenceState
+              asterismIds.get.toList,
+              sequenceChanged
             )
 
           val itcTile: Tile =
@@ -447,7 +448,9 @@ object ObsTabTiles:
               otherObsCount(props.obsId, _),
               props.searching,
               "Targets",
-              props.globalPreferences
+              props.globalPreferences,
+              // Any target changes invalidate the sequence
+              sequenceChanged.set(Pot.pending)
             )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
@@ -489,7 +492,7 @@ object ObsTabTiles:
               obsConf,
               selectedConfig,
               props.allTargets.get,
-              sequenceState.mod {
+              sequenceChanged.mod {
                 case Ready(x) => Pot.pending
                 case x        => x
               }
