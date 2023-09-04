@@ -144,8 +144,10 @@ object GmosGeometry:
             val probeShape =
               GmosGeometry.probeShapes(posAngle, gsOffset, Offset.Zero, basicConf, port, Css.Empty)
 
-            val offsets = configuration.flatMap(_.scienceOffsets) |+|
-              configuration.flatMap(_.acquisitionOffsets)
+            val offsets =
+              (configuration.flatMap(_.scienceOffsets) |+|
+                configuration.flatMap(_.acquisitionOffsets))
+                .orElse(NonEmptyList.one(Offset.Zero).some)
 
             val patrolFieldIntersection =
               for {
