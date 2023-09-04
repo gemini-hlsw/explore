@@ -347,6 +347,7 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(
               props.programId,
               props.obsId,
+              asterismIds.get.toList,
               sequenceState
             )
 
@@ -447,7 +448,9 @@ object ObsTabTiles:
               otherObsCount(props.obsId, _),
               props.searching,
               "Targets",
-              props.globalPreferences
+              props.globalPreferences,
+              // Any target changes invalidate the sequence
+              sequenceState.set(Pot.pending)
             )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

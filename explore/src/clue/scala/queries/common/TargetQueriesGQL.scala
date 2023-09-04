@@ -91,15 +91,12 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait ProgramTargetEditSubscription extends GraphQLOperation[ObservationDB] {
+  trait TargetEditSubscription extends GraphQLOperation[ObservationDB] {
     // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
-      subscription($programId: ProgramId!) {
-        targetEdit(input: {programId: $programId}) {
+      subscription($targetId: TargetId!) {
+        targetEdit(input: {targetId: $targetId}) {
           id
-          value {
-            id
-          }
         }
       }
     """

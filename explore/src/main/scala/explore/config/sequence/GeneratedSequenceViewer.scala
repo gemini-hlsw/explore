@@ -4,6 +4,7 @@
 package explore.config.sequence
 
 import cats.effect.IO
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.given
@@ -15,6 +16,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
@@ -22,10 +24,12 @@ import lucuma.schemas.odb.SequenceSQL.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
+import queries.common.TargetQueriesGQL
 
 case class GeneratedSequenceViewer(
   programId: Program.Id,
   obsId:     Observation.Id,
+  targetIds: List[Target.Id],
   changed:   View[Pot[Unit]]
 ) extends ReactFnProps(GeneratedSequenceViewer.component)
 
@@ -38,21 +42,26 @@ object GeneratedSequenceViewer:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStreamResourceOnMountBy { (props, ctx) =>
+      .useStreamResourceOnMountBy: (props, ctx) =>
         import ctx.given
+
+        val targetChanges = props.targetIds.traverse: targetId =>
+          TargetQueriesGQL.TargetEditSubscription
+            .subscribe[IO](targetId)
 
         SequenceQuery[IO]
           .query(props.obsId)
           .map(_.observation.map(_.execution.config))
           .attemptPot
           .resetOnResourceSignals(
-            ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
+            for {
+              o <- ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
+              t <- targetChanges
+            } yield o.merge(t.sequence)
           )
-      }
-      .useEffectWithDepsBy((_, _, config) => config.toPot.flatten)((props, _, _) =>
+      .useEffectWithDepsBy((_, _, config) => config.toPot.flatten): (props, _, _) =>
         changedPot => props.changed.set(changedPot.void)
-      )
-      .render((props, _, config) =>
+      .render: (props, _, config) =>
         props.changed.get
           .flatMap(_ => config.toPot.flatten)
           .renderPot(
@@ -62,8 +71,14 @@ object GeneratedSequenceViewer:
               case InstrumentExecutionConfig.GmosSouth(config) =>
                 GmosSouthGeneratedSequenceTables(props.obsId, config)
             },
-            errorRender = _ => {
-              val msg = "No sequence avaialble, you may need to setup a configuration"
+            errorRender = m => {
+              val msg = m match {
+                case clue.ResponseException(errors, _)
+                    if errors.exists(_.message.startsWith("ITC returned")) =>
+                  "Cannot calculate ITC, please check your configuration"
+                case _ =>
+                  "No sequence available, you may need to setup a configuration"
+              }
               <.div(
                 ExploreStyles.SequencesPanelError,
                 Message(text = msg,
@@ -73,4 +88,3 @@ object GeneratedSequenceViewer:
               )
             }
           )
-      )

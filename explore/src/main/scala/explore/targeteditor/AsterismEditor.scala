@@ -52,7 +52,8 @@ case class AsterismEditor(
   otherObsCount:     Target.Id => Int,
   searching:         View[Set[Target.Id]],
   renderInTitle:     Tile.RenderInTitle,
-  globalPreferences: View[GlobalPreferences]
+  globalPreferences: View[GlobalPreferences],
+  sequenceChanged:   Callback
 ) extends ReactFnProps(AsterismEditor.component)
 
 object AreAdding extends NewType[Boolean]
@@ -193,7 +194,8 @@ object AsterismEditor extends AsterismModifier:
                         props.obsIds.some
                       else none,
                     fullScreen = fullScreen,
-                    globalPreferences = props.globalPreferences
+                    globalPreferences = props.globalPreferences,
+                    props.sequenceChanged
                   )
                 )
               )

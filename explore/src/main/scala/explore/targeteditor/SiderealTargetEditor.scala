@@ -68,7 +68,8 @@ case class SiderealTargetEditor(
   onClone:           TargetWithId => Callback = _ => Callback.empty,
   renderInTitle:     Option[Tile.RenderInTitle] = None,
   fullScreen:        View[AladinFullScreen],
-  globalPreferences: View[GlobalPreferences]
+  globalPreferences: View[GlobalPreferences],
+  sequenceChanged:   Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor:
@@ -152,7 +153,8 @@ object SiderealTargetEditor:
               WHERE = props.targetId.toWhereTarget.assign,
               SET = TargetPropertiesInput()
             ),
-            remoteOnMod
+            // Invalidate the sequence if the target changes
+            u => props.sequenceChanged.to[IO] *> remoteOnMod(u)
           )
 
         val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)

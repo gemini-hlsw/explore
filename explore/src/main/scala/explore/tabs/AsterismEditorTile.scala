@@ -51,6 +51,7 @@ object AsterismEditorTile:
     searching:         View[Set[Target.Id]],
     title:             String,
     globalPreferences: View[GlobalPreferences],
+    sequenceChanged:   Callback = Callback.empty,
     backButton:        Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
@@ -83,7 +84,8 @@ object AsterismEditorTile:
           otherObsCount,
           searching,
           renderInTitle,
-          globalPreferences
+          globalPreferences,
+          sequenceChanged
         )
       )
     )
