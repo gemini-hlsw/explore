@@ -23,16 +23,16 @@ import scala.collection.immutable.SortedSet
 
 object ObservationPasteAction {
   private def obsListGetter(
-    ids: List[(Observation.Id, Target.Id)]
+    ids: List[(Observation.Id, List[Target.Id])]
   ): ProgramSummaries => Option[List[ObsSummary]] = agwo =>
     ids.map((obsId, _) => agwo.observations.getValue(obsId)).sequence
 
-  private def obsListSetter(ids: List[(Observation.Id, Target.Id)])(
+  private def obsListSetter(ids: List[(Observation.Id, List[Target.Id])])(
     otwol: Option[List[ObsSummary]]
   ): ProgramSummaries => ProgramSummaries = agwo =>
     otwol.fold {
       // the Option[List]] is empty, so we're deleting.
-      ids.foldLeft(agwo) { case (grps, (obsId, tid)) => grps.removeObs(obsId) }
+      ids.foldLeft(agwo) { case (grps, (obsId, _)) => grps.removeObs(obsId) }
 
     } {
       // we insert the ones we received back into the agwo
@@ -40,7 +40,7 @@ object ObservationPasteAction {
     }
 
   private def updateExpandedIds(
-    ids:         List[(Observation.Id, Target.Id)],
+    ids:         List[(Observation.Id, List[Target.Id])],
     agwo:        ProgramSummaries,
     adding:      Boolean
   )(
@@ -52,7 +52,7 @@ object ObservationPasteAction {
       // this is safe because it was created by groupMap
       val newObsIdSet = ObsIdSet.fromList(obsIds).get
       agwo.asterismGroups
-        .findWithTargetIds(SortedSet(tid))
+        .findWithTargetIds(SortedSet(tid: _*))
         .fold(
           if (adding) eids + newObsIdSet
           else eids
@@ -64,7 +64,7 @@ object ObservationPasteAction {
 
   def paste(
     programId:   Program.Id,
-    ids:         List[(Observation.Id, Target.Id)],
+    ids:         List[(Observation.Id, List[Target.Id])],
     expandedIds: View[SortedSet[ObsIdSet]]
   )(using
     c:           FetchClient[IO, ObservationDB]
