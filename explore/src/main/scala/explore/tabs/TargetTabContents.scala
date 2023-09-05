@@ -418,12 +418,12 @@ object TargetTabContents extends TwoPanels:
     expandedIds:      View[SortedSet[ObsIdSet]]
   ): IO[Unit] =
     import ctx.given
-    (obsIds, targetIds).tupled
-      .traverse((obsId, tid) =>
+    obsIds
+      .traverse(obsId =>
         ObsQueries
-          .applyObservation[IO](obsId, List(tid))
-          .map(o => programSummaries.get.cloneObsWithTargets(obsId, o.id, List(tid)))
-          .map(_.map(summ => (summ, tid)))
+          .applyObservation[IO](obsId, targetIds)
+          .map(o => programSummaries.get.cloneObsWithTargets(obsId, o.id, targetIds))
+          .map(_.map(summ => (summ, targetIds)))
       )
       .flatMap(olist =>
         olist.sequence
