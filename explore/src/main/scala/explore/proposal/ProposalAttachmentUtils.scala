@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.attachments.Action
 import explore.attachments.AttachmentUtils
 import explore.model.ProposalAttachment
 import explore.model.syntax.all.*

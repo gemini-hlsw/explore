@@ -13,6 +13,7 @@ import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.attachments.Action
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants

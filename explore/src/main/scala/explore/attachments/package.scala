@@ -46,19 +46,6 @@ trait AttachmentUtils:
       )
     else f
 
-  enum Action(val msg: String) derives Eq:
-    case None     extends Action("")
-    case Insert   extends Action("Uploading Attachment")
-    case Replace  extends Action("Uploading Replacment")
-    case Download extends Action("Downloading Attachment")
-    case Unlink   extends Action("Unlinking Attachment")
-
-  val LabelButtonClasses =
-    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
-      |+| LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.Compact
-
-  val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
-
   val AttIdColumnId: ColumnId          = ColumnId("id")           // ObsAttachments only
   val ActionsColumnId: ColumnId        = ColumnId("actions")
   val FileNameColumnId: ColumnId       = ColumnId("filename")
@@ -80,6 +67,19 @@ trait AttachmentUtils:
     DescriptionColumnId    -> "Description",
     CheckedColumnId        -> "Checked"
   )
+
+  val LabelButtonClasses =
+    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
+      |+| LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.Compact
+
+  val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
+
+enum Action(val msg: String) derives Eq:
+  case None     extends Action("")
+  case Insert   extends Action("Uploading Attachment")
+  case Replace  extends Action("Uploading Replacment")
+  case Download extends Action("Downloading Attachment")
+  case Unlink   extends Action("Unlinking Attachment")
 
 trait ObsAttachmentUtils extends AttachmentUtils:
   type UrlMapKey = (ObsAtt.Id, Timestamp)

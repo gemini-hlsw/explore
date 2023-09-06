@@ -10,6 +10,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
@@ -51,6 +52,7 @@ case class FinderCharts(
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
   selected:         View[Option[ObsAtt.Id]],
+  chartSelector:    View[ChartSelector],
   parallacticAngle: Option[Angle],
   renderInTitle:    Tile.RenderInTitle
 ) extends ReactFnProps(FinderCharts.component)
@@ -95,59 +97,61 @@ def finderChartsSelector(
     onChange = (att: Option[ObsAttachment]) => selected.set(att.map(_.id))
   )
 
+def attachmentSelector(
+  programId:        Program.Id,
+  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
+  obsAttachments:   View[ObsAttachmentList],
+  ctx:              AppContext[IO],
+  client:           OdbRestClient[IO],
+  selected:         View[Option[ObsAtt.Id]],
+  action:           View[Action],
+  added:            UseState[Option[ObsAtt.Id]],
+  chartSelector:    View[ChartSelector]
+): VdomNode = {
+  import ctx.given
+
+  def addNewFinderChart(e: ReactEventFromInput) =
+    action.set(Action.Insert) *>
+      ObsAttachmentUtils.onInsertFileSelected(
+        programId,
+        obsAttachments,
+        ObsAttachmentType.Finder,
+        client,
+        action,
+        id => obsAttachmentIds.mod(_ + id) *> added.setState(Some(id))
+      )(e)
+
+  <.div(
+    ExploreStyles.FinderChartsSelectorSection,
+    Button(
+      severity = Button.Severity.Secondary,
+      outlined = chartSelector.get.value,
+      icon = Icons.Link.withFixedWidth(false).withInverse(chartSelector.get.value),
+      onClick = chartSelector.mod(_.flip),
+      tooltip = s"Select charts"
+    ).tiny.compact,
+    <.label(
+      ObsAttachmentUtils.LabelButtonClasses,
+      ^.htmlFor := "attachment-upload",
+      Icons.FileArrowUp.withFixedWidth(true)
+    ).withTooltip(
+      tooltip = s"Upload new finder chart",
+      placement = Placement.Right
+    ),
+    <.input(
+      ExploreStyles.FileUpload,
+      ^.tpe    := "file",
+      ^.onChange ==> addNewFinderChart,
+      ^.id     := "attachment-upload",
+      ^.name   := "file",
+      ^.accept := ObsAttachmentType.Finder.accept
+    ),
+    finderChartsSelector(obsAttachments.get, obsAttachmentIds.get, selected)
+  )
+}
+
 object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
   private type Props = FinderCharts
-
-  private def attachmentSelector(
-    props:         Props,
-    ctx:           AppContext[IO],
-    client:        OdbRestClient[IO],
-    selected:      View[Option[ObsAtt.Id]],
-    action:        View[Action],
-    added:         UseState[Option[ObsAtt.Id]],
-    chartSelector: UseState[ChartSelector]
-  ): VdomNode = {
-    import ctx.given
-
-    def addNewFinderChart(e: ReactEventFromInput) =
-      action.set(Action.Insert) *>
-        onInsertFileSelected(
-          props.programId,
-          props.obsAttachments,
-          ObsAttachmentType.Finder,
-          client,
-          action,
-          id => props.obsAttachmentIds.mod(_ + id) *> added.setState(Some(id))
-        )(e)
-
-    <.div(
-      ExploreStyles.FinderChartsSelectorSection,
-      Button(
-        severity = Button.Severity.Secondary,
-        outlined = chartSelector.value.value,
-        icon = Icons.Link.withFixedWidth(false).withInverse(chartSelector.value.value),
-        onClick = chartSelector.modState(_.flip),
-        tooltip = s"Select charts"
-      ).tiny.compact,
-      <.label(
-        LabelButtonClasses,
-        ^.htmlFor := "attachment-upload",
-        Icons.FileArrowUp.withFixedWidth(true)
-      ).withTooltip(
-        tooltip = s"Upload new finder chart",
-        placement = Placement.Right
-      ),
-      <.input(
-        ExploreStyles.FileUpload,
-        ^.tpe    := "file",
-        ^.onChange ==> addNewFinderChart,
-        ^.id     := "attachment-upload",
-        ^.name   := "file",
-        ^.accept := ObsAttachmentType.Finder.accept
-      ),
-      finderChartsSelector(props.obsAttachments.get, props.obsAttachmentIds.get, selected)
-    )
-  }
 
   private val component =
     ScalaFnComponent
@@ -229,23 +233,31 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             .getOrEmpty
       }
       .useStateView(Action.None)
-      .useState(ChartSelector.Closed)
-      .render { (props, ctx, client, ops, urls, added, action, selector) =>
+      .render { (props, ctx, client, ops, urls, added, action) =>
         val transforms = ops.get.calcTransform
         <.div(
           ExploreStyles.FinderChartsBackground,
           ^.onClick ==> { e =>
-            selector.setState(ChartSelector.Closed).when_(selector.value.value)
+            props.chartSelector.set(ChartSelector.Closed).when_(props.chartSelector.get.value)
           },
           props.renderInTitle(
-            attachmentSelector(props, ctx, client, props.selected, action, added, selector)
+            attachmentSelector(props.programId,
+                               props.obsAttachmentIds,
+                               props.obsAttachments,
+                               ctx,
+                               client,
+                               props.selected,
+                               action,
+                               added,
+                               props.chartSelector
+            )
           ),
           <.div(
             SolarProgress(ExploreStyles.FinderChartsLoadProgress)
               .unless(action.get === Action.None)
           ),
           ControlOverlay(props.parallacticAngle, ops),
-          if (selector.value.value) {
+          if (props.chartSelector.get.value) {
             FinderChartLinker(props.programId,
                               client,
                               props.selected,
@@ -270,3 +282,37 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           )
         )
       }
+
+case class FinderChartsSelector(
+  programId:        Program.Id,
+  authToken:        NonEmptyString,
+  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
+  obsAttachments:   View[ObsAttachmentList],
+  selected:         View[Option[ObsAtt.Id]],
+  chartSelector:    View[ChartSelector]
+) extends ReactFnProps(FinderChartsSelector.component)
+
+object FinderChartsSelector:
+  private type Props = FinderChartsSelector
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+        token => OdbRestClient[IO](ctx.environment, token)
+      )
+      .useStateView(Action.None)
+      // added attachment, FIXME once we can upload and assign in one step
+      .useState(none[ObsAtt.Id])
+      .render: (props, ctx, restClient, action, added) =>
+        attachmentSelector(props.programId,
+                           props.obsAttachmentIds,
+                           props.obsAttachments,
+                           ctx,
+                           restClient,
+                           props.selected,
+                           action,
+                           added,
+                           props.chartSelector
+        )
