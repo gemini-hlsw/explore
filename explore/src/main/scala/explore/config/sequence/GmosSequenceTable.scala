@@ -16,8 +16,7 @@ import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.ui.sequence.SequenceColumns
-import lucuma.ui.sequence.SequenceRow
+import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 
@@ -35,7 +34,9 @@ case class GmosSouthSequenceTable(atoms: List[Atom[DynamicConfig.GmosSouth]])
 private sealed trait GmosSequenceTableBuilder[D: Eq]:
   private type Props = GmosSequenceTable[D]
 
-  private val ColDef = ColumnDef[(SequenceRow.FutureStep[D], Int)]
+  private case class SequenceTableRow(step: SequenceRow.FutureStep[D], index: StepIndex)
+
+  private val ColDef = ColumnDef[SequenceTableRow]
 
   private def drawBracket(rows: Int): VdomElement =
     svg(^.width := "1px", ^.height := "15px")(
@@ -47,32 +48,31 @@ private sealed trait GmosSequenceTableBuilder[D: Eq]:
 
   private val AtomStepsColumnId: ColumnId = ColumnId("atomSteps")
 
-  private val columns: List[ColumnDef[(SequenceRow.FutureStep[D], Int), ?]] =
+  private val columns: List[ColumnDef[SequenceTableRow, ?]] =
     ColDef(
       AtomStepsColumnId,
-      _._1.firstOf,
+      _.step.firstOf,
       header = " ",
       cell = _.value.map(drawBracket),
       size = 30.toPx
-    ) +: SequenceColumns.gmosColumns(ColDef, _._1.some, _._2.some.map(_ + 1))
+    ) +: SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
   protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemo(())(_ => columns)
-      .useMemoBy((props, _) => props.atoms)((_, _) =>
-        atoms => SequenceRow.FutureStep.fromAtoms(atoms).zipWithIndex
-      )
-      .useReactTableBy((props, cols, rows) =>
+      .useMemo(())(_ => columns) // cols
+      .useMemoBy((props, _) => props.atoms): (_, _) => // rows
+        atoms =>
+          SequenceRow.FutureStep.fromAtoms(atoms).zipWithStepIndex.map(SequenceTableRow.apply)
+      .useReactTableBy: (props, cols, rows) =>
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => RowId(row._1.id.toString),
+          getRowId = (row, _, _) => RowId(row.step.id.toString),
           enableColumnResizing = false,
           enableSorting = false
         )
-      )
-      .render { (_, _, _, table) =>
+      .render: (_, _, _, table) =>
         PrimeVirtualizedTable(
           table,
           estimateSize = _ => 28.toPx,
@@ -82,13 +82,13 @@ private sealed trait GmosSequenceTableBuilder[D: Eq]:
           tableMod = ExploreStyles.SequenceTable,
           cellMod = // Hide border between bracket column and next one
             _.column.id match
-              case colId if colId === AtomStepsColumnId.value                =>
+              case colId if colId === AtomStepsColumnId.value                    =>
                 ExploreStyles.SequenceBracketCell
-              case colId if colId === SequenceColumns.StepTypeColumnId.value =>
+              case colId if colId === SequenceColumns.IndexAndTypeColumnId.value =>
                 ExploreStyles.CellHideBorder
-              case _                                                         => Css.Empty
+              case _                                                             =>
+                Css.Empty
         )
-      }
 
 object GmosNorthSequenceTable extends GmosSequenceTableBuilder[DynamicConfig.GmosNorth]
 

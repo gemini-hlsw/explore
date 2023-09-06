@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
-import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.DatasetQaState
@@ -17,13 +16,16 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.StepRecord
-import lucuma.ui.sequence.SequenceColumns
-import lucuma.ui.sequence.SequenceRow
+import lucuma.ui.reusability.given
+import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 
 sealed trait VisitTable[D]:
   def steps: List[StepRecord[D]]
+
+  protected[sequence] lazy val rows: List[SequenceRow.Executed.ExecutedStep[D]] =
+    steps.map(SequenceRow.Executed.ExecutedStep(_))
 
 case class GmosNorthVisitTable(steps: List[StepRecord[DynamicConfig.GmosNorth]])
     extends ReactFnProps(GmosNorthVisitTable.component)
@@ -36,30 +38,26 @@ case class GmosSouthVisitTable(steps: List[StepRecord[DynamicConfig.GmosSouth]])
 private sealed trait VisitTableBuilder[D: Eq]:
   private type Props = VisitTable[D]
 
-  private val ColDef = ColumnDef[(SequenceRow.Executed.ExecutedStep[D], Int)]
+  private case class ExecutedStepRow(step: SequenceRow.Executed.ExecutedStep[D], index: StepIndex)
 
-  val IndexColumnId: ColumnId = ColumnId("stepIndex")
+  private val ColDef = ColumnDef[ExecutedStepRow]
 
   protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemo(())(_ =>
-        ColDef(IndexColumnId, _._2 + 1, header = "Step", cell = _.value.toString, size = 30.toPx) +:
-          SequenceColumns.gmosColumns(ColDef, _._1.some, _._2.some.map(_ + 1))
-      )
-      .useMemoBy((props, _) => props.steps)((_, _) =>
-        _.map(step => SequenceRow.Executed.ExecutedStep(step))
-      )
-      .useReactTableBy((_, cols, rows) =>
+      .useMemo(()): _ => // cols
+        SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
+      .useMemoBy((props, _) => props.rows): (_, _) => // rows
+        _.zipWithStepIndex.map(ExecutedStepRow.apply)
+      .useReactTableBy: (_, cols, rows) =>
         TableOptions(
           cols,
-          rows.map(_.zipWithIndex),
-          getRowId = (row, _, _) => RowId(row._1.id.toString),
+          rows,
+          getRowId = (row, _, _) => RowId(row.step.id.toString),
           enableColumnResizing = false,
           enableSorting = false
         )
-      )
-      .render((props, _, _, table) =>
+      .render: (props, _, _, table) =>
         PrimeVirtualizedTable(
           table,
           estimateSize = _ => 28.toPx,
@@ -99,7 +97,6 @@ private sealed trait VisitTableBuilder[D: Eq]:
               )
             ): VdomNode).some
         )
-      )
 
 object GmosNorthVisitTable extends VisitTableBuilder[DynamicConfig.GmosNorth]
 
