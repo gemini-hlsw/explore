@@ -18,7 +18,6 @@ import explore.model.GroupList
 import explore.model.Grouping
 import explore.model.enums.AppTab
 import explore.model.reusability.given
-import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
 import explore.undo.Undoer
@@ -82,23 +81,6 @@ object ObsList:
         }
     }
 
-  private def insertObs(
-    programId:    Program.Id,
-    pos:          Int,
-    observations: UndoSetter[ObservationList],
-    adding:       View[Boolean],
-    ctx:          AppContext[IO]
-  ): IO[Unit] =
-    import ctx.given
-
-    createObservation[IO](programId)
-      .flatMap { obs =>
-        obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
-          .mod(observations)(obsListMod.upsert(obs, pos))
-          .toAsync
-      }
-      .switching(adding.async)
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -131,7 +113,7 @@ object ObsList:
           }
       }
       // adding new observation
-      .useStateView(false)
+      .useStateView(AddingObservation(false))
       .useMemoBy((props, _, _, _) => (props.observations.get, props.groups))((_, _, _, _) =>
         ObsNode.fromList
       )
@@ -215,8 +197,8 @@ object ObsList:
                     props.observations.get.length,
                     props.observations,
                     ctx,
-                    adding.async.set(true),
-                    adding.async.set(false)
+                    adding.async.set(AddingObservation(true)),
+                    adding.async.set(AddingObservation(false))
                   )
                     .withToast(s"Duplicating obs ${id}")
                     .runAsync
@@ -241,8 +223,8 @@ object ObsList:
                   severity = Button.Severity.Success,
                   icon = Icons.New,
                   label = "Obs",
-                  disabled = adding.get,
-                  loading = adding.get,
+                  disabled = adding.get.value,
+                  loading = adding.get.value,
                   onClick = insertObs(
                     props.programId,
                     props.observations.get.length,
@@ -261,7 +243,7 @@ object ObsList:
                     clazz = ExploreStyles.ObsTreeHideShow,
                     onClick = props.deckShown.mod(_.flip)
                   ).mini.compact,
-                  UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get)
+                  UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value)
                 )
               ),
               <.div(

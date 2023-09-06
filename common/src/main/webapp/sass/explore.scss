@@ -2469,3 +2469,15 @@ a.explore-upgrade-link {
     min-width: 20ch;
   }
 }
+
+.observations-summary-table {
+  td.p-datatable-emptymessage {
+    background-color: var(--table-striped-background);
+
+    span {
+      button {
+        margin-top: 1em;
+      }
+    }
+  }
+}
