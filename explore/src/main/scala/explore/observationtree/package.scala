@@ -16,6 +16,7 @@ import explore.model.ObsSummary
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
 import explore.optics.all.*
+import explore.syntax.ui.*
 import explore.undo.Action
 import explore.undo.KIListMod
 import explore.undo.UndoSetter
@@ -23,6 +24,7 @@ import japgolly.scalajs.react.*
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
+import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -157,3 +159,23 @@ def obsExistence(programId: Program.Id, obsId: Observation.Id, setObs: Observati
           setObs(obs.id).toAsync
       }
   )
+
+object AddingObservation extends NewType[Boolean]
+type AddingObservation = AddingObservation.Type
+
+def insertObs(
+  programId:    Program.Id,
+  pos:          Int,
+  observations: UndoSetter[ObservationList],
+  adding:       View[AddingObservation],
+  ctx:          AppContext[IO]
+): IO[Unit] =
+  import ctx.given
+
+  createObservation[IO](programId)
+    .flatMap { obs =>
+      obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
+        .mod(observations)(obsListMod.upsert(obs, pos))
+        .toAsync
+    }
+    .switching(adding.zoom(AddingObservation.value.asLens).async)

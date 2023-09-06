@@ -6,6 +6,8 @@ package explore.observationtree
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.react.*
+import crystal.react.hooks.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
@@ -21,6 +23,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.model.syntax.all.*
+import explore.undo.UndoSetter
 import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagOf
@@ -33,12 +36,14 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -52,7 +57,7 @@ import scala.scalajs.js
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
-  observations:  ObservationList,
+  observations:  UndoSetter[ObservationList],
   allTargets:    TargetList,
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
@@ -240,9 +245,9 @@ object ObsSummaryTable:
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => (props.observations.toList, props.allTargets))((_, _, _) =>
+    .useMemoBy((props, _, _) => (props.observations.get.toList, props.allTargets))((_, _, _) =>
       (obsList, allTargets) =>
-        obsList.toList
+        obsList
           .map(obs =>
             obs -> obs.scienceTargetIds.toList
               .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
@@ -284,7 +289,9 @@ object ObsSummaryTable:
       )
     )
     .useResizeDetector()
-    .render { (props, ctx, _, _, table, resizer) =>
+    // adding new observation
+    .useStateView(AddingObservation(false))
+    .render { (props, ctx, _, rows, table, resizer, adding) =>
       React.Fragment(
         props.renderInTitle(
           React.Fragment(
@@ -301,7 +308,8 @@ object ObsSummaryTable:
           compact = Compact.Very,
           innerContainerMod = ^.width := "100%",
           containerRef = resizer.ref,
-          tableMod = ExploreStyles.ExploreTable,
+          hoverableRows = rows.nonEmpty,
+          tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable,
           headerCellMod = _ => ExploreStyles.StickyHeader,
           rowMod = row =>
             TagMod(
@@ -318,7 +326,19 @@ object ObsSummaryTable:
                 )
               }
             ),
-          emptyMessage = <.div("No observations found")
+          emptyMessage = <.span(
+            ExploreStyles.HVCenter,
+            Button(
+              severity = Button.Severity.Success,
+              icon = Icons.New,
+              disabled = adding.get.value,
+              loading = adding.get.value,
+              label = "Add an observation",
+              clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
+              onClick =
+                insertObs(props.programId, 0, props.observations, adding, ctx).runAsyncAndForget
+            ).tiny.compact
+          )
         )
       )
     }

@@ -129,7 +129,7 @@ object ObsTabContents extends TwoPanels:
           ObsSummaryTable(
             props.userId,
             props.programId,
-            props.observations.get,
+            props.observations,
             props.targets.get,
             renderInTitle
           )
