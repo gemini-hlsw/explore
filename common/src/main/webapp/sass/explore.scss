@@ -2474,10 +2474,8 @@ a.explore-upgrade-link {
   td.p-datatable-emptymessage {
     background-color: var(--table-striped-background);
 
-    span {
-      button {
-        margin-top: 1em;
-      }
+    button.observations-summary-add {
+      margin-top: 1em;
     }
   }
 }
