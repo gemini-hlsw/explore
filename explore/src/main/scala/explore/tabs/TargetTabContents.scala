@@ -411,20 +411,19 @@ object TargetTabContents extends TwoPanels:
 
   private def applyObs(
     programId:        Program.Id,
-    obsIds:           List[Observation.Id],
-    targetIds:        List[Target.Id],
+    obsIds:           List[(Observation.Id, List[Target.Id])],
     programSummaries: UndoSetter[ProgramSummaries],
     ctx:              AppContext[IO],
     expandedIds:      View[SortedSet[ObsIdSet]]
   ): IO[Unit] =
     import ctx.given
     obsIds
-      .traverse(obsId =>
+      .traverse { case (obsId, targetIds) =>
         ObsQueries
           .applyObservation[IO](obsId, targetIds)
           .map(o => programSummaries.get.cloneObsWithTargets(obsId, o.id, targetIds))
           .map(_.map(summ => (summ, targetIds)))
-      )
+      }
       .flatMap(olist =>
         olist.sequence
           .foldMap(summList =>
@@ -487,17 +486,23 @@ object TargetTabContents extends TwoPanels:
           case PasteAlt1 | PasteAlt2 =>
             ExploreClipboard.get.flatMap {
               case LocalClipboard.CopiedObservations(id) =>
-                val treeTargets =
+                val obsAndTargets =
                   props.focused.obsSet
-                    .flatMap(i => asterismGroups.get(i).map(_.toList))
-                    .getOrElse(selectedIds)
+                    // This with some targets on the tree seelected
+                    .map(i => id.idSet.toList.map((_, asterismGroups.get(i).foldMap(_.toList))))
+                    // These are targets on the table
+                    .getOrElse {
+                      for {
+                        tid <- selectedIds
+                        oid <- id.idSet.toList
+                      } yield (oid, List(tid))
+                    }
 
-                if (treeTargets.nonEmpty)
+                if (obsAndTargets.nonEmpty)
                   // Apply the obs to selected targets on the tree
                   applyObs(
                     props.programId,
-                    id.idSet.toList,
-                    treeTargets,
+                    obsAndTargets,
                     props.programSummaries,
                     ctx,
                     props.expandedIds
