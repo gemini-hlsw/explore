@@ -92,14 +92,12 @@ object ProgramQueriesGQL {
       }
     """
 
-    object Data {
-      object Program {
+    object Data:
+      object Program:
         type Proposal = model.Proposal
-        object PlannedTimeRange {
-          type Maximum = TimeSpan
-        }
-      }
-    }
+        object PlannedTimeRange:
+          object Maximum:
+            type Total = TimeSpan
   }
 
   @GraphQL
