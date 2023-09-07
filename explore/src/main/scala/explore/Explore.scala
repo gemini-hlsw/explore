@@ -35,7 +35,6 @@ import lucuma.broadcastchannel.*
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.ui.enums.ExecutionEnvironment
-import lucuma.ui.enums.Theme
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.http4s.dom.FetchClientBuilder
@@ -156,7 +155,6 @@ object ExploreMain {
         routerCtl.set(RoutingInfo.getPage(tab, programId, focused), via)
 
       for {
-        _                    <- Theme.init[IO]
         host                 <- IO(dom.window.location.host)
         appConfig            <- fetchConfig[IO](host)
         _                    <- workerClients.itc.requestAndForget(ItcMessage.Initialize(appConfig.itcURI))
