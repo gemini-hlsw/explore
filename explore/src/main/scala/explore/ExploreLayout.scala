@@ -36,6 +36,8 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.ui.components.SideTabs
 import lucuma.ui.components.state.IfLogged
+import lucuma.ui.enums.Theme
+import lucuma.ui.hooks.*
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL.*
@@ -129,7 +131,8 @@ object ExploreLayout:
           ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
         }
       .useStateView(none[NonEmptyString]) // userSelectionMessage
-      .render: (props, helpCtx, ctx, toastRef, userSelectionMessage) =>
+      .useTheme(Theme.Dark)
+      .render: (props, helpCtx, ctx, toastRef, userSelectionMessage, theme) =>
         import ctx.given
 
         // Creates a "profile" for user preferences.
@@ -206,6 +209,7 @@ object ExploreLayout:
                     props.view
                       .zoom(RootModel.programSummaries.some)
                       .zoom(ProgramSummaries.programs),
+                    theme,
                     onLogout >> props.view.zoom(RootModel.vault).set(none).toAsync
                   )
                 ),
