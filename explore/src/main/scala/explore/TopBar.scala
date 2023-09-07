@@ -179,7 +179,7 @@ object TopBar:
             clazz = ExploreStyles.MainHeader,
             left = <.span(ExploreStyles.MainTitle, "Explore"),
             right = React.Fragment(
-              RoleSwitch(props.vault),
+              RoleSwitch(props.vault, ctx.sso),
               ConnectionsStatus(),
               Button(
                 icon = Icons.Bars,
