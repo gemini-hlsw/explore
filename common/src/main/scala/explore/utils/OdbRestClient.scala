@@ -13,7 +13,6 @@ import fs2.Stream
 import fs2.text.utf8
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
-import lucuma.core.syntax.string.*
 import lucuma.ui.enums.ExecutionEnvironment
 import org.http4s.*
 import org.http4s.client.Client
@@ -129,7 +128,7 @@ object OdbRestClient {
         runRequest("Adding Attachment") { baseUri =>
           val uri = (baseUri / "obs" / programId.show)
             .withQueryParam("fileName", fileName)
-            .withQueryParam("attachmentType", attachmentType.toString.toScreamingSnakeCase)
+            .withQueryParam("attachmentType", attachmentType.tag)
             .withOptionQueryParam("description", description)
           Request[F](
             method = Method.POST,
