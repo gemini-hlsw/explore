@@ -83,9 +83,15 @@ case class AladinCell(
     } yield angles.sorted(using Angle.AngleOrder)
 
   val positions: Option[NonEmptyList[AgsPosition]] =
-    val offsets: NonEmptyList[Offset] = obsConf.flatMap(_.scienceOffsets) match
-      case Some(offsets) => offsets.prepend(Offset.Zero).distinct
-      case None          => NonEmptyList.of(Offset.Zero)
+    val offsets: NonEmptyList[Offset] = obsConf
+      .flatMap { o =>
+        (o.scienceOffsets, o.acquisitionOffsets) match
+          case (Some(sci), Some(acq)) => (sci ++ acq.toList).toNes.toNonEmptyList.some
+          case (Some(sci), None)      => sci.some
+          case (None, Some(acq))      => acq.some
+          case (None, None)           => none
+      }
+      .getOrElse(NonEmptyList.of(Offset.Zero))
 
     anglesToTest.map: anglesToTest =>
       for {
