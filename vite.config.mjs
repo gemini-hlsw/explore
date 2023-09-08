@@ -101,12 +101,12 @@ const pathExists = async (path) => {
 export default defineConfig(async ({ mode }) => {
   const _dirname =
     typeof __dirname !== 'undefined' ? __dirname : dirname(fileURLToPath(import.meta.url));
-  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.3.0`);
+  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.3.1`);
   const isProduction = mode === 'production';
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, `explore-opt`)
     : path.resolve(scalaClassesDir, `explore-fastopt`);
-  const workersScalaClassesDir = path.resolve(_dirname, 'workers/target/scala-3.3.0');
+  const workersScalaClassesDir = path.resolve(_dirname, 'workers/target/scala-3.3.1');
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');

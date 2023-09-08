@@ -30,7 +30,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.scalajs.dom.HTMLButtonElement
-import org.scalajs.dom.ext.KeyValue
 
 import scalajs.js.timers
 import scalajs.js.JSConverters.*
@@ -76,7 +75,7 @@ object SearchForm:
         val searchComplete: Callback = props.searching.mod(_ - props.id)
 
         def onKeyPress = (e: ReactKeyboardEvent) =>
-          if (Option(e.key).exists(_ === KeyValue.Enter))
+          if (Option(e.key).exists(_ === dom.KeyValue.Enter))
             buttonRef.get >>= (_.map(button => Callback(button.click())).orEmpty)
           else
             Callback.empty
