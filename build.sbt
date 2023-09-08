@@ -167,6 +167,7 @@ lazy val commonLibSettings = Seq(
       Kittens.value ++
       LucumaCore.value ++
       LucumaSchemas.value ++
+      LucumaOdbSchema.value ++
       LucumaRefined.value ++
       LucumaAgs.value ++
       LucumaITCClient.value ++

@@ -50,7 +50,7 @@ object ITCRequests:
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
     def itcResults(r: IntegrationTimeResult): EitherNec[ItcQueryProblems, ItcResult] =
       // Convert to usable types
-      val i = r.result.head
+      val i = r.result.focus
       ItcResult
         .Result(i.exposureTime, i.exposures)
         .rightNec
