@@ -118,5 +118,5 @@ def textDomSize(textValue: String): (Double, Double) =
   val width  = Math.ceil(text.clientWidth)
   val height = Math.ceil(text.clientHeight)
 
-  document.body.removeChild(text);
+  document.body.removeChild(text)
   (width, height)
