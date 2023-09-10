@@ -256,7 +256,7 @@ export default defineConfig(async ({ mode }) => {
       VitePWA({
         injectRegister: 'inline',
         workbox: {
-          globPatterns: ['**/*.{js,html,wasm}'],
+          globPatterns: ['**/*.{js,css,html,wasm}'],
           maximumFileSizeToCacheInBytes: 30000000, // sjs produce large ffiles
           // Cache aladin images
           runtimeCaching: [
