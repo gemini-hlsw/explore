@@ -59,10 +59,6 @@
     "vite-plugin-pwa": "^0.16.5"
   },
   "scripts": {
-    "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
-    "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/sass",
-    "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
-    "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/sass",
     "lint-prettier": "prettier --check .",
     "build": "node --unhandled-rejections=strict build.mjs",
     "serve": "vite preview"
