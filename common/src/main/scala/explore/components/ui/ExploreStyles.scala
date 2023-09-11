@@ -59,14 +59,7 @@ object ExploreStyles:
   // styling and layout
   val ProposalTile: Css = Css("proposal-tile")
 
-  val MainGrid: Css              = Css("main-grid")
-  val MainHeader: Css            = Css("main-header")
-  val MainBody: Css              = Css("main-body")
-  val MainTitle: Css             = Css("main-title")
   val ConnectionIcon: Css        = Css("connection-icon")
-  val MainUserName: Css          = Css("main-user-name")
-  val MainMenu: Css              = Css("main-menu")
-  val MainMenuDropdown: Css      = Css("main-menu-dropdown")
   val ObsGroupTitle: Css         = Css("obs-group-title")
   val ObsGroupTitleWithWrap: Css = Css("obs-group-title-with-wrap")
   val ObsGroupTitleWithList: Css = Css("obs-group-title-with-list")

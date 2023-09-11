@@ -20,6 +20,7 @@ import explore.model.enums.AppTab
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.utils.*
+import japgolly.scalajs.react.React
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -38,6 +39,7 @@ import lucuma.ui.components.SideTabs
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
+import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import queries.common.UserPreferencesQueriesGQL.*
@@ -141,12 +143,14 @@ object ExploreLayout:
             UserInsertMutation[IO].execute(vault.user.id.toString.assign).start.void
           )
 
+        val userVault = props.view.zoom(RootModel.vault)
+
         IfLogged[ExploreEvent](
           "Explore".refined,
           ExploreStyles.LoginTitle,
           allowGuest = true,
           ctx.sso,
-          props.view.zoom(RootModel.vault),
+          userVault,
           userSelectionMessage,
           ctx.clients.init(_),
           ctx.clients.close(),
@@ -155,7 +159,7 @@ object ExploreLayout:
           _.event === ExploreEvent.LogoutEventId,
           _.value.toString,
           ExploreEvent.LogoutEvent(_)
-        )((vault: UserVault, onLogout: IO[Unit]) =>
+        )(onLogout =>
           val routingInfo = RoutingInfo.from(props.resolution.page)
 
           val routingInfoView: View[RoutingInfo] =
@@ -186,8 +190,7 @@ object ExploreLayout:
                   .when(helpView.get.isDefined)
               )
             ),
-            <.div(
-              ExploreStyles.MainGrid,
+            <.div(LayoutStyles.MainGrid)(
               // This might use the `RoutingInfo.dummyProgramId` if the URL had no
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
@@ -197,10 +200,12 @@ object ExploreLayout:
                 props.view.zoom(RootModel.user).get.map(_.role.name),
                 props.view.zoom(RootModel.programSummaries).async.set
               ),
-              PreferencesCache(vault.user.id, props.view.zoom(RootModel.userPreferences).async.set),
-              props.view
-                .zoom(RootModel.vault)
-                .mapValue(vault =>
+              userVault.mapValue: (vault: View[UserVault]) =>
+                React.Fragment(
+                  PreferencesCache(
+                    vault.get.user.id,
+                    props.view.zoom(RootModel.userPreferences).async.set
+                  ),
                   TopBar(
                     vault,
                     routingInfo.optProgramId,
@@ -219,8 +224,7 @@ object ExploreLayout:
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                 _.separatorAfter
               ),
-              <.div(
-                ExploreStyles.MainBody,
+              <.div(LayoutStyles.MainBody)(
                 props.resolution.renderP(props.view)
               )
             )
