@@ -34,6 +34,7 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
+import lucuma.core.model.brightestProfileAt
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import queries.schemas.itc.syntax.*
@@ -106,7 +107,7 @@ case class ItcProps(
     for
       w <- wavelength
       t <- itcTargets.flatMap(_.find(_ === target))
-      b <- t.brightnessNearestTo(w.value)
+      b <- t.profile.nearestBand(w.value)
     yield b
 
   val defaultSelectedTarget: Option[ItcTarget] =
@@ -114,7 +115,7 @@ case class ItcProps(
     val r =
       for
         w <- wavelength
-        b <- t.brightestAt(w.value)
+        b <- t.brightestProfileAt(_.profile)(w.value)
       yield b
     r.orElse(t.headOption)
 
