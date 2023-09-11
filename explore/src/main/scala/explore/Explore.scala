@@ -84,12 +84,12 @@ object ExploreMain {
 
   def showEnvironment[F[_]: Sync](env: ExecutionEnvironment): F[Unit] = Sync[F]
     .delay {
-      val stagingBanner = dom.document.createElement("div")
-      stagingBanner.id = "staging-banner"
-      stagingBanner.textContent = "Staging"
-      dom.document.body.appendChild(stagingBanner)
+      val nonProdBanner = dom.document.createElement("div")
+      nonProdBanner.id = "non-prod-banner"
+      nonProdBanner.textContent = env.tag
+      dom.document.body.appendChild(nonProdBanner)
     }
-    .whenA(env === ExecutionEnvironment.Staging)
+    .whenA(env =!= ExecutionEnvironment.Production)
 
   def crash[F[_]: Sync](msg: String): F[Unit] =
     setupDOM[F].map { element =>
