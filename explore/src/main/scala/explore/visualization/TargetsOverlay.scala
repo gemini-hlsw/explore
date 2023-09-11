@@ -163,6 +163,8 @@ object TargetsOverlay {
         val (viewBoxX, viewBoxY, viewBoxW, viewBoxH) =
           calculateViewBox(x, y, w, h, p.fov, p.screenOffset)
 
+        val sx     = p.width / viewBoxW.abs
+        val sy     = p.height / viewBoxH.abs
         val svgRaw = Option(svgRef.raw.current).map(_.asInstanceOf[SVG])
 
         val svg = <.svg(
@@ -180,7 +182,7 @@ object TargetsOverlay {
                 val (offP, offQ) = offset.micros
                 (offP, offQ, t)
               }
-              .collect {
+              .collect[VdomNode] {
                 case (offP, offQ, SVGTarget.CircleTarget(_, css, radius, title))    =>
                   val pointCss = ExploreStyles.CircleTarget |+| css
 
@@ -209,13 +211,12 @@ object TargetsOverlay {
                     ),
                     title.map(<.title(_))
                   )
+
                 case (offP,
                       offQ,
-                      SVGTarget.ScienceTarget(_, css, selectedCss, sidePx, title, selected)
+                      SVGTarget.ScienceTarget(_, css, selectedCss, sidePx, selected, title)
                     ) =>
                   val pointCss = ExploreStyles.CrosshairTarget |+| css
-                  val sx       = p.width / (viewBoxW - viewBoxX).abs
-                  val sy       = p.height / (viewBoxH - viewBoxY).abs
 
                   CrossTarget(svgRaw,
                               offP,
@@ -226,45 +227,24 @@ object TargetsOverlay {
                               selectedCss,
                               sx,
                               sy,
-                              title,
-                              selected
-                  ): VdomNode
+                              selected,
+                              title
+                  )
 
                 case (offP, offQ, SVGTarget.GuideStarCandidateTarget(_, css, radius, ags, _)) =>
                   val pointCss = ExploreStyles.GuideStarCandidateTarget |+| css
-                  <.circle(^.cx := scale(offP),
-                           ^.cy := scale(offQ),
-                           ^.r  := scale(maxP * radius),
-                           pointCss
-                  )
-                  val sx = p.width / (viewBoxW - viewBoxX).abs
-                  val sy = p.height / (viewBoxH - viewBoxY).abs
-                  GuideStarTarget(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, ags): VdomNode
+                  GuideStarTarget(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, ags)
 
                 case (offP, offQ, SVGTarget.GuideStarTarget(_, css, radius, ags, _)) =>
                   val pointCss = ExploreStyles.GuideStarTarget |+| css
-                  val sx       = p.width / (viewBoxW - viewBoxX).abs
-                  val sy       = p.height / (viewBoxH - viewBoxY).abs
-                  GuideStarTarget(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, ags): VdomNode
+                  GuideStarTarget(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, ags)
+
                 case (offP,
                       offQ,
                       SVGTarget.OffsetIndicator(_, idx, o, oType, css, radius, title)
                     ) =>
                   val pointCss = ExploreStyles.OffsetPosition |+| css
-                  val sx       = p.width / (viewBoxW - viewBoxX).abs
-                  val sy       = p.height / (viewBoxH - viewBoxY).abs
-                  OffsetSVG(svgRaw,
-                            offP,
-                            offQ,
-                            maxP,
-                            radius,
-                            pointCss,
-                            sx,
-                            sy,
-                            oType,
-                            idx,
-                            o
-                  ): VdomNode
+                  OffsetSVG(svgRaw, offP, offQ, maxP, radius, pointCss, sx, sy, oType, idx, o)
 
                 case (offP, offQ, SVGTarget.LineTo(_, d, css, title)) =>
                   val destOffset = d.diff(p.baseCoordinates).offset

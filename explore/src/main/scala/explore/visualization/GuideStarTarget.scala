@@ -29,7 +29,7 @@ case class GuideStarTarget(
   analysis: AgsAnalysis
 ) extends ReactFnProps(GuideStarTarget.component)
 
-object GuideStarTarget {
+object GuideStarTarget:
   private type Props = GuideStarTarget
 
   extension (s: String)
@@ -53,7 +53,7 @@ object GuideStarTarget {
       .useInteractionsBy { (_, _, h) =>
         List(middleware.useHover(h.context))
       }
-      .render { (p, open, floating, _) =>
+      .render: (p, open, floating, _) =>
         val pointCss =
           ExploreStyles.TargetTooltipArea |+| ExploreStyles.GuideStarCandidateTarget |+| p.pointCss
 
@@ -64,59 +64,57 @@ object GuideStarTarget {
                                  pointCss
         )
 
-        val ID = s"Gaia DR3 ${p.analysis.target.id}"
-
-        val mag = p.analysis.target.gBrightness.foldMap(g => f"G: $g%.2f")
-
-        val (translateBoxY, translateTextX, translateTextY, path, pf) =
-          SVGTooltip.tooltipTranslationAndContent(floating, p.offQ, p.sx, p.sy, ID)
-
-        def speedIcon(guideSpeed: GuideSpeed) = guideSpeed match {
-          case GuideSpeed.Fast   =>
-            Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
-          case GuideSpeed.Medium =>
-            Icons.CircleSmall.withClass(ExploreStyles.AgsMedium)
-          case GuideSpeed.Slow   =>
-            Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
-        }
-
-        val (guideSpeedIcon, speedText) = p.analysis match {
-          case AgsAnalysis.Usable(_, _, guideSpeed, _, _)                    =>
-            (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
-          case AgsAnalysis.NotReachableAtPosition(_, _, Some(guideSpeed), _) =>
-            (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
-          case _                                                             =>
-            (none, "")
-        }
-
-        val (speedWidth, _) = textDomSize(speedText)
-        val scaleTr         = s"scale(${1 / pf}, ${1 / pf})"
-        val tooltip         =
-          <.g(
-            <.text(
-              ^.transform := s"translate($translateTextX, ${1.6 * translateTextY}) $scaleTr",
-              ID
-            ),
-            <.text(
-              ^.transform := s"translate(${-30 / pf}, ${0.7 * translateTextY}) $scaleTr",
-              mag
-            ),
-            <.g(
-              ^.transform := s"translate(${5 / pf}, ${1.45 * translateTextY}) scale(0.025, 0.025)",
-              guideSpeedIcon
-            ),
-            <.text(
-              ^.transform := s"translate(${15 / pf}, ${0.7 * translateTextY}) $scaleTr",
-              speedText
-            )
-          )
-
         if (open.value.value) {
+          val ID = s"Gaia DR3 ${p.analysis.target.id}"
+
+          val mag = p.analysis.target.gBrightness.foldMap(g => f"G: $g%.2f")
+
+          val (translateBoxY, translateTextX, translateTextY, path, pf) =
+            tooltipTranslationAndContent(floating, p.offQ, p.sx, p.sy, ID)
+
+          def speedIcon(guideSpeed: GuideSpeed) = guideSpeed match
+            case GuideSpeed.Fast   =>
+              Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
+            case GuideSpeed.Medium =>
+              Icons.CircleSmall.withClass(ExploreStyles.AgsMedium)
+            case GuideSpeed.Slow   =>
+              Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
+
+          val (guideSpeedIcon, speedText) = p.analysis match
+            case AgsAnalysis.Usable(_, _, guideSpeed, _, _)                    =>
+              (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
+            case AgsAnalysis.NotReachableAtPosition(_, _, Some(guideSpeed), _) =>
+              (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
+            case _                                                             =>
+              (none, "")
+
+          val (speedWidth, _) = textDomSize(speedText)
+          val scaleTr         = s"scale(${1 / pf}, ${1 / pf})"
+          val tooltip         =
+            <.g(
+              <.text(
+                ^.transform := s"translate($translateTextX, ${1.5 * translateTextY}) $scaleTr",
+                ID
+              ),
+              <.text(
+                ^.transform := s"translate(${-30 / pf}, ${0.7 * translateTextY}) $scaleTr",
+                mag
+              ),
+              <.g(
+                ^.transform := s"translate(${5 / pf}, ${1.55 * translateTextY}) scale(0.02, 0.02)",
+                guideSpeedIcon
+              ),
+              <.text(
+                ^.transform := s"translate(${15 / pf}, ${0.7 * translateTextY}) $scaleTr",
+                speedText
+              )
+            )
+
           <.g(
             targetSvg,
             <.g(
               ExploreStyles.TargetTooltip,
-              ^.transform := s"translate(${scale(p.offP)}, ${translateBoxY})",
+              ^.transform := s"translate(${scale(p.offP)}, ${translateBoxY}) scale($TooltipScaleFactor, $TooltipScaleFactor)",
               <.path(
                 ^.untypedRef := floating.floating,
                 ^.d          := path
@@ -127,5 +125,3 @@ object GuideStarTarget {
         } else {
           targetSvg
         }
-      }
-}
