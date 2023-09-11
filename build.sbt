@@ -318,7 +318,7 @@ lazy val firebaseDeployReview = firebaseDeploy(
   live = false
 )
 
-lazy val firebaseDeployStaging = firebaseDeploy(
+lazy val firebaseDeployDev = firebaseDeploy(
   "Deploy staging app to Firebase",
   masterCond,
   live = true
@@ -376,7 +376,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       overrideCiCommit ::
       bundlemon ::
       // firebaseDeployReview ::
-      firebaseDeployStaging ::
+      firebaseDeployDev ::
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
