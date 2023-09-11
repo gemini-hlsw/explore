@@ -1,6 +1,21 @@
 {
   "hosting": [
     {
+      "target": "dev",
+      "public": "heroku/static",
+      "ignore": ["/*.conf.json"],
+      "rewrites": [
+        {
+          "source": "/conf.json",
+          "destination": "/dev.conf.json"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    {
       "target": "staging",
       "public": "heroku/static",
       "ignore": ["/*.conf.json"],

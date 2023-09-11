@@ -138,6 +138,16 @@ jobs:
           BUNDLEMON_PROJECT_APIKEY: ${{ secrets.BUNDLEMON_PROJECT_APIKEY }}
         run: yarn bundlemon
 
+      - name: Deploy staging app to Firebase
+        if: github.ref == 'refs/heads/master'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}
+          projectId: explore-gemini
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          target: dev
+          channelId: live
+
   heroku:
     name: Deploy to Heroku
     if: (github.event_name == 'push' && github.ref == 'refs/heads/master' && startsWith(github.repository, 'gemini'))

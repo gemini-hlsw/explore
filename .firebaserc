@@ -5,6 +5,7 @@
   "targets": {
     "explore-gemini": {
       "hosting": {
+        "dev": ["explore-gemini-dev"],
         "staging": ["explore-gemini"],
         "production": ["explore-gemini-prod"]
       }
