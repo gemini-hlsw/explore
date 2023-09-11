@@ -147,13 +147,11 @@ object ObsTabTiles:
         ObsItcQuery[IO]
           .query(props.obsId)(ErrorPolicy.RaiseOnNoData)
           .map(
-            _.data.observation.flatMap(
-              _.itc.map(i =>
-                OdbItcResult.Success(
-                  i.result.exposureTime,
-                  i.result.exposures,
-                  i.result.signalToNoise
-                )
+            _.data.observation.map(o =>
+              OdbItcResult.Success(
+                o.itc.science.selected.exposureTime,
+                o.itc.science.selected.exposures,
+                o.itc.science.selected.signalToNoise
               )
             )
           )

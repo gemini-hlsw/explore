@@ -28,13 +28,15 @@ object ObsQueriesGQL:
     val document = s"""
       query($$obsId: ObservationId!) {
         observation(observationId: $$obsId) {
-          itc{
-            result {
-              exposureTime {
-                milliseconds
+          itc {
+            science {
+              selected {
+                exposureTime {
+                  milliseconds
+                }
+                exposures
+                signalToNoise
               }
-              exposures
-              signalToNoise
             }
           }
         }
@@ -44,8 +46,9 @@ object ObsQueriesGQL:
     object Data:
       object Observation:
         object Itc:
-          object Result:
-            type ExposureTime = lucuma.core.util.TimeSpan
+          object Science:
+            object Selected:
+              type ExposureTime = lucuma.core.util.TimeSpan
 
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
