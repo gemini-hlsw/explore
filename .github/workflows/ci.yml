@@ -186,28 +186,7 @@ jobs:
       - name: Extract CSS files
         run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' lucumaCss
 
-      - name: Setup and expand vars dark
-        run: |
-          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css
-          cat vars.css
-
-      - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v2.3.0
-        with:
-          stylelint: true
-          stylelint_extensions: css,sass,scss
-          stylelint_args: common/src/main/webapp/sass
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          prettier: true
-
-      - name: Setup and expand vars light
-        if: github.event_name != 'pull_request'
-        run: |
-          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css
-          cat vars.css
-
-      - name: Run linters in light mode
-        if: github.event_name != 'pull_request'
+      - name: Run linters
         uses: wearerequired/lint-action@v2.3.0
         with:
           stylelint: true
