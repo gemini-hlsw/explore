@@ -40,7 +40,7 @@ ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
   "https://s01.oss.sonatype.org/content/repositories/snapshots/"
 )
 
-val stage = taskKey[Unit]("Prepare static files to deploy to Heroku")
+val stage = taskKey[Unit]("Prepare static files to deploy to Firebase")
 
 // For simplicity, the build's stage only deals with the explore app.
 stage := {
@@ -120,8 +120,7 @@ lazy val common = project
       scalaVersion,
       sbtVersion,
       git.gitHeadCommit,
-      "herokuSourceVersion" -> sys.env.get("SOURCE_VERSION"),
-      "buildDateTime"       -> System.currentTimeMillis()
+      "buildDateTime" -> System.currentTimeMillis()
     ),
     buildInfoPackage := "explore"
   )
@@ -324,17 +323,6 @@ lazy val firebaseDeployDev = firebaseDeploy(
   live = true
 )
 
-lazy val herokuProvision = WorkflowStep.Run(
-  List("heroku plugins:install heroku-cli-static"),
-  name = Some("Heroku - Provision static plugin")
-)
-
-lazy val herokuDeploy = WorkflowStep.Run(
-  List("cd ./heroku", "heroku static:deploy -a ${{ secrets.HEROKU_APP_NAME }}"),
-  name = Some("Heroku - Deploy"),
-  env = Map("HEROKU_API_KEY" -> "${{ secrets.HEROKU_API_KEY }}")
-)
-
 def setupVars(mode: String) = WorkflowStep.Run(
   List(
     raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' common/src/main/webapp/less/variables-$mode.less > vars.css""",
@@ -381,25 +369,6 @@ ThisBuild / githubWorkflowAddedJobs +=
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
-  )
-
-ThisBuild / githubWorkflowAddedJobs +=
-  WorkflowJob(
-    "heroku",
-    "Deploy to Heroku",
-    WorkflowStep.Checkout ::
-      herokuProvision ::
-      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
-      setupNode ::
-      githubWorkflowGeneratedCacheSteps.value.toList :::
-      sbtStage ::
-      npmInstall ::
-      npmBuild ::
-      herokuDeploy ::
-      Nil,
-    scalas = List(scalaVersion.value),
-    javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(pushCond, masterCond, geminiRepoCond))
   )
 
 ThisBuild / githubWorkflowAddedJobs +=

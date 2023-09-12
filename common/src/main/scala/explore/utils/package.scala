@@ -48,7 +48,6 @@ def toggleReusabilityOverlay[F[_]: Sync](): F[Unit] =
     .void
 
 val gitHash = BuildInfo.gitHeadCommit
-  .orElse(BuildInfo.herokuSourceVersion)
 
 def version(environment: ExecutionEnvironment): NonEmptyString = {
   val instant = Instant.ofEpochMilli(BuildInfo.buildDateTime)
