@@ -11,7 +11,6 @@ import explore.model.Constants
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.DatasetQaState
-import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
@@ -26,7 +25,7 @@ sealed trait VisitTable[D]:
   def steps: List[StepRecord[D]]
 
   protected[sequence] lazy val rows: List[SequenceRow.Executed.ExecutedStep[D]] =
-    steps.map(SequenceRow.Executed.ExecutedStep(_))
+    steps.map(SequenceRow.Executed.ExecutedStep(_, _ => none))
 
 case class GmosNorthVisitTable(steps: List[StepRecord[DynamicConfig.GmosNorth]])
     extends ReactFnProps(GmosNorthVisitTable.component)
@@ -47,7 +46,7 @@ private sealed trait VisitTableBuilder[D: Eq]:
     ScalaFnComponent
       .withHooks[Props]
       .useMemo(()): _ => // cols
-        SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some, _ => SignalToNoise.Min.some)
+        SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
       .useMemoBy((props, _) => props.rows): (_, _) => // rows
         _.zipWithStepIndex.map(ExecutedStepRow.apply)
       .useReactTableBy: (_, cols, rows) =>
