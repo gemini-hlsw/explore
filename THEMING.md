@@ -90,10 +90,10 @@ As mentioned the theme is mostly based on `slate` but it has been further refine
 
 # Linting
 
-[Stylelint](https://stylelint.io/) has been setup to check for common errors on the css/less files. Note it is not run against the SUI files
+[Stylelint](https://stylelint.io/) has been setup to check for common errors on the css/less/sass files.
 
 A tricky part of using `stylelint` is the way variables are checked.
-A small sed script can take the variables from either the dark or light theme and export them as a `vars.css` file.
+A small sed script can take the variables from either the dark or light theme and export them as a `vars.css` file by removing the lines that don't define variables.
 This file in turns is used by `stylelint` to check that all variables required are present.
 To run the linters locally you can do either:
 `npm run lint-dark`

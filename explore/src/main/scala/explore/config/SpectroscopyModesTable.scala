@@ -57,6 +57,7 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.typed.{tanstackVirtualCore => rawVirtual}
+import lucuma.ui.components.ThemeIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -199,7 +200,7 @@ private object SpectroscopyModesTable:
                 <.span("Missing target info")
               case ItcQueryProblems.MissingBrightness                             => <.span("No brightness defined")
               case ItcQueryProblems.GenericError(e) if e.startsWith("Source too") =>
-                <.span(Icons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon), e)
+                <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon), e)
               case ItcQueryProblems.GenericError(e)                               =>
                 e.split("\n").map(u => <.span(u)).intersperse(<.br: VdomNode).mkTagMod(<.span)
             }

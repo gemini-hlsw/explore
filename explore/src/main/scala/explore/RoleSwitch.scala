@@ -7,8 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.*
-import explore.components.ui.ExploreStyles
-import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
@@ -18,11 +16,13 @@ import lucuma.react.common.*
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.ui.primereact.FormDropdown
+import lucuma.ui.sso.SSOClient
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class RoleSwitch(
-  vault: View[UserVault]
+  vault:     View[UserVault],
+  ssoClient: SSOClient[IO]
 ) extends ReactFnProps(RoleSwitch.component)
 
 object RoleSwitch:
@@ -31,13 +31,12 @@ object RoleSwitch:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .render { (props, ctx) =>
+      .render: props =>
         val user = props.vault.get.user
 
         def roleSwitch(id: StandardRole.Id) =
           (for {
-            t <- ctx.sso.switchRole(id)
+            t <- props.ssoClient.switchRole(id)
             _ <- t.foldMap(props.vault.set(_).to[IO])
           } yield ()).runAsyncAndForget
 
@@ -47,20 +46,16 @@ object RoleSwitch:
         }
 
         React.Fragment(
-          <.span(
-            ExploreStyles.MainUserName,
-            user.displayName
-          ),
           curRole match {
             case Some(r) if otherRoles.nonEmpty =>
               val options = (r :: otherRoles).map(r => SelectItem(r.id, label = r.name))
-              FormDropdown(id = "role-selector-switch".refined,
-                           r.id,
-                           options,
-                           onChange = roleSwitch
+              FormDropdown(
+                id = "role-selector-switch".refined,
+                r.id,
+                options,
+                onChange = roleSwitch
               )
             case a                              =>
               EmptyVdom
           }
         )
-      }
