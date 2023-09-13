@@ -3,7 +3,6 @@
 
 package explore.model.enums
 
-import cats.data.NonEmptyList
 import lucuma.core.util.Enumerated
 
 /**

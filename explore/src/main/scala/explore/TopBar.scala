@@ -36,8 +36,10 @@ import lucuma.refined.*
 import lucuma.ui.Resources
 import lucuma.ui.components.About
 import lucuma.ui.components.LoginStyles
+import lucuma.ui.components.ThemeSubMenu
 import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.enums.Theme
+import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
@@ -129,30 +131,7 @@ object TopBar:
               icon = Icons.Bug
             )
           ),
-          MenuItem.SubMenu(
-            label = "Theme",
-            icon = Icons.Eclipse,
-            visible = ctx.environment === ExecutionEnvironment.Development
-          )(
-            MenuItem.Item(
-              label = "Dark",
-              icon = Icons.Moon,
-              disabled = props.theme.get === Theme.Dark,
-              command = props.theme.set(Theme.Dark)
-            ),
-            MenuItem.Item(
-              label = "Light",
-              icon = Icons.SunBright,
-              disabled = props.theme.get === Theme.Light,
-              command = props.theme.set(Theme.Light)
-            ),
-            MenuItem.Item(
-              label = "System",
-              icon = Icons.Eclipse,
-              disabled = props.theme.get === Theme.System,
-              command = props.theme.set(Theme.System)
-            )
-          ),
+          ThemeSubMenu(props.theme),
           MenuItem.Item(
             label = "Toggle Reusability",
             icon = Icons.CrystalBall,
@@ -176,10 +155,11 @@ object TopBar:
 
         React.Fragment(
           Toolbar(
-            clazz = ExploreStyles.MainHeader,
-            left = <.span(ExploreStyles.MainTitle, "Explore"),
+            clazz = LayoutStyles.MainHeader,
+            left = <.span(LayoutStyles.MainTitle, "Explore"),
             right = React.Fragment(
-              RoleSwitch(props.vault),
+              <.span(LayoutStyles.MainUserName)(user.displayName),
+              RoleSwitch(props.vault, ctx.sso),
               ConnectionsStatus(),
               Button(
                 icon = Icons.Bars,

@@ -215,18 +215,6 @@ object Icons {
   val faThumbtack: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faSun")
-  val faSunBright: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faMoon")
-  val faMoon: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-solid-svg-icons", "faEclipse")
-  val faEclipse: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
   val faTriangleSolid: FAIcon = js.native
 
@@ -379,9 +367,6 @@ object Icons {
     faStars,
     faSpinner,
     faThumbtack,
-    faSunBright,
-    faMoon,
-    faEclipse,
     faTriangleSolid,
     faCrystalBall,
     faThinSliders,
@@ -459,9 +444,6 @@ object Icons {
   val Stars                = FontAwesomeIcon(faStars)
   val Spinner              = FontAwesomeIcon(faSpinner)
   val Thumbtack            = FontAwesomeIcon(faThumbtack)
-  val SunBright            = FontAwesomeIcon(faSunBright)
-  val Moon                 = FontAwesomeIcon(faMoon)
-  val Eclipse              = FontAwesomeIcon(faEclipse)
   val TriangleSolid        = FontAwesomeIcon(faTriangleSolid)
   val CrystalBall          = FontAwesomeIcon(faCrystalBall)
   val ThinSliders          = FontAwesomeIcon(faThinSliders)

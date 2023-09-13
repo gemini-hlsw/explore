@@ -1,12 +1,15 @@
 import '/common/sass/explore-primereact.scss';
+import '/lucuma-css/lucuma-ui-layout.scss';
 import '/lucuma-css/lucuma-ui-login.scss';
 import '/lucuma-css/lucuma-ui-sequence.scss';
+import '/lucuma-css/lucuma-ui-side-tabs.scss';
 import '/lucuma-css/lucuma-ui-table.scss';
+import '/lucuma-css/lucuma-ui-variables-dark.scss';
+import '/lucuma-css/lucuma-ui-variables-light.scss';
 import '/lucuma-css/solar-system.scss';
 import '/lucuma-css/moon.scss';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import '/lucuma-css/side-tabs.scss';
 import '/common/less/style.less';
 import '/common/sass/visualization.scss';
 import '/common/sass/tooltips.scss';

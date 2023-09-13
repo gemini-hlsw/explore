@@ -3,337 +3,340 @@
 /* Using custom classes for series works, but messes up tooltip border colors.
 See https://github.com/highcharts/highcharts/issues/13320 */
 
-.highcharts-container {
-  font-family: inherit;
-}
-
-.highcharts-graph {
-  stroke-width: 1.5px;
-}
-
-.highcharts-tooltip-box {
-  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  stroke: var(--plot-tooltip-border-color);
-  stroke-width: 0.9px;
-
-  // This is tricky. Without this the background will change depending on the system
-  // appeareance like dark mode. But with this, the background will be the correct color
-  // regardless
-  fill: var(--plot-tooltip-background-color);
-}
-
-.highcharts-point-inactive,
-.highcharts-series-inactive {
-  opacity: 0.5;
-}
-
-.highcharts-background {
-  fill: var(--plot-background-color);
-}
-
-.highcharts-root text {
-  fill: var(--plot-text-color);
-}
-
-.highcharts-grid-line {
-  stroke: var(--plot-grid-color);
-}
-
-.highcharts-minor-grid-line {
-  stroke: var(--plot-grid-color);
-  stroke-dasharray: 2, 2;
-}
-
-.elevation-plot-series .highcharts-area {
-  fill-opacity: 0;
-}
-
-.elevation-plot-series .elevation-plot-visualization-period {
-  fill-opacity: 0.75;
-}
-
-/* Target Elevation */
-.highcharts-color-0 {
-  fill: hsl(0deg 87% 66%);
-  stroke: hsl(0deg 87% 66%);
-}
-
-/* Parallactic angle */
-.highcharts-color-1 {
-  fill: hsl(79deg 70% 43%);
-  stroke: hsl(79deg 70% 43%);
-}
-
-.plot-sky-brightness-percentile {
-  stroke-dasharray: 3, 5;
-}
-
-/* Sky Brightness */
-.elevation-plot {
-  .highcharts-color-2,
-  .plot-sky-brightness-percentile,
-  .highcharts-plot-line-label {
-    fill: hsl(209deg 75% 71%) !important;
-    stroke: hsl(209deg 75% 71%);
+.dark-theme,
+.light-theme {
+  .highcharts-container {
+    font-family: inherit;
   }
-}
 
-/* Lunar Elevation */
-.highcharts-color-3 {
-  fill: hsl(27deg 91% 66%);
-  stroke: hsl(27deg 91% 66%);
-}
-
-.plot-axis-parallactic-angle {
-  stroke-width: 0;
-  fill: hsl(79deg 70% 43%);
-}
-
-.plot-axis-parallactic-angle text {
-  fill: hsl(79deg 70% 43%);
-}
-
-.plot-axis-sky-brightness {
-  stroke-width: 0;
-  fill: hsl(209deg 75% 71%);
-}
-
-.plot-axis-sky-brightness text {
-  fill: hsl(209deg 75% 71%);
-}
-
-.plot-band-exclude-window {
-  fill: var(--plot-plot-band-exclude-window-color);
-  fill-opacity: var(--plot-plot-band-exclude-window-opacity);
-}
-
-.plot-band-twilight-nautical {
-  fill: var(--plot-plot-band-night-color);
-  fill-opacity: var(--plot-plot-band-night-opacity);
-}
-
-.plot-band-twilight-nautical-end {
-  fill-opacity: 0;
-}
-
-.highcharts-plot-band-label {
-  fill: hsl(0deg 0% 40%);
-}
-
-.highcharts-xaxis-grid .highcharts-grid-line {
-  stroke-width: 1px;
-}
-
-.highcharts-legend-item:hover text {
-  fill: var(--plot-text-color-hover);
-}
-
-.highcharts-legend-item-hidden * {
-  fill: var(--plot-text-color-disabled) !important;
-  stroke: var(--plot-text-color-disabled) !important;
-}
-
-// We force these to override highchart's defaults.
-.plot-plot-line-progress {
-  stroke-width: 2 !important;
-  stroke: gray !important;
-}
-
-.plot-plot-line-date {
-  stroke-width: 2 !important;
-  stroke: green !important;
-}
-
-.plot-sky-brightness-band {
-  stroke-width: 0;
-}
-
-.plot-sky-brightness-band-label {
-  fill: hsl(209deg 75% 71%);
-}
-
-.highcharts-loading {
-  background-color: unset;
-  opacity: 0.6;
-}
-
-.itc-plot-loading {
-  svg.highcharts-root {
-    opacity: 0.3;
+  .highcharts-graph {
+    stroke-width: 1.5px;
   }
-}
 
-.itc-plot-section {
-  background-color: var(--plot-background-color);
-  color: var(--plot-text-color);
-  display: grid;
-  width: 100%;
-  overflow: hidden;
-  min-height: 0;
-  grid-template: 'description plot' minmax(0, 1fr) // minmax is required to properly shrink
-    'description plot-controls' / minmax(max-content, 2fr) minmax(0, 5fr);
-}
+  .highcharts-tooltip-box {
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+    stroke: var(--plot-tooltip-border-color);
+    stroke-width: 0.9px;
 
-.itc-plot-body {
-  position: relative;
-  grid-area: plot;
-  width: 100%;
-  background-color: var(--plot-background-color);
-}
-
-.itc-plot-controls {
-  align-self: end;
-  grid-area: plot-controls;
-  background-color: var(--plot-background-color);
-  padding: 0.2em;
-  display: flex;
-  padding-right: 1em;
-  padding-left: 1em;
-  justify-content: space-between;
-}
-
-$description-column-count: 2;
-
-@mixin first-row {
-  &:nth-child(-n + #{$description-column-count}) {
-    @content;
+    // This is tricky. Without this the background will change depending on the system
+    // appeareance like dark mode. But with this, the background will be the correct color
+    // regardless
+    fill: var(--plot-tooltip-background-color);
   }
-}
 
-.itc-plot-description {
-  grid-area: description;
-  display: grid;
-  column-gap: 0.5em;
-  padding: 0.5em;
-  grid-template-columns: minmax(100px, 1fr) 1fr;
-  background-color: var(--tile-background);
-  align-content: start;
-  align-items: baseline;
+  .highcharts-point-inactive,
+  .highcharts-series-inactive {
+    opacity: 0.5;
+  }
 
-  .text,
-  span,
-  label {
-    font-size: smaller;
+  .highcharts-background {
+    fill: var(--plot-background-color);
+  }
+
+  .highcharts-root text {
+    fill: var(--plot-text-color);
+  }
+
+  .highcharts-grid-line {
+    stroke: var(--plot-grid-color);
+  }
+
+  .highcharts-minor-grid-line {
+    stroke: var(--plot-grid-color);
+    stroke-dasharray: 2, 2;
+  }
+
+  .elevation-plot-series .highcharts-area {
+    fill-opacity: 0;
+  }
+
+  .elevation-plot-series .elevation-plot-visualization-period {
+    fill-opacity: 0.75;
+  }
+
+  /* Target Elevation */
+  .highcharts-color-0 {
+    fill: hsl(0deg 87% 66%);
+    stroke: hsl(0deg 87% 66%);
+  }
+
+  /* Parallactic angle */
+  .highcharts-color-1 {
+    fill: hsl(79deg 70% 43%);
+    stroke: hsl(79deg 70% 43%);
+  }
+
+  .plot-sky-brightness-percentile {
+    stroke-dasharray: 3, 5;
+  }
+
+  /* Sky Brightness */
+  .elevation-plot {
+    .highcharts-color-2,
+    .plot-sky-brightness-percentile,
+    .highcharts-plot-line-label {
+      fill: hsl(209deg 75% 71%) !important;
+      stroke: hsl(209deg 75% 71%);
+    }
+  }
+
+  /* Lunar Elevation */
+  .highcharts-color-3 {
+    fill: hsl(27deg 91% 66%);
+    stroke: hsl(27deg 91% 66%);
+  }
+
+  .plot-axis-parallactic-angle {
+    stroke-width: 0;
+    fill: hsl(79deg 70% 43%);
+  }
+
+  .plot-axis-parallactic-angle text {
+    fill: hsl(79deg 70% 43%);
+  }
+
+  .plot-axis-sky-brightness {
+    stroke-width: 0;
+    fill: hsl(209deg 75% 71%);
+  }
+
+  .plot-axis-sky-brightness text {
+    fill: hsl(209deg 75% 71%);
+  }
+
+  .plot-band-exclude-window {
+    fill: var(--plot-plot-band-exclude-window-color);
+    fill-opacity: var(--plot-plot-band-exclude-window-opacity);
+  }
+
+  .plot-band-twilight-nautical {
+    fill: var(--plot-plot-band-night-color);
+    fill-opacity: var(--plot-plot-band-night-opacity);
+  }
+
+  .plot-band-twilight-nautical-end {
+    fill-opacity: 0;
+  }
+
+  .highcharts-plot-band-label {
+    fill: hsl(0deg 0% 40%);
+  }
+
+  .highcharts-xaxis-grid .highcharts-grid-line {
+    stroke-width: 1px;
+  }
+
+  .highcharts-legend-item:hover text {
+    fill: var(--plot-text-color-hover);
+  }
+
+  .highcharts-legend-item-hidden * {
+    fill: var(--plot-text-color-disabled) !important;
+    stroke: var(--plot-text-color-disabled) !important;
+  }
+
+  // We force these to override highchart's defaults.
+  .plot-plot-line-progress {
+    stroke-width: 2 !important;
+    stroke: gray !important;
+  }
+
+  .plot-plot-line-date {
+    stroke-width: 2 !important;
+    stroke: green !important;
+  }
+
+  .plot-sky-brightness-band {
+    stroke-width: 0;
+  }
+
+  .plot-sky-brightness-band-label {
+    fill: hsl(209deg 75% 71%);
+  }
+
+  .highcharts-loading {
+    background-color: unset;
+    opacity: 0.6;
+  }
+
+  .itc-plot-loading {
+    svg.highcharts-root {
+      opacity: 0.3;
+    }
+  }
+
+  .itc-plot-section {
+    background-color: var(--plot-background-color);
+    color: var(--plot-text-color);
+    display: grid;
+    width: 100%;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-height: 0;
+    grid-template: 'description plot' minmax(0, 1fr) // minmax is required to properly shrink
+      'description plot-controls' / minmax(max-content, 2fr) minmax(0, 5fr);
   }
 
-  label {
-    font-weight: bold;
+  .itc-plot-body {
+    position: relative;
+    grid-area: plot;
+    width: 100%;
+    background-color: var(--plot-background-color);
   }
 
-  span {
-    font-weight: lighter;
+  .itc-plot-controls {
+    align-self: end;
+    grid-area: plot-controls;
+    background-color: var(--plot-background-color);
+    padding: 0.2em;
+    display: flex;
+    padding-right: 1em;
+    padding-left: 1em;
+    justify-content: space-between;
   }
-}
 
-.itc-plot-details-hidden {
-  grid-template-columns: 0 3fr;
+  $description-column-count: 2;
+
+  @mixin first-row {
+    &:nth-child(-n + #{$description-column-count}) {
+      @content;
+    }
+  }
 
   .itc-plot-description {
-    display: none;
-  }
-}
+    grid-area: description;
+    display: grid;
+    column-gap: 0.5em;
+    padding: 0.5em;
+    grid-template-columns: minmax(100px, 1fr) 1fr;
+    background-color: var(--tile-background);
+    align-content: start;
+    align-items: baseline;
 
-.tile-xs-width {
-  .itc-plot-description {
-    display: none;
-  }
-}
-
-.highcharts-reset-zoom {
-  fill: var(--button-background-color-semi);
-  stroke: var(--site-border-color);
-}
-
-.itc-plot-chart {
-  --itc-plot-blue: hsl(207deg 54% 46.9%);
-  --itc-plot-lightblue: hsl(187deg 54% 66.9%);
-  --itc-plot-green: hsl(118deg 40.6% 48.8%);
-  --itc-plot-lightgreen: hsl(98deg 40.6% 68.8%);
-  --itc-plot-red: hsl(359deg 79.5% 49.8%);
-  --itc-plot-lightred: hsl(339deg 79.5% 69.8%);
-  --itc-plot-wavelength-line: hsl(0deg 10% 90%);
-
-  .itc-plot-wavelength-line {
-    stroke: var(--itc-plot-wavelength-line);
-    stroke-dasharray: 2 2;
-  }
-
-  .highcharts-title {
-    font-size: 14px;
-  }
-
-  .highcharts-subtitle {
-    font-size: 10px;
-  }
-
-  .highcharts-legend-item {
-    font-size: 10px;
-  }
-
-  .s2nchart {
-    &.highcharts-color-0 {
-      fill: var(--itc-plot-lightblue);
-      stroke: var(--itc-plot-lightblue);
+    .text,
+    span,
+    label {
+      font-size: smaller;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    &.highcharts-color-1 {
-      fill: var(--itc-plot-blue);
-      stroke: var(--itc-plot-blue);
+    label {
+      font-weight: bold;
     }
 
-    &.highcharts-color-2 {
-      fill: var(--itc-plot-lightgreen);
-      stroke: var(--itc-plot-lightgreen);
-    }
-
-    &.highcharts-color-3 {
-      fill: var(--itc-plot-green);
-      stroke: var(--itc-plot-green);
-    }
-
-    &.highcharts-color-4 {
-      fill: var(--itc-plot-lightred);
-      stroke: var(--itc-plot-lightred);
-    }
-
-    &.highcharts-color-5 {
-      fill: var(--itc-plot-red);
-      stroke: var(--itc-plot-red);
+    span {
+      font-weight: lighter;
     }
   }
 
-  .signalchart {
-    &.highcharts-color-0 {
-      fill: var(--itc-plot-blue);
-      stroke: var(--itc-plot-blue);
+  .itc-plot-details-hidden {
+    grid-template-columns: 0 3fr;
+
+    .itc-plot-description {
+      display: none;
+    }
+  }
+
+  .tile-xs-width {
+    .itc-plot-description {
+      display: none;
+    }
+  }
+
+  .highcharts-reset-zoom {
+    fill: var(--button-background-color-semi);
+    stroke: var(--site-border-color);
+  }
+
+  .itc-plot-chart {
+    --itc-plot-blue: hsl(207deg 54% 46.9%);
+    --itc-plot-lightblue: hsl(187deg 54% 66.9%);
+    --itc-plot-green: hsl(118deg 40.6% 48.8%);
+    --itc-plot-lightgreen: hsl(98deg 40.6% 68.8%);
+    --itc-plot-red: hsl(359deg 79.5% 49.8%);
+    --itc-plot-lightred: hsl(339deg 79.5% 69.8%);
+    --itc-plot-wavelength-line: hsl(0deg 10% 90%);
+
+    .itc-plot-wavelength-line {
+      stroke: var(--itc-plot-wavelength-line);
+      stroke-dasharray: 2 2;
     }
 
-    &.highcharts-color-1 {
-      fill: var(--itc-plot-lightblue);
-      stroke: var(--itc-plot-lightblue);
+    .highcharts-title {
+      font-size: 14px;
     }
 
-    &.highcharts-color-2 {
-      fill: var(--itc-plot-green);
-      stroke: var(--itc-plot-green);
+    .highcharts-subtitle {
+      font-size: 10px;
     }
 
-    &.highcharts-color-3 {
-      fill: var(--itc-plot-lightgreen);
-      stroke: var(--itc-plot-lightgreen);
+    .highcharts-legend-item {
+      font-size: 10px;
     }
 
-    &.highcharts-color-4 {
-      fill: var(--itc-plot-red);
-      stroke: var(--itc-plot-red);
+    .s2nchart {
+      &.highcharts-color-0 {
+        fill: var(--itc-plot-lightblue);
+        stroke: var(--itc-plot-lightblue);
+      }
+
+      &.highcharts-color-1 {
+        fill: var(--itc-plot-blue);
+        stroke: var(--itc-plot-blue);
+      }
+
+      &.highcharts-color-2 {
+        fill: var(--itc-plot-lightgreen);
+        stroke: var(--itc-plot-lightgreen);
+      }
+
+      &.highcharts-color-3 {
+        fill: var(--itc-plot-green);
+        stroke: var(--itc-plot-green);
+      }
+
+      &.highcharts-color-4 {
+        fill: var(--itc-plot-lightred);
+        stroke: var(--itc-plot-lightred);
+      }
+
+      &.highcharts-color-5 {
+        fill: var(--itc-plot-red);
+        stroke: var(--itc-plot-red);
+      }
     }
 
-    &.highcharts-color-5 {
-      fill: var(--itc-plot-lightred);
-      stroke: var(--itc-plot-lightred);
+    .signalchart {
+      &.highcharts-color-0 {
+        fill: var(--itc-plot-blue);
+        stroke: var(--itc-plot-blue);
+      }
+
+      &.highcharts-color-1 {
+        fill: var(--itc-plot-lightblue);
+        stroke: var(--itc-plot-lightblue);
+      }
+
+      &.highcharts-color-2 {
+        fill: var(--itc-plot-green);
+        stroke: var(--itc-plot-green);
+      }
+
+      &.highcharts-color-3 {
+        fill: var(--itc-plot-lightgreen);
+        stroke: var(--itc-plot-lightgreen);
+      }
+
+      &.highcharts-color-4 {
+        fill: var(--itc-plot-red);
+        stroke: var(--itc-plot-red);
+      }
+
+      &.highcharts-color-5 {
+        fill: var(--itc-plot-lightred);
+        stroke: var(--itc-plot-lightred);
+      }
     }
   }
 }

@@ -166,7 +166,7 @@ object Routing:
     withProgramSummaries(none, model)(_ => <.div("Programmer error!"))
 
   def config: RouterWithPropsConfig[Page, View[RootModel]] =
-    RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig { dsl =>
+    RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig: dsl =>
       import dsl.*
 
       // We can't use gid.regexPattern because capture groups don't work here.
@@ -301,4 +301,3 @@ object Routing:
       }
 
       configuration
-    }

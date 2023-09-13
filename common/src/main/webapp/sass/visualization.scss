@@ -10,598 +10,601 @@
 $saturation: var(--aladin-image-saturation);
 $brightness: var(--aladin-image-brightness);
 
-/* stylelint-disable-next-line selector-class-pattern */
-.aladin-imageCanvas {
-  filter: #{saturate }(string.unquote($saturation)) brightness(string.unquote($brightness));
-}
-
-.aladin-container {
-  overflow: hidden; // Needed to keep the visualization svg inside the component
-  outline: none;
-  pointer-events: none;
-
-  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
-    pointer-events: initial;
-  }
-}
-
-.aladin-target-disable-mouse {
-  pointer-events: none;
-}
-
-.aladin-container-body {
-  grid-area: aladin;
-  position: relative;
-}
-
-.visualization-display {
-  display: inline !important; // we use this as a toggle thus we need important set
-}
-
-.visualization-overlay-svg {
-  position: absolute;
-  pointer-events: none; // let aladin get pointer events
-  z-index: 40;
-
-  .viz-polygon {
-    stroke: gray;
-    stroke-width: 2px;
-    fill: none;
-    vector-effect: non-scaling-stroke;
+.dark-theme,
+.light-theme {
+  /* stylelint-disable-next-line selector-class-pattern */
+  .aladin-imageCanvas {
+    filter: #{saturate }(string.unquote($saturation)) brightness(string.unquote($brightness));
   }
 
-  .gmos-probe-arm {
-    stroke: hsl(0deg 67.9% 41.6%);
+  .aladin-container {
+    overflow: hidden; // Needed to keep the visualization svg inside the component
+    outline: none;
+    pointer-events: none;
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      pointer-events: initial;
+    }
   }
 
-  .gmos-patrol-field {
-    stroke: hsl(120deg 100% 50%);
-    display: none;
-    stroke-width: 1px;
-    stroke-dasharray: 10;
+  .aladin-target-disable-mouse {
+    pointer-events: none;
   }
 
-  .patrol-field-intersection {
-    stroke: hsl(120deg 100% 50%);
-    stroke-width: 1.5px;
-    stroke-dasharray: 3;
+  .aladin-container-body {
+    grid-area: aladin;
+    position: relative;
   }
 
-  .gmos-fpu > polygon {
-    stroke: blue;
-    stroke-width: 0.8px;
-    fill: lightgray;
-    fill-opacity: 0.1;
+  .visualization-display {
+    display: inline !important; // we use this as a toggle thus we need important set
   }
 
-  .gmos-science-area polygon {
-    display: none;
-    stroke: purple;
-    fill: black;
-    fill-opacity: 1;
+  .visualization-overlay-svg {
+    position: absolute;
+    pointer-events: none; // let aladin get pointer events
+    z-index: 40;
+
+    .viz-polygon {
+      stroke: gray;
+      stroke-width: 2px;
+      fill: none;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .gmos-probe-arm {
+      stroke: hsl(0deg 67.9% 41.6%);
+    }
+
+    .gmos-patrol-field {
+      stroke: hsl(120deg 100% 50%);
+      display: none;
+      stroke-width: 1px;
+      stroke-dasharray: 10;
+    }
+
+    .patrol-field-intersection {
+      stroke: hsl(120deg 100% 50%);
+      stroke-width: 1.5px;
+      stroke-dasharray: 3;
+    }
+
+    .gmos-fpu > polygon {
+      stroke: blue;
+      stroke-width: 0.8px;
+      fill: lightgray;
+      fill-opacity: 0.1;
+    }
+
+    .gmos-science-area polygon {
+      display: none;
+      stroke: purple;
+      fill: black;
+      fill-opacity: 1;
+    }
+
+    .gmos-science-ccd-offset polygon {
+      display: none;
+      stroke: yellow;
+      fill-opacity: 0.1;
+    }
+
+    .gmos-science-ccd polygon {
+      display: none;
+      stroke: cyan;
+      fill-opacity: 0.1;
+    }
+
+    .gmos-candidates-area {
+      display: none;
+      fill-opacity: 0;
+      stroke: lightgreen;
+      stroke-width: 0.4px;
+      stroke-dasharray: 1.5;
+
+      &.guide-star-candidate-target-visible {
+        display: inline;
+      }
+    }
+
+    .viz-svg-border {
+      stroke: yellow;
+      stroke-width: 2px;
+      vector-effect: non-scaling-stroke;
+      stroke-dasharray: 1;
+    }
+
+    .viz-svg-center {
+      display: none;
+      stroke: green;
+      stroke-width: 2px;
+      vector-effect: non-scaling-stroke;
+    }
   }
 
-  .gmos-science-ccd-offset polygon {
-    display: none;
-    stroke: yellow;
-    fill-opacity: 0.1;
-  }
+  .targets-overlay-svg {
+    pointer-events: none; // let aladin get pointer events
+    position: absolute;
+    z-index: 40;
 
-  .gmos-science-ccd polygon {
-    display: none;
-    stroke: cyan;
-    fill-opacity: 0.1;
-  }
+    rect,
+    circle,
+    line {
+      vector-effect: non-scaling-stroke;
+    }
 
-  .gmos-candidates-area {
-    display: none;
-    fill-opacity: 0;
-    stroke: lightgreen;
-    stroke-width: 0.4px;
-    stroke-dasharray: 1.5;
+    .crosshair-target {
+      stroke: hsl(84deg 100% 29.2%);
+      stroke-width: 2px;
+    }
 
-    &.guide-star-candidate-target-visible {
+    .circle-target {
+      display: none;
+      pointer-events: fill;
+    }
+
+    .science-target {
+      fill: hsl(240deg 100% 60.2%);
+      stroke: hsl(240deg 100% 60.2%);
+      stroke-width: 1px;
+      pointer-events: stroke;
+    }
+
+    .science-selected-target {
+      fill: none;
+      stroke: hsl(33deg 100% 50%);
+      stroke-width: 1px;
+    }
+
+    .arrow-between-targets {
+      stroke: darkblue;
+      stroke-width: 2px;
+      stroke-dasharray: 2;
+    }
+
+    .proper-motion-line-gs {
+      display: none;
+
+      &.guide-star-candidate-target-visible {
+        display: inline;
+      }
+    }
+
+    .overlay-all-targets {
+      isolation: inline;
+    }
+
+    .offset-position {
+      stroke-width: 1.5px;
+      stroke-dasharray: 0 1.5 0;
+      stroke-linejoin: bevel;
+      fill: none;
+      pointer-events: stroke;
+    }
+
+    .acquisition-offset-position {
+      // tomato color for acq offets
+      stroke: hsl(9deg 70% 63.9%);
+    }
+
+    .science-offset-position {
+      // dark turqoise for science offsets
+      stroke: hsl(181deg 100% 41% / 100%);
+    }
+
+    .svg-target-tooltip {
+      .ags-fast-color {
+        fill: var(--ags-fast-guide-speed-color);
+        color: var(--ags-fast-guide-speed-color);
+        stroke: var(--ags-fast-guide-speed-color);
+      }
+
+      .ags-not-found {
+        fill: var(--negative-background-color);
+        color: var(--negative-background-color);
+        stroke: var(--negative-background-color);
+      }
+
+      .ags-medium-color {
+        fill: var(--ags-medium-guide-speed-color);
+        color: var(--ags-medium-guide-speed-color);
+        stroke: var(--ags-medium-guide-speed-color);
+      }
+
+      .ags-slow-color {
+        fill: var(--ags-slow-guide-speed-color);
+        color: var(--ags-slow-guide-speed-color);
+        stroke: var(--ags-slow-guide-speed-color);
+      }
+    }
+
+    .guide-star-target,
+    .guide-star-candidate-target {
+      display: none;
+      stroke-width: 1px;
+      stroke: hsl(9deg 100% 83.9% / 80%);
+      fill: none;
+      pointer-events: fill;
+
+      &.guide-star-candidate-target-crowded {
+        stroke-width: 0.5px;
+        fill: hsl(9deg 100% 63.9% / 50%);
+      }
+
+      &.guide-star-candidate-target-visible {
+        display: inline;
+      }
+
+      &.guide-star-vignetted {
+        stroke: red;
+        stroke-width: 1px;
+        fill: hsl(9deg 100% 63.9% / 80%);
+      }
+
+      // fast -> green
+      &.guide-star-fast {
+        stroke-width: 1px;
+        stroke: hsl(120deg 60.7% 33.9%);
+        fill: var(--ags-fast-guide-speed-color);
+        fill-opacity: 0.7;
+      }
+
+      // medium -> yellow
+      &.guide-star-medium {
+        stroke-width: 1px;
+        stroke: hsl(43deg 74.4% 69%);
+        fill: var(--ags-medium-guide-speed-color);
+        fill-opacity: 0.8;
+      }
+
+      // slow -> orange
+      &.guide-star-slow {
+        stroke-width: 1px;
+        stroke: hsl(39deg 100% 50%);
+        fill: var(--ags-slow-guide-speed-color);
+        fill-opacity: 0.8;
+      }
+
+      // faint -> red
+      &.guide-star-too-faint {
+        stroke-width: 1px;
+        stroke: hsl(9deg 100% 63.9%);
+        fill: hsl(0deg 100% 50%);
+        fill-opacity: 0.5;
+      }
+    }
+
+    .guide-star-target {
       display: inline;
     }
-  }
 
-  .viz-svg-border {
-    stroke: yellow;
-    stroke-width: 2px;
-    vector-effect: non-scaling-stroke;
-    stroke-dasharray: 1;
-  }
-
-  .viz-svg-center {
-    display: none;
-    stroke: green;
-    stroke-width: 2px;
-    vector-effect: non-scaling-stroke;
-  }
-}
-
-.targets-overlay-svg {
-  pointer-events: none; // let aladin get pointer events
-  position: absolute;
-  z-index: 40;
-
-  rect,
-  circle,
-  line {
-    vector-effect: non-scaling-stroke;
-  }
-
-  .crosshair-target {
-    stroke: hsl(84deg 100% 29.2%);
-    stroke-width: 2px;
-  }
-
-  .circle-target {
-    display: none;
-    pointer-events: fill;
-  }
-
-  .science-target {
-    fill: hsl(240deg 100% 60.2%);
-    stroke: hsl(240deg 100% 60.2%);
-    stroke-width: 1px;
-    pointer-events: stroke;
-  }
-
-  .science-selected-target {
-    fill: none;
-    stroke: hsl(33deg 100% 50%);
-    stroke-width: 1px;
-  }
-
-  .arrow-between-targets {
-    stroke: darkblue;
-    stroke-width: 2px;
-    stroke-dasharray: 2;
-  }
-
-  .proper-motion-line-gs {
-    display: none;
-
-    &.guide-star-candidate-target-visible {
-      display: inline;
-    }
-  }
-
-  .overlay-all-targets {
-    isolation: inline;
-  }
-
-  .offset-position {
-    stroke-width: 1.5px;
-    stroke-dasharray: 0 1.5 0;
-    stroke-linejoin: bevel;
-    fill: none;
-    pointer-events: stroke;
-  }
-
-  .acquisition-offset-position {
-    // tomato color for acq offets
-    stroke: hsl(9deg 70% 63.9%);
-  }
-
-  .science-offset-position {
-    // dark turqoise for science offsets
-    stroke: hsl(181deg 100% 41% / 100%);
-  }
-
-  .svg-target-tooltip {
-    .ags-fast-color {
-      fill: var(--ags-fast-guide-speed-color);
-      color: var(--ags-fast-guide-speed-color);
-      stroke: var(--ags-fast-guide-speed-color);
-    }
-
-    .ags-not-found {
-      fill: var(--negative-background-color);
-      color: var(--negative-background-color);
-      stroke: var(--negative-background-color);
-    }
-
-    .ags-medium-color {
-      fill: var(--ags-medium-guide-speed-color);
-      color: var(--ags-medium-guide-speed-color);
-      stroke: var(--ags-medium-guide-speed-color);
-    }
-
-    .ags-slow-color {
-      fill: var(--ags-slow-guide-speed-color);
-      color: var(--ags-slow-guide-speed-color);
-      stroke: var(--ags-slow-guide-speed-color);
-    }
-  }
-
-  .guide-star-target,
-  .guide-star-candidate-target {
-    display: none;
-    stroke-width: 1px;
-    stroke: hsl(9deg 100% 83.9% / 80%);
-    fill: none;
-    pointer-events: fill;
-
-    &.guide-star-candidate-target-crowded {
+    .guide-star-candidate-target-base {
+      display: none;
+      stroke: black;
       stroke-width: 0.5px;
-      fill: hsl(9deg 100% 63.9% / 50%);
-    }
-
-    &.guide-star-candidate-target-visible {
-      display: inline;
-    }
-
-    &.guide-star-vignetted {
-      stroke: red;
-      stroke-width: 1px;
-      fill: hsl(9deg 100% 63.9% / 80%);
-    }
-
-    // fast -> green
-    &.guide-star-fast {
-      stroke-width: 1px;
-      stroke: hsl(120deg 60.7% 33.9%);
-      fill: var(--ags-fast-guide-speed-color);
-      fill-opacity: 0.7;
-    }
-
-    // medium -> yellow
-    &.guide-star-medium {
-      stroke-width: 1px;
-      stroke: hsl(43deg 74.4% 69%);
-      fill: var(--ags-medium-guide-speed-color);
-      fill-opacity: 0.8;
-    }
-
-    // slow -> orange
-    &.guide-star-slow {
-      stroke-width: 1px;
-      stroke: hsl(39deg 100% 50%);
-      fill: var(--ags-slow-guide-speed-color);
-      fill-opacity: 0.8;
-    }
-
-    // faint -> red
-    &.guide-star-too-faint {
-      stroke-width: 1px;
-      stroke: hsl(9deg 100% 63.9%);
-      fill: hsl(0deg 100% 50%);
-      fill-opacity: 0.5;
+      fill: yellow;
+      fill-opacity: 0.4;
+      isolation: initial;
     }
   }
 
-  .guide-star-target {
-    display: inline;
-  }
-
-  .guide-star-candidate-target-base {
+  .viz-guides {
     display: none;
-    stroke: black;
-    stroke-width: 0.5px;
-    fill: yellow;
-    fill-opacity: 0.4;
-    isolation: initial;
   }
-}
 
-.viz-guides {
-  display: none;
-}
+  .p-menu.p-component.explore-aladin-settings-menu {
+    background: var(--button-background-color-semi);
+    border-color: var(--site-border-color);
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+    font-size: var(--pl-mini-font-size);
+    width: 14em;
 
-.p-menu.p-component.explore-aladin-settings-menu {
-  background: var(--button-background-color-semi);
-  border-color: var(--site-border-color);
-  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  font-size: var(--pl-mini-font-size);
-  width: 14em;
+    .p-menuitem-link {
+      padding: 0.6em;
 
-  .p-menuitem-link {
-    padding: 0.6em;
+      // otherwise, the slider handle can stick out too far.
+      &:has(.aladin-range-control) {
+        padding-right: 1rem;
+      }
 
-    // otherwise, the slider handle can stick out too far.
-    &:has(.aladin-range-control) {
-      padding-right: 1rem;
-    }
-
-    .aladin-range-control {
-      width: 100%;
-
-      .p-slider {
+      .aladin-range-control {
         width: 100%;
+
+        .p-slider {
+          width: 100%;
+        }
       }
     }
   }
-}
-
-.p-button.p-button-icon-only.explore-aladin-button,
-.p-button.explore-aladin-button {
-  background: var(--button-background-color-semi);
-  border-color: var(--gray-500);
-  padding: 0.3em;
-  margin-right: 0;
-  aspect-ratio: 1;
-  max-width: 30px;
-  max-height: 30px;
-
-  &:enabled:focus,
-  &:enabled:hover {
-    background: var(--gray-700);
-    border-color: var(--gray-200);
-    box-shadow: 0 0 0 0.5px var(--gray-200);
-  }
-}
-
-@mixin aladin-button-mixin {
-  position: absolute;
-  z-index: 120;
-  padding: 0.3em;
-  aspect-ratio: 1;
-}
-
-.explore-aladin-zoom-control {
-  @include aladin-button-mixin;
-
-  right: 10px;
-  top: 50%;
-  display: flex;
-  flex-direction: column;
-}
-
-.explore-aladin-search-zoom-control {
-  top: 40%;
-}
-
-.p-button.explore-aladin-fullscreen-button {
-  margin: 0;
-
-  /* stylelint-disable-next-line selector-class-pattern */
-  svg.svg-inline--fa {
-    width: auto;
-  }
-}
-
-.explore-aladin-fullscreen-button {
-  @include aladin-button-mixin;
-
-  right: 5px;
-  top: 10px;
-}
-
-.explore-aladin-toolbox-button {
-  @include aladin-button-mixin;
-
-  top: 10px;
-  left: 10px;
 
   .p-button.p-button-icon-only.explore-aladin-button,
   .p-button.explore-aladin-button {
+    background: var(--button-background-color-semi);
+    border-color: var(--gray-500);
+    padding: 0.3em;
+    margin-right: 0;
+    aspect-ratio: 1;
+    max-width: 30px;
+    max-height: 30px;
+
+    &:enabled:focus,
+    &:enabled:hover {
+      background: var(--gray-700);
+      border-color: var(--gray-200);
+      box-shadow: 0 0 0 0.5px var(--gray-200);
+    }
+  }
+
+  @mixin aladin-button-mixin {
     position: absolute;
-  }
-}
-
-@mixin hud {
-  position: absolute;
-  z-index: 120;
-  padding: 0.3em 1em;
-  margin: 1em;
-  color: var(--hud-color);
-  border: 1px solid var(--hud-color);
-  border-radius: 3px;
-  background: var(--hud-background-color);
-}
-
-.ags-overlay {
-  @include hud;
-
-  bottom: 30px;
-  font-size: smaller;
-
-  .fa-bahai {
-    color: var(--ags-icon-color);
-    margin-right: 0.3em;
+    z-index: 120;
+    padding: 0.3em;
+    aspect-ratio: 1;
   }
 
-  .ags-description {
-    @include lucumaUICommon.text-ellipsis;
+  .explore-aladin-zoom-control {
+    @include aladin-button-mixin;
 
+    right: 10px;
+    top: 50%;
     display: flex;
-    gap: 0.1em;
-    align-items: center;
+    flex-direction: column;
+  }
 
-    .ags-navigation {
-      margin-left: 0.3em;
+  .explore-aladin-search-zoom-control {
+    top: 40%;
+  }
+
+  .p-button.explore-aladin-fullscreen-button {
+    margin: 0;
+
+    /* stylelint-disable-next-line selector-class-pattern */
+    svg.svg-inline--fa {
+      width: auto;
+    }
+  }
+
+  .explore-aladin-fullscreen-button {
+    @include aladin-button-mixin;
+
+    right: 5px;
+    top: 10px;
+  }
+
+  .explore-aladin-toolbox-button {
+    @include aladin-button-mixin;
+
+    top: 10px;
+    left: 10px;
+
+    .p-button.p-button-icon-only.explore-aladin-button,
+    .p-button.explore-aladin-button {
+      position: absolute;
+    }
+  }
+
+  @mixin hud {
+    position: absolute;
+    z-index: 120;
+    padding: 0.3em 1em;
+    margin: 1em;
+    color: var(--hud-color);
+    border: 1px solid var(--hud-color);
+    border-radius: 3px;
+    background: var(--hud-background-color);
+  }
+
+  .ags-overlay {
+    @include hud;
+
+    bottom: 30px;
+    font-size: smaller;
+
+    .fa-bahai {
+      color: var(--ags-icon-color);
+      margin-right: 0.3em;
     }
 
-    .ags-navigation-button {
-      cursor: pointer;
-      padding: {
-        left: 0.2em !important;
-        right: 0.2em !important;
+    .ags-description {
+      @include lucumaUICommon.text-ellipsis;
+
+      display: flex;
+      gap: 0.1em;
+      align-items: center;
+
+      .ags-navigation {
+        margin-left: 0.3em;
+      }
+
+      .ags-navigation-button {
+        cursor: pointer;
+        padding: {
+          left: 0.2em !important;
+          right: 0.2em !important;
+        }
+
+        /* stylelint-disable-next-line selector-class-pattern */
+        svg.svg-inline--fa {
+          color: var(--gray-50);
+          width: auto;
+          margin-right: 0;
+        }
+      }
+
+      .ags-guide-speed {
+        text-transform: capitalize;
+      }
+
+      .ags-g-brightness {
+        margin-left: 0.3em;
+      }
+
+      .ags-coordinates {
+        margin-left: 0.3em;
+        font-weight: bold;
       }
 
       /* stylelint-disable-next-line selector-class-pattern */
-      svg.svg-inline--fa {
-        color: var(--gray-50);
-        width: auto;
-        margin-right: 0;
+      .svg-inline--fa {
+        margin-right: 0.3em;
       }
     }
 
-    .ags-guide-speed {
-      text-transform: capitalize;
+    .ags-fast-color {
+      color: var(--ags-fast-guide-speed-color);
     }
 
-    .ags-g-brightness {
-      margin-left: 0.3em;
+    .ags-not-found {
+      color: var(--negative-background-color);
     }
 
-    .ags-coordinates {
-      margin-left: 0.3em;
-      font-weight: bold;
+    .ags-medium-color {
+      color: var(--ags-medium-guide-speed-color);
     }
 
-    /* stylelint-disable-next-line selector-class-pattern */
-    .svg-inline--fa {
-      margin-right: 0.3em;
+    .ags-slow-color {
+      color: var(--ags-slow-guide-speed-color);
     }
   }
 
-  .ags-fast-color {
-    color: var(--ags-fast-guide-speed-color);
-  }
-
-  .ags-not-found {
-    color: var(--negative-background-color);
-  }
-
-  .ags-medium-color {
-    color: var(--ags-medium-guide-speed-color);
-  }
-
-  .ags-slow-color {
-    color: var(--ags-slow-guide-speed-color);
-  }
-}
-
-.finder-charts-tile {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--hud-background-color),
-    var(--hud-background-color) 10px,
-    var(--hud-stripe-color) 10px,
-    var(--hud-stripe-color) 11px
-  );
-}
-
-.finder-charts-tools {
-  display: grid;
-  user-select: none;
-  grid-template-columns: min-content 1fr min-content 6ch;
-  grid-template-rows:
-    [header] min-content
-    [divider] min-content
-    [zoom] min-content
-    [rotate] min-content
-    [flip] min-content
-    [rotate-pa] min-content
-    [reset] min-content
-    [invert] min-content;
-  justify-items: center;
-  color: var(--text-color);
-  left: 0;
-
-  // pa row
-  :nth-child(14) {
-    grid-row-start: rotate-pa;
-    grid-column-end: span 4;
-    justify-self: start;
-    align-self: baseline;
-  }
-
-  // reset row
-  :nth-child(15),
-  :nth-child(16) {
-    grid-row-start: reset;
-  }
-
-  // invert row
-  :nth-child(17),
-  :nth-child(18) {
-    grid-row-start: invert;
-  }
-
-  .finder-charts-button-pa {
+  .finder-charts-tile {
+    width: 100%;
+    height: 100%;
     display: flex;
+    justify-content: center;
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--hud-background-color),
+      var(--hud-background-color) 10px,
+      var(--hud-stripe-color) 10px,
+      var(--hud-stripe-color) 11px
+    );
   }
-}
 
-.finder-charts-attachments,
-.finder-charts-tools {
-  @include hud;
+  .finder-charts-tools {
+    display: grid;
+    user-select: none;
+    grid-template-columns: min-content 1fr min-content 6ch;
+    grid-template-rows:
+      [header] min-content
+      [divider] min-content
+      [zoom] min-content
+      [rotate] min-content
+      [flip] min-content
+      [rotate-pa] min-content
+      [reset] min-content
+      [invert] min-content;
+    justify-items: center;
+    color: var(--text-color);
+    left: 0;
 
-  padding: 0.3em 0.5em;
+    // pa row
+    :nth-child(14) {
+      grid-row-start: rotate-pa;
+      grid-column-end: span 4;
+      justify-self: start;
+      align-self: baseline;
+    }
 
-  .finder-charts-button {
-    cursor: pointer;
+    // reset row
+    :nth-child(15),
+    :nth-child(16) {
+      grid-row-start: reset;
+    }
 
-    .fa-border {
-      border-color: var(--hud-background-color);
+    // invert row
+    :nth-child(17),
+    :nth-child(18) {
+      grid-row-start: invert;
+    }
 
-      &:hover {
-        border-color: var(--text-color);
+    .finder-charts-button-pa {
+      display: flex;
+    }
+  }
+
+  .finder-charts-attachments,
+  .finder-charts-tools {
+    @include hud;
+
+    padding: 0.3em 0.5em;
+
+    .finder-charts-button {
+      cursor: pointer;
+
+      .fa-border {
+        border-color: var(--hud-background-color);
+
+        &:hover {
+          border-color: var(--text-color);
+        }
+      }
+    }
+
+    .p-divider.p-divider-horizontal {
+      margin: 0.3rem 0;
+    }
+
+    .p-divider,
+    span:first-child {
+      grid-column: 1 / -1;
+      justify-self: stretch;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+    }
+  }
+
+  .finder-charts-attachments {
+    right: 0;
+    top: exploreCommon.$tile-title-height;
+    width: min(40%, 300px);
+    height: max(30%, 150px);
+    display: flex;
+    flex-direction: column;
+
+    span:first-child {
+      justify-content: space-between;
+    }
+
+    .finder-charts-table-header {
+      display: none;
+    }
+
+    .finder-charts-table {
+      width: max-content;
+
+      .p-datatable-tbody > tr {
+        opacity: 0.7;
+      }
+    }
+
+    .finder-charts-table-disabled {
+      pointer-events: none;
+
+      .p-datatable-tbody > tr {
+        opacity: 0.4;
       }
     }
   }
 
-  .p-divider.p-divider-horizontal {
-    margin: 0.3rem 0;
-  }
-
-  .p-divider,
-  span:first-child {
-    grid-column: 1 / -1;
-    justify-self: stretch;
+  .finder-charts-body {
     display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-  }
-}
-
-.finder-charts-attachments {
-  right: 0;
-  top: exploreCommon.$tile-title-height;
-  width: min(40%, 300px);
-  height: max(30%, 150px);
-  display: flex;
-  flex-direction: column;
-
-  span:first-child {
-    justify-content: space-between;
+    position: relative;
+    justify-content: center;
   }
 
-  .finder-charts-table-header {
-    display: none;
+  .finder-charts-image {
+    transition:
+      transform 0.2s ease,
+      filter 0.85s ease;
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
   }
 
-  .finder-charts-table {
-    width: max-content;
-
-    .p-datatable-tbody > tr {
-      opacity: 0.7;
-    }
+  .finder-charts-image-inverted {
+    filter: invert(1);
   }
-
-  .finder-charts-table-disabled {
-    pointer-events: none;
-
-    .p-datatable-tbody > tr {
-      opacity: 0.4;
-    }
-  }
-}
-
-.finder-charts-body {
-  display: flex;
-  position: relative;
-  justify-content: center;
-}
-
-.finder-charts-image {
-  transition:
-    transform 0.2s ease,
-    filter 0.85s ease;
-  max-height: 100%;
-  max-width: 100%;
-  object-fit: contain;
-}
-
-.finder-charts-image-inverted {
-  filter: invert(1);
 }

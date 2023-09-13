@@ -325,7 +325,8 @@ lazy val firebaseDeployDev = firebaseDeploy(
 
 def setupVars(mode: String) = WorkflowStep.Run(
   List(
-    raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' common/src/main/webapp/less/variables-$mode.less > vars.css""",
+    // Removes all lines that don't define a variable, thus building a viable CSS file for linting
+    raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-$mode.scss > vars.css""",
     "cat vars.css"
   ),
   name = Some(s"Setup and expand vars $mode"),
