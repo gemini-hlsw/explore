@@ -37,6 +37,7 @@
     "ua-parser-js": "1.0.36"
   },
   "devDependencies": {
+    "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties": "^4.0.1",
     "assert": "^2.0.0",
     "brotli-size": "4.0.0",
     "bundlemon": "^2.0.2",
@@ -58,6 +59,10 @@
     "vite-plugin-pwa": "^0.16.5"
   },
   "scripts": {
+    "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
+    "fix-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/sass",
+    "lint-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
+    "fix-light": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-light.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint --fix common/src/main/webapp/sass",
     "lint-prettier": "prettier --check .",
     "build": "node --unhandled-rejections=strict build.mjs",
     "serve": "vite preview"

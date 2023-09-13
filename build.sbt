@@ -323,16 +323,27 @@ lazy val firebaseDeployDev = firebaseDeploy(
   live = true
 )
 
-lazy val runLinters = WorkflowStep.Use(
+def setupVars(mode: String) = WorkflowStep.Run(
+  List(
+    // Removes all lines that don't define a variable, thus building a viable CSS file for linting
+    raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-$mode.scss > vars.css""",
+    "cat vars.css"
+  ),
+  name = Some(s"Setup and expand vars $mode"),
+  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
+)
+
+def runLinters(mode: String) = WorkflowStep.Use(
   UseRef.Public("wearerequired", "lint-action", "v2.3.0"),
-  name = Some(s"Run linters"),
+  name = Some(s"Run linters in $mode mode"),
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
     "prettier"             -> "true",
     "stylelint"            -> "true",
     "stylelint_args"       -> "common/src/main/webapp/sass",
     "stylelint_extensions" -> "css,sass,scss"
-  )
+  ),
+  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
@@ -370,7 +381,10 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupNode ::
       npmInstall ::
       lucumaCssStep ::
-      runLinters ::
+      setupVars("dark") ::
+      runLinters("dark") ::
+      setupVars("light") ::
+      runLinters("light") ::
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),

@@ -1,10 +1,19 @@
 {
   "extends": ["stylelint-config-standard-scss"],
-  "plugins": ["stylelint-color-format"],
+  "plugins": [
+    "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties",
+    "stylelint-color-format"
+  ],
   "rules": {
     "color-format/format": {
       "format": "hsla"
     },
+    "csstools/value-no-unknown-custom-properties": [
+      true,
+      {
+        "importFrom": ["vars.css", "explore/target/lucuma-css/dark-theme.css"]
+      }
+    ],
     "no-descending-specificity": null
   }
 }

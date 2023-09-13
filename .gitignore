@@ -35,7 +35,9 @@ metals.sbt
 
 # Hydra
 .hydra/
+
 node_modules/
+vars.css
 static/
 common/src/main/publicdev/
 
