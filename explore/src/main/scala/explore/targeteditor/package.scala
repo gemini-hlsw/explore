@@ -21,14 +21,13 @@ extension (fov: Fov)
 object AddDisabled extends NewType[Boolean]
 type AddDisabled = AddDisabled.Type
 
-def domRoot: Option[HTMLElement] =
+val domRoot: Option[HTMLElement] =
   Option(document.querySelector(":root")) match
     case Some(r: HTMLElement) => r.some
     case _                    => none
 
 def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
   root
-    .map(root =>
+    .map: root =>
       Callback(root.style.setProperty(s"--aladin-image-$variableName", s"${value / 100.0}"))
-    )
     .getOrEmpty
