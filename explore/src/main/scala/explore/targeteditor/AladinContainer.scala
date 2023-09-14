@@ -107,25 +107,25 @@ object AladinContainer extends AladinCommon {
     ScalaFnComponent
       .withHooks[Props]
       // Base coordinates and science targets with pm correction if possible
-      .useStateBy(p => baseAndScience(p))
+      .useStateBy(baseAndScience)
       // View coordinates base coordinates with pm correction + user panning
-      .useStateBy { (p, baseCoordinates) =>
+      .useStateBy: (p, baseCoordinates) =>
         baseCoordinates.value._1.value.offsetBy(Angle.Angle0, p.options.viewOffset)
-      }
-      .useEffectWithDepsBy((p, _, _) => (p.asterism, p.vizTime)) {
-        (p, baseCoordinates, currentPos) => _ =>
-          val (base, science) = baseAndScience(p)
-          baseCoordinates.setState((base, science)) *>
-            currentPos.setState(
-              base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
-            )
-      }
+      // Update coordinates if asterism or vizTime changes
+      .useEffectWithDepsBy((p, _, _) => (p.asterism, p.vizTime)):
+        (p, baseCoordinates, currentPos) =>
+          _ =>
+            val (base, science) = baseAndScience(p)
+            baseCoordinates.setState((base, science)) *>
+              currentPos.setState(
+                base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
+              )
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If view offset changes upstream to zero, redraw
-      .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)) {
-        (_, baseCoordinates, viewCoordinates, aladinRef) => (_, offset) =>
-          {
+      .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)):
+        (_, baseCoordinates, viewCoordinates, aladinRef) =>
+          (_, offset) => {
             val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
             newCoords
               .map(coords =>
@@ -141,19 +141,18 @@ object AladinContainer extends AladinCommon {
               )
               .getOrEmpty
           }
-      }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf, p.globalPreferences, p.selectedGuideStar)
+        (allCoordinates, p.obsConf, p.globalPreferences.agsOverlay, p.selectedGuideStar)
       ) {
         (_, _, _, _) => (
           allCoordinates,
           configuration,
-          userPrefs,
+          agsOverlay,
           gs
         ) =>
           val candidatesVisibilityCss =
-            ExploreStyles.GuideStarCandidateVisible.when_(userPrefs.agsOverlay.isVisible)
+            ExploreStyles.GuideStarCandidateVisible.when_(agsOverlay.isVisible)
 
           GmosGeometry.gmosGeometry(
             allCoordinates.value._1.value,

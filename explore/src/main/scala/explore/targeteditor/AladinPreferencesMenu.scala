@@ -30,8 +30,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Lens
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.document
 
 case class AladinPreferencesMenu(
   uid:               User.Id,
@@ -56,12 +54,8 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // Reference to the root
-      .useMemo(())(_ =>
-        Option(document.querySelector(":root")) match
-          case Some(r: HTMLElement) => r.some
-          case _                    => none
-      )
+      // Reference to root
+      .useMemo(())(_ => domRoot)
       .render {
         (
           props,
