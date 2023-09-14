@@ -53,8 +53,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Lens
-import org.scalajs.dom.HTMLElement
-import org.scalajs.dom.document
 import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
 
@@ -103,18 +101,15 @@ case class AladinCell(
     o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined && positions.isDefined
   )
 
+  def sciencePositionsAt(vizTime: Instant): List[Coordinates] =
+    asterism.asList
+      .flatMap(_.toSidereal)
+      .flatMap(_.target.tracking.at(vizTime))
+end AladinCell
+
 trait AladinCommon:
   given Reusability[Asterism] = Reusability.by(x => (x.toSiderealTracking, x.focus.id))
   given Reusability[AgsState] = Reusability.byEq
-
-  def setVariable(root: Option[HTMLElement], variableName: String, value: Int): Callback =
-    root
-      .map(root =>
-        Callback(
-          root.style.setProperty(s"--aladin-image-$variableName", s"${value / 100.0}")
-        )
-      )
-      .getOrEmpty
 
   def userPrefsSetter(
     uid:                User.Id,
@@ -250,12 +245,8 @@ object AladinCell extends ModelOptics with AladinCommon:
             props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
           )
       }
-      // Reference to the root
-      .useMemo(())(_ =>
-        Option(document.querySelector(":root")) match
-          case Some(r: HTMLElement) => r.some
-          case _                    => none
-      )
+      // Reference to root
+      .useMemo(())(_ => domRoot)
       // Load target preferences
       .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.tid)) {
         (props, ctx, options, _, _, root) => _ =>
@@ -297,6 +288,7 @@ object AladinCell extends ModelOptics with AladinCommon:
         (p.asterism.baseTracking,
          p.asterism.focus.id,
          p.positions,
+         p.obsConf.flatMap(_.posAngleConstraint),
          p.obsConf.flatMap(_.constraints),
          p.obsConf.flatMap(_.wavelength),
          p.vizTime,
@@ -308,6 +300,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           case (tracking,
                 _,
                 positions,
+                _,
                 Some(constraints),
                 Some(wavelength),
                 vizTime,
@@ -322,16 +315,11 @@ object AladinCell extends ModelOptics with AladinCommon:
                 val fpu    = observingMode.flatMap(_.fpuAlternative)
                 val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
-                val sciencePositions =
-                  props.asterism.asList
-                    .flatMap(_.toSidereal)
-                    .flatMap(_.target.tracking.at(vizTime))
-
                 val request = AgsMessage.AgsRequest(props.tid,
                                                     constraints,
                                                     wavelength,
                                                     base.value,
-                                                    sciencePositions,
+                                                    props.sciencePositionsAt(vizTime),
                                                     positions,
                                                     params,
                                                     candidates
@@ -359,15 +347,16 @@ object AladinCell extends ModelOptics with AladinCommon:
                     }
                   } yield ()).toAsync
 
-                val process: IO[Unit] = for
-                  _ <- agsState.set(AgsState.Calculating).toAsync
-                  _ <-
-                    AgsClient[IO]
-                      .requestSingle(request)
-                      .flatMap(processResults(_))
-                      .unlessA(candidates.isEmpty)
-                      .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-                yield ()
+                val process: IO[Unit] =
+                  for {
+                    _ <- agsState.set(AgsState.Calculating).toAsync
+                    _ <-
+                      AgsClient[IO]
+                        .requestSingle(request)
+                        .flatMap(processResults(_))
+                        .unlessA(candidates.isEmpty)
+                        .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+                  } yield ()
 
                 process.guarantee(
                   agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
