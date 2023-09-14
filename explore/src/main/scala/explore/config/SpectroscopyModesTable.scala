@@ -21,7 +21,6 @@ import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.events.*
-import explore.itc.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.Progress
@@ -64,6 +63,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
+import lucuma.ui.utils.*
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*

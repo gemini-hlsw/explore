@@ -20,6 +20,7 @@ import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
+import lucuma.ui.utils.*
 
 case class ItcPanelTitle(
   selectedTarget:  View[Option[ItcTarget]],

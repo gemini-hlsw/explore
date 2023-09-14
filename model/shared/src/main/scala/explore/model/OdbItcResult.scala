@@ -13,6 +13,7 @@ import explore.model.itc.OverridenExposureTime
 import io.circe.Decoder
 import io.circe.generic.semiauto
 import io.circe.refined.*
+import lucuma.core.enums.ObserveClass
 import lucuma.core.math.SignalToNoise
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
@@ -27,17 +28,21 @@ sealed trait OdbItcResult extends Product with Serializable
 // of getting ITC data via the ODB.
 object OdbItcResult {
   case class Success(
-    exposureTime:  TimeSpan,
-    exposures:     NonNegInt,
-    signalToNoise: SignalToNoise
+    sciExposureTime:  TimeSpan,
+    sciExposures:     NonNegInt,
+    sciSignalToNoise: SignalToNoise,
+    acqSignalToNoise: SignalToNoise
   ) extends OdbItcResult
       derives Eq {
     def toItcExposureTime: ItcExposureTime =
       ItcExposureTime(
         OverridenExposureTime.FromItc,
-        exposureTime,
-        PosInt.unsafeFrom(exposures.value)
+        sciExposureTime,
+        PosInt.unsafeFrom(sciExposures.value)
       )
+
+    val snPerClass: Map[ObserveClass, SignalToNoise] =
+      Map(ObserveClass.Science -> sciSignalToNoise, ObserveClass.Acquisition -> acqSignalToNoise)
   }
 
   case class MissingParams(

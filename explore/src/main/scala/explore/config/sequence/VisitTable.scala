@@ -25,7 +25,7 @@ sealed trait VisitTable[D]:
   def steps: List[StepRecord[D]]
 
   protected[sequence] lazy val rows: List[SequenceRow.Executed.ExecutedStep[D]] =
-    steps.map(SequenceRow.Executed.ExecutedStep(_))
+    steps.map(SequenceRow.Executed.ExecutedStep(_, _ => none))
 
 case class GmosNorthVisitTable(steps: List[StepRecord[DynamicConfig.GmosNorth]])
     extends ReactFnProps(GmosNorthVisitTable.component)

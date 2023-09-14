@@ -18,6 +18,7 @@ import lucuma.itc.ItcCcd
 import lucuma.itc.SingleSN
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.*
 
 case class ItcSpectroscopyPlotDescription(
   brightness:   Option[(Band, BrightnessValue, Units)],

@@ -10,6 +10,7 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.react.common.Css
@@ -22,13 +23,18 @@ import lucuma.ui.table.*
 
 sealed trait GmosSequenceTable[D]:
   def atoms: List[Atom[D]]
+  def sn: Option[SignalToNoise]
 
-case class GmosNorthSequenceTable(atoms: List[Atom[DynamicConfig.GmosNorth]])
-    extends ReactFnProps(GmosNorthSequenceTable.component)
+case class GmosNorthSequenceTable(
+  atoms: List[Atom[DynamicConfig.GmosNorth]],
+  sn:    Option[SignalToNoise]
+) extends ReactFnProps(GmosNorthSequenceTable.component)
     with GmosSequenceTable[DynamicConfig.GmosNorth]
 
-case class GmosSouthSequenceTable(atoms: List[Atom[DynamicConfig.GmosSouth]])
-    extends ReactFnProps(GmosSouthSequenceTable.component)
+case class GmosSouthSequenceTable(
+  atoms: List[Atom[DynamicConfig.GmosSouth]],
+  sn:    Option[SignalToNoise]
+) extends ReactFnProps(GmosSouthSequenceTable.component)
     with GmosSequenceTable[DynamicConfig.GmosSouth]
 
 private sealed trait GmosSequenceTableBuilder[D: Eq]:
@@ -55,15 +61,22 @@ private sealed trait GmosSequenceTableBuilder[D: Eq]:
       header = " ",
       cell = _.value.map(drawBracket),
       size = 30.toPx
-    ) +: SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
+    ) +: SequenceColumns.gmosColumns(
+      ColDef,
+      _.step.some,
+      _.index.some
+    )
 
   protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
       .useMemo(())(_ => columns) // cols
-      .useMemoBy((props, _) => props.atoms): (_, _) => // rows
+      .useMemoBy((props, _) => props.atoms): (props, _) => // rows
         atoms =>
-          SequenceRow.FutureStep.fromAtoms(atoms).zipWithStepIndex.map(SequenceTableRow.apply)
+          SequenceRow.FutureStep
+            .fromAtoms(atoms, props.sn.showForFutureStep)
+            .zipWithStepIndex
+            .map(SequenceTableRow.apply)
       .useReactTableBy: (props, cols, rows) =>
         TableOptions(
           cols,

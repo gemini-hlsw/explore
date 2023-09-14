@@ -14,6 +14,8 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ObserveClass
+import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -30,6 +32,7 @@ case class GeneratedSequenceViewer(
   programId:       Program.Id,
   obsId:           Observation.Id,
   targetIds:       List[Target.Id],
+  snPerClass:      Map[ObserveClass, SignalToNoise],
   sequenceChanged: View[Pot[Unit]]
 ) extends ReactFnProps(GeneratedSequenceViewer.component)
 
@@ -67,9 +70,9 @@ object GeneratedSequenceViewer:
           .renderPot(
             _.fold[VdomNode](<.div("Default observation not found")) {
               case InstrumentExecutionConfig.GmosNorth(config) =>
-                GmosNorthGeneratedSequenceTables(props.obsId, config)
+                GmosNorthGeneratedSequenceTables(props.obsId, config, props.snPerClass)
               case InstrumentExecutionConfig.GmosSouth(config) =>
-                GmosSouthGeneratedSequenceTables(props.obsId, config)
+                GmosSouthGeneratedSequenceTables(props.obsId, config, props.snPerClass)
             },
             errorRender = m => {
               val msg = m match {
