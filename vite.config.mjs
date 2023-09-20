@@ -226,14 +226,6 @@ export default defineConfig(async ({ mode }) => {
     build: {
       emptyOutDir: true,
       chunkSizeWarningLimit: 20000,
-      terserOptions: {
-        sourceMap: false,
-        compress: {
-          passes: 2,
-          toplevel: true,
-          ecma: 2020,
-        },
-      },
       rollupOptions: {
         plugins: rollupPlugins,
       },
