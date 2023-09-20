@@ -8,18 +8,19 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
+import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
-import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.util.TimeSpan
 import lucuma.itc.client.ItcClient
+import lucuma.itc.client.OptimizedSpectroscopyGraphInput
 import lucuma.itc.client.SignificantFiguresInput
-import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphInput
 import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
@@ -32,7 +33,8 @@ object ITCGraphRequests:
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      CentralWavelength,
-    signalToNoise:   SignalToNoise,
+    exposureTime:    TimeSpan,
+    exposures:       PosInt,
     signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
@@ -44,7 +46,8 @@ object ITCGraphRequests:
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
         ItcGraphRequestParams(wavelength,
-                              signalToNoise,
+                              exposureTime,
+                              exposures,
                               signalToNoiseAt,
                               constraints,
                               targets,
@@ -52,7 +55,8 @@ object ITCGraphRequests:
         ).some
       case m: GmosSouthSpectroscopyRow =>
         ItcGraphRequestParams(wavelength,
-                              signalToNoise,
+                              exposureTime,
+                              exposures,
                               signalToNoiseAt,
                               constraints,
                               targets,
@@ -71,11 +75,12 @@ object ITCGraphRequests:
           )
             .traverseN { (band, mode) =>
               ItcClient[F]
-                .spectroscopyIntegrationTimeAndGraph(
-                  SpectroscopyIntegrationTimeAndGraphInput(
+                .optimizedSpectroscopyGraph(
+                  OptimizedSpectroscopyGraphInput(
                     wavelength = request.wavelength.value,
                     signalToNoiseAt = request.signalToNoiseAt.some,
-                    signalToNoise = request.signalToNoise,
+                    exposureTime = request.exposureTime,
+                    exposures = request.exposures,
                     sourceProfile = t.profile,
                     band = band,
                     radialVelocity = t.rv,
@@ -89,8 +94,8 @@ object ITCGraphRequests:
                   t -> ItcChartResult(
                     t,
                     ItcExposureTime(OverridenExposureTime.FromItc,
-                                    chartResult.exposureTime,
-                                    chartResult.exposures
+                                    request.exposureTime,
+                                    request.exposures
                     ),
                     chartResult.ccds,
                     chartResult.charts,

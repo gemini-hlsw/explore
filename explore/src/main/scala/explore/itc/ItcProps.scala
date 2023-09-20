@@ -31,7 +31,6 @@ import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessValue
-import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
 import lucuma.core.model.brightestProfileAt
@@ -74,10 +73,6 @@ case class ItcProps(
     case BasicConfigAndItc(c: BasicConfiguration.GmosSouthLongSlit, _) => c.centralWavelength
   }
 
-  // TODO: Revisit when we have exposure mode in spectroscopy requirements
-  private val signalToNoise: Option[SignalToNoise] =
-    spectroscopyRequirements.flatMap(_.signalToNoise)
-
   private val instrumentRow: Option[InstrumentRow] = finalConfig.map {
     case BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _) =>
       val gmosOverride: Option[GmosSpectroscopyOverrides] = modeOverrides match {
@@ -99,7 +94,7 @@ case class ItcProps(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps: List[Option[?]] =
-    List(itcTargets, finalConfig, wavelength, instrumentRow, signalToNoise)
+    List(itcTargets, finalConfig, wavelength, instrumentRow, remoteExposureTime)
 
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
@@ -119,22 +114,23 @@ case class ItcProps(
       yield b
     r.orElse(t.headOption)
 
-  def requestITCData(
+  def requestChart(
     onComplete:  Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => IO[Unit],
     orElse:      IO[Unit],
     beforeStart: IO[Unit]
   )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =
     val action: Option[IO[Unit]] =
       for
-        w    <- wavelength
-        sn   <- signalToNoise
-        snAt <- signalToNoiseAt
-        t    <- itcTargets
-        mode <- instrumentRow
+        w     <- wavelength
+        exp   <- remoteExposureTime.map(_.time)
+        count <- remoteExposureTime.map(_.count)
+        snAt  <- signalToNoiseAt
+        t     <- itcTargets
+        mode  <- instrumentRow
       yield beforeStart *>
         ItcClient[IO]
           .requestSingle(
-            ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
+            ItcMessage.GraphQuery(w, exp, count, snAt, constraints, t, mode)
           )
           .flatMap(
             _.fold(
