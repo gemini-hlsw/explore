@@ -18,9 +18,11 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
+import io.circe.JsonObject
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.itc.SourceTooBrightExtension
 import lucuma.itc.client.IntegrationTimeResult
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SpectroscopyIntegrationTimeInput
@@ -29,6 +31,26 @@ import queries.schemas.itc.syntax.*
 import workers.*
 
 object ITCRequests:
+  val cacheVersion = CacheVersion(11)
+
+  def processExtension(resp: Throwable): ItcQueryProblems =
+    resp match {
+      case ResponseException(errors, _)                               =>
+        val extension = errors.map(_.extensions).head
+        extension
+          .map(c => JsonObject.apply(c.toSeq: _*))
+          .flatMap(_.toJson.as[SourceTooBrightExtension].toOption) match {
+          case Some(SourceTooBrightExtension(halfWell)) =>
+            ItcQueryProblems.SourceTooBright(halfWell)
+          case _                                        =>
+            ItcQueryProblems.GenericError(errors.map(_.message).mkString_("\n"))
+        }
+      case e if e.getMessage.startsWith("TypeError: Failed to fetch") =>
+        ItcQueryProblems.GenericError("ITC Server unreachable")
+      case e                                                          =>
+        ItcQueryProblems.GenericError(e.getMessage)
+    }
+
   // Copied from https://gist.github.com/gvolpe/44e2263f9068efe298a1f30390de6d22
   def parTraverseN[F[_]: Concurrent: Parallel, G[_]: Traverse, A, B](
     n:  Long,
@@ -81,18 +103,11 @@ object ITCRequests:
             )
             .map(r => Map(params -> itcResults(r)))
             .handleError { e =>
-              val msg = e match
-                case ResponseException(errors, _) =>
-                  errors.map(_.message).mkString_("\n")
-                case e                            =>
-                  e.getMessage
               Map(
-                params -> (ItcQueryProblems.GenericError(msg): ItcQueryProblems).leftNec[ItcResult]
+                params -> processExtension(e).leftNec[ItcResult]
               )
             }
         }
-
-    val cacheVersion = CacheVersion(10)
 
     val cacheableRequest =
       Cacheable(

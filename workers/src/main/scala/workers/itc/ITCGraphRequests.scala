@@ -8,7 +8,6 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
-import clue.ResponseException
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.itc.math.*
@@ -102,14 +101,7 @@ object ITCGraphRequests:
                   ).asRight
                 )
                 .handleError { e =>
-                  val msg = e match
-                    case ResponseException(errors, _)                               =>
-                      errors.map(_.message).mkString_("\n")
-                    case e if e.getMessage.startsWith("TypeError: Failed to fetch") =>
-                      "ITC Server unreachable"
-                    case e                                                          =>
-                      e.getMessage
-                  t -> ItcQueryProblems.GenericError(msg).asLeft
+                  t -> ITCRequests.processExtension(e).asLeft
                 }
             }
         )
@@ -119,7 +111,7 @@ object ITCGraphRequests:
     val cacheableRequest =
       Cacheable(
         CacheName("itcGraphQuery"),
-        CacheVersion(11),
+        ITCRequests.cacheVersion,
         doRequest,
         (r, g) =>
           r.target.forall(t =>

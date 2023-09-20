@@ -184,13 +184,15 @@ trait DisplayImplicits:
   }
 
   given Display[ItcQueryProblems] = Display.byShortName {
-    case ItcQueryProblems.UnsupportedMode        => "Mode not supported"
-    case ItcQueryProblems.MissingWavelength      => "Provide a wavelength"
-    case ItcQueryProblems.MissingSignalToNoise   => "Provide a signal to noise"
-    case ItcQueryProblems.MissingSignalToNoiseAt => "Provide the wavelength where to measure S/N"
-    case ItcQueryProblems.MissingTargetInfo      => "Target information is missing"
-    case ItcQueryProblems.MissingBrightness      => "Target brightness is missing"
-    case ItcQueryProblems.GenericError(e)        => e
+    case ItcQueryProblems.UnsupportedMode               => "Mode not supported"
+    case ItcQueryProblems.MissingWavelength             => "Provide a wavelength"
+    case ItcQueryProblems.MissingSignalToNoise          => "Provide a signal to noise"
+    case ItcQueryProblems.MissingSignalToNoiseAt        => "Provide the wavelength where to measure S/N"
+    case ItcQueryProblems.MissingTargetInfo             => "Target information is missing"
+    case ItcQueryProblems.MissingBrightness             => "Target brightness is missing"
+    case ItcQueryProblems.SourceTooBright(halfWellTime) =>
+      f"Source too bright, well half filled in $halfWellTime%.2f seconds"
+    case ItcQueryProblems.GenericError(e)               => e
   }
 
   extension (configuration: BasicConfiguration)
