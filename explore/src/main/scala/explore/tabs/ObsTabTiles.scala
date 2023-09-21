@@ -30,6 +30,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
 import explore.observationtree.obsEditAttachments
@@ -62,6 +63,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -117,14 +119,14 @@ object ObsTabTiles:
     )
 
   private def itcQueryProps(
-    obs:            ObsSummary,
-    odbItc:         Option[OdbItcResult.Success],
-    selectedConfig: Option[BasicConfigAndItc],
-    targetsList:    TargetList
+    obs:             ObsSummary,
+    itcExposureTime: Option[ItcExposureTime],
+    selectedConfig:  Option[BasicConfigAndItc],
+    targetsList:     TargetList
   ): ItcProps =
     ItcProps(
       obs,
-      odbItc.map(_.toItcExposureTime),
+      itcExposureTime,
       selectedConfig,
       targetsList,
       obs.toModeOverride
@@ -135,7 +137,16 @@ object ObsTabTiles:
     acquisition: Option[NonEmptyList[Offset]]
   )
 
-  given Reusability[LoadingState] = Reusability.byEq
+  private def expTime(
+    selectedConfig: Option[BasicConfigAndItc],
+    odbItc:         Option[OdbItcResult.Success]
+  ): Option[ItcExposureTime] =
+    val tableItc = for {
+      conf <- selectedConfig
+      res  <- conf.itcResult.flatMap(_.toOption)
+      itc  <- res.toItcExposureTime
+    } yield itc
+    odbItc.map(_.toItcExposureTime).orElse(tableItc)
 
   private val component =
     ScalaFnComponent
@@ -187,9 +198,11 @@ object ObsTabTiles:
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
       .useStateWithReuseBy((props, _, odbItc, _, _, _, selectedConfig) =>
+        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
+
         itcQueryProps(
           props.observation.get,
-          odbItc.toOption.flatten,
+          time,
           selectedConfig.get,
           props.allTargets.get
         )
@@ -199,9 +212,11 @@ object ObsTabTiles:
       // itc loading
       .useStateWithReuse(LoadingState.Done)
       .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
+        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
+
         itcQueryProps(
           props.observation.get,
-          odbItc.toOption.flatten,
+          time,
           selectedConfig.get,
           props.allTargets.get
         )
@@ -210,7 +225,7 @@ object ObsTabTiles:
 
         oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
           itcProps
-            .requestITCData(
+            .requestChart(
               m => {
                 val r = m.map {
                   case (k, Left(e))  =>

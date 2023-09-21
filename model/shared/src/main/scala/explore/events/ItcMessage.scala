@@ -5,6 +5,7 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import cats.data.*
+import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.ItcPicklers
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcQueryProblems
@@ -17,6 +18,7 @@ import explore.modes.SpectroscopyModesMatrix
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 import workers.WorkerRequest
@@ -45,7 +47,8 @@ object ItcMessage extends ItcPicklers:
 
   case class GraphQuery(
     wavelength:      CentralWavelength,
-    signalToNoise:   SignalToNoise,
+    exposureTime:    TimeSpan,
+    exposures:       PosInt,
     signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
