@@ -58,9 +58,9 @@ object GuideStarTarget:
           ExploreStyles.TargetTooltipArea |+| ExploreStyles.GuideStarCandidateTarget |+| p.pointCss
 
         val targetSvg = <.circle(^.cx := scale(p.offP),
-                                 ^.cy         := scale(p.offQ),
-                                 ^.r          := scale(p.maxP * p.radius),
-                                 ^.untypedRef := floating.reference,
+                                 ^.cy := scale(p.offQ),
+                                 ^.r  := scale(p.maxP * p.radius),
+                                 ^.untypedRef(floating.refs.setReference),
                                  pointCss
         )
 
@@ -116,8 +116,8 @@ object GuideStarTarget:
               ExploreStyles.TargetTooltip,
               ^.transform := s"translate(${scale(p.offP)}, ${translateBoxY}) scale($TooltipScaleFactor, $TooltipScaleFactor)",
               <.path(
-                ^.untypedRef := floating.floating,
-                ^.d          := path
+                ^.untypedRef(floating.refs.setFloating),
+                ^.d := path
               ),
               tooltip
             )

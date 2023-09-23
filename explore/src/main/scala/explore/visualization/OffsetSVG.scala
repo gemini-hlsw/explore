@@ -51,7 +51,7 @@ object OffsetSVG:
         val areaSize  = scale(p.maxP * (2 * p.radius + 3))
         val targetSvg = <.g(
           // tooltip area
-          floatingArea(p.p, p.q, areaSize, floating.reference),
+          floatingArea(p.p, p.q, areaSize, floating.refs),
           // mark the offsset pos with a square
           <.rect(
             ^.x      := scale(p.p) - areaSize / 2,
