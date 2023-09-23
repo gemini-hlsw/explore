@@ -39,10 +39,11 @@ import lucuma.ui.utils.given
 import monocle.Lens
 
 case class ConstraintsPanel(
-  programId:     Program.Id,
-  obsIds:        ObsIdSet,
-  undoCtx:       UndoSetter[ConstraintSet],
-  renderInTitle: Tile.RenderInTitle
+  programId:       Program.Id,
+  obsIds:          ObsIdSet,
+  undoCtx:         UndoSetter[ConstraintSet],
+  renderInTitle:   Tile.RenderInTitle,
+  sequenceChanged: Callback = Callback.empty
 ) extends ReactFnProps(ConstraintsPanel.component):
   val constraintSet: ConstraintSet = undoCtx.model.get
 

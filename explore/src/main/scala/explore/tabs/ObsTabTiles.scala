@@ -101,14 +101,15 @@ object ObsTabTiles:
     programId:         Program.Id,
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
-    allConstraintSets: Set[ConstraintSet]
+    allConstraintSets: Set[ConstraintSet],
+    sequenceChanged:   Callback
   )(using FetchClient[IO, ObservationDB]): VdomNode =
     <.div(
       ExploreStyles.JustifiedEndTileControl,
       Dropdown[ConstraintSet](
         value = constraintSet.get,
         onChange = (cs: ConstraintSet) =>
-          constraintSet.set(cs) >>
+          constraintSet.set(cs) >> Callback.log("CHANGE") *> sequenceChanged >>
             ObsQueries
               .updateObservationConstraintSet[IO](programId, List(observationId), cs)
               .runAsyncAndForget,
@@ -152,8 +153,11 @@ object ObsTabTiles:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStreamResourceOnMountBy { (props, ctx) =>
+      // Hash of sequence parameters. If the hash changes, the sequence has changed
+      .useStateView(().ready)
+      .useStreamResourceOnMountBy { (props, ctx, u) =>
         import ctx.given
+        println(u.get)
 
         ObsItcQuery[IO]
           .query(props.obsId)(ErrorPolicy.RaiseOnNoData)
@@ -168,9 +172,13 @@ object ObsTabTiles:
             )
           )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+          .reRunOnResourceSignals(
+            ObservationEditSubscription
+              .subscribe[IO](props.obsId)
+              .flatTap(a => cats.effect.Resource.eval(IO.println(a)))
+          )
       }
-      .useStreamResourceOnMountBy { (props, ctx, _) =>
+      .useStreamResourceOnMountBy { (props, ctx, _, _) =>
         import ctx.given
 
         SequenceOffsets[IO]
@@ -188,7 +196,11 @@ object ObsTabTiles:
             )
           )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+          .reRunOnResourceSignals(
+            ObservationEditSubscription
+              .subscribe[IO](props.obsId)
+              .flatTap(a => cats.effect.Resource.eval(IO.println(a)))
+          )
       }
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
@@ -197,7 +209,7 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateWithReuseBy((props, _, odbItc, _, _, _, selectedConfig) =>
+      .useStateWithReuseBy((props, _, _, odbItc, _, _, _, selectedConfig) =>
         val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
 
         itcQueryProps(
@@ -211,7 +223,7 @@ object ObsTabTiles:
       .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
       .useStateWithReuse(LoadingState.Done)
-      .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
+      .useEffectWithDepsBy { (props, _, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
         val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
 
         itcQueryProps(
@@ -220,7 +232,7 @@ object ObsTabTiles:
           selectedConfig.get,
           props.allTargets.get
         )
-      } { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
+      } { (props, ctx, _, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
         import ctx.given
 
         oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
@@ -253,18 +265,17 @@ object ObsTabTiles:
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
       // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
-        (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
+        (_, _, _, _, _, _, _, _, _, _, _, selectedTarget) =>
           itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
       )
       // selected attachment
       .useStateView(none[ObsAtt.Id])
-      // Signal that the sequence has changed
-      .useStateView(().ready)
       .render {
         (
           props,
           ctx,
+          sequenceChanged,
           itc,
           sequenceOffsets,
           agsState,
@@ -274,8 +285,7 @@ object ObsTabTiles:
           itcChartResults,
           itcLoading,
           selectedItcTarget,
-          selectedAttachment,
-          sequenceChanged
+          selectedAttachment
         ) =>
           import ctx.given
 
@@ -381,14 +391,6 @@ object ObsTabTiles:
           val constraints: View[ConstraintSet] =
             props.observation.model.zoom(ObsSummary.constraints)
 
-          val constraintsSelector: VdomNode =
-            makeConstraintsSelector(
-              props.programId,
-              props.obsId,
-              props.observation.model.zoom(ObsSummary.constraints),
-              props.allConstraintSets
-            )
-
           val timingWindows: View[List[TimingWindow]] =
             TimingWindowsQueries.viewWithRemoteMod(
               props.programId,
@@ -468,6 +470,15 @@ object ObsTabTiles:
               sequenceChanged.set(Pot.pending)
             )
 
+          val constraintsSelector: VdomNode =
+            makeConstraintsSelector(
+              props.programId,
+              props.obsId,
+              props.observation.model.zoom(ObsSummary.constraints),
+              props.allConstraintSets,
+              sequenceChanged.set(Pot.pending)
+            )
+
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
           // so that the constraints selector dropdown always appears in front of any other tiles. If more
           // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
@@ -485,7 +496,8 @@ object ObsTabTiles:
                 props.programId,
                 ObsIdSet.one(props.obsId),
                 props.observation.zoom(ObsSummary.constraints),
-                renderInTitle
+                renderInTitle,
+                sequenceChanged.set(Pot.pending)
               )
             )
 
