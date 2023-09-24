@@ -112,6 +112,7 @@ object ObsTabContents extends TwoPanels:
             outlined = true,
             disabled = false,
             icon = Icons.ArrowRightFromLine,
+            clazz = ExploreStyles.ObsTreeHideShow,
             onClick = deckShown.mod(_.flip)
           ).mini.compact
         )
@@ -171,7 +172,7 @@ object ObsTabContents extends TwoPanels:
       rightSide,
       RightSideCardinality.Multi,
       resize,
-      ExploreStyles.ObsHiddenToolbar
+      ExploreStyles.ObsHiddenToolbar.when_(deckShown.get === DeckShown.Hidden)
     )
   }
 
