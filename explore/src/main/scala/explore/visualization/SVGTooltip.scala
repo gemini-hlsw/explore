@@ -4,8 +4,6 @@
 package explore.visualization
 
 import explore.components.ui.ExploreStyles
-import japgolly.scalajs.react.facade.React.RefFn
-import japgolly.scalajs.react.vdom.TopNode
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.react.common.Style
 import lucuma.react.floatingui.*
@@ -96,13 +94,13 @@ def tooltipTranslationAndContent(
   (translateBoxY, translateTextX, translateTextY, path, pf)
 }
 
-def floatingArea(p: Double, q: Double, areaSize: Double, reference: RefFn[TopNode]) =
+def floatingArea(p: Double, q: Double, areaSize: Double, refs: FloatingRefs) =
   <.rect(
-    ^.x          := scale(p) - areaSize / 2,
-    ^.width      := areaSize,
-    ^.height     := areaSize,
-    ^.y          := scale(q) - areaSize / 2,
-    ^.untypedRef := reference,
+    ^.x      := scale(p) - areaSize / 2,
+    ^.width  := areaSize,
+    ^.height := areaSize,
+    ^.y      := scale(q) - areaSize / 2,
+    ^.untypedRef(refs.setReference),
     ExploreStyles.TargetTooltipArea
   )
 
@@ -127,11 +125,11 @@ def svgWithTooltip(
         ExploreStyles.TargetTooltip,
         ^.transform := s"translate(${scale(p)}, ${translateBoxY}) scale($TooltipScaleFactor, $TooltipScaleFactor)",
         <.path(
-          ^.untypedRef := floating.floating,
-          ^.d          := path
+          ^.untypedRef(floating.refs.setFloating),
+          ^.d         := path
         ),
         <.text(
-          ^.transform  := s"translate($translateTextX, $translateTextY) scale(${1 / pf}, ${1 / pf})",
+          ^.transform := s"translate($translateTextX, $translateTextY) scale(${1 / pf}, ${1 / pf})",
           tooltip
         )
       )
