@@ -19,7 +19,7 @@ object Icons {
   val faArrowDownLeft: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowLeftFromLine")
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowLeftFromLine")
   val faArrowLeftFromLine: FAIcon = js.native
 
   @js.native
@@ -27,7 +27,7 @@ object Icons {
   val faArrowRight: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-thin-svg-icons", "faArrowRightFromLine")
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowRightFromLine")
   val faArrowRightFromLine: FAIcon = js.native
 
   @js.native

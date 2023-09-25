@@ -1659,6 +1659,12 @@ input[type='file'].explore-fileupload {
 .tree-body {
   width: 100vw;
 
+  &.obs-tree-hidden-toolbar {
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      width: unset;
+    }
+  }
+
   @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     width: $tree-section-width;
 
@@ -1694,6 +1700,10 @@ input[type='file'].explore-fileupload {
 
 .obs-hide-show-button {
   display: none;
+
+  &.p-button-secondary.p-button-outlined.p-button {
+    color: var(--site-text-color);
+  }
 
   @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     display: flex;
