@@ -210,7 +210,10 @@ object ElevationPlotNight {
             case TimeDisplay.UT       => timezoneInstantFormat(instant, ZoneOffset.UTC)
             case TimeDisplay.Sidereal =>
               val skycalc = ImprovedSkyCalc(props.site.place)
-              val sid     = skycalc.getSiderealTime(instant)
+              val sid     = {
+                val sid = skycalc.getSiderealTime(instant)
+                if (sid < 0) sid + 24 else sid
+              }
               val hours   = sid.toInt
               val minutes = Math.round((sid % 1) * 60).toInt
               f"$hours%02d:$minutes%02d"
