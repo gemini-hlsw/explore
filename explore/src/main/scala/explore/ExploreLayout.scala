@@ -4,6 +4,7 @@
 package explore
 
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.*
@@ -25,7 +26,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.broadcastchannel.*
 import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
@@ -98,7 +98,7 @@ object ExploreLayout:
       )
       .useEffectOnMountBy: (props, _, ctx, toastRef) =>
         Callback {
-          ctx.broadcastChannel.onmessage = (
+          ctx.broadcastChannel.messages.map(_.data).foreach(
             (x: ExploreEvent) =>
               // This is coming from the js world, we can't match the type
               x.event match {
@@ -127,7 +127,7 @@ object ExploreLayout:
                       .toAsync
                 case _                        => IO.unit
               }
-          ): (ExploreEvent => IO[Unit])
+          ).compile.drain.unsafeRunAndForget()(IORuntime.global)
           // Scala 3 infers the return type as Any if we don't ascribe
 
           ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
