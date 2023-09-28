@@ -162,6 +162,12 @@ object Dependencies {
     )(lucumaCatalog)
   )
 
+  val LucumaBC = Def.setting(
+    deps(
+      "edu.gemini" %%% "lucuma-broadcast-channel"
+    )(lucumaBC)
+  )
+
   val LucumaCatalog = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-catalog"

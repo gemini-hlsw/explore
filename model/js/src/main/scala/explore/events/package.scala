@@ -3,8 +3,6 @@
 
 package explore.events
 
-import fs2.dom.Serializer
-
 import scala.scalajs.js
 
 // These are messages sent across tabs thus they need to be JS compatible
@@ -15,9 +13,6 @@ sealed trait ExploreEvent extends js.Object {
 }
 
 object ExploreEvent {
-  given Serializer[ExploreEvent] =
-    Serializer.any.imap(_.asInstanceOf[ExploreEvent])(identity(_))
-
   val LogoutEventId    = 1
   val PWAUpdateId      = 2
   val PWAReloadId      = 3
