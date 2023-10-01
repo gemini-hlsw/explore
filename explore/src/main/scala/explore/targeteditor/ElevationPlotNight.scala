@@ -21,6 +21,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
+import lucuma.core.util.time.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.ResizingChart
 import lucuma.react.resizeDetector.hooks.*
@@ -38,6 +39,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import scala.collection.immutable.HashSet
 import scala.deriving.Mirror
 import scala.scalajs.js
@@ -54,26 +56,23 @@ case class ElevationPlotNight(
 ) extends ReactFnProps(ElevationPlotNight.component):
   val visualizationDuration: Duration = Duration.ofHours(1)
 
-object ElevationPlotNight {
+object ElevationPlotNight:
   private type Props = ElevationPlotNight
 
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
   @js.native
-  protected trait PointOptionsWithAirmass extends PointOptionsObject {
+  protected trait PointOptionsWithAirmass extends PointOptionsObject:
     var airmass: Double
-  }
 
   @js.native
-  protected trait ElevationPointWithAirmass extends Point {
+  protected trait ElevationPointWithAirmass extends Point:
     var airmass: Double
-  }
 
-  inline def setAirMass(x: PointOptionsWithAirmass, value: Double): PointOptionsWithAirmass = {
+  inline def setAirMass(x: PointOptionsWithAirmass, value: Double): PointOptionsWithAirmass =
     x.airmass = value
     x
-  }
 
   protected case class SeriesData(
     targetAltitude:   List[ResizingChart.Data],
@@ -92,15 +91,14 @@ object ElevationPlotNight {
     case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
     case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
 
-  private def formatAngle(degs: Double): String = {
+  private def formatAngle(degs: Double): String =
     val dms     = Angle.DMS(Angle.fromDoubleDegrees(degs))
     val degrees = if (dms.degrees > 180) s"-${360 - dms.degrees}" else dms.degrees.toString
     val minutes = "%02d".format(dms.arcminutes)
     val seconds = "%02d".format(dms.arcseconds)
     s"$degrees°$minutes′$seconds″"
-  }
 
-  private val skyBrightnessPercentileLines = {
+  private val skyBrightnessPercentileLines =
     def plotLine(id: String, value: Double) =
       YAxisPlotLinesOptions()
         .setId(s"sky-brightness-$id")
@@ -114,9 +112,8 @@ object ElevationPlotNight {
       plotLine("50", 20.78),
       plotLine("80", 19.61)
     )
-  }
 
-  private val skyBrightnessPercentileBands = {
+  private val skyBrightnessPercentileBands =
     def plotBand(id: String, label: String, from: Double, to: Double) =
       YAxisPlotBandsOptions()
         .setId(s"sky-brightness-$id")
@@ -137,14 +134,13 @@ object ElevationPlotNight {
       plotBand("gray", "Gray", 19.61, 20.78),
       plotBand("bright", "Bright", 17, 19.61)
     )
-  }
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useState(HashSet.from(ElevationSeries.values))
       .useResizeDetector()
-      .render { (props, shownSeries, resize) =>
+      .render: (props, shownSeries, resize) =>
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
           shownSeries.modState(_ + series) >>
             Callback {
@@ -202,10 +198,11 @@ object ElevationPlotNight {
         def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
           ZonedDateTime
             .ofInstant(instant, zoneId)
+            .roundTo(ChronoUnit.MINUTES)
             .format(Constants.GppTimeFormatter)
 
         def instantFormat(instant: Instant): String =
-          props.timeDisplay match {
+          props.timeDisplay match
             case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
             case TimeDisplay.UT       => timezoneInstantFormat(instant, ZoneOffset.UTC)
             case TimeDisplay.Sidereal =>
@@ -217,17 +214,15 @@ object ElevationPlotNight {
               val hours   = sid.toInt
               val minutes = Math.round((sid % 1) * 60).toInt
               f"$hours%02d:$minutes%02d"
-          }
 
         def timeFormat(value: Double): String =
           instantFormat(Instant.ofEpochMilli(value.toLong))
 
         val timeDisplay: String =
-          props.timeDisplay match {
+          props.timeDisplay match
             case TimeDisplay.Site     => props.site.timezone.getId
             case TimeDisplay.UT       => "UTC"
             case TimeDisplay.Sidereal => "Site Sidereal"
-          }
 
         val tickFormatter: AxisLabelsFormatterCallbackFunction =
           (
@@ -235,7 +230,7 @@ object ElevationPlotNight {
             _:          AxisLabelsFormatterContextObject
           ) => timeFormat(labelValue.value.asInstanceOf[Double])
 
-        val tooltipFormatter: TooltipFormatterCallbackFunction = {
+        val tooltipFormatter: TooltipFormatterCallbackFunction =
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
             val x     = ctx.x match
               case x: Double => x
@@ -253,7 +248,6 @@ object ElevationPlotNight {
               case _ => formatAngle(y)       // Other elevations
             }
             s"<strong>$time ($timeDisplay)</strong><br/>${ctx.series.name}: $value"
-        }
 
         val dusk = instantFormat(tbNauticalNight.start)
         val dawn = instantFormat(tbNauticalNight.end)
@@ -435,5 +429,3 @@ object ElevationPlotNight {
           )
         )
           .withRef(resize.ref)
-      }
-}
