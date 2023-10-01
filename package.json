@@ -2,6 +2,7 @@
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.7",
     "@floating-ui/react": "^0.25.4",
+    "@fontsource/lato": "^5.0.13",
     "@fortawesome/fontawesome-pro": "^6.4.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
     "@fortawesome/pro-duotone-svg-icons": "^6.4.0",
@@ -47,14 +48,13 @@
     "less-watch-compiler": "1.16.3",
     "prettier": "^3.0.3",
     "process": "^0.11.10",
-    "rollup-plugin-visualizer": "^5.9.2",
     "sass": "^1.68.0",
     "stylelint": "^15.10.3",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-standard-scss": "^11.0.0",
     "terser": "5.20.0",
+    "unplugin-fonts": "^1.0.3",
     "vite": "4.4.9",
-    "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-mkcert": "^1.16.0",
     "vite-plugin-pwa": "^0.16.5"
   },

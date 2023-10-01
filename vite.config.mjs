@@ -1,10 +1,9 @@
 // @ts-check
 import { defineConfig } from 'vite';
-import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 import fs from 'fs/promises';
 import mkcert from 'vite-plugin-mkcert';
-import { VitePluginFonts } from 'vite-plugin-fonts';
+import Unfonts from 'unplugin-fonts/vite'
 import { VitePWA } from 'vite-plugin-pwa';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,13 +29,10 @@ const fixCssRoot = (opts = {}) => {
  */
 fixCssRoot.postcss = true;
 
-const fontImport = VitePluginFonts({
-  google: {
+const fontImport = Unfonts({
+  fontsource: {
     families: [
-      {
-        name: 'Lato',
-        styles: 'ital,wght@0,400;0,700;1,400;1,700',
-      },
+      'Lato'
     ],
   },
 });
@@ -233,9 +229,6 @@ export default defineConfig(async ({ mode }) => {
           toplevel: true,
           ecma: 2020,
         },
-      },
-      rollupOptions: {
-        plugins: rollupPlugins,
       },
       minify: 'terser',
       outDir: path.resolve(_dirname, 'heroku/static'),
