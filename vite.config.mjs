@@ -106,7 +106,6 @@ export default defineConfig(async ({ mode }) => {
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');
-  const rollupPlugins = isProduction ? [] : [visualizer()];
   const common = path.resolve(_dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
   const imagesCommon = path.resolve(webappCommon, 'images');

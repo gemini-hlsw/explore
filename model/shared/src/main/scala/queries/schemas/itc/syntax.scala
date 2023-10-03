@@ -21,6 +21,7 @@ import lucuma.core.enums.ImageQuality
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.model.sequence.gmos.binning.*
 import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
@@ -38,8 +39,8 @@ trait syntax:
           .orElse(
             GmosCcdMode(
               if (isFPU) GmosXBinning.One
-              else xbinNorth(g.fpu, p, iq, PosDouble.unsafeFrom(2.0)),
-              if (isFPU) GmosYBinning.One else DefaultYBinning,
+              else northSpectralBinning(g.fpu, p, iq, g.grating, PosDouble.unsafeFrom(2.0)),
+              if (isFPU) GmosYBinning.One else GmosYBinning.Two,
               DefaultAmpCount,
               DefaultAmpGain,
               DefaultAmpReadMode
@@ -57,8 +58,8 @@ trait syntax:
           .orElse(
             GmosCcdMode(
               if (isFPU) GmosXBinning.One
-              else xbinSouth(g.fpu, p, iq, PosDouble.unsafeFrom(2.0)),
-              if (isFPU) GmosYBinning.One else DefaultYBinning,
+              else southSpectralBinning(g.fpu, p, iq, g.grating, PosDouble.unsafeFrom(2.0)),
+              if (isFPU) GmosYBinning.One else GmosYBinning.Two,
               DefaultAmpCount,
               DefaultAmpGain,
               DefaultAmpReadMode
