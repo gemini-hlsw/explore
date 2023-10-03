@@ -12,7 +12,6 @@
     "@fortawesome/pro-thin-svg-icons": "^6.4.2",
     "@tanstack/react-table": "^8.10.3",
     "@tanstack/react-virtual": "v3.0.0-beta.61",
-    "broadcast-channel": "5.3.0",
     "copy-to-clipboard": "3.3.3",
     "github-markdown-css": "^5.1.0",
     "highcharts": "11.1.0",

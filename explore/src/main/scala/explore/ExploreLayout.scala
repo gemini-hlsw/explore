@@ -4,7 +4,6 @@
 package explore
 
 import cats.effect.IO
-import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.*
@@ -96,45 +95,40 @@ object ExploreLayout:
               _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
             )
       )
-      .useEffectOnMountBy: (props, _, ctx, toastRef) =>
-        Callback {
-          ctx.broadcastChannel.messages.map(_.data).foreach(
-            (x: ExploreEvent) =>
-              // This is coming from the js world, we can't match the type
-              x.event match {
-                // TODO: Handle logout events
-                case ExploreEvent.PWAUpdateId =>
-                  // Clear other toasts first
-                  toastRef.clear().toAsync *>
-                    toastRef
-                      .upgradePrompt(
-                        <.span(
-                          "A new version of ",
-                          <.a(
-                            ExploreStyles.UpgradeLink,
-                            "Explore",
-                            ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
-                            ^.target := "_blank"
-                          ),
-                          " is available!"
-                        ),
-                        IO(
-                          ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
-                        )
-                          .handleErrorWith(e => IO(e.printStackTrace()))
-                          .runAsyncAndForget
-                      )
-                      .toAsync
-                case _                        => IO.unit
-              }
-          ).compile.drain.unsafeRunAndForget()(IORuntime.global)
-          // Scala 3 infers the return type as Any if we don't ascribe
-
-          ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
-        }
+      .useStreamOnMountBy: (_, _, ctx, toastRef) =>
+        ctx.broadcastChannel.messages.evalTap(
+          // This is coming from the js world, we can't match the type
+          _.data.event match {
+            // TODO: Handle logout events
+            case ExploreEvent.PWAUpdateId =>
+              // Clear other toasts first
+              toastRef.clear().toAsync *>
+                toastRef
+                  .upgradePrompt(
+                    <.span(
+                      "A new version of ",
+                      <.a(
+                        ExploreStyles.UpgradeLink,
+                        "Explore",
+                        ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
+                        ^.target := "_blank"
+                      ),
+                      " is available!"
+                    ),
+                    ctx.broadcastChannel
+                      .postMessage(ExploreEvent.PWAReload)
+                      .handleErrorWith(e => IO(e.printStackTrace()))
+                      .runAsyncAndForget
+                  )
+                  .toAsync
+            case _                        => IO.unit
+          }
+        )
+      .useEffectOnMountBy: (_, _, ctx, _, _) =>
+        ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
       .useStateView(none[NonEmptyString]) // userSelectionMessage
       .useTheme(Theme.Dark)
-      .render: (props, helpCtx, ctx, toastRef, userSelectionMessage, theme) =>
+      .render: (props, helpCtx, ctx, toastRef, _, userSelectionMessage, theme) =>
         import ctx.given
 
         // Creates a "profile" for user preferences.
