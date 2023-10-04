@@ -5,7 +5,6 @@ package queries.schemas.itc
 
 import cats.Hash
 import cats.syntax.all.*
-import eu.timepit.refined.types.numeric.PosDouble
 import explore.model.AsterismIds
 import explore.model.TargetList
 import explore.model.itc.ItcTarget
@@ -30,16 +29,16 @@ trait syntax:
   extension (row: InstrumentRow)
     def toItcClientMode(p: SourceProfile, iq: ImageQuality): Option[InstrumentMode] = row match {
       case g: GmosNorthSpectroscopyRow =>
-        val isFPU =
-          g.fpu === GmosNorthFpu.Ifu2Slits || g.fpu === GmosNorthFpu.IfuBlue || g.fpu === GmosNorthFpu.IfuRed
-        val roi   = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-        val ccd   = g.modeOverrides
+        val (xbin, ybin) =
+          if (g.fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
+          else northBinning(g.fpu, p, iq, g.grating)
+        val roi          = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
+        val ccd          = g.modeOverrides
           .flatMap(_.ccdMode)
           .orElse(
             GmosCcdMode(
-              if (isFPU) GmosXBinning.One
-              else xbinNorth(g.fpu, p, iq, PosDouble.unsafeFrom(2.0)),
-              if (isFPU) GmosYBinning.One else DefaultYBinning,
+              xbin,
+              ybin,
               DefaultAmpCount,
               DefaultAmpGain,
               DefaultAmpReadMode
@@ -49,16 +48,16 @@ trait syntax:
           .GmosNorthSpectroscopy(g.grating, g.filter, GmosFpu.North(g.fpu.asRight), ccd, roi)
           .some
       case g: GmosSouthSpectroscopyRow =>
-        val isFPU =
-          g.fpu === GmosSouthFpu.Ifu2Slits || g.fpu === GmosSouthFpu.IfuBlue || g.fpu === GmosSouthFpu.IfuRed
-        val roi   = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-        val ccd   = g.modeOverrides
+        val (xbin, ybin) =
+          if (g.fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
+          else southBinning(g.fpu, p, iq, g.grating)
+        val roi          = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
+        val ccd          = g.modeOverrides
           .flatMap(_.ccdMode)
           .orElse(
             GmosCcdMode(
-              if (isFPU) GmosXBinning.One
-              else xbinSouth(g.fpu, p, iq, PosDouble.unsafeFrom(2.0)),
-              if (isFPU) GmosYBinning.One else DefaultYBinning,
+              xbin,
+              ybin,
               DefaultAmpCount,
               DefaultAmpGain,
               DefaultAmpReadMode
