@@ -4,7 +4,6 @@
 package explore
 
 import cats.effect.IO
-import cats.effect.Resource
 import cats.effect.unsafe.implicits.global
 import crystal.react.*
 import explore.events.ExploreEvent
@@ -89,7 +88,7 @@ object ExplorePWA {
       .awakeEvery[IO](updateInteval)
       .evalTap { _ =>
         IO.println("Check for new explore version") >>
-          pingSW(u).flatMap(go => if (go) IO.blocking(r.update()) else IO.unit)
+          pingSW(u).ifM(IO(r.update()), IO.unit)
       }
       .compile
       .drain
@@ -128,13 +127,10 @@ object ExplorePWA {
             (IO.println(
               s"Service worker registered, setup self update task, offline: $isOffline"
             ) *>
+              // initial check
               pingSW(u)
-                .flatMap(go =>
-                  // initial check
-                  if (go) IO.sleep(Duration(2, TimeUnit.SECONDS)) >> IO.blocking(r.update())
-                  else IO.unit
-                )
-                .attempt *>
+                .ifM(IO.sleep(Duration(2, TimeUnit.SECONDS)) >> IO(r.update()), IO.unit)
+                .voidError *>
               scheduleUpdateCheck(u, r)).runAsyncAndForget
         )
       )
@@ -154,11 +150,11 @@ object ExplorePWA {
   def setupSW: IO[Unit] =
     (for {
       bc <- BroadcastChannel[IO, ExploreEvent]("explore")
-      _  <- Resource.eval(handleEvents(bc).start)
+      _  <- handleEvents(bc).background
     } yield ()).useForever
 
   @JSExport
   def runServiceWorker(): Unit =
-    setupSW.handleError(t => IO(t.printStackTrace())).unsafeRunAndForget()
+    setupSW.unsafeRunAndForget()
 
 }

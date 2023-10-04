@@ -117,7 +117,6 @@ object ExploreLayout:
                     ),
                     ctx.broadcastChannel
                       .postMessage(ExploreEvent.PWAReload)
-                      .handleErrorWith(e => IO(e.printStackTrace()))
                       .runAsyncAndForget
                   )
                   .toAsync
