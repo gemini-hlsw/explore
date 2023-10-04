@@ -20,7 +20,6 @@ import lucuma.core.enums.ImageQuality
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
-import lucuma.core.model.sequence.gmos.binning.*
 import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
@@ -30,10 +29,8 @@ trait syntax:
   extension (row: InstrumentRow)
     def toItcClientMode(p: SourceProfile, iq: ImageQuality): Option[InstrumentMode] = row match {
       case g: GmosNorthSpectroscopyRow =>
-        val isIFU        =
-          g.fpu === GmosNorthFpu.Ifu2Slits || g.fpu === GmosNorthFpu.IfuBlue || g.fpu === GmosNorthFpu.IfuRed
         val (xbin, ybin) =
-          if (isIFU) (GmosXBinning.One, GmosYBinning.One)
+          if (g.fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
           else northBinning(g.fpu, p, iq, g.grating)
         val roi          = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
         val ccd          = g.modeOverrides
@@ -51,10 +48,8 @@ trait syntax:
           .GmosNorthSpectroscopy(g.grating, g.filter, GmosFpu.North(g.fpu.asRight), ccd, roi)
           .some
       case g: GmosSouthSpectroscopyRow =>
-        val isIFU        =
-          g.fpu === GmosSouthFpu.Ifu2Slits || g.fpu === GmosSouthFpu.IfuBlue || g.fpu === GmosSouthFpu.IfuRed
         val (xbin, ybin) =
-          if (isIFU) (GmosXBinning.One, GmosYBinning.One)
+          if (g.fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
           else southBinning(g.fpu, p, iq, g.grating)
         val roi          = g.modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
         val ccd          = g.modeOverrides
