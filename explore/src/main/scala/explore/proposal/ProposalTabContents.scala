@@ -3,6 +3,8 @@
 
 package explore.proposal
 
+import cats.Eq
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -135,8 +137,10 @@ object ProposalTabContents:
       optPropInfo.renderPotOption(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
     }
 
-case class ProposalInfo(optProposal: Option[Proposal], executionTime: Option[TimeSpan])
+case class ProposalInfo(optProposal: Option[Proposal], executionTime: Option[TimeSpan]) derives Eq
 
 object ProposalInfo:
+  given Reusability[ProposalInfo] = Reusability.byEq
+
   val optProposal: Lens[ProposalInfo, Option[Proposal]]   = Focus[ProposalInfo](_.optProposal)
   val executionTime: Lens[ProposalInfo, Option[TimeSpan]] = Focus[ProposalInfo](_.executionTime)

@@ -480,3 +480,7 @@ object ExploreStyles:
   val TimingWindowExclude: Css                  = Css("timing-window-exclude")
 
   val SingleTileMaximized: Css = Css("explore-single-tile-maximized")
+
+  // Program Tab
+  val ProgramDetailsTile: Css = Css("program-details-tile")
+  val ProgramTabTable: Css    = Css("program-tab-table")
