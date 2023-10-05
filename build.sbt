@@ -268,7 +268,7 @@ lazy val lucumaCssStep = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extrac
 
 // https://stackoverflow.com/a/55610612
 lazy val npmInstall = WorkflowStep.Run(
-  List("npm clean-install"),
+  List("npm clean-install --verbose"),
   name = Some("npm clean-install")
 )
 

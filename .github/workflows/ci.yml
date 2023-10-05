@@ -59,7 +59,7 @@ jobs:
           cache: npm
 
       - name: npm clean-install
-        run: npm clean-install
+        run: npm clean-install --verbose
 
       - name: Check that workflows are up to date
         run: sbt -v -J-Xmx6g githubWorkflowCheck
@@ -121,7 +121,7 @@ jobs:
         run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
       - name: npm clean-install
-        run: npm clean-install
+        run: npm clean-install --verbose
 
       - name: Build application
         env:
@@ -181,7 +181,7 @@ jobs:
           cache: npm
 
       - name: npm clean-install
-        run: npm clean-install
+        run: npm clean-install --verbose
 
       - name: Extract CSS files
         run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' lucumaCss
