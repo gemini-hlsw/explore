@@ -1,3 +1,4 @@
+import 'unfonts.css';
 import '/common/sass/explore-primereact.scss';
 import '/lucuma-css/lucuma-ui-layout.scss';
 import '/lucuma-css/lucuma-ui-login.scss';
