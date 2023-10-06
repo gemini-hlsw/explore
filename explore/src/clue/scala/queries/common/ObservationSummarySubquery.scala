@@ -45,5 +45,7 @@ object ObservationSummarySubquery
             }
           }
           observingMode $ObservingModeSubquery
+          groupId
+          groupIndex
         }
       """

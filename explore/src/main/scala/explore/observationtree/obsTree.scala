@@ -7,13 +7,13 @@ import cats.Eq
 import cats.Order.*
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.*
 import explore.data.KeyedIndexedList
 import explore.model.GroupList
 import explore.model.GroupObs
 import explore.model.Grouping
 import explore.model.GroupingElement
 import explore.model.ObsSummary
-import explore.model.syntax.all.*
 import lucuma.core.model.Observation
 import lucuma.react.primereact.Tree
 import lucuma.react.primereact.Tree.Node
@@ -31,16 +31,19 @@ object ObsNode:
   ): Seq[Node[ObsNode]] =
 
     val rootGroups =
-      groups.mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
-    val groupings  = groups.flatMap(_.value.toOption).toSortedMap(_.id)
+      groups
+        .mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
+        .sortBy(_.fold(_.groupIndex, _.parentIndex))
+
+    val groupings = KeyedIndexedList.fromList(groups.flatMap(_.value.toOption), _.id)
 
     def createObsNode(groupObs: GroupObs): Option[Node[ObsNode]] =
       obsList.getValue(groupObs.id).map(n => Tree.Node(Tree.Id(n.id.toString), Obs(n)))
 
     def createGroup(group: Grouping): Node[ObsNode] =
-      val children = group.elements.flatMap {
+      val children = group.elements.sortBy(_.fold(_.groupIndex, _.parentIndex)).flatMap {
         case Left(groupObs)  => createObsNode(groupObs)
-        case Right(grouping) => groupings.get(grouping.id).map(createGroup)
+        case Right(grouping) => groupings.getValue(grouping.id).map(createGroup)
       }
       val isAnd    = group.minimumRequired.forall(_.value == group.elements.length)
       val data     = if isAnd then And(group) else Or(group)
@@ -49,7 +52,7 @@ object ObsNode:
     val treeNodes = rootGroups.flatMap {
 
       case Left(groupObs)  => createObsNode(groupObs)
-      case Right(grouping) => groupings.get(grouping.id).map(createGroup)
+      case Right(grouping) => groupings.getValue(grouping.id).map(createGroup)
 
     }
 

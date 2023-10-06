@@ -16,11 +16,14 @@ import lucuma.core.model.Observation
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism
+import monocle.Traversal
+
+import GroupElement.given
 
 case class GroupElement(value: Either[GroupObs, Grouping], parentGroupId: Option[Group.Id])
     derives Eq
 
-object GroupElement extends WithGroupObsOr:
+object GroupElement:
   val value: Lens[GroupElement, Either[GroupObs, Grouping]] = Focus[GroupElement](_.value)
 
   val groupObs =
@@ -41,35 +44,31 @@ object GroupElement extends WithGroupObsOr:
     )
   )
 
-case class GroupObs(id: Observation.Id) derives Eq, Decoder
+  given Decoder[Either[GroupObs, GroupingElement]] =
+    Decoder.instance(groupObsOr(_.get[GroupingElement]("group")))
+
+  private def groupObsOr[B](f: HCursor => Decoder.Result[B]) = (c: HCursor) =>
+    f(c).map(_.asRight).orElse(c.get[GroupObs]("observation").map(_.asLeft))
+
+case class GroupObs(id: Observation.Id, groupIndex: NonNegShort) derives Eq, Decoder
+
+object GroupObs:
+  val groupIndex: Lens[GroupObs, NonNegShort] = Focus[GroupObs](_.groupIndex)
 
 case class Grouping(
   id:              Group.Id,
   name:            Option[String],
   minimumRequired: Option[NonNegShort],
-  elements:        List[Either[GroupObs, GroupingElement]]
-) derives Eq
+  elements:        List[Either[GroupObs, GroupingElement]],
+  parentId:        Option[Group.Id],
+  parentIndex:     NonNegShort
+) derives Eq,
+      Decoder
 
-object Grouping extends WithGroupObsOr:
-  given Decoder[Grouping] = Decoder.instance(c =>
-    for {
-      id              <- c.get[Group.Id]("id")
-      name            <- c.get[Option[String]]("name")
-      minimumRequired <- c.get[Option[NonNegShort]]("minimumRequired")
-      elements        <- c.get[List[Either[GroupObs, GroupingElement]]]("elements")
-    } yield Grouping(
-      id,
-      name,
-      minimumRequired,
-      elements
-    )
-  )
+object Grouping:
+  val elements: Lens[Grouping, List[Either[GroupObs, GroupingElement]]] =
+    Focus[Grouping](_.elements)
 
-  given Decoder[Either[GroupObs, GroupingElement]] =
-    Decoder.instance(groupObsOr(_.get[GroupingElement]("group")))
+  val elementsTraversal = Traversal.fromTraverse[List, Either[GroupObs, GroupingElement]]
 
-case class GroupingElement(id: Group.Id) derives Eq, Decoder
-
-sealed trait WithGroupObsOr:
-  protected def groupObsOr[B](f: HCursor => Decoder.Result[B]) = (c: HCursor) =>
-    f(c).map(_.asRight).orElse(c.get[GroupObs]("observation").map(_.asLeft))
+case class GroupingElement(id: Group.Id, parentIndex: NonNegShort) derives Eq, Decoder
