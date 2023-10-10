@@ -63,8 +63,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
-          restore-keys: ${{ hashFiles('package.json') }}
+          key: ${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ hashFiles('package-lock.json') }}
 
       - name: npm clean-install
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
@@ -131,8 +131,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
-          restore-keys: ${{ hashFiles('package.json') }}
+          key: ${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ hashFiles('package-lock.json') }}
 
       - name: npm clean-install
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
@@ -203,8 +203,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
-          restore-keys: ${{ hashFiles('package.json') }}
+          key: ${{ hashFiles('package-lock.json') }}
+          restore-keys: ${{ hashFiles('package-lock.json') }}
 
       - name: npm clean-install
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
