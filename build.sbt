@@ -267,8 +267,9 @@ lazy val setupNodeNpmInstall =
       name = Some("Cache node_modules"),
       id = Some("cache-node_modules"),
       params = {
-        val key = "${{ hashFiles('package-lock.json') }}"
-        Map("path" -> "node_modules", "key" -> key, "restore-keys" -> key)
+        val prefix = "node_modules"
+        val key = s"$prefix-$${{ hashFiles('package-lock.json') }}"
+        Map("path" -> "node_modules", "key" -> key, "restore-keys" -> prefix)
       }
     ),
     WorkflowStep.Run(
