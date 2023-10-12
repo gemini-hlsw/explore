@@ -71,6 +71,7 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 
+import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 
@@ -427,7 +428,14 @@ object ObsTabTiles:
               .mapN((site, asterism, vizTime) =>
                 posAngleConstraintView.get match
                   case PosAngleConstraint.AverageParallactic =>
-                    averageParallacticAngle(site, asterism.baseTracking, vizTime)
+                    // TODO: When we have the calculated observation time, we probably want to use that
+                    // for the duration below, although we can't know if the observation will be splt.
+                    // See also `anglesToTestAt` in AladinCell.scala.
+                    averageParallacticAngle(site,
+                                            asterism.baseTracking,
+                                            vizTime,
+                                            Duration.ofHours(1)
+                    )
                   case _                                     => none
               )
               .flatten
