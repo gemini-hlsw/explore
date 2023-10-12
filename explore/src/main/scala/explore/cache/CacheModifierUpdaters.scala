@@ -194,8 +194,6 @@ trait CacheModifierUpdaters {
         }
         // Moved to root group or different group
         else if (groupId.isEmpty || groupId.isDefined && !groupId.contains(grouping.id)) {
-          pprint.pprintln(groupId)
-          pprint.pprintln(grouping.id)
           Grouping.elements.modify(_.filterNot(selectionF))
         }
         // Updated (index changed)
