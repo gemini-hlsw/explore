@@ -52,13 +52,22 @@ jobs:
         if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt -v -J-Xmx6g +update
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: npm
 
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
+
       - name: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
         run: npm clean-install --verbose
 
       - name: Check that workflows are up to date
@@ -111,17 +120,26 @@ jobs:
         if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt -v -J-Xmx6g +update
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: npm
 
-      - name: Stage
-        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
 
       - name: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
         run: npm clean-install --verbose
+
+      - name: Stage
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
       - name: Build application
         env:
@@ -174,13 +192,22 @@ jobs:
         if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt -v -J-Xmx6g +update
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: npm
 
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
+
       - name: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
         run: npm clean-install --verbose
 
       - name: Extract CSS files
