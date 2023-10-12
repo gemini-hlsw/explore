@@ -75,7 +75,11 @@ case class AladinCell(
       configuration <- conf.configuration
       paConstraint  <- conf.posAngleConstraint
       angles        <-
-        paConstraint.anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime)
+        paConstraint.anglesToTestAt(configuration.siteFor,
+                                    asterism.baseTracking,
+                                    vizTime,
+                                    Duration.ofHours(1)
+        )
       // We sort the angles or we could end up in a loop where the angles are tested back and forth
       // This is rare but can happen if each angle finds an equivalent guide star
     } yield angles.sorted(using Angle.AngleOrder)
