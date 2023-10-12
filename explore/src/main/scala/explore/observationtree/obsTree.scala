@@ -14,6 +14,7 @@ import explore.model.GroupObs
 import explore.model.Grouping
 import explore.model.GroupingElement
 import explore.model.ObsSummary
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.react.primereact.Tree
 import lucuma.react.primereact.Tree.Node
@@ -22,6 +23,11 @@ enum ObsNode derives Eq:
   case Obs(value: ObsSummary)
   case And(group: Grouping)
   case Or(group: Grouping)
+
+  def id: Either[Observation.Id, Group.Id] = this match
+    case Obs(value) => value.id.asLeft
+    case And(group) => group.id.asRight
+    case Or(group)  => group.id.asRight
 
 object ObsNode:
 

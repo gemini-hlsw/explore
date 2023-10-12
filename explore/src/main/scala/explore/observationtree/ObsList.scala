@@ -7,8 +7,10 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
@@ -156,18 +158,35 @@ object ObsList:
 
         val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
 
+        def onDragDrop(e: Tree.DragDropEvent[ObsNode]) =
+          val dragNodeId = e.dragNode.data.id
+          val dropNodeId = e.dropNode.flatMap(_.data.id.toOption)
+          val dropIndex  = NonNegShort.from(e.dropIndex.toShort).toOption
+
+          (dragNodeId match
+            case Left(obsId)    =>
+              ObsQueries
+                .moveObservation[IO](props.programId, obsId, dropNodeId, dropIndex)
+                .runAsync
+            case Right(groupId) =>
+              GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex).runAsync
+          ) *> // Open the group we moved to
+            dropNodeId.map(id => expandedGroups.mod(ids => ids + Tree.Id(id.toString))).getOrEmpty
+
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
             case ObsNode.Obs(obs)   =>
               val id       = obs.id
               val selected = props.focusedObs.exists(_ === id)
               <.a(
-                ^.id   := s"obs-list-${id.toString}",
-                ^.href := ctx.pageUrl(
+                ^.id        := s"obs-list-${id.toString}",
+                ^.href      := ctx.pageUrl(
                   AppTab.Observations,
                   props.programId,
                   Focused.singleObs(id, props.focusedTarget)
                 ),
+                // Disable link dragging to enable tree node dragging
+                ^.draggable := false,
                 ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                 ^.onClick ==> linkOverride(
                   setObs(props.programId, id.some, ctx)
@@ -261,7 +280,9 @@ object ObsList:
                   treeNodes,
                   renderItem,
                   expandedKeys = expandedGroups.get,
-                  onToggle = expandedGroups.set
+                  onToggle = expandedGroups.set,
+                  dragDropScope = "obs-tree",
+                  onDragDrop = onDragDrop
                 )
               )
             )
