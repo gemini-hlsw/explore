@@ -34,6 +34,7 @@ case class ProgramsPopup(
   programInfos:     ViewOpt[ProgramInfoList],
   undoStacks:       View[UndoStacks[IO, ProgramSummaries]],
   onClose:          Option[Callback] = none,
+  onLogout:         Option[IO[Unit]] = none,
   message:          Option[String] = none
 ) extends ReactFnProps(ProgramsPopup.component)
 
@@ -78,7 +79,8 @@ object ProgramsPopup {
                 pis,
                 selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
                 props.onClose.isEmpty,
-                onHide
+                onHide,
+                props.onLogout
               )
             )
             .toPot

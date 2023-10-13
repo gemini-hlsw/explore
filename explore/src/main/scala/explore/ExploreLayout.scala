@@ -17,6 +17,7 @@ import explore.events.ExploreEvent.LogoutEventId
 import explore.model.AppContext
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.utils.*
@@ -217,9 +218,30 @@ object ExploreLayout:
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                 _.separatorAfter
               ),
-              <.div(LayoutStyles.MainBody)(
-                props.resolution.renderP(props.view)
-              )
+              <.div(LayoutStyles.MainBody) {
+                val (showProgsPopup, msg) =
+                  props.view.get.programSummaries.fold((false, none)) { pss =>
+                    routingInfo.optProgramId.fold((true, none)) { id =>
+                      if (pss.programs.get(id).exists(!_.deleted)) (false, none)
+                      else
+                        (true,
+                         s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some
+                        )
+                    }
+                  }
+                if (showProgsPopup)
+                  ProgramsPopup(
+                    currentProgramId = none,
+                    props.view
+                      .zoom(RootModel.programSummaries.some)
+                      .zoom(ProgramSummaries.programs),
+                    undoStacks = props.view.zoom(RootModel.undoStacks),
+                    onLogout = (onLogout >>
+                      props.view.zoom(RootModel.vault).set(none).toAsync).some,
+                    message = msg
+                  ): VdomElement
+                else props.resolution.renderP(props.view)
+              }
             )
           )
         )
