@@ -10,8 +10,6 @@ ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 ThisBuild / evictionErrorLevel := Level.Info
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
-ThisBuild / coverageEnabled := false
-
 ThisBuild / lucumaCssExts += "svg"
 
 addCommandAlias(
@@ -63,6 +61,7 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .jvmSettings(commonJVMSettings)
+  .jsSettings(commonJsLibSettings)
 
 lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
@@ -111,7 +110,6 @@ lazy val common = project
   .settings(
     libraryDependencies ++=
       LucumaSSO.value ++
-        LucumaBC.value ++
         LucumaCatalog.value ++
         LucumaSchemas.value ++
         LucumaReact.value ++
@@ -256,21 +254,34 @@ def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
 val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
 
-lazy val setupNode = WorkflowStep.Use(
-  UseRef.Public("actions", "setup-node", "v3"),
-  name = Some("Use Node.js"),
-  params = Map("node-version" -> "20", "cache" -> "npm")
-)
+// https://github.com/actions/setup-node/issues/835#issuecomment-1753052021
+lazy val setupNodeNpmInstall =
+  List(
+    WorkflowStep.Use(
+      UseRef.Public("actions", "setup-node", "v3"),
+      name = Some("Setup Node.js"),
+      params = Map("node-version" -> "20", "cache" -> "npm")
+    ),
+    WorkflowStep.Use(
+      UseRef.Public("actions", "cache", "v3"),
+      name = Some("Cache node_modules"),
+      id = Some("cache-node_modules"),
+      params = {
+        val prefix = "node_modules"
+        val key    = s"$prefix-$${{ hashFiles('package-lock.json') }}"
+        Map("path" -> "node_modules", "key" -> key, "restore-keys" -> prefix)
+      }
+    ),
+    WorkflowStep.Run(
+      List("npm clean-install --verbose"),
+      name = Some("npm clean-install"),
+      cond = Some("steps.cache-node_modules.outputs.cache-hit != 'true'")
+    )
+  )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 lazy val lucumaCssStep = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extract CSS files"))
-
-// https://stackoverflow.com/a/55610612
-lazy val npmInstall = WorkflowStep.Run(
-  List("npm clean-install"),
-  name = Some("npm clean-install")
-)
 
 lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
@@ -348,7 +359,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
-ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmInstall)
+ThisBuild / githubWorkflowBuildPreamble ++= setupNodeNpmInstall
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
 
 ThisBuild / githubWorkflowAddedJobs +=
@@ -357,10 +368,8 @@ ThisBuild / githubWorkflowAddedJobs +=
     "full",
     WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
-      setupNode ::
-      githubWorkflowGeneratedCacheSteps.value.toList :::
+      setupNodeNpmInstall :::
       sbtStage ::
-      npmInstall ::
       npmBuild ::
       overrideCiCommit ::
       bundlemon ::
@@ -378,8 +387,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     "Run linters",
     WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
-      setupNode ::
-      npmInstall ::
+      setupNodeNpmInstall :::
       lucumaCssStep ::
       setupVars("dark") ::
       runLinters("dark") ::

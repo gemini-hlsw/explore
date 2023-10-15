@@ -327,7 +327,7 @@ $brightness: var(--aladin-image-brightness);
     max-width: 30px;
     max-height: 30px;
 
-    &:enabled:focus,
+    &:enabled:focus-visible,
     &:enabled:hover {
       background: var(--gray-700);
       border-color: var(--gray-200);
