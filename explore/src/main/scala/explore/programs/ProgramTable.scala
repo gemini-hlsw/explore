@@ -45,7 +45,8 @@ case class ProgramTable(
   programInfos:     View[ProgramInfoList],
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean,
-  onClose:          Option[Callback]
+  onClose:          Option[Callback],
+  onLogout:         Option[IO[Unit]]
 ) extends ReactFnProps(ProgramTable.component)
 
 object ProgramTable:
@@ -194,6 +195,16 @@ object ProgramTable:
           ).small.compact.some
         )
 
+      val logoutButton =
+        props.onLogout.fold(none)(io =>
+          Button(
+            label = "Logout",
+            icon = Icons.Logout,
+            severity = Button.Severity.Danger,
+            onClick = (ctx.sso.logout >> io).runAsync
+          ).small.compact.some
+        )
+
       <.div(
         React.Fragment(
           <.div(ExploreStyles.ProgramTable)(
@@ -220,7 +231,8 @@ object ProgramTable:
                          value = showDeleted.zoom(ShowDeleted.value.asLens),
                          label = "Show deleted"
             ),
-            closeButton
+            closeButton,
+            logoutButton
           )
         )
       )

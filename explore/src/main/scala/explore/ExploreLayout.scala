@@ -17,6 +17,7 @@ import explore.events.ExploreEvent.LogoutEventId
 import explore.model.AppContext
 import explore.model.*
 import explore.model.enums.AppTab
+import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.utils.*
@@ -25,7 +26,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.broadcastchannel.*
 import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
@@ -96,45 +96,39 @@ object ExploreLayout:
               _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
             )
       )
-      .useEffectOnMountBy: (props, _, ctx, toastRef) =>
-        Callback {
-          ctx.broadcastChannel.onmessage = (
-            (x: ExploreEvent) =>
-              // This is coming from the js world, we can't match the type
-              x.event match {
-                // TODO: Handle logout events
-                case ExploreEvent.PWAUpdateId =>
-                  // Clear other toasts first
-                  toastRef.clear().toAsync *>
-                    toastRef
-                      .upgradePrompt(
-                        <.span(
-                          "A new version of ",
-                          <.a(
-                            ExploreStyles.UpgradeLink,
-                            "Explore",
-                            ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
-                            ^.target := "_blank"
-                          ),
-                          " is available!"
-                        ),
-                        IO(
-                          ctx.broadcastChannel.postMessage(ExploreEvent.PWAReload)
-                        )
-                          .handleErrorWith(e => IO(e.printStackTrace()))
-                          .runAsyncAndForget
-                      )
-                      .toAsync
-                case _                        => IO.unit
-              }
-          ): (ExploreEvent => IO[Unit])
-          // Scala 3 infers the return type as Any if we don't ascribe
-
-          ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
-        }
+      .useStreamOnMountBy: (_, _, ctx, toastRef) =>
+        ctx.broadcastChannel.messages.evalTap(
+          // This is coming from the js world, we can't match the type
+          _.data.event match {
+            // TODO: Handle logout events
+            case ExploreEvent.PWAUpdateId =>
+              // Clear other toasts first
+              toastRef.clear().toAsync *>
+                toastRef
+                  .upgradePrompt(
+                    <.span(
+                      "A new version of ",
+                      <.a(
+                        ExploreStyles.UpgradeLink,
+                        "Explore",
+                        ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
+                        ^.target := "_blank"
+                      ),
+                      " is available!"
+                    ),
+                    ctx.broadcastChannel
+                      .postMessage(ExploreEvent.PWAReload)
+                      .runAsyncAndForget
+                  )
+                  .toAsync
+            case _                        => IO.unit
+          }
+        )
+      .useEffectOnMountBy: (_, _, ctx, _, _) =>
+        ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
       .useStateView(none[NonEmptyString]) // userSelectionMessage
       .useTheme(Theme.Dark)
-      .render: (props, helpCtx, ctx, toastRef, userSelectionMessage, theme) =>
+      .render: (props, helpCtx, ctx, toastRef, _, userSelectionMessage, theme) =>
         import ctx.given
 
         // Creates a "profile" for user preferences.
@@ -224,9 +218,30 @@ object ExploreLayout:
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                 _.separatorAfter
               ),
-              <.div(LayoutStyles.MainBody)(
-                props.resolution.renderP(props.view)
-              )
+              <.div(LayoutStyles.MainBody) {
+                val (showProgsPopup, msg) =
+                  props.view.get.programSummaries.fold((false, none)) { pss =>
+                    routingInfo.optProgramId.fold((true, none)) { id =>
+                      if (pss.programs.get(id).exists(!_.deleted)) (false, none)
+                      else
+                        (true,
+                         s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some
+                        )
+                    }
+                  }
+                if (showProgsPopup)
+                  ProgramsPopup(
+                    currentProgramId = none,
+                    props.view
+                      .zoom(RootModel.programSummaries.some)
+                      .zoom(ProgramSummaries.programs),
+                    undoStacks = props.view.zoom(RootModel.undoStacks),
+                    onLogout = (onLogout >>
+                      props.view.zoom(RootModel.vault).set(none).toAsync).some,
+                    message = msg
+                  ): VdomElement
+                else props.resolution.renderP(props.view)
+              }
             )
           )
         )
