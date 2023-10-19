@@ -23,7 +23,9 @@ private object Globals extends js.Object:
 
 object DynamicEnums:
   val parsedEnums: ACursor =
-    parse(Globals.enumMetadataString).toOption.get.hcursor.downField("data")
+    parse(Globals.enumMetadataString) match
+      case Left(err)   => err.printStackTrace; throw err
+      case Right(json) => json.hcursor
 
   // The givens are apparently (probably) constructed lazily.
   // See https://alexn.org/blog/2022/05/11/implicit-vs-scala-3-given/
@@ -39,7 +41,9 @@ object DynamicEnums:
       semiauto.deriveDecoder
 
     val values =
-      parsedEnums.downField("obsAttachmentTypeMeta").as[List[ObsAttachmentType]].toOption.get
+      parsedEnums.downField("obsAttachmentTypeMeta").as[List[ObsAttachmentType]] match
+        case Left(err)   => err.printStackTrace; throw err
+        case Right(json) => json
 
     Enumerated.from(values.head, values.tail: _*).withTag(_.tag)
 

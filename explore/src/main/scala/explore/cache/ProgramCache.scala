@@ -4,7 +4,7 @@
 package explore.cache
 
 import cats.effect.IO
-import cats.effect.kernel.Resource
+import cats.effect.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
@@ -60,7 +60,7 @@ object ProgramCache
     go(none, List.empty)
   }
 
-  override protected val initial: ProgramCache => IO[ProgramSummaries] = props =>
+  override protected val initial: ProgramCache => IO[ProgramSummaries] = { props =>
     import props.given
 
     val targets: IO[List[TargetWithId]] =
@@ -110,43 +110,53 @@ object ProgramCache
       case (ts, os, gs, (oas, pas), ps) =>
         ProgramSummaries.fromLists(ts, os, gs, oas, pas, ps)
     }
+  }
 
   override protected val updateStream: ProgramCache => Resource[
     cats.effect.IO,
     fs2.Stream[cats.effect.IO, ProgramSummaries => ProgramSummaries]
-  ] = props =>
-    import props.given
+  ] = { props =>
+    try {
+      import props.given
 
-    val updateTargets =
-      TargetQueriesGQL.ProgramTargetsDelta
+      val updateTargets =
+        TargetQueriesGQL.ProgramTargetsDelta
+          .subscribe[IO](props.programId)
+          .map(_.map(data => modifyTargets(data.targetEdit)))
+
+      val updateObservations =
+        ObsQueriesGQL.ProgramObservationsDelta
+          .subscribe[IO](props.programId)
+          .map(_.map(data => modifyObservations(data.observationEdit)))
+
+      val updateGroups = ProgramQueriesGQL.GroupEditSubscription
         .subscribe[IO](props.programId)
-        .map(_.map(data => modifyTargets(data.targetEdit)))
+        .map(_.map(data => modifyGroups(data.groupEdit)))
 
-    val updateObservations =
-      ObsQueriesGQL.ProgramObservationsDelta
+      // Right now the programEdit subsription isn't fine grained enough to
+      // differentiate what got updated, so we alway update all the attachments.
+      // Hopefully this will change in the future.
+      val updateAttachments = ProgramQueriesGQL.ProgramEditAttachmentSubscription
         .subscribe[IO](props.programId)
-        .map(_.map(data => modifyObservations(data.observationEdit)))
+        .map(_.map(data => modifyAttachments(data.programEdit)))
 
-    val updateGroups = ProgramQueriesGQL.GroupEditSubscription
-      .subscribe[IO](props.programId)
-      .map(_.map(data => modifyGroups(data.groupEdit)))
+      val updatePrograms =
+        ProgramQueriesGQL.ProgramInfoDelta
+          .subscribe[IO]()
+          .map(_.map(data => modifyPrograms(data.programEdit)))
 
-    // Right now the programEdit subsription isn't fine grained enough to
-    // differentiate what got updated, so we alway update all the attachments.
-    // Hopefully this will change in the future.
-    val updateAttachments = ProgramQueriesGQL.ProgramEditAttachmentSubscription
-      .subscribe[IO](props.programId)
-      .map(_.map(data => modifyAttachments(data.programEdit)))
-
-    val updatePrograms =
-      ProgramQueriesGQL.ProgramInfoDelta
-        .subscribe[IO]()
-        .map(_.map(data => modifyPrograms(data.programEdit)))
-
-    // TODO Handle errors, disable transparent resubscription upon connection loss.
-    List(updateTargets,
-         updateObservations,
-         updateGroups,
-         updateAttachments,
-         updatePrograms
-    ).sequence.map(_.reduceLeft(_.merge(_)))
+      // TODO Handle errors, disable transparent resubscription upon connection loss.
+      List(
+        updateTargets,
+        updateObservations,
+        updateGroups,
+        updateAttachments,
+        updatePrograms
+      ).sequence.map(_.reduceLeft(_.merge(_)))
+    } catch {
+      case t: Throwable =>
+        println("ERROR INITIALIZING ProgramCache!")
+        t.printStackTrace()
+        throw t
+    }
+  }
