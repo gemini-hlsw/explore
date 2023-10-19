@@ -19,6 +19,7 @@ object GroupQueriesGQL:
         parentGroupId
         observation {
           id
+          groupIndex
         }
         group $GroupSubQuery
       }
@@ -31,12 +32,16 @@ object GroupQueriesGQL:
         id
         name
         minimumRequired
+        parentId
+        parentIndex
         elements {
           observation {
             id
+            groupIndex
           }
           group {
             id
+            parentIndex
           }
         }
       }

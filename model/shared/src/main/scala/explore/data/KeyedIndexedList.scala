@@ -72,10 +72,11 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, I
       case i               => i
     }
     val baseList = removed(key).list
+
+    val (front, back) = baseList.splitAt(fixedIdx)
     KeyedIndexedList.unsafeFromTreeSeqMap(
-      (baseList
-        .take(fixedIdx) + ((key, (elem, fixedIdx)))) ++ baseList.drop(fixedIdx).map {
-        case (k, (e, i)) => (k, (e, i + 1))
+      (front + ((key, (elem, fixedIdx)))) ++ back.map { case (k, (e, i)) =>
+        (k, (e, i + 1))
       }
     )
   }

@@ -8,6 +8,7 @@ import cats.Order.given
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.modes.GmosSpectroscopyOverrides
 import explore.modes.InstrumentOverrides
@@ -23,6 +24,7 @@ import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -56,7 +58,9 @@ case class ObsSummary(
   observingMode:       Option[ObservingMode],
   visualizationTime:   Option[Instant],
   posAngleConstraint:  PosAngleConstraint,
-  wavelength:          Option[Wavelength]
+  wavelength:          Option[Wavelength],
+  groupId:             Option[Group.Id],
+  groupIndex:          NonNegShort
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
     case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
@@ -163,6 +167,8 @@ object ObsSummary:
       wavelength          <- c.downField("scienceRequirements")
                                .downField("spectroscopy")
                                .get[Option[Wavelength]]("wavelength")
+      groupId             <- c.get[Option[Group.Id]]("groupId")
+      groupIndex          <- c.get[NonNegShort]("groupIndex")
     } yield ObsSummary(
       id,
       title,
@@ -177,6 +183,8 @@ object ObsSummary:
       observingMode,
       visualizationTime.map(_.toInstant),
       posAngleConstraint,
-      wavelength
+      wavelength,
+      groupId,
+      groupIndex
     )
   )

@@ -3,7 +3,6 @@
 
 package explore.cache
 
-import cats.Order.given
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
@@ -11,25 +10,19 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
 import explore.model.GroupElement
-import explore.model.GroupObs
-import explore.model.Grouping
 import explore.model.ObsAttachment
 import explore.model.ObsSummary
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
-import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Enums.EditType
-import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
-import monocle.Traversal
 import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
@@ -45,7 +38,9 @@ case class ProgramCache(
   val setState                             = setProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
 
-object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
+object ProgramCache
+    extends CacheComponent[ProgramSummaries, ProgramCache]
+    with CacheModifierUpdaters:
   given Reusability[ProgramCache] = Reusability.by(p => (p.programId, p.roleId))
 
   private def drain[A, Id, R](
@@ -125,103 +120,28 @@ object ProgramCache extends CacheComponent[ProgramSummaries, ProgramCache]:
     val updateTargets =
       TargetQueriesGQL.ProgramTargetsDelta
         .subscribe[IO](props.programId)
-        .map(
-          _.map(data =>
-            ProgramSummaries.targets
-              .modify(targets =>
-                if (data.targetEdit.meta.existence === Existence.Present)
-                  targets.updated(data.targetEdit.value.id, data.targetEdit.value.target)
-                else
-                  targets.removed(data.targetEdit.value.id)
-              )
-          )
-        )
+        .map(_.map(data => modifyTargets(data.targetEdit)))
 
     val updateObservations =
       ObsQueriesGQL.ProgramObservationsDelta
         .subscribe[IO](props.programId)
-        .map(
-          _.map(data =>
-            val obsId = data.observationEdit.value.id
-
-            val obsUpdate    = ProgramSummaries.observations
-              .modify(observations =>
-                if (data.observationEdit.meta.existence === Existence.Present)
-                  observations.inserted(
-                    obsId,
-                    data.observationEdit.value,
-                    observations.getIndex(obsId).getOrElse(observations.length)
-                  )
-                else
-                  observations.removed(obsId)
-              )
-            val groupsUpdate = ProgramSummaries.groups
-              .modify(groupElements =>
-                if (data.observationEdit.editType === EditType.Created)
-                  groupElements :+ GroupElement(GroupObs(obsId).asLeft, none)
-                else if (data.observationEdit.meta.existence === Existence.Deleted)
-                  // Remove the observation from all groupElements, including from the `elements` field
-                  groupElements.mapFilter(ge =>
-                    val newValue: Option[Either[GroupObs, Grouping]] = ge.value.bitraverse(
-                      value => if value.id === obsId then none else value.some,
-                      value =>
-                        value
-                          .copy(elements = value.elements.filterNot(_.left.exists(_.id === obsId)))
-                          .some
-                    )
-
-                    newValue.map(GroupElement.value.replace(_)(ge))
-                  )
-                else groupElements
-              )
-            obsUpdate.andThen(groupsUpdate)
-          )
-        )
+        .map(_.map(data => modifyObservations(data.observationEdit)))
 
     val updateGroups = ProgramQueriesGQL.GroupEditSubscription
       .subscribe[IO](props.programId)
-      .map(_.map(data =>
-        val groupId  = data.groupEdit.value.id
-        val editType = data.groupEdit.editType
-
-        // TODO: update elements (like when a group is added to another group) using parentId and parentIndex (data not available yet)
-        // TODO: remove groups (data not available yet)
-        // TODO: ordering using indices (data not available yet)
-        editType match
-          case EditType.Created =>
-            ProgramSummaries.groups.modify(groupElements =>
-              groupElements :+ GroupElement(data.groupEdit.value.asRight, none)
-            )
-          case EditType.Updated =>
-            ProgramSummaries.groups
-              .andThen(Traversal.fromTraverse[List, GroupElement])
-              .andThen(GroupElement.grouping)
-              .filter(_.id === groupId)
-              .replace(data.groupEdit.value)
-      ))
+      .map(_.map(data => modifyGroups(data.groupEdit)))
 
     // Right now the programEdit subsription isn't fine grained enough to
     // differentiate what got updated, so we alway update all the attachments.
     // Hopefully this will change in the future.
     val updateAttachments = ProgramQueriesGQL.ProgramEditAttachmentSubscription
       .subscribe[IO](props.programId)
-      .map(_.map(data =>
-        val obsAttachments      = data.programEdit.value.obsAttachments.toSortedMap(_.id)
-        val proposalAttachments = data.programEdit.value.proposalAttachments
-        ProgramSummaries.obsAttachments
-          .replace(obsAttachments)
-          .compose(ProgramSummaries.proposalAttachments.replace(proposalAttachments))
-      ))
+      .map(_.map(data => modifyAttachments(data.programEdit)))
 
     val updatePrograms =
       ProgramQueriesGQL.ProgramInfoDelta
         .subscribe[IO]()
-        .map(
-          _.map(data =>
-            ProgramSummaries.programs
-              .modify(_.updated(data.programEdit.value.id, data.programEdit.value))
-          )
-        )
+        .map(_.map(data => modifyPrograms(data.programEdit)))
 
     // TODO Handle errors, disable transparent resubscription upon connection loss.
     List(updateTargets,
