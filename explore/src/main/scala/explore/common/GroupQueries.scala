@@ -11,11 +11,8 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import explore.DefaultErrorPolicy
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
-import lucuma.schemas.ObservationDB.Types.UpdateGroupsInput
-import lucuma.schemas.ObservationDB.Types.WhereGroup
-import lucuma.schemas.ObservationDB.Types.WhereOrderGroupId
-import queries.common.GroupQueriesGQL.UpdateGroupsMutation
+import lucuma.schemas.ObservationDB.Types.*
+import queries.common.GroupQueriesGQL.*
 
 object GroupQueries:
 

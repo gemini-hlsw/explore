@@ -5,6 +5,7 @@ package explore.cache
 
 import cats.Order.given
 import cats.syntax.all.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.GroupElement
 import explore.model.GroupObs
 import explore.model.Grouping
@@ -55,17 +56,16 @@ trait CacheModifierUpdaters {
         else
           observations.removed(obsId)
       )
+    // TODO: this won't be needed anymore when groups are also updated through events of observation updates
     val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
 
     obsUpdate.andThen(groupsUpdate)
   }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries = {
-    val newGrouping  = groupEdit.value
-    val groupId      = newGrouping.id
-    val editType     = groupEdit.editType
-    val parentId     = newGrouping.parentId
-    val newGrElement = GroupingElement(groupId, newGrouping.parentIndex)
+    val newGrouping = groupEdit.value
+    val groupId     = newGrouping.id
+    val editType    = groupEdit.editType
 
     // TODO: remove groups (data not available yet)
     editType match
@@ -74,26 +74,36 @@ trait CacheModifierUpdaters {
           groupElements :+ GroupElement(newGrouping.asRight, none)
         )
       case EditType.Updated =>
-        ProgramSummaries.groups.andThen(Traversal.fromTraverse[List, GroupElement]).modify {
-          val updateRootElements = GroupElement.grouping
-            .filter(_.id === groupId)
-            .replace(newGrouping)
-
-          val updateParentGroupId = Optional
-            .filter(GroupElement.grouping.exist(_.id === groupId))
-            .andThen(GroupElement.parentGroupId)
-            .replace(parentId)
-
-          val updateGroupElements = GroupElement.grouping
-            .modify(
-              updateGroupElementsMapping(parentId, newGrElement.asRight, _.exists(_.id === groupId))
-            )
-
-          updateParentGroupId
-            .andThen(updateRootElements)
-            .andThen(updateGroupElements)
-        }
+        ProgramSummaries.groups.modify(updateGroups(groupId, newGrouping))
   }
+
+  protected def updateGroups(groupId: Group.Id, newGrouping: Grouping) =
+    Traversal.fromTraverse[List, GroupElement].modify {
+      val parentId = newGrouping.parentId
+
+      val updateRootElements = GroupElement.grouping
+        .filter(_.id === groupId)
+        .replace(newGrouping)
+
+      // TODO: this won't be needed anymore when group update events also include the new/old group
+      val updateParentGroupId = Optional
+        .filter(GroupElement.grouping.exist(_.id === groupId))
+        .andThen(GroupElement.parentGroupId)
+        .replace(parentId)
+
+      // TODO: this won't be needed anymore when group update events also include the new/old group
+      val updateGroupElements = GroupElement.grouping
+        .modify(
+          updateGroupElementsMapping(parentId,
+                                     GroupingElement(groupId, newGrouping.parentIndex).asRight,
+                                     _.exists(_.id === groupId)
+          )
+        )
+
+      updateParentGroupId
+        .andThen(updateRootElements)
+        .andThen(updateGroupElements)
+    }
 
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit
@@ -119,7 +129,7 @@ trait CacheModifierUpdaters {
     val obsId = observationEdit.value.id
 
     ProgramSummaries.groups
-      .modify(groupElements =>
+      .modify { groupElements =>
         val groupId     = observationEdit.value.groupId
         val newGroupObs = GroupObs(obsId, observationEdit.value.groupIndex)
 
@@ -139,36 +149,41 @@ trait CacheModifierUpdaters {
             newValue.map(GroupElement.value.replace(_)(ge))
           )
         else if (observationEdit.editType === EditType.Updated)
-          val groupElementsT = Traversal.fromTraverse[List, GroupElement]
-          groupElementsT.modify {
-
-            val updateParentGroupId = Optional
-              .filter(GroupElement.groupObs.exist(_.id === obsId))
-              .andThen(GroupElement.parentGroupId)
-              .replace(observationEdit.value.groupId)
-
-            // Update index for the changed observation
-            val updateRootElements = GroupElement.groupObs
-              .filter(_.id === obsId)
-              .replace(newGroupObs)
-
-            // Update 'elements' field to update/add/remove the observation from the group
-            val updateGroupElements = GroupElement.grouping
-              .modify(
-                updateGroupElementsMapping(
-                  groupId,
-                  newGroupObs.asLeft,
-                  _.left.exists(_.id === obsId)
-                )
-              )
-
-            updateParentGroupId
-              .andThen(updateRootElements)
-              .andThen(updateGroupElements)
-          }(groupElements)
+          updateObservations(groupId, newGroupObs)(groupElements)
         else groupElements
-      )
+      }
   }
+
+  protected def updateObservations(
+    groupId: Option[Group.Id],
+    newObs:  GroupObs
+  ): List[GroupElement] => List[GroupElement] =
+    Traversal.fromTraverse[List, GroupElement].modify {
+
+      val updateParentGroupId = Optional
+        .filter(GroupElement.groupObs.exist(_.id === newObs.id))
+        .andThen(GroupElement.parentGroupId)
+        .replace(groupId)
+
+      // Update index for the changed observation
+      val updateRootElements = GroupElement.groupObs
+        .filter(_.id === newObs.id)
+        .replace(newObs)
+
+      // Update 'elements' field to update/add/remove the observation from the group
+      val updateGroupElements = GroupElement.grouping
+        .modify(
+          updateGroupElementsMapping(
+            groupId,
+            newObs.asLeft,
+            _.left.exists(_.id === newObs.id)
+          )
+        )
+
+      updateParentGroupId
+        .andThen(updateRootElements)
+        .andThen(updateGroupElements)
+    }
 
   /**
    * Update the elements of a grouping. When an observation or group is updated, we also need to

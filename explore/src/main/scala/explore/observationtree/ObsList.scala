@@ -10,9 +10,11 @@ import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.GroupQueries
+import explore.cache.CacheModifierUpdaters
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
+import explore.groups.GroupMoveAction
+import explore.groups.GroupActions
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupElement
@@ -57,16 +59,19 @@ case class ObsList(
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
   setSummaryPanel: Callback,
-  groups:          GroupList,
+  groups:          UndoSetter[GroupList],
   expandedGroups:  View[Set[Group.Id]],
   deckShown:       View[DeckShown]
 ) extends ReactFnProps(ObsList.component)
 
-object ObsList:
+object ObsList extends CacheModifierUpdaters:
   private type Props = ObsList
 
   private given Reusability[GroupElement] = Reusability.byEq
 
+  /**
+   * Lens to map between Group.Id and Tree.Id
+   */
   private val groupTreeIdLens: Lens[Set[Group.Id], Set[Tree.Id]] =
     Lens[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
       _ => a.flatMap(v => Group.Id.parse(v.value))
@@ -116,14 +121,15 @@ object ObsList:
       }
       // adding new observation
       .useStateView(AddingObservation(false))
-      .useMemoBy((props, _, _, _) => (props.observations.get, props.groups))((_, _, _, _) =>
+      .useMemoBy((props, _, _, _) => (props.observations.get, props.groups.get))((_, _, _, _) =>
         ObsNode.fromList
       )
       // Scroll to newly created/selected observation
       .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs)((_, _, _, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
       )
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups))(
+      // Open the group (and all super-groups) of the focused observation
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups.get))(
         (props, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
@@ -161,16 +167,12 @@ object ObsList:
         def onDragDrop(e: Tree.DragDropEvent[ObsNode]) =
           val dragNodeId = e.dragNode.data.id
           val dropNodeId = e.dropNode.flatMap(_.data.id.toOption)
-          val dropIndex  = NonNegShort.from(e.dropIndex.toShort).toOption
+          val dropIndex  = NonNegShort.unsafeFrom(e.dropIndex.toShort)
 
-          (dragNodeId match
-            case Left(obsId)    =>
-              ObsQueries
-                .moveObservation[IO](props.programId, obsId, dropNodeId, dropIndex)
-                .runAsync
-            case Right(groupId) =>
-              GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex).runAsync
-          ) *> // Open the group we moved to
+          dragNodeId
+            .fold(GroupActions.moveObs(props.programId, _), GroupActions.moveGroup(_))
+            .set(props.groups)(GroupMoveAction(dropNodeId, dropIndex).some) *>
+            // Open the group we moved to
             dropNodeId.map(id => expandedGroups.mod(ids => ids + Tree.Id(id.toString))).getOrEmpty
 
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
