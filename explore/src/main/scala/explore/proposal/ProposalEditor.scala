@@ -109,7 +109,7 @@ object ProposalEditor:
 
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
     val img: TagMod  =
-      <.img(^.src := PartnerFlags.smallFlag(partner),
+      <.img(^.src        := PartnerFlags.smallFlag(partner),
             ^.alt := s"${partner.name}  Flag",
             ExploreStyles.PartnerSplitFlag
       )

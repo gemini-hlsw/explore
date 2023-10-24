@@ -186,7 +186,7 @@ object TargetsOverlay {
                 case (offP, offQ, SVGTarget.CircleTarget(_, css, radius, title))    =>
                   val pointCss = ExploreStyles.CircleTarget |+| css
 
-                  <.circle(^.cx := scale(offP),
+                  <.circle(^.cx       := scale(offP),
                            ^.cy := scale(offQ),
                            ^.r  := scale(maxP * radius),
                            pointCss,
@@ -197,13 +197,13 @@ object TargetsOverlay {
 
                   val side = scale(maxP * sidePx)
                   <.g(
-                    <.line(^.x1 := scale(offP) - side,
+                    <.line(^.x1       := scale(offP) - side,
                            ^.x2 := scale(offP) + side,
                            ^.y1 := scale(offQ),
                            ^.y2 := scale(offQ),
                            pointCss
                     ),
-                    <.line(^.x1 := scale(offP),
+                    <.line(^.x1       := scale(offP),
                            ^.x2 := scale(offP),
                            ^.y1 := scale(offQ) - side,
                            ^.y2 := scale(offQ) + side,
@@ -256,7 +256,7 @@ object TargetsOverlay {
                     Offset.Q.signedDecimalArcseconds.get(destOffset.q).toDouble * 1e6
 
                   val pointCss = ExploreStyles.ArrowBetweenTargets |+| css
-                  <.line(^.x1 := scale(offP),
+                  <.line(^.x1       := scale(offP),
                          ^.x2 := scale(destP),
                          ^.y1 := scale(offQ),
                          ^.y2 := scale(destQ),
