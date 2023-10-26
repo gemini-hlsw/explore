@@ -31,8 +31,6 @@ import explore.modes.ModeWavelength
 import explore.modes.ModeWavelengthDelta
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
-import explore.optics.*
-import explore.optics.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -61,6 +59,7 @@ import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
