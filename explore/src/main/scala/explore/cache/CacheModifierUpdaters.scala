@@ -7,7 +7,6 @@ import cats.Order.given
 import cats.syntax.all.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.GroupElement
-import explore.model.GroupList
 import explore.model.GroupObs
 import explore.model.Grouping
 import explore.model.GroupingElement

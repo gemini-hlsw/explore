@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.cache.CacheModifierUpdaters
 import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
@@ -43,7 +42,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
-import monocle.Lens
+import monocle.Iso
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
@@ -65,17 +64,17 @@ case class ObsList(
   deckShown:       View[DeckShown]
 ) extends ReactFnProps(ObsList.component)
 
-object ObsList extends CacheModifierUpdaters:
+object ObsList:
   private type Props = ObsList
 
   private given Reusability[GroupElement] = Reusability.byEq
 
   /**
-   * Lens to map between Group.Id and Tree.Id
+   * Iso to go between Group.Id and Tree.Id
    */
-  private val groupTreeIdLens: Lens[Set[Group.Id], Set[Tree.Id]] =
-    Lens[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
-      _ => a.flatMap(v => Group.Id.parse(v.value))
+  private val groupTreeIdLens: Iso[Set[Group.Id], Set[Tree.Id]] =
+    Iso[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
+      a.flatMap(v => Group.Id.parse(v.value))
     )
 
   private def scrollIfNeeded(targetObs: Observation.Id) =
@@ -166,7 +165,7 @@ object ObsList extends CacheModifierUpdaters:
       .render { (props, ctx, _, adding, treeNodes) =>
         import ctx.given
 
-        val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
+        val expandedGroups = props.expandedGroups.as(groupTreeIdLens)
 
         def onDragDrop(e: Tree.DragDropEvent[ObsNode]): Callback =
           if (e.dropNode.exists(_.data.isObs)) Callback.empty
