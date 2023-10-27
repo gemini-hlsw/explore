@@ -24,7 +24,7 @@ object GroupQueries:
    * @param parentGroup
    *   New parent group, `None` to move to top level
    * @param parentGroupIndex
-   *   New index in parent group, `None` to leave position unchanged
+   *   New index in parent group, `None` to leave position unchanged (or let backend decide index when moving)
    */
   def moveGroup[F[_]: Async](
     groupId:          Group.Id,
