@@ -59,3 +59,12 @@ object GroupQueriesGQL:
         }
       }
     """
+
+  @GraphQL
+  trait CreateGroupMutation extends GraphQLOperation[ObservationDB]:
+    override val document = s"""#graphql
+      mutation($$input: CreateGroupInput!) {
+        createGroup(input: $$input) {
+          group $GroupSubQuery
+        }
+      }"""

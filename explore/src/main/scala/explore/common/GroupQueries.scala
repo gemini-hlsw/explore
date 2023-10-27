@@ -9,7 +9,9 @@ import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.DefaultErrorPolicy
+import explore.model.Grouping
 import lucuma.core.model.Group
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.GroupQueriesGQL.*
@@ -37,3 +39,14 @@ object GroupQueries:
       )
     )
     UpdateGroupsMutation[F].execute(input).void
+
+  def createGroup[F[_]: Async](programId: Program.Id)(using
+    FetchClient[F, ObservationDB]
+  ): F[Grouping] =
+    CreateGroupMutation[F]
+      .execute(
+        CreateGroupInput(
+          programId = programId
+        )
+      )
+      .map(_.createGroup.group)

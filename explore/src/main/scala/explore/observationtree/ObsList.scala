@@ -5,16 +5,16 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.given
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.cache.CacheModifierUpdaters
+import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.groups.GroupMoveAction
-import explore.groups.GroupActions
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupElement
@@ -37,6 +37,7 @@ import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tree
+import lucuma.react.primereact.Tree.Node
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -121,8 +122,11 @@ object ObsList extends CacheModifierUpdaters:
       }
       // adding new observation
       .useStateView(AddingObservation(false))
-      .useMemoBy((props, _, _, _) => (props.observations.get, props.groups.get))((_, _, _, _) =>
-        ObsNode.fromList
+      // treeNodes
+      .useMemoBy((props, _, _, _) =>
+        (props.observations.model.reuseByValue, props.groups.model.reuseByValue)
+      )((props, _, _, _) =>
+        (obs, groups) => (obs.value, groups.value).tupled.as(ObsNode.obsGroupNodeIso)
       )
       // Scroll to newly created/selected observation
       .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs)((_, _, _, _, _) =>
@@ -164,16 +168,28 @@ object ObsList extends CacheModifierUpdaters:
 
         val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
 
-        def onDragDrop(e: Tree.DragDropEvent[ObsNode]) =
-          val dragNodeId = e.dragNode.data.id
-          val dropNodeId = e.dropNode.flatMap(_.data.id.toOption)
-          val dropIndex  = NonNegShort.unsafeFrom(e.dropIndex.toShort)
+        def onDragDrop(e: Tree.DragDropEvent[ObsNode]): Callback =
+          if (e.dropNode.exists(_.data.isObs)) Callback.empty
+          else {
+            val dragNodeId = e.dragNode.data.id
+            val dropNodeId = e.dropNode
+              .flatMap(_.data.value.fold(_.groupId, _.id.some))
 
-          dragNodeId
-            .fold(GroupActions.moveObs(props.programId, _), GroupActions.moveGroup(_))
-            .set(props.groups)(GroupMoveAction(dropNodeId, dropIndex).some) *>
-            // Open the group we moved to
-            dropNodeId.map(id => expandedGroups.mod(ids => ids + Tree.Id(id.toString))).getOrEmpty
+            val dropIndex =
+              NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
+
+            dragNodeId
+              .fold(
+                obsId =>
+                  ObsQueries
+                    .moveObservation[IO](props.programId, obsId, dropNodeId, dropIndex.some),
+                groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
+              )
+              .runAsync *>
+              treeNodes.value.set(e.value) *>
+              // Open the group we moved to
+              dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
+          }
 
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
@@ -254,6 +270,19 @@ object ObsList extends CacheModifierUpdaters:
                     ctx
                   ).runAsync
                 ).mini.compact,
+                Button(
+                  severity = Button.Severity.Success,
+                  icon = Icons.New,
+                  label = "Group",
+                  disabled = adding.get.value,
+                  loading = adding.get.value,
+                  onClick = insertGroup(
+                    props.programId,
+                    props.groups,
+                    adding,
+                    ctx
+                  ).runAsync
+                ).mini.compact,
                 <.div(
                   ExploreStyles.ObsTreeButtons,
                   Button(
@@ -279,7 +308,7 @@ object ObsList extends CacheModifierUpdaters:
               <.div(
                 ^.overflow := "auto",
                 Tree(
-                  treeNodes,
+                  treeNodes.get,
                   renderItem,
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set,

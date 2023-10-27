@@ -7,6 +7,7 @@ import cats.Order.given
 import cats.syntax.all.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.GroupElement
+import explore.model.GroupList
 import explore.model.GroupObs
 import explore.model.Grouping
 import explore.model.GroupingElement
@@ -157,33 +158,35 @@ trait CacheModifierUpdaters {
   protected def updateObservations(
     groupId: Option[Group.Id],
     newObs:  GroupObs
-  ): List[GroupElement] => List[GroupElement] =
-    Traversal.fromTraverse[List, GroupElement].modify {
+  ): GroupList => GroupList =
+    Traversal
+      .fromTraverse[List, GroupElement]
+      .modify {
 
-      val updateParentGroupId = Optional
-        .filter(GroupElement.groupObs.exist(_.id === newObs.id))
-        .andThen(GroupElement.parentGroupId)
-        .replace(groupId)
+        val updateParentGroupId = Optional
+          .filter(GroupElement.groupObs.exist(_.id === newObs.id))
+          .andThen(GroupElement.parentGroupId)
+          .replace(groupId)
 
-      // Update index for the changed observation
-      val updateRootElements = GroupElement.groupObs
-        .filter(_.id === newObs.id)
-        .replace(newObs)
+        // Update index for the changed observation
+        val updateRootElements = GroupElement.groupObs
+          .filter(_.id === newObs.id)
+          .replace(newObs)
 
-      // Update 'elements' field to update/add/remove the observation from the group
-      val updateGroupElements = GroupElement.grouping
-        .modify(
-          updateGroupElementsMapping(
-            groupId,
-            newObs.asLeft,
-            _.left.exists(_.id === newObs.id)
+        // Update 'elements' field to update/add/remove the observation from the group
+        val updateGroupElements = GroupElement.grouping
+          .modify(
+            updateGroupElementsMapping(
+              groupId,
+              newObs.asLeft,
+              _.left.exists(_.id === newObs.id)
+            )
           )
-        )
 
-      updateParentGroupId
-        .andThen(updateRootElements)
-        .andThen(updateGroupElements)
-    }
+        updateParentGroupId
+          .andThen(updateRootElements)
+          .andThen(updateGroupElements)
+      }
 
   /**
    * Update the elements of a grouping. When an observation or group is updated, we also need to
@@ -197,23 +200,30 @@ trait CacheModifierUpdaters {
    *   function to select the element to update
    */
   private def updateGroupElementsMapping(
-    groupId:         Option[Group.Id],
-    newGroupElement: Either[GroupObs, GroupingElement],
-    selectionF:      Either[GroupObs, GroupingElement] => Boolean
+    groupId:             Option[Group.Id],
+    updateGroupdElement: Either[GroupObs, GroupingElement],
+    selectionF:          Either[GroupObs, GroupingElement] => Boolean
   ): Grouping => Grouping =
     grouping =>
+
+      lazy val isAdded   = groupId.contains(grouping.id) && !grouping.elements.exists(selectionF)
+      lazy val isMoved   = (groupId.isEmpty && grouping.parentId.nonEmpty) ||
+        (groupId.isDefined && !groupId.contains(
+          grouping.id
+        ))
+      lazy val isUpdated = groupId.contains(grouping.id)
       (
         // Added
-        if (groupId.contains(grouping.id) && !grouping.elements.exists(selectionF)) {
-          Grouping.elements.modify(_ :+ newGroupElement)
+        if (isAdded) {
+          Grouping.elements.modify(_ :+ updateGroupdElement)
         }
         // Moved to root group or different group
-        else if (groupId.isEmpty || groupId.isDefined && !groupId.contains(grouping.id)) {
+        else if (isMoved) {
           Grouping.elements.modify(_.filterNot(selectionF))
         }
         // Updated (index changed)
-        else if (groupId.contains(grouping.id)) {
-          Grouping.elements.modify(_.map(e => if (selectionF(e)) newGroupElement else e))
+        else if (isUpdated) {
+          Grouping.elements.modify(_.map(e => if (selectionF(e)) updateGroupdElement else e))
         } else {
           identity[Grouping]
         }
