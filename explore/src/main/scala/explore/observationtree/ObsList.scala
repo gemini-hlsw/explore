@@ -5,10 +5,13 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.given
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
@@ -33,12 +36,13 @@ import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tree
+import lucuma.react.primereact.Tree.Node
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
-import monocle.Lens
+import monocle.Iso
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
@@ -55,7 +59,7 @@ case class ObsList(
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
   setSummaryPanel: Callback,
-  groups:          GroupList,
+  groups:          UndoSetter[GroupList],
   expandedGroups:  View[Set[Group.Id]],
   deckShown:       View[DeckShown]
 ) extends ReactFnProps(ObsList.component)
@@ -65,9 +69,12 @@ object ObsList:
 
   private given Reusability[GroupElement] = Reusability.byEq
 
-  private val groupTreeIdLens: Lens[Set[Group.Id], Set[Tree.Id]] =
-    Lens[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
-      _ => a.flatMap(v => Group.Id.parse(v.value))
+  /**
+   * Iso to go between Group.Id and Tree.Id
+   */
+  private val groupTreeIdLens: Iso[Set[Group.Id], Set[Tree.Id]] =
+    Iso[Set[Group.Id], Set[Tree.Id]](_.map(k => Tree.Id(k.toString)))(a =>
+      a.flatMap(v => Group.Id.parse(v.value))
     )
 
   private def scrollIfNeeded(targetObs: Observation.Id) =
@@ -114,14 +121,18 @@ object ObsList:
       }
       // adding new observation
       .useStateView(AddingObservation(false))
-      .useMemoBy((props, _, _, _) => (props.observations.get, props.groups))((_, _, _, _) =>
-        ObsNode.fromList
+      // treeNodes
+      .useMemoBy((props, _, _, _) =>
+        (props.observations.model.reuseByValue, props.groups.model.reuseByValue)
+      )((props, _, _, _) =>
+        (obs, groups) => (obs.value, groups.value).tupled.as(ObsNode.obsGroupNodeIso)
       )
       // Scroll to newly created/selected observation
       .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs)((_, _, _, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
       )
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups))(
+      // Open the group (and all super-groups) of the focused observation
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups.get))(
         (props, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
@@ -154,7 +165,30 @@ object ObsList:
       .render { (props, ctx, _, adding, treeNodes) =>
         import ctx.given
 
-        val expandedGroups = props.expandedGroups.zoom(groupTreeIdLens)
+        val expandedGroups = props.expandedGroups.as(groupTreeIdLens)
+
+        def onDragDrop(e: Tree.DragDropEvent[ObsNode]): Callback =
+          if (e.dropNode.exists(_.data.isObs)) Callback.empty
+          else {
+            val dragNodeId = e.dragNode.data.id
+            val dropNodeId = e.dropNode
+              .flatMap(_.data.value.fold(_.groupId, _.id.some))
+
+            val dropIndex =
+              NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
+
+            dragNodeId
+              .fold(
+                obsId =>
+                  ObsQueries
+                    .moveObservation[IO](props.programId, obsId, dropNodeId, dropIndex.some),
+                groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
+              )
+              .runAsync *>
+              treeNodes.value.set(e.value) *>
+              // Open the group we moved to
+              dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
+          }
 
         def renderItem(node: ObsNode, options: TreeNodeTemplateOptions) =
           node match
@@ -162,12 +196,14 @@ object ObsList:
               val id       = obs.id
               val selected = props.focusedObs.exists(_ === id)
               <.a(
-                ^.id   := s"obs-list-${id.toString}",
-                ^.href := ctx.pageUrl(
+                ^.id        := s"obs-list-${id.toString}",
+                ^.href      := ctx.pageUrl(
                   AppTab.Observations,
                   props.programId,
                   Focused.singleObs(id, props.focusedTarget)
                 ),
+                // Disable link dragging to enable tree node dragging
+                ^.draggable := false,
                 ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                 ^.onClick ==> linkOverride(
                   setObs(props.programId, id.some, ctx)
@@ -233,6 +269,19 @@ object ObsList:
                     ctx
                   ).runAsync
                 ).mini.compact,
+                Button(
+                  severity = Button.Severity.Success,
+                  icon = Icons.New,
+                  label = "Group",
+                  disabled = adding.get.value,
+                  loading = adding.get.value,
+                  onClick = insertGroup(
+                    props.programId,
+                    props.groups,
+                    adding,
+                    ctx
+                  ).runAsync
+                ).mini.compact,
                 <.div(
                   ExploreStyles.ObsTreeButtons,
                   Button(
@@ -258,10 +307,12 @@ object ObsList:
               <.div(
                 ^.overflow := "auto",
                 Tree(
-                  treeNodes,
+                  treeNodes.get,
                   renderItem,
                   expandedKeys = expandedGroups.get,
-                  onToggle = expandedGroups.set
+                  onToggle = expandedGroups.set,
+                  dragDropScope = "obs-tree",
+                  onDragDrop = onDragDrop
                 )
               )
             )

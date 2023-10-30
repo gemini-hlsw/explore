@@ -8,6 +8,7 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
+import explore.model.syntax.all.*
 import io.circe.Decoder
 import io.circe.HCursor
 import io.circe.refined.given
@@ -71,4 +72,16 @@ object Grouping:
 
   val elementsTraversal = Traversal.fromTraverse[List, Either[GroupObs, GroupingElement]]
 
+  val elementGroupIndex: Lens[Either[GroupObs, GroupingElement], NonNegShort] =
+    Lens[Either[GroupObs, GroupingElement], NonNegShort](_.groupIndex)(i =>
+      _.bimap(GroupObs.groupIndex.replace(i), GroupingElement.parentIndex.replace(i))
+    )
+
+  val parentId: Lens[Grouping, Option[Group.Id]] = Focus[Grouping](_.parentId)
+  val parentIndex: Lens[Grouping, NonNegShort]   = Focus[Grouping](_.parentIndex)
+
+  val a = (parentId, parentIndex).tupled
 case class GroupingElement(id: Group.Id, parentIndex: NonNegShort) derives Eq, Decoder
+
+object GroupingElement:
+  val parentIndex: Lens[GroupingElement, NonNegShort] = Focus[GroupingElement](_.parentIndex)

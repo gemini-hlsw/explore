@@ -140,6 +140,8 @@ object ObsSummary:
   val visualizationTime   = Focus[ObsSummary](_.visualizationTime)
   val posAngleConstraint  = Focus[ObsSummary](_.posAngleConstraint)
   val wavelength          = Focus[ObsSummary](_.wavelength)
+  val groupId             = Focus[ObsSummary](_.groupId)
+  val groupIndex          = Focus[ObsSummary](_.groupIndex)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
