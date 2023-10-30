@@ -15,6 +15,7 @@ import explore.model.ObsSummary
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
+import explore.utils.reduceWithin
 import japgolly.scalajs.react.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -27,6 +28,8 @@ import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
+
+import scala.concurrent.duration.*
 
 case class ProgramCache(
   programId:           Program.Id,
@@ -152,7 +155,10 @@ object ProgramCache
         updateGroups,
         updateAttachments,
         updatePrograms
-      ).sequence.map(_.reduceLeft(_.merge(_)))
+      ).sequence.map(
+        _.reduceLeft(_.merge(_))
+          .reduceWithin(150.millis, _ andThen _) // Group updates within 150ms
+      )
     } catch {
       case t: Throwable =>
         println("ERROR INITIALIZING ProgramCache!")
