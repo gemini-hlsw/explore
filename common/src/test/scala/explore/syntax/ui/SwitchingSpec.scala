@@ -47,7 +47,5 @@ class SwitchingSpec extends munit.CatsEffectSuite {
    */
   private def mkView = Ref[IO]
     .of(false)
-    .map(ref =>
-      (ref, ViewF.apply[IO, Boolean](false, (f, cb) => ref.update(f) *> ref.get.flatMap(cb)))
-    )
+    .map(ref => (ref, ViewF.apply[IO, Boolean](false, (f, cb) => ref.updateAndGet(f).flatMap(cb))))
 }

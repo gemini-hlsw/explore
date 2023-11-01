@@ -179,19 +179,6 @@ type IsExpanded = IsExpanded.Type
 
 extension [F[_], O](s: Stream[F, O])
   /**
-   * Combine items within a given duration using the given function.
-   *
-   * When an item is received in the stream, a timer is started. Within that time, items are
-   * combined until the timer expires, at which point the combined item is emitted.
-   *
-   * If no items are received within the given duration, no item is emitted.
-   */
-  def reduceWithin(d: FiniteDuration, f: (O, O) => O)(using F: Temporal[F]): Stream[F, O] =
-    given Semigroup[O] with
-      def combine(x: O, y: O): O = f(x, y)
-    reduceSemigroupWithin(d)
-
-  /**
    * Combine items within a given duration using Semigroup.
    *
    * When an item is received in the stream, a timer is started. Within that time, items are
@@ -199,9 +186,24 @@ extension [F[_], O](s: Stream[F, O])
    *
    * If no items are received within the given duration, no item is emitted.
    */
-  def reduceSemigroupWithin(
-    d: FiniteDuration
-  )(using F: Temporal[F], M: Semigroup[O]): Stream[F, O] =
+  def reduceSemigroupWithin(d: FiniteDuration)(using
+    F: Temporal[F],
+    S: Semigroup[O]
+  ): Stream[F, O] =
+    reduceWithin(d, S.combine)
+
+  /**
+   * Combine items within a given duration using the given function.
+   *
+   * When an item is received in the stream, a timer is started. Within that time, items are
+   * combined until the timer expires, at which point the combined item is emitted.
+   *
+   * If no items are received within the given duration, no item is emitted.
+   */
+  def reduceWithin(
+    d: FiniteDuration,
+    f: (O, O) => O
+  )(using F: Temporal[F]): Stream[F, O] =
     Stream.force {
       F.ref[Option[O]](None).map { ref =>
 
@@ -217,13 +219,21 @@ extension [F[_], O](s: Stream[F, O])
         // Start a 'timed' pull. This will send a timeout cons after the given timeout, at which point we send the collected chunk
         s.pull.timed { timedPull =>
 
+          def combine(x: Option[O], y: Option[O]) = (x, y) match
+            case (None, None)       => None
+            case (Some(a), None)    => Some(a)
+            case (None, Some(b))    => Some(b)
+            case (Some(a), Some(b)) => Some(f(a, b))
+
           def addToSend(oChunk: Chunk[O]): Pull[F, Nothing, Unit] =
-            Pull.eval(ref.getAndUpdate(_ |+| oChunk.combineAllOption)).flatMap {
-              // This is the first new element since the last emit (or first in the stream), so start the timer
-              case None => timedPull.timeout(d)
-              // Timed is started already, so do nothing
-              case _    => Pull.done
-            }
+            Pull
+              .eval(ref.getAndUpdate(combine(_, oChunk.reduceLeftOption(f))))
+              .flatMap {
+                // This is the first new element since the last emit (or first in the stream), so start the timer
+                case None => timedPull.timeout(d)
+                // Timed is started already, so do nothing
+                case _    => Pull.done
+              }
 
           def go(timedPull: Pull.Timed[F, O]): Pull[F, O, Unit] =
             timedPull.uncons.flatMap {
