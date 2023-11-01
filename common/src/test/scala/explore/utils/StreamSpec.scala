@@ -13,7 +13,7 @@ import scala.concurrent.duration.*
 
 class StreamSpec extends munit.CatsEffectSuite:
 
-  // Stream that emits 1 every 100ms, sleeps for 1 second, and repeats
+  // Stream that emits 1 every 50ms, sleeps for 100ms, and repeats
   val stream =
     (Stream.awakeEvery[IO](50.millis).as(1).take(4) ++ Stream.sleep_[IO](100.millis)).repeat
 
