@@ -199,6 +199,11 @@ extension [F[_], O](s: Stream[F, O])
    * combined until the timer expires, at which point the combined item is emitted.
    *
    * If no items are received within the given duration, no item is emitted.
+   *
+   * This might seem similar to `groupWithin`. The subtle difference is that in-between durations
+   * `groupWithin` enters a "timed out" state, where the next element will immediately be emitted,
+   * and only elements _after_ that will be grouped. This is not the case for `reduceWithin`, which
+   * will always wait for the timeout to expire before emitting the combined element.
    */
   def reduceWithin(
     d: FiniteDuration,

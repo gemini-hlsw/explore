@@ -6,6 +6,7 @@ package explore.utils
 import cats.effect
 import cats.effect.IO
 import cats.effect.testkit.TestControl
+import cats.syntax.all.*
 import fs2.Stream
 import munit.Location
 
@@ -43,8 +44,17 @@ class StreamSpec extends munit.CatsEffectSuite:
     TestControl.executeEmbed(program).assertEquals(Vector(1, 1, 1, 1, 1))
   }
 
-  test("reduceWithinSemigroup uses semigroup to combine") {
+  test("reduceSemigroupWithin uses semigroup to combine") {
     val program = stream.reduceSemigroupWithin(250.millis).head.compile.lastOrError
 
     TestControl.executeEmbed(program).assertEquals(4)
+  }
+
+  test("different behaviour to groupWithin") {
+    val a = stream.reduceSemigroupWithin(300.millis)
+    val b = stream.groupWithin(Int.MaxValue, 300.millis).map(_.combineAll)
+
+    val program = (a.take(5).compile.toVector, b.take(5).compile.toVector).tupled
+
+    TestControl.executeEmbed(program).map((a, b) => assertNotEquals(a, b)).void
   }
