@@ -93,6 +93,12 @@ object Dependencies {
     )
   )
 
+  val CatsEffectTestkit = Def.setting(
+    Seq(
+      "org.typelevel" %%% "cats-effect-testkit" % catsEffect
+    )
+  )
+
   val FS2 = Def.setting(
     deps(
       "co.fs2" %%% "fs2-core"
