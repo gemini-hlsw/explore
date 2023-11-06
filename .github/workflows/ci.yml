@@ -53,7 +53,7 @@ jobs:
         run: sbt -v -J-Xmx6g +update
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -121,7 +121,7 @@ jobs:
         run: sbt -v -J-Xmx6g +update
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
@@ -193,7 +193,7 @@ jobs:
         run: sbt -v -J-Xmx6g +update
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm

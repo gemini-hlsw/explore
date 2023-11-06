@@ -260,7 +260,7 @@ val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NP
 lazy val setupNodeNpmInstall =
   List(
     WorkflowStep.Use(
-      UseRef.Public("actions", "setup-node", "v3"),
+      UseRef.Public("actions", "setup-node", "v4"),
       name = Some("Setup Node.js"),
       params = Map("node-version" -> "20", "cache" -> "npm")
     ),
