@@ -103,8 +103,7 @@
 
 .aladin-marker-measurement {
   max-height: 130px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   font-family: monospace;
   font-size: 11px;
   color: hsl(0deg 0% 0%);

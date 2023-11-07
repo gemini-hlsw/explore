@@ -301,8 +301,7 @@ body.hide-reusability {
 .explore-itc-tile-title {
   flex-grow: 1;
   display: grid;
-  column-gap: 0.5em;
-  row-gap: 0;
+  gap: 0 0.5em;
   font-size: smaller;
   grid-template-columns: repeat(3, minmax(fit-content, 1fr));
   grid-template-rows: repeat(2, min-content);
@@ -410,8 +409,7 @@ body.hide-reusability {
 // ------
 .explore-brightnesses-wrapper {
   grid-column: 1 / -1;
-  justify-self: stretch;
-  align-self: stretch;
+  place-self: stretch stretch;
   grid-row-start: 4;
 
   .p-panel.p-panel-toggleable {
@@ -704,8 +702,7 @@ $search-preview-margin: 5px;
   max-height: 80vh; // Don't let the form grow too large
   gap: 0.3em;
   align-items: stretch;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto auto;
   grid-template-columns: 1fr;
   grid-auto-rows: fit-content;
 
@@ -774,8 +771,7 @@ $search-preview-margin: 5px;
 .explore-target-search-results {
   border: 1px solid var(--site-border-color);
   border-radius: 0.28rem;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: auto auto;
 }
 
 .explore-sequences-panel {
@@ -883,8 +879,7 @@ table.pl-react-table.explore-sequence-table {
   @include aladin-toolbar-labels;
 
   grid-area: fov;
-  justify-self: stretch;
-  align-self: center;
+  place-self: center stretch;
   display: flex;
   gap: 0.3em;
   align-items: center;
@@ -929,8 +924,7 @@ table.pl-react-table.explore-sequence-table {
   @include aladin-toolbar-labels;
 
   grid-area: curr;
-  justify-self: end;
-  align-self: center;
+  place-self: center end;
   white-space: nowrap;
 }
 
@@ -1644,8 +1638,7 @@ input[type='file'].explore-fileupload {
 // Area where the grid-layout is placed
 // ------------
 .tree-rgl {
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow: hidden hidden;
   position: relative;
   display: flex;
 }
@@ -1679,8 +1672,7 @@ input[type='file'].explore-fileupload {
 .single-panel-tile {
   flex-shrink: 1;
   flex-grow: 1;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: auto auto;
 }
 
 .tree-toolbar {
@@ -2135,8 +2127,7 @@ $help-title-height: 40px;
 
 .explore-basic-configuration-sn-at {
   display: flex;
-  align-items: baseline;
-  justify-items: stretch;
+  place-items: baseline stretch;
   grid-gap: 0.5em;
 
   div:first-child {

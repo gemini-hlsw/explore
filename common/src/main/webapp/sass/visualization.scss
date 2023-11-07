@@ -503,8 +503,7 @@ $brightness: var(--aladin-image-brightness);
     :nth-child(14) {
       grid-row-start: rotate-pa;
       grid-column-end: span 4;
-      justify-self: start;
-      align-self: baseline;
+      place-self: baseline start;
     }
 
     // reset row
