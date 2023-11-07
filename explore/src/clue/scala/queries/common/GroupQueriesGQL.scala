@@ -49,6 +49,11 @@ object GroupQueriesGQL:
     """
 
   @GraphQL
+  object OptionalGroupSubQuery
+      extends GraphQLSubquery.Typed[ObservationDB, Option[Grouping]]("Group"):
+    override val subquery: String = GroupSubQuery.subquery
+
+  @GraphQL
   trait UpdateGroupsMutation extends GraphQLOperation[ObservationDB]:
     override val document = """
       mutation($input: UpdateGroupsInput!) {
