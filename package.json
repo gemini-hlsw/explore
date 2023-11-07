@@ -10,7 +10,7 @@
     "@fortawesome/pro-regular-svg-icons": "^6.4.2",
     "@fortawesome/pro-solid-svg-icons": "^6.4.2",
     "@fortawesome/pro-thin-svg-icons": "^6.4.2",
-    "@tanstack/react-table": "^8.10.3",
+    "@tanstack/react-table": "^8.10.7",
     "@tanstack/react-virtual": "v3.0.0-beta.68",
     "copy-to-clipboard": "3.3.3",
     "github-markdown-css": "^5.1.0",
