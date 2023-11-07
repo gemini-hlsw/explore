@@ -62,7 +62,7 @@ object PartnerSplitsEditor {
   private def makeId(partner: Partner) = s"${partner.tag}-percent"
   private def makePartnerCell(partner: Partner): VdomNode =
     <.label(
-      <.img(^.src := PartnerFlags.smallFlag(partner),
+      <.img(^.src        := PartnerFlags.smallFlag(partner),
             ^.alt := s"${partner.name} Flag",
             ExploreStyles.PartnerSplitFlag
       ),

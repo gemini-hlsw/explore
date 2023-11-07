@@ -4,6 +4,8 @@
 package explore.utils
 
 import cats.Endo
+import cats.Semigroup
+import cats.effect.Temporal
 import cats.effect.*
 import cats.syntax.all.*
 import clue.data.*
@@ -14,6 +16,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import fs2.Chunk
+import fs2.Pull
+import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
@@ -33,6 +38,7 @@ import org.scalajs.dom
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import scala.concurrent.duration.FiniteDuration
 import scala.scalajs.js
 
 val canvasWidth  = VdomAttr("width")
@@ -170,3 +176,81 @@ extension (bytes: NonNegLong)
 
 object IsExpanded extends NewType[Boolean]
 type IsExpanded = IsExpanded.Type
+
+extension [F[_], O](s: Stream[F, O])
+  /**
+   * Combine items within a given duration using Semigroup.
+   *
+   * When an item is received in the stream, a timer is started. Within that time, items are
+   * combined until the timer expires, at which point the combined item is emitted.
+   *
+   * If no items are received within the given duration, no item is emitted.
+   */
+  def reduceSemigroupWithin(d: FiniteDuration)(using
+    F: Temporal[F],
+    S: Semigroup[O]
+  ): Stream[F, O] =
+    reduceWithin(d, S.combine)
+
+  /**
+   * Combine items within a given duration using the given function.
+   *
+   * When an item is received in the stream, a timer is started. Within that time, items are
+   * combined until the timer expires, at which point the combined item is emitted.
+   *
+   * If no items are received within the given duration, no item is emitted.
+   *
+   * This might seem similar to `groupWithin`. The subtle difference is that in-between durations
+   * `groupWithin` enters a "timed out" state, where the next element will immediately be emitted,
+   * and only elements _after_ that will be grouped. This is not the case for `reduceWithin`, which
+   * will always wait for the timeout to expire before emitting the combined element.
+   */
+  def reduceWithin(
+    d: FiniteDuration,
+    f: (O, O) => O
+  )(using F: Temporal[F]): Stream[F, O] =
+    Stream.force {
+      F.ref[Option[O]](None).map { ref =>
+
+        val sendLatest: Pull[F, O, Unit] =
+          // 'clear' the ref
+          Pull.eval(ref.getAndSet(None)).flatMap {
+            // Don't send empty elements
+            case None    => Pull.done
+            // Send a combined chunk
+            case Some(c) => Pull.output1(c)
+          }
+
+        // Start a 'timed' pull. This will send a timeout cons after the given timeout, at which point we send the collected chunk
+        s.pull.timed { timedPull =>
+
+          def combine(x: Option[O], y: Option[O]) = (x, y) match
+            case (None, None)       => None
+            case (Some(a), None)    => Some(a)
+            case (None, Some(b))    => Some(b)
+            case (Some(a), Some(b)) => Some(f(a, b))
+
+          def addToSend(oChunk: Chunk[O]): Pull[F, Nothing, Unit] =
+            Pull
+              .eval(ref.getAndUpdate(combine(_, oChunk.reduceLeftOption(f))))
+              .flatMap {
+                // This is the first new element since the last emit (or first in the stream), so start the timer
+                case None => timedPull.timeout(d)
+                // Timed is started already, so do nothing
+                case _    => Pull.done
+              }
+
+          def go(timedPull: Pull.Timed[F, O]): Pull[F, O, Unit] =
+            timedPull.uncons.flatMap {
+              // Combine chunk to send when the timeout expires
+              case Some((Right(chunk), next)) => addToSend(chunk) >> go(next)
+              // Timeout has expired, send the latest element
+              case Some((Left(_), next))      => sendLatest >> go(next)
+              // Stream is done, send the latest element
+              case None                       => sendLatest
+            }
+          go(timedPull)
+
+        }.stream
+      }
+    }

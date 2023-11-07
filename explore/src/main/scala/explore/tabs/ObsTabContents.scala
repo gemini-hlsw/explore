@@ -101,7 +101,7 @@ object ObsTabContents extends TwoPanels:
           props.focusedObs,
           props.focusedTarget,
           selectedView.set(SelectedPanel.Summary),
-          props.groups.get,
+          props.groups,
           props.expandedGroups,
           deckShown
         ): VdomNode

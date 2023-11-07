@@ -7,6 +7,7 @@ import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
@@ -19,6 +20,7 @@ import explore.model.OdbItcResult
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.ExposureTimeMode.FixedExposureMode
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -211,3 +213,27 @@ object ObsQueries:
         )
       )
       .void
+
+  /**
+   * @param programId
+   * @param obsId
+   * @param groupId
+   *   Group to move to. `None` to move to top level
+   * @param groupIndex
+   *   New index in group. `None` to leave position unchanged
+   */
+  def moveObservation[F[_]: Async](
+    programId:  Program.Id,
+    obsId:      Observation.Id,
+    groupId:    Option[Group.Id],
+    groupIndex: Option[NonNegShort]
+  )(using FetchClient[F, ObservationDB]) =
+    val input = UpdateObservationsInput(
+      programId = programId,
+      WHERE = obsId.toWhereObservation.assign,
+      SET = ObservationPropertiesInput(
+        groupId = groupId.orUnassign,
+        groupIndex = groupIndex.orIgnore
+      )
+    )
+    UpdateObservationMutation[F].execute(input).void

@@ -3,6 +3,7 @@
 
 package queries.common
 
+import clue.GraphQLOperation
 import clue.GraphQLSubquery
 import explore.model.GroupElement
 import explore.model.Grouping
@@ -46,3 +47,24 @@ object GroupQueriesGQL:
         }
       }
     """
+
+  @GraphQL
+  trait UpdateGroupsMutation extends GraphQLOperation[ObservationDB]:
+    override val document = """
+      mutation($input: UpdateGroupsInput!) {
+        updateGroups(input: $input) {
+          groups {
+            id
+          }
+        }
+      }
+    """
+
+  @GraphQL
+  trait CreateGroupMutation extends GraphQLOperation[ObservationDB]:
+    override val document = s"""#graphql
+      mutation($$input: CreateGroupInput!) {
+        createGroup(input: $$input) {
+          group $GroupSubQuery
+        }
+      }"""

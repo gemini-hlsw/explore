@@ -93,6 +93,11 @@ case class KeyedIndexedTree[K: Eq, A] private (
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
 
+  def collect[B](pf: PartialFunction[(K, Node[A], Index[K]), B]): List[B] =
+    byKey
+      .collect(pf.compose { case (k, node) => (k, node.map(_.elem), node.value.index) })
+      .toList
+
 }
 
 object KeyedIndexedTree {

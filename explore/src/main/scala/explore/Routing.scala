@@ -39,7 +39,8 @@ object Routing:
   ): VdomElement =
     model
       .zoom(RootModel.programSummaries)
-      .mapValue { (pss: View[ProgramSummaries]) =>
+      .toOptionView
+      .map { (pss: View[ProgramSummaries]) =>
         render(UndoContext(model.zoom(RootModel.undoStacks), pss))
       }
       .toPot
