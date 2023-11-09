@@ -32,8 +32,6 @@ trait ModelOptics {
       ApparentRadialVelocity(b.withUnit[KilometersPerSecond].toUnit[MetersPerSecond])
     )(cz => cz.cz.toUnit[KilometersPerSecond].value)
 
-  // val redshiftBigDecimalIso: Iso[BigDecimal, Redshift] = Iso(Redshift.apply)(_.z)
-
   val FromKilometersPerSecondRV: Prism[BigDecimal, RadialVelocity] =
     Prism[BigDecimal, RadialVelocity](b =>
       Some(b)
