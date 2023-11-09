@@ -22,8 +22,5 @@ class ModelOpticsSuite extends DisciplineSuite {
   import ArbRedshift.*
   import ArbTarget.given
 
-  checkAll("redshiftBigDecimal", IsoTests(redshiftBigDecimalIso))
   checkAll("targetRV", OptionalTests(targetRV))
-  checkAll("optionNonEmptyStringIso", IsoTests(optionNonEmptyStringIso))
-  checkAll("timeSpanSecondsSplitEpi", SplitEpiTests(timeSpanSecondsSplitEpi).splitEpi)
 }

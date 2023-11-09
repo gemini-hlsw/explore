@@ -27,7 +27,6 @@ import explore.model.AppContext
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.display.given
-import explore.optics.all.*
 import explore.proposal.ProposalClassType.*
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -52,6 +51,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.*
+import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -340,8 +340,9 @@ object ProposalEditor:
             FormEnumDropdownView(
               id = "too-activation".refined,
               value = activationView,
-              label = React.Fragment("ToO Activation",
-                                     HelpIcon("proposal/main/too-activation.md".refined)
+              label = React.Fragment(
+                "ToO Activation",
+                HelpIcon("proposal/main/too-activation.md".refined)
               )
             )
           )
@@ -350,7 +351,7 @@ object ProposalEditor:
         FormInputTextAreaView(
           id = "abstract".refined,
           label = "Abstract",
-          value = abstractView.as(optionNonEmptyStringIso)
+          value = abstractView.as(OptionNonEmptyStringIso)
         )(ExploreStyles.ProposalAbstract, ^.rows := 10)
       )
     )

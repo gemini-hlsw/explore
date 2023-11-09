@@ -1008,15 +1008,13 @@ object AdvancedConfigurationPanel {
     @inline override protected val initialCentralWavelengthLens =
       ObservingMode.GmosNorthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
     @inline protected val defaultBinningLens                    =
-      disjointZip(
-        ObservingMode.GmosNorthLongSlit.defaultXBin,
-        ObservingMode.GmosNorthLongSlit.defaultYBin
-      )
+      (ObservingMode.GmosNorthLongSlit.defaultXBin,
+       ObservingMode.GmosNorthLongSlit.defaultYBin
+      ).disjointZip
     @inline protected val defaultReadModeGainLens               =
-      disjointZip(
-        ObservingMode.GmosNorthLongSlit.defaultAmpReadMode,
-        ObservingMode.GmosNorthLongSlit.defaultAmpGain
-      )
+      (ObservingMode.GmosNorthLongSlit.defaultAmpReadMode,
+       ObservingMode.GmosNorthLongSlit.defaultAmpGain
+      ).disjointZip
     @inline protected val defaultRoiLens                        = ObservingMode.GmosNorthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
       ObservingMode.GmosNorthLongSlit.defaultWavelengthDithers
@@ -1213,15 +1211,13 @@ object AdvancedConfigurationPanel {
     @inline override protected val initialCentralWavelengthLens =
       ObservingMode.GmosSouthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
     @inline protected val defaultBinningLens                    =
-      disjointZip(
-        ObservingMode.GmosSouthLongSlit.defaultXBin,
-        ObservingMode.GmosSouthLongSlit.defaultYBin
-      )
+      (ObservingMode.GmosSouthLongSlit.defaultXBin,
+       ObservingMode.GmosSouthLongSlit.defaultYBin
+      ).disjointZip
     @inline protected val defaultReadModeGainLens               =
-      disjointZip(
-        ObservingMode.GmosSouthLongSlit.defaultAmpReadMode,
-        ObservingMode.GmosSouthLongSlit.defaultAmpGain
-      )
+      (ObservingMode.GmosSouthLongSlit.defaultAmpReadMode,
+       ObservingMode.GmosSouthLongSlit.defaultAmpGain
+      ).disjointZip
     @inline protected val defaultRoiLens                        = ObservingMode.GmosSouthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
       ObservingMode.GmosSouthLongSlit.defaultWavelengthDithers
