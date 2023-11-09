@@ -129,7 +129,7 @@ object ProgramQueriesGQL {
     val document: String = s"""
       subscription($$programId: ProgramId!) {
         groupEdit(input: { programId: $$programId }) {
-          value ${GroupQueriesGQL.GroupSubQuery}
+          value ${GroupQueriesGQL.OptionalGroupSubQuery}
           editType
         }
       }
