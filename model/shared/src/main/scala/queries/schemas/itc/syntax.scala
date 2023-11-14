@@ -83,7 +83,7 @@ trait syntax:
           allTargets
             .get(targetId)
             .flatMap(target =>
-              targetRV
+              TargetRV
                 .getOption(target)
                 .map(r => ItcTarget(target.name, r, Target.sourceProfile.get(target)))
             )
