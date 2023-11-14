@@ -52,13 +52,13 @@ trait formats:
     Format(_.parseBigDecimalOption, rv => formatterRV.format(rv))
 
   val formatRV: Format[String, RadialVelocity] =
-    formatBigDecimalRV.andThen(fromKilometersPerSecondRV)
+    formatBigDecimalRV.andThen(FromKilometersPerSecondRV)
 
   val formatZ: Format[String, Redshift] =
-    formatBigDecimalZ.andThen(redshiftBigDecimalIso)
+    formatBigDecimalZ.andThen(Redshift.redshift)
 
   val formatCZ: Format[String, ApparentRadialVelocity] =
-    formatBigDecimalCZ.andThen(fromKilometersPerSecondCZ)
+    formatBigDecimalCZ.andThen(FromKilometersPerSecondCZ)
 
   val formatWavelengthMicron: Format[String, Wavelength] =
     Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
