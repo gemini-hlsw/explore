@@ -178,7 +178,7 @@ object TargetColumns:
           Band.all.map(band =>
             siderealColumnOpt(
               bandColumnId(band),
-              t => targetBrightnesses.get(t).flatMap(_.get(band))
+              t => TargetBrightnesses.get(t).flatMap(_.get(band))
             ).setCell(_.value.map(displayWithoutError).orEmpty)
               .setSize(80.toPx)
               // By user request we allow sorting by value though there maybe a mix of units

@@ -62,43 +62,46 @@ trait CacheModifierUpdaters {
     obsUpdate.andThen(groupsUpdate)
   }
 
-  protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries = {
-    val newGrouping = groupEdit.value
-    val groupId     = newGrouping.id
-    val editType    = groupEdit.editType
+  protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
+    groupEdit.value
+      .map { newGrouping =>
+        val groupId  = newGrouping.id
+        val editType = groupEdit.editType
 
-    // TODO: remove groups (data not available yet)
-    editType match
-      case EditType.Created =>
-        ProgramSummaries.groups.modify(groupElements =>
-          groupElements :+ GroupElement(newGrouping.asRight, none)
-        )
-      case EditType.Updated =>
-        ProgramSummaries.groups.andThen(Traversal.fromTraverse[List, GroupElement]).modify {
-          val updateRootElements = GroupElement.grouping
-            .filter(_.id === groupId)
-            .replace(newGrouping)
-
-          // TODO: this won't be needed anymore when group update events also include the new/old group
-          val updateParentGroupId = Optional
-            .filter(GroupElement.grouping.exist(_.id === groupId))
-            .andThen(GroupElement.parentGroupId)
-            .replace(newGrouping.parentId)
-
-          // TODO: this won't be needed anymore when group update events also include the new/old group
-          val updateGroupElements = GroupElement.grouping
-            .modify(
-              updateGroupElementsMapping(newGrouping.parentId,
-                                         GroupingElement(groupId, newGrouping.parentIndex).asRight,
-                                         _.exists(_.id === groupId)
-              )
+        // TODO: remove groups (data not available yet)
+        editType match
+          case EditType.Created =>
+            ProgramSummaries.groups.modify(groupElements =>
+              groupElements :+ GroupElement(newGrouping.asRight, none)
             )
+          case EditType.Updated =>
+            ProgramSummaries.groups.andThen(Traversal.fromTraverse[List, GroupElement]).modify {
+              val updateRootElements = GroupElement.grouping
+                .filter(_.id === groupId)
+                .replace(newGrouping)
 
-          updateParentGroupId
-            .andThen(updateRootElements)
-            .andThen(updateGroupElements)
-        }
-  }
+              // TODO: this won't be needed anymore when group update events also include the new/old group
+              val updateParentGroupId = Optional
+                .filter(GroupElement.grouping.exist(_.id === groupId))
+                .andThen(GroupElement.parentGroupId)
+                .replace(newGrouping.parentId)
+
+              // TODO: this won't be needed anymore when group update events also include the new/old group
+              val updateGroupElements = GroupElement.grouping
+                .modify(
+                  updateGroupElementsMapping(
+                    newGrouping.parentId,
+                    GroupingElement(groupId, newGrouping.parentIndex).asRight,
+                    _.exists(_.id === groupId)
+                  )
+                )
+
+              updateRootElements
+                .andThen(updateParentGroupId)
+                .andThen(updateGroupElements)
+            }
+      }
+      .getOrElse(identity)
 
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit
