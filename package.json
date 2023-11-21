@@ -54,7 +54,7 @@
     "terser": "5.24.0",
     "unplugin-fonts": "^1.0.3",
     "vite": "4.5.0",
-    "vite-plugin-mkcert": "^1.16.0",
+    "vite-plugin-mkcert": "^1.17.1",
     "vite-plugin-pwa": "^0.17.0"
   },
   "scripts": {
