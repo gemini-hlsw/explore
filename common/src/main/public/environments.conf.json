@@ -30,8 +30,8 @@
   {
     "hostName": "explore.gemini.edu",
     "environment": "PRODUCTION",
-    "odbURI": "wss://lucuma-odb.herokuapp.com/ws",
-    "odbRestURI": "https://lucuma-odb.herokuapp.com",
+    "odbURI": "wss://lucuma-postgres-odb-production.herokuapp.com/ws",
+    "odbRestURI": "https://lucuma-postgres-odb-production.herokuapp.com",
     "preferencesDBURI": "wss://user-prefs.herokuapp.com/v1/graphql",
     "itcURI": "https://itc.gpp.gemini.edu/itc",
     "sso": {
