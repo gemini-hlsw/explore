@@ -6,6 +6,7 @@ package explore.cache
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
+import clue.ErrorPolicy
 import clue.StreamingClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
@@ -80,7 +81,7 @@ object ProgramCache
         offset =>
           ProgramSummaryQueriesGQL
             .AllProgramObservations[IO]
-            .query(props.programId, offset.orUnassign),
+            .query(props.programId, offset.orUnassign)(ErrorPolicy.IgnoreOnData),
         _.observations.matches,
         _.observations.hasMore,
         _.id
@@ -129,7 +130,7 @@ object ProgramCache
 
       val updateObservations =
         ObsQueriesGQL.ProgramObservationsDelta
-          .subscribe[IO](props.programId)
+          .subscribe[IO](props.programId)(summon, ErrorPolicy.IgnoreOnData)
           .map(_.map(data => modifyObservations(data.observationEdit)))
 
       val updateGroups = ProgramQueriesGQL.GroupEditSubscription
