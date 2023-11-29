@@ -151,10 +151,7 @@ jobs:
         run: echo "CI_COMMIT_SHA=${{ github.event.pull_request.head.sha}}" >> $GITHUB_ENV
 
       - name: Run BundleMon
-        env:
-          BUNDLEMON_PROJECT_ID: 61a698e5de59ab000954f941
-          BUNDLEMON_PROJECT_APIKEY: ${{ secrets.BUNDLEMON_PROJECT_APIKEY }}
-        run: yarn bundlemon
+        uses: lironer/bundlemon-action@v1
 
       - name: Deploy staging app to Firebase
         if: github.ref == 'refs/heads/master'

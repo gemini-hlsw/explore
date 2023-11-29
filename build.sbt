@@ -300,13 +300,9 @@ lazy val overrideCiCommit = WorkflowStep.Run(
   cond = Some(prCond)
 )
 
-lazy val bundlemon = WorkflowStep.Run(
-  List("yarn bundlemon"),
-  name = Some("Run BundleMon"),
-  env = Map(
-    "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
-    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}"
-  )
+lazy val bundlemon = WorkflowStep.Use(
+  UseRef.Public("lironer", "bundlemon-action", "v1"),
+  name = Some("Run BundleMon")
 )
 
 def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use(
