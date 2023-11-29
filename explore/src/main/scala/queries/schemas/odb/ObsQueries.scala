@@ -5,13 +5,13 @@ package queries.schemas.odb
 
 import cats.effect.Async
 import cats.implicits.*
+import clue.ErrorPolicy
 import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
@@ -38,6 +38,8 @@ import scala.collection.immutable.SortedMap
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
+
+  given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
 
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposureMode =

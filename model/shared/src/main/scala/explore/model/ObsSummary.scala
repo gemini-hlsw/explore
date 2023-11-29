@@ -60,7 +60,8 @@ case class ObsSummary(
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
   groupId:             Option[Group.Id],
-  groupIndex:          NonNegShort
+  groupIndex:          NonNegShort,
+  execution:           Execution
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
     case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
@@ -70,7 +71,7 @@ case class ObsSummary(
     case _                                                              =>
       none
 
-  val executionTime = TimeSpan.Zero // TODO Read from the odb
+  val executionTime: Option[TimeSpan] = execution.digest.map(_.fullPlannedTime.sum)
 
   val toModeOverride: Option[InstrumentOverrides] = observingMode.map {
     case n: ObservingMode.GmosNorthLongSlit =>
@@ -171,6 +172,7 @@ object ObsSummary:
                                .get[Option[Wavelength]]("wavelength")
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
+      execution           <- c.get[Execution]("execution")
     } yield ObsSummary(
       id,
       title,
@@ -187,6 +189,7 @@ object ObsSummary:
       posAngleConstraint,
       wavelength,
       groupId,
-      groupIndex
+      groupIndex,
+      execution
     )
   )

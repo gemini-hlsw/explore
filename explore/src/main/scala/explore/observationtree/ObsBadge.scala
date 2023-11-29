@@ -178,7 +178,7 @@ object ObsBadge:
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            <.span(obs.executionTime.toHoursMinutes)
+            obs.executionTime.map(ts => <.span(ts.toHoursMinutes))
           )
         )
       )
