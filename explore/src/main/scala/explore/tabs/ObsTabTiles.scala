@@ -180,11 +180,13 @@ object ObsTabTiles:
             Offsets(
               science = NonEmptyList.fromList(
                 data.observation
-                  .foldMap(_.execution.config.allScienceOffsets)
+                  .foldMap(_.execution.config.toList.flatMap(_.allScienceOffsets))
                   .distinct
               ),
               acquisition = NonEmptyList.fromList(
-                data.observation.foldMap(_.execution.config.allAcquisitionOffsets).distinct
+                data.observation
+                  .foldMap(_.execution.config.toList.flatMap(_.allAcquisitionOffsets))
+                  .distinct
               )
             )
           )
