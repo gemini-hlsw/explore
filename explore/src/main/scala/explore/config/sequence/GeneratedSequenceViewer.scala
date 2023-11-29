@@ -54,7 +54,7 @@ object GeneratedSequenceViewer:
 
         SequenceQuery[IO]
           .query(props.obsId)
-          .map(_.observation.map(_.execution.config))
+          .map(_.observation.flatMap(_.execution.config))
           .attemptPot
           .resetOnResourceSignals(
             for {
