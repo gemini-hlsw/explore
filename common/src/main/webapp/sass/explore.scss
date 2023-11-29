@@ -1018,7 +1018,7 @@ table.pl-react-table.explore-sequence-table {
     font-size: var(--pl-tiny-font-size);
 
     // because of the rotate, Y is X
-    $active-status-translate-x: -1em;
+    $active-status-translate-x: -0.4em;
     $active-status-translate-y: 2em;
 
     .p-component.p-inputswitch.obs-active-status-toggle {
@@ -1042,10 +1042,10 @@ table.pl-react-table.explore-sequence-table {
     margin-top: 5px;
     display: flex;
     justify-content: space-between;
+    gap: 2em;
 
     .obs-status-select-wrapper {
       flex-grow: 2;
-      margin-right: 2em;
     }
   }
 
