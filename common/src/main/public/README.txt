@@ -1,10 +1,7 @@
-The "conf.json" and "staging.conf.json" files are deprecated. They
-are only here so that old serviceWorkers won't fail when they can't
-find the config file they are expecting.
+The "conf.json" files is deprecated. It is only here so that old serviceWorkers 
+won't fail when they can't find the config file they are expecting. The working
+assumption is that everyone who uses staging has updated in the 5 months
+since the change was made to "environments.conf.json", so the only issue will be
+with production.
 
-"staging.conf.json" is only needed by serviceWorkers that were loaded
-during a short transition of 1 day on 19 June 2023 and is probably only 
-needed by developers and Andy. It can be deleted soon.
-
-"conf.json" is expected by serviceWorkers that stretch back for many
-months so probably should be kept longer. 
+Eventually, this file and conf.json should be deleted.

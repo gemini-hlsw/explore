@@ -6,7 +6,7 @@
     "explore-gemini": {
       "hosting": {
         "dev": ["explore-gemini-dev"],
-        "staging": ["explore-gemini"],
+        "staging": ["explore-gemini-stage"],
         "production": ["explore-gemini-prod"]
       }
     }
