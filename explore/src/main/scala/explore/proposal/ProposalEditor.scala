@@ -64,10 +64,11 @@ import spire.std.any.*
 import scala.collection.immutable.SortedMap
 
 case class ProposalEditor(
-  programId:     Program.Id,
-  proposal:      View[Proposal],
-  undoStacks:    View[UndoStacks[IO, Proposal]],
-  executionTime: Option[TimeSpan]
+  programId:        Program.Id,
+  proposal:         View[Proposal],
+  undoStacks:       View[UndoStacks[IO, Proposal]],
+  minExecutionTime: Option[TimeSpan],
+  maxExecutionTime: Option[TimeSpan]
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -178,7 +179,8 @@ object ProposalEditor:
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
-    executionTime:     TimeSpan,
+    minExecutionTime:  TimeSpan,
+    maxExecutionTime:  TimeSpan,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
@@ -292,13 +294,13 @@ object ProposalEditor:
               ),
               // The second partner splits row - is always there
               FormStaticData(
-                value = formatHours(toHours(executionTime)),
+                value = formatHours(toHours(maxExecutionTime)),
                 label = time1Label,
                 id = "time1"
               ),
-              timeSplits(splitsMap, executionTime),
+              timeSplits(splitsMap, maxExecutionTime),
               // depending on the observation class, either an input or just text for the minimum time
-              minimumTime(minimumPct1View.get, executionTime).unless(has2Minimums),
+              minimumTime(minimumPct1View.get, minExecutionTime).unless(has2Minimums),
               <.div(makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)).when(has2Minimums),
               // The third partner splits row - only exists for a few observation classes
               totalTime.fold(React.Fragment()) { tt =>
@@ -357,7 +359,8 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
-    executionTime:     TimeSpan
+    minExecutionTime:  TimeSpan,
+    maxExecutionTime:  TimeSpan
   )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
@@ -400,7 +403,8 @@ object ProposalEditor:
             showDialog,
             splitsList,
             splitsView.get,
-            executionTime,
+            minExecutionTime,
+            maxExecutionTime,
             _
           )
         )
@@ -477,8 +481,7 @@ object ProposalEditor:
           proposalClassType,
           showDialog,
           splitsList,
-          props.executionTime.getOrElse(
-            TimeSpan.Zero
-          ) // this is not correct, we need to be able to handle a missing execution time
+          props.minExecutionTime.orEmpty,
+          props.maxExecutionTime.orEmpty // this is not correct, we need to be able to handle a missing execution time
         )
       }

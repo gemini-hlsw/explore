@@ -50,7 +50,12 @@ object ProgramTabContents:
         .query(props.programId)
         .map(data =>
           data.program
-            .map(prog => ProposalInfo(prog.proposal, prog.plannedTimeRange.map(_.maximum.total)))
+            .map(prog =>
+              ProposalInfo(prog.proposal,
+                           prog.plannedTimeRange.map(_.maximum.total),
+                           prog.plannedTimeRange.map(_.maximum.total)
+              )
+            )
         )
         .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO](props.programId.assign))
     }
