@@ -89,7 +89,10 @@ object ExploreMain {
       nonProdBanner.textContent = env.tag
       dom.document.body.appendChild(nonProdBanner)
     }
-    .whenA(env =!= ExecutionEnvironment.Production)
+    .whenA(
+      env =!= ExecutionEnvironment.Production &&
+        dom.document.querySelector("#non-prod-banner") == null
+    )
 
   def crash[F[_]: Sync](msg: String): F[Unit] =
     setupDOM[F].map { element =>

@@ -3,11 +3,13 @@
 
 package explore.programs
 
+import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
-import explore.components.ui.PartnerFlags
+import explore.model.syntax.all.toHoursMinutes
 import explore.proposal.ProposalInfo
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 
 case class ProgramDetailsTile(optProposal: Option[ProposalInfo])
@@ -21,65 +23,65 @@ object ProgramDetailsTile:
     .withHooks[Props]
     .render { props =>
 
-      val timeAwards = for {
-        propInfo <- props.optProposal
-        proposal <- propInfo.optProposal
-      } yield table(
-        headers = Seq("Time Award", "Band 1"),
-        rows = proposal.partnerSplits
-          .map((partner, split) =>
-            Seq[VdomNode](
-              <.span(
-                ^.verticalAlign.middle,
-                partner.abbreviation,
-                <.img(^.src        := PartnerFlags.smallFlag(partner),
-                      ^.alt := s"${partner.name}  Flag",
-                      ExploreStyles.PartnerSplitFlag,
-                      ^.verticalAlign.middle
-                )
-              ),
-              split.value.toString()
-            )
-          )
-          .toSeq
-      )
-
       val timeAccounting = for {
-        propInfo      <- props.optProposal
-        proposal      <- propInfo.optProposal
-        executionTime <- propInfo.executionTime
+        propInfo    <- props.optProposal
+        minTime     <- propInfo.minExecutionTime
+        maxTime     <- propInfo.maxExecutionTime
+        used         = TimeSpan.Zero // TODO
+        remain       = maxTime.subtract(used)
+        isSingleTime = minTime == maxTime
       } yield table(
         headers = Seq("Time accounting"),
         rows = Seq(
-        )
+          if (isSingleTime) Seq("Planned", minTime.toHoursMinutes)
+          else Seq("Planned", s"min ${minTime.toHoursMinutes} - max ${maxTime.toHoursMinutes}"),
+          Seq("Used", used.toHoursMinutes)
+        ),
+        footer = remain.toList.map(remain => Seq[TagMod]("Remain", remain.toHoursMinutes))
       )
 
       <.div(
         ExploreStyles.ProgramDetailsTile,
-        <.div("col1"),
-        <.div("col2")(
-          timeAwards,
+        <.div(
           timeAccounting
-        ),
-        <.div("col3")
+        )
       )
     }
 
-  private def table(headers: Seq[String], rows: Seq[Seq[TagMod]]): VdomNode =
+  private def table(
+    headers: Seq[String],
+    rows:    Seq[Seq[TagMod]],
+    footer:  Seq[Seq[TagMod]]
+  ): VdomNode =
     <.table(ExploreStyles.ProgramTabTable)(
-      <.thead(
-        <.tr(
-          headers.toTagMod(h =>
-            <.th(^.colSpan := rows.headOption
-                   .filter(_ => headers.length == 1)
-                   .map(_.length)
-                   .getOrElse(1),
-                 h
+      headers.nonEmpty
+        .guard[Option]
+        .as(
+          <.thead(
+            <.tr(
+              headers.toTagMod(h =>
+                <.th(^.colSpan := rows.headOption
+                       .filter(_ => headers.length == 1)
+                       .map(_.length)
+                       .getOrElse(1),
+                     h
+                )
+              )
             )
           )
+        ),
+      rows.nonEmpty
+        .guard[Option]
+        .as(
+          <.tbody(
+            rows.toTagMod(r => <.tr(r.toTagMod(c => <.td(c))))
+          )
+        ),
+      footer.nonEmpty
+        .guard[Option]
+        .as(
+          <.tfoot(
+            footer.toTagMod(r => <.tr(r.toTagMod(c => <.td(c))))
+          )
         )
-      ),
-      <.tbody(
-        rows.toTagMod(r => <.tr(r.toTagMod(c => <.td(c))))
-      )
     )
