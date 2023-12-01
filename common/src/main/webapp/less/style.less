@@ -303,51 +303,6 @@ tfoot {
   margin-left: 0.25em;
 }
 
-.minimum-percent {
-  width: 5.5em;
-  padding-left: 0.5em !important;
-
-  span& {
-    text-align: end;
-  }
-}
-
-// The split edit button and the band totals
-.partner-split-data {
-  &,
-  div& data {
-    width: 6em;
-  }
-
-  // the text only "hours".
-  span& {
-    text-align: end;
-    padding-right: 6px; // determined empirically from dev tools
-  }
-
-  // The div containing the flag and percent text.
-  data > div {
-    display: flex;
-
-    // The percent text
-    span {
-      flex: 1;
-      text-align: end;
-    }
-  }
-}
-
-div.partner-split-total {
-  &,
-  & > div > data {
-    width: 5.5em;
-  }
-
-  & > div > data {
-    text-align: end;
-  }
-}
-
 .explore-input-error-mixin() {
   left: 30%;
   z-index: 3;

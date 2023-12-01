@@ -1375,6 +1375,50 @@ table.pl-react-table.explore-sequence-table {
 // ------
 // Proposals and Partner Splits
 // ------
+.partner-splits-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  column-gap: 0.5dvw;
+  row-gap: 0.5em;
+  width: 100%;
+
+  .partner-splits-grid-min-pct,
+  .partner-splits-grid-total {
+    width: 3em;
+  }
+
+  // only applies to the text field, not the input - pushes text to bottom
+  & > .partner-splits-grid-min-pct {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  & > .explore-flex-container {
+    align-items: flex-end;
+  }
+
+  // align the partner split hours to the end to align with the percents
+  span.partner-split-data {
+    text-align: end;
+  }
+
+  .partner-split-data {
+    margin-right: 2em;
+    width: 4.5em;
+
+    // The div containing the flag and percent text.
+    data > div {
+      display: flex;
+
+      // The percent text
+      span {
+        flex: 1;
+        text-align: end;
+      }
+    }
+  }
+}
+
 img.partner-split-flag {
   height: 16px;
   width: 32px;

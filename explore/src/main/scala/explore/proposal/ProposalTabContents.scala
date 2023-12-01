@@ -85,8 +85,7 @@ object ProposalTabContents:
               programId,
               proposalView,
               undoStacks,
-              executionTime,
-              TimeSpan.Zero // Will come from API eventually
+              executionTime
             ): VdomNode
           )
           .getOrElse(user match {
