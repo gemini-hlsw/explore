@@ -1378,8 +1378,7 @@ table.pl-react-table.explore-sequence-table {
 .partner-splits-grid {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  column-gap: 0.5dvw;
-  row-gap: 0.5em;
+  gap: 0.5em 0.5em;
   width: 100%;
 
   .partner-splits-grid-min-pct,
