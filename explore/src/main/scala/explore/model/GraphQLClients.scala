@@ -23,7 +23,7 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
   def init(payload: Map[String, Json]): F[Unit] =
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
-      odb.connect() >> odb.initialize(payload),
+      odb.connect() >> odb.initialize(payload)
     ).parTupled.void
 
   def close(): F[Unit] =
