@@ -76,7 +76,7 @@ object ProposalEditor:
   private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
 
   private def toHours(time: TimeSpan): Hours =
-    Hours.from(time.toHours.longValue).getOrElse(Hours.Max)
+    Hours.from(time.toHours).getOrElse(Hours.Max)
 
   private def fromHours(hours: Hours): TimeSpan =
     TimeSpan.unsafeFromMicroseconds((hours.value * Hours2Micros).longValue)
