@@ -9,8 +9,6 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DynamicEnums
-import explore.DynamicEnums.given
 import explore.Icons
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
@@ -21,7 +19,6 @@ import explore.model.AppContext
 import explore.model.ObsAttachment
 import explore.model.ObsAttachmentList
 import explore.model.Transformation
-import explore.model.enums.ObsAttachmentType
 import explore.model.reusability.given
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
@@ -38,6 +35,7 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
+import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.components.SolarProgress
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given

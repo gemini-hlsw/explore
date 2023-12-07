@@ -205,6 +205,7 @@ export default defineConfig(async ({ mode }) => {
       host: '0.0.0.0',
       port: 8080,
       https: true,
+      cors: { origin: "*" },
       watch: {
         ignored: [
           function ignoreThisPath(_path) {
