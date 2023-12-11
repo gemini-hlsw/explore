@@ -13,8 +13,6 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DynamicEnums
-import explore.DynamicEnums.given
 import explore.EditableLabel
 import explore.Icons
 import explore.common.ProgramQueries
@@ -27,7 +25,6 @@ import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.enums.AppTab
-import explore.model.enums.ObsAttachmentType
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
@@ -51,6 +48,7 @@ import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given

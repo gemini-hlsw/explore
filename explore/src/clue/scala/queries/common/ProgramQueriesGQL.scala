@@ -10,7 +10,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 // gql: import lucuma.odb.json.time.decoder.given
 // gql: import lucuma.schemas.decoders.given
-// gql: import explore.DynamicEnums.given
 
 object ProgramQueriesGQL {
   @GraphQL

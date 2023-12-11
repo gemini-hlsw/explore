@@ -13,7 +13,6 @@ import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsAttachment
 import explore.model.ObsAttachmentList
-import explore.model.enums.ObsAttachmentType
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
@@ -27,6 +26,7 @@ import lucuma.react.primereact.Message
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
+import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
