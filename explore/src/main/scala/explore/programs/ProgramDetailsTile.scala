@@ -28,16 +28,18 @@ object ProgramDetailsTile:
         minTime     <- propInfo.minExecutionTime
         maxTime     <- propInfo.maxExecutionTime
         used         = TimeSpan.Zero // TODO
-        remain       = maxTime.subtract(used)
+        remain       = TimeSpan.Zero // TODO
         isSingleTime = minTime == maxTime
       } yield table(
         headers = Seq("Time accounting"),
-        rows = Seq(
-          if (isSingleTime) Seq("Planned", minTime.toHoursMinutes)
-          else Seq("Planned", s"min ${minTime.toHoursMinutes} - max ${maxTime.toHoursMinutes}"),
-          Seq("Used", used.toHoursMinutes)
-        ),
-        footer = remain.toList.map(remain => Seq[TagMod]("Remain", remain.toHoursMinutes))
+        rows = (if (isSingleTime) Seq(Seq[TagMod]("Planned", minTime.toHoursMinutes))
+                else
+                  Seq(
+                    Seq[TagMod]("Min Time", minTime.toHoursMinutes),
+                    Seq[TagMod]("Max Time", maxTime.toHoursMinutes)
+                  )) ++
+          Seq(Seq[TagMod]("Used", used.toHoursMinutes)),
+        footer = Seq(Seq[TagMod]("Remain", remain.toHoursMinutes))
       )
 
       <.div(
