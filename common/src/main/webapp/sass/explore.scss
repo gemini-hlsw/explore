@@ -1422,6 +1422,7 @@ img.partner-split-flag {
   height: 16px;
   width: 32px;
   margin-right: 0.5em;
+  margin-left: 0.5em;
 }
 
 .partner-splits-editor-dialog {
@@ -2420,6 +2421,51 @@ a.explore-upgrade-link {
 
     button.observations-summary-add {
       margin-top: 1em;
+    }
+  }
+}
+
+// Program Tab
+.program-details-tile {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.program-tab-table {
+  border-collapse: collapse;
+  margin: 1em;
+
+  thead {
+    tr {
+      th {
+        padding: 0.5em;
+        font-weight: bold;
+      }
+    }
+  }
+
+  tbody,
+  tfoot {
+    border-top: 1.5px solid var(--site-border-color);
+    background-color: transparent;
+
+    tr {
+      td {
+        &:first-child {
+          font-weight: bold;
+          border-right: 1px solid var(--site-border-color);
+          text-align: right;
+        }
+
+        &:last-child {
+          border-left: 1px solid var(--site-border-color);
+        }
+
+        vertical-align: middle;
+        padding: 0.5em;
+        font-weight: normal;
+      }
     }
   }
 }

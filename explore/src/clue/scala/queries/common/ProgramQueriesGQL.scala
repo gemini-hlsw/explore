@@ -81,6 +81,11 @@ object ProgramQueriesGQL {
             }
           }
           plannedTimeRange {
+            minimum {
+              total {
+                microseconds
+              }
+            }
             maximum {
               total {
                 microseconds

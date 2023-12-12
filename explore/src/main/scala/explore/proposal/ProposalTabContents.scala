@@ -3,6 +3,8 @@
 
 package explore.proposal
 
+import cats.Eq
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -49,12 +51,13 @@ case class ProposalTabContents(
 
 object ProposalTabContents:
   private def createProposal(
-    programId:       Program.Id,
-    optProposalView: View[Option[ProposalInfo]],
-    executionTime:   Option[TimeSpan]
+    programId:        Program.Id,
+    optProposalView:  View[Option[ProposalInfo]],
+    minExecutionTime: Option[TimeSpan],
+    maxExecutionTime: Option[TimeSpan]
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
-    optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
+    optProposalView.set(ProposalInfo(proposal.some, minExecutionTime, maxExecutionTime).some) >>
       UpdateProgramsMutation[IO]
         .execute(
           UpdateProgramsInput(
@@ -76,7 +79,8 @@ object ProposalTabContents:
 
     optProposalInfo
       .mapValue { (proposalInfo: View[ProposalInfo]) =>
-        val executionTime = proposalInfo.get.executionTime
+        val minExecutionTime = proposalInfo.get.minExecutionTime
+        val maxExecutionTime = proposalInfo.get.maxExecutionTime
 
         proposalInfo
           .zoom(ProposalInfo.optProposal)
@@ -85,7 +89,8 @@ object ProposalTabContents:
               programId,
               proposalView,
               undoStacks,
-              executionTime
+              minExecutionTime,
+              maxExecutionTime
             ): VdomNode
           )
           .getOrElse(user match {
@@ -97,7 +102,8 @@ object ProposalTabContents:
                   icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
                   clazz = LoginStyles.LoginBoxButton,
                   severity = Button.Severity.Secondary,
-                  onClick = createProposal(programId, optProposalInfo, executionTime)
+                  onClick =
+                    createProposal(programId, optProposalInfo, minExecutionTime, maxExecutionTime)
                 ).big
               )
             case _                     =>
@@ -127,7 +133,12 @@ object ProposalTabContents:
         .query(props.programId)
         .map(data =>
           data.program
-            .map(prog => ProposalInfo(prog.proposal, prog.plannedTimeRange.map(_.maximum.total)))
+            .map(prog =>
+              ProposalInfo(prog.proposal,
+                           prog.plannedTimeRange.map(_.maximum.total),
+                           prog.plannedTimeRange.map(_.maximum.total)
+              )
+            )
         )
         .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO](props.programId.assign))
     }
@@ -135,8 +146,17 @@ object ProposalTabContents:
       optPropInfo.renderPotOption(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
     }
 
-case class ProposalInfo(optProposal: Option[Proposal], executionTime: Option[TimeSpan])
+case class ProposalInfo(
+  optProposal:      Option[Proposal],
+  minExecutionTime: Option[TimeSpan],
+  maxExecutionTime: Option[TimeSpan]
+) derives Eq
 
 object ProposalInfo:
-  val optProposal: Lens[ProposalInfo, Option[Proposal]]   = Focus[ProposalInfo](_.optProposal)
-  val executionTime: Lens[ProposalInfo, Option[TimeSpan]] = Focus[ProposalInfo](_.executionTime)
+  given Reusability[ProposalInfo] = Reusability.byEq
+
+  val optProposal: Lens[ProposalInfo, Option[Proposal]]      = Focus[ProposalInfo](_.optProposal)
+  val minExecutionTime: Lens[ProposalInfo, Option[TimeSpan]] =
+    Focus[ProposalInfo](_.minExecutionTime)
+  val maxExecutionTime: Lens[ProposalInfo, Option[TimeSpan]] =
+    Focus[ProposalInfo](_.maxExecutionTime)
