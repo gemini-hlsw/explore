@@ -31,31 +31,9 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.{File => DomFile}
 import org.typelevel.log4cats.Logger
 
-trait ObsAttachmentUtils:
-  type UrlMapKey = (ObsAtt.Id, Timestamp)
-  type UrlMap    = Map[UrlMapKey, Pot[String]]
-
-  val AttIdColumnId: ColumnId          = ColumnId("id")
-  val ActionsColumnId: ColumnId        = ColumnId("actions")
-  val FileNameColumnId: ColumnId       = ColumnId("filename")
-  val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
-  val SizeColumnId                     = ColumnId("filesize")
-  val LastUpdateColumnId               = ColumnId("last-update")
-  val ObservationsColumnId: ColumnId   = ColumnId("observations")
-  val DescriptionColumnId: ColumnId    = ColumnId("description")
-  val CheckedColumnId: ColumnId        = ColumnId("checked")
-
-  val LabelButtonClasses =
-    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
-      |+| LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.Compact
-
-  enum Action derives Eq:
-    case None, Insert, Replace, Download, Unlink
-
+trait AttachmentUtils:
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
   private val maxFileSize: NonNegLong = 10000000.refined
-
-  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
 
   def checkFileSize(file: DomFile)(f: => IO[Unit])(using tx: ToastCtx[IO]): IO[Unit] =
     if (file.size.toLong === 0)
@@ -67,6 +45,48 @@ trait ObsAttachmentUtils:
         true
       )
     else f
+
+  enum Action(val msg: String) derives Eq:
+    case None     extends Action("")
+    case Insert   extends Action("Uploading Attachment")
+    case Replace  extends Action("Uploading Replacment")
+    case Download extends Action("Downloading Attachment")
+    case Unlink   extends Action("Unlinking Attachment")
+    // case None, Insert, Replace, Download, Unlink
+
+  val LabelButtonClasses =
+    PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly
+      |+| LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.Compact
+
+  val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
+
+  val AttIdColumnId: ColumnId          = ColumnId("id")           // ObsAttachments only
+  val ActionsColumnId: ColumnId        = ColumnId("actions")
+  val FileNameColumnId: ColumnId       = ColumnId("filename")
+  val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
+  val SizeColumnId                     = ColumnId("filesize")
+  val LastUpdateColumnId               = ColumnId("last-update")
+  val ObservationsColumnId: ColumnId   = ColumnId("observations") // ObsAttachments only
+  val DescriptionColumnId: ColumnId    = ColumnId("description")
+  val CheckedColumnId: ColumnId        = ColumnId("checked")
+
+  val columnNames: Map[ColumnId, String] = Map(
+    AttIdColumnId          -> "ID",
+    ActionsColumnId        -> "Actions",
+    FileNameColumnId       -> "File",
+    AttachmentTypeColumnId -> "Type",
+    SizeColumnId           -> "Size",
+    LastUpdateColumnId     -> "LastUpdate",
+    ObservationsColumnId   -> "Observations",
+    DescriptionColumnId    -> "Description",
+    CheckedColumnId        -> "Checked"
+  )
+
+trait ObsAttachmentUtils extends AttachmentUtils:
+  type UrlMapKey = (ObsAtt.Id, Timestamp)
+  type UrlMap    = Map[UrlMapKey, Pot[String]]
+
+  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
 
   def insertAttachment(
     programId:      Program.Id,
@@ -138,7 +158,7 @@ trait ObsAttachmentUtils:
     urlMap: View[UrlMap]
   ): IO[Unit] =
     client
-      .getPresignedUrl(pid, mapKey._1)
+      .getObsAttachmentUrl(pid, mapKey._1)
       .attempt
       .map {
         case Right(url) => Pot(url)

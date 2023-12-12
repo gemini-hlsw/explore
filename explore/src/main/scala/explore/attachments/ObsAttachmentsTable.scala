@@ -45,7 +45,6 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
-import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.enums.ObsAttachmentType
@@ -73,19 +72,6 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
   private type Props = ObsAttachmentsTable
 
   private val ColDef = ColumnDef[View[ObsAttachment]]
-
-  private val columnNames: Map[ColumnId, String] = Map(
-    ActionsColumnId        -> "Actions",
-    FileNameColumnId       -> "File",
-    AttachmentTypeColumnId -> "Type",
-    SizeColumnId           -> "Size",
-    LastUpdateColumnId     -> "LastUpdate",
-    ObservationsColumnId   -> "Observations",
-    DescriptionColumnId    -> "Description",
-    CheckedColumnId        -> "Checked"
-  )
-
-  private val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
 
   given Reusability[UrlMap]                     = Reusability.map
   given Reusability[ObsAttachmentAssignmentMap] = Reusability.map
@@ -135,7 +121,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
     aid:    ObsAtt.Id
   )(using ToastCtx[IO]): IO[Unit] =
     props.obsAttachments.mod(_.removed(aid)).toAsync *>
-      client.deleteAttachment(props.pid, aid).toastErrors
+      client.deleteObsAttachment(props.pid, aid).toastErrors
 
   def deletePrompt(
     props:  Props,
@@ -338,12 +324,6 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
       .render { (props, ctx, client, action, _, _, _, table, newAttType) =>
         import ctx.given
 
-        val dialogHeader = action.get match
-          case Action.Insert   => "Uploading Attachment"
-          case Action.Replace  => "Uploading Replacement"
-          case Action.Download => "Downloading Attachment"
-          case _               => ""
-
         React.Fragment(
           props.renderInTitle(
             <.div(
@@ -387,7 +367,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
           Dialog(
             onHide = Callback.empty,
             visible = action.get != Action.None,
-            header = dialogHeader,
+            header = action.get.msg,
             blockScroll = true,
             modal = true,
             dismissableMask = false,

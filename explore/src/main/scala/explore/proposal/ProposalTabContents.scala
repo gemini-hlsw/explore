@@ -16,6 +16,9 @@ import explore.Icons
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.ProgramUser
+import explore.model.ProgramUserWithRole
+import explore.model.ProposalAttachment
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
@@ -35,6 +38,7 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.effect.*
 import lucuma.ui.syntax.pot.*
@@ -44,9 +48,10 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 
 case class ProposalTabContents(
-  programId:  Program.Id,
-  user:       Option[User],
-  undoStacks: View[UndoStacks[IO, Proposal]]
+  programId:   Program.Id,
+  userVault:   Option[UserVault],
+  attachments: View[List[ProposalAttachment]],
+  undoStacks:  View[UndoStacks[IO, Proposal]]
 ) extends ReactFnProps(ProposalTabContents.component)
 
 object ProposalTabContents:
@@ -57,7 +62,9 @@ object ProposalTabContents:
     maxExecutionTime: Option[TimeSpan]
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
-    optProposalView.set(ProposalInfo(proposal.some, minExecutionTime, maxExecutionTime).some) >>
+    optProposalView.set(
+      ProposalInfo(proposal.some, minExecutionTime, maxExecutionTime, none, Nil).some
+    ) >>
       UpdateProgramsMutation[IO]
         .execute(
           UpdateProgramsInput(
@@ -70,10 +77,11 @@ object ProposalTabContents:
         .runAsync
 
   private def renderFn(
-    programId:  Program.Id,
-    user:       Option[User],
-    undoStacks: View[UndoStacks[IO, Proposal]],
-    ctx:        AppContext[IO]
+    programId:   Program.Id,
+    userVault:   Option[UserVault],
+    attachments: View[List[ProposalAttachment]],
+    undoStacks:  View[UndoStacks[IO, Proposal]],
+    ctx:         AppContext[IO]
   )(optProposalInfo: View[Option[ProposalInfo]]): VdomNode =
     import ctx.given
 
@@ -81,6 +89,7 @@ object ProposalTabContents:
       .mapValue { (proposalInfo: View[ProposalInfo]) =>
         val minExecutionTime = proposalInfo.get.minExecutionTime
         val maxExecutionTime = proposalInfo.get.maxExecutionTime
+        val users            = proposalInfo.get.allUsers
 
         proposalInfo
           .zoom(ProposalInfo.optProposal)
@@ -90,10 +99,13 @@ object ProposalTabContents:
               proposalView,
               undoStacks,
               minExecutionTime,
-              maxExecutionTime
+              maxExecutionTime,
+              users,
+              attachments,
+              userVault.map(_.token)
             ): VdomNode
           )
-          .getOrElse(user match {
+          .getOrElse(userVault.map(_.user) match {
             case Some(_: StandardUser) =>
               <.div(
                 ExploreStyles.HVCenter,
@@ -133,24 +145,31 @@ object ProposalTabContents:
         .query(props.programId)
         .map(data =>
           data.program
-            .map(prog =>
+            .map { prog =>
               ProposalInfo(prog.proposal,
+                           prog.plannedTimeRange.map(_.minimum.total),
                            prog.plannedTimeRange.map(_.maximum.total),
-                           prog.plannedTimeRange.map(_.maximum.total)
+                           prog.pi,
+                           prog.users
               )
-            )
+            }
         )
         .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO](props.programId.assign))
     }
     .render { (props, ctx, optPropInfo) =>
-      optPropInfo.renderPotOption(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
+      optPropInfo.renderPotOption(
+        renderFn(props.programId, props.userVault, props.attachments, props.undoStacks, ctx) _
+      )
     }
 
 case class ProposalInfo(
   optProposal:      Option[Proposal],
   minExecutionTime: Option[TimeSpan],
-  maxExecutionTime: Option[TimeSpan]
-) derives Eq
+  maxExecutionTime: Option[TimeSpan],
+  pi:               Option[ProgramUser],
+  programUsers:     List[ProgramUserWithRole]
+) derives Eq:
+  val allUsers = pi.fold(programUsers)(p => ProgramUserWithRole(p, none) :: programUsers)
 
 object ProposalInfo:
   given Reusability[ProposalInfo] = Reusability.byEq

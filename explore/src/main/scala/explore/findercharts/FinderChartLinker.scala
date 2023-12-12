@@ -44,11 +44,6 @@ case class FinderChartLinker(
 object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentUtils {
   private type Props = FinderChartLinker
 
-  private val columnNames: Map[ColumnId, String] = Map(
-    AttIdColumnId    -> "ID",
-    FileNameColumnId -> "File"
-  )
-
   private val ColDef = ColumnDef[ObsAttachment]
 
   private val component =

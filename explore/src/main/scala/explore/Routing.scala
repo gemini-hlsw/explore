@@ -128,11 +128,14 @@ object Routing:
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    ProposalTabContents(
-      routingInfo.programId,
-      model.zoom(RootModel.user).get,
-      model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal)
+    withProgramSummaries(model)(programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+      ProposalTabContents(
+        routingInfo.programId,
+        model.zoom(RootModel.vault).get,
+        programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
+        model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal)
+      )
     )
 
   private def programTab(page: Page, model: View[RootModel]): VdomElement =

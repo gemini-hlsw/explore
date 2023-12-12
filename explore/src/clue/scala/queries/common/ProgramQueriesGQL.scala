@@ -51,9 +51,9 @@ object ProgramQueriesGQL {
 
   @GraphQL
   trait ProgramProposalQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      query($programId: ProgramId!) {
-        program(programId: $programId) {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) {
           proposal {
             title
             proposalClass {
@@ -80,6 +80,8 @@ object ProgramQueriesGQL {
               percent
             }
           }
+          pi $ProgramUserSubquery
+          users $ProgramUserWithRoleSubquery
           plannedTimeRange {
             minimum {
               total {
@@ -100,6 +102,8 @@ object ProgramQueriesGQL {
       object Program:
         type Proposal = model.Proposal
         object PlannedTimeRange:
+          object Minimum:
+            type Total = TimeSpan
           object Maximum:
             type Total = TimeSpan
   }
