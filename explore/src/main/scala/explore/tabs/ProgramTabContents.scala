@@ -52,8 +52,8 @@ object ProgramTabContents:
           data.program
             .map(prog =>
               ProposalInfo(prog.proposal,
-                           prog.plannedTimeRange.map(_.minimum.total),
-                           prog.plannedTimeRange.map(_.maximum.total),
+                           prog.timeEstimateRange.map(_.minimum.total),
+                           prog.timeEstimateRange.map(_.maximum.total),
                            prog.pi,
                            prog.users
               )

@@ -82,7 +82,7 @@ object ProgramQueriesGQL {
           }
           pi $ProgramUserSubquery
           users $ProgramUserWithRoleSubquery
-          plannedTimeRange {
+          timeEstimateRange {
             minimum {
               total {
                 microseconds
@@ -101,7 +101,7 @@ object ProgramQueriesGQL {
     object Data:
       object Program:
         type Proposal = model.Proposal
-        object PlannedTimeRange:
+        object TimeEstimateRange:
           object Minimum:
             type Total = TimeSpan
           object Maximum:
