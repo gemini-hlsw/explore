@@ -13,6 +13,7 @@ import fs2.text.utf8
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.schemas.enums.ObsAttachmentType
+import lucuma.schemas.enums.ProposalAttachmentType
 import lucuma.ui.enums.ExecutionEnvironment
 import org.http4s.*
 import org.http4s.client.Client
@@ -29,7 +30,7 @@ trait OdbRestClient[F[_]] {
 
   def getObsAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Stream[F, Byte]]
 
-  def getPresignedUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String]
+  def getObsAttachmentUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String]
 
   def insertObsAttachment(
     programId:      Program.Id,
@@ -47,7 +48,31 @@ trait OdbRestClient[F[_]] {
     data:         Stream[F, Byte]
   ): F[Unit]
 
-  def deleteAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Unit]
+  def deleteObsAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Unit]
+
+  def getProposalAttachmentUrl(
+    programId:      Program.Id,
+    attachmentType: ProposalAttachmentType
+  ): F[String]
+
+  def insertProposalAttachment(
+    programId:      Program.Id,
+    attachmentType: ProposalAttachmentType,
+    fileName:       NonEmptyString,
+    data:           Stream[F, Byte]
+  ): F[Unit]
+
+  def updateProposalAttachment(
+    programId:      Program.Id,
+    attachmentType: ProposalAttachmentType,
+    fileName:       NonEmptyString,
+    data:           Stream[F, Byte]
+  ): F[Unit]
+
+  def deleteProposalAttachment(
+    programId:      Program.Id,
+    attachmentType: ProposalAttachmentType
+  ): F[Unit]
 }
 
 object OdbRestClient {
@@ -107,7 +132,7 @@ object OdbRestClient {
           )
         ).use(r => Async[F].pure(r.body))
 
-      def getPresignedUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String] =
+      def getObsAttachmentUrl(programId: Program.Id, attachmentId: ObsAttachment.Id): F[String] =
         runRequest("Getting URL")(baseUri =>
           Request[F](
             method = Method.GET,
@@ -161,9 +186,70 @@ object OdbRestClient {
           )
         }.use(_ => Async[F].unit)
 
-      def deleteAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Unit] =
+      def deleteObsAttachment(programId: Program.Id, attachmentId: ObsAttachment.Id): F[Unit] =
         runRequest("Deleting Attachment") { baseUri =>
           val uri = baseUri / "obs" / programId.show / attachmentId.show
+          Request[F](
+            method = Method.DELETE,
+            uri = uri,
+            headers = authHeader
+          )
+        }.use(_ => Async[F].unit)
+
+      def getProposalAttachmentUrl(
+        programId:      Program.Id,
+        attachmentType: ProposalAttachmentType
+      ): F[String] =
+        runRequest("Getting URL")(baseUri =>
+          Request[F](
+            method = Method.GET,
+            uri = baseUri / "proposal" / "url" / programId.show / attachmentType.tag,
+            headers = authHeader
+          )
+        ).use(
+          _.getBody
+        )
+
+      def insertProposalAttachment(
+        programId:      Program.Id,
+        attachmentType: ProposalAttachmentType,
+        fileName:       NonEmptyString,
+        data:           Stream[F, Byte]
+      ): F[Unit] =
+        runRequest("Adding Attachment") { baseUri =>
+          val uri = (baseUri / "proposal" / programId.show / attachmentType.tag)
+            .withQueryParam("fileName", fileName)
+          Request[F](
+            method = Method.POST,
+            uri = uri,
+            headers = authHeader,
+            body = data
+          )
+        }.use(_ => Async[F].unit)
+
+      def updateProposalAttachment(
+        programId:      Program.Id,
+        attachmentType: ProposalAttachmentType,
+        fileName:       NonEmptyString,
+        data:           Stream[F, Byte]
+      ): F[Unit] =
+        runRequest("Updating Attachment") { baseUri =>
+          val uri = (baseUri / "proposal" / programId.show / attachmentType.tag)
+            .withQueryParam("fileName", fileName)
+          Request[F](
+            method = Method.PUT,
+            uri = uri,
+            headers = authHeader,
+            body = data
+          )
+        }.use(_ => Async[F].unit)
+
+      def deleteProposalAttachment(
+        programId:      Program.Id,
+        attachmentType: ProposalAttachmentType
+      ): F[Unit] =
+        runRequest("Deleting Attachment") { baseUri =>
+          val uri = baseUri / "proposal" / programId.show / attachmentType.tag
           Request[F](
             method = Method.DELETE,
             uri = uri,

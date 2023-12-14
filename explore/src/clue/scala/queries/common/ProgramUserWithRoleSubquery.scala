@@ -4,18 +4,16 @@
 package queries.common
 
 import clue.GraphQLSubquery
-import explore.model.ProposalAttachment
-import lucuma.schemas.ObservationDB
 import clue.annotation.GraphQL
+import explore.model.ProgramUserWithRole
+import lucuma.schemas.ObservationDB
 
 @GraphQL
-object ProposalAttachmentSubquery
-    extends GraphQLSubquery.Typed[ObservationDB, ProposalAttachment]("ProposalAttachment"):
+object ProgramUserWithRoleSubquery
+    extends GraphQLSubquery.Typed[ObservationDB, ProgramUserWithRole]("ProgramUser"):
   override val subquery: String = s"""
     {
-      attachmentType
-      fileName
-      fileSize
-      updatedAt
-    }
+      user $ProgramUserSubquery
+      role
+    } 
   """
