@@ -39,11 +39,14 @@ object SequenceDigestSubquery
         observeClass
         atomCount
         timeEstimate {
-          charges {
-            chargeClass
-            time {
-              microseconds
-            }
+          program {
+            microseconds
+          }
+          partner {
+            microseconds
+          }
+          nonCharged {
+            microseconds
           }
           total {
             microseconds
