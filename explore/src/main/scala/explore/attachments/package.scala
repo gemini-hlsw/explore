@@ -52,7 +52,6 @@ trait AttachmentUtils:
     case Replace  extends Action("Uploading Replacment")
     case Download extends Action("Downloading Attachment")
     case Unlink   extends Action("Unlinking Attachment")
-    // case None, Insert, Replace, Download, Unlink
 
   val LabelButtonClasses =
     PrimeStyles.Component |+| PrimeStyles.Button |+| PrimeStyles.ButtonIconOnly

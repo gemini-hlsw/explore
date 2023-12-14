@@ -38,7 +38,7 @@ object SequenceDigestSubquery
       {
         observeClass
         atomCount
-        plannedTime {
+        timeEstimate {
           charges {
             chargeClass
             time {
