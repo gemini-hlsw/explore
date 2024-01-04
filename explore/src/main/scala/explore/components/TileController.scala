@@ -103,34 +103,39 @@ object TileController:
       }
       // Make a local copy of the layout fixing the state of minimized layouts
       .useStateViewBy((p, _, _) => updateResizableState(p.tiles, p.layoutMap))
+      // resizing
+      .useState(TileResizing(false))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap))(
-        (p, _, _, currentLayout) =>
-          (_, layout) => currentLayout.set(updateResizableState(p.tiles, layout))
+      .useEffectWithDepsBy((p, _, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap))(
+        (p, _, _, currentLayout, resizing) =>
+          (_, layout) =>
+            resizing.setState(TileResizing(false)) *>
+              currentLayout.set(updateResizableState(p.tiles, layout))
       )
-      .render { (p, ctx, breakpoint, currentLayout) =>
+      .render { (p, ctx, breakpoint, currentLayout, resizing) =>
         import ctx.given
 
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
-          currentLayout
-            .zoom(allTiles)
-            .mod {
-              case l if l.i === id.value =>
-                if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
-                else if (st === TileSizeState.Normal) {
-                  val defaultHeight =
-                    unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
-                  // restore the resizable state
-                  val resizable     =
-                    tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
-                  // TODO: Restore to the previous size
-                  l.copy(h = defaultHeight,
-                         isResizable = resizable,
-                         minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
-                  )
-                } else l
-              case l                     => l
-            }
+          resizing.setState(TileResizing(true)) *>
+            currentLayout
+              .zoom(allTiles)
+              .mod {
+                case l if l.i === id.value =>
+                  if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
+                  else if (st === TileSizeState.Normal) {
+                    val defaultHeight =
+                      unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
+                    // restore the resizable state
+                    val resizable     =
+                      tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
+                    // TODO: Restore to the previous size
+                    l.copy(h = defaultHeight,
+                           isResizable = resizable,
+                           minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
+                    )
+                  } else l
+                case l                     => l
+              }
 
         def addBackButton: List[Tile] = {
           val topTile =
@@ -194,7 +199,10 @@ object TileController:
                 }
                 .getOrElse(EmptyVdom),
               t.controllerClass,
-              t.withState(unsafeSizeToState(currentLayout.get, t.id), sizeState(t.id))
+              t.withState(unsafeSizeToState(currentLayout.get, t.id),
+                          resizing.value,
+                          sizeState(t.id)
+              )
             )
           }.toVdomArray
         )

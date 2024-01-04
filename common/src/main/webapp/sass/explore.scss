@@ -209,6 +209,7 @@ body.hide-reusability {
     transform 0.25s,
     filter 0.25s ease-in;
 
+  &:enabled:focus,
   &:enabled:focus-visible {
     border: none;
     box-shadow: none;
