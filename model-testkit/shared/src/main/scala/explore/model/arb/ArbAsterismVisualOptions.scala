@@ -3,7 +3,7 @@
 
 package explore.model.arb
 
-import explore.model.TargetVisualOptions
+import explore.model.AsterismVisualOptions
 import eu.timepit.refined.scalacheck.numeric.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -15,22 +15,25 @@ import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen.*
 
-trait ArbTargetVisualOptions:
+trait ArbAsterismVisualOptions:
 
-  given Arbitrary[TargetVisualOptions] =
-    Arbitrary[TargetVisualOptions] {
+  given Arbitrary[AsterismVisualOptions] =
+    Arbitrary[AsterismVisualOptions] {
       for {
+        id   <- arbitrary[Option[Int]]
         fra  <- arbitrary[Angle]
         fdec <- arbitrary[Angle]
         vo   <- arbitrary[Offset]
-        s    <- arbitrary[TargetVisualOptions.ImageFilterRange]
-        b    <- arbitrary[TargetVisualOptions.ImageFilterRange]
-      } yield TargetVisualOptions(fra, fdec, vo, s, b)
+        s    <- arbitrary[AsterismVisualOptions.ImageFilterRange]
+        b    <- arbitrary[AsterismVisualOptions.ImageFilterRange]
+      } yield AsterismVisualOptions(id, fra, fdec, vo, s, b)
     }
 
-  given Cogen[TargetVisualOptions] =
+  given Cogen[AsterismVisualOptions] =
     Cogen[
-      (Angle, Angle, Offset, Int, Int)
-    ].contramap(c => (c.fovRA, c.fovDec, c.viewOffset, c.saturation.value, c.brightness.value))
+      (Option[Int], Angle, Angle, Offset, Int, Int)
+    ].contramap(c =>
+      (c.id, c.fovRA, c.fovDec, c.viewOffset, c.saturation.value, c.brightness.value)
+    )
 
-object ArbTargetVisualOptions extends ArbTargetVisualOptions
+object ArbAsterismVisualOptions extends ArbAsterismVisualOptions

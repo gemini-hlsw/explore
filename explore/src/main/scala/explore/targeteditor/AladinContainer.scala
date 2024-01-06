@@ -12,10 +12,10 @@ import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
+import explore.model.AsterismVisualOptions
 import explore.model.Constants
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
-import explore.model.TargetVisualOptions
 import explore.model.enums.Visible
 import explore.model.reusability.given
 import explore.visualization.*
@@ -50,7 +50,7 @@ case class AladinContainer(
   vizTime:                Instant,
   obsConf:                Option[ObsConfiguration],
   globalPreferences:      GlobalPreferences,
-  options:                TargetVisualOptions,
+  options:                AsterismVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,

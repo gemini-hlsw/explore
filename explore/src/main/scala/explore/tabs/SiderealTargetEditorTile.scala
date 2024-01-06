@@ -48,9 +48,8 @@ object SiderealTargetEditorTile {
           userId.map(uid =>
             SiderealTargetEditor(
               uid,
-              targetId,
               target,
-              Asterism.one(TargetWithId(targetId, target.get)).some,
+              Asterism.one(TargetWithId(targetId, target.get)),
               none,
               none,
               searching,

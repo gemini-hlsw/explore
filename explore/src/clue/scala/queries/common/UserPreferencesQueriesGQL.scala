@@ -130,19 +130,33 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
-  trait UserTargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+  trait AsterismPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      query targetPreferences($userId: String! = "", $targetId: String! = "") {
-        exploreTargetPreferencesByPk(targetId: $targetId, userId: $userId) {
-          fovRA
-          fovDec
-          viewOffsetP
-          viewOffsetQ
-          saturation
-          brightness
+    query asterismPreferences($userId: String!, $targetIds: [String!] = "") {
+      exploreAsterismPreferences(where: {_and: {userId: {_eq: $userId}, lucumaAsterisms: {targetId: {_in: $targetIds}}}}) {
+        id
+        brightness
+        saturation
+        fovRA
+        fovDec
+        viewOffsetP
+        viewOffsetQ
+        lucumaAsterisms {
+          targetId
         }
       }
+    }
     """
+  }
+
+  @GraphQL
+  trait AsterismUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation asterismUpsert($object: ExploreAsterismPreferencesInsertInput!, $updateColumns: [ExploreAsterismPreferencesUpdateColumn!]) {
+        insertExploreAsterismPreferencesOne(object: $object, onConflict: {constraint: exploreAsterismPreferences_pkey, update_columns: $updateColumns}) {
+          id
+        }
+      }"""
   }
 
   @GraphQL
@@ -251,35 +265,6 @@ object UserPreferencesQueriesGQL {
         }
       }
     """
-  }
-
-  @GraphQL
-  trait UserTargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
-    val document =
-      """mutation targetPreferencesUpsert($objects: LucumaTargetInsertInput! = {}) {
-        insertLucumaTarget(objects: [$objects], onConflict: {constraint: lucuma_target_pkey, update_columns: targetId}) {
-          affected_rows
-        }
-      }"""
-  }
-
-  @GraphQL
-  trait UserTargetPreferencesFovUpdate extends GraphQLOperation[UserPreferencesDB] {
-    val document =
-      """ mutation updateTargetFov($userId: String!, $targetId: String!, $fovRA: bigint!, $fovDec: bigint!) {
-        updateExploreTargetPreferencesByPk(
-          pk_columns: {
-            userId: $userId,
-            targetId: $targetId
-          }
-          _set: {
-            fovRA: $fovRA,
-            fovDec: $fovDecc
-          }
-        ) {
-          targetId
-        }
-      }"""
   }
 
   @GraphQL

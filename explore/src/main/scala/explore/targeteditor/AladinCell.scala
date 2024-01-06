@@ -20,8 +20,8 @@ import eu.timepit.refined.auto.*
 import explore.Icons
 import explore.aladin.AladinFullScreenControl
 import explore.common.UserPreferencesQueries
+import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
-import explore.common.UserPreferencesQueries.TargetPreferences
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppContext
@@ -62,10 +62,9 @@ import scala.concurrent.duration.*
 
 case class AladinCell(
   uid:               User.Id,
-  tid:               Target.Id,
+  asterism:          Asterism,
   vizTime:           Instant,
   obsConf:           Option[ObsConfiguration],
-  asterism:          Asterism,
   fullScreen:        View[AladinFullScreen],
   globalPreferences: View[GlobalPreferences]
 ) extends ReactFnProps(AladinCell.component):
@@ -154,24 +153,22 @@ object AladinCell extends ModelOptics with AladinCommon:
   }
 
   private given Reusability[Props] =
-    Reusability.by(x =>
-      (x.uid, x.tid, x.obsConf, x.asterism, x.fullScreen.get, x.globalPreferences.get)
-    )
+    Reusability.by(x => (x.uid, x.obsConf, x.asterism, x.fullScreen.get, x.globalPreferences.get))
 
-  private val fovLens: Lens[TargetVisualOptions, Fov] =
-    Lens[TargetVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
+  private val fovLens: Lens[AsterismVisualOptions, Fov] =
+    Lens[AsterismVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
       t => t.copy(fovRA = f.x, fovDec = f.y)
     )
 
   private def offsetViews(
     props:   Props,
-    options: View[Pot[TargetVisualOptions]]
+    options: View[Pot[AsterismVisualOptions]]
   )(ctx: AppContext[IO]) = {
     import ctx.given
 
     val offsetView =
       options.zoom(
-        Pot.readyPrism.andThen(TargetVisualOptions.viewOffset)
+        Pot.readyPrism.andThen(AsterismVisualOptions.viewOffset)
       )
 
     val offsetChangeInAladin = (newOffset: Offset) => {
@@ -187,8 +184,12 @@ object AladinCell extends ModelOptics with AladinCommon:
       )
 
       offsetView.set(newOffset) *>
-        TargetPreferences
-          .updateViewOffset[IO](props.uid, props.tid, newOffset)
+        AsterismPreferences
+          .updateAladinPreferences[IO](options.get.toOption.flatMap(_.id),
+                                       props.uid,
+                                       props.asterism.ids,
+                                       offset = newOffset.some
+          )
           .unlessA(ignore)
           .runAsync
           .rateLimit(1.seconds, 1)
@@ -197,12 +198,16 @@ object AladinCell extends ModelOptics with AladinCommon:
 
     // Always store the offset when centering
     val offsetOnCenter = offsetView.withOnMod {
-      case Some(o) =>
-        TargetPreferences
-          .updateViewOffset[IO](props.uid, props.tid, o)
-          .runAsync
+      case o @ Some(_) =>
+        AsterismPreferences
+          .updateAladinPreferences[IO](options.get.toOption.flatMap(_.id),
+                                       props.uid,
+                                       props.asterism.ids,
+                                       offset = o
+          )
           .void
-      case _       => Callback.empty
+          .runAsync
+      case _           => Callback.empty
     }
     (offsetChangeInAladin, offsetOnCenter)
   }
@@ -227,7 +232,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // target options, will be read from the user preferences
-      .useStateViewWithReuse(Pot.pending[TargetVisualOptions])
+      .useStateViewWithReuse(Pot.pending[AsterismVisualOptions])
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Analysis results
@@ -252,12 +257,12 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Reference to root
       .useMemo(())(_ => domRoot)
       // Load target preferences
-      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.tid)) {
+      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.asterism.ids)) {
         (props, ctx, options, _, _, root) => _ =>
           import ctx.given
 
-          TargetPreferences
-            .queryWithDefault[IO](props.uid, props.tid, Constants.InitialFov)
+          AsterismPreferences
+            .queryWithDefault[IO](props.uid, props.asterism.ids, Constants.InitialFov)
             .flatMap { tp =>
               (options.set(tp.ready) *>
                 setVariable(root, "saturation", tp.saturation) *>
@@ -319,7 +324,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 val fpu    = observingMode.flatMap(_.fpuAlternative)
                 val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
-                val request = AgsMessage.AgsRequest(props.tid,
+                val request = AgsMessage.AgsRequest(props.asterism.focus.id,
                                                     constraints,
                                                     wavelength,
                                                     base.value,
@@ -428,8 +433,13 @@ object AladinCell extends ModelOptics with AladinCommon:
             if (newFov.x.toMicroarcseconds === 0L) Callback.empty
             else {
               fovView.set(newFov) *>
-                TargetPreferences
-                  .updateAladinPreferences[IO](props.uid, props.tid, newFov.x.some, newFov.y.some)
+                AsterismPreferences
+                  .updateAladinPreferences[IO](options.get.toOption.flatMap(_.id),
+                                               props.uid,
+                                               props.asterism.ids,
+                                               newFov.x.some,
+                                               newFov.y.some
+                  )
                   .unlessA(ignore)
                   .runAsync
                   .rateLimit(1.seconds, 1)
@@ -441,8 +451,8 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
 
-          val renderCell: TargetVisualOptions => VdomNode =
-            (t: TargetVisualOptions) =>
+          val renderCell: AsterismVisualOptions => VdomNode =
+            (t: AsterismVisualOptions) =>
               AladinContainer(
                 props.asterism,
                 props.vizTime,
@@ -450,14 +460,14 @@ object AladinCell extends ModelOptics with AladinCommon:
                 props.globalPreferences.get,
                 t,
                 coordinatesSetter,
-                fovSetter.reuseAlways,
+                fovSetter,
                 offsetChangeInAladin.reuseAlways,
                 selectedGuideStar,
                 agsResults.value
               )
 
-          val renderToolbar: (TargetVisualOptions) => VdomNode =
-            (t: TargetVisualOptions) =>
+          val renderToolbar: (AsterismVisualOptions) => VdomNode =
+            (t: AsterismVisualOptions) =>
               val agsState = props.obsConf
                 .flatMap(_.agsState.map(_.get))
                 .getOrElse(AgsState.Idle)
@@ -469,8 +479,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                             offsetOnCenter
               )
 
-          val renderAgsOverlay: TargetVisualOptions => VdomNode =
-            (t: TargetVisualOptions) =>
+          val renderAgsOverlay: AsterismVisualOptions => VdomNode =
+            (t: AsterismVisualOptions) =>
               if (props.globalPreferences.get.agsOverlay.isVisible) {
                 props.obsConf
                   .flatMap(_.agsState)
@@ -505,10 +515,10 @@ object AladinCell extends ModelOptics with AladinCommon:
               options.renderPotView(renderAgsOverlay)
             ),
             options
-              .zoom(Pot.readyPrism[TargetVisualOptions])
+              .zoom(Pot.readyPrism[AsterismVisualOptions])
               .mapValue(options =>
                 AladinPreferencesMenu(props.uid,
-                                      props.tid,
+                                      props.asterism.ids,
                                       props.globalPreferences,
                                       options,
                                       menuRef

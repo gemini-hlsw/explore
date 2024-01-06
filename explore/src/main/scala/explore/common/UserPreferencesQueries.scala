@@ -6,6 +6,7 @@ package explore.common
 import cats.ApplicativeThrow
 import cats.MonadThrow
 import cats.Order.*
+import cats.data.NonEmptyList
 import cats.data.OptionT
 import cats.syntax.all.*
 import clue.FetchClient
@@ -15,10 +16,10 @@ import eu.timepit.refined.numeric.*
 import explore.DefaultErrorPolicy
 import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
+import explore.model.AsterismVisualOptions
 import explore.model.ChartOp
 import explore.model.ColorsInverted
 import explore.model.GlobalPreferences
-import explore.model.TargetVisualOptions
 import explore.model.Transformation
 import explore.model.enums.GridBreakpointName
 import explore.model.enums.GridLayoutSection
@@ -41,13 +42,13 @@ import lucuma.react.gridlayout.*
 import lucuma.react.table.*
 import lucuma.ui.table.hooks.*
 import org.typelevel.log4cats.Logger
+import queries.common.UserPreferencesQueriesGQL.AsterismPreferencesQuery.Data.ExploreAsterismPreferences
+import queries.common.UserPreferencesQueriesGQL.AsterismUpsert
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates.Data.LucumaGridLayoutPositions
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery
-import queries.common.UserPreferencesQueriesGQL.UserTargetPreferencesQuery.Data.ExploreTargetPreferencesByPk
 import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
-import queries.schemas.UserPreferencesDB.Scalars.*
 import queries.schemas.UserPreferencesDB.Types.*
 
 import scala.collection.immutable.SortedMap
@@ -204,118 +205,121 @@ object UserPreferencesQueries:
       }.void
   end GridLayouts
 
-  object TargetPreferences:
-    def updateAladinPreferences[F[_]: ApplicativeThrow](
+  object AsterismPreferences:
+    // Gets the asterism properties, if not foun use the default
+    def queryWithDefault[F[_]: MonadThrow](
       uid:        User.Id,
-      targetId:   Target.Id,
-      fovRA:      Option[Angle] = None,
-      fovDec:     Option[Angle] = None,
-      saturation: Option[Int] = None,
-      brightness: Option[Int] = None
-    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
-      UserTargetPreferencesUpsert[F]
-        .execute(
-          LucumaTargetInsertInput(
-            targetId = targetId.show.assign,
-            lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
-              data = List(
-                ExploreTargetPreferencesInsertInput(
-                  userId = uid.show.assign,
-                  fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
-                  fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
-                  saturation = saturation.orIgnore,
-                  brightness = brightness.orIgnore
-                )
-              ),
-              onConflict = ExploreTargetPreferencesOnConflict(
-                constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
-                update_columns = List(
-                  ExploreTargetPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
-                  ExploreTargetPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
-                  ExploreTargetPreferencesUpdateColumn.Saturation.some.filter(_ =>
-                    saturation.isDefined
-                  ),
-                  ExploreTargetPreferencesUpdateColumn.Brightness.some.filter(_ =>
-                    brightness.isDefined
-                  )
-                ).flattenOption
-              ).assign
-            ).assign
-          )
-        )
-        .attempt
-        .void
-
-    // Gets the target properties
-    def queryWithDefault[F[_]: ApplicativeThrow](
-      uid:        User.Id,
-      tid:        Target.Id,
+      tids:       NonEmptyList[Target.Id],
       defaultFov: Angle
     )(using
       FetchClient[F, UserPreferencesDB]
-    ): F[TargetVisualOptions] =
-      UserTargetPreferencesQuery[F]
-        .query(uid.show, tid.show)
-        .map { r =>
-          val targetPrefsResult = r.exploreTargetPreferencesByPk
+    ): F[AsterismVisualOptions] = {
+      val targetIds = tids.toList.map(_.show)
+      AsterismPreferencesQuery[F]
+        .query(uid.show, targetIds.assign)
+        .flatMap { r =>
+          val asterismPrefsResult = r.exploreAsterismPreferences
 
-          val fovRA  =
-            targetPrefsResult.flatMap(_.fovRA.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
-          val fovDec =
-            targetPrefsResult.flatMap(_.fovDec.map(Angle.fromMicroarcseconds)).getOrElse(defaultFov)
-          val offset = targetPrefsResult
-            .flatMap(u =>
-              (u.viewOffsetP.map(Angle.fromMicroarcseconds(_).p),
-               u.viewOffsetQ.map(Angle.fromMicroarcseconds(_).q)
-              )
-                .mapN(Offset.apply)
-            )
-            .getOrElse(TargetVisualOptions.Default.viewOffset)
+          asterismPrefsResult
+            .filter {
+              // Unfortunately we can't use the DB to filter by targetId,
+              // instead we have to do it here by hand
+              _.lucumaAsterisms.map(_.targetId).forall(i => targetIds.exists(_ === i))
+            }
+            .headOption
+            .map { result =>
 
-          def rangeProp(op: ExploreTargetPreferencesByPk => Option[Int]) = targetPrefsResult
-            .flatMap(op)
-            .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
-            .getOrElse(TargetVisualOptions.Default.saturation)
+              val fovRA =
+                result.fovRA
+                  .map(Angle.fromMicroarcseconds)
+                  .getOrElse(defaultFov)
 
-          val saturation = rangeProp(_.saturation)
-          val brightness = rangeProp(_.brightness)
+              val fovDec =
+                result.fovDec
+                  .map(Angle.fromMicroarcseconds)
+                  .getOrElse(defaultFov)
 
-          TargetVisualOptions(fovRA, fovDec, offset, saturation, brightness).some
-        }
-        .handleError(_ => none)
-        .map(_.getOrElse(TargetVisualOptions.Default))
-
-    def updateViewOffset[F[_]: ApplicativeThrow](
-      uid:      User.Id,
-      targetId: Target.Id,
-      offset:   Offset
-    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
-      UserTargetPreferencesUpsert[F]
-        .execute(
-          LucumaTargetInsertInput(
-            targetId = targetId.show.assign,
-            lucuma_target_preferences = ExploreTargetPreferencesArrRelInsertInput(
-              data = List(
-                ExploreTargetPreferencesInsertInput(
-                  userId = uid.show.assign,
-                  viewOffsetP = offset.p.toAngle.toMicroarcseconds.assign,
-                  viewOffsetQ = offset.q.toAngle.toMicroarcseconds.assign
+              val offset =
+                (result.viewOffsetP.map(Angle.fromMicroarcseconds(_).p),
+                 result.viewOffsetQ.map(Angle.fromMicroarcseconds(_).q)
                 )
-              ),
-              onConflict = ExploreTargetPreferencesOnConflict(
-                constraint = ExploreTargetPreferencesConstraint.LucumaTargetPreferencesPkey,
+                  .mapN(Offset.apply)
+                  .getOrElse(Offset.Zero)
+
+              def rangeProp(op: ExploreAsterismPreferences => Option[Int]) =
+                op(result)
+                  .flatMap(refineV[Interval.Closed[0, 100]](_).toOption)
+                  .getOrElse(AsterismVisualOptions.Default.saturation)
+
+              val saturation = rangeProp(_.saturation)
+              val brightness = rangeProp(_.brightness)
+
+              AsterismVisualOptions(result.id.some, fovRA, fovDec, offset, saturation, brightness)
+                .pure[F]
+            }
+            .getOrElse {
+              updateAladinPreferences[F](
+                None,
+                uid,
+                tids,
+                fovRA = defaultFov.some,
+                fovDec = defaultFov.some
+              ).map(i => AsterismVisualOptions.Default.copy(i))
+            }
+        }
+        .handleError { e =>
+          AsterismVisualOptions.Default
+        }
+    }
+
+    def updateAladinPreferences[F[_]: ApplicativeThrow](
+      prefsId:    Option[Int],
+      uid:        User.Id,
+      targetId:   NonEmptyList[Target.Id],
+      fovRA:      Option[Angle] = None,
+      fovDec:     Option[Angle] = None,
+      saturation: Option[Int] = None,
+      brightness: Option[Int] = None,
+      offset:     Option[Offset] = None
+    )(using FetchClient[F, UserPreferencesDB]): F[Option[Int]] =
+      AsterismUpsert[F]
+        .execute(
+          ExploreAsterismPreferencesInsertInput(
+            id = prefsId.orIgnore,
+            userId = uid.show.assign,
+            brightness = brightness.orIgnore,
+            saturation = saturation.orIgnore,
+            fovRA = fovRA.map(_.toMicroarcseconds).orIgnore,
+            fovDec = fovDec.map(_.toMicroarcseconds).orIgnore,
+            viewOffsetP = offset.map(_.p.toAngle.toMicroarcseconds).orIgnore,
+            viewOffsetQ = offset.map(_.q.toAngle.toMicroarcseconds).orIgnore,
+            lucumaAsterisms = LucumaAsterismArrRelInsertInput(
+              data =
+                targetId.map(t => LucumaAsterismInsertInput(targetId = t.toString.assign)).toList,
+              onConflict = LucumaAsterismOnConflict(
+                constraint = LucumaAsterismConstraint.LucumaAsterismPkey,
                 update_columns = List(
-                  ExploreTargetPreferencesUpdateColumn.ViewOffsetP.some,
-                  ExploreTargetPreferencesUpdateColumn.ViewOffsetQ.some
+                  LucumaAsterismUpdateColumn.TargetId.some
                 ).flattenOption
               ).assign
             ).assign
-          )
+          ),
+          updateColumns = List(
+            ExploreAsterismPreferencesUpdateColumn.FovRA.some.filter(_ => fovRA.isDefined),
+            ExploreAsterismPreferencesUpdateColumn.FovDec.some.filter(_ => fovDec.isDefined),
+            ExploreAsterismPreferencesUpdateColumn.Saturation.some.filter(_ =>
+              saturation.isDefined
+            ),
+            ExploreAsterismPreferencesUpdateColumn.Brightness.some.filter(_ =>
+              brightness.isDefined
+            ),
+            ExploreAsterismPreferencesUpdateColumn.ViewOffsetP.some.filter(_ => offset.isDefined),
+            ExploreAsterismPreferencesUpdateColumn.ViewOffsetQ.some.filter(_ => offset.isDefined)
+          ).flattenOption.assign
         )
+        .map(_.insertExploreAsterismPreferencesOne.map(_.id))
         .attempt
-        .void
-
-  end TargetPreferences
+        .map(_.getOrElse(None))
 
   object FinderChartPreferences:
     // Gets the prefs for the itc plot

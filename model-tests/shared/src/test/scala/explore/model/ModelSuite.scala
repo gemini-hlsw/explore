@@ -10,5 +10,5 @@ import lucuma.core.util.arb.ArbEnumerated.*
 import munit.DisciplineSuite
 
 class ModelSuite extends DisciplineSuite:
-  checkAll("Eq[TargetVisualOptions]", EqTests[TargetVisualOptions].eqv)
+  checkAll("Eq[AsterismVisualOptions]", EqTests[AsterismVisualOptions].eqv)
   checkAll("Eq[SideButton]", EqTests[AppTab].eqv)
