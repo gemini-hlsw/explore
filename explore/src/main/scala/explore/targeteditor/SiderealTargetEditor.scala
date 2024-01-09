@@ -58,9 +58,8 @@ import java.time.Instant
 
 case class SiderealTargetEditor(
   userId:             User.Id,
-  targetId:           Target.Id,        // Used to call DB mutations and focus in Aladin.
   target:             UndoSetter[Target.Sidereal],
-  asterism:           Option[Asterism], // This is passed through to Aladin, to plot the entire Asterism.
+  asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
   vizTime:            Option[Instant],
   obsConf:            Option[ObsConfiguration],
   searching:          View[Set[Target.Id]],
@@ -132,15 +131,15 @@ object SiderealTargetEditor:
 
         val remoteOnMod: UpdateTargetsInput => IO[Unit] =
           getRemoteOnMod(
-            props.targetId,
+            props.asterism.focus.id,
             props.obsIdSubset,
             cloning,
             props.onClone
           ).andThen(
             _.handleErrorWith(t =>
-              Logger[IO].error(t)(s"Error updating target [${props.targetId}]") >>
+              Logger[IO].error(t)(s"Error updating target [${props.asterism.focus.id}]") >>
                 ToastCtx[IO].showToast(
-                  s"Error saving target [${props.targetId}]",
+                  s"Error saving target [${props.asterism.focus.id}]",
                   Message.Severity.Error
                 )
             )
@@ -150,7 +149,7 @@ object SiderealTargetEditor:
           Aligner(
             props.target,
             UpdateTargetsInput(
-              WHERE = props.targetId.toWhereTarget.assign,
+              WHERE = props.asterism.focus.id.toWhereTarget.assign,
               SET = TargetPropertiesInput()
             ),
             // Invalidate the sequence if the target changes
@@ -258,17 +257,16 @@ object SiderealTargetEditor:
             forceAssign(sourceProfileLens.modify)(SourceProfileInput())
           )
 
-        val disabled = props.searching.get.exists(_ === props.targetId) || cloning.get
+        val disabled = props.searching.get.exists(_ === props.asterism.focus.id) || cloning.get
 
         React.Fragment(
           <.div(ExploreStyles.TargetGrid)(
-            (vizTime, props.asterism.toPot).tupled.renderPot((vt, asterism) =>
+            vizTime.renderPot(vt =>
               AladinCell(
                 props.userId,
-                props.targetId,
+                props.asterism,
                 vt,
                 props.obsConf,
-                asterism,
                 props.fullScreen,
                 props.globalPreferences
               )
@@ -276,7 +274,7 @@ object SiderealTargetEditor:
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
               // Keep the search field and the coords always together
               SearchForm(
-                props.targetId,
+                props.asterism.focus.id,
                 // SearchForm doesn't edit the name directly. It will set it atomically, together
                 // with coords & magnitudes from the catalog search, so that all 3 fields are
                 // a single undo/redo operation.

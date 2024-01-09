@@ -4,14 +4,14 @@
 package explore.targeteditor
 
 import cats.syntax.option.*
-import explore.model.TargetVisualOptions
+import explore.model.AsterismVisualOptions
 import japgolly.scalajs.react.*
 import lucuma.core.util.NewType
 import lucuma.react.aladin.Fov
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
 
-extension (options: TargetVisualOptions) inline def fov: Fov = Fov(options.fovRA, options.fovDec)
+extension (options: AsterismVisualOptions) inline def fov: Fov = Fov(options.fovRA, options.fovDec)
 
 extension (fov: Fov)
   def isDifferentEnough(newFov: Fov): Boolean =

@@ -1,15 +1,9 @@
-"""
-whether this query should be cached (Hasura Cloud only)
-"""
+"""whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
-  """
-  measured in seconds
-  """
+  """measured in seconds"""
   ttl: Int! = 60
 
-  """
-  refresh the cache entry
-  """
+  """refresh the cache entry"""
   refresh: Boolean! = false
 ) on QUERY
 
@@ -43,19 +37,393 @@ input BooleanComparisonExp {
   _nin: [Boolean!]
 }
 
-"""
-ordering argument of a cursor
-"""
+"""ordering argument of a cursor"""
 enum CursorOrdering {
-  """
-  ascending ordering of the cursor
-  """
+  """ascending ordering of the cursor"""
   ASC
 
-  """
-  descending ordering of the cursor
-  """
+  """descending ordering of the cursor"""
   DESC
+}
+
+"""
+columns and relationships of "exploreAsterismPreferences"
+"""
+type ExploreAsterismPreferences {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int!
+
+  """An array relationship"""
+  lucumaAsterisms(
+    """distinct select on columns"""
+    distinctOn: [LucumaAsterismSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaAsterismOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): [LucumaAsterism!]!
+
+  """An aggregate relationship"""
+  lucumaAsterismsAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaAsterismSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaAsterismOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): LucumaAsterismAggregate!
+
+  """An object relationship"""
+  lucumaUser: LucumaUser!
+  saturation: Int
+  userId: String!
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+aggregated selection of "exploreAsterismPreferences"
+"""
+type ExploreAsterismPreferencesAggregate {
+  aggregate: ExploreAsterismPreferencesAggregateFields
+  nodes: [ExploreAsterismPreferences!]!
+}
+
+"""
+aggregate fields of "exploreAsterismPreferences"
+"""
+type ExploreAsterismPreferencesAggregateFields {
+  avg: ExploreAsterismPreferencesAvgFields
+  count(columns: [ExploreAsterismPreferencesSelectColumn!], distinct: Boolean): Int!
+  max: ExploreAsterismPreferencesMaxFields
+  min: ExploreAsterismPreferencesMinFields
+  stddev: ExploreAsterismPreferencesStddevFields
+  stddevPop: ExploreAsterismPreferencesStddev_popFields
+  stddevSamp: ExploreAsterismPreferencesStddev_sampFields
+  sum: ExploreAsterismPreferencesSumFields
+  varPop: ExploreAsterismPreferencesVar_popFields
+  varSamp: ExploreAsterismPreferencesVar_sampFields
+  variance: ExploreAsterismPreferencesVarianceFields
+}
+
+"""aggregate avg on columns"""
+type ExploreAsterismPreferencesAvgFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""
+Boolean expression to filter rows from the table "exploreAsterismPreferences". All fields are combined with a logical 'AND'.
+"""
+input ExploreAsterismPreferencesBoolExp {
+  _and: [ExploreAsterismPreferencesBoolExp!]
+  _not: ExploreAsterismPreferencesBoolExp
+  _or: [ExploreAsterismPreferencesBoolExp!]
+  brightness: IntComparisonExp
+  fovDec: BigintComparisonExp
+  fovRA: BigintComparisonExp
+  id: IntComparisonExp
+  lucumaAsterisms: LucumaAsterismBoolExp
+  lucumaUser: LucumaUserBoolExp
+  saturation: IntComparisonExp
+  userId: StringComparisonExp
+  viewOffsetP: BigintComparisonExp
+  viewOffsetQ: BigintComparisonExp
+}
+
+"""
+unique or primary key constraints on table "exploreAsterismPreferences"
+"""
+enum ExploreAsterismPreferencesConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  exploreAsterismPreferences_pkey
+}
+
+"""
+input type for incrementing numeric columns in table "exploreAsterismPreferences"
+"""
+input ExploreAsterismPreferencesIncInput {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  saturation: Int
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+input type for inserting data into table "exploreAsterismPreferences"
+"""
+input ExploreAsterismPreferencesInsertInput {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  lucumaAsterisms: LucumaAsterismArrRelInsertInput
+  lucumaUser: LucumaUserObjRelInsertInput
+  saturation: Int
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""aggregate max on columns"""
+type ExploreAsterismPreferencesMaxFields {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  saturation: Int
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""aggregate min on columns"""
+type ExploreAsterismPreferencesMinFields {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  saturation: Int
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+response of any mutation on the table "exploreAsterismPreferences"
+"""
+type ExploreAsterismPreferencesMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [ExploreAsterismPreferences!]!
+}
+
+"""
+input type for inserting object relation for remote table "exploreAsterismPreferences"
+"""
+input ExploreAsterismPreferencesObjRelInsertInput {
+  data: ExploreAsterismPreferencesInsertInput!
+
+  """upsert condition"""
+  onConflict: ExploreAsterismPreferencesOnConflict
+}
+
+"""
+on_conflict condition type for table "exploreAsterismPreferences"
+"""
+input ExploreAsterismPreferencesOnConflict {
+  constraint: ExploreAsterismPreferencesConstraint!
+  update_columns: [ExploreAsterismPreferencesUpdateColumn!]! = []
+  where: ExploreAsterismPreferencesBoolExp
+}
+
+"""
+Ordering options when selecting data from "exploreAsterismPreferences".
+"""
+input ExploreAsterismPreferencesOrderBy {
+  brightness: OrderBy
+  fovDec: OrderBy
+  fovRA: OrderBy
+  id: OrderBy
+  lucumaAsterismsAggregate: LucumaAsterismAggregateOrderBy
+  lucumaUser: LucumaUserOrderBy
+  saturation: OrderBy
+  userId: OrderBy
+  viewOffsetP: OrderBy
+  viewOffsetQ: OrderBy
+}
+
+"""primary key columns input for table: exploreAsterismPreferences"""
+input ExploreAsterismPreferencesPkColumnsInput {
+  id: Int!
+}
+
+"""
+select columns of table "exploreAsterismPreferences"
+"""
+enum ExploreAsterismPreferencesSelectColumn {
+  """column name"""
+  brightness
+
+  """column name"""
+  fovDec
+
+  """column name"""
+  fovRA
+
+  """column name"""
+  id
+
+  """column name"""
+  saturation
+
+  """column name"""
+  userId
+
+  """column name"""
+  viewOffsetP
+
+  """column name"""
+  viewOffsetQ
+}
+
+"""
+input type for updating data in table "exploreAsterismPreferences"
+"""
+input ExploreAsterismPreferencesSetInput {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  saturation: Int
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""aggregate stddev on columns"""
+type ExploreAsterismPreferencesStddevFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate stddev_pop on columns"""
+type ExploreAsterismPreferencesStddev_popFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate stddev_samp on columns"""
+type ExploreAsterismPreferencesStddev_sampFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate sum on columns"""
+type ExploreAsterismPreferencesSumFields {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  saturation: Int
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
+
+"""
+update columns of table "exploreAsterismPreferences"
+"""
+enum ExploreAsterismPreferencesUpdateColumn {
+  """column name"""
+  brightness
+
+  """column name"""
+  fovDec
+
+  """column name"""
+  fovRA
+
+  """column name"""
+  id
+
+  """column name"""
+  saturation
+
+  """column name"""
+  userId
+
+  """column name"""
+  viewOffsetP
+
+  """column name"""
+  viewOffsetQ
+}
+
+input ExploreAsterismPreferencesUpdates {
+  """increments the numeric columns with given value of the filtered values"""
+  _inc: ExploreAsterismPreferencesIncInput
+
+  """sets the columns of the filtered rows to the given values"""
+  _set: ExploreAsterismPreferencesSetInput
+  where: ExploreAsterismPreferencesBoolExp!
+}
+
+"""aggregate var_pop on columns"""
+type ExploreAsterismPreferencesVar_popFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate var_samp on columns"""
+type ExploreAsterismPreferencesVar_sampFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
+}
+
+"""aggregate variance on columns"""
+type ExploreAsterismPreferencesVarianceFields {
+  brightness: Float
+  fovDec: Float
+  fovRA: Float
+  id: Float
+  saturation: Float
+  viewOffsetP: Float
+  viewOffsetQ: Float
 }
 
 """
@@ -67,9 +435,7 @@ type ExploreFinderChart {
   flipY: Boolean!
   inverted: Boolean!
 
-  """
-  An object relationship
-  """
+  """An object relationship"""
   lucumaObservation: LucumaObservation!
   observationId: String!
   rotate: Int!
@@ -125,15 +491,11 @@ input type for inserting array relation for remote table "exploreFinderChart"
 input ExploreFinderChartArrRelInsertInput {
   data: [ExploreFinderChartInsertInput!]!
 
-  """
-  upsert condition
-  """
+  """upsert condition"""
   onConflict: ExploreFinderChartOnConflict
 }
 
-"""
-aggregate avg on columns
-"""
+"""aggregate avg on columns"""
 type ExploreFinderChartAvgFields {
   rotate: Float
   scaleX: Float
@@ -192,9 +554,7 @@ input ExploreFinderChartInsertInput {
   scaleY: Int
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type ExploreFinderChartMaxFields {
   attachmentId: String
   observationId: String
@@ -203,9 +563,7 @@ type ExploreFinderChartMaxFields {
   scaleY: Int
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type ExploreFinderChartMinFields {
   attachmentId: String
   observationId: String
@@ -218,14 +576,10 @@ type ExploreFinderChartMinFields {
 response of any mutation on the table "exploreFinderChart"
 """
 type ExploreFinderChartMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [ExploreFinderChart!]!
 }
 
@@ -238,9 +592,7 @@ input ExploreFinderChartOnConflict {
   where: ExploreFinderChartBoolExp
 }
 
-"""
-Ordering options when selecting data from "exploreFinderChart".
-"""
+"""Ordering options when selecting data from "exploreFinderChart"."""
 input ExploreFinderChartOrderBy {
   attachmentId: OrderBy
   flipX: OrderBy
@@ -253,9 +605,7 @@ input ExploreFinderChartOrderBy {
   scaleY: OrderBy
 }
 
-"""
-primary key columns input for table: exploreFinderChart
-"""
+"""primary key columns input for table: exploreFinderChart"""
 input ExploreFinderChartPkColumnsInput {
   attachmentId: String!
   observationId: String!
@@ -265,44 +615,28 @@ input ExploreFinderChartPkColumnsInput {
 select columns of table "exploreFinderChart"
 """
 enum ExploreFinderChartSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   attachmentId
 
-  """
-  column name
-  """
+  """column name"""
   flipX
 
-  """
-  column name
-  """
+  """column name"""
   flipY
 
-  """
-  column name
-  """
+  """column name"""
   inverted
 
-  """
-  column name
-  """
+  """column name"""
   observationId
 
-  """
-  column name
-  """
+  """column name"""
   rotate
 
-  """
-  column name
-  """
+  """column name"""
   scaleX
 
-  """
-  column name
-  """
+  """column name"""
   scaleY
 }
 
@@ -320,36 +654,28 @@ input ExploreFinderChartSetInput {
   scaleY: Int
 }
 
-"""
-aggregate stddev on columns
-"""
+"""aggregate stddev on columns"""
 type ExploreFinderChartStddevFields {
   rotate: Float
   scaleX: Float
   scaleY: Float
 }
 
-"""
-aggregate stddev_pop on columns
-"""
+"""aggregate stddev_pop on columns"""
 type ExploreFinderChartStddev_popFields {
   rotate: Float
   scaleX: Float
   scaleY: Float
 }
 
-"""
-aggregate stddev_samp on columns
-"""
+"""aggregate stddev_samp on columns"""
 type ExploreFinderChartStddev_sampFields {
   rotate: Float
   scaleX: Float
   scaleY: Float
 }
 
-"""
-aggregate sum on columns
-"""
+"""aggregate sum on columns"""
 type ExploreFinderChartSumFields {
   rotate: Int
   scaleX: Int
@@ -360,81 +686,55 @@ type ExploreFinderChartSumFields {
 update columns of table "exploreFinderChart"
 """
 enum ExploreFinderChartUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   attachmentId
 
-  """
-  column name
-  """
+  """column name"""
   flipX
 
-  """
-  column name
-  """
+  """column name"""
   flipY
 
-  """
-  column name
-  """
+  """column name"""
   inverted
 
-  """
-  column name
-  """
+  """column name"""
   observationId
 
-  """
-  column name
-  """
+  """column name"""
   rotate
 
-  """
-  column name
-  """
+  """column name"""
   scaleX
 
-  """
-  column name
-  """
+  """column name"""
   scaleY
 }
 
 input ExploreFinderChartUpdates {
-  """
-  increments the numeric columns with given value of the filtered values
-  """
+  """increments the numeric columns with given value of the filtered values"""
   _inc: ExploreFinderChartIncInput
 
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: ExploreFinderChartSetInput
   where: ExploreFinderChartBoolExp!
 }
 
-"""
-aggregate var_pop on columns
-"""
+"""aggregate var_pop on columns"""
 type ExploreFinderChartVar_popFields {
   rotate: Float
   scaleX: Float
   scaleY: Float
 }
 
-"""
-aggregate var_samp on columns
-"""
+"""aggregate var_samp on columns"""
 type ExploreFinderChartVar_sampFields {
   rotate: Float
   scaleX: Float
   scaleY: Float
 }
 
-"""
-aggregate variance on columns
-"""
+"""aggregate variance on columns"""
 type ExploreFinderChartVarianceFields {
   rotate: Float
   scaleX: Float
@@ -508,16 +808,12 @@ input ExplorePlotRangeInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type ExplorePlotRangeMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type ExplorePlotRangeMinFields {
   id: String
 }
@@ -526,14 +822,10 @@ type ExplorePlotRangeMinFields {
 response of any mutation on the table "explorePlotRange"
 """
 type ExplorePlotRangeMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [ExplorePlotRange!]!
 }
 
@@ -546,16 +838,12 @@ input ExplorePlotRangeOnConflict {
   where: ExplorePlotRangeBoolExp
 }
 
-"""
-Ordering options when selecting data from "explorePlotRange".
-"""
+"""Ordering options when selecting data from "explorePlotRange"."""
 input ExplorePlotRangeOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: explorePlotRange
-"""
+"""primary key columns input for table: explorePlotRange"""
 input ExplorePlotRangePkColumnsInput {
   id: String!
 }
@@ -564,9 +852,7 @@ input ExplorePlotRangePkColumnsInput {
 select columns of table "explorePlotRange"
 """
 enum ExplorePlotRangeSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -581,16 +867,12 @@ input ExplorePlotRangeSetInput {
 update columns of table "explorePlotRange"
 """
 enum ExplorePlotRangeUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input ExplorePlotRangeUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: ExplorePlotRangeSetInput
   where: ExplorePlotRangeBoolExp!
 }
@@ -663,16 +945,12 @@ input ExplorePlotTimeInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type ExplorePlotTimeMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type ExplorePlotTimeMinFields {
   id: String
 }
@@ -681,14 +959,10 @@ type ExplorePlotTimeMinFields {
 response of any mutation on the table "explorePlotTime"
 """
 type ExplorePlotTimeMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [ExplorePlotTime!]!
 }
 
@@ -701,16 +975,12 @@ input ExplorePlotTimeOnConflict {
   where: ExplorePlotTimeBoolExp
 }
 
-"""
-Ordering options when selecting data from "explorePlotTime".
-"""
+"""Ordering options when selecting data from "explorePlotTime"."""
 input ExplorePlotTimeOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: explorePlotTime
-"""
+"""primary key columns input for table: explorePlotTime"""
 input ExplorePlotTimePkColumnsInput {
   id: String!
 }
@@ -719,9 +989,7 @@ input ExplorePlotTimePkColumnsInput {
 select columns of table "explorePlotTime"
 """
 enum ExplorePlotTimeSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -736,468 +1004,14 @@ input ExplorePlotTimeSetInput {
 update columns of table "explorePlotTime"
 """
 enum ExplorePlotTimeUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input ExplorePlotTimeUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: ExplorePlotTimeSetInput
   where: ExplorePlotTimeBoolExp!
-}
-
-"""
-columns and relationships of "exploreTargetPreferences"
-"""
-type ExploreTargetPreferences {
-  brightness: Int
-  createdAt: timestamptz
-  fovDec: bigint
-  fovRA: bigint
-
-  """
-  An object relationship
-  """
-  lucuma_target: LucumaTarget!
-  saturation: Int
-  targetId: String!
-  updatedAt: timestamptz
-  userId: String!
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-aggregated selection of "exploreTargetPreferences"
-"""
-type ExploreTargetPreferencesAggregate {
-  aggregate: ExploreTargetPreferencesAggregateFields
-  nodes: [ExploreTargetPreferences!]!
-}
-
-"""
-aggregate fields of "exploreTargetPreferences"
-"""
-type ExploreTargetPreferencesAggregateFields {
-  avg: ExploreTargetPreferencesAvgFields
-  count(columns: [ExploreTargetPreferencesSelectColumn!], distinct: Boolean): Int!
-  max: ExploreTargetPreferencesMaxFields
-  min: ExploreTargetPreferencesMinFields
-  stddev: ExploreTargetPreferencesStddevFields
-  stddevPop: ExploreTargetPreferencesStddev_popFields
-  stddevSamp: ExploreTargetPreferencesStddev_sampFields
-  sum: ExploreTargetPreferencesSumFields
-  varPop: ExploreTargetPreferencesVar_popFields
-  varSamp: ExploreTargetPreferencesVar_sampFields
-  variance: ExploreTargetPreferencesVarianceFields
-}
-
-"""
-order by aggregate values of table "exploreTargetPreferences"
-"""
-input ExploreTargetPreferencesAggregateOrderBy {
-  avg: exploreTargetPreferences_avg_order_by
-  count: OrderBy
-  max: exploreTargetPreferences_max_order_by
-  min: exploreTargetPreferences_min_order_by
-  stddev: exploreTargetPreferences_stddev_order_by
-  stddev_pop: exploreTargetPreferences_stddev_pop_order_by
-  stddev_samp: exploreTargetPreferences_stddev_samp_order_by
-  sum: exploreTargetPreferences_sum_order_by
-  var_pop: exploreTargetPreferences_var_pop_order_by
-  var_samp: exploreTargetPreferences_var_samp_order_by
-  variance: exploreTargetPreferences_variance_order_by
-}
-
-"""
-input type for inserting array relation for remote table "exploreTargetPreferences"
-"""
-input ExploreTargetPreferencesArrRelInsertInput {
-  data: [ExploreTargetPreferencesInsertInput!]!
-
-  """
-  upsert condition
-  """
-  onConflict: ExploreTargetPreferencesOnConflict
-}
-
-"""
-aggregate avg on columns
-"""
-type ExploreTargetPreferencesAvgFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-Boolean expression to filter rows from the table "exploreTargetPreferences". All fields are combined with a logical 'AND'.
-"""
-input ExploreTargetPreferencesBoolExp {
-  _and: [ExploreTargetPreferencesBoolExp!]
-  _not: ExploreTargetPreferencesBoolExp
-  _or: [ExploreTargetPreferencesBoolExp!]
-  brightness: IntComparisonExp
-  createdAt: TimestamptzComparisonExp
-  fovDec: BigintComparisonExp
-  fovRA: BigintComparisonExp
-  lucuma_target: LucumaTargetBoolExp
-  saturation: IntComparisonExp
-  targetId: StringComparisonExp
-  updatedAt: TimestamptzComparisonExp
-  userId: StringComparisonExp
-  viewOffsetP: BigintComparisonExp
-  viewOffsetQ: BigintComparisonExp
-}
-
-"""
-unique or primary key constraints on table "exploreTargetPreferences"
-"""
-enum ExploreTargetPreferencesConstraint {
-  """
-  unique or primary key constraint on columns "targetId", "userId"
-  """
-  lucuma_target_preferences_pkey
-}
-
-"""
-input type for incrementing numeric columns in table "exploreTargetPreferences"
-"""
-input ExploreTargetPreferencesIncInput {
-  brightness: Int
-  fovDec: bigint
-  fovRA: bigint
-  saturation: Int
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-input type for inserting data into table "exploreTargetPreferences"
-"""
-input ExploreTargetPreferencesInsertInput {
-  brightness: Int
-  createdAt: timestamptz
-  fovDec: bigint
-  fovRA: bigint
-  lucuma_target: LucumaTargetObjRelInsertInput
-  saturation: Int
-  targetId: String
-  updatedAt: timestamptz
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-aggregate max on columns
-"""
-type ExploreTargetPreferencesMaxFields {
-  brightness: Int
-  createdAt: timestamptz
-  fovDec: bigint
-  fovRA: bigint
-  saturation: Int
-  targetId: String
-  updatedAt: timestamptz
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-aggregate min on columns
-"""
-type ExploreTargetPreferencesMinFields {
-  brightness: Int
-  createdAt: timestamptz
-  fovDec: bigint
-  fovRA: bigint
-  saturation: Int
-  targetId: String
-  updatedAt: timestamptz
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-response of any mutation on the table "exploreTargetPreferences"
-"""
-type ExploreTargetPreferencesMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
-  affected_rows: Int!
-
-  """
-  data from the rows affected by the mutation
-  """
-  returning: [ExploreTargetPreferences!]!
-}
-
-"""
-on_conflict condition type for table "exploreTargetPreferences"
-"""
-input ExploreTargetPreferencesOnConflict {
-  constraint: ExploreTargetPreferencesConstraint!
-  update_columns: [ExploreTargetPreferencesUpdateColumn!]! = []
-  where: ExploreTargetPreferencesBoolExp
-}
-
-"""
-Ordering options when selecting data from "exploreTargetPreferences".
-"""
-input ExploreTargetPreferencesOrderBy {
-  brightness: OrderBy
-  createdAt: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  lucuma_target: LucumaTargetOrderBy
-  saturation: OrderBy
-  targetId: OrderBy
-  updatedAt: OrderBy
-  userId: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
-}
-
-"""
-primary key columns input for table: exploreTargetPreferences
-"""
-input ExploreTargetPreferencesPkColumnsInput {
-  targetId: String!
-  userId: String!
-}
-
-"""
-select columns of table "exploreTargetPreferences"
-"""
-enum ExploreTargetPreferencesSelectColumn {
-  """
-  column name
-  """
-  brightness
-
-  """
-  column name
-  """
-  createdAt
-
-  """
-  column name
-  """
-  fovDec
-
-  """
-  column name
-  """
-  fovRA
-
-  """
-  column name
-  """
-  saturation
-
-  """
-  column name
-  """
-  targetId
-
-  """
-  column name
-  """
-  updatedAt
-
-  """
-  column name
-  """
-  userId
-
-  """
-  column name
-  """
-  viewOffsetP
-
-  """
-  column name
-  """
-  viewOffsetQ
-}
-
-"""
-input type for updating data in table "exploreTargetPreferences"
-"""
-input ExploreTargetPreferencesSetInput {
-  brightness: Int
-  createdAt: timestamptz
-  fovDec: bigint
-  fovRA: bigint
-  saturation: Int
-  targetId: String
-  updatedAt: timestamptz
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-aggregate stddev on columns
-"""
-type ExploreTargetPreferencesStddevFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-aggregate stddev_pop on columns
-"""
-type ExploreTargetPreferencesStddev_popFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-aggregate stddev_samp on columns
-"""
-type ExploreTargetPreferencesStddev_sampFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-aggregate sum on columns
-"""
-type ExploreTargetPreferencesSumFields {
-  brightness: Int
-  fovDec: bigint
-  fovRA: bigint
-  saturation: Int
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
-}
-
-"""
-update columns of table "exploreTargetPreferences"
-"""
-enum ExploreTargetPreferencesUpdateColumn {
-  """
-  column name
-  """
-  brightness
-
-  """
-  column name
-  """
-  createdAt
-
-  """
-  column name
-  """
-  fovDec
-
-  """
-  column name
-  """
-  fovRA
-
-  """
-  column name
-  """
-  saturation
-
-  """
-  column name
-  """
-  targetId
-
-  """
-  column name
-  """
-  updatedAt
-
-  """
-  column name
-  """
-  userId
-
-  """
-  column name
-  """
-  viewOffsetP
-
-  """
-  column name
-  """
-  viewOffsetQ
-}
-
-input ExploreTargetPreferencesUpdates {
-  """
-  increments the numeric columns with given value of the filtered values
-  """
-  _inc: ExploreTargetPreferencesIncInput
-
-  """
-  sets the columns of the filtered rows to the given values
-  """
-  _set: ExploreTargetPreferencesSetInput
-  where: ExploreTargetPreferencesBoolExp!
-}
-
-"""
-aggregate var_pop on columns
-"""
-type ExploreTargetPreferencesVar_popFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-aggregate var_samp on columns
-"""
-type ExploreTargetPreferencesVar_sampFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
-}
-
-"""
-aggregate variance on columns
-"""
-type ExploreTargetPreferencesVarianceFields {
-  brightness: Float
-  fovDec: Float
-  fovRA: Float
-  saturation: Float
-  viewOffsetP: Float
-  viewOffsetQ: Float
 }
 
 """
@@ -1282,16 +1096,12 @@ input ItcChartTypeInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type ItcChartTypeMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type ItcChartTypeMinFields {
   id: String
 }
@@ -1300,14 +1110,10 @@ type ItcChartTypeMinFields {
 response of any mutation on the table "ItcChartType"
 """
 type ItcChartTypeMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [ItcChartType!]!
 }
 
@@ -1320,16 +1126,12 @@ input ItcChartTypeOnConflict {
   where: ItcChartTypeBoolExp
 }
 
-"""
-Ordering options when selecting data from "ItcChartType".
-"""
+"""Ordering options when selecting data from "ItcChartType"."""
 input ItcChartTypeOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: ItcChartType
-"""
+"""primary key columns input for table: ItcChartType"""
 input ItcChartTypePkColumnsInput {
   id: String!
 }
@@ -1338,9 +1140,7 @@ input ItcChartTypePkColumnsInput {
 select columns of table "ItcChartType"
 """
 enum ItcChartTypeSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -1355,16 +1155,12 @@ input ItcChartTypeSetInput {
 update columns of table "ItcChartType"
 """
 enum ItcChartTypeUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input ItcChartTypeUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: ItcChartTypeSetInput
   where: ItcChartTypeBoolExp!
 }
@@ -1373,22 +1169,240 @@ input ItcChartTypeUpdates {
 Streaming cursor of the table "ItcChartType"
 """
 input ItcChartType_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: ItcChartType_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input ItcChartType_streamCursorValueInput {
   id: String
+}
+
+"""
+columns and relationships of "lucumaAsterism"
+"""
+type LucumaAsterism {
+  """An object relationship"""
+  exploreAsterismPreference: ExploreAsterismPreferences!
+  prefId: Int!
+  targetId: String!
+}
+
+"""
+aggregated selection of "lucumaAsterism"
+"""
+type LucumaAsterismAggregate {
+  aggregate: LucumaAsterismAggregateFields
+  nodes: [LucumaAsterism!]!
+}
+
+"""
+aggregate fields of "lucumaAsterism"
+"""
+type LucumaAsterismAggregateFields {
+  avg: LucumaAsterismAvgFields
+  count(columns: [LucumaAsterismSelectColumn!], distinct: Boolean): Int!
+  max: LucumaAsterismMaxFields
+  min: LucumaAsterismMinFields
+  stddev: LucumaAsterismStddevFields
+  stddevPop: LucumaAsterismStddev_popFields
+  stddevSamp: LucumaAsterismStddev_sampFields
+  sum: LucumaAsterismSumFields
+  varPop: LucumaAsterismVar_popFields
+  varSamp: LucumaAsterismVar_sampFields
+  variance: LucumaAsterismVarianceFields
+}
+
+"""
+order by aggregate values of table "lucumaAsterism"
+"""
+input LucumaAsterismAggregateOrderBy {
+  avg: lucumaAsterism_avg_order_by
+  count: OrderBy
+  max: lucumaAsterism_max_order_by
+  min: lucumaAsterism_min_order_by
+  stddev: lucumaAsterism_stddev_order_by
+  stddev_pop: lucumaAsterism_stddev_pop_order_by
+  stddev_samp: lucumaAsterism_stddev_samp_order_by
+  sum: lucumaAsterism_sum_order_by
+  var_pop: lucumaAsterism_var_pop_order_by
+  var_samp: lucumaAsterism_var_samp_order_by
+  variance: lucumaAsterism_variance_order_by
+}
+
+"""
+input type for inserting array relation for remote table "lucumaAsterism"
+"""
+input LucumaAsterismArrRelInsertInput {
+  data: [LucumaAsterismInsertInput!]!
+
+  """upsert condition"""
+  onConflict: LucumaAsterismOnConflict
+}
+
+"""aggregate avg on columns"""
+type LucumaAsterismAvgFields {
+  prefId: Float
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaAsterism". All fields are combined with a logical 'AND'.
+"""
+input LucumaAsterismBoolExp {
+  _and: [LucumaAsterismBoolExp!]
+  _not: LucumaAsterismBoolExp
+  _or: [LucumaAsterismBoolExp!]
+  exploreAsterismPreference: ExploreAsterismPreferencesBoolExp
+  prefId: IntComparisonExp
+  targetId: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaAsterism"
+"""
+enum LucumaAsterismConstraint {
+  """
+  unique or primary key constraint on columns "targetId", "prefId"
+  """
+  lucumaAsterism_pkey
+}
+
+"""
+input type for incrementing numeric columns in table "lucumaAsterism"
+"""
+input LucumaAsterismIncInput {
+  prefId: Int
+}
+
+"""
+input type for inserting data into table "lucumaAsterism"
+"""
+input LucumaAsterismInsertInput {
+  exploreAsterismPreference: ExploreAsterismPreferencesObjRelInsertInput
+  prefId: Int
+  targetId: String
+}
+
+"""aggregate max on columns"""
+type LucumaAsterismMaxFields {
+  prefId: Int
+  targetId: String
+}
+
+"""aggregate min on columns"""
+type LucumaAsterismMinFields {
+  prefId: Int
+  targetId: String
+}
+
+"""
+response of any mutation on the table "lucumaAsterism"
+"""
+type LucumaAsterismMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaAsterism!]!
+}
+
+"""
+on_conflict condition type for table "lucumaAsterism"
+"""
+input LucumaAsterismOnConflict {
+  constraint: LucumaAsterismConstraint!
+  update_columns: [LucumaAsterismUpdateColumn!]! = []
+  where: LucumaAsterismBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaAsterism"."""
+input LucumaAsterismOrderBy {
+  exploreAsterismPreference: ExploreAsterismPreferencesOrderBy
+  prefId: OrderBy
+  targetId: OrderBy
+}
+
+"""primary key columns input for table: lucumaAsterism"""
+input LucumaAsterismPkColumnsInput {
+  prefId: Int!
+  targetId: String!
+}
+
+"""
+select columns of table "lucumaAsterism"
+"""
+enum LucumaAsterismSelectColumn {
+  """column name"""
+  prefId
+
+  """column name"""
+  targetId
+}
+
+"""
+input type for updating data in table "lucumaAsterism"
+"""
+input LucumaAsterismSetInput {
+  prefId: Int
+  targetId: String
+}
+
+"""aggregate stddev on columns"""
+type LucumaAsterismStddevFields {
+  prefId: Float
+}
+
+"""aggregate stddev_pop on columns"""
+type LucumaAsterismStddev_popFields {
+  prefId: Float
+}
+
+"""aggregate stddev_samp on columns"""
+type LucumaAsterismStddev_sampFields {
+  prefId: Float
+}
+
+"""aggregate sum on columns"""
+type LucumaAsterismSumFields {
+  prefId: Int
+}
+
+"""
+update columns of table "lucumaAsterism"
+"""
+enum LucumaAsterismUpdateColumn {
+  """column name"""
+  prefId
+
+  """column name"""
+  targetId
+}
+
+input LucumaAsterismUpdates {
+  """increments the numeric columns with given value of the filtered values"""
+  _inc: LucumaAsterismIncInput
+
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaAsterismSetInput
+  where: LucumaAsterismBoolExp!
+}
+
+"""aggregate var_pop on columns"""
+type LucumaAsterismVar_popFields {
+  prefId: Float
+}
+
+"""aggregate var_samp on columns"""
+type LucumaAsterismVar_sampFields {
+  prefId: Float
+}
+
+"""aggregate variance on columns"""
+type LucumaAsterismVarianceFields {
+  prefId: Float
 }
 
 """
@@ -1463,16 +1477,12 @@ input LucumaGridBreakpointNameInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaGridBreakpointNameMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaGridBreakpointNameMinFields {
   id: String
 }
@@ -1481,14 +1491,10 @@ type LucumaGridBreakpointNameMinFields {
 response of any mutation on the table "lucumaGridBreakpointName"
 """
 type LucumaGridBreakpointNameMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaGridBreakpointName!]!
 }
 
@@ -1501,16 +1507,12 @@ input LucumaGridBreakpointNameOnConflict {
   where: LucumaGridBreakpointNameBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaGridBreakpointName".
-"""
+"""Ordering options when selecting data from "lucumaGridBreakpointName"."""
 input LucumaGridBreakpointNameOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaGridBreakpointName
-"""
+"""primary key columns input for table: lucumaGridBreakpointName"""
 input LucumaGridBreakpointNamePkColumnsInput {
   id: String!
 }
@@ -1519,9 +1521,7 @@ input LucumaGridBreakpointNamePkColumnsInput {
 select columns of table "lucumaGridBreakpointName"
 """
 enum LucumaGridBreakpointNameSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -1536,16 +1536,12 @@ input LucumaGridBreakpointNameSetInput {
 update columns of table "lucumaGridBreakpointName"
 """
 enum LucumaGridBreakpointNameUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input LucumaGridBreakpointNameUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaGridBreakpointNameSetInput
   where: LucumaGridBreakpointNameBoolExp!
 }
@@ -1621,16 +1617,12 @@ input LucumaGridLayoutIdInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaGridLayoutIdMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaGridLayoutIdMinFields {
   id: String
 }
@@ -1639,14 +1631,10 @@ type LucumaGridLayoutIdMinFields {
 response of any mutation on the table "lucumaGridLayoutId"
 """
 type LucumaGridLayoutIdMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaGridLayoutId!]!
 }
 
@@ -1659,16 +1647,12 @@ input LucumaGridLayoutIdOnConflict {
   where: LucumaGridLayoutIdBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaGridLayoutId".
-"""
+"""Ordering options when selecting data from "lucumaGridLayoutId"."""
 input LucumaGridLayoutIdOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaGridLayoutId
-"""
+"""primary key columns input for table: lucumaGridLayoutId"""
 input LucumaGridLayoutIdPkColumnsInput {
   id: String!
 }
@@ -1677,9 +1661,7 @@ input LucumaGridLayoutIdPkColumnsInput {
 select columns of table "lucumaGridLayoutId"
 """
 enum LucumaGridLayoutIdSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -1694,16 +1676,12 @@ input LucumaGridLayoutIdSetInput {
 update columns of table "lucumaGridLayoutId"
 """
 enum LucumaGridLayoutIdUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input LucumaGridLayoutIdUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaGridLayoutIdSetInput
   where: LucumaGridLayoutIdBoolExp!
 }
@@ -1747,9 +1725,7 @@ type LucumaGridLayoutPositionsAggregateFields {
   variance: LucumaGridLayoutPositionsVarianceFields
 }
 
-"""
-aggregate avg on columns
-"""
+"""aggregate avg on columns"""
 type LucumaGridLayoutPositionsAvgFields {
   height: Float
   width: Float
@@ -1808,9 +1784,7 @@ input LucumaGridLayoutPositionsInsertInput {
   y: Int
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaGridLayoutPositionsMaxFields {
   height: Int
   tile: String
@@ -1820,9 +1794,7 @@ type LucumaGridLayoutPositionsMaxFields {
   y: Int
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaGridLayoutPositionsMinFields {
   height: Int
   tile: String
@@ -1836,14 +1808,10 @@ type LucumaGridLayoutPositionsMinFields {
 response of any mutation on the table "lucumaGridLayoutPositions"
 """
 type LucumaGridLayoutPositionsMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaGridLayoutPositions!]!
 }
 
@@ -1856,9 +1824,7 @@ input LucumaGridLayoutPositionsOnConflict {
   where: LucumaGridLayoutPositionsBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaGridLayoutPositions".
-"""
+"""Ordering options when selecting data from "lucumaGridLayoutPositions"."""
 input LucumaGridLayoutPositionsOrderBy {
   breakpointName: OrderBy
   height: OrderBy
@@ -1870,9 +1836,7 @@ input LucumaGridLayoutPositionsOrderBy {
   y: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaGridLayoutPositions
-"""
+"""primary key columns input for table: lucumaGridLayoutPositions"""
 input LucumaGridLayoutPositionsPkColumnsInput {
   breakpointName: LucumaGridBreakpointNameEnum!
   section: LucumaGridLayoutIdEnum!
@@ -1884,44 +1848,28 @@ input LucumaGridLayoutPositionsPkColumnsInput {
 select columns of table "lucumaGridLayoutPositions"
 """
 enum LucumaGridLayoutPositionsSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   breakpointName
 
-  """
-  column name
-  """
+  """column name"""
   height
 
-  """
-  column name
-  """
+  """column name"""
   section
 
-  """
-  column name
-  """
+  """column name"""
   tile
 
-  """
-  column name
-  """
+  """column name"""
   userId
 
-  """
-  column name
-  """
+  """column name"""
   width
 
-  """
-  column name
-  """
+  """column name"""
   x
 
-  """
-  column name
-  """
+  """column name"""
   y
 }
 
@@ -1939,9 +1887,7 @@ input LucumaGridLayoutPositionsSetInput {
   y: Int
 }
 
-"""
-aggregate stddev on columns
-"""
+"""aggregate stddev on columns"""
 type LucumaGridLayoutPositionsStddevFields {
   height: Float
   width: Float
@@ -1949,9 +1895,7 @@ type LucumaGridLayoutPositionsStddevFields {
   y: Float
 }
 
-"""
-aggregate stddev_pop on columns
-"""
+"""aggregate stddev_pop on columns"""
 type LucumaGridLayoutPositionsStddev_popFields {
   height: Float
   width: Float
@@ -1959,9 +1903,7 @@ type LucumaGridLayoutPositionsStddev_popFields {
   y: Float
 }
 
-"""
-aggregate stddev_samp on columns
-"""
+"""aggregate stddev_samp on columns"""
 type LucumaGridLayoutPositionsStddev_sampFields {
   height: Float
   width: Float
@@ -1969,9 +1911,7 @@ type LucumaGridLayoutPositionsStddev_sampFields {
   y: Float
 }
 
-"""
-aggregate sum on columns
-"""
+"""aggregate sum on columns"""
 type LucumaGridLayoutPositionsSumFields {
   height: Int
   width: Int
@@ -1983,63 +1923,41 @@ type LucumaGridLayoutPositionsSumFields {
 update columns of table "lucumaGridLayoutPositions"
 """
 enum LucumaGridLayoutPositionsUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   breakpointName
 
-  """
-  column name
-  """
+  """column name"""
   height
 
-  """
-  column name
-  """
+  """column name"""
   section
 
-  """
-  column name
-  """
+  """column name"""
   tile
 
-  """
-  column name
-  """
+  """column name"""
   userId
 
-  """
-  column name
-  """
+  """column name"""
   width
 
-  """
-  column name
-  """
+  """column name"""
   x
 
-  """
-  column name
-  """
+  """column name"""
   y
 }
 
 input LucumaGridLayoutPositionsUpdates {
-  """
-  increments the numeric columns with given value of the filtered values
-  """
+  """increments the numeric columns with given value of the filtered values"""
   _inc: LucumaGridLayoutPositionsIncInput
 
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaGridLayoutPositionsSetInput
   where: LucumaGridLayoutPositionsBoolExp!
 }
 
-"""
-aggregate var_pop on columns
-"""
+"""aggregate var_pop on columns"""
 type LucumaGridLayoutPositionsVar_popFields {
   height: Float
   width: Float
@@ -2047,9 +1965,7 @@ type LucumaGridLayoutPositionsVar_popFields {
   y: Float
 }
 
-"""
-aggregate var_samp on columns
-"""
+"""aggregate var_samp on columns"""
 type LucumaGridLayoutPositionsVar_sampFields {
   height: Float
   width: Float
@@ -2057,9 +1973,7 @@ type LucumaGridLayoutPositionsVar_sampFields {
   y: Float
 }
 
-"""
-aggregate variance on columns
-"""
+"""aggregate variance on columns"""
 type LucumaGridLayoutPositionsVarianceFields {
   height: Float
   width: Float
@@ -2071,63 +1985,39 @@ type LucumaGridLayoutPositionsVarianceFields {
 columns and relationships of "lucumaObservation"
 """
 type LucumaObservation {
-  """
-  An array relationship
-  """
+  """An array relationship"""
   exploreFinderCharts(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExploreFinderChartSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExploreFinderChartOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): [ExploreFinderChart!]!
 
-  """
-  An aggregate relationship
-  """
+  """An aggregate relationship"""
   exploreFinderChartsAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExploreFinderChartSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExploreFinderChartOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): ExploreFinderChartAggregate!
   observationId: String!
@@ -2179,16 +2069,12 @@ input LucumaObservationInsertInput {
   observationId: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaObservationMaxFields {
   observationId: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaObservationMinFields {
   observationId: String
 }
@@ -2197,14 +2083,10 @@ type LucumaObservationMinFields {
 response of any mutation on the table "lucumaObservation"
 """
 type LucumaObservationMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaObservation!]!
 }
 
@@ -2214,9 +2096,7 @@ input type for inserting object relation for remote table "lucumaObservation"
 input LucumaObservationObjRelInsertInput {
   data: LucumaObservationInsertInput!
 
-  """
-  upsert condition
-  """
+  """upsert condition"""
   onConflict: LucumaObservationOnConflict
 }
 
@@ -2229,17 +2109,13 @@ input LucumaObservationOnConflict {
   where: LucumaObservationBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaObservation".
-"""
+"""Ordering options when selecting data from "lucumaObservation"."""
 input LucumaObservationOrderBy {
   exploreFinderChartsAggregate: ExploreFinderChartAggregateOrderBy
   observationId: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaObservation
-"""
+"""primary key columns input for table: lucumaObservation"""
 input LucumaObservationPkColumnsInput {
   observationId: String!
 }
@@ -2248,9 +2124,7 @@ input LucumaObservationPkColumnsInput {
 select columns of table "lucumaObservation"
 """
 enum LucumaObservationSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   observationId
 }
 
@@ -2265,16 +2139,12 @@ input LucumaObservationSetInput {
 update columns of table "lucumaObservation"
 """
 enum LucumaObservationUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   observationId
 }
 
 input LucumaObservationUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaObservationSetInput
   where: LucumaObservationBoolExp!
 }
@@ -2346,16 +2216,12 @@ input LucumaSortDirectionInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaSortDirectionMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaSortDirectionMinFields {
   id: String
 }
@@ -2364,14 +2230,10 @@ type LucumaSortDirectionMinFields {
 response of any mutation on the table "lucumaSortDirection"
 """
 type LucumaSortDirectionMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaSortDirection!]!
 }
 
@@ -2384,16 +2246,12 @@ input LucumaSortDirectionOnConflict {
   where: LucumaSortDirectionBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaSortDirection".
-"""
+"""Ordering options when selecting data from "lucumaSortDirection"."""
 input LucumaSortDirectionOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaSortDirection
-"""
+"""primary key columns input for table: lucumaSortDirection"""
 input LucumaSortDirectionPkColumnsInput {
   id: String!
 }
@@ -2402,9 +2260,7 @@ input LucumaSortDirectionPkColumnsInput {
 select columns of table "lucumaSortDirection"
 """
 enum LucumaSortDirectionSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -2419,16 +2275,12 @@ input LucumaSortDirectionSetInput {
 update columns of table "lucumaSortDirection"
 """
 enum LucumaSortDirectionUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input LucumaSortDirectionUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaSortDirectionSetInput
   where: LucumaSortDirectionBoolExp!
 }
@@ -2472,9 +2324,7 @@ type LucumaTableColumnPreferencesAggregateFields {
   variance: LucumaTableColumnPreferencesVarianceFields
 }
 
-"""
-aggregate avg on columns
-"""
+"""aggregate avg on columns"""
 type LucumaTableColumnPreferencesAvgFields {
   sortingOrder: Float
 }
@@ -2527,9 +2377,7 @@ input LucumaTableColumnPreferencesInsertInput {
   visible: Boolean
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaTableColumnPreferencesMaxFields {
   columnId: String
   createdAt: timestamptz
@@ -2538,9 +2386,7 @@ type LucumaTableColumnPreferencesMaxFields {
   userId: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaTableColumnPreferencesMinFields {
   columnId: String
   createdAt: timestamptz
@@ -2553,14 +2399,10 @@ type LucumaTableColumnPreferencesMinFields {
 response of any mutation on the table "lucumaTableColumnPreferences"
 """
 type LucumaTableColumnPreferencesMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaTableColumnPreferences!]!
 }
 
@@ -2587,9 +2429,7 @@ input LucumaTableColumnPreferencesOrderBy {
   visible: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaTableColumnPreferences
-"""
+"""primary key columns input for table: lucumaTableColumnPreferences"""
 input LucumaTableColumnPreferencesPkColumnsInput {
   columnId: String!
   tableId: LucumaTableIdsEnum!
@@ -2600,44 +2440,28 @@ input LucumaTableColumnPreferencesPkColumnsInput {
 select columns of table "lucumaTableColumnPreferences"
 """
 enum LucumaTableColumnPreferencesSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   columnId
 
-  """
-  column name
-  """
+  """column name"""
   createdAt
 
-  """
-  column name
-  """
+  """column name"""
   sorting
 
-  """
-  column name
-  """
+  """column name"""
   sortingOrder
 
-  """
-  column name
-  """
+  """column name"""
   tableId
 
-  """
-  column name
-  """
+  """column name"""
   updatedAt
 
-  """
-  column name
-  """
+  """column name"""
   userId
 
-  """
-  column name
-  """
+  """column name"""
   visible
 }
 
@@ -2655,30 +2479,22 @@ input LucumaTableColumnPreferencesSetInput {
   visible: Boolean
 }
 
-"""
-aggregate stddev on columns
-"""
+"""aggregate stddev on columns"""
 type LucumaTableColumnPreferencesStddevFields {
   sortingOrder: Float
 }
 
-"""
-aggregate stddev_pop on columns
-"""
+"""aggregate stddev_pop on columns"""
 type LucumaTableColumnPreferencesStddev_popFields {
   sortingOrder: Float
 }
 
-"""
-aggregate stddev_samp on columns
-"""
+"""aggregate stddev_samp on columns"""
 type LucumaTableColumnPreferencesStddev_sampFields {
   sortingOrder: Float
 }
 
-"""
-aggregate sum on columns
-"""
+"""aggregate sum on columns"""
 type LucumaTableColumnPreferencesSumFields {
   sortingOrder: Int
 }
@@ -2687,77 +2503,51 @@ type LucumaTableColumnPreferencesSumFields {
 update columns of table "lucumaTableColumnPreferences"
 """
 enum LucumaTableColumnPreferencesUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   columnId
 
-  """
-  column name
-  """
+  """column name"""
   createdAt
 
-  """
-  column name
-  """
+  """column name"""
   sorting
 
-  """
-  column name
-  """
+  """column name"""
   sortingOrder
 
-  """
-  column name
-  """
+  """column name"""
   tableId
 
-  """
-  column name
-  """
+  """column name"""
   updatedAt
 
-  """
-  column name
-  """
+  """column name"""
   userId
 
-  """
-  column name
-  """
+  """column name"""
   visible
 }
 
 input LucumaTableColumnPreferencesUpdates {
-  """
-  increments the numeric columns with given value of the filtered values
-  """
+  """increments the numeric columns with given value of the filtered values"""
   _inc: LucumaTableColumnPreferencesIncInput
 
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaTableColumnPreferencesSetInput
   where: LucumaTableColumnPreferencesBoolExp!
 }
 
-"""
-aggregate var_pop on columns
-"""
+"""aggregate var_pop on columns"""
 type LucumaTableColumnPreferencesVar_popFields {
   sortingOrder: Float
 }
 
-"""
-aggregate var_samp on columns
-"""
+"""aggregate var_samp on columns"""
 type LucumaTableColumnPreferencesVar_sampFields {
   sortingOrder: Float
 }
 
-"""
-aggregate variance on columns
-"""
+"""aggregate variance on columns"""
 type LucumaTableColumnPreferencesVarianceFields {
   sortingOrder: Float
 }
@@ -2832,16 +2622,12 @@ input LucumaTableIdsInsertInput {
   id: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaTableIdsMaxFields {
   id: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaTableIdsMinFields {
   id: String
 }
@@ -2850,14 +2636,10 @@ type LucumaTableIdsMinFields {
 response of any mutation on the table "lucumaTableIds"
 """
 type LucumaTableIdsMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaTableIds!]!
 }
 
@@ -2870,16 +2652,12 @@ input LucumaTableIdsOnConflict {
   where: LucumaTableIdsBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaTableIds".
-"""
+"""Ordering options when selecting data from "lucumaTableIds"."""
 input LucumaTableIdsOrderBy {
   id: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaTableIds
-"""
+"""primary key columns input for table: lucumaTableIds"""
 input LucumaTableIdsPkColumnsInput {
   id: String!
 }
@@ -2888,9 +2666,7 @@ input LucumaTableIdsPkColumnsInput {
 select columns of table "lucumaTableIds"
 """
 enum LucumaTableIdsSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
@@ -2905,230 +2681,14 @@ input LucumaTableIdsSetInput {
 update columns of table "lucumaTableIds"
 """
 enum LucumaTableIdsUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   id
 }
 
 input LucumaTableIdsUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaTableIdsSetInput
   where: LucumaTableIdsBoolExp!
-}
-
-"""
-columns and relationships of "lucumaTarget"
-"""
-type LucumaTarget {
-  """
-  An aggregate relationship
-  """
-  lucumaTargetPreferencesAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreTargetPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreTargetPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): ExploreTargetPreferencesAggregate!
-
-  """
-  An array relationship
-  """
-  lucuma_target_preferences(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreTargetPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreTargetPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): [ExploreTargetPreferences!]!
-  targetId: String!
-}
-
-"""
-aggregated selection of "lucumaTarget"
-"""
-type LucumaTargetAggregate {
-  aggregate: LucumaTargetAggregateFields
-  nodes: [LucumaTarget!]!
-}
-
-"""
-aggregate fields of "lucumaTarget"
-"""
-type LucumaTargetAggregateFields {
-  count(columns: [LucumaTargetSelectColumn!], distinct: Boolean): Int!
-  max: LucumaTargetMaxFields
-  min: LucumaTargetMinFields
-}
-
-"""
-Boolean expression to filter rows from the table "lucumaTarget". All fields are combined with a logical 'AND'.
-"""
-input LucumaTargetBoolExp {
-  _and: [LucumaTargetBoolExp!]
-  _not: LucumaTargetBoolExp
-  _or: [LucumaTargetBoolExp!]
-  lucuma_target_preferences: ExploreTargetPreferencesBoolExp
-  targetId: StringComparisonExp
-}
-
-"""
-unique or primary key constraints on table "lucumaTarget"
-"""
-enum LucumaTargetConstraint {
-  """
-  unique or primary key constraint on columns "targetId"
-  """
-  lucuma_target_pkey
-}
-
-"""
-input type for inserting data into table "lucumaTarget"
-"""
-input LucumaTargetInsertInput {
-  lucuma_target_preferences: ExploreTargetPreferencesArrRelInsertInput
-  targetId: String
-}
-
-"""
-aggregate max on columns
-"""
-type LucumaTargetMaxFields {
-  targetId: String
-}
-
-"""
-aggregate min on columns
-"""
-type LucumaTargetMinFields {
-  targetId: String
-}
-
-"""
-response of any mutation on the table "lucumaTarget"
-"""
-type LucumaTargetMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
-  affected_rows: Int!
-
-  """
-  data from the rows affected by the mutation
-  """
-  returning: [LucumaTarget!]!
-}
-
-"""
-input type for inserting object relation for remote table "lucumaTarget"
-"""
-input LucumaTargetObjRelInsertInput {
-  data: LucumaTargetInsertInput!
-
-  """
-  upsert condition
-  """
-  onConflict: LucumaTargetOnConflict
-}
-
-"""
-on_conflict condition type for table "lucumaTarget"
-"""
-input LucumaTargetOnConflict {
-  constraint: LucumaTargetConstraint!
-  update_columns: [LucumaTargetUpdateColumn!]! = []
-  where: LucumaTargetBoolExp
-}
-
-"""
-Ordering options when selecting data from "lucumaTarget".
-"""
-input LucumaTargetOrderBy {
-  lucuma_target_preferencesAggregate: ExploreTargetPreferencesAggregateOrderBy
-  targetId: OrderBy
-}
-
-"""
-primary key columns input for table: lucumaTarget
-"""
-input LucumaTargetPkColumnsInput {
-  targetId: String!
-}
-
-"""
-select columns of table "lucumaTarget"
-"""
-enum LucumaTargetSelectColumn {
-  """
-  column name
-  """
-  targetId
-}
-
-"""
-input type for updating data in table "lucumaTarget"
-"""
-input LucumaTargetSetInput {
-  targetId: String
-}
-
-"""
-update columns of table "lucumaTarget"
-"""
-enum LucumaTargetUpdateColumn {
-  """
-  column name
-  """
-  targetId
-}
-
-input LucumaTargetUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
-  _set: LucumaTargetSetInput
-  where: LucumaTargetBoolExp!
 }
 
 """
@@ -3182,16 +2742,12 @@ input LucumaUserInsertInput {
   userId: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaUserMaxFields {
   userId: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaUserMinFields {
   userId: String
 }
@@ -3200,14 +2756,10 @@ type LucumaUserMinFields {
 response of any mutation on the table "lucumaUser"
 """
 type LucumaUserMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaUser!]!
 }
 
@@ -3217,9 +2769,7 @@ input type for inserting object relation for remote table "lucumaUser"
 input LucumaUserObjRelInsertInput {
   data: LucumaUserInsertInput!
 
-  """
-  upsert condition
-  """
+  """upsert condition"""
   onConflict: LucumaUserOnConflict
 }
 
@@ -3232,16 +2782,12 @@ input LucumaUserOnConflict {
   where: LucumaUserBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaUser".
-"""
+"""Ordering options when selecting data from "lucumaUser"."""
 input LucumaUserOrderBy {
   userId: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaUser
-"""
+"""primary key columns input for table: lucumaUser"""
 input LucumaUserPkColumnsInput {
   userId: String!
 }
@@ -3261,9 +2807,7 @@ type LucumaUserPreferences {
   itcChartType: ItcChartTypeEnum!
   itcDetailsOpen: Boolean!
 
-  """
-  An object relationship
-  """
+  """An object relationship"""
   lucuma_user: LucumaUser!
   scienceOffsets: Boolean!
   showCatalog: Boolean!
@@ -3343,18 +2887,14 @@ input LucumaUserPreferencesInsertInput {
   userId: String
 }
 
-"""
-aggregate max on columns
-"""
+"""aggregate max on columns"""
 type LucumaUserPreferencesMaxFields {
   createdAt: timestamptz
   updatedAt: timestamptz
   userId: String
 }
 
-"""
-aggregate min on columns
-"""
+"""aggregate min on columns"""
 type LucumaUserPreferencesMinFields {
   createdAt: timestamptz
   updatedAt: timestamptz
@@ -3365,14 +2905,10 @@ type LucumaUserPreferencesMinFields {
 response of any mutation on the table "lucumaUserPreferences"
 """
 type LucumaUserPreferencesMutationResponse {
-  """
-  number of rows affected by the mutation
-  """
+  """number of rows affected by the mutation"""
   affected_rows: Int!
 
-  """
-  data from the rows affected by the mutation
-  """
+  """data from the rows affected by the mutation"""
   returning: [LucumaUserPreferences!]!
 }
 
@@ -3385,9 +2921,7 @@ input LucumaUserPreferencesOnConflict {
   where: LucumaUserPreferencesBoolExp
 }
 
-"""
-Ordering options when selecting data from "lucumaUserPreferences".
-"""
+"""Ordering options when selecting data from "lucumaUserPreferences"."""
 input LucumaUserPreferencesOrderBy {
   acquisitionOffsets: OrderBy
   agsOverlay: OrderBy
@@ -3406,9 +2940,7 @@ input LucumaUserPreferencesOrderBy {
   userId: OrderBy
 }
 
-"""
-primary key columns input for table: lucumaUserPreferences
-"""
+"""primary key columns input for table: lucumaUserPreferences"""
 input LucumaUserPreferencesPkColumnsInput {
   userId: String!
 }
@@ -3417,74 +2949,46 @@ input LucumaUserPreferencesPkColumnsInput {
 select columns of table "lucumaUserPreferences"
 """
 enum LucumaUserPreferencesSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   acquisitionOffsets
 
-  """
-  column name
-  """
+  """column name"""
   agsOverlay
 
-  """
-  column name
-  """
+  """column name"""
   aladinMouseScroll
 
-  """
-  column name
-  """
+  """column name"""
   createdAt
 
-  """
-  column name
-  """
+  """column name"""
   elevationPlotRange
 
-  """
-  column name
-  """
+  """column name"""
   elevationPlotScheduling
 
-  """
-  column name
-  """
+  """column name"""
   elevationPlotTime
 
-  """
-  column name
-  """
+  """column name"""
   fullScreen
 
-  """
-  column name
-  """
+  """column name"""
   itcChartType
 
-  """
-  column name
-  """
+  """column name"""
   itcDetailsOpen
 
-  """
-  column name
-  """
+  """column name"""
   scienceOffsets
 
-  """
-  column name
-  """
+  """column name"""
   showCatalog
 
-  """
-  column name
-  """
+  """column name"""
   updatedAt
 
-  """
-  column name
-  """
+  """column name"""
   userId
 }
 
@@ -3512,81 +3016,51 @@ input LucumaUserPreferencesSetInput {
 update columns of table "lucumaUserPreferences"
 """
 enum LucumaUserPreferencesUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   acquisitionOffsets
 
-  """
-  column name
-  """
+  """column name"""
   agsOverlay
 
-  """
-  column name
-  """
+  """column name"""
   aladinMouseScroll
 
-  """
-  column name
-  """
+  """column name"""
   createdAt
 
-  """
-  column name
-  """
+  """column name"""
   elevationPlotRange
 
-  """
-  column name
-  """
+  """column name"""
   elevationPlotScheduling
 
-  """
-  column name
-  """
+  """column name"""
   elevationPlotTime
 
-  """
-  column name
-  """
+  """column name"""
   fullScreen
 
-  """
-  column name
-  """
+  """column name"""
   itcChartType
 
-  """
-  column name
-  """
+  """column name"""
   itcDetailsOpen
 
-  """
-  column name
-  """
+  """column name"""
   scienceOffsets
 
-  """
-  column name
-  """
+  """column name"""
   showCatalog
 
-  """
-  column name
-  """
+  """column name"""
   updatedAt
 
-  """
-  column name
-  """
+  """column name"""
   userId
 }
 
 input LucumaUserPreferencesUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaUserPreferencesSetInput
   where: LucumaUserPreferencesBoolExp!
 }
@@ -3595,9 +3069,7 @@ input LucumaUserPreferencesUpdates {
 select columns of table "lucumaUser"
 """
 enum LucumaUserSelectColumn {
-  """
-  column name
-  """
+  """column name"""
   userId
 }
 
@@ -3612,52 +3084,34 @@ input LucumaUserSetInput {
 update columns of table "lucumaUser"
 """
 enum LucumaUserUpdateColumn {
-  """
-  column name
-  """
+  """column name"""
   userId
 }
 
 input LucumaUserUpdates {
-  """
-  sets the columns of the filtered rows to the given values
-  """
+  """sets the columns of the filtered rows to the given values"""
   _set: LucumaUserSetInput
   where: LucumaUserBoolExp!
 }
 
-"""
-column ordering options
-"""
+"""column ordering options"""
 enum OrderBy {
-  """
-  in ascending order, nulls last
-  """
+  """in ascending order, nulls last"""
   ASC
 
-  """
-  in ascending order, nulls first
-  """
+  """in ascending order, nulls first"""
   ASC_NULLS_FIRST
 
-  """
-  in ascending order, nulls last
-  """
+  """in ascending order, nulls last"""
   ASC_NULLS_LAST
 
-  """
-  in descending order, nulls first
-  """
+  """in descending order, nulls first"""
   DESC
 
-  """
-  in descending order, nulls first
-  """
+  """in descending order, nulls first"""
   DESC_NULLS_FIRST
 
-  """
-  in descending order, nulls last
-  """
+  """in descending order, nulls last"""
   DESC_NULLS_LAST
 }
 
@@ -3669,9 +3123,7 @@ input StringComparisonExp {
   _gt: String
   _gte: String
 
-  """
-  does the column match the given case-insensitive pattern
-  """
+  """does the column match the given case-insensitive pattern"""
   _ilike: String
   _in: [String!]
 
@@ -3681,17 +3133,13 @@ input StringComparisonExp {
   _iregex: String
   _isNull: Boolean
 
-  """
-  does the column match the given pattern
-  """
+  """does the column match the given pattern"""
   _like: String
   _lt: String
   _lte: String
   _neq: String
 
-  """
-  does the column NOT match the given case-insensitive pattern
-  """
+  """does the column NOT match the given case-insensitive pattern"""
   _nilike: String
   _nin: [String!]
 
@@ -3700,9 +3148,7 @@ input StringComparisonExp {
   """
   _niregex: String
 
-  """
-  does the column NOT match the given pattern
-  """
+  """does the column NOT match the given pattern"""
   _nlike: String
 
   """
@@ -3710,9 +3156,7 @@ input StringComparisonExp {
   """
   _nregex: String
 
-  """
-  does the column NOT match the given SQL regular expression
-  """
+  """does the column NOT match the given SQL regular expression"""
   _nsimilar: String
 
   """
@@ -3720,9 +3164,7 @@ input StringComparisonExp {
   """
   _regex: String
 
-  """
-  does the column match the given SQL regular expression
-  """
+  """does the column match the given SQL regular expression"""
   _similar: String
 }
 
@@ -3742,6 +3184,29 @@ input TimestamptzComparisonExp {
 }
 
 scalar bigint
+
+"""
+Streaming cursor of the table "exploreAsterismPreferences"
+"""
+input exploreAsterismPreferences_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: exploreAsterismPreferences_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input exploreAsterismPreferences_streamCursorValueInput {
+  brightness: Int
+  fovDec: bigint
+  fovRA: bigint
+  id: Int
+  saturation: Int
+  userId: String
+  viewOffsetP: bigint
+  viewOffsetQ: bigint
+}
 
 """
 order by avg() on columns of table "exploreFinderChart"
@@ -3805,20 +3270,14 @@ input exploreFinderChart_stddev_samp_order_by {
 Streaming cursor of the table "exploreFinderChart"
 """
 input exploreFinderChart_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: exploreFinderChart_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input exploreFinderChart_streamCursorValueInput {
   attachmentId: String
   flipX: Boolean
@@ -3870,20 +3329,14 @@ input exploreFinderChart_variance_order_by {
 Streaming cursor of the table "explorePlotRange"
 """
 input explorePlotRange_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: explorePlotRange_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input explorePlotRange_streamCursorValueInput {
   id: String
 }
@@ -3892,201 +3345,119 @@ input explorePlotRange_streamCursorValueInput {
 Streaming cursor of the table "explorePlotTime"
 """
 input explorePlotTime_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: explorePlotTime_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input explorePlotTime_streamCursorValueInput {
   id: String
 }
 
 """
-order by avg() on columns of table "exploreTargetPreferences"
+order by avg() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_avg_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_avg_order_by {
+  prefId: OrderBy
 }
 
 """
-order by max() on columns of table "exploreTargetPreferences"
+order by max() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_max_order_by {
-  brightness: OrderBy
-  createdAt: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
+input lucumaAsterism_max_order_by {
+  prefId: OrderBy
   targetId: OrderBy
-  updatedAt: OrderBy
-  userId: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
 }
 
 """
-order by min() on columns of table "exploreTargetPreferences"
+order by min() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_min_order_by {
-  brightness: OrderBy
-  createdAt: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
+input lucumaAsterism_min_order_by {
+  prefId: OrderBy
   targetId: OrderBy
-  updatedAt: OrderBy
-  userId: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
 }
 
 """
-order by stddev() on columns of table "exploreTargetPreferences"
+order by stddev() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_stddev_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_stddev_order_by {
+  prefId: OrderBy
 }
 
 """
-order by stddev_pop() on columns of table "exploreTargetPreferences"
+order by stddev_pop() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_stddev_pop_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_stddev_pop_order_by {
+  prefId: OrderBy
 }
 
 """
-order by stddev_samp() on columns of table "exploreTargetPreferences"
+order by stddev_samp() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_stddev_samp_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_stddev_samp_order_by {
+  prefId: OrderBy
 }
 
 """
-Streaming cursor of the table "exploreTargetPreferences"
+Streaming cursor of the table "lucumaAsterism"
 """
-input exploreTargetPreferences_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
-  initialValue: exploreTargetPreferences_streamCursorValueInput!
+input lucumaAsterism_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaAsterism_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
-input exploreTargetPreferences_streamCursorValueInput {
-  brightness: Int
-  createdAt: timestamptz
-  fovDec: bigint
-  fovRA: bigint
-  saturation: Int
+"""Initial value of the column from where the streaming should start"""
+input lucumaAsterism_streamCursorValueInput {
+  prefId: Int
   targetId: String
-  updatedAt: timestamptz
-  userId: String
-  viewOffsetP: bigint
-  viewOffsetQ: bigint
 }
 
 """
-order by sum() on columns of table "exploreTargetPreferences"
+order by sum() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_sum_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_sum_order_by {
+  prefId: OrderBy
 }
 
 """
-order by var_pop() on columns of table "exploreTargetPreferences"
+order by var_pop() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_var_pop_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_var_pop_order_by {
+  prefId: OrderBy
 }
 
 """
-order by var_samp() on columns of table "exploreTargetPreferences"
+order by var_samp() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_var_samp_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_var_samp_order_by {
+  prefId: OrderBy
 }
 
 """
-order by variance() on columns of table "exploreTargetPreferences"
+order by variance() on columns of table "lucumaAsterism"
 """
-input exploreTargetPreferences_variance_order_by {
-  brightness: OrderBy
-  fovDec: OrderBy
-  fovRA: OrderBy
-  saturation: OrderBy
-  viewOffsetP: OrderBy
-  viewOffsetQ: OrderBy
+input lucumaAsterism_variance_order_by {
+  prefId: OrderBy
 }
 
 """
 Streaming cursor of the table "lucumaGridBreakpointName"
 """
 input lucumaGridBreakpointName_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaGridBreakpointName_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaGridBreakpointName_streamCursorValueInput {
   id: String
 }
@@ -4095,20 +3466,14 @@ input lucumaGridBreakpointName_streamCursorValueInput {
 Streaming cursor of the table "lucumaGridLayoutId"
 """
 input lucumaGridLayoutId_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaGridLayoutId_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaGridLayoutId_streamCursorValueInput {
   id: String
 }
@@ -4117,20 +3482,14 @@ input lucumaGridLayoutId_streamCursorValueInput {
 Streaming cursor of the table "lucumaGridLayoutPositions"
 """
 input lucumaGridLayoutPositions_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaGridLayoutPositions_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaGridLayoutPositions_streamCursorValueInput {
   breakpointName: LucumaGridBreakpointNameEnum
   height: Int
@@ -4146,20 +3505,14 @@ input lucumaGridLayoutPositions_streamCursorValueInput {
 Streaming cursor of the table "lucumaObservation"
 """
 input lucumaObservation_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaObservation_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaObservation_streamCursorValueInput {
   observationId: String
 }
@@ -4168,20 +3521,14 @@ input lucumaObservation_streamCursorValueInput {
 Streaming cursor of the table "lucumaSortDirection"
 """
 input lucumaSortDirection_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaSortDirection_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaSortDirection_streamCursorValueInput {
   id: String
 }
@@ -4190,20 +3537,14 @@ input lucumaSortDirection_streamCursorValueInput {
 Streaming cursor of the table "lucumaTableColumnPreferences"
 """
 input lucumaTableColumnPreferences_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaTableColumnPreferences_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaTableColumnPreferences_streamCursorValueInput {
   columnId: String
   createdAt: timestamptz
@@ -4219,64 +3560,30 @@ input lucumaTableColumnPreferences_streamCursorValueInput {
 Streaming cursor of the table "lucumaTableIds"
 """
 input lucumaTableIds_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaTableIds_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaTableIds_streamCursorValueInput {
   id: String
-}
-
-"""
-Streaming cursor of the table "lucumaTarget"
-"""
-input lucumaTarget_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
-  initialValue: lucumaTarget_streamCursorValueInput!
-
-  """
-  cursor ordering
-  """
-  ordering: CursorOrdering
-}
-
-"""
-Initial value of the column from where the streaming should start
-"""
-input lucumaTarget_streamCursorValueInput {
-  targetId: String
 }
 
 """
 Streaming cursor of the table "lucumaUserPreferences"
 """
 input lucumaUserPreferences_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaUserPreferences_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaUserPreferences_streamCursorValueInput {
   acquisitionOffsets: Boolean
   agsOverlay: Boolean
@@ -4298,35 +3605,38 @@ input lucumaUserPreferences_streamCursorValueInput {
 Streaming cursor of the table "lucumaUser"
 """
 input lucumaUser_streamCursorInput {
-  """
-  Stream column input with initial value
-  """
+  """Stream column input with initial value"""
   initialValue: lucumaUser_streamCursorValueInput!
 
-  """
-  cursor ordering
-  """
+  """cursor ordering"""
   ordering: CursorOrdering
 }
 
-"""
-Initial value of the column from where the streaming should start
-"""
+"""Initial value of the column from where the streaming should start"""
 input lucumaUser_streamCursorValueInput {
   userId: String
 }
 
-"""
-mutation root
-"""
+"""mutation root"""
 type Mutation {
+  """
+  delete data from the table: "exploreAsterismPreferences"
+  """
+  deleteExploreAsterismPreferences(
+    """filter the rows which have to be deleted"""
+    where: ExploreAsterismPreferencesBoolExp!
+  ): ExploreAsterismPreferencesMutationResponse
+
+  """
+  delete single row from the table: "exploreAsterismPreferences"
+  """
+  deleteExploreAsterismPreferencesByPk(id: Int!): ExploreAsterismPreferences
+
   """
   delete data from the table: "exploreFinderChart"
   """
   deleteExploreFinderChart(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: ExploreFinderChartBoolExp!
   ): ExploreFinderChartMutationResponse
 
@@ -4339,9 +3649,7 @@ type Mutation {
   delete data from the table: "explorePlotRange"
   """
   deleteExplorePlotRange(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: ExplorePlotRangeBoolExp!
   ): ExplorePlotRangeMutationResponse
 
@@ -4354,9 +3662,7 @@ type Mutation {
   delete data from the table: "explorePlotTime"
   """
   deleteExplorePlotTime(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: ExplorePlotTimeBoolExp!
   ): ExplorePlotTimeMutationResponse
 
@@ -4366,27 +3672,10 @@ type Mutation {
   deleteExplorePlotTimeByPk(id: String!): ExplorePlotTime
 
   """
-  delete data from the table: "exploreTargetPreferences"
-  """
-  deleteExploreTargetPreferences(
-    """
-    filter the rows which have to be deleted
-    """
-    where: ExploreTargetPreferencesBoolExp!
-  ): ExploreTargetPreferencesMutationResponse
-
-  """
-  delete single row from the table: "exploreTargetPreferences"
-  """
-  deleteExploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
-
-  """
   delete data from the table: "ItcChartType"
   """
   deleteItcChartType(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: ItcChartTypeBoolExp!
   ): ItcChartTypeMutationResponse
 
@@ -4396,12 +3685,23 @@ type Mutation {
   deleteItcChartTypeByPk(id: String!): ItcChartType
 
   """
+  delete data from the table: "lucumaAsterism"
+  """
+  deleteLucumaAsterism(
+    """filter the rows which have to be deleted"""
+    where: LucumaAsterismBoolExp!
+  ): LucumaAsterismMutationResponse
+
+  """
+  delete single row from the table: "lucumaAsterism"
+  """
+  deleteLucumaAsterismByPk(prefId: Int!, targetId: String!): LucumaAsterism
+
+  """
   delete data from the table: "lucumaGridBreakpointName"
   """
   deleteLucumaGridBreakpointName(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaGridBreakpointNameBoolExp!
   ): LucumaGridBreakpointNameMutationResponse
 
@@ -4414,9 +3714,7 @@ type Mutation {
   delete data from the table: "lucumaGridLayoutId"
   """
   deleteLucumaGridLayoutId(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaGridLayoutIdBoolExp!
   ): LucumaGridLayoutIdMutationResponse
 
@@ -4429,29 +3727,20 @@ type Mutation {
   delete data from the table: "lucumaGridLayoutPositions"
   """
   deleteLucumaGridLayoutPositions(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaGridLayoutPositionsBoolExp!
   ): LucumaGridLayoutPositionsMutationResponse
 
   """
   delete single row from the table: "lucumaGridLayoutPositions"
   """
-  deleteLucumaGridLayoutPositionsByPk(
-    breakpointName: LucumaGridBreakpointNameEnum!
-    section: LucumaGridLayoutIdEnum!
-    tile: String!
-    userId: String!
-  ): LucumaGridLayoutPositions
+  deleteLucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   delete data from the table: "lucumaObservation"
   """
   deleteLucumaObservation(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaObservationBoolExp!
   ): LucumaObservationMutationResponse
 
@@ -4464,9 +3753,7 @@ type Mutation {
   delete data from the table: "lucumaSortDirection"
   """
   deleteLucumaSortDirection(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaSortDirectionBoolExp!
   ): LucumaSortDirectionMutationResponse
 
@@ -4479,28 +3766,20 @@ type Mutation {
   delete data from the table: "lucumaTableColumnPreferences"
   """
   deleteLucumaTableColumnPreferences(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaTableColumnPreferencesBoolExp!
   ): LucumaTableColumnPreferencesMutationResponse
 
   """
   delete single row from the table: "lucumaTableColumnPreferences"
   """
-  deleteLucumaTableColumnPreferencesByPk(
-    columnId: String!
-    tableId: LucumaTableIdsEnum!
-    userId: String!
-  ): LucumaTableColumnPreferences
+  deleteLucumaTableColumnPreferencesByPk(columnId: String!, tableId: LucumaTableIdsEnum!, userId: String!): LucumaTableColumnPreferences
 
   """
   delete data from the table: "lucumaTableIds"
   """
   deleteLucumaTableIds(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaTableIdsBoolExp!
   ): LucumaTableIdsMutationResponse
 
@@ -4510,27 +3789,10 @@ type Mutation {
   deleteLucumaTableIdsByPk(id: String!): LucumaTableIds
 
   """
-  delete data from the table: "lucumaTarget"
-  """
-  deleteLucumaTarget(
-    """
-    filter the rows which have to be deleted
-    """
-    where: LucumaTargetBoolExp!
-  ): LucumaTargetMutationResponse
-
-  """
-  delete single row from the table: "lucumaTarget"
-  """
-  deleteLucumaTargetByPk(targetId: String!): LucumaTarget
-
-  """
   delete data from the table: "lucumaUser"
   """
   deleteLucumaUser(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaUserBoolExp!
   ): LucumaUserMutationResponse
 
@@ -4543,9 +3805,7 @@ type Mutation {
   delete data from the table: "lucumaUserPreferences"
   """
   deleteLucumaUserPreferences(
-    """
-    filter the rows which have to be deleted
-    """
+    """filter the rows which have to be deleted"""
     where: LucumaUserPreferencesBoolExp!
   ): LucumaUserPreferencesMutationResponse
 
@@ -4555,17 +3815,35 @@ type Mutation {
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
 
   """
+  insert data into the table: "exploreAsterismPreferences"
+  """
+  insertExploreAsterismPreferences(
+    """the rows to be inserted"""
+    objects: [ExploreAsterismPreferencesInsertInput!]!
+
+    """upsert condition"""
+    onConflict: ExploreAsterismPreferencesOnConflict
+  ): ExploreAsterismPreferencesMutationResponse
+
+  """
+  insert a single row into the table: "exploreAsterismPreferences"
+  """
+  insertExploreAsterismPreferencesOne(
+    """the row to be inserted"""
+    object: ExploreAsterismPreferencesInsertInput!
+
+    """upsert condition"""
+    onConflict: ExploreAsterismPreferencesOnConflict
+  ): ExploreAsterismPreferences
+
+  """
   insert data into the table: "exploreFinderChart"
   """
   insertExploreFinderChart(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [ExploreFinderChartInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ExploreFinderChartOnConflict
   ): ExploreFinderChartMutationResponse
 
@@ -4573,14 +3851,10 @@ type Mutation {
   insert a single row into the table: "exploreFinderChart"
   """
   insertExploreFinderChartOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: ExploreFinderChartInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ExploreFinderChartOnConflict
   ): ExploreFinderChart
 
@@ -4588,14 +3862,10 @@ type Mutation {
   insert data into the table: "explorePlotRange"
   """
   insertExplorePlotRange(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [ExplorePlotRangeInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ExplorePlotRangeOnConflict
   ): ExplorePlotRangeMutationResponse
 
@@ -4603,14 +3873,10 @@ type Mutation {
   insert a single row into the table: "explorePlotRange"
   """
   insertExplorePlotRangeOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: ExplorePlotRangeInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ExplorePlotRangeOnConflict
   ): ExplorePlotRange
 
@@ -4618,14 +3884,10 @@ type Mutation {
   insert data into the table: "explorePlotTime"
   """
   insertExplorePlotTime(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [ExplorePlotTimeInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ExplorePlotTimeOnConflict
   ): ExplorePlotTimeMutationResponse
 
@@ -4633,59 +3895,21 @@ type Mutation {
   insert a single row into the table: "explorePlotTime"
   """
   insertExplorePlotTimeOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: ExplorePlotTimeInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ExplorePlotTimeOnConflict
   ): ExplorePlotTime
-
-  """
-  insert data into the table: "exploreTargetPreferences"
-  """
-  insertExploreTargetPreferences(
-    """
-    the rows to be inserted
-    """
-    objects: [ExploreTargetPreferencesInsertInput!]!
-
-    """
-    upsert condition
-    """
-    onConflict: ExploreTargetPreferencesOnConflict
-  ): ExploreTargetPreferencesMutationResponse
-
-  """
-  insert a single row into the table: "exploreTargetPreferences"
-  """
-  insertExploreTargetPreferencesOne(
-    """
-    the row to be inserted
-    """
-    object: ExploreTargetPreferencesInsertInput!
-
-    """
-    upsert condition
-    """
-    onConflict: ExploreTargetPreferencesOnConflict
-  ): ExploreTargetPreferences
 
   """
   insert data into the table: "ItcChartType"
   """
   insertItcChartType(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [ItcChartTypeInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ItcChartTypeOnConflict
   ): ItcChartTypeMutationResponse
 
@@ -4693,29 +3917,43 @@ type Mutation {
   insert a single row into the table: "ItcChartType"
   """
   insertItcChartTypeOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: ItcChartTypeInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: ItcChartTypeOnConflict
   ): ItcChartType
+
+  """
+  insert data into the table: "lucumaAsterism"
+  """
+  insertLucumaAsterism(
+    """the rows to be inserted"""
+    objects: [LucumaAsterismInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaAsterismOnConflict
+  ): LucumaAsterismMutationResponse
+
+  """
+  insert a single row into the table: "lucumaAsterism"
+  """
+  insertLucumaAsterismOne(
+    """the row to be inserted"""
+    object: LucumaAsterismInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaAsterismOnConflict
+  ): LucumaAsterism
 
   """
   insert data into the table: "lucumaGridBreakpointName"
   """
   insertLucumaGridBreakpointName(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaGridBreakpointNameInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaGridBreakpointNameOnConflict
   ): LucumaGridBreakpointNameMutationResponse
 
@@ -4723,14 +3961,10 @@ type Mutation {
   insert a single row into the table: "lucumaGridBreakpointName"
   """
   insertLucumaGridBreakpointNameOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaGridBreakpointNameInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaGridBreakpointNameOnConflict
   ): LucumaGridBreakpointName
 
@@ -4738,14 +3972,10 @@ type Mutation {
   insert data into the table: "lucumaGridLayoutId"
   """
   insertLucumaGridLayoutId(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaGridLayoutIdInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaGridLayoutIdOnConflict
   ): LucumaGridLayoutIdMutationResponse
 
@@ -4753,14 +3983,10 @@ type Mutation {
   insert a single row into the table: "lucumaGridLayoutId"
   """
   insertLucumaGridLayoutIdOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaGridLayoutIdInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaGridLayoutIdOnConflict
   ): LucumaGridLayoutId
 
@@ -4768,14 +3994,10 @@ type Mutation {
   insert data into the table: "lucumaGridLayoutPositions"
   """
   insertLucumaGridLayoutPositions(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaGridLayoutPositionsInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaGridLayoutPositionsOnConflict
   ): LucumaGridLayoutPositionsMutationResponse
 
@@ -4783,14 +4005,10 @@ type Mutation {
   insert a single row into the table: "lucumaGridLayoutPositions"
   """
   insertLucumaGridLayoutPositionsOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaGridLayoutPositionsInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaGridLayoutPositionsOnConflict
   ): LucumaGridLayoutPositions
 
@@ -4798,14 +4016,10 @@ type Mutation {
   insert data into the table: "lucumaObservation"
   """
   insertLucumaObservation(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaObservationInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaObservationOnConflict
   ): LucumaObservationMutationResponse
 
@@ -4813,14 +4027,10 @@ type Mutation {
   insert a single row into the table: "lucumaObservation"
   """
   insertLucumaObservationOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaObservationInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaObservationOnConflict
   ): LucumaObservation
 
@@ -4828,14 +4038,10 @@ type Mutation {
   insert data into the table: "lucumaSortDirection"
   """
   insertLucumaSortDirection(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaSortDirectionInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaSortDirectionOnConflict
   ): LucumaSortDirectionMutationResponse
 
@@ -4843,14 +4049,10 @@ type Mutation {
   insert a single row into the table: "lucumaSortDirection"
   """
   insertLucumaSortDirectionOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaSortDirectionInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaSortDirectionOnConflict
   ): LucumaSortDirection
 
@@ -4858,14 +4060,10 @@ type Mutation {
   insert data into the table: "lucumaTableColumnPreferences"
   """
   insertLucumaTableColumnPreferences(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaTableColumnPreferencesInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaTableColumnPreferencesOnConflict
   ): LucumaTableColumnPreferencesMutationResponse
 
@@ -4873,14 +4071,10 @@ type Mutation {
   insert a single row into the table: "lucumaTableColumnPreferences"
   """
   insertLucumaTableColumnPreferencesOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaTableColumnPreferencesInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaTableColumnPreferencesOnConflict
   ): LucumaTableColumnPreferences
 
@@ -4888,14 +4082,10 @@ type Mutation {
   insert data into the table: "lucumaTableIds"
   """
   insertLucumaTableIds(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaTableIdsInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaTableIdsOnConflict
   ): LucumaTableIdsMutationResponse
 
@@ -4903,59 +4093,21 @@ type Mutation {
   insert a single row into the table: "lucumaTableIds"
   """
   insertLucumaTableIdsOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaTableIdsInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaTableIdsOnConflict
   ): LucumaTableIds
-
-  """
-  insert data into the table: "lucumaTarget"
-  """
-  insertLucumaTarget(
-    """
-    the rows to be inserted
-    """
-    objects: [LucumaTargetInsertInput!]!
-
-    """
-    upsert condition
-    """
-    onConflict: LucumaTargetOnConflict
-  ): LucumaTargetMutationResponse
-
-  """
-  insert a single row into the table: "lucumaTarget"
-  """
-  insertLucumaTargetOne(
-    """
-    the row to be inserted
-    """
-    object: LucumaTargetInsertInput!
-
-    """
-    upsert condition
-    """
-    onConflict: LucumaTargetOnConflict
-  ): LucumaTarget
 
   """
   insert data into the table: "lucumaUser"
   """
   insertLucumaUser(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaUserInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaUserOnConflict
   ): LucumaUserMutationResponse
 
@@ -4963,14 +4115,10 @@ type Mutation {
   insert a single row into the table: "lucumaUser"
   """
   insertLucumaUserOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaUserInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaUserOnConflict
   ): LucumaUser
 
@@ -4978,14 +4126,10 @@ type Mutation {
   insert data into the table: "lucumaUserPreferences"
   """
   insertLucumaUserPreferences(
-    """
-    the rows to be inserted
-    """
+    """the rows to be inserted"""
     objects: [LucumaUserPreferencesInsertInput!]!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaUserPreferencesOnConflict
   ): LucumaUserPreferencesMutationResponse
 
@@ -4993,34 +4137,58 @@ type Mutation {
   insert a single row into the table: "lucumaUserPreferences"
   """
   insertLucumaUserPreferencesOne(
-    """
-    the row to be inserted
-    """
+    """the row to be inserted"""
     object: LucumaUserPreferencesInsertInput!
 
-    """
-    upsert condition
-    """
+    """upsert condition"""
     onConflict: LucumaUserPreferencesOnConflict
   ): LucumaUserPreferences
+
+  """
+  update data of the table: "exploreAsterismPreferences"
+  """
+  updateExploreAsterismPreferences(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: ExploreAsterismPreferencesIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreAsterismPreferencesSetInput
+
+    """filter the rows which have to be updated"""
+    where: ExploreAsterismPreferencesBoolExp!
+  ): ExploreAsterismPreferencesMutationResponse
+
+  """
+  update single row of the table: "exploreAsterismPreferences"
+  """
+  updateExploreAsterismPreferencesByPk(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: ExploreAsterismPreferencesIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: ExploreAsterismPreferencesSetInput
+    pk_columns: ExploreAsterismPreferencesPkColumnsInput!
+  ): ExploreAsterismPreferences
+
+  """
+  update multiples rows of table: "exploreAsterismPreferences"
+  """
+  updateExploreAsterismPreferencesMany(
+    """updates to execute, in order"""
+    updates: [ExploreAsterismPreferencesUpdates!]!
+  ): [ExploreAsterismPreferencesMutationResponse]
 
   """
   update data of the table: "exploreFinderChart"
   """
   updateExploreFinderChart(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
+    """increments the numeric columns with given value of the filtered values"""
     _inc: ExploreFinderChartIncInput
 
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ExploreFinderChartSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: ExploreFinderChartBoolExp!
   ): ExploreFinderChartMutationResponse
 
@@ -5028,14 +4196,10 @@ type Mutation {
   update single row of the table: "exploreFinderChart"
   """
   updateExploreFinderChartByPk(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
+    """increments the numeric columns with given value of the filtered values"""
     _inc: ExploreFinderChartIncInput
 
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ExploreFinderChartSetInput
     pk_columns: ExploreFinderChartPkColumnsInput!
   ): ExploreFinderChart
@@ -5044,9 +4208,7 @@ type Mutation {
   update multiples rows of table: "exploreFinderChart"
   """
   updateExploreFinderChartMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [ExploreFinderChartUpdates!]!
   ): [ExploreFinderChartMutationResponse]
 
@@ -5054,14 +4216,10 @@ type Mutation {
   update data of the table: "explorePlotRange"
   """
   updateExplorePlotRange(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ExplorePlotRangeSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: ExplorePlotRangeBoolExp!
   ): ExplorePlotRangeMutationResponse
 
@@ -5069,9 +4227,7 @@ type Mutation {
   update single row of the table: "explorePlotRange"
   """
   updateExplorePlotRangeByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ExplorePlotRangeSetInput
     pk_columns: ExplorePlotRangePkColumnsInput!
   ): ExplorePlotRange
@@ -5080,9 +4236,7 @@ type Mutation {
   update multiples rows of table: "explorePlotRange"
   """
   updateExplorePlotRangeMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [ExplorePlotRangeUpdates!]!
   ): [ExplorePlotRangeMutationResponse]
 
@@ -5090,14 +4244,10 @@ type Mutation {
   update data of the table: "explorePlotTime"
   """
   updateExplorePlotTime(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ExplorePlotTimeSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: ExplorePlotTimeBoolExp!
   ): ExplorePlotTimeMutationResponse
 
@@ -5105,9 +4255,7 @@ type Mutation {
   update single row of the table: "explorePlotTime"
   """
   updateExplorePlotTimeByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ExplorePlotTimeSetInput
     pk_columns: ExplorePlotTimePkColumnsInput!
   ): ExplorePlotTime
@@ -5116,70 +4264,18 @@ type Mutation {
   update multiples rows of table: "explorePlotTime"
   """
   updateExplorePlotTimeMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [ExplorePlotTimeUpdates!]!
   ): [ExplorePlotTimeMutationResponse]
-
-  """
-  update data of the table: "exploreTargetPreferences"
-  """
-  updateExploreTargetPreferences(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
-    _inc: ExploreTargetPreferencesIncInput
-
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: ExploreTargetPreferencesSetInput
-
-    """
-    filter the rows which have to be updated
-    """
-    where: ExploreTargetPreferencesBoolExp!
-  ): ExploreTargetPreferencesMutationResponse
-
-  """
-  update single row of the table: "exploreTargetPreferences"
-  """
-  updateExploreTargetPreferencesByPk(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
-    _inc: ExploreTargetPreferencesIncInput
-
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: ExploreTargetPreferencesSetInput
-    pk_columns: ExploreTargetPreferencesPkColumnsInput!
-  ): ExploreTargetPreferences
-
-  """
-  update multiples rows of table: "exploreTargetPreferences"
-  """
-  updateExploreTargetPreferencesMany(
-    """
-    updates to execute, in order
-    """
-    updates: [ExploreTargetPreferencesUpdates!]!
-  ): [ExploreTargetPreferencesMutationResponse]
 
   """
   update data of the table: "ItcChartType"
   """
   updateItcChartType(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ItcChartTypeSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: ItcChartTypeBoolExp!
   ): ItcChartTypeMutationResponse
 
@@ -5187,9 +4283,7 @@ type Mutation {
   update single row of the table: "ItcChartType"
   """
   updateItcChartTypeByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: ItcChartTypeSetInput
     pk_columns: ItcChartTypePkColumnsInput!
   ): ItcChartType
@@ -5198,24 +4292,52 @@ type Mutation {
   update multiples rows of table: "ItcChartType"
   """
   updateItcChartTypeMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [ItcChartTypeUpdates!]!
   ): [ItcChartTypeMutationResponse]
+
+  """
+  update data of the table: "lucumaAsterism"
+  """
+  updateLucumaAsterism(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: LucumaAsterismIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaAsterismSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaAsterismBoolExp!
+  ): LucumaAsterismMutationResponse
+
+  """
+  update single row of the table: "lucumaAsterism"
+  """
+  updateLucumaAsterismByPk(
+    """increments the numeric columns with given value of the filtered values"""
+    _inc: LucumaAsterismIncInput
+
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaAsterismSetInput
+    pk_columns: LucumaAsterismPkColumnsInput!
+  ): LucumaAsterism
+
+  """
+  update multiples rows of table: "lucumaAsterism"
+  """
+  updateLucumaAsterismMany(
+    """updates to execute, in order"""
+    updates: [LucumaAsterismUpdates!]!
+  ): [LucumaAsterismMutationResponse]
 
   """
   update data of the table: "lucumaGridBreakpointName"
   """
   updateLucumaGridBreakpointName(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaGridBreakpointNameSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaGridBreakpointNameBoolExp!
   ): LucumaGridBreakpointNameMutationResponse
 
@@ -5223,9 +4345,7 @@ type Mutation {
   update single row of the table: "lucumaGridBreakpointName"
   """
   updateLucumaGridBreakpointNameByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaGridBreakpointNameSetInput
     pk_columns: LucumaGridBreakpointNamePkColumnsInput!
   ): LucumaGridBreakpointName
@@ -5234,9 +4354,7 @@ type Mutation {
   update multiples rows of table: "lucumaGridBreakpointName"
   """
   updateLucumaGridBreakpointNameMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaGridBreakpointNameUpdates!]!
   ): [LucumaGridBreakpointNameMutationResponse]
 
@@ -5244,14 +4362,10 @@ type Mutation {
   update data of the table: "lucumaGridLayoutId"
   """
   updateLucumaGridLayoutId(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaGridLayoutIdSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaGridLayoutIdBoolExp!
   ): LucumaGridLayoutIdMutationResponse
 
@@ -5259,9 +4373,7 @@ type Mutation {
   update single row of the table: "lucumaGridLayoutId"
   """
   updateLucumaGridLayoutIdByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaGridLayoutIdSetInput
     pk_columns: LucumaGridLayoutIdPkColumnsInput!
   ): LucumaGridLayoutId
@@ -5270,9 +4382,7 @@ type Mutation {
   update multiples rows of table: "lucumaGridLayoutId"
   """
   updateLucumaGridLayoutIdMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaGridLayoutIdUpdates!]!
   ): [LucumaGridLayoutIdMutationResponse]
 
@@ -5280,19 +4390,13 @@ type Mutation {
   update data of the table: "lucumaGridLayoutPositions"
   """
   updateLucumaGridLayoutPositions(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
+    """increments the numeric columns with given value of the filtered values"""
     _inc: LucumaGridLayoutPositionsIncInput
 
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaGridLayoutPositionsSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaGridLayoutPositionsBoolExp!
   ): LucumaGridLayoutPositionsMutationResponse
 
@@ -5300,14 +4404,10 @@ type Mutation {
   update single row of the table: "lucumaGridLayoutPositions"
   """
   updateLucumaGridLayoutPositionsByPk(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
+    """increments the numeric columns with given value of the filtered values"""
     _inc: LucumaGridLayoutPositionsIncInput
 
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaGridLayoutPositionsSetInput
     pk_columns: LucumaGridLayoutPositionsPkColumnsInput!
   ): LucumaGridLayoutPositions
@@ -5316,9 +4416,7 @@ type Mutation {
   update multiples rows of table: "lucumaGridLayoutPositions"
   """
   updateLucumaGridLayoutPositionsMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaGridLayoutPositionsUpdates!]!
   ): [LucumaGridLayoutPositionsMutationResponse]
 
@@ -5326,14 +4424,10 @@ type Mutation {
   update data of the table: "lucumaObservation"
   """
   updateLucumaObservation(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaObservationSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaObservationBoolExp!
   ): LucumaObservationMutationResponse
 
@@ -5341,9 +4435,7 @@ type Mutation {
   update single row of the table: "lucumaObservation"
   """
   updateLucumaObservationByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaObservationSetInput
     pk_columns: LucumaObservationPkColumnsInput!
   ): LucumaObservation
@@ -5352,9 +4444,7 @@ type Mutation {
   update multiples rows of table: "lucumaObservation"
   """
   updateLucumaObservationMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaObservationUpdates!]!
   ): [LucumaObservationMutationResponse]
 
@@ -5362,14 +4452,10 @@ type Mutation {
   update data of the table: "lucumaSortDirection"
   """
   updateLucumaSortDirection(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaSortDirectionSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaSortDirectionBoolExp!
   ): LucumaSortDirectionMutationResponse
 
@@ -5377,9 +4463,7 @@ type Mutation {
   update single row of the table: "lucumaSortDirection"
   """
   updateLucumaSortDirectionByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaSortDirectionSetInput
     pk_columns: LucumaSortDirectionPkColumnsInput!
   ): LucumaSortDirection
@@ -5388,9 +4472,7 @@ type Mutation {
   update multiples rows of table: "lucumaSortDirection"
   """
   updateLucumaSortDirectionMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaSortDirectionUpdates!]!
   ): [LucumaSortDirectionMutationResponse]
 
@@ -5398,19 +4480,13 @@ type Mutation {
   update data of the table: "lucumaTableColumnPreferences"
   """
   updateLucumaTableColumnPreferences(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
+    """increments the numeric columns with given value of the filtered values"""
     _inc: LucumaTableColumnPreferencesIncInput
 
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaTableColumnPreferencesSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaTableColumnPreferencesBoolExp!
   ): LucumaTableColumnPreferencesMutationResponse
 
@@ -5418,14 +4494,10 @@ type Mutation {
   update single row of the table: "lucumaTableColumnPreferences"
   """
   updateLucumaTableColumnPreferencesByPk(
-    """
-    increments the numeric columns with given value of the filtered values
-    """
+    """increments the numeric columns with given value of the filtered values"""
     _inc: LucumaTableColumnPreferencesIncInput
 
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaTableColumnPreferencesSetInput
     pk_columns: LucumaTableColumnPreferencesPkColumnsInput!
   ): LucumaTableColumnPreferences
@@ -5434,9 +4506,7 @@ type Mutation {
   update multiples rows of table: "lucumaTableColumnPreferences"
   """
   updateLucumaTableColumnPreferencesMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaTableColumnPreferencesUpdates!]!
   ): [LucumaTableColumnPreferencesMutationResponse]
 
@@ -5444,14 +4514,10 @@ type Mutation {
   update data of the table: "lucumaTableIds"
   """
   updateLucumaTableIds(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaTableIdsSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaTableIdsBoolExp!
   ): LucumaTableIdsMutationResponse
 
@@ -5459,9 +4525,7 @@ type Mutation {
   update single row of the table: "lucumaTableIds"
   """
   updateLucumaTableIdsByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaTableIdsSetInput
     pk_columns: LucumaTableIdsPkColumnsInput!
   ): LucumaTableIds
@@ -5470,60 +4534,18 @@ type Mutation {
   update multiples rows of table: "lucumaTableIds"
   """
   updateLucumaTableIdsMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaTableIdsUpdates!]!
   ): [LucumaTableIdsMutationResponse]
-
-  """
-  update data of the table: "lucumaTarget"
-  """
-  updateLucumaTarget(
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: LucumaTargetSetInput
-
-    """
-    filter the rows which have to be updated
-    """
-    where: LucumaTargetBoolExp!
-  ): LucumaTargetMutationResponse
-
-  """
-  update single row of the table: "lucumaTarget"
-  """
-  updateLucumaTargetByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
-    _set: LucumaTargetSetInput
-    pk_columns: LucumaTargetPkColumnsInput!
-  ): LucumaTarget
-
-  """
-  update multiples rows of table: "lucumaTarget"
-  """
-  updateLucumaTargetMany(
-    """
-    updates to execute, in order
-    """
-    updates: [LucumaTargetUpdates!]!
-  ): [LucumaTargetMutationResponse]
 
   """
   update data of the table: "lucumaUser"
   """
   updateLucumaUser(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaUserSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaUserBoolExp!
   ): LucumaUserMutationResponse
 
@@ -5531,9 +4553,7 @@ type Mutation {
   update single row of the table: "lucumaUser"
   """
   updateLucumaUserByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaUserSetInput
     pk_columns: LucumaUserPkColumnsInput!
   ): LucumaUser
@@ -5542,9 +4562,7 @@ type Mutation {
   update multiples rows of table: "lucumaUser"
   """
   updateLucumaUserMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaUserUpdates!]!
   ): [LucumaUserMutationResponse]
 
@@ -5552,14 +4570,10 @@ type Mutation {
   update data of the table: "lucumaUserPreferences"
   """
   updateLucumaUserPreferences(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaUserPreferencesSetInput
 
-    """
-    filter the rows which have to be updated
-    """
+    """filter the rows which have to be updated"""
     where: LucumaUserPreferencesBoolExp!
   ): LucumaUserPreferencesMutationResponse
 
@@ -5567,9 +4581,7 @@ type Mutation {
   update single row of the table: "lucumaUserPreferences"
   """
   updateLucumaUserPreferencesByPk(
-    """
-    sets the columns of the filtered rows to the given values
-    """
+    """sets the columns of the filtered rows to the given values"""
     _set: LucumaUserPreferencesSetInput
     pk_columns: LucumaUserPreferencesPkColumnsInput!
   ): LucumaUserPreferences
@@ -5578,41 +4590,74 @@ type Mutation {
   update multiples rows of table: "lucumaUserPreferences"
   """
   updateLucumaUserPreferencesMany(
-    """
-    updates to execute, in order
-    """
+    """updates to execute, in order"""
     updates: [LucumaUserPreferencesUpdates!]!
   ): [LucumaUserPreferencesMutationResponse]
 }
 
 type Query {
   """
+  fetch data from the table: "exploreAsterismPreferences"
+  """
+  exploreAsterismPreferences(
+    """distinct select on columns"""
+    distinctOn: [ExploreAsterismPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreAsterismPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreAsterismPreferencesBoolExp
+  ): [ExploreAsterismPreferences!]!
+
+  """
+  fetch aggregated fields from the table: "exploreAsterismPreferences"
+  """
+  exploreAsterismPreferencesAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreAsterismPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreAsterismPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreAsterismPreferencesBoolExp
+  ): ExploreAsterismPreferencesAggregate!
+
+  """
+  fetch data from the table: "exploreAsterismPreferences" using primary key columns
+  """
+  exploreAsterismPreferencesByPk(id: Int!): ExploreAsterismPreferences
+
+  """
   fetch data from the table: "exploreFinderChart"
   """
   exploreFinderChart(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExploreFinderChartSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExploreFinderChartOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): [ExploreFinderChart!]!
 
@@ -5620,29 +4665,19 @@ type Query {
   fetch aggregated fields from the table: "exploreFinderChart"
   """
   exploreFinderChartAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExploreFinderChartSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExploreFinderChartOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): ExploreFinderChartAggregate!
 
@@ -5655,29 +4690,19 @@ type Query {
   fetch data from the table: "explorePlotRange"
   """
   explorePlotRange(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotRangeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotRangeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotRangeBoolExp
   ): [ExplorePlotRange!]!
 
@@ -5685,29 +4710,19 @@ type Query {
   fetch aggregated fields from the table: "explorePlotRange"
   """
   explorePlotRangeAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotRangeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotRangeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotRangeBoolExp
   ): ExplorePlotRangeAggregate!
 
@@ -5720,29 +4735,19 @@ type Query {
   fetch data from the table: "explorePlotTime"
   """
   explorePlotTime(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotTimeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotTimeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotTimeBoolExp
   ): [ExplorePlotTime!]!
 
@@ -5750,129 +4755,42 @@ type Query {
   fetch aggregated fields from the table: "explorePlotTime"
   """
   explorePlotTimeAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotTimeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotTimeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotTimeBoolExp
   ): ExplorePlotTimeAggregate!
 
-  """
-  fetch data from the table: "explorePlotTime" using primary key columns
-  """
+  """fetch data from the table: "explorePlotTime" using primary key columns"""
   explorePlotTimeByPk(id: String!): ExplorePlotTime
-
-  """
-  fetch data from the table: "exploreTargetPreferences"
-  """
-  exploreTargetPreferences(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreTargetPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreTargetPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): [ExploreTargetPreferences!]!
-
-  """
-  fetch aggregated fields from the table: "exploreTargetPreferences"
-  """
-  exploreTargetPreferencesAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreTargetPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreTargetPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): ExploreTargetPreferencesAggregate!
-
-  """
-  fetch data from the table: "exploreTargetPreferences" using primary key columns
-  """
-  exploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
 
   """
   fetch data from the table: "ItcChartType"
   """
   itcChartType(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ItcChartTypeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ItcChartTypeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ItcChartTypeBoolExp
   ): [ItcChartType!]!
 
@@ -5880,64 +4798,85 @@ type Query {
   fetch aggregated fields from the table: "ItcChartType"
   """
   itcChartTypeAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ItcChartTypeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ItcChartTypeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ItcChartTypeBoolExp
   ): ItcChartTypeAggregate!
 
-  """
-  fetch data from the table: "ItcChartType" using primary key columns
-  """
+  """fetch data from the table: "ItcChartType" using primary key columns"""
   itcChartTypeByPk(id: String!): ItcChartType
+
+  """
+  fetch data from the table: "lucumaAsterism"
+  """
+  lucumaAsterism(
+    """distinct select on columns"""
+    distinctOn: [LucumaAsterismSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaAsterismOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): [LucumaAsterism!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaAsterism"
+  """
+  lucumaAsterismAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaAsterismSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaAsterismOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): LucumaAsterismAggregate!
+
+  """fetch data from the table: "lucumaAsterism" using primary key columns"""
+  lucumaAsterismByPk(prefId: Int!, targetId: String!): LucumaAsterism
 
   """
   fetch data from the table: "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointName(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridBreakpointNameSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridBreakpointNameOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridBreakpointNameBoolExp
   ): [LucumaGridBreakpointName!]!
 
@@ -5945,29 +4884,19 @@ type Query {
   fetch aggregated fields from the table: "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointNameAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridBreakpointNameSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridBreakpointNameOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridBreakpointNameBoolExp
   ): LucumaGridBreakpointNameAggregate!
 
@@ -5980,29 +4909,19 @@ type Query {
   fetch data from the table: "lucumaGridLayoutId"
   """
   lucumaGridLayoutId(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutIdSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutIdOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutIdBoolExp
   ): [LucumaGridLayoutId!]!
 
@@ -6010,29 +4929,19 @@ type Query {
   fetch aggregated fields from the table: "lucumaGridLayoutId"
   """
   lucumaGridLayoutIdAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutIdSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutIdOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutIdBoolExp
   ): LucumaGridLayoutIdAggregate!
 
@@ -6045,29 +4954,19 @@ type Query {
   fetch data from the table: "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositions(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutPositionsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutPositionsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutPositionsBoolExp
   ): [LucumaGridLayoutPositions!]!
 
@@ -6075,69 +4974,44 @@ type Query {
   fetch aggregated fields from the table: "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositionsAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutPositionsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutPositionsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutPositionsBoolExp
   ): LucumaGridLayoutPositionsAggregate!
 
   """
   fetch data from the table: "lucumaGridLayoutPositions" using primary key columns
   """
-  lucumaGridLayoutPositionsByPk(
-    breakpointName: LucumaGridBreakpointNameEnum!
-    section: LucumaGridLayoutIdEnum!
-    tile: String!
-    userId: String!
-  ): LucumaGridLayoutPositions
+  lucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   fetch data from the table: "lucumaObservation"
   """
   lucumaObservation(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaObservationSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaObservationOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaObservationBoolExp
   ): [LucumaObservation!]!
 
@@ -6145,29 +5019,19 @@ type Query {
   fetch aggregated fields from the table: "lucumaObservation"
   """
   lucumaObservationAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaObservationSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaObservationOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaObservationBoolExp
   ): LucumaObservationAggregate!
 
@@ -6180,29 +5044,19 @@ type Query {
   fetch data from the table: "lucumaSortDirection"
   """
   lucumaSortDirection(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaSortDirectionSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaSortDirectionOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaSortDirectionBoolExp
   ): [LucumaSortDirection!]!
 
@@ -6210,29 +5064,19 @@ type Query {
   fetch aggregated fields from the table: "lucumaSortDirection"
   """
   lucumaSortDirectionAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaSortDirectionSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaSortDirectionOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaSortDirectionBoolExp
   ): LucumaSortDirectionAggregate!
 
@@ -6245,29 +5089,19 @@ type Query {
   fetch data from the table: "lucumaTableColumnPreferences"
   """
   lucumaTableColumnPreferences(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableColumnPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableColumnPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableColumnPreferencesBoolExp
   ): [LucumaTableColumnPreferences!]!
 
@@ -6275,68 +5109,44 @@ type Query {
   fetch aggregated fields from the table: "lucumaTableColumnPreferences"
   """
   lucumaTableColumnPreferencesAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableColumnPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableColumnPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableColumnPreferencesBoolExp
   ): LucumaTableColumnPreferencesAggregate!
 
   """
   fetch data from the table: "lucumaTableColumnPreferences" using primary key columns
   """
-  lucumaTableColumnPreferencesByPk(
-    columnId: String!
-    tableId: LucumaTableIdsEnum!
-    userId: String!
-  ): LucumaTableColumnPreferences
+  lucumaTableColumnPreferencesByPk(columnId: String!, tableId: LucumaTableIdsEnum!, userId: String!): LucumaTableColumnPreferences
 
   """
   fetch data from the table: "lucumaTableIds"
   """
   lucumaTableIds(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableIdsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableIdsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableIdsBoolExp
   ): [LucumaTableIds!]!
 
@@ -6344,129 +5154,42 @@ type Query {
   fetch aggregated fields from the table: "lucumaTableIds"
   """
   lucumaTableIdsAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableIdsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableIdsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableIdsBoolExp
   ): LucumaTableIdsAggregate!
 
-  """
-  fetch data from the table: "lucumaTableIds" using primary key columns
-  """
+  """fetch data from the table: "lucumaTableIds" using primary key columns"""
   lucumaTableIdsByPk(id: String!): LucumaTableIds
-
-  """
-  fetch data from the table: "lucumaTarget"
-  """
-  lucumaTarget(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaTargetSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaTargetOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaTargetBoolExp
-  ): [LucumaTarget!]!
-
-  """
-  fetch aggregated fields from the table: "lucumaTarget"
-  """
-  lucumaTargetAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaTargetSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaTargetOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaTargetBoolExp
-  ): LucumaTargetAggregate!
-
-  """
-  fetch data from the table: "lucumaTarget" using primary key columns
-  """
-  lucumaTargetByPk(targetId: String!): LucumaTarget
 
   """
   fetch data from the table: "lucumaUser"
   """
   lucumaUser(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserBoolExp
   ): [LucumaUser!]!
 
@@ -6474,64 +5197,42 @@ type Query {
   fetch aggregated fields from the table: "lucumaUser"
   """
   lucumaUserAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserBoolExp
   ): LucumaUserAggregate!
 
-  """
-  fetch data from the table: "lucumaUser" using primary key columns
-  """
+  """fetch data from the table: "lucumaUser" using primary key columns"""
   lucumaUserByPk(userId: String!): LucumaUser
 
   """
   fetch data from the table: "lucumaUserPreferences"
   """
   lucumaUserPreferences(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserPreferencesBoolExp
   ): [LucumaUserPreferences!]!
 
@@ -6539,29 +5240,19 @@ type Query {
   fetch aggregated fields from the table: "lucumaUserPreferences"
   """
   lucumaUserPreferencesAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserPreferencesBoolExp
   ): LucumaUserPreferencesAggregate!
 
@@ -6573,32 +5264,81 @@ type Query {
 
 type Subscription {
   """
+  fetch data from the table: "exploreAsterismPreferences"
+  """
+  exploreAsterismPreferences(
+    """distinct select on columns"""
+    distinctOn: [ExploreAsterismPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreAsterismPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreAsterismPreferencesBoolExp
+  ): [ExploreAsterismPreferences!]!
+
+  """
+  fetch aggregated fields from the table: "exploreAsterismPreferences"
+  """
+  exploreAsterismPreferencesAggregate(
+    """distinct select on columns"""
+    distinctOn: [ExploreAsterismPreferencesSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [ExploreAsterismPreferencesOrderBy!]
+
+    """filter the rows returned"""
+    where: ExploreAsterismPreferencesBoolExp
+  ): ExploreAsterismPreferencesAggregate!
+
+  """
+  fetch data from the table: "exploreAsterismPreferences" using primary key columns
+  """
+  exploreAsterismPreferencesByPk(id: Int!): ExploreAsterismPreferences
+
+  """
+  fetch data from the table in a streaming manner : "exploreAsterismPreferences"
+  """
+  exploreAsterismPreferencesStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [exploreAsterismPreferences_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: ExploreAsterismPreferencesBoolExp
+  ): [ExploreAsterismPreferences!]!
+
+  """
   fetch data from the table: "exploreFinderChart"
   """
   exploreFinderChart(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExploreFinderChartSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExploreFinderChartOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): [ExploreFinderChart!]!
 
@@ -6606,29 +5346,19 @@ type Subscription {
   fetch aggregated fields from the table: "exploreFinderChart"
   """
   exploreFinderChartAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExploreFinderChartSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExploreFinderChartOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): ExploreFinderChartAggregate!
 
@@ -6641,19 +5371,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "exploreFinderChart"
   """
   exploreFinderChartStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [exploreFinderChart_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExploreFinderChartBoolExp
   ): [ExploreFinderChart!]!
 
@@ -6661,29 +5385,19 @@ type Subscription {
   fetch data from the table: "explorePlotRange"
   """
   explorePlotRange(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotRangeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotRangeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotRangeBoolExp
   ): [ExplorePlotRange!]!
 
@@ -6691,29 +5405,19 @@ type Subscription {
   fetch aggregated fields from the table: "explorePlotRange"
   """
   explorePlotRangeAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotRangeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotRangeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotRangeBoolExp
   ): ExplorePlotRangeAggregate!
 
@@ -6726,19 +5430,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "explorePlotRange"
   """
   explorePlotRangeStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [explorePlotRange_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotRangeBoolExp
   ): [ExplorePlotRange!]!
 
@@ -6746,29 +5444,19 @@ type Subscription {
   fetch data from the table: "explorePlotTime"
   """
   explorePlotTime(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotTimeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotTimeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotTimeBoolExp
   ): [ExplorePlotTime!]!
 
@@ -6776,169 +5464,56 @@ type Subscription {
   fetch aggregated fields from the table: "explorePlotTime"
   """
   explorePlotTimeAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ExplorePlotTimeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ExplorePlotTimeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotTimeBoolExp
   ): ExplorePlotTimeAggregate!
 
-  """
-  fetch data from the table: "explorePlotTime" using primary key columns
-  """
+  """fetch data from the table: "explorePlotTime" using primary key columns"""
   explorePlotTimeByPk(id: String!): ExplorePlotTime
 
   """
   fetch data from the table in a streaming manner : "explorePlotTime"
   """
   explorePlotTimeStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [explorePlotTime_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ExplorePlotTimeBoolExp
   ): [ExplorePlotTime!]!
-
-  """
-  fetch data from the table: "exploreTargetPreferences"
-  """
-  exploreTargetPreferences(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreTargetPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreTargetPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): [ExploreTargetPreferences!]!
-
-  """
-  fetch aggregated fields from the table: "exploreTargetPreferences"
-  """
-  exploreTargetPreferencesAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [ExploreTargetPreferencesSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [ExploreTargetPreferencesOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): ExploreTargetPreferencesAggregate!
-
-  """
-  fetch data from the table: "exploreTargetPreferences" using primary key columns
-  """
-  exploreTargetPreferencesByPk(targetId: String!, userId: String!): ExploreTargetPreferences
-
-  """
-  fetch data from the table in a streaming manner : "exploreTargetPreferences"
-  """
-  exploreTargetPreferencesStream(
-    """
-    maximum number of rows returned in a single batch
-    """
-    batchSize: Int!
-
-    """
-    cursor to stream the results returned by the query
-    """
-    cursor: [exploreTargetPreferences_streamCursorInput]!
-
-    """
-    filter the rows returned
-    """
-    where: ExploreTargetPreferencesBoolExp
-  ): [ExploreTargetPreferences!]!
 
   """
   fetch data from the table: "ItcChartType"
   """
   itcChartType(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ItcChartTypeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ItcChartTypeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ItcChartTypeBoolExp
   ): [ItcChartType!]!
 
@@ -6946,84 +5521,113 @@ type Subscription {
   fetch aggregated fields from the table: "ItcChartType"
   """
   itcChartTypeAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [ItcChartTypeSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [ItcChartTypeOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ItcChartTypeBoolExp
   ): ItcChartTypeAggregate!
 
-  """
-  fetch data from the table: "ItcChartType" using primary key columns
-  """
+  """fetch data from the table: "ItcChartType" using primary key columns"""
   itcChartTypeByPk(id: String!): ItcChartType
 
   """
   fetch data from the table in a streaming manner : "ItcChartType"
   """
   itcChartTypeStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [ItcChartType_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: ItcChartTypeBoolExp
   ): [ItcChartType!]!
+
+  """
+  fetch data from the table: "lucumaAsterism"
+  """
+  lucumaAsterism(
+    """distinct select on columns"""
+    distinctOn: [LucumaAsterismSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaAsterismOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): [LucumaAsterism!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaAsterism"
+  """
+  lucumaAsterismAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaAsterismSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaAsterismOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): LucumaAsterismAggregate!
+
+  """fetch data from the table: "lucumaAsterism" using primary key columns"""
+  lucumaAsterismByPk(prefId: Int!, targetId: String!): LucumaAsterism
+
+  """
+  fetch data from the table in a streaming manner : "lucumaAsterism"
+  """
+  lucumaAsterismStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaAsterism_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaAsterismBoolExp
+  ): [LucumaAsterism!]!
 
   """
   fetch data from the table: "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointName(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridBreakpointNameSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridBreakpointNameOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridBreakpointNameBoolExp
   ): [LucumaGridBreakpointName!]!
 
@@ -7031,29 +5635,19 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointNameAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridBreakpointNameSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridBreakpointNameOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridBreakpointNameBoolExp
   ): LucumaGridBreakpointNameAggregate!
 
@@ -7066,19 +5660,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "lucumaGridBreakpointName"
   """
   lucumaGridBreakpointNameStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaGridBreakpointName_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridBreakpointNameBoolExp
   ): [LucumaGridBreakpointName!]!
 
@@ -7086,29 +5674,19 @@ type Subscription {
   fetch data from the table: "lucumaGridLayoutId"
   """
   lucumaGridLayoutId(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutIdSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutIdOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutIdBoolExp
   ): [LucumaGridLayoutId!]!
 
@@ -7116,29 +5694,19 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaGridLayoutId"
   """
   lucumaGridLayoutIdAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutIdSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutIdOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutIdBoolExp
   ): LucumaGridLayoutIdAggregate!
 
@@ -7151,19 +5719,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "lucumaGridLayoutId"
   """
   lucumaGridLayoutIdStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaGridLayoutId_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutIdBoolExp
   ): [LucumaGridLayoutId!]!
 
@@ -7171,29 +5733,19 @@ type Subscription {
   fetch data from the table: "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositions(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutPositionsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutPositionsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutPositionsBoolExp
   ): [LucumaGridLayoutPositions!]!
 
@@ -7201,59 +5753,38 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositionsAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaGridLayoutPositionsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaGridLayoutPositionsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutPositionsBoolExp
   ): LucumaGridLayoutPositionsAggregate!
 
   """
   fetch data from the table: "lucumaGridLayoutPositions" using primary key columns
   """
-  lucumaGridLayoutPositionsByPk(
-    breakpointName: LucumaGridBreakpointNameEnum!
-    section: LucumaGridLayoutIdEnum!
-    tile: String!
-    userId: String!
-  ): LucumaGridLayoutPositions
+  lucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
   fetch data from the table in a streaming manner : "lucumaGridLayoutPositions"
   """
   lucumaGridLayoutPositionsStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaGridLayoutPositions_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaGridLayoutPositionsBoolExp
   ): [LucumaGridLayoutPositions!]!
 
@@ -7261,29 +5792,19 @@ type Subscription {
   fetch data from the table: "lucumaObservation"
   """
   lucumaObservation(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaObservationSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaObservationOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaObservationBoolExp
   ): [LucumaObservation!]!
 
@@ -7291,29 +5812,19 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaObservation"
   """
   lucumaObservationAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaObservationSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaObservationOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaObservationBoolExp
   ): LucumaObservationAggregate!
 
@@ -7326,19 +5837,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "lucumaObservation"
   """
   lucumaObservationStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaObservation_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaObservationBoolExp
   ): [LucumaObservation!]!
 
@@ -7346,29 +5851,19 @@ type Subscription {
   fetch data from the table: "lucumaSortDirection"
   """
   lucumaSortDirection(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaSortDirectionSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaSortDirectionOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaSortDirectionBoolExp
   ): [LucumaSortDirection!]!
 
@@ -7376,29 +5871,19 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaSortDirection"
   """
   lucumaSortDirectionAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaSortDirectionSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaSortDirectionOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaSortDirectionBoolExp
   ): LucumaSortDirectionAggregate!
 
@@ -7411,19 +5896,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "lucumaSortDirection"
   """
   lucumaSortDirectionStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaSortDirection_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaSortDirectionBoolExp
   ): [LucumaSortDirection!]!
 
@@ -7431,29 +5910,19 @@ type Subscription {
   fetch data from the table: "lucumaTableColumnPreferences"
   """
   lucumaTableColumnPreferences(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableColumnPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableColumnPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableColumnPreferencesBoolExp
   ): [LucumaTableColumnPreferences!]!
 
@@ -7461,58 +5930,38 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaTableColumnPreferences"
   """
   lucumaTableColumnPreferencesAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableColumnPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableColumnPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableColumnPreferencesBoolExp
   ): LucumaTableColumnPreferencesAggregate!
 
   """
   fetch data from the table: "lucumaTableColumnPreferences" using primary key columns
   """
-  lucumaTableColumnPreferencesByPk(
-    columnId: String!
-    tableId: LucumaTableIdsEnum!
-    userId: String!
-  ): LucumaTableColumnPreferences
+  lucumaTableColumnPreferencesByPk(columnId: String!, tableId: LucumaTableIdsEnum!, userId: String!): LucumaTableColumnPreferences
 
   """
   fetch data from the table in a streaming manner : "lucumaTableColumnPreferences"
   """
   lucumaTableColumnPreferencesStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaTableColumnPreferences_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableColumnPreferencesBoolExp
   ): [LucumaTableColumnPreferences!]!
 
@@ -7520,29 +5969,19 @@ type Subscription {
   fetch data from the table: "lucumaTableIds"
   """
   lucumaTableIds(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableIdsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableIdsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableIdsBoolExp
   ): [LucumaTableIds!]!
 
@@ -7550,169 +5989,56 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaTableIds"
   """
   lucumaTableIdsAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaTableIdsSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaTableIdsOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableIdsBoolExp
   ): LucumaTableIdsAggregate!
 
-  """
-  fetch data from the table: "lucumaTableIds" using primary key columns
-  """
+  """fetch data from the table: "lucumaTableIds" using primary key columns"""
   lucumaTableIdsByPk(id: String!): LucumaTableIds
 
   """
   fetch data from the table in a streaming manner : "lucumaTableIds"
   """
   lucumaTableIdsStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaTableIds_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaTableIdsBoolExp
   ): [LucumaTableIds!]!
-
-  """
-  fetch data from the table: "lucumaTarget"
-  """
-  lucumaTarget(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaTargetSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaTargetOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaTargetBoolExp
-  ): [LucumaTarget!]!
-
-  """
-  fetch aggregated fields from the table: "lucumaTarget"
-  """
-  lucumaTargetAggregate(
-    """
-    distinct select on columns
-    """
-    distinctOn: [LucumaTargetSelectColumn!]
-
-    """
-    limit the number of rows returned
-    """
-    limit: Int
-
-    """
-    skip the first n rows. Use only with order_by
-    """
-    offset: Int
-
-    """
-    sort the rows by one or more columns
-    """
-    orderBy: [LucumaTargetOrderBy!]
-
-    """
-    filter the rows returned
-    """
-    where: LucumaTargetBoolExp
-  ): LucumaTargetAggregate!
-
-  """
-  fetch data from the table: "lucumaTarget" using primary key columns
-  """
-  lucumaTargetByPk(targetId: String!): LucumaTarget
-
-  """
-  fetch data from the table in a streaming manner : "lucumaTarget"
-  """
-  lucumaTargetStream(
-    """
-    maximum number of rows returned in a single batch
-    """
-    batchSize: Int!
-
-    """
-    cursor to stream the results returned by the query
-    """
-    cursor: [lucumaTarget_streamCursorInput]!
-
-    """
-    filter the rows returned
-    """
-    where: LucumaTargetBoolExp
-  ): [LucumaTarget!]!
 
   """
   fetch data from the table: "lucumaUser"
   """
   lucumaUser(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserBoolExp
   ): [LucumaUser!]!
 
@@ -7720,64 +6046,42 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaUser"
   """
   lucumaUserAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserBoolExp
   ): LucumaUserAggregate!
 
-  """
-  fetch data from the table: "lucumaUser" using primary key columns
-  """
+  """fetch data from the table: "lucumaUser" using primary key columns"""
   lucumaUserByPk(userId: String!): LucumaUser
 
   """
   fetch data from the table: "lucumaUserPreferences"
   """
   lucumaUserPreferences(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserPreferencesBoolExp
   ): [LucumaUserPreferences!]!
 
@@ -7785,29 +6089,19 @@ type Subscription {
   fetch aggregated fields from the table: "lucumaUserPreferences"
   """
   lucumaUserPreferencesAggregate(
-    """
-    distinct select on columns
-    """
+    """distinct select on columns"""
     distinctOn: [LucumaUserPreferencesSelectColumn!]
 
-    """
-    limit the number of rows returned
-    """
+    """limit the number of rows returned"""
     limit: Int
 
-    """
-    skip the first n rows. Use only with order_by
-    """
+    """skip the first n rows. Use only with order_by"""
     offset: Int
 
-    """
-    sort the rows by one or more columns
-    """
+    """sort the rows by one or more columns"""
     orderBy: [LucumaUserPreferencesOrderBy!]
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserPreferencesBoolExp
   ): LucumaUserPreferencesAggregate!
 
@@ -7820,19 +6114,13 @@ type Subscription {
   fetch data from the table in a streaming manner : "lucumaUserPreferences"
   """
   lucumaUserPreferencesStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaUserPreferences_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserPreferencesBoolExp
   ): [LucumaUserPreferences!]!
 
@@ -7840,21 +6128,16 @@ type Subscription {
   fetch data from the table in a streaming manner : "lucumaUser"
   """
   lucumaUserStream(
-    """
-    maximum number of rows returned in a single batch
-    """
+    """maximum number of rows returned in a single batch"""
     batchSize: Int!
 
-    """
-    cursor to stream the results returned by the query
-    """
+    """cursor to stream the results returned by the query"""
     cursor: [lucumaUser_streamCursorInput]!
 
-    """
-    filter the rows returned
-    """
+    """filter the rows returned"""
     where: LucumaUserBoolExp
   ): [LucumaUser!]!
 }
 
 scalar timestamptz
+

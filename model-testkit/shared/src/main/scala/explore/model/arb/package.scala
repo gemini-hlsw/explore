@@ -4,7 +4,7 @@
 package explore.model.arb
 
 object all
-    extends ArbTargetVisualOptions
+    extends ArbAsterismVisualOptions
     with CogenUUID
     with ArbKeyedIndexedList
     with ArbTree
