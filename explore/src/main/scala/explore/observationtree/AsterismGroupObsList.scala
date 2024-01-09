@@ -19,6 +19,7 @@ import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
@@ -56,9 +57,11 @@ case class AsterismGroupObsList(
   readonly:               Boolean
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
-  val programSummaries                         = undoCtx.model
-  val obsExecutions                            = programSummaries.get.obsExecutionPots
-  override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
+  val programSummaries                          = undoCtx.model
+  val obsExecutions                             = programSummaries.get.obsExecutionPots
+  val observations: UndoSetter[ObservationList] =
+    undoCtx.zoom(ProgramSummaries.observations)
+  override val focusedObsSet: Option[ObsIdSet]  = focused.obsSet
 
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
@@ -339,35 +342,46 @@ object AsterismGroupObsList:
                 )
                 .orEmpty
             )(
-              ^.cursor.pointer,
-              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
-              ^.onClick ==> { (e: ReactEvent) =>
-                e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
-              }
-            )(
-              csHeader,
-              TagMod.when(props.expandedIds.get.contains(obsIds))(
-                TagMod(
-                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                    props.renderObsBadgeItem(
-                      ObsBadge.Layout.TargetsTab,
-                      selectable = true,
-                      highlightSelected = true,
-                      forceHighlight = isObsSelected(obs.id),
-                      linkToObsTab = false,
-                      onSelect = obsId =>
-                        setFocused(
-                          props.focused
-                            .withSingleObs(obsId)
-                            .validateOrSetTarget(obs.scienceTargetIds)
-                        ),
-                      onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
-                      ctx
-                    )(obs, idx)
-                  }
-                )
-              ),
-              provided.placeholder
+              <.a(
+                ExploreStyles.ObsTreeGroup |+| Option
+                  .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                  .orElse(
+                    Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
+                  )
+                  .orEmpty
+              )(
+                ^.cursor.pointer,
+                ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
+                ^.onClick ==> { (e: ReactEvent) =>
+                  e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
+                }
+              )(
+                csHeader,
+                TagMod.when(props.expandedIds.get.contains(obsIds))(
+                  TagMod(
+                    cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                      val delete = props.undoableDeleteObs(
+                        obs.id,
+                        props.observations,
+                        o => setFocused(props.focused)
+                      )
+
+                      props.renderObsBadgeItem(
+                        ObsBadge.Layout.TargetsTab,
+                        selectable = true,
+                        highlightSelected = true,
+                        forceHighlight = isObsSelected(obs.id),
+                        linkToObsTab = false,
+                        onSelect = obsId => setFocused(props.focused.withSingleObs(obsId)),
+                        onDelete = delete.some,
+                        onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
+                        ctx = ctx
+                      )(obs, idx)
+                    }
+                  )
+                ),
+                provided.placeholder
+              )
             )
           )
         }

@@ -282,6 +282,11 @@ object SchedulingGroupObsList:
               csHeader,
               TagMod.when(props.expandedIds.get.contains(obsIds))(
                 cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                  val delete =
+                    props.undoableDeleteObs(obs.id,
+                                            props.observations,
+                                            o => setObsSet(obsIds.add(o).some)
+                    )
                   props.renderObsBadgeItem(
                     ObsBadge.Layout.ConstraintsTab,
                     selectable = true,
@@ -289,8 +294,9 @@ object SchedulingGroupObsList:
                     forceHighlight = isObsSelected(obs.id),
                     linkToObsTab = false,
                     onSelect = setObs,
+                    onDelete = delete.some,
                     onCtrlClick = id => handleCtrlClick(id, obsIds),
-                    ctx
+                    ctx = ctx
                   )(obs, idx)
                 }
               ),
