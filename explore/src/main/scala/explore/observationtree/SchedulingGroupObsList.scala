@@ -290,7 +290,7 @@ object SchedulingGroupObsList:
                     linkToObsTab = false,
                     onSelect = setObs,
                     onCtrlClick = id => handleCtrlClick(id, obsIds),
-                    ctx
+                    ctx = ctx
                   )(obs, idx)
                 }
               ),

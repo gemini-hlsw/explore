@@ -28,20 +28,23 @@ trait ViewCommon {
     obs:               ObsSummary,
     layout:            ObsBadge.Layout,
     highlightSelected: Boolean = true,
-    forceHighlight:    Boolean = false // if true, overrides highlightSelected
+    forceHighlight:    Boolean = false, // if true, overrides highlightSelected
+    onDelete:          Option[Callback] = none
   ): TagMod =
     ObsBadge(
       obs,
       obsExecutions.getPot(obs.id).map(_.programTimeEstimate),
       layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
-      readonly = readonly
+      readonly = readonly,
+      deleteCB = onDelete
     )
 
   def renderObsBadgeItem(
     layout:            ObsBadge.Layout,
     selectable:        Boolean,
     onSelect:          Observation.Id => Callback,
+    onDelete:          Option[Callback] = none,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false,
     linkToObsTab:      Boolean = false,
@@ -68,7 +71,7 @@ trait ViewCommon {
           }).when(linkToObsTab)
         )(
           <.span(provided.dragHandleProps)(
-            renderObsBadge(obs, layout, highlightSelected, forceHighlight)
+            renderObsBadge(obs, layout, highlightSelected, forceHighlight, onDelete)
           )
         )
       }

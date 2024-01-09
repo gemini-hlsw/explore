@@ -45,6 +45,7 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
+import explore.targets.ObservationDeleteAction
 
 case class AsterismGroupObsList(
   programId:              Program.Id,
@@ -339,35 +340,56 @@ object AsterismGroupObsList:
                 )
                 .orEmpty
             )(
-              ^.cursor.pointer,
-              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
-              ^.onClick ==> { (e: ReactEvent) =>
-                e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
-              }
-            )(
-              csHeader,
-              TagMod.when(props.expandedIds.get.contains(obsIds))(
-                TagMod(
-                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                    props.renderObsBadgeItem(
-                      ObsBadge.Layout.TargetsTab,
-                      selectable = true,
-                      highlightSelected = true,
-                      forceHighlight = isObsSelected(obs.id),
-                      linkToObsTab = false,
-                      onSelect = obsId =>
-                        setFocused(
-                          props.focused
-                            .withSingleObs(obsId)
-                            .validateOrSetTarget(obs.scienceTargetIds)
-                        ),
-                      onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
-                      ctx
-                    )(obs, idx)
-                  }
-                )
-              ),
-              provided.placeholder
+              <.a(
+                ExploreStyles.ObsTreeGroup |+| Option
+                  .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                  .orElse(
+                    Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
+                  )
+                  .orEmpty
+              )(
+                ^.cursor.pointer,
+                ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
+                ^.onClick ==> { (e: ReactEvent) =>
+                  e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
+                }
+              )(
+                csHeader,
+                TagMod.when(props.expandedIds.get.contains(obsIds))(
+                  TagMod(
+                    cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                      // val delete = ObservationDeleteAction
+                      //   .delete(props.programId,
+                      //           obs.id,
+                      //           props.expandedIds,
+                      //           setObs(props.programId, _, ctx).to[IO],
+                      //           IO.println
+                      //   )
+                      //   .mod(props.undoCtx)(identity)
+                      // val delete = obsExistence(
+                      //   obs.id,
+                      //   o => setObs(props.programId, o.some, ctx)
+                      // )
+                      //   // .mod(100)(100)
+                      //   // .mod(props.observations)(obsListMod.delete)
+                      //   .showToastCB(s"Deleted obs ${id.show}")
+
+                      props.renderObsBadgeItem(
+                        ObsBadge.Layout.TargetsTab,
+                        selectable = true,
+                        highlightSelected = true,
+                        forceHighlight = isObsSelected(obs.id),
+                        linkToObsTab = false,
+                        onSelect = obsId => setFocused(props.focused.withSingleObs(obsId)),
+                        // onDelete = delete.some,
+                        onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
+                        ctx = ctx
+                      )(obs, idx)
+                    }
+                  )
+                ),
+                provided.placeholder
+              )
             )
           )
         }
