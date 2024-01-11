@@ -27,6 +27,7 @@ out/
 .metals/
 metals.sbt
 .bsp/
+.vscode/
 
 # Mac OS
 .DS_Store

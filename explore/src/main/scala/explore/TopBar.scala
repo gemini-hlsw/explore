@@ -37,7 +37,7 @@ import lucuma.ui.Resources
 import lucuma.ui.components.About
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.components.ThemeSubMenu
-import lucuma.ui.enums.ExecutionEnvironment
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.ui.enums.Theme
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault

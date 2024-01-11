@@ -34,7 +34,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
-import lucuma.ui.enums.ExecutionEnvironment
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.http4s.dom.FetchClientBuilder

@@ -14,7 +14,7 @@ import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.schemas.enums.ProposalAttachmentType
-import lucuma.ui.enums.ExecutionEnvironment
+import lucuma.core.enums.ExecutionEnvironment
 import org.http4s.*
 import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder

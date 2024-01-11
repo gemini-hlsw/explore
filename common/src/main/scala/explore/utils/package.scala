@@ -28,7 +28,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.MessageItem
 import lucuma.react.primereact.ToastRef
-import lucuma.ui.enums.ExecutionEnvironment
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
