@@ -21,6 +21,7 @@ import fs2.Pull
 import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.util.NewType
 import lucuma.react.datepicker.*
 import lucuma.react.fa.IconSize
@@ -28,7 +29,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.MessageItem
 import lucuma.react.primereact.ToastRef
-import lucuma.core.enums.ExecutionEnvironment
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter

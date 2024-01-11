@@ -32,9 +32,9 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
-import lucuma.core.enums.ExecutionEnvironment
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.http4s.dom.FetchClientBuilder
