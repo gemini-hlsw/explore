@@ -1,4 +1,5 @@
 {
+  // Do not remove from Git: We want to keep these editor settings in the project.
   "files.watcherExclude": {
     "**/target": true
   },
