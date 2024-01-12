@@ -19,10 +19,10 @@ import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.feature.Context
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.schemas.ObservationDB
-import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.sso.SSOClient
 import org.typelevel.log4cats.Logger
 import queries.schemas.SSO

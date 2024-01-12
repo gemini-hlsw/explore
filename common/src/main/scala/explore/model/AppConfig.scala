@@ -9,7 +9,7 @@ import cats.derived.*
 import cats.effect.Async
 import cats.syntax.all.*
 import io.circe.*
-import lucuma.ui.enums.ExecutionEnvironment
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.ui.sso.SSOConfig
 import org.http4s.Uri
 import org.http4s.circe.*
