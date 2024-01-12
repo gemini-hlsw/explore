@@ -1,0 +1,13 @@
+{
+  "files.watcherExclude": {
+    "**/target": true
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": true
+    }
+  },
+  "editor.formatOnSave": true,
+  "stylelint.validate": ["css", "scss"]
+}
