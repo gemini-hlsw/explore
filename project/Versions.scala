@@ -17,7 +17,7 @@ object Versions {
   val geminiLocales          = "0.7.0"
   val http4s                 = "0.23.25"
   val http4sDom              = "0.2.11"
-  val kittens                = "3.1.0"
+  val kittens                = "3.2.0"
   val log4Cats               = "2.6.0"
   val log4CatsLogLevel       = "0.3.1"
   val lucumaBC               = "0.4.0"
