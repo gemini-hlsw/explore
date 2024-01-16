@@ -8,6 +8,7 @@ import clue.annotation.GraphQL
 import lucuma.core.model
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
+import explore.{model => exploreModel}
 // gql: import lucuma.odb.json.time.decoder.given
 // gql: import lucuma.schemas.decoders.given
 
@@ -94,18 +95,24 @@ object ProgramQueriesGQL {
               }
             }
           }
+          timeCharge {
+            program {
+              microseconds
+            }
+          }
         }
       }
     """
 
     object Data:
       object Program:
-        type Proposal = model.Proposal
+        type Proposal   = model.Proposal
         object TimeEstimateRange:
           object Minimum:
             type Total = TimeSpan
           object Maximum:
             type Total = TimeSpan
+        type TimeCharge = exploreModel.TimeCharge
   }
 
   @GraphQL
