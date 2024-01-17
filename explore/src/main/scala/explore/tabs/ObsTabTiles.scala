@@ -99,7 +99,6 @@ object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
-    programId:         Program.Id,
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet]
@@ -111,7 +110,7 @@ object ObsTabTiles:
         onChange = (cs: ConstraintSet) =>
           constraintSet.set(cs) >>
             ObsQueries
-              .updateObservationConstraintSet[IO](programId, List(observationId), cs)
+              .updateObservationConstraintSet[IO](List(observationId), cs)
               .runAsyncAndForget,
         options = allConstraintSets
           .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
@@ -289,7 +288,7 @@ object ObsTabTiles:
               .zoom(ObsSummary.posAngleConstraint)
               .withOnMod(pa =>
                 ObsQueries
-                  .updatePosAngle[IO](props.programId, List(props.obsId), pa)
+                  .updatePosAngle[IO](List(props.obsId), pa)
                   .switching(agsState.async, AgsState.Saving, AgsState.Idle)
                   .runAsync
               )
@@ -325,7 +324,7 @@ object ObsTabTiles:
 
           val attachmentsView =
             props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
-              obsEditAttachments(props.programId, props.obsId, ids).runAsync
+              obsEditAttachments(props.obsId, ids).runAsync
             }
 
           val pa: Option[Angle] =
@@ -386,7 +385,6 @@ object ObsTabTiles:
 
           val constraintsSelector: VdomNode =
             makeConstraintsSelector(
-              props.programId,
               props.obsId,
               props.observation.model.zoom(ObsSummary.constraints),
               props.allConstraintSets
@@ -394,7 +392,6 @@ object ObsTabTiles:
 
           val timingWindows: View[List[TimingWindow]] =
             TimingWindowsQueries.viewWithRemoteMod(
-              props.programId,
               ObsIdSet.one(props.obsId),
               props.observation.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
@@ -492,7 +489,6 @@ object ObsTabTiles:
             )(renderInTitle =>
               <.div
               ConstraintsPanel(
-                props.programId,
                 ObsIdSet.one(props.obsId),
                 props.observation.zoom(ObsSummary.constraints),
                 renderInTitle

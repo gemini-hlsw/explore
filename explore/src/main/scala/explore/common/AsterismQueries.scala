@@ -20,12 +20,10 @@ import queries.common.ObsQueriesGQL.*
 object AsterismQueries:
 
   def replaceAsterism[F[_]: Async](
-    programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateObservationsInput(
-      programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = ObservationPropertiesInput(
         targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign

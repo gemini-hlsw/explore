@@ -113,7 +113,6 @@ object SchedulingGroupObsList:
 
   private def onDragEnd(
     undoCtx:          UndoSetter[ObservationList],
-    programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
     schedulingGroups: SchedulingGroupList
@@ -149,7 +148,6 @@ object SchedulingGroupObsList:
       ) >>
         TimingWindowsQueries
           .viewWithRemoteMod[IO](
-            programId,
             draggedIds,
             twUndoCtx.undoableView(Iso.id.asLens)
           )
@@ -221,7 +219,6 @@ object SchedulingGroupObsList:
 
       val handleDragEnd = onDragEnd(
         props.observations,
-        props.programId,
         props.expandedIds,
         props.focusedObsSet,
         props.schedulingGroups

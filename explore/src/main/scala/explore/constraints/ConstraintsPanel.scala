@@ -20,7 +20,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.Program
 import lucuma.core.model.validation.ModelValidators
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -39,7 +38,6 @@ import lucuma.ui.utils.given
 import monocle.Lens
 
 case class ConstraintsPanel(
-  programId:     Program.Id,
   obsIds:        ObsIdSet,
   undoCtx:       UndoSetter[ConstraintSet],
   renderInTitle: Tile.RenderInTitle
@@ -96,7 +94,7 @@ object ConstraintsPanel:
       .render { (props, ctx, elevationRangeOptions) =>
         import ctx.given
 
-        val undoViewSet = UndoView(props.programId, props.obsIds, props.undoCtx)
+        val undoViewSet = UndoView(props.obsIds, props.undoCtx)
 
         val erView =
           undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)

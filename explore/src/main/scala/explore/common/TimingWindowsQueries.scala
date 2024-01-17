@@ -13,7 +13,6 @@ import explore.model.ObsIdSet
 import explore.syntax.ui.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.util.Effect.Dispatch
-import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -23,16 +22,14 @@ import queries.common.ObsQueriesGQL.UpdateObservationMutation
 
 object TimingWindowsQueries:
   def viewWithRemoteMod[F[_]: MonadThrow: Dispatch](
-    programId: Program.Id,
-    obsIds:    ObsIdSet,
-    view:      View[List[TimingWindow]]
+    obsIds: ObsIdSet,
+    view:   View[List[TimingWindow]]
   )(using FetchClient[F, ObservationDB], Logger[F], ToastCtx[F]): View[List[TimingWindow]] =
     view
       .withOnMod(value =>
         UpdateObservationMutation[F]
           .execute(
             UpdateObservationsInput(
-              programId = programId,
               WHERE = obsIds.toList.toWhereObservation.assign,
               SET = ObservationPropertiesInput(
                 timingWindows = value.map(_.toInput).assign
