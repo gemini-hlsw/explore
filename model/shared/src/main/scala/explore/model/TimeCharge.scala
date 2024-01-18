@@ -5,9 +5,8 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all.*
 import io.circe.Decoder
-import lucuma.core.model.sequence.ExecutionDigest
-import lucuma.odb.json.sequence.given
+import lucuma.core.util.TimeSpan
+import lucuma.odb.json.time.decoder.given
 
-case class Execution(digest: Option[ExecutionDigest], timeCharge: TimeCharge) derives Decoder, Eq
+final case class TimeCharge(program: TimeSpan) derives Decoder, Eq

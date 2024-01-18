@@ -17,6 +17,7 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
@@ -33,6 +34,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
+import explore.model.syntax.all.toHoursMinutes
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
@@ -361,12 +363,28 @@ object ObsTabTiles:
             )
 
           val sequenceTile =
-            SequenceEditorTile.sequenceTile(
-              props.programId,
-              props.obsId,
-              asterismIds.get.toList,
-              itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
-              sequenceChanged
+            SequenceEditorTile.sequenceTile(renderInTitle =>
+              React.Fragment(
+                renderInTitle {
+                  val programTimeCharge = props.observation.get.execution.timeCharge.program
+                  props.observation.get.executionTime
+                    .map { planned =>
+                      val total = programTimeCharge +| planned
+                      <.span(
+                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
+                        s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                      )
+                    }
+                    .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                },
+                GeneratedSequenceViewer(
+                  props.programId,
+                  props.obsId,
+                  asterismIds.get.toList,
+                  itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
+                  sequenceChanged
+                )
+              )
             )
 
           val itcTile: Tile =

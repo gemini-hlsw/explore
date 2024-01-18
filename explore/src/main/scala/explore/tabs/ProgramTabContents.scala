@@ -55,7 +55,8 @@ object ProgramTabContents:
                            prog.timeEstimateRange.map(_.minimum.total),
                            prog.timeEstimateRange.map(_.maximum.total),
                            prog.pi,
-                           prog.users
+                           prog.users,
+                           prog.timeCharge
               )
             )
         )

@@ -27,7 +27,7 @@ object ProgramDetailsTile:
         propInfo    <- props.optProposal
         minTime     <- propInfo.minExecutionTime
         maxTime     <- propInfo.maxExecutionTime
-        used         = TimeSpan.Zero // TODO
+        used         = propInfo.timeCharge.program
         remain       = TimeSpan.Zero // TODO
         isSingleTime = minTime == maxTime
       } yield table(
