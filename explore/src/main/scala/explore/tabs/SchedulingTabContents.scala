@@ -110,7 +110,6 @@ object SchedulingTabContents extends TwoPanels:
 
               val twView: View[List[TimingWindow]] =
                 TimingWindowsQueries.viewWithRemoteMod(
-                  props.programId,
                   idsToEdit,
                   observations
                     .undoableView[List[TimingWindow]](

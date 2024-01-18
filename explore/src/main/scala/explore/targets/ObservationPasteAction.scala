@@ -14,7 +14,6 @@ import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
@@ -63,7 +62,6 @@ object ObservationPasteAction {
     }
 
   def paste(
-    programId:   Program.Id,
     ids:         List[(Observation.Id, List[Target.Id])],
     expandedIds: View[SortedSet[ObsIdSet]]
   )(using
@@ -75,10 +73,10 @@ object ObservationPasteAction {
         val obsIds = ids.map(_._1)
         olObsSumm.fold(
           expandedIds.mod(updateExpandedIds(ids, agwo, false)).toAsync >>
-            ObsQueries.deleteObservations[IO](programId, obsIds)
+            ObsQueries.deleteObservations[IO](obsIds)
         )(_ =>
           expandedIds.mod(updateExpandedIds(ids, agwo, true)).toAsync >>
-            ObsQueries.undeleteObservations[IO](programId, obsIds)
+            ObsQueries.undeleteObservations[IO](obsIds)
         )
     )
 }

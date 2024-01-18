@@ -46,7 +46,6 @@ object ObsQueries:
       FixedExposureMode(PosInt.unsafeFrom(self.sciExposures.value), self.sciExposureTime)
 
   def updateObservationConstraintSet[F[_]: Async](
-    programId:   Program.Id,
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
   )(using FetchClient[F, ObservationDB]): F[Unit] = {
@@ -76,7 +75,6 @@ object ObsQueries:
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -85,7 +83,6 @@ object ObsQueries:
   }
 
   def updateVisualizationTime[F[_]: Async](
-    programId:         Program.Id,
     obsIds:            List[Observation.Id],
     visualizationTime: Option[Instant]
   )(using FetchClient[F, ObservationDB]): F[Unit] = {
@@ -97,7 +94,6 @@ object ObsQueries:
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -106,7 +102,6 @@ object ObsQueries:
   }
 
   def updatePosAngle[F[_]: Async](
-    programId:          Program.Id,
     obsIds:             List[Observation.Id],
     posAngleConstraint: PosAngleConstraint
   )(using FetchClient[F, ObservationDB]): F[Unit] = {
@@ -117,7 +112,6 @@ object ObsQueries:
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
@@ -176,25 +170,21 @@ object ObsQueries:
       .map(_.cloneObservation.newObservation)
 
   def deleteObservation[F[_]: Async](
-    programId: Program.Id,
-    obsId:     Observation.Id
+    obsId: Observation.Id
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    deleteObservations(programId, List(obsId))
+    deleteObservations(List(obsId))
 
   def undeleteObservation[F[_]: Async](
-    programId: Program.Id,
-    obsId:     Observation.Id
+    obsId: Observation.Id
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    undeleteObservations(programId, List(obsId))
+    undeleteObservations(List(obsId))
 
   def deleteObservations[F[_]: Async](
-    programId: Program.Id,
-    obsIds:    List[Observation.Id]
+    obsIds: List[Observation.Id]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = ObservationPropertiesInput(existence = Existence.Deleted.assign)
         )
@@ -202,13 +192,11 @@ object ObsQueries:
       .void
 
   def undeleteObservations[F[_]: Async](
-    programId: Program.Id,
-    obsIds:    List[Observation.Id]
+    obsIds: List[Observation.Id]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObservationMutation[F]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsIds.toWhereObservation.assign,
           SET = ObservationPropertiesInput(existence = Existence.Present.assign),
           includeDeleted = true.assign
@@ -225,13 +213,11 @@ object ObsQueries:
    *   New index in group. `None` to leave position unchanged
    */
   def moveObservation[F[_]: Async](
-    programId:  Program.Id,
     obsId:      Observation.Id,
     groupId:    Option[Group.Id],
     groupIndex: Option[NonNegShort]
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateObservationsInput(
-      programId = programId,
       WHERE = obsId.toWhereObservation.assign,
       SET = ObservationPropertiesInput(
         groupId = groupId.orUnassign,

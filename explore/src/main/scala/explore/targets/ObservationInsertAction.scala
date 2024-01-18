@@ -14,7 +14,6 @@ import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import explore.undo.*
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
@@ -57,7 +56,6 @@ object ObservationInsertAction {
     )
 
   def insert(
-    programId:   Program.Id,
     obsId:       Observation.Id,
     expandedIds: View[SortedSet[ObsIdSet]],
     setPage:     Option[Observation.Id] => IO[Unit],
@@ -71,11 +69,11 @@ object ObservationInsertAction {
       onRestore = (agwo, optObs) =>
         expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).toAsync >>
           optObs.fold(
-            ObsQueries.deleteObservation[IO](programId, obsId) >>
+            ObsQueries.deleteObservation[IO](obsId) >>
               setPage(none) >>
               postMessage(s"Deleted observation $obsId")
           )(_ =>
-            ObsQueries.undeleteObservation[IO](programId, obsId) >>
+            ObsQueries.undeleteObservation[IO](obsId) >>
               setPage(obsId.some) >>
               postMessage(s"Restored observation $obsId")
           )

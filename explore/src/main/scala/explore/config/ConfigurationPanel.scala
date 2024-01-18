@@ -108,7 +108,6 @@ object ConfigurationPanel:
 
   // TODO: We probably want a mutation that returns the configuration so that we can update locally
   private def createConfiguration(
-    programId:     Program.Id,
     obsId:         Observation.Id,
     config:        Option[BasicConfiguration],
     observingMode: View[Option[ObservingMode]]
@@ -118,7 +117,6 @@ object ConfigurationPanel:
         .CreateConfigurationMutation[IO]
         .execute(
           UpdateObservationsInput(
-            programId = programId,
             WHERE = obsId.toWhereObservation.assign,
             SET = ObservationPropertiesInput(observingMode = c.toInput.assign)
           )
@@ -149,7 +147,6 @@ object ConfigurationPanel:
           Aligner(
             props.mode,
             UpdateObservationsInput(
-              props.programId,
               WHERE = props.obsId.toWhereObservation.assign,
               SET = ObservationPropertiesInput(observingMode = ObservingModeInput().assign)
             ),
@@ -202,7 +199,6 @@ object ConfigurationPanel:
                 .map(constraints =>
                   BasicConfigurationPanel(
                     props.userId,
-                    props.programId,
                     props.obsId,
                     props.requirements,
                     props.selectedConfig,
@@ -210,7 +206,6 @@ object ConfigurationPanel:
                     props.itcTargets,
                     props.baseCoordinates,
                     createConfiguration(
-                      props.programId,
                       props.obsId,
                       props.selectedConfig.get.map(_.configuration),
                       optModeView
