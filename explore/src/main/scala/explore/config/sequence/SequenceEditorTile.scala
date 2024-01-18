@@ -11,7 +11,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 
 object SequenceEditorTile:
 
-  def sequenceTile =
+  val sequenceTile =
     Tile(
       ObsTabTilesIds.SequenceId.id,
       s"Sequence",

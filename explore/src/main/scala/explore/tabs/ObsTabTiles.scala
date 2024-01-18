@@ -371,7 +371,7 @@ object ObsTabTiles:
                     .map { planned =>
                       val total = programTimeCharge +| planned
                       <.span(
-                        <.span(^.fontWeight := "bold", total.toHoursMinutes),
+                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
                         s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
                       )
                     }
