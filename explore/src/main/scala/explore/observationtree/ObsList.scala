@@ -181,7 +181,7 @@ object ObsList:
               .fold(
                 obsId =>
                   ObsQueries
-                    .moveObservation[IO](props.programId, obsId, dropNodeId, dropIndex.some),
+                    .moveObservation[IO](obsId, dropNodeId, dropIndex.some),
                 groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
               )
               .runAsync *>
@@ -213,14 +213,13 @@ object ObsList:
                   obs,
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
-                  setStatusCB = (obsEditStatus(props.programId, id)
+                  setStatusCB = (obsEditStatus(id)
                     .set(props.observations) _).compose((_: ObsStatus).some).some,
-                  setActiveStatusCB = (obsActiveStatus(props.programId, id)
+                  setActiveStatusCB = (obsActiveStatus(id)
                     .set(props.observations) _).compose((_: ObsActiveStatus).some).some,
-                  setSubtitleCB = (obsEditSubtitle(props.programId, id)
+                  setSubtitleCB = (obsEditSubtitle(id)
                     .set(props.observations) _).compose((_: Option[NonEmptyString]).some).some,
                   deleteCB = obsExistence(
-                    props.programId,
                     id,
                     o => setObs(props.programId, o.some, ctx)
                   )

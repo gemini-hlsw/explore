@@ -19,6 +19,7 @@ import explore.model.AppContext
 import explore.model.ProgramUser
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment
+import explore.model.TimeCharge
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
@@ -59,11 +60,12 @@ object ProposalTabContents:
     programId:        Program.Id,
     optProposalView:  View[Option[ProposalInfo]],
     minExecutionTime: Option[TimeSpan],
-    maxExecutionTime: Option[TimeSpan]
+    maxExecutionTime: Option[TimeSpan],
+    timeCharge:       TimeCharge
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     optProposalView.set(
-      ProposalInfo(proposal.some, minExecutionTime, maxExecutionTime, none, Nil).some
+      ProposalInfo(proposal.some, minExecutionTime, maxExecutionTime, none, Nil, timeCharge).some
     ) >>
       UpdateProgramsMutation[IO]
         .execute(
@@ -90,6 +92,7 @@ object ProposalTabContents:
         val minExecutionTime = proposalInfo.get.minExecutionTime
         val maxExecutionTime = proposalInfo.get.maxExecutionTime
         val users            = proposalInfo.get.allUsers
+        val timeCharge       = proposalInfo.get.timeCharge
 
         proposalInfo
           .zoom(ProposalInfo.optProposal)
@@ -114,8 +117,13 @@ object ProposalTabContents:
                   icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
                   clazz = LoginStyles.LoginBoxButton,
                   severity = Button.Severity.Secondary,
-                  onClick =
-                    createProposal(programId, optProposalInfo, minExecutionTime, maxExecutionTime)
+                  onClick = createProposal(
+                    programId,
+                    optProposalInfo,
+                    minExecutionTime,
+                    maxExecutionTime,
+                    timeCharge
+                  )
                 ).big
               )
             case _                     =>
@@ -150,7 +158,8 @@ object ProposalTabContents:
                            prog.timeEstimateRange.map(_.minimum.total),
                            prog.timeEstimateRange.map(_.maximum.total),
                            prog.pi,
-                           prog.users
+                           prog.users,
+                           prog.timeCharge
               )
             }
         )
@@ -167,7 +176,8 @@ case class ProposalInfo(
   minExecutionTime: Option[TimeSpan],
   maxExecutionTime: Option[TimeSpan],
   pi:               Option[ProgramUser],
-  programUsers:     List[ProgramUserWithRole]
+  programUsers:     List[ProgramUserWithRole],
+  timeCharge:       TimeCharge
 ) derives Eq:
   val allUsers = pi.fold(programUsers)(p => ProgramUserWithRole(p, none) :: programUsers)
 

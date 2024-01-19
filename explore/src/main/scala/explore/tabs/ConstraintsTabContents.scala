@@ -142,7 +142,6 @@ object ConstraintsTabContents extends TwoPanels:
                 canMinimize = true
               )(renderInTitle =>
                 ConstraintsPanel(
-                  props.programId,
                   idsToEdit,
                   constraintSet,
                   renderInTitle
@@ -153,7 +152,6 @@ object ConstraintsTabContents extends TwoPanels:
 
               val twView: View[List[TimingWindow]] =
                 TimingWindowsQueries.viewWithRemoteMod(
-                  props.programId,
                   idsToEdit,
                   observations
                     .undoableView[List[TimingWindow]](

@@ -110,7 +110,7 @@ object AsterismEditor extends AsterismModifier:
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.vizTime.withOnMod(t =>
           ObsQueries
-            .updateVisualizationTime[IO](props.programId, props.obsIds.toList, t)
+            .updateVisualizationTime[IO](props.obsIds.toList, t)
             .runAsync
         )
 

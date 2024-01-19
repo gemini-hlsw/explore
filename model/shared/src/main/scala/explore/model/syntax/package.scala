@@ -75,7 +75,12 @@ object all:
      * Format a timespan in the format `${hh}hrs ${mm}mins`
      */
     def toHoursMinutes: String =
-      s"${timespan.toHours.toLong}hrs ${(timespan.toMinutes.toLong) % 60}mins"
+      val hours   = timespan.toHours.toLong
+      val minutes = (timespan.toMinutes.toLong) % 60
+
+      if hours === 0 then s"${minutes}mins"
+      else if minutes === 0 then s"${hours}hrs"
+      else s"${hours}hrs ${minutes}mins"
 
   extension (cs: ConstraintSet)
     def summaryString: String =

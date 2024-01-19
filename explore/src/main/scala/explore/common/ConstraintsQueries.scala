@@ -17,7 +17,6 @@ import explore.utils.ToastCtx
 import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -27,9 +26,8 @@ import queries.common.ObsQueriesGQL.*
 
 object ConstraintsQueries:
   case class UndoView(
-    programId: Program.Id,
-    obsIds:    ObsIdSet,
-    undoCtx:   UndoSetter[ConstraintSet]
+    obsIds:  ObsIdSet,
+    undoCtx: UndoSetter[ConstraintSet]
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
@@ -42,7 +40,6 @@ object ConstraintsQueries:
           UpdateObservationMutation[IO]
             .execute(
               UpdateObservationsInput(
-                programId = programId,
                 WHERE = obsIds.toList.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(
                   constraintSet = remoteSet(value)(ConstraintSetInput()).assign

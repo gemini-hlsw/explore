@@ -79,7 +79,6 @@ object ConstraintGroupObsList:
 
   private def onDragEnd(
     observations:     UndoSetter[ObservationList],
-    programId:        Program.Id,
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
     constraintGroups: ConstraintGroupList
@@ -114,7 +113,7 @@ object ConstraintGroupObsList:
         (srcIds -- draggedIds).fold(base)(base + _)
       ) >>
         ConstraintsQueries
-          .UndoView(programId, draggedIds, constraintSet)(
+          .UndoView(draggedIds, constraintSet)(
             // There should be a better way to do this.
             identity,
             identity,
@@ -188,7 +187,6 @@ object ConstraintGroupObsList:
 
       val handleDragEnd = onDragEnd(
         props.observations,
-        props.programId,
         props.expandedIds,
         props.focusedObsSet,
         props.constraintGroups

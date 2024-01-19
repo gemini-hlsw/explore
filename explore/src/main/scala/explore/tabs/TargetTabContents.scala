@@ -413,7 +413,6 @@ object TargetTabContents extends TwoPanels:
   }
 
   private def applyObs(
-    programId:        Program.Id,
     obsIds:           List[(Observation.Id, List[Target.Id])],
     programSummaries: UndoSetter[ProgramSummaries],
     ctx:              AppContext[IO],
@@ -433,7 +432,7 @@ object TargetTabContents extends TwoPanels:
             val newIds    = summList.map((summ, tid) => (summ.id, tid))
             val summaries = summList.map(_._1)
             ObservationPasteAction
-              .paste(programId, newIds, expandedIds)
+              .paste(newIds, expandedIds)
               .set(programSummaries)(summaries.some)
               .toAsync
           )
@@ -504,7 +503,6 @@ object TargetTabContents extends TwoPanels:
                 if (obsAndTargets.nonEmpty)
                   // Apply the obs to selected targets on the tree
                   applyObs(
-                    props.programId,
                     obsAndTargets,
                     props.programSummaries,
                     ctx,

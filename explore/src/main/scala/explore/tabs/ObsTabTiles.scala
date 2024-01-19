@@ -17,6 +17,7 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
@@ -33,6 +34,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
+import explore.model.syntax.all.toHoursMinutes
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
@@ -99,7 +101,6 @@ object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
-    programId:         Program.Id,
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet]
@@ -111,7 +112,7 @@ object ObsTabTiles:
         onChange = (cs: ConstraintSet) =>
           constraintSet.set(cs) >>
             ObsQueries
-              .updateObservationConstraintSet[IO](programId, List(observationId), cs)
+              .updateObservationConstraintSet[IO](List(observationId), cs)
               .runAsyncAndForget,
         options = allConstraintSets
           .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
@@ -289,7 +290,7 @@ object ObsTabTiles:
               .zoom(ObsSummary.posAngleConstraint)
               .withOnMod(pa =>
                 ObsQueries
-                  .updatePosAngle[IO](props.programId, List(props.obsId), pa)
+                  .updatePosAngle[IO](List(props.obsId), pa)
                   .switching(agsState.async, AgsState.Saving, AgsState.Idle)
                   .runAsync
               )
@@ -325,7 +326,7 @@ object ObsTabTiles:
 
           val attachmentsView =
             props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
-              obsEditAttachments(props.programId, props.obsId, ids).runAsync
+              obsEditAttachments(props.obsId, ids).runAsync
             }
 
           val pa: Option[Angle] =
@@ -361,12 +362,28 @@ object ObsTabTiles:
             )
 
           val sequenceTile =
-            SequenceEditorTile.sequenceTile(
-              props.programId,
-              props.obsId,
-              asterismIds.get.toList,
-              itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
-              sequenceChanged
+            SequenceEditorTile.sequenceTile(renderInTitle =>
+              React.Fragment(
+                renderInTitle {
+                  val programTimeCharge = props.observation.get.execution.timeCharge.program
+                  props.observation.get.executionTime
+                    .map { planned =>
+                      val total = programTimeCharge +| planned
+                      <.span(
+                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
+                        s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                      )
+                    }
+                    .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                },
+                GeneratedSequenceViewer(
+                  props.programId,
+                  props.obsId,
+                  asterismIds.get.toList,
+                  itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
+                  sequenceChanged
+                )
+              )
             )
 
           val itcTile: Tile =
@@ -386,7 +403,6 @@ object ObsTabTiles:
 
           val constraintsSelector: VdomNode =
             makeConstraintsSelector(
-              props.programId,
               props.obsId,
               props.observation.model.zoom(ObsSummary.constraints),
               props.allConstraintSets
@@ -394,7 +410,6 @@ object ObsTabTiles:
 
           val timingWindows: View[List[TimingWindow]] =
             TimingWindowsQueries.viewWithRemoteMod(
-              props.programId,
               ObsIdSet.one(props.obsId),
               props.observation.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
@@ -492,7 +507,6 @@ object ObsTabTiles:
             )(renderInTitle =>
               <.div
               ConstraintsPanel(
-                props.programId,
                 ObsIdSet.one(props.obsId),
                 props.observation.zoom(ObsSummary.constraints),
                 renderInTitle

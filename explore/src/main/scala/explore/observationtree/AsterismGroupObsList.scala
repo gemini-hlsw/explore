@@ -121,7 +121,6 @@ object AsterismGroupObsList:
       else
         AsterismGroupObsListActions
           .dropObservations(
-            props.programId,
             draggedIds,
             srcIds,
             destIds,
@@ -167,7 +166,6 @@ object AsterismGroupObsList:
       .flatMap { obs =>
         ObservationInsertAction
           .insert(
-            programId,
             obs.id,
             expandedIds,
             selectObsOrSummary(_).toAsync,
