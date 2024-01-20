@@ -11,7 +11,7 @@ object Versions {
   val crystal                = "0.37.1"
   val discipline             = "1.5.1"
   val disciplineMUnit        = "1.0.9"
-  val fs2                    = "3.9.3"
+  val fs2                    = "3.9.4"
   val fs2Data                = "1.10.0"
   val fs2Dom                 = "0.3.0-M1"
   val geminiLocales          = "0.7.0"
