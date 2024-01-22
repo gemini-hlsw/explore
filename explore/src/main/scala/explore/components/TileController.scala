@@ -135,7 +135,7 @@ object TileController:
                     )
                   } else l
                 case l                     => l
-              }
+              } *> resizing.setState(TileResizing(false)).when(p.storeLayout === false).void
 
         def addBackButton: List[Tile] = {
           val topTile =
