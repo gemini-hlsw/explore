@@ -11,6 +11,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
 import explore.Icons
+import explore.common.UserPreferencesQueries.GridLayouts
 import explore.components.ui.ExploreStyles
 import explore.model.ApiKey
 import explore.model.AppContext
@@ -80,6 +81,7 @@ object UserPreferencesContent:
   private type IsActive = IsActive.Type
 
   private object IsCleaningTheCache extends NewType[Boolean]
+  private object IsDeletingLayouts  extends NewType[Boolean]
 
   private object NewKey extends NewType[Option[String]]
   private type NewKey = NewKey.Type
@@ -185,91 +187,122 @@ object UserPreferencesContent:
     )
     .useStateView(RoleType.Pi)
     .useState(IsCleaningTheCache(false))
-    .render { (props, ctx, active, user, newKey, _, _, table, newRoleType, isCleaningTheCache) =>
-      import ctx.given
+    .useStateView(IsDeletingLayouts(false))
+    .render {
+      (
+        props,
+        ctx,
+        active,
+        user,
+        newKey,
+        _,
+        _,
+        table,
+        newRoleType,
+        isCleaningTheCache,
+        isDeletingLayouts
+      ) =>
+        import ctx.given
 
-      user.renderPot { ssoUser =>
-        val id   = ssoUser.user.id
-        val name = s"${ssoUser.user.givenName.orEmpty} ${ssoUser.user.familyName.orEmpty}"
-        val role = ssoUser.role.`type`.shortName
+        user.renderPot { ssoUser =>
+          val id   = ssoUser.user.id
+          val name = s"${ssoUser.user.givenName.orEmpty} ${ssoUser.user.familyName.orEmpty}"
+          val role = ssoUser.role.`type`.shortName
 
-        val allRoles = ssoUser.user.roles
+          val allRoles = ssoUser.user.roles
 
-        val requestCacheClean =
-          for {
-            _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).toAsync
-            _ <- ctx.workerClients.clearAll(
-                   isCleaningTheCache.setState(IsCleaningTheCache(false)).toAsync
-                 )
-          } yield ()
+          val requestCacheClean =
+            for {
+              _ <- isCleaningTheCache.setState(IsCleaningTheCache(true)).toAsync
+              _ <- ctx.workerClients.clearAll(
+                     isCleaningTheCache.setState(IsCleaningTheCache(false)).toAsync
+                   )
+            } yield ()
 
-        val cleanCacheButton =
-          Button(
-            label = "Clean local cache",
-            disabled = isCleaningTheCache.value.value,
-            icon = Icons.Trash,
-            onClick = requestCacheClean.runAsyncAndForget
-          ).small.compact
-
-        val unsupportedRoles = Enumerated[RoleType].all.filterNot { rt =>
-          allRoles.exists(r => r.`type` === rt)
-        }
-        val currentKeyRoleId = allRoles.find(_.`type` === newRoleType.get).map(_.id)
-
-        React.Fragment(
-          Divider(),
-          <.div(LucumaPrimeStyles.FormColumnCompact)(
-            <.label(LucumaPrimeStyles.FormFieldLabel, "ID: "),
-            <.label(LucumaPrimeStyles.FormField, id.show),
-            <.label(LucumaPrimeStyles.FormFieldLabel, "Name: "),
-            <.label(LucumaPrimeStyles.FormField, name),
-            <.label(LucumaPrimeStyles.FormFieldLabel, "Role: "),
-            <.label(LucumaPrimeStyles.FormField, role)
-          ),
-          Divider(),
-          <.h4("API Keys:"),
-          <.div(ExploreStyles.ApiKeysTable)(
-            PrimeAutoHeightVirtualizedTable(
-              table,
-              estimateSize = _ => 32.toPx,
-              striped = true,
-              compact = Compact.Very,
-              tableMod =
-                ExploreStyles.ApiKeysTableMod |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
-              emptyMessage = "No keys available"
-            )
-          ),
-          Divider(),
-          newKey.get.value.map { k =>
-            <.div(LucumaPrimeStyles.FormColumnCompact)(
-              <.label(LucumaPrimeStyles.FormFieldLabel, "Key: "),
-              <.label(ExploreStyles.NewApiKey, k),
-              CopyControl("", k),
-              <.label(ExploreStyles.NewApiKeyLabel, "This API key won't be displayed again.")
-            )
-          },
-          <.div(ExploreStyles.ProgramsPopupFauxFooter)(
+          val cleanCacheButton =
             Button(
-              label = "New Key with role: ",
-              icon = Icons.New,
-              severity = Button.Severity.Success,
-              disabled = active.get.value,
-              loading = active.get.value,
-              onClick = currentKeyRoleId
-                .map(createNewKey(_, active, newKey, props.vault))
-                .map(_.runAsync)
-                .getOrEmpty
-            ).small.compact,
-            EnumDropdownView(
-              id = "new-key-role".refined,
-              exclude = unsupportedRoles.toSet,
-              value = newRoleType,
-              disabled = active.get.value
-            )
-          ),
-          Divider(),
-          cleanCacheButton,
-          ConfirmDialog()
-        )
-      }
+              label = "Clean local cache",
+              disabled = isCleaningTheCache.value.value,
+              loading = isCleaningTheCache.value.value,
+              icon = Icons.Trash,
+              onClick = requestCacheClean.runAsyncAndForget
+            ).small.compact
+
+          val deleteGridLayoutsButton =
+            Button(
+              label = "Reset Tile Layouts",
+              disabled = isDeletingLayouts.get.value,
+              loading = isDeletingLayouts.get.value,
+              icon = Icons.Trash,
+              tooltip = "Revert to the default tile layouts for the various tabs",
+              onClick = GridLayouts
+                .deleteLayoutsPreference(props.vault.user.id)
+                .switching(isDeletingLayouts.async, IsDeletingLayouts(_))
+                .runAsyncAndForget
+            ).small.compact
+
+          val unsupportedRoles = Enumerated[RoleType].all.filterNot { rt =>
+            allRoles.exists(r => r.`type` === rt)
+          }
+          val currentKeyRoleId = allRoles.find(_.`type` === newRoleType.get).map(_.id)
+
+          React.Fragment(
+            Divider(),
+            <.div(LucumaPrimeStyles.FormColumnCompact)(
+              <.label(LucumaPrimeStyles.FormFieldLabel, "ID: "),
+              <.label(LucumaPrimeStyles.FormField, id.show),
+              <.label(LucumaPrimeStyles.FormFieldLabel, "Name: "),
+              <.label(LucumaPrimeStyles.FormField, name),
+              <.label(LucumaPrimeStyles.FormFieldLabel, "Role: "),
+              <.label(LucumaPrimeStyles.FormField, role)
+            ),
+            Divider(),
+            <.h4("API Keys:"),
+            <.div(ExploreStyles.ApiKeysTable)(
+              PrimeAutoHeightVirtualizedTable(
+                table,
+                estimateSize = _ => 32.toPx,
+                striped = true,
+                compact = Compact.Very,
+                tableMod =
+                  ExploreStyles.ApiKeysTableMod |+| ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
+                emptyMessage = "No keys available"
+              )
+            ),
+            Divider(),
+            newKey.get.value.map { k =>
+              <.div(LucumaPrimeStyles.FormColumnCompact)(
+                <.label(LucumaPrimeStyles.FormFieldLabel, "Key: "),
+                <.label(ExploreStyles.NewApiKey, k),
+                CopyControl("", k),
+                <.label(ExploreStyles.NewApiKeyLabel, "This API key won't be displayed again.")
+              )
+            },
+            <.div(ExploreStyles.ProgramsPopupFauxFooter)(
+              Button(
+                label = "New Key with role: ",
+                icon = Icons.New,
+                severity = Button.Severity.Success,
+                disabled = active.get.value,
+                loading = active.get.value,
+                onClick = currentKeyRoleId
+                  .map(createNewKey(_, active, newKey, props.vault))
+                  .map(_.runAsync)
+                  .getOrEmpty
+              ).small.compact,
+              EnumDropdownView(
+                id = "new-key-role".refined,
+                exclude = unsupportedRoles.toSet,
+                value = newRoleType,
+                disabled = active.get.value
+              )
+            ),
+            Divider(),
+            <.div(
+              cleanCacheButton,
+              deleteGridLayoutsButton
+            ),
+            ConfirmDialog()
+          )
+        }
     }
