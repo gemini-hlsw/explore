@@ -19,6 +19,7 @@ import explore.model.display.given
 import explore.model.enums.RoleType
 import explore.model.reusability.given
 import explore.syntax.ui.*
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
@@ -238,6 +239,7 @@ object UserPreferencesContent:
               onClick = GridLayouts
                 .deleteLayoutsPreference(props.vault.user.id)
                 .switching(isDeletingLayouts.async, IsDeletingLayouts(_))
+                .withToast("Layouts reset. You may need to reload page for it to take effect.")
                 .runAsyncAndForget
             ).small.compact
 
