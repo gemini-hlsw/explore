@@ -203,6 +203,12 @@ object UserPreferencesQueries:
           )
           .attempt
       }.void
+
+    def deleteLayoutsPreference[F[_]: ApplicativeThrow](userId: User.Id)(using
+      FetchClient[F, UserPreferencesDB]
+    ): F[Unit] =
+      UserGridLayoutsDelete[F].execute(userId.show).void
+
   end GridLayouts
 
   object AsterismPreferences:

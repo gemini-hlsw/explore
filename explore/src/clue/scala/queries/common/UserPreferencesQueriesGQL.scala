@@ -130,6 +130,17 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
+  trait UserGridLayoutsDelete extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation deleteLayoutPositions($userId: String!) {
+        deleteLucumaGridLayoutPositions(where : {userId: {_eq: $userId}}) {
+          affected_rows
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait AsterismPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
     query asterismPreferences($userId: String!, $targetIds: [String!] = "") {
