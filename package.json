@@ -11,7 +11,7 @@
     "@fortawesome/pro-solid-svg-icons": "^6.5.1",
     "@fortawesome/pro-thin-svg-icons": "^6.5.1",
     "@tanstack/react-table": "^8.11.6",
-    "@tanstack/react-virtual": "v3.0.1",
+    "@tanstack/react-virtual": "v3.0.2",
     "copy-to-clipboard": "3.3.3",
     "github-markdown-css": "^5.5.0",
     "highcharts": "11.2.0",
