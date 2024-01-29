@@ -85,12 +85,12 @@ object ProgramQueriesGQL {
           users $ProgramUserWithRoleSubquery
           timeEstimateRange {
             minimum {
-              total {
+              program {
                 microseconds
               }
             }
             maximum {
-              total {
+              program {
                 microseconds
               }
             }
@@ -109,9 +109,9 @@ object ProgramQueriesGQL {
         type Proposal   = model.Proposal
         object TimeEstimateRange:
           object Minimum:
-            type Total = TimeSpan
+            type Program = TimeSpan
           object Maximum:
-            type Total = TimeSpan
+            type Program = TimeSpan
         type TimeCharge = exploreModel.TimeCharge
   }
 

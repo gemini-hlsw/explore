@@ -155,8 +155,8 @@ object ProposalTabContents:
           data.program
             .map { prog =>
               ProposalInfo(prog.proposal,
-                           prog.timeEstimateRange.map(_.minimum.total),
-                           prog.timeEstimateRange.map(_.maximum.total),
+                           prog.timeEstimateRange.map(_.minimum.program),
+                           prog.timeEstimateRange.map(_.maximum.program),
                            prog.pi,
                            prog.users,
                            prog.timeCharge
