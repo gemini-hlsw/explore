@@ -55,9 +55,8 @@ object AsterismEditorTile:
     backButton:        Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
-    val vizTimeView = vizTime.withOnMod(t =>
-      ObsQueries.updateVisualizationTime[IO](programId, obsIds.toList, t).runAsync
-    )
+    val vizTimeView =
+      vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
 
     val control: VdomNode =
       <.div(ExploreStyles.JustifiedEndTileControl, VizTimeEditor(vizTimeView))

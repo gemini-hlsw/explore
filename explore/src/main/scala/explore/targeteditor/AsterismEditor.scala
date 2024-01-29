@@ -110,7 +110,7 @@ object AsterismEditor extends AsterismModifier:
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.vizTime.withOnMod(t =>
           ObsQueries
-            .updateVisualizationTime[IO](props.programId, props.obsIds.toList, t)
+            .updateVisualizationTime[IO](props.obsIds.toList, t)
             .runAsync
         )
 
@@ -176,11 +176,11 @@ object AsterismEditor extends AsterismModifier:
                   ).when(otherObsCount > 0),
                   SiderealTargetEditor(
                     props.userId,
-                    focusedTargetId,
                     siderealTarget,
                     Asterism
                       .fromIdsAndTargets(props.asterismIds.get, props.allTargets.get)
-                      .map(_.focusOn(focusedTargetId)),
+                      .map(_.focusOn(focusedTargetId))
+                      .getOrElse(sys.error("Asterism not available")),
                     vizTime,
                     props.configuration.some,
                     props.searching,

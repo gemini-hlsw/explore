@@ -38,7 +38,7 @@ object reusability:
   given Reusability[ProgramSummaries]                                         = Reusability.byEq
   given Reusability[ItcTarget]                                                = Reusability.byEq
   given Reusability[PersistentClientStatus]                                   = Reusability.byEq
-  given Reusability[TargetVisualOptions]                                      = Reusability.byEq
+  given Reusability[AsterismVisualOptions]                                    = Reusability.byEq
   given Reusability[ExpandedIds]                                              = Reusability.byEq
   given Reusability[RootModel]                                                = Reusability.byEq
   given idListReuse[Id, A: Reusability]: Reusability[KeyedIndexedList[Id, A]] =

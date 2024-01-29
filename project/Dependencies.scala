@@ -93,6 +93,12 @@ object Dependencies {
     )
   )
 
+  val CatsEffectTestkit = Def.setting(
+    Seq(
+      "org.typelevel" %%% "cats-effect-testkit" % catsEffect
+    )
+  )
+
   val FS2 = Def.setting(
     deps(
       "co.fs2" %%% "fs2-core"
@@ -160,12 +166,6 @@ object Dependencies {
     deps(
       "edu.gemini" %%% "lucuma-ags"
     )(lucumaCatalog)
-  )
-
-  val LucumaBC = Def.setting(
-    deps(
-      "edu.gemini" %%% "lucuma-broadcast-channel"
-    )(lucumaBC)
   )
 
   val LucumaCatalog = Def.setting(

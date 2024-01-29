@@ -10,8 +10,6 @@ ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 ThisBuild / evictionErrorLevel := Level.Info
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
-ThisBuild / coverageEnabled := false
-
 ThisBuild / lucumaCssExts += "svg"
 
 addCommandAlias(
@@ -63,6 +61,7 @@ lazy val model = crossProject(JVMPlatform, JSPlatform)
   .settings(commonSettings: _*)
   .settings(commonLibSettings: _*)
   .jvmSettings(commonJVMSettings)
+  .jsSettings(commonJsLibSettings)
 
 lazy val modelTestkit = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
@@ -111,7 +110,6 @@ lazy val common = project
   .settings(
     libraryDependencies ++=
       LucumaSSO.value ++
-        LucumaBC.value ++
         LucumaCatalog.value ++
         LucumaSchemas.value ++
         LucumaReact.value ++
@@ -179,6 +177,7 @@ lazy val commonLibSettings = Seq(
         MUnit.value ++
           Discipline.value ++
           CatsTimeTestkit.value ++
+          CatsEffectTestkit.value ++
           MUnitCatsEffect.value ++
           MonocleLaw.value
       ),
@@ -189,6 +188,7 @@ lazy val testkitLibSettings = Seq(
   libraryDependencies ++= Discipline.value ++
     MonocleLaw.value ++
     CatsTimeTestkit.value ++
+    CatsEffectTestkit.value ++
     LucumaCoreTestKit.value ++
     LucumaCatalogTestKit.value ++
     LucumaSchemasTestkit.value
@@ -256,26 +256,34 @@ def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
 val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
 
-lazy val setupNode = WorkflowStep.Use(
-  UseRef.Public("actions", "setup-node", "v3"),
-  name = Some("Use Node.js"),
-  params = Map("node-version" -> "20", "cache" -> "npm")
-)
+// https://github.com/actions/setup-node/issues/835#issuecomment-1753052021
+lazy val setupNodeNpmInstall =
+  List(
+    WorkflowStep.Use(
+      UseRef.Public("actions", "setup-node", "v4"),
+      name = Some("Setup Node.js"),
+      params = Map("node-version" -> "20", "cache" -> "npm")
+    ),
+    WorkflowStep.Use(
+      UseRef.Public("actions", "cache", "v3"),
+      name = Some("Cache node_modules"),
+      id = Some("cache-node_modules"),
+      params = {
+        val prefix = "node_modules"
+        val key    = s"$prefix-$${{ hashFiles('package-lock.json') }}"
+        Map("path" -> "node_modules", "key" -> key, "restore-keys" -> prefix)
+      }
+    ),
+    WorkflowStep.Run(
+      List("npm clean-install --verbose"),
+      name = Some("npm clean-install"),
+      cond = Some("steps.cache-node_modules.outputs.cache-hit != 'true'")
+    )
+  )
 
 lazy val sbtStage = WorkflowStep.Sbt(List("stage"), name = Some("Stage"))
 
 lazy val lucumaCssStep = WorkflowStep.Sbt(List("lucumaCss"), name = Some("Extract CSS files"))
-
-// https://stackoverflow.com/a/55610612
-lazy val npmCleanInstall = WorkflowStep.Run(
-  List("npm clean-install"),
-  name = Some("npm clean-install")
-)
-
-lazy val npmInstall = WorkflowStep.Run(
-  List("npm install"),
-  name = Some("npm install")
-)
 
 lazy val npmBuild = WorkflowStep.Run(
   List("npm run build"),
@@ -292,13 +300,9 @@ lazy val overrideCiCommit = WorkflowStep.Run(
   cond = Some(prCond)
 )
 
-lazy val bundlemon = WorkflowStep.Run(
-  List("yarn bundlemon"),
-  name = Some("Run BundleMon"),
-  env = Map(
-    "BUNDLEMON_PROJECT_ID"     -> "61a698e5de59ab000954f941",
-    "BUNDLEMON_PROJECT_APIKEY" -> "${{ secrets.BUNDLEMON_PROJECT_APIKEY }}"
-  )
+lazy val bundlemon = WorkflowStep.Use(
+  UseRef.Public("lironer", "bundlemon-action", "v1"),
+  name = Some("Run BundleMon")
 )
 
 def firebaseDeploy(name: String, cond: String, live: Boolean) = WorkflowStep.Use(
@@ -353,7 +357,7 @@ def runLinters(mode: String) = WorkflowStep.Use(
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
-ThisBuild / githubWorkflowBuildPreamble ++= Seq(setupNode, npmCleanInstall)
+ThisBuild / githubWorkflowBuildPreamble ++= setupNodeNpmInstall
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
 ThisBuild / githubWorkflowOSes                 := Seq("macos-latest")
 
@@ -363,10 +367,8 @@ ThisBuild / githubWorkflowAddedJobs +=
     "full",
     WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
-      setupNode ::
-      githubWorkflowGeneratedCacheSteps.value.toList :::
+      setupNodeNpmInstall :::
       sbtStage ::
-      npmCleanInstall ::
       npmBuild ::
       overrideCiCommit ::
       bundlemon ::
@@ -385,8 +387,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     "Run linters",
     WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
-      setupNode ::
-      npmCleanInstall ::
+      setupNodeNpmInstall :::
       lucumaCssStep ::
       setupVars("dark") ::
       runLinters("dark") ::

@@ -192,16 +192,18 @@ private object SpectroscopyModesTable:
         else
           val content = nel
             .collect {
-              case ItcQueryProblems.MissingSignalToNoise                          => <.span("Set S/N")
-              case ItcQueryProblems.MissingSignalToNoiseAt                        =>
+              case ItcQueryProblems.MissingSignalToNoise             => <.span("Set S/N")
+              case ItcQueryProblems.MissingSignalToNoiseAt           =>
                 <.span("Set Wavelength to measure S/N at")
-              case ItcQueryProblems.MissingWavelength                             => <.span("Set Wavelength")
-              case ItcQueryProblems.MissingTargetInfo if w.isDefined              =>
+              case ItcQueryProblems.MissingWavelength                => <.span("Set Wavelength")
+              case ItcQueryProblems.MissingTargetInfo if w.isDefined =>
                 <.span("Missing target info")
-              case ItcQueryProblems.MissingBrightness                             => <.span("No brightness defined")
-              case ItcQueryProblems.GenericError(e) if e.startsWith("Source too") =>
-                <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon), e)
-              case ItcQueryProblems.GenericError(e)                               =>
+              case ItcQueryProblems.MissingBrightness                => <.span("No brightness defined")
+              case s @ ItcQueryProblems.SourceTooBright(_)           =>
+                <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon),
+                       (s: ItcQueryProblems).shortName
+                )
+              case ItcQueryProblems.GenericError(e)                  =>
                 e.split("\n").map(u => <.span(u)).intersperse(<.br: VdomNode).mkTagMod(<.span)
             }
             .toList

@@ -31,8 +31,6 @@ import explore.modes.ModeWavelength
 import explore.modes.ModeWavelengthDelta
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
-import explore.optics.*
-import explore.optics.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -61,6 +59,7 @@ import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
+import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -1009,15 +1008,13 @@ object AdvancedConfigurationPanel {
     @inline override protected val initialCentralWavelengthLens =
       ObservingMode.GmosNorthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
     @inline protected val defaultBinningLens                    =
-      disjointZip(
-        ObservingMode.GmosNorthLongSlit.defaultXBin,
-        ObservingMode.GmosNorthLongSlit.defaultYBin
-      )
+      (ObservingMode.GmosNorthLongSlit.defaultXBin,
+       ObservingMode.GmosNorthLongSlit.defaultYBin
+      ).disjointZip
     @inline protected val defaultReadModeGainLens               =
-      disjointZip(
-        ObservingMode.GmosNorthLongSlit.defaultAmpReadMode,
-        ObservingMode.GmosNorthLongSlit.defaultAmpGain
-      )
+      (ObservingMode.GmosNorthLongSlit.defaultAmpReadMode,
+       ObservingMode.GmosNorthLongSlit.defaultAmpGain
+      ).disjointZip
     @inline protected val defaultRoiLens                        = ObservingMode.GmosNorthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
       ObservingMode.GmosNorthLongSlit.defaultWavelengthDithers
@@ -1214,15 +1211,13 @@ object AdvancedConfigurationPanel {
     @inline override protected val initialCentralWavelengthLens =
       ObservingMode.GmosSouthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
     @inline protected val defaultBinningLens                    =
-      disjointZip(
-        ObservingMode.GmosSouthLongSlit.defaultXBin,
-        ObservingMode.GmosSouthLongSlit.defaultYBin
-      )
+      (ObservingMode.GmosSouthLongSlit.defaultXBin,
+       ObservingMode.GmosSouthLongSlit.defaultYBin
+      ).disjointZip
     @inline protected val defaultReadModeGainLens               =
-      disjointZip(
-        ObservingMode.GmosSouthLongSlit.defaultAmpReadMode,
-        ObservingMode.GmosSouthLongSlit.defaultAmpGain
-      )
+      (ObservingMode.GmosSouthLongSlit.defaultAmpReadMode,
+       ObservingMode.GmosSouthLongSlit.defaultAmpGain
+      ).disjointZip
     @inline protected val defaultRoiLens                        = ObservingMode.GmosSouthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
       ObservingMode.GmosSouthLongSlit.defaultWavelengthDithers

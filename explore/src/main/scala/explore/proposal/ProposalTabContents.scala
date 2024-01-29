@@ -3,6 +3,8 @@
 
 package explore.proposal
 
+import cats.Eq
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -14,6 +16,10 @@ import explore.Icons
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.ProgramUser
+import explore.model.ProgramUserWithRole
+import explore.model.ProposalAttachment
+import explore.model.TimeCharge
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
@@ -33,6 +39,7 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.effect.*
 import lucuma.ui.syntax.pot.*
@@ -42,19 +49,24 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 
 case class ProposalTabContents(
-  programId:  Program.Id,
-  user:       Option[User],
-  undoStacks: View[UndoStacks[IO, Proposal]]
+  programId:   Program.Id,
+  userVault:   Option[UserVault],
+  attachments: View[List[ProposalAttachment]],
+  undoStacks:  View[UndoStacks[IO, Proposal]]
 ) extends ReactFnProps(ProposalTabContents.component)
 
 object ProposalTabContents:
   private def createProposal(
-    programId:       Program.Id,
-    optProposalView: View[Option[ProposalInfo]],
-    executionTime:   Option[TimeSpan]
+    programId:        Program.Id,
+    optProposalView:  View[Option[ProposalInfo]],
+    minExecutionTime: Option[TimeSpan],
+    maxExecutionTime: Option[TimeSpan],
+    timeCharge:       TimeCharge
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
-    optProposalView.set(ProposalInfo(proposal.some, executionTime).some) >>
+    optProposalView.set(
+      ProposalInfo(proposal.some, minExecutionTime, maxExecutionTime, none, Nil, timeCharge).some
+    ) >>
       UpdateProgramsMutation[IO]
         .execute(
           UpdateProgramsInput(
@@ -67,16 +79,20 @@ object ProposalTabContents:
         .runAsync
 
   private def renderFn(
-    programId:  Program.Id,
-    user:       Option[User],
-    undoStacks: View[UndoStacks[IO, Proposal]],
-    ctx:        AppContext[IO]
+    programId:   Program.Id,
+    userVault:   Option[UserVault],
+    attachments: View[List[ProposalAttachment]],
+    undoStacks:  View[UndoStacks[IO, Proposal]],
+    ctx:         AppContext[IO]
   )(optProposalInfo: View[Option[ProposalInfo]]): VdomNode =
     import ctx.given
 
     optProposalInfo
       .mapValue { (proposalInfo: View[ProposalInfo]) =>
-        val executionTime = proposalInfo.get.executionTime
+        val minExecutionTime = proposalInfo.get.minExecutionTime
+        val maxExecutionTime = proposalInfo.get.maxExecutionTime
+        val users            = proposalInfo.get.allUsers
+        val timeCharge       = proposalInfo.get.timeCharge
 
         proposalInfo
           .zoom(ProposalInfo.optProposal)
@@ -85,11 +101,14 @@ object ProposalTabContents:
               programId,
               proposalView,
               undoStacks,
-              executionTime,
-              TimeSpan.Zero // Will come from API eventually
+              minExecutionTime,
+              maxExecutionTime,
+              users,
+              attachments,
+              userVault.map(_.token)
             ): VdomNode
           )
-          .getOrElse(user match {
+          .getOrElse(userVault.map(_.user) match {
             case Some(_: StandardUser) =>
               <.div(
                 ExploreStyles.HVCenter,
@@ -98,7 +117,13 @@ object ProposalTabContents:
                   icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
                   clazz = LoginStyles.LoginBoxButton,
                   severity = Button.Severity.Secondary,
-                  onClick = createProposal(programId, optProposalInfo, executionTime)
+                  onClick = createProposal(
+                    programId,
+                    optProposalInfo,
+                    minExecutionTime,
+                    maxExecutionTime,
+                    timeCharge
+                  )
                 ).big
               )
             case _                     =>
@@ -128,16 +153,39 @@ object ProposalTabContents:
         .query(props.programId)
         .map(data =>
           data.program
-            .map(prog => ProposalInfo(prog.proposal, prog.plannedTimeRange.map(_.maximum.total)))
+            .map { prog =>
+              ProposalInfo(prog.proposal,
+                           prog.timeEstimateRange.map(_.minimum.total),
+                           prog.timeEstimateRange.map(_.maximum.total),
+                           prog.pi,
+                           prog.users,
+                           prog.timeCharge
+              )
+            }
         )
         .reRunOnResourceSignals(ProgramEditSubscription.subscribe[IO](props.programId.assign))
     }
     .render { (props, ctx, optPropInfo) =>
-      optPropInfo.renderPotOption(renderFn(props.programId, props.user, props.undoStacks, ctx) _)
+      optPropInfo.renderPotOption(
+        renderFn(props.programId, props.userVault, props.attachments, props.undoStacks, ctx) _
+      )
     }
 
-case class ProposalInfo(optProposal: Option[Proposal], executionTime: Option[TimeSpan])
+case class ProposalInfo(
+  optProposal:      Option[Proposal],
+  minExecutionTime: Option[TimeSpan],
+  maxExecutionTime: Option[TimeSpan],
+  pi:               Option[ProgramUser],
+  programUsers:     List[ProgramUserWithRole],
+  timeCharge:       TimeCharge
+) derives Eq:
+  val allUsers = pi.fold(programUsers)(p => ProgramUserWithRole(p, none) :: programUsers)
 
 object ProposalInfo:
-  val optProposal: Lens[ProposalInfo, Option[Proposal]]   = Focus[ProposalInfo](_.optProposal)
-  val executionTime: Lens[ProposalInfo, Option[TimeSpan]] = Focus[ProposalInfo](_.executionTime)
+  given Reusability[ProposalInfo] = Reusability.byEq
+
+  val optProposal: Lens[ProposalInfo, Option[Proposal]]      = Focus[ProposalInfo](_.optProposal)
+  val minExecutionTime: Lens[ProposalInfo, Option[TimeSpan]] =
+    Focus[ProposalInfo](_.minExecutionTime)
+  val maxExecutionTime: Lens[ProposalInfo, Option[TimeSpan]] =
+    Focus[ProposalInfo](_.maxExecutionTime)

@@ -27,14 +27,14 @@ import explore.model.RoutingInfo
 import explore.model.WorkerClients
 import explore.model.enums.AppTab
 import explore.utils.*
+import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
-import lucuma.broadcastchannel.*
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
-import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.http4s.dom.FetchClientBuilder
@@ -89,7 +89,10 @@ object ExploreMain {
       nonProdBanner.textContent = env.tag
       dom.document.body.appendChild(nonProdBanner)
     }
-    .whenA(env =!= ExecutionEnvironment.Production)
+    .whenA(
+      env =!= ExecutionEnvironment.Production &&
+        dom.document.querySelector("#non-prod-banner") == null
+    )
 
   def crash[F[_]: Sync](msg: String): F[Unit] =
     setupDOM[F].map { element =>
@@ -106,11 +109,6 @@ object ExploreMain {
     lucuma.react.highcharts.Highcharts
     lucuma.react.highcharts.HighchartsAccesibility
   }.void
-
-  def broadcastChannel[F[_]: Sync]: Resource[F, BroadcastChannel[ExploreEvent]] =
-    Resource.make(Sync[F].delay(new BroadcastChannel[ExploreEvent]("explore")))(c =>
-      Sync[F].delay(c.close()).void
-    )
 
   def run: IO[Unit] = {
 
@@ -135,7 +133,7 @@ object ExploreMain {
       dispatcher:       Dispatcher[IO],
       workerClients:    WorkerClients[IO],
       localPreferences: ExploreLocalPreferences,
-      bc:               BroadcastChannel[ExploreEvent]
+      bc:               BroadcastChannel[IO, ExploreEvent]
     )(using Logger[IO]): IO[Unit] = {
       given FetchJSBackend[IO]     = FetchJSBackend[IO](FetchMethod.GET)
       given WebSocketJSBackend[IO] = WebSocketJSBackend[IO](dispatcher)
@@ -188,7 +186,7 @@ object ExploreMain {
       prefs            <- Resource.eval(ExploreLocalPreferences.loadPreferences[IO])
       given Logger[IO] <- Resource.eval(setupLogger[IO](prefs))
       workerClients    <- WorkerClients.build[IO](dispatcher)
-      bc               <- broadcastChannel[IO]
+      bc               <- BroadcastChannel[IO, ExploreEvent]("explore")
       _                <- Resource.eval(buildPage(dispatcher, workerClients, prefs, bc))
     } yield ()).useForever
   }

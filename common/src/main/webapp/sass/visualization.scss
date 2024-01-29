@@ -327,7 +327,7 @@ $brightness: var(--aladin-image-brightness);
     max-width: 30px;
     max-height: 30px;
 
-    &:enabled:focus,
+    &:enabled:focus-visible,
     &:enabled:hover {
       background: var(--gray-700);
       border-color: var(--gray-200);
@@ -503,8 +503,7 @@ $brightness: var(--aladin-image-brightness);
     :nth-child(14) {
       grid-row-start: rotate-pa;
       grid-column-end: span 4;
-      justify-self: start;
-      align-self: baseline;
+      place-self: baseline start;
     }
 
     // reset row

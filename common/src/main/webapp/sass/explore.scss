@@ -209,7 +209,8 @@ body.hide-reusability {
     transform 0.25s,
     filter 0.25s ease-in;
 
-  &:enabled:focus {
+  &:enabled:focus,
+  &:enabled:focus-visible {
     border: none;
     box-shadow: none;
   }
@@ -301,8 +302,7 @@ body.hide-reusability {
 .explore-itc-tile-title {
   flex-grow: 1;
   display: grid;
-  column-gap: 0.5em;
-  row-gap: 0;
+  gap: 0 0.5em;
   font-size: smaller;
   grid-template-columns: repeat(3, minmax(fit-content, 1fr));
   grid-template-rows: repeat(2, min-content);
@@ -410,8 +410,7 @@ body.hide-reusability {
 // ------
 .explore-brightnesses-wrapper {
   grid-column: 1 / -1;
-  justify-self: stretch;
-  align-self: stretch;
+  place-self: stretch stretch;
   grid-row-start: 4;
 
   .p-panel.p-panel-toggleable {
@@ -704,8 +703,7 @@ $search-preview-margin: 5px;
   max-height: 80vh; // Don't let the form grow too large
   gap: 0.3em;
   align-items: stretch;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto auto;
   grid-template-columns: 1fr;
   grid-auto-rows: fit-content;
 
@@ -774,8 +772,7 @@ $search-preview-margin: 5px;
 .explore-target-search-results {
   border: 1px solid var(--site-border-color);
   border-radius: 0.28rem;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: auto auto;
 }
 
 .explore-sequences-panel {
@@ -792,6 +789,10 @@ $search-preview-margin: 5px;
   display: flex;
   justify-content: center;
   padding-top: 1em;
+}
+
+.explore-sequence-tile-title {
+  font-weight: bold;
 }
 
 table.pl-react-table.explore-sequence-table {
@@ -883,8 +884,7 @@ table.pl-react-table.explore-sequence-table {
   @include aladin-toolbar-labels;
 
   grid-area: fov;
-  justify-self: stretch;
-  align-self: center;
+  place-self: center stretch;
   display: flex;
   gap: 0.3em;
   align-items: center;
@@ -929,8 +929,7 @@ table.pl-react-table.explore-sequence-table {
   @include aladin-toolbar-labels;
 
   grid-area: curr;
-  justify-self: end;
-  align-self: center;
+  place-self: center end;
   white-space: nowrap;
 }
 
@@ -1024,7 +1023,7 @@ table.pl-react-table.explore-sequence-table {
     font-size: var(--pl-tiny-font-size);
 
     // because of the rotate, Y is X
-    $active-status-translate-x: -1em;
+    $active-status-translate-x: -0.4em;
     $active-status-translate-y: 2em;
 
     .p-component.p-inputswitch.obs-active-status-toggle {
@@ -1048,10 +1047,10 @@ table.pl-react-table.explore-sequence-table {
     margin-top: 5px;
     display: flex;
     justify-content: space-between;
+    gap: 2em;
 
     .obs-status-select-wrapper {
       flex-grow: 2;
-      margin-right: 2em;
     }
   }
 
@@ -1381,10 +1380,54 @@ table.pl-react-table.explore-sequence-table {
 // ------
 // Proposals and Partner Splits
 // ------
+.partner-splits-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5em 0.5em;
+  width: 100%;
+
+  .partner-splits-grid-min-pct,
+  .partner-splits-grid-total {
+    width: 3em;
+  }
+
+  // only applies to the text field, not the input - pushes text to bottom
+  & > .partner-splits-grid-min-pct {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  & > .explore-flex-container {
+    align-items: flex-end;
+  }
+
+  // align the partner split hours to the end to align with the percents
+  span.partner-split-data {
+    text-align: end;
+  }
+
+  .partner-split-data {
+    margin-right: 2em;
+    width: 4.5em;
+
+    // The div containing the flag and percent text.
+    data > div {
+      display: flex;
+
+      // The percent text
+      span {
+        flex: 1;
+        text-align: end;
+      }
+    }
+  }
+}
+
 img.partner-split-flag {
   height: 16px;
   width: 32px;
   margin-right: 0.5em;
+  margin-left: 0.5em;
 }
 
 .partner-splits-editor-dialog {
@@ -1610,7 +1653,7 @@ input[type='file'].explore-fileupload {
       margin-left: 0.5rem;
     }
 
-    &:focus {
+    &:focus-visible {
       box-shadow: none;
     }
   }
@@ -1644,8 +1687,7 @@ input[type='file'].explore-fileupload {
 // Area where the grid-layout is placed
 // ------------
 .tree-rgl {
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow: hidden hidden;
   position: relative;
   display: flex;
 }
@@ -1658,6 +1700,12 @@ input[type='file'].explore-fileupload {
 // Inner area of the tree
 .tree-body {
   width: 100vw;
+
+  &.obs-tree-hidden-toolbar {
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      width: unset;
+    }
+  }
 
   @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     width: $tree-section-width;
@@ -1673,8 +1721,7 @@ input[type='file'].explore-fileupload {
 .single-panel-tile {
   flex-shrink: 1;
   flex-grow: 1;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: auto auto;
 }
 
 .tree-toolbar {
@@ -1694,6 +1741,10 @@ input[type='file'].explore-fileupload {
 
 .obs-hide-show-button {
   display: none;
+
+  &.p-button-secondary.p-button-outlined.p-button {
+    color: var(--site-text-color);
+  }
 
   @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     display: flex;
@@ -2125,8 +2176,7 @@ $help-title-height: 40px;
 
 .explore-basic-configuration-sn-at {
   display: flex;
-  align-items: baseline;
-  justify-items: stretch;
+  place-items: baseline stretch;
   grid-gap: 0.5em;
 
   div:first-child {
@@ -2376,6 +2426,51 @@ a.explore-upgrade-link {
 
     button.observations-summary-add {
       margin-top: 1em;
+    }
+  }
+}
+
+// Program Tab
+.program-details-tile {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.program-tab-table {
+  border-collapse: collapse;
+  margin: 1em;
+
+  thead {
+    tr {
+      th {
+        padding: 0.5em;
+        font-weight: bold;
+      }
+    }
+  }
+
+  tbody,
+  tfoot {
+    border-top: 1.5px solid var(--site-border-color);
+    background-color: transparent;
+
+    tr {
+      td {
+        &:first-child {
+          font-weight: bold;
+          border-right: 1px solid var(--site-border-color);
+          text-align: right;
+        }
+
+        &:last-child {
+          border-left: 1px solid var(--site-border-color);
+        }
+
+        vertical-align: middle;
+        padding: 0.5em;
+        font-weight: normal;
+      }
     }
   }
 }

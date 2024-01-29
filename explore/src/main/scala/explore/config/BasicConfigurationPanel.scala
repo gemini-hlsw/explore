@@ -28,7 +28,6 @@ import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
@@ -44,7 +43,6 @@ import monocle.Iso
 
 case class BasicConfigurationPanel(
   userId:          Option[User.Id],
-  programId:       Program.Id,
   obsId:           Observation.Id,
   requirementsCtx: UndoSetter[ScienceRequirements],
   selectedConfig:  View[Option[BasicConfigAndItc]],
@@ -71,7 +69,7 @@ private object BasicConfigurationPanel:
         import ctx.given
 
         val requirementsViewSet: ScienceRequirementsUndoView =
-          ScienceRequirementsUndoView(props.programId, props.obsId, props.requirementsCtx)
+          ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)
 
         val requirementsView: View[ScienceRequirements] =
           requirementsViewSet(

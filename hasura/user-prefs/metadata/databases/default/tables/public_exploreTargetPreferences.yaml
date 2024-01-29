@@ -1,7 +1,3 @@
 table:
   name: exploreTargetPreferences
   schema: public
-object_relationships:
-- name: lucuma_target
-  using:
-    foreign_key_constraint_on: targetId

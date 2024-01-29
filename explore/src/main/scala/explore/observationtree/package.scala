@@ -9,9 +9,13 @@ import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
 import explore.DefaultErrorPolicy
+import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.GroupElement
+import explore.model.GroupList
+import explore.model.Grouping
 import explore.model.ObsSummary
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
@@ -21,6 +25,7 @@ import explore.undo.Action
 import explore.undo.KIListMod
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
+import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
@@ -55,7 +60,7 @@ def cloneObs(
   before >>
     cloneObservation[IO](obsId)
       .flatMap { obs =>
-        obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
+        obsExistence(obs.id, o => setObs(programId, o.some, ctx))
           .mod(observations)(obsListMod.upsert(obs, pos))
           .toAsync
       }
@@ -70,7 +75,7 @@ private def obsWithId(
     .withKey(obsId)
     .composeOptionLens(Focus[(ObsSummary, Int)](_._1))
 
-def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
+def obsEditStatus(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummary.status)
@@ -79,7 +84,6 @@ def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
     UpdateObservationMutation[IO]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(status = status.orIgnore)
         )
@@ -87,7 +91,7 @@ def obsEditStatus(programId: Program.Id, obsId: Observation.Id)(using
       .void
 )
 
-def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
+def obsEditSubtitle(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummary.subtitle)
@@ -96,7 +100,6 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
     UpdateObservationMutation[IO]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
         )
@@ -105,7 +108,6 @@ def obsEditSubtitle(programId: Program.Id, obsId: Observation.Id)(using
 )
 
 def obsEditAttachments(
-  programId:     Program.Id,
   obsId:         Observation.Id,
   attachmentIds: Set[ObsAttachment.Id]
 )(using
@@ -114,14 +116,13 @@ def obsEditAttachments(
   UpdateObservationMutation[IO]
     .execute(
       UpdateObservationsInput(
-        programId = programId,
         WHERE = obsId.toWhereObservation.assign,
         SET = ObservationPropertiesInput(obsAttachments = attachmentIds.toList.assign)
       )
     )
     .void
 
-def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
+def obsActiveStatus(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
 ) = Action(
   access = obsWithId(obsId).composeOptionLens(ObsSummary.activeStatus)
@@ -130,7 +131,6 @@ def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
     UpdateObservationMutation[IO]
       .execute(
         UpdateObservationsInput(
-          programId = programId,
           WHERE = obsId.toWhereObservation.assign,
           SET = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
         )
@@ -138,24 +138,24 @@ def obsActiveStatus(programId: Program.Id, obsId: Observation.Id)(using
       .void
 )
 
-def obsExistence(programId: Program.Id, obsId: Observation.Id, setObs: Observation.Id => Callback)(
-  using FetchClient[IO, ObservationDB]
+def obsExistence(obsId: Observation.Id, setObs: Observation.Id => Callback)(using
+  FetchClient[IO, ObservationDB]
 ) =
   Action(
     access = obsListMod.withKey(obsId)
   )(
     onSet = (_, elemWithIndexOpt) =>
       elemWithIndexOpt.fold {
-        deleteObservation[IO](programId, obsId)
+        deleteObservation[IO](obsId)
       } { case (obs, _) =>
         // Not much to do here, the observation must be created before we get here
         setObs(obs.id).toAsync
       },
     onRestore = (_, elemWithIndexOpt) =>
       elemWithIndexOpt.fold {
-        deleteObservation[IO](programId, obsId)
+        deleteObservation[IO](obsId)
       } { case (obs, _) =>
-        undeleteObservation[IO](programId, obs.id) >>
+        undeleteObservation[IO](obs.id) >>
           setObs(obs.id).toAsync
       }
   )
@@ -174,8 +174,36 @@ def insertObs(
 
   createObservation[IO](programId)
     .flatMap { obs =>
-      obsExistence(programId, obs.id, o => setObs(programId, o.some, ctx))
+      obsExistence(obs.id, o => setObs(programId, o.some, ctx))
         .mod(observations)(obsListMod.upsert(obs, pos))
         .toAsync
     }
+    .switching(adding.zoom(AddingObservation.value.asLens).async)
+
+private def findGrouping(groupId: Group.Id): GroupList => Option[Grouping] = _.collectFirstSome(
+  _.value.toOption.filter(_.id === groupId)
+)
+
+def groupExistence(groupId: Group.Id): Action[GroupList, Option[Grouping]] = Action(
+  getter = findGrouping(groupId),
+  setter = group =>
+    groupList =>
+      val groupEl =
+        group.map(grouping => GroupElement(grouping.asRight, grouping.parentId))
+      groupList ++ groupEl
+)(
+  // TODO: handle undo by removing (and undoing remove) of groups
+  onSet = (_, _) => IO.unit
+)
+
+def insertGroup(
+  programId: Program.Id,
+  groups:    UndoSetter[GroupList],
+  adding:    View[AddingObservation],
+  ctx:       AppContext[IO]
+): IO[Unit] =
+  import ctx.given
+  GroupQueries
+    .createGroup[IO](programId)
+    .flatMap(group => groupExistence(group.id).set(groups)(group.some).toAsync)
     .switching(adding.zoom(AddingObservation.value.asLens).async)

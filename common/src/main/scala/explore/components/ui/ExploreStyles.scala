@@ -213,11 +213,11 @@ object ExploreStyles:
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
-  val MinimumPercent: Css = Css("minimum-percent") |+| FlexEnd
-
-  val PartnerSplitTotal: Css = Css("partner-split-total")
-  val PartnerSplitData: Css  = Css("partner-split-data")
-  val PartnerSplitFlag: Css  = Css("partner-split-flag")
+  val PartnerSplitsGrid: Css       = Css("partner-splits-grid")
+  val PartnerSplitsGridMinPct: Css = Css("partner-splits-grid-min-pct")
+  val PartnerSplitsGridTotal: Css  = Css("partner-splits-grid-total")
+  val PartnerSplitData: Css        = Css("partner-split-data")
+  val PartnerSplitFlag: Css        = Css("partner-split-flag")
 
   val PartnerSplitsEditorDialog: Css = Css("partner-splits-editor-dialog")
 
@@ -355,6 +355,7 @@ object ExploreStyles:
   val SequenceTable                    = Css("explore-sequence-table")
   val CellHideBorder                   = Css("explore-table-cell-hide-border")
   val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
+  val SequenceTileTitle                = Css("explore-sequence-tile-title")
   val VisitSection                     = Css("explore-visit-section")
   val VisitHeader                      = Css("explore-visit-header")
   val VisitStepExtra                   = Css("explore-visit-step-extra")
@@ -480,3 +481,7 @@ object ExploreStyles:
   val TimingWindowExclude: Css                  = Css("timing-window-exclude")
 
   val SingleTileMaximized: Css = Css("explore-single-tile-maximized")
+
+  // Program Tab
+  val ProgramDetailsTile: Css = Css("program-details-tile")
+  val ProgramTabTable: Css    = Css("program-tab-table")

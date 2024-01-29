@@ -42,7 +42,7 @@ jobs:
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
         if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -52,20 +52,29 @@ jobs:
         if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt -v -J-Xmx6g +update
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
+
       - name: npm clean-install
-        run: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        run: npm clean-install --verbose
 
       - name: Check that workflows are up to date
         run: sbt -v -J-Xmx6g githubWorkflowCheck
 
       - name: Check headers and formatting
-        if: matrix.java == 'temurin@17'
+        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck lucumaScalafmtCheck lucumaScalafixCheck
 
       - name: Check scalafix lints
@@ -101,7 +110,7 @@ jobs:
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
         if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -111,17 +120,26 @@ jobs:
         if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt -v -J-Xmx6g +update
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Stage
-        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
 
       - name: npm clean-install
-        run: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        run: npm clean-install --verbose
+
+      - name: Stage
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
 
       - name: Build application
         env:
@@ -133,10 +151,7 @@ jobs:
         run: echo "CI_COMMIT_SHA=${{ github.event.pull_request.head.sha}}" >> $GITHUB_ENV
 
       - name: Run BundleMon
-        env:
-          BUNDLEMON_PROJECT_ID: 61a698e5de59ab000954f941
-          BUNDLEMON_PROJECT_APIKEY: ${{ secrets.BUNDLEMON_PROJECT_APIKEY }}
-        run: yarn bundlemon
+        uses: lironer/bundlemon-action@v1
 
       - name: Deploy staging app to Firebase
         if: github.ref == 'refs/heads/master'
@@ -164,7 +179,7 @@ jobs:
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
         if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -174,14 +189,23 @@ jobs:
         if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt -v -J-Xmx6g +update
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
+
       - name: npm clean-install
-        run: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        run: npm clean-install --verbose
 
       - name: Extract CSS files
         run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' lucumaCss

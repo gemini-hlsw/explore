@@ -1,9 +1,14 @@
 {
+  // Do not remove from Git: We want to keep these editor settings in the project.
   "files.watcherExclude": {
     "**/target": true
   },
   "[scss]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": "explicit"
+    }
   },
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "stylelint.validate": ["css", "scss"]
 }

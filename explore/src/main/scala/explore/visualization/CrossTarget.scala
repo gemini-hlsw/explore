@@ -47,7 +47,7 @@ object CrossTarget:
       .render: (p, open, floating, _) =>
         val areaSize  = scale(p.maxP * (2 * p.radius + 3))
         val targetSvg = <.g(
-          floatingArea(p.p, p.q, areaSize, floating.reference),
+          floatingArea(p.p, p.q, areaSize, floating.refs),
           <.circle(
             ^.cx := scale(p.p),
             ^.cy := scale(p.q),

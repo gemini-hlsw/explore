@@ -109,10 +109,13 @@ trait CatalogPicklers extends CommonPicklers {
 
   given Pickler[ObjectTracking.SiderealAsterismTracking] = generatePickler
 
+  given Pickler[ObjectTracking.ConstantTracking] = generatePickler
+
   given Pickler[ObjectTracking] =
     compositePickler[ObjectTracking]
       .addConcreteType[ObjectTracking.SiderealObjectTracking]
       .addConcreteType[ObjectTracking.SiderealAsterismTracking]
+      .addConcreteType[ObjectTracking.ConstantTracking]
 }
 
 object CatalogPicklers extends CatalogPicklers

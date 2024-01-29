@@ -20,7 +20,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.optics.syntax.lens.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -32,7 +31,6 @@ import queries.common.ObsQueriesGQL.*
 object ScienceQueries:
 
   case class ScienceRequirementsUndoView(
-    programId:               Program.Id,
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirements]
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
@@ -47,7 +45,6 @@ object ScienceQueries:
           UpdateObservationMutation[IO]
             .execute(
               UpdateObservationsInput(
-                programId = programId,
                 WHERE = obsId.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(scienceRequirements =
                   remoteSet(value)(ScienceRequirementsInput()).assign

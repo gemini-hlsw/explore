@@ -25,13 +25,14 @@ import scala.math.*
 sealed trait ItcQueryProblems extends Product with Serializable derives Eq
 
 object ItcQueryProblems {
-  case object UnsupportedMode          extends ItcQueryProblems
-  case object MissingWavelength        extends ItcQueryProblems
-  case object MissingSignalToNoise     extends ItcQueryProblems
-  case object MissingSignalToNoiseAt   extends ItcQueryProblems
-  case object MissingTargetInfo        extends ItcQueryProblems
-  case object MissingBrightness        extends ItcQueryProblems
-  case class GenericError(msg: String) extends ItcQueryProblems
+  case object UnsupportedMode                      extends ItcQueryProblems
+  case object MissingWavelength                    extends ItcQueryProblems
+  case object MissingSignalToNoise                 extends ItcQueryProblems
+  case object MissingSignalToNoiseAt               extends ItcQueryProblems
+  case object MissingTargetInfo                    extends ItcQueryProblems
+  case object MissingBrightness                    extends ItcQueryProblems
+  case class SourceTooBright(halfWell: BigDecimal) extends ItcQueryProblems
+  case class GenericError(msg: String)             extends ItcQueryProblems
 }
 
 sealed trait ItcResult extends Product with Serializable derives Eq {

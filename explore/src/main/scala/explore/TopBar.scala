@@ -21,6 +21,7 @@ import explore.users.UserPreferencesPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
@@ -37,7 +38,6 @@ import lucuma.ui.Resources
 import lucuma.ui.components.About
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.components.ThemeSubMenu
-import lucuma.ui.enums.ExecutionEnvironment
 import lucuma.ui.enums.Theme
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault

@@ -15,8 +15,6 @@ object ProposalAttachmentSubquery
     {
       attachmentType
       fileName
-      description
-      checked
       fileSize
       updatedAt
     }

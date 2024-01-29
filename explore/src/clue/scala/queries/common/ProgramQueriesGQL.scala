@@ -8,9 +8,9 @@ import clue.annotation.GraphQL
 import lucuma.core.model
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
+import explore.{model => exploreModel}
 // gql: import lucuma.odb.json.time.decoder.given
 // gql: import lucuma.schemas.decoders.given
-// gql: import explore.DynamicEnums.given
 
 object ProgramQueriesGQL {
   @GraphQL
@@ -52,9 +52,9 @@ object ProgramQueriesGQL {
 
   @GraphQL
   trait ProgramProposalQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      query($programId: ProgramId!) {
-        program(programId: $programId) {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) {
           proposal {
             title
             proposalClass {
@@ -81,11 +81,23 @@ object ProgramQueriesGQL {
               percent
             }
           }
-          plannedTimeRange {
+          pi $ProgramUserSubquery
+          users $ProgramUserWithRoleSubquery
+          timeEstimateRange {
+            minimum {
+              total {
+                microseconds
+              }
+            }
             maximum {
               total {
                 microseconds
               }
+            }
+          }
+          timeCharge {
+            program {
+              microseconds
             }
           }
         }
@@ -94,10 +106,13 @@ object ProgramQueriesGQL {
 
     object Data:
       object Program:
-        type Proposal = model.Proposal
-        object PlannedTimeRange:
+        type Proposal   = model.Proposal
+        object TimeEstimateRange:
+          object Minimum:
+            type Total = TimeSpan
           object Maximum:
             type Total = TimeSpan
+        type TimeCharge = exploreModel.TimeCharge
   }
 
   @GraphQL

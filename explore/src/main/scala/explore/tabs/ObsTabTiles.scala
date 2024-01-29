@@ -17,6 +17,7 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
@@ -30,8 +31,10 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
+import explore.model.syntax.all.toHoursMinutes
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
@@ -62,6 +65,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -69,6 +73,7 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 
+import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 
@@ -96,7 +101,6 @@ object ObsTabTiles:
   private type Props = ObsTabTiles
 
   private def makeConstraintsSelector(
-    programId:         Program.Id,
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet]
@@ -108,7 +112,7 @@ object ObsTabTiles:
         onChange = (cs: ConstraintSet) =>
           constraintSet.set(cs) >>
             ObsQueries
-              .updateObservationConstraintSet[IO](programId, List(observationId), cs)
+              .updateObservationConstraintSet[IO](List(observationId), cs)
               .runAsyncAndForget,
         options = allConstraintSets
           .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
@@ -117,14 +121,14 @@ object ObsTabTiles:
     )
 
   private def itcQueryProps(
-    obs:            ObsSummary,
-    odbItc:         Option[OdbItcResult.Success],
-    selectedConfig: Option[BasicConfigAndItc],
-    targetsList:    TargetList
+    obs:             ObsSummary,
+    itcExposureTime: Option[ItcExposureTime],
+    selectedConfig:  Option[BasicConfigAndItc],
+    targetsList:     TargetList
   ): ItcProps =
     ItcProps(
       obs,
-      odbItc.map(_.toItcExposureTime),
+      itcExposureTime,
       selectedConfig,
       targetsList,
       obs.toModeOverride
@@ -135,7 +139,16 @@ object ObsTabTiles:
     acquisition: Option[NonEmptyList[Offset]]
   )
 
-  given Reusability[LoadingState] = Reusability.byEq
+  private def expTime(
+    selectedConfig: Option[BasicConfigAndItc],
+    odbItc:         Option[OdbItcResult.Success]
+  ): Option[ItcExposureTime] =
+    val tableItc = for {
+      conf <- selectedConfig
+      res  <- conf.itcResult.flatMap(_.toOption)
+      itc  <- res.toItcExposureTime
+    } yield itc
+    odbItc.map(_.toItcExposureTime).orElse(tableItc)
 
   private val component =
     ScalaFnComponent
@@ -168,11 +181,13 @@ object ObsTabTiles:
             Offsets(
               science = NonEmptyList.fromList(
                 data.observation
-                  .foldMap(_.execution.config.allScienceOffsets)
+                  .foldMap(_.execution.config.toList.flatMap(_.allScienceOffsets))
                   .distinct
               ),
               acquisition = NonEmptyList.fromList(
-                data.observation.foldMap(_.execution.config.allAcquisitionOffsets).distinct
+                data.observation
+                  .foldMap(_.execution.config.toList.flatMap(_.allAcquisitionOffsets))
+                  .distinct
               )
             )
           )
@@ -187,9 +202,11 @@ object ObsTabTiles:
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
       .useStateWithReuseBy((props, _, odbItc, _, _, _, selectedConfig) =>
+        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
+
         itcQueryProps(
           props.observation.get,
-          odbItc.toOption.flatten,
+          time,
           selectedConfig.get,
           props.allTargets.get
         )
@@ -199,9 +216,11 @@ object ObsTabTiles:
       // itc loading
       .useStateWithReuse(LoadingState.Done)
       .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
+        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
+
         itcQueryProps(
           props.observation.get,
-          odbItc.toOption.flatten,
+          time,
           selectedConfig.get,
           props.allTargets.get
         )
@@ -210,7 +229,7 @@ object ObsTabTiles:
 
         oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
           itcProps
-            .requestITCData(
+            .requestChart(
               m => {
                 val r = m.map {
                   case (k, Left(e))  =>
@@ -271,7 +290,7 @@ object ObsTabTiles:
               .zoom(ObsSummary.posAngleConstraint)
               .withOnMod(pa =>
                 ObsQueries
-                  .updatePosAngle[IO](props.programId, List(props.obsId), pa)
+                  .updatePosAngle[IO](List(props.obsId), pa)
                   .switching(agsState.async, AgsState.Saving, AgsState.Idle)
                   .runAsync
               )
@@ -307,7 +326,7 @@ object ObsTabTiles:
 
           val attachmentsView =
             props.observation.model.zoom(ObsSummary.attachmentIds).withOnMod { ids =>
-              obsEditAttachments(props.programId, props.obsId, ids).runAsync
+              obsEditAttachments(props.obsId, ids).runAsync
             }
 
           val pa: Option[Angle] =
@@ -343,12 +362,28 @@ object ObsTabTiles:
             )
 
           val sequenceTile =
-            SequenceEditorTile.sequenceTile(
-              props.programId,
-              props.obsId,
-              asterismIds.get.toList,
-              itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
-              sequenceChanged
+            SequenceEditorTile.sequenceTile(renderInTitle =>
+              React.Fragment(
+                renderInTitle {
+                  val programTimeCharge = props.observation.get.execution.timeCharge.program
+                  props.observation.get.executionTime
+                    .map { planned =>
+                      val total = programTimeCharge +| planned
+                      <.span(
+                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
+                        s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                      )
+                    }
+                    .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                },
+                GeneratedSequenceViewer(
+                  props.programId,
+                  props.obsId,
+                  asterismIds.get.toList,
+                  itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
+                  sequenceChanged
+                )
+              )
             )
 
           val itcTile: Tile =
@@ -368,7 +403,6 @@ object ObsTabTiles:
 
           val constraintsSelector: VdomNode =
             makeConstraintsSelector(
-              props.programId,
               props.obsId,
               props.observation.model.zoom(ObsSummary.constraints),
               props.allConstraintSets
@@ -376,7 +410,6 @@ object ObsTabTiles:
 
           val timingWindows: View[List[TimingWindow]] =
             TimingWindowsQueries.viewWithRemoteMod(
-              props.programId,
               ObsIdSet.one(props.obsId),
               props.observation.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
@@ -412,7 +445,14 @@ object ObsTabTiles:
               .mapN((site, asterism, vizTime) =>
                 posAngleConstraintView.get match
                   case PosAngleConstraint.AverageParallactic =>
-                    averageParallacticAngle(site, asterism.baseTracking, vizTime)
+                    // TODO: When we have the calculated observation time, we probably want to use that
+                    // for the duration below, although we can't know if the observation will be splt.
+                    // See also `anglesToTestAt` in AladinCell.scala.
+                    averageParallacticAngle(site,
+                                            asterism.baseTracking,
+                                            vizTime,
+                                            Duration.ofHours(1)
+                    )
                   case _                                     => none
               )
               .flatten
@@ -467,7 +507,6 @@ object ObsTabTiles:
             )(renderInTitle =>
               <.div
               ConstraintsPanel(
-                props.programId,
                 ObsIdSet.one(props.obsId),
                 props.observation.zoom(ObsSummary.constraints),
                 renderInTitle

@@ -16,7 +16,6 @@ import explore.model.TargetList
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import monocle.Iso
@@ -26,7 +25,6 @@ import scala.collection.immutable.SortedSet
 
 object AsterismGroupObsListActions {
   def dropObservations(
-    programId:   Program.Id,
     draggedIds:  ObsIdSet,
     srcIds:      ObsIdSet,
     destIds:     ObsIdSet,
@@ -52,7 +50,6 @@ object AsterismGroupObsListActions {
           (srcIds -- draggedIds).fold(base)(base + _)
         ) >>
           AsterismQueries.replaceAsterism[IO](
-            programId,
             draggedIds.toList,
             filteredTargetIds.toList
           ) >>

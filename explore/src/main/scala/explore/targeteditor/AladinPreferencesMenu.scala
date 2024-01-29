@@ -3,6 +3,7 @@
 
 package explore.targeteditor
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -10,8 +11,8 @@ import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import explore.common.UserPreferencesQueries
+import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
-import explore.common.UserPreferencesQueries.TargetPreferences
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.*
@@ -33,9 +34,9 @@ import monocle.Lens
 
 case class AladinPreferencesMenu(
   uid:               User.Id,
-  tid:               Target.Id,
+  tids:              NonEmptyList[Target.Id],
   globalPreferences: View[GlobalPreferences],
-  targetPreferences: View[TargetVisualOptions],
+  targetPreferences: View[AsterismVisualOptions],
   menuRef:           PopupMenuRef
 ) extends ReactFnProps(AladinPreferencesMenu.component)
 
@@ -43,10 +44,10 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
 
   private type Props = AladinPreferencesMenu
 
-  private val unsafeRangeLens: Lens[TargetVisualOptions.ImageFilterRange, Double] =
-    Lens[TargetVisualOptions.ImageFilterRange, Double](_.value.toDouble)(x =>
+  private val unsafeRangeLens: Lens[AsterismVisualOptions.ImageFilterRange, Double] =
+    Lens[AsterismVisualOptions.ImageFilterRange, Double](_.value.toDouble)(x =>
       y =>
-        refineV[TargetVisualOptions.FilterRange](x.toInt).toOption
+        refineV[AsterismVisualOptions.FilterRange](x.toInt).toOption
           .getOrElse(y) // Ignore invalid updates
     )
 
@@ -68,13 +69,15 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
             saturation: Option[Int] = None,
             brightness: Option[Int] = None
           ): Callback =
-            TargetPreferences
+            AsterismPreferences
               .updateAladinPreferences[IO](
+                props.targetPreferences.get.id,
                 props.uid,
-                props.tid,
+                props.tids,
                 saturation = saturation,
                 brightness = brightness
               )
+              .flatMap(id => props.targetPreferences.zoom(AsterismVisualOptions.id).set(id).to[IO])
               .runAsync
               .void
 
@@ -108,7 +111,7 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
             )
 
           def cssVarView(
-            varLens:        Lens[TargetVisualOptions, TargetVisualOptions.ImageFilterRange],
+            varLens:        Lens[AsterismVisualOptions, AsterismVisualOptions.ImageFilterRange],
             variableName:   String,
             updateCallback: Int => Callback
           ) =
@@ -117,12 +120,12 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
               .withOnMod(s => setVariable(root, variableName, s) *> updateCallback(s))
 
           val saturationView =
-            cssVarView(TargetVisualOptions.saturation,
+            cssVarView(AsterismVisualOptions.saturation,
                        "saturation",
                        s => prefsSetter(saturation = s.some)
             )
           val brightnessView =
-            cssVarView(TargetVisualOptions.brightness,
+            cssVarView(AsterismVisualOptions.brightness,
                        "brightness",
                        s => prefsSetter(brightness = s.some)
             )

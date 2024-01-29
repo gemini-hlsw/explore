@@ -5,14 +5,8 @@ package explore.model.syntax
 
 import cats.effect.IO
 import cats.syntax.all.*
-import explore.model.AsterismGroup
-import explore.model.AsterismGroupList
-import explore.model.Constants
-import explore.model.ConstraintGroup
-import explore.model.ConstraintGroupList
-import explore.model.ObsIdSet
-import explore.model.SchedulingGroup
-import explore.model.SchedulingGroupList
+import eu.timepit.refined.types.numeric.NonNegShort
+import explore.model.*
 import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
@@ -81,7 +75,12 @@ object all:
      * Format a timespan in the format `${hh}hrs ${mm}mins`
      */
     def toHoursMinutes: String =
-      s"${timespan.toHours.toLong}hrs ${(timespan.toMinutes.toLong) % 60}mins"
+      val hours   = timespan.toHours.toLong
+      val minutes = (timespan.toMinutes.toLong) % 60
+
+      if hours === 0 then s"${minutes}mins"
+      else if minutes === 0 then s"${hours}hrs"
+      else s"${hours}hrs ${minutes}mins"
 
   extension (cs: ConstraintSet)
     def summaryString: String =
@@ -97,3 +96,10 @@ object all:
         s"${Constants.GppTimeTZFormatterWithZone.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
 
   extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)
+
+  extension (e: Either[GroupObs, GroupingElement])
+    def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)
+
+  extension (e: Either[GroupObs, Grouping])
+    @targetName("groupIndexGrouping")
+    def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)

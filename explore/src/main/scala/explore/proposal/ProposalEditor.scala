@@ -26,8 +26,9 @@ import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.ExploreModelValidators
 import explore.model.Hours
+import explore.model.ProgramUserWithRole
+import explore.model.ProposalAttachment
 import explore.model.display.given
-import explore.optics.all.*
 import explore.proposal.ProposalClassType.*
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -52,6 +53,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.*
+import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -64,11 +66,14 @@ import spire.std.any.*
 import scala.collection.immutable.SortedMap
 
 case class ProposalEditor(
-  programId:     Program.Id,
-  proposal:      View[Proposal],
-  undoStacks:    View[UndoStacks[IO, Proposal]],
-  executionTime: Option[TimeSpan],
-  band3Time:     TimeSpan
+  programId:        Program.Id,
+  proposal:         View[Proposal],
+  undoStacks:       View[UndoStacks[IO, Proposal]],
+  minExecutionTime: Option[TimeSpan],
+  maxExecutionTime: Option[TimeSpan],
+  users:            List[ProgramUserWithRole],
+  attachments:      View[List[ProposalAttachment]],
+  authToken:        Option[NonEmptyString]
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -77,7 +82,7 @@ object ProposalEditor:
   private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
 
   private def toHours(time: TimeSpan): Hours =
-    Hours.from(time.toHours.longValue).getOrElse(Hours.Max)
+    Hours.from(time.toHours).getOrElse(Hours.Max)
 
   private def fromHours(hours: Hours): TimeSpan =
     TimeSpan.unsafeFromMicroseconds((hours.value * Hours2Micros).longValue)
@@ -109,7 +114,7 @@ object ProposalEditor:
 
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
     val img: TagMod  =
-      <.img(^.src := PartnerFlags.smallFlag(partner),
+      <.img(^.src        := PartnerFlags.smallFlag(partner),
             ^.alt := s"${partner.name}  Flag",
             ExploreStyles.PartnerSplitFlag
       )
@@ -121,14 +126,14 @@ object ProposalEditor:
     )
   }
 
-  private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): TagMod =
-    splits match {
+  private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): VdomNode =
+    val tagmod = splits match {
       case a if a.isEmpty => TagMod.empty
       case _              =>
-        val ps = sortedSplits(splits)
+        sortedSplits(splits)
           .toTagMod(ps => timeSplit(ps, total))
-        <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
     }
+    <.div(tagmod, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
 
   private def timeSplit(ps: PartnerSplit, total: TimeSpan) = {
     val splitTime = ps.percent.value * toHours(total).value / 100
@@ -139,7 +144,7 @@ object ProposalEditor:
   private def minimumTime(pct: IntPercent, total: TimeSpan) = {
     val time     = pct.value * toHours(total).value / 100
     val timeText = formatHours(time)
-    <.span(timeText, ExploreStyles.MinimumPercent)
+    <.div(<.span(timeText), ExploreStyles.PartnerSplitsGridMinPct)
   }
 
   private def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
@@ -179,8 +184,9 @@ object ProposalEditor:
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
-    executionTime:     TimeSpan,
-    band3Time:         TimeSpan,
+    minExecutionTime:  TimeSpan,
+    maxExecutionTime:  TimeSpan,
+    users:             List[ProgramUserWithRole],
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
@@ -213,13 +219,10 @@ object ProposalEditor:
     val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
     val minimumPct2View = classView.zoom(ProposalClass.minPercentTotalTime)
 
-    val has2Minimums = minimumPct2View.get.isDefined
-
-    val (time1Label, secondTime) =
+    val (maxTimeLabel, minTimeLabel) =
       ProposalClassType.fromProposalClass(classView.get) match {
-        case Queue                    => ("Band 1 & 2", band3Time.some)
-        case LargeProgram | Intensive => ("1st Semester", totalTime)
-        case _                        => ("Time", none)
+        case LargeProgram | Intensive => ("Semester Max", "Semester Min")
+        case _                        => ("Max Time", "Min Time")
       }
 
     def makeMinimumPctInput[A](pctView: View[IntPercent], id: NonEmptyString): TagMod =
@@ -228,21 +231,18 @@ object ProposalEditor:
         validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
         changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
         label = React.Fragment("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
-        id = id
+        id = id,
+        inputClass = ExploreStyles.PartnerSplitsGridMinPct
       )
 
-    def totalTimeEntry[A]: Option[VdomNode] =
-      totalTime.map(_ =>
-        FormInputTextView(
-          value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
-          validFormat = ExploreModelValidators.hoursValidWedge,
-          changeAuditor = ChangeAuditor.accept.decimal(2.refined),
-          label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
-          id = "total-time-entry".refined
-        ).withMods(
-          ExploreStyles.FlexShrink(0.refined),
-          ExploreStyles.PartnerSplitTotal
-        )
+    def totalTimeEntry[A]: VdomNode =
+      FormInputTextView(
+        value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
+        validFormat = ExploreModelValidators.hoursValidWedge,
+        changeAuditor = ChangeAuditor.accept.decimal(2.refined),
+        label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
+        id = "total-time-entry".refined,
+        inputClass = ExploreStyles.PartnerSplitsGridTotal
       )
 
     def openPartnerSplitsEditor: Callback = {
@@ -278,50 +278,53 @@ object ProposalEditor:
               label = "Title"
             )(^.autoFocus := true),
             <.div(
-              ExploreStyles.FlexContainer,
-              <.div(ExploreStyles.FlexShrink(0.refined) |+| ExploreStyles.PartnerSplitTotal)(
+              ExploreStyles.PartnerSplitsGrid,
+              // The first partner splits row, with the button and the flags
+              <.div(
                 <.label("Partners"),
-                Button(
-                  icon = Icons.Edit,
-                  severity = Button.Severity.Secondary,
-                  tpe = Button.Type.Button,
-                  onClick = openPartnerSplitsEditor
+                <.div(
+                  Button(
+                    icon = Icons.Edit,
+                    severity = Button.Severity.Secondary,
+                    tpe = Button.Type.Button,
+                    onClick = openPartnerSplitsEditor,
+                    tooltip = "Edit Partner Splits"
+                  ).mini.compact
                 )
               ),
               partnerSplits(splitsMap),
-              <.div(ExploreStyles.FlexShrink(0.refined), ExploreStyles.MinimumPercent)(
-                makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).unless(has2Minimums)
-              )
-            ),
-            <.div(
-              ExploreStyles.FlexContainer,
-              FormStaticData(
-                value = formatHours(toHours(executionTime)),
-                label = time1Label,
-                id = "time1"
-              )(
-                ExploreStyles.FlexShrink(0.refined),
-                ExploreStyles.PartnerSplitTotal
-              ),
-              timeSplits(splitsMap, executionTime),
-              minimumTime(minimumPct1View.get, executionTime).unless(has2Minimums),
-              makeMinimumPctInput(minimumPct1View, "min-pct-1".refined).when(has2Minimums)
-            ),
-            secondTime.fold(<.span(): VdomNode) { t2 =>
               <.div(
-                ExploreStyles.FlexContainer,
-                totalTimeEntry.getOrElse(
-                  FormStaticData(value = formatHours(toHours(t2)), label = "Band 3", id = "band-3")(
-                    ExploreStyles.FlexShrink(0.refined),
-                    ExploreStyles.PartnerSplitTotal
+                makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
+              ),
+              // The second partner splits row, for maximum times - is always there
+              FormStaticData(
+                value = formatHours(toHours(maxExecutionTime)),
+                label = maxTimeLabel,
+                id = "maxTime"
+              ),
+              timeSplits(splitsMap, maxExecutionTime),
+              minimumTime(minimumPct1View.get, maxExecutionTime),
+              // The third partner splits row, for minimum times - is always there
+              FormStaticData(
+                value = formatHours(toHours(minExecutionTime)),
+                label = minTimeLabel,
+                id = "maxTime"
+              ),
+              timeSplits(splitsMap, minExecutionTime),
+              minimumTime(minimumPct1View.get, minExecutionTime),
+              // The third partner splits row - only exists for a few observation classes
+              totalTime.fold(React.Fragment()) { tt =>
+                React.Fragment(
+                  <.div(totalTimeEntry),
+                  timeSplits(splitsMap, tt),
+                  <.div(
+                    minimumPct2View
+                      .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
+                      .getOrElse(minimumTime(minimumPct1View.get, tt))
                   )
-                ),
-                timeSplits(splitsMap, t2),
-                minimumPct2View
-                  .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
-                  .getOrElse(minimumTime(minimumPct1View.get, t2))
-              )
-            }
+                )
+              }
+            )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
             FormEnumDropdownView(
@@ -340,17 +343,20 @@ object ProposalEditor:
             FormEnumDropdownView(
               id = "too-activation".refined,
               value = activationView,
-              label = React.Fragment("ToO Activation",
-                                     HelpIcon("proposal/main/too-activation.md".refined)
+              label = React.Fragment(
+                "ToO Activation",
+                HelpIcon("proposal/main/too-activation.md".refined)
               )
             )
           )
         ),
         Divider(borderType = Divider.BorderType.Solid),
+        ProgramUsersTable(users),
+        Divider(borderType = Divider.BorderType.Solid),
         FormInputTextAreaView(
           id = "abstract".refined,
           label = "Abstract",
-          value = abstractView.as(optionNonEmptyStringIso)
+          value = abstractView.as(OptionNonEmptyStringIso)
         )(ExploreStyles.ProposalAbstract, ^.rows := 10)
       )
     )
@@ -365,8 +371,11 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
-    executionTime:     TimeSpan,
-    band3Time:         TimeSpan
+    minExecutionTime:  TimeSpan,
+    maxExecutionTime:  TimeSpan,
+    users:             List[ProgramUserWithRole],
+    attachments:       View[List[ProposalAttachment]],
+    authToken:         Option[NonEmptyString]
   )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
@@ -409,16 +418,19 @@ object ProposalEditor:
             showDialog,
             splitsList,
             splitsView.get,
-            executionTime,
-            band3Time,
+            minExecutionTime,
+            maxExecutionTime,
+            users,
             _
           )
         )
       ),
       <.div(
-        ^.key := "preview",
+        ^.key := "attachments",
         ExploreStyles.ProposalTile,
-        Tile("preview".refined, "Preview")(_ => <.span("Placeholder for PDF preview."))
+        Tile("attachments".refined, "Attachments")(_ =>
+          authToken.map(token => ProposalAttachmentsTable(programId, token, attachments))
+        )
       ),
       PartnerSplitsEditor(
         showDialog.get,
@@ -487,9 +499,10 @@ object ProposalEditor:
           proposalClassType,
           showDialog,
           splitsList,
-          props.executionTime.getOrElse(
-            TimeSpan.Zero
-          ), // this is not correct, we need to be able to handle a missing execution time
-          props.band3Time
+          props.minExecutionTime.orEmpty,
+          props.maxExecutionTime.orEmpty,
+          props.users,
+          props.attachments,
+          props.authToken
         )
       }
