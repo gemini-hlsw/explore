@@ -1,5 +1,5 @@
 version: 3
-endpoint: https://user-prefs-master.herokuapp.com
+endpoint: https://user-prefs-development.herokuapp.com
 metadata_directory: metadata
 actions:
   kind: synchronous
