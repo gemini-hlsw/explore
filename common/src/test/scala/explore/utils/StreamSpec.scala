@@ -14,11 +14,11 @@ import scala.concurrent.duration.*
 
 class StreamSpec extends munit.CatsEffectSuite:
 
-  // Stream that emits 1 every 50ms, sleeps for 100ms, and repeats
+  // Stream that emits 1 every 0.5s, sleeps for 1s, and repeats
   val stream =
-    (Stream.awakeEvery[IO](50.millis).as(1).take(4) ++ Stream.sleep_[IO](100.millis)).repeat
+    (Stream.awakeEvery[IO](0.5.seconds).as(1).take(4) ++ Stream.sleep_[IO](1.second)).repeat
 
-  val sut = stream.reduceWithin(250.millis, _ + _)
+  val sut = stream.reduceWithin(2.5.seconds, _ + _)
 
   test("reduceWithin combines elements within a time window") {
     val program = sut.head.compile.lastOrError
@@ -34,10 +34,10 @@ class StreamSpec extends munit.CatsEffectSuite:
 
   test("reduceWithin does not combine if elements are outside the time window") {
     val program = Stream
-      .awakeEvery[IO](100.millis)
+      .awakeEvery[IO](1.second)
       .as(1)
       .take(5)
-      .reduceWithin(50.millis, _ + _)
+      .reduceWithin(0.5.seconds, _ + _)
       .compile
       .toVector
 
@@ -45,16 +45,16 @@ class StreamSpec extends munit.CatsEffectSuite:
   }
 
   test("reduceSemigroupWithin uses semigroup to combine") {
-    val program = stream.reduceSemigroupWithin(250.millis).head.compile.lastOrError
+    val program = stream.reduceSemigroupWithin(2.5.seconds).head.compile.lastOrError
 
     TestControl.executeEmbed(program).assertEquals(4)
   }
 
   test("different behaviour to groupWithin") {
-    val a = stream.reduceSemigroupWithin(300.millis)
-    val b = stream.groupWithin(Int.MaxValue, 300.millis).map(_.combineAll)
+    val a = stream.reduceSemigroupWithin(3.seconds)
+    val b = stream.groupWithin(Int.MaxValue, 3.seconds).map(_.combineAll)
 
     val program = (a.take(5).compile.toVector, b.take(5).compile.toVector).tupled
 
-    TestControl.executeEmbed(program).map((a, b) => assertNotEquals(a, b)).void
+    TestControl.executeEmbed(program).map((a, b) => assertNotEquals(a, b))
   }
