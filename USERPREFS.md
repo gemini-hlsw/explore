@@ -69,8 +69,10 @@ Changes should be first tested on user-prefs-master to be later applied to
 hasura migrate apply --endpoint https://user-prefs-development.herokuapp.com
 hasura metadata apply --endpoint https://user-prefs-development.herokuapp.com
 ```
+
 If you update a table that is used as a GraphQL Enum, such as `lucumaGridLayoutPositions`,
 the GraphQL enums might be out of sync. So, it is probably safest to always run:
+
 ```
 hasura metadata reload --endpoint https://user-prefs-development.herokuapp.com
 ```

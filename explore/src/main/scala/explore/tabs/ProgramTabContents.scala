@@ -53,7 +53,6 @@ object ProgramTabContents:
         "Program Details",
         canMinimize = true
       )(_ => ProgramDetailsTile(props.timeEstimateRange, props.timeCharge))
-      // )(_ => optPropInfo.renderPotOption(optProp => ProgramDetailsTile(props.timeEstimateRange, props.timeCharge))
 
       val notesTile = Tile(
         ProgramTabTileIds.NotesId.id,
