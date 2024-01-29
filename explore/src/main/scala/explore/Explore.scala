@@ -30,13 +30,11 @@ import explore.utils.*
 import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.ui.sso.UserVault
-import lucuma.ui.syntax.all.given
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.scalajs.dom.Element
@@ -172,8 +170,11 @@ object ExploreMain {
         _                    <- setupReusabilityOverlay(appConfig.environment)
         r                    <- (ctx.sso.whoami, setupDOM[IO], showEnvironment[IO](appConfig.environment)).parTupled
         (vault, container, _) = r
-      } yield RootComponent(ctx, router, initialModel(vault, localPreferences))
-        .renderIntoDOM(container)
+      } yield ReactDOMClient
+        .createRoot(container)
+        .render:
+          RootComponent(ctx, router, initialModel(vault, localPreferences)).toUnmounted
+
     }.void
       .handleErrorWith { t =>
         Logger[IO].error("Error initializing") >>
