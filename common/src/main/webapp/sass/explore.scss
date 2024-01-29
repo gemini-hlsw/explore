@@ -2285,14 +2285,43 @@ div.spectroscopy-table-emptymessage {
   }
 }
 
-.explore-proposal-details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(34em, 1fr));
-  column-gap: 0.5dvw;
-}
+.explore-proposal-tab {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  row-gap: 0.5em;
 
-.explore-proposal-abstract {
-  width: 100%;
+  > .react-grid-layout {
+    overflow: auto auto;
+    flex: 1 1 1;
+  }
+
+  > .p-toolbar {
+    flex: 0 0 auto;
+  }
+
+  .explore-proposal-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(34em, 1fr));
+    column-gap: 0.5dvw;
+  }
+
+  .explore-proposal-abstract {
+    .pl-form-field {
+      // width: 100%;
+      height: 100%;
+      padding: 0.5em;
+
+      textarea {
+        height: 100%;
+        width: 100%;
+        resize: none;
+        // padlding: 0.5em;
+      }
+    }
+  }
 }
 
 // -----

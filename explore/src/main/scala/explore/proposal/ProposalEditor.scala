@@ -21,14 +21,19 @@ import explore.common.Aligner
 import explore.components.FormStaticData
 import explore.components.HelpIcon
 import explore.components.Tile
+import explore.components.TileController
 import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
+import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment
+import explore.model.ProposalTabTileIds
 import explore.model.display.given
+import explore.model.enums.GridLayoutSection
+import explore.model.layout.LayoutsMap
 import explore.proposal.ProposalClassType.*
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -39,6 +44,7 @@ import lucuma.core.model.Partner
 import lucuma.core.model.Program
 import lucuma.core.model.Proposal
 import lucuma.core.model.ProposalClass
+import lucuma.core.model.User
 import lucuma.core.model.ZeroTo100
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
@@ -48,6 +54,8 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Divider
 import lucuma.react.primereact.SelectItem
+import lucuma.react.resizeDetector.UseResizeDetectorReturn
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -67,13 +75,15 @@ import scala.collection.immutable.SortedMap
 
 case class ProposalEditor(
   programId:        Program.Id,
+  optUserId:        Option[User.Id],
   proposal:         View[Proposal],
   undoStacks:       View[UndoStacks[IO, Proposal]],
   minExecutionTime: Option[TimeSpan],
   maxExecutionTime: Option[TimeSpan],
   users:            List[ProgramUserWithRole],
   attachments:      View[List[ProposalAttachment]],
-  authToken:        Option[NonEmptyString]
+  authToken:        Option[NonEmptyString],
+  layout:           LayoutsMap
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -208,11 +218,6 @@ object ProposalEditor:
       aligner.zoom(Proposal.toOActivation, a => _.map(ProposalInput.toOActivation.modify(a)))
 
     val activationView: View[ToOActivation] = activationAligner.view(_.assign)
-
-    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.abstrakt, t => _.map(ProposalInput.`abstract`.modify(t)))
-
-    val abstractView = abstractAligner.view(_.orUnassign)
 
     val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     val totalTime       = totalTimeView.get
@@ -351,19 +356,14 @@ object ProposalEditor:
           )
         ),
         Divider(borderType = Divider.BorderType.Solid),
-        ProgramUsersTable(users),
-        Divider(borderType = Divider.BorderType.Solid),
-        FormInputTextAreaView(
-          id = "abstract".refined,
-          label = "Abstract",
-          value = abstractView.as(OptionNonEmptyStringIso)
-        )(ExploreStyles.ProposalAbstract, ^.rows := 10)
+        ProgramUsersTable(users)
       )
     )
   }
 
   private def renderFn(
     programId:         Program.Id,
+    optUserId:         Option[User.Id],
     proposal:          View[Proposal],
     undoStacks:        View[UndoStacks[IO, Proposal]],
     totalHours:        View[Hours],
@@ -375,7 +375,9 @@ object ProposalEditor:
     maxExecutionTime:  TimeSpan,
     users:             List[ProgramUserWithRole],
     attachments:       View[List[ProposalAttachment]],
-    authToken:         Option[NonEmptyString]
+    authToken:         Option[NonEmptyString],
+    layout:            LayoutsMap,
+    resize:            UseResizeDetectorReturn
   )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
@@ -404,33 +406,57 @@ object ProposalEditor:
           .assign
       )
 
+    val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
+
+    val detailsTile =
+      Tile(ProposalTabTileIds.DetailsId.id, "Details", canMinimize = true)(
+        renderDetails(
+          aligner,
+          undoCtx,
+          totalHours,
+          minPct2,
+          proposalClassType,
+          showDialog,
+          splitsList,
+          splitsView.get,
+          minExecutionTime,
+          maxExecutionTime,
+          users,
+          _
+        )
+      )
+
+    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
+      aligner.zoom(Proposal.abstrakt, t => _.map(ProposalInput.`abstract`.modify(t)))
+
+    val abstractView = abstractAligner.view(_.orUnassign)
+    val abstractTile =
+      Tile(ProposalTabTileIds.AbstractId.id,
+           "Abstract",
+           canMinimize = true,
+           bodyClass = ExploreStyles.ProposalAbstract
+      )(_ =>
+        FormInputTextAreaView(
+          id = "abstract".refined,
+          value = abstractView.as(OptionNonEmptyStringIso)
+        )
+      )
+
+    val attachmentsTile =
+      Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments", canMinimize = true)(_ =>
+        authToken.map(token => ProposalAttachmentsTable(programId, token, attachments))
+      )
+
     <.div(
-      <.div(
-        ^.key := "details",
-        ExploreStyles.ProposalTile,
-        Tile("details".refined, "Details")(
-          renderDetails(
-            aligner,
-            undoCtx,
-            totalHours,
-            minPct2,
-            proposalClassType,
-            showDialog,
-            splitsList,
-            splitsView.get,
-            minExecutionTime,
-            maxExecutionTime,
-            users,
-            _
-          )
-        )
-      ),
-      <.div(
-        ^.key := "attachments",
-        ExploreStyles.ProposalTile,
-        Tile("attachments".refined, "Attachments")(_ =>
-          authToken.map(token => ProposalAttachmentsTable(programId, token, attachments))
-        )
+      ExploreStyles.MultiPanelTile,
+      TileController(
+        optUserId,
+        resize.width.getOrElse(1),
+        defaultLayouts,
+        layout,
+        List(detailsTile, abstractTile, attachmentsTile),
+        GridLayoutSection.ProposalLayout,
+        storeLayout = true
       ),
       PartnerSplitsEditor(
         showDialog.get,
@@ -438,7 +464,7 @@ object ProposalEditor:
         closePartnerSplitsEditor,
         saveStateSplits(splitsView, _)
       )
-    )
+    ).withRef(resize.ref)
   }
 
   private val component =
@@ -487,22 +513,27 @@ object ProposalEditor:
             setClass >> setType >> setHours >> setPct2
           }
       )
-      .render { (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _) =>
-        import ctx.given
+      .useResizeDetector()
+      .render {
+        (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _, resize) =>
+          import ctx.given
 
-        renderFn(
-          props.programId,
-          props.proposal,
-          props.undoStacks,
-          totalHours,
-          minPct2,
-          proposalClassType,
-          showDialog,
-          splitsList,
-          props.minExecutionTime.orEmpty,
-          props.maxExecutionTime.orEmpty,
-          props.users,
-          props.attachments,
-          props.authToken
-        )
+          renderFn(
+            props.programId,
+            props.optUserId,
+            props.proposal,
+            props.undoStacks,
+            totalHours,
+            minPct2,
+            proposalClassType,
+            showDialog,
+            splitsList,
+            props.minExecutionTime.orEmpty,
+            props.maxExecutionTime.orEmpty,
+            props.users,
+            props.attachments,
+            props.authToken,
+            props.layout,
+            resize
+          )
       }

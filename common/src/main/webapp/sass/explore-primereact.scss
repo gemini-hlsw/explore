@@ -14,12 +14,6 @@
 
 .dark-theme,
 .light-theme {
-  // specific to Explore - may be able to remove this when we're fully primereact - may have to apply to tiles or something
-  .constraints-tile .explore-tile-body,
-  .explore-configuration-grid {
-    background-color: var(--surface-card);
-  }
-
   // TODO: Move to lucuma-ui
   // From the SUI Header component
   .pl-header {

@@ -20,6 +20,7 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ProgramSummaries(
+  programDetails:      ProgramDetails,
   targets:             TargetList,
   observations:        ObservationList,
   groups:              GroupList,
@@ -92,6 +93,8 @@ case class ProgramSummaries(
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
 
 object ProgramSummaries:
+  val programDetails: Lens[ProgramSummaries, ProgramDetails]                =
+    Focus[ProgramSummaries](_.programDetails)
   val targets: Lens[ProgramSummaries, TargetList]                           = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)
@@ -103,6 +106,7 @@ object ProgramSummaries:
   val programs: Lens[ProgramSummaries, ProgramInfoList]                     = Focus[ProgramSummaries](_.programs)
 
   def fromLists(
+    programDetails:      ProgramDetails,
     targetList:          List[TargetWithId],
     obsList:             List[ObsSummary],
     groups:              List[GroupElement],
@@ -111,6 +115,7 @@ object ProgramSummaries:
     programs:            List[ProgramInfo]
   ): ProgramSummaries =
     ProgramSummaries(
+      programDetails,
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
       groups,

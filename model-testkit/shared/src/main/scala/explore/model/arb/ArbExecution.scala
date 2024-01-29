@@ -4,26 +4,19 @@
 package explore.model.arb
 
 import explore.model.Execution
-import explore.model.TimeCharge
+import lucuma.core.model.sequence.CategorizedTime
 import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.model.sequence.arb.ArbCategorizedTime.given
 import lucuma.core.model.sequence.arb.ArbExecutionDigest.given
-import lucuma.core.util.TimeSpan
-import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 
 trait ArbExecution:
 
-  given Arbitrary[TimeCharge] = Arbitrary(
-    for {
-      program <- arbitrary[TimeSpan]
-    } yield TimeCharge(program)
-  )
-
   given Arbitrary[Execution] = Arbitrary(
     for {
       digest     <- arbitrary[Option[ExecutionDigest]]
-      timeCharge <- arbitrary[TimeCharge]
+      timeCharge <- arbitrary[CategorizedTime]
     } yield Execution(digest, timeCharge)
   )
 

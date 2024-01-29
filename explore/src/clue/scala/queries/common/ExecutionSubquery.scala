@@ -27,11 +27,7 @@ object ExecutionSubquery extends GraphQLSubquery.Typed[ObservationDB, Execution]
         acquisition $SequenceDigestSubquery
         science $SequenceDigestSubquery
       }
-      timeCharge {
-        program {
-          microseconds
-        }
-      }
+      timeCharge $CategorizedTimeSubquery
     }
   """
 }

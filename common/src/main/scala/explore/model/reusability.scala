@@ -55,6 +55,7 @@ object reusability:
   given Reusability[ObsAttachment]           = Reusability.byEq
   given Reusability[ProposalAttachment]      = Reusability.byEq
   given Reusability[ProgramInfo]             = Reusability.byEq
+  given Reusability[ProgramDetails]          = Reusability.byEq
 
   /**
    */

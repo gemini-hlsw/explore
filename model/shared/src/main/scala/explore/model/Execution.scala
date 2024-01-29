@@ -7,7 +7,11 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import io.circe.Decoder
+import lucuma.core.model.sequence.CategorizedTime
 import lucuma.core.model.sequence.ExecutionDigest
 import lucuma.odb.json.sequence.given
+import lucuma.odb.json.timeaccounting.given
 
-case class Execution(digest: Option[ExecutionDigest], timeCharge: TimeCharge) derives Decoder, Eq
+case class Execution(digest: Option[ExecutionDigest], timeCharge: CategorizedTime)
+    derives Decoder,
+      Eq
