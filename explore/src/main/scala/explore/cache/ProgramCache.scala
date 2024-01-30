@@ -13,6 +13,7 @@ import explore.DefaultErrorPolicy
 import explore.model.GroupElement
 import explore.model.ObsAttachment
 import explore.model.ObsSummary
+import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProposalAttachment
@@ -67,6 +68,16 @@ object ProgramCache
   override protected val initial: ProgramCache => IO[ProgramSummaries] = { props =>
     import props.given
 
+    val programDetails: IO[ProgramDetails] =
+      ProgramSummaryQueriesGQL
+        .ProgramDetailsQuery[IO]
+        .query(props.programId)
+        .flatMap(
+          _.program.fold(
+            IO.raiseError(Exception(s"Unable to load details for program ${props.programId}"))
+          )(IO.pure)
+        )
+
     val targets: IO[List[TargetWithId]] =
       drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
         offset =>
@@ -110,9 +121,9 @@ object ProgramCache
         _.id
       )
 
-    (targets, observations, groups, attachments, programs).mapN {
-      case (ts, os, gs, (oas, pas), ps) =>
-        ProgramSummaries.fromLists(ts, os, gs, oas, pas, ps)
+    (programDetails, targets, observations, groups, attachments, programs).mapN {
+      case (pd, ts, os, gs, (oas, pas), ps) =>
+        ProgramSummaries.fromLists(pd, ts, os, gs, oas, pas, ps)
     }
   }
 
@@ -122,6 +133,11 @@ object ProgramCache
   ] = { props =>
     try {
       import props.given
+
+      val updateProgramDetails =
+        ProgramQueriesGQL.ProgramEditDetailsSubscription
+          .subscribe[IO](props.programId)
+          .map(_.map(data => ProgramSummaries.programDetails.replace(data.programEdit.value)))
 
       val updateTargets =
         TargetQueriesGQL.ProgramTargetsDelta
@@ -151,6 +167,7 @@ object ProgramCache
 
       // TODO Handle errors, disable transparent resubscription upon connection loss.
       List(
+        updateProgramDetails,
         updateTargets,
         updateObservations,
         updateGroups,

@@ -68,13 +68,15 @@ object OverviewTabContents {
           )
         )
 
-        TileController(
-          props.userVault.map(_.user.id),
-          resize.width.getOrElse(1),
-          defaultLayouts,
-          layouts,
-          List(warningsAndErrorsTile, obsAttachmentsTile),
-          GridLayoutSection.OverviewLayout
-        )
+        <.div(
+          TileController(
+            props.userVault.map(_.user.id),
+            resize.width.getOrElse(1),
+            defaultLayouts,
+            layouts,
+            List(warningsAndErrorsTile, obsAttachmentsTile),
+            GridLayoutSection.OverviewLayout
+          )
+        ).withRef(resize.ref)
       }
 }

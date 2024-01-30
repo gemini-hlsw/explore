@@ -55,10 +55,6 @@ object ExploreStyles:
   // Change styles for a readonly input
   val StaticData: Css = Css("static-data")
 
-  // re-evaluate the need/use of this as part of overall
-  // styling and layout
-  val ProposalTile: Css = Css("proposal-tile")
-
   val ConnectionIcon: Css        = Css("connection-icon")
   val ObsGroupTitle: Css         = Css("obs-group-title")
   val ObsGroupTitleWithWrap: Css = Css("obs-group-title-with-wrap")
@@ -210,6 +206,7 @@ object ExploreStyles:
   val AgsNavigationButton: Css = Css("ags-navigation-button")
   val AgsNavigation: Css       = Css("ags-navigation")
 
+  val ProposalTab: Css         = Css("explore-proposal-tab")
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
@@ -240,10 +237,6 @@ object ExploreStyles:
   // Edit Warning
   val EditWarning: Css = Css("edit-warning")
 
-  // The Observation tab contents
-  val ObservationTiles: Css = Css("observation-tiles")
-  val ConstraintsTile: Css  = Css("constraints-tile")
-
   // The Target tab contents
   val TargetGrid: Css     = Css("target-grid")
   val AsterismEditor: Css = Css("target-asterism-editor")
@@ -262,7 +255,6 @@ object ExploreStyles:
   val ConstraintsGrid                = Css("constraints-grid")
   val ConstraintsNameField           = Css("constraints-name-field")
   val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
-  val ConstraintsTileSelector        = Css("constraints-tile-selector")
   val ElevationRangePicker           = Css("elevation-range-picker")
   val ElevationRangeEntry            = Css("elevation-range-entry")
 

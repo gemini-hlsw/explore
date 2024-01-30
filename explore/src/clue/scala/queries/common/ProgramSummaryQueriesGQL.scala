@@ -56,4 +56,13 @@ object ProgramSummaryQueriesGQL {
       }
     """
   }
+
+  @GraphQL
+  trait ProgramDetailsQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) $ProgramDetailsSubquery
+      }
+    """
+  }
 }

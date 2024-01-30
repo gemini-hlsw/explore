@@ -133,18 +133,26 @@ object Routing:
       ProposalTabContents(
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
+        programSummaries.model.zoom(ProgramSummaries.programDetails),
         programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
-        model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal)
+        model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
+        userPreferences(model).proposalTabLayout
       )
     )
 
   private def programTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    ProgramTabContents(
-      routingInfo.programId,
-      model.zoom(RootModel.vault).get,
-      userPreferences(model)
-    )
+    withProgramSummaries(model) { programSummaries =>
+      val programTimeEstimateRange = programSummaries.get.programDetails.programTimeEstimateRange
+      val programTimeCharge        = programSummaries.get.programDetails.programTimeCharge
+      val routingInfo              = RoutingInfo.from(page)
+      ProgramTabContents(
+        routingInfo.programId,
+        model.zoom(RootModel.vault).get,
+        programTimeEstimateRange,
+        programTimeCharge,
+        userPreferences(model)
+      )
+    }
 
   // The programs popup will be shown
   private def noProgram: VdomElement = React.Fragment()

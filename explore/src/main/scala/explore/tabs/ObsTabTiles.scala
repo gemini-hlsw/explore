@@ -365,7 +365,7 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  val programTimeCharge = props.observation.get.execution.timeCharge.program
+                  val programTimeCharge = props.observation.get.execution.programTimeCharge.value
                   props.observation.get.executionTime
                     .map { planned =>
                       val total = programTimeCharge +| planned
@@ -502,8 +502,7 @@ object ObsTabTiles:
               ObsTabTilesIds.ConstraintsId.id,
               "Constraints",
               canMinimize = true,
-              control = _ => constraintsSelector.some,
-              controllerClass = ExploreStyles.ConstraintsTile
+              control = _ => constraintsSelector.some
             )(renderInTitle =>
               <.div
               ConstraintsPanel(
@@ -554,7 +553,6 @@ object ObsTabTiles:
               itcTile
             ),
             GridLayoutSection.ObservationsLayout,
-            props.backButton.some,
-            clazz = ExploreStyles.ObservationTiles.some
+            props.backButton.some
           )
       }
