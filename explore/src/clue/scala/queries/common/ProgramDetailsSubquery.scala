@@ -17,7 +17,7 @@ object ProgramDetailsSubquery
       proposalStatus
       pi $ProgramUserSubquery
       users $ProgramUserWithRoleSubquery
-      timeEstimateRange $CategorizedTimeRangeSubquery
-      timeCharge $CategorizedTimeSubquery
+      timeEstimateRange $ProgramTimeRangeSubquery
+      timeCharge $ProgramTimeSubquery
     }
   """

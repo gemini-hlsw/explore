@@ -4,10 +4,11 @@
 package explore.model.arb
 
 import explore.model.Execution
-import lucuma.core.model.sequence.CategorizedTime
+import explore.model.ProgramTime
 import lucuma.core.model.sequence.ExecutionDigest
-import lucuma.core.model.sequence.arb.ArbCategorizedTime.given
 import lucuma.core.model.sequence.arb.ArbExecutionDigest.given
+import lucuma.core.util.TimeSpan
+import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 
@@ -16,8 +17,8 @@ trait ArbExecution:
   given Arbitrary[Execution] = Arbitrary(
     for {
       digest     <- arbitrary[Option[ExecutionDigest]]
-      timeCharge <- arbitrary[CategorizedTime]
-    } yield Execution(digest, timeCharge)
+      timeCharge <- arbitrary[TimeSpan]
+    } yield Execution(digest, ProgramTime(timeCharge))
   )
 
 object ArbExecution extends ArbExecution

@@ -10,6 +10,8 @@ import explore.components.TileController
 import explore.model.AppContext
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramTabTileIds
+import explore.model.ProgramTime
+import explore.model.ProgramTimeRange
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
 import explore.programs.ProgramChangeRequestsTile
@@ -19,8 +21,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.core.model.sequence.CategorizedTime
-import lucuma.core.model.sequence.CategorizedTimeRange
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
@@ -28,11 +28,11 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programId:         Program.Id,
-  userVault:         Option[UserVault],
-  timeEstimateRange: Option[CategorizedTimeRange],
-  timeCharge:        CategorizedTime,
-  userPreferences:   UserPreferences
+  programId:                Program.Id,
+  userVault:                Option[UserVault],
+  programTimeEstimateRange: Option[ProgramTimeRange],
+  programTimeCharge:        ProgramTime,
+  userPreferences:          UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 
 object ProgramTabContents:
@@ -52,7 +52,7 @@ object ProgramTabContents:
         ProgramTabTileIds.DetailsId.id,
         "Program Details",
         canMinimize = true
-      )(_ => ProgramDetailsTile(props.timeEstimateRange, props.timeCharge))
+      )(_ => ProgramDetailsTile(props.programTimeEstimateRange, props.programTimeCharge))
 
       val notesTile = Tile(
         ProgramTabTileIds.NotesId.id,

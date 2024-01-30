@@ -365,7 +365,7 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  val programTimeCharge = props.observation.get.execution.timeCharge.programTime
+                  val programTimeCharge = props.observation.get.execution.programTimeCharge.value
                   props.observation.get.executionTime
                     .map { planned =>
                       val total = programTimeCharge +| planned

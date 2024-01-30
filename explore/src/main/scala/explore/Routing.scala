@@ -142,14 +142,14 @@ object Routing:
 
   private def programTab(page: Page, model: View[RootModel]): VdomElement =
     withProgramSummaries(model) { programSummaries =>
-      val timeEstimateRange = programSummaries.get.programDetails.timeEstimateRange
-      val timeCharge        = programSummaries.get.programDetails.timeCharge
-      val routingInfo       = RoutingInfo.from(page)
+      val programTimeEstimateRange = programSummaries.get.programDetails.programTimeEstimateRange
+      val programTimeCharge        = programSummaries.get.programDetails.programTimeCharge
+      val routingInfo              = RoutingInfo.from(page)
       ProgramTabContents(
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
-        timeEstimateRange,
-        timeCharge,
+        programTimeEstimateRange,
+        programTimeCharge,
         userPreferences(model)
       )
     }

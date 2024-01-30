@@ -88,8 +88,8 @@ object ProposalTabContents:
     import ctx.given
 
     val details          = programDetails.get
-    val minExecutionTime = details.timeEstimateRange.map(_.min.programTime)
-    val maxExecutionTime = details.timeEstimateRange.map(_.max.programTime)
+    val minExecutionTime = details.programTimeEstimateRange.map(_.minimum.value)
+    val maxExecutionTime = details.programTimeEstimateRange.map(_.maximum.value)
     val users            = details.allUsers
 
     val isStdUser      = userVault.map(_.user).collect { case _: StandardUser => () }.isDefined

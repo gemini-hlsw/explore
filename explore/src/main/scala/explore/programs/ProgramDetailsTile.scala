@@ -5,17 +5,17 @@ package explore.programs
 
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
+import explore.model.ProgramTime
+import explore.model.ProgramTimeRange
 import explore.model.syntax.all.toHoursMinutes
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.sequence.CategorizedTime
-import lucuma.core.model.sequence.CategorizedTimeRange
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 
 case class ProgramDetailsTile(
-  timeEstimateRange: Option[CategorizedTimeRange],
-  timeCharge:        CategorizedTime
+  programTimeEstimateRange: Option[ProgramTimeRange],
+  programTimeCharge:        ProgramTime
 ) extends ReactFnProps(ProgramDetailsTile.component)
 
 object ProgramDetailsTile:
@@ -27,9 +27,9 @@ object ProgramDetailsTile:
     .render { props =>
 
       val timeAccounting = for {
-        minTime     <- props.timeEstimateRange.map(_.min.programTime)
-        maxTime     <- props.timeEstimateRange.map(_.max.programTime)
-        used         = props.timeCharge.programTime
+        minTime     <- props.programTimeEstimateRange.map(_.minimum.value)
+        maxTime     <- props.programTimeEstimateRange.map(_.maximum.value)
+        used         = props.programTimeCharge.value
         remain       = TimeSpan.Zero // TODO
         isSingleTime = minTime == maxTime
       } yield table(
