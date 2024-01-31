@@ -112,6 +112,7 @@ object ExploreStyles:
   val ObservationsSummaryTable: Css = Css("observations-summary-table")
   val ObservationsSummaryAdd: Css   = Css("observations-summary-add")
   val SelectedObsItem: Css          = Css("selected-obs-item")
+  val SelectedGroupItem: Css        = Css("selected-group-item")
   val ObsItem: Css                  = Css("obs-item")
   val TrashIcon: Css                = Css("trash-icon")
   val EraserIcon: Css               = Css("eraser-icon")

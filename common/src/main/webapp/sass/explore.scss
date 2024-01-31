@@ -1100,7 +1100,8 @@ table.pl-react-table.explore-sequence-table {
 }
 
 .selected-obs-item .obs-badge,
-.obs-tree-item .obs-badge.obs-badge-selected {
+.obs-tree-item .obs-badge.obs-badge-selected,
+.p-treenode:has(.selected-group-item) {
   background-color: var(--obs-selected-badge-background);
   box-shadow: 0 0 0 1.5px var(--site-solid-border-color);
 }
@@ -1782,6 +1783,8 @@ input[type='file'].explore-fileupload {
   .p-tree-container > .p-treenode > .p-treenode-content {
     > .obs-tree-group-leaf {
       margin: 8px;
+      width: 100%;
+      text-decoration: none;
     }
   }
 

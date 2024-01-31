@@ -34,6 +34,8 @@ object RoutingInfo {
     case ProposalPage(p)                       => RoutingInfo(AppTab.Proposal, p.some, Focused.None)
     case ObservationsBasePage(p)               => RoutingInfo(AppTab.Observations, p.some, Focused.None)
     case ObsPage(p, obsId)                     => RoutingInfo(AppTab.Observations, p.some, Focused.singleObs(obsId))
+    case ObsGroupPage(p, groupId)              =>
+      RoutingInfo(AppTab.Observations, p.some, Focused.group(groupId))
     case ObsTargetPage(p, obsId, targetId)     =>
       RoutingInfo(AppTab.Observations, p.some, Focused.singleObs(obsId, targetId.some))
     case TargetsBasePage(p)                    => RoutingInfo(AppTab.Targets, p.some, Focused.None)
@@ -60,18 +62,19 @@ object RoutingInfo {
       case AppTab.Overview     => HomePage(programId)
       case AppTab.Observations =>
         focused match {
-          case Focused(Some(obsIds), Some(targetId)) if obsIds.length === 1 =>
+          case Focused(Some(obsIds), Some(targetId), _) if obsIds.length === 1 =>
             ObsTargetPage(programId, obsIds.head, targetId)
-          case Focused(Some(obsIds), _) if obsIds.length === 1              => ObsPage(programId, obsIds.head)
-          case _                                                            => ObservationsBasePage(programId)
+          case Focused(Some(obsIds), _, _) if obsIds.length === 1              => ObsPage(programId, obsIds.head)
+          case Focused(_, _, Some(groupId))                                    => ObsGroupPage(programId, groupId)
+          case _                                                               => ObservationsBasePage(programId)
         }
       case AppTab.Targets      =>
         focused match {
-          case Focused(Some(obsIds), Some(targetId)) =>
+          case Focused(Some(obsIds), Some(targetId), _) =>
             TargetWithObsPage(programId, obsIds, targetId)
-          case Focused(Some(obsIds), _)              => TargetsObsPage(programId, obsIds)
-          case Focused(_, Some(targetId))            => TargetPage(programId, targetId)
-          case _                                     => TargetsBasePage(programId)
+          case Focused(Some(obsIds), _, _)              => TargetsObsPage(programId, obsIds)
+          case Focused(_, Some(targetId), _)            => TargetPage(programId, targetId)
+          case _                                        => TargetsBasePage(programId)
         }
       // case AppTab.Configurations => ConfigurationsPage(programId)
       case AppTab.Constraints  =>

@@ -64,8 +64,7 @@ object ObsNode:
         case Left(groupObs)  => createObsNode(groupObs)
         case Right(grouping) => groupings.getValue(grouping.id).map(createGroup)
       }
-      val isAnd    = group.minimumRequired.forall(_.value == group.elements.length)
-      val data     = if isAnd then And(group) else Or(group)
+      val data     = if group.isAnd then And(group) else Or(group)
       Tree.Node(Tree.Id(group.id.toString), data, children = children)
 
     val treeNodes = rootGroups.flatMap {

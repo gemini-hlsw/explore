@@ -13,5 +13,6 @@ enum GridLayoutSection(val value: String) derives Enumerated:
   case SchedulingLayout   extends GridLayoutSection("scheduling")
   case OverviewLayout     extends GridLayoutSection("overview")
   case ProposalLayout     extends GridLayoutSection("proposal")
+  case GroupEditLayout    extends GridLayoutSection("groupedit")
 
   private val tag = value

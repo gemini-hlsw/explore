@@ -64,7 +64,8 @@ case class Grouping(
   parentId:        Option[Group.Id],
   parentIndex:     NonNegShort
 ) derives Eq,
-      Decoder
+      Decoder:
+  def isAnd: Boolean = minimumRequired.forall(_.value.toInt === elements.length)
 
 object Grouping:
   val elements: Lens[Grouping, List[Either[GroupObs, GroupingElement]]] =

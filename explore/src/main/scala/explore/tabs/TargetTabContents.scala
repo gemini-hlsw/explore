@@ -353,8 +353,8 @@ object TargetTabContents extends TwoPanels:
     }
 
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
-      case Focused(Some(obsIdSet), _)    => obsIdSet.asRight.some
-      case Focused(None, Some(targetId)) => targetId.asLeft.some
+      case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
+      case Focused(None, Some(targetId), _) => targetId.asLeft.some
       case _                             => none
 
     val renderNonSiderealTargetEditor: List[Tile] =
@@ -448,9 +448,9 @@ object TargetTabContents extends TwoPanels:
       .useEffectWithDepsBy((props, _, state) => (props.focused, state.reuseByValue)) {
         (_, _, selected) => (focused, _) =>
           (focused, selected.get) match
-            case (Focused(Some(_), _), _)                    => selected.set(SelectedPanel.Editor)
-            case (Focused(None, Some(_)), _)                 => selected.set(SelectedPanel.Editor)
-            case (Focused(None, None), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
+            case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
+            case (Focused(None, None, _), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
             case _                                           => Callback.empty
       }
       .useStateViewBy((props, _, _) => props.focused.target.toList)
