@@ -216,7 +216,7 @@ jobs:
           cat vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v2.3.0
+        uses: wearerequired/lint-action@v2
         with:
           stylelint: true
           stylelint_extensions: css,sass,scss
@@ -232,7 +232,7 @@ jobs:
 
       - name: Run linters in light mode
         if: github.event_name != 'pull_request'
-        uses: wearerequired/lint-action@v2.3.0
+        uses: wearerequired/lint-action@v2
         with:
           stylelint: true
           stylelint_extensions: css,sass,scss

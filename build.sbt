@@ -343,7 +343,7 @@ def setupVars(mode: String) = WorkflowStep.Run(
 )
 
 def runLinters(mode: String) = WorkflowStep.Use(
-  UseRef.Public("wearerequired", "lint-action", "v2.3.0"),
+  UseRef.Public("wearerequired", "lint-action", "v2"),
   name = Some(s"Run linters in $mode mode"),
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
