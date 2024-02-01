@@ -60,7 +60,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: node_modules-${{ hashFiles('package-lock.json') }}
@@ -128,7 +128,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: node_modules-${{ hashFiles('package-lock.json') }}
@@ -197,7 +197,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: node_modules-${{ hashFiles('package-lock.json') }}
@@ -216,7 +216,7 @@ jobs:
           cat vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v2.3.0
+        uses: wearerequired/lint-action@v2
         with:
           stylelint: true
           stylelint_extensions: css,sass,scss
@@ -232,7 +232,7 @@ jobs:
 
       - name: Run linters in light mode
         if: github.event_name != 'pull_request'
-        uses: wearerequired/lint-action@v2.3.0
+        uses: wearerequired/lint-action@v2
         with:
           stylelint: true
           stylelint_extensions: css,sass,scss
