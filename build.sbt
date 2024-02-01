@@ -265,7 +265,7 @@ lazy val setupNodeNpmInstall =
       params = Map("node-version" -> "20", "cache" -> "npm")
     ),
     WorkflowStep.Use(
-      UseRef.Public("actions", "cache", "v3"),
+      UseRef.Public("actions", "cache", "v4"),
       name = Some("Cache node_modules"),
       id = Some("cache-node_modules"),
       params = {
