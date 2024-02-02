@@ -13,8 +13,8 @@ object ProgramSummaryQueriesGQL {
   @GraphQL
   trait AllProgramObservations extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      query($$programId: ProgramId!, $$OFFSET: ObservationId) {
-        observations(programId: $$programId, OFFSET: $$OFFSET) {
+      query($$where: WhereObservation!, $$OFFSET: ObservationId) {
+        observations(WHERE: $$where, OFFSET: $$OFFSET) {
           matches $ObservationSummarySubquery
           hasMore
         }
@@ -24,8 +24,8 @@ object ProgramSummaryQueriesGQL {
   @GraphQL
   trait AllProgramTargets      extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      query($$programId: ProgramId!, $$OFFSET: TargetId) {
-        targets(WHERE: { programId: { EQ: $$programId } }, OFFSET: $$OFFSET) {
+      query($$where: WhereTarget!, $$OFFSET: TargetId) {
+        targets(WHERE: $$where, OFFSET: $$OFFSET) {
           matches $TargetWithIdSubquery
           hasMore
         }

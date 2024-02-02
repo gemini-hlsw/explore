@@ -65,6 +65,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.odb.input.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
@@ -170,7 +171,9 @@ object ObsTabTiles:
             )
           )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+          .reRunOnResourceSignals(
+            ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
+          )
       }
       .useStreamResourceOnMountBy { (props, ctx, _) =>
         import ctx.given
@@ -192,7 +195,9 @@ object ObsTabTiles:
             )
           )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+          .reRunOnResourceSignals(
+            ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
+          )
       }
       // Ags state
       .useStateView[AgsState](AgsState.Idle)

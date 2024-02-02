@@ -23,6 +23,7 @@ import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
 import lucuma.schemas.odb.SequenceSQL.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
@@ -58,7 +59,8 @@ object GeneratedSequenceViewer:
           .attemptPot
           .resetOnResourceSignals(
             for {
-              o <- ObsQueriesGQL.ObservationEditSubscription.subscribe[IO](props.obsId)
+              o <- ObsQueriesGQL.ObservationEditSubscription
+                     .subscribe[IO](props.obsId.toObservationEditInput)
               t <- targetChanges
             } yield o.merge(t.sequence)
           )

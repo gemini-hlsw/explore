@@ -24,14 +24,6 @@ object TargetQueriesGQL {
         }
       }
     """
-
-    object Data {
-      object TargetGroup {
-        object Matches {
-          type Target = schemasModel.TargetWithId
-        }
-      }
-    }
   }
 
   @GraphQL
@@ -108,8 +100,8 @@ object TargetQueriesGQL {
   // how to do. Is it worth it?
   trait AllProgramTargets extends GraphQLOperation[ObservationDB] {
     val document = s"""
-      query($$programId: ProgramId!) {
-        targets(WHERE: {programId: {EQ: $$programId}}) {
+      query($$where: WhereTarget!) {
+        targets(WHERE: $$where) {
           matches $TargetWithIdSubquery
         }
       }
@@ -119,8 +111,8 @@ object TargetQueriesGQL {
   @GraphQL
   trait ProgramTargetsDelta extends GraphQLOperation[ObservationDB] {
     val document = s"""
-      subscription($$programId: ProgramId!) {
-        targetEdit(input: {programId: $$programId}) {
+      subscription($$input: TargetEditInput!) {
+        targetEdit(input: $$input) {
           value $TargetWithIdSubquery
           meta:value {
             existence
