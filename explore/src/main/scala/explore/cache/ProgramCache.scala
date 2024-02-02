@@ -68,15 +68,11 @@ object ProgramCache
   override protected val initial: ProgramCache => IO[ProgramSummaries] = { props =>
     import props.given
 
-    val programDetails: IO[ProgramDetails] =
+    val optProgramDetails: IO[Option[ProgramDetails]] =
       ProgramSummaryQueriesGQL
         .ProgramDetailsQuery[IO]
         .query(props.programId)
-        .flatMap(
-          _.program.fold(
-            IO.raiseError(Exception(s"Unable to load details for program ${props.programId}"))
-          )(IO.pure)
-        )
+        .map(_.program)
 
     val targets: IO[List[TargetWithId]] =
       drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
@@ -121,7 +117,7 @@ object ProgramCache
         _.id
       )
 
-    (programDetails, targets, observations, groups, attachments, programs).mapN {
+    (optProgramDetails, targets, observations, groups, attachments, programs).mapN {
       case (pd, ts, os, gs, (oas, pas), ps) =>
         ProgramSummaries.fromLists(pd, ts, os, gs, oas, pas, ps)
     }
@@ -137,7 +133,9 @@ object ProgramCache
       val updateProgramDetails =
         ProgramQueriesGQL.ProgramEditDetailsSubscription
           .subscribe[IO](props.programId)
-          .map(_.map(data => ProgramSummaries.programDetails.replace(data.programEdit.value)))
+          .map(
+            _.map(data => ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some))
+          )
 
       val updateTargets =
         TargetQueriesGQL.ProgramTargetsDelta

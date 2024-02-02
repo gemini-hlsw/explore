@@ -130,28 +130,35 @@ object Routing:
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     withProgramSummaries(model)(programSummaries =>
       val routingInfo = RoutingInfo.from(page)
-      ProposalTabContents(
-        routingInfo.programId,
-        model.zoom(RootModel.vault).get,
-        programSummaries.model.zoom(ProgramSummaries.programDetails),
-        programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
-        model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
-        userPreferences(model).proposalTabLayout
-      )
+      // if we got this far, we will have program details
+      programSummaries.model
+        .zoom(ProgramSummaries.optProgramDetails)
+        .toOptionView
+        .map(detailsView =>
+          ProposalTabContents(
+            routingInfo.programId,
+            model.zoom(RootModel.vault).get,
+            detailsView,
+            programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
+            model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
+            userPreferences(model).proposalTabLayout
+          )
+        )
     )
 
   private def programTab(page: Page, model: View[RootModel]): VdomElement =
     withProgramSummaries(model) { programSummaries =>
-      val programTimeEstimateRange = programSummaries.get.programDetails.programTimeEstimateRange
-      val programTimeCharge        = programSummaries.get.programDetails.programTimeCharge
-      val routingInfo              = RoutingInfo.from(page)
-      ProgramTabContents(
-        routingInfo.programId,
-        model.zoom(RootModel.vault).get,
-        programTimeEstimateRange,
-        programTimeCharge,
-        userPreferences(model)
-      )
+      // if we got this far, we will have program details
+      programSummaries.get.optProgramDetails.map { details =>
+        val routingInfo = RoutingInfo.from(page)
+        ProgramTabContents(
+          routingInfo.programId,
+          model.zoom(RootModel.vault).get,
+          details.programTimeEstimateRange,
+          details.programTimeCharge,
+          userPreferences(model)
+        )
+      }
     }
 
   // The programs popup will be shown
