@@ -173,7 +173,7 @@ object ExploreMain {
       } yield ReactDOMClient
         .createRoot(container)
         .render:
-          RootComponent(ctx, router, initialModel(vault, localPreferences)).toUnmounted
+          RootComponent(ctx, router, initialModel(vault, localPreferences))
 
     }.void
       .handleErrorWith { t =>
