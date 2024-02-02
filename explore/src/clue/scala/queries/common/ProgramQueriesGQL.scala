@@ -57,23 +57,10 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
-  trait ProgramEditSubscription extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      subscription($programId: ProgramId) {
-        programEdit(input: {programId: $programId}) {
-          value {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait GroupEditSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      subscription($$programId: ProgramId!) {
-        groupEdit(input: { programId: $$programId }) {
+      subscription($$input: ProgramEditInput!) {
+        groupEdit(input: $$input) {
           value ${GroupQueriesGQL.GroupSubQuery}
           editType
         }
@@ -84,8 +71,8 @@ object ProgramQueriesGQL {
   @GraphQL
   trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      subscription($$programId: ProgramId!) {
-        programEdit(input: {programId: $$programId}) {
+      subscription($$input: ProgramEditInput!) {
+        programEdit(input: $$input) {
           value {
             obsAttachments $ObsAttachmentSubquery
             proposalAttachments $ProposalAttachmentSubquery
@@ -102,8 +89,8 @@ object ProgramQueriesGQL {
   @GraphQL
   trait ProgramEditDetailsSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      subscription($$programId: ProgramId!) {
-        programEdit(input: {programId: $$programId}) {
+      subscription($$input: ProgramEditInput!) {
+        programEdit(input: $$input) {
           value $ProgramDetailsSubquery
         }
       }

@@ -25,6 +25,7 @@ import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.odb.input.*
 import lucuma.ui.reusability.given
 import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL
@@ -77,7 +78,9 @@ object ProgramCache
     val targets: IO[List[TargetWithId]] =
       drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
         offset =>
-          ProgramSummaryQueriesGQL.AllProgramTargets[IO].query(props.programId, offset.orUnassign),
+          ProgramSummaryQueriesGQL
+            .AllProgramTargets[IO]
+            .query(props.programId.toWhereTarget, offset.orUnassign),
         _.targets.matches,
         _.targets.hasMore,
         _.id
@@ -88,7 +91,7 @@ object ProgramCache
         offset =>
           ProgramSummaryQueriesGQL
             .AllProgramObservations[IO]
-            .query(props.programId, offset.orUnassign)(ErrorPolicy.IgnoreOnData),
+            .query(props.programId.toWhereObservation, offset.orUnassign)(ErrorPolicy.IgnoreOnData),
         _.observations.matches,
         _.observations.hasMore,
         _.id
@@ -132,30 +135,30 @@ object ProgramCache
 
       val updateProgramDetails =
         ProgramQueriesGQL.ProgramEditDetailsSubscription
-          .subscribe[IO](props.programId)
+          .subscribe[IO](props.programId.toProgramEditInput)
           .map(
             _.map(data => ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some))
           )
 
       val updateTargets =
         TargetQueriesGQL.ProgramTargetsDelta
-          .subscribe[IO](props.programId)
+          .subscribe[IO](props.programId.toTargetEditInput)
           .map(_.map(data => modifyTargets(data.targetEdit)))
 
       val updateObservations =
         ObsQueriesGQL.ProgramObservationsDelta
-          .subscribe[IO](props.programId)(summon, ErrorPolicy.IgnoreOnData)
+          .subscribe[IO](props.programId.toObservationEditInput)(summon, ErrorPolicy.IgnoreOnData)
           .map(_.map(data => modifyObservations(data.observationEdit)))
 
       val updateGroups = ProgramQueriesGQL.GroupEditSubscription
-        .subscribe[IO](props.programId)
+        .subscribe[IO](props.programId.toProgramEditInput)
         .map(_.map(data => modifyGroups(data.groupEdit)))
 
       // Right now the programEdit subsription isn't fine grained enough to
       // differentiate what got updated, so we alway update all the attachments.
       // Hopefully this will change in the future.
       val updateAttachments = ProgramQueriesGQL.ProgramEditAttachmentSubscription
-        .subscribe[IO](props.programId)
+        .subscribe[IO](props.programId.toProgramEditInput)
         .map(_.map(data => modifyAttachments(data.programEdit)))
 
       val updatePrograms =

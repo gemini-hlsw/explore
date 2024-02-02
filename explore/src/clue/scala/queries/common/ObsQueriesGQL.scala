@@ -147,8 +147,8 @@ object ObsQueriesGQL:
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:
     // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
-      subscription($obsId: ObservationId!) {
-        observationEdit(input: {observationId: $obsId}) {
+      subscription($input: ObservationEditInput!) {
+        observationEdit(input: $input) {
           value {
             id
           }
@@ -193,8 +193,8 @@ object ObsQueriesGQL:
   @GraphQL
   trait ProgramObservationsDelta extends GraphQLOperation[ObservationDB] {
     val document = s"""
-      subscription($$programId: ProgramId!) {
-        observationEdit(input: {programId: $$programId}) {
+      subscription($$input: ObservationEditInput!) {
+        observationEdit(input: $$input) {
           value $ObservationSummarySubquery
           meta:value {
             existence
