@@ -92,7 +92,7 @@ jobs:
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' coverageReport coverageAggregate
 
       - name: Upload code coverage data
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
 
   full:
     name: full
