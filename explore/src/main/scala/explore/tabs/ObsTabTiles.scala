@@ -94,7 +94,8 @@ case class ObsTabTiles(
   resize:                   UseResizeDetectorReturn,
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  globalPreferences:        View[GlobalPreferences]
+  globalPreferences:        View[GlobalPreferences],
+  readonly:                 Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsId: Observation.Id = observation.get.id
 
@@ -494,6 +495,7 @@ object ObsTabTiles:
               props.searching,
               "Targets",
               props.globalPreferences,
+              props.readonly,
               // Any target changes invalidate the sequence
               sequenceChanged.set(Pot.pending)
             )
@@ -513,13 +515,14 @@ object ObsTabTiles:
               ConstraintsPanel(
                 ObsIdSet.one(props.obsId),
                 props.observation.zoom(ObsSummary.constraints),
-                renderInTitle
+                renderInTitle,
+                props.readonly
               )
             )
 
           val timingWindowsTile =
             Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-              renderInTitle => TimingWindowsPanel(timingWindows, renderInTitle)
+              renderInTitle => TimingWindowsPanel(timingWindows, props.readonly, renderInTitle)
             )
 
           val configurationTile =
@@ -538,7 +541,8 @@ object ObsTabTiles:
               sequenceChanged.mod {
                 case Ready(x) => Pot.pending
                 case x        => x
-              }
+              },
+              props.readonly
             )
 
           TileController(

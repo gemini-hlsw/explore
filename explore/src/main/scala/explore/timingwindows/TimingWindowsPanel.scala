@@ -51,8 +51,11 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
-case class TimingWindowsPanel(windows: View[List[TimingWindow]], renderInTitle: Tile.RenderInTitle)
-    extends ReactFnProps(TimingWindowsPanel.component)
+case class TimingWindowsPanel(
+  windows:       View[List[TimingWindow]],
+  readonly:      Boolean,
+  renderInTitle: Tile.RenderInTitle
+) extends ReactFnProps(TimingWindowsPanel.component)
 
 object TimingWindowsPanel:
   private type Props = TimingWindowsPanel
@@ -90,26 +93,28 @@ object TimingWindowsPanel:
       .withHooks[Props]
       .useResizeDetector()
       // cols
-      .useMemoBy((props, resize) => (props.windows.get, resize)) { (props, _) => (_, resize) =>
-        List(
-          ColDef(
-            ColumnId(WindowColId),
-            _._1,
-            size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
-          ).setCell(_.value.renderVdom),
-          ColDef(
-            ColumnId(DeleteColId),
-            _._2,
-            size = DeleteColWidth.toPx
-          ).setCell(c =>
-            Button(
-              text = true,
-              onClickE = e =>
-                e.stopPropagationCB >>
-                  props.windows.mod(tws => tws.take(c.value) ++ tws.drop(c.value + 1))
-            ).compact.small(Icons.Trash)
-          )
-        )
+      .useMemoBy((props, resize) => (props.windows.get, props.readonly, resize)) {
+        (props, _) => (_, readonly, resize) =>
+          List(
+            ColDef(
+              ColumnId(WindowColId),
+              _._1,
+              size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
+            ).setCell(_.value.renderVdom).some,
+            ColDef(
+              ColumnId(DeleteColId),
+              _._2,
+              size = DeleteColWidth.toPx
+            ).setCell(c =>
+              Button(
+                text = true,
+                onClickE = e =>
+                  e.stopPropagationCB >>
+                    props.windows.mod(tws => tws.take(c.value) ++ tws.drop(c.value + 1))
+              ).compact.small(Icons.Trash)
+            ).some
+              .filterNot(_ => readonly)
+          ).flatten
       }
       // rows
       .useMemoBy((props, _, _) => props.windows.get)((_, _, _) => _.zipWithIndex.sorted)
@@ -125,11 +130,13 @@ object TimingWindowsPanel:
         val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
 
         val selectedTW: Option[View[TimingWindow]] =
-          pos.flatMap(p =>
-            props.windows
-              .zoom(Index.index[List[TimingWindow], Int, TimingWindow](p))
-              .asView
-          )
+          pos
+            .filterNot(_ => props.readonly)
+            .flatMap(p =>
+              props.windows
+                .zoom(Index.index[List[TimingWindow], Int, TimingWindow](p))
+                .asView
+            )
 
         // TODO Should we move this to lucuma-ui?
         val HMPartialRegEx                  = "\\d*(:\\d{0,2})?".r
@@ -368,18 +375,20 @@ object TimingWindowsPanel:
             )
           },
           props.renderInTitle(
-            Button(
-              severity = Button.Severity.Success,
-              icon = Icons.New,
-              label = "Add",
-              onClick = props.windows.mod(
-                _ :+ TimingWindow(
-                  inclusion = TimingWindowInclusion.Include,
-                  start = Timestamp.unsafeFromInstantTruncated(Instant.now),
-                  end = none
-                )
-              ) >> table.setRowSelection(RowSelection(RowId(rows.length.toString) -> true))
-            ).tiny.compact
+            if (props.readonly) EmptyVdom
+            else
+              Button(
+                severity = Button.Severity.Success,
+                icon = Icons.New,
+                label = "Add",
+                onClick = props.windows.mod(
+                  _ :+ TimingWindow(
+                    inclusion = TimingWindowInclusion.Include,
+                    start = Timestamp.unsafeFromInstantTruncated(Instant.now),
+                    end = none
+                  )
+                ) >> table.setRowSelection(RowSelection(RowId(rows.length.toString) -> true))
+              ).tiny.compact
           )
         )
       }

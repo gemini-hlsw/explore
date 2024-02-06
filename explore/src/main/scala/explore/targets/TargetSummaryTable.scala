@@ -60,7 +60,8 @@ case class TargetSummaryTable(
   selectTargetOrSummary: Option[Target.Id] => Callback,
   renderInTitle:         Tile.RenderInTitle,
   selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[ProgramSummaries]
+  undoCtx:               UndoContext[ProgramSummaries],
+  readonly:              Boolean
 ) extends ReactFnProps(TargetSummaryTable.component)
 
 object TargetSummaryTable:
@@ -271,43 +272,45 @@ object TargetSummaryTable:
         React.Fragment(
           props.renderInTitle(
             React.Fragment(
-              <.div(
-                ExploreStyles.TableSelectionToolbar,
-                HelpIcon("target/main/target-import.md".refined),
-                <.label(
-                  PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
-                  ^.htmlFor := "target-import",
-                  Icons.FileArrowUp
+              if (props.readonly) EmptyVdom
+              else
+                <.div(
+                  ExploreStyles.TableSelectionToolbar,
+                  HelpIcon("target/main/target-import.md".refined),
+                  <.label(
+                    PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
+                    ^.htmlFor := "target-import",
+                    Icons.FileArrowUp
+                  ),
+                  <.input(
+                    ^.tpe     := "file",
+                    ^.onChange ==> onTextChange,
+                    ^.id      := "target-import",
+                    ^.name    := "file",
+                    ^.accept  := ".csv"
+                  ),
+                  TargetImportPopup(props.programId, filesToImport),
+                  Button(
+                    size = Button.Size.Small,
+                    icon = Icons.CheckDouble,
+                    label = "All",
+                    onClick = table.toggleAllRowsSelected(true)
+                  ).compact,
+                  Button(
+                    size = Button.Size.Small,
+                    icon = Icons.SquareXMark,
+                    label = "None",
+                    onClick = table.toggleAllRowsSelected(false)
+                  ).compact,
+                  Button(
+                    size = Button.Size.Small,
+                    icon = Icons.Trash,
+                    disabled = deletingTargets.get.value,
+                    loading = deletingTargets.get.value,
+                    onClick = deleteSelected
+                  ).compact.when(selectedRows.nonEmpty),
+                  ConfirmDialog()
                 ),
-                <.input(
-                  ^.tpe     := "file",
-                  ^.onChange ==> onTextChange,
-                  ^.id      := "target-import",
-                  ^.name    := "file",
-                  ^.accept  := ".csv"
-                ),
-                TargetImportPopup(props.programId, filesToImport),
-                Button(
-                  size = Button.Size.Small,
-                  icon = Icons.CheckDouble,
-                  label = "All",
-                  onClick = table.toggleAllRowsSelected(true)
-                ).compact,
-                Button(
-                  size = Button.Size.Small,
-                  icon = Icons.SquareXMark,
-                  label = "None",
-                  onClick = table.toggleAllRowsSelected(false)
-                ).compact,
-                Button(
-                  size = Button.Size.Small,
-                  icon = Icons.Trash,
-                  disabled = deletingTargets.get.value,
-                  loading = deletingTargets.get.value,
-                  onClick = deleteSelected
-                ).compact.when(selectedRows.nonEmpty),
-                ConfirmDialog()
-              ),
               <.span(ExploreStyles.TitleSelectColumns)(
                 ColumnSelector(table, ColNames, ExploreStyles.SelectColumns)
               )

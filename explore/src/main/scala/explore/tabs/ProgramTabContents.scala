@@ -7,6 +7,7 @@ import cats.effect.IO
 import explore.*
 import explore.components.Tile
 import explore.components.TileController
+import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramTabTileIds
@@ -67,6 +68,7 @@ object ProgramTabContents:
       )(_ => ProgramChangeRequestsTile())
 
       <.div(
+        ExploreStyles.MultiPanelTile,
         TileController(
           props.userVault.map(_.user.id),
           resize.width.getOrElse(1),

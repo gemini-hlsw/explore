@@ -40,7 +40,8 @@ object ConfigurationTile {
     obsConf:          ObsConfiguration,
     selectedConfig:   View[Option[BasicConfigAndItc]],
     allTargets:       TargetList,
-    sequenceChanged:  Callback
+    sequenceChanged:  Callback,
+    readonly:         Boolean
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -59,7 +60,8 @@ object ConfigurationTile {
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
         selectedConfig,
-        sequenceChanged
+        sequenceChanged,
+        readonly
       )
     )
 }

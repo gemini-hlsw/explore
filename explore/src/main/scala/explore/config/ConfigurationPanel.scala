@@ -57,7 +57,8 @@ case class ConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   selectedConfig:  View[Option[BasicConfigAndItc]],
-  sequenceChanged: Callback
+  sequenceChanged: Callback,
+  readonly:        Boolean
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel:
@@ -191,7 +192,8 @@ object ConfigurationPanel:
                   props.posAngle,
                   props.obsConf.selectedPA,
                   props.obsConf.averagePA,
-                  agsState
+                  agsState,
+                  props.readonly
                 )
               ),
             if (optModeView.get.isEmpty)
@@ -210,7 +212,8 @@ object ConfigurationPanel:
                       props.selectedConfig.get.map(_.configuration),
                       optModeView
                     ),
-                    confMatrix
+                    confMatrix,
+                    props.readonly
                   )
                 )
             else
@@ -229,7 +232,8 @@ object ConfigurationPanel:
                           deleteConfiguration,
                           confMatrix,
                           props.selectedConfig,
-                          props.sequenceChanged
+                          props.sequenceChanged,
+                          props.readonly
                         )
                     ),
                     // Gmos South Long Slit
@@ -243,7 +247,8 @@ object ConfigurationPanel:
                           deleteConfiguration,
                           confMatrix,
                           props.selectedConfig,
-                          props.sequenceChanged
+                          props.sequenceChanged,
+                          props.readonly
                         )
                     )
                   )

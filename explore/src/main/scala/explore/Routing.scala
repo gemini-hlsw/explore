@@ -60,7 +60,8 @@ object Routing:
         model.zoom(RootModel.vault).get,
         programSummaries.model.zoom(ProgramSummaries.obsAttachments),
         programSummaries.model.get.obsAttachmentAssignments,
-        userPreferences(model)
+        userPreferences(model).overviewTabLayout,
+        programSummaries.get.proposalIsSubmitted
       )
     )
 
@@ -77,7 +78,8 @@ object Routing:
             userPrefs,
             routingInfo.focused,
             model.zoom(RootModel.searchingTarget),
-            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
+            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
+            programSummaries.get.proposalIsSubmitted
           )
         )
     )
@@ -96,7 +98,8 @@ object Routing:
             userPrefs,
             routingInfo.focused,
             model.zoom(RootModel.searchingTarget),
-            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
+            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
+            programSummaries.get.proposalIsSubmitted
           )
         )
     )
@@ -110,7 +113,8 @@ object Routing:
         programSummaries,
         userPreferences(model),
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds))
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
+        programSummaries.get.proposalIsSubmitted
       )
     )
 
@@ -123,7 +127,8 @@ object Routing:
         programSummaries,
         userPreferences(model),
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds))
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
+        programSummaries.get.proposalIsSubmitted
       )
     )
 

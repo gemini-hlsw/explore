@@ -50,7 +50,8 @@ case class ConstraintGroupObsList(
   constraintGroups: ConstraintGroupList,
   focusedObsSet:    Option[ObsIdSet],
   setSummaryPanel:  Callback,
-  expandedIds:      View[SortedSet[ObsIdSet]]
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  readonly:         Boolean
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
 
@@ -217,57 +218,61 @@ object ConstraintGroupObsList:
           )
           .withFixedWidth()
 
-        Droppable(ObsIdSet.fromString.reverseGet(obsIds), renderClone = renderClone) {
-          case (provided, snapshot) =>
-            val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-              icon,
-              <.span(ExploreStyles.ObsGroupTitleWithWrap)(constraintSet.shortName),
-              <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
-            )
+        Droppable(ObsIdSet.fromString.reverseGet(obsIds),
+                  renderClone = renderClone,
+                  isDropDisabled = props.readonly
+        ) { case (provided, snapshot) =>
+          val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
+            icon,
+            <.span(ExploreStyles.ObsGroupTitleWithWrap)(constraintSet.shortName),
+            <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
+          )
 
-            <.div(
-              provided.innerRef,
-              provided.droppableProps,
-              props.getListStyle(
-                snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
-              )
-            )(
-              <.div(
-                ExploreStyles.ObsTreeGroup |+| Option
-                  .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
-                  .orElse(
-                    Option.when(!dragging.value)(ExploreStyles.UnselectedObsTreeGroup)
-                  )
-                  .orEmpty
-              )(^.cursor.pointer, ^.onClick --> setObsSet(obsIds.some))(
-                csHeader,
-                TagMod.when(props.expandedIds.get.contains(obsIds))(
-                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                    props.renderObsBadgeItem(
-                      ObsBadge.Layout.ConstraintsTab,
-                      selectable = true,
-                      highlightSelected = true,
-                      forceHighlight = isObsSelected(obs.id),
-                      linkToObsTab = false,
-                      onSelect = setObs,
-                      onCtrlClick = id => handleCtrlClick(id, obsIds),
-                      ctx
-                    )(obs, idx)
-                  }
-                ),
-                provided.placeholder
-              )
+          <.div(
+            provided.innerRef,
+            provided.droppableProps,
+            props.getListStyle(
+              snapshot.draggingOverWith.exists(id => Observation.Id.parse(id).isDefined)
             )
+          )(
+            <.div(
+              ExploreStyles.ObsTreeGroup |+| Option
+                .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                .orElse(
+                  Option.when(!dragging.value)(ExploreStyles.UnselectedObsTreeGroup)
+                )
+                .orEmpty
+            )(^.cursor.pointer, ^.onClick --> setObsSet(obsIds.some))(
+              csHeader,
+              TagMod.when(props.expandedIds.get.contains(obsIds))(
+                cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                  props.renderObsBadgeItem(
+                    ObsBadge.Layout.ConstraintsTab,
+                    selectable = true,
+                    highlightSelected = true,
+                    forceHighlight = isObsSelected(obs.id),
+                    linkToObsTab = false,
+                    onSelect = setObs,
+                    onCtrlClick = id => handleCtrlClick(id, obsIds),
+                    ctx
+                  )(obs, idx)
+                }
+              ),
+              provided.placeholder
+            )
+          )
         }
       }
 
       DragDropContext(
-        onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(true),
-        onDragEnd =
-          (result, provided) => dragging.setState(false) >> handleDragEnd(result, provided)
+        onDragStart =
+          (_: DragStart, _: ResponderProvided) => dragging.setState(true).unless_(props.readonly),
+        onDragEnd = (result, provided) =>
+          (dragging.setState(false) >> handleDragEnd(result, provided)).unless_(props.readonly)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini)),
+          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini))
+            .unless(props.readonly),
           <.div(
             Button(
               onClick = setObsSet(none) >> props.setSummaryPanel,
