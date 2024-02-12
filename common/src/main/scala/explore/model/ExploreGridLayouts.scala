@@ -448,7 +448,7 @@ object ExploreGridLayouts:
     private val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTilesIds.GroupEditId.id.value,
+          i = GroupEditIds.GroupEditId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
@@ -457,7 +457,7 @@ object ExploreGridLayouts:
           minW = TileMinWidth.value
         ),
         LayoutItem(
-          i = ObsTabTilesIds.NotesId.id.value,
+          i = GroupEditIds.GroupNotesId.id.value,
           x = 0,
           y = GroupEditHeight.value,
           w = DefaultWidth.value,

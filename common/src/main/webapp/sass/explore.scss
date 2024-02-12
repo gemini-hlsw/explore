@@ -1106,6 +1106,66 @@ table.pl-react-table.explore-sequence-table {
   box-shadow: 0 0 0 1.5px var(--site-solid-border-color);
 }
 
+.group-edit-tile {
+  margin: 16px;
+
+  .group-type-select {
+    display: flex;
+    gap: var(--content-padding);
+    flex-flow: row wrap;
+
+    .group-change-buttons {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      gap: var(--inline-spacing);
+
+      .p-buttonset {
+        display: flex;
+        gap: var(--inline-spacing);
+      }
+
+      .p-button {
+        width: max-content;
+      }
+    }
+
+    .group-edit-note {
+      display: flex;
+      max-width: 700px;
+      gap: var(--content-padding);
+      padding: var(--content-padding);
+      border-radius: var(--border-radius);
+      background-color: var(--control-background-color);
+
+      .fa-note {
+        --note-size: 2em;
+
+        padding-top: 3px;
+        width: var(--note-size);
+        height: var(--note-size);
+      }
+
+      @media (max-width: lucumaUICommon.$mobile-responsive-cutoff) {
+        max-width: 100%;
+      }
+    }
+  }
+
+  .group-name-form {
+    margin-top: var(--content-padding);
+    margin-bottom: var(--content-padding);
+  }
+  
+  .p-inputgroup {
+    max-width: fit-content;
+  }
+
+  .min-required-form-input {
+    width: auto;
+  }
+}
+
 // ------
 // Configuration Tile
 // ------

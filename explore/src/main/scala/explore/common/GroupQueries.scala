@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.Grouping
 import lucuma.core.model.Group
@@ -40,6 +41,18 @@ object GroupQueries:
       )
     )
     UpdateGroupsMutation[F].execute(input).void
+
+  def updateGroup[F[_]: Async](groupId: Group.Id, set: GroupPropertiesInput)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    UpdateGroupsMutation[F]
+      .execute(
+        UpdateGroupsInput(
+          WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
+          SET = set
+        )
+      )
+      .void
 
   def createGroup[F[_]: Async](programId: Program.Id)(using
     FetchClient[F, ObservationDB]

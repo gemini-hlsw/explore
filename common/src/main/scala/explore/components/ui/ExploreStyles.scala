@@ -119,6 +119,14 @@ object ExploreStyles:
   val ExpanderChevron: Css          = Css("expander-chevron")
   val ExpanderChevronOpen: Css      = Css("expander-chevron-open")
 
+  val GroupEditTile: Css        = Css("group-edit-tile")
+  val GroupTypeSelect: Css      = Css("group-type-select")
+  val GroupChangeButtons: Css   = Css("group-change-buttons")
+  val GroupChangeLabel: Css     = Css("group-change-label")
+  val GroupEditNote: Css        = Css("group-edit-note")
+  val GroupNameForm: Css        = Css("group-name-form")
+  val MinRequiredFormInput: Css = Css("min-required-form-input")
+
   val ApiKeysPopup    = Css("api-keys-popup")
   val ApiKeysTable    = Css("api-keys-table")
   val ApiKeyDelete    = Css("api-keys-delete")

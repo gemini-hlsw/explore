@@ -180,9 +180,7 @@ object ObsList:
 
             dragNodeId
               .fold(
-                obsId =>
-                  ObsQueries
-                    .moveObservation[IO](obsId, dropNodeId, dropIndex.some),
+                obsId => ObsQueries.moveObservation[IO](obsId, dropNodeId, dropIndex.some),
                 groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
               )
               .runAsync *>
@@ -249,7 +247,7 @@ object ObsList:
           <.a(
             title,
             ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(selected),
-            group.name.map(<.em(_, ^.marginLeft := 8.px)),
+            group.name.map(n => <.em(n.value, ^.marginLeft := 8.px)),
             ^.title := group.id.show,
             ^.id        := show"obs-group-${group.id}",
             ^.draggable := false,

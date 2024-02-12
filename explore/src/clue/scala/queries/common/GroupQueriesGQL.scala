@@ -35,6 +35,13 @@ object GroupQueriesGQL:
         minimumRequired
         parentId
         parentIndex
+        ordered
+        minimumInterval {
+          microseconds
+        }
+        maximumInterval {
+          microseconds
+        }
         elements {
           observation {
             id
