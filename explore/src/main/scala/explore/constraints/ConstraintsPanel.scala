@@ -40,7 +40,8 @@ import monocle.Lens
 case class ConstraintsPanel(
   obsIds:        ObsIdSet,
   undoCtx:       UndoSetter[ConstraintSet],
-  renderInTitle: Tile.RenderInTitle
+  renderInTitle: Tile.RenderInTitle,
+  readonly:      Boolean
 ) extends ReactFnProps(ConstraintsPanel.component):
   val constraintSet: ConstraintSet = undoCtx.model.get
 
@@ -108,7 +109,10 @@ object ConstraintsPanel:
           val id = NonEmptyString.unsafeFrom(label.value.toLowerCase().replaceAll(" ", "-"))
           React.Fragment(
             FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
-            EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet))
+            EnumDropdownView(id = id,
+                             value = undoViewSet(lens, remoteSet),
+                             disabled = props.readonly
+            )
           )
         }
 
@@ -182,7 +186,8 @@ object ConstraintsPanel:
               EnumDropdownView(
                 id = "ertype".refined,
                 value = erTypeView,
-                clazz = ExploreStyles.ElevationRangePicker
+                clazz = ExploreStyles.ElevationRangePicker,
+                disabled = props.readonly
               ),
               React
                 .Fragment(
@@ -196,7 +201,8 @@ object ConstraintsPanel:
                       )
                     ),
                     changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                    groupClass = ExploreStyles.ElevationRangeEntry
+                    groupClass = ExploreStyles.ElevationRangeEntry,
+                    disabled = props.readonly
                   ),
                   <.label("Max"),
                   FormInputTextView(
@@ -208,7 +214,8 @@ object ConstraintsPanel:
                       )
                     ),
                     changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                    groupClass = ExploreStyles.ElevationRangeEntry
+                    groupClass = ExploreStyles.ElevationRangeEntry,
+                    disabled = props.readonly
                   )
                 )
                 .when(elevationRangeOptions.value.rangeType === AirMass),
@@ -225,7 +232,8 @@ object ConstraintsPanel:
                       )
                     ),
                     changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                    groupClass = ExploreStyles.ElevationRangeEntry
+                    groupClass = ExploreStyles.ElevationRangeEntry,
+                    disabled = props.readonly
                   ),
                   <.label("Max"),
                   FormInputTextView(
@@ -238,7 +246,8 @@ object ConstraintsPanel:
                       )
                     ),
                     changeAuditor = ChangeAuditor.accept.decimal(1.refined),
-                    groupClass = ExploreStyles.ElevationRangeEntry
+                    groupClass = ExploreStyles.ElevationRangeEntry,
+                    disabled = props.readonly
                   ),
                   <.label("Hours")
                 )

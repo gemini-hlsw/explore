@@ -34,7 +34,8 @@ case class PAConfigurationPanel(
   posAngleView: View[PosAngleConstraint],
   selectedPA:   Option[Angle],
   averagePA:    Option[Angle],
-  agsState:     View[AgsState]
+  agsState:     View[AgsState],
+  readonly:     Boolean
 ) extends ReactFnProps(PAConfigurationPanel.component)
 
 object PAConfigurationPanel:
@@ -93,7 +94,7 @@ object PAConfigurationPanel:
             groupClass = ExploreStyles.PAConfigurationAngle,
             value = pa,
             units = "° E of N",
-            disabled = !props.agsState.get.canRecalculate,
+            disabled = !props.agsState.get.canRecalculate || props.readonly,
             validFormat = MathValidators.truncatedAngleDegrees,
             changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
           )
@@ -108,7 +109,7 @@ object PAConfigurationPanel:
           label =
             React.Fragment("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
           value = posAngleOptionsView,
-          disabled = !props.agsState.get.canRecalculate
+          disabled = !props.agsState.get.canRecalculate || props.readonly
         ),
         fixedView.mapValue(posAngleEditor),
         allowedFlipView.mapValue(posAngleEditor),

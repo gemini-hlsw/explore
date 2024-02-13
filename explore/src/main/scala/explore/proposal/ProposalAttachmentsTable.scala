@@ -43,7 +43,8 @@ import org.typelevel.log4cats.Logger
 case class ProposalAttachmentsTable(
   programId:   Program.Id,
   authToken:   NonEmptyString,
-  attachments: View[List[ProposalAttachment]]
+  attachments: View[List[ProposalAttachment]],
+  readonly:    Boolean
 ) extends ReactFnProps(ProposalAttachmentsTable.component)
 
 object ProposalAttachmentsTable extends ProposalAttachmentUtils {
@@ -114,90 +115,93 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
             updateUrlMap *> getUrls
       )
       // Columns
-      .useMemoBy((_, _, client, _, urlMap) => (client, urlMap.get))((props, ctx, _, action, _) =>
-        (client, urlMap) =>
-          import ctx.given
+      .useMemoBy((props, _, client, _, urlMap) => (props.readonly, client, urlMap.get))(
+        (props, ctx, _, action, _) =>
+          (_, client, urlMap) =>
+            import ctx.given
 
-          def column[V](id: ColumnId, accessor: Row => V): ColumnDef.Single[Row, V] =
-            ColDef(id, v => accessor(v), columnNames(id))
+            def column[V](id: ColumnId, accessor: Row => V): ColumnDef.Single[Row, V] =
+              ColDef(id, v => accessor(v), columnNames(id))
 
-          List(
-            column(ActionsColumnId, identity)
-              .setCell(cell =>
-                cell.value.fold(
-                  attType =>
-                    <.div(
-                      <.label(
-                        tableLabelButtonClasses,
-                        ^.htmlFor := s"attachment-upload-$attType",
-                        Icons.FileArrowUp
-                      ).withTooltip(
-                        tooltip = s"Upload new ${attType.shortName} attachment"
+            List(
+              column(ActionsColumnId, identity)
+                .setCell(cell =>
+                  cell.value.fold(
+                    attType =>
+                      <.div(
+                        <.label(
+                          tableLabelButtonClasses,
+                          ^.htmlFor := s"attachment-upload-$attType",
+                          Icons.FileArrowUp
+                        ).withTooltip(
+                          tooltip = s"Upload new ${attType.shortName} attachment"
+                        ).unless(props.readonly),
+                        <.input(
+                          ExploreStyles.FileUpload,
+                          ^.tpe    := "file",
+                          ^.onChange ==> onInsertFileSelected(props.programId,
+                                                              props.attachments,
+                                                              attType,
+                                                              client,
+                                                              action
+                          ),
+                          ^.id     := s"attachment-upload-$attType",
+                          ^.name   := "file",
+                          ^.accept := ProposalAttachmentType.accept
+                        ).unless(props.readonly)
                       ),
-                      <.input(
-                        ExploreStyles.FileUpload,
-                        ^.tpe    := "file",
-                        ^.onChange ==> onInsertFileSelected(props.programId,
-                                                            props.attachments,
-                                                            attType,
-                                                            client,
-                                                            action
-                        ),
-                        ^.id     := s"attachment-upload-$attType",
-                        ^.name   := "file",
-                        ^.accept := ProposalAttachmentType.accept
+                    thisAtt =>
+                      val attType = thisAtt.attachmentType
+                      <.div(
+                        // The upload "button" needs to be a label. In order to make
+                        // the styling consistent they're all labels.
+                        <.label(
+                          tableLabelButtonClasses,
+                          Icons.Trash,
+                          ^.onClick ==> deletePrompt(props, client, thisAtt)
+                        ).withTooltip("Delete attachment").unless(props.readonly),
+                        <.label(
+                          tableLabelButtonClasses,
+                          ^.htmlFor := s"attachment-replace-$attType",
+                          Icons.FileArrowUp
+                        ).withTooltip(
+                          tooltip = s"Upload replacement file",
+                          placement = Placement.Right
+                        ).unless(props.readonly),
+                        <.input(
+                          ExploreStyles.FileUpload,
+                          ^.tpe    := "file",
+                          ^.onChange ==> onUpdateFileSelected(props.programId,
+                                                              props.attachments,
+                                                              thisAtt,
+                                                              client,
+                                                              action
+                          ),
+                          ^.id     := s"attachment-replace-$attType",
+                          ^.name   := "file",
+                          ^.accept := ProposalAttachmentType.accept
+                        ).unless(props.readonly),
+                        urlMap.get(thisAtt.toMapKey).foldMap {
+                          case Pot.Ready(url) =>
+                            <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
+                              .withTooltip("Download File")
+                          case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
+                          case Pot.Error(t)   =>
+                            <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
+                        }
                       )
-                    ),
-                  thisAtt =>
-                    val attType = thisAtt.attachmentType
-                    <.div(
-                      // The upload "button" needs to be a label. In order to make
-                      // the styling consistent they're all labels.
-                      <.label(
-                        tableLabelButtonClasses,
-                        Icons.Trash,
-                        ^.onClick ==> deletePrompt(props, client, thisAtt)
-                      ).withTooltip("Delete attachment"),
-                      <.label(
-                        tableLabelButtonClasses,
-                        ^.htmlFor := s"attachment-replace-$attType",
-                        Icons.FileArrowUp
-                      ).withTooltip(
-                        tooltip = s"Upload replacement file",
-                        placement = Placement.Right
-                      ),
-                      <.input(
-                        ExploreStyles.FileUpload,
-                        ^.tpe    := "file",
-                        ^.onChange ==> onUpdateFileSelected(props.programId,
-                                                            props.attachments,
-                                                            thisAtt,
-                                                            client,
-                                                            action
-                        ),
-                        ^.id     := s"attachment-replace-$attType",
-                        ^.name   := "file",
-                        ^.accept := ProposalAttachmentType.accept
-                      ),
-                      urlMap.get(thisAtt.toMapKey).foldMap {
-                        case Pot.Ready(url) =>
-                          <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
-                            .withTooltip("Download File")
-                        case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
-                        case Pot.Error(t)   =>
-                          <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
-                      }
-                    )
+                  )
+                ),
+              column(AttachmentTypeColumnId, _.attachmentType)
+                .setCell(_.value.shortName),
+              column(FileNameColumnId, _.fileName),
+              column(SizeColumnId, _.fileSize)
+                .setCell(cell => cell.value.foldMap(_.toHumanReadableByteCount)),
+              column(LastUpdateColumnId, _.updatedAt)
+                .setCell(
+                  _.value.foldMap(ts => Constants.GppDateFormatter.format(ts.toLocalDateTime))
                 )
-              ),
-            column(AttachmentTypeColumnId, _.attachmentType)
-              .setCell(_.value.shortName),
-            column(FileNameColumnId, _.fileName),
-            column(SizeColumnId, _.fileSize)
-              .setCell(cell => cell.value.foldMap(_.toHumanReadableByteCount)),
-            column(LastUpdateColumnId, _.updatedAt)
-              .setCell(_.value.foldMap(ts => Constants.GppDateFormatter.format(ts.toLocalDateTime)))
-          )
+            )
       )
       // Rows
       .useMemoBy((props, _, _, _, _, _) => props.attachments.reuseByValue)((_, _, _, _, _, _) =>

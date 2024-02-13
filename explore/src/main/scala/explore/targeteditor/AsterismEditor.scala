@@ -53,6 +53,7 @@ case class AsterismEditor(
   searching:         View[Set[Target.Id]],
   renderInTitle:     Tile.RenderInTitle,
   globalPreferences: View[GlobalPreferences],
+  readonly:          Boolean,
   sequenceChanged:   Callback
 ) extends ReactFnProps(AsterismEditor.component)
 
@@ -126,17 +127,19 @@ object AsterismEditor extends AsterismModifier:
 
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
-          props.renderInTitle(
-            targetSelectionPopup(
-              "Add",
-              props.programId,
-              props.obsIds,
-              props.asterismIds,
-              props.allTargets.model,
-              adding,
-              targetView.async.set
-            )
-          ),
+          if (props.readonly) EmptyVdom
+          else
+            props.renderInTitle(
+              targetSelectionPopup(
+                "Add",
+                props.programId,
+                props.obsIds,
+                props.asterismIds,
+                props.allTargets.model,
+                adding,
+                targetView.async.set
+              )
+            ),
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,
@@ -147,7 +150,8 @@ object AsterismEditor extends AsterismModifier:
             selectedTargetView,
             vizTime,
             props.renderInTitle,
-            fullScreen.get
+            fullScreen.get,
+            props.readonly
           ),
           props.focusedTargetId.map { focusedTargetId =>
             val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =
@@ -173,7 +177,7 @@ object AsterismEditor extends AsterismModifier:
                         if (props.obsIds.size === 1) "only this observation".refined
                         else "only the current observations".refined,
                     ).toFalseTrueFragment
-                  ).when(otherObsCount > 0),
+                  ).when(otherObsCount > 0 && !props.readonly),
                   SiderealTargetEditor(
                     props.userId,
                     siderealTarget,
@@ -195,6 +199,7 @@ object AsterismEditor extends AsterismModifier:
                       else none,
                     fullScreen = fullScreen,
                     globalPreferences = props.globalPreferences,
+                    props.readonly,
                     props.sequenceChanged
                   )
                 )

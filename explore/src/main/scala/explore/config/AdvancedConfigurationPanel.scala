@@ -81,6 +81,7 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def confMatrix: SpectroscopyModesMatrix
   def selectedConfig: View[Option[BasicConfigAndItc]]
   def sequenceChanged: Callback
+  def readonly: Boolean
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ObservingMode,
@@ -451,7 +452,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         //     )
         //     .flatten
 
-        val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit
+        val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
         val disableSimpleEdit   =
           disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
@@ -797,7 +798,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               onClick = editState.set(ConfigEditState.AdvancedEdit)
             ).compact.small
               .when(editState.get === ConfigEditState.SimpleEdit)
-          )
+          ).unless(props.readonly)
         )
       }
 }
@@ -835,7 +836,8 @@ object AdvancedConfigurationPanel {
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]],
-    sequenceChanged:          Callback
+    sequenceChanged:          Callback,
+    readonly:                 Boolean
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
@@ -1035,7 +1037,8 @@ object AdvancedConfigurationPanel {
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]],
-    sequenceChanged:          Callback
+    sequenceChanged:          Callback,
+    readonly:                 Boolean
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )

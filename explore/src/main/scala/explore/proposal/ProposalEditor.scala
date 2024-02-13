@@ -83,7 +83,8 @@ case class ProposalEditor(
   users:            List[ProgramUserWithRole],
   attachments:      View[List[ProposalAttachment]],
   authToken:        Option[NonEmptyString],
-  layout:           LayoutsMap
+  layout:           LayoutsMap,
+  readonly:         Boolean
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -197,6 +198,7 @@ object ProposalEditor:
     minExecutionTime:  TimeSpan,
     maxExecutionTime:  TimeSpan,
     users:             List[ProgramUserWithRole],
+    readonly:          Boolean,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
@@ -237,6 +239,7 @@ object ProposalEditor:
         changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
         label = React.Fragment("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
         id = id,
+        disabled = readonly,
         inputClass = ExploreStyles.PartnerSplitsGridMinPct
       )
 
@@ -247,6 +250,7 @@ object ProposalEditor:
         changeAuditor = ChangeAuditor.accept.decimal(2.refined),
         label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
         id = "total-time-entry".refined,
+        disabled = readonly,
         inputClass = ExploreStyles.PartnerSplitsGridTotal
       )
 
@@ -280,7 +284,8 @@ object ProposalEditor:
               inputClass = Css("inverse"),
               value = titleView,
               validFormat = InputValidSplitEpi.nonEmptyString.optional,
-              label = "Title"
+              label = "Title",
+              disabled = readonly
             )(^.autoFocus := true),
             <.div(
               ExploreStyles.PartnerSplitsGrid,
@@ -293,7 +298,8 @@ object ProposalEditor:
                     severity = Button.Severity.Secondary,
                     tpe = Button.Type.Button,
                     onClick = openPartnerSplitsEditor,
-                    tooltip = "Edit Partner Splits"
+                    tooltip = "Edit Partner Splits",
+                    disabled = readonly
                   ).mini.compact
                 )
               ),
@@ -335,7 +341,8 @@ object ProposalEditor:
             FormEnumDropdownView(
               id = "proposal-class".refined,
               value = proposalClassType.withOnMod(onClassTypeMod _),
-              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined))
+              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
+              disabled = readonly
             ),
             FormDropdownOptional(
               id = "category".refined,
@@ -343,6 +350,7 @@ object ProposalEditor:
               value = categoryView.get.map(categoryTag),
               options = categoryOptions,
               onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+              disabled = readonly,
               modifiers = List(^.id := "category")
             ),
             FormEnumDropdownView(
@@ -351,7 +359,8 @@ object ProposalEditor:
               label = React.Fragment(
                 "ToO Activation",
                 HelpIcon("proposal/main/too-activation.md".refined)
-              )
+              ),
+              disabled = readonly
             )
           )
         ),
@@ -377,6 +386,7 @@ object ProposalEditor:
     attachments:       View[List[ProposalAttachment]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
+    readonly:          Boolean,
     resize:            UseResizeDetectorReturn
   )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
@@ -422,6 +432,7 @@ object ProposalEditor:
           minExecutionTime,
           maxExecutionTime,
           users,
+          readonly,
           _
         )
       )
@@ -439,12 +450,12 @@ object ProposalEditor:
         FormInputTextAreaView(
           id = "abstract".refined,
           value = abstractView.as(OptionNonEmptyStringIso)
-        )
+        )(^.disabled := readonly)
       )
 
     val attachmentsTile =
       Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments", canMinimize = true)(_ =>
-        authToken.map(token => ProposalAttachmentsTable(programId, token, attachments))
+        authToken.map(token => ProposalAttachmentsTable(programId, token, attachments, readonly))
       )
 
     <.div(
@@ -534,6 +545,7 @@ object ProposalEditor:
             props.attachments,
             props.authToken,
             props.layout,
+            props.readonly,
             resize
           )
       }

@@ -64,7 +64,8 @@ case class TargetTabContents(
   userPreferences:  View[UserPreferences],
   focused:          Focused,
   searching:        View[Set[Target.Id]],
-  expandedIds:      View[SortedSet[ObsIdSet]]
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
   val targets: UndoSetter[TargetList] = props.programSummaries.zoom(ProgramSummaries.targets)
 
@@ -100,7 +101,8 @@ object TargetTabContents extends TwoPanels:
         props.expandedIds,
         programSummaries,
         selectTargetOrSummary _,
-        selectedTargetIds
+        selectedTargetIds,
+        props.readonly
       )
 
     def findAsterismGroup(obsIds: ObsIdSet, agl: AsterismGroupList): Option[AsterismGroup] =
@@ -168,7 +170,8 @@ object TargetTabContents extends TwoPanels:
           selectTargetOrSummary _,
           renderInTitle,
           selectedTargetIds,
-          props.programSummaries
+          props.programSummaries,
+          props.readonly
         )
       )
 
@@ -283,7 +286,8 @@ object TargetTabContents extends TwoPanels:
           otherObsCount(idsToEdit) _,
           props.searching,
           title,
-          props.globalPreferences
+          props.globalPreferences,
+          props.readonly
         )
 
       val selectedCoordinates: Option[Coordinates] =
@@ -334,7 +338,8 @@ object TargetTabContents extends TwoPanels:
         props.searching,
         title,
         fullScreen,
-        props.globalPreferences
+        props.globalPreferences,
+        props.readonly
       )
 
       val skyPlotTile =
@@ -458,8 +463,8 @@ object TargetTabContents extends TwoPanels:
         _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
       .useGlobalHotkeysWithDepsBy((props, ctx, _, selIds) =>
-        (props.focused, props.programSummaries.get.asterismGroups, selIds.get)
-      ) { (props, ctx, _, _) => (target, asterismGroups, selectedIds) =>
+        (props.focused, props.programSummaries.get.asterismGroups, props.readonly, selIds.get)
+      ) { (props, ctx, _, _) => (target, asterismGroups, readonly, selectedIds) =>
         import ctx.given
 
         def selectObsIds: ObsIdSet => IO[Unit] =
@@ -486,56 +491,59 @@ object TargetTabContents extends TwoPanels:
               .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
-            ExploreClipboard.get.flatMap {
-              case LocalClipboard.CopiedObservations(id) =>
-                val obsAndTargets =
+            ExploreClipboard.get
+              .flatMap {
+                case LocalClipboard.CopiedObservations(id) =>
+                  val obsAndTargets =
+                    props.focused.obsSet
+                      // This with some targets on the tree seelected
+                      .map(i => id.idSet.toList.map((_, asterismGroups.get(i).foldMap(_.toList))))
+                      // These are targets on the table
+                      .getOrElse {
+                        for {
+                          tid <- selectedIds
+                          oid <- id.idSet.toList
+                        } yield (oid, List(tid))
+                      }
+
+                  if (obsAndTargets.nonEmpty)
+                    // Apply the obs to selected targets on the tree
+                    applyObs(
+                      obsAndTargets,
+                      props.programSummaries,
+                      ctx,
+                      props.expandedIds
+                    ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
+                  else IO.unit
+
+                case LocalClipboard.CopiedTargets(tids) =>
                   props.focused.obsSet
-                    // This with some targets on the tree seelected
-                    .map(i => id.idSet.toList.map((_, asterismGroups.get(i).foldMap(_.toList))))
-                    // These are targets on the table
-                    .getOrElse {
-                      for {
-                        tid <- selectedIds
-                        oid <- id.idSet.toList
-                      } yield (oid, List(tid))
-                    }
+                    .foldMap(obsIds =>
+                      // Only want to paste targets that aren't already in the target asterism or
+                      // undo is messed up.
+                      // If all the targets are already there, do nothing.
+                      val targetAsterism =
+                        props.programSummaries.get.asterismGroups.findContainingObsIds(obsIds)
+                      targetAsterism
+                        .flatMap(ag => tids.removeSet(ag.targetIds))
+                        .foldMap(uniqueTids =>
+                          TargetPasteAction
+                            .pasteTargets(
+                              props.programId,
+                              obsIds,
+                              uniqueTids,
+                              selectObsIds,
+                              props.expandedIds
+                            )
+                            .set(props.programSummaries)(())
+                            .toAsync
+                        )
+                    )
 
-                if (obsAndTargets.nonEmpty)
-                  // Apply the obs to selected targets on the tree
-                  applyObs(
-                    obsAndTargets,
-                    props.programSummaries,
-                    ctx,
-                    props.expandedIds
-                  ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
-                else IO.unit
-
-              case LocalClipboard.CopiedTargets(tids) =>
-                props.focused.obsSet
-                  .foldMap(obsIds =>
-                    // Only want to paste targets that aren't already in the target asterism or
-                    // undo is messed up.
-                    // If all the targets are already there, do nothing.
-                    val targetAsterism =
-                      props.programSummaries.get.asterismGroups.findContainingObsIds(obsIds)
-                    targetAsterism
-                      .flatMap(ag => tids.removeSet(ag.targetIds))
-                      .foldMap(uniqueTids =>
-                        TargetPasteAction
-                          .pasteTargets(
-                            props.programId,
-                            obsIds,
-                            uniqueTids,
-                            selectObsIds,
-                            props.expandedIds
-                          )
-                          .set(props.programSummaries)(())
-                          .toAsync
-                      )
-                  )
-
-              case _ => IO.unit
-            }.runAsync
+                case _ => IO.unit
+              }
+              .runAsync
+              .unless_(readonly)
 
           case GoToSummary =>
             ctx.pushPage(AppTab.Targets, props.programId, Focused.None)

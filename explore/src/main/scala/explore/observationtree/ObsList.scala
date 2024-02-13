@@ -61,7 +61,8 @@ case class ObsList(
   setSummaryPanel: Callback,
   groups:          UndoSetter[GroupList],
   expandedGroups:  View[Set[Group.Id]],
-  deckShown:       View[DeckShown]
+  deckShown:       View[DeckShown],
+  readonly:        Boolean
 ) extends ReactFnProps(ObsList.component)
 
 object ObsList:
@@ -237,7 +238,8 @@ object ObsList:
                   )
                     .withToast(s"Duplicating obs ${id}")
                     .runAsync
-                    .some
+                    .some,
+                  readonly = props.readonly
                 )
               )
             case ObsNode.And(group) => renderGroup("AND", group)
@@ -254,33 +256,37 @@ object ObsList:
           if (props.deckShown.get === DeckShown.Shown) {
             React.Fragment(
               <.div(ExploreStyles.TreeToolbar)(
-                Button(
-                  severity = Button.Severity.Success,
-                  icon = Icons.New,
-                  label = "Obs",
-                  disabled = adding.get.value,
-                  loading = adding.get.value,
-                  onClick = insertObs(
-                    props.programId,
-                    props.observations.get.length,
-                    props.observations,
-                    adding,
-                    ctx
-                  ).runAsync
-                ).mini.compact,
-                Button(
-                  severity = Button.Severity.Success,
-                  icon = Icons.New,
-                  label = "Group",
-                  disabled = adding.get.value,
-                  loading = adding.get.value,
-                  onClick = insertGroup(
-                    props.programId,
-                    props.groups,
-                    adding,
-                    ctx
-                  ).runAsync
-                ).mini.compact,
+                if (props.readonly) EmptyVdom
+                else
+                  React.Fragment(
+                    Button(
+                      severity = Button.Severity.Success,
+                      icon = Icons.New,
+                      label = "Obs",
+                      disabled = adding.get.value,
+                      loading = adding.get.value,
+                      onClick = insertObs(
+                        props.programId,
+                        props.observations.get.length,
+                        props.observations,
+                        adding,
+                        ctx
+                      ).runAsync
+                    ).mini.compact,
+                    Button(
+                      severity = Button.Severity.Success,
+                      icon = Icons.New,
+                      label = "Group",
+                      disabled = adding.get.value,
+                      loading = adding.get.value,
+                      onClick = insertGroup(
+                        props.programId,
+                        props.groups,
+                        adding,
+                        ctx
+                      ).runAsync
+                    ).mini.compact
+                  ),
                 <.div(
                   ExploreStyles.ObsTreeButtons,
                   Button(
@@ -291,7 +297,9 @@ object ObsList:
                     clazz = ExploreStyles.ObsTreeHideShow,
                     onClick = props.deckShown.mod(_.flip)
                   ).mini.compact,
-                  UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value)
+                  if (props.readonly) EmptyVdom
+                  else
+                    UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value)
                 )
               ),
               <.div(
@@ -310,8 +318,8 @@ object ObsList:
                   renderItem,
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set,
-                  dragDropScope = "obs-tree",
-                  onDragDrop = onDragDrop
+                  dragDropScope = if (props.readonly) js.undefined else "obs-tree",
+                  onDragDrop = if (props.readonly) js.undefined else onDragDrop
                 )
               )
             )

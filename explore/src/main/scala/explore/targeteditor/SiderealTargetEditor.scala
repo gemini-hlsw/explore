@@ -68,6 +68,7 @@ case class SiderealTargetEditor(
   renderInTitle:      Option[Tile.RenderInTitle] = None,
   fullScreen:         View[AladinFullScreen],
   globalPreferences:  View[GlobalPreferences],
+  readonly:           Boolean,
   invalidateSequence: Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
@@ -257,7 +258,8 @@ object SiderealTargetEditor:
             forceAssign(sourceProfileLens.modify)(SourceProfileInput())
           )
 
-        val disabled = props.searching.get.exists(_ === props.asterism.focus.id) || cloning.get
+        val disabled =
+          props.searching.get.exists(_ === props.asterism.focus.id) || cloning.get || props.readonly
 
         React.Fragment(
           <.div(ExploreStyles.TargetGrid)(
@@ -280,7 +282,8 @@ object SiderealTargetEditor:
                 // a single undo/redo operation.
                 nameView,
                 allView.set,
-                props.searching
+                props.searching,
+                props.readonly
               ),
               FormInputTextView(
                 id = "ra".refined,

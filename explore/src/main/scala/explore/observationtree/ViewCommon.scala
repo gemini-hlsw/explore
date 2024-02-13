@@ -20,6 +20,7 @@ import lucuma.ui.syntax.all.given
 trait ViewCommon {
   def programId: Program.Id
   def focusedObsSet: Option[ObsIdSet]
+  def readonly: Boolean
 
   def renderObsBadge(
     obs:               ObsSummary,
@@ -30,7 +31,8 @@ trait ViewCommon {
     ObsBadge(
       obs,
       layout,
-      selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id)))
+      selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
+      readonly = readonly
     )
 
   def renderObsBadgeItem(
@@ -47,7 +49,7 @@ trait ViewCommon {
     idx:               Int
   ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
-      Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
+      Draggable(obs.id.toString, idx, isDragDisabled = readonly) { case (provided, snapshot, _) =>
         <.div(
           provided.innerRef,
           provided.draggableProps,

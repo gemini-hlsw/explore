@@ -33,7 +33,8 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class SpectroscopyConfigurationPanel(
-  options: View[ScienceRequirements.Spectroscopy]
+  options:  View[ScienceRequirements.Spectroscopy],
+  readonly: Boolean
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
 object SpectroscopyConfigurationPanel {
@@ -84,7 +85,8 @@ object SpectroscopyConfigurationPanel {
           postAddons = wv.get.fold(List(requiredForITC))(_ => Nil),
           units = "μm",
           validFormat = wvMicroInput,
-          changeAuditor = wvChangeAuditor
+          changeAuditor = wvChangeAuditor,
+          disabled = p.readonly
         ).clearable(^.autoComplete.off),
         FormInputTextView(
           id = "configuration-resolution-power".refined,
@@ -94,7 +96,8 @@ object SpectroscopyConfigurationPanel {
             HelpIcon("configuration/spectral_resolution.md".refined)
           ),
           validFormat = InputValidSplitEpi.posInt.optional,
-          changeAuditor = ChangeAuditor.posInt.optional
+          changeAuditor = ChangeAuditor.posInt.optional,
+          disabled = p.readonly
         ).clearable(^.autoComplete.off),
         FormLabel("signal-to-noise".refined)(
           "S / N",
@@ -108,7 +111,8 @@ object SpectroscopyConfigurationPanel {
             groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
             validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
             postAddons = signalToNoise.get.fold(List(requiredForITC))(_ => Nil),
-            changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional
+            changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional,
+            disabled = p.readonly
           ).withMods(^.autoComplete.off),
           FormLabel("signal-to-noise-at".refined)("at"),
           FormInputTextView(
@@ -118,7 +122,8 @@ object SpectroscopyConfigurationPanel {
             value = signalToNoiseAt,
             units = "μm",
             validFormat = wvMicroInput,
-            changeAuditor = snAtWvChangeAuditor
+            changeAuditor = snAtWvChangeAuditor,
+            disabled = p.readonly
           ).clearable(^.autoComplete.off)
         ),
         FormInputTextView(
@@ -130,7 +135,8 @@ object SpectroscopyConfigurationPanel {
             HelpIcon("configuration/wavelength_coverage.md".refined)
           ),
           validFormat = wvcMicroInput,
-          changeAuditor = wvChangeAuditor
+          changeAuditor = wvChangeAuditor,
+          disabled = p.readonly
         ).clearable(^.autoComplete.off),
         FormLabel("focal-plane".refined)("Focal Plane",
                                          HelpIcon("configuration/focal_plane.md".refined)
@@ -140,14 +146,16 @@ object SpectroscopyConfigurationPanel {
           FormEnumDropdownOptionalView(
             id = "focal-plane".refined,
             placeholder = "Any",
-            value = focalPlane
+            value = focalPlane,
+            disabled = p.readonly
           ),
           FormInputTextView(
             id = "focal-plane-angle".refined,
             value = focalPlaneAngle,
             units = "arcsec",
             validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional
+            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
+            disabled = p.readonly
           ).clearable(^.autoComplete.off)
         ),
         FormEnumDropdownOptionalView(
@@ -157,7 +165,8 @@ object SpectroscopyConfigurationPanel {
           label = ReactFragment(
             "Capability",
             HelpIcon("configuration/capability.md".refined)
-          )
+          ),
+          disabled = p.readonly
         )
       )
     }

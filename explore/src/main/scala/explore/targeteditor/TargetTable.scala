@@ -56,7 +56,8 @@ case class TargetTable(
   selectedTarget: View[Option[Target.Id]],
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
-  fullScreen:     AladinFullScreen
+  fullScreen:     AladinFullScreen,
+  readonly:       Boolean
 ) extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
@@ -88,31 +89,34 @@ object TargetTable extends AsterismModifier:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // cols
-      .useMemoBy((props, _) => (props.obsIds, props.targetIds.get)) { (props, ctx) => _ =>
-        import ctx.given
+      .useMemoBy((props, _) => (props.obsIds, props.targetIds.get, props.readonly)) {
+        (props, ctx) => _ =>
+          import ctx.given
 
-        List(
-          ColDef(
-            DeleteColumnId,
-            _.id,
-            "",
-            cell =>
-              Button(
-                text = true,
-                clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-                icon = Icons.Trash,
-                tooltip = "Delete",
-                onClickE = (e: ReactMouseEvent) =>
-                  e.preventDefaultCB >>
-                    e.stopPropagationCB >>
-                    props.targetIds.mod(_ - cell.value) >>
-                    deleteSiderealTarget(props.programId, props.obsIds, cell.value).runAsync
-              ).tiny.compact,
-            size = 35.toPx,
-            enableSorting = false
-          )
-        ) ++
-          TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
+          List(
+            ColDef(
+              DeleteColumnId,
+              _.id,
+              "",
+              cell =>
+                if (props.readonly) EmptyVdom
+                else
+                  Button(
+                    text = true,
+                    clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
+                    icon = Icons.Trash,
+                    tooltip = "Delete",
+                    onClickE = (e: ReactMouseEvent) =>
+                      e.preventDefaultCB >>
+                        e.stopPropagationCB >>
+                        props.targetIds.mod(_ - cell.value) >>
+                        deleteSiderealTarget(props.programId, props.obsIds, cell.value).runAsync
+                  ).tiny.compact,
+              size = 35.toPx,
+              enableSorting = false
+            )
+          ) ++
+            TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
       }
       // If vizTime is not set, change it to now
       .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>

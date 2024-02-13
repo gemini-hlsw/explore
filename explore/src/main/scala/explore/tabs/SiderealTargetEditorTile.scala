@@ -32,6 +32,7 @@ object SiderealTargetEditorTile {
     title:             String,
     fullScreen:        View[AladinFullScreen],
     globalPreferences: View[GlobalPreferences],
+    readonly:          Boolean,
     backButton:        Option[VdomNode] = none
   ) =
     Tile(
@@ -55,7 +56,8 @@ object SiderealTargetEditorTile {
               searching,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen,
-              globalPreferences = globalPreferences
+              globalPreferences = globalPreferences,
+              readonly
             )
           )
         )

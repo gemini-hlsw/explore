@@ -30,6 +30,7 @@ import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
+import lucuma.react.primereact.Message
 import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
@@ -168,6 +169,19 @@ object ExploreLayout:
 
           given Display[AppTab] = _.title
 
+          val (showProgsPopup, msg, isSubmitted) =
+            props.view.get.programSummaries.fold((false, none, false)) { pss =>
+              routingInfo.optProgramId.fold((true, none, false)) { id =>
+                if (pss.programs.get(id).exists(!_.deleted))
+                  (false, none, pss.proposalIsSubmitted)
+                else
+                  (true,
+                   s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
+                   false
+                  )
+              }
+            }
+
           React.Fragment(
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
             Sidebar(
@@ -218,30 +232,24 @@ object ExploreLayout:
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                 _.separatorAfter
               ),
-              <.div(LayoutStyles.MainBody) {
-                val (showProgsPopup, msg) =
-                  props.view.get.programSummaries.fold((false, none)) { pss =>
-                    routingInfo.optProgramId.fold((true, none)) { id =>
-                      if (pss.programs.get(id).exists(!_.deleted)) (false, none)
-                      else
-                        (true,
-                         s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some
-                        )
-                    }
-                  }
-                if (showProgsPopup)
-                  ProgramsPopup(
-                    currentProgramId = none,
-                    props.view
-                      .zoom(RootModel.programSummaries.some)
-                      .zoom(ProgramSummaries.programs),
-                    undoStacks = props.view.zoom(RootModel.undoStacks),
-                    onLogout = (onLogout >>
-                      props.view.zoom(RootModel.vault).set(none).toAsync).some,
-                    message = msg
-                  ): VdomElement
-                else props.resolution.renderP(props.view)
-              }
+              if (showProgsPopup)
+                ProgramsPopup(
+                  currentProgramId = none,
+                  props.view
+                    .zoom(RootModel.programSummaries.some)
+                    .zoom(ProgramSummaries.programs),
+                  undoStacks = props.view.zoom(RootModel.undoStacks),
+                  onLogout = (onLogout >>
+                    props.view.zoom(RootModel.vault).set(none).toAsync).some,
+                  message = msg
+                ): VdomElement
+              else
+                <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
+                  props.resolution.renderP(props.view),
+                  if (isSubmitted)
+                    Message(text = "The proposal has been submitted, so the program is readonly.")
+                  else EmptyVdom
+                )
             )
           )
         )

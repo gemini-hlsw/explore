@@ -40,6 +40,7 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
+import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
@@ -83,7 +84,8 @@ object ProposalTabContents:
     undoStacks:       View[UndoStacks[IO, Proposal]],
     ctx:              AppContext[IO],
     layout:           LayoutsMap,
-    isUpdatingStatus: View[IsUpdatingStatus]
+    isUpdatingStatus: View[IsUpdatingStatus],
+    readonly:         Boolean
   ): VdomNode = {
     import ctx.given
 
@@ -116,7 +118,8 @@ object ProposalTabContents:
             users,
             attachments,
             userVault.map(_.token),
-            layout
+            layout,
+            readonly
           ),
           Toolbar(left =
             <.span(
@@ -182,7 +185,10 @@ object ProposalTabContents:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useStateView(IsUpdatingStatus(false))
-    .render { (props, ctx, isUpdatingStatus) =>
+    .useMemoBy((props, _, _) => props.programDetails.get.proposalStatus)((_, _, _) =>
+      _ === ProposalStatus.Submitted
+    )
+    .render { (props, ctx, isUpdatingStatus, readonly) =>
       renderFn(props.programId,
                props.userVault,
                props.programDetails,
@@ -190,6 +196,7 @@ object ProposalTabContents:
                props.undoStacks,
                ctx,
                props.layout,
-               isUpdatingStatus
+               isUpdatingStatus,
+               readonly
       )
     }

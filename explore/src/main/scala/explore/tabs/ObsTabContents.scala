@@ -68,7 +68,8 @@ case class ObsTabContents(
   userPreferences:  View[UserPreferences],
   focused:          Focused,
   searching:        View[Set[Target.Id]],
-  expandedGroups:   View[Set[Group.Id]]
+  expandedGroups:   View[Set[Group.Id]],
+  readonly:         Boolean
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id]                   = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]                     = focused.target
@@ -103,7 +104,8 @@ object ObsTabContents extends TwoPanels:
           selectedView.set(SelectedPanel.Summary),
           props.groups,
           props.expandedGroups,
-          deckShown
+          deckShown,
+          props.readonly
         ): VdomNode
       } else
         <.div(ExploreStyles.TreeToolbar)(
@@ -161,7 +163,8 @@ object ObsTabContents extends TwoPanels:
               resize,
               props.obsAttachments,
               props.obsAttachmentAssignments,
-              props.userPreferences.zoom(UserPreferences.globalPreferences)
+              props.userPreferences.zoom(UserPreferences.globalPreferences),
+              props.readonly
             ).withKey(s"${obsId.show}")
           )
       )
@@ -194,9 +197,10 @@ object ObsTabContents extends TwoPanels:
       .useResizeDetector()
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _) =>
         (props.focusedObs,
-         props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList
+         props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList,
+         props.readonly
         )
-      ) { (props, ctx, _, _) => (obs, observationIds) =>
+      ) { (props, ctx, _, _) => (obs, observationIds, readonly) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -213,22 +217,25 @@ object ObsTabContents extends TwoPanels:
               .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
-            ExploreClipboard.get.flatMap {
-              case LocalClipboard.CopiedObservations(idSet) =>
-                idSet.idSet.toList
-                  .traverse(oid =>
-                    cloneObs(
-                      props.programId,
-                      oid,
-                      observationIds.length,
-                      props.observations,
-                      ctx
+            ExploreClipboard.get
+              .flatMap {
+                case LocalClipboard.CopiedObservations(idSet) =>
+                  idSet.idSet.toList
+                    .traverse(oid =>
+                      cloneObs(
+                        props.programId,
+                        oid,
+                        observationIds.length,
+                        props.observations,
+                        ctx
+                      )
                     )
-                  )
-                  .void
-                  .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-              case _                                        => IO.unit
-            }.runAsync
+                    .void
+                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
+                case _                                        => IO.unit
+              }
+              .runAsync
+              .unless_(readonly)
 
           case Down =>
             obsPos

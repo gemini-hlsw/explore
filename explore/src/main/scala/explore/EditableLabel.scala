@@ -36,7 +36,8 @@ case class EditableLabel(
   rightButtonIcon:      FontAwesomeIcon = Icons.Eraser,
   rightButtonTooltip:   Option[String] = None,
   okButtonTooltip:      Option[String] = None,
-  discardButtonTooltip: Option[String] = None
+  discardButtonTooltip: Option[String] = None,
+  readonly:             Boolean = false
 ) extends ReactFnProps(EditableLabel.component)
 
 object EditableLabel {
@@ -55,7 +56,8 @@ object EditableLabel {
     deleteButtonIcon:     FontAwesomeIcon = Icons.Eraser,
     deleteButtonTooltip:  Option[String] = None,
     okButtonTooltip:      Option[String] = None,
-    discardButtonTooltip: Option[String] = None
+    discardButtonTooltip: Option[String] = None,
+    readonly:             Boolean = false
   ): EditableLabel =
     EditableLabel(
       value.get,
@@ -71,7 +73,8 @@ object EditableLabel {
       deleteButtonIcon,
       deleteButtonTooltip,
       okButtonTooltip,
-      discardButtonTooltip
+      discardButtonTooltip,
+      readonly
     )
 
   type Editing = Editing.Type
@@ -156,20 +159,24 @@ object EditableLabel {
           )
         else
           props.value.fold[VdomNode](
-            Button(
-              severity = Button.Severity.Secondary,
-              clazz = props.addButtonClass,
-              onClickE = editCB
-            ).mini.compact(props.addButtonLabel)
+            if (props.readonly)
+              EmptyVdom
+            else
+              Button(
+                severity = Button.Severity.Secondary,
+                clazz = props.addButtonClass,
+                onClickE = editCB
+              ).mini
+                .compact(props.addButtonLabel)
           )(text =>
             <.div(^.width := "100%", ^.display.flex)(
               <.span(
                 props.textClass,
-                ^.onClick ==> (v => editCB(v).whenA(props.editOnClick)),
+                ^.onClick ==> (v => editCB(v).whenA(props.editOnClick && !props.readonly)),
                 text
               ),
-              leftButton,
-              rightButton
+              leftButton.unless(props.readonly),
+              rightButton.unless(props.readonly)
             )
           )
       }
