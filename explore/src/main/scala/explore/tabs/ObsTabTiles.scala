@@ -19,6 +19,7 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
+import explore.config.sequence.VisitsViewer
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
 import explore.model.AppContext
@@ -382,6 +383,7 @@ object ObsTabTiles:
                     }
                     .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
                 },
+                VisitsViewer(props.obsId),
                 GeneratedSequenceViewer(
                   props.programId,
                   props.obsId,
