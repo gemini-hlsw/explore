@@ -1152,17 +1152,31 @@ table.pl-react-table.explore-sequence-table {
     }
   }
 
-  .group-name-form {
-    margin-top: var(--content-padding);
-    margin-bottom: var(--content-padding);
-  }
-  
   .p-inputgroup {
     max-width: fit-content;
   }
 
   .min-required-form-input {
     width: auto;
+  }
+
+  .group-form {
+    --group-row-count: 3;
+    --group-column-count: 3;
+
+    // Move to 2 columns on mobile
+    @media (max-width: lucumaUICommon.$tablet-responsive-cutoff) {
+      --group-row-count: 4;
+      --group-column-count: 2;
+    }
+
+    margin-top: var(--content-padding);
+    margin-bottom: var(--content-padding);
+    display: grid;
+    gap: var(--content-padding);
+    grid-template-rows: repeat(var(--group-row-count), auto); /* 3 rows of equal height */
+    grid-template-columns: repeat(var(--group-column-count), auto); /* 3 columns of equal width */
+    grid-auto-flow: column; /* fill the rows first, then move to the next column */
   }
 }
 

@@ -126,6 +126,7 @@ object ExploreStyles:
   val GroupEditNote: Css        = Css("group-edit-note")
   val GroupNameForm: Css        = Css("group-name-form")
   val MinRequiredFormInput: Css = Css("min-required-form-input")
+  val GroupForm: Css            = Css("group-form")
 
   val ApiKeysPopup    = Css("api-keys-popup")
   val ApiKeysTable    = Css("api-keys-table")

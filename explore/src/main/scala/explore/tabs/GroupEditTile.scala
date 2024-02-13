@@ -18,6 +18,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Grouping
 import explore.syntax.ui.*
+import explore.model.syntax.all.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
@@ -40,6 +41,7 @@ import scala.concurrent.duration.Duration
 import scala.scalajs.js
 import scala.util.Try
 import cats.kernel.Eq
+import explore.components.FormTimeSpanInput
 
 case class GroupEditTile(
   group:         UndoSetter[Grouping],
@@ -209,6 +211,8 @@ object GroupEditTile:
       )
 
       val delaysForm = <.div(
+        group.minimumInterval.map(ts => s"Minimum delay: ${ts.toHoursMinutes}"),
+        FormTimeSpanInput(label = "minimum delay", value = group.minimumInterval.getOrElse(TimeSpan.Zero)),
         FormInputText(
           id = "minDelay".refined,
           label = "Minimum Delay",
@@ -230,18 +234,18 @@ object GroupEditTile:
       )
 
       val groupTypeSpecificForms =
-        if isAnd then <.div(nameForm, orderForm, delaysForm)
-        else <.div(nameForm, minRequiredForm)
+        if isAnd then <.div(ExploreStyles.GroupForm, nameForm, orderForm, delaysForm)
+        else <.div(ExploreStyles.GroupForm, nameForm, minRequiredForm)
 
-      // React.Fragment(
-      //   props.renderInTitle(title),
-      <.div(ExploreStyles.GroupEditTile)(
-        <.div("Add at least 2 elements to this group to change the type.")
-          .when(elementsLength <= 1),
-        selectGroupForm,
-        groupTypeSpecificForms
+      React.Fragment(
+        props.renderInTitle(title),
+        <.div(ExploreStyles.GroupEditTile)(
+          <.div("Add at least 2 elements to this group to change the type.")
+            .when(elementsLength <= 1),
+          selectGroupForm,
+          groupTypeSpecificForms
+        )
       )
-  // )
 
   def parseTimeStringParts(str: String): Either[String, TimeSpan] =
     val parts = str.split(' ').map(_.trim()).filterNot(_.isBlank())
