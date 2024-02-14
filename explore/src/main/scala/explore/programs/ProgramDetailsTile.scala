@@ -4,18 +4,18 @@
 package explore.programs
 
 import cats.syntax.all.*
+import crystal.Pot
 import explore.components.ui.ExploreStyles
-import explore.model.ProgramTime
-import explore.model.ProgramTimeRange
+import explore.model.ProgramTimes
 import explore.model.syntax.all.toHoursMinutes
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
+import lucuma.ui.syntax.all.*
 
 case class ProgramDetailsTile(
-  programTimeEstimateRange: Option[ProgramTimeRange],
-  programTimeCharge:        ProgramTime
+  programTimes: Pot[ProgramTimes]
 ) extends ReactFnProps(ProgramDetailsTile.component)
 
 object ProgramDetailsTile:
@@ -25,31 +25,32 @@ object ProgramDetailsTile:
   val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
-
-      val timeAccounting = for {
-        minTime     <- props.programTimeEstimateRange.map(_.minimum.value)
-        maxTime     <- props.programTimeEstimateRange.map(_.maximum.value)
-        used         = props.programTimeCharge.value
-        remain       = TimeSpan.Zero // TODO
-        isSingleTime = minTime == maxTime
-      } yield table(
-        headers = Seq("Time accounting"),
-        rows = (if (isSingleTime) Seq(Seq[TagMod]("Planned", minTime.toHoursMinutes))
-                else
-                  Seq(
-                    Seq[TagMod]("Min Time", minTime.toHoursMinutes),
-                    Seq[TagMod]("Max Time", maxTime.toHoursMinutes)
-                  )) ++
-          Seq(Seq[TagMod]("Used", used.toHoursMinutes)),
-        footer = Seq(Seq[TagMod]("Remain", remain.toHoursMinutes))
-      )
-
-      <.div(
-        ExploreStyles.ProgramDetailsTile,
-        <.div(
-          timeAccounting
+      props.programTimes.renderPot { programTimes =>
+        val timeAccounting = for {
+          minTime     <- programTimes.timeEstimateRange.map(_.minimum.value)
+          maxTime     <- programTimes.timeEstimateRange.map(_.maximum.value)
+          used         = programTimes.timeCharge.value
+          remain       = TimeSpan.Zero // TODO
+          isSingleTime = minTime == maxTime
+        } yield table(
+          headers = Seq("Time accounting"),
+          rows = (if (isSingleTime) Seq(Seq[TagMod]("Planned", minTime.toHoursMinutes))
+                  else
+                    Seq(
+                      Seq[TagMod]("Min Time", minTime.toHoursMinutes),
+                      Seq[TagMod]("Max Time", maxTime.toHoursMinutes)
+                    )) ++
+            Seq(Seq[TagMod]("Used", used.toHoursMinutes)),
+          footer = Seq(Seq[TagMod]("Remain", remain.toHoursMinutes))
         )
-      )
+
+        <.div(
+          ExploreStyles.ProgramDetailsTile,
+          <.div(
+            timeAccounting
+          )
+        )
+      }
     }
 
   private def table(

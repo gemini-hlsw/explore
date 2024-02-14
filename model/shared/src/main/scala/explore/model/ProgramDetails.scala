@@ -14,28 +14,22 @@ import monocle.Focus
 import monocle.Lens
 
 case class ProgramDetails(
-  proposal:                 Option[Proposal],
-  proposalStatus:           ProposalStatus,
-  pi:                       Option[ProgramUser],
-  users:                    List[ProgramUserWithRole],
-  programTimeEstimateRange: Option[ProgramTimeRange],
-  programTimeCharge:        ProgramTime
+  proposal:       Option[Proposal],
+  proposalStatus: ProposalStatus,
+  pi:             Option[ProgramUser],
+  users:          List[ProgramUserWithRole]
 ) derives Eq:
   val allUsers = pi.fold(users)(p => ProgramUserWithRole(p, None) :: users)
 
 object ProgramDetails:
-  val proposal: Lens[ProgramDetails, Option[Proposal]]                         = Focus[ProgramDetails](_.proposal)
-  val proposalStatus: Lens[ProgramDetails, ProposalStatus]                     = Focus[ProgramDetails](_.proposalStatus)
-  val programTimeEstimateRange: Lens[ProgramDetails, Option[ProgramTimeRange]] =
-    Focus[ProgramDetails](_.programTimeEstimateRange)
+  val proposal: Lens[ProgramDetails, Option[Proposal]]     = Focus[ProgramDetails](_.proposal)
+  val proposalStatus: Lens[ProgramDetails, ProposalStatus] = Focus[ProgramDetails](_.proposalStatus)
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {
-      p   <- c.get[Option[Proposal]]("proposal")
-      ps  <- c.get[ProposalStatus]("proposalStatus")
-      pi  <- c.get[Option[ProgramUser]]("pi")
-      us  <- c.get[List[ProgramUserWithRole]]("users")
-      est <- c.get[Option[ProgramTimeRange]]("timeEstimateRange")
-      chg <- c.get[ProgramTime]("timeCharge")
-    } yield ProgramDetails(p, ps, pi, us, est, chg)
+      p  <- c.get[Option[Proposal]]("proposal")
+      ps <- c.get[ProposalStatus]("proposalStatus")
+      pi <- c.get[Option[ProgramUser]]("pi")
+      us <- c.get[List[ProgramUserWithRole]]("users")
+    } yield ProgramDetails(p, ps, pi, us)
   )

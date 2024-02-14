@@ -14,7 +14,7 @@ import lucuma.schemas.odb.TimeSpanSubquery
 
 @GraphQL
 object ExecutionSubquery extends GraphQLSubquery.Typed[ObservationDB, Execution]("Execution") {
-  override val subquery: String = s"""#gql
+  override val subquery: String = s"""
     {
       digest {
         setup {

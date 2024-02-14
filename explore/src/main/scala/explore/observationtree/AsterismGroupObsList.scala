@@ -57,6 +57,7 @@ case class AsterismGroupObsList(
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   val programSummaries                         = undoCtx.model
+  val obsExecutions                            = programSummaries.get.obsExecutionPots
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
 object AsterismGroupObsList:

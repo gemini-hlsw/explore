@@ -145,6 +145,7 @@ object Routing:
             routingInfo.programId,
             model.zoom(RootModel.vault).get,
             detailsView,
+            programSummaries.model.get.programTimes.map(_.timeEstimateRange),
             programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
             model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
             userPreferences(model).proposalTabLayout
@@ -154,17 +155,13 @@ object Routing:
 
   private def programTab(page: Page, model: View[RootModel]): VdomElement =
     withProgramSummaries(model) { programSummaries =>
-      // if we got this far, we will have program details
-      programSummaries.get.optProgramDetails.map { details =>
-        val routingInfo = RoutingInfo.from(page)
-        ProgramTabContents(
-          routingInfo.programId,
-          model.zoom(RootModel.vault).get,
-          details.programTimeEstimateRange,
-          details.programTimeCharge,
-          userPreferences(model)
-        )
-      }
+      val routingInfo = RoutingInfo.from(page)
+      ProgramTabContents(
+        routingInfo.programId,
+        model.zoom(RootModel.vault).get,
+        programSummaries.get.programTimes,
+        userPreferences(model)
+      )
     }
 
   // The programs popup will be shown

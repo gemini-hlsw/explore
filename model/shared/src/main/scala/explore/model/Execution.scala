@@ -9,9 +9,11 @@ import cats.syntax.all.*
 import explore.model.ProgramTime
 import io.circe.Decoder
 import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.TimeSpan
 import lucuma.odb.json.sequence.given
 
-case class Execution(digest: Option[ExecutionDigest], programTimeCharge: ProgramTime) derives Eq
+case class Execution(digest: Option[ExecutionDigest], programTimeCharge: ProgramTime) derives Eq:
+  lazy val executionTime: Option[TimeSpan] = digest.map(_.fullTimeEstimate.sum)
 
 object Execution {
   given Decoder[Execution] = Decoder.instance(c =>
