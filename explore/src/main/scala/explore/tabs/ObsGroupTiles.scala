@@ -38,6 +38,7 @@ object ObsGroupTiles:
 
   def component = ScalaFnComponent
     .withHooks[Props]
+    .useEffectOnMount(Callback.log("ObsGroupTiles mounted"))
     .render { props =>
 
       val lens  = Traversal
