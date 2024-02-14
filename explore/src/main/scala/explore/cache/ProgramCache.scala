@@ -5,17 +5,22 @@ package explore.cache
 
 import cats.effect.IO
 import cats.effect.Resource
+import cats.effect.std.UUIDGen
 import cats.syntax.all.*
 import clue.ErrorPolicy
 import clue.StreamingClient
 import clue.data.syntax.*
+import crystal.Pot
 import explore.DefaultErrorPolicy
+import explore.model.Execution
 import explore.model.GroupElement
 import explore.model.ObsAttachment
 import explore.model.ObsSummary
+import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
+import explore.model.ProgramTimes
 import explore.model.ProposalAttachment
 import explore.utils.reduceWithin
 import japgolly.scalajs.react.*
@@ -32,6 +37,7 @@ import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 
+import java.util.UUID
 import scala.concurrent.duration.*
 
 case class ProgramCache(
@@ -66,70 +72,143 @@ object ProgramCache
     go(none, List.empty)
   }
 
-  override protected val initial: ProgramCache => IO[ProgramSummaries] = { props =>
-    import props.given
+  private def mergeIOFns[A](one: IO[A => A], two: IO[A => A]): IO[A => A] =
+    for {
+      o <- one
+      t <- two
+    } yield o.andThen(t)
 
-    val optProgramDetails: IO[Option[ProgramDetails]] =
-      ProgramSummaryQueriesGQL
-        .ProgramDetailsQuery[IO]
-        .query(props.programId)
-        .map(_.program)
-
-    val targets: IO[List[TargetWithId]] =
-      drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
-        offset =>
-          ProgramSummaryQueriesGQL
-            .AllProgramTargets[IO]
-            .query(props.programId.toWhereTarget, offset.orUnassign),
-        _.targets.matches,
-        _.targets.hasMore,
-        _.id
+  private def updateProgramTimes(
+    programId: Program.Id,
+    uuid:      UUID,
+    effect:    (ProgramSummaries => ProgramSummaries) => IO[Unit]
+  )(using client: StreamingClient[IO, ObservationDB]): IO[Unit] = {
+    def f(oTimes: Option[ProgramTimes]): ProgramSummaries => ProgramSummaries = sums =>
+      oTimes.fold(sums)(times =>
+        if (sums.programTimesPot._1 === uuid)
+          ProgramSummaries.programTimesPot.replace((uuid, Pot(times)))(sums)
+        else sums
       )
 
-    val observations: IO[List[ObsSummary]] =
-      drain[ObsSummary, Observation.Id, ProgramSummaryQueriesGQL.AllProgramObservations.Data](
-        offset =>
-          ProgramSummaryQueriesGQL
-            .AllProgramObservations[IO]
-            .query(props.programId.toWhereObservation, offset.orUnassign)(ErrorPolicy.IgnoreOnData),
-        _.observations.matches,
-        _.observations.hasMore,
-        _.id
-      )
-
-    val groups: IO[List[GroupElement]] =
-      ProgramQueriesGQL
-        .ProgramGroupsQuery[IO]
-        .query(props.programId)
-        .map(_.program.toList.flatMap(_.allGroupElements))
-
-    val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
-      ProgramSummaryQueriesGQL
-        .AllProgramAttachments[IO]
-        .query(props.programId)
-        .map(_.program.fold(List.empty, List.empty)(p => (p.obsAttachments, p.proposalAttachments)))
-
-    val programs: IO[List[ProgramInfo]] =
-      drain[ProgramInfo, Program.Id, ProgramSummaryQueriesGQL.AllPrograms.Data](
-        offset =>
-          ProgramSummaryQueriesGQL
-            .AllPrograms[IO]
-            .query(offset.orUnassign),
-        _.programs.matches,
-        _.programs.hasMore,
-        _.id
-      )
-
-    (optProgramDetails, targets, observations, groups, attachments, programs).mapN {
-      case (pd, ts, os, gs, (oas, pas), ps) =>
-        ProgramSummaries.fromLists(pd, ts, os, gs, oas, pas, ps)
-    }
+    val data = ProgramSummaryQueriesGQL.ProgramTimesQuery[IO].query(programId)
+    data.flatMap(d => effect(f(d.program)))
   }
 
-  override protected val updateStream: ProgramCache => Resource[
-    cats.effect.IO,
-    fs2.Stream[cats.effect.IO, ProgramSummaries => ProgramSummaries]
-  ] = { props =>
+  private def updateObservationExecution(
+    obsId:  Observation.Id,
+    uuid:   UUID,
+    effect: (ProgramSummaries => ProgramSummaries) => IO[Unit]
+  )(using
+    client: StreamingClient[IO, ObservationDB]
+  ): IO[Unit] = {
+    def f(oExecution: Option[Execution]): ProgramSummaries => ProgramSummaries = sums =>
+      oExecution.fold(sums)(execution =>
+        if (sums.obsExecutionPots.getUUID(obsId).exists(_ === uuid))
+          ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, uuid, Pot(execution)))(sums)
+        else sums
+      )
+
+    val data =
+      ProgramSummaryQueriesGQL.ObservationExecutionQuery[IO].query(obsId)(ErrorPolicy.IgnoreOnData)
+    data.flatMap(d => effect(f(d.observation.map(_.execution))))
+  }
+
+  override protected val initial
+    : (ProgramCache, (ProgramSummaries => ProgramSummaries) => IO[Unit]) => IO[ProgramSummaries] = {
+    (props, effect) =>
+      import props.given
+
+      val optProgramDetails: IO[Option[ProgramDetails]] =
+        ProgramSummaryQueriesGQL
+          .ProgramDetailsQuery[IO]
+          .query(props.programId)
+          .map(_.program)
+
+      val targets: IO[List[TargetWithId]] =
+        drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
+          offset =>
+            ProgramSummaryQueriesGQL
+              .AllProgramTargets[IO]
+              .query(props.programId.toWhereTarget, offset.orUnassign),
+          _.targets.matches,
+          _.targets.hasMore,
+          _.id
+        )
+
+      val observations: IO[List[ObsSummary]] =
+        drain[ObsSummary, Observation.Id, ProgramSummaryQueriesGQL.AllProgramObservations.Data](
+          offset =>
+            ProgramSummaryQueriesGQL
+              .AllProgramObservations[IO]
+              .query(props.programId.toWhereObservation, offset.orUnassign),
+          _.observations.matches,
+          _.observations.hasMore,
+          _.id
+        )
+
+      val groups: IO[List[GroupElement]] =
+        ProgramQueriesGQL
+          .ProgramGroupsQuery[IO]
+          .query(props.programId)
+          .map(_.program.toList.flatMap(_.allGroupElements))
+
+      val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
+        ProgramSummaryQueriesGQL
+          .AllProgramAttachments[IO]
+          .query(props.programId)
+          .map(
+            _.program.fold(List.empty, List.empty)(p => (p.obsAttachments, p.proposalAttachments))
+          )
+
+      val programs: IO[List[ProgramInfo]] =
+        drain[ProgramInfo, Program.Id, ProgramSummaryQueriesGQL.AllPrograms.Data](
+          offset =>
+            ProgramSummaryQueriesGQL
+              .AllPrograms[IO]
+              .query(offset.orUnassign),
+          _.programs.matches,
+          _.programs.hasMore,
+          _.id
+        )
+
+      def initializeSummaries(
+        observations: List[ObsSummary],
+        uuid:         UUID
+      ): IO[ProgramSummaries] =
+        val progPot = (uuid, Pot.pending)
+        val obsPots = observations.map(o => (o.id, (uuid, Pot.pending[Execution]))).toMap
+        (optProgramDetails, targets, groups, attachments, programs).mapN {
+          case (pd, ts, gs, (oas, pas), ps) =>
+            ProgramSummaries.fromLists(pd, ts, observations, gs, oas, pas, ps, progPot, obsPots)
+        }
+
+      def combineTimesUpdates(
+        observations: List[ObsSummary],
+        uuid:         UUID
+      ): IO[Unit] = {
+        // We want to update all the observations first, followed by the program, because
+        // the program requires all of the observation times be calculated. So, if we do
+        // it first, it could take a long time.
+        val program    = updateProgramTimes(props.programId, uuid, effect)
+        val obsUpdates =
+          observations.map(o => updateObservationExecution(o.id, uuid, effect)).sequence
+        obsUpdates *> program
+      }
+
+      for {
+        // everything can share the same UUID to start with.
+        uuid      <- UUIDGen[IO].randomUUID
+        obs       <- observations
+        summaries <- initializeSummaries(obs, uuid)
+        _         <- combineTimesUpdates(obs, uuid).start
+      } yield summaries
+  }
+
+  override protected val updateStream
+    : (ProgramCache, (ProgramSummaries => ProgramSummaries) => IO[Unit]) => Resource[
+      cats.effect.IO,
+      fs2.Stream[cats.effect.IO, IO[ProgramSummaries => ProgramSummaries]]
+    ] = { (props, effect) =>
     try {
       import props.given
 
@@ -137,34 +216,51 @@ object ProgramCache
         ProgramQueriesGQL.ProgramEditDetailsSubscription
           .subscribe[IO](props.programId.toProgramEditInput)
           .map(
-            _.map(data => ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some))
+            _.map(data =>
+              for {
+                uuid <- UUIDGen[IO].randomUUID
+                _    <- updateProgramTimes(props.programId, uuid, effect).start
+              } yield ProgramSummaries.optProgramDetails
+                .replace(data.programEdit.value.some)
+                .andThen(ProgramSummaries.programTimesPot.replace((uuid, Pot.pending)))
+            )
           )
 
       val updateTargets =
         TargetQueriesGQL.ProgramTargetsDelta
           .subscribe[IO](props.programId.toTargetEditInput)
-          .map(_.map(data => modifyTargets(data.targetEdit)))
+          .map(_.map(data => IO.pure(modifyTargets(data.targetEdit))))
 
       val updateObservations =
         ObsQueriesGQL.ProgramObservationsDelta
           .subscribe[IO](props.programId.toObservationEditInput)(summon, ErrorPolicy.IgnoreOnData)
-          .map(_.map(data => modifyObservations(data.observationEdit)))
+          .map(
+            _.map(data =>
+              for {
+                uuid <- UUIDGen[IO].randomUUID
+                _    <- (updateObservationExecution(data.observationEdit.value.id,
+                                                    uuid,
+                                                    effect
+                        ) *> updateProgramTimes(props.programId, uuid, effect)).start
+              } yield modifyObservations(data.observationEdit, uuid)
+            )
+          )
 
       val updateGroups = ProgramQueriesGQL.GroupEditSubscription
         .subscribe[IO](props.programId.toProgramEditInput)
-        .map(_.map(data => modifyGroups(data.groupEdit)))
+        .map(_.map(data => IO.pure(modifyGroups(data.groupEdit))))
 
       // Right now the programEdit subsription isn't fine grained enough to
       // differentiate what got updated, so we alway update all the attachments.
       // Hopefully this will change in the future.
       val updateAttachments = ProgramQueriesGQL.ProgramEditAttachmentSubscription
         .subscribe[IO](props.programId.toProgramEditInput)
-        .map(_.map(data => modifyAttachments(data.programEdit)))
+        .map(_.map(data => IO.pure(modifyAttachments(data.programEdit))))
 
       val updatePrograms =
         ProgramQueriesGQL.ProgramInfoDelta
           .subscribe[IO]()
-          .map(_.map(data => modifyPrograms(data.programEdit)))
+          .map(_.map(data => IO.pure(modifyPrograms(data.programEdit))))
 
       // TODO Handle errors, disable transparent resubscription upon connection loss.
       List(
@@ -176,7 +272,7 @@ object ProgramCache
         updatePrograms
       ).sequence.map(
         _.reduceLeft(_.merge(_))
-          .reduceWithin(150.millis, _ andThen _) // Group updates within 150ms
+          .reduceWithin(150.millis, mergeIOFns) // Group updates within 150ms
       )
     } catch {
       case t: Throwable =>

@@ -3,6 +3,7 @@
 
 package explore.cache
 
+import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.kernel.Deferred
 import cats.syntax.all.*
@@ -15,9 +16,9 @@ import japgolly.scalajs.react.vdom.html_<^.*
 trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
   private type F[T] = DefaultA[T]
 
-  protected val initial: P => F[S]
+  protected val initial: (P, (S => S) => F[Unit]) => F[S]
 
-  protected val updateStream: P => Resource[F, fs2.Stream[F, S => S]]
+  protected val updateStream: (P, (S => S) => F[Unit]) => Resource[F, fs2.Stream[F, F[S => S]]]
 
   val component =
     ScalaFnComponent
@@ -26,24 +27,34 @@ trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
         props =>
           for
             latch        <- Deferred[F, SignallingRef[F, S]]
+            effects      <- SignallingRef[F].of(identity[S])
             // Start the update fiber. We want subscriptions to start before initial query.
             // This way we don't miss updates.
             // The update fiber Will only update the cache once it is initialized (via latch).
             // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
             _            <-
-              updateStream(props)
+              updateStream(props, effects.set)
+                .map(
+                  _.merge(effects.discrete.map(Async[F].pure))
+                )
                 .evalTap(
-                  _.evalTap(mod => latch.get.flatMap(_.update(mod))).compile.drain
+                  _.evalTap(fmod =>
+                    latch.get.flatMap(ref => fmod.flatMap(mod => ref.update(mod)))
+                  ).compile.drain
                 )
                 .useForever
                 .start
-            initialValue <- initial(props)
+            initialValue <- initial(props, effects.set)
             cache        <- SignallingRef[F].of(initialValue)
             _            <- latch.complete(cache) // Allow stream updates to proceed.
           yield cache
       )
       .useStreamBy((props, cache) => (props, cache.isReady))((props, cache) =>
-        _ => cache.toOption.map(_.discrete).orEmpty.evalTap(value => props.setState(value.some))
+        _ =>
+          cache.toOption.map(_.discrete).orEmpty.evalTap { value =>
+            cats.effect.Async[F].delay(println("Emitting a value")) >>
+              props.setState(value.some)
+          }
       )
       // .useEffectWithDepsBy((_, _, value) => value.toOption)((props, _, _) =>
       //   value => props.setState(value)

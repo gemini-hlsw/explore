@@ -12,6 +12,7 @@ import crystal.Pot.Ready
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
+import explore.Icons
 import explore.*
 import explore.common.TimingWindowsQueries
 import explore.components.Tile
@@ -84,6 +85,7 @@ case class ObsTabTiles(
   programId:                Program.Id,
   backButton:               VdomNode,
   observation:              UndoSetter[ObsSummary],
+  obsExecution:             Pot[Execution],
   allTargets:               UndoSetter[TargetList],
   allConstraintSets:        Set[ConstraintSet],
   targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
@@ -371,16 +373,21 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  val programTimeCharge = props.observation.get.execution.programTimeCharge.value
-                  props.observation.get.executionTime
-                    .map { planned =>
-                      val total = programTimeCharge +| planned
-                      <.span(
-                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
-                        s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
-                      )
-                    }
-                    .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                  props.obsExecution.renderPot(
+                    valueRender = execution => {
+                      val programTimeCharge = execution.programTimeCharge.value
+                      execution.executionTime
+                        .map { planned =>
+                          val total = programTimeCharge +| planned
+                          <.span(
+                            <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
+                            s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                          )
+                        }
+                        .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                    },
+                    pendingRender = Icons.Spinner.withSpin(true)
+                  )
                 },
                 GeneratedSequenceViewer(
                   props.programId,

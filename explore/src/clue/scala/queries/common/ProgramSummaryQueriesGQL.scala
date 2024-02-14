@@ -40,7 +40,7 @@ object ProgramSummaryQueriesGQL {
         program(programId: $$programId) {
           obsAttachments $ObsAttachmentSubquery
           proposalAttachments $ProposalAttachmentSubquery
-        }
+        } 
       }
     """
   }
@@ -62,6 +62,26 @@ object ProgramSummaryQueriesGQL {
     val document: String = s"""
       query($$programId: ProgramId!) {
         program(programId: $$programId) $ProgramDetailsSubquery
+      }
+    """
+  }
+
+  @GraphQL
+  trait ProgramTimesQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) $ProgramTimesSubquery
+      }
+    """
+  }
+
+  @GraphQL
+  trait ObservationExecutionQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$id: ObservationId!) {
+        observation(observationId: $$id) {
+          execution $ExecutionSubquery
+        }
       }
     """
   }

@@ -5,6 +5,7 @@ package explore.cache
 
 import cats.Order.given
 import cats.syntax.all.*
+import crystal.Pot
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.GroupElement
 import explore.model.GroupObs
@@ -26,6 +27,8 @@ import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.{
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 
+import java.util.UUID
+
 /**
  * Functions to modify cache through subscription updates
  */
@@ -41,7 +44,8 @@ trait CacheModifierUpdaters {
       )
 
   protected def modifyObservations(
-    observationEdit: ObservationEdit
+    observationEdit: ObservationEdit,
+    uuid:            UUID
   ): ProgramSummaries => ProgramSummaries = {
     val obsId = observationEdit.value.id
 
@@ -59,7 +63,11 @@ trait CacheModifierUpdaters {
     // TODO: this won't be needed anymore when groups are also updated through events of observation updates
     val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
 
-    obsUpdate.andThen(groupsUpdate)
+    // the program times and the observation execution will share the same UUID, but that's fine.
+    val programTimesReset = ProgramSummaries.programTimesPot.replace((uuid, Pot.pending))
+    val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.updatePending(obsId, uuid))
+
+    obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
   }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =

@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
@@ -16,6 +17,7 @@ import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ProgramDetails
+import explore.model.ProgramTimeRange
 import explore.model.ProposalAttachment
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
@@ -47,12 +49,13 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProgramQueriesGQL.*
 
 case class ProposalTabContents(
-  programId:      Program.Id,
-  userVault:      Option[UserVault],
-  programDetails: View[ProgramDetails],
-  attachments:    View[List[ProposalAttachment]],
-  undoStacks:     View[UndoStacks[IO, Proposal]],
-  layout:         LayoutsMap
+  programId:         Program.Id,
+  userVault:         Option[UserVault],
+  programDetails:    View[ProgramDetails],
+  timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  attachments:       View[List[ProposalAttachment]],
+  undoStacks:        View[UndoStacks[IO, Proposal]],
+  layout:            LayoutsMap
 ) extends ReactFnProps(ProposalTabContents.component)
 
 object ProposalTabContents:
@@ -77,22 +80,21 @@ object ProposalTabContents:
         .runAsync
 
   private def renderFn(
-    programId:        Program.Id,
-    userVault:        Option[UserVault],
-    programDetails:   View[ProgramDetails],
-    attachments:      View[List[ProposalAttachment]],
-    undoStacks:       View[UndoStacks[IO, Proposal]],
-    ctx:              AppContext[IO],
-    layout:           LayoutsMap,
-    isUpdatingStatus: View[IsUpdatingStatus],
-    readonly:         Boolean
+    programId:         Program.Id,
+    userVault:         Option[UserVault],
+    programDetails:    View[ProgramDetails],
+    timeEstimateRange: Pot[Option[ProgramTimeRange]],
+    attachments:       View[List[ProposalAttachment]],
+    undoStacks:        View[UndoStacks[IO, Proposal]],
+    ctx:               AppContext[IO],
+    layout:            LayoutsMap,
+    isUpdatingStatus:  View[IsUpdatingStatus],
+    readonly:          Boolean
   ): VdomNode = {
     import ctx.given
 
-    val details          = programDetails.get
-    val minExecutionTime = details.programTimeEstimateRange.map(_.minimum.value)
-    val maxExecutionTime = details.programTimeEstimateRange.map(_.maximum.value)
-    val users            = details.allUsers
+    val details = programDetails.get
+    val users   = details.allUsers
 
     val isStdUser      = userVault.map(_.user).collect { case _: StandardUser => () }.isDefined
     val proposalStatus = programDetails.get.proposalStatus
@@ -113,8 +115,7 @@ object ProposalTabContents:
             userVault.map(_.user.id),
             proposalView,
             undoStacks,
-            minExecutionTime,
-            maxExecutionTime,
+            timeEstimateRange,
             users,
             attachments,
             userVault.map(_.token),
@@ -189,14 +190,16 @@ object ProposalTabContents:
       _ === ProposalStatus.Submitted
     )
     .render { (props, ctx, isUpdatingStatus, readonly) =>
-      renderFn(props.programId,
-               props.userVault,
-               props.programDetails,
-               props.attachments,
-               props.undoStacks,
-               ctx,
-               props.layout,
-               isUpdatingStatus,
-               readonly
+      renderFn(
+        props.programId,
+        props.userVault,
+        props.programDetails,
+        props.timeEstimateRange,
+        props.attachments,
+        props.undoStacks,
+        ctx,
+        props.layout,
+        isUpdatingStatus,
+        readonly
       )
     }

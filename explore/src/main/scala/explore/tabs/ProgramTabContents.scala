@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.effect.IO
+import crystal.Pot
 import explore.*
 import explore.components.Tile
 import explore.components.TileController
@@ -11,8 +12,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramTabTileIds
-import explore.model.ProgramTime
-import explore.model.ProgramTimeRange
+import explore.model.ProgramTimes
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
 import explore.programs.ProgramChangeRequestsTile
@@ -29,11 +29,10 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programId:                Program.Id,
-  userVault:                Option[UserVault],
-  programTimeEstimateRange: Option[ProgramTimeRange],
-  programTimeCharge:        ProgramTime,
-  userPreferences:          UserPreferences
+  programId:       Program.Id,
+  userVault:       Option[UserVault],
+  programTimes:    Pot[ProgramTimes],
+  userPreferences: UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 
 object ProgramTabContents:
@@ -53,7 +52,7 @@ object ProgramTabContents:
         ProgramTabTileIds.DetailsId.id,
         "Program Details",
         canMinimize = true
-      )(_ => ProgramDetailsTile(props.programTimeEstimateRange, props.programTimeCharge))
+      )(_ => ProgramDetailsTile(props.programTimes))
 
       val notesTile = Tile(
         ProgramTabTileIds.NotesId.id,

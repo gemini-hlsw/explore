@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.Input
 import clue.data.syntax.*
+import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
@@ -28,6 +29,7 @@ import explore.model.AppContext
 import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
 import explore.model.Hours
+import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment
 import explore.model.ProposalTabTileIds
@@ -65,6 +67,7 @@ import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
+import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
@@ -74,17 +77,16 @@ import spire.std.any.*
 import scala.collection.immutable.SortedMap
 
 case class ProposalEditor(
-  programId:        Program.Id,
-  optUserId:        Option[User.Id],
-  proposal:         View[Proposal],
-  undoStacks:       View[UndoStacks[IO, Proposal]],
-  minExecutionTime: Option[TimeSpan],
-  maxExecutionTime: Option[TimeSpan],
-  users:            List[ProgramUserWithRole],
-  attachments:      View[List[ProposalAttachment]],
-  authToken:        Option[NonEmptyString],
-  layout:           LayoutsMap,
-  readonly:         Boolean
+  programId:         Program.Id,
+  optUserId:         Option[User.Id],
+  proposal:          View[Proposal],
+  undoStacks:        View[UndoStacks[IO, Proposal]],
+  timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  users:             List[ProgramUserWithRole],
+  attachments:       View[List[ProposalAttachment]],
+  authToken:         Option[NonEmptyString],
+  layout:            LayoutsMap,
+  readonly:          Boolean
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -195,8 +197,7 @@ object ProposalEditor:
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
-    minExecutionTime:  TimeSpan,
-    maxExecutionTime:  TimeSpan,
+    timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
     readonly:          Boolean,
     renderInTitle:     Tile.RenderInTitle
@@ -225,6 +226,9 @@ object ProposalEditor:
     val totalTime       = totalTimeView.get
     val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
     val minimumPct2View = classView.zoom(ProposalClass.minPercentTotalTime)
+
+    val minExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.minimum.value).orEmpty)
+    val maxExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
 
     val (maxTimeLabel, minTimeLabel) =
       ProposalClassType.fromProposalClass(classView.get) match {
@@ -274,6 +278,10 @@ object ProposalEditor:
       classView.set(newClass) >> minPct2.set(minPctTotalTime) >> totalHours.set(toHours(totalTime))
     }
 
+    extension [A](pot: Pot[A])
+      def orSpinner(f: A => VdomNode): VdomNode =
+        pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
+
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
       <.form(
@@ -309,20 +317,30 @@ object ProposalEditor:
               ),
               // The second partner splits row, for maximum times - is always there
               FormStaticData(
-                value = formatHours(toHours(maxExecutionTime)),
+                value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
                 label = maxTimeLabel,
                 id = "maxTime"
               ),
-              timeSplits(splitsMap, maxExecutionTime),
-              minimumTime(minimumPct1View.get, maxExecutionTime),
+              maxExecutionPot.renderPot(
+                valueRender = maxExecutionTime =>
+                  React.Fragment(timeSplits(splitsMap, maxExecutionTime),
+                                 minimumTime(minimumPct1View.get, maxExecutionTime)
+                  ),
+                pendingRender = React.Fragment(<.span(), <.span())
+              ),
               // The third partner splits row, for minimum times - is always there
               FormStaticData(
-                value = formatHours(toHours(minExecutionTime)),
+                value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
                 label = minTimeLabel,
                 id = "maxTime"
               ),
-              timeSplits(splitsMap, minExecutionTime),
-              minimumTime(minimumPct1View.get, minExecutionTime),
+              minExecutionPot.renderPot(
+                valueRender = minExecutionTime =>
+                  React.Fragment(timeSplits(splitsMap, minExecutionTime),
+                                 minimumTime(minimumPct1View.get, minExecutionTime)
+                  ),
+                pendingRender = React.Fragment(<.span(), <.span())
+              ),
               // The third partner splits row - only exists for a few observation classes
               totalTime.fold(React.Fragment()) { tt =>
                 React.Fragment(
@@ -380,8 +398,7 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
-    minExecutionTime:  TimeSpan,
-    maxExecutionTime:  TimeSpan,
+    timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
     attachments:       View[List[ProposalAttachment]],
     authToken:         Option[NonEmptyString],
@@ -429,8 +446,7 @@ object ProposalEditor:
           showDialog,
           splitsList,
           splitsView.get,
-          minExecutionTime,
-          maxExecutionTime,
+          timeEstimateRange,
           users,
           readonly,
           _
@@ -539,8 +555,7 @@ object ProposalEditor:
             proposalClassType,
             showDialog,
             splitsList,
-            props.minExecutionTime.orEmpty,
-            props.maxExecutionTime.orEmpty,
+            props.timeEstimateRange,
             props.users,
             props.attachments,
             props.authToken,

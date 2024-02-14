@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
+import crystal.react.syntax.pot.given
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
@@ -17,6 +18,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Focused
 import explore.model.ObsSummary
+import explore.model.ObservationExecutionMap
 import explore.model.TargetList
 import explore.model.display.given
 import explore.model.enums.AppTab
@@ -45,6 +47,7 @@ import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
+import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
@@ -52,12 +55,14 @@ import org.scalajs.dom.html.Anchor
 import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
+import java.util.UUID
 import scala.scalajs.js
 
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  UndoSetter[ObservationList],
+  obsExecutions: ObservationExecutionMap,
   allTargets:    TargetList,
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(ObsSummaryTable.component)
@@ -66,6 +71,9 @@ object ObsSummaryTable:
   import ObsSummaryRow.*
 
   private type Props = ObsSummaryTable
+
+  given Reusability[UUID]                    = Reusability.byEq
+  given Reusability[ObservationExecutionMap] = Reusability.by(_.value.toList)
 
   private val ColDef = ColumnDef[Expandable[ObsSummaryRow]]
 
@@ -140,7 +148,7 @@ object ObsSummaryTable:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     // Columns
-    .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
+    .useMemoBy((props, _) => props.obsExecutions) { (props, ctx) => obsExecutions =>
       def constraintUrl(constraintId: Observation.Id): String =
         ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
@@ -241,15 +249,26 @@ object ObsSummaryTable:
         column(ConfigurationColumnId, _.obs.configurationSummary.orEmpty),
         column(
           DurationColumnId,
-          _.obs.executionTime.map(_.toHoursMinutes).orEmpty
+          r =>
+            obsExecutions
+              .getPot(r.obs.id)
+              .map(_.executionTime)
+        ).setCell(cell =>
+          cell.value.map(
+            _.renderPot(valueRender = t => t.map(_.toHoursMinutes).orEmpty,
+                        pendingRender = Icons.Spinner.withSpin(true)
+            )
+          )
         )
         // TODO: PriorityColumnId
         // TODO: ChargedTimeColumnId
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => (props.observations.get.toList, props.allTargets))((_, _, _) =>
-      (obsList, allTargets) =>
+    .useMemoBy((props, _, _) =>
+      (props.observations.get.toList, props.allTargets, props.obsExecutions)
+    )((_, _, _) =>
+      (obsList, allTargets, _) =>
         obsList
           .map(obs =>
             obs -> obs.scienceTargetIds.toList
