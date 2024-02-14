@@ -127,6 +127,7 @@ object ExploreStyles:
   val GroupNameForm: Css        = Css("group-name-form")
   val MinRequiredFormInput: Css = Css("min-required-form-input")
   val GroupForm: Css            = Css("group-form")
+  val GroupDelaysForm: Css      = Css("group-delays-form")
 
   val ApiKeysPopup    = Css("api-keys-popup")
   val ApiKeysTable    = Css("api-keys-table")
@@ -462,6 +463,9 @@ object ExploreStyles:
   // Move to PrimeReactStyles
   val Disabled: Css    = Css("p-disabled")
   val FormValue: Css   = Css("explore-value-field")
+
+  val TimeSpanInput: Css = Css("time-span-input")
+  val TimeSpanInputItem: Css = Css("time-span-input-item")
 
   // Timing Windows
   val TimingWindowsBody: Css                    = Css("timing-windows-body")

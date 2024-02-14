@@ -1178,6 +1178,14 @@ table.pl-react-table.explore-sequence-table {
     grid-template-columns: repeat(var(--group-column-count), auto); /* 3 columns of equal width */
     grid-auto-flow: column; /* fill the rows first, then move to the next column */
   }
+
+  .group-delays-form {
+    display: grid;
+    column-gap: var(--content-padding);
+    grid-template-columns: repeat(2, auto);
+    align-items: center;
+    margin-right: auto;
+  }
 }
 
 // ------
@@ -2576,5 +2584,11 @@ a.explore-upgrade-link {
         font-weight: normal;
       }
     }
+  }
+}
+
+.time-span-input-item {
+  input {
+    width: 44px;
   }
 }

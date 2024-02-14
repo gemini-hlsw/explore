@@ -3,8 +3,9 @@
 
 package explore.tabs
 
-import cats.data.Chain
+import cats.derived.*
 import cats.effect.IO
+import cats.kernel.Eq
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.*
@@ -13,14 +14,13 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.GroupQueries
+import explore.components.FormTimeSpanInput
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Grouping
 import explore.syntax.ui.*
-import explore.model.syntax.all.*
 import explore.undo.UndoSetter
-import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Display
@@ -35,13 +35,10 @@ import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import cats.derived.*
+import monocle.Lens
+
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
 import scala.scalajs.js
-import scala.util.Try
-import cats.kernel.Eq
-import explore.components.FormTimeSpanInput
 
 case class GroupEditTile(
   group:         UndoSetter[Grouping],
@@ -77,7 +74,8 @@ object GroupEditTile:
     .useEffectOnMountBy((props, ctx, editType, isLoading) =>
       Callback.log("GroupEditTile is mounting. isLoading: ", isLoading.get)
     )
-    .renderWithReuse: (props, ctx, editType, isLoading) =>
+    .useState(0)
+    .renderWithReuse: (props, ctx, editType, isLoading, inc) =>
       import ctx.given
 
       val group          = props.group.get
@@ -86,49 +84,34 @@ object GroupEditTile:
 
       val isDisabled = isLoading.get || elementsLength <= 1
 
-      val setMinimumRequired: Option[NonNegShort] => Callback = props.group.set(
-        Grouping.minimumRequired.get,
-        Grouping.minimumRequired.replace,
-        mmin =>
-          GroupQueries
-            .updateGroup[IO](group.id, GroupPropertiesInput(minimumRequired = mmin.orUnassign))
-            .switching(isLoading.async)
+      def groupModView[A](lens: Lens[Grouping, A], prop: A => GroupPropertiesInput) = props.group
+        .undoableView(lens)
+        .withOnMod(a =>
+          GroupQueries.updateGroup[IO](group.id, prop(a)).switching(isLoading.async).runAsync
+        )
+
+      val minRequiredV = groupModView(
+        Grouping.minimumRequired,
+        m => GroupPropertiesInput(minimumRequired = m.orUnassign)
       )
-      val setName: Option[NonEmptyString] => Callback         = props.group.set(
-        Grouping.name.get,
-        Grouping.name.replace,
-        n =>
-          GroupQueries
-            .updateGroup[IO](group.id, GroupPropertiesInput(name = n.orUnassign))
-            .switching(isLoading.async)
+      val nameV        = groupModView(
+        Grouping.name,
+        n => GroupPropertiesInput(name = n.orUnassign)
       )
-      val setOrdered: Boolean => Callback                     = o =>
-        GroupQueries.updateGroup[IO](group.id, GroupPropertiesInput(ordered = o.assign)).runAsync
-      val setMinimumDelay: Option[TimeSpan] => Callback       = props.group.set(
-        Grouping.minimumInterval.get,
-        Grouping.minimumInterval.replace,
-        m =>
-          GroupQueries
-            .updateGroup[IO](
-              group.id,
-              GroupPropertiesInput(minimumInterval =
-                m.map(ts => TimeSpanInput(microseconds = ts.toMicroseconds.assign)).orUnassign
-              )
-            )
-            .switching(isLoading.async)
+      val orderedV     = groupModView(Grouping.ordered, o => GroupPropertiesInput(ordered = o.assign))
+      val minIntervalV = groupModView(
+        Grouping.minimumInterval,
+        t =>
+          GroupPropertiesInput(minimumInterval =
+            t.map(ts => TimeSpanInput(microseconds = ts.toMicroseconds.assign)).orUnassign
+          )
       )
-      val setMaximumDelay: Option[TimeSpan] => Callback       = props.group.set(
-        Grouping.maximumInterval.get,
-        Grouping.maximumInterval.replace,
-        m =>
-          GroupQueries
-            .updateGroup[IO](
-              group.id,
-              GroupPropertiesInput(maximumInterval =
-                m.map(ts => TimeSpanInput(microseconds = ts.toMicroseconds.assign)).orUnassign
-              )
-            )
-            .switching(isLoading.async)
+      val maxIntervalV = groupModView(
+        Grouping.maximumInterval,
+        t =>
+          GroupPropertiesInput(maximumInterval =
+            t.map(ts => TimeSpanInput(microseconds = ts.toMicroseconds.assign)).orUnassign
+          )
       )
 
       val changeGroupTypeButtons = <.div(
@@ -142,7 +125,7 @@ object GroupEditTile:
             case GroupEditType.And => <.span("AND (Scheduling)")
             case GroupEditType.Or  => <.span("OR (Choose ", <.i("n"), ")")
           ,
-          onChange = tp => setMinimumRequired(minimumForGroup(tp))
+          onChange = tp => minRequiredV.set(minimumForGroup(tp))
         )
       )
 
@@ -177,9 +160,9 @@ object GroupEditTile:
         FormInputText(
           id = "nameInput".refined,
           label = "Name",
-          value = group.name.fold(js.undefined)(_.value),
+          value = nameV.get.fold(js.undefined)(_.value),
           disabled = isDisabled,
-          onChange = e => setName(NonEmptyString.from(e.target.value).toOption)
+          onChange = e => nameV.set(NonEmptyString.from(e.target.value).toOption)
         )
       )
 
@@ -189,14 +172,14 @@ object GroupEditTile:
           "minRequiredInput",
           placeholder = "1",
           clazz = ExploreStyles.MinRequiredFormInput,
-          value = group.minimumRequired.fold(js.undefined)(_.value.toString),
+          value = minRequiredV.get.fold(js.undefined)(_.value.toString),
           disabled = isDisabled,
           modifiers = Seq(^.`type` := "number", ^.min := 0, ^.max := elementsLength),
           onChange = e =>
             val newMin = e.target.value.toShortOption
               .map(s => Math.abs(Math.min(s, elementsLength)).toShort)
               .flatMap(s => NonNegShort.from(s).toOption)
-            setMinimumRequired(newMin)
+            minRequiredV.set(newMin)
         ),
         s" of ${elementsLength} observations"
       )
@@ -204,32 +187,25 @@ object GroupEditTile:
       val orderForm = <.div(
         CheckboxView(
           id = "orderedCheck".refined,
-          value = props.group.undoableView(Grouping.ordered).withOnMod(setOrdered(_)),
+          value = orderedV,
           label = "Ordered",
           disabled = isDisabled
         )
       )
 
       val delaysForm = <.div(
-        group.minimumInterval.map(ts => s"Minimum delay: ${ts.toHoursMinutes}"),
-        FormTimeSpanInput(label = "minimum delay", value = group.minimumInterval.getOrElse(TimeSpan.Zero)),
-        FormInputText(
-          id = "minDelay".refined,
-          label = "Minimum Delay",
-          value = group.minimumInterval.fold(js.undefined)(timeSpanToStringParts),
-          disabled = isDisabled,
-          onBlur = e =>
-            parseTimeStringParts(e.target.value)
-              .fold(e => ToastCtx[IO].showToast(e).runAsync, ts => setMinimumDelay(ts.some))
+        ExploreStyles.GroupDelaysForm,
+        <.span("Minimum delay"),
+        FormTimeSpanInput(
+          value = minIntervalV.get.getOrElse(TimeSpan.Zero),
+          onChange = e => minIntervalV.set(e.some),
+          disabled = isDisabled
         ),
-        FormInputText(
-          id = "maxDelay".refined,
-          label = "Maximum Delay",
-          value = group.maximumInterval.fold(js.undefined)(timeSpanToStringParts),
-          disabled = isDisabled,
-          onBlur = e =>
-            parseTimeStringParts(e.target.value)
-              .fold(e => ToastCtx[IO].showToast(e).runAsync, ts => setMaximumDelay(ts.some))
+        <.span("Maximum delay"),
+        FormTimeSpanInput(
+          value = maxIntervalV.get.getOrElse(TimeSpan.Zero),
+          onChange = e => maxIntervalV.set(e.some),
+          disabled = isDisabled
         )
       )
 
@@ -243,47 +219,11 @@ object GroupEditTile:
           <.div("Add at least 2 elements to this group to change the type.")
             .when(elementsLength <= 1),
           selectGroupForm,
+          <.button(
+            ^.disabled := isLoading.get,
+            ^.onClick --> inc.modState(_ + 1),
+            s"Increment ${inc.value}"
+          ),
           groupTypeSpecificForms
         )
       )
-
-  def parseTimeStringParts(str: String): Either[String, TimeSpan] =
-    val parts = str.split(' ').map(_.trim()).filterNot(_.isBlank())
-    if parts.isEmpty then TimeSpan.Zero.asRight
-    else
-      parts
-        .foldLeft(TimeSpan.Zero.asRight)((acc, part) =>
-          Try(Duration(part)).toEither.leftMap(_.getMessage) match
-            case Left(e)       => s"Invalid time format ${part}: $e".asLeft
-            case Right(parsed) =>
-              acc.map(acc => acc +| TimeSpan.unsafeFromMicroseconds(parsed.toMicros))
-        )
-
-  def timeSpanToStringParts(ts: TimeSpan): String = {
-    val units =
-      Seq(TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES, TimeUnit.SECONDS, TimeUnit.MILLISECONDS)
-
-    val timeStrings = units
-      .foldLeft((Chain.empty[String], ts.toMilliseconds)) { case ((humanReadable, rest), unit) =>
-        val name   = unit.toString().toLowerCase() match {
-          case "days"         => "d"
-          case "hours"        => "h"
-          case "minutes"      => "m"
-          case "seconds"      => "s"
-          case "milliseconds" => "ms"
-        }
-        val result = unit.convert(rest.toLong, TimeUnit.MILLISECONDS)
-        val diff   = rest - TimeUnit.MILLISECONDS.convert(result, unit)
-        val str    = result match {
-          case 0    => humanReadable
-          case more => humanReadable :+ s"$more$name"
-        }
-        (str, diff)
-      }
-      ._1
-
-    timeStrings match {
-      case Chain() => "0s"
-      case _       => timeStrings.mkString_(" ")
-    }
-  }
