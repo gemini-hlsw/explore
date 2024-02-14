@@ -52,14 +52,10 @@ object GroupEditTile:
     case And extends GroupEditType("And")
     case Or  extends GroupEditType("Or")
 
-  private given Display[GroupEditType]                 = Display.byShortName(_.tag)
-  private given Reusability[GroupEditType]             = Reusability.byEq
-  private given Reusability[Grouping]                  = Reusability.byEq
-  private given Reusability[Props]                     = Reusability.by(_.group.get)
-  private given [A: Reusability]: Reusability[View[A]] = Reusability.by(_.get)
+  private given Display[GroupEditType] = Display.byShortName(_.tag)
 
   private def minimumForGroup(t: GroupEditType): Option[NonNegShort] =
-    if t == GroupEditType.And then none
+    if t === GroupEditType.And then none
     else NonNegShort.from(1).toOption
 
   def component = ScalaFnComponent
@@ -75,7 +71,7 @@ object GroupEditTile:
       Callback.log("GroupEditTile is mounting. isLoading: ", isLoading.get)
     )
     .useState(0)
-    .renderWithReuse: (props, ctx, editType, isLoading, inc) =>
+    .render: (props, ctx, editType, isLoading, inc) =>
       import ctx.given
 
       val group          = props.group.get
