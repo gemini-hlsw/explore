@@ -374,7 +374,7 @@ object ObsTabTiles:
                 renderInTitle {
                   props.obsExecution.orSpinner { execution =>
                     val programTimeCharge = execution.programTimeCharge.value
-                    execution.executionTime
+                    execution.programTimeEstimate
                       .map { planned =>
                         val total = programTimeCharge +| planned
                         <.span(

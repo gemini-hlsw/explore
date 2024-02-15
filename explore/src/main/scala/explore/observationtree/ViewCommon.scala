@@ -32,7 +32,7 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
-      obsExecutions.getPot(obs.id).map(_.executionTime),
+      obsExecutions.getPot(obs.id).map(_.programTimeEstimate),
       layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
       readonly = readonly
