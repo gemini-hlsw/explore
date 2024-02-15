@@ -24,7 +24,7 @@ class FormatsSuite extends munit.DisciplineSuite {
       .map { ts =>
         s"${ts.toHoursPart}:${ts.toMinutesPart}"
       }
-      .flatMapOneOf(Gen.const, perturbations: _*)
+      .flatMapOneOf(Gen.const, perturbations*)
 
   val finiteDurationsHMS: Gen[String] =
     arbitrary[TimeSpan]
@@ -36,7 +36,7 @@ class FormatsSuite extends munit.DisciplineSuite {
             f"${ts.toSecondsPart}%02d"
         s"${ts.toHoursPart}:${ts.toMinutes}:$secs"
       }
-      .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations): _*)
+      .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations)*)
 
   assertEquals(parsers.durationHM.parseAll("0").toOption,
                TimeSpan.unsafeFromDuration(Duration.ofMinutes(0)).some

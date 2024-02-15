@@ -116,7 +116,7 @@ object SiderealTargetEditor:
     dec: Option[ProperMotion.Dec]
   ): Option[ProperMotion] =
     attemptCombine(ra, dec)
-      .map((ProperMotion.apply _).tupled)
+      .map(ProperMotion.apply.tupled)
 
   private val component =
     ScalaFnComponent
@@ -185,7 +185,7 @@ object SiderealTargetEditor:
         val epochView: View[Epoch] =
           siderealTargetAligner
             .zoom(Target.Sidereal.epoch, siderealToTargetEndo.compose(SiderealInput.epoch.modify))
-            .view((Epoch.fromString.reverseGet _).andThen(_.assign))
+            .view(Epoch.fromString.reverseGet.andThen(_.assign))
 
         val nameView: View[NonEmptyString] =
           siderealTargetAligner

@@ -153,8 +153,8 @@ object UserPreferencesQueries:
                   case l if l.isEmpty => Map.empty
                   case l              =>
                     l.groupBy(_.section).map { case (s, l) =>
-                      s -> SortedMap(
-                        l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*
+                      s -> SortedMap.from(
+                        l.groupBy(_.breakpointName).map(positions2LayoutMap)
                       )
                     }
                 }
@@ -170,8 +170,8 @@ object UserPreferencesQueries:
         case l if l.isEmpty => original
         case l              =>
           val newMap = l.groupBy(_.section).map { case (s, l) =>
-            s -> SortedMap(
-              l.groupBy(_.breakpointName).map(positions2LayoutMap).toList: _*
+            s -> SortedMap.from(
+              l.groupBy(_.breakpointName).map(positions2LayoutMap)
             )
           }
           mergeSectionLayoutsMaps(original, newMap)
@@ -475,4 +475,4 @@ object UserPreferencesQueries:
       // We don't force unsorting, in case there's a default sorting.
       sortedCols match
         case Nil      => original
-        case nonEmpty => Sorting(nonEmpty.map((colId, dir, _) => colId -> dir): _*)
+        case nonEmpty => Sorting(nonEmpty.map((colId, dir, _) => colId -> dir)*)

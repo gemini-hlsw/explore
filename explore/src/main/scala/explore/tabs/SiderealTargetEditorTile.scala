@@ -57,7 +57,7 @@ object SiderealTargetEditorTile {
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen,
               globalPreferences = globalPreferences,
-              readonly
+              readonly = readonly
             )
           )
         )

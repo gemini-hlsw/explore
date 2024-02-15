@@ -51,7 +51,7 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite:
   val milliArcSecondsGen: Gen[String] =
     arbitrary[Angle]
       .map(Angle.signedDecimalMilliarcseconds.get(_).toString)
-      .flatMapOneOf(Gen.const[String], perturbations: _*)
+      .flatMapOneOf(Gen.const[String], perturbations*)
 
   checkAll(
     "compactDecimalStringValidWedge",

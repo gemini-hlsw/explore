@@ -18,7 +18,7 @@ trait SpectroscopyModesMatrixPlatform extends SpectroscopyModesMatrixDecoders {
       .readAll(path)
       .through(text.utf8.decode)
       .through(decodeUsingHeaders[NonEmptyList[SpectroscopyModeRow]]())
-      .flatMap(l => Stream(l.toList: _*))
+      .flatMap(l => Stream.emits(l.toList))
       .zipWithIndex
       .map { case (r, i) =>
         r.copy(id = i.toInt)

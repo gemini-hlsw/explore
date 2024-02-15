@@ -214,12 +214,18 @@ object ObsList:
                   obs,
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
-                  setStatusCB = (obsEditStatus(id)
-                    .set(props.observations) _).compose((_: ObsStatus).some).some,
-                  setActiveStatusCB = (obsActiveStatus(id)
-                    .set(props.observations) _).compose((_: ObsActiveStatus).some).some,
-                  setSubtitleCB = (obsEditSubtitle(id)
-                    .set(props.observations) _).compose((_: Option[NonEmptyString]).some).some,
+                  setStatusCB = obsEditStatus(id)
+                    .set(props.observations)
+                    .compose((_: ObsStatus).some)
+                    .some,
+                  setActiveStatusCB = obsActiveStatus(id)
+                    .set(props.observations)
+                    .compose((_: ObsActiveStatus).some)
+                    .some,
+                  setSubtitleCB = obsEditSubtitle(id)
+                    .set(props.observations)
+                    .compose((_: Option[NonEmptyString]).some)
+                    .some,
                   deleteCB = obsExistence(
                     id,
                     o => setObs(props.programId, o.some, ctx)

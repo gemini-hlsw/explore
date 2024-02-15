@@ -192,15 +192,15 @@ object AsterismEditor extends AsterismModifier:
                       props.asterismIds,
                       props.allTargets.model,
                       props.setTarget
-                    ) _,
+                    ),
                     obsIdSubset =
                       if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
                         props.obsIds.some
                       else none,
                     fullScreen = fullScreen,
                     globalPreferences = props.globalPreferences,
-                    props.readonly,
-                    props.sequenceChanged
+                    readonly = props.readonly,
+                    invalidateSequence = props.sequenceChanged
                   )
                 )
               )

@@ -25,7 +25,7 @@ object TargetIdSet {
   def fromTargetIdList(targetIds: List[Target.Id]): Option[TargetIdSet] =
     targetIds match {
       case Nil          => none
-      case head :: tail => TargetIdSet(NonEmptySet.of(head, tail: _*)).some
+      case head :: tail => TargetIdSet(NonEmptySet.of(head, tail*)).some
     }
 
   val fromString: Prism[String, TargetIdSet] =
@@ -33,7 +33,7 @@ object TargetIdSet {
 
   def one(id: Target.Id): TargetIdSet = TargetIdSet(NonEmptySet.one(id))
 
-  def of(id: Target.Id, ids: Target.Id*): TargetIdSet = TargetIdSet(NonEmptySet.of(id, ids: _*))
+  def of(id: Target.Id, ids: Target.Id*): TargetIdSet = TargetIdSet(NonEmptySet.of(id, ids*))
 
   private def parse(idSetStr: String): Option[TargetIdSet] =
     idSetStr.split(",").toList.traverse(Target.Id.parse).flatMap(fromTargetIdList)

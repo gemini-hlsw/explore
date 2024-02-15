@@ -34,7 +34,7 @@ object ExploreGridLayouts:
   }
 
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =
-    SortedMap(GridLayoutSection.values.map(l => l -> sectionLayout(l)): _*)
+    SortedMap.from(GridLayoutSection.values.map(l => l -> sectionLayout(l)))
 
   object constraints:
     private val ConstraintsHeight: NonNegInt   = 4.refined

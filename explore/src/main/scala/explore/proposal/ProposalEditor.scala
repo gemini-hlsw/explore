@@ -340,7 +340,7 @@ object ProposalEditor:
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
             FormEnumDropdownView(
               id = "proposal-class".refined,
-              value = proposalClassType.withOnMod(onClassTypeMod _),
+              value = proposalClassType.withOnMod(onClassTypeMod),
               label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
               disabled = readonly
             ),

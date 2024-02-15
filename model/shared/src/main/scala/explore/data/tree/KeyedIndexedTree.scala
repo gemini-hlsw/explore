@@ -115,7 +115,7 @@ object KeyedIndexedTree {
       children
         .map(node => (getKey(node.value), node))
         .distinctBy(_._1) // key
-        .filterNot((accumKeys.contains _).compose(_._1))
+        .filterNot(accumKeys.contains.compose(_._1))
     val newAccumKeys: Set[K] = accumKeys ++ keyedNewNodes.map(_._1)
     keyedNewNodes.zipWithIndex.foldLeft(
       List.empty[Node[IndexedElem[K, A]]]
