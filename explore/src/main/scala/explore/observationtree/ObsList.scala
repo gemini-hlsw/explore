@@ -213,7 +213,7 @@ object ObsList:
               )(
                 ObsBadge(
                   obs,
-                  props.obsExecutionTimes.getPot(id).map(_.executionTime),
+                  props.obsExecutionTimes.getPot(id).map(_.programTimeEstimate),
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
                   setStatusCB = obsEditStatus(id)

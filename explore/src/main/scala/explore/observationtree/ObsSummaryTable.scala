@@ -252,7 +252,7 @@ object ObsSummaryTable:
           r =>
             obsExecutions
               .getPot(r.obs.id)
-              .map(_.executionTime)
+              .map(_.programTimeEstimate)
         ).setCell(cell =>
           cell.value.map(
             _.orSpinner(_.map(_.toHoursMinutes).orEmpty)

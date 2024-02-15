@@ -384,7 +384,7 @@ object ObsTabTiles:
 
                     val executed = timeDisplay("Executed", programTimeCharge)
 
-                    execution.executionTime
+                    execution.programTimeEstimate
                       .map { plannedTime =>
                         val total   = programTimeCharge +| plannedTime
                         val pending = timeDisplay("Pending", plannedTime)
