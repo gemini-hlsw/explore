@@ -123,7 +123,7 @@ object ObsQueries:
     programId: Program.Id
   )(using FetchClient[F, ObservationDB]): F[ObsSummary] =
     ProgramCreateObservation[F]
-      .execute(CreateObservationInput(programId = programId))
+      .execute(CreateObservationInput(programId = programId.assign))
       .map(_.createObservation.observation)
 
   def createObservationWithTargets[F[_]: Async](
@@ -135,7 +135,7 @@ object ObsQueries:
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
-          programId = programId,
+          programId = programId.assign,
           SET = ObservationPropertiesInput(
             targetEnvironment = TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
           ).assign

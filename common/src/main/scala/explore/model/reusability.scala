@@ -112,7 +112,7 @@ object reusability:
 
   given Reusability[TimingWindow] = Reusability.byEq
 
-  given [S: Eq, D: Eq]: Reusability[Visit[S, D]] = Reusability.byEq
+  given [D: Eq]: Reusability[Visit[D]] = Reusability.byEq
 
   given [D: Eq]: Reusability[StepRecord[D]] = Reusability.byEq
 
