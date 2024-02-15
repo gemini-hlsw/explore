@@ -42,6 +42,7 @@ object GroupQueriesGQL:
         maximumInterval {
           microseconds
         }
+        timeEstimateRange $ProgramTimeRangeSubquery
         elements {
           observation {
             id

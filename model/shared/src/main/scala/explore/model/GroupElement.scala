@@ -69,7 +69,8 @@ case class Grouping(
   parentIndex:     NonNegShort,
   minimumInterval: Option[TimeSpan],
   maximumInterval: Option[TimeSpan],
-  ordered:         Boolean
+  ordered:         Boolean,
+  timeEstimateRange: Option[ProgramTimeRange]
 ) derives Eq,
       Decoder:
   def isAnd: Boolean = minimumRequired.isEmpty

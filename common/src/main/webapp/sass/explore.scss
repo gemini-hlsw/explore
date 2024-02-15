@@ -1179,7 +1179,8 @@ table.pl-react-table.explore-sequence-table {
     grid-auto-flow: column; /* fill the rows first, then move to the next column */
   }
 
-  .group-delays-form {
+  .group-delays-form,
+  .group-planned-time {
     display: grid;
     column-gap: var(--content-padding);
     grid-template-columns: repeat(2, auto);

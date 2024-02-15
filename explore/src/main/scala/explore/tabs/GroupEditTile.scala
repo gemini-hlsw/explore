@@ -19,6 +19,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Grouping
+import explore.model.syntax.all.toHoursMinutes
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -205,9 +206,26 @@ object GroupEditTile:
         )
       )
 
+      val plannedTime =
+        group.timeEstimateRange.map: timeEstimateRange =>
+          <.div(ExploreStyles.GroupPlannedTime)(
+            if timeEstimateRange.maximum === timeEstimateRange.minimum then
+              React.Fragment(
+                FormLabel(htmlFor = "plannedTime".refined)("Planned Time"),
+                <.span(^.id := "plannedTime", timeEstimateRange.maximum.value.toHoursMinutes)
+              )
+            else
+              React.Fragment(
+                FormLabel(htmlFor = "maxPlannedTime".refined)("Maximum Planned Time"),
+                <.span(^.id := "maxPlannedTime", timeEstimateRange.maximum.value.toHoursMinutes),
+                FormLabel(htmlFor = "minPlannedTime".refined)("Minimum Planned Time"),
+                <.span(^.id := "minPlannedTime", timeEstimateRange.minimum.value.toHoursMinutes)
+              )
+          )
+
       val groupTypeSpecificForms =
-        if isAnd then <.div(ExploreStyles.GroupForm, nameForm, orderForm, delaysForm)
-        else <.div(ExploreStyles.GroupForm, nameForm, minRequiredForm)
+        if isAnd then <.div(ExploreStyles.GroupForm, nameForm, orderForm, delaysForm, plannedTime)
+        else <.div(ExploreStyles.GroupForm, nameForm, minRequiredForm, plannedTime)
 
       React.Fragment(
         props.renderInTitle(title),

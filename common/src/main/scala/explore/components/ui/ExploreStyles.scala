@@ -128,6 +128,7 @@ object ExploreStyles:
   val MinRequiredFormInput: Css = Css("min-required-form-input")
   val GroupForm: Css            = Css("group-form")
   val GroupDelaysForm: Css      = Css("group-delays-form")
+  val GroupPlannedTime: Css     = Css("group-planned-time")
 
   val ApiKeysPopup    = Css("api-keys-popup")
   val ApiKeysTable    = Css("api-keys-table")

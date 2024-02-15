@@ -80,8 +80,8 @@ object FormTimeSpanInput:
       ._1
 
   // Custom ordering to go from biggest to smallest
-  private given Order[TimeUnit]    = Order.fromOrdering
   private given Ordering[TimeUnit] = Ordering.by[TimeUnit, Int](_.ordinal).reverse
+  private given Order[TimeUnit]    = Order.fromOrdering
 
   private given Reusability[TimeSpan]                 = Reusability.byEq
   private given [A: Eq]: Reusability[NonEmptyList[A]] = Reusability.byEq

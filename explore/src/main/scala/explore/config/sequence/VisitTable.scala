@@ -75,7 +75,7 @@ private sealed trait VisitTableBuilder[D: Eq]:
                 step.datasets
                   .map(dataset =>
                     <.span(ExploreStyles.VisitStepExtraDatasetItem)(
-                      dataset.filename.value,
+                      dataset.filename.format,
                       dataset.qaState.map(qaState =>
                         React.Fragment(
                           Icons.Circle.withClass(
