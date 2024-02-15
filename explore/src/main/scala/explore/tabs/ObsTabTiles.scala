@@ -12,7 +12,6 @@ import crystal.Pot.Ready
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.Icons
 import explore.*
 import explore.common.TimingWindowsQueries
 import explore.components.Tile
@@ -375,34 +374,31 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  props.obsExecution.renderPot(
-                    valueRender = execution => {
-                      val programTimeCharge = execution.programTimeCharge.value
+                  props.obsExecution.orSpinner { execution =>
+                    val programTimeCharge = execution.programTimeCharge.value
 
-                      def timeDisplay(name: String, time: TimeSpan) =
-                        <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
-                               time.toHoursMinutes
+                    def timeDisplay(name: String, time: TimeSpan) =
+                      <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
+                             time.toHoursMinutes
+                      )
+
+                    val executed = timeDisplay("Executed", programTimeCharge)
+
+                    execution.executionTime
+                      .map { plannedTime =>
+                        val total   = programTimeCharge +| plannedTime
+                        val pending = timeDisplay("Pending", plannedTime)
+                        val planned = timeDisplay("Planned", total)
+                        <.span(
+                          ExploreStyles.SequenceTileTitle
+                        )(
+                          planned,
+                          executed,
+                          pending
                         )
-
-                      val executed = timeDisplay("Executed", programTimeCharge)
-
-                      execution.executionTime
-                        .map { plannedTime =>
-                          val total   = programTimeCharge +| plannedTime
-                          val pending = timeDisplay("Pending", plannedTime)
-                          val planned = timeDisplay("Planned", total)
-                          <.span(
-                            ExploreStyles.SequenceTileTitle
-                          )(
-                            planned,
-                            executed,
-                            pending
-                          )
-                        }
-                        .getOrElse(executed)
-                    },
-                    pendingRender = Icons.Spinner.withSpin(true)
-                  )
+                      }
+                      .getOrElse(executed)
+                  }
                 },
                 VisitsViewer(props.obsId),
                 GeneratedSequenceViewer(

@@ -10,12 +10,15 @@ import clue.ResponseException
 import clue.js.FetchJSRequest
 import crystal.*
 import crystal.react.*
+import explore.Icons
 import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault
+import lucuma.ui.syntax.all.*
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
@@ -86,3 +89,7 @@ extension [F[_]: MonadCancelThrow, A](f: F[A])
    */
   def switching[B](view: ViewF[F, B], acquire: B, release: B): F[A] =
     MonadCancelThrow[F].bracket(view.set(acquire))(_ => f)(_ => view.set(release))
+
+extension [A](pot: Pot[A])
+  def orSpinner(f: A => VdomNode): VdomNode =
+    pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))

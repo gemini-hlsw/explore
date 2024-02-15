@@ -25,6 +25,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.model.syntax.all.*
+import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
@@ -47,7 +48,6 @@ import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
@@ -255,9 +255,7 @@ object ObsSummaryTable:
               .map(_.executionTime)
         ).setCell(cell =>
           cell.value.map(
-            _.renderPot(valueRender = t => t.map(_.toHoursMinutes).orEmpty,
-                        pendingRender = Icons.Spinner.withSpin(true)
-            )
+            _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
           )
         )
         // TODO: PriorityColumnId

@@ -14,6 +14,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.syntax.all.*
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
@@ -29,7 +30,6 @@ import lucuma.react.primereact.TooltipOptions
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
 case class ObsBadge(
@@ -188,10 +188,7 @@ object ObsBadge:
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            props.executionTime.renderPot(valueRender = _.map(ts => <.span(ts.toHoursMinutes)),
-                                          pendingRender = Icons.Spinner.withSpin(true)
-                                          // pendingRender = <.span("Waiting...")
-            )
+            props.executionTime.orSpinner(_.map(ts => <.span(ts.toHoursMinutes)))
           )
         )
       )
