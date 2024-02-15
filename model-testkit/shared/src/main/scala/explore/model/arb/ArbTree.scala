@@ -41,7 +41,7 @@ trait ArbTree {
         for {
           a        <- arbitrary[A]
           children <- genChildren[A](maxDepth)
-        } yield Node(a, children: _*)
+        } yield Node(a, children)
       )
 
   def genLeaf[A](implicit arbA: Arbitrary[A]): Gen[Node[A]] = arbitrary[A].map(a => Node(a))

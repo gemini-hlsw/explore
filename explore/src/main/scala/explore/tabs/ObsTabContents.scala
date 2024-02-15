@@ -68,7 +68,8 @@ case class ObsTabContents(
   userPreferences:  View[UserPreferences],
   focused:          Focused,
   searching:        View[Set[Target.Id]],
-  expandedGroups:   View[Set[Group.Id]]
+  expandedGroups:   View[Set[Group.Id]],
+  readonly:         Boolean
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id]                   = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]                     = focused.target
@@ -105,7 +106,8 @@ object ObsTabContents extends TwoPanels:
           selectedView.set(SelectedPanel.Summary),
           props.groups,
           props.expandedGroups,
-          deckShown
+          deckShown,
+          props.readonly
         ): VdomNode
       } else
         <.div(ExploreStyles.TreeToolbar)(
@@ -137,18 +139,7 @@ object ObsTabContents extends TwoPanels:
     // TODO: elevation view
     )
 
-    def groupTiles(groupId: Group.Id): VdomNode =
-      ObsGroupTiles(
-        props.userId,
-        groupId,
-        props.groups,
-        resize,
-        ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
-        props.userPreferences.get.groupEditLayout,
-        backButton
-      )
-
-    def obsTiles(obsId: Observation.Id): VdomNode =
+    def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
       val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
 
       props.observations.model
@@ -173,21 +164,33 @@ object ObsTabContents extends TwoPanels:
             resize,
             props.obsAttachments,
             props.obsAttachmentAssignments,
-            props.userPreferences.zoom(UserPreferences.globalPreferences)
+            props.userPreferences.zoom(UserPreferences.globalPreferences),
+            props.readonly
           ).withKey(s"${obsId.show}")
         )
 
-    def rightSide: VdomNode =
+    def groupTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
+      ObsGroupTiles(
+        props.userId,
+        groupId,
+        props.groups,
+        resize,
+        ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
+        props.userPreferences.get.groupEditLayout,
+        backButton
+      )
+
+    def rightSide(resize: UseResizeDetectorReturn): VdomNode =
       (props.focusedObs, props.focusedGroup) match {
-        case (Some(obsId), _)   => obsTiles(obsId)
-        case (_, Some(groupId)) => groupTiles(groupId)
+        case (Some(obsId), _)   => obsTiles(obsId, resize)
+        case (_, Some(groupId)) => groupTiles(groupId, resize)
         case _                  => obsSummaryTable()
       }
 
     makeOneOrTwoPanels(
       selectedView,
       observationsTree(props.observations.model),
-      _ => rightSide,
+      rightSide,
       RightSideCardinality.Multi,
       resize,
       ExploreStyles.ObsHiddenToolbar.when_(deckShown.get === DeckShown.Hidden)
@@ -212,9 +215,10 @@ object ObsTabContents extends TwoPanels:
       .useResizeDetector()
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _) =>
         (props.focusedObs,
-         props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList
+         props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList,
+         props.readonly
         )
-      ) { (props, ctx, _, _) => (obs, observationIds) =>
+      ) { (props, ctx, _, _) => (obs, observationIds, readonly) =>
         import ctx.given
 
         val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -231,22 +235,25 @@ object ObsTabContents extends TwoPanels:
               .runAsync
 
           case PasteAlt1 | PasteAlt2 =>
-            ExploreClipboard.get.flatMap {
-              case LocalClipboard.CopiedObservations(idSet) =>
-                idSet.idSet.toList
-                  .traverse(oid =>
-                    cloneObs(
-                      props.programId,
-                      oid,
-                      observationIds.length,
-                      props.observations,
-                      ctx
+            ExploreClipboard.get
+              .flatMap {
+                case LocalClipboard.CopiedObservations(idSet) =>
+                  idSet.idSet.toList
+                    .traverse(oid =>
+                      cloneObs(
+                        props.programId,
+                        oid,
+                        observationIds.length,
+                        props.observations,
+                        ctx
+                      )
                     )
-                  )
-                  .void
-                  .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-              case _                                        => IO.unit
-            }.runAsync
+                    .void
+                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
+                case _                                        => IO.unit
+              }
+              .runAsync
+              .unless_(readonly)
 
           case Down =>
             obsPos

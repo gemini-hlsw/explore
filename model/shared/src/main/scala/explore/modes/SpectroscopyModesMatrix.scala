@@ -343,7 +343,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
             case "multislit"  => FocalPlane.MultipleSlit
             case "ifu"        => FocalPlane.IFU
           } match {
-          case h :: t => NonEmptyList.of(h, t: _*).asRight
+          case h :: t => NonEmptyList.of(h, t*).asRight
           case Nil    => new DecoderError(s"Unknown focal plane $r").asLeft
         }
       }

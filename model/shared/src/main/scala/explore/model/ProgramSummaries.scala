@@ -12,6 +12,7 @@ import explore.model.syntax.all.*
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
@@ -28,13 +29,16 @@ case class ProgramSummaries(
   proposalAttachments: List[ProposalAttachment],
   programs:            ProgramInfoList
 ) derives Eq:
+  lazy val proposalIsSubmitted =
+    optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
+
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(
       observations.values
         .map(obs => obs.id -> obs.scienceTargetIds)
         .groupMap(_._2)(_._1)
         .map((targets, observations) =>
-          ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList: _*)) -> SortedSet
+          ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList*)) -> SortedSet
             .from(targets)
         )
     )
@@ -65,14 +69,14 @@ case class ProgramSummaries(
     SortedMap.from(
       observations.values
         .groupMap(_.constraints)(_.id)
-        .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> c)
+        .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> c)
     )
 
   lazy val schedulingGroups: SchedulingGroupList =
     SortedMap.from(
       observations.values
         .groupMap(_.timingWindows.sorted)(_.id)
-        .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> tws.sorted)
+        .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )
 
   def cloneObsWithTargets(

@@ -50,7 +50,8 @@ case class BasicConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   createConfig:    IO[Unit],
-  confMatrix:      SpectroscopyModesMatrix
+  confMatrix:      SpectroscopyModesMatrix,
+  readonly:        Boolean
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
 private object BasicConfigurationPanel:
@@ -111,8 +112,11 @@ private object BasicConfigurationPanel:
           <.div(
             ExploreStyles.BasicConfigurationForm,
             <.label("Mode", HelpIcon("configuration/mode.md".refined)),
-            FormEnumDropdownView(id = "configuration-mode".refined, value = mode),
-            spectroscopyView.mapValue(SpectroscopyConfigurationPanel(_))
+            FormEnumDropdownView(id = "configuration-mode".refined,
+                                 value = mode,
+                                 disabled = props.readonly
+            ),
+            spectroscopyView.mapValue(v => SpectroscopyConfigurationPanel(v, props.readonly))
             // TODO Pending reinstate
             // ImagingConfigurationPanel(imaging)
             //   .unless(isSpectroscopy)
@@ -137,6 +141,6 @@ private object BasicConfigurationPanel:
               severity = Button.Severity.Secondary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
-          ).when(spectroscopyView.get.isDefined)
+          ).when(spectroscopyView.get.isDefined && !props.readonly)
         )
       }

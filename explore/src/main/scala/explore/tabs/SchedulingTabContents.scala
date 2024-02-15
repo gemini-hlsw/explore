@@ -51,7 +51,8 @@ case class SchedulingTabContents(
   programSummaries: UndoContext[ProgramSummaries],
   userPreferences:  UserPreferences,
   focusedObsSet:    Option[ObsIdSet],
-  expandedIds:      View[SortedSet[ObsIdSet]]
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  readonly:         Boolean
 ) extends ReactFnProps(SchedulingTabContents.component)
 
 object SchedulingTabContents extends TwoPanels:
@@ -120,7 +121,7 @@ object SchedulingTabContents extends TwoPanels:
 
               val timingWindowsTile =
                 Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-                  renderInTitle => TimingWindowsPanel(twView, renderInTitle)
+                  renderInTitle => TimingWindowsPanel(twView, props.readonly, renderInTitle)
                 )
 
               TileController(
@@ -142,7 +143,8 @@ object SchedulingTabContents extends TwoPanels:
             props.programSummaries.get.schedulingGroups,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
-            props.expandedIds
+            props.expandedIds,
+            props.readonly
           )
 
         makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)

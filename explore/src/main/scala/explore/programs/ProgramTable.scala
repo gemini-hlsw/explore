@@ -107,7 +107,7 @@ object ProgramTable:
         List(
           ColDef(
             ActionsColumnId,
-            identity[View[ProgramInfo]] _,
+            identity[View[ProgramInfo]],
             "Actions",
             cell = { cell =>
               val programId = cell.value.get.id

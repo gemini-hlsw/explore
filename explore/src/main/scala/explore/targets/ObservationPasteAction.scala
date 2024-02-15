@@ -51,7 +51,7 @@ object ObservationPasteAction {
       // this is safe because it was created by groupMap
       val newObsIdSet = ObsIdSet.fromList(obsIds).get
       agwo.asterismGroups
-        .findWithTargetIds(SortedSet(tid: _*))
+        .findWithTargetIds(SortedSet.from(tid))
         .fold(
           if (adding) eids + newObsIdSet
           else eids
