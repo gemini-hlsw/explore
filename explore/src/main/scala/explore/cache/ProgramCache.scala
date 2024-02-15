@@ -79,9 +79,9 @@ object ProgramCache
     } yield o.andThen(t)
 
   private def updateProgramTimes(
-    programId: Program.Id,
-    uuid:      UUID,
-    effect:    (ProgramSummaries => ProgramSummaries) => IO[Unit]
+    programId:      Program.Id,
+    uuid:           UUID,
+    delayedUpdater: (ProgramSummaries => ProgramSummaries) => IO[Unit]
   )(using client: StreamingClient[IO, ObservationDB]): IO[Unit] = {
     def f(oTimes: Option[ProgramTimes]): ProgramSummaries => ProgramSummaries = sums =>
       oTimes.fold(sums)(times =>
@@ -91,15 +91,15 @@ object ProgramCache
       )
 
     val data = ProgramSummaryQueriesGQL.ProgramTimesQuery[IO].query(programId)
-    data.flatMap(d => effect(f(d.program)))
+    data.flatMap(d => delayedUpdater(f(d.program)))
   }
 
   private def updateObservationExecution(
-    obsId:  Observation.Id,
-    uuid:   UUID,
-    effect: (ProgramSummaries => ProgramSummaries) => IO[Unit]
+    obsId:          Observation.Id,
+    uuid:           UUID,
+    delayedUpdater: (ProgramSummaries => ProgramSummaries) => IO[Unit]
   )(using
-    client: StreamingClient[IO, ObservationDB]
+    client:         StreamingClient[IO, ObservationDB]
   ): IO[Unit] = {
     def f(oExecution: Option[Execution]): ProgramSummaries => ProgramSummaries = sums =>
       oExecution.fold(sums)(execution =>
@@ -110,12 +110,15 @@ object ProgramCache
 
     val data =
       ProgramSummaryQueriesGQL.ObservationExecutionQuery[IO].query(obsId)(ErrorPolicy.IgnoreOnData)
-    data.flatMap(d => effect(f(d.observation.map(_.execution))))
+    data.flatMap(d => delayedUpdater(f(d.observation.map(_.execution))))
   }
 
+  // See CacheComponent for an explanation of the types.
+  // Note that the IO resulting from a call to `delayedUpdater` must be `.start`ed
+  // at some point so that it runs asynchronously.
   override protected val initial
     : (ProgramCache, (ProgramSummaries => ProgramSummaries) => IO[Unit]) => IO[ProgramSummaries] = {
-    (props, effect) =>
+    (props, delayedUpdater) =>
       import props.given
 
       val optProgramDetails: IO[Option[ProgramDetails]] =
@@ -189,9 +192,9 @@ object ProgramCache
         // We want to update all the observations first, followed by the program, because
         // the program requires all of the observation times be calculated. So, if we do
         // it first, it could take a long time.
-        val program    = updateProgramTimes(props.programId, uuid, effect)
+        val program    = updateProgramTimes(props.programId, uuid, delayedUpdater)
         val obsUpdates =
-          observations.map(o => updateObservationExecution(o.id, uuid, effect)).sequence
+          observations.traverse(o => updateObservationExecution(o.id, uuid, delayedUpdater))
         obsUpdates *> program
       }
 
@@ -204,11 +207,14 @@ object ProgramCache
       } yield summaries
   }
 
+  // See CacheComponent for an explanation of the types.
+  // Note that the IO resulting from a call to `delayedUpdater` must be `.start`ed
+  // at some point so that it runs asynchronously.
   override protected val updateStream
     : (ProgramCache, (ProgramSummaries => ProgramSummaries) => IO[Unit]) => Resource[
       cats.effect.IO,
       fs2.Stream[cats.effect.IO, IO[ProgramSummaries => ProgramSummaries]]
-    ] = { (props, effect) =>
+    ] = { (props, delayedUpdater) =>
     try {
       import props.given
 
@@ -219,7 +225,7 @@ object ProgramCache
             _.map(data =>
               for {
                 uuid <- UUIDGen[IO].randomUUID
-                _    <- updateProgramTimes(props.programId, uuid, effect).start
+                _    <- updateProgramTimes(props.programId, uuid, delayedUpdater).start
               } yield ProgramSummaries.optProgramDetails
                 .replace(data.programEdit.value.some)
                 .andThen(ProgramSummaries.programTimesPot.replace((uuid, Pot.pending)))
@@ -240,8 +246,8 @@ object ProgramCache
                 uuid <- UUIDGen[IO].randomUUID
                 _    <- (updateObservationExecution(data.observationEdit.value.id,
                                                     uuid,
-                                                    effect
-                        ) *> updateProgramTimes(props.programId, uuid, effect)).start
+                                                    delayedUpdater
+                        ) *> updateProgramTimes(props.programId, uuid, delayedUpdater)).start
               } yield modifyObservations(data.observationEdit, uuid)
             )
           )
