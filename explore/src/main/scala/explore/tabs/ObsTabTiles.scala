@@ -12,7 +12,6 @@ import crystal.Pot.Ready
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.Icons
 import explore.*
 import explore.common.TimingWindowsQueries
 import explore.components.Tile
@@ -373,21 +372,18 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  props.obsExecution.renderPot(
-                    valueRender = execution => {
-                      val programTimeCharge = execution.programTimeCharge.value
-                      execution.executionTime
-                        .map { planned =>
-                          val total = programTimeCharge +| planned
-                          <.span(
-                            <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
-                            s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
-                          )
-                        }
-                        .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
-                    },
-                    pendingRender = Icons.Spinner.withSpin(true)
-                  )
+                  props.obsExecution.orSpinner { execution =>
+                    val programTimeCharge = execution.programTimeCharge.value
+                    execution.executionTime
+                      .map { planned =>
+                        val total = programTimeCharge +| planned
+                        <.span(
+                          <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
+                          s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                        )
+                      }
+                      .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                  }
                 },
                 GeneratedSequenceViewer(
                   props.programId,

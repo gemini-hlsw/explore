@@ -37,6 +37,7 @@ import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.proposal.ProposalClassType.*
+import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -277,10 +278,6 @@ object ProposalEditor:
       val newClass        = classType.toProposalClass(minPctTime, minPctTotalTime, totalTime)
       classView.set(newClass) >> minPct2.set(minPctTotalTime) >> totalHours.set(toHours(totalTime))
     }
-
-    extension [A](pot: Pot[A])
-      def orSpinner(f: A => VdomNode): VdomNode =
-        pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
 
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
