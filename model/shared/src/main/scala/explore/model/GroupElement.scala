@@ -61,15 +61,15 @@ object GroupObs:
   val groupIndex: Lens[GroupObs, NonNegShort] = Focus[GroupObs](_.groupIndex)
 
 case class Grouping(
-  id:              Group.Id,
-  name:            Option[NonEmptyString],
-  minimumRequired: Option[NonNegShort],
-  elements:        List[Either[GroupObs, GroupingElement]],
-  parentId:        Option[Group.Id],
-  parentIndex:     NonNegShort,
-  minimumInterval: Option[TimeSpan],
-  maximumInterval: Option[TimeSpan],
-  ordered:         Boolean,
+  id:                Group.Id,
+  name:              Option[NonEmptyString],
+  minimumRequired:   Option[NonNegShort],
+  elements:          List[Either[GroupObs, GroupingElement]],
+  parentId:          Option[Group.Id],
+  parentIndex:       NonNegShort,
+  minimumInterval:   Option[TimeSpan],
+  maximumInterval:   Option[TimeSpan],
+  ordered:           Boolean,
   timeEstimateRange: Option[ProgramTimeRange]
 ) derives Eq,
       Decoder:
