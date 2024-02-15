@@ -360,7 +360,7 @@ object TargetTabContents extends TwoPanels:
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
       case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
       case Focused(None, Some(targetId), _) => targetId.asLeft.some
-      case _                             => none
+      case _                                => none
 
     val renderNonSiderealTargetEditor: List[Tile] =
       List(
@@ -455,8 +455,9 @@ object TargetTabContents extends TwoPanels:
           (focused, selected.get) match
             case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
             case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
-            case (Focused(None, None, _), SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-            case _                                           => Callback.empty
+            case (Focused(None, None, _), SelectedPanel.Editor) =>
+              selected.set(SelectedPanel.Summary)
+            case _                                              => Callback.empty
       }
       .useStateViewBy((props, _, _) => props.focused.target.toList)
       .useEffectWithDepsBy((props, _, _, _) => props.focused.target)((_, _, _, selIds) =>

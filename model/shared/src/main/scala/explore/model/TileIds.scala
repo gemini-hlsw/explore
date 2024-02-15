@@ -24,7 +24,6 @@ enum ObsTabTilesIds:
     case FinderChartsId      => "finderCharts".refined
     case SequenceId          => "sequence".refined
 
-
 enum ProgramTabTileIds:
   case DetailsId, NotesId, ChangeRequestsId
 

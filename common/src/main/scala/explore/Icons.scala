@@ -436,7 +436,7 @@ object Icons {
   val UserGears            = FontAwesomeIcon(faUserGears)
   val Logout               = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones      = FontAwesomeIcon(faSkullCrossbones)
-  val Note                = FontAwesomeIcon(faNote)
+  val Note                 = FontAwesomeIcon(faNote)
   val Info                 = FontAwesomeIcon(faInfoCircle)
   val InfoLight            = FontAwesomeIcon(faInfoCircleLight)
   val Close                = FontAwesomeIcon(faTimes)

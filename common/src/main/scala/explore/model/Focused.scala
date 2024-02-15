@@ -13,7 +13,11 @@ import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
 
-case class Focused(obsSet: Option[ObsIdSet] = none, target: Option[Target.Id] = none, group: Option[Group.Id] = none) {
+case class Focused(
+  obsSet: Option[ObsIdSet] = none,
+  target: Option[Target.Id] = none,
+  group:  Option[Group.Id] = none
+) {
   def withObsSetOpt(obsSet: Option[ObsIdSet]): Focused = Focused.obsSet.replace(obsSet)(this)
 
   def withObsSet(obsSet: ObsIdSet): Focused = withObsSetOpt(obsSet.some)
