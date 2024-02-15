@@ -47,7 +47,7 @@ object GroupQueries:
     CreateGroupMutation[F]
       .execute(
         CreateGroupInput(
-          programId = programId
+          programId = programId.assign
         )
       )
       .map(_.createGroup.group)
