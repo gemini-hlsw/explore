@@ -38,7 +38,7 @@ object ITCRequests:
       case ResponseException(errors, _)                               =>
         val extension = errors.map(_.extensions).head
         extension
-          .map(c => JsonObject.apply(c.toSeq: _*))
+          .map(c => JsonObject.fromMap(c))
           .flatMap(_.toJson.as[SourceTooBrightExtension].toOption) match {
           case Some(SourceTooBrightExtension(halfWell)) =>
             ItcQueryProblems.SourceTooBright(halfWell)

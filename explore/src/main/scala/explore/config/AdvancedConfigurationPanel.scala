@@ -999,7 +999,7 @@ object AdvancedConfigurationPanel {
     ): View[Option[NonEmptyList[Offset.Q]]] = aligner
       .zoom(
         ObservingMode.GmosNorthLongSlit.explicitSpatialOffsets,
-        GmosNorthLongSlitInput.explicitSpatialOffsets.modify _
+        GmosNorthLongSlitInput.explicitSpatialOffsets.modify
       )
       .view(_.map(_.toList.map(_.toInput)).orUnassign)
 
@@ -1203,7 +1203,7 @@ object AdvancedConfigurationPanel {
     ): View[Option[NonEmptyList[Offset.Q]]] = aligner
       .zoom(
         ObservingMode.GmosSouthLongSlit.explicitSpatialOffsets,
-        GmosSouthLongSlitInput.explicitSpatialOffsets.modify _
+        GmosSouthLongSlitInput.explicitSpatialOffsets.modify
       )
       .view(_.map(_.toList.map(_.toInput)).orUnassign)
 

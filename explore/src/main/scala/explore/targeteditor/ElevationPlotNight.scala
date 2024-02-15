@@ -236,7 +236,7 @@ object ElevationPlotNight:
               case x: Double => x
               case x: String => x.toDouble
               case _         => 0.0
-            val y     = ctx.y match
+            val y     = ctx.y.asInstanceOf[js.UndefOr[String | Double]] match
               case y: Double => y
               case y: String => y.toDouble
               case _         => 0.0

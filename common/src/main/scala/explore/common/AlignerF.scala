@@ -111,7 +111,7 @@ trait AlignerF[F[_], B, S]:
     prism:     Prism[B, C],
     remoteMod: (U => U) => S => S
   ): Option[AlignerF[F, C, U]] =
-    zoomOpt(prism.getOption _, prism.modify _, remoteMod)
+    zoomOpt(prism.getOption, prism.modify, remoteMod)
 
   /**
    * Optional drill-down specifying model `Optional` and delta structure modification function.
@@ -121,7 +121,7 @@ trait AlignerF[F[_], B, S]:
     optional:  Optional[B, C],
     remoteMod: (U => U) => S => S
   ): Option[AlignerF[F, C, U]] =
-    zoomOpt(optional.getOption _, optional.modify _, remoteMod)
+    zoomOpt(optional.getOption, optional.modify, remoteMod)
 
   /**
    * Turn an `AlignerF[F, Option[B], S]` into an `Option[AlignerF[F, B, S]]
@@ -130,7 +130,7 @@ trait AlignerF[F[_], B, S]:
     get.map { _ =>
       val bToC: B => C                 = _.get
       val modelMod: (C => C) => B => B = f => _.map(f)
-      zoom(bToC, modelMod, identity[S => S] _)
+      zoom(bToC, modelMod, identity[S => S])
     }
 
 object AlignerF:

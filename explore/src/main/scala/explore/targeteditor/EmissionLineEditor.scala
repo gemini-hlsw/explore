@@ -12,7 +12,6 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.*

@@ -36,7 +36,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   def kiList[K, A](a: A*)(getKey: A => K) = KeyedIndexedList.fromList(a.toList, getKey)
 
-  def kiIntList(i: Int*) = kiList(i: _*)(idLens.get)
+  def kiIntList(i: Int*) = kiList(i*)(idLens.get)
 
   val dispatcher = ResourceFixture(Dispatcher.parallel[IO])
 
@@ -103,7 +103,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   val vListMod = new ListModByIdEq[IO, V, Int](V.id)
 
-  def kiVList(v: V*) = kiList(v: _*)(V.id.get)
+  def kiVList(v: V*) = kiList(v*)(V.id.get)
 
   def externalVListSetS(id: Int): Adjuster[KeyedIndexedList[Int, V], String] =
     vListMod

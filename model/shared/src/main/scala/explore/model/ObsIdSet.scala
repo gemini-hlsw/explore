@@ -50,5 +50,5 @@ object ObsIdSet {
 
   def one(id: Observation.Id): ObsIdSet = ObsIdSet(NonEmptySet.one(id))
 
-  def of(id: Observation.Id, ids: Observation.Id*): ObsIdSet = ObsIdSet(NonEmptySet.of(id, ids: _*))
+  def of(id: Observation.Id, ids: Observation.Id*): ObsIdSet = ObsIdSet(NonEmptySet.of(id, ids*))
 }

@@ -62,11 +62,11 @@ package object common {
       prism:     Prism[A, B],
       remoteMod: (S => S) => T => T
     ): Option[ReuseAligner[B, S]] =
-      zoomOpt(prism.getOption _, prism.modify _, remoteMod)
+      zoomOpt(prism.getOption, prism.modify, remoteMod)
 
     def zoomOpt[B, S](
       optional:  Optional[A, B],
       remoteMod: (S => S) => T => T
     ): Option[ReuseAligner[B, S]] =
-      zoomOpt(optional.getOption _, optional.modify _, remoteMod)
+      zoomOpt(optional.getOption, optional.modify, remoteMod)
 }

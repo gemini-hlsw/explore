@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.Pot
-import crystal.ViewOptF
 import crystal.*
 import crystal.react.*
 import crystal.react.given

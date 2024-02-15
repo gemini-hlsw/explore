@@ -96,7 +96,7 @@ object TargetColumns:
       ) ++
         Band.all
           .filterNot(_ === Band.V)
-          .map(b => bandColumnId(b))).map(_ -> Visibility.Hidden): _*
+          .map(b => bandColumnId(b))).map(_ -> Visibility.Hidden)*
     )
 
   object Builder:
@@ -213,7 +213,7 @@ object TargetColumns:
               .sortable,
             siderealColumnOpt(
               ZColumnId,
-              (Target.Sidereal.radialVelocity.get _).andThen(rvToRedshiftGet)
+              Target.Sidereal.radialVelocity.get.andThen(rvToRedshiftGet)
             )
               .setCell(_.value.map(formatZ.reverseGet).orEmpty)
               .setSize(90.toPx)
@@ -243,13 +243,13 @@ object TargetColumns:
       )
 
       val ProgramColumns = List(
-        siderealColumnOpt(CZColumnId, (Target.Sidereal.radialVelocity.get _).andThen(rvToARVGet))
+        siderealColumnOpt(CZColumnId, Target.Sidereal.radialVelocity.get.andThen(rvToARVGet))
           .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
           .setSize(90.toPx)
           .sortable,
         siderealColumn(
           MorphologyColumnId,
-          (Target.Sidereal.sourceProfile.get _).andThen(SourceProfileType.fromSourceProfile)
+          Target.Sidereal.sourceProfile.get.andThen(SourceProfileType.fromSourceProfile)
         )
           .setCell(_.value.map(_.shortName).orEmpty)
           .setSize(115.toPx)

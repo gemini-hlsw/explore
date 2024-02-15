@@ -354,7 +354,7 @@ object TargetSummaryTable:
                             RowSelection(
                               (RowId(firstId) -> true) :: allRows
                                 .slice(indexOfCurrent, indexOfFirst)
-                                .map { case (row, _) => RowId(row.id) -> true }: _*
+                                .map { case (row, _) => RowId(row.id) -> true }*
                             )
                           )
                         } else {
@@ -362,7 +362,7 @@ object TargetSummaryTable:
                             RowSelection(
                               (RowId(currentId) -> true) :: allRows
                                 .slice(indexOfLast, indexOfCurrent)
-                                .map { case (row, _) => RowId(row.id) -> true }: _*
+                                .map { case (row, _) => RowId(row.id) -> true }*
                             )
                           )
                         }

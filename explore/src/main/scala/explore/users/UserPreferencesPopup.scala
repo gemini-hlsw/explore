@@ -161,7 +161,7 @@ object UserPreferencesContent:
           ).sortable,
           ColDef(
             ActionsColumnId,
-            identity[ApiKey] _,
+            identity[ApiKey],
             "Delete",
             cell = { cell =>
               val keyId = cell.value.id
