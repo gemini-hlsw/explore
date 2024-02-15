@@ -71,8 +71,7 @@ object GroupEditTile:
     .useEffectOnMountBy((props, ctx, editType, isLoading) =>
       Callback.log("GroupEditTile is mounting. isLoading: ", isLoading.get)
     )
-    .useState(0)
-    .render: (props, ctx, editType, isLoading, inc) =>
+    .render: (props, ctx, editType, isLoading) =>
       import ctx.given
 
       val group          = props.group.get
@@ -233,11 +232,6 @@ object GroupEditTile:
           <.div("Add at least 2 elements to this group to change the type.")
             .when(elementsLength <= 1),
           selectGroupForm,
-          <.button(
-            ^.disabled := isLoading.get,
-            ^.onClick --> inc.modState(_ + 1),
-            s"Increment ${inc.value}"
-          ),
           groupTypeSpecificForms
         )
       )
