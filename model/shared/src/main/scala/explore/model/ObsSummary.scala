@@ -71,7 +71,7 @@ case class ObsSummary(
     case _                                                              =>
       none
 
-  val executionTime: Option[TimeSpan] = execution.digest.map(_.fullTimeEstimate.sum)
+  val executionTime: Option[TimeSpan] = execution.digest.map(_.fullTimeEstimate.programTime)
 
   val toModeOverride: Option[InstrumentOverrides] = observingMode.map {
     case n: ObservingMode.GmosNorthLongSlit =>
