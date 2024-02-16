@@ -21,8 +21,7 @@ import scala.collection.immutable.SortedMap
 
 case class FormTimeSpanInput(
   value:    TimeSpan,
-  units:    NonEmptyList[TimeUnit] =
-    NonEmptyList.of(TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES, TimeUnit.SECONDS),
+  units:    NonEmptyList[TimeUnit] = NonEmptyList.of(TimeUnit.DAYS, TimeUnit.HOURS, TimeUnit.MINUTES),
   onBlur:   TimeSpan => Callback = _ => Callback.empty,
   onChange: TimeSpan => Callback = _ => Callback.empty,
   disabled: Boolean = false
