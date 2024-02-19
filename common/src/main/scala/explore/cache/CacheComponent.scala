@@ -3,7 +3,6 @@
 
 package explore.cache
 
-import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.kernel.Deferred
 import cats.syntax.all.*
@@ -16,56 +15,46 @@ import japgolly.scalajs.react.vdom.html_<^.*
 trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
   private type F[T] = DefaultA[T]
 
-  // Initializes the cache.
-  // `P` is the Properties
-  // `(S => S) => F[Unit]` is a delayed update function. Things fed to this function
-  // will be merged with the main update stream. The idea is that this will be done
-  // asynchronously. BUT, it is the responsibility of the implementation to
-  // call `.start` on the IO returned by this function. This gives the implementation
-  // more control over when the IO will be started.
-  protected val initial: (P, (S => S) => F[Unit]) => F[S]
+  // Initial model and a stream of delayed updates.
+  protected val initial: P => F[(S, fs2.Stream[F, S => S])]
 
-  // A stream of updates to the cache.
-  // See explanation of types above.
-  // Plus, in the output, the stream values must be `F[S => S]` in order to support
-  // the asnchronous updates.
-  protected val updateStream: (P, (S => S) => F[Unit]) => Resource[F, fs2.Stream[F, F[S => S]]]
+  // Stream of updates to the cache. Updates are collected as soon as the
+  // app starts, but they processed once all initial delayed updates complete.
+  protected val updateStream: P => Resource[F, fs2.Stream[F, S => S]]
 
   val component =
     ScalaFnComponent
       .withHooks[P]
-      .useEffectResultWithDepsBy(props => props)(_ =>
-        props =>
+      .useEffectResultWithDepsBy(props => props): _ =>
+        props => // TODO Could we actually useResource? or useStreamResource?
           for
-            latch        <- Deferred[F, SignallingRef[F, S]]
-            delayUpdate  <- SignallingRef[F].of(identity[S])
+            latch                        <- Deferred[F, SignallingRef[F, S]]
             // Start the update fiber. We want subscriptions to start before initial query.
             // This way we don't miss updates.
-            // The update fiber Will only update the cache once it is initialized (via latch).
+            // The update fiber will only update the cache once it is initialized (via latch).
             // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-            _            <-
-              updateStream(props, delayUpdate.set)
-                .map(
-                  _.merge(delayUpdate.discrete.map(Async[F].pure))
-                )
-                .evalTap(
-                  _.evalTap(fmod =>
-                    latch.get.flatMap(ref => fmod.flatMap(mod => ref.update(mod)))
-                  ).compile.drain
-                )
+            _                            <-
+              updateStream(props)
+                .evalTap:
+                  _.evalTap: mod =>
+                    latch.get.flatMap(_.update(mod))
+                  .compile.drain
                 .useForever
                 .start
-            initialValue <- initial(props, delayUpdate.set)
-            cache        <- SignallingRef[F].of(initialValue)
-            _            <- latch.complete(cache) // Allow stream updates to proceed.
+            (initialValue, delayedInits) <- initial(props)
+            cache                        <- SignallingRef[F].of(initialValue)
+            _                            <-
+              delayedInits
+                .evalTap: mod =>
+                  cache.update(mod)
+                .compile
+                .drain
+                .flatMap: _ =>
+                  latch.complete(cache) // Allow stream updates to proceed.
+                .start
           yield cache
-      )
-      .useStreamBy((props, cache) => (props, cache.isReady))((props, cache) =>
-        _ =>
-          cache.toOption.map(_.discrete).orEmpty.evalTap { value =>
-            props.setState(value.some)
-          }
-      )
+      .useStreamBy((props, cache) => (props, cache.isReady)): (props, cache) =>
+        _ => cache.toOption.map(_.discrete).orEmpty.evalTap(value => props.setState(value.some))
       // .useEffectWithDepsBy((_, _, value) => value.toOption)((props, _, _) =>
       //   value => props.setState(value)
       // )

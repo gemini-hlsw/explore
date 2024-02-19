@@ -18,7 +18,6 @@ import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
 
-import java.util.UUID
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
@@ -30,8 +29,8 @@ case class ProgramSummaries(
   obsAttachments:      ObsAttachmentList,
   proposalAttachments: List[ProposalAttachment],
   programs:            ProgramInfoList,
-  programTimesPot:     (UUID, Pot[ProgramTimes]), // access via `progTimes`
-  obsExecutionPots:    ObservationExecutionMap    // see extension methods on ObservationExecutionMap
+  programTimesPot:     Pot[ProgramTimes],
+  obsExecutionPots:    ObservationExecutionMap
 ) derives Eq:
   lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
@@ -83,8 +82,6 @@ case class ProgramSummaries(
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )
 
-  lazy val programTimes: Pot[ProgramTimes] = programTimesPot._2
-
   def cloneObsWithTargets(
     originalId: Observation.Id,
     clonedId:   Observation.Id,
@@ -114,7 +111,7 @@ object ProgramSummaries:
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
     Focus[ProgramSummaries](_.proposalAttachments)
   val programs: Lens[ProgramSummaries, ProgramInfoList]                     = Focus[ProgramSummaries](_.programs)
-  val programTimesPot: Lens[ProgramSummaries, (UUID, Pot[ProgramTimes])]    =
+  val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]            =
     Focus[ProgramSummaries](_.programTimesPot)
   val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]     =
     Focus[ProgramSummaries](_.obsExecutionPots)
@@ -127,8 +124,8 @@ object ProgramSummaries:
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
     programs:            List[ProgramInfo],
-    programTimesPot:     (UUID, Pot[ProgramTimes]),
-    obsExecutionPots:    Map[Observation.Id, (UUID, Pot[Execution])]
+    programTimesPot:     Pot[ProgramTimes],
+    obsExecutionPots:    Map[Observation.Id, Pot[Execution]]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,

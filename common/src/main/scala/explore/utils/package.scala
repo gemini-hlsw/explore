@@ -3,10 +3,12 @@
 
 package explore.utils
 
+import cats.Applicative
 import cats.Endo
 import cats.Semigroup
 import cats.effect.Temporal
 import cats.effect.*
+import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
@@ -17,8 +19,10 @@ import explore.BuildInfo
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import fs2.Chunk
+import fs2.Pipe
 import fs2.Pull
 import fs2.Stream
+import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
@@ -254,3 +258,54 @@ extension [F[_], O](s: Stream[F, O])
         }.stream
       }
     }
+
+/**
+ * Produces a `Pipe` that evaluates an effect for each element in the input stream and emits its
+ * result, canceling previous effects that are still running with the same `key`.
+ */
+def keyedSwitchEvalMap[F[_]: Concurrent, I, O, K](
+  key: I => K,
+  f:   I => F[O]
+): Pipe[F, I, O] = {
+  def go(
+    stream: Stream[F, Either[Option[I], (K, O)]], // input? | key -> output
+    fibers: Map[K, Fiber[F, Throwable, Unit]],
+    ended:  Boolean,
+    emit:   ((K, O)) => F[Unit]
+  ): Pull[F, O, Unit] =
+    stream.pull.uncons1.flatMap:
+      // Element arrives on input stream. Run the effect and store the fiber. Cancel previous effect for the same key, if any.
+      case Some(Left(Some(i)), tail) =>
+        val k: K = key(i)
+
+        def run(preF: F[Unit]): Pull[F, O, Unit] =
+          val finalF = preF >> f(i) >>= (o => emit(k -> o))
+          Pull
+            .eval(finalF.start)
+            .flatMap: fiber =>
+              go(tail, fibers.updated(k, fiber), ended, emit)
+
+        fibers.get(k) match
+          case Some(fiber) => run(fiber.cancel)
+          case None        => run(Applicative[F].unit)
+      // An effect completed! Output it. If input stream ended and there no more running fibers, we're done.
+      case Some(Right((k, o)), tail) =>
+        Pull.output1(o) >> {
+          val newFibers = fibers - k
+          if (ended && newFibers.isEmpty) Pull.done
+          else go(tail, newFibers, ended, emit)
+        }
+      // Input stream ended! Just take note and wait for all fibers to complete, or end if there are no fibers.
+      case Some(Left(None), tail)    =>
+        if (fibers.isEmpty) Pull.done
+        else go(tail, fibers, true, emit)
+      // Will never happen. Right stream will not end on its own.
+      case None                      => Pull.done
+
+  in =>
+    Stream
+      .eval(Channel.unbounded[F, (K, O)])
+      .flatMap: out =>
+        go(in.noneTerminate.either(out.stream), Map.empty, false, out.send(_).void).stream
+          .onFinalize(out.close.void)
+}

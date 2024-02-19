@@ -36,53 +36,47 @@ case class PreferencesCache(
 object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache]:
   given Reusability[PreferencesCache] = Reusability.by(_.userId)
 
-  override protected val initial
-    : (PreferencesCache, (UserPreferences => UserPreferences) => IO[Unit]) => IO[UserPreferences] =
-    (props, _) =>
-      import props.given
-
-      val grids: IO[Map[GridLayoutSection, LayoutsMap]] =
-        GridLayouts
-          .queryLayouts[IO](props.userId.some)
-          .map(
-            _.fold(ExploreGridLayouts.DefaultLayouts)(l =>
-              layout.mergeSectionLayoutsMaps(ExploreGridLayouts.DefaultLayouts, l)
-            )
-          )
-
-      val userPrefs = GlobalUserPreferences.loadPreferences[IO](props.userId)
-
-      (grids, userPrefs).parMapN(UserPreferences.apply)
-
-  override protected val updateStream
-    : (PreferencesCache, (UserPreferences => UserPreferences) => IO[Unit]) => Resource[
-      cats.effect.IO,
-      fs2.Stream[cats.effect.IO, IO[UserPreferences => UserPreferences]]
-    ] = (props, _) =>
+  override protected val initial: PreferencesCache => IO[
+    (UserPreferences, fs2.Stream[IO, UserPreferences => UserPreferences])
+  ] = props =>
     import props.given
 
-    val updateLayouts: Resource[IO, fs2.Stream[IO, IO[UserPreferences => UserPreferences]]] =
+    val grids: IO[Map[GridLayoutSection, LayoutsMap]] =
+      GridLayouts
+        .queryLayouts[IO](props.userId.some)
+        .map(
+          _.fold(ExploreGridLayouts.DefaultLayouts)(l =>
+            layout.mergeSectionLayoutsMaps(ExploreGridLayouts.DefaultLayouts, l)
+          )
+        )
+
+    val userPrefs = GlobalUserPreferences.loadPreferences[IO](props.userId)
+
+    (grids, userPrefs).parMapN(UserPreferences.apply).map(prefs => (prefs, fs2.Stream.empty))
+
+  override protected val updateStream: PreferencesCache => Resource[
+    cats.effect.IO,
+    fs2.Stream[cats.effect.IO, UserPreferences => UserPreferences]
+  ] = props =>
+    import props.given
+
+    val updateLayouts: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
       UserGridLayoutUpdates
         .subscribe[IO](props.userId.show)
         .map(
           _.map(data =>
-            IO.pure(
-              UserPreferences.gridLayouts
-                .modify(GridLayouts.updateLayouts(data.lucumaGridLayoutPositions))
-            )
+            UserPreferences.gridLayouts
+              .modify(GridLayouts.updateLayouts(data.lucumaGridLayoutPositions))
           )
         )
 
-    val updateGlobalPreferences
-      : Resource[IO, fs2.Stream[IO, IO[UserPreferences => UserPreferences]]] =
+    val updateGlobalPreferences: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
       UserPreferencesUpdates
         .subscribe[IO](props.userId.show)
         .map(
           _.map(data =>
-            IO.pure(
-              UserPreferences.globalPreferences
-                .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
-            )
+            UserPreferences.globalPreferences
+              .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
           )
         )
 

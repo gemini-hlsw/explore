@@ -27,8 +27,6 @@ import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.{
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 
-import java.util.UUID
-
 /**
  * Functions to modify cache through subscription updates
  */
@@ -44,8 +42,7 @@ trait CacheModifierUpdaters {
       )
 
   protected def modifyObservations(
-    observationEdit: ObservationEdit,
-    uuid:            UUID
+    observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries = {
     val obsId = observationEdit.value.id
 
@@ -64,8 +61,8 @@ trait CacheModifierUpdaters {
     val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
 
     // the program times and the observation execution will share the same UUID, but that's fine.
-    val programTimesReset = ProgramSummaries.programTimesPot.replace((uuid, Pot.pending))
-    val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.updatePending(obsId, uuid))
+    val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
+    val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.withUpdatePending(obsId))
 
     obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
   }

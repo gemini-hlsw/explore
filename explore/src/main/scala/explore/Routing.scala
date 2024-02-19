@@ -145,7 +145,7 @@ object Routing:
             routingInfo.programId,
             model.zoom(RootModel.vault).get,
             detailsView,
-            programSummaries.model.get.programTimes.map(_.timeEstimateRange),
+            programSummaries.model.get.programTimesPot.map(_.timeEstimateRange),
             programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
             model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
             userPreferences(model).proposalTabLayout
@@ -159,7 +159,7 @@ object Routing:
       ProgramTabContents(
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
-        programSummaries.get.programTimes,
+        programSummaries.get.programTimesPot,
         userPreferences(model)
       )
     }

@@ -24,7 +24,6 @@ import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.NewType
 import lucuma.refined.*
 
-import java.util.UUID
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
@@ -62,15 +61,13 @@ type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
 
 type GroupList = List[GroupElement]
 
-object ObservationExecutionMap extends NewType[Map[Observation.Id, (UUID, Pot[Execution])]]:
+object ObservationExecutionMap extends NewType[Map[Observation.Id, Pot[Execution]]]:
   extension (t: Type)
-    def getPot(obsId: Observation.Id): Pot[Execution]                                            =
-      t.value.get(obsId).map(_._2).getOrElse(Pot.pending)
-    def getUUID(obsId: Observation.Id): Option[UUID]                                             =
-      t.value.get(obsId).map(_._1)
-    def updated(obsId: Observation.Id, uuid: UUID, pot: Pot[Execution]): ObservationExecutionMap =
-      ObservationExecutionMap(t.value.updated(obsId, (uuid, pot)))
-    def updatePending(obsId: Observation.Id, uuid: UUID): ObservationExecutionMap                =
-      updated(obsId, uuid, Pot.pending)
+    def getPot(obsId: Observation.Id): Pot[Execution]                                =
+      t.value.get(obsId).getOrElse(Pot.pending)
+    def updated(obsId: Observation.Id, pot: Pot[Execution]): ObservationExecutionMap =
+      ObservationExecutionMap(t.value.updated(obsId, pot))
+    def withUpdatePending(obsId: Observation.Id): ObservationExecutionMap            =
+      updated(obsId, Pot.pending)
 
 type ObservationExecutionMap = ObservationExecutionMap.Type
