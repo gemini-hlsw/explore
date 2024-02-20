@@ -39,3 +39,10 @@ enum ProposalTabTileIds:
     case DetailsId     => "proposalDetails".refined
     case AbstractId    => "proposalAbstract".refined
     case AttachmentsId => "proposalAttachments".refined
+
+enum GroupEditIds:
+  case GroupEditId, GroupNotesId
+
+  def id: NonEmptyString = this match
+    case GroupEditId  => "groupEdit".refined
+    case GroupNotesId => "groupNotes".refined

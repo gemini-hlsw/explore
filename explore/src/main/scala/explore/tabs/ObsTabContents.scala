@@ -73,6 +73,7 @@ case class ObsTabContents(
 ) extends ReactFnProps(ObsTabContents.component):
   val focusedObs: Option[Observation.Id]                   = focused.obsSet.map(_.head)
   val focusedTarget: Option[Target.Id]                     = focused.target
+  val focusedGroup: Option[Group.Id]                       = focused.group
   val obsAttachments: View[ObsAttachmentList]              =
     programSummaries.model.zoom(ProgramSummaries.obsAttachments)
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
@@ -101,6 +102,7 @@ object ObsTabContents extends TwoPanels:
           props.programId,
           props.focusedObs,
           props.focusedTarget,
+          props.focusedGroup,
           selectedView.set(SelectedPanel.Summary),
           props.groups,
           props.expandedGroups,
@@ -122,52 +124,68 @@ object ObsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    def rightSide = (resize: UseResizeDetectorReturn) =>
-      props.focusedObs.fold[VdomNode](
-        Tile(
-          "observations".refined,
-          "Observations Summary",
-          backButton.some
-        )(renderInTitle =>
-          ObsSummaryTable(
+    def obsSummaryTable(): VdomNode = Tile(
+      "observations".refined,
+      "Observations Summary",
+      backButton.some
+    )(renderInTitle =>
+      ObsSummaryTable(
+        props.userId,
+        props.programId,
+        props.observations,
+        props.targets.get,
+        renderInTitle
+      )
+    // TODO: elevation view
+    )
+
+    def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
+      val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
+
+      props.observations.model
+        .zoom(indexValue)
+        .mapValue(obsView =>
+          ObsTabTiles(
+            props.vault,
             props.userId,
             props.programId,
-            props.observations,
-            props.targets.get,
-            renderInTitle
-          )
-        // TODO: elevation view
+            backButton,
+            // FIXME Find a better mechanism for this.
+            // Something like .mapValue but for UndoContext
+            props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+            props.targets,
+            // maybe we want constraintGroups, so we can get saner ids?
+            props.programSummaries.get.constraintGroups.map(_._2).toSet,
+            props.programSummaries.get.targetObservations,
+            props.focusedTarget,
+            props.searching,
+            ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
+            props.userPreferences.get.observationsTabLayout,
+            resize,
+            props.obsAttachments,
+            props.obsAttachmentAssignments,
+            props.userPreferences.zoom(UserPreferences.globalPreferences),
+            props.readonly
+          ).withKey(s"${obsId.show}")
         )
-      )(obsId =>
-        val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
 
-        props.observations.model
-          .zoom(indexValue)
-          .mapValue(obsView =>
-            ObsTabTiles(
-              props.vault,
-              props.userId,
-              props.programId,
-              backButton,
-              // FIXME Find a better mechanism for this.
-              // Something like .mapValue but for UndoContext
-              props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
-              props.targets,
-              // maybe we want constraintGroups, so we can get saner ids?
-              props.programSummaries.get.constraintGroups.map(_._2).toSet,
-              props.programSummaries.get.targetObservations,
-              props.focusedTarget,
-              props.searching,
-              ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
-              props.userPreferences.get.observationsTabLayout,
-              resize,
-              props.obsAttachments,
-              props.obsAttachmentAssignments,
-              props.userPreferences.zoom(UserPreferences.globalPreferences),
-              props.readonly
-            ).withKey(s"${obsId.show}")
-          )
+    def groupTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
+      ObsGroupTiles(
+        props.userId,
+        groupId,
+        props.groups,
+        resize,
+        ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
+        props.userPreferences.get.groupEditLayout,
+        backButton
       )
+
+    def rightSide(resize: UseResizeDetectorReturn): VdomNode =
+      (props.focusedObs, props.focusedGroup) match {
+        case (Some(obsId), _)   => obsTiles(obsId, resize)
+        case (_, Some(groupId)) => groupTiles(groupId, resize)
+        case _                  => obsSummaryTable()
+      }
 
     makeOneOrTwoPanels(
       selectedView,

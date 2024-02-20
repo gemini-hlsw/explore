@@ -2,6 +2,6 @@ table:
   name: lucumaAsterism
   schema: public
 object_relationships:
-- name: exploreAsterismPreference
-  using:
-    foreign_key_constraint_on: prefId
+  - name: exploreAsterismPreference
+    using:
+      foreign_key_constraint_on: prefId

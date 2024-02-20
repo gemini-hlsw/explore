@@ -2,14 +2,14 @@ table:
   name: exploreAsterismPreferences
   schema: public
 object_relationships:
-- name: lucumaUser
-  using:
-    foreign_key_constraint_on: userId
+  - name: lucumaUser
+    using:
+      foreign_key_constraint_on: userId
 array_relationships:
-- name: lucumaAsterisms
-  using:
-    foreign_key_constraint_on:
-      column: prefId
-      table:
-        name: lucumaAsterism
-        schema: public
+  - name: lucumaAsterisms
+    using:
+      foreign_key_constraint_on:
+        column: prefId
+        table:
+          name: lucumaAsterism
+          schema: public

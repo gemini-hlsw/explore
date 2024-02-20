@@ -2,6 +2,6 @@ table:
   name: exploreFinderChart
   schema: public
 object_relationships:
-- name: lucumaObservation
-  using:
-    foreign_key_constraint_on: observationId
+  - name: lucumaObservation
+    using:
+      foreign_key_constraint_on: observationId
