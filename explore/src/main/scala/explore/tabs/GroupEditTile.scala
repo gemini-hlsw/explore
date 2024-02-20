@@ -68,9 +68,6 @@ object GroupEditTile:
     )
     // isLoading
     .useStateView(false)
-    .useEffectOnMountBy((props, ctx, editType, isLoading) =>
-      Callback.log("GroupEditTile is mounting. isLoading: ", isLoading.get)
-    )
     .render: (props, ctx, editType, isLoading) =>
       import ctx.given
 
