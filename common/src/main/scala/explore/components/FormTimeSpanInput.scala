@@ -3,18 +3,17 @@
 
 package explore.components
 
-import cats.Eq
-import cats.Order
 import cats.data.NonEmptyList
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
-import lucuma.core.util.TimeSpan.given
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
+import lucuma.ui.reusability.given
 
 import java.util.concurrent.TimeUnit
 import scala.collection.immutable.SortedMap
@@ -65,7 +64,7 @@ object FormTimeSpanInput:
    *
    * E.g. a timespan of 25.5 hours would be 1 (day), 1 (hour), 30 (minutes)
    */
-  def makeTimeUnitsMap(
+  private def makeTimeUnitsMap(
     units: NonEmptyList[TimeUnit],
     value: TimeSpan
   ): SortedMap[TimeUnit, Double] =
@@ -78,13 +77,6 @@ object FormTimeSpanInput:
           (acc + (unit -> result.toDouble), diff)
       ._1
 
-  // Custom ordering to go from biggest to smallest
-  private given Ordering[TimeUnit] = Ordering.by[TimeUnit, Int](_.ordinal).reverse
-  private given Order[TimeUnit]    = Order.fromOrdering
-
-  private given Reusability[TimeSpan]                 = Reusability.byEq
-  private given [A: Eq]: Reusability[NonEmptyList[A]] = Reusability.byEq
-
   private given Display[TimeUnit] = Display.byShortName {
     case TimeUnit.NANOSECONDS  => "ns"
     case TimeUnit.MICROSECONDS => "µs"
@@ -94,3 +86,9 @@ object FormTimeSpanInput:
     case TimeUnit.HOURS        => "h"
     case TimeUnit.DAYS         => "d"
   }
+
+  // Custom ordering to go from biggest to smallest
+  private given Ordering[TimeUnit]   = Ordering.by[TimeUnit, Int](_.ordinal).reverse
+  private given Enumerated[TimeUnit] = Enumerated
+    .fromNEL(NonEmptyList.fromListUnsafe(TimeUnit.values().reverse.toList))
+    .withTag(_.shortName)
