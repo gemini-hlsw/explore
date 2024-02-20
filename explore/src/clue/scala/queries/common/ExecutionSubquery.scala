@@ -10,6 +10,7 @@ import lucuma.core.model.sequence.SequenceDigest
 import lucuma.odb.json.sequence.given
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.OffsetSubquery
+import lucuma.schemas.odb.TimeSpanSubquery
 
 @GraphQL
 object ExecutionSubquery extends GraphQLSubquery.Typed[ObservationDB, Execution]("Execution") {
@@ -17,12 +18,8 @@ object ExecutionSubquery extends GraphQLSubquery.Typed[ObservationDB, Execution]
     {
       digest {
         setup {
-          full {
-            microseconds
-          }
-          reacquisition {
-            microseconds
-          }
+          full $TimeSpanSubquery
+          reacquisition $TimeSpanSubquery
         }
         acquisition $SequenceDigestSubquery
         science $SequenceDigestSubquery
@@ -40,18 +37,10 @@ object SequenceDigestSubquery
         observeClass
         atomCount
         timeEstimate {
-          program {
-            microseconds
-          }
-          partner {
-            microseconds
-          }
-          nonCharged {
-            microseconds
-          }
-          total {
-            microseconds
-          }
+          program $TimeSpanSubquery
+          partner $TimeSpanSubquery
+          nonCharged $TimeSpanSubquery
+          total $TimeSpanSubquery
         }
         offsets $OffsetSubquery
       }

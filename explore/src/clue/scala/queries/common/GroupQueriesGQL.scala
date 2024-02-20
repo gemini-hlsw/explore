@@ -9,6 +9,7 @@ import explore.model.GroupElement
 import explore.model.Grouping
 import lucuma.schemas.ObservationDB
 import clue.annotation.GraphQL
+import lucuma.schemas.odb.TimeSpanSubquery
 
 object GroupQueriesGQL:
 
@@ -36,12 +37,8 @@ object GroupQueriesGQL:
         parentId
         parentIndex
         ordered
-        minimumInterval {
-          microseconds
-        }
-        maximumInterval {
-          microseconds
-        }
+        minimumInterval $TimeSpanSubquery
+        maximumInterval $TimeSpanSubquery
         timeEstimateRange $ProgramTimeRangeSubquery
         elements {
           observation {
