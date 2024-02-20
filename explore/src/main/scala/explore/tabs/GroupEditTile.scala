@@ -29,7 +29,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.*
-import lucuma.react.primereact.FormTimeSpanInput
 import lucuma.react.primereact.InputText
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
