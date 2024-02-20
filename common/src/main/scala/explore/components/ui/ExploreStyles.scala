@@ -465,9 +465,6 @@ object ExploreStyles:
   val Disabled: Css    = Css("p-disabled")
   val FormValue: Css   = Css("explore-value-field")
 
-  val TimeSpanInput: Css     = Css("time-span-input")
-  val TimeSpanInputItem: Css = Css("time-span-input-item")
-
   // Timing Windows
   val TimingWindowsBody: Css                    = Css("timing-windows-body")
   val TimingWindowsEmpty: Css                   = Css("timing-windows-empty")

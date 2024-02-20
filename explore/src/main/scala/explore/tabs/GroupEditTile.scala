@@ -14,7 +14,6 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.GroupQueries
-import explore.components.FormTimeSpanInput
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -30,6 +29,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.*
+import lucuma.react.primereact.FormTimeSpanInput
 import lucuma.react.primereact.InputText
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
@@ -194,18 +194,10 @@ object GroupEditTile:
 
       val delaysForm = <.div(
         ExploreStyles.GroupDelaysForm,
-        <.span("Minimum delay"),
-        FormTimeSpanInput(
-          value = minIntervalV.get,
-          onChange = minIntervalV.set,
-          disabled = isDisabled
-        ),
-        <.span("Maximum delay"),
-        FormTimeSpanInput(
-          value = maxIntervalV.get,
-          onChange = maxIntervalV.set,
-          disabled = isDisabled
-        )
+        FormLabel(htmlFor = "minDelay".refined)("Minimum delay"),
+        FormTimeSpanInput(value = minIntervalV, id = "maxDelay".refined, disabled = isDisabled),
+        FormLabel(htmlFor = "maxDelay".refined)("Maximum delay"),
+        FormTimeSpanInput(value = maxIntervalV, id = "maxDelay".refined, disabled = isDisabled)
       )
 
       val plannedTime =

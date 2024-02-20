@@ -69,7 +69,9 @@ private sealed trait VisitTableBuilder[D: Eq]:
             val step = row.original._1
             (<.div(ExploreStyles.VisitStepExtra)(
               <.span(ExploreStyles.VisitStepExtraDatetime)(
-                step.startTime.fold("---")(start => Constants.UtcFormatter.format(start))
+                step.interval.fold("---")(interval =>
+                  Constants.UtcFormatter.format(interval.start.toInstant)
+                )
               ),
               <.span(ExploreStyles.VisitStepExtraDatasets)(
                 step.datasets
