@@ -36,9 +36,9 @@ import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import monocle.Iso
 import monocle.Lens
 
-import java.util.concurrent.TimeUnit
 import scala.scalajs.js
 
 case class GroupEditTile(
@@ -95,18 +95,21 @@ object GroupEditTile:
         n => GroupPropertiesInput(name = n.orUnassign)
       )
       val orderedV     = groupModView(Grouping.ordered, o => GroupPropertiesInput(ordered = o.assign))
-      val minIntervalV = groupModView(
-        Grouping.minimumInterval,
-        t =>
+
+      val timeSpanOrEmptyLens =
+        Iso[Option[TimeSpan], TimeSpan](_.orEmpty)(_.some.filterNot(_.isZero))
+      val minIntervalV        = groupModView(
+        Grouping.minimumInterval.andThen(timeSpanOrEmptyLens),
+        ts =>
           GroupPropertiesInput(minimumInterval =
-            t.map(ts => TimeSpanInput(microseconds = ts.toMicroseconds.assign)).orUnassign
+            TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
           )
       )
-      val maxIntervalV = groupModView(
-        Grouping.maximumInterval,
-        t =>
+      val maxIntervalV        = groupModView(
+        Grouping.maximumInterval.andThen(timeSpanOrEmptyLens),
+        ts =>
           GroupPropertiesInput(maximumInterval =
-            t.map(ts => TimeSpanInput(microseconds = ts.toMicroseconds.assign)).orUnassign
+            TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
           )
       )
 
@@ -193,14 +196,14 @@ object GroupEditTile:
         ExploreStyles.GroupDelaysForm,
         <.span("Minimum delay"),
         FormTimeSpanInput(
-          value = minIntervalV.get.getOrElse(TimeSpan.Zero),
-          onChange = e => minIntervalV.set(e.some),
+          value = minIntervalV.get,
+          onChange = minIntervalV.set,
           disabled = isDisabled
         ),
         <.span("Maximum delay"),
         FormTimeSpanInput(
-          value = maxIntervalV.get.getOrElse(TimeSpan.Zero),
-          onChange = e => maxIntervalV.set(e.some),
+          value = maxIntervalV.get,
+          onChange = maxIntervalV.set,
           disabled = isDisabled
         )
       )
