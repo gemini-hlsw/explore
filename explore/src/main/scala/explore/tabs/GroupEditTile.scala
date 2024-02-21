@@ -190,10 +190,19 @@ object GroupEditTile:
 
       val delaysForm = <.div(
         ExploreStyles.GroupDelaysForm,
-        FormLabel(htmlFor = "minDelay".refined)("Minimum delay"),
-        FormTimeSpanInput(value = minIntervalV, id = "maxDelay".refined, disabled = isDisabled),
-        FormLabel(htmlFor = "maxDelay".refined)("Maximum delay"),
-        FormTimeSpanInput(value = maxIntervalV, id = "maxDelay".refined, disabled = isDisabled)
+        FormTimeSpanInput(value = minIntervalV,
+                          id = "minDelay".refined,
+                          label = "Minimum delay",
+                          min = TimeSpan.Zero,
+                          max = maxIntervalV.get,
+                          disabled = isDisabled
+        ),
+        FormTimeSpanInput(value = maxIntervalV,
+                          id = "maxDelay".refined,
+                          label = "Maximum delay",
+                          min = minIntervalV.get,
+                          disabled = isDisabled
+        )
       )
 
       val plannedTime =
