@@ -1100,9 +1100,93 @@ table.pl-react-table.explore-sequence-table {
 }
 
 .selected-obs-item .obs-badge,
-.obs-tree-item .obs-badge.obs-badge-selected {
+.obs-tree-item .obs-badge.obs-badge-selected,
+.p-treenode:has(.selected-group-item) {
   background-color: var(--obs-selected-badge-background);
   box-shadow: 0 0 0 1.5px var(--site-solid-border-color);
+}
+
+.group-edit-tile {
+  margin: 16px;
+
+  .group-type-select {
+    display: flex;
+    gap: var(--content-padding);
+    flex-flow: row wrap;
+
+    .group-change-buttons {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      gap: var(--inline-spacing);
+
+      .p-buttonset {
+        display: flex;
+        gap: var(--inline-spacing);
+      }
+
+      .p-button {
+        width: max-content;
+      }
+    }
+
+    .group-edit-note {
+      display: flex;
+      max-width: 700px;
+      gap: var(--content-padding);
+      padding: var(--content-padding);
+      border-radius: var(--border-radius);
+      background-color: var(--control-background-color);
+
+      .fa-note {
+        --note-size: 2em;
+
+        padding-top: 3px;
+        width: var(--note-size);
+        height: var(--note-size);
+      }
+
+      @media (max-width: lucumaUICommon.$mobile-responsive-cutoff) {
+        max-width: 100%;
+      }
+    }
+  }
+
+  .p-inputgroup {
+    max-width: fit-content;
+  }
+
+  .min-required-form-input {
+    width: auto;
+  }
+
+  .group-form {
+    --group-row-count: 3;
+    --group-column-count: 3;
+
+    // Move to 2 columns on mobile
+    @media (max-width: lucumaUICommon.$tablet-responsive-cutoff) {
+      --group-row-count: 4;
+      --group-column-count: 2;
+    }
+
+    margin-top: var(--content-padding);
+    margin-bottom: var(--content-padding);
+    display: grid;
+    gap: var(--content-padding);
+    grid-template-rows: repeat(var(--group-row-count), auto); /* 3 rows of equal height */
+    grid-template-columns: repeat(var(--group-column-count), auto); /* 3 columns of equal width */
+    grid-auto-flow: column; /* fill the rows first, then move to the next column */
+  }
+
+  .group-delays-form,
+  .group-planned-time {
+    display: grid;
+    column-gap: var(--content-padding);
+    grid-template-columns: repeat(2, auto);
+    align-items: center;
+    margin-right: auto;
+  }
 }
 
 // ------
@@ -1782,6 +1866,8 @@ input[type='file'].explore-fileupload {
   .p-tree-container > .p-treenode > .p-treenode-content {
     > .obs-tree-group-leaf {
       margin: 8px;
+      width: 100%;
+      text-decoration: none;
     }
   }
 

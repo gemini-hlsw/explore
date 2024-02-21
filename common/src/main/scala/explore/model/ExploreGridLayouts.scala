@@ -31,6 +31,7 @@ object ExploreGridLayouts:
     case GridLayoutSection.ObservationsLayout => observations.defaultObsLayouts
     case GridLayoutSection.OverviewLayout     => overview.defaultOverviewLayouts
     case GridLayoutSection.ProposalLayout     => proposal.defaultProposalLayouts
+    case GridLayoutSection.GroupEditLayout    => groupEdit.defaultGroupEditLayouts
   }
 
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =
@@ -427,6 +428,47 @@ object ExploreGridLayouts:
     )
 
     val defaultProposalLayouts = defineStdLayouts(
+      Map(
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+        ),
+        (BreakpointName.md, layoutMedium)
+      )
+    )
+
+  object groupEdit:
+    val GroupEditHeight: NonNegInt    = 12.refined
+    val GroupEditMinHeight: NonNegInt = 6.refined
+    val NotesHeight: NonNegInt        = 8.refined
+    val NotesMinHeight: NonNegInt     = 4.refined
+    val TileMinWidth: NonNegInt       = 6.refined
+    val DefaultWidth: NonNegInt       = 10.refined
+    val DefaultLargeWidth: NonNegInt  = 12.refined
+
+    private val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = GroupEditIds.GroupEditId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = GroupEditHeight.value,
+          minH = GroupEditMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = GroupEditIds.GroupNotesId.id.value,
+          x = 0,
+          y = GroupEditHeight.value,
+          w = DefaultWidth.value,
+          h = NotesHeight.value,
+          minH = NotesMinHeight.value,
+          minW = TileMinWidth.value
+        )
+      )
+    )
+
+    val defaultGroupEditLayouts = defineStdLayouts(
       Map(
         (BreakpointName.lg,
          layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)

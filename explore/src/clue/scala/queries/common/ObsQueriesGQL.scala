@@ -31,9 +31,7 @@ object ObsQueriesGQL:
           itc {
             science {
               selected {
-                exposureTime {
-                  milliseconds
-                }
+                exposureTime $TimeSpanSubquery
                 exposures
                 signalToNoise
               }
@@ -47,13 +45,6 @@ object ObsQueriesGQL:
         }
       }
     """
-
-    object Data:
-      object Observation:
-        object Itc:
-          object Science:
-            object Selected:
-              type ExposureTime = lucuma.core.util.TimeSpan
 
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:

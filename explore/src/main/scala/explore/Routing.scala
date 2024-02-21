@@ -21,6 +21,7 @@ import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -218,6 +219,10 @@ object Routing:
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "observation" / id[Observation.Id]).xmapL(ObsPage.iso)
+          ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "observation" / id[Group.Id]).xmapL(ObsGroupPage.iso)
           ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
 
           | dynamicRouteCT((root / id[Program.Id] / "targets").xmapL(TargetsBasePage.iso)) ~>

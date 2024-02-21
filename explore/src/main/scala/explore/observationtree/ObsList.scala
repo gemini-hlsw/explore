@@ -58,6 +58,7 @@ case class ObsList(
   programId:       Program.Id,
   focusedObs:      Option[Observation.Id],
   focusedTarget:   Option[Target.Id],
+  focusedGroup:    Option[Group.Id],
   setSummaryPanel: Callback,
   groups:          UndoSetter[GroupList],
   expandedGroups:  View[Set[Group.Id]],
@@ -180,9 +181,7 @@ object ObsList:
 
             dragNodeId
               .fold(
-                obsId =>
-                  ObsQueries
-                    .moveObservation[IO](obsId, dropNodeId, dropIndex.some),
+                obsId => ObsQueries.moveObservation[IO](obsId, dropNodeId, dropIndex.some),
                 groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
               )
               .runAsync *>
@@ -195,7 +194,7 @@ object ObsList:
           node match
             case ObsNode.Obs(obs)   =>
               val id       = obs.id
-              val selected = props.focusedObs.exists(_ === id)
+              val selected = props.focusedObs.contains_(id)
               <.a(
                 ^.id        := s"obs-list-${id.toString}",
                 ^.href      := ctx.pageUrl(
@@ -252,10 +251,22 @@ object ObsList:
             case ObsNode.Or(group)  => renderGroup("OR", group)
 
         def renderGroup(title: String, group: Grouping) =
-          <.span(title,
-                 ExploreStyles.ObsTreeGroupLeaf,
-                 group.name.map(<.em(_, ^.marginLeft := "8px")),
-                 ^.title := group.id.show
+          val selected = props.focusedGroup.contains_(group.id)
+          <.a(
+            title,
+            ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(selected),
+            group.name.map(n => <.em(n.value, ^.marginLeft := 8.px)),
+            ^.title := group.id.show,
+            ^.id        := show"obs-group-${group.id}",
+            ^.draggable := false,
+            ^.onClick ==> linkOverride(
+              setGroup(props.programId, group.id.some, ctx)
+            ),
+            ^.href      := ctx.pageUrl(
+              AppTab.Observations,
+              props.programId,
+              Focused.group(group.id)
+            )
           )
 
         val tree =

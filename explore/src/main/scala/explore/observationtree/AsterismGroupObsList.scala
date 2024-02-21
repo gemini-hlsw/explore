@@ -73,7 +73,7 @@ object AsterismGroupObsList:
   ): Callback =
     expandedIds.mod { expanded =>
       expanded
-        .exists(_ === obsIds)
+        .contains_(obsIds)
         .fold(expanded - obsIds, expanded + obsIds)
     }
 
@@ -296,7 +296,7 @@ object AsterismGroupObsList:
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
         val icon: FontAwesomeIcon = props.expandedIds.get
-          .exists(_ === obsIds)
+          .contains_(obsIds)
           .fold(Icons.ChevronDown, Icons.ChevronRight)(
             ^.cursor.pointer,
             ^.onClick ==> { (e: ReactEvent) =>
