@@ -13,7 +13,7 @@ object ProgramChangeRequestsTile:
 
   private type Props = ProgramChangeRequestsTile
 
-  def component = ScalaFnComponent
+  val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
       UnderConstruction()

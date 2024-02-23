@@ -13,7 +13,7 @@ object ProgramNotesTile:
 
   private type Props = ProgramNotesTile
 
-  def component = ScalaFnComponent
+  val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
       UnderConstruction()
