@@ -360,6 +360,7 @@ object ExploreStyles:
   val CellHideBorder                   = Css("explore-table-cell-hide-border")
   val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
   val SequenceTileTitle                = Css("explore-sequence-tile-title")
+  val SequenceTileTitleItem            = Css("explore-sequence-tile-title-item")
   val VisitSection                     = Css("explore-visit-section")
   val VisitHeader                      = Css("explore-visit-header")
   val VisitStepExtra                   = Css("explore-visit-step-extra")
