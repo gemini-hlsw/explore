@@ -50,7 +50,7 @@
     "stylelint": "^15.11.0",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-standard-scss": "^11.1.0",
-    "terser": "5.27.0",
+    "terser": "5.28.1",
     "unplugin-fonts": "^1.1.1",
     "vite": "5.1.4",
     "vite-plugin-mkcert": "^1.17.3",
