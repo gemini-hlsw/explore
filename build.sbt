@@ -359,7 +359,7 @@ ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= setupNodeNpmInstall
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
-ThisBuild / githubWorkflowOSes := Seq("macos-14")
+ThisBuild / githubWorkflowOSes                 := Seq("macos-14")
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
@@ -375,6 +375,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       // firebaseDeployReview ::
       firebaseDeployDev ::
       Nil,
+    oses = List("macos-14"),
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
@@ -393,6 +394,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       setupVars("light") ::
       runLinters("light") ::
       Nil,
+    oses = List("macos-14"),
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond, notDependabotCond))

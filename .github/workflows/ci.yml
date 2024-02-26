@@ -103,7 +103,7 @@ jobs:
     if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-14]
         scala: [3.4.0]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
@@ -172,7 +172,7 @@ jobs:
     if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini') && github.actor != 'dependabot[bot]')
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-14]
         scala: [3.4.0]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
