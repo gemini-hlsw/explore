@@ -359,6 +359,7 @@ ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= setupNodeNpmInstall
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
+ThisBuild / githubWorkflowOSes := Seq("macos-14")
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
