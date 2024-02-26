@@ -365,8 +365,7 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "full",
     "full",
-    WorkflowStep.Checkout ::
-      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
+    (ThisBuild / githubWorkflowJobSetup).value.toList :::
       setupNodeNpmInstall :::
       sbtStage ::
       npmBuild ::
@@ -385,8 +384,7 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "lint",
     "Run linters",
-    WorkflowStep.Checkout ::
-      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
+    (ThisBuild / githubWorkflowJobSetup).value.toList :::
       setupNodeNpmInstall :::
       lucumaCssStep ::
       setupVars("dark") ::

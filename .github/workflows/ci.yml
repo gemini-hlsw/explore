@@ -108,8 +108,14 @@ jobs:
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout current branch (fast)
+      - name: Install sbt
+        if: contains(runner.os, 'macos')
+        run: brew install sbt
+
+      - name: Checkout current branch (full)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
@@ -177,8 +183,14 @@ jobs:
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout current branch (fast)
+      - name: Install sbt
+        if: contains(runner.os, 'macos')
+        run: brew install sbt
+
+      - name: Checkout current branch (full)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
