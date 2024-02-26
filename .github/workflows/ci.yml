@@ -67,8 +67,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node_modules
+          key: node_modules_macos-14-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules_macos-14
 
       - name: npm clean-install
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
@@ -141,8 +141,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node_modules
+          key: node_modules_macos-14-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules_macos-14
 
       - name: npm clean-install
         if: steps.cache-node_modules.outputs.cache-hit != 'true'
@@ -216,8 +216,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node_modules
+          key: node_modules_macos-14-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules_macos-14
 
       - name: npm clean-install
         if: steps.cache-node_modules.outputs.cache-hit != 'true'

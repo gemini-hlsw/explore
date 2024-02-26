@@ -269,7 +269,7 @@ lazy val setupNodeNpmInstall =
       name = Some("Cache node_modules"),
       id = Some("cache-node_modules"),
       params = {
-        val prefix = "node_modules"
+        val prefix = "node_modules_macos-14"
         val key    = s"$prefix-$${{ hashFiles('package-lock.json') }}"
         Map("path" -> "node_modules", "key" -> key, "restore-keys" -> prefix)
       }
