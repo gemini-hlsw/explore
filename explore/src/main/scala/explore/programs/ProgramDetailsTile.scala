@@ -22,7 +22,7 @@ object ProgramDetailsTile:
 
   private type Props = ProgramDetailsTile
 
-  def component = ScalaFnComponent
+  val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
 
