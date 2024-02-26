@@ -22,7 +22,7 @@ case class HelpContext(
 )
 
 object HelpContext:
-  val ctx: Context[HelpContext] = React.createContext(null) // No default value
+  val ctx: Context[HelpContext] = React.createContext("HelpContext", null) // No default value
 
   val Provider =
     ScalaFnComponent

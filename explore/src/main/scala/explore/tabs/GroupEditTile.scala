@@ -29,7 +29,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.*
-import lucuma.react.primereact.InputText
+import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
@@ -58,7 +58,7 @@ object GroupEditTile:
     if t === GroupEditType.And then none
     else NonNegShort.from(1).toOption
 
-  def component = ScalaFnComponent
+  val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
     // editType
@@ -67,7 +67,9 @@ object GroupEditTile:
     )
     // isLoading
     .useStateView(false)
-    .render: (props, ctx, editType, isLoading) =>
+    // nameDisplay
+    .useStateBy((props, _, _, _) => props.group.get.name)
+    .render: (props, ctx, editType, isLoading, nameDisplay) =>
       import ctx.given
 
       val group          = props.group.get
@@ -114,7 +116,7 @@ object GroupEditTile:
         SelectButtonEnumView(
           "groupType".refined,
           editType,
-          label = <.div(ExploreStyles.GroupChangeLabel, "Type"),
+          label = "Type",
           disabled = isDisabled,
           itemTemplate = _.value match
             case GroupEditType.And => <.span("AND (Scheduling)")
@@ -123,11 +125,6 @@ object GroupEditTile:
           onChange = tp => minRequiredV.set(minimumForGroup(tp))
         )
       )
-
-      val title: VdomNode =
-        if isAnd then EmptyVdom
-        else
-          s"(Choose ${group.minimumRequired.getOrElse(NonNegShort.unsafeFrom(1))} of ${elementsLength})"
 
       val note = <.div(
         ExploreStyles.GroupEditNote,
@@ -151,29 +148,29 @@ object GroupEditTile:
       )
 
       val nameForm = <.div(
-        ExploreStyles.GroupNameForm,
         FormInputText(
           id = "nameInput".refined,
           label = "Name",
-          value = nameV.get.fold(js.undefined)(_.value),
+          value = nameDisplay.value.fold(js.undefined)(_.value),
           disabled = isDisabled,
-          onChange = e => nameV.set(NonEmptyString.from(e.target.value).toOption)
+          onChange = e => nameDisplay.setState(NonEmptyString.from(e.target.value).toOption),
+          onBlur = e => nameV.set(NonEmptyString.from(e.target.value).toOption)
         )
       )
 
       val minRequiredForm = <.div(
         "Observe ",
-        InputText(
+        InputNumber(
           "minRequiredInput",
           placeholder = "1",
-          clazz = ExploreStyles.MinRequiredFormInput,
-          value = minRequiredV.get.fold(js.undefined)(_.value.toString),
+          value = minRequiredV.get.fold(js.undefined)(_.value),
           disabled = isDisabled,
-          modifiers = Seq(^.`type` := "number", ^.min := 0, ^.max := elementsLength),
-          onChange = e =>
-            val newMin = e.target.value.toShortOption
-              .map(s => Math.abs(Math.min(s, elementsLength)).toShort)
-              .flatMap(s => NonNegShort.from(s).toOption)
+          min = 0,
+          max = elementsLength,
+          size = minRequiredV.get.fold(js.undefined)(_.toString.length),
+          onValueChange = e =>
+            val newMin = e.valueOption
+              .flatMap(s => NonNegShort.from(s.toShort).toOption)
             minRequiredV.set(newMin)
         ),
         s" of ${elementsLength} observations"
@@ -223,11 +220,11 @@ object GroupEditTile:
           )
 
       val groupTypeSpecificForms =
-        if isAnd then <.div(ExploreStyles.GroupForm, nameForm, orderForm, delaysForm, plannedTime)
-        else <.div(ExploreStyles.GroupForm, nameForm, minRequiredForm, plannedTime)
+        if isAnd then <.div(ExploreStyles.GroupForm)(nameForm, orderForm, delaysForm, plannedTime)
+        else <.div(ExploreStyles.GroupForm)(nameForm, minRequiredForm, plannedTime)
 
       React.Fragment(
-        props.renderInTitle(title),
+        props.renderInTitle(makeTitle(group)),
         <.div(ExploreStyles.GroupEditTile)(
           <.div("Add at least 2 elements to this group to change the type.")
             .when(elementsLength <= 1),
@@ -235,3 +232,18 @@ object GroupEditTile:
           groupTypeSpecificForms
         )
       )
+
+  private def makeTitle(group: Grouping) =
+    val timeStr: VdomNode  = group.timeEstimateRange
+      .map: timeEstimateRange =>
+        if timeEstimateRange.maximum === timeEstimateRange.minimum then
+          timeEstimateRange.maximum.value.toHoursMinutes
+        else
+          s"${timeEstimateRange.maximum.value.toHoursMinutes} max - ${timeEstimateRange.minimum.value.toHoursMinutes} min"
+      .map(s => s", $s")
+    val andOrStr: VdomNode =
+      if group.isAnd then if group.ordered then "Ordered" else "Any order"
+      else
+        s"Choose ${group.minimumRequired.getOrElse(NonNegShort.unsafeFrom(1))} of ${group.elements.length}"
+
+    <.span("(", andOrStr, timeStr, ")")

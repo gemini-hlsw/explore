@@ -36,7 +36,7 @@ object ObsGroupTiles:
 
   private type Props = ObsGroupTiles
 
-  def component = ScalaFnComponent
+  val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
 
@@ -49,7 +49,8 @@ object ObsGroupTiles:
       val editTile = Tile(
         GroupEditIds.GroupEditId.id,
         s"${if group.get.isAnd then "AND" else "OR"} Group",
-        props.backButton.some
+        props.backButton.some,
+        tileTitleClass = ExploreStyles.GroupEditTitle
       )(GroupEditTile(group, _))
 
       val notesTile = Tile(

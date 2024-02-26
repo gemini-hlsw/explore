@@ -1111,6 +1111,14 @@ table.pl-react-table.explore-sequence-table {
   box-shadow: 0 0 0 1.5px var(--site-solid-border-color);
 }
 
+.group-edit-title {
+  justify-content: start;
+
+  .explore-tile-control-buttons {
+    margin-left: auto;
+  }
+}
+
 .group-edit-tile {
   margin: 16px;
 
@@ -1159,10 +1167,6 @@ table.pl-react-table.explore-sequence-table {
 
   .p-inputgroup {
     max-width: fit-content;
-  }
-
-  .min-required-form-input {
-    width: auto;
   }
 
   .group-form {
