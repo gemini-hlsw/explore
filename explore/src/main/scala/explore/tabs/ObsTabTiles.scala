@@ -58,6 +58,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
@@ -372,15 +373,28 @@ object ObsTabTiles:
               React.Fragment(
                 renderInTitle {
                   val programTimeCharge = props.observation.get.execution.programTimeCharge.value
+
+                  def timeDisplay(name: String, time: TimeSpan) =
+                    <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
+                           time.toHoursMinutes
+                    )
+
+                  val executed = timeDisplay("Executed", programTimeCharge)
+
                   props.observation.get.executionTime
-                    .map { planned =>
-                      val total = programTimeCharge +| planned
+                    .map { plannedTime =>
+                      val total   = programTimeCharge +| plannedTime
+                      val pending = timeDisplay("Pending", plannedTime)
+                      val planned = timeDisplay("Planned", total)
                       <.span(
-                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
-                        s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                        ExploreStyles.SequenceTileTitle
+                      )(
+                        planned,
+                        executed,
+                        pending
                       )
                     }
-                    .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+                    .getOrElse(executed)
                 },
                 GeneratedSequenceViewer(
                   props.programId,
