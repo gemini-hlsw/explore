@@ -60,7 +60,6 @@ trait CacheModifierUpdaters {
     // TODO: this won't be needed anymore when groups are also updated through events of observation updates
     val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
 
-    // the program times and the observation execution will share the same UUID, but that's fine.
     val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
     val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.withUpdatePending(obsId))
 
