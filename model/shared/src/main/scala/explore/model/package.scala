@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Order.given
 import cats.syntax.all.*
+import crystal.Pot
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
@@ -20,6 +21,7 @@ import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.{ObsAttachment => ObsAtt}
+import lucuma.core.util.NewType
 import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
@@ -58,3 +60,14 @@ type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
 
 type GroupList = List[GroupElement]
+
+object ObservationExecutionMap extends NewType[Map[Observation.Id, Pot[Execution]]]:
+  extension (t: Type)
+    def getPot(obsId: Observation.Id): Pot[Execution]                                =
+      t.value.get(obsId).getOrElse(Pot.pending)
+    def updated(obsId: Observation.Id, pot: Pot[Execution]): ObservationExecutionMap =
+      ObservationExecutionMap(t.value.updated(obsId, pot))
+    def withUpdatePending(obsId: Observation.Id): ObservationExecutionMap            =
+      updated(obsId, Pot.pending)
+
+type ObservationExecutionMap = ObservationExecutionMap.Type

@@ -15,6 +15,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.AppContext
+import explore.model.ObservationExecutionMap
 import explore.model.ProgramSummaries
 import explore.model.*
 import explore.model.enums.AppTab
@@ -80,6 +81,7 @@ case class ObsTabContents(
     programSummaries.get.obsAttachmentAssignments
   val observations: UndoSetter[ObservationList]            =
     programSummaries.zoom(ProgramSummaries.observations)
+  val obsExecutions: ObservationExecutionMap               = programSummaries.get.obsExecutionPots
   val groups: UndoSetter[GroupList]                        = programSummaries.zoom(ProgramSummaries.groups)
   val targets: UndoSetter[TargetList]                      = programSummaries.zoom(ProgramSummaries.targets)
 
@@ -98,6 +100,7 @@ object ObsTabContents extends TwoPanels:
       if (deckShown.get === DeckShown.Shown) {
         ObsList(
           props.observations,
+          props.obsExecutions,
           props.programSummaries,
           props.programId,
           props.focusedObs,
@@ -133,6 +136,7 @@ object ObsTabContents extends TwoPanels:
         props.userId,
         props.programId,
         props.observations,
+        props.obsExecutions,
         props.targets.get,
         renderInTitle
       )
@@ -153,6 +157,7 @@ object ObsTabContents extends TwoPanels:
             // FIXME Find a better mechanism for this.
             // Something like .mapValue but for UndoContext
             props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+            props.obsExecutions.getPot(obsView.get.id),
             props.targets,
             // maybe we want constraintGroups, so we can get saner ids?
             props.programSummaries.get.constraintGroups.map(_._2).toSet,

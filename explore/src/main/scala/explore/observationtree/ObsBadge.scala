@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
@@ -13,6 +14,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.syntax.all.*
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
@@ -20,6 +22,7 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.InputSwitch
@@ -31,6 +34,7 @@ import lucuma.ui.syntax.all.given
 
 case class ObsBadge(
   obs:               ObsSummary,
+  executionTime:     Pot[Option[TimeSpan]],
   layout:            ObsBadge.Layout,
   selected:          Boolean = false,
   setStatusCB:       Option[ObsStatus => Callback] = none,
@@ -184,7 +188,7 @@ object ObsBadge:
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            obs.executionTime.map(ts => <.span(ts.toHoursMinutes))
+            props.executionTime.orSpinner(_.map(ts => <.span(ts.toHoursMinutes)))
           )
         )
       )

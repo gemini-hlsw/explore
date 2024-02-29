@@ -4,11 +4,10 @@
 package explore.model.arb
 
 import cats.Order.given
-import eu.timepit.refined.scalacheck.numeric.*
+import eu.timepit.refined.scalacheck.numeric.given
 import eu.timepit.refined.scalacheck.string.given
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.Execution
 import explore.model.ObsSummary
 import explore.model.ScienceRequirements
 import lucuma.core.arb.ArbTime
@@ -41,7 +40,6 @@ trait ArbObsSummary:
   import ArbTime.given
   import ArbScienceRequirements.given
   import ArbObservingMode.given
-  import ArbExecution.given
 
   given Arbitrary[ObsSummary] =
     Arbitrary(
@@ -62,7 +60,6 @@ trait ArbObsSummary:
         wavelength          <- arbitrary[Option[Wavelength]]
         groupId             <- arbitrary[Option[Group.Id]]
         groupIndex          <- arbitrary[NonNegShort]
-        execution           <- arbitrary[Execution]
       yield ObsSummary(
         id,
         title,
@@ -79,8 +76,7 @@ trait ArbObsSummary:
         posAngleConstraint,
         wavelength,
         groupId,
-        groupIndex,
-        execution
+        groupIndex
       )
     )
 
@@ -98,7 +94,9 @@ trait ArbObsSummary:
        Option[ObservingMode],
        Option[Instant],
        PosAngleConstraint,
-       Option[Wavelength]
+       Option[Wavelength],
+       Option[Group.Id],
+       Short
       )
     ]
       .contramap(o =>
@@ -114,7 +112,9 @@ trait ArbObsSummary:
          o.observingMode,
          o.visualizationTime,
          o.posAngleConstraint,
-         o.wavelength
+         o.wavelength,
+         o.groupId,
+         o.groupIndex.value
         )
       )
 

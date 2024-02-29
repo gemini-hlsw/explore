@@ -47,6 +47,5 @@ object ObservationSummarySubquery
           observingMode $ObservingModeSubquery
           groupId
           groupIndex
-          execution $ExecutionSubquery
         }
       """

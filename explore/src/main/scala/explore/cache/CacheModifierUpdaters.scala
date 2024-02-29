@@ -5,6 +5,7 @@ package explore.cache
 
 import cats.Order.given
 import cats.syntax.all.*
+import crystal.Pot
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.GroupElement
 import explore.model.GroupObs
@@ -59,7 +60,10 @@ trait CacheModifierUpdaters {
     // TODO: this won't be needed anymore when groups are also updated through events of observation updates
     val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
 
-    obsUpdate.andThen(groupsUpdate)
+    val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
+    val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.withUpdatePending(obsId))
+
+    obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
   }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =

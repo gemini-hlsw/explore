@@ -36,7 +36,9 @@ case class PreferencesCache(
 object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache]:
   given Reusability[PreferencesCache] = Reusability.by(_.userId)
 
-  override protected val initial: PreferencesCache => IO[UserPreferences] = props =>
+  override protected val initial: PreferencesCache => IO[
+    (UserPreferences, fs2.Stream[IO, UserPreferences => UserPreferences])
+  ] = props =>
     import props.given
 
     val grids: IO[Map[GridLayoutSection, LayoutsMap]] =
@@ -50,7 +52,7 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
 
     val userPrefs = GlobalUserPreferences.loadPreferences[IO](props.userId)
 
-    (grids, userPrefs).parMapN(UserPreferences.apply)
+    (grids, userPrefs).parMapN(UserPreferences.apply).map(prefs => (prefs, fs2.Stream.empty))
 
   override protected val updateStream: PreferencesCache => Resource[
     cats.effect.IO,

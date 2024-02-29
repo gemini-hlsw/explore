@@ -58,3 +58,36 @@ class StreamSpec extends munit.CatsEffectSuite:
 
     TestControl.executeEmbed(program).map((a, b) => assertNotEquals(a, b))
   }
+
+  test("keyedSwitchEvalMap cancels selectively") {
+    val stream                 = Stream(1, 2, 3).meteredStartImmediately[IO](0.25.seconds)
+    val effect: Int => IO[Int] = i => IO.sleep(1.second).as(i)
+    // The key is _ % 2, so the first element should be cancelled when the third one is emitted:
+    // At 0s: 1 is emitted in the input and its 1s `effect` starts (A).
+    // At 0.25s: 2 is emitted in the input and its 1s `effect` starts.
+    // At 0.5s: 3 is emitted in the input and its 1s `effect` starts, cancelling the first one (A).
+    // At 1.25s: 2 is emitted in the output.
+    // At 1.5s: 3 is emitted in the output.
+    val pipe                   = keyedSwitchEvalMap[IO, Int, Int, Int](_ % 2, effect)
+
+    val program = stream.through(pipe).compile.toVector
+
+    TestControl.executeEmbed(program).assertEquals(Vector(2, 3))
+  }
+
+  test("keyedSwitchEvalMap emits all") {
+    val stream                 = Stream(1, 2, 3).meteredStartImmediately[IO](0.5.seconds)
+    val effect: Int => IO[Int] = i => IO.sleep(0.25.second).as(i)
+    // All elements should be emitted, no cancellations occur.
+    // At 0s: 1 is emitted in the input and its 0.25s `effect` starts.
+    // At 0.25s: 1 is emitted in the output.
+    // At 0.5s: 2 is emitted in the input and its 1s `effect` starts.
+    // At 0.75s: 2 is emitted in the output.
+    // At 1s: 3 is emitted in the input and its 1s `effect` starts.
+    // At 1.25s: 3 is emitted in the output.
+    val pipe                   = keyedSwitchEvalMap[IO, Int, Int, Int](_ % 2, effect)
+
+    val program = stream.through(pipe).compile.toVector
+
+    TestControl.executeEmbed(program).assertEquals(Vector(1, 2, 3))
+  }

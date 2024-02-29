@@ -7,6 +7,7 @@ import cats.Eq
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
+import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
 import lucuma.core.model.ObsAttachment
@@ -27,7 +28,9 @@ case class ProgramSummaries(
   groups:              GroupList,
   obsAttachments:      ObsAttachmentList,
   proposalAttachments: List[ProposalAttachment],
-  programs:            ProgramInfoList
+  programs:            ProgramInfoList,
+  programTimesPot:     Pot[ProgramTimes],
+  obsExecutionPots:    ObservationExecutionMap
 ) derives Eq:
   lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
@@ -108,6 +111,10 @@ object ProgramSummaries:
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
     Focus[ProgramSummaries](_.proposalAttachments)
   val programs: Lens[ProgramSummaries, ProgramInfoList]                     = Focus[ProgramSummaries](_.programs)
+  val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]            =
+    Focus[ProgramSummaries](_.programTimesPot)
+  val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]     =
+    Focus[ProgramSummaries](_.obsExecutionPots)
 
   def fromLists(
     optProgramDetails:   Option[ProgramDetails],
@@ -116,7 +123,9 @@ object ProgramSummaries:
     groups:              List[GroupElement],
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
-    programs:            List[ProgramInfo]
+    programs:            List[ProgramInfo],
+    programTimesPot:     Pot[ProgramTimes],
+    obsExecutionPots:    Map[Observation.Id, Pot[Execution]]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,
@@ -125,5 +134,7 @@ object ProgramSummaries:
       groups,
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,
-      programs.toSortedMap(_.id)
+      programs.toSortedMap(_.id),
+      programTimesPot,
+      ObservationExecutionMap(obsExecutionPots)
     )

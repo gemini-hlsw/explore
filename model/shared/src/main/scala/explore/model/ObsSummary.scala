@@ -31,7 +31,6 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.gmos.GmosCcdMode
-import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.decoders.given
@@ -60,8 +59,7 @@ case class ObsSummary(
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
   groupId:             Option[Group.Id],
-  groupIndex:          NonNegShort,
-  execution:           Execution
+  groupIndex:          NonNegShort
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
     case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
@@ -70,8 +68,6 @@ case class ObsSummary(
       s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
     case _                                                              =>
       none
-
-  val executionTime: Option[TimeSpan] = execution.digest.map(_.fullTimeEstimate.programTime)
 
   val toModeOverride: Option[InstrumentOverrides] = observingMode.map {
     case n: ObservingMode.GmosNorthLongSlit =>
@@ -172,7 +168,6 @@ object ObsSummary:
                                .get[Option[Wavelength]]("wavelength")
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
-      execution           <- c.get[Execution]("execution")
     } yield ObsSummary(
       id,
       title,
@@ -189,7 +184,6 @@ object ObsSummary:
       posAngleConstraint,
       wavelength,
       groupId,
-      groupIndex,
-      execution
+      groupIndex
     )
   )

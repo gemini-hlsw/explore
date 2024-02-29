@@ -86,6 +86,7 @@ case class ObsTabTiles(
   programId:                Program.Id,
   backButton:               VdomNode,
   observation:              UndoSetter[ObsSummary],
+  obsExecution:             Pot[Execution],
   allTargets:               UndoSetter[TargetList],
   allConstraintSets:        Set[ConstraintSet],
   targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
@@ -373,29 +374,29 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  val programTimeCharge = props.observation.get.execution.programTimeCharge.value
+                  props.obsExecution.orSpinner { execution =>
+                    val programTimeCharge = execution.programTimeCharge.value
 
-                  def timeDisplay(name: String, time: TimeSpan) =
-                    <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
-                           time.toHoursMinutes
-                    )
-
-                  val executed = timeDisplay("Executed", programTimeCharge)
-
-                  props.observation.get.executionTime
-                    .map { plannedTime =>
-                      val total   = programTimeCharge +| plannedTime
-                      val pending = timeDisplay("Pending", plannedTime)
-                      val planned = timeDisplay("Planned", total)
-                      <.span(
-                        ExploreStyles.SequenceTileTitle
-                      )(
-                        planned,
-                        executed,
-                        pending
+                    def timeDisplay(name: String, time: TimeSpan) =
+                      <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
+                             time.toHoursMinutes
                       )
-                    }
-                    .getOrElse(executed)
+
+                    val executed = timeDisplay("Executed", programTimeCharge)
+
+                    execution.programTimeEstimate
+                      .map { plannedTime =>
+                        val total   = programTimeCharge +| plannedTime
+                        val pending = timeDisplay("Pending", plannedTime)
+                        val planned = timeDisplay("Planned", total)
+                        <.span(ExploreStyles.SequenceTileTitle)(
+                          planned,
+                          executed,
+                          pending
+                        )
+                      }
+                      .getOrElse(executed)
+                  }
                 },
                 VisitsViewer(props.obsId),
                 GeneratedSequenceViewer(

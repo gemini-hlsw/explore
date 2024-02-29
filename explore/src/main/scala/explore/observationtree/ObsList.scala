@@ -19,6 +19,7 @@ import explore.model.Focused
 import explore.model.GroupElement
 import explore.model.GroupList
 import explore.model.Grouping
+import explore.model.ObservationExecutionMap
 import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.tabs.DeckShown
@@ -53,17 +54,18 @@ import scala.scalajs.js
 import ObsQueries.*
 
 case class ObsList(
-  observations:    UndoSetter[ObservationList],
-  undoer:          Undoer,
-  programId:       Program.Id,
-  focusedObs:      Option[Observation.Id],
-  focusedTarget:   Option[Target.Id],
-  focusedGroup:    Option[Group.Id],
-  setSummaryPanel: Callback,
-  groups:          UndoSetter[GroupList],
-  expandedGroups:  View[Set[Group.Id]],
-  deckShown:       View[DeckShown],
-  readonly:        Boolean
+  observations:      UndoSetter[ObservationList],
+  obsExecutionTimes: ObservationExecutionMap,
+  undoer:            Undoer,
+  programId:         Program.Id,
+  focusedObs:        Option[Observation.Id],
+  focusedTarget:     Option[Target.Id],
+  focusedGroup:      Option[Group.Id],
+  setSummaryPanel:   Callback,
+  groups:            UndoSetter[GroupList],
+  expandedGroups:    View[Set[Group.Id]],
+  deckShown:         View[DeckShown],
+  readonly:          Boolean
 ) extends ReactFnProps(ObsList.component)
 
 object ObsList:
@@ -211,6 +213,7 @@ object ObsList:
               )(
                 ObsBadge(
                   obs,
+                  props.obsExecutionTimes.getPot(id).map(_.programTimeEstimate),
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
                   setStatusCB = obsEditStatus(id)
