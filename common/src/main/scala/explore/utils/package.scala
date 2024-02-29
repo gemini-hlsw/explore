@@ -267,8 +267,13 @@ def keyedSwitchEvalMap[F[_]: Concurrent, I, O, K](
   key: I => K,
   f:   I => F[O]
 ): Pipe[F, I, O] = {
+  // The logic uses an internal `Channel` to where completed effects emit their values (together with their corresponding key).
+  // It then uses a `Pull` that processes one by one the elements of a stream that merges the the input and result streams.
+  // The input stream is on the `Left`, `noneTerminate`d so we can tell when it ends. New elements here trigger the effect and cancel running one for the same key.
+  // The result stream is on the `Right`, with each element together with its associated key. New elements here are emitted in the `Pull` output.
+  // We also keep track of the running effects and whether the input stream has ended.
   def go(
-    stream: Stream[F, Either[Option[I], (K, O)]], // input? | key -> output
+    stream: Stream[F, Either[Option[I], (K, O)]],
     fibers: Map[K, Fiber[F, Throwable, Unit]],
     ended:  Boolean,
     emit:   ((K, O)) => F[Unit]
@@ -279,6 +284,8 @@ def keyedSwitchEvalMap[F[_]: Concurrent, I, O, K](
         val k: K = key(i)
 
         def run(preF: F[Unit]): Pull[F, O, Unit] =
+          // Before running the effect, cancel the previous one for the same key, if any.
+          // After running the effect, emit its value to the result stream. This is processed in the next `case` entry.
           val finalF = preF >> f(i) >>= (o => emit(k -> o))
           Pull
             .eval(finalF.start)

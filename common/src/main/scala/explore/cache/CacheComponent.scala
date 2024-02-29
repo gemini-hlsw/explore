@@ -45,7 +45,7 @@ trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
             cache                        <- SignallingRef[F].of(initialValue)
             _                            <-
               delayedInits
-                .evalTap: mod =>
+                .evalMap: mod =>
                   cache.update(mod)
                 .compile
                 .drain
