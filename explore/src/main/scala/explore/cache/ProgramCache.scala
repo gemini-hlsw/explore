@@ -164,7 +164,7 @@ object ProgramCache
       // We want to update all the observations first, followed by the program, because
       // the program requires all of the observation times be calculated. So, if we do
       // it first, it could take a long time.
-      fs2.Stream(observations.map(_.id)*).evalMap(updateObservationExecution) ++
+      fs2.Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
         fs2.Stream.eval(updateProgramTimes(props.programId))
 
     for
