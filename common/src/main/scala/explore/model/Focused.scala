@@ -13,6 +13,8 @@ import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens
 
+import scala.collection.immutable.SortedSet
+
 case class Focused(
   obsSet: Option[ObsIdSet] = none,
   target: Option[Target.Id] = none,
@@ -32,6 +34,11 @@ case class Focused(
 
   def withoutTarget: Focused = withTargetOpt(none)
 
+  // If the current target exists and is in targetIds, keep it. Otherwise set to targetIds.headOption.
+  // This keeps the currently focused target selected if possible.
+  def validateOrSetTarget(targetIds: SortedSet[Target.Id]): Focused =
+    if (target.exists(targetIds.contains)) this else withTargetOpt(targetIds.headOption)
+
   def withGroupOpt(group: Option[Group.Id]): Focused = Focused.group.replace(group)(this)
 
   def withGroup(group: Group.Id): Focused = withGroupOpt(group.some)
@@ -50,9 +57,6 @@ object Focused {
 
   def singleObs(obsId: Observation.Id, targetId: Option[Target.Id] = none): Focused =
     Focused(ObsIdSet.one(obsId).some, targetId, none)
-
-  def fromAsterismGroup(group: AsterismGroup): Focused =
-    Focused(group.obsIds.some, group.targetIds.headOption, none)
 
   def group(group: Group.Id): Focused = Focused(none, none, group.some)
 
