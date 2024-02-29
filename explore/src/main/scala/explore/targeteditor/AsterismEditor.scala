@@ -153,7 +153,11 @@ object AsterismEditor extends AsterismModifier:
             fullScreen.get,
             props.readonly
           ),
-          props.focusedTargetId.map { focusedTargetId =>
+          // it's possible for us to get here without an asterism but with a focused target id. This will get
+          // corrected, but we need to not render the target editor before it is corrected.
+          (Asterism.fromIdsAndTargets(props.asterismIds.get, props.allTargets.get),
+           props.focusedTargetId
+          ).mapN { (asterism, focusedTargetId) =>
             val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =
               props.allTargets
                 .zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
@@ -181,10 +185,7 @@ object AsterismEditor extends AsterismModifier:
                   SiderealTargetEditor(
                     props.userId,
                     siderealTarget,
-                    Asterism
-                      .fromIdsAndTargets(props.asterismIds.get, props.allTargets.get)
-                      .map(_.focusOn(focusedTargetId))
-                      .getOrElse(sys.error("Asterism not available")),
+                    asterism.focusOn(focusedTargetId),
                     vizTime,
                     props.configuration.some,
                     props.searching,
