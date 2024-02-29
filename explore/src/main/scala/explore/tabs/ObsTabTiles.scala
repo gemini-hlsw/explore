@@ -389,9 +389,7 @@ object ObsTabTiles:
                         val total   = programTimeCharge +| plannedTime
                         val pending = timeDisplay("Pending", plannedTime)
                         val planned = timeDisplay("Planned", total)
-                        <.span(
-                          ExploreStyles.SequenceTileTitle
-                        )(
+                        <.span(ExploreStyles.SequenceTileTitle)(
                           planned,
                           executed,
                           pending
