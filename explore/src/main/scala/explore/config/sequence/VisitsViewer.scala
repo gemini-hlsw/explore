@@ -83,11 +83,8 @@ object VisitsViewer:
   ): List[AccordionTab] =
     visits
       .flatMap: visit =>
-        List(
-          renderSequence(SequenceType.Acquisition, visit.acquisitionAtoms, renderTable),
+        renderSequence(SequenceType.Acquisition, visit.acquisitionAtoms, renderTable) ++
           renderSequence(SequenceType.Science, visit.scienceAtoms, renderTable)
-        )
-      .flattenOption
 
   private val component =
     ScalaFnComponent
