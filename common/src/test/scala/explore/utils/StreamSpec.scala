@@ -60,7 +60,7 @@ class StreamSpec extends munit.CatsEffectSuite:
   }
 
   test("keyedSwitchEvalMap cancels selectively") {
-    val stream                 = Stream(1, 2, 3).evalMap(IO.sleep(0.25.seconds).as(_))
+    val stream                 = Stream(1, 2, 3).meteredStartImmediately(0.25.seconds)
     val effect: Int => IO[Int] = i => IO.sleep(1.second) >> IO.pure(i)
     val pipe                   = keyedSwitchEvalMap[IO, Int, Int, Int](_ % 2, effect)
 
