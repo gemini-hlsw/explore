@@ -58,9 +58,6 @@ object GroupQueries:
     FetchClient[F, ObservationDB]
   ): F[Grouping] =
     CreateGroupMutation[F]
-      .execute(
-        CreateGroupInput(
-          programId = programId.assign
-        )
-      )
+      .execute:
+        CreateGroupInput(programId = programId.assign)
       .map(_.createGroup.group)

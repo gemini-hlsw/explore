@@ -39,7 +39,7 @@ object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
-  given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
+  private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
 
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposureMode =
