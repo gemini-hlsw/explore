@@ -72,9 +72,6 @@ object AladinContainer extends AladinCommon {
     case _                                            => None
   })
   private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
-  private given Reusability[Props]               =
-    Reusability.by(x => (x.asterism, x.obsConf, x.globalPreferences, x.options))
-  private given Reusability[Fov]                 = Reusability.by(x => (x.y, x.y))
 
   private val AladinComp = Aladin.component
 
@@ -265,7 +262,7 @@ object AladinContainer extends AladinCommon {
       }
       // Use fov from aladin
       .useState(none[Fov])
-      .renderWithReuse {
+      .render {
         (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
           val (baseCoordinates, scienceTargets) = allCoordinates.value
 
