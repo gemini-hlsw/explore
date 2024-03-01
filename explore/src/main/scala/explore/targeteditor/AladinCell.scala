@@ -11,7 +11,6 @@ import clue.FetchClient
 import crystal.Pot
 import crystal.*
 import crystal.react.*
-import crystal.react.given
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
@@ -46,7 +45,6 @@ import lucuma.core.util.NewType
 import lucuma.react.aladin.Fov
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.PopupMenuRef
 import lucuma.react.primereact.hooks.all.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
@@ -138,9 +136,6 @@ object AladinCell extends ModelOptics with AladinCommon:
   private type ManualAgsOverride = ManualAgsOverride.Type
 
   private type Props = AladinCell
-  private given Reusability[View[ManualAgsOverride]] = Reusability.by(_.get)
-  private given Reusability[PopupMenuRef]            =
-    Reusability.by(ref => Option(ref.ref.raw.current).isDefined)
 
   // We want to re render only when the vizTime changes at least a month
   // We keep the candidates data pm corrected for the viz time
@@ -150,9 +145,6 @@ object AladinCell extends ModelOptics with AladinCommon:
   private given Reusability[Instant] = Reusability[Instant] {
     Duration.between(_, _).toDays().abs < 30L
   }
-
-  private given Reusability[Props] =
-    Reusability.by(x => (x.uid, x.obsConf, x.asterism, x.fullScreen.get, x.globalPreferences.get))
 
   private val fovLens: Lens[AsterismVisualOptions, Fov] =
     Lens[AsterismVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -231,7 +223,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // target options, will be read from the user preferences
-      .useStateViewWithReuse(Pot.pending[AsterismVisualOptions])
+      .useStateView(Pot.pending[AsterismVisualOptions])
       // to get faster reusability use a serial state, rather than check every candidate
       .useSerialState(List.empty[GuideStarCandidate])
       // Analysis results
@@ -269,7 +261,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             }
       }
       // Selected GS index. Should be stored in the db
-      .useStateViewWithReuse(none[Int])
+      .useStateView(none[Int])
       // mouse coordinates, starts on the base
       .useStateBy((props, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
@@ -380,7 +372,7 @@ object AladinCell extends ModelOptics with AladinCommon:
         }
       }
       .usePopupMenuRef
-      .renderWithReuse {
+      .render {
         (
           props,
           ctx,
