@@ -162,7 +162,8 @@ object ElevationPlotSection:
               Button(
                 onClick = opt.range match
                   case PlotRange.Night    => dateView.mod(_.minusDays(1))
-                  case PlotRange.Semester => semesterView.mod(_.prev)
+                  // if we've run out of valid semesters, don't move
+                  case PlotRange.Semester => semesterView.mod(s => s.prev.getOrElse(s))
                 ,
                 clazz = ExploreStyles.ElevationPlotDateButton,
                 text = false,
@@ -186,7 +187,8 @@ object ElevationPlotSection:
               Button(
                 onClick = opt.range match
                   case PlotRange.Night    => dateView.mod(_.plusDays(1))
-                  case PlotRange.Semester => semesterView.mod(_.next)
+                  // if we've run out of valid semesters, don't move
+                  case PlotRange.Semester => semesterView.mod(s => s.next.getOrElse(s))
                 ,
                 clazz = ExploreStyles.ElevationPlotDateButton,
                 text = false,
