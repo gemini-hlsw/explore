@@ -5,7 +5,7 @@ package explore.model
 
 import cats.*
 import cats.derived.*
-import cats.syntax.option.given
+import cats.syntax.all.*
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import lucuma.core.enums.Site
@@ -68,7 +68,13 @@ object ElevationPlotOptions:
       ObservingNight
         .fromSiteAndInstant(site, visualizationTime.getOrElse(Instant.now))
         .toLocalDate
-    (date, Semester.fromLocalDate(date))
+    // if `fromLocalDate` returns None, date is out of range, so clamp
+    // semester to the Min and Max semesters
+    val semester        = Semester.fromLocalDate(date).getOrElse {
+      if (date < Semester.MinValue.start.localDate) Semester.MinValue
+      else Semester.MaxValue
+    }
+    (date, semester)
 
   def default(
     predefinedSite:    Option[Site],
@@ -84,7 +90,7 @@ object ElevationPlotOptions:
       site,
       PlotRange.Night,
       date,
-      Semester.fromLocalDate(date),
+      semester,
       TimeDisplay.Site,
       ElevationPlotScheduling.On
     )
