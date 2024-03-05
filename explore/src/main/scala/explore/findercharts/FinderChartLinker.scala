@@ -30,6 +30,7 @@ import lucuma.react.table.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import org.scalajs.dom.*
 
 import scala.collection.immutable.SortedSet
 
@@ -65,8 +66,9 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                 .setCell(cell =>
                   Checkbox(
                     obsIds.contains(cell.value),
-                    onChange = { (e: Boolean) =>
+                    onChangeE = { (e: Boolean, ev: ReactEventFrom[Element]) =>
                       (for {
+                        _ <- ev.preventDefaultCB *> ev.stopPropagationCB
                         _ <- action.set(Action.Unlink)
                         _ <- p.obsAttachmentIds.mod(_ - cell.value).unless_(e)
                         _ <- p.selected.set(none).when_(e && p.selected.get.contains(cell.value))
@@ -134,9 +136,10 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
               rowMod = row =>
                 TagMod(
                   ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                  ^.onClick --> {
+                  ^.onClick ==> { e =>
                     val selectedId = ObsAtt.Id.parse(row.id).filter(p.obsAttachmentIds.get.contains)
                     for {
+                      _ <- e.preventDefaultCB *> e.stopPropagationCB
                       _ <- p.selected.set(selectedId)
                       _ <- table.toggleAllRowsSelected(false)
                       _ <- Callback(row.toggleSelected())
