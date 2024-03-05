@@ -117,7 +117,7 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           ObsAttachmentType.Finder,
           client,
           action,
-          id => added.setState(Some(id))
+          id => props.obsAttachmentIds.mod(_ + id) *> added.setState(Some(id))
         )(e)
 
     <.div(

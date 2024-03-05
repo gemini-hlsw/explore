@@ -113,7 +113,6 @@ def obsEditSubtitle(obsId: Observation.Id)(using
       )
       .void
 )
-
 def obsEditAttachments(
   obsId:         Observation.Id,
   attachmentIds: Set[ObsAttachment.Id]
