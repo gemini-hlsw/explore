@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
@@ -12,7 +13,6 @@ import explore.findercharts.FinderCharts
 import explore.findercharts.FinderChartsSelector
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
-import explore.syntax.ui.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.Observation
@@ -55,7 +55,7 @@ object FinderChartsTile:
       control = state => control.filter(_ => state.isMinimized)
     )(renderInTitle =>
       authToken
-        .map(t =>
+        .map[VdomNode](t =>
           FinderCharts(programId,
                        oid,
                        t,
@@ -67,5 +67,5 @@ object FinderChartsTile:
                        renderInTitle
           )
         )
-        .getOrEmpty
+        .orEmpty
     )

@@ -15,7 +15,6 @@ import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
-import japgolly.scalajs.react.vdom.Exports.EmptyVdom
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.primereact.Message
@@ -24,7 +23,6 @@ import lucuma.ui.syntax.all.*
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
-import scala.Conversion
 import scala.scalajs.js
 import scala.scalajs.js.UndefOr
 
@@ -96,8 +94,3 @@ extension [F[_]: MonadCancelThrow, A](f: F[A])
 extension [A](pot: Pot[A])
   def orSpinner(f: A => VdomNode): VdomNode =
     pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
-
-extension [A](vdom: Option[A])(using c: Conversion[A, VdomNode])
-  inline def getOrEmpty: VdomNode = vdom.map(c).getOrElse(EmptyVdom)
-
-extension (vdom: Option[VdomNode]) inline def getOrEmpty: VdomNode = vdom.getOrElse(EmptyVdom)
