@@ -71,7 +71,8 @@ object ObsQueriesGQL:
         observation(observationId: $$obsId) {
           execution {
             config {
-              ... on GmosSouthExecutionConfig {
+              instrument
+              gmosSouth {
                 acquisition {
                   nextAtom {
                     steps {
@@ -97,7 +98,7 @@ object ObsQueriesGQL:
                   }
                 }
               }
-              ... on GmosNorthExecutionConfig {
+              gmosNorth {
                 acquisition {
                   nextAtom {
                     steps {

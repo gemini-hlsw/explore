@@ -27,27 +27,5 @@ object VisitQueriesGQL:
         shuffleOffset
         shuffleCycles
       }
-
-      fragment gmosNorthStaticConfigFields on GmosNorthExecutionConfig {
-        static {
-          stageMode
-          detector
-          mosPreImaging
-          nodAndShuffle {
-            ...nodAndShuffleFields
-          }
-        }
-      }
-
-      fragment gmosSouthStaticConfigFields on GmosSouthExecutionConfig {
-        static {
-          stageMode
-          detector
-          mosPreImaging
-          nodAndShuffle {
-            ...nodAndShuffleFields
-          }
-        }
-      }
     """
     // ${ExecutionVisitsSubquery.Fragments}
