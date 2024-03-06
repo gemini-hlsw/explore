@@ -15,6 +15,7 @@ import explore.model.Constants
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
+import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault

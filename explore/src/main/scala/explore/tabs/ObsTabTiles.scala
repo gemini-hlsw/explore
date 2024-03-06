@@ -21,6 +21,7 @@ import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
 import explore.config.sequence.VisitsViewer
 import explore.constraints.ConstraintsPanel
+import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
 import explore.model.AppContext
 import explore.model.LoadingState
@@ -274,6 +275,7 @@ object ObsTabTiles:
       .useStateView(none[ObsAtt.Id])
       // Signal that the sequence has changed
       .useStateView(().ready)
+      .useStateView(ChartSelector.Closed)
       .render {
         (
           props,
@@ -288,7 +290,8 @@ object ObsTabTiles:
           itcLoading,
           selectedItcTarget,
           selectedAttachment,
-          sequenceChanged
+          sequenceChanged,
+          chartSelector
         ) =>
           import ctx.given
 
@@ -352,7 +355,8 @@ object ObsTabTiles:
               props.vault.map(_.token),
               props.obsAttachments,
               selectedAttachment,
-              pa
+              pa,
+              chartSelector
             )
 
           val notesTile =

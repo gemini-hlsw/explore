@@ -10,6 +10,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.Icons
+import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
