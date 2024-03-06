@@ -5,6 +5,7 @@ package explore.config.sequence
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.ErrorPolicy
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
@@ -94,7 +95,7 @@ object VisitsViewer:
         import ctx.given
 
         ObservationVisits[IO]
-          .query(props.obsId)
+          .query(props.obsId)(ErrorPolicy.IgnoreOnData)
           .map(_.map(_.observation.map(_.execution)))
           .attemptPot
           .resetOnResourceSignals:
@@ -104,12 +105,13 @@ object VisitsViewer:
       .render: (_, _, execution) =>
         execution.toPot.flatten
           .renderPot:
-            _.map: executionVisits =>
-              val accordionTabs =
-                executionVisits match
-                  case ExecutionVisits.GmosNorth(_, visits) =>
-                    renderVisits(visits, GmosNorthVisitTable(_))
-                  case ExecutionVisits.GmosSouth(_, visits) =>
-                    renderVisits(visits, GmosSouthVisitTable(_))
+            _.map:
+              _.map: executionVisits =>
+                val accordionTabs =
+                  executionVisits match
+                    case ExecutionVisits.GmosNorth(_, visits) =>
+                      renderVisits(visits, GmosNorthVisitTable(_))
+                    case ExecutionVisits.GmosSouth(_, visits) =>
+                      renderVisits(visits, GmosSouthVisitTable(_))
 
-              AccordionMultiple(tabs = accordionTabs)
+                AccordionMultiple(tabs = accordionTabs)
