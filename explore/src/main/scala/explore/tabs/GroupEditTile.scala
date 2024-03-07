@@ -76,8 +76,6 @@ object GroupEditTile:
       val isAnd          = group.isAnd
       val elementsLength = group.elements.length
 
-      val isDisabled = isLoading.get || elementsLength <= 1
-
       def groupModView[A](lens: Lens[Grouping, A], prop: A => GroupPropertiesInput) = props.group
         .undoableView(lens)
         .withOnMod(a =>
@@ -117,7 +115,7 @@ object GroupEditTile:
           "groupType".refined,
           editType,
           label = "Type",
-          disabled = isDisabled,
+          disabled = isLoading.get,
           itemTemplate = _.value match
             case GroupEditType.And => <.span("AND (Scheduling)")
             case GroupEditType.Or  => <.span("OR (Choose ", <.i("n"), ")")
@@ -152,7 +150,7 @@ object GroupEditTile:
           id = "nameInput".refined,
           label = "Name",
           value = nameDisplay.value.fold(js.undefined)(_.value),
-          disabled = isDisabled,
+          disabled = isLoading.get,
           onChange = e => nameDisplay.setState(NonEmptyString.from(e.target.value).toOption),
           onBlur = e => nameV.set(NonEmptyString.from(e.target.value).toOption)
         )
@@ -164,7 +162,7 @@ object GroupEditTile:
           "minRequiredInput",
           placeholder = "1",
           value = minRequiredV.get.fold(js.undefined)(_.value),
-          disabled = isDisabled,
+          disabled = isLoading.get,
           min = 0,
           max = elementsLength,
           size = minRequiredV.get.fold(js.undefined)(_.toString.length),
@@ -181,7 +179,7 @@ object GroupEditTile:
           id = "orderedCheck".refined,
           value = orderedV,
           label = "Ordered",
-          disabled = isDisabled
+          disabled = isLoading.get
         )
       )
 
@@ -192,13 +190,13 @@ object GroupEditTile:
                           label = "Minimum delay",
                           min = TimeSpan.Zero,
                           max = maxIntervalV.get,
-                          disabled = isDisabled
+                          disabled = isLoading.get
         ),
         FormTimeSpanInput(value = maxIntervalV,
                           id = "maxDelay".refined,
                           label = "Maximum delay",
                           min = minIntervalV.get,
-                          disabled = isDisabled
+                          disabled = isLoading.get
         )
       )
 
@@ -226,8 +224,6 @@ object GroupEditTile:
       React.Fragment(
         props.renderInTitle(makeTitle(group)),
         <.div(ExploreStyles.GroupEditTile)(
-          <.div("Add at least 2 elements to this group to change the type.")
-            .when(elementsLength <= 1),
           selectGroupForm,
           groupTypeSpecificForms
         )
