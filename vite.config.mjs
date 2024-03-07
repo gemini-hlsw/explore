@@ -218,6 +218,13 @@ export default defineConfig(async ({ mode }) => {
           },
         ],
       },
+      warmup: {
+        clientFiles: [
+          path.resolve(sjs, '*.js'),
+          path.resolve(webappCommon, 'sass/*.scss'),
+          path.resolve(lucumaCss, '*.scss')
+        ]
+      }
     },
     build: {
       emptyOutDir: true,
