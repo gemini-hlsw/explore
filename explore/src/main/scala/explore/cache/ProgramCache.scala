@@ -227,7 +227,7 @@ object ProgramCache
               _.map: data => // Replace program and reset times.
                 ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some) >>>
                   ProgramSummaries.programTimesPot.replace(Pot.pending)
-            .evalTap(_ => queryProgramTimes)
+              .evalTap(_ => queryProgramTimes)
 
         val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
           TargetQueriesGQL.ProgramTargetsDelta
