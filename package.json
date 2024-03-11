@@ -13,7 +13,7 @@
     "@tanstack/react-table": "^8.13.2",
     "@tanstack/react-virtual": "v3.1.3",
     "github-markdown-css": "^5.5.1",
-    "highcharts": "11.3.0",
+    "highcharts": "11.4.0",
     "loglevel": "1.9.1",
     "primeicons": "^6.0.1",
     "primereact": "~10.5.1",
