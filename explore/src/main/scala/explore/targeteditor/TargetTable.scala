@@ -78,11 +78,10 @@ object TargetTable extends AsterismModifier:
   )
 
   private def deleteSiderealTarget(
-    programId: Program.Id,
-    obsIds:    ObsIdSet,
-    targetId:  Target.Id
+    obsIds:   ObsIdSet,
+    targetId: Target.Id
   )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-    AsterismQueries.removeTargetsFromAsterisms[IO](programId, obsIds.toList, List(targetId))
+    AsterismQueries.removeTargetsFromAsterisms[IO](obsIds.toList, List(targetId))
 
   protected val component =
     ScalaFnComponent
@@ -110,7 +109,7 @@ object TargetTable extends AsterismModifier:
                       e.preventDefaultCB >>
                         e.stopPropagationCB >>
                         props.targetIds.mod(_ - cell.value) >>
-                        deleteSiderealTarget(props.programId, props.obsIds, cell.value).runAsync
+                        deleteSiderealTarget(props.obsIds, cell.value).runAsync
                   ).tiny.compact,
               size = 35.toPx,
               enableSorting = false

@@ -9,7 +9,6 @@ import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
 import lucuma.core.model.Observation
-import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -32,24 +31,20 @@ object AsterismQueries:
     UpdateObservationMutation[F].execute(input).void
 
   def addTargetsToAsterisms[F[_]: Async](
-    programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
-      programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(ADD = targetIds.assign)
     )
     UpdateAsterismsMutation[F].execute(input).void
 
   def removeTargetsFromAsterisms[F[_]: Async](
-    programId: Program.Id,
     obsIds:    List[Observation.Id],
     targetIds: List[Target.Id]
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateAsterismsInput(
-      programId = programId,
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(DELETE = targetIds.assign)
     )
