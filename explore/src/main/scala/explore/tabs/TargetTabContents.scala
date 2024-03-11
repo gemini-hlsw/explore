@@ -529,7 +529,6 @@ object TargetTabContents extends TwoPanels:
                         .foldMap(uniqueTids =>
                           TargetPasteAction
                             .pasteTargets(
-                              props.programId,
                               obsIds,
                               uniqueTids,
                               selectObsIds,

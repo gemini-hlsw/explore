@@ -79,14 +79,12 @@ object ProgramQueries:
       .void
 
   def updateObsAttachmentDescription[F[_]: Async](
-    pid:  Program.Id,
     oid:  ObsAttachment.Id,
     desc: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObsAttachmentMutation[F]
       .execute(
         UpdateObsAttachmentsInput(
-          programId = pid,
           WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
           SET = ObsAttachmentPropertiesInput(description = desc.orUnassign)
         )
@@ -94,14 +92,12 @@ object ProgramQueries:
       .void
 
   def updateObsAttachmentChecked[F[_]: Async](
-    pid:     Program.Id,
     oid:     ObsAttachment.Id,
     checked: Boolean
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObsAttachmentMutation[F]
       .execute(
         UpdateObsAttachmentsInput(
-          programId = pid,
           WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
           SET = ObsAttachmentPropertiesInput(checked = checked.assign)
         )

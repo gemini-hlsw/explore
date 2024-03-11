@@ -273,7 +273,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
               DescriptionColumnId,
               _.withOnMod(oa =>
                 ProgramQueries
-                  .updateObsAttachmentDescription[IO](props.pid, oa.id, oa.description)
+                  .updateObsAttachmentDescription[IO](oa.id, oa.description)
                   .runAsync
               )
                 .zoom(ObsAttachment.description),
@@ -302,7 +302,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                   value = cell.value
                     .withOnMod(oa =>
                       ProgramQueries
-                        .updateObsAttachmentChecked[IO](props.pid, oa.id, oa.checked)
+                        .updateObsAttachmentChecked[IO](oa.id, oa.checked)
                         .runAsync
                     )
                     .zoom(ObsAttachment.checked),
