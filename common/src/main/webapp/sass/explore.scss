@@ -267,20 +267,6 @@ body.hide-reusability {
   }
 }
 
-.expander-chevron {
-  &:hover {
-    color: var(--site-link-color);
-  }
-
-  svg {
-    transition: transform 0.1s ease-in;
-  }
-}
-
-.expander-chevron-open svg {
-  transform: rotate(90deg);
-}
-
 // -------------
 // Itc tile title
 // -------------
@@ -800,63 +786,15 @@ $search-preview-margin: 5px;
   }
 }
 
-table.pl-react-table.explore-sequence-table {
-  table-layout: auto;
-}
-
-.explore-visit-section {
-  .p-accordion-header-text {
-    width: 100%;
-
-    .explore-visit-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: medium;
-
-      span {
-        @include lucumaUICommon.text-ellipsis;
-
-        &:not(:last-child) {
-          width: 23%;
-        }
-
-        &:last-child {
-          width: 8%;
-          text-align: right;
-        }
-      }
-    }
-  }
-
-  table tr .explore-visit-step-extra {
-    width: '100%';
-    display: flex;
-    justify-content: space-between;
-    padding-left: 5%;
-
-    .explore-visit-step-extra-datetime {
-      width: 20%;
-    }
-
-    .explore-visit-step-extra-datasets {
-      width: 75%;
-
-      .explore-visit-step-extra-dataset-item {
-        margin-right: 2.5dvw;
-
-        .explore-visit-step-extra-dataset-status-icon {
-          padding-left: 0.5dvw;
-        }
-
-        .explore-visit-step-extra-dataset-status-label {
-          padding-left: 0.2dvw;
-        }
-      }
-    }
-  }
+.explore-visit-section .p-accordion-header-text {
+  width: 100%;
 }
 
 .pl-react-table.pl-celled-table {
+  .p-datatable-thead > tr > th {
+    z-index: 55;
+  }
+
   .p-datatable-tbody > tr > td {
     &.explore-table-cell-hide-border {
       border-left-width: 0;
@@ -864,8 +802,6 @@ table.pl-react-table.explore-sequence-table {
 
     &.explore-sequence-bracket-cell {
       overflow: visible;
-      position: relative;
-      z-index: 50;
 
       svg {
         overflow: visible;
@@ -2363,18 +2299,6 @@ $help-title-height: 40px;
 div.spectroscopy-table-emptymessage {
   left: 10px;
   transform: unset;
-}
-
-.indicator-ok {
-  color: var(--green-400);
-}
-
-.indicator-warning {
-  color: var(--yellow-500);
-}
-
-.indicator-fail {
-  color: var(--red-500);
 }
 
 .explore-single-tile-maximized.react-grid-layout {
