@@ -63,10 +63,7 @@ trait CacheModifierUpdaters {
     val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
     val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.withUpdatePending(obsId))
 
-    obsUpdate
-      .andThen(groupsUpdate)
-      .andThen(programTimesReset)
-      .andThen(obsExecutionReset)
+    obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
   }
 
   /**
