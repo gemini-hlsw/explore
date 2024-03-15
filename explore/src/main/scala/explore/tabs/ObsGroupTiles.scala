@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.syntax.all.*
+import crystal.Pot
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -11,6 +12,7 @@ import explore.model.GroupEditIds
 import explore.model.GroupElement
 import explore.model.GroupList
 import explore.model.Grouping
+import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.UndoSetter
@@ -23,13 +25,14 @@ import lucuma.react.resizeDetector.UseResizeDetectorReturn
 import monocle.Traversal
 
 case class ObsGroupTiles(
-  userId:         Option[User.Id],
-  groupId:        Group.Id,
-  groups:         UndoSetter[GroupList],
-  resize:         UseResizeDetectorReturn,
-  defaultLayouts: LayoutsMap,
-  layouts:        LayoutsMap,
-  backButton:     VdomNode
+  userId:            Option[User.Id],
+  groupId:           Group.Id,
+  groups:            UndoSetter[GroupList],
+  timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  resize:            UseResizeDetectorReturn,
+  defaultLayouts:    LayoutsMap,
+  layouts:           LayoutsMap,
+  backButton:        VdomNode
 ) extends ReactFnProps(ObsGroupTiles.component)
 
 object ObsGroupTiles:
@@ -51,7 +54,7 @@ object ObsGroupTiles:
         s"${if group.get.isAnd then "AND" else "OR"} Group",
         props.backButton.some,
         tileTitleClass = ExploreStyles.GroupEditTitle
-      )(GroupEditTile(group, _))
+      )(GroupEditTile(group, props.timeEstimateRange, _))
 
       val notesTile = Tile(
         GroupEditIds.GroupNotesId.id,

@@ -63,8 +63,29 @@ trait CacheModifierUpdaters {
     val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
     val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.withUpdatePending(obsId))
 
-    obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
+    val parentGroupsReset = observationEdit.value.groupId
+      .map(gid => parentGroupReset(gid.asRight))
+      .getOrElse(identity[ProgramSummaries])
+
+    obsUpdate
+      .andThen(groupsUpdate)
+      .andThen(programTimesReset)
+      .andThen(obsExecutionReset)
+      .andThen(parentGroupsReset)
   }
+
+  /**
+   * Reset the time range pots for all parent groups of the given id
+   */
+  def parentGroupReset(id: Either[Observation.Id, Group.Id]): ProgramSummaries => ProgramSummaries =
+    programSummaries =>
+      val groupTimeRangePots = GroupElement
+        .findParentGroupIds(programSummaries.groups, id)
+        .tupleRight(Pot.pending)
+        .toMap
+      ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
+        programSummaries
+      )
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     groupEdit.value
@@ -73,7 +94,7 @@ trait CacheModifierUpdaters {
         val editType = groupEdit.editType
 
         // TODO: remove groups (data not available yet)
-        editType match
+        val groupUpdate = editType match
           case EditType.Created =>
             ProgramSummaries.groups.modify(groupElements =>
               groupElements :+ GroupElement(newGrouping.asRight, none)
@@ -104,6 +125,12 @@ trait CacheModifierUpdaters {
                 .andThen(updateParentGroupId)
                 .andThen(updateGroupElements)
             }
+
+        val groupsReset = ProgramSummaries.groupTimeRangePots
+          .modify(_.withUpdatePending(groupId))
+          .andThen(parentGroupReset(groupId.asRight))
+
+        groupUpdate.andThen(groupsReset)
       }
       .getOrElse(identity)
 

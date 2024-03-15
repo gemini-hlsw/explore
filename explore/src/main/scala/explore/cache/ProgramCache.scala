@@ -94,6 +94,23 @@ object ProgramCache
           .fold(identity[ProgramSummaries]): execution =>
             ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, Pot(execution)))
 
+  private def updateGroupTimeRange(programId: Program.Id)(using
+    StreamingClient[IO, ObservationDB]
+  ): IO[ProgramSummaries => ProgramSummaries] =
+    ProgramSummaryQueriesGQL
+      .GroupTimeRangeQuery[IO]
+      .query(programId)
+      .map(result =>
+        ProgramSummaries.groupTimeRangePots.modify(
+          _.allUpdated(
+            result.program.toList
+              .flatMap(_.allGroupElements.flatMap(_.group))
+              .map(group => (group.id, Pot(group.timeEstimateRange)))
+              .toMap
+          )
+        )
+      )
+
   override protected val initial
     : ProgramCache => IO[(ProgramSummaries, Stream[IO, ProgramSummaries => ProgramSummaries])] = {
     props =>
@@ -156,7 +173,17 @@ object ProgramCache
         val obsPots = observations.map(o => (o.id, Pot.pending)).toMap
         (optProgramDetails, targets, groups, attachments, programs).mapN {
           case (pd, ts, gs, (oas, pas), ps) =>
-            ProgramSummaries.fromLists(pd, ts, observations, gs, oas, pas, ps, Pot.pending, obsPots)
+            ProgramSummaries.fromLists(pd,
+                                       ts,
+                                       observations,
+                                       gs,
+                                       oas,
+                                       pas,
+                                       ps,
+                                       Pot.pending,
+                                       obsPots,
+                                       Map.empty
+            )
         }
 
       def combineTimesUpdates(
@@ -166,6 +193,7 @@ object ProgramCache
         // the program requires all of the observation times be calculated. So, if we do
         // it first, it could take a long time.
         Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
+          Stream.eval(updateGroupTimeRange(props.programId)) ++
           Stream.eval(updateProgramTimes(props.programId))
 
       for
@@ -213,6 +241,15 @@ object ProgramCache
               queryProgramTimes
         )
 
+        val groupTimeRangeUpdate: Pipe[
+          IO,
+          ProgramQueriesGQL.GroupEditSubscription.Data,
+          ProgramSummaries => ProgramSummaries
+        ] = keyedSwitchEvalMap(
+          _.groupEdit.value.map(_.id),
+          data => updateGroupTimeRange(props.programId)
+        )
+
         val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
           ObsQueriesGQL.ProgramObservationsDelta
             .subscribe[IO](props.programId.toObservationEditInput)(summon, ErrorPolicy.IgnoreOnData)
@@ -225,7 +262,11 @@ object ProgramCache
         val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
           ProgramQueriesGQL.GroupEditSubscription
             .subscribe[IO](props.programId.toProgramEditInput)
-            .map(_.map(data => modifyGroups(data.groupEdit)))
+            .map:
+              _.broadcastThrough(
+                _.map(data => modifyGroups(data.groupEdit)),
+                groupTimeRangeUpdate
+              )
 
         // Right now the programEdit subsription isn't fine grained enough to
         // differentiate what got updated, so we alway update all the attachments.

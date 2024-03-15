@@ -48,7 +48,6 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
 
-import scala.annotation.tailrec
 import scala.scalajs.js
 
 import ObsQueries.*
@@ -140,31 +139,9 @@ object ObsList:
         (props, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
-            @tailrec
-            def findParentGroups(
-              groupElementId: Either[Observation.Id, Group.Id],
-              acc:            Set[Group.Id]
-            ): Set[Group.Id] = {
-              val parentGroup = groups.find(
-                GroupElement.grouping
-                  .exist(_.elements.exists(_.bimap(_.id, _.id) === groupElementId))
-              )
+            val groupsToAddFocus = GroupElement.findParentGroupIds(groups, obsId.asLeft)
 
-              parentGroup match
-                case None                                                => acc
-                case Some(GroupElement(Left(_), _))                      => acc
-                // We've found the 'root' group, so we're done
-                case Some(GroupElement(Right(grouping), None))           => acc + grouping.id
-                case Some(GroupElement(Right(grouping), Some(parentId))) =>
-                  findParentGroups(parentId.asRight, acc ++ Set(parentId, grouping.id))
-            }
-
-            val groupsToAddFocus =
-              findParentGroups(obsId.asLeft, Set.empty)
-
-            Callback.when(groupsToAddFocus.nonEmpty)(
-              props.expandedGroups.mod(_ ++ groupsToAddFocus)
-            )
+            props.expandedGroups.mod(_ ++ groupsToAddFocus).when_(groupsToAddFocus.nonEmpty)
       )
       .render { (props, ctx, _, adding, treeNodes) =>
         import ctx.given

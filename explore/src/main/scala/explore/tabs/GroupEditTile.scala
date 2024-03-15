@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.kernel.Eq
 import cats.syntax.all.*
 import clue.data.syntax.*
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegShort
@@ -18,6 +19,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Grouping
+import explore.model.ProgramTimeRange
 import explore.model.syntax.all.toHoursMinutes
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
@@ -41,8 +43,9 @@ import monocle.Lens
 import scala.scalajs.js
 
 case class GroupEditTile(
-  group:         UndoSetter[Grouping],
-  renderInTitle: Tile.RenderInTitle
+  group:             UndoSetter[Grouping],
+  timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps(GroupEditTile.component)
 
 object GroupEditTile:
@@ -201,7 +204,7 @@ object GroupEditTile:
       )
 
       val plannedTime =
-        group.timeEstimateRange.map: timeEstimateRange =>
+        props.timeEstimateRange.orSpinner(_.map: timeEstimateRange =>
           <.div(ExploreStyles.GroupPlannedTime)(
             if timeEstimateRange.maximum === timeEstimateRange.minimum then
               React.Fragment(
@@ -215,28 +218,27 @@ object GroupEditTile:
                 FormLabel(htmlFor = "minPlannedTime".refined)("Minimum Planned Time"),
                 <.span(^.id := "minPlannedTime", timeEstimateRange.minimum.value.toHoursMinutes)
               )
-          )
+          ))
 
       val groupTypeSpecificForms =
         if isAnd then <.div(ExploreStyles.GroupForm)(nameForm, orderForm, delaysForm, plannedTime)
         else <.div(ExploreStyles.GroupForm)(nameForm, minRequiredForm, plannedTime)
 
       React.Fragment(
-        props.renderInTitle(makeTitle(group)),
+        props.renderInTitle(makeTitle(group, props.timeEstimateRange)),
         <.div(ExploreStyles.GroupEditTile)(
           selectGroupForm,
           groupTypeSpecificForms
         )
       )
 
-  private def makeTitle(group: Grouping) =
-    val timeStr: VdomNode  = group.timeEstimateRange
-      .map: timeEstimateRange =>
-        if timeEstimateRange.maximum === timeEstimateRange.minimum then
-          timeEstimateRange.maximum.value.toHoursMinutes
-        else
-          s"${timeEstimateRange.maximum.value.toHoursMinutes} max - ${timeEstimateRange.minimum.value.toHoursMinutes} min"
-      .map(s => s", $s")
+  private def makeTitle(group: Grouping, timeEstimateRange: Pot[Option[ProgramTimeRange]]) =
+    val timeStr: VdomNode  = timeEstimateRange.renderReady(_.map: timeEstimateRange =>
+      if timeEstimateRange.maximum === timeEstimateRange.minimum then
+        timeEstimateRange.maximum.value.toHoursMinutes
+      else
+        s"${timeEstimateRange.maximum.value.toHoursMinutes} max - ${timeEstimateRange.minimum.value.toHoursMinutes} min"
+    .map(s => s", $s"))
     val andOrStr: VdomNode =
       if group.isAnd then if group.ordered then "Ordered" else "Any order"
       else

@@ -13,6 +13,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
@@ -61,13 +62,19 @@ type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
 
 type GroupList = List[GroupElement]
 
-object ObservationExecutionMap extends NewType[Map[Observation.Id, Pot[Execution]]]:
-  extension (t: Type)
-    def getPot(obsId: Observation.Id): Pot[Execution]                                =
-      t.value.get(obsId).getOrElse(Pot.pending)
-    def updated(obsId: Observation.Id, pot: Pot[Execution]): ObservationExecutionMap =
-      ObservationExecutionMap(t.value.updated(obsId, pot))
-    def withUpdatePending(obsId: Observation.Id): ObservationExecutionMap            =
-      updated(obsId, Pot.pending)
-
+object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
 type ObservationExecutionMap = ObservationExecutionMap.Type
+
+object GroupTimeRangeMap extends PotMap[Group.Id, Option[ProgramTimeRange]]
+type GroupTimeRangeMap = GroupTimeRangeMap.Type
+
+trait PotMap[K, V] extends NewType[Map[K, Pot[V]]]:
+  extension (t: Type)
+    def getPot(k: K): Pot[V]                       =
+      t.value.get(k).getOrElse(Pot.pending)
+    def updated(k: K, pot: Pot[V]): this.Type      =
+      apply(t.value.updated(k, pot))
+    def withUpdatePending(k: K): this.Type         =
+      updated(k, Pot.pending)
+    def allUpdated(map: Map[K, Pot[V]]): this.Type =
+      apply(t.value ++ map)

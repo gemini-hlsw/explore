@@ -22,6 +22,8 @@ import monocle.Lens
 import monocle.Prism
 import monocle.Traversal
 
+import scala.annotation.tailrec
+
 import GroupElement.given
 
 case class GroupElement(value: Either[GroupObs, Grouping], parentGroupId: Option[Group.Id])
@@ -34,6 +36,8 @@ object GroupElement:
     value.andThen(Prism[Either[GroupObs, Grouping], GroupObs](_.left.toOption)(_.asLeft))
 
   val grouping = value.andThen(Prism[Either[GroupObs, Grouping], Grouping](_.toOption)(_.asRight))
+
+  val groupId = grouping.andThen(Grouping.id)
 
   val parentGroupId: Lens[GroupElement, Option[Group.Id]] =
     Focus[GroupElement](_.parentGroupId)
@@ -54,6 +58,34 @@ object GroupElement:
   private def groupObsOr[B](f: HCursor => Decoder.Result[B]) = (c: HCursor) =>
     f(c).map(_.asRight).orElse(c.get[GroupObs]("observation").map(_.asLeft))
 
+    /**
+     * Find all parents of this element in the given group list
+     */
+  def findParentGroupIds(
+    groups:    GroupList,
+    elementId: Either[Observation.Id, Group.Id]
+  ): List[Group.Id] = {
+    @tailrec
+    def go(
+      acc:     List[Group.Id],
+      current: Either[Observation.Id, Group.Id]
+    ): List[Group.Id] =
+      val parentGroup = groups.find(
+        GroupElement.grouping
+          .exist(_.elements.exists(_.bimap(_.id, _.id) === current))
+      )
+      parentGroup match
+        case None                                                     => acc
+        // Parent is an observation. Shouldn't happen, so just return what we have
+        case Some(GroupElement(Left(_), _))                           => acc
+        // We've found the 'root' group, so we're done
+        case Some(GroupElement(Right(grouping), None))                => acc :+ grouping.id
+        // We've found a parent group, so we add it to the list and continue
+        case Some(el @ GroupElement(Right(grouping), Some(parentId))) =>
+          go(acc ++ List(parentId, grouping.id), parentId.asRight)
+    go(Nil, elementId)
+  }
+
 case class GroupObs(id: Observation.Id, groupIndex: NonNegShort) derives Eq, Decoder
 
 object GroupObs:
@@ -61,16 +93,15 @@ object GroupObs:
   val groupIndex: Lens[GroupObs, NonNegShort] = Focus[GroupObs](_.groupIndex)
 
 case class Grouping(
-  id:                Group.Id,
-  name:              Option[NonEmptyString],
-  minimumRequired:   Option[NonNegShort],
-  elements:          List[Either[GroupObs, GroupingElement]],
-  parentId:          Option[Group.Id],
-  parentIndex:       NonNegShort,
-  minimumInterval:   Option[TimeSpan],
-  maximumInterval:   Option[TimeSpan],
-  ordered:           Boolean,
-  timeEstimateRange: Option[ProgramTimeRange]
+  id:              Group.Id,
+  name:            Option[NonEmptyString],
+  minimumRequired: Option[NonNegShort],
+  elements:        List[Either[GroupObs, GroupingElement]],
+  parentId:        Option[Group.Id],
+  parentIndex:     NonNegShort,
+  minimumInterval: Option[TimeSpan],
+  maximumInterval: Option[TimeSpan],
+  ordered:         Boolean
 ) derives Eq,
       Decoder:
   def isAnd: Boolean = minimumRequired.isEmpty

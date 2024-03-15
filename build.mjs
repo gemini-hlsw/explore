@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import process from 'process';
-import { build } from 'vite';
+import { build, loadConfigFromFile } from 'vite';
 import { minify } from 'terser';
 import humanFormat from 'human-format';
 import brotliSize from 'brotli-size';
@@ -13,6 +13,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const outDir = path.resolve(__dirname, 'heroku/static');
+
+/**
+ * @type {import('terser').MinifyOptions}
+ */
 const terserOptions = {
   sourceMap: false,
   nameCache: {},
@@ -43,6 +47,10 @@ const terserOptions = {
 };
 
 let i = 1;
+/**
+ * @param {string} fileName
+ * @param {number} length
+ */
 async function runTerserOn(fileName, length) {
   process.stdout.write(`Minifying ${i++}/${length}: ${fileName}...`);
   const absolute = path.join(outDir, fileName);
@@ -69,13 +77,15 @@ async function runTerserOn(fileName, length) {
   );
 }
 
-(async () => {
-  const rollupOutput = await build(config({ mode: 'production' }));
-  const jsChunks = rollupOutput.output
-    .map((chunk) => chunk.fileName)
-    .filter((fileName) => fileName.endsWith('.js'));
+const config = await loadConfigFromFile({ mode: 'production' });
+/**
+ * @type {import('rollup').RollupOutput}
+ */
+const rollupOutput = await build(config);
+const jsChunks = rollupOutput.output
+  .map((chunk) => chunk.fileName)
+  .filter((fileName) => fileName.endsWith('.js'));
 
-  for (const fileName of jsChunks) {
-    await runTerserOn(fileName, jsChunks.length);
-  }
-})();
+for (const fileName of jsChunks) {
+  await runTerserOn(fileName, jsChunks.length);
+}
