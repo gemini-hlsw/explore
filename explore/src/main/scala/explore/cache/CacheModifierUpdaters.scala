@@ -66,21 +66,6 @@ trait CacheModifierUpdaters {
     obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
   }
 
-  /**
-   * Reset the time range pots for all parent groups of the given id
-   */
-  def parentGroupTimeRangeReset(
-    id: Either[Observation.Id, Group.Id]
-  ): ProgramSummaries => ProgramSummaries =
-    programSummaries =>
-      val groupTimeRangePots = GroupElement
-        .findParentGroupIds(programSummaries.groups, id)
-        .tupleRight(Pot.pending)
-        .toMap
-      ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
-        programSummaries
-      )
-
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     groupEdit.value
       .map { newGrouping =>
@@ -141,6 +126,21 @@ trait CacheModifierUpdaters {
   protected def modifyPrograms(programEdit: ProgramEdit): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.programs
       .modify(_.updated(programEdit.value.id, programEdit.value))
+
+  /**
+   * Reset the time range pots for all parent groups of the given id
+   */
+  private def parentGroupTimeRangeReset(
+    id: Either[Observation.Id, Group.Id]
+  ): ProgramSummaries => ProgramSummaries =
+    programSummaries =>
+      val groupTimeRangePots = GroupElement
+        .findParentGroupIds(programSummaries.groups, id)
+        .tupleRight(Pot.pending)
+        .toMap
+      ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
+        programSummaries
+      )
 
   /**
    * Update the groups for an observation edit. When an observation is updated, we also need to
