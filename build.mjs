@@ -6,7 +6,8 @@ import { build, loadConfigFromFile } from 'vite';
 import { minify } from 'terser';
 import humanFormat from 'human-format';
 import brotliSize from 'brotli-size';
-import config from './vite.config.mjs';
+
+const config = await loadConfigFromFile({ mode: 'production' });
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -77,7 +78,6 @@ async function runTerserOn(fileName, length) {
   );
 }
 
-const config = await loadConfigFromFile({ mode: 'production' });
 /**
  * @type {import('rollup').RollupOutput}
  */
