@@ -53,7 +53,7 @@
     "unplugin-fonts": "^1.1.1",
     "vite": "4.5.0",
     "vite-plugin-mkcert": "^1.17.4",
-    "vite-plugin-pwa": "^0.19.2"
+    "vite-plugin-pwa": "^0.19.4"
   },
   "scripts": {
     "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
