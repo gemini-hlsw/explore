@@ -39,7 +39,6 @@ object GroupQueriesGQL:
         ordered
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
-        timeEstimateRange $ProgramTimeRangeSubquery
         elements {
           observation {
             id

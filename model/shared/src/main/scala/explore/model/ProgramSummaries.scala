@@ -10,6 +10,7 @@ import cats.implicits.*
 import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
+import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
@@ -30,7 +31,8 @@ case class ProgramSummaries(
   proposalAttachments: List[ProposalAttachment],
   programs:            ProgramInfoList,
   programTimesPot:     Pot[ProgramTimes],
-  obsExecutionPots:    ObservationExecutionMap
+  obsExecutionPots:    ObservationExecutionMap,
+  groupTimeRangePots:  GroupTimeRangeMap
 ) derives Eq:
   lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
@@ -115,6 +117,8 @@ object ProgramSummaries:
     Focus[ProgramSummaries](_.programTimesPot)
   val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]     =
     Focus[ProgramSummaries](_.obsExecutionPots)
+  val groupTimeRangePots: Lens[ProgramSummaries, GroupTimeRangeMap]         =
+    Focus[ProgramSummaries](_.groupTimeRangePots)
 
   def fromLists(
     optProgramDetails:   Option[ProgramDetails],
@@ -125,7 +129,8 @@ object ProgramSummaries:
     proposalAttachments: List[ProposalAttachment],
     programs:            List[ProgramInfo],
     programTimesPot:     Pot[ProgramTimes],
-    obsExecutionPots:    Map[Observation.Id, Pot[Execution]]
+    obsExecutionPots:    Map[Observation.Id, Pot[Execution]],
+    groupTimeRangePots:  Map[Group.Id, Pot[Option[ProgramTimeRange]]]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,
@@ -136,5 +141,6 @@ object ProgramSummaries:
       proposalAttachments,
       programs.toSortedMap(_.id),
       programTimesPot,
-      ObservationExecutionMap(obsExecutionPots)
+      ObservationExecutionMap(obsExecutionPots),
+      GroupTimeRangeMap(groupTimeRangePots)
     )

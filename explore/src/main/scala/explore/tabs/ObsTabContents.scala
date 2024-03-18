@@ -82,6 +82,7 @@ case class ObsTabContents(
   val observations: UndoSetter[ObservationList]            =
     programSummaries.zoom(ProgramSummaries.observations)
   val obsExecutions: ObservationExecutionMap               = programSummaries.get.obsExecutionPots
+  val groupTimeRanges: GroupTimeRangeMap                   = programSummaries.get.groupTimeRangePots
   val groups: UndoSetter[GroupList]                        = programSummaries.zoom(ProgramSummaries.groups)
   val targets: UndoSetter[TargetList]                      = programSummaries.zoom(ProgramSummaries.targets)
 
@@ -179,6 +180,7 @@ object ObsTabContents extends TwoPanels:
         props.userId,
         groupId,
         props.groups,
+        props.groupTimeRanges.getPot(groupId),
         resize,
         ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
         props.userPreferences.get.groupEditLayout,

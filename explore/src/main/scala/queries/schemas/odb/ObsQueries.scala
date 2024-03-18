@@ -149,7 +149,7 @@ object ObsQueries:
     FetchClient[F, ObservationDB]
   ): F[ObsSummary] =
     CloneObservationMutation[F]
-      .execute(CloneObservationInput(observationId = obsId))
+      .execute(CloneObservationInput(observationId = obsId.assign))
       .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
@@ -161,7 +161,7 @@ object ObsQueries:
     CloneObservationMutation[F]
       .execute(
         CloneObservationInput(
-          observationId = obsId,
+          observationId = obsId.assign,
           SET = ObservationPropertiesInput(targetEnvironment =
             TargetEnvironmentInput(asterism = targetIds.assign).assign
           ).assign
