@@ -6,7 +6,7 @@ package explore.model
 import cats.kernel.laws.discipline.*
 import explore.model.arb.all.given
 import explore.model.enums.AppTab
-import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.util.arb.ArbEnumerated.given
 import munit.DisciplineSuite
 
 class ModelSuite extends DisciplineSuite:

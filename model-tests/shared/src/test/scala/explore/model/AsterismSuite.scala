@@ -8,7 +8,7 @@ import cats.laws.discipline.arbitrary.*
 import explore.model.arb.all.given
 import lucuma.core.model.Target
 import lucuma.core.model.arb.ArbTarget.given
-import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbGid.given
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.arb.ArbTargetWithId.given
 import monocle.law.discipline.*

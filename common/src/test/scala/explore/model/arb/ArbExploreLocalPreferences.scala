@@ -5,7 +5,7 @@ package explore.model.arb
 
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
-import lucuma.core.util.arb.ArbEnumerated.*
+import lucuma.core.util.arb.ArbEnumerated.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen

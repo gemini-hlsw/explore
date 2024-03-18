@@ -3,7 +3,7 @@
 
 package explore.model
 
-import explore.model.arb.ArbObsIdSet.*
+import explore.model.arb.ArbObsIdSet.given
 import monocle.law.discipline.*
 import munit.DisciplineSuite
 

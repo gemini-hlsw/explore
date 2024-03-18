@@ -7,18 +7,18 @@ import cats.data.NonEmptySet
 import cats.laws.discipline.arbitrary.*
 import explore.model.ObsIdSet
 import lucuma.core.model.Observation
-import lucuma.core.util.arb.ArbGid.*
+import lucuma.core.util.arb.ArbGid.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 
 trait ArbObsIdSet {
 
-  implicit val arbObsIdSet: Arbitrary[ObsIdSet] = Arbitrary {
+  given Arbitrary[ObsIdSet] = Arbitrary {
     arbitrary[NonEmptySet[Observation.Id]].map(ObsIdSet.apply)
   }
 
-  implicit val cogenObsIdSet: Cogen[ObsIdSet] =
+  given Cogen[ObsIdSet] =
     Cogen[NonEmptySet[Observation.Id]].contramap(_.idSet)
 }
 
