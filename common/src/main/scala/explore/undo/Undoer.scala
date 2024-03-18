@@ -3,7 +3,7 @@
 
 package explore.undo
 
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
+import japgolly.scalajs.react.util.DefaultEffects.Sync as DefaultS
 
 /** Undo controls */
 trait Undoer:

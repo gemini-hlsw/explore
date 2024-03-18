@@ -9,7 +9,7 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import fs2.concurrent.SignallingRef
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
+import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
 
 trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:

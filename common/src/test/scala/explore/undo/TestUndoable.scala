@@ -8,8 +8,8 @@ import cats.effect.std.Dispatcher
 import crystal.react.View
 import explore.optics.GetAdjust
 import japgolly.scalajs.react.ReactCats.*
-import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
+import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
+import japgolly.scalajs.react.util.DefaultEffects.Sync as DefaultS
 import org.typelevel.log4cats.Logger
 
 class TestUndoable[M](

@@ -4,10 +4,10 @@
 package queries.common
 
 import clue.GraphQLSubquery
+import clue.annotation.GraphQL
 import explore.model.ObsSummary
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
-import clue.annotation.GraphQL
 
 @GraphQL
 object ObservationSummarySubquery

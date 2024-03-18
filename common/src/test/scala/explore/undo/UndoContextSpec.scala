@@ -8,8 +8,8 @@ import cats.effect.std.Dispatcher
 import cats.kernel.Eq
 import cats.syntax.all.*
 import explore.data.KeyedIndexedList
-import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree.*
+import explore.data.tree.KeyedIndexedTree.Index
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import explore.undo.*

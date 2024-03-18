@@ -5,10 +5,10 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.GraphQLSubquery
+import clue.annotation.GraphQL
 import explore.model.GroupElement
 import explore.model.Grouping
 import lucuma.schemas.ObservationDB
-import clue.annotation.GraphQL
 import lucuma.schemas.odb.TimeSpanSubquery
 
 object GroupQueriesGQL:
