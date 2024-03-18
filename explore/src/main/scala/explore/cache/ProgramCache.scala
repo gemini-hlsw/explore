@@ -12,6 +12,7 @@ import clue.data.syntax.*
 import crystal.Pot
 import explore.DefaultErrorPolicy
 import explore.model.GroupElement
+import explore.model.GroupList
 import explore.model.ObsAttachment
 import explore.model.ObsSummary
 import explore.model.ObservationExecutionMap
@@ -25,6 +26,7 @@ import fs2.Pipe
 import fs2.Stream
 import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -94,22 +96,17 @@ object ProgramCache
           .fold(identity[ProgramSummaries]): execution =>
             ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, Pot(execution)))
 
-  private def updateGroupTimeRange(programId: Program.Id)(using
+  private def updateGroupTimeRange(groupId: Group.Id)(using
     StreamingClient[IO, ObservationDB]
   ): IO[ProgramSummaries => ProgramSummaries] =
     ProgramSummaryQueriesGQL
       .GroupTimeRangeQuery[IO]
-      .query(programId)
-      .map(result =>
-        ProgramSummaries.groupTimeRangePots.modify(
-          _.allUpdated(
-            result.program.toList
-              .flatMap(_.allGroupElements.flatMap(_.group))
-              .map(group => (group.id, Pot(group.timeEstimateRange)))
-              .toMap
-          )
-        )
-      )
+      .query(groupId)
+      .map:
+        _.group
+          .map(_.timeEstimateRange)
+          .fold(identity[ProgramSummaries]): timeRange =>
+            ProgramSummaries.groupTimeRangePots.modify(_.updated(groupId, Pot(timeRange)))
 
   override protected val initial
     : ProgramCache => IO[(ProgramSummaries, Stream[IO, ProgramSummaries => ProgramSummaries])] = {
@@ -169,37 +166,44 @@ object ProgramCache
           _.id
         )
 
-      def initializeSummaries(observations: List[ObsSummary]): IO[ProgramSummaries] =
-        val obsPots = observations.map(o => (o.id, Pot.pending)).toMap
-        (optProgramDetails, targets, groups, attachments, programs).mapN {
-          case (pd, ts, gs, (oas, pas), ps) =>
-            ProgramSummaries.fromLists(pd,
-                                       ts,
-                                       observations,
-                                       gs,
-                                       oas,
-                                       pas,
-                                       ps,
-                                       Pot.pending,
-                                       obsPots,
-                                       Map.empty
-            )
+      def initializeSummaries(
+        observations: List[ObsSummary],
+        groups:       GroupList
+      ): IO[ProgramSummaries] =
+        val obsPots   = observations.map(o => (o.id, Pot.pending)).toMap
+        val groupPots =
+          groups.flatMap(GroupElement.groupId.getOption).map(g => (g, Pot.pending)).toMap
+        (optProgramDetails, targets, attachments, programs).mapN { case (pd, ts, (oas, pas), ps) =>
+          ProgramSummaries.fromLists(pd,
+                                     ts,
+                                     observations,
+                                     groups,
+                                     oas,
+                                     pas,
+                                     ps,
+                                     Pot.pending,
+                                     obsPots,
+                                     groupPots
+          )
         }
 
       def combineTimesUpdates(
-        observations: List[ObsSummary]
+        observations: List[ObsSummary],
+        groups:       GroupList
       ): Stream[IO, ProgramSummaries => ProgramSummaries] =
-        // We want to update all the observations first, followed by the program, because
-        // the program requires all of the observation times be calculated. So, if we do
-        // it first, it could take a long time.
+        // We want to update all the observations first, followed by the groups,
+        // and then the program, because the program requires all of the observation times be calculated.
+        // So, if we do it first, it could take a long time.
         Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
-          Stream.eval(updateGroupTimeRange(props.programId)) ++
+          Stream
+            .emits(groups.flatMap(GroupElement.groupId.getOption))
+            .evalMap(updateGroupTimeRange) ++
           Stream.eval(updateProgramTimes(props.programId))
 
       for
-        obs       <- observations
-        summaries <- initializeSummaries(obs)
-      yield (summaries, combineTimesUpdates(obs))
+        (obs, groupss) <- (observations, groups).parTupled
+        summaries      <- initializeSummaries(obs, groupss)
+      yield (summaries, combineTimesUpdates(obs, groupss))
   }
 
   override protected val updateStream
@@ -236,9 +240,7 @@ object ProgramCache
           ProgramSummaries => ProgramSummaries
         ] = keyedSwitchEvalMap(
           _.observationEdit.value.id,
-          data =>
-            updateObservationExecution(data.observationEdit.value.id).flatTap: _ =>
-              queryProgramTimes
+          data => updateObservationExecution(data.observationEdit.value.id) <* queryProgramTimes
         )
 
         val groupTimeRangeUpdate: Pipe[
@@ -247,7 +249,10 @@ object ProgramCache
           ProgramSummaries => ProgramSummaries
         ] = keyedSwitchEvalMap(
           _.groupEdit.value.map(_.id),
-          data => updateGroupTimeRange(props.programId)
+          data =>
+            data.groupEdit.value
+              .map(_.id)
+              .fold(identity[ProgramSummaries].pure[IO])(updateGroupTimeRange) <* queryProgramTimes
         )
 
         val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =

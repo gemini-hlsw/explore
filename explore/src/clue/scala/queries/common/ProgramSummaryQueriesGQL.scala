@@ -89,14 +89,9 @@ object ProgramSummaryQueriesGQL {
   @GraphQL
   trait GroupTimeRangeQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      query($$programId: ProgramId!) {
-        program(programId: $$programId) {
-          allGroupElements {
-            group {
-              id
-              timeEstimateRange $ProgramTimeRangeSubquery
-            }
-          }
+      query($$groupId: GroupId!) {
+        group(groupId: $$groupId) {
+          timeEstimateRange $ProgramTimeRangeSubquery
         }
       }
     """
