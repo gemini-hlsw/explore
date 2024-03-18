@@ -360,7 +360,6 @@ ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty
 ThisBuild / githubWorkflowSbtCommand           := "sbt -v -J-Xmx6g"
 ThisBuild / githubWorkflowBuildPreamble ++= setupNodeNpmInstall
 ThisBuild / githubWorkflowEnv += faNpmAuthToken
-ThisBuild / githubWorkflowOSes                 := Seq("macos-latest")
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
@@ -378,7 +377,6 @@ ThisBuild / githubWorkflowAddedJobs +=
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
-    oses = List("macos-latest"),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
   )
 

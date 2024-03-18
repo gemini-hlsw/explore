@@ -27,7 +27,7 @@ jobs:
     name: Build and Test
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest]
         scala: [3]
         java: [temurin@17]
         project: [rootJS, rootJVM]
@@ -74,11 +74,11 @@ jobs:
         run: sbt -v -J-Xmx6g githubWorkflowCheck
 
       - name: Check headers and formatting
-        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
+        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-latest'
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck lucumaScalafmtCheck lucumaScalafixCheck
 
       - name: Check scalafix lints
-        if: matrix.java == 'temurin@17' && matrix.os == 'macos-latest'
+        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-latest'
         run: sbt -v -J-Xmx6g 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' 'scalafixAll --check'
 
       - name: scalaJSLink
