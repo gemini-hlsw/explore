@@ -10,8 +10,8 @@ import eu.timepit.refined.api.Refined
 import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
-import lucuma.ags.GuideProbe
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.enums.GuideProbe
 import lucuma.core.geom.Area
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates

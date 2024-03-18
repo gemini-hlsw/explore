@@ -7,8 +7,8 @@ import explore.model.AsterismVisualOptions
 import eu.timepit.refined.scalacheck.numeric.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.core.math.arb.ArbAngle.*
-import lucuma.core.math.arb.ArbOffset.*
+import lucuma.core.math.arb.ArbAngle.given
+import lucuma.core.math.arb.ArbOffset.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary.*
