@@ -55,6 +55,8 @@ object reusability:
   given Reusability[ObsAttachment]           = Reusability.byEq
   given Reusability[ProposalAttachment]      = Reusability.byEq
   given Reusability[ProgramInfo]             = Reusability.byEq
+  given Reusability[ProgramDetails]          = Reusability.byEq
+  given Reusability[Execution]               = Reusability.byEq
 
   /**
    */
@@ -111,7 +113,7 @@ object reusability:
 
   given Reusability[TimingWindow] = Reusability.byEq
 
-  given [S: Eq, D: Eq]: Reusability[Visit[S, D]] = Reusability.byEq
+  given [D: Eq]: Reusability[Visit[D]] = Reusability.byEq
 
   given [D: Eq]: Reusability[StepRecord[D]] = Reusability.byEq
 

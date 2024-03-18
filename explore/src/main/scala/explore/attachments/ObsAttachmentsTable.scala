@@ -65,6 +65,7 @@ case class ObsAttachmentsTable(
   authToken:                NonEmptyString,
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
+  readonly:                 Boolean,
   renderInTitle:            Tile.RenderInTitle
 ) extends ReactFnProps(ObsAttachmentsTable.component)
 
@@ -171,9 +172,9 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
       )
       // Columns
       .useMemoBy((props, _, client, _, urlMap) =>
-        (client, props.obsAttachmentAssignments, urlMap.get)
+        (client, props.obsAttachmentAssignments, urlMap.get, props.readonly)
       )((props, ctx, _, action, _) =>
-        (client, assignments, urlMap) =>
+        (client, assignments, urlMap, readonly) =>
           import ctx.given
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
@@ -207,7 +208,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                     tableLabelButtonClasses,
                     Icons.Trash,
                     ^.onClick ==> deletePrompt(props, client, thisOa, assignments.get(id).orEmpty)
-                  ).withTooltip("Delete attachment"),
+                  ).withTooltip("Delete attachment").unless(readonly),
                   <.label(
                     tableLabelButtonClasses,
                     ^.htmlFor := s"attachment-replace-$id",
@@ -215,7 +216,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                   ).withTooltip(
                     tooltip = s"Upload replacement file",
                     placement = Placement.Right
-                  ),
+                  ).unless(readonly),
                   <.input(
                     ExploreStyles.FileUpload,
                     ^.tpe    := "file",
@@ -223,7 +224,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                     ^.id     := s"attachment-replace-$id",
                     ^.name   := "file",
                     ^.accept := thisOa.attachmentType.accept
-                  ),
+                  ).unless(readonly),
                   urlMap.get(thisOa.toMapKey).foldMap {
                     case Pot.Ready(url) =>
                       <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
@@ -272,7 +273,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
               DescriptionColumnId,
               _.withOnMod(oa =>
                 ProgramQueries
-                  .updateObsAttachmentDescription[IO](props.pid, oa.id, oa.description)
+                  .updateObsAttachmentDescription[IO](oa.id, oa.description)
                   .runAsync
               )
                 .zoom(ObsAttachment.description),
@@ -286,7 +287,8 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                   editButtonTooltip = "Edit description".some,
                   deleteButtonTooltip = "Delete description".some,
                   okButtonTooltip = "Accept".some,
-                  discardButtonTooltip = "Discard".some
+                  discardButtonTooltip = "Discard".some,
+                  readonly = readonly
                 )
             )
               .sortableBy(_.get.map(_.value.toUpperCase).orEmpty),
@@ -300,11 +302,12 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                   value = cell.value
                     .withOnMod(oa =>
                       ProgramQueries
-                        .updateObsAttachmentChecked[IO](props.pid, oa.id, oa.checked)
+                        .updateObsAttachmentChecked[IO](oa.id, oa.checked)
                         .runAsync
                     )
                     .zoom(ObsAttachment.checked),
-                  label = ""
+                  label = "",
+                  disabled = readonly
                 )
             ).sortableBy(_.get.checked)
           )
@@ -326,35 +329,37 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
 
         React.Fragment(
           props.renderInTitle(
-            <.div(
-              ExploreStyles.TableSelectionToolbar,
-              EnumDropdownView(
-                id = "attachment-type".refined,
-                value = newAttType,
-                clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
-              ),
-              <.label(
-                LabelButtonClasses,
-                ^.htmlFor := "attachment-upload",
-                Icons.FileArrowUp
-              ).withTooltip(
-                tooltip = s"Upload new ${newAttType.get.shortName} attachment",
-                placement = Placement.Right
-              ),
-              <.input(
-                ExploreStyles.FileUpload,
-                ^.tpe    := "file",
-                ^.onChange ==> onInsertFileSelected(props.pid,
-                                                    props.obsAttachments,
-                                                    newAttType.get,
-                                                    client,
-                                                    action
+            if (props.readonly) EmptyVdom
+            else
+              <.div(
+                ExploreStyles.TableSelectionToolbar,
+                EnumDropdownView(
+                  id = "attachment-type".refined,
+                  value = newAttType,
+                  clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
                 ),
-                ^.id     := "attachment-upload",
-                ^.name   := "file",
-                ^.accept := newAttType.get.accept
+                <.label(
+                  LabelButtonClasses,
+                  ^.htmlFor := "attachment-upload",
+                  Icons.FileArrowUp
+                ).withTooltip(
+                  tooltip = s"Upload new ${newAttType.get.shortName} attachment",
+                  placement = Placement.Right
+                ),
+                <.input(
+                  ExploreStyles.FileUpload,
+                  ^.tpe    := "file",
+                  ^.onChange ==> onInsertFileSelected(props.pid,
+                                                      props.obsAttachments,
+                                                      newAttType.get,
+                                                      client,
+                                                      action
+                  ),
+                  ^.id     := "attachment-upload",
+                  ^.name   := "file",
+                  ^.accept := newAttType.get.accept
+                )
               )
-            )
           ),
           PrimeTable(
             table,

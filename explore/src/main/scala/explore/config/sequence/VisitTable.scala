@@ -69,13 +69,15 @@ private sealed trait VisitTableBuilder[D: Eq]:
             val step = row.original._1
             (<.div(ExploreStyles.VisitStepExtra)(
               <.span(ExploreStyles.VisitStepExtraDatetime)(
-                step.startTime.fold("---")(start => Constants.UtcFormatter.format(start))
+                step.interval
+                  .map(_.start.toInstant)
+                  .fold("---")(start => Constants.UtcFormatter.format(start))
               ),
               <.span(ExploreStyles.VisitStepExtraDatasets)(
                 step.datasets
                   .map(dataset =>
                     <.span(ExploreStyles.VisitStepExtraDatasetItem)(
-                      dataset.filename.value,
+                      dataset.filename.format,
                       dataset.qaState.map(qaState =>
                         React.Fragment(
                           Icons.Circle.withClass(

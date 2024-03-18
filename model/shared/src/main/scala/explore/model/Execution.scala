@@ -6,8 +6,20 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.ProgramTime
 import io.circe.Decoder
 import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.TimeSpan
 import lucuma.odb.json.sequence.given
 
-case class Execution(digest: Option[ExecutionDigest], timeCharge: TimeCharge) derives Decoder, Eq
+case class Execution(digest: Option[ExecutionDigest], programTimeCharge: ProgramTime) derives Eq:
+  lazy val programTimeEstimate: Option[TimeSpan] = digest.map(_.fullTimeEstimate.programTime)
+
+object Execution {
+  given Decoder[Execution] = Decoder.instance(c =>
+    for {
+      d  <- c.get[Option[ExecutionDigest]]("digest")
+      pt <- c.get[ProgramTime]("timeCharge")
+    } yield Execution(d, pt)
+  )
+}

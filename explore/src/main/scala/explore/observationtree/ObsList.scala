@@ -19,6 +19,7 @@ import explore.model.Focused
 import explore.model.GroupElement
 import explore.model.GroupList
 import explore.model.Grouping
+import explore.model.ObservationExecutionMap
 import explore.model.enums.AppTab
 import explore.model.reusability.given
 import explore.tabs.DeckShown
@@ -47,21 +48,23 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
 
-import scala.annotation.tailrec
 import scala.scalajs.js
 
 import ObsQueries.*
 
 case class ObsList(
-  observations:    UndoSetter[ObservationList],
-  undoer:          Undoer,
-  programId:       Program.Id,
-  focusedObs:      Option[Observation.Id],
-  focusedTarget:   Option[Target.Id],
-  setSummaryPanel: Callback,
-  groups:          UndoSetter[GroupList],
-  expandedGroups:  View[Set[Group.Id]],
-  deckShown:       View[DeckShown]
+  observations:      UndoSetter[ObservationList],
+  obsExecutionTimes: ObservationExecutionMap,
+  undoer:            Undoer,
+  programId:         Program.Id,
+  focusedObs:        Option[Observation.Id],
+  focusedTarget:     Option[Target.Id],
+  focusedGroup:      Option[Group.Id],
+  setSummaryPanel:   Callback,
+  groups:            UndoSetter[GroupList],
+  expandedGroups:    View[Set[Group.Id]],
+  deckShown:         View[DeckShown],
+  readonly:          Boolean
 ) extends ReactFnProps(ObsList.component)
 
 object ObsList:
@@ -136,31 +139,9 @@ object ObsList:
         (props, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
-            @tailrec
-            def findParentGroups(
-              groupElementId: Either[Observation.Id, Group.Id],
-              acc:            Set[Group.Id]
-            ): Set[Group.Id] = {
-              val parentGroup = groups.find(
-                GroupElement.grouping
-                  .exist(_.elements.exists(_.bimap(_.id, _.id) === groupElementId))
-              )
+            val groupsToAddFocus = GroupElement.findParentGroupIds(groups, obsId.asLeft)
 
-              parentGroup match
-                case None                                                => acc
-                case Some(GroupElement(Left(_), _))                      => acc
-                // We've found the 'root' group, so we're done
-                case Some(GroupElement(Right(grouping), None))           => acc + grouping.id
-                case Some(GroupElement(Right(grouping), Some(parentId))) =>
-                  findParentGroups(parentId.asRight, acc ++ Set(parentId, grouping.id))
-            }
-
-            val groupsToAddFocus =
-              findParentGroups(obsId.asLeft, Set.empty)
-
-            Callback.when(groupsToAddFocus.nonEmpty)(
-              props.expandedGroups.mod(_ ++ groupsToAddFocus)
-            )
+            props.expandedGroups.mod(_ ++ groupsToAddFocus).when_(groupsToAddFocus.nonEmpty)
       )
       .render { (props, ctx, _, adding, treeNodes) =>
         import ctx.given
@@ -179,9 +160,7 @@ object ObsList:
 
             dragNodeId
               .fold(
-                obsId =>
-                  ObsQueries
-                    .moveObservation[IO](obsId, dropNodeId, dropIndex.some),
+                obsId => ObsQueries.moveObservation[IO](obsId, dropNodeId, dropIndex.some),
                 groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
               )
               .runAsync *>
@@ -194,7 +173,7 @@ object ObsList:
           node match
             case ObsNode.Obs(obs)   =>
               val id       = obs.id
-              val selected = props.focusedObs.exists(_ === id)
+              val selected = props.focusedObs.contains_(id)
               <.a(
                 ^.id        := s"obs-list-${id.toString}",
                 ^.href      := ctx.pageUrl(
@@ -211,14 +190,21 @@ object ObsList:
               )(
                 ObsBadge(
                   obs,
+                  props.obsExecutionTimes.getPot(id).map(_.programTimeEstimate),
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
-                  setStatusCB = (obsEditStatus(id)
-                    .set(props.observations) _).compose((_: ObsStatus).some).some,
-                  setActiveStatusCB = (obsActiveStatus(id)
-                    .set(props.observations) _).compose((_: ObsActiveStatus).some).some,
-                  setSubtitleCB = (obsEditSubtitle(id)
-                    .set(props.observations) _).compose((_: Option[NonEmptyString]).some).some,
+                  setStatusCB = obsEditStatus(id)
+                    .set(props.observations)
+                    .compose((_: ObsStatus).some)
+                    .some,
+                  setActiveStatusCB = obsActiveStatus(id)
+                    .set(props.observations)
+                    .compose((_: ObsActiveStatus).some)
+                    .some,
+                  setSubtitleCB = obsEditSubtitle(id)
+                    .set(props.observations)
+                    .compose((_: Option[NonEmptyString]).some)
+                    .some,
                   deleteCB = obsExistence(
                     id,
                     o => setObs(props.programId, o.some, ctx)
@@ -237,50 +223,67 @@ object ObsList:
                   )
                     .withToast(s"Duplicating obs ${id}")
                     .runAsync
-                    .some
+                    .some,
+                  readonly = props.readonly
                 )
               )
             case ObsNode.And(group) => renderGroup("AND", group)
             case ObsNode.Or(group)  => renderGroup("OR", group)
 
         def renderGroup(title: String, group: Grouping) =
-          <.span(title,
-                 ExploreStyles.ObsTreeGroupLeaf,
-                 group.name.map(<.em(_, ^.marginLeft := "8px")),
-                 ^.title := group.id.show
+          val selected = props.focusedGroup.contains_(group.id)
+          <.a(
+            title,
+            ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(selected),
+            group.name.map(n => <.em(n.value, ^.marginLeft := 8.px)),
+            ^.title := group.id.show,
+            ^.id        := show"obs-group-${group.id}",
+            ^.draggable := false,
+            ^.onClick ==> linkOverride(
+              setGroup(props.programId, group.id.some, ctx)
+            ),
+            ^.href      := ctx.pageUrl(
+              AppTab.Observations,
+              props.programId,
+              Focused.group(group.id)
+            )
           )
 
         val tree =
           if (props.deckShown.get === DeckShown.Shown) {
             React.Fragment(
               <.div(ExploreStyles.TreeToolbar)(
-                Button(
-                  severity = Button.Severity.Success,
-                  icon = Icons.New,
-                  label = "Obs",
-                  disabled = adding.get.value,
-                  loading = adding.get.value,
-                  onClick = insertObs(
-                    props.programId,
-                    props.observations.get.length,
-                    props.observations,
-                    adding,
-                    ctx
-                  ).runAsync
-                ).mini.compact,
-                Button(
-                  severity = Button.Severity.Success,
-                  icon = Icons.New,
-                  label = "Group",
-                  disabled = adding.get.value,
-                  loading = adding.get.value,
-                  onClick = insertGroup(
-                    props.programId,
-                    props.groups,
-                    adding,
-                    ctx
-                  ).runAsync
-                ).mini.compact,
+                if (props.readonly) EmptyVdom
+                else
+                  React.Fragment(
+                    Button(
+                      severity = Button.Severity.Success,
+                      icon = Icons.New,
+                      label = "Obs",
+                      disabled = adding.get.value,
+                      loading = adding.get.value,
+                      onClick = insertObs(
+                        props.programId,
+                        props.observations.get.length,
+                        props.observations,
+                        adding,
+                        ctx
+                      ).runAsync
+                    ).mini.compact,
+                    Button(
+                      severity = Button.Severity.Success,
+                      icon = Icons.New,
+                      label = "Group",
+                      disabled = adding.get.value,
+                      loading = adding.get.value,
+                      onClick = insertGroup(
+                        props.programId,
+                        props.groups,
+                        adding,
+                        ctx
+                      ).runAsync
+                    ).mini.compact
+                  ),
                 <.div(
                   ExploreStyles.ObsTreeButtons,
                   Button(
@@ -291,7 +294,9 @@ object ObsList:
                     clazz = ExploreStyles.ObsTreeHideShow,
                     onClick = props.deckShown.mod(_.flip)
                   ).mini.compact,
-                  UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value)
+                  if (props.readonly) EmptyVdom
+                  else
+                    UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value)
                 )
               ),
               <.div(
@@ -310,8 +315,8 @@ object ObsList:
                   renderItem,
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set,
-                  dragDropScope = "obs-tree",
-                  onDragDrop = onDragDrop
+                  dragDropScope = if (props.readonly) js.undefined else "obs-tree",
+                  onDragDrop = if (props.readonly) js.undefined else onDragDrop
                 )
               )
             )

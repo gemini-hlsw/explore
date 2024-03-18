@@ -9,6 +9,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
+import explore.model.ObservationExecutionMap
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -20,6 +21,8 @@ import lucuma.ui.syntax.all.given
 trait ViewCommon {
   def programId: Program.Id
   def focusedObsSet: Option[ObsIdSet]
+  def obsExecutions: ObservationExecutionMap
+  def readonly: Boolean
 
   def renderObsBadge(
     obs:               ObsSummary,
@@ -29,8 +32,10 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
+      obsExecutions.getPot(obs.id).map(_.programTimeEstimate),
       layout,
-      selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id)))
+      selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
+      readonly = readonly
     )
 
   def renderObsBadgeItem(
@@ -47,7 +52,7 @@ trait ViewCommon {
     idx:               Int
   ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(
-      Draggable(obs.id.toString, idx) { case (provided, snapshot, _) =>
+      Draggable(obs.id.toString, idx, isDragDisabled = readonly) { case (provided, snapshot, _) =>
         <.div(
           provided.innerRef,
           provided.draggableProps,

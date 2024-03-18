@@ -9,7 +9,7 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
+import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
@@ -22,22 +22,13 @@ import explore.model.Transformation
 import explore.model.reusability.given
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.{ObsAttachment => ObsAtt}
-import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
-import lucuma.react.floatingui.Placement
-import lucuma.react.floatingui.syntax.*
-import lucuma.react.primereact.Button
-import lucuma.react.primereact.SelectItem
-import lucuma.refined.*
-import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.components.SolarProgress
-import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
@@ -51,103 +42,13 @@ case class FinderCharts(
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
   selected:         View[Option[ObsAtt.Id]],
+  chartSelector:    View[ChartSelector],
   parallacticAngle: Option[Angle],
   renderInTitle:    Tile.RenderInTitle
 ) extends ReactFnProps(FinderCharts.component)
 
-trait FinderChartsAttachmentUtils:
-  def validAttachments(
-    allAttachments:   ObsAttachmentList,
-    obsAttachmentIds: SortedSet[ObsAtt.Id]
-  ): ObsAttachmentList =
-    allAttachments.filter { case (_, attachment) =>
-      (attachment.attachmentType === ObsAttachmentType.Finder) && obsAttachmentIds
-        .contains(attachment.id)
-    }
-
-object FinderChartsAttachmentUtils extends FinderChartsAttachmentUtils
-
-object ChartSelector extends NewType[Boolean]:
-  inline def Open: ChartSelector   = ChartSelector(true)
-  inline def Closed: ChartSelector = ChartSelector(false)
-  extension (s: ChartSelector)
-    def flip: ChartSelector =
-      if (s.value) ChartSelector.Closed else ChartSelector.Open
-
-type ChartSelector = ChartSelector.Type
-
-def finderChartsSelector(
-  obsAttachments:   ObsAttachmentList,
-  obsAttachmentIds: SortedSet[ObsAtt.Id],
-  selected:         View[Option[ObsAtt.Id]]
-): VdomNode =
-  FormDropdownOptional(
-    id = "attachment-selector".refined,
-    placeholder = if (obsAttachmentIds.nonEmpty) "Select finder chart" else "No finder charts",
-    options = FinderChartsAttachmentUtils
-      .validAttachments(obsAttachments, obsAttachmentIds)
-      .map(_._2)
-      .map { attachment =>
-        new SelectItem[ObsAttachment](value = attachment, label = attachment.fileName.value)
-      }
-      .toList,
-    value = obsAttachments.find(i => selected.get.exists(_ === i._2.id)).map(_._2),
-    onChange = (att: Option[ObsAttachment]) => selected.set(att.map(_.id))
-  )
-
 object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
   private type Props = FinderCharts
-
-  private def attachmentSelector(
-    props:         Props,
-    ctx:           AppContext[IO],
-    client:        OdbRestClient[IO],
-    selected:      View[Option[ObsAtt.Id]],
-    action:        View[Action],
-    added:         UseState[Option[ObsAtt.Id]],
-    chartSelector: UseState[ChartSelector]
-  ): VdomNode = {
-    import ctx.given
-
-    def addNewFinderChart(e: ReactEventFromInput) =
-      action.set(Action.Insert) *>
-        onInsertFileSelected(
-          props.programId,
-          props.obsAttachments,
-          ObsAttachmentType.Finder,
-          client,
-          action,
-          id => added.setState(Some(id))
-        )(e)
-
-    <.div(
-      ExploreStyles.FinderChartsSelectorSection,
-      Button(
-        severity = Button.Severity.Secondary,
-        outlined = chartSelector.value.value,
-        icon = Icons.Link.withFixedWidth(false).withInverse(chartSelector.value.value),
-        onClick = chartSelector.modState(_.flip),
-        tooltip = s"Select charts"
-      ).tiny.compact,
-      <.label(
-        LabelButtonClasses,
-        ^.htmlFor := "attachment-upload",
-        Icons.FileArrowUp.withFixedWidth(true)
-      ).withTooltip(
-        tooltip = s"Upload new finder chart",
-        placement = Placement.Right
-      ),
-      <.input(
-        ExploreStyles.FileUpload,
-        ^.tpe    := "file",
-        ^.onChange ==> addNewFinderChart,
-        ^.id     := "attachment-upload",
-        ^.name   := "file",
-        ^.accept := ObsAttachmentType.Finder.accept
-      ),
-      finderChartsSelector(props.obsAttachments.get, props.obsAttachmentIds.get, selected)
-    )
-  }
 
   private val component =
     ScalaFnComponent
@@ -229,23 +130,31 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
             .getOrEmpty
       }
       .useStateView(Action.None)
-      .useState(ChartSelector.Closed)
-      .render { (props, ctx, client, ops, urls, added, action, selector) =>
+      .render { (props, ctx, client, ops, urls, added, action) =>
         val transforms = ops.get.calcTransform
         <.div(
           ExploreStyles.FinderChartsBackground,
           ^.onClick ==> { e =>
-            selector.setState(ChartSelector.Closed).when_(selector.value.value)
+            props.chartSelector.set(ChartSelector.Closed).when_(props.chartSelector.get.value)
           },
           props.renderInTitle(
-            attachmentSelector(props, ctx, client, props.selected, action, added, selector)
+            attachmentSelector(props.programId,
+                               props.obsAttachmentIds,
+                               props.obsAttachments,
+                               ctx,
+                               client,
+                               props.selected,
+                               action,
+                               added,
+                               props.chartSelector
+            )
           ),
           <.div(
             SolarProgress(ExploreStyles.FinderChartsLoadProgress)
               .unless(action.get === Action.None)
           ),
           ControlOverlay(props.parallacticAngle, ops),
-          if (selector.value.value) {
+          if (props.chartSelector.get.value) {
             FinderChartLinker(props.programId,
                               client,
                               props.selected,
@@ -270,3 +179,37 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           )
         )
       }
+
+case class FinderChartsSelector(
+  programId:        Program.Id,
+  authToken:        NonEmptyString,
+  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
+  obsAttachments:   View[ObsAttachmentList],
+  selected:         View[Option[ObsAtt.Id]],
+  chartSelector:    View[ChartSelector]
+) extends ReactFnProps(FinderChartsSelector.component)
+
+object FinderChartsSelector:
+  private type Props = FinderChartsSelector
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+        token => OdbRestClient[IO](ctx.environment, token)
+      )
+      .useStateView(Action.None)
+      // added attachment, FIXME once we can upload and assign in one step
+      .useState(none[ObsAtt.Id])
+      .render: (props, ctx, restClient, action, added) =>
+        attachmentSelector(props.programId,
+                           props.obsAttachmentIds,
+                           props.obsAttachments,
+                           ctx,
+                           restClient,
+                           props.selected,
+                           action,
+                           added,
+                           props.chartSelector
+        )

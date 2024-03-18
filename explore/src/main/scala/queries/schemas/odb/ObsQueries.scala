@@ -39,7 +39,7 @@ object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
-  given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
+  private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
 
   extension (self: OdbItcResult.Success)
     def asFixedExposureTime: FixedExposureMode =
@@ -123,7 +123,7 @@ object ObsQueries:
     programId: Program.Id
   )(using FetchClient[F, ObservationDB]): F[ObsSummary] =
     ProgramCreateObservation[F]
-      .execute(CreateObservationInput(programId = programId))
+      .execute(CreateObservationInput(programId = programId.assign))
       .map(_.createObservation.observation)
 
   def createObservationWithTargets[F[_]: Async](
@@ -135,7 +135,7 @@ object ObsQueries:
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
-          programId = programId,
+          programId = programId.assign,
           SET = ObservationPropertiesInput(
             targetEnvironment = TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
           ).assign
@@ -149,7 +149,7 @@ object ObsQueries:
     FetchClient[F, ObservationDB]
   ): F[ObsSummary] =
     CloneObservationMutation[F]
-      .execute(CloneObservationInput(observationId = obsId))
+      .execute(CloneObservationInput(observationId = obsId.assign))
       .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
@@ -161,7 +161,7 @@ object ObsQueries:
     CloneObservationMutation[F]
       .execute(
         CloneObservationInput(
-          observationId = obsId,
+          observationId = obsId.assign,
           SET = ObservationPropertiesInput(targetEnvironment =
             TargetEnvironmentInput(asterism = targetIds.assign).assign
           ).assign

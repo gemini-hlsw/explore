@@ -44,7 +44,7 @@ object PartnerSplitsEditor {
 
   private def save(props: Props) =
     if (addsUpTo100(props.splits.get))
-      props.onSave(props.splits.get) >> props.closeMe >> Callback.log("Closing")
+      props.onSave(props.splits.get) >> props.closeMe
     else Callback.empty
 
   private def footer(props: Props) =

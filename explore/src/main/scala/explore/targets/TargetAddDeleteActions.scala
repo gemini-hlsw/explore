@@ -47,7 +47,7 @@ object TargetAddDeleteActions {
       .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
-            .copy(programId = WhereOrderProgramId(programId.assign).assign)
+            .copy(program = programId.toWhereProgram.assign)
             .assign,
           SET = TargetPropertiesInput(existence = Existence.Deleted.assign)
         )
@@ -62,7 +62,7 @@ object TargetAddDeleteActions {
       .execute(
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
-            .copy(programId = WhereOrderProgramId(programId.assign).assign)
+            .copy(program = programId.toWhereProgram.assign)
             .assign,
           SET = TargetPropertiesInput(existence = Existence.Present.assign),
           includeDeleted = true.assign

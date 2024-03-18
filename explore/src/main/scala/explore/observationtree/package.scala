@@ -46,6 +46,13 @@ def setObs[F[_]](
 ): Callback =
   ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
 
+def setGroup[F[_]](
+  programId: Program.Id,
+  groupId:   Option[Group.Id],
+  ctx:       AppContext[F]
+): Callback =
+  ctx.pushPage(AppTab.Observations, programId, groupId.fold(Focused.None)(Focused.group(_)))
+
 def cloneObs(
   programId:    Program.Id,
   obsId:        Observation.Id,
@@ -106,7 +113,6 @@ def obsEditSubtitle(obsId: Observation.Id)(using
       )
       .void
 )
-
 def obsEditAttachments(
   obsId:         Observation.Id,
   attachmentIds: Set[ObsAttachment.Id]

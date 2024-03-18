@@ -30,10 +30,12 @@ object ExploreGridLayouts:
     case GridLayoutSection.TargetLayout       => targets.defaultTargetLayouts
     case GridLayoutSection.ObservationsLayout => observations.defaultObsLayouts
     case GridLayoutSection.OverviewLayout     => overview.defaultOverviewLayouts
+    case GridLayoutSection.ProposalLayout     => proposal.defaultProposalLayouts
+    case GridLayoutSection.GroupEditLayout    => groupEdit.defaultGroupEditLayouts
   }
 
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =
-    SortedMap(GridLayoutSection.values.map(l => l -> sectionLayout(l)): _*)
+    SortedMap.from(GridLayoutSection.values.map(l => l -> sectionLayout(l)))
 
   object constraints:
     private val ConstraintsHeight: NonNegInt   = 4.refined
@@ -296,7 +298,7 @@ object ExploreGridLayouts:
     private val NotesMinHeight: NonNegInt          = 4.refined
     private val ChangeRequestsHeight: NonNegInt    = 6.refined
     private val ChangeRequestsMinHeight: NonNegInt = 4.refined
-    private val TileMinWidth: NonNegInt            = 8.refined
+    private val TileMinWidth: NonNegInt            = 6.refined
     private val DefaultWidth: NonNegInt            = 10.refined
     private val DefaultLargeWidth: NonNegInt       = 12.refined
 
@@ -374,6 +376,99 @@ object ExploreGridLayouts:
     )
 
     val defaultOverviewLayouts = defineStdLayouts(
+      Map(
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+        ),
+        (BreakpointName.md, layoutMedium)
+      )
+    )
+
+  object proposal:
+    private val DetailsHeight: NonNegInt        = 12.refined
+    private val DetailsMinHeight: NonNegInt     = 6.refined
+    private val AbstractHeight: NonNegInt       = 8.refined
+    private val AbstractMinHeight: NonNegInt    = 4.refined
+    private val AttachmentsHeight: NonNegInt    = 8.refined
+    private val AttachmentsMinHeight: NonNegInt = 6.refined
+    private val TileMinWidth: NonNegInt         = 6.refined
+    private val DefaultWidth: NonNegInt         = 10.refined
+    private val DefaultLargeWidth: NonNegInt    = 12.refined
+
+    private val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = ProposalTabTileIds.DetailsId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = DetailsHeight.value,
+          minH = DetailsMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = ProposalTabTileIds.AbstractId.id.value,
+          x = 0,
+          y = DetailsHeight.value,
+          w = DefaultWidth.value,
+          h = AbstractHeight.value,
+          minH = AbstractMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = ProposalTabTileIds.AttachmentsId.id.value,
+          x = 0,
+          y = (DetailsHeight |+| AbstractHeight).value,
+          w = DefaultWidth.value,
+          h = AttachmentsHeight.value,
+          minH = AttachmentsMinHeight.value,
+          minW = TileMinWidth.value
+        )
+      )
+    )
+
+    val defaultProposalLayouts = defineStdLayouts(
+      Map(
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+        ),
+        (BreakpointName.md, layoutMedium)
+      )
+    )
+
+  object groupEdit:
+    val GroupEditHeight: NonNegInt    = 12.refined
+    val GroupEditMinHeight: NonNegInt = 6.refined
+    val NotesHeight: NonNegInt        = 8.refined
+    val NotesMinHeight: NonNegInt     = 4.refined
+    val TileMinWidth: NonNegInt       = 6.refined
+    val DefaultWidth: NonNegInt       = 10.refined
+    val DefaultLargeWidth: NonNegInt  = 12.refined
+
+    private val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = GroupEditIds.GroupEditId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = GroupEditHeight.value,
+          minH = GroupEditMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = GroupEditIds.GroupNotesId.id.value,
+          x = 0,
+          y = GroupEditHeight.value,
+          w = DefaultWidth.value,
+          h = NotesHeight.value,
+          minH = NotesMinHeight.value,
+          minW = TileMinWidth.value
+        )
+      )
+    )
+
+    val defaultGroupEditLayouts = defineStdLayouts(
       Map(
         (BreakpointName.lg,
          layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)

@@ -13,8 +13,8 @@ object ProgramSummaryQueriesGQL {
   @GraphQL
   trait AllProgramObservations extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      query($$programId: ProgramId!, $$OFFSET: ObservationId) {
-        observations(programId: $$programId, OFFSET: $$OFFSET) {
+      query($$where: WhereObservation!, $$OFFSET: ObservationId) {
+        observations(WHERE: $$where, OFFSET: $$OFFSET) {
           matches $ObservationSummarySubquery
           hasMore
         }
@@ -24,8 +24,8 @@ object ProgramSummaryQueriesGQL {
   @GraphQL
   trait AllProgramTargets      extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      query($$programId: ProgramId!, $$OFFSET: TargetId) {
-        targets(WHERE: { programId: { EQ: $$programId } }, OFFSET: $$OFFSET) {
+      query($$where: WhereTarget!, $$OFFSET: TargetId) {
+        targets(WHERE: $$where, OFFSET: $$OFFSET) {
           matches $TargetWithIdSubquery
           hasMore
         }
@@ -40,7 +40,7 @@ object ProgramSummaryQueriesGQL {
         program(programId: $$programId) {
           obsAttachments $ObsAttachmentSubquery
           proposalAttachments $ProposalAttachmentSubquery
-        }
+        } 
       }
     """
   }
@@ -52,6 +52,46 @@ object ProgramSummaryQueriesGQL {
         programs(OFFSET: $$OFFSET, includeDeleted: true) {
           matches $ProgramInfoSubquery
           hasMore
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait ProgramDetailsQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) $ProgramDetailsSubquery
+      }
+    """
+  }
+
+  @GraphQL
+  trait ProgramTimesQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$programId: ProgramId!) {
+        program(programId: $$programId) $ProgramTimesSubquery
+      }
+    """
+  }
+
+  @GraphQL
+  trait ObservationExecutionQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$id: ObservationId!) {
+        observation(observationId: $$id) {
+          execution $ExecutionSubquery
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait GroupTimeRangeQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$groupId: GroupId!) {
+        group(groupId: $$groupId) {
+          timeEstimateRange $ProgramTimeRangeSubquery
         }
       }
     """

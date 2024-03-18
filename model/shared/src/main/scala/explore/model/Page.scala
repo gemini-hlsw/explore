@@ -7,6 +7,7 @@ import cats.Eq
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.syntax.all._
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -19,6 +20,7 @@ enum Page derives Eq:
   case ProposalPage(programId: Program.Id)                                              extends Page
   case ObservationsBasePage(programId: Program.Id)                                      extends Page
   case ObsPage(programId: Program.Id, obsId: Observation.Id)                            extends Page
+  case ObsGroupPage(programId: Program.Id, groupId: Group.Id)                           extends Page
   case ObsTargetPage(programId: Program.Id, obsId: Observation.Id, targetId: Target.Id) extends Page
   case TargetsBasePage(programId: Program.Id)                                           extends Page
   case TargetsObsPage(programId: Program.Id, obsId: ObsIdSet)                           extends Page
@@ -51,6 +53,12 @@ object Page:
     val iso: Iso[(Program.Id, Observation.Id), ObsPage] =
       Iso[(Program.Id, Observation.Id), ObsPage] { case (p, o) => Page.ObsPage(p, o) }(p =>
         (p.programId, p.obsId)
+      )
+
+  object ObsGroupPage:
+    val iso: Iso[(Program.Id, Group.Id), ObsGroupPage] =
+      Iso[(Program.Id, Group.Id), ObsGroupPage] { case (p, g) => Page.ObsGroupPage(p, g) }(p =>
+        (p.programId, p.groupId)
       )
 
   object ObsTargetPage:

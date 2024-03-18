@@ -114,10 +114,7 @@ object ExplorePWA {
               // Delay a bit to let the front setup the listener
               requestUserConfirmation(bc),
           onOfflineReady = Callback.log(s"Offline ready"),
-          onRegisterError = (x: js.Any) =>
-            Callback.log(s"Error on service worker registration $x") *> Callback(
-              org.scalajs.dom.window.console.log(x)
-            ),
+          onRegisterError = (x: js.Any) => Callback.log(s"Error on service worker registration", x),
           onRegisteredSW = (u: String, r: ServiceWorkerRegistration) =>
             import scala.concurrent.ExecutionContext.Implicits.global
             // https://vite-plugin-pwa.netlify.app/guide/periodic-sw-updates.html
@@ -138,8 +135,8 @@ object ExplorePWA {
     bc.messages
       .evalTap { me =>
         me.data.event match
-          case ExploreEvent.PWAReloadId      => IO.fromFuture(IO(updateSW(true).toFuture)) // .void
-          case ExploreEvent.ExploreUIReadyId => IO.fromFuture(IO(updateSW(()).toFuture))   // .void
+          case ExploreEvent.PWAReloadId      => IO.fromPromise(IO(updateSW(true))) // .void
+          case ExploreEvent.ExploreUIReadyId => IO.fromPromise(IO(updateSW(())))   // .void
           case _                             => IO.unit
       }
       .compile

@@ -53,7 +53,7 @@ object PlotServer extends WorkerServer[IO, PlotMessage.Request] {
       skyCalcSamples: Samples[SkyCalcResults]
     ): Cacheable[IO, (Site, LocalDate, Coordinates), (Instant, Duration)] = {
       val targetVisible: BoundedInterval[Instant] => IntervalSeq[Instant] =
-        ElevationSolver(MinTargetElevation, Declination.Max).solve(skyCalcSamples) _
+        ElevationSolver(MinTargetElevation, Declination.Max).solve(skyCalcSamples)(_)
 
       Cacheable(
         CacheName("siderealVisibility"),

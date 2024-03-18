@@ -52,10 +52,12 @@ case class AsterismGroupObsList(
   expandedIds:            View[SortedSet[ObsIdSet]],
   undoCtx:                UndoContext[ProgramSummaries], // TODO Targets are not modified here
   selectTargetOrSummary:  Option[Target.Id] => Callback,
-  selectedSummaryTargets: View[List[Target.Id]]
+  selectedSummaryTargets: View[List[Target.Id]],
+  readonly:               Boolean
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   val programSummaries                         = undoCtx.model
+  val obsExecutions                            = programSummaries.get.obsExecutionPots
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
 object AsterismGroupObsList:
@@ -72,7 +74,7 @@ object AsterismGroupObsList:
   ): Callback =
     expandedIds.mod { expanded =>
       expanded
-        .exists(_ === obsIds)
+        .contains_(obsIds)
         .fold(expanded - obsIds, expanded + obsIds)
     }
 
@@ -295,7 +297,7 @@ object AsterismGroupObsList:
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 
         val icon: FontAwesomeIcon = props.expandedIds.get
-          .exists(_ === obsIds)
+          .contains_(obsIds)
           .fold(Icons.ChevronDown, Icons.ChevronRight)(
             ^.cursor.pointer,
             ^.onClick ==> { (e: ReactEvent) =>
@@ -307,68 +309,76 @@ object AsterismGroupObsList:
           )
           .withFixedWidth()
 
-        Droppable(ObsIdSet.fromString.reverseGet(obsIds), renderClone = renderClone) {
-          case (provided, snapshot) =>
-            val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
-              icon,
-              <.span(ExploreStyles.ObsGroupTitleWithWrap)(
-                makeAsterismGroupName(names)
-              ),
-              <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
-            )
+        Droppable(ObsIdSet.fromString.reverseGet(obsIds),
+                  renderClone = renderClone,
+                  isDropDisabled = props.readonly
+        ) { case (provided, snapshot) =>
+          val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
+            icon,
+            <.span(ExploreStyles.ObsGroupTitleWithWrap)(
+              makeAsterismGroupName(names)
+            ),
+            <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
+          )
 
-            val clickFocus = props.focused.target.fold(Focused.fromAsterismGroup(asterismGroup))(
-              _ => props.focused.withObsSet(obsIds)
-            )
+          val clickFocus =
+            props.focused.withObsSet(obsIds).validateOrSetTarget(asterismGroup.targetIds)
 
-            <.div(
-              provided.innerRef,
-              provided.droppableProps,
-              props.getListStyle(
-                snapshot.draggingOverWith.exists(id => parseDragId(id).isDefined)
-              )
+          <.div(
+            provided.innerRef,
+            provided.droppableProps,
+            props.getListStyle(
+              snapshot.draggingOverWith.exists(id => parseDragId(id).isDefined)
+            )
+          )(
+            <.a(
+              ExploreStyles.ObsTreeGroup |+| Option
+                .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
+                .orElse(
+                  Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
+                )
+                .orEmpty
             )(
-              <.a(
-                ExploreStyles.ObsTreeGroup |+| Option
-                  .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
-                  .orElse(
-                    Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
-                  )
-                  .orEmpty
-              )(
-                ^.cursor.pointer,
-                ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
-                ^.onClick ==> { (e: ReactEvent) =>
-                  e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
-                }
-              )(
-                csHeader,
-                TagMod.when(props.expandedIds.get.contains(obsIds))(
-                  TagMod(
-                    cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                      props.renderObsBadgeItem(
-                        ObsBadge.Layout.TargetsTab,
-                        selectable = true,
-                        highlightSelected = true,
-                        forceHighlight = isObsSelected(obs.id),
-                        linkToObsTab = false,
-                        onSelect = obsId => setFocused(props.focused.withSingleObs(obsId)),
-                        onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
-                        ctx
-                      )(obs, idx)
-                    }
-                  )
-                ),
-                provided.placeholder
-              )
+              ^.cursor.pointer,
+              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
+              ^.onClick ==> { (e: ReactEvent) =>
+                e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
+              }
+            )(
+              csHeader,
+              TagMod.when(props.expandedIds.get.contains(obsIds))(
+                TagMod(
+                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                    props.renderObsBadgeItem(
+                      ObsBadge.Layout.TargetsTab,
+                      selectable = true,
+                      highlightSelected = true,
+                      forceHighlight = isObsSelected(obs.id),
+                      linkToObsTab = false,
+                      onSelect = obsId =>
+                        setFocused(
+                          props.focused
+                            .withSingleObs(obsId)
+                            .validateOrSetTarget(obs.scienceTargetIds)
+                        ),
+                      onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
+                      ctx
+                    )(obs, idx)
+                  }
+                )
+              ),
+              provided.placeholder
             )
+          )
         }
       }
 
       DragDropContext(
-        onDragStart = (_: DragStart, _: ResponderProvided) => dragging.setState(Dragging(true)),
+        onDragStart = (_: DragStart, _: ResponderProvided) =>
+          dragging.setState(Dragging(true)).unless_(props.readonly),
         onDragEnd = (result, provided) =>
-          dragging.setState(Dragging(false)) >> handleDragEnd(result, provided)
+          (dragging.setState(Dragging(false)) >> handleDragEnd(result, provided))
+            .unless_(props.readonly)
       ) {
         // make the target name sort case insensitive
         given Ordering[String] = Ordering.fromLessThan(_.toLowerCase < _.toLowerCase)
@@ -405,7 +415,7 @@ object AsterismGroupObsList:
               ).runAsync
             ).compact.mini,
             UndoButtons(props.undoCtx, size = PlSize.Mini)
-          ),
+          ).unless(props.readonly),
           <.div(
             Button(
               severity = Button.Severity.Secondary,

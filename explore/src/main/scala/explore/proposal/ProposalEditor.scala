@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.Input
 import clue.data.syntax.*
+import crystal.Pot
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
@@ -21,15 +22,22 @@ import explore.common.Aligner
 import explore.components.FormStaticData
 import explore.components.HelpIcon
 import explore.components.Tile
+import explore.components.TileController
 import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
+import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
 import explore.model.Hours
+import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment
+import explore.model.ProposalTabTileIds
 import explore.model.display.given
+import explore.model.enums.GridLayoutSection
+import explore.model.layout.LayoutsMap
 import explore.proposal.ProposalClassType.*
+import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -39,6 +47,7 @@ import lucuma.core.model.Partner
 import lucuma.core.model.Program
 import lucuma.core.model.Proposal
 import lucuma.core.model.ProposalClass
+import lucuma.core.model.User
 import lucuma.core.model.ZeroTo100
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
@@ -48,6 +57,8 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Divider
 import lucuma.react.primereact.SelectItem
+import lucuma.react.resizeDetector.UseResizeDetectorReturn
+import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -57,6 +68,7 @@ import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
+import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
@@ -66,14 +78,16 @@ import spire.std.any.*
 import scala.collection.immutable.SortedMap
 
 case class ProposalEditor(
-  programId:        Program.Id,
-  proposal:         View[Proposal],
-  undoStacks:       View[UndoStacks[IO, Proposal]],
-  minExecutionTime: Option[TimeSpan],
-  maxExecutionTime: Option[TimeSpan],
-  users:            List[ProgramUserWithRole],
-  attachments:      View[List[ProposalAttachment]],
-  authToken:        Option[NonEmptyString]
+  programId:         Program.Id,
+  optUserId:         Option[User.Id],
+  proposal:          View[Proposal],
+  undoStacks:        View[UndoStacks[IO, Proposal]],
+  timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  users:             List[ProgramUserWithRole],
+  attachments:       View[List[ProposalAttachment]],
+  authToken:         Option[NonEmptyString],
+  layout:            LayoutsMap,
+  readonly:          Boolean
 ) extends ReactFnProps(ProposalEditor.component)
 
 object ProposalEditor:
@@ -184,9 +198,9 @@ object ProposalEditor:
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
-    minExecutionTime:  TimeSpan,
-    maxExecutionTime:  TimeSpan,
+    timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
+    readonly:          Boolean,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
@@ -209,15 +223,13 @@ object ProposalEditor:
 
     val activationView: View[ToOActivation] = activationAligner.view(_.assign)
 
-    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.abstrakt, t => _.map(ProposalInput.`abstract`.modify(t)))
-
-    val abstractView = abstractAligner.view(_.orUnassign)
-
     val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     val totalTime       = totalTimeView.get
     val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
     val minimumPct2View = classView.zoom(ProposalClass.minPercentTotalTime)
+
+    val minExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.minimum.value).orEmpty)
+    val maxExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
 
     val (maxTimeLabel, minTimeLabel) =
       ProposalClassType.fromProposalClass(classView.get) match {
@@ -232,6 +244,7 @@ object ProposalEditor:
         changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
         label = React.Fragment("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
         id = id,
+        disabled = readonly,
         inputClass = ExploreStyles.PartnerSplitsGridMinPct
       )
 
@@ -242,6 +255,7 @@ object ProposalEditor:
         changeAuditor = ChangeAuditor.accept.decimal(2.refined),
         label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
         id = "total-time-entry".refined,
+        disabled = readonly,
         inputClass = ExploreStyles.PartnerSplitsGridTotal
       )
 
@@ -275,7 +289,8 @@ object ProposalEditor:
               inputClass = Css("inverse"),
               value = titleView,
               validFormat = InputValidSplitEpi.nonEmptyString.optional,
-              label = "Title"
+              label = "Title",
+              disabled = readonly
             )(^.autoFocus := true),
             <.div(
               ExploreStyles.PartnerSplitsGrid,
@@ -288,7 +303,8 @@ object ProposalEditor:
                     severity = Button.Severity.Secondary,
                     tpe = Button.Type.Button,
                     onClick = openPartnerSplitsEditor,
-                    tooltip = "Edit Partner Splits"
+                    tooltip = "Edit Partner Splits",
+                    disabled = readonly
                   ).mini.compact
                 )
               ),
@@ -298,20 +314,30 @@ object ProposalEditor:
               ),
               // The second partner splits row, for maximum times - is always there
               FormStaticData(
-                value = formatHours(toHours(maxExecutionTime)),
+                value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
                 label = maxTimeLabel,
                 id = "maxTime"
               ),
-              timeSplits(splitsMap, maxExecutionTime),
-              minimumTime(minimumPct1View.get, maxExecutionTime),
+              maxExecutionPot.renderPot(
+                valueRender = maxExecutionTime =>
+                  React.Fragment(timeSplits(splitsMap, maxExecutionTime),
+                                 minimumTime(minimumPct1View.get, maxExecutionTime)
+                  ),
+                pendingRender = React.Fragment(<.span(), <.span())
+              ),
               // The third partner splits row, for minimum times - is always there
               FormStaticData(
-                value = formatHours(toHours(minExecutionTime)),
+                value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
                 label = minTimeLabel,
                 id = "maxTime"
               ),
-              timeSplits(splitsMap, minExecutionTime),
-              minimumTime(minimumPct1View.get, minExecutionTime),
+              minExecutionPot.renderPot(
+                valueRender = minExecutionTime =>
+                  React.Fragment(timeSplits(splitsMap, minExecutionTime),
+                                 minimumTime(minimumPct1View.get, minExecutionTime)
+                  ),
+                pendingRender = React.Fragment(<.span(), <.span())
+              ),
               // The third partner splits row - only exists for a few observation classes
               totalTime.fold(React.Fragment()) { tt =>
                 React.Fragment(
@@ -329,8 +355,9 @@ object ProposalEditor:
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
             FormEnumDropdownView(
               id = "proposal-class".refined,
-              value = proposalClassType.withOnMod(onClassTypeMod _),
-              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined))
+              value = proposalClassType.withOnMod(onClassTypeMod),
+              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
+              disabled = readonly
             ),
             FormDropdownOptional(
               id = "category".refined,
@@ -338,6 +365,7 @@ object ProposalEditor:
               value = categoryView.get.map(categoryTag),
               options = categoryOptions,
               onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+              disabled = readonly,
               modifiers = List(^.id := "category")
             ),
             FormEnumDropdownView(
@@ -346,24 +374,20 @@ object ProposalEditor:
               label = React.Fragment(
                 "ToO Activation",
                 HelpIcon("proposal/main/too-activation.md".refined)
-              )
+              ),
+              disabled = readonly
             )
           )
         ),
         Divider(borderType = Divider.BorderType.Solid),
-        ProgramUsersTable(users),
-        Divider(borderType = Divider.BorderType.Solid),
-        FormInputTextAreaView(
-          id = "abstract".refined,
-          label = "Abstract",
-          value = abstractView.as(OptionNonEmptyStringIso)
-        )(ExploreStyles.ProposalAbstract, ^.rows := 10)
+        ProgramUsersTable(users)
       )
     )
   }
 
   private def renderFn(
     programId:         Program.Id,
+    optUserId:         Option[User.Id],
     proposal:          View[Proposal],
     undoStacks:        View[UndoStacks[IO, Proposal]],
     totalHours:        View[Hours],
@@ -371,11 +395,13 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
-    minExecutionTime:  TimeSpan,
-    maxExecutionTime:  TimeSpan,
+    timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
     attachments:       View[List[ProposalAttachment]],
-    authToken:         Option[NonEmptyString]
+    authToken:         Option[NonEmptyString],
+    layout:            LayoutsMap,
+    readonly:          Boolean,
+    resize:            UseResizeDetectorReturn
   )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
@@ -404,33 +430,57 @@ object ProposalEditor:
           .assign
       )
 
+    val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
+
+    val detailsTile =
+      Tile(ProposalTabTileIds.DetailsId.id, "Details", canMinimize = true)(
+        renderDetails(
+          aligner,
+          undoCtx,
+          totalHours,
+          minPct2,
+          proposalClassType,
+          showDialog,
+          splitsList,
+          splitsView.get,
+          timeEstimateRange,
+          users,
+          readonly,
+          _
+        )
+      )
+
+    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
+      aligner.zoom(Proposal.abstrakt, t => _.map(ProposalInput.`abstract`.modify(t)))
+
+    val abstractView = abstractAligner.view(_.orUnassign)
+    val abstractTile =
+      Tile(ProposalTabTileIds.AbstractId.id,
+           "Abstract",
+           canMinimize = true,
+           bodyClass = ExploreStyles.ProposalAbstract
+      )(_ =>
+        FormInputTextAreaView(
+          id = "abstract".refined,
+          value = abstractView.as(OptionNonEmptyStringIso)
+        )(^.disabled := readonly)
+      )
+
+    val attachmentsTile =
+      Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments", canMinimize = true)(_ =>
+        authToken.map(token => ProposalAttachmentsTable(programId, token, attachments, readonly))
+      )
+
     <.div(
-      <.div(
-        ^.key := "details",
-        ExploreStyles.ProposalTile,
-        Tile("details".refined, "Details")(
-          renderDetails(
-            aligner,
-            undoCtx,
-            totalHours,
-            minPct2,
-            proposalClassType,
-            showDialog,
-            splitsList,
-            splitsView.get,
-            minExecutionTime,
-            maxExecutionTime,
-            users,
-            _
-          )
-        )
-      ),
-      <.div(
-        ^.key := "attachments",
-        ExploreStyles.ProposalTile,
-        Tile("attachments".refined, "Attachments")(_ =>
-          authToken.map(token => ProposalAttachmentsTable(programId, token, attachments))
-        )
+      ExploreStyles.MultiPanelTile,
+      TileController(
+        optUserId,
+        resize.width.getOrElse(1),
+        defaultLayouts,
+        layout,
+        List(detailsTile, abstractTile, attachmentsTile),
+        GridLayoutSection.ProposalLayout,
+        storeLayout = true
       ),
       PartnerSplitsEditor(
         showDialog.get,
@@ -438,7 +488,7 @@ object ProposalEditor:
         closePartnerSplitsEditor,
         saveStateSplits(splitsView, _)
       )
-    )
+    ).withRef(resize.ref)
   }
 
   private val component =
@@ -487,22 +537,27 @@ object ProposalEditor:
             setClass >> setType >> setHours >> setPct2
           }
       )
-      .render { (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _) =>
-        import ctx.given
+      .useResizeDetector()
+      .render {
+        (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _, resize) =>
+          import ctx.given
 
-        renderFn(
-          props.programId,
-          props.proposal,
-          props.undoStacks,
-          totalHours,
-          minPct2,
-          proposalClassType,
-          showDialog,
-          splitsList,
-          props.minExecutionTime.orEmpty,
-          props.maxExecutionTime.orEmpty,
-          props.users,
-          props.attachments,
-          props.authToken
-        )
+          renderFn(
+            props.programId,
+            props.optUserId,
+            props.proposal,
+            props.undoStacks,
+            totalHours,
+            minPct2,
+            proposalClassType,
+            showDialog,
+            splitsList,
+            props.timeEstimateRange,
+            props.users,
+            props.attachments,
+            props.authToken,
+            props.layout,
+            props.readonly,
+            resize
+          )
       }

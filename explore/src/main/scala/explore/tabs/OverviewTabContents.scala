@@ -15,8 +15,8 @@ import explore.model.ExploreGridLayouts
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
-import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
+import explore.model.layout.LayoutsMap
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -30,7 +30,8 @@ case class OverviewTabContents(
   userVault:                Option[UserVault],
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  userPreferences:          UserPreferences
+  layout:                   LayoutsMap,
+  readonly:                 Boolean
 ) extends ReactFnProps(OverviewTabContents.component)
 
 object OverviewTabContents {
@@ -43,7 +44,6 @@ object OverviewTabContents {
       .useResizeDetector()
       .render { (props, _, resize) =>
         val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.OverviewLayout)
-        val layouts        = props.userPreferences.overviewTabLayout
 
         val warningsAndErrorsTile = Tile(
           ObsTabTilesIds.WarningsAndErrorsId.id,
@@ -63,18 +63,21 @@ object OverviewTabContents {
                                 vault.token,
                                 props.obsAttachments,
                                 props.obsAttachmentAssignments,
+                                props.readonly,
                                 renderInTitle
             )
           )
         )
 
-        TileController(
-          props.userVault.map(_.user.id),
-          resize.width.getOrElse(1),
-          defaultLayouts,
-          layouts,
-          List(warningsAndErrorsTile, obsAttachmentsTile),
-          GridLayoutSection.OverviewLayout
-        )
+        <.div(
+          TileController(
+            props.userVault.map(_.user.id),
+            resize.width.getOrElse(1),
+            defaultLayouts,
+            props.layout,
+            List(warningsAndErrorsTile, obsAttachmentsTile),
+            GridLayoutSection.OverviewLayout
+          )
+        ).withRef(resize.ref)
       }
 }

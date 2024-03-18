@@ -1,20 +1,19 @@
-// @ts-check
-import { defineConfig } from 'vite';
-import path from 'path';
+import type { PathLike } from 'fs';
 import fs from 'fs/promises';
-import mkcert from 'vite-plugin-mkcert';
-import Unfonts from 'unplugin-fonts/vite'
-import { VitePWA } from 'vite-plugin-pwa';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import path from 'path';
+import type { PluginCreator } from 'postcss';
+import Unfonts from 'unplugin-fonts/vite';
+import { defineConfig, UserConfig } from 'vite';
+import mkcert from 'vite-plugin-mkcert';
+import { VitePWA } from 'vite-plugin-pwa';
+import type { RuntimeCaching } from 'workbox-build';
 
-// import wasm from "vite-plugin-wasm";
-// import topLevelAwait from "vite-plugin-top-level-await";
-
-const fixCssRoot = (opts = {}) => {
+const fixCssRoot: PluginCreator<void> = () => {
   return {
     postcssPlugin: 'postcss-fix-nested-root',
-    Once(root, { result }) {
+    Once(root) {
       root.walkRules((rule) => {
         if (rule.selector.includes(' :root')) {
           rule.selector = rule.selector.replace(' :root', '');
@@ -23,26 +22,24 @@ const fixCssRoot = (opts = {}) => {
     },
   };
 };
-/**
- * Refine type to 'true' instead of 'boolean'
- * @type {true}
- */
 fixCssRoot.postcss = true;
 
 const fontImport = Unfonts({
   fontsource: {
-    families: [
-      'Lato'
-    ],
+    families: ['Lato'],
   },
 });
 
 /**
  * Configuration to cache aladin images
- * @param {{name: string, pattern: RegExp}} param0
- * @returns {import('workbox-build').RuntimeCaching}
  */
-const imageCache = ({ name, pattern }) => ({
+const imageCache = ({
+  name,
+  pattern,
+}: {
+  name: string;
+  pattern: RuntimeCaching['urlPattern'];
+}): RuntimeCaching => ({
   urlPattern: pattern,
   handler: 'CacheFirst',
   options: {
@@ -60,10 +57,14 @@ const imageCache = ({ name, pattern }) => ({
 
 /**
  * Configuration for itc
- * @param {{name: string, pattern: RegExp}} param0
- * @returns {import('workbox-build').RuntimeCaching}
  */
-const itcCache = ({ name, pattern }) => ({
+const itcCache = ({
+  name,
+  pattern,
+}: {
+  name: string;
+  pattern: RuntimeCaching['urlPattern'];
+}): RuntimeCaching => ({
   urlPattern: pattern,
   handler: 'CacheFirst',
   options: {
@@ -81,10 +82,8 @@ const itcCache = ({ name, pattern }) => ({
 
 /**
  * Check if a file or directory exists
- * @param {import('fs').PathLike} path
- * @returns
  */
-const pathExists = async (path) => {
+const pathExists = async (path: PathLike) => {
   try {
     await fs.access(path, fs.constants.F_OK);
     return true;
@@ -97,12 +96,12 @@ const pathExists = async (path) => {
 export default defineConfig(async ({ mode }) => {
   const _dirname =
     typeof __dirname !== 'undefined' ? __dirname : dirname(fileURLToPath(import.meta.url));
-  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.3.1`);
+  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.4.0`);
   const isProduction = mode === 'production';
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, `explore-opt`)
     : path.resolve(scalaClassesDir, `explore-fastopt`);
-  const workersScalaClassesDir = path.resolve(_dirname, 'workers/target/scala-3.3.1');
+  const workersScalaClassesDir = path.resolve(_dirname, 'workers/target/scala-3.4.0');
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');
@@ -199,13 +198,12 @@ export default defineConfig(async ({ mode }) => {
     },
     server: {
       strictPort: true,
-      fsServe: {
+      fs: {
         strict: true,
       },
       host: '0.0.0.0',
       port: 8080,
-      https: true,
-      cors: { origin: "*" },
+      cors: { origin: '*' },
       watch: {
         ignored: [
           function ignoreThisPath(_path) {
@@ -218,6 +216,15 @@ export default defineConfig(async ({ mode }) => {
           },
         ],
       },
+      // https://vitejs.dev/guide/performance.html#warm-up-frequently-used-files
+      // @ts-expect-error doesn't exist in type definition, but it's in the docs
+      warmup: {
+        clientFiles: [
+          path.resolve(sjs, '*.js'),
+          path.resolve(webappCommon, 'sass/*.scss'),
+          path.resolve(lucumaCss, '*.scss'),
+        ],
+      },
     },
     build: {
       emptyOutDir: true,
@@ -226,15 +233,8 @@ export default defineConfig(async ({ mode }) => {
     },
     worker: {
       format: 'es', // We need this for workers to be able to do dynamic imports.
-      // We need these to allow wasm modules on the workres
-      // plugins: [
-      //   wasm(),
-      //   topLevelAwait()
-      // ]
     },
     plugins: [
-      // wasm(),
-      // topLevelAwait(),
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       fontImport,
       VitePWA({
@@ -261,5 +261,5 @@ export default defineConfig(async ({ mode }) => {
         },
       }),
     ],
-  };
+  } satisfies UserConfig;
 });

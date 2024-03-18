@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
@@ -13,6 +14,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.model.syntax.all.*
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
@@ -20,6 +22,7 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.InputSwitch
@@ -31,13 +34,15 @@ import lucuma.ui.syntax.all.given
 
 case class ObsBadge(
   obs:               ObsSummary,
+  executionTime:     Pot[Option[TimeSpan]],
   layout:            ObsBadge.Layout,
   selected:          Boolean = false,
   setStatusCB:       Option[ObsStatus => Callback] = none,
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
   setSubtitleCB:     Option[Option[NonEmptyString] => Callback] = none,
   deleteCB:          Option[Callback] = none,
-  cloneCB:           Option[Callback] = none
+  cloneCB:           Option[Callback] = none,
+  readonly:          Boolean = false
 ) extends ReactFnProps(ObsBadge.component)
 
 object ObsBadge:
@@ -78,7 +83,7 @@ object ObsBadge:
           icon = Icons.Trash,
           tooltip = "Delete",
           onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB.getOrEmpty
-        ).small
+        ).small.unless(props.readonly)
 
       val duplicateButton =
         Button(
@@ -87,7 +92,7 @@ object ObsBadge:
           icon = Icons.Clone,
           tooltip = "Duplicate",
           onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.cloneCB.getOrEmpty
-        ).small
+        ).small.unless(props.readonly)
 
       val header =
         <.div(ExploreStyles.ObsBadgeHeader)(
@@ -116,7 +121,8 @@ object ObsBadge:
               addButtonLabel = "Add description",
               addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
               leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
-              rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete
+              rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete,
+              readonly = props.readonly
             )
           )
           .whenDefined
@@ -148,11 +154,14 @@ object ObsBadge:
                     case ObsActiveStatus.Active   => "Observation is active"
                     case ObsActiveStatus.Inactive => "Observation is not active"
                   ,
-                  tooltipOptions = TooltipOptions(position = TooltipOptions.Position.Left)
+                  tooltipOptions = TooltipOptions(position = TooltipOptions.Position.Left),
+                  disabled = props.readonly
                 )
               )(
                 // don't select the observation when changing the active status
-                ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
+                ^.onClick ==> { e =>
+                  (e.preventDefaultCB >> e.stopPropagationCB).unless_(props.readonly)
+                }
               )
             )
           ),
@@ -171,14 +180,15 @@ object ObsBadge:
                   ),
                   size = PlSize.Mini,
                   clazz = ExploreStyles.ObsStatusSelect,
-                  panelClass = ExploreStyles.ObsStatusSelectPanel
+                  panelClass = ExploreStyles.ObsStatusSelectPanel,
+                  disabled = props.readonly
                 )
               )(
                 // don't select the observation when changing the status
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            obs.executionTime.map(ts => <.span(ts.toHoursMinutes))
+            props.executionTime.orSpinner(_.map(ts => <.span(ts.toHoursMinutes)))
           )
         )
       )

@@ -31,9 +31,7 @@ object ObsQueriesGQL:
           itc {
             science {
               selected {
-                exposureTime {
-                  milliseconds
-                }
+                exposureTime $TimeSpanSubquery
                 exposures
                 signalToNoise
               }
@@ -47,13 +45,6 @@ object ObsQueriesGQL:
         }
       }
     """
-
-    object Data:
-      object Observation:
-        object Itc:
-          object Science:
-            object Selected:
-              type ExposureTime = lucuma.core.util.TimeSpan
 
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
@@ -80,7 +71,8 @@ object ObsQueriesGQL:
         observation(observationId: $$obsId) {
           execution {
             config {
-              ... on GmosSouthExecutionConfig {
+              instrument
+              gmosSouth {
                 acquisition {
                   nextAtom {
                     steps {
@@ -106,7 +98,7 @@ object ObsQueriesGQL:
                   }
                 }
               }
-              ... on GmosNorthExecutionConfig {
+              gmosNorth {
                 acquisition {
                   nextAtom {
                     steps {
@@ -147,8 +139,8 @@ object ObsQueriesGQL:
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:
     // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
-      subscription($obsId: ObservationId!) {
-        observationEdit(input: {observationId: $obsId}) {
+      subscription($input: ObservationEditInput!) {
+        observationEdit(input: $input) {
           value {
             id
           }
@@ -193,8 +185,8 @@ object ObsQueriesGQL:
   @GraphQL
   trait ProgramObservationsDelta extends GraphQLOperation[ObservationDB] {
     val document = s"""
-      subscription($$programId: ProgramId!) {
-        observationEdit(input: {programId: $$programId}) {
+      subscription($$input: ObservationEditInput!) {
+        observationEdit(input: $$input) {
           value $ObservationSummarySubquery
           meta:value {
             existence

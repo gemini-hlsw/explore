@@ -21,6 +21,7 @@ import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -60,7 +61,8 @@ object Routing:
         model.zoom(RootModel.vault).get,
         programSummaries.model.zoom(ProgramSummaries.obsAttachments),
         programSummaries.model.get.obsAttachmentAssignments,
-        userPreferences(model)
+        userPreferences(model).overviewTabLayout,
+        programSummaries.get.proposalIsSubmitted
       )
     )
 
@@ -77,7 +79,8 @@ object Routing:
             userPrefs,
             routingInfo.focused,
             model.zoom(RootModel.searchingTarget),
-            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds))
+            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
+            programSummaries.get.proposalIsSubmitted
           )
         )
     )
@@ -96,7 +99,8 @@ object Routing:
             userPrefs,
             routingInfo.focused,
             model.zoom(RootModel.searchingTarget),
-            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
+            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
+            programSummaries.get.proposalIsSubmitted
           )
         )
     )
@@ -110,7 +114,8 @@ object Routing:
         programSummaries,
         userPreferences(model),
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds))
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
+        programSummaries.get.proposalIsSubmitted
       )
     )
 
@@ -123,28 +128,41 @@ object Routing:
         programSummaries,
         userPreferences(model),
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds))
+        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
+        programSummaries.get.proposalIsSubmitted
       )
     )
 
   private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
     withProgramSummaries(model)(programSummaries =>
       val routingInfo = RoutingInfo.from(page)
-      ProposalTabContents(
-        routingInfo.programId,
-        model.zoom(RootModel.vault).get,
-        programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
-        model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal)
-      )
+      // if we got this far, we will have program details
+      programSummaries.model
+        .zoom(ProgramSummaries.optProgramDetails)
+        .toOptionView
+        .map(detailsView =>
+          ProposalTabContents(
+            routingInfo.programId,
+            model.zoom(RootModel.vault).get,
+            detailsView,
+            programSummaries.model.get.programTimesPot.map(_.timeEstimateRange),
+            programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
+            model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
+            userPreferences(model).proposalTabLayout
+          )
+        )
     )
 
   private def programTab(page: Page, model: View[RootModel]): VdomElement =
-    val routingInfo = RoutingInfo.from(page)
-    ProgramTabContents(
-      routingInfo.programId,
-      model.zoom(RootModel.vault).get,
-      userPreferences(model)
-    )
+    withProgramSummaries(model) { programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
+      ProgramTabContents(
+        routingInfo.programId,
+        model.zoom(RootModel.vault).get,
+        programSummaries.get.programTimesPot,
+        userPreferences(model)
+      )
+    }
 
   // The programs popup will be shown
   private def noProgram: VdomElement = React.Fragment()
@@ -198,6 +216,10 @@ object Routing:
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "observation" / id[Observation.Id]).xmapL(ObsPage.iso)
+          ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
+
+          | dynamicRouteCT(
+            (root / id[Program.Id] / "observation" / id[Group.Id]).xmapL(ObsGroupPage.iso)
           ) ~> dynRenderP { case (p, m) => obsTab(p, m) }
 
           | dynamicRouteCT((root / id[Program.Id] / "targets").xmapL(TargetsBasePage.iso)) ~>

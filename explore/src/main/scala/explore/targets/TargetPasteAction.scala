@@ -18,7 +18,6 @@ import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
 import explore.model.syntax.all.*
 import explore.undo.*
-import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import monocle.Iso
 
@@ -77,7 +76,6 @@ object TargetPasteAction {
     currentGroup.obsIds.remove(obsIds).fold(merged)(merged + _)
 
   def pasteTargets(
-    programId:    Program.Id,
     obsIds:       ObsIdSet,
     targetIds:    TargetIdSet,
     selectObsIds: ObsIdSet => IO[Unit],
@@ -97,10 +95,10 @@ object TargetPasteAction {
             selectObsIds(obsIds) >>
             (if (isUndo)
                AsterismQueries
-                 .removeTargetsFromAsterisms[IO](programId, obsIds.toList, targetIds.toList)
+                 .removeTargetsFromAsterisms[IO](obsIds.toList, targetIds.toList)
              else
                AsterismQueries
-                 .addTargetsToAsterisms[IO](programId, obsIds.toList, targetIds.toList))
+                 .addTargetsToAsterisms[IO](obsIds.toList, targetIds.toList))
         )
     )
 }

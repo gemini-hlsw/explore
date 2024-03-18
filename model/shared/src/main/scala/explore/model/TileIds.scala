@@ -31,3 +31,18 @@ enum ProgramTabTileIds:
     case DetailsId        => "programDetails".refined
     case NotesId          => "programNotes".refined
     case ChangeRequestsId => "programChangeRequests".refined
+
+enum ProposalTabTileIds:
+  case DetailsId, AbstractId, AttachmentsId
+
+  def id: NonEmptyString = this match
+    case DetailsId     => "proposalDetails".refined
+    case AbstractId    => "proposalAbstract".refined
+    case AttachmentsId => "proposalAttachments".refined
+
+enum GroupEditIds:
+  case GroupEditId, GroupNotesId
+
+  def id: NonEmptyString = this match
+    case GroupEditId  => "groupEdit".refined
+    case GroupNotesId => "groupNotes".refined

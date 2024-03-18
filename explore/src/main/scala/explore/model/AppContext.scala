@@ -64,7 +64,7 @@ case class AppContext[F[_]](
   export explore.DefaultErrorPolicy
 
 object AppContext:
-  val ctx: Context[AppContext[IO]] = React.createContext(null) // No default value
+  val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value
 
   def from[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
     config:               AppConfig,

@@ -7,11 +7,14 @@ import cats.Eq
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
+import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
+import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
+import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
@@ -20,20 +23,27 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ProgramSummaries(
+  optProgramDetails:   Option[ProgramDetails],
   targets:             TargetList,
   observations:        ObservationList,
   groups:              GroupList,
   obsAttachments:      ObsAttachmentList,
   proposalAttachments: List[ProposalAttachment],
-  programs:            ProgramInfoList
+  programs:            ProgramInfoList,
+  programTimesPot:     Pot[ProgramTimes],
+  obsExecutionPots:    ObservationExecutionMap,
+  groupTimeRangePots:  GroupTimeRangeMap
 ) derives Eq:
+  lazy val proposalIsSubmitted =
+    optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
+
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(
       observations.values
         .map(obs => obs.id -> obs.scienceTargetIds)
         .groupMap(_._2)(_._1)
         .map((targets, observations) =>
-          ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList: _*)) -> SortedSet
+          ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList*)) -> SortedSet
             .from(targets)
         )
     )
@@ -64,14 +74,14 @@ case class ProgramSummaries(
     SortedMap.from(
       observations.values
         .groupMap(_.constraints)(_.id)
-        .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> c)
+        .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> c)
     )
 
   lazy val schedulingGroups: SchedulingGroupList =
     SortedMap.from(
       observations.values
         .groupMap(_.timingWindows.sorted)(_.id)
-        .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList: _*) -> tws.sorted)
+        .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )
 
   def cloneObsWithTargets(
@@ -92,6 +102,8 @@ case class ProgramSummaries(
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
 
 object ProgramSummaries:
+  val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]     =
+    Focus[ProgramSummaries](_.optProgramDetails)
   val targets: Lens[ProgramSummaries, TargetList]                           = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)
@@ -101,20 +113,34 @@ object ProgramSummaries:
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
     Focus[ProgramSummaries](_.proposalAttachments)
   val programs: Lens[ProgramSummaries, ProgramInfoList]                     = Focus[ProgramSummaries](_.programs)
+  val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]            =
+    Focus[ProgramSummaries](_.programTimesPot)
+  val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]     =
+    Focus[ProgramSummaries](_.obsExecutionPots)
+  val groupTimeRangePots: Lens[ProgramSummaries, GroupTimeRangeMap]         =
+    Focus[ProgramSummaries](_.groupTimeRangePots)
 
   def fromLists(
+    optProgramDetails:   Option[ProgramDetails],
     targetList:          List[TargetWithId],
     obsList:             List[ObsSummary],
     groups:              List[GroupElement],
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
-    programs:            List[ProgramInfo]
+    programs:            List[ProgramInfo],
+    programTimesPot:     Pot[ProgramTimes],
+    obsExecutionPots:    Map[Observation.Id, Pot[Execution]],
+    groupTimeRangePots:  Map[Group.Id, Pot[Option[ProgramTimeRange]]]
   ): ProgramSummaries =
     ProgramSummaries(
+      optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
       groups,
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,
-      programs.toSortedMap(_.id)
+      programs.toSortedMap(_.id),
+      programTimesPot,
+      ObservationExecutionMap(obsExecutionPots),
+      GroupTimeRangeMap(groupTimeRangePots)
     )

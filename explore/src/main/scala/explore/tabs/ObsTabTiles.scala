@@ -19,7 +19,9 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
+import explore.config.sequence.VisitsViewer
 import explore.constraints.ConstraintsPanel
+import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
 import explore.model.AppContext
 import explore.model.LoadingState
@@ -58,6 +60,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
@@ -65,6 +68,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.odb.input.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
@@ -83,6 +87,7 @@ case class ObsTabTiles(
   programId:                Program.Id,
   backButton:               VdomNode,
   observation:              UndoSetter[ObsSummary],
+  obsExecution:             Pot[Execution],
   allTargets:               UndoSetter[TargetList],
   allConstraintSets:        Set[ConstraintSet],
   targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
@@ -93,7 +98,8 @@ case class ObsTabTiles(
   resize:                   UseResizeDetectorReturn,
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  globalPreferences:        View[GlobalPreferences]
+  globalPreferences:        View[GlobalPreferences],
+  readonly:                 Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsId: Observation.Id = observation.get.id
 
@@ -170,7 +176,9 @@ object ObsTabTiles:
             )
           )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+          .reRunOnResourceSignals(
+            ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
+          )
       }
       .useStreamResourceOnMountBy { (props, ctx, _) =>
         import ctx.given
@@ -192,7 +200,9 @@ object ObsTabTiles:
             )
           )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(ObservationEditSubscription.subscribe[IO](props.obsId))
+          .reRunOnResourceSignals(
+            ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
+          )
       }
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
@@ -265,6 +275,7 @@ object ObsTabTiles:
       .useStateView(none[ObsAtt.Id])
       // Signal that the sequence has changed
       .useStateView(().ready)
+      .useStateView(ChartSelector.Closed)
       .render {
         (
           props,
@@ -279,7 +290,8 @@ object ObsTabTiles:
           itcLoading,
           selectedItcTarget,
           selectedAttachment,
-          sequenceChanged
+          sequenceChanged,
+          chartSelector
         ) =>
           import ctx.given
 
@@ -343,7 +355,8 @@ object ObsTabTiles:
               props.vault.map(_.token),
               props.obsAttachments,
               selectedAttachment,
-              pa
+              pa,
+              chartSelector
             )
 
           val notesTile =
@@ -365,17 +378,31 @@ object ObsTabTiles:
             SequenceEditorTile.sequenceTile(renderInTitle =>
               React.Fragment(
                 renderInTitle {
-                  val programTimeCharge = props.observation.get.execution.timeCharge.program
-                  props.observation.get.executionTime
-                    .map { planned =>
-                      val total = programTimeCharge +| planned
-                      <.span(
-                        <.span(ExploreStyles.SequenceTileTitle, total.toHoursMinutes),
-                        s" (${programTimeCharge.toHoursMinutes} executed, ${planned.toHoursMinutes} remaining)"
+                  props.obsExecution.orSpinner { execution =>
+                    val programTimeCharge = execution.programTimeCharge.value
+
+                    def timeDisplay(name: String, time: TimeSpan) =
+                      <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
+                             time.toHoursMinutes
                       )
-                    }
-                    .getOrElse(s"${programTimeCharge.toHoursMinutes} executed")
+
+                    val executed = timeDisplay("Executed", programTimeCharge)
+
+                    execution.programTimeEstimate
+                      .map { plannedTime =>
+                        val total   = programTimeCharge +| plannedTime
+                        val pending = timeDisplay("Pending", plannedTime)
+                        val planned = timeDisplay("Planned", total)
+                        <.span(ExploreStyles.SequenceTileTitle)(
+                          planned,
+                          executed,
+                          pending
+                        )
+                      }
+                      .getOrElse(executed)
+                  }
                 },
+                VisitsViewer(props.obsId),
                 GeneratedSequenceViewer(
                   props.programId,
                   props.obsId,
@@ -489,6 +516,7 @@ object ObsTabTiles:
               props.searching,
               "Targets",
               props.globalPreferences,
+              props.readonly,
               // Any target changes invalidate the sequence
               sequenceChanged.set(Pot.pending)
             )
@@ -502,20 +530,20 @@ object ObsTabTiles:
               ObsTabTilesIds.ConstraintsId.id,
               "Constraints",
               canMinimize = true,
-              control = _ => constraintsSelector.some,
-              controllerClass = ExploreStyles.ConstraintsTile
+              control = _ => constraintsSelector.some
             )(renderInTitle =>
               <.div
               ConstraintsPanel(
                 ObsIdSet.one(props.obsId),
                 props.observation.zoom(ObsSummary.constraints),
-                renderInTitle
+                renderInTitle,
+                props.readonly
               )
             )
 
           val timingWindowsTile =
             Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-              renderInTitle => TimingWindowsPanel(timingWindows, renderInTitle)
+              renderInTitle => TimingWindowsPanel(timingWindows, props.readonly, renderInTitle)
             )
 
           val configurationTile =
@@ -534,7 +562,8 @@ object ObsTabTiles:
               sequenceChanged.mod {
                 case Ready(x) => Pot.pending
                 case x        => x
-              }
+              },
+              props.readonly
             )
 
           TileController(
@@ -554,7 +583,6 @@ object ObsTabTiles:
               itcTile
             ),
             GridLayoutSection.ObservationsLayout,
-            props.backButton.some,
-            clazz = ExploreStyles.ObservationTiles.some
+            props.backButton.some
           )
       }

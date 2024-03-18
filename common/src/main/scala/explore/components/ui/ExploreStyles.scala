@@ -55,10 +55,6 @@ object ExploreStyles:
   // Change styles for a readonly input
   val StaticData: Css = Css("static-data")
 
-  // re-evaluate the need/use of this as part of overall
-  // styling and layout
-  val ProposalTile: Css = Css("proposal-tile")
-
   val ConnectionIcon: Css        = Css("connection-icon")
   val ObsGroupTitle: Css         = Css("obs-group-title")
   val ObsGroupTitleWithWrap: Css = Css("obs-group-title-with-wrap")
@@ -116,18 +112,29 @@ object ExploreStyles:
   val ObservationsSummaryTable: Css = Css("observations-summary-table")
   val ObservationsSummaryAdd: Css   = Css("observations-summary-add")
   val SelectedObsItem: Css          = Css("selected-obs-item")
+  val SelectedGroupItem: Css        = Css("selected-group-item")
   val ObsItem: Css                  = Css("obs-item")
   val TrashIcon: Css                = Css("trash-icon")
   val EraserIcon: Css               = Css("eraser-icon")
   val ExpanderChevron: Css          = Css("expander-chevron")
   val ExpanderChevronOpen: Css      = Css("expander-chevron-open")
 
-  val ApiKeysPopup    = Css("api-keys-popup")
-  val ApiKeysTable    = Css("api-keys-table")
-  val ApiKeyDelete    = Css("api-keys-delete")
-  val ApiKeysTableMod = Css("api-keys-table-mod")
-  val NewApiKey       = Css("new-api-key")
-  val NewApiKeyLabel  = Css("new-api-key-label")
+  val GroupEditTile: Css      = Css("group-edit-tile")
+  val GroupEditTitle: Css     = Css("group-edit-title")
+  val GroupTypeSelect: Css    = Css("group-type-select")
+  val GroupChangeButtons: Css = Css("group-change-buttons")
+  val GroupEditNote: Css      = Css("group-edit-note")
+  val GroupForm: Css          = Css("group-form")
+  val GroupDelaysForm: Css    = Css("group-delays-form")
+  val GroupPlannedTime: Css   = Css("group-planned-time")
+
+  val ApiKeysPopup         = Css("api-keys-popup")
+  val ApiKeysTable         = Css("api-keys-table")
+  val ApiKeyDelete         = Css("api-keys-delete")
+  val ApiKeysTableMod      = Css("api-keys-table-mod")
+  val NewApiKey            = Css("new-api-key")
+  val NewApiKeyLabel       = Css("new-api-key-label")
+  val EmptyUserPreferences = Css("empty-user-preferences")
 
   val ProgramsPopup                = Css("programs-popup")
   val ProgramTable                 = Css("program-table")
@@ -210,6 +217,7 @@ object ExploreStyles:
   val AgsNavigationButton: Css = Css("ags-navigation-button")
   val AgsNavigation: Css       = Css("ags-navigation")
 
+  val ProposalTab: Css         = Css("explore-proposal-tab")
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
@@ -240,10 +248,6 @@ object ExploreStyles:
   // Edit Warning
   val EditWarning: Css = Css("edit-warning")
 
-  // The Observation tab contents
-  val ObservationTiles: Css = Css("observation-tiles")
-  val ConstraintsTile: Css  = Css("constraints-tile")
-
   // The Target tab contents
   val TargetGrid: Css     = Css("target-grid")
   val AsterismEditor: Css = Css("target-asterism-editor")
@@ -262,7 +266,6 @@ object ExploreStyles:
   val ConstraintsGrid                = Css("constraints-grid")
   val ConstraintsNameField           = Css("constraints-name-field")
   val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
-  val ConstraintsTileSelector        = Css("constraints-tile-selector")
   val ElevationRangePicker           = Css("elevation-range-picker")
   val ElevationRangeEntry            = Css("elevation-range-entry")
 
@@ -356,6 +359,7 @@ object ExploreStyles:
   val CellHideBorder                   = Css("explore-table-cell-hide-border")
   val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
   val SequenceTileTitle                = Css("explore-sequence-tile-title")
+  val SequenceTileTitleItem            = Css("explore-sequence-tile-title-item")
   val VisitSection                     = Css("explore-visit-section")
   val VisitHeader                      = Css("explore-visit-header")
   val VisitStepExtra                   = Css("explore-visit-step-extra")

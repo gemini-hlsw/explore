@@ -5,12 +5,7 @@ package queries.common
 
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
-import lucuma.core.model
-import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
-import explore.{model => exploreModel}
-// gql: import lucuma.odb.json.time.decoder.given
-// gql: import lucuma.schemas.decoders.given
 
 object ProgramQueriesGQL {
   @GraphQL
@@ -51,71 +46,6 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
-  trait ProgramProposalQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = s"""
-      query($$programId: ProgramId!) {
-        program(programId: $$programId) {
-          proposal {
-            title
-            proposalClass {
-              __typename
-              minPercentTime
-              ... on LargeProgram {
-                minPercentTotalTime
-                totalTime {
-                  microseconds
-                }
-              }
-              ... on Intensive {
-                minPercentTotalTime
-                totalTime {
-                  microseconds
-                }
-              }
-            }
-            category
-            toOActivation
-            abstract
-            partnerSplits {
-              partner
-              percent
-            }
-          }
-          pi $ProgramUserSubquery
-          users $ProgramUserWithRoleSubquery
-          timeEstimateRange {
-            minimum {
-              total {
-                microseconds
-              }
-            }
-            maximum {
-              total {
-                microseconds
-              }
-            }
-          }
-          timeCharge {
-            program {
-              microseconds
-            }
-          }
-        }
-      }
-    """
-
-    object Data:
-      object Program:
-        type Proposal   = model.Proposal
-        object TimeEstimateRange:
-          object Minimum:
-            type Total = TimeSpan
-          object Maximum:
-            type Total = TimeSpan
-        type TimeCharge = exploreModel.TimeCharge
-  }
-
-  @GraphQL
   trait ProgramGroupsQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""#graphql
       query ($$programId: ProgramId!) {
@@ -127,23 +57,10 @@ object ProgramQueriesGQL {
   }
 
   @GraphQL
-  trait ProgramEditSubscription extends GraphQLOperation[ObservationDB] {
-    val document: String = """
-      subscription($programId: ProgramId) {
-        programEdit(input: {programId: $programId}) {
-          value {
-            id
-          }
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait GroupEditSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      subscription($$programId: ProgramId!) {
-        groupEdit(input: { programId: $$programId }) {
+      subscription($$input: ProgramEditInput!) {
+        groupEdit(input: $$input) {
           value ${GroupQueriesGQL.GroupSubQuery}
           editType
         }
@@ -154,12 +71,27 @@ object ProgramQueriesGQL {
   @GraphQL
   trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      subscription($$programId: ProgramId!) {
-        programEdit(input: {programId: $$programId}) {
+      subscription($$input: ProgramEditInput!) {
+        programEdit(input: $$input) {
           value {
             obsAttachments $ObsAttachmentSubquery
             proposalAttachments $ProposalAttachmentSubquery
           }
+        }
+      }
+    """
+  }
+
+  // TODO: We now have 2 bits of ProgramSummaries that start a `programEdit` subscription
+  // for the current program. The program attachments could be moved into the program details
+  // to avoid this. But, we also need to change the ODB so that editing a proposal triggers a
+  // subscription update.
+  @GraphQL
+  trait ProgramEditDetailsSubscription extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      subscription($$input: ProgramEditInput!) {
+        programEdit(input: $$input) {
+          value $ProgramDetailsSubquery
         }
       }
     """

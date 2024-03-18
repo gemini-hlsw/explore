@@ -14,7 +14,7 @@ import org.scalacheck.Arbitrary.*
 
 class ListModSpec extends DisciplineSuite {
 
-  val idGet = Iso.id[Int].get _
+  val idGet = Iso.id[Int].get
 
   val listMod = new KIListMod[Int, Int](Iso.id)
 
@@ -38,7 +38,7 @@ class ListModSpec extends DisciplineSuite {
     def apply(id: Int): V = V(id, id.toString)
   }
 
-  implicit val keyGet: V => Int = V.id.get _
+  implicit val keyGet: V => Int = V.id.get
 
   val vlistMod = new KIListMod[V, Int](V.id)
 

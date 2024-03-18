@@ -31,8 +31,8 @@ ThisBuild / description                         := "Explore"
 Global / onChangedBuildSource                   := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
 ThisBuild / scalafixScalaBinaryVersion          := "2.13"
-ThisBuild / scalaVersion                        := "3.3.1"
-ThisBuild / crossScalaVersions                  := Seq("3.3.1")
+ThisBuild / scalaVersion                        := "3.4.0"
+ThisBuild / crossScalaVersions                  := Seq("3.4.0")
 ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
 ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
   "https://s01.oss.sonatype.org/content/repositories/snapshots/"
@@ -265,7 +265,7 @@ lazy val setupNodeNpmInstall =
       params = Map("node-version" -> "20", "cache" -> "npm")
     ),
     WorkflowStep.Use(
-      UseRef.Public("actions", "cache", "v3"),
+      UseRef.Public("actions", "cache", "v4"),
       name = Some("Cache node_modules"),
       id = Some("cache-node_modules"),
       params = {
@@ -343,7 +343,7 @@ def setupVars(mode: String) = WorkflowStep.Run(
 )
 
 def runLinters(mode: String) = WorkflowStep.Use(
-  UseRef.Public("wearerequired", "lint-action", "v2.3.0"),
+  UseRef.Public("wearerequired", "lint-action", "v2"),
   name = Some(s"Run linters in $mode mode"),
   params = Map(
     "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",

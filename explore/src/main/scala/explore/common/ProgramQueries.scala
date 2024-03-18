@@ -15,6 +15,7 @@ import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.odb.input.*
 import queries.common.ProgramQueriesGQL.*
 
@@ -65,15 +66,25 @@ object ProgramQueries:
       )
       .void
 
+  def updateProposalStatus[F[_]: Async](id: Program.Id, status: ProposalStatus)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    UpdateProgramsMutation[F]
+      .execute(
+        UpdateProgramsInput(
+          WHERE = id.toWhereProgram.assign,
+          SET = ProgramPropertiesInput(proposalStatus = status.assign)
+        )
+      )
+      .void
+
   def updateObsAttachmentDescription[F[_]: Async](
-    pid:  Program.Id,
     oid:  ObsAttachment.Id,
     desc: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObsAttachmentMutation[F]
       .execute(
         UpdateObsAttachmentsInput(
-          programId = pid,
           WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
           SET = ObsAttachmentPropertiesInput(description = desc.orUnassign)
         )
@@ -81,14 +92,12 @@ object ProgramQueries:
       .void
 
   def updateObsAttachmentChecked[F[_]: Async](
-    pid:     Program.Id,
     oid:     ObsAttachment.Id,
     checked: Boolean
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObsAttachmentMutation[F]
       .execute(
         UpdateObsAttachmentsInput(
-          programId = pid,
           WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
           SET = ObsAttachmentPropertiesInput(checked = checked.assign)
         )

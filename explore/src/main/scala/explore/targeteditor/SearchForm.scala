@@ -38,7 +38,8 @@ case class SearchForm(
   id:         Target.Id,
   targetName: View[NonEmptyString],
   targetSet:  Target.Sidereal => Callback,
-  searching:  View[Set[Target.Id]]
+  searching:  View[Set[Target.Id]],
+  readonly:   Boolean
 ) extends ReactFnProps[SearchForm](SearchForm.component)
 
 object SearchForm:
@@ -75,7 +76,7 @@ object SearchForm:
         val searchComplete: Callback = props.searching.mod(_ - props.id)
 
         def onKeyPress = (e: ReactKeyboardEvent) =>
-          if (Option(e.key).exists(_ === dom.KeyValue.Enter))
+          if (Option(e.key).exists(_ === dom.KeyValue.Enter) && !props.readonly)
             buttonRef.get >>= (_.map(button => Callback(button.click())).orEmpty)
           else
             Callback.empty
@@ -108,7 +109,7 @@ object SearchForm:
             )
           else Icons.Ban
 
-        val disabled = props.searching.get.exists(_ === props.id)
+        val disabled = props.searching.get.exists(_ === props.id) || props.readonly
 
         // use a form here to handle submit? is it embedded?
         FormInputTextView(

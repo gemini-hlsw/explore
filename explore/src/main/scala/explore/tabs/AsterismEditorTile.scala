@@ -51,6 +51,7 @@ object AsterismEditorTile:
     searching:         View[Set[Target.Id]],
     title:             String,
     globalPreferences: View[GlobalPreferences],
+    readonly:          Boolean,
     sequenceChanged:   Callback = Callback.empty,
     backButton:        Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
@@ -84,6 +85,7 @@ object AsterismEditorTile:
           searching,
           renderInTitle,
           globalPreferences,
+          readonly,
           sequenceChanged
         )
       )
