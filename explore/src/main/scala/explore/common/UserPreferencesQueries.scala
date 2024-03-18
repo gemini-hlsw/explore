@@ -27,8 +27,8 @@ import explore.model.enums.PlotRange
 import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
-import explore.model.itc.PlotDetails
 import explore.model.itc.*
+import explore.model.itc.PlotDetails
 import explore.model.layout.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -42,11 +42,11 @@ import lucuma.react.gridlayout.*
 import lucuma.react.table.*
 import lucuma.ui.table.hooks.*
 import org.typelevel.log4cats.Logger
+import queries.common.UserPreferencesQueriesGQL.*
 import queries.common.UserPreferencesQueriesGQL.AsterismPreferencesQuery.Data.ExploreAsterismPreferences
 import queries.common.UserPreferencesQueriesGQL.AsterismUpsert
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates.Data.LucumaGridLayoutPositions
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesQuery
-import queries.common.UserPreferencesQueriesGQL.*
 import queries.schemas.UserPreferencesDB
 import queries.schemas.UserPreferencesDB.Enums.*
 import queries.schemas.UserPreferencesDB.Types.*

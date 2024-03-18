@@ -19,8 +19,8 @@ import explore.model.ObsConfiguration
 import explore.model.enums.Visible
 import explore.model.reusability.given
 import explore.visualization.*
-import japgolly.scalajs.react.Reusability.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.Reusability.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis

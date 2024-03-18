@@ -35,8 +35,8 @@ import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
 import lucuma.refined.*
-import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso

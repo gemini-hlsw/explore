@@ -14,15 +14,15 @@ import explore.cache.ProgramCache
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import explore.events.ExploreEvent.LogoutEventId
-import explore.model.AppContext
 import explore.model.*
+import explore.model.AppContext
 import explore.model.enums.AppTab
 import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.utils.*
-import japgolly.scalajs.react.React
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.React
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*

@@ -8,13 +8,13 @@ import cats.data.NonEmptySet
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.View
+import explore.model.*
 import explore.model.Page
 import explore.model.Page.*
-import explore.model.*
 import explore.proposal.ProposalTabContents
+import explore.tabs.*
 import explore.tabs.ConstraintsTabContents
 import explore.tabs.ProgramTabContents
-import explore.tabs.*
 import explore.undo.UndoContext
 import japgolly.scalajs.react.React
 import japgolly.scalajs.react.ReactMonocle.*

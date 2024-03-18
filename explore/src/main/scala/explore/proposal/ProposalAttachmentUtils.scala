@@ -20,7 +20,7 @@ import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.util.Timestamp
 import lucuma.schemas.enums.ProposalAttachmentType
-import org.scalajs.dom.{File => DomFile}
+import org.scalajs.dom.File as DomFile
 import org.typelevel.log4cats.Logger
 
 trait ProposalAttachmentUtils extends AttachmentUtils:

@@ -1,8 +1,7 @@
-import org.scalajs.linker.interface.ModuleSplitStyle
-import scala.sys.process.*
 import Dependencies.*
+import org.scalajs.linker.interface.ModuleSplitStyle
 
-val reactJS = "17.0.2"
+import scala.sys.process.*
 
 ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false

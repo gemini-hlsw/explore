@@ -26,20 +26,20 @@ import explore.model.BasicConfigAndItc
 import explore.model.Progress
 import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
-import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.TableId
-import explore.model.itc.ItcTarget
 import explore.model.itc.*
+import explore.model.itc.ItcTarget
 import explore.model.reusability.given
 import explore.modes.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
+import lucuma.core.enums.FocalPlane
 import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
@@ -55,13 +55,13 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.BasicConfiguration
-import lucuma.typed.{tanstackVirtualCore => rawVirtual}
+import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.*
+import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 import lucuma.ui.utils.*
 

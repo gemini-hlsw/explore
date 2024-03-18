@@ -24,9 +24,9 @@ import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.components.SolarProgress
 import lucuma.ui.reusability.given
