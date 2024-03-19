@@ -10,9 +10,9 @@ import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
+import explore.*
 import explore.EditableLabel
 import explore.Icons
-import explore.*
 import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -20,8 +20,8 @@ import explore.model.ProgramInfo
 import explore.model.ProgramInfoList
 import explore.model.reusability.given
 import explore.syntax.ui.*
-import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program

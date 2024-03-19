@@ -3,7 +3,7 @@
 
 package explore.optics
 
-import explore.optics.all._
+import explore.optics.all.*
 import monocle.Getter
 import monocle.Lens
 

@@ -1,8 +1,7 @@
-import org.scalajs.linker.interface.ModuleSplitStyle
-import scala.sys.process.*
 import Dependencies.*
+import org.scalajs.linker.interface.ModuleSplitStyle
 
-val reactJS = "17.0.2"
+import scala.sys.process.*
 
 ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
@@ -223,6 +222,7 @@ lazy val esModule = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
+  Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withMinify(true) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     // Linking with smaller modules seems to take way longer.
     // ModuleSplitStyle.SmallModulesFor(List("explore"))

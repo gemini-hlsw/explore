@@ -8,8 +8,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.ErrorPolicy
 import clue.FetchClient
-import crystal.Pot.Ready
 import crystal.*
+import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.*
@@ -23,10 +23,10 @@ import explore.config.sequence.VisitsViewer
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
+import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
-import explore.model.*
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
@@ -52,13 +52,13 @@ import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.math.skycalc.parallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps

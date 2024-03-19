@@ -14,9 +14,9 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
+import explore.model.*
 import explore.model.AppContext
 import explore.model.ObsSummary
-import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel

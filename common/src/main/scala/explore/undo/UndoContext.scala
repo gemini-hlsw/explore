@@ -8,8 +8,8 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.util.DefaultEffects.{Async => DefaultA}
-import japgolly.scalajs.react.util.DefaultEffects.{Sync => DefaultS}
+import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
+import japgolly.scalajs.react.util.DefaultEffects.Sync as DefaultS
 
 /*
  * Combines a view of a model `M` and a view of `UndoStacks` over `M`.

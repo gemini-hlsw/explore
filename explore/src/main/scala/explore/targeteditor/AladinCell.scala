@@ -8,8 +8,8 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.Pot
 import crystal.*
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
@@ -22,11 +22,11 @@ import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.components.ui.ExploreStyles
 import explore.events.*
+import explore.model.*
 import explore.model.AppContext
 import explore.model.WorkerClients.*
-import explore.model.*
-import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.*
+import explore.model.boopickle.CatalogPicklers.given
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.given

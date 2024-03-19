@@ -27,8 +27,8 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.InputSwitch
 import lucuma.react.primereact.TooltipOptions
-import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 

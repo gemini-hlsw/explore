@@ -6,8 +6,8 @@ package explore.utils
 import cats.Applicative
 import cats.Endo
 import cats.Semigroup
-import cats.effect.Temporal
 import cats.effect.*
+import cats.effect.Temporal
 import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
