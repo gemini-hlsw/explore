@@ -20,8 +20,8 @@ import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Program
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Checkbox
 import lucuma.react.primereact.Divider

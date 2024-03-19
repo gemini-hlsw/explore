@@ -26,8 +26,8 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.ResizingChart
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.typed.highcharts.highchartsStrings.area
-import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.typed.highcharts.mod.*
+import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.ui.components.MoonPhase
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*

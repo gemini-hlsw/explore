@@ -13,8 +13,8 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.*
+import explore.DefaultErrorPolicy
 import explore.common.Aligner
 import explore.components.ui.ExploreStyles
 import explore.events.*
@@ -23,8 +23,8 @@ import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
 import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
-import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*

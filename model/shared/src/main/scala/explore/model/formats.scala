@@ -7,8 +7,8 @@ import cats.syntax.all.*
 import coulomb.*
 import eu.timepit.refined.collection.NonEmpty
 import explore.optics.all.*
-import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.*
+import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.units.*
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*

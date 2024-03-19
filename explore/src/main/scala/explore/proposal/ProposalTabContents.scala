@@ -10,9 +10,9 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
+import explore.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.*
 import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext

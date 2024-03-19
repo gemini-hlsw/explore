@@ -41,13 +41,13 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
-import lucuma.typed.{tanstackVirtualCore => rawVirtual}
+import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
-import org.scalajs.dom.{File => DOMFile}
+import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
 

@@ -9,8 +9,8 @@ import explore.model.boopickle.CatalogPicklers.given
 import japgolly.scalajs.react.callback.*
 import japgolly.webapputil.binary.*
 import japgolly.webapputil.boopickle.*
-import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
 import japgolly.webapputil.indexeddb.*
+import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
 import lucuma.ags.GuideStarCandidate
 
 import scala.annotation.nowarn

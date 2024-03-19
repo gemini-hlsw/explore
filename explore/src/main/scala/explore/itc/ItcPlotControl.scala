@@ -15,8 +15,8 @@ import lucuma.itc.ChartType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.refined.*
-import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Prism

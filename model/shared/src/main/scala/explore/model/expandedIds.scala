@@ -3,8 +3,8 @@
 
 package explore.model
 
-import cats.Order.*
 import cats.*
+import cats.Order.*
 import cats.derived.*
 import lucuma.core.model.Group
 import lucuma.core.model.Target

@@ -21,9 +21,7 @@ import monocle.Optional
 import monocle.Traversal
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
-import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.{
-  ProgramEdit => AttachmentProgramEdit
-}
+import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 
