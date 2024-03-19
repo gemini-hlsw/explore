@@ -3,11 +3,11 @@
 
 package explore.model
 
+import cats.parse.*
 import cats.parse.Numbers.digit
 import cats.parse.Numbers.digits
 import cats.parse.Parser.char
 import cats.parse.Rfc5234.sp
-import cats.parse.*
 import cats.syntax.all.*
 import lucuma.core.math.parser.AngleParsers
 import lucuma.core.parser.MiscParsers

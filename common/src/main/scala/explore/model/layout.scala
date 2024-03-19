@@ -3,8 +3,8 @@
 
 package explore.model
 
-import cats.Order.*
 import cats.*
+import cats.Order.*
 import cats.syntax.all.*
 import explore.model.enums.GridLayoutSection
 import lucuma.react.gridlayout.*

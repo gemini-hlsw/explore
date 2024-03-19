@@ -27,15 +27,15 @@ import explore.model.ObsAttachmentList
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
-import explore.utils.OdbRestClient
 import explore.utils.*
+import explore.utils.OdbRestClient
 import fs2.dom
-import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
@@ -55,7 +55,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import org.scalajs.dom.{File => DomFile}
+import org.scalajs.dom.File as DomFile
 import org.typelevel.log4cats.Logger
 
 import scala.collection.immutable.SortedSet

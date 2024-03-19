@@ -21,8 +21,8 @@ import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
+import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.units.*
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED

@@ -17,8 +17,8 @@ import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Program
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.NewType
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*

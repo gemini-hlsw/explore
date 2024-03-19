@@ -5,11 +5,11 @@ package explore.common
 
 import cats.Applicative
 import org.typelevel.log4cats.Logger
+import retry.*
 import retry.RetryDetails.*
 import retry.RetryPolicies.*
-import retry.*
 
-import java.{util => ju}
+import java.util as ju
 import scala.concurrent.duration.*
 
 import ju.concurrent.TimeUnit

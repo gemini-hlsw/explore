@@ -9,8 +9,8 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.model.enums.GridLayoutSection
-import explore.model.layout.LayoutsMap
 import explore.model.layout.*
+import explore.model.layout.LayoutsMap
 import lucuma.react.gridlayout.BreakpointName
 import lucuma.react.gridlayout.Layout
 import lucuma.react.gridlayout.LayoutItem

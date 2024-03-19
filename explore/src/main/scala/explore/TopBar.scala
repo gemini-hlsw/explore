@@ -5,8 +5,8 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.View
 import crystal.react.*
+import crystal.react.View
 import crystal.react.hooks.*
 import explore.components.ConnectionsStatus
 import explore.components.ui.ExploreStyles

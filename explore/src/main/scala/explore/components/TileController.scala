@@ -3,8 +3,8 @@
 
 package explore.components
 
-import cats.Order.*
 import cats.*
+import cats.Order.*
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*

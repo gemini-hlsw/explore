@@ -11,8 +11,8 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.data.KeyedIndexedList
 import explore.data.tree.KeyedIndexedTree
-import explore.data.tree.{Node => IndexNode}
-import explore.data.tree.{Tree => IndexTree}
+import explore.data.tree.Node as IndexNode
+import explore.data.tree.Tree as IndexTree
 import explore.model.*
 import explore.model.syntax.all.*
 import lucuma.core.model.Group

@@ -14,8 +14,8 @@ import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.components.ui.ExploreStyles
-import explore.model.AppContext
 import explore.model.*
+import explore.model.AppContext
 import explore.model.enums.Visible
 import explore.optics.ModelOptics
 import japgolly.scalajs.react.*

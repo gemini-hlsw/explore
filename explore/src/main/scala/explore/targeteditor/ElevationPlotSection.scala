@@ -35,9 +35,9 @@ import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.ToggleButton
 import lucuma.refined.*
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.SelectButtonEnumView
-import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
