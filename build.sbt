@@ -222,6 +222,7 @@ lazy val esModule = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
+  Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withMinify(true) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     // Linking with smaller modules seems to take way longer.
     // ModuleSplitStyle.SmallModulesFor(List("explore"))
