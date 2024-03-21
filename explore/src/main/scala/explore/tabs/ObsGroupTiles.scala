@@ -9,9 +9,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.GroupEditIds
-import explore.model.GroupElement
-import explore.model.GroupList
-import explore.model.Grouping
+import explore.model.GroupTree
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -22,12 +20,11 @@ import lucuma.core.model.*
 import lucuma.react.common.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
-import monocle.Traversal
 
 case class ObsGroupTiles(
   userId:            Option[User.Id],
   groupId:           Group.Id,
-  groups:            UndoSetter[GroupList],
+  groups:            UndoSetter[GroupTree],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   resize:            UseResizeDetectorReturn,
   defaultLayouts:    LayoutsMap,
@@ -43,11 +40,19 @@ object ObsGroupTiles:
     .withHooks[Props]
     .render { props =>
 
-      val lens  = Traversal
-        .fromTraverse[List, GroupElement]
-        .andThen(GroupElement.grouping)
-        .filter(_.id === props.groupId)
-      val group = props.groups.zoom(lens.headOption.andThen(_.get), lens.modify)
+      val groupTreeKey = props.groupId.asRight
+      // We can safely .get here because we know the key is in the tree and that the value is a Grouping
+      val group        = props.groups
+        .zoom(
+          _.getNodeAndIndexByKey(groupTreeKey).flatMap(_._1.value.toOption).get,
+          f =>
+            groups =>
+              (for
+                (node, index) <- groups.getNodeAndIndexByKey(groupTreeKey)
+                nodeValue     <- node.value.toOption
+                newValue       = f(nodeValue)
+              yield groups.updated(groupTreeKey, newValue.asRight, index)).getOrElse(groups)
+        )
 
       val editTile = Tile(
         GroupEditIds.GroupEditId.id,

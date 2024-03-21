@@ -11,10 +11,10 @@ import crystal.react.*
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
+import explore.data.tree.KeyedIndexedTree.Index
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.GroupElement
-import explore.model.GroupList
+import explore.model.GroupTree
 import explore.model.Grouping
 import explore.model.ObsSummary
 import explore.model.enums.AppTab
@@ -186,17 +186,20 @@ def insertObs(
     }
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 
-private def findGrouping(groupId: Group.Id): GroupList => Option[Grouping] = _.collectFirstSome(
-  _.value.toOption.filter(_.id === groupId)
-)
+private def findGrouping(groupId: Group.Id): GroupTree => Option[Grouping] =
+  _.getNodeAndIndexByKey(groupId.asRight).flatMap(_._1.value.toOption)
 
-def groupExistence(groupId: Group.Id): Action[GroupList, Option[Grouping]] = Action(
+def groupExistence(groupId: Group.Id): Action[GroupTree, Option[Grouping]] = Action(
   getter = findGrouping(groupId),
-  setter = group =>
+  setter = maybeGroup =>
     groupList =>
-      val groupEl =
-        group.map(grouping => GroupElement(grouping.asRight, grouping.parentId))
-      groupList ++ groupEl
+      maybeGroup match
+        case None        => groupList.removed(groupId.asRight)
+        case Some(group) =>
+          groupList.updated(groupId.asRight,
+                            group.asRight,
+                            Index(group.parentId.map(_.asRight), group.parentIndex)
+          )
 )(
   // TODO: handle undo by removing (and undoing remove) of groups
   onSet = (_, _) => IO.unit
@@ -204,7 +207,7 @@ def groupExistence(groupId: Group.Id): Action[GroupList, Option[Grouping]] = Act
 
 def insertGroup(
   programId: Program.Id,
-  groups:    UndoSetter[GroupList],
+  groups:    UndoSetter[GroupTree],
   adding:    View[AddingObservation],
   ctx:       AppContext[IO]
 ): IO[Unit] =

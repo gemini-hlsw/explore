@@ -26,7 +26,7 @@ case class ProgramSummaries(
   optProgramDetails:   Option[ProgramDetails],
   targets:             TargetList,
   observations:        ObservationList,
-  groups:              GroupList,
+  groups:              GroupTree,
   obsAttachments:      ObsAttachmentList,
   proposalAttachments: List[ProposalAttachment],
   programs:            ProgramInfoList,
@@ -107,7 +107,7 @@ object ProgramSummaries:
   val targets: Lens[ProgramSummaries, TargetList]                           = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)
-  val groups: Lens[ProgramSummaries, GroupList]                             = Focus[ProgramSummaries](_.groups)
+  val groups: Lens[ProgramSummaries, GroupTree]                             = Focus[ProgramSummaries](_.groups)
   val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]             =
     Focus[ProgramSummaries](_.obsAttachments)
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
@@ -124,7 +124,7 @@ object ProgramSummaries:
     optProgramDetails:   Option[ProgramDetails],
     targetList:          List[TargetWithId],
     obsList:             List[ObsSummary],
-    groups:              List[GroupElement],
+    groups:              GroupTree,
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
     programs:            List[ProgramInfo],
