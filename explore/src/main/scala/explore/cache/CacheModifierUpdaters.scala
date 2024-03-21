@@ -6,19 +6,17 @@ package explore.cache
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
-import eu.timepit.refined.types.numeric.NonNegShort
-import explore.model.GroupElement
+import explore.data.tree.KeyedIndexedTree.Index
+import explore.data.tree.Node
 import explore.model.GroupObs
 import explore.model.Grouping
-import explore.model.GroupingElement
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Enums.EditType
+import lucuma.schemas.ObservationDB.Enums.EditType.Created
 import lucuma.schemas.ObservationDB.Enums.Existence
-import monocle.Optional
-import monocle.Traversal
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
@@ -70,44 +68,30 @@ trait CacheModifierUpdaters {
         val groupId  = newGrouping.id
         val editType = groupEdit.editType
 
+        val newIndex =
+          Index(newGrouping.parentId.map(_.asRight[Observation.Id]), newGrouping.parentIndex)
+
         // TODO: remove groups (data not available yet)
-        val groupUpdate = editType match
-          case EditType.Created =>
-            ProgramSummaries.groups.modify(groupElements =>
-              groupElements :+ GroupElement(newGrouping.asRight, none)
-            )
-          case EditType.Updated =>
-            ProgramSummaries.groups.andThen(Traversal.fromTraverse[List, GroupElement]).modify {
-              val updateRootElements = GroupElement.grouping
-                .filter(_.id === groupId)
-                .replace(newGrouping)
+        val groupUpdate = ProgramSummaries.groups.modify:
+          editType match
+            case Created          =>
+              _.inserted(
+                newGrouping.id.asRight,
+                Node(newGrouping.asRight),
+                newIndex
+              )
+            case EditType.Updated =>
+              _.updated(
+                newGrouping.id.asRight,
+                newGrouping.asRight,
+                newIndex
+              )
 
-              // TODO: this won't be needed anymore when group update events also include the new/old group
-              val updateParentGroupId = Optional
-                .filter(GroupElement.grouping.exist(_.id === groupId))
-                .andThen(GroupElement.parentGroupId)
-                .replace(newGrouping.parentId)
-
-              // TODO: this won't be needed anymore when group update events also include the new/old group
-              val updateGroupElements = GroupElement.grouping
-                .modify(
-                  updateGroupElementsMapping(
-                    newGrouping.parentId,
-                    GroupingElement(groupId, newGrouping.parentIndex).asRight,
-                    _.exists(_.id === groupId)
-                  )
-                )
-
-              updateRootElements
-                .andThen(updateParentGroupId)
-                .andThen(updateGroupElements)
-            }
-
-        val groupsReset = ProgramSummaries.groupTimeRangePots
+        val groupTimeRangePotsReset = ProgramSummaries.groupTimeRangePots
           .modify(_.withUpdatePending(groupId))
           .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
-        groupUpdate.andThen(groupsReset)
+        groupUpdate.andThen(groupTimeRangePotsReset)
       }
       .getOrElse(identity)
 
@@ -126,21 +110,6 @@ trait CacheModifierUpdaters {
       .modify(_.updated(programEdit.value.id, programEdit.value))
 
   /**
-   * Reset the time range pots for all parent groups of the given id
-   */
-  private def parentGroupTimeRangeReset(
-    id: Either[Observation.Id, Group.Id]
-  ): ProgramSummaries => ProgramSummaries =
-    programSummaries =>
-      val groupTimeRangePots = GroupElement
-        .findParentGroupIds(programSummaries.groups, id)
-        .tupleRight(Pot.pending)
-        .toMap
-      ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
-        programSummaries
-      )
-
-  /**
    * Update the groups for an observation edit. When an observation is updated, we also need to
    * update the groups it belongs to.
    */
@@ -153,99 +122,46 @@ trait CacheModifierUpdaters {
       .modify { groupElements =>
         val groupId     = observationEdit.value.groupId
         val newGroupObs = GroupObs(obsId, observationEdit.value.groupIndex)
+        val newIndex    =
+          Index(groupId.map(_.asRight[Observation.Id]), observationEdit.value.groupIndex)
 
         if (observationEdit.editType === EditType.Created)
-          groupElements :+ GroupElement(newGroupObs.asLeft, none)
-        else if (observationEdit.meta.existence === Existence.Deleted)
-          // Remove the observation from all groupElements, including from the `elements` field
-          groupElements.mapFilter(ge =>
-            val newValue: Option[Either[GroupObs, Grouping]] = ge.value.bitraverse(
-              value => if value.id === obsId then none else value.some,
-              value =>
-                value
-                  .copy(elements = value.elements.filterNot(_.left.exists(_.id === obsId)))
-                  .some
-            )
-
-            newValue.map(GroupElement.value.replace(_)(ge))
+          groupElements.inserted(
+            obsId.asLeft,
+            Node(newGroupObs.asLeft),
+            newIndex
           )
+        else if (observationEdit.meta.existence === Existence.Deleted)
+          groupElements.removed(obsId.asLeft)
         else if (observationEdit.editType === EditType.Updated)
-          val groupElementsT = Traversal
-            .fromTraverse[List, GroupElement]
-          groupElementsT.modify {
-            val updateParentGroupId = Optional
-              .filter(GroupElement.groupObs.exist(_.id === newGroupObs.id))
-              .andThen(GroupElement.parentGroupId)
-              .replace(groupId)
-
-            // Update index for the changed observation
-            val updateRootElements = GroupElement.groupObs
-              .filter(_.id === newGroupObs.id)
-              .replace(newGroupObs)
-
-            // Update 'elements' field to update/add/remove the observation from the group
-            val updateGroupElements = GroupElement.grouping
-              .modify(
-                updateGroupElementsMapping(
-                  groupId,
-                  newGroupObs.asLeft,
-                  _.left.exists(_.id === newGroupObs.id)
-                )
-              )
-
-            updateParentGroupId
-              .andThen(updateRootElements)
-              .andThen(updateGroupElements)
-          }(groupElements)
+          groupElements.updated(
+            obsId.asLeft,
+            newGroupObs.asLeft,
+            newIndex
+          )
         else groupElements
       }
 
-    val parentGroupsReset = observationEdit.value.groupId
+    val parentTimeRangePotsReset = observationEdit.value.groupId
       .map(gid => parentGroupTimeRangeReset(gid.asRight))
       .getOrElse(identity[ProgramSummaries])
 
-    groupEdit.andThen(parentGroupsReset)
+    groupEdit.andThen(parentTimeRangePotsReset)
   }
 
   /**
-   * Update the elements of a grouping. When an observation or group is updated, we also need to
-   * update the elements of the grouping it belongs to (or its new/old group)
-   *
-   * @param groupId
-   *   id of the new group, or None if it is moved to the root group
-   * @param newGroupElement
-   *   new element to add or update
-   * @param selectionF
-   *   function to select the element to update
+   * Reset the time range pots for all parent groups of the given id
    */
-  private def updateGroupElementsMapping(
-    groupId:             Option[Group.Id],
-    updateGroupdElement: Either[GroupObs, GroupingElement],
-    selectionF:          Either[GroupObs, GroupingElement] => Boolean
-  ): Grouping => Grouping =
-    grouping =>
-
-      lazy val isAdded   = groupId.contains(grouping.id) && !grouping.elements.exists(selectionF)
-      lazy val isMoved   = (groupId.isEmpty && grouping.parentId.nonEmpty) ||
-        (groupId.isDefined && !groupId.contains(
-          grouping.id
-        ))
-      lazy val isUpdated = groupId.contains(grouping.id)
-      (
-        // Added
-        if (isAdded) {
-          Grouping.elements.modify(_ :+ updateGroupdElement)
-        }
-        // Moved to root group or different group
-        else if (isMoved) {
-          Grouping.elements.modify(_.filterNot(selectionF))
-        }
-        // Updated (index changed)
-        else if (isUpdated) {
-          Grouping.elements.modify(_.map(e => if (selectionF(e)) updateGroupdElement else e))
-        } else {
-          identity[Grouping]
-        }
-      ) (grouping)
+  private def parentGroupTimeRangeReset(
+    id: Either[Observation.Id, Group.Id]
+  ): ProgramSummaries => ProgramSummaries =
+    programSummaries =>
+      val groupTimeRangePots = programSummaries.groups
+        .parentKeys(id)
+        .flatMap(_.toOption.tupleRight(Pot.pending))
+        .toMap
+      ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
+        programSummaries
+      )
 
 }

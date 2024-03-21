@@ -14,11 +14,12 @@ import explore.Icons
 import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
+import explore.data.tree.KeyedIndexedTree
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.GroupElement
-import explore.model.GroupList
+import explore.model.GroupTree
 import explore.model.Grouping
+import explore.model.ObsNode
 import explore.model.ObservationExecutionMap
 import explore.model.enums.AppTab
 import explore.model.reusability.given
@@ -61,7 +62,7 @@ case class ObsList(
   focusedTarget:     Option[Target.Id],
   focusedGroup:      Option[Group.Id],
   setSummaryPanel:   Callback,
-  groups:            UndoSetter[GroupList],
+  groups:            UndoSetter[GroupTree],
   expandedGroups:    View[Set[Group.Id]],
   deckShown:         View[DeckShown],
   readonly:          Boolean
@@ -69,8 +70,6 @@ case class ObsList(
 
 object ObsList:
   private type Props = ObsList
-
-  private given Reusability[GroupElement] = Reusability.byEq
 
   /**
    * Iso to go between Group.Id and Tree.Id
@@ -139,7 +138,9 @@ object ObsList:
         (props, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
-            val groupsToAddFocus = GroupElement.findParentGroupIds(groups, obsId.asLeft)
+            val groupsToAddFocus = groups
+              .parentKeys(obsId.asLeft)
+              .flatMap(_.toOption)
 
             props.expandedGroups.mod(_ ++ groupsToAddFocus).when_(groupsToAddFocus.nonEmpty)
       )
@@ -164,7 +165,7 @@ object ObsList:
                 groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
               )
               .runAsync *>
-              treeNodes.value.set(e.value) *>
+              treeNodes.value.set(e.value.toList) *>
               // Open the group we moved to
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
@@ -227,27 +228,24 @@ object ObsList:
                   readonly = props.readonly
                 )
               )
-            case ObsNode.And(group) => renderGroup("AND", group)
-            case ObsNode.Or(group)  => renderGroup("OR", group)
-
-        def renderGroup(title: String, group: Grouping) =
-          val selected = props.focusedGroup.contains_(group.id)
-          <.a(
-            title,
-            ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(selected),
-            group.name.map(n => <.em(n.value, ^.marginLeft := 8.px)),
-            ^.title := group.id.show,
-            ^.id        := show"obs-group-${group.id}",
-            ^.draggable := false,
-            ^.onClick ==> linkOverride(
-              setGroup(props.programId, group.id.some, ctx)
-            ),
-            ^.href      := ctx.pageUrl(
-              AppTab.Observations,
-              props.programId,
-              Focused.group(group.id)
-            )
-          )
+            case ObsNode.Grp(group) =>
+              val selected = props.focusedGroup.contains_(group.id)
+              <.a(
+                if group.isAnd then "AND" else "OR",
+                ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(selected),
+                group.name.map(n => <.em(n.value, ^.marginLeft := 8.px)),
+                ^.title := group.id.show,
+                ^.id        := show"obs-group-${group.id}",
+                ^.draggable := false,
+                ^.onClick ==> linkOverride(
+                  setGroup(props.programId, group.id.some, ctx)
+                ),
+                ^.href      := ctx.pageUrl(
+                  AppTab.Observations,
+                  props.programId,
+                  Focused.group(group.id)
+                )
+              )
 
         val tree =
           if (props.deckShown.get === DeckShown.Shown) {
