@@ -121,7 +121,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
         case Some(Node(IndexedElem(_, Index(None, _)), _))            => acc
         // We've found a parent node, so we add it to the list and continue
         case Some(Node(IndexedElem(_, Index(Some(parentKey), _)), _)) =>
-          go(parentKey +: acc, parentKey)
+          go(parentKey :: acc, parentKey)
     go(Nil, key)
   }
 

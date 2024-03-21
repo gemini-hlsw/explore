@@ -19,6 +19,7 @@ import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
 import explore.model.Grouping
+import explore.model.ObsNode
 import explore.model.ObservationExecutionMap
 import explore.model.enums.AppTab
 import explore.model.reusability.given
