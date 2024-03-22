@@ -33,10 +33,11 @@ enum ProgramTabTileIds:
     case ChangeRequestsId => "programChangeRequests".refined
 
 enum ProposalTabTileIds:
-  case DetailsId, AbstractId, AttachmentsId
+  case DetailsId, UsersId, AbstractId, AttachmentsId
 
   def id: NonEmptyString = this match
     case DetailsId     => "proposalDetails".refined
+    case UsersId       => "proposalUsers".refined
     case AbstractId    => "proposalAbstract".refined
     case AttachmentsId => "proposalAttachments".refined
 

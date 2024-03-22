@@ -199,7 +199,6 @@ object ProposalEditor:
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
-    users:             List[ProgramUserWithRole],
     readonly:          Boolean,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
@@ -379,8 +378,7 @@ object ProposalEditor:
             )
           )
         ),
-        Divider(borderType = Divider.BorderType.Solid),
-        ProgramUsersTable(users)
+        Divider(borderType = Divider.BorderType.Solid)
       )
     )
   }
@@ -444,10 +442,14 @@ object ProposalEditor:
           splitsList,
           splitsView.get,
           timeEstimateRange,
-          users,
           readonly,
           _
         )
+      )
+
+    val usersTile =
+      Tile(ProposalTabTileIds.UsersId.id, "Investigators", canMinimize = true)(_ =>
+        ProgramUsersTable(users)
       )
 
     val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
@@ -478,7 +480,7 @@ object ProposalEditor:
         resize.width.getOrElse(1),
         defaultLayouts,
         layout,
-        List(detailsTile, abstractTile, attachmentsTile),
+        List(detailsTile, usersTile, abstractTile, attachmentsTile),
         GridLayoutSection.ProposalLayout,
         storeLayout = true
       ),

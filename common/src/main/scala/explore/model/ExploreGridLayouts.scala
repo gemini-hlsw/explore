@@ -385,8 +385,10 @@ object ExploreGridLayouts:
     )
 
   object proposal:
-    private val DetailsHeight: NonNegInt        = 12.refined
+    private val DetailsHeight: NonNegInt        = 6.refined
     private val DetailsMinHeight: NonNegInt     = 6.refined
+    private val UsersHeight: NonNegInt          = 6.refined
+    private val UsersMinHeight: NonNegInt       = 4.refined
     private val AbstractHeight: NonNegInt       = 8.refined
     private val AbstractMinHeight: NonNegInt    = 4.refined
     private val AttachmentsHeight: NonNegInt    = 8.refined
@@ -404,6 +406,15 @@ object ExploreGridLayouts:
           w = DefaultWidth.value,
           h = DetailsHeight.value,
           minH = DetailsMinHeight.value,
+          minW = TileMinWidth.value
+        ),
+        LayoutItem(
+          i = ProposalTabTileIds.UsersId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = UsersHeight.value,
+          minH = UsersMinHeight.value,
           minW = TileMinWidth.value
         ),
         LayoutItem(
