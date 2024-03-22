@@ -280,6 +280,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
               columnNames(DescriptionColumnId),
               cell =>
                 EditableLabel.fromView(
+                  id = NonEmptyString.unsafeFrom(s"obs-description-${props.pid}"),
                   value = cell.value,
                   addButtonLabel = ("Add description": VdomNode).reuseAlways,
                   textClass = ExploreStyles.AttachmentName,
