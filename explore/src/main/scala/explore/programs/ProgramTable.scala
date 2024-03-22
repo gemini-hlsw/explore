@@ -157,9 +157,6 @@ object ProgramTable:
             cell =>
               EditableLabel
                 .fromView(
-                  id = NonEmptyString.unsafeFrom(
-                    s"program-table-${props.currentProgramId.foldMap(_.show)}"
-                  ),
                   value = cell.value,
                   addButtonLabel = ("Add program name": VdomNode).reuseAlways,
                   textClass = ExploreStyles.ProgramName,

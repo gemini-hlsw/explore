@@ -113,7 +113,6 @@ object ObsBadge:
         props.setSubtitleCB
           .map(setCB =>
             EditableLabel(
-              id = NonEmptyString.unsafeFrom(s"obs-badge-description-${obs.id}"),
               value = obs.subtitle,
               mod = setCB,
               editOnClick = false,

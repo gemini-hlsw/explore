@@ -23,7 +23,6 @@ import org.scalajs.dom
 import scalajs.js.JSConverters.*
 
 case class EditableLabel(
-  id:                   NonEmptyString,
   value:                Option[NonEmptyString],
   mod:                  Option[NonEmptyString] => Callback,
   editOnClick:          Boolean = false,
@@ -45,7 +44,6 @@ object EditableLabel {
   type Props = EditableLabel
 
   def fromView(
-    id:                   NonEmptyString,
     value:                View[Option[NonEmptyString]],
     editOnClick:          Boolean = false,
     textClass:            Css = Css.Empty,
@@ -62,7 +60,6 @@ object EditableLabel {
     readonly:             Boolean = false
   ): EditableLabel =
     EditableLabel(
-      id,
       value.get,
       value.set,
       editOnClick,
@@ -92,7 +89,8 @@ object EditableLabel {
       .withHooks[Props]
       .useState(NotEditing) // editing
       .useState("")         // displayValue
-      .render { (props, editing, displayValue) =>
+      .useId
+      .render { (props, editing, displayValue, id) =>
         def editCB(e: ReactMouseEvent): Callback =
           e.stopPropagationCB >> e.preventDefaultCB >>
             displayValue.setState(props.value.map(_.value).orEmpty) >>
@@ -142,7 +140,7 @@ object EditableLabel {
         if (editing.value.value)
           <.div(^.width := "100%", ^.display.flex)(
             InputText(
-              id = s"editable-label-input-${props.id}",
+              id = id,
               value = displayValue.value,
               onChange = (e: ReactEventFromInput) => displayValue.setState(e.target.value),
               clazz = props.inputClass
