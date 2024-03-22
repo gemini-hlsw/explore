@@ -20,6 +20,8 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import org.scalajs.dom
 
+import scala.util.Random
+
 import scalajs.js.JSConverters.*
 
 case class EditableLabel(
@@ -139,13 +141,15 @@ object EditableLabel {
         if (editing.value.value)
           <.div(^.width := "100%", ^.display.flex)(
             InputText(
-              id = "editable-label-input", // won't necesessarily be unique...
+              id = s"editable-label-input-${Random.nextInt}",
               value = displayValue.value,
               onChange = (e: ReactEventFromInput) => displayValue.setState(e.target.value),
               clazz = props.inputClass
             ).mini.withMods(
               ^.onKeyUp ==> (e =>
-                if (e.key === "Enter") submitCB
+                // This is odd, it works fine in demo but not in explore
+                if (e.key === " ") displayValue.modState(_ + " ")
+                else if (e.key === "Enter") submitCB
                 else if (e.key === "Escape") editing.setState(NotEditing)
                 else Callback.empty
               ),
