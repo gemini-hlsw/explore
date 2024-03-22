@@ -10,6 +10,7 @@ import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.EditableLabel
 import explore.Icons
