@@ -19,5 +19,6 @@ object ProgramDetailsSubquery
       users $ProgramUserWithRoleSubquery
       timeEstimateRange $ProgramTimeRangeSubquery
       timeCharge $ProgramTimeSubquery
+      userInvitations $ProgramInvitationsSubquery
     }
   """

@@ -7,7 +7,6 @@ import cats.Order.*
 import cats.data.Chain
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.Pot
@@ -16,7 +15,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.Aligner
 import explore.components.FormStaticData
@@ -76,6 +74,7 @@ import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
+import explore.model.UserInvitation
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -84,6 +83,7 @@ case class ProposalEditor(
   undoStacks:        View[UndoStacks[IO, Proposal]],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   users:             List[ProgramUserWithRole],
+  invitations:       List[UserInvitation],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
   layout:            LayoutsMap,
@@ -393,14 +393,18 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
+    createInvite:      View[CreateInviteProcess],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
+    invitations:       List[UserInvitation],
     attachments:       View[List[ProposalAttachment]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
     readonly:          Boolean,
     resize:            UseResizeDetectorReturn
-  )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
+  )(using ctx: AppContext[IO]) = {
+    import ctx.given
+
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
     val undoCtx: UndoContext[Proposal]                      = UndoContext(undoStacks, proposal)
@@ -445,10 +449,7 @@ object ProposalEditor:
         )
       )
 
-    val usersTile =
-      Tile(ProposalTabTileIds.UsersId.id, "Investigators", canMinimize = true)(_ =>
-        ProgramUsersTable(users)
-      )
+    val usersTile = ProgramUsers.programUsersTile(programId, users, invitations, createInvite)
 
     val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
@@ -538,10 +539,20 @@ object ProposalEditor:
           }
       )
       .useResizeDetector()
+      .useStateView(CreateInviteProcess.Idle)
       .render {
-        (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _, resize) =>
-          import ctx.given
-
+        (
+          props,
+          ctx,
+          totalHours,
+          minPct2,
+          proposalClassType,
+          showDialog,
+          splitsList,
+          _,
+          resize,
+          createInvite
+        ) =>
           renderFn(
             props.programId,
             props.optUserId,
@@ -552,12 +563,14 @@ object ProposalEditor:
             proposalClassType,
             showDialog,
             splitsList,
+            createInvite,
             props.timeEstimateRange,
             props.users,
+            props.invitations,
             props.attachments,
             props.authToken,
             props.layout,
             props.readonly,
             resize
-          )
+          )(using ctx)
       }
