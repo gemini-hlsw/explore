@@ -137,8 +137,9 @@ object ObsList:
                   .get(newIdx.toLong)
                   .fold(
                     optIndex.setState(none) >> setObs(props.programId, none, ctx)
-                  )(obsSumm => 
-                    optIndex.setState(NonNegInt.from(newIdx).toOption) >> setObs(props.programId, obsSumm.id.some, ctx)
+                  )(obsSumm =>
+                    optIndex.setState(NonNegInt.from(newIdx).toOption) >>
+                      setObs(props.programId, obsSumm.id.some, ctx)
                   )
             }
           }

@@ -171,7 +171,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      _        <- undoable.mod(treeIntMod.pos.withKey(3), treeIntMod.pos.set(Index(4.some, 1.refined[NonNegative])))
+      _        <- undoable.mod(treeIntMod.pos.withKey(3),
+                               treeIntMod.pos.set(Index(4.some, 1.refined[NonNegative]))
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(
                       v,
@@ -265,7 +267,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      _        <- undoable.mod(treeIntMod.withKey(8), treeIntMod.upsert(8, Index(1.some, 8.refined[NonNegative])))
+      _        <- undoable.mod(treeIntMod.withKey(8),
+                               treeIntMod.upsert(8, Index(1.some, 8.refined[NonNegative]))
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(v,
                                  kiIntTree(
@@ -324,7 +328,9 @@ class UndoContextSpec extends munit.CatsEffectSuite {
                       )
                     )
                   )
-      _        <- undoable.mod(vTreeMod.pos.withKey(3), vTreeMod.pos.set(Index(4.some, 1.refined[NonNegative])))
+      _        <- undoable.mod(vTreeMod.pos.withKey(3),
+                               vTreeMod.pos.set(Index(4.some, 1.refined[NonNegative]))
+                  )
       _        <- undoable.get.map(v =>
                     assertEquals(v,
                                  kiVTree(

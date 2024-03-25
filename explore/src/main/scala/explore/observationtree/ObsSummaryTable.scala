@@ -356,8 +356,13 @@ object ObsSummaryTable:
               loading = adding.get.value,
               label = "Add an observation",
               clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick =
-                insertObs(props.programId, 0.refined, props.observations, adding, ctx).runAsyncAndForget
+              onClick = insertObs(
+                props.programId,
+                0.refined,
+                props.observations,
+                adding,
+                ctx
+              ).runAsyncAndForget
             ).tiny.compact
           )
         )
