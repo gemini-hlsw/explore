@@ -308,8 +308,7 @@ object TargetSummaryTable:
                     disabled = deletingTargets.get.value,
                     loading = deletingTargets.get.value,
                     onClick = deleteSelected
-                  ).compact.when(selectedRows.nonEmpty),
-                  ConfirmDialog()
+                  ).compact.when(selectedRows.nonEmpty)
                 ),
               <.span(ExploreStyles.TitleSelectColumns)(
                 ColumnSelector(table, ColNames, ExploreStyles.SelectColumns)

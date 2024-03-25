@@ -9,6 +9,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.string.MatchesRegex
 import io.circe.Decoder
+import lucuma.core.util.Enumerated
 
 // Matchtes the odb standard for email validation
 type EmailPred =
@@ -16,11 +17,19 @@ type EmailPred =
 
 type RefinedEmail = String Refined EmailPred
 
-case class UserInvitation(id: String, email: RefinedEmail) derives Eq
+// Move to lucuma-core
+enum InvitationStatus(val tag: String) derives Enumerated:
+  case Pending  extends InvitationStatus("pending")
+  case Redeemed extends InvitationStatus("redeemed")
+  case Declined extends InvitationStatus("declined")
+  case Revoked  extends InvitationStatus("revoked")
+
+case class UserInvitation(id: String, email: RefinedEmail, status: InvitationStatus) derives Eq
 
 object UserInvitation:
   given Decoder[UserInvitation] = c =>
     for {
       id <- c.get[String]("id")
       em <- c.get[String]("recipientEmail").map(Refined.unsafeApply[String, EmailPred])
-    } yield UserInvitation(id, em)
+      s  <- c.get[InvitationStatus]("status")
+    } yield UserInvitation(id, em, s)

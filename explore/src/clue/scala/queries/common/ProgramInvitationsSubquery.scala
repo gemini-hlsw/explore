@@ -15,5 +15,6 @@ object ProgramInvitationsSubquery
     {
       id
       recipientEmail
+      status
     }
   """

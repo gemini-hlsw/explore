@@ -30,6 +30,7 @@ import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
+import lucuma.react.primereact.ConfirmDialog
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
@@ -183,6 +184,7 @@ object ExploreLayout:
             }
 
           React.Fragment(
+            ConfirmDialog(),
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
             Sidebar(
               position = Sidebar.Position.Right,
