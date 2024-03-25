@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.data.tree.KeyedIndexedTree.Index
 import io.circe.Decoder
 import io.circe.HCursor
 import io.circe.refined.given
@@ -16,27 +17,14 @@ import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
-import monocle.Focus
-import monocle.Lens
-import monocle.Prism
 
 import GroupElement.given
 
+// These case classes are only used for decoding the graphql response. Used case classes are in GroupTree.scala
 case class GroupElement(value: Either[GroupObs, Grouping], parentGroupId: Option[Group.Id])
     derives Eq
 
 object GroupElement:
-  val value: Lens[GroupElement, Either[GroupObs, Grouping]] = Focus[GroupElement](_.value)
-
-  val groupObs =
-    value.andThen(Prism[Either[GroupObs, Grouping], GroupObs](_.left.toOption)(_.asLeft))
-
-  val grouping = value.andThen(Prism[Either[GroupObs, Grouping], Grouping](_.toOption)(_.asRight))
-
-  val groupId = grouping.andThen(Grouping.id)
-
-  val parentGroupId: Lens[GroupElement, Option[Group.Id]] =
-    Focus[GroupElement](_.parentGroupId)
 
   given Decoder[GroupElement] = Decoder.instance(c =>
     for {
@@ -56,10 +44,6 @@ object GroupElement:
 
 case class GroupObs(id: Observation.Id, groupIndex: NonNegShort) derives Eq, Decoder
 
-object GroupObs:
-  val id: Lens[GroupObs, Observation.Id]      = Focus[GroupObs](_.id)
-  val groupIndex: Lens[GroupObs, NonNegShort] = Focus[GroupObs](_.groupIndex)
-
 case class Grouping(
   id:              Group.Id,
   name:            Option[NonEmptyString],
@@ -72,24 +56,9 @@ case class Grouping(
   ordered:         Boolean
 ) derives Eq,
       Decoder:
-  def isAnd: Boolean = minimumRequired.isEmpty
+  def toGroupTreeGroup: GroupTree.Group =
+    GroupTree.Group(id, name, minimumRequired, minimumInterval, maximumInterval, ordered)
 
-object Grouping:
-  val id: Lens[Grouping, Group.Id] = Focus[Grouping](_.id)
-
-  val name: Lens[Grouping, Option[NonEmptyString]] = Focus[Grouping](_.name)
-
-  val elements: Lens[Grouping, List[Either[GroupObs, GroupingElement]]] =
-    Focus[Grouping](_.elements)
-
-  val minimumRequired: Lens[Grouping, Option[NonNegShort]] = Focus[Grouping](_.minimumRequired)
-
-  val parentId: Lens[Grouping, Option[Group.Id]] = Focus[Grouping](_.parentId)
-  val parentIndex: Lens[Grouping, NonNegShort]   = Focus[Grouping](_.parentIndex)
-
-  val ordered: Lens[Grouping, Boolean] = Focus[Grouping](_.ordered)
-
-  val minimumInterval: Lens[Grouping, Option[TimeSpan]] = Focus[Grouping](_.minimumInterval)
-  val maximumInterval: Lens[Grouping, Option[TimeSpan]] = Focus[Grouping](_.maximumInterval)
+  def toIndex: GroupTree.Index = Index(parentId.map(_.asRight), parentIndex)
 
 case class GroupingElement(id: Group.Id, parentIndex: NonNegShort) derives Eq, Decoder

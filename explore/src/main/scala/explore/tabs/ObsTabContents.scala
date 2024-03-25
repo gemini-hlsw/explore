@@ -9,6 +9,7 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
 import explore.Icons
 import explore.components.Tile
@@ -222,7 +223,11 @@ object ObsTabContents extends TwoPanels:
       .useResizeDetector()
       .useGlobalHotkeysWithDepsBy((props, ctx, _, _) =>
         (props.focusedObs,
-         props.programSummaries.get.observations.values.map(_.id).zipWithIndex.toList,
+         props.programSummaries.get.observations.values
+           .map(_.id)
+           .zipWithIndex
+           .toList
+           .map((id, idx) => id -> NonNegInt.unsafeFrom(idx)),
          props.readonly
         )
       ) { (props, ctx, _, _) => (obs, observationIds, readonly) =>
@@ -250,7 +255,7 @@ object ObsTabContents extends TwoPanels:
                       cloneObs(
                         props.programId,
                         oid,
-                        observationIds.length,
+                        NonNegInt.unsafeFrom(observationIds.length),
                         props.observations,
                         ctx
                       )
@@ -264,9 +269,9 @@ object ObsTabContents extends TwoPanels:
 
           case Down =>
             obsPos
-              .filter(_ < observationIds.length)
+              .filter(_.value < observationIds.length)
               .flatMap { p =>
-                val next = if (props.focusedObs.isEmpty) 0 else p + 1
+                val next = if (props.focusedObs.isEmpty) 0 else p.value + 1
                 observationIds.lift(next).map { (obsId, _) =>
                   ctx.setPageVia(
                     AppTab.Observations,
@@ -280,9 +285,9 @@ object ObsTabContents extends TwoPanels:
 
           case Up =>
             obsPos
-              .filter(_ > 0)
+              .filter(_.value > 0)
               .flatMap { p =>
-                observationIds.lift(p - 1).map { (obsId, _) =>
+                observationIds.lift(p.value - 1).map { (obsId, _) =>
                   ctx.setPageVia(
                     AppTab.Observations,
                     props.programId,

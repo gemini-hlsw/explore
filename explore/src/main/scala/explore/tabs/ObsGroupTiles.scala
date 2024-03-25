@@ -41,17 +41,24 @@ object ObsGroupTiles:
     .render { props =>
 
       val groupTreeKey = props.groupId.asRight
+      // First zoom to the node, to get the number of child elements
       // We can safely .get here because we know the key is in the tree and that the value is a Grouping
-      val group        = props.groups
+      val node         = props.groups
         .zoom(
-          _.getNodeAndIndexByKey(groupTreeKey).flatMap(_._1.value.toOption).get,
-          f =>
+          _.getNodeAndIndexByKey(groupTreeKey).get,
+          modF =>
             groups =>
-              (for
-                (node, index) <- groups.getNodeAndIndexByKey(groupTreeKey)
-                nodeValue     <- node.value.toOption
-                newValue       = f(nodeValue)
-              yield groups.updated(groupTreeKey, newValue.asRight, index)).getOrElse(groups)
+              groups
+                .getNodeAndIndexByKey(groupTreeKey)
+                .map(modF)
+                .map((newValue, newIndex) => groups.updated(groupTreeKey, newValue.value, newIndex))
+                .getOrElse(groups)
+        )
+
+      // Then zoom to the Grouping itself
+      val group =
+        node.zoom(_._1.value.toOption.get,
+                  modF => _.leftMap(node => node.copy(value = node.value.map(modF)))
         )
 
       val editTile = Tile(
@@ -59,7 +66,7 @@ object ObsGroupTiles:
         s"${if group.get.isAnd then "AND" else "OR"} Group",
         props.backButton.some,
         tileTitleClass = ExploreStyles.GroupEditTitle
-      )(GroupEditTile(group, props.timeEstimateRange, _))
+      )(GroupEditTile(group, node.get._1.children.length, props.timeEstimateRange, _))
 
       val notesTile = Tile(
         GroupEditIds.GroupNotesId.id,

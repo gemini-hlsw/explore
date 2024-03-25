@@ -3,12 +3,12 @@
 
 package explore.model.arb
 
+import explore.data.tree.Node
+import explore.data.tree.Tree
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen.*
-import explore.data.tree.Node
-import explore.data.tree.Tree
 import org.scalacheck.Gen
 import org.scalacheck.rng.Seed
 
