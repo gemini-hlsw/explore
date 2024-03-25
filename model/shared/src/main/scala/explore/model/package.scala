@@ -60,8 +60,6 @@ type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
 type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
 
-type GroupList = List[GroupElement]
-
 object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
 type ObservationExecutionMap = ObservationExecutionMap.Type
 

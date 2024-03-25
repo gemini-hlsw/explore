@@ -29,7 +29,7 @@ object GroupTree:
   type Value = Either[Obs, Group]
   type Node  = TreeNode[Value]
 
-  def fromList(groups: GroupList): GroupTree = {
+  def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
     val groupMap = groups
       .flatMap(_.value.toOption.map(group => (group.id, group)))
