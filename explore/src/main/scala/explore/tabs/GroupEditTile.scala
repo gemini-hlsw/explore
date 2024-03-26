@@ -11,6 +11,7 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -29,8 +30,8 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.react.*
-import lucuma.react.common.*
 import lucuma.react.common.ReactFnProps
+import lucuma.react.common.*
 import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
@@ -247,7 +248,6 @@ object GroupEditTile:
     .map(s => s", $s"))
     val andOrStr: VdomNode =
       if group.isAnd then if group.ordered then "Ordered" else "Any order"
-      else
-        s"Choose ${group.minimumRequired.getOrElse(NonNegShort.unsafeFrom(1))} of ${elementsLength}"
+      else s"Choose ${group.minimumRequired.getOrElse(1.refined[NonNegative])} of ${elementsLength}"
 
     <.span("(", andOrStr, timeStr, ")")
