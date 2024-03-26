@@ -36,8 +36,8 @@ import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
 import lucuma.schemas.enums.ProposalAttachmentType
+import lucuma.ui.react.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import org.typelevel.log4cats.Logger
 

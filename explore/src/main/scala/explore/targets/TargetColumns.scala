@@ -34,7 +34,7 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.ui.syntax.all.given
+import lucuma.ui.react.given
 import monocle.std.option.*
 
 object TargetColumns:

@@ -18,7 +18,7 @@ import lucuma.core.math.Angle
 import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.ui.syntax.all.given
+import lucuma.ui.react.given
 
 import scala.collection.immutable.SortedSet
 

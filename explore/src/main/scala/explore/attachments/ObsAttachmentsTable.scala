@@ -51,8 +51,8 @@ import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
+import lucuma.ui.react.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import org.scalajs.dom.File as DomFile

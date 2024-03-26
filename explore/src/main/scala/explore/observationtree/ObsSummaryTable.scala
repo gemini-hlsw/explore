@@ -180,12 +180,12 @@ object ObsSummaryTable:
             if (cell.row.getCanExpand())
               <.span(
                 ^.cursor.pointer,
-                ExploreStyles.ExpanderChevron,
-                ExploreStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
+                TableStyles.ExpanderChevron,
+                TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
                 ^.onClick ==> (_.stopPropagationCB *> Callback(
                   cell.row.getToggleExpandedHandler()()
                 ))
-              )(Icons.ChevronRightLight.withFixedWidth(true))
+              )(TableIcons.ChevronRight.withFixedWidth(true))
             else "",
           enableResizing = false
         ).setSize(35.toPx),

@@ -116,8 +116,6 @@ object ExploreStyles:
   val ObsItem: Css                  = Css("obs-item")
   val TrashIcon: Css                = Css("trash-icon")
   val EraserIcon: Css               = Css("eraser-icon")
-  val ExpanderChevron: Css          = Css("expander-chevron")
-  val ExpanderChevronOpen: Css      = Css("expander-chevron-open")
 
   val GroupEditTile: Css      = Css("group-edit-tile")
   val GroupEditTitle: Css     = Css("group-edit-title")
@@ -237,10 +235,6 @@ object ExploreStyles:
   val InputErrorTooltipBelow: Css = Css("explore-input-error-tooltip-below")
   val FlatFormField: Css          = Css("flat-form-field")
 
-  val IndicatorOK: Css      = Css("indicator-ok")
-  val IndicatorWarning: Css = Css("indicator-warning")
-  val IndicatorFail: Css    = Css("indicator-fail")
-
   // WIP
   val WIP: Css        = Css("wip")
   val WIPWarning: Css = Css("wip-warning")
@@ -353,21 +347,13 @@ object ExploreStyles:
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
 
   // Sequence Viewer
-  val SequencesPanel                   = Css("explore-sequences-panel")
-  val SequencesPanelError              = Css("explore-sequences-panel-error")
-  val SequenceTable                    = Css("explore-sequence-table")
-  val CellHideBorder                   = Css("explore-table-cell-hide-border")
-  val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
-  val SequenceTileTitle                = Css("explore-sequence-tile-title")
-  val SequenceTileTitleItem            = Css("explore-sequence-tile-title-item")
-  val VisitSection                     = Css("explore-visit-section")
-  val VisitHeader                      = Css("explore-visit-header")
-  val VisitStepExtra                   = Css("explore-visit-step-extra")
-  val VisitStepExtraDatetime           = Css("explore-visit-step-extra-datetime")
-  val VisitStepExtraDatasets           = Css("explore-visit-step-extra-datasets")
-  val VisitStepExtraDatasetItem        = Css("explore-visit-step-extra-dataset-item")
-  val VisitStepExtraDatasetStatusIcon  = Css("explore-visit-step-extra-dataset-status-icon")
-  val VisitStepExtraDatasetStatusLabel = Css("explore-visit-step-extra-dataset-status-label")
+  val SequencesPanel        = Css("explore-sequences-panel")
+  val SequencesPanelError   = Css("explore-sequences-panel-error")
+  val CellHideBorder        = Css("explore-table-cell-hide-border")
+  val SequenceBracketCell   = Css("explore-sequence-bracket-cell")
+  val SequenceTileTitle     = Css("explore-sequence-tile-title")
+  val SequenceTileTitleItem = Css("explore-sequence-tile-title-item")
+  val VisitSection          = Css("explore-visit-section")
 
   val ButtonCopy: Css            = Css("explore-button-copy")
   val ButtonsUndo: Css           = Css("explore-buttons-undo")

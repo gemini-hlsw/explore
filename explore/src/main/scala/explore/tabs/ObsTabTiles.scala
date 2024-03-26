@@ -19,7 +19,6 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
-import explore.config.sequence.VisitsViewer
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
@@ -402,7 +401,6 @@ object ObsTabTiles:
                       .getOrElse(executed)
                   }
                 },
-                VisitsViewer(props.obsId),
                 GeneratedSequenceViewer(
                   props.programId,
                   props.obsId,

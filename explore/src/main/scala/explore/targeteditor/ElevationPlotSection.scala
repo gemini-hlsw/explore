@@ -41,6 +41,7 @@ import lucuma.ui.primereact.SelectButtonEnumView
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.TableIcons
 import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
@@ -192,7 +193,7 @@ object ElevationPlotSection:
                 ,
                 clazz = ExploreStyles.ElevationPlotDateButton,
                 text = false,
-                icon = Icons.ChevronRightLight
+                icon = TableIcons.ChevronRight
               ).tiny.compact
             ),
             SelectButtonEnumView(
