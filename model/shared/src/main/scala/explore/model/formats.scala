@@ -68,6 +68,17 @@ trait formats:
   val formatArcsec: Format[String, Angle] =
     Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)
 
+  val formatDecimalArcsec: Format[String, Angle] =
+    Format(
+      _.parseBigDecimalOption.map(Angle.signedDecimalArcseconds.reverseGet(_)),
+      a => {
+        val v = Angle.signedDecimalArcseconds.get(a).setScale(2, BigDecimal.RoundingMode.HALF_UP)
+        val i = v.abs
+        val d = (v - i.toInt) * BigDecimal(10).pow(2)
+        f"${i.toInt}.${d.toInt}%02d"
+      }
+    )
+
   private def formatHMS(hms: HMS): String =
     f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"
 

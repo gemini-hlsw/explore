@@ -153,8 +153,8 @@ object SpectroscopyConfigurationPanel {
             id = "focal-plane-angle".refined,
             value = focalPlaneAngle,
             units = "arcsec",
-            validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
+            validFormat = InputValidWedge.fromFormat(formatDecimalArcsec).optional,
+            changeAuditor = ChangeAuditor.fromFormat(formatDecimalArcsec).optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off)
         ),

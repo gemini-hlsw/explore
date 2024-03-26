@@ -401,7 +401,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         wavelength.forall(w => w >= r.λmin.value && w <= r.λmax.value) &&
         resolution.forall(_ <= r.resolution) &&
         range.forall(_ <= r.λdelta.value) &&
-        slitWidth.forall(_.toMicroarcseconds <= r.slitLength.value.toMicroarcseconds) &&
+        slitWidth.forall(_.toMicroarcseconds <= r.slitWidth.value.toMicroarcseconds) &&
         declination.forall(r.instrument.site.inPreferredDeclination)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this

@@ -64,7 +64,7 @@ class ModesSuite extends CatsEffectSuite {
       )
       // .flatTap(_.traverse(IO.println))
       .map(_.length)
-      .assertEquals(85)
+      .assertEquals(48)
   }
 
   test("spectroscopy csv loading") {
