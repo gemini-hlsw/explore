@@ -29,9 +29,9 @@
     "react-is": "17.0.2",
     "react-markdown": "^9.0.1",
     "react-resize-detector": "10.0.1",
-    "rehype-katex": "^6.0.3",
+    "rehype-katex": "^7.0.0",
     "remark-gfm": "^4.0.0",
-    "remark-math": "^5.1.1",
+    "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "ua-parser-js": "1.0.37"
   },

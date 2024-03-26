@@ -76,7 +76,7 @@ object HelpBody:
         React.Fragment(
           <.div(
             ExploreStyles.HelpTitle,
-            <.h4(ExploreStyles.HelpTitleLabel, "Help"),
+            <.h4("Help"),
             <.div(
               <.a(Button(icon = Icons.Edit,
                          severity = Button.Severity.Secondary,
@@ -98,10 +98,12 @@ object HelpBody:
                 ReactMarkdown(
                   content = a,
                   clazz = ExploreStyles.HelpMarkdownBody,
-                  linkTarget = "_blank",
                   imageConv,
                   remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
-                  rehypePlugins = List(RehypePlugin.RehypeKatex)
+                  rehypePlugins = List(
+                    RehypePlugin.RehypeKatex
+                      // RehypePlugin.RehypeExternalLinks(RehypePlugin.externalLinks)
+                  )
                 ): VdomNode
               case Pot.Pending                                  => <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
               case Pot.Error(o) if o.getMessage.contains("404") =>
