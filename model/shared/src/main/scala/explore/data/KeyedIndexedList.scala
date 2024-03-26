@@ -6,6 +6,7 @@ package explore.data
 import cats.Applicative
 import cats.Eq
 import cats.Order
+import cats.Order.given
 import cats.syntax.all.given
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.NonNegative
@@ -145,7 +146,7 @@ object KeyedIndexedList:
               .map(list =>
                 KeyedIndexedList.unsafeFromTreeSeqMap(
                   TreeSeqMap.from(
-                    list.sortBy { case (_, (_, i)) => i }(Order[NonNegInt].toOrdering)
+                    list.sortBy { case (_, (_, i)) => i }
                   )
                 )
               )
