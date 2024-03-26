@@ -8,8 +8,7 @@ import cats.syntax.all.*
 import crystal.Pot
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree.Node
-import explore.model.GroupObs
-import explore.model.Grouping
+import explore.model.GroupTree
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
@@ -68,23 +67,20 @@ trait CacheModifierUpdaters {
         val groupId  = newGrouping.id
         val editType = groupEdit.editType
 
-        val newIndex =
-          Index(newGrouping.parentId.map(_.asRight[Observation.Id]), newGrouping.parentIndex)
-
         // TODO: remove groups (data not available yet)
         val groupUpdate = ProgramSummaries.groups.modify:
           editType match
             case Created          =>
               _.inserted(
                 newGrouping.id.asRight,
-                Node(newGrouping.asRight),
-                newIndex
+                Node(newGrouping.toGroupTreeGroup.asRight),
+                newGrouping.toIndex
               )
             case EditType.Updated =>
               _.updated(
                 newGrouping.id.asRight,
-                newGrouping.asRight,
-                newIndex
+                newGrouping.toGroupTreeGroup.asRight,
+                newGrouping.toIndex
               )
 
         val groupTimeRangePotsReset = ProgramSummaries.groupTimeRangePots
@@ -121,7 +117,7 @@ trait CacheModifierUpdaters {
     val groupEdit = ProgramSummaries.groups
       .modify { groupElements =>
         val groupId     = observationEdit.value.groupId
-        val newGroupObs = GroupObs(obsId, observationEdit.value.groupIndex)
+        val newGroupObs = GroupTree.Obs(obsId)
         val newIndex    =
           Index(groupId.map(_.asRight[Observation.Id]), observationEdit.value.groupIndex)
 

@@ -5,7 +5,10 @@ package explore.data.tree
 
 import cats.kernel.Eq
 import cats.syntax.all.*
+import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.NonNegShort
+import lucuma.refined.*
 
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
@@ -33,7 +36,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
     index.parentKey
       .fold(tree.children.some)(pkey => byKey.get(pkey).map(_.children))
       .flatMap(
-        _.get(index.childPos.toLong).map(node => (getKey(node.value.elem), node.map(_.elem)))
+        _.get(index.childPos.value.toLong).map(node => (getKey(node.value.elem), node.map(_.elem)))
       )
 
   private def removeInTree(key: K): Tree[IndexedElem[K, A]] = {
@@ -44,9 +47,9 @@ case class KeyedIndexedTree[K: Eq, A] private (
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
       if (parentKey === idx.parentKey)
-        children.take(idx.childPos) ++ children.drop(idx.childPos + 1).map {
+        children.take(idx.childPos.value) ++ children.drop(idx.childPos.value + 1).map {
           case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-            Node(IndexedElem(e, Index(pkey, pos - 1)), ch)
+            Node(IndexedElem(e, Index(pkey, NonNegInt.unsafeFrom(pos.value - 1))), ch)
         }
       else
         children.map(node =>
@@ -71,19 +74,19 @@ case class KeyedIndexedTree[K: Eq, A] private (
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
       if (parentKey === idx.parentKey) {
-        val fixedPos: Int = idx.childPos match {
-          case i if i > children.length => children.length
-          case i if i < 0               => 0
-          case i                        => i
+        val fixedPos: NonNegInt = idx.childPos.value match {
+          case i if i > children.length => NonNegInt.unsafeFrom(children.length)
+          case i if i < 0               => 0.refined[NonNegative]
+          case i                        => NonNegInt.unsafeFrom(i)
         }
-        (children.take(fixedPos) :+
+        (children.take(fixedPos.value) :+
           Node(IndexedElem(node.value, Index(parentKey, fixedPos)),
                indexedUniqueKeyChildren(node.children, getKey, key.some, byKey.keySet + key)
           )) ++
           children
-            .drop(fixedPos)
+            .drop(fixedPos.value)
             .map { case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-              Node(IndexedElem(e, Index(pkey, pos + 1)), ch)
+              Node(IndexedElem(e, Index(pkey, NonNegInt.unsafeFrom(pos.value + 1))), ch)
             }
       } else
         children.map(node =>
@@ -140,10 +143,10 @@ case class KeyedIndexedTree[K: Eq, A] private (
 }
 
 object KeyedIndexedTree {
-  case class Index[K](parentKey: Option[K], childPos: Int)
+  case class Index[K](parentKey: Option[K], childPos: NonNegInt)
   object Index:
     inline def apply[K](parentKey: Option[K], childPos: NonNegShort): Index[K] =
-      Index(parentKey, childPos.value.toInt)
+      Index(parentKey, NonNegInt.unsafeFrom(childPos.value.toInt))
 
   protected case class IndexedElem[K, A](elem: A, index: Index[K])
 
@@ -163,7 +166,8 @@ object KeyedIndexedTree {
       List.empty[Node[IndexedElem[K, A]]]
     ) { case (nodes, ((key, node), idx)) =>
       val newNodes = indexedUniqueKeyChildren(node.children, getKey, key.some, newAccumKeys)
-      val newNode  = Node(IndexedElem(node.value, Index(parentKey, idx)), newNodes)
+      val newNode  =
+        Node(IndexedElem(node.value, Index(parentKey, NonNegInt.unsafeFrom(idx))), newNodes)
       nodes :+ newNode
     }
   }

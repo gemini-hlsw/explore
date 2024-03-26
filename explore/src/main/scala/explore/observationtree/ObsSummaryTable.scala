@@ -45,6 +45,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
+import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -355,8 +356,13 @@ object ObsSummaryTable:
               loading = adding.get.value,
               label = "Add an observation",
               clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick =
-                insertObs(props.programId, 0, props.observations, adding, ctx).runAsyncAndForget
+              onClick = insertObs(
+                props.programId,
+                0.refined,
+                props.observations,
+                adding,
+                ctx
+              ).runAsyncAndForget
             ).tiny.compact
           )
         )

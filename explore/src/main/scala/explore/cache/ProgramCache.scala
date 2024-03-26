@@ -11,7 +11,6 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import explore.DefaultErrorPolicy
-import explore.model.GroupList
 import explore.model.GroupTree
 import explore.model.ObsAttachment
 import explore.model.ObsSummary

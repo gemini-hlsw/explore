@@ -11,6 +11,7 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -18,7 +19,7 @@ import explore.common.GroupQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Grouping
+import explore.model.GroupTree
 import explore.model.ProgramTimeRange
 import explore.model.syntax.all.toHoursMinutes
 import explore.syntax.ui.*
@@ -43,7 +44,8 @@ import monocle.Lens
 import scala.scalajs.js
 
 case class GroupEditTile(
-  group:             UndoSetter[Grouping],
+  group:             UndoSetter[GroupTree.Group],
+  elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps(GroupEditTile.component)
@@ -75,37 +77,38 @@ object GroupEditTile:
     .render: (props, ctx, editType, isLoading, nameDisplay) =>
       import ctx.given
 
-      val group          = props.group.get
-      val isAnd          = group.isAnd
-      val elementsLength = group.elements.length
+      val group = props.group.get
+      val isAnd = group.isAnd
 
-      def groupModView[A](lens: Lens[Grouping, A], prop: A => GroupPropertiesInput) = props.group
-        .undoableView(lens)
-        .withOnMod(a =>
-          GroupQueries.updateGroup[IO](group.id, prop(a)).switching(isLoading.async).runAsync
-        )
+      def groupModView[A](lens: Lens[GroupTree.Group, A], prop: A => GroupPropertiesInput) =
+        props.group
+          .undoableView(lens)
+          .withOnMod(a =>
+            GroupQueries.updateGroup[IO](group.id, prop(a)).switching(isLoading.async).runAsync
+          )
 
       val minRequiredV = groupModView(
-        Grouping.minimumRequired,
+        GroupTree.Group.minimumRequired,
         m => GroupPropertiesInput(minimumRequired = m.orUnassign)
       )
       val nameV        = groupModView(
-        Grouping.name,
+        GroupTree.Group.name,
         n => GroupPropertiesInput(name = n.orUnassign)
       )
-      val orderedV     = groupModView(Grouping.ordered, o => GroupPropertiesInput(ordered = o.assign))
+      val orderedV     =
+        groupModView(GroupTree.Group.ordered, o => GroupPropertiesInput(ordered = o.assign))
 
       val timeSpanOrEmptyLens =
         Iso[Option[TimeSpan], TimeSpan](_.orEmpty)(_.some.filterNot(_.isZero))
       val minIntervalV        = groupModView(
-        Grouping.minimumInterval.andThen(timeSpanOrEmptyLens),
+        GroupTree.Group.minimumInterval.andThen(timeSpanOrEmptyLens),
         ts =>
           GroupPropertiesInput(minimumInterval =
             TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
           )
       )
       val maxIntervalV        = groupModView(
-        Grouping.maximumInterval.andThen(timeSpanOrEmptyLens),
+        GroupTree.Group.maximumInterval.andThen(timeSpanOrEmptyLens),
         ts =>
           GroupPropertiesInput(maximumInterval =
             TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
@@ -167,14 +170,14 @@ object GroupEditTile:
           value = minRequiredV.get.fold(js.undefined)(_.value),
           disabled = isLoading.get,
           min = 0,
-          max = elementsLength,
+          max = props.elementsLength,
           size = minRequiredV.get.fold(js.undefined)(_.toString.length),
           onValueChange = e =>
             val newMin = e.valueOption
               .flatMap(s => NonNegShort.from(s.toShort).toOption)
             minRequiredV.set(newMin)
         ),
-        s" of ${elementsLength} observations"
+        s" of ${props.elementsLength} observations"
       )
 
       val orderForm = <.div(
@@ -225,14 +228,18 @@ object GroupEditTile:
         else <.div(ExploreStyles.GroupForm)(nameForm, minRequiredForm, plannedTime)
 
       React.Fragment(
-        props.renderInTitle(makeTitle(group, props.timeEstimateRange)),
+        props.renderInTitle(makeTitle(group, props.timeEstimateRange, props.elementsLength)),
         <.div(ExploreStyles.GroupEditTile)(
           selectGroupForm,
           groupTypeSpecificForms
         )
       )
 
-  private def makeTitle(group: Grouping, timeEstimateRange: Pot[Option[ProgramTimeRange]]) =
+  private def makeTitle(
+    group:             GroupTree.Group,
+    timeEstimateRange: Pot[Option[ProgramTimeRange]],
+    elementsLength:    Int
+  ) =
     val timeStr: VdomNode  = timeEstimateRange.renderReady(_.map: timeEstimateRange =>
       if timeEstimateRange.maximum === timeEstimateRange.minimum then
         timeEstimateRange.maximum.value.toHoursMinutes
@@ -241,7 +248,6 @@ object GroupEditTile:
     .map(s => s", $s"))
     val andOrStr: VdomNode =
       if group.isAnd then if group.ordered then "Ordered" else "Any order"
-      else
-        s"Choose ${group.minimumRequired.getOrElse(NonNegShort.unsafeFrom(1))} of ${group.elements.length}"
+      else s"Choose ${group.minimumRequired.getOrElse(1.refined[NonNegative])} of ${elementsLength}"
 
     <.span("(", andOrStr, timeStr, ")")

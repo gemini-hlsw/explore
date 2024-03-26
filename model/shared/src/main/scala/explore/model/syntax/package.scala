@@ -103,3 +103,5 @@ object all:
   extension (e: Either[GroupObs, Grouping])
     @targetName("groupIndexGrouping")
     def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)
+
+  extension (e: GroupTree.Value) def id: GroupTree.Key = e.bimap(_.id, _.id)
