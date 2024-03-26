@@ -32,7 +32,9 @@ sealed trait GmosSequenceTable[S, D]:
   def config: ExecutionConfig[S, D]
   def snPerClass: Map[ObserveClass, SignalToNoise]
 
-  private def steps(obsClass: ObserveClass)(sequence: ExecutionSequence[D]): List[SequenceRow.FutureStep[D]] =
+  private def steps(
+    obsClass: ObserveClass
+  )(sequence: ExecutionSequence[D]): List[SequenceRow.FutureStep[D]] =
     SequenceRow.FutureStep
       .fromAtoms(
         sequence.nextAtom +: sequence.possibleFuture,
@@ -44,7 +46,6 @@ sealed trait GmosSequenceTable[S, D]:
 
   protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
     config.science.map(steps(ObserveClass.Science)).orEmpty
-
 
 case class GmosNorthSequenceTable(
   visits:     List[Visit.GmosNorth],
@@ -88,17 +89,21 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
       SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
         AtomStepsColumnId,
-        _.value.toOption.map(_.step).collect:
-          case SequenceRow.FutureStep(_, _, firstOf, _) => firstOf,
+        _.value.toOption
+          .map(_.step)
+          .collect:
+            case SequenceRow.FutureStep(_, _, firstOf, _) => firstOf,
         header = " ",
         cell = _.value.flatMap(_.map(drawBracket))
       ).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
         ExtraRowColumnId,
         header = "",
-        cell = _.row.original.value.toOption.map(_.step).collect:
-          case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
-            renderVisitExtraRow(step)
+        cell = _.row.original.value.toOption
+          .map(_.step)
+          .collect:
+            case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
+              renderVisitExtraRow(step)
       ).setColumnSize(ColumnSizes(ExtraRowColumnId))
     ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
@@ -117,14 +122,13 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
       .useMemo(())(_ => columns) // cols
       .useMemoBy((props, _) => props.visits): (_, _) =>
         visitsSequences // (List[Visit], nextIndex)
-      .useMemoBy((props, _, visitsData) =>
-        (visitsData, props.acquisitionRows, props.scienceRows)
-      ): (_, _, _) =>
-        (visitsData, acquisitionSteps, scienceSteps) =>
-          val (visits, nextIndex): (List[VisitData], StepIndex) = visitsData.value
-          stitchSequence(visits, nextIndex, acquisitionSteps,  scienceSteps)
+      .useMemoBy((props, _, visitsData) => (visitsData, props.acquisitionRows, props.scienceRows)):
+        (_, _, _) =>
+          (visitsData, acquisitionSteps, scienceSteps) =>
+            val (visits, nextIndex): (List[VisitData], StepIndex) = visitsData.value
+            stitchSequence(visits, nextIndex, acquisitionSteps, scienceSteps)
       .useResizeDetector()
-      .useDynTableBy: (_, _, _, _, resize) => 
+      .useDynTableBy: (_, _, _, _, resize) =>
         (DynTableDef, SizePx(resize.width.orEmpty))
       .useReactTableBy: (props, cols, _, rows, _, dynTable) =>
         TableOptions(
@@ -143,8 +147,8 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           ),
           state = PartialTableState(
             columnSizing = dynTable.columnSizing,
-            columnVisibility = dynTable.columnVisibility,
-          ),
+            columnVisibility = dynTable.columnVisibility
+          )
           // onColumnSizingChange = dynTable.onColumnSizingChangeHandler
         )
       .render: (_, cols, _, _, resize, _, table) =>
@@ -167,13 +171,16 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           celled = true,
           tableMod = SequenceStyles.SequenceTable,
           headerCellMod = _.column.id match
-            case id if id == HeaderColumnId.value     => SequenceStyles.HiddenColTableHeader
-            case id if id == ExtraRowColumnId.value   => SequenceStyles.HiddenColTableHeader
-            case _                                    => TagMod.empty,
-          rowMod = _.original.value.toOption.map(_.step).collect{
-            case SequenceRow.Executed.ExecutedStep(_, _) => SequenceStyles.RowHasExtra
-          }.orEmpty,
-          cellMod = cell => 
+            case id if id == HeaderColumnId.value   => SequenceStyles.HiddenColTableHeader
+            case id if id == ExtraRowColumnId.value => SequenceStyles.HiddenColTableHeader
+            case _                                  => TagMod.empty,
+          rowMod = _.original.value.toOption
+            .map(_.step)
+            .collect { case SequenceRow.Executed.ExecutedStep(_, _) =>
+              SequenceStyles.RowHasExtra
+            }
+            .orEmpty,
+          cellMod = cell =>
             cell.row.original.value match
               case Left(_)        => // Header
                 cell.column.id match
@@ -181,7 +188,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
                   case _                                => ^.display.none
               case Right(stepRow) =>
                 cell.column.id match
-                  case id if id == ExtraRowColumnId.value   =>
+                  case id if id == ExtraRowColumnId.value                            =>
                     stepRow.step match // Extra row is shown in a selected row or in an executed step row.
                       case SequenceRow.Executed.ExecutedStep(_, _) => extraRowMod
                       case _                                       => TagMod.empty
@@ -193,6 +200,8 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
                     TagMod.empty
         )
 
-object GmosNorthSequenceTable extends GmosSequenceTableBuilder[StaticConfig.GmosNorth, DynamicConfig.GmosNorth]
+object GmosNorthSequenceTable
+    extends GmosSequenceTableBuilder[StaticConfig.GmosNorth, DynamicConfig.GmosNorth]
 
-object GmosSouthSequenceTable extends GmosSequenceTableBuilder[StaticConfig.GmosSouth, DynamicConfig.GmosSouth]
+object GmosSouthSequenceTable
+    extends GmosSequenceTableBuilder[StaticConfig.GmosSouth, DynamicConfig.GmosSouth]

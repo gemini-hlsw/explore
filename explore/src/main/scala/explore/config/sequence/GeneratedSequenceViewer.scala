@@ -85,20 +85,21 @@ object GeneratedSequenceViewer:
       .render: (props, _, visits, config) =>
         props.sequenceChanged.get
           .flatMap(_ => (visits.toPot.flatten, config.toPot.flatten).tupled) // tupled for Pot
-          .renderPot( 
+          .renderPot(
             _.tupled // tupled for Option
               .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
                 case (
                       ExecutionVisits.GmosNorth(_, visits),
                       InstrumentExecutionConfig.GmosNorth(config)
                     ) =>
-                      GmosNorthSequenceTable(visits, config, props.snPerClass)
+                  GmosNorthSequenceTable(visits, config, props.snPerClass)
                 case (
                       ExecutionVisits.GmosSouth(_, visits),
                       InstrumentExecutionConfig.GmosSouth(config)
                     ) =>
-                      GmosSouthSequenceTable(visits, config, props.snPerClass)
-                case _ => <.div("MISMATCH!!!") // TODO Nice error message, which should never happen BTW
+                  GmosSouthSequenceTable(visits, config, props.snPerClass)
+                case _ =>
+                  <.div("MISMATCH!!!") // TODO Nice error message, which should never happen BTW
               },
             errorRender = m =>
               val msg = m match
