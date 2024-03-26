@@ -8,8 +8,12 @@ import eu.timepit.refined.cats.given
 import explore.model.formats.*
 import lucuma.core.arb.*
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
+import lucuma.core.optics.laws.discipline.FormatTests
+import explore.model.formats.*
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbTimeSpan.given
+import lucuma.core.math.Angle
+import lucuma.core.math.arb.ArbAngle.given
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 

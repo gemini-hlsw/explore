@@ -14,6 +14,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.HourRange
 import explore.model.display.given
 import lucuma.core.math.Axis
+import lucuma.core.math.Angle
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.BrightnessValueRefinement
 import lucuma.core.math.Offset
@@ -35,6 +36,7 @@ import lucuma.refined.*
 import monocle.Iso
 
 import scala.util.Try
+import monocle.Prism
 
 object ExploreModelValidators:
   type ValidFilterNEC[A] = ValidFilter[NonEmptyChain[NonEmptyString], A]
@@ -114,6 +116,20 @@ object ExploreModelValidators:
       .andThen(
         ValidWedge
           .fromFormat(Wavelength.decimalMicrometers, _ => "Invalid Wavelength".refined[NonEmpty])
+          .toErrorsValidWedge
+      )
+
+  private val decimalArcsecondsPrism: Prism[BigDecimal, Angle] =
+    Prism[BigDecimal, Angle](Angle.decimalArcseconds.reverseGet(_).some)(
+      Angle.decimalArcseconds.get
+    )
+
+  val decimalArcsecondsValidWedge: InputValidWedge[Angle] =
+    InputValidWedge
+      .truncatedBigDecimal(2.refined)
+      .andThen(
+        ValidWedge
+          .fromPrism(decimalArcsecondsPrism, _ => "Invalid Angle".refined[NonEmpty])
           .toErrorsValidWedge
       )
 
