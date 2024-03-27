@@ -20,7 +20,6 @@ import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
-import monocle.law.discipline.PrismTests
 
 class ExploreModelValidatorsSuite extends DisciplineSuite:
   checkAll(

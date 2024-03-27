@@ -262,11 +262,11 @@ private object SpectroscopyModesTable:
         }
         .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
-        .setCell(cell => formatSlitWidth(cell.value))
+        .setCell(cell => formatSlitWidth(cell.value.value))
         .setColumnSize(FixedSize(100.toPx))
         .sortable,
       column(SlitLengthColumnId, row => SpectroscopyModeRow.slitLength.get(row.entry))
-        .setCell(cell => formatSlitLength(cell.value))
+        .setCell(cell => formatSlitLength(cell.value.value))
         .setColumnSize(FixedSize(105.toPx))
         .sortable,
       column(GratingColumnId, row => SpectroscopyModeRow.grating.get(row.entry))
@@ -371,7 +371,7 @@ private object SpectroscopyModesTable:
               focalPlane = s.focalPlane,
               capability = s.capability,
               wavelength = s.wavelength,
-              slitWidth = s.focalPlaneAngle,
+              slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
               resolution = s.resolution,
               range = s.wavelengthCoverage,
               declination = dec

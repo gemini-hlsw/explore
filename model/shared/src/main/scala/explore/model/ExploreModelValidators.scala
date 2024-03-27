@@ -13,8 +13,8 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.HourRange
 import explore.model.display.given
-import lucuma.core.math.Axis
 import lucuma.core.math.Angle
+import lucuma.core.math.Axis
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.BrightnessValueRefinement
 import lucuma.core.math.Offset
@@ -34,9 +34,9 @@ import lucuma.core.syntax.string.*
 import lucuma.core.validation.*
 import lucuma.refined.*
 import monocle.Iso
+import monocle.Prism
 
 import scala.util.Try
-import monocle.Prism
 
 object ExploreModelValidators:
   type ValidFilterNEC[A] = ValidFilter[NonEmptyChain[NonEmptyString], A]

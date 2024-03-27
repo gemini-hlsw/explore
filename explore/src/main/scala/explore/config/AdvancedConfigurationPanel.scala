@@ -27,8 +27,10 @@ import explore.model.display.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.ModeCommonWavelengths
+import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
 import explore.modes.ModeWavelengthDelta
+import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.*
@@ -407,7 +409,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           props.confMatrix.filtered(
             focalPlane = fp,
             capability = cap,
-            slitWidth = fpa,
+            slitLength = fpa.map(s => SlitLength(ModeSlitSize(s))),
             resolution = res,
             range = rng
           )

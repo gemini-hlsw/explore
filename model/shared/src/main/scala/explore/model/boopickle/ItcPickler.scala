@@ -93,6 +93,10 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ModeSlitSize] = picklerNewType(ModeSlitSize)
 
+  given Pickler[SlitLength] = picklerNewType(SlitLength)
+
+  given Pickler[SlitWidth] = picklerNewType(SlitWidth)
+
   given Pickler[ModeWavelengthDelta] = picklerNewType(ModeWavelengthDelta)
 
   given Pickler[SpectroscopyModeRow] = generatePickler

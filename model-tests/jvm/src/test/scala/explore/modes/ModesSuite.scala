@@ -58,13 +58,13 @@ class ModesSuite extends CatsEffectSuite {
           Wavelength.fromIntNanometers(500),
           1.refined[Positive].some,
           WavelengthDelta.fromIntPicometers(0),
-          Angle.fromDoubleArcseconds(1).some,
+          SlitLength(ModeSlitSize(Angle.fromDoubleArcseconds(1))).some,
           declination = none
         )
       )
       // .flatTap(_.traverse(IO.println))
       .map(_.length)
-      .assertEquals(48)
+      .assertEquals(85)
   }
 
   test("spectroscopy csv loading") {

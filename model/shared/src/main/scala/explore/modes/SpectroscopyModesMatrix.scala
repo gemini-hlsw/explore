@@ -4,6 +4,7 @@
 package explore.modes
 
 import cats.Eq
+import cats.Order
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.implicits.*
@@ -26,6 +27,7 @@ import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
 import monocle.Lens
@@ -256,6 +258,15 @@ object ModeCommonWavelengths:
           range
       shifted.intersect(BoundedInterval.unsafeClosed(λmin, λmax))
 
+object SlitLength extends NewType[ModeSlitSize] {
+  given Order[SlitLength] = Order.by(_.value.value.toMicroarcseconds)
+}
+
+type SlitLength = SlitLength.Type
+
+object SlitWidth extends NewType[ModeSlitSize]
+type SlitWidth = SlitWidth.Type
+
 case class SpectroscopyModeRow(
   id:                Int, // Give them a local id to simplify reusability
   instrument:        InstrumentRow,
@@ -268,8 +279,8 @@ case class SpectroscopyModeRow(
   optimalWavelength: ModeWavelength,
   λdelta:            ModeWavelengthDelta,
   resolution:        PosInt,
-  slitLength:        ModeSlitSize,
-  slitWidth:         ModeSlitSize
+  slitLength:        SlitLength,
+  slitWidth:         SlitWidth
 ) extends ModeCommonWavelengths {
   // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthDelta
 
@@ -302,10 +313,10 @@ object SpectroscopyModeRow {
   val instrumentAndConfig: Getter[SpectroscopyModeRow, (Instrument, NonEmptyString)] =
     instrument.zip(config.asGetter)
 
-  val slitWidth: Lens[SpectroscopyModeRow, ModeSlitSize] =
+  val slitWidth: Lens[SpectroscopyModeRow, SlitWidth] =
     GenLens[SpectroscopyModeRow](_.slitWidth)
 
-  val slitLength: Lens[SpectroscopyModeRow, ModeSlitSize] =
+  val slitLength: Lens[SpectroscopyModeRow, SlitLength] =
     GenLens[SpectroscopyModeRow](_.slitLength)
 
   def grating: Getter[SpectroscopyModeRow, InstrumentRow#Grating] =
@@ -374,7 +385,7 @@ trait SpectroscopyModesMatrixDecoders extends Decoders {
       sl  <- row.as[ModeSlitSize]("slit length")
       sw  <- row.as[ModeSlitSize]("slit width")
     } yield fs.map(f => // Ids are assigned later, after list is flattened.
-      SpectroscopyModeRow(0, i, s, f, c, a, min, max, wo, wr, r, sl, sw)
+      SpectroscopyModeRow(0, i, s, f, c, a, min, max, wo, wr, r, SlitLength(sl), SlitWidth(sw))
     )
 
 }
@@ -390,7 +401,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
     wavelength:  Option[Wavelength] = None,
     resolution:  Option[PosInt] = None,
     range:       Option[WavelengthDelta] = None,
-    slitWidth:   Option[Angle] = None,
+    slitLength:  Option[SlitLength] = None,
     declination: Option[Declination] = None
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
@@ -401,7 +412,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         wavelength.forall(w => w >= r.λmin.value && w <= r.λmax.value) &&
         resolution.forall(_ <= r.resolution) &&
         range.forall(_ <= r.λdelta.value) &&
-        slitWidth.forall(_.toMicroarcseconds <= r.slitWidth.value.toMicroarcseconds) &&
+        slitLength.forall(_ <= r.slitLength) &&
         declination.forall(r.instrument.site.inPreferredDeclination)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
@@ -414,7 +425,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       // Difference in slit width
       val deltaSlitWidth: Rational    =
         iq.map(i =>
-          (Rational(r.slitWidth.value.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
+          (Rational(r.slitWidth.value.value.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
       val deltaRes: BigDecimal        =
