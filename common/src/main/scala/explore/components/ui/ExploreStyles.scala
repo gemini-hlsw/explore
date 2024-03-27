@@ -301,7 +301,6 @@ object ExploreStyles:
   val HelpIconFloating: Css = Css("explore-help-icon-floating")
   val HelpSidebar: Css      = Css("explore-help-sidebar")
   val HelpTitle: Css        = Css("explore-help-title")
-  val HelpTitleLabel: Css   = Css("explore-help-title-label")
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
 
