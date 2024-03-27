@@ -120,8 +120,8 @@ object ExploreModelValidators:
       )
 
   private val decimalArcsecondsPrism: Prism[BigDecimal, Angle] =
-    Prism[BigDecimal, Angle](Angle.decimalArcseconds.reverseGet(_).some)(
-      Angle.decimalArcseconds.get
+    Prism[BigDecimal, Angle](Angle.signedDecimalArcseconds.reverseGet(_).some)(
+      Angle.signedDecimalArcseconds.get
     )
 
   val decimalArcsecondsValidWedge: InputValidWedge[Angle] =

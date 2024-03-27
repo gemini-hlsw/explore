@@ -22,6 +22,7 @@ import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
 
 class ExploreModelValidatorsSuite extends DisciplineSuite:
+
   checkAll(
     "brightnessValidWedge",
     ValidWedgeTests(ExploreModelValidators.brightnessValidWedge).validWedgeLaws
