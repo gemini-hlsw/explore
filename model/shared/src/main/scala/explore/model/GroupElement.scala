@@ -17,6 +17,7 @@ import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
+import lucuma.schemas.ObservationDB.Enums.Existence
 
 import GroupElement.given
 
@@ -42,7 +43,9 @@ object GroupElement:
   private def groupObsOr[B](f: HCursor => Decoder.Result[B]) = (c: HCursor) =>
     f(c).map(_.asRight).orElse(c.get[GroupObs]("observation").map(_.asLeft))
 
-case class GroupObs(id: Observation.Id, groupIndex: NonNegShort) derives Eq, Decoder
+case class GroupObs(id: Observation.Id, groupIndex: NonNegShort, existence: Option[Existence])
+    derives Eq,
+      Decoder
 
 case class Grouping(
   id:              Group.Id,

@@ -17,6 +17,7 @@ import explore.model.syntax.all.*
 import lucuma.core.model.Group.Id as GroupId
 import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
+import lucuma.schemas.ObservationDB.Enums.Existence
 import monocle.Focus
 import monocle.Lens
 
@@ -35,15 +36,15 @@ object GroupTree:
       .flatMap(_.value.toOption.map(group => (group.id, group)))
       .toMap
 
-    def createObsNode(obs: GroupObs): Node =
-      TreeNode(Obs(obs.id).asLeft[Group], Nil)
+    def createObsNode(obs: GroupObs): Option[Node] =
+      obs.existence.filter(_ === Existence.Present).as(TreeNode(Obs(obs.id).asLeft[Group], Nil))
 
     def createGroupNode(group: Grouping): Node =
       val children = group.elements
         .sortBy(_.groupIndex)
         .flatMap(
           _.fold(
-            createObsNode(_).some,
+            createObsNode(_),
             group => groupMap.get(group.id).map(createGroupNode)
           )
         )
@@ -54,7 +55,7 @@ object GroupTree:
         .mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
         .sortBy(_.groupIndex)
 
-    val nodes = rootGroups.map(_.fold(createObsNode, createGroupNode))
+    val nodes = rootGroups.flatMap(_.fold(createObsNode, g => createGroupNode(g).some))
 
     KeyedIndexedTree.fromTree(Tree(nodes), _.id)
   }
