@@ -10,6 +10,8 @@ import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { RuntimeCaching } from 'workbox-build';
 
+const scalaVersion = '3.4.1';
+
 const fixCssRoot: PluginCreator<void> = () => {
   return {
     postcssPlugin: 'postcss-fix-nested-root',
@@ -96,12 +98,12 @@ const pathExists = async (path: PathLike) => {
 export default defineConfig(async ({ mode }) => {
   const _dirname =
     typeof __dirname !== 'undefined' ? __dirname : dirname(fileURLToPath(import.meta.url));
-  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-3.4.0`);
+  const scalaClassesDir = path.resolve(_dirname, `explore/target/scala-${scalaVersion}`);
   const isProduction = mode === 'production';
   const sjs = isProduction
     ? path.resolve(scalaClassesDir, `explore-opt`)
     : path.resolve(scalaClassesDir, `explore-fastopt`);
-  const workersScalaClassesDir = path.resolve(_dirname, 'workers/target/scala-3.4.0');
+  const workersScalaClassesDir = path.resolve(_dirname, `workers/target/scala-${scalaVersion}`);
   const workersSjs = isProduction
     ? path.resolve(workersScalaClassesDir, 'workers-opt')
     : path.resolve(workersScalaClassesDir, 'workers-fastopt');
