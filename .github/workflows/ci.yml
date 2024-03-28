@@ -94,13 +94,38 @@ jobs:
       - name: Upload code coverage data
         uses: codecov/codecov-action@v4
 
+  validate-steward:
+    name: Validate Steward Config
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        java: [temurin@11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout current branch (fast)
+        uses: actions/checkout@v4
+
+      - name: Setup Java (temurin@11)
+        id: setup-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - uses: coursier/setup-action@v1
+        with:
+          apps: scala-steward
+
+      - run: scala-steward validate-repo-config .scala-steward.conf
+
   full:
     name: full
     if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.4.0]
+        scala: [3.4.1]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -169,7 +194,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.4.0]
+        scala: [3.4.1]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
