@@ -21,7 +21,8 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
 
-final class ExploreModelValidatorsSuite extends DisciplineSuite:
+class ExploreModelValidatorsSuite extends DisciplineSuite:
+
   checkAll(
     "brightnessValidWedge",
     ValidWedgeTests(ExploreModelValidators.brightnessValidWedge).validWedgeLaws
@@ -74,4 +75,16 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite:
     "pmDecValidWedge",
     ValidWedgeTests(ExploreModelValidators.pmDecValidWedge)
       .validWedgeLawsWith(milliArcSecondsGen)
+  )
+
+  val arcSecondsGen: Gen[String] =
+    arbitrary[Angle]
+      .map(Angle.signedDecimalArcseconds.get(_).toString)
+      .flatMapOneOf(Gen.const[String], perturbations*)
+
+  checkAll(
+    "decimalArcsecondsValidWedge",
+    ValidWedgeTests(
+      ExploreModelValidators.decimalArcsecondsValidWedge
+    ).validWedgeLawsWith(arcSecondsGen)
   )

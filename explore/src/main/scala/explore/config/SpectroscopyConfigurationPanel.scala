@@ -13,7 +13,6 @@ import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.display.given
-import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -37,7 +36,16 @@ case class SpectroscopyConfigurationPanel(
   readonly: Boolean
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
-object SpectroscopyConfigurationPanel {
+trait ConfigurationFormats:
+  private val slitLengthBaseAuditor = ChangeAuditor
+    .fromInputValidWedge(ExploreModelValidators.decimalArcsecondsValidWedge)
+    .allow(s => s === "0" || s === "0.")
+  val slitLengthChangeAuditor       = slitLengthBaseAuditor
+    .decimal(2.refined)
+    .optional
+  val slitLengthFormat              = ExploreModelValidators.decimalArcsecondsValidWedge.optional
+
+object SpectroscopyConfigurationPanel extends ConfigurationFormats {
   type Props = SpectroscopyConfigurationPanel
 
   protected val component =
@@ -153,8 +161,8 @@ object SpectroscopyConfigurationPanel {
             id = "focal-plane-angle".refined,
             value = focalPlaneAngle,
             units = "arcsec",
-            validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional,
+            validFormat = slitLengthFormat,
+            changeAuditor = slitLengthChangeAuditor,
             disabled = p.readonly
           ).clearable(^.autoComplete.off)
         ),
