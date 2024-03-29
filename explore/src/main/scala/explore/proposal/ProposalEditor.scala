@@ -31,6 +31,7 @@ import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment
 import explore.model.ProposalTabTileIds
+import explore.model.UserInvitation
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -54,7 +55,9 @@ import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Divider
+import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
+import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
@@ -74,7 +77,6 @@ import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
-import explore.model.UserInvitation
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -401,7 +403,8 @@ object ProposalEditor:
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
     readonly:          Boolean,
-    resize:            UseResizeDetectorReturn
+    resize:            UseResizeDetectorReturn,
+    ref:               OverlayPanelRef
   )(using ctx: AppContext[IO]) = {
     import ctx.given
 
@@ -449,7 +452,7 @@ object ProposalEditor:
         )
       )
 
-    val usersTile = ProgramUsers.programUsersTile(programId, users, invitations, createInvite)
+    val usersTile = ProgramUsers.programUsersTile(programId, users, invitations, createInvite, ref)
 
     val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
@@ -540,6 +543,7 @@ object ProposalEditor:
       )
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
+      .useOverlayPanelRef
       .render {
         (
           props,
@@ -551,7 +555,8 @@ object ProposalEditor:
           splitsList,
           _,
           resize,
-          createInvite
+          createInvite,
+          overlayRef
         ) =>
           renderFn(
             props.programId,
@@ -571,6 +576,7 @@ object ProposalEditor:
             props.authToken,
             props.layout,
             props.readonly,
-            resize
+            resize,
+            overlayRef
           )(using ctx)
       }

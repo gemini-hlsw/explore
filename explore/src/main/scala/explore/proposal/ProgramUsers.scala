@@ -5,77 +5,71 @@ package explore.proposal
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.*
 import crystal.react.*
 import explore.Icons
 import explore.components.Tile
+import explore.components.Tile.RenderInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalTabTileIds
+import explore.model.UserInvitation
+import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.core.util.NewType
+import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.OverlayPanel
+import lucuma.react.primereact.OverlayPanelRef
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.common.InvitationQueriesGQL.*
-import explore.model.UserInvitation
 
-object AddUserOpen extends NewType[Boolean]
-type AddUserOpen = AddUserOpen.Type
-
-enum CreateInviteProcess:
-  case Idle, Running, Done
+enum CreateInviteProcess(private val tag: String) derives Enumerated:
+  case Idle    extends CreateInviteProcess("idle")
+  case Running extends CreateInviteProcess("running")
+  case Error   extends CreateInviteProcess("error")
+  case Done    extends CreateInviteProcess("done")
 
 case class ProgramUsers(
   pid:         Program.Id,
   users:       List[ProgramUserWithRole],
   invitations: List[UserInvitation],
-  addUser:     View[CreateInviteProcess]
+  inTitle:     RenderInTitle,
+  ref:         OverlayPanelRef
 ) extends ReactFnProps(ProgramUsers.component)
 
 object ProgramUsers:
-  // def createInvitation(
-  //   createInvite: View[CreateInviteProcess],
-  //   pid:          Program.Id
-  // )(using ctx: AppContext[IO]): IO[Unit] =
-  //   import ctx.given
-  //   (createInvite.set(CreateInviteProcess.Running).to[IO] *> CreateInviteMutation[IO].execute(
-  //     pid
-  //   )).void
-  //     .guarantee(
-  //       createInvite.set(CreateInviteProcess.Done).to[IO]
-  //     )
 
   def programUsersTile(
     pid:          Program.Id,
     users:        List[ProgramUserWithRole],
     invitations:  List[UserInvitation],
-    createInvite: View[CreateInviteProcess]
+    createInvite: View[CreateInviteProcess],
+    ref:          OverlayPanelRef
   )(using AppContext[IO], Logger[IO]) = {
 
     val control =
       <.div(
         ExploreStyles.JustifiedEndTileControl,
+        InviteUserPopup(pid, ref),
         Button(
           severity = Button.Severity.Secondary,
           size = Button.Size.Small,
           loading = createInvite.get == CreateInviteProcess.Running,
           icon = Icons.UserPlus,
-          tooltip = "Create CoI invitation"
-          // onClick = createInvitation(createInvite, pid).runAsync
+          tooltip = "Create CoI invitation",
+          onClickE = ref.toggle
         ).tiny.compact
       )
 
     Tile(ProposalTabTileIds.UsersId.id,
          "Investigators",
          canMinimize = true,
-         control = _ => control.some
-    )(_ => ProgramUsers(pid, users, invitations, createInvite))
+         control = s => control.some.filter(_ => s === TileSizeState.Minimized)
+    )(r => ProgramUsers(pid, users, invitations, r, ref))
   }
 
   private type Props = ProgramUsers
@@ -86,11 +80,16 @@ object ProgramUsers:
       .useState(CreateInviteProcess.Idle)
       .render: (props, create) =>
         <.div(
-          OverlayPanel(true)(
-            Button(icon = Icons.UserPlus, tooltip = "Create CoI invitation").tiny.compact
+          InviteUserPopup(props.pid, props.ref),
+          props.inTitle(
+            Button(
+              severity = Button.Severity.Secondary,
+              size = Button.Size.Small,
+              icon = Icons.UserPlus,
+              tooltip = "Create CoI invitation",
+              onClickE = props.ref.toggle
+            ).tiny.compact
           ),
-          // if (props.addUser.get.value) InviteUserPopup(props.pid, props.users, props.addUser)
-          // else EmptyVdom,
           ProgramUsersTable(props.users),
           "Pending invitations".when(props.invitations.nonEmpty),
           ProgramUserInvitations(props.invitations).when(props.invitations.nonEmpty)

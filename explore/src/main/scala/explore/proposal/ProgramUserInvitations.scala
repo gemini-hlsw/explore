@@ -4,15 +4,13 @@
 package explore.proposal
 
 import cats.syntax.all.*
-import explore.model.ProgramUserWithRole
+import explore.model.UserInvitation
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import explore.model.UserInvitation
-import explore.model.UserInvitation
 
 case class ProgramUserInvitations(users: List[UserInvitation])
     extends ReactFnProps(ProgramUserInvitations.component)
@@ -22,10 +20,12 @@ object ProgramUserInvitations:
 
   private val ColDef = ColumnDef[UserInvitation]
 
-  private val KeyId: ColumnId = ColumnId("id")
+  private val KeyId: ColumnId   = ColumnId("id")
+  private val EmailId: ColumnId = ColumnId("email")
 
   private val columnNames: Map[ColumnId, String] = Map(
-    KeyId -> "ID"
+    KeyId   -> "ID",
+    EmailId -> "email"
   )
 
   private def column[V](
@@ -36,7 +36,8 @@ object ProgramUserInvitations:
 
   private val columns: List[ColumnDef[UserInvitation, ?]] =
     List(
-      column(KeyId, _.id)
+      column(KeyId, _.id),
+      column(EmailId, _.email)
     )
 
   private val component =

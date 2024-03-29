@@ -187,6 +187,10 @@ object Icons {
   val faChevronDoubleDown: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faPaperPlaneTop")
+  val faPaperPlaneTop: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faRectangleList")
   val faListAlt: FAIcon = js.native
 
@@ -364,6 +368,7 @@ object Icons {
     faChevronDown,
     faChevronDoubleUp,
     faChevronDoubleDown,
+    faPaperPlaneTop,
     faListAlt,
     faListCheck,
     faCompress,
@@ -476,6 +481,7 @@ object Icons {
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
   val Files                = FontAwesomeIcon(faFiles)
   val Angle                = FontAwesomeIcon(faAngle)
+  val PaperPlaneTop        = FontAwesomeIcon(faPaperPlaneTop)
 
   val MissingInfoIcon = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
   val ErrorIcon       = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)
