@@ -14,22 +14,6 @@ object InvitationQueriesGQL:
       mutation inviteToProgram($$programId: ProgramId!, $$recipientEmail: String!) {
         createUserInvitation(input: { programId: $$programId, recipientEmail: $$recipientEmail, role: COI }) {
           key
-          invitation {
-            id
-            status
-            issuer {
-              id
-            }
-            redeemer {
-              id
-            }
-            program {
-              id
-            }
-            role
-            supportType
-            supportPartner
-          }
         }
       }
     """
