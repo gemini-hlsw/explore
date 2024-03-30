@@ -9,9 +9,11 @@ import cats.syntax.all.*
 import explore.model.enums.GridLayoutSection
 import lucuma.react.gridlayout.*
 import monocle.Focus
+import monocle.Iso
 import monocle.Lens
 import monocle.Traversal
 import monocle.function.At.*
+import monocle.function.Each
 import monocle.function.Each.*
 
 import scala.collection.immutable.SortedMap
@@ -33,7 +35,7 @@ object layout {
 
   val breakpoints: Map[BreakpointName, (LayoutWidth, LayoutCols)] =
     Map(
-      (BreakpointName.lg, (LargeCutoff, 12)),
+      (BreakpointName.lg, (LargeCutoff, 16)),
       (BreakpointName.md, (MediumCutoff, 10)),
       (BreakpointName.sm, (SmallCutoff, 8))
     )
@@ -68,6 +70,24 @@ object layout {
 
   def breakpointLayout(bn: BreakpointName): Traversal[LayoutsMap, Layout] =
     at[LayoutsMap, BreakpointName, Option[LayoutEntry]](bn).some.andThen(Focus[LayoutEntry](_._3))
+
+  given Each[Layout, LayoutItem] =
+    Each.fromIso(Iso[Layout, List[LayoutItem]](_.asList)(Layout.apply))
+
+  extension (l: LayoutsMap)
+    def breakpointProportionalWidth(
+      current: BreakpointName,
+      next:    BreakpointName
+    ): LayoutsMap = {
+      val maxCols  = breakpointCols(current)
+      val nextCols = breakpointCols(next)
+      val ratio    = nextCols.toDouble / maxCols.toDouble
+
+      breakpointLayout(next).each.modify { li =>
+        if (ratio < 1) li
+        else li.copy(w = (li.w * ratio).toInt)
+      }(l)
+    }
 
   val layoutItem: Lens[Layout, List[LayoutItem]] =
     Lens[Layout, List[LayoutItem]](_.asList)(list => _ => Layout(list))

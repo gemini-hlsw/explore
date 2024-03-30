@@ -162,7 +162,12 @@ object TileController:
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileTitleControlArea.htmlClass}",
-          onBreakpointChange = (bk: BreakpointName, _: Int) => breakpoint.setState(bk),
+          onBreakpointChange = (bk: BreakpointName, i: Int) =>
+            currentLayout
+              .mod(_.breakpointProportionalWidth(breakpoint.value, bk))
+              .when_(breakpoint.value =!= bk) *>
+              breakpoint
+                .setState(bk),
           onLayoutChange = (m: Layout, newLayouts: Layouts) =>
             // Store the current layout in the state for debugging
             currentLayout
@@ -178,7 +183,7 @@ object TileController:
               // Show tile properties on the title if enabled
               currentLayout.get
                 .get(breakpoint.value)
-                .flatMap { case (_, _, l) =>
+                .flatMap { case (p, c, l) =>
                   l.asList
                     .find(_.i === t.id.value)
                     .flatMap { i =>
@@ -186,7 +191,7 @@ object TileController:
                         .devOnly(
                           <.div(
                             ^.cls := "rgl-tile-overlay",
-                            s"id: ${i.i} st: ${t.state} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
+                            s"id: ${i.i} width: ${p} cols: $c bp: ${breakpoint.value} x: ${i.x} y: ${i.y} w: ${i.w} h: ${i.h}${i.minH.toOption
                                 .foldMap(m => s" minH: $m")}${i.maxH.toOption
                                 .foldMap(m => s" maxH: $m")}${i.minW.toOption
                                 .foldMap(m => s" minW: $m")}${i.maxW.toOption
