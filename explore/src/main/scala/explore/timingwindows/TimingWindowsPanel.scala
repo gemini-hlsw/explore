@@ -10,8 +10,10 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
+import explore.common.TimingWindowsQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.Constants.BadTimingWindow
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
@@ -29,6 +31,7 @@ import lucuma.core.util.Timestamp
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
 import lucuma.react.datepicker.Datepicker
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
@@ -86,6 +89,7 @@ object TimingWindowsPanel:
 
   private val DeleteColWidth = 20
   private val WindowColId    = "TimingWindow"
+  private val ErrorColId     = "Error"
   private val DeleteColId    = "Delete"
 
   private val component =
@@ -101,6 +105,16 @@ object TimingWindowsPanel:
               _._1,
               size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
             ).setCell(_.value.renderVdom).some,
+            ColDef(
+              ColumnId(ErrorColId),
+              _._2,
+              size = DeleteColWidth.toPx
+            ).setCell { c =>
+              val isValid = c.row.getValue(WindowColId).isValid
+              if (isValid) EmptyVdom
+              else
+                <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow)
+            }.some,
             ColDef(
               ColumnId(DeleteColId),
               _._2,
@@ -213,7 +227,10 @@ object TimingWindowsPanel:
                     .showTimeInput(true)
                     .selected(selectedStart.get.toInstant.toDatePickerJsDate)
                     .dateFormat("yyyy-MM-dd HH:mm"),
-                  " UTC"
+                  " UTC ",
+                  <.span(Icons.ErrorIcon)
+                    .withTooltip("Check start date is before the end")
+                    .unless(tw.get.isValid)
                 )
               ),
               <.div(ExploreStyles.TimingWindowEditorBody)(
@@ -263,7 +280,11 @@ object TimingWindowsPanel:
                         .showTimeInput(true)
                         .selected(endAt.get.toInstant.toDatePickerJsDate)
                         .dateFormat("yyyy-MM-dd HH:mm"),
-                      <.span(" UTC")
+                      " UTC  ",
+                      if (tw.get.isValid) EmptyVdom
+                      else
+                        <.span(Icons.ErrorIcon)
+                          .withTooltip("Check start date is before the end")
                     )
                   )
                 ),
