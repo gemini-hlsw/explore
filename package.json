@@ -40,7 +40,7 @@
     "less": "4.2.0",
     "less-watch-compiler": "1.16.3",
     "prettier": "^3.2.5",
-    "sass": "^1.71.1",
+    "sass": "^1.72.0",
     "stylelint": "^15.11.0",
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-standard-scss": "^11.1.0",
