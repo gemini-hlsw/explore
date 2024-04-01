@@ -37,11 +37,12 @@ object ExploreGridLayouts:
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =
     SortedMap.from(GridLayoutSection.values.map(l => l -> sectionLayout(l)))
 
+  private val DefaultWidth: NonNegInt      = 10.refined
+  private val DefaultLargeWidth: NonNegInt = 16.refined
+
   object constraints:
     private val ConstraintsHeight: NonNegInt   = 4.refined
     private val TimingWindowsHeight: NonNegInt = 14.refined
-    private val DefaultWidth: NonNegInt        = 10.refined
-    private val DefaultLargeWidth: NonNegInt   = 12.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -74,9 +75,7 @@ object ExploreGridLayouts:
     )
 
   object scheduling:
-    private val SchedulingHeight: NonNegInt  = 14.refined
-    private val DefaultWidth: NonNegInt      = 10.refined
-    private val DefaultLargeWidth: NonNegInt = 12.refined
+    private val SchedulingHeight: NonNegInt = 14.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -101,15 +100,13 @@ object ExploreGridLayouts:
     )
 
   object targets:
-    private val SummaryHeight: NonNegInt     = 6.refined
-    private val SummaryMinHeight: NonNegInt  = 4.refined
-    private val TargetHeight: NonNegInt      = 18.refined
-    private val TargetMinHeight: NonNegInt   = 15.refined
-    private val SkyPlotHeight: NonNegInt     = 9.refined
-    private val SkyPlotMinHeight: NonNegInt  = 6.refined
-    private val TileMinWidth: NonNegInt      = 5.refined
-    private val DefaultWidth: NonNegInt      = 10.refined
-    private val DefaultLargeWidth: NonNegInt = 12.refined
+    private val SummaryHeight: NonNegInt    = 6.refined
+    private val SummaryMinHeight: NonNegInt = 4.refined
+    private val TargetHeight: NonNegInt     = 18.refined
+    private val TargetMinHeight: NonNegInt  = 15.refined
+    private val SkyPlotHeight: NonNegInt    = 9.refined
+    private val SkyPlotMinHeight: NonNegInt = 6.refined
+    private val TileMinWidth: NonNegInt     = 5.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -191,9 +188,7 @@ object ExploreGridLayouts:
     private val ItcMaxHeight: NonNegInt           = 9.refined
     private val FinderChartMinHeight: NonNegInt   = 6.refined
     private val FinderChartHeight: NonNegInt      = 9.refined
-    private val DefaultWidth: NonNegInt           = 10.refined
     private val TileMinWidth: NonNegInt           = 6.refined
-    private val DefaultLargeWidth: NonNegInt      = 12.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -299,8 +294,6 @@ object ExploreGridLayouts:
     private val ChangeRequestsHeight: NonNegInt    = 6.refined
     private val ChangeRequestsMinHeight: NonNegInt = 4.refined
     private val TileMinWidth: NonNegInt            = 6.refined
-    private val DefaultWidth: NonNegInt            = 10.refined
-    private val DefaultLargeWidth: NonNegInt       = 12.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -349,8 +342,6 @@ object ExploreGridLayouts:
     private val ObsAttachmentsHeight: NonNegInt       = 8.refined
     private val ObsAttachmentsMinHeight: NonNegInt    = 6.refined
     private val TileMinWidth: NonNegInt               = 8.refined
-    private val DefaultWidth: NonNegInt               = 10.refined
-    private val DefaultLargeWidth: NonNegInt          = 12.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -394,8 +385,6 @@ object ExploreGridLayouts:
     private val AttachmentsHeight: NonNegInt    = 8.refined
     private val AttachmentsMinHeight: NonNegInt = 6.refined
     private val TileMinWidth: NonNegInt         = 6.refined
-    private val DefaultWidth: NonNegInt         = 10.refined
-    private val DefaultLargeWidth: NonNegInt    = 12.refined
 
     private val layoutMedium: Layout = Layout(
       List(
@@ -453,8 +442,6 @@ object ExploreGridLayouts:
     val NotesHeight: NonNegInt        = 8.refined
     val NotesMinHeight: NonNegInt     = 4.refined
     val TileMinWidth: NonNegInt       = 6.refined
-    val DefaultWidth: NonNegInt       = 10.refined
-    val DefaultLargeWidth: NonNegInt  = 12.refined
 
     private val layoutMedium: Layout = Layout(
       List(
