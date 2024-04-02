@@ -11,7 +11,7 @@ object InvitationQueriesGQL:
   @GraphQL
   trait CreateInviteMutation extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
-      mutation inviteToProgram($$programId: ProgramId!, $$recipientEmail: String!) {
+      mutation($$programId: ProgramId!, $$recipientEmail: String!) {
         createUserInvitation(input: { programId: $$programId, recipientEmail: $$recipientEmail, role: COI }) {
           key
         }

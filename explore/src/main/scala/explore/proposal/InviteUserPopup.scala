@@ -99,7 +99,7 @@ object InviteUserPopup:
               ).when(key.when(_.isDefined)),
               key.get.map(key =>
                 <.div(LucumaPrimeStyles.FormColumn)(
-                  CopyControl("Invite Link", dom.window.location.origin + s"/reedem-invite/${key}")
+                  CopyControl("Invite Link", dom.window.location.origin + s"/redeem-invite/${key}")
                 )
               )
             ),

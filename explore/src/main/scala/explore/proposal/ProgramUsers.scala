@@ -91,6 +91,10 @@ object ProgramUsers:
             ).tiny.compact
           ),
           ProgramUsersTable(props.users),
-          "Pending invitations".when(props.invitations.nonEmpty),
-          ProgramUserInvitations(props.invitations).when(props.invitations.nonEmpty)
+          React
+            .Fragment(
+              "Pending invitations",
+              ProgramUserInvitations(props.invitations)
+            )
+            .when(props.invitations.nonEmpty)
         )
