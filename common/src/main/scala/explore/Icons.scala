@@ -470,4 +470,7 @@ object Icons {
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
   val Files                = FontAwesomeIcon(faFiles)
   val Angle                = FontAwesomeIcon(faAngle)
+
+  val MissingInfoIcon = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
+  val ErrorIcon       = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)
 }

@@ -14,6 +14,8 @@ import explore.syntax.ui.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.util.Effect.Dispatch
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.TimingWindowEnd
+import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -21,22 +23,33 @@ import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.UpdateObservationMutation
 
 object TimingWindowsQueries:
+  extension (tw: TimingWindow)
+    // TODO Move to lucuma-core
+    def isValid: Boolean =
+      tw.end.flatMap(TimingWindowEnd.at.getOption).forall(_.instant > tw.start)
+
   def viewWithRemoteMod[F[_]: MonadThrow: Dispatch](
     obsIds: ObsIdSet,
     view:   View[List[TimingWindow]]
   )(using FetchClient[F, ObservationDB], Logger[F], ToastCtx[F]): View[List[TimingWindow]] =
     view
-      .withOnMod(value =>
-        UpdateObservationMutation[F]
-          .execute(
-            UpdateObservationsInput(
-              WHERE = obsIds.toList.toWhereObservation.assign,
-              SET = ObservationPropertiesInput(
-                timingWindows = value.map(_.toInput).assign
-              )
-            )
-          )
-          .toastErrors
-          .void
-          .runAsync
-      )
+      .withOnMod: value =>
+        (if (value.forall(_.isValid))
+           ToastCtx[F].clear() *> UpdateObservationMutation[F]
+             .execute(
+               UpdateObservationsInput(
+                 WHERE = obsIds.toList.toWhereObservation.assign,
+                 SET = ObservationPropertiesInput(
+                   timingWindows = value.filter(_.isValid).map(_.toInput).assign
+                 )
+               )
+             )
+             .toastErrors
+             .void
+         else
+           ToastCtx[F].clear() *> ToastCtx[F]
+             .showToast("Invalid timing window(s), changes not saved",
+                        severity = Message.Severity.Error,
+                        sticky = true
+             )
+             .void).runAsync

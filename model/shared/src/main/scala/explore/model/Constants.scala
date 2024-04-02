@@ -51,5 +51,7 @@ trait Constants:
 
   val NoGuideStarMessage = "No guidestar available"
   val MissingInfo        = "No mode or target information available"
+  val BadTimingWindow    = "Review the dates on this timing window."
+  val MissingInfoMsg     = "Not enough information to call ITC"
 
 object Constants extends Constants

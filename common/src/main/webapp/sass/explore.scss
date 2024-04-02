@@ -36,6 +36,11 @@ $tree-section-width: 300px;
   width: 1px;
   white-space: nowrap;
 }
+
+.react-datepicker__day--disabled {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
 /* stylelint-enable selector-class-pattern */
 
 // Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
@@ -864,6 +869,10 @@ $search-preview-margin: 5px;
   svg.fa-circle-small.explore-error-icon {
     color: var(--error-background-color);
   }
+}
+
+svg.fa-triangle-exclamation.explore-error-icon {
+  color: var(--negative-icon-color);
 }
 
 .aladin-status-current-coordinates {
