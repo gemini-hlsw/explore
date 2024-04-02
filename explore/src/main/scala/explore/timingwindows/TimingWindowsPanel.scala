@@ -226,7 +226,13 @@ object TimingWindowsPanel:
                   )
                     .showTimeInput(true)
                     .selected(selectedStart.get.toInstant.toDatePickerJsDate)
-                    .dateFormat("yyyy-MM-dd HH:mm"),
+                    .dateFormat("yyyy-MM-dd HH:mm")
+                    .maxDate(
+                      selectedEnd.get
+                        .flatMap(TimingWindowEnd.at.getOption)
+                        .map(_.instant.toInstant.toDatePickerJsDate)
+                        .orNull
+                    ),
                   " UTC ",
                   <.span(Icons.ErrorIcon)
                     .withTooltip("Check start date is before the end")
@@ -279,7 +285,8 @@ object TimingWindowsPanel:
                       )
                         .showTimeInput(true)
                         .selected(endAt.get.toInstant.toDatePickerJsDate)
-                        .dateFormat("yyyy-MM-dd HH:mm"),
+                        .dateFormat("yyyy-MM-dd HH:mm")
+                        .minDate(selectedStart.get.toInstant.toDatePickerJsDate),
                       " UTC  ",
                       if (tw.get.isValid) EmptyVdom
                       else
