@@ -29,7 +29,9 @@ object GroupElement:
 
   given Decoder[GroupElement] = Decoder.instance(c =>
     for {
-      value         <- groupObsOr(_.get[Grouping]("group"))(c)
+      value         <- c.get[Grouping]("group")
+                         .map(_.asRight)
+                         .orElse(c.get[GroupObs]("observation").map(_.asLeft))
       parentGroupId <- c.get[Option[Group.Id]]("parentGroupId")
     } yield GroupElement(
       value,
@@ -37,13 +39,14 @@ object GroupElement:
     )
   )
 
-  given Decoder[Either[GroupObs, GroupingElement]] =
-    Decoder.instance(groupObsOr(_.get[GroupingElement]("group")))
+  given Decoder[Either[ObsElement, GroupingElement]] =
+    Decoder.instance(c =>
+      c.get[GroupingElement]("group")
+        .map(_.asRight)
+        .orElse(c.get[ObsElement]("observation").map(_.asLeft))
+    )
 
-  private def groupObsOr[B](f: HCursor => Decoder.Result[B]) = (c: HCursor) =>
-    f(c).map(_.asRight).orElse(c.get[GroupObs]("observation").map(_.asLeft))
-
-case class GroupObs(id: Observation.Id, groupIndex: NonNegShort, existence: Option[Existence])
+case class GroupObs(id: Observation.Id, groupIndex: NonNegShort, existence: Existence)
     derives Eq,
       Decoder
 
@@ -51,7 +54,7 @@ case class Grouping(
   id:              Group.Id,
   name:            Option[NonEmptyString],
   minimumRequired: Option[NonNegShort],
-  elements:        List[Either[GroupObs, GroupingElement]],
+  elements:        List[Either[ObsElement, GroupingElement]],
   parentId:        Option[Group.Id],
   parentIndex:     NonNegShort,
   minimumInterval: Option[TimeSpan],
@@ -64,4 +67,5 @@ case class Grouping(
 
   def toIndex: GroupTree.Index = Index(parentId.map(_.asRight), parentIndex)
 
-case class GroupingElement(id: Group.Id, parentIndex: NonNegShort) derives Eq, Decoder
+case class ObsElement(id: Observation.Id) derives Eq, Decoder
+case class GroupingElement(id: Group.Id) derives Eq, Decoder
