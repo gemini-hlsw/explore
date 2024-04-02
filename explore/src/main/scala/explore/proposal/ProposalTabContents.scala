@@ -13,7 +13,6 @@ import crystal.react.hooks.*
 import explore.*
 import explore.DefaultErrorPolicy
 import explore.Icons
-import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ProgramDetails
@@ -46,7 +45,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.common.ProgramQueriesGQL.*
+import queries.common.ProposalQueriesGQL.*
 
 case class ProposalTabContents(
   programId:         Program.Id,
@@ -68,11 +67,11 @@ object ProposalTabContents:
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     programDetails.zoom(ProgramDetails.proposal).set(proposal.some) >>
-      UpdateProgramsMutation[IO]
+      CreateProposalMutation[IO]
         .execute(
-          UpdateProgramsInput(
-            WHERE = programId.toWhereProgram.assign,
-            SET = ProgramPropertiesInput(proposal = proposal.toInput.assign)
+          CreateProposalInput(
+            programId = programId,
+            SET = proposal.toInput
           )
         )
         .toastErrors
@@ -101,7 +100,9 @@ object ProposalTabContents:
 
     def updateStatus(newStatus: ProposalStatus): Callback =
       (for {
-        _ <- ProgramQueries.updateProposalStatus[IO](programId, newStatus)
+        _ <- SetProposalStatus[IO]
+               .execute(SetProposalStatusInput(programId = programId.assign, status = newStatus))
+               .void
         _ <- programDetails.zoom(ProgramDetails.proposalStatus).set(newStatus).toAsync
       } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
 

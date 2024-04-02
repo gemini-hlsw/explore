@@ -72,7 +72,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
-import queries.common.ProgramQueriesGQL
+import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
@@ -190,7 +190,7 @@ object ProposalEditor:
       .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
   private def renderDetails(
-    aligner:           Aligner[Proposal, Input[ProposalInput]],
+    aligner:           Aligner[Proposal, ProposalPropertiesInput],
     undoCtx:           UndoContext[Proposal],
     totalHours:        View[Hours],
     minPct2:           View[IntPercent],
@@ -203,22 +203,22 @@ object ProposalEditor:
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.title, t => _.map(ProposalInput.title.modify(t)))
+      aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
 
     val classAligner: Aligner[ProposalClass, Input[ProposalClassInput]] =
-      aligner.zoom(Proposal.proposalClass, c => _.map(ProposalInput.proposalClass.modify(c)))
+      aligner.zoom(Proposal.proposalClass, ProposalPropertiesInput.proposalClass.modify)
 
     val classView: View[ProposalClass] = classAligner.view(_.toInput.assign)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
-      aligner.zoom(Proposal.category, c => _.map(ProposalInput.category.modify(c)))
+      aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
 
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
 
     val activationAligner: Aligner[ToOActivation, Input[ToOActivation]] =
-      aligner.zoom(Proposal.toOActivation, a => _.map(ProposalInput.toOActivation.modify(a)))
+      aligner.zoom(Proposal.toOActivation, ProposalPropertiesInput.toOActivation.modify)
 
     val activationView: View[ToOActivation] = activationAligner.view(_.assign)
 
@@ -403,21 +403,19 @@ object ProposalEditor:
   )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
-    val undoCtx: UndoContext[Proposal]                   = UndoContext(undoStacks, proposal)
-    val aligner: Aligner[Proposal, Input[ProposalInput]] =
+    val undoCtx: UndoContext[Proposal]                      = UndoContext(undoStacks, proposal)
+    val aligner: Aligner[Proposal, ProposalPropertiesInput] =
       Aligner(
         undoCtx,
-        UpdateProgramsInput(
-          WHERE = programId.toWhereProgram.assign,
-          SET = ProgramPropertiesInput(proposal = ProposalInput().assign)
+        UpdateProposalInput(
+          programId = programId.assign,
+          SET = ProposalPropertiesInput()
         ),
-        (ProgramQueriesGQL.UpdateProgramsMutation[IO].execute(_)).andThen(_.void)
-      ).zoom(Iso.id[Proposal].asLens,
-             UpdateProgramsInput.SET.andThen(ProgramPropertiesInput.proposal).modify
-      )
+        (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
+      ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
     val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitInput]]] =
-      aligner.zoom(Proposal.partnerSplits, s => _.map(ProposalInput.partnerSplits.modify(s)))
+      aligner.zoom(Proposal.partnerSplits, ProposalPropertiesInput.partnerSplits.modify)
 
     val splitsView: View[SortedMap[Partner, IntPercent]] =
       splitsAligner.view(
@@ -453,7 +451,7 @@ object ProposalEditor:
       )
 
     val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.abstrakt, t => _.map(ProposalInput.`abstract`.modify(t)))
+      aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
 
     val abstractView = abstractAligner.view(_.orUnassign)
     val abstractTile =
