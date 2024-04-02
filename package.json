@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@cquiroz/aladin-lite": "0.7.7",
-    "@floating-ui/react": "^0.26.9",
+    "@floating-ui/react": "^0.26.10",
     "@fontsource/lato": "^5.0.20",
     "@fortawesome/fontawesome-pro": "^6.5.1",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
