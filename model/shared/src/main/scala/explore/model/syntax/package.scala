@@ -97,9 +97,6 @@ object all:
 
   extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)
 
-  extension (e: Either[GroupObs, GroupingElement])
-    def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)
-
   extension (e: Either[GroupObs, Grouping])
     @targetName("groupIndexGrouping")
     def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)

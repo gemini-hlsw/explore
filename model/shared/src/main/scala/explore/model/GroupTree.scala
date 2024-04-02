@@ -32,22 +32,22 @@ object GroupTree:
 
   def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
-    val groupMap = groups
-      .flatMap(_.value.toOption.map(group => (group.id, group)))
-      .toMap
+    val (obsList, groupList) = groups.partitionMap(_.value)
+    val obsMap               = obsList.map(obs => (obs.id, obs)).toMap
+    val groupMap             = groupList.map(group => (group.id, group)).toMap
 
-    def createObsNode(obs: GroupObs): Option[Node] =
-      obs.existence.filter(_ === Existence.Present).as(TreeNode(Obs(obs.id).asLeft[Group], Nil))
+    def createObsNode(obs: GroupObs): Node = TreeNode(Obs(obs.id).asLeft[Group], Nil)
 
     def createGroupNode(group: Grouping): Node =
       val children = group.elements
-        .sortBy(_.groupIndex)
         .flatMap(
           _.fold(
-            createObsNode(_),
-            group => groupMap.get(group.id).map(createGroupNode)
+            obs => obsMap.get(obs.id).filter(_.existence === Existence.Present).map(_.asLeft),
+            group => groupMap.get(group.id).map(_.asRight)
           )
         )
+        .sortBy(_.groupIndex)
+        .map(_.fold(createObsNode(_), createGroupNode))
       TreeNode(group.toGroupTreeGroup.asRight, children)
 
     val rootGroups =
@@ -55,7 +55,7 @@ object GroupTree:
         .mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
         .sortBy(_.groupIndex)
 
-    val nodes = rootGroups.flatMap(_.fold(createObsNode, g => createGroupNode(g).some))
+    val nodes = rootGroups.map(_.fold(createObsNode, createGroupNode))
 
     KeyedIndexedTree.fromTree(Tree(nodes), _.id)
   }

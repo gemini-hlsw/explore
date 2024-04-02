@@ -43,11 +43,9 @@ object GroupQueriesGQL:
         elements {
           observation {
             id
-            groupIndex
           }
           group {
             id
-            parentIndex
           }
         }
       }
