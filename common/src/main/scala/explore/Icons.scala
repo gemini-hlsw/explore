@@ -139,6 +139,10 @@ object Icons {
   val faUserGears: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faUserPlus")
+  val faUserPlus: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
   val faExclamationTriangle: FAIcon = js.native
 
@@ -181,6 +185,10 @@ object Icons {
   @js.native
   @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronsDown")
   val faChevronDoubleDown: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faPaperPlaneTop")
+  val faPaperPlaneTop: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faRectangleList")
@@ -348,6 +356,7 @@ object Icons {
     faInfoCircleLight,
     faTimes,
     faUserGears,
+    faUserPlus,
     faExclamationTriangle,
     faExclamationDiamond,
     faSkullCrossbones,
@@ -359,6 +368,7 @@ object Icons {
     faChevronDown,
     faChevronDoubleUp,
     faChevronDoubleDown,
+    faPaperPlaneTop,
     faListAlt,
     faListCheck,
     faCompress,
@@ -428,6 +438,7 @@ object Icons {
   val ExclamationTriangle  = FontAwesomeIcon(faExclamationTriangle)
   val ExclamationDiamond   = FontAwesomeIcon(faExclamationDiamond)
   val UserGears            = FontAwesomeIcon(faUserGears)
+  val UserPlus             = FontAwesomeIcon(faUserPlus)
   val Logout               = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones      = FontAwesomeIcon(faSkullCrossbones)
   val Note                 = FontAwesomeIcon(faNote)
@@ -470,6 +481,7 @@ object Icons {
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
   val Files                = FontAwesomeIcon(faFiles)
   val Angle                = FontAwesomeIcon(faAngle)
+  val PaperPlaneTop        = FontAwesomeIcon(faPaperPlaneTop)
 
   val MissingInfoIcon = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
   val ErrorIcon       = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)

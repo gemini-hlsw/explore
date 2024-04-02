@@ -118,6 +118,7 @@ object ProposalTabContents:
             undoStacks,
             timeEstimateRange,
             users,
+            details.invitations,
             attachments,
             userVault.map(_.token),
             layout,

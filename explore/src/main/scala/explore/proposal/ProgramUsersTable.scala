@@ -5,6 +5,7 @@ package explore.proposal
 
 import cats.syntax.all.*
 import explore.model.ProgramUserWithRole
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.*
@@ -44,8 +45,6 @@ object ProgramUsersTable:
       column(OrcidIdColumnId, _.user.profile.map(_.orcidId.value).orEmpty),
       column(RoleColumnId, _.roleName)
     )
-
-  given Reusability[ProgramUserWithRole] = Reusability.byEq
 
   private val component =
     ScalaFnComponent

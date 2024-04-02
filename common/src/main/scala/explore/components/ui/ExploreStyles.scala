@@ -226,6 +226,10 @@ object ExploreStyles:
   val PartnerSplitFlag: Css        = Css("partner-split-flag")
 
   val PartnerSplitsEditorDialog: Css = Css("partner-splits-editor-dialog")
+  val CompactOverlayPanel: Css       = Css("compact-overlay-panel")
+
+  // User invite
+  val InviteUserPopup: Css = Css("invite-user-popup")
 
   // Semantic UI form overrides and extensions
   val Grid: Css                   = Css("explore-grid")
