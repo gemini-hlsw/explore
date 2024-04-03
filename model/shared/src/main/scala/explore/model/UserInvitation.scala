@@ -24,6 +24,7 @@ enum InvitationStatus(val tag: String) derives Enumerated:
   case Declined extends InvitationStatus("declined")
   case Revoked  extends InvitationStatus("revoked")
 
+// TODO: move to lucuma-core
 case class UserInvitation(id: String, email: RefinedEmail, status: InvitationStatus) derives Eq
 
 object UserInvitation:

@@ -398,7 +398,7 @@ object ProposalEditor:
     createInvite:      View[CreateInviteProcess],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
-    invitations:       List[UserInvitation],
+    invitations:       View[List[UserInvitation]],
     attachments:       View[List[ProposalAttachment]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
@@ -544,6 +544,7 @@ object ProposalEditor:
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
+      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _) => props.invitations)
       .render {
         (
           props,
@@ -556,7 +557,8 @@ object ProposalEditor:
           _,
           resize,
           createInvite,
-          overlayRef
+          overlayRef,
+          invitations
         ) =>
           renderFn(
             props.programId,
@@ -571,7 +573,7 @@ object ProposalEditor:
             createInvite,
             props.timeEstimateRange,
             props.users,
-            props.invitations,
+            invitations,
             props.attachments,
             props.authToken,
             props.layout,

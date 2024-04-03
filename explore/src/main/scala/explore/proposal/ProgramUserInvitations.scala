@@ -28,7 +28,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
 
-case class ProgramUserInvitations(invitations: List[UserInvitation])
+case class ProgramUserInvitations(invitations: View[List[UserInvitation]])
     extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
@@ -52,7 +52,7 @@ object ProgramUserInvitations:
   ): ColumnDef.Single[UserInvitation, V] =
     ColDef(id, accessor, columnNames(id))
 
-  private def columns(active: View[IsActive])(
+  private def columns(active: View[IsActive], invitations: View[List[UserInvitation]])(
     ctx: AppContext[IO]
   ): List[ColumnDef[UserInvitation, ?]] =
     import ctx.given
@@ -67,7 +67,8 @@ object ProgramUserInvitations:
           val email  = cell.value.email
           val id     = cell.value.id
           val action =
-            RevokeInvitationMutation[IO].execute(id)
+            RevokeInvitationMutation[IO].execute(id) *>
+              invitations.mod(_.filterNot(_.id === id)).to[IO]
 
           val revoke = deleteConfirmation(
             s"This action will revoke the invitation to $email. This action cannot be reversed.",
@@ -76,6 +77,7 @@ object ProgramUserInvitations:
             action.void,
             active
           )
+
           <.div(
             ExploreStyles.ApiKeyDelete,
             Button(
@@ -95,11 +97,11 @@ object ProgramUserInvitations:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
-      .useMemoBy((_, _, x) => x.reuseByValue)((_, ctx, _) =>
-        active => columns(active)(ctx)
+      .useMemoBy((_, _, x) => x.reuseByValue)((p, ctx, _) =>
+        active => columns(active, p.invitations)(ctx)
       )                           // columns
       .useMemoBy((props, _, _, _) =>
-        props.invitations.filter(_.status === InvitationStatus.Pending)
+        props.invitations.get.filter(_.status === InvitationStatus.Pending)
       )((_, _, _, _) => identity) // rows
       .useReactTableBy((props, _, _, cols, rows) =>
         TableOptions(cols, rows, getRowId = (row, _, _) => RowId(row.id.toString))
