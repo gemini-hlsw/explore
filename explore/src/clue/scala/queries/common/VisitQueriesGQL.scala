@@ -14,7 +14,7 @@ object VisitQueriesGQL:
   @GraphQL
   trait ObservationVisits extends GraphQLOperation[ObservationDB]:
     val document = s"""
-      query($$obsId: ObservationId!) {
+      query($$obsId: ObservationId!, $$visitIdOffset: VisitId) {
         observation(observationId: $$obsId) {
           execution $ExecutionVisitsSubquery
         }
