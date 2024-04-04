@@ -26,6 +26,7 @@ import japgolly.scalajs.react.React
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramType
 import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
@@ -232,7 +233,12 @@ object ExploreLayout:
                 "side-tabs".refined,
                 routingInfoView.zoom(RoutingInfo.appTab),
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
-                _.separatorAfter
+                _.separatorAfter,
+                tab =>
+                  props.view.get.programSummaries
+                    .flatMap(_.optProgramDetails)
+                    .map(_.programType === ProgramType.Science || tab =!= AppTab.Proposal)
+                    .getOrElse(true)
               ),
               if (showProgsPopup)
                 ProgramsPopup(
