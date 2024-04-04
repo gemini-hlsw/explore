@@ -12,12 +12,12 @@ import explore.Icons
 import explore.components.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.InvitationStatus
+import explore.model.CoIInvitation
 import explore.model.IsActive
-import explore.model.UserInvitation
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.InvitationStatus
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.primereact.Button
@@ -28,13 +28,13 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
 
-case class ProgramUserInvitations(invitations: View[List[UserInvitation]])
+case class ProgramUserInvitations(invitations: View[List[CoIInvitation]])
     extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
   private type Props = ProgramUserInvitations
 
-  private val ColDef = ColumnDef[UserInvitation]
+  private val ColDef = ColumnDef[CoIInvitation]
 
   private val KeyId: ColumnId    = ColumnId("id")
   private val EmailId: ColumnId  = ColumnId("email")
@@ -48,13 +48,13 @@ object ProgramUserInvitations:
 
   private def column[V](
     id:       ColumnId,
-    accessor: UserInvitation => V
-  ): ColumnDef.Single[UserInvitation, V] =
+    accessor: CoIInvitation => V
+  ): ColumnDef.Single[CoIInvitation, V] =
     ColDef(id, accessor, columnNames(id))
 
-  private def columns(active: View[IsActive], invitations: View[List[UserInvitation]])(
+  private def columns(active: View[IsActive], invitations: View[List[CoIInvitation]])(
     ctx: AppContext[IO]
-  ): List[ColumnDef[UserInvitation, ?]] =
+  ): List[ColumnDef[CoIInvitation, ?]] =
     import ctx.given
     List(
       column(KeyId, _.id),

@@ -12,13 +12,13 @@ import explore.components.Tile
 import explore.components.Tile.RenderInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.InvitationStatus
+import explore.model.CoIInvitation
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalTabTileIds
-import explore.model.UserInvitation
 import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.InvitationStatus
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
@@ -37,7 +37,7 @@ enum CreateInviteProcess(private val tag: String) derives Enumerated:
 case class ProgramUsers(
   pid:         Program.Id,
   users:       List[ProgramUserWithRole],
-  invitations: View[List[UserInvitation]],
+  invitations: View[List[CoIInvitation]],
   inTitle:     RenderInTitle,
   ref:         OverlayPanelRef
 ) extends ReactFnProps(ProgramUsers.component)
@@ -47,7 +47,7 @@ object ProgramUsers:
   def programUsersTile(
     pid:          Program.Id,
     users:        List[ProgramUserWithRole],
-    invitations:  View[List[UserInvitation]],
+    invitations:  View[List[CoIInvitation]],
     createInvite: View[CreateInviteProcess],
     ref:          OverlayPanelRef
   )(using AppContext[IO], Logger[IO]) = {

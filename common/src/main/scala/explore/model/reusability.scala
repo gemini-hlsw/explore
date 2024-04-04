@@ -139,6 +139,6 @@ object reusability:
 
   given Reusability[ProgramUserWithRole] = Reusability.byEq
 
-  given Reusability[UserInvitation] = Reusability.byEq
+  given Reusability[CoIInvitation] = Reusability.byEq
 
   given Reusability[IsActive] = Reusability.byEq

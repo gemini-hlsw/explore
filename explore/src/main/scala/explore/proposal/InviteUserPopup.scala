@@ -16,14 +16,11 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.EmailPred
-import explore.model.InvitationStatus
-import explore.model.RefinedEmail
-import explore.model.UserInvitation
-import io.circe.Decoder
-import io.circe.syntax.*
+import explore.model.CoIInvitation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.data.EmailAddress
+import lucuma.core.data.EmailPred
 import lucuma.core.model.Program
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
@@ -46,35 +43,22 @@ import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
 case class InviteUserPopup(
   pid:         Program.Id,
   ref:         OverlayPanelRef,
-  invitations: View[List[UserInvitation]]
+  invitations: View[List[CoIInvitation]]
 ) extends ReactFnProps(InviteUserPopup.component)
 
 object InviteUserPopup:
-  val MailValidator: InputValidSplitEpi[RefinedEmail] =
-    InputValidSplitEpi.refinedString[EmailPred]
+  val MailValidator: InputValidSplitEpi[EmailAddress] =
+    // Scala doesn't like type aliases with refined types?
+    InputValidSplitEpi.refinedString[EmailPred].asInstanceOf[InputValidSplitEpi[EmailAddress]]
 
   private type Props = InviteUserPopup
-
-  // We can move this to the query once the model is moved to lucuma-core
-  extension (d: Data)
-    // This is unsafe because we are assuming the server will always return a valid status
-    def unsafeUserInvitation: UserInvitation =
-      UserInvitation(
-        d.createUserInvitation.invitation.id,
-        Refined.unsafeApply[String, EmailPred](d.createUserInvitation.invitation.recipientEmail),
-        Decoder[InvitationStatus]
-          .decodeJson(
-            d.createUserInvitation.invitation.status.asJson
-          )
-          .getOrElse(InvitationStatus.Revoked)
-      )
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(CreateInviteProcess.Idle)
-      .useStateView(none[RefinedEmail])
+      .useStateView(none[EmailAddress])
       .useState(false)
       .useStateView(none[String])
       .render: (props, ctx, inviteState, emailView, validEmail, key) =>
@@ -82,18 +66,18 @@ object InviteUserPopup:
         def createInvitation(
           createInvite: View[CreateInviteProcess],
           pid:          Program.Id,
-          email:        RefinedEmail,
+          email:        EmailAddress,
           viewKey:      View[Option[String]]
         ): IO[Unit] =
           (createInvite.set(CreateInviteProcess.Running).to[IO] *>
-            CreateInviteMutation[IO].execute(pid, email.value)).attempt
+            CreateInviteMutation[IO].execute(pid, email.value.value)).attempt
             .flatMap {
               case Left(e)  =>
                 Logger[IO].error(e)("Error creating invitation") *>
                   createInvite.set(CreateInviteProcess.Error).to[IO]
               case Right(r) =>
                 props.invitations
-                  .mod(r.unsafeUserInvitation :: _)
+                  .mod(r.createUserInvitation.invitation :: _)
                   .to[IO] *>
                   viewKey.set(r.createUserInvitation.key.some).to[IO] *>
                   createInvite.set(CreateInviteProcess.Done).to[IO]

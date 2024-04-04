@@ -18,12 +18,12 @@ import explore.model.ApiKey
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.display.given
-import explore.model.enums.RoleType
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.RoleType
 import lucuma.core.model.StandardRole
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated

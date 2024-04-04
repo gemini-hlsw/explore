@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+import explore.model.CoIInvitation
 
 object InvitationQueriesGQL:
   @GraphQL
@@ -26,6 +27,10 @@ object InvitationQueriesGQL:
         }
       }
     """
+
+    object Data:
+      object CreateUserInvitation:
+        type Invitation = CoIInvitation
 
   @GraphQL
   trait RevokeInvitationMutation extends GraphQLOperation[ObservationDB]:
