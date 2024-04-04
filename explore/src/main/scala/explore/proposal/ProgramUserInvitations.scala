@@ -83,6 +83,7 @@ object ProgramUserInvitations:
             Button(
               icon = Icons.Trash,
               severity = Button.Severity.Secondary,
+              disabled = active.get.value,
               onClick = revoke,
               tooltip = s"Revoke invitation"
             ).mini.compact
