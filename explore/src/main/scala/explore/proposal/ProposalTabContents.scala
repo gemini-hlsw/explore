@@ -24,6 +24,7 @@ import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramType
 import lucuma.core.model.Program
 import lucuma.core.model.Proposal
 import lucuma.core.model.StandardUser
@@ -32,6 +33,7 @@ import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Image
+import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tag
 import lucuma.react.primereact.Toolbar
 import lucuma.schemas.ObservationDB
@@ -106,80 +108,87 @@ object ProposalTabContents:
         _ <- programDetails.zoom(ProgramDetails.proposalStatus).set(newStatus).toAsync
       } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
 
-    programDetails
-      .zoom(ProgramDetails.proposal)
-      .mapValue((proposalView: View[Proposal]) =>
-        <.div(
-          ExploreStyles.ProposalTab,
-          ProposalEditor(
-            programId,
-            userVault.map(_.user.id),
-            proposalView,
-            undoStacks,
-            timeEstimateRange,
-            users,
-            details.invitations,
-            attachments,
-            userVault.map(_.token),
-            layout,
-            readonly
-          ),
-          Toolbar(left =
-            <.span(
-              Tag(
-                value = programDetails.get.proposalStatus.name,
-                severity =
-                  if (proposalStatus === ProposalStatus.Accepted) Tag.Severity.Success
-                  else Tag.Severity.Danger
-              )
-                .when(proposalStatus > ProposalStatus.Submitted),
-              // TODO: Validate proposal before allowing submission
-              Button(label = "Submit Proposal",
-                     onClick = updateStatus(ProposalStatus.Submitted),
-                     disabled = isUpdatingStatus.get.value
-              ).compact.tiny
-                .when(
-                  isStdUser && proposalStatus === ProposalStatus.NotSubmitted
-                ),
-              Button("Retract Proposal",
-                     severity = Button.Severity.Warning,
-                     onClick = updateStatus(ProposalStatus.NotSubmitted),
-                     disabled = isUpdatingStatus.get.value
-              ).compact.tiny
-                .when(
-                  isStdUser && proposalStatus === ProposalStatus.Submitted
+    if (programDetails.get.programType =!= ProgramType.Science)
+      <.div(ExploreStyles.HVCenter,
+            Message(text = "Only Science Program Types can have proposals.",
+                    severity = Message.Severity.Info
+            )
+      )
+    else
+      programDetails
+        .zoom(ProgramDetails.proposal)
+        .mapValue((proposalView: View[Proposal]) =>
+          <.div(
+            ExploreStyles.ProposalTab,
+            ProposalEditor(
+              programId,
+              userVault.map(_.user.id),
+              proposalView,
+              undoStacks,
+              timeEstimateRange,
+              users,
+              details.invitations,
+              attachments,
+              userVault.map(_.token),
+              layout,
+              readonly
+            ),
+            Toolbar(left =
+              <.span(
+                Tag(
+                  value = programDetails.get.proposalStatus.name,
+                  severity =
+                    if (proposalStatus === ProposalStatus.Accepted) Tag.Severity.Success
+                    else Tag.Severity.Danger
                 )
+                  .when(proposalStatus > ProposalStatus.Submitted),
+                // TODO: Validate proposal before allowing submission
+                Button(label = "Submit Proposal",
+                       onClick = updateStatus(ProposalStatus.Submitted),
+                       disabled = isUpdatingStatus.get.value
+                ).compact.tiny
+                  .when(
+                    isStdUser && proposalStatus === ProposalStatus.NotSubmitted
+                  ),
+                Button("Retract Proposal",
+                       severity = Button.Severity.Warning,
+                       onClick = updateStatus(ProposalStatus.NotSubmitted),
+                       disabled = isUpdatingStatus.get.value
+                ).compact.tiny
+                  .when(
+                    isStdUser && proposalStatus === ProposalStatus.Submitted
+                  )
+              )
             )
           )
         )
-      )
-      .getOrElse(
-        if (isStdUser)
-          <.div(
-            ExploreStyles.HVCenter,
-            Button(
-              label = "Create a Proposal",
-              icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
-              clazz = LoginStyles.LoginBoxButton,
-              severity = Button.Severity.Secondary,
-              onClick = createProposal(
-                programId,
-                programDetails
-              )
-            ).big
-          )
-        else
-          <.div(
-            ExploreStyles.HVCenter,
-            Button(
-              label = "Login with ORCID to create a Proposal",
-              icon = Image(src = Resources.OrcidLogo, clazz = LoginStyles.LoginOrcidIcon),
-              clazz = LoginStyles.LoginBoxButton,
-              severity = Button.Severity.Secondary,
-              onClick = ctx.sso.switchToORCID.runAsync
-            ).big
-          )
-      )
+        .getOrElse(
+          if (isStdUser)
+            <.div(
+              ExploreStyles.HVCenter,
+              Button(
+                label = "Create a Proposal",
+                icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
+                clazz = LoginStyles.LoginBoxButton,
+                severity = Button.Severity.Secondary,
+                onClick = createProposal(
+                  programId,
+                  programDetails
+                )
+              ).big
+            )
+          else
+            <.div(
+              ExploreStyles.HVCenter,
+              Button(
+                label = "Login with ORCID to create a Proposal",
+                icon = Image(src = Resources.OrcidLogo, clazz = LoginStyles.LoginOrcidIcon),
+                clazz = LoginStyles.LoginBoxButton,
+                severity = Button.Severity.Secondary,
+                onClick = ctx.sso.switchToORCID.runAsync
+              ).big
+            )
+        )
   }
 
   private type Props = ProposalTabContents

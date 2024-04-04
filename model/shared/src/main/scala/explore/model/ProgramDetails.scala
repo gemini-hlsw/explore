@@ -7,6 +7,7 @@ import cats.Eq
 import cats.derived.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
+import lucuma.core.enums.ProgramType
 import lucuma.core.model.Proposal
 import lucuma.schemas.decoders.given
 import lucuma.schemas.enums.ProposalStatus
@@ -14,6 +15,7 @@ import monocle.Focus
 import monocle.Lens
 
 case class ProgramDetails(
+  programType:    ProgramType,
   proposal:       Option[Proposal],
   proposalStatus: ProposalStatus,
   pi:             Option[ProgramUser],
@@ -28,10 +30,11 @@ object ProgramDetails:
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {
+      t  <- c.get[ProgramType]("type")
       p  <- c.get[Option[Proposal]]("proposal")
       ps <- c.get[ProposalStatus]("proposalStatus")
       pi <- c.get[Option[ProgramUser]]("pi")
       us <- c.get[List[ProgramUserWithRole]]("users")
       in <- c.get[List[CoIInvitation]]("userInvitations")
-    } yield ProgramDetails(p, ps, pi, us, in)
+    } yield ProgramDetails(t, p, ps, pi, us, in)
   )
