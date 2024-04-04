@@ -26,6 +26,8 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
+import lucuma.ui.react.given
+import scala.scalajs.LinkingInfo
 
 sealed trait GmosSequenceTable[S, D]:
   def visits: List[Visit[D]]
@@ -176,9 +178,10 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
             case _                                  => TagMod.empty,
           rowMod = _.original.value.toOption
             .map(_.step)
-            .collect { case SequenceRow.Executed.ExecutedStep(_, _) =>
-              SequenceStyles.RowHasExtra
-            }
+            .map(s => if (LinkingInfo.developmentMode) ^.title := s.id.toString else TagMod.empty)
+            // .collect { case SequenceRow.Executed.ExecutedStep(_, _) =>
+            //   SequenceStyles.RowHasExtra
+            // }
             .orEmpty,
           cellMod = cell =>
             cell.row.original.value match
