@@ -6,6 +6,7 @@ package explore.model
 import cats.kernel.Eq
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.model.IsActive
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
@@ -138,4 +139,6 @@ object reusability:
 
   given Reusability[ProgramUserWithRole] = Reusability.byEq
 
-  given Reusability[UserInvitation] = Reusability.byEq
+  given Reusability[CoIInvitation] = Reusability.byEq
+
+  given Reusability[IsActive] = Reusability.byEq

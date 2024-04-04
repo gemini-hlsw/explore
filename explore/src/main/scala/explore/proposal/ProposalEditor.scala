@@ -24,6 +24,7 @@ import explore.components.TileController
 import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
+import explore.model.CoIInvitation
 import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
 import explore.model.Hours
@@ -31,7 +32,6 @@ import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment
 import explore.model.ProposalTabTileIds
-import explore.model.UserInvitation
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -85,7 +85,7 @@ case class ProposalEditor(
   undoStacks:        View[UndoStacks[IO, Proposal]],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   users:             List[ProgramUserWithRole],
-  invitations:       List[UserInvitation],
+  invitations:       List[CoIInvitation],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
   layout:            LayoutsMap,
@@ -398,7 +398,7 @@ object ProposalEditor:
     createInvite:      View[CreateInviteProcess],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:             List[ProgramUserWithRole],
-    invitations:       List[UserInvitation],
+    invitations:       View[List[CoIInvitation]],
     attachments:       View[List[ProposalAttachment]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
@@ -544,6 +544,7 @@ object ProposalEditor:
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
+      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _) => props.invitations)
       .render {
         (
           props,
@@ -556,7 +557,8 @@ object ProposalEditor:
           _,
           resize,
           createInvite,
-          overlayRef
+          overlayRef,
+          invitations
         ) =>
           renderFn(
             props.programId,
@@ -571,7 +573,7 @@ object ProposalEditor:
             createInvite,
             props.timeEstimateRange,
             props.users,
-            props.invitations,
+            invitations,
             props.attachments,
             props.authToken,
             props.layout,

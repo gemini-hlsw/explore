@@ -10,7 +10,6 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
-import explore.common.TimingWindowsQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
@@ -110,8 +109,8 @@ object TimingWindowsPanel:
               _._2,
               size = DeleteColWidth.toPx
             ).setCell { c =>
-              val isValid = c.row.getValue(WindowColId).isValid
-              if (isValid) EmptyVdom
+              val tw: TimingWindow = c.row.getValue(WindowColId)
+              if (tw.isValid) EmptyVdom
               else
                 <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow)
             }.some,

@@ -5,8 +5,8 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import explore.model.enums.RoleType
 import io.circe.Decoder
+import lucuma.core.enums.RoleType
 
 case class RoleWrapper(`type`: RoleType) derives Decoder, Eq
 case class ApiKey(id: String, role: RoleWrapper) derives Decoder, Eq

@@ -14,7 +14,6 @@ import explore.syntax.ui.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.util.Effect.Dispatch
 import lucuma.core.model.TimingWindow
-import lucuma.core.model.TimingWindowEnd
 import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -23,10 +22,6 @@ import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.UpdateObservationMutation
 
 object TimingWindowsQueries:
-  extension (tw: TimingWindow)
-    // TODO Move to lucuma-core
-    def isValid: Boolean =
-      tw.end.flatMap(TimingWindowEnd.at.getOption).forall(_.instant > tw.start)
 
   def viewWithRemoteMod[F[_]: MonadThrow: Dispatch](
     obsIds: ObsIdSet,

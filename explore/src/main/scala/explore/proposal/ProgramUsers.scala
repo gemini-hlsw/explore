@@ -12,12 +12,13 @@ import explore.components.Tile
 import explore.components.Tile.RenderInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.CoIInvitation
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalTabTileIds
-import explore.model.UserInvitation
 import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.InvitationStatus
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
@@ -36,7 +37,7 @@ enum CreateInviteProcess(private val tag: String) derives Enumerated:
 case class ProgramUsers(
   pid:         Program.Id,
   users:       List[ProgramUserWithRole],
-  invitations: List[UserInvitation],
+  invitations: View[List[CoIInvitation]],
   inTitle:     RenderInTitle,
   ref:         OverlayPanelRef
 ) extends ReactFnProps(ProgramUsers.component)
@@ -46,7 +47,7 @@ object ProgramUsers:
   def programUsersTile(
     pid:          Program.Id,
     users:        List[ProgramUserWithRole],
-    invitations:  List[UserInvitation],
+    invitations:  View[List[CoIInvitation]],
     createInvite: View[CreateInviteProcess],
     ref:          OverlayPanelRef
   )(using AppContext[IO], Logger[IO]) = {
@@ -54,7 +55,7 @@ object ProgramUsers:
     val control =
       <.div(
         ExploreStyles.JustifiedEndTileControl,
-        InviteUserPopup(pid, ref),
+        InviteUserPopup(pid, ref, invitations),
         Button(
           severity = Button.Severity.Secondary,
           size = Button.Size.Small,
@@ -80,7 +81,7 @@ object ProgramUsers:
       .useState(CreateInviteProcess.Idle)
       .render: (props, create) =>
         <.div(
-          InviteUserPopup(props.pid, props.ref),
+          InviteUserPopup(props.pid, props.ref, props.invitations),
           props.inTitle(
             Button(
               severity = Button.Severity.Secondary,
@@ -96,5 +97,5 @@ object ProgramUsers:
               "Pending invitations",
               ProgramUserInvitations(props.invitations)
             )
-            .when(props.invitations.nonEmpty)
+            .when(props.invitations.when(_.filter(_.status === InvitationStatus.Pending).nonEmpty))
         )

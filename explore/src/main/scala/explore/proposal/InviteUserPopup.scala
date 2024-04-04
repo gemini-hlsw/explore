@@ -16,10 +16,11 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.EmailPred
-import explore.model.RefinedEmail
+import explore.model.CoIInvitation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.data.EmailAddress
+import lucuma.core.data.EmailPred
 import lucuma.core.model.Program
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
@@ -37,15 +38,18 @@ import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.*
+import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
 
 case class InviteUserPopup(
-  pid: Program.Id,
-  ref: OverlayPanelRef
+  pid:         Program.Id,
+  ref:         OverlayPanelRef,
+  invitations: View[List[CoIInvitation]]
 ) extends ReactFnProps(InviteUserPopup.component)
 
 object InviteUserPopup:
-  val MailValidator: InputValidSplitEpi[RefinedEmail] =
-    InputValidSplitEpi.refinedString[EmailPred]
+  val MailValidator: InputValidSplitEpi[EmailAddress] =
+    // Scala doesn't like type aliases with refined types?
+    InputValidSplitEpi.refinedString[EmailPred].asInstanceOf[InputValidSplitEpi[EmailAddress]]
 
   private type Props = InviteUserPopup
 
@@ -54,7 +58,7 @@ object InviteUserPopup:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(CreateInviteProcess.Idle)
-      .useStateView(none[RefinedEmail])
+      .useStateView(none[EmailAddress])
       .useState(false)
       .useStateView(none[String])
       .render: (props, ctx, inviteState, emailView, validEmail, key) =>
@@ -62,17 +66,20 @@ object InviteUserPopup:
         def createInvitation(
           createInvite: View[CreateInviteProcess],
           pid:          Program.Id,
-          email:        RefinedEmail,
+          email:        EmailAddress,
           viewKey:      View[Option[String]]
         ): IO[Unit] =
           (createInvite.set(CreateInviteProcess.Running).to[IO] *>
-            CreateInviteMutation[IO].execute(pid, email.value)).attempt
+            CreateInviteMutation[IO].execute(pid, email.value.value)).attempt
             .flatMap {
               case Left(e)  =>
                 Logger[IO].error(e)("Error creating invitation") *>
                   createInvite.set(CreateInviteProcess.Error).to[IO]
               case Right(r) =>
-                viewKey.set(r.createUserInvitation.key.some).to[IO] *>
+                props.invitations
+                  .mod(r.createUserInvitation.invitation :: _)
+                  .to[IO] *>
+                  viewKey.set(r.createUserInvitation.key.some).to[IO] *>
                   createInvite.set(CreateInviteProcess.Done).to[IO]
             }
 
@@ -80,7 +87,6 @@ object InviteUserPopup:
           <.div(
             PrimeStyles.Dialog,
             <.div(PrimeStyles.DialogHeader, "Create CoI invitation"),
-            // Divider(),
             <.div(PrimeStyles.DialogContent)(
               <.div(LucumaPrimeStyles.FormColumnCompact)(
                 FormInputTextView(
@@ -111,7 +117,7 @@ object InviteUserPopup:
                 Button(
                   icon = Icons.PaperPlaneTop,
                   loading = inviteState.get === CreateInviteProcess.Running,
-                  disabled = !validEmail.value,
+                  disabled = !validEmail.value || inviteState.get === CreateInviteProcess.Done,
                   onClick = emailView.get
                     .map(e => createInvitation(inviteState, props.pid, e, key).runAsync)
                     .getOrEmpty,

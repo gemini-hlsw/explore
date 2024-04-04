@@ -5,9 +5,9 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-import explore.model.enums.RoleType
 import explore.model.itc.ItcQueryProblems
 import lucuma.core.enums.*
+import lucuma.core.enums.RoleType
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.BrightnessValue

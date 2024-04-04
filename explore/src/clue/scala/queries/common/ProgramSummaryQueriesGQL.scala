@@ -40,7 +40,7 @@ object ProgramSummaryQueriesGQL {
         program(programId: $$programId) {
           obsAttachments $ObsAttachmentSubquery
           proposalAttachments $ProposalAttachmentSubquery
-        } 
+        }
       }
     """
   }

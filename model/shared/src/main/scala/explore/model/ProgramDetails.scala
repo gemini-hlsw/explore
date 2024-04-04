@@ -18,7 +18,7 @@ case class ProgramDetails(
   proposalStatus: ProposalStatus,
   pi:             Option[ProgramUser],
   users:          List[ProgramUserWithRole],
-  invitations:    List[UserInvitation]
+  invitations:    List[CoIInvitation]
 ) derives Eq:
   val allUsers = pi.fold(users)(p => ProgramUserWithRole(p, None) :: users)
 
@@ -32,6 +32,6 @@ object ProgramDetails:
       ps <- c.get[ProposalStatus]("proposalStatus")
       pi <- c.get[Option[ProgramUser]]("pi")
       us <- c.get[List[ProgramUserWithRole]]("users")
-      in <- c.get[List[UserInvitation]]("userInvitations")
+      in <- c.get[List[CoIInvitation]]("userInvitations")
     } yield ProgramDetails(p, ps, pi, us, in)
   )

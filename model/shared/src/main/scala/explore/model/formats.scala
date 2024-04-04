@@ -100,13 +100,6 @@ trait formats:
       f"$arcseconds%01d.$mas%02d″"
   }
 
-  // TODO: Move these to lucuma-core?
-  extension (ts: TimeSpan)
-    def toSecondsPart: Int = (ts.toSeconds.longValue      % 60L).toInt
-    def toMinutesPart: Int = (ts.toMinutes.longValue      % 60L).toInt
-    def toHoursPart: Int   = (ts.toHours.longValue        % 24L).toInt
-    def toMillisPart: Int  = (ts.toMilliseconds.longValue % 1000L).toInt
-
   val durationHM: InputValidWedge[TimeSpan] =
     InputValidWedge(
       s =>

@@ -12,16 +12,18 @@ import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.UserPreferencesQueries.GridLayouts
+import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
 import explore.model.ApiKey
 import explore.model.AppContext
+import explore.model.IsActive
 import explore.model.display.given
-import explore.model.enums.RoleType
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.RoleType
 import lucuma.core.model.StandardRole
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated
@@ -36,7 +38,6 @@ import lucuma.ui.components.SolarProgress
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
@@ -79,9 +80,6 @@ case class UserPreferencesContent(vault: UserVault, onClose: Option[Callback] = 
 object UserPreferencesContent:
   private type Props = UserPreferencesContent
 
-  private object IsActive extends NewType[Boolean]
-  private type IsActive = IsActive.Type
-
   private object IsCleaningTheCache extends NewType[Boolean]
   private object IsDeletingLayouts  extends NewType[Boolean]
 
@@ -93,31 +91,6 @@ object UserPreferencesContent:
   private val ActionsColumnId: ColumnId = ColumnId("actions")
   private val IdColumnId: ColumnId      = ColumnId("id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
-
-  private def deleteKey(
-    key:    String,
-    active: View[IsActive],
-    newKey: View[NewKey],
-    vault:  UserVault
-  )(using
-    FetchJSClient[IO, SSO],
-    Logger[IO]
-  ) =
-    ConfirmDialog.confirmDialog(
-      message = <.div(
-        s"This action will delete the key with id: $key. This action cannot be reversed."
-      ),
-      header = "Key delete",
-      acceptLabel = "Yes, delete",
-      position = DialogPosition.Top,
-      accept = (for {
-        _ <- DeleteApiKey[IO].execute(key, modParams = vault.addAuthorizationHeaderTo)
-        _ <- newKey.set(NewKey(none)).toAsync
-      } yield ()).switching(active.async, IsActive(_)).runAsync,
-      acceptClass = PrimeStyles.ButtonSmall,
-      rejectClass = PrimeStyles.ButtonSmall,
-      icon = Icons.SkullCrossBones(^.color.red)
-    )
 
   private def createNewKey(
     keyRoleId: StandardRole.Id,
@@ -136,14 +109,14 @@ object UserPreferencesContent:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useStateView(IsActive(false))
-    .useEffectResultWithDepsBy((_, ctx, isAdding) => isAdding.get) { (props, ctx, _) => _ =>
+    .useStateView[IsActive](IsActive(false))
+    .useEffectResultWithDepsBy((_, ctx, isActive) => isActive.get) { (props, ctx, _) => _ =>
       import ctx.given
       UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo)
     }
     .useStateView(NewKey(none)) // id fo the new role id to create
     // Columns
-    .useMemoBy((_, _, isAdding, _, _) => isAdding.get)((props, ctx, isAdding, _, newKey) =>
+    .useMemoBy((_, _, isActive, _, _) => isActive.get)((props, ctx, isActive, _, newKey) =>
       _ =>
         import ctx.given
 
@@ -166,12 +139,27 @@ object UserPreferencesContent:
             "Delete",
             cell = { cell =>
               val keyId = cell.value.id
+
+              val action = for {
+                _ <-
+                  DeleteApiKey[IO].execute(keyId, modParams = props.vault.addAuthorizationHeaderTo)
+                _ <- newKey.set(NewKey(none)).toAsync
+              } yield ()
+
+              val deleteKey = deleteConfirmation(
+                s"This action will delete the key with id: $keyId. This action cannot be reversed.",
+                "Key delete",
+                "Yes, delete",
+                action,
+                isActive
+              )
+
               <.div(
                 ExploreStyles.ApiKeyDelete,
                 Button(
                   icon = Icons.Trash,
                   severity = Button.Severity.Secondary,
-                  onClick = deleteKey(keyId, isAdding, newKey, props.vault),
+                  onClick = deleteKey,
                   tooltip = s"Delete key $keyId"
                 ).mini.compact
               )
@@ -305,8 +293,7 @@ object UserPreferencesContent:
               <.div(
                 cleanCacheButton,
                 deleteGridLayoutsButton
-              ),
-              ConfirmDialog()
+              )
             )
           },
           pendingRender = <.div(ExploreStyles.EmptyUserPreferences, SolarProgress())
