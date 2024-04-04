@@ -31,7 +31,7 @@ import queries.schemas.itc.syntax.*
 import workers.*
 
 object ITCRequests:
-  val cacheVersion = CacheVersion(11)
+  val cacheVersion = CacheVersion(12)
 
   def processExtension(resp: Throwable): ItcQueryProblems =
     resp match {
