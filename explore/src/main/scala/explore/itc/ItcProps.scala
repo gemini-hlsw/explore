@@ -6,6 +6,7 @@ package explore.itc
 import boopickle.Default.eitherPickler
 import boopickle.Default.mapPickler
 import cats.Eq
+import cats.Order.given
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.effect.IO
@@ -17,11 +18,7 @@ import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcExposureTime
-import explore.model.itc.ItcQueryProblems
-import explore.model.itc.ItcResult
-import explore.model.itc.ItcTarget
+import explore.model.itc.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.GmosSpectroscopyOverrides
@@ -33,21 +30,30 @@ import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.Target
 import lucuma.core.model.brightestProfileAt
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
 
+import scala.collection.immutable.SortedMap
+
 case class ItcProps(
   obsSummary:         ObsSummary,
   remoteExposureTime: Option[ItcExposureTime],   // time provided by the db
   selectedConfig:     Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  allTargets:         TargetList,
+  at:                 TargetList,
   modeOverrides:      Option[InstrumentOverrides]
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
     ScienceRequirements.spectroscopy.getOption(obsSummary.scienceRequirements)
+
+  private val allTargets: TargetList =
+    SortedMap.from(
+      at.view.mapValues(Target.sourceProfile.modify(_.gaiaFree))
+    )
 
   private val constraints = obsSummary.constraints
   private val asterismIds = obsSummary.scienceTargetIds
