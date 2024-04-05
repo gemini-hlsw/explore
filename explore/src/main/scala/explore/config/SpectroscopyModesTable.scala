@@ -84,7 +84,7 @@ case class SpectroscopyModesTable(
   val brightestTarget: Option[ItcTarget] =
     for
       w <- spectroscopyRequirements.wavelength
-      t <- targets.flatMap(_.brightestProfileAt(_.profile)(w))
+      t <- targets.flatMap(_.map(_.gaiaFree).brightestProfileAt(_.profile)(w))
       if t.canQueryITC
     yield t
 
