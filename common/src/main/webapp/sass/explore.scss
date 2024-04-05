@@ -2095,6 +2095,11 @@ $help-title-height: 40px;
       margin-bottom: 0.5em;
     }
 
+    .timing-window-through-editor,
+    .timing-window-from-editor {
+      display: flex;
+    }
+
     .timing-window-editor-header {
       display: flex;
       align-items: center;
@@ -2102,10 +2107,6 @@ $help-title-height: 40px;
       .timing-window-inclusion-editor {
         display: inline-flex;
         flex-direction: column;
-      }
-
-      .timing-window-from-editor {
-        margin-left: 0.5vw;
       }
     }
 

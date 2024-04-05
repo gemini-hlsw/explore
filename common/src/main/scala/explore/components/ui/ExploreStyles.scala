@@ -463,6 +463,7 @@ object ExploreStyles:
   val TimingWindowEditorHeader: Css             = Css("timing-window-editor-header")
   val TimingWindowInclusionEditor: Css          = Css("timing-window-inclusion-editor")
   val TimingWindowFromEditor: Css               = Css("timing-window-from-editor")
+  val TimingWindowThroughEditor: Css            = Css("timing-window-through-editor")
   val TimingWindowEditorBody: Css               = Css("timing-window-editor-body")
   val TimingWindowEndAfter: Css                 = Css("timing-window-end-after")
   val TimingWindowRepeatEditor: Css             = Css("timing-window-repeat-editor")
