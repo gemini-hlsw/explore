@@ -35,7 +35,6 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.*
 import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
@@ -63,6 +62,7 @@ object InviteUserPopup:
       .useStateView(none[String])
       .render: (props, ctx, inviteState, emailView, validEmail, key) =>
         import ctx.given
+
         def createInvitation(
           createInvite: View[CreateInviteProcess],
           pid:          Program.Id,
@@ -76,9 +76,7 @@ object InviteUserPopup:
                 Logger[IO].error(e)("Error creating invitation") *>
                   createInvite.set(CreateInviteProcess.Error).to[IO]
               case Right(r) =>
-                props.invitations
-                  .mod(r.createUserInvitation.invitation :: _)
-                  .to[IO] *>
+                props.invitations.mod(r.createUserInvitation.invitation :: _).to[IO] *>
                   viewKey.set(r.createUserInvitation.key.some).to[IO] *>
                   createInvite.set(CreateInviteProcess.Done).to[IO]
             }
@@ -105,7 +103,7 @@ object InviteUserPopup:
               ).when(key.when(_.isDefined)),
               key.get.map(key =>
                 <.div(LucumaPrimeStyles.FormColumn)(
-                  CopyControl("Invite Link", dom.window.location.origin + s"/redeem-invite/${key}")
+                  CopyControl("Invite code", key)
                 )
               )
             ),
