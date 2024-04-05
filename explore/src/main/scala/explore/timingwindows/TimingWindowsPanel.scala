@@ -211,8 +211,8 @@ object TimingWindowsPanel:
                   renderInclusionRadio(TimingWindowInclusion.Include, "include-option"),
                   renderInclusionRadio(TimingWindowInclusion.Exclude, "exclude-option")
                 ),
-                <.span(ExploreStyles.TimingWindowFromEditor)(
-                  " from",
+                <.div(ExploreStyles.TimingWindowFromEditor)(
+                  <.span(" from"),
                   Datepicker(onChange =
                     (newValue, _) =>
                       newValue.fromDatePickerToZDTOpt.foldMap { zdt =>
@@ -232,7 +232,7 @@ object TimingWindowsPanel:
                         .map(_.instant.toInstant.toDatePickerJsDate)
                         .orNull
                     ),
-                  " UTC ",
+                  <.span(" UTC "),
                   <.span(Icons.ErrorIcon)
                     .withTooltip("Check start date is before the end")
                     .unless(tw.get.isValid)
@@ -249,6 +249,7 @@ object TimingWindowsPanel:
                   <.label("Forever", ^.htmlFor := "forever-option")
                 ),
                 <.div(
+                  ExploreStyles.TimingWindowThroughEditor,
                   RadioButton(
                     "through",
                     id = "through-option",
@@ -286,7 +287,7 @@ object TimingWindowsPanel:
                         .selected(endAt.get.toInstant.toDatePickerJsDate)
                         .dateFormat("yyyy-MM-dd HH:mm")
                         .minDate(selectedStart.get.toInstant.toDatePickerJsDate),
-                      " UTC  ",
+                      <.span(" UTC "),
                       if (tw.get.isValid) EmptyVdom
                       else
                         <.span(Icons.ErrorIcon)
