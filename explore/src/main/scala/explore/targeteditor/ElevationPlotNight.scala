@@ -82,14 +82,15 @@ object ElevationPlotNight:
   )
 
   private enum ElevationSeries(
-    val name:  String,
-    val yAxis: Int,
-    val data:  SeriesData => List[ResizingChart.Data]
+    val name:    String,
+    val yAxis:   Int,
+    val data:    SeriesData => List[ResizingChart.Data],
+    val enabled: Boolean
   ) derives Eq:
-    case Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude)
-    case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle)
-    case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness)
-    case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude)
+    case Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude, true)
+    case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle, true)
+    case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness, false)
+    case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude, false)
 
   private def formatAngle(degs: Double): String =
     val dms     = Angle.DMS(Angle.fromDoubleDegrees(degs))
@@ -374,6 +375,7 @@ object ElevationPlotNight:
           )
           .setSeries(
             ElevationSeries.values
+              .filter(_.enabled)
               .map(series =>
                 val zones       =
                   props.visualizationTime
