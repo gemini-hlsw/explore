@@ -59,7 +59,7 @@ object SequenceEditorTile:
       s"Sequence",
       canMinimize = true,
       control = _ => control.some
-    )(renderInTitle =>
+    )(_ =>
       GeneratedSequenceViewer(
         programId,
         obsId,
