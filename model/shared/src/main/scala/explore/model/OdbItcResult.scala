@@ -16,6 +16,7 @@ import io.circe.refined.*
 import lucuma.core.enums.ObserveClass
 import lucuma.core.math.SignalToNoise
 import lucuma.core.util.TimeSpan
+import lucuma.itc.*
 import lucuma.odb.json.time.decoder.given
 import monocle.Focus
 import monocle.Prism
@@ -31,6 +32,7 @@ object OdbItcResult {
     sciExposureTime:  TimeSpan,
     sciExposures:     NonNegInt,
     sciSignalToNoise: SignalToNoise,
+    acqExposures:     NonNegInt,
     acqSignalToNoise: SignalToNoise
   ) extends OdbItcResult
       derives Eq {
@@ -41,8 +43,16 @@ object OdbItcResult {
         PosInt.unsafeFrom(sciExposures.value)
       )
 
+    def sciExposureSignalToNoise: Option[SignalToNoise] =
+      PosInt.from(sciExposures.value).toOption.flatMap(sciSignalToNoise.stepSignalToNoise)
+
+    def acqExposureSignalToNoise: Option[SignalToNoise] =
+      PosInt.from(acqExposures.value).toOption.flatMap(acqSignalToNoise.stepSignalToNoise)
+
     val snPerClass: Map[ObserveClass, SignalToNoise] =
-      Map(ObserveClass.Science -> sciSignalToNoise, ObserveClass.Acquisition -> acqSignalToNoise)
+      Map(ObserveClass.Science     -> sciExposureSignalToNoise,
+          ObserveClass.Acquisition -> acqExposureSignalToNoise
+      ).collect { case (k, Some(v)) => k -> v }
   }
 
   case class MissingParams(
