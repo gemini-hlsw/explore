@@ -13,6 +13,7 @@ import explore.Icons
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
+import explore.model.ObsTabTilesIds
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
@@ -60,6 +61,18 @@ case class TimingWindowsPanel(
 ) extends ReactFnProps(TimingWindowsPanel.component)
 
 object TimingWindowsPanel:
+  def timingWindowsPanel(
+    timingWindows: View[List[TimingWindow]],
+    readonly:      Boolean
+  ) = {
+    val base  = "Scheduling Windows"
+    val title =
+      if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
+    Tile(ObsTabTilesIds.TimingWindowsId.id, title, canMinimize = true)(renderInTitle =>
+      TimingWindowsPanel(timingWindows, readonly, renderInTitle)
+    )
+  }
+
   private type Props = TimingWindowsPanel
 
   private val ColDef = ColumnDef[(TimingWindow, Int)]

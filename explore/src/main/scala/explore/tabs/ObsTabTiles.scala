@@ -540,9 +540,7 @@ object ObsTabTiles:
             )
 
           val timingWindowsTile =
-            Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-              renderInTitle => TimingWindowsPanel(timingWindows, props.readonly, renderInTitle)
-            )
+            TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
 
           val configurationTile =
             ConfigurationTile.configurationTile(

@@ -109,7 +109,7 @@ object SchedulingTabContents extends TwoPanels:
 
               val twTraversal = obsTraversal.andThen(ObsSummary.timingWindows)
 
-              val twView: View[List[TimingWindow]] =
+              val timingWindows: View[List[TimingWindow]] =
                 TimingWindowsQueries.viewWithRemoteMod(
                   idsToEdit,
                   observations
@@ -120,9 +120,7 @@ object SchedulingTabContents extends TwoPanels:
                 )
 
               val timingWindowsTile =
-                Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-                  renderInTitle => TimingWindowsPanel(twView, props.readonly, renderInTitle)
-                )
+                TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
 
               TileController(
                 props.userId,
