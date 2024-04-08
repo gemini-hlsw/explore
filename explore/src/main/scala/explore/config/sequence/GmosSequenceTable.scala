@@ -40,7 +40,21 @@ sealed trait GmosSequenceTable[S, D]:
     SequenceRow.FutureStep
       .fromAtoms(
         sequence.nextAtom +: sequence.possibleFuture,
-        _ => snPerClass.get(obsClass)
+        i =>
+          // Only show S/N for science or acq if FPU is None
+          snPerClass
+            .get(obsClass)
+            .filter(_ =>
+              i.observeClass match {
+                case a @ ObserveClass.Acquisition =>
+                  i.instrumentConfig match
+                    case DynamicConfig.GmosNorth(_, _, _, _, _, _, None) => true
+                    case DynamicConfig.GmosSouth(_, _, _, _, _, _, None) => true
+                    case _                                               => false
+                case ObserveClass.Science         => true
+                case _                            => false
+              }
+            )
       )
 
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
