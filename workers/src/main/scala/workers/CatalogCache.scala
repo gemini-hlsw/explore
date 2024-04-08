@@ -34,14 +34,15 @@ import java.time.temporal.ChronoUnit
 trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
 
-  val MaxTargets = 100
+  val MaxTargets           = 100
+  private val CacheVersion = 1
 
   given Hash[Coordinates]            = Hash.fromUniversalHashCode
   given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3Lite
   given ci: ADQLInterpreter          = ADQLInterpreter.nTarget(MaxTargets)
 
   def cacheQueryHash: Hash[ADQLQuery] =
-    Hash.by(q => (MaxTargets, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))
+    Hash.by(q => (MaxTargets, CacheVersion, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))
 
 }
 
