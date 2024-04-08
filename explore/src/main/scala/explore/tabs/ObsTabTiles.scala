@@ -17,7 +17,6 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.ChartSelector
@@ -35,7 +34,6 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
-import explore.model.syntax.all.toHoursMinutes
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
@@ -59,7 +57,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
-import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
@@ -374,41 +371,12 @@ object ObsTabTiles:
             )
 
           val sequenceTile =
-            SequenceEditorTile.sequenceTile(renderInTitle =>
-              React.Fragment(
-                renderInTitle {
-                  props.obsExecution.orSpinner { execution =>
-                    val programTimeCharge = execution.programTimeCharge.value
-
-                    def timeDisplay(name: String, time: TimeSpan) =
-                      <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
-                             time.toHoursMinutes
-                      )
-
-                    val executed = timeDisplay("Executed", programTimeCharge)
-
-                    execution.programTimeEstimate
-                      .map { plannedTime =>
-                        val total   = programTimeCharge +| plannedTime
-                        val pending = timeDisplay("Pending", plannedTime)
-                        val planned = timeDisplay("Planned", total)
-                        <.span(ExploreStyles.SequenceTileTitle)(
-                          planned,
-                          executed,
-                          pending
-                        )
-                      }
-                      .getOrElse(executed)
-                  }
-                },
-                GeneratedSequenceViewer(
-                  props.programId,
-                  props.obsId,
-                  asterismIds.get.toList,
-                  itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
-                  sequenceChanged
-                )
-              )
+            SequenceEditorTile.sequenceTile(props.programId,
+                                            props.obsId,
+                                            props.obsExecution,
+                                            asterismIds.get,
+                                            itc.toOption.flatten,
+                                            sequenceChanged
             )
 
           val itcTile: Tile =
