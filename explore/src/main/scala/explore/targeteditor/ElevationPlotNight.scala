@@ -88,8 +88,8 @@ object ElevationPlotNight:
     val enabled: Boolean
   ) derives Eq:
     case Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude, true)
-    case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle, true)
-    case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness, false)
+    case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle, false)
+    case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness, true)
     case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude, false)
 
   private def formatAngle(degs: Double): String =
