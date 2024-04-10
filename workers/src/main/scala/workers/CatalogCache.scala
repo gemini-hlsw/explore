@@ -35,7 +35,7 @@ trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
 
   val MaxTargets           = 100
-  private val CacheVersion = 1
+  private val CacheVersion = 2
 
   given Hash[Coordinates]            = Hash.fromUniversalHashCode
   given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3Lite

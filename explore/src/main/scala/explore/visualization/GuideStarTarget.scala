@@ -67,7 +67,7 @@ object GuideStarTarget:
         if (open.value.value) {
           val ID = s"Gaia DR3 ${p.analysis.target.id}"
 
-          val mag = p.analysis.target.gBrightness.foldMap(g => f"G: $g%.2f")
+          val mag = p.analysis.target.gBrightness.foldMap(g => f"{g._1.shortName}: ${g._2}%.2f")
 
           val (translateBoxY, translateTextX, translateTextY, path, pf) =
             tooltipTranslationAndContent(floating, p.offQ, p.sx, p.sy, ID)

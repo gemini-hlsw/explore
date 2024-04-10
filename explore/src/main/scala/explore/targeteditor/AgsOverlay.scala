@@ -88,10 +88,11 @@ object AgsOverlay {
                 case AgsAnalysis.Usable(_, _, speed, _, _) =>
                   React.Fragment(
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
-                    <.div(ExploreStyles.AgsGBrightness,
-                          analysis.target.gBrightness.map(g =>
-                            s"G: ${g.value.value.setScale(1, RoundingMode.HALF_DOWN).toString()}"
-                          )
+                    <.div(
+                      ExploreStyles.AgsGBrightness,
+                      analysis.target.gBrightness.map(g =>
+                        s"${g._1.shortName}: ${g._2.value.value.setScale(1, RoundingMode.HALF_DOWN).toString()}"
+                      )
                     ),
                     <.div(ExploreStyles.AgsCoordinates,
                           s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
