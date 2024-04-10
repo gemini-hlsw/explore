@@ -157,7 +157,6 @@ lazy val commonLibSettings = Seq(
       CoulombRefined.value ++
       Crystal.value ++
       FS2.value ++
-      FS2Data.value ++
       Http4sCore.value ++
       Kittens.value ++
       LucumaCore.value ++

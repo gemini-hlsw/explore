@@ -17,14 +17,10 @@ import explore.*
 import explore.DefaultErrorPolicy
 import explore.common.Aligner
 import explore.components.ui.ExploreStyles
-import explore.events.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
 import explore.model.ScienceRequirements
-import explore.model.WorkerClients.*
-import explore.model.boopickle.*
-import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
@@ -43,7 +39,7 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import org.http4s.syntax.all.*
+import queries.common.ModesQueriesGQL
 import queries.common.ObsQueriesGQL
 
 case class ConfigurationPanel(
@@ -136,9 +132,14 @@ object ConfigurationPanel:
       .useEffectResultOnMountBy { (props, ctx) =>
         import ctx.given
 
-        ItcClient[IO]
-          .requestSingle(
-            ItcMessage.SpectroscopyMatrixRequest(uri"/instrument_spectroscopy_matrix.csv")
+        ModesQueriesGQL
+          .SpectroscopyModes[IO]
+          .query()
+          .map(u =>
+            val modes = u.spectroscopyConfigOptions.zipWithIndex.map { case (s, i) =>
+              s.copy(id = i.some)
+            }
+            SpectroscopyModesMatrix(modes)
           )
       }
       .render { (props, ctx, matrix) =>
@@ -180,7 +181,7 @@ object ConfigurationPanel:
           )
         }
 
-        val confMatrix = matrix.toOption.flatten.getOrElse(SpectroscopyModesMatrix.empty)
+        val confMatrix = matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
 
         React.Fragment(
           <.div(ExploreStyles.ConfigurationGrid)(

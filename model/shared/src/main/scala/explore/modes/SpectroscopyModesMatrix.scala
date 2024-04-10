@@ -5,7 +5,6 @@ package explore.modes
 
 import cats.Eq
 import cats.Order
-import cats.data.NonEmptyList
 import cats.derived.*
 import cats.implicits.*
 import coulomb.*
@@ -17,6 +16,8 @@ import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
 import explore.model.syntax.all.*
 import fs2.data.csv.*
+import io.circe.Decoder
+import io.circe.refined.*
 import lucuma.core.enums.*
 import lucuma.core.math.Angle
 import lucuma.core.math.BoundedInterval
@@ -28,6 +29,8 @@ import lucuma.core.math.units.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
+import lucuma.odb.json.angle.decoder.given
+import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
 import monocle.Lens
@@ -73,6 +76,7 @@ case class GmosNorthSpectroscopyRow(
   val instrument = Instrument.GmosNorth
   val site       = Site.GN
   val hasFilter  = filter.isDefined
+
 }
 
 case class GmosSouthSpectroscopyRow(
@@ -232,7 +236,7 @@ object InstrumentRow {
 trait ModeCommonWavelengths {
   val λmin: ModeWavelength
   val λmax: ModeWavelength
-  val λdelta: ModeWavelengthDelta
+  val λdelta: WavelengthDelta
 }
 
 object ModeCommonWavelengths:
@@ -240,7 +244,7 @@ object ModeCommonWavelengths:
     λ: Wavelength
   ): ModeCommonWavelengths => Option[BoundedInterval[Wavelength]] =
     r =>
-      val λr      = r.λdelta.value
+      val λr      = r.λdelta
       // Coverage of allowed wavelength
       // Can be simplified once coulomb-refined is available
       val λmin    = r.λmin.value
@@ -268,19 +272,19 @@ object SlitWidth extends NewType[ModeSlitSize]
 type SlitWidth = SlitWidth.Type
 
 case class SpectroscopyModeRow(
-  id:                Int, // Give them a local id to simplify reusability
-  instrument:        InstrumentRow,
-  config:            NonEmptyString,
-  focalPlane:        FocalPlane,
-  capability:        Option[SpectroscopyCapabilities],
-  ao:                ModeAO,
-  λmin:              ModeWavelength,
-  λmax:              ModeWavelength,
-  optimalWavelength: ModeWavelength,
-  λdelta:            ModeWavelengthDelta,
-  resolution:        PosInt,
-  slitLength:        SlitLength,
-  slitWidth:         SlitWidth
+  id:         Option[Int], // we number the modes for the UI
+  instrument: InstrumentRow,
+  config:     NonEmptyString,
+  focalPlane: FocalPlane,
+  capability: Option[SpectroscopyCapabilities],
+  ao:         ModeAO,
+  λmin:       ModeWavelength,
+  λmax:       ModeWavelength,
+  λoptimal:   ModeWavelength,
+  λdelta:     WavelengthDelta,
+  resolution: PosInt,
+  slitLength: SlitLength,
+  slitWidth:  SlitWidth
 ) extends ModeCommonWavelengths {
   // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthDelta
 
@@ -332,62 +336,58 @@ object SpectroscopyModeRow {
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)
-}
 
-trait SpectroscopyModesMatrixDecoders extends Decoders {
-  given CellDecoder[NonEmptyString] =
-    CellDecoder.stringDecoder
-      .emap { x =>
-        refineV[NonEmpty](x).leftMap(s => new DecoderError(s))
-      }
-
-  given CellDecoder[NonEmptyList[FocalPlane]] =
-    CellDecoder.stringDecoder
-      .emap { r =>
-        r.toLowerCase
-          .replace("\\s", "")
-          .trim
-          .split(",")
-          .toList
-          .collect {
-            case "singleslit" => FocalPlane.SingleSlit
-            case "multislit"  => FocalPlane.MultipleSlit
-            case "ifu"        => FocalPlane.IFU
-          } match {
-          case h :: t => NonEmptyList.of(h, t*).asRight
-          case Nil    => new DecoderError(s"Unknown focal plane $r").asLeft
-        }
-      }
-
-  given CellDecoder[Option[SpectroscopyCapabilities]] =
-    CellDecoder.stringDecoder
-      .map {
-        case "Nod&Shuffle" => SpectroscopyCapabilities.NodAndShuffle.some
-        case "coronagraph" => SpectroscopyCapabilities.Coronagraphy.some
-        case _             => none
-      }
-
-  given CsvRowDecoder[NonEmptyList[SpectroscopyModeRow], String] = (row: CsvRow[String]) =>
+  // decodores for instruments are used locally as they are not lawful
+  private given Decoder[GmosNorthSpectroscopyRow] = c =>
     for {
-      di  <- row.as[String]("disperser")
-      fi  <- row.as[NonEmptyString]("filter")
-      fu  <- row.as[NonEmptyString]("fpu")
-      i   <- row.as[Instrument]("instrument").flatMap(InstrumentRow.decode(_, di, fi, fu))
-      s   <- row.as[NonEmptyString]("Config")
-      fs  <- row.as[NonEmptyList[FocalPlane]]("Focal Plane")
-      c   <- row.as[Option[SpectroscopyCapabilities]]("capabilities")
-      a   <- row.as[ModeAO]("AO")
-      min <- row.as[ModeWavelength]("wave min")
-      max <- row.as[ModeWavelength]("wave max")
-      wo  <- row.as[ModeWavelength]("wave optimal")
-      wr  <- row.as[ModeWavelengthDelta]("wave coverage")
-      r   <- row.as[PosInt]("resolution")
-      sl  <- row.as[ModeSlitSize]("slit length")
-      sw  <- row.as[ModeSlitSize]("slit width")
-    } yield fs.map(f => // Ids are assigned later, after list is flattened.
-      SpectroscopyModeRow(0, i, s, f, c, a, min, max, wo, wr, r, SlitLength(sl), SlitWidth(sw))
-    )
+      grating <- c.downField("grating").as[GmosNorthGrating]
+      fpu     <- c.downField("fpu").as[GmosNorthFpu]
+      filter  <- c.downField("filter").as[Option[GmosNorthFilter]]
+    } yield GmosNorthSpectroscopyRow(grating, fpu, filter, none)
 
+  private given Decoder[GmosSouthSpectroscopyRow] = c =>
+    for {
+      grating <- c.downField("grating").as[GmosSouthGrating]
+      fpu     <- c.downField("fpu").as[GmosSouthFpu]
+      filter  <- c.downField("filter").as[Option[GmosSouthFilter]]
+    } yield GmosSouthSpectroscopyRow(grating, fpu, filter, none)
+
+  given Decoder[SpectroscopyModeRow] = c =>
+    for {
+      instrument <- c.downField("instrument").as[Instrument]
+      name       <- c.downField("name").as[NonEmptyString]
+      focalPlane <- c.downField("focalPlane").as[FocalPlane]
+      capability <- c.downField("capability").as[Option[SpectroscopyCapabilities]]
+      ao         <- c.downField("adaptiveOptics").as[Boolean]
+      λmin       <- c.downField("wavelengthMin").as[Wavelength]
+      λmax       <- c.downField("wavelengthMax").as[Wavelength]
+      λoptimal   <- c.downField("wavelengthOptimal").as[Wavelength]
+      λcoverage  <- c.downField("wavelengthCoverage").as[Wavelength] // It is wavelength in the odb
+      resolution <- c.downField("resolution").as[PosInt]
+      slitWidth  <- c.downField("slitWidth").as[Angle]
+      slitLength <- c.downField("slitLength").as[Angle]
+      gmosNorth  <- c.downField("gmosNorth").as[Option[GmosNorthSpectroscopyRow]]
+      gmosSouth  <- c.downField("gmosSouth").as[Option[GmosSouthSpectroscopyRow]]
+    } yield gmosNorth
+      .orElse(gmosSouth)
+      .map { i =>
+        SpectroscopyModeRow(
+          none,
+          i,
+          name,
+          focalPlane,
+          capability,
+          ModeAO.fromBoolean(ao),
+          ModeWavelength(λmin),
+          ModeWavelength(λmax),
+          ModeWavelength(λoptimal),
+          WavelengthDelta(λcoverage.pm),
+          resolution,
+          SlitLength(ModeSlitSize(slitLength)),
+          SlitWidth(ModeSlitSize(slitWidth))
+        )
+      }
+      .getOrElse(sys.error("Instrument not found"))
 }
 
 case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
@@ -411,7 +411,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
         iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
         wavelength.forall(w => w >= r.λmin.value && w <= r.λmax.value) &&
         resolution.forall(_ <= r.resolution) &&
-        range.forall(_ <= r.λdelta.value) &&
+        range.forall(_ <= r.λdelta) &&
         slitLength.forall(_ <= r.slitLength) &&
         declination.forall(r.instrument.site.inPreferredDeclination)
 
@@ -420,7 +420,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
       // Difference in wavelength
       val deltaWave: BigDecimal       =
         wavelength
-          .map(w => r.optimalWavelength.value.diff(w).abs.toNanometers.value)
+          .map(w => r.λoptimal.value.diff(w).abs.toNanometers.value)
           .getOrElse(BigDecimal(0))
       // Difference in slit width
       val deltaSlitWidth: Rational    =
@@ -468,6 +468,6 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
   }
 }
 
-object SpectroscopyModesMatrix extends SpectroscopyModesMatrixPlatform {
+object SpectroscopyModesMatrix {
   val empty: SpectroscopyModesMatrix = SpectroscopyModesMatrix(Nil)
 }
