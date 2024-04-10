@@ -11,6 +11,7 @@ import crystal.react.View
 import explore.model.*
 import explore.model.Page
 import explore.model.Page.*
+import explore.modes.SpectroscopyModesMatrix
 import explore.proposal.ProposalTabContents
 import explore.tabs.*
 import explore.tabs.ConstraintsTabContents
@@ -97,6 +98,7 @@ object Routing:
             routingInfo.programId,
             programSummaries,
             userPrefs,
+            model.zoom(RootModel.spectroscopyModes).get.getOrElse(SpectroscopyModesMatrix.empty),
             routingInfo.focused,
             model.zoom(RootModel.searchingTarget),
             model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),

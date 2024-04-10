@@ -9,6 +9,7 @@ import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.cache.ModesCache
 import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
 import explore.components.ui.ExploreStyles
@@ -206,6 +207,7 @@ object ExploreLayout:
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
               // selection popup.
+              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.set),
               ProgramCache(
                 routingInfo.programId,
                 props.view.zoom(RootModel.user).get.map(_.role.name),

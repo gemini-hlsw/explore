@@ -23,6 +23,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
+import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
@@ -68,6 +69,7 @@ case class ObsTabContents(
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
   userPreferences:  View[UserPreferences],
+  modes:            SpectroscopyModesMatrix,
   focused:          Focused,
   searching:        View[Set[Target.Id]],
   expandedGroups:   View[Set[Group.Id]],
@@ -155,6 +157,7 @@ object ObsTabContents extends TwoPanels:
             props.vault,
             props.userId,
             props.programId,
+            props.modes,
             backButton,
             // FIXME Find a better mechanism for this.
             // Something like .mapValue but for UndoContext

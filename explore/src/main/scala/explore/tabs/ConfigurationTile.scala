@@ -15,6 +15,7 @@ import explore.model.ObsConfiguration
 import explore.model.ObsTabTilesIds
 import explore.model.ScienceRequirements
 import explore.model.TargetList
+import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.Callback
 import lucuma.core.model.CoordinatesAtVizTime
@@ -39,6 +40,7 @@ object ConfigurationTile {
     baseCoordinates:  Option[CoordinatesAtVizTime],
     obsConf:          ObsConfiguration,
     selectedConfig:   View[Option[BasicConfigAndItc]],
+    modes:            SpectroscopyModesMatrix,
     allTargets:       TargetList,
     sequenceChanged:  Callback,
     readonly:         Boolean
@@ -60,6 +62,7 @@ object ConfigurationTile {
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
         selectedConfig,
+        modes,
         sequenceChanged,
         readonly
       )

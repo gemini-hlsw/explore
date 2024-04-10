@@ -439,7 +439,7 @@ private object SpectroscopyModesTable:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => RowId(row.entry.id.value),
+            getRowId = (row, _, _) => RowId(row.entry.id.orEmpty.toString),
             enableSorting = true
           ),
           TableStore(props.userId, TableId.SpectroscopyModes, cols)

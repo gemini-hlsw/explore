@@ -9,6 +9,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoStacks
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
@@ -30,6 +31,7 @@ case class RootModel(
   userSelectionMessage: Option[NonEmptyString] = none,
   programSummaries:     Option[ProgramSummaries] = none,
   userPreferences:      Option[UserPreferences] = none,
+  spectroscopyModes:    Option[SpectroscopyModesMatrix] = none,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq
@@ -42,6 +44,7 @@ object RootModel:
   val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
   val programSummaries     = Focus[RootModel](_.programSummaries)
   val userPreferences      = Focus[RootModel](_.userPreferences)
+  val spectroscopyModes    = Focus[RootModel](_.spectroscopyModes)
   val undoStacks           = Focus[RootModel](_.undoStacks)
   val otherUndoStacks      = Focus[RootModel](_.otherUndoStacks)
 

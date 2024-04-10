@@ -11,7 +11,6 @@ import clue.data.Input
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
-import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.DefaultErrorPolicy
@@ -39,7 +38,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import queries.common.ModesQueriesGQL
 import queries.common.ObsQueriesGQL
 
 case class ConfigurationPanel(
@@ -53,6 +51,7 @@ case class ConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   selectedConfig:  View[Option[BasicConfigAndItc]],
+  modes:           SpectroscopyModesMatrix,
   sequenceChanged: Callback,
   readonly:        Boolean
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
@@ -129,20 +128,7 @@ object ConfigurationPanel:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useEffectResultOnMountBy { (props, ctx) =>
-        import ctx.given
-
-        ModesQueriesGQL
-          .SpectroscopyModes[IO]
-          .query()
-          .map(u =>
-            val modes = u.spectroscopyConfigOptions.zipWithIndex.map { case (s, i) =>
-              s.copy(id = i.some)
-            }
-            SpectroscopyModesMatrix(modes)
-          )
-      }
-      .render { (props, ctx, matrix) =>
+      .render { (props, ctx) =>
         import ctx.given
 
         val modeAligner: Aligner[Option[ObservingMode], Input[ObservingModeInput]] =
@@ -181,8 +167,6 @@ object ConfigurationPanel:
           )
         }
 
-        val confMatrix = matrix.toOption.getOrElse(SpectroscopyModesMatrix.empty)
-
         React.Fragment(
           <.div(ExploreStyles.ConfigurationGrid)(
             props.obsConf.agsState
@@ -213,7 +197,7 @@ object ConfigurationPanel:
                       props.selectedConfig.get.map(_.configuration),
                       optModeView
                     ),
-                    confMatrix,
+                    props.modes,
                     props.readonly
                   )
                 )
@@ -231,7 +215,7 @@ object ConfigurationPanel:
                           northAligner,
                           spectroscopyRequirements,
                           deleteConfiguration,
-                          confMatrix,
+                          props.modes,
                           props.selectedConfig,
                           props.sequenceChanged,
                           props.readonly
@@ -246,7 +230,7 @@ object ConfigurationPanel:
                           southAligner,
                           spectroscopyRequirements,
                           deleteConfiguration,
-                          confMatrix,
+                          props.modes,
                           props.selectedConfig,
                           props.sequenceChanged,
                           props.readonly

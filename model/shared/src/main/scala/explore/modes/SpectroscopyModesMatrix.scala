@@ -285,7 +285,8 @@ case class SpectroscopyModeRow(
   resolution: PosInt,
   slitLength: SlitLength,
   slitWidth:  SlitWidth
-) extends ModeCommonWavelengths {
+) extends ModeCommonWavelengths
+    derives Eq {
   // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthDelta
 
   inline def hasFilter: Boolean = instrument.hasFilter
@@ -390,7 +391,7 @@ object SpectroscopyModeRow {
       .getOrElse(sys.error("Instrument not found"))
 }
 
-case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) {
+case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq {
   val ScoreBump   = Rational(1, 2)
   val FilterLimit = Wavelength.fromIntNanometers(650)
 
