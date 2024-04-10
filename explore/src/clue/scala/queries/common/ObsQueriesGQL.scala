@@ -38,6 +38,7 @@ object ObsQueriesGQL:
             }
             acquisition {
               selected {
+                exposures
                 signalToNoise
               }
             }

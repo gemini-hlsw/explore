@@ -167,6 +167,7 @@ object ObsTabTiles:
                 o.itc.science.selected.exposureTime,
                 o.itc.science.selected.exposures,
                 o.itc.science.selected.signalToNoise,
+                o.itc.acquisition.selected.exposures,
                 o.itc.acquisition.selected.signalToNoise
               )
             )
