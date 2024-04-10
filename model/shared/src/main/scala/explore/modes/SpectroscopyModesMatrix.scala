@@ -15,7 +15,6 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
 import explore.model.syntax.all.*
-import fs2.data.csv.*
 import io.circe.Decoder
 import io.circe.refined.*
 import lucuma.core.enums.*
@@ -143,85 +142,6 @@ case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: NonEmp
 
 object InstrumentRow {
 
-  def decodeEnums[A: Enumerated, B](
-    id:       B,
-    criteria: (B, A) => Boolean
-  ): Either[DecoderError, A] =
-    Enumerated[A].all.find(criteria(id, _)).toRight(new DecoderError(s"Unknown enum $id"))
-
-  def decodeOptionalenums[A: Enumerated](
-    filter:   String,
-    criteria: (String, A) => Boolean
-  ): Either[DecoderError, Option[A]] =
-    if (filter.isEmpty || filter.toLowerCase === "none") none.asRight
-    else decodeEnums[A, String](filter, criteria).map(_.some)
-
-  def decodeGmosSouthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosSouthFilter]] =
-    decodeOptionalenums[GmosSouthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
-
-  def decodeGmosSouthFPU(fpu: NonEmptyString): Either[DecoderError, GmosSouthFpu] =
-    decodeEnums[GmosSouthFpu, String](fpu.value, (i, f) => i === f.shortName)
-
-  def decodeGmosSouthGrating(grating: String): Either[DecoderError, GmosSouthGrating] =
-    decodeEnums[GmosSouthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
-
-  def decodeGmosNorthFilter(filter: NonEmptyString): Either[DecoderError, Option[GmosNorthFilter]] =
-    decodeOptionalenums[GmosNorthFilter](filter.value, (i, f) => !f.obsolete && i === f.shortName)
-
-  def decodeGmosNorthGrating(grating: String): Either[DecoderError, GmosNorthGrating] =
-    decodeEnums[GmosNorthGrating, String](grating, (i, f) => !f.obsolete && i === f.shortName)
-
-  def decodeGmosNorthFPU(fpu: NonEmptyString): Either[DecoderError, GmosNorthFpu] =
-    decodeEnums[GmosNorthFpu, String](fpu.value, (i, f) => i === f.shortName)
-
-  def decodeF2Filter(filter: NonEmptyString): Either[DecoderError, F2Filter] =
-    decodeEnums[F2Filter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
-
-  def decodeF2Disperser(grating: String): Either[DecoderError, F2Disperser] =
-    decodeEnums[F2Disperser, String](grating, _ === _.shortName)
-
-  def decodeGpiFilter(filter: NonEmptyString): Either[DecoderError, GpiFilter] =
-    decodeEnums[GpiFilter, String](filter.value, (i, f) => !f.obsolete && i === f.shortName)
-
-  def decodeGpiDisperser(grating: String): Either[DecoderError, GpiDisperser] =
-    decodeEnums[GpiDisperser, String](grating, _ === _.shortName)
-
-  def decodeGnirsFilter(filter: NonEmptyString): Either[DecoderError, GnirsFilter] =
-    decodeEnums[GnirsFilter, String](filter.value, _ === _.shortName)
-
-  def decodeGnirsDisperser(grating: String): Either[DecoderError, GnirsDisperser] =
-    decodeEnums[GnirsDisperser, String](grating, _ === _.shortName)
-
-  def decode(
-    instrument0: Instrument,
-    grating0:    String,
-    filter0:     NonEmptyString,
-    fpu0:        NonEmptyString
-  ): Either[DecoderError, InstrumentRow] =
-    instrument0 match {
-      case Instrument.GmosNorth  =>
-        (decodeGmosNorthGrating(grating0), decodeGmosNorthFPU(fpu0), decodeGmosNorthFilter(filter0))
-          .mapN(
-            GmosNorthSpectroscopyRow(_, _, _, none)
-          )
-      case Instrument.GmosSouth  =>
-        (decodeGmosSouthGrating(grating0), decodeGmosSouthFPU(fpu0), decodeGmosSouthFilter(filter0))
-          .mapN(
-            GmosSouthSpectroscopyRow(_, _, _, none)
-          )
-      case Instrument.Flamingos2 =>
-        (decodeF2Disperser(grating0), decodeF2Filter(filter0)).mapN(
-          Flamingos2SpectroscopyRow.apply
-        )
-      case Instrument.Gpi        =>
-        (decodeGpiDisperser(grating0), decodeGpiFilter(filter0)).mapN(GpiSpectroscopyRow.apply)
-      case Instrument.Gnirs      =>
-        (decodeGnirsDisperser(grating0), decodeGnirsFilter(filter0)).mapN(
-          GnirsSpectroscopyRow.apply
-        )
-      case i                     => GenericSpectroscopyRow(i, grating0, filter0).asRight
-    }
-
   val instrument: Getter[InstrumentRow, Instrument] =
     Getter[InstrumentRow, Instrument](_.instrument)
 
@@ -338,7 +258,7 @@ object SpectroscopyModeRow {
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)
 
-  // decodores for instruments are used locally as they are not lawful
+  // decoders for instruments are used locally as they are not lawful
   private given Decoder[GmosNorthSpectroscopyRow] = c =>
     for {
       grating <- c.downField("grating").as[GmosNorthGrating]
