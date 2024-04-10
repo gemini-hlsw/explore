@@ -34,6 +34,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
+import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
@@ -81,6 +82,7 @@ case class ObsTabTiles(
   vault:                    Option[UserVault],
   userId:                   Option[User.Id],
   programId:                Program.Id,
+  modes:                    SpectroscopyModesMatrix,
   backButton:               VdomNode,
   observation:              UndoSetter[ObsSummary],
   obsExecution:             Pot[Execution],
@@ -523,6 +525,7 @@ object ObsTabTiles:
               targetCoords,
               obsConf,
               selectedConfig,
+              props.modes,
               props.allTargets.get,
               sequenceChanged.mod {
                 case Ready(x) => Pot.pending

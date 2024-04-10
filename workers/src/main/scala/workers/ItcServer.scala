@@ -11,9 +11,7 @@ import explore.events.*
 import explore.itc.ITCGraphRequests
 import explore.itc.ITCRequests
 import explore.itc.ITCVersionsRequests
-import explore.model.StaticData
 import explore.model.boopickle.ItcPicklers
-import explore.modes.SpectroscopyModesMatrix
 import lucuma.itc.client.ItcClient
 import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
@@ -46,7 +44,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
       self      <- IO(dom.DedicatedWorkerGlobalScope.self)
       cache     <- Cache.withIDB[IO](self.indexedDB.toOption, "explore-itc")
       _         <- cache.evict(CacheRetention).start
-      matrix    <- Deferred[IO, SpectroscopyModesMatrix]
       itcClient <- Deferred[IO, ItcClient[IO]]
     } yield { invocation =>
       invocation.data match
@@ -59,18 +56,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
         case ItcMessage.CleanCache =>
           cache.clear *> invocation.respond(())
-
-        case ItcMessage.SpectroscopyMatrixRequest(uri) =>
-          matrix.tryGet.flatMap {
-            case Some(m) =>
-              Logger[IO].debug("ITC matrix load from memory") *>
-                invocation.respond(m)
-            case _       =>
-              Logger[IO].debug("ITC matrix load from remote") *>
-                StaticData.build[IO](uri).flatMap { m =>
-                  matrix.complete(m) *> invocation.respond(m)
-                }
-          }
 
         case ItcMessage.Query(
               wavelength,

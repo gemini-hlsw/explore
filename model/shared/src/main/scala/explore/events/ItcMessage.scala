@@ -14,7 +14,6 @@ import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
-import explore.modes.SpectroscopyModesMatrix
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
@@ -31,9 +30,6 @@ object ItcMessage extends ItcPicklers:
 
   case object CleanCache extends Request:
     type ResponseType = Unit
-
-  case class SpectroscopyMatrixRequest(uri: Uri) extends Request:
-    type ResponseType = SpectroscopyModesMatrix
 
   case class Query(
     wavelength:      Wavelength,
@@ -55,8 +51,6 @@ object ItcMessage extends ItcPicklers:
     modes:           InstrumentRow
   ) extends Request:
     type ResponseType = Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]
-
-  private given Pickler[SpectroscopyMatrixRequest] = generatePickler
 
   private given Pickler[Query] = generatePickler
 

@@ -4,6 +4,7 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic.*
+import boopickle.Pickler
 import cats.implicits.*
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -37,6 +38,7 @@ import lucuma.core.math.LineWidthValue
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
@@ -97,7 +99,7 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[SlitWidth] = picklerNewType(SlitWidth)
 
-  given Pickler[ModeWavelengthDelta] = picklerNewType(ModeWavelengthDelta)
+  given Pickler[ModeAO] = picklerNewType(ModeAO)
 
   given Pickler[SpectroscopyModeRow] = generatePickler
 

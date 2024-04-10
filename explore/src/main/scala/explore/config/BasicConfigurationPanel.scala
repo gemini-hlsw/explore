@@ -10,14 +10,12 @@ import crystal.react.hooks.*
 import explore.Icons
 import explore.common.ScienceQueries
 import explore.common.ScienceQueries.*
-import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ImagingConfigurationOptions
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
-import explore.model.display.given
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
@@ -34,10 +32,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
-import lucuma.refined.*
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.FormEnumDropdownView
-import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 
@@ -111,11 +106,12 @@ private object BasicConfigurationPanel:
         <.div(ExploreStyles.BasicConfigurationGrid)(
           <.div(
             ExploreStyles.BasicConfigurationForm,
-            <.label("Mode", HelpIcon("configuration/mode.md".refined)),
-            FormEnumDropdownView(id = "configuration-mode".refined,
-                                 value = mode,
-                                 disabled = props.readonly
-            ),
+            // TODO Enable when imaging is available
+            // <.label("Mode", HelpIcon("configuration/mode.md".refined)),
+            // FormEnumDropdownView(id = "configuration-mode".refined,
+            //                      value = mode,
+            //                      disabled = props.readonly
+            // ),
             spectroscopyView.mapValue(v => SpectroscopyConfigurationPanel(v, props.readonly))
             // TODO Pending reinstate
             // ImagingConfigurationPanel(imaging)

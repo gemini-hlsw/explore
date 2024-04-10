@@ -29,7 +29,6 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.ModeCommonWavelengths
 import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
-import explore.modes.ModeWavelengthDelta
 import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
@@ -208,7 +207,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     resolution:        PosInt,
     λmin:              ModeWavelength,
     λmax:              ModeWavelength,
-    λdelta:            ModeWavelengthDelta
+    λdelta:            WavelengthDelta
   ) extends ModeCommonWavelengths
 
   private object ModeData {
@@ -472,11 +471,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         val validDithers = modeData.value
           .map(mode =>
-            ExploreModelValidators.dithersValidWedge(
-              centralWavelengthView.get,
-              mode.λmin.value,
-              mode.λmax.value,
-              mode.λdelta.value
+            ExploreModelValidators.dithersValidWedge(centralWavelengthView.get,
+                                                     mode.λmin.value,
+                                                     mode.λmax.value,
+                                                     mode.λdelta
             )
           )
           .getOrElse(
