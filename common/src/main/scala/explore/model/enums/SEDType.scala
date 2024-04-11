@@ -78,7 +78,7 @@ sealed abstract class SEDTypeEnum[T](
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
   case object BlackBodyType
-      extends BandNormalizedSED("Black Body", BlackBody(1000.refined[Positive].withUnit[Kelvin]))
+      extends BandNormalizedSED("Black Body", BlackBody(10000.refined[Positive].withUnit[Kelvin]))
   case object UserDefinedType
       extends BandNormalizedSED(
         "User Defined",
