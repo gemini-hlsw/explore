@@ -9,6 +9,7 @@ import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.svg_<^.*
 import lucuma.ags.AgsAnalysis
+import lucuma.core.enums.Band
 import lucuma.core.enums.GuideSpeed
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -67,8 +68,6 @@ object GuideStarTarget:
         if (open.value.value) {
           val ID = s"Gaia DR3 ${p.analysis.target.id}"
 
-          val mag = p.analysis.target.gBrightness.foldMap(g => f"G: $g%.2f")
-
           val (translateBoxY, translateTextX, translateTextY, path, pf) =
             tooltipTranslationAndContent(floating, p.offQ, p.sx, p.sy, ID)
 
@@ -97,15 +96,19 @@ object GuideStarTarget:
                 ID
               ),
               <.text(
-                ^.transform := s"translate(${-30 / pf}, ${0.7 * translateTextY}) $scaleTr",
-                mag
+                ^.transform := s"translate(${-30 / pf}, ${0.75 * translateTextY}) $scaleTr",
+                p.analysis.target.gBrightness.map {
+                  case (Band.GaiaRP, v) =>
+                    React.Fragment("G", <.tspan(^.baselineShift := "sub", "RP"), f": ${v}%.2f")
+                  case (b, v)           => React.Fragment(f"${b.shortName}: ${v}%.2f")
+                }
               ),
               <.g(
-                ^.transform := s"translate(${5 / pf}, ${1.55 * translateTextY}) scale(0.02, 0.02)",
+                ^.transform := s"translate(${10 / pf}, ${1.6 * translateTextY}) scale(0.02, 0.02)",
                 guideSpeedIcon
               ),
               <.text(
-                ^.transform := s"translate(${15 / pf}, ${0.7 * translateTextY}) $scaleTr",
+                ^.transform := s"translate(${20 / pf}, ${0.75 * translateTextY}) $scaleTr",
                 speedText
               )
             )
