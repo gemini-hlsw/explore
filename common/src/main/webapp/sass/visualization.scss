@@ -402,7 +402,7 @@ $brightness: var(--aladin-image-brightness);
 
     .fa-bahai {
       color: var(--ags-icon-color);
-      margin-right: 0.3em;
+      padding-top: 0.3em;
     }
 
     .ags-description {
@@ -410,7 +410,7 @@ $brightness: var(--aladin-image-brightness);
 
       display: flex;
       gap: 0.1em;
-      align-items: center;
+      align-items: baselinee;
 
       .ags-navigation {
         margin-left: 0.3em;
@@ -448,6 +448,14 @@ $brightness: var(--aladin-image-brightness);
       .svg-inline--fa {
         margin-right: 0.3em;
       }
+    }
+
+
+    .ags-not-found,
+    .ags-medium-color,
+    .ags-fast-color,
+    .ags-slow-color {
+      padding-top: 0.3em;
     }
 
     .ags-fast-color {

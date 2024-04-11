@@ -14,6 +14,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
+import lucuma.core.enums.Band
 import lucuma.core.enums.GuideSpeed
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.IconSize
@@ -90,9 +91,12 @@ object AgsOverlay {
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
                     <.div(
                       ExploreStyles.AgsGBrightness,
-                      analysis.target.gBrightness.map(g =>
-                        s"${g._1.shortName}: ${g._2.value.value.setScale(1, RoundingMode.HALF_DOWN).toString()}"
-                      )
+                      analysis.target.gBrightness.map { case (b, v) =>
+                        React.Fragment(
+                          if (b === Band.GaiaRP) React.Fragment(s"G", <.sub("RP")) else b.shortName,
+                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}"
+                        )
+                      }
                     ),
                     <.div(ExploreStyles.AgsCoordinates,
                           s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
