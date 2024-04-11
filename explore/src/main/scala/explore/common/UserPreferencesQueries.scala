@@ -389,17 +389,25 @@ object UserPreferencesQueries:
 
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
-      userId:     User.Id,
-      range:      PlotRange,
-      time:       TimeDisplay,
-      scheduling: Boolean
+      userId:                               User.Id,
+      range:                                PlotRange,
+      time:                                 TimeDisplay,
+      scheduling:                           Boolean,
+      elevationPlotElevationVisible:        Visible,
+      elevationPlotParallacticAngleVisible: Visible,
+      elevationPlotSkyBrightnessVisible:    Visible,
+      elevationPlotLunarElevationVisible:   Visible
     )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       UserPreferencesElevPlotUpdate[F]
         .execute(
           userId = userId.show.assign,
           elevationPlotRange = range,
           elevationPlotTime = time,
-          elevationPlotScheduling = scheduling
+          elevationPlotScheduling = scheduling,
+          elevationPlotElevationVisible = elevationPlotElevationVisible.isVisible,
+          elevationPlotParallacticAngleVisible = elevationPlotParallacticAngleVisible.isVisible,
+          elevationPlotSkyBrightnessVisible = elevationPlotSkyBrightnessVisible.isVisible,
+          elevationPlotLunarElevationVisible = elevationPlotLunarElevationVisible.isVisible
         )
         .attempt
         .void

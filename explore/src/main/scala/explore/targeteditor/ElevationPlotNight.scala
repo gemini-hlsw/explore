@@ -6,10 +6,13 @@ package explore.targeteditor
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import crystal.react.*
 import explore.*
 import explore.highcharts.*
 import explore.model.Constants
+import explore.model.ElevationPlotOptions
 import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -31,6 +34,7 @@ import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.ui.components.MoonPhase
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import monocle.Lens
 import org.scalajs.dom
 
 import java.time.Duration
@@ -52,7 +56,8 @@ case class ElevationPlotNight(
   date:              LocalDate,
   timeDisplay:       TimeDisplay,
   visualizationTime: Option[Instant],
-  excludeIntervals:  List[BoundedInterval[Instant]]
+  excludeIntervals:  List[BoundedInterval[Instant]],
+  options:           View[ElevationPlotOptions]
 ) extends ReactFnProps(ElevationPlotNight.component):
   val visualizationDuration: Duration = Duration.ofHours(1)
 
@@ -85,12 +90,28 @@ object ElevationPlotNight:
     val name:    String,
     val yAxis:   Int,
     val data:    SeriesData => List[ResizingChart.Data],
-    val enabled: Boolean
+    val enabled: ElevationPlotOptions => Visible
   ) derives Eq:
-    case Elevation        extends ElevationSeries("Elevation", 0, _.targetAltitude, true)
-    case ParallacticAngle extends ElevationSeries("Parallactic Angle", 1, _.parallacticAngle, false)
-    case SkyBrightness    extends ElevationSeries("Sky Brightness", 2, _.skyBrightness, true)
-    case LunarElevation   extends ElevationSeries("Lunar Elevation", 0, _.moonAltitude, false)
+    case Elevation
+        extends ElevationSeries("Elevation", 0, _.targetAltitude, _.elevationPlotElevationVisible)
+    case ParallacticAngle
+        extends ElevationSeries("Parallactic Angle",
+                                1,
+                                _.parallacticAngle,
+                                _.elevationPlotParallacticAngleVisible
+        )
+    case SkyBrightness
+        extends ElevationSeries("Sky Brightness",
+                                2,
+                                _.skyBrightness,
+                                _.elevationPlotSkyBrightnessVisible
+        )
+    case LunarElevation
+        extends ElevationSeries("Lunar Elevation",
+                                0,
+                                _.moonAltitude,
+                                _.elevationPlotLunarElevationVisible
+        )
 
   private def formatAngle(degs: Double): String =
     val dms     = Angle.DMS(Angle.fromDoubleDegrees(degs))
@@ -142,8 +163,19 @@ object ElevationPlotNight:
       .useState(HashSet.from(ElevationSeries.values))
       .useResizeDetector()
       .render: (props, shownSeries, resize) =>
+        def zoomFn(series: ElevationSeries): Lens[ElevationPlotOptions, Visible] =
+          series match
+            case ElevationSeries.Elevation        => ElevationPlotOptions.elevationPlotElevationVisible
+            case ElevationSeries.ParallacticAngle =>
+              ElevationPlotOptions.elevationPlotParallacticAngleVisible
+            case ElevationSeries.SkyBrightness    =>
+              ElevationPlotOptions.elevationPlotSkyBrightnessVisible
+            case ElevationSeries.LunarElevation   =>
+              ElevationPlotOptions.elevationPlotLunarElevationVisible
+
         def showSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
-          shownSeries.modState(_ + series) >>
+          props.options.zoom(zoomFn(series)).set(Visible.Shown) *>
+            shownSeries.modState(_ + series) *>
             Callback {
               skyBrightnessPercentileLines.foreach(line => chart.yAxis(2).addPlotLine(line))
               skyBrightnessPercentileBands.foreach(band => chart.yAxis(2).addPlotBand(band))
@@ -152,7 +184,8 @@ object ElevationPlotNight:
               .void
 
         def hideSeriesCB(series: ElevationSeries, chart: Chart_): Callback =
-          shownSeries.modState(_ - series) >>
+          props.options.zoom(zoomFn(series)).set(Visible.Hidden) *>
+            shownSeries.modState(_ - series) *>
             Callback {
               skyBrightnessPercentileLines
                 .flatMap(_.id.toList)
@@ -375,7 +408,6 @@ object ElevationPlotNight:
           )
           .setSeries(
             ElevationSeries.values
-              .filter(_.enabled)
               .map(series =>
                 val zones       =
                   props.visualizationTime
@@ -394,7 +426,10 @@ object ElevationPlotNight:
                     .setClassName("elevation-plot-series")
                     .setYAxis(series.yAxis)
                     .setData(series.data(seriesData).toJSArray)
-                    .setVisible(shownSeries.value.contains(series))
+                    .setVisible(
+                      series.enabled(props.options.get).isVisible && shownSeries.value
+                        .contains(series)
+                    )
                     .setEvents(
                       SeriesEventsOptionsObject()
                         .setHide((s, _) => hideSeriesCB(series, s.chart).runNow())
