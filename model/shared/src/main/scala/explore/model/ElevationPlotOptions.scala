@@ -8,6 +8,7 @@ import cats.derived.*
 import cats.syntax.all.*
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
@@ -21,12 +22,16 @@ import java.time.Instant
 import java.time.LocalDate
 
 case class ElevationPlotOptions(
-  site:           Site,
-  range:          PlotRange,
-  date:           LocalDate,
-  semester:       Semester,
-  timeDisplay:    TimeDisplay,
-  showScheduling: ElevationPlotScheduling
+  site:                                 Site,
+  range:                                PlotRange,
+  date:                                 LocalDate,
+  semester:                             Semester,
+  timeDisplay:                          TimeDisplay,
+  showScheduling:                       ElevationPlotScheduling,
+  elevationPlotElevationVisible:        Visible,
+  elevationPlotParallacticAngleVisible: Visible,
+  elevationPlotSkyBrightnessVisible:    Visible,
+  elevationPlotLunarElevationVisible:   Visible
 ) derives Eq:
   def withDateAndSemesterOf(visualizationTime: Instant): ElevationPlotOptions =
     val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(visualizationTime.some, site)
@@ -53,12 +58,19 @@ case class ElevationPlotOptions(
   def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)
 
 object ElevationPlotOptions:
-  val site           = Focus[ElevationPlotOptions](_.site)
-  val range          = Focus[ElevationPlotOptions](_.range)
-  val date           = Focus[ElevationPlotOptions](_.date)
-  val semester       = Focus[ElevationPlotOptions](_.semester)
-  val timeDisplay    = Focus[ElevationPlotOptions](_.timeDisplay)
-  val showScheduling = Focus[ElevationPlotOptions](_.showScheduling)
+  val site                                 = Focus[ElevationPlotOptions](_.site)
+  val range                                = Focus[ElevationPlotOptions](_.range)
+  val date                                 = Focus[ElevationPlotOptions](_.date)
+  val semester                             = Focus[ElevationPlotOptions](_.semester)
+  val timeDisplay                          = Focus[ElevationPlotOptions](_.timeDisplay)
+  val showScheduling                       = Focus[ElevationPlotOptions](_.showScheduling)
+  val elevationPlotElevationVisible        = Focus[ElevationPlotOptions](_.elevationPlotElevationVisible)
+  val elevationPlotParallacticAngleVisible =
+    Focus[ElevationPlotOptions](_.elevationPlotParallacticAngleVisible)
+  val elevationPlotSkyBrightnessVisible    =
+    Focus[ElevationPlotOptions](_.elevationPlotSkyBrightnessVisible)
+  val elevationPlotLunarElevationVisible   =
+    Focus[ElevationPlotOptions](_.elevationPlotLunarElevationVisible)
 
   private def dateAndSemesterOf(
     visualizationTime: Option[Instant],
@@ -92,5 +104,9 @@ object ElevationPlotOptions:
       date,
       semester,
       TimeDisplay.Site,
-      ElevationPlotScheduling.On
+      ElevationPlotScheduling.On,
+      Visible.Shown,
+      Visible.Hidden,
+      Visible.Shown,
+      Visible.Hidden
     )

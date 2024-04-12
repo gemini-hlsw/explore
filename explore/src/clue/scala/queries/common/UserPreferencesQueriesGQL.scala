@@ -186,6 +186,10 @@ object UserPreferencesQueriesGQL {
           elevationPlotScheduling
           itcChartType
           itcDetailsOpen
+          elevationPlotElevationVisible
+          elevationPlotParallacticAngleVisible
+          elevationPlotSkyBrightnessVisible
+          elevationPlotLunarElevationVisible
         }
       }
     """
@@ -231,20 +235,37 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesElevPlotUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation userPreferencesUpsert($userId: String = "", $elevationPlotRange: ExplorePlotRangeEnum!, $elevationPlotTime: ExplorePlotTimeEnum!, $elevationPlotScheduling: Boolean!) {
+      mutation userPreferencesUpsert(
+        $userId: String = "",
+        $elevationPlotRange: ExplorePlotRangeEnum!,
+        $elevationPlotTime: ExplorePlotTimeEnum!,
+        $elevationPlotScheduling: Boolean!
+        $elevationPlotElevationVisible: Boolean!,
+        $elevationPlotParallacticAngleVisible: Boolean!,
+        $elevationPlotSkyBrightnessVisible: Boolean!,
+        $elevationPlotLunarElevationVisible: Boolean!
+      ) {
         insertLucumaUserPreferencesOne(
           object: {
             userId: $userId,
             elevationPlotRange: $elevationPlotRange,
             elevationPlotTime: $elevationPlotTime,
-            elevationPlotScheduling: $elevationPlotScheduling
+            elevationPlotScheduling: $elevationPlotScheduling,
+            elevationPlotElevationVisible: $elevationPlotElevationVisible,
+            elevationPlotParallacticAngleVisible: $elevationPlotParallacticAngleVisible,
+            elevationPlotSkyBrightnessVisible: $elevationPlotSkyBrightnessVisible,
+            elevationPlotLunarElevationVisible: $elevationPlotLunarElevationVisible
           },
           onConflict: {
             constraint: lucuma_user_preferences_pkey,
             update_columns: [
               elevationPlotRange,
               elevationPlotTime,
-              elevationPlotScheduling
+              elevationPlotScheduling,
+              elevationPlotElevationVisible,
+              elevationPlotParallacticAngleVisible,
+              elevationPlotSkyBrightnessVisible,
+              elevationPlotLunarElevationVisible
             ]
           }
         ) {

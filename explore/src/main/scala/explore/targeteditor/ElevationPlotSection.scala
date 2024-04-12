@@ -71,7 +71,14 @@ object ElevationPlotSection:
           .copy(
             range = props.globalPreferences.elevationPlotRange,
             timeDisplay = props.globalPreferences.elevationPlotTime,
-            showScheduling = props.globalPreferences.elevationPlotScheduling
+            showScheduling = props.globalPreferences.elevationPlotScheduling,
+            elevationPlotElevationVisible = props.globalPreferences.elevationPlotElevationVisible,
+            elevationPlotParallacticAngleVisible =
+              props.globalPreferences.elevationPlotParallacticAngleVisible,
+            elevationPlotSkyBrightnessVisible =
+              props.globalPreferences.elevationPlotSkyBrightnessVisible,
+            elevationPlotLunarElevationVisible =
+              props.globalPreferences.elevationPlotLunarElevationVisible
           )
       )
       // If predefined site changes, switch to it.
@@ -87,10 +94,15 @@ object ElevationPlotSection:
 
         val options = elevationPlotOptions.withOnMod(opts =>
           ElevationPlotPreference
-            .updatePlotPreferences[IO](props.uid,
-                                       opts.range,
-                                       opts.timeDisplay,
-                                       opts.showScheduling.value
+            .updatePlotPreferences[IO](
+              props.uid,
+              opts.range,
+              opts.timeDisplay,
+              opts.showScheduling.value,
+              opts.elevationPlotElevationVisible,
+              opts.elevationPlotParallacticAngleVisible,
+              opts.elevationPlotSkyBrightnessVisible,
+              opts.elevationPlotLunarElevationVisible
             )
             .runAsync
         )
@@ -140,7 +152,8 @@ object ElevationPlotSection:
                   opt.date,
                   opt.timeDisplay,
                   props.visualizationTime,
-                  windowsNetExcludeIntervals
+                  windowsNetExcludeIntervals,
+                  options
                 )
               case PlotRange.Semester =>
                 val coords = props.coords
