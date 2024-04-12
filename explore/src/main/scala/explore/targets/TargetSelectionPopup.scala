@@ -228,9 +228,15 @@ object TargetSelectionPopup:
                 label = "Create Empty Sidereal Target",
                 icon = Icons.New,
                 severity = Button.Severity.Success,
-                onClick = props
-                  .onSelected(TargetWithOptId(none, EmptySiderealTarget))
-                  .flatTap(_ => isOpen.setState(PopupState.Closed))
+                onClick = {
+                  val target = NonEmptyString
+                    .from(inputValue.get)
+                    .toOption
+                    .fold(EmptySiderealTarget)(s => EmptySiderealTarget.copy(name = s))
+                  props
+                    .onSelected(TargetWithOptId(none, target))
+                    .flatTap(_ => isOpen.setState(PopupState.Closed))
+                }
               ).small.when(props.showCreateEmpty)
             ),
             position = DialogPosition.Top,
