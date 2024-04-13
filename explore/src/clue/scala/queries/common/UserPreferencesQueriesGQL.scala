@@ -214,6 +214,10 @@ object UserPreferencesQueriesGQL {
           elevationPlotScheduling
           itcChartType
           itcDetailsOpen
+          elevationPlotElevationVisible
+          elevationPlotParallacticAngleVisible
+          elevationPlotSkyBrightnessVisible
+          elevationPlotLunarElevationVisible
         }
       }
     """
