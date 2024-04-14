@@ -11,6 +11,7 @@ import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
 import explore.model.Constants
+import explore.model.ElevationPlotOptions
 import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
@@ -35,7 +36,6 @@ import scala.concurrent.duration.*
 import scala.scalajs.js
 
 import js.JSConverters.*
-import explore.model.ElevationPlotOptions
 
 case class ElevationPlotSemester(
   options:          ElevationPlotOptions,

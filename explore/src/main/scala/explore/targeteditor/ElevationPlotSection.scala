@@ -52,6 +52,7 @@ case class ElevationPlotSection(
   tid:               Target.Id,
   site:              Option[Site],
   visualizationTime: Option[Instant],
+  pendingTime:       Option[Duration],
   coords:            CoordinatesAtVizTime,
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
@@ -150,13 +151,13 @@ object ElevationPlotSection:
                   props.coords,
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
+                  props.pendingTime,
                   options
                 )
               case PlotRange.Semester =>
-                val coords = props.coords
                 ElevationPlotSemester(
                   options.get,
-                  coords,
+                  props.coords,
                   windowsNetExcludeIntervals
                 )
           },

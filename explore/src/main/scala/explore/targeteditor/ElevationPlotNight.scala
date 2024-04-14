@@ -52,9 +52,9 @@ case class ElevationPlotNight(
   coords:            CoordinatesAtVizTime,
   visualizationTime: Option[Instant],
   excludeIntervals:  List[BoundedInterval[Instant]],
+  pendingTime:       Option[Duration],
   options:           View[ElevationPlotOptions]
-) extends ReactFnProps(ElevationPlotNight.component):
-  val visualizationDuration: Duration = Duration.ofHours(1)
+) extends ReactFnProps(ElevationPlotNight.component)
 
 object ElevationPlotNight:
   private type Props = ElevationPlotNight
@@ -257,10 +257,8 @@ object ElevationPlotNight:
             case TimeDisplay.Sidereal => "Site Sidereal"
 
         val tickFormatter: AxisLabelsFormatterCallbackFunction =
-          (
-            labelValue: AxisLabelsFormatterContextObject,
-            _:          AxisLabelsFormatterContextObject
-          ) => timeFormat(labelValue.value.asInstanceOf[Double])
+          (labelValue: AxisLabelsFormatterContextObject, _: AxisLabelsFormatterContextObject) =>
+            timeFormat(labelValue.value.asInstanceOf[Double])
 
         val tooltipFormatter: TooltipFormatterCallbackFunction =
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
@@ -408,13 +406,13 @@ object ElevationPlotNight:
             ElevationSeries.values
               .map(series =>
                 val zones       =
-                  props.visualizationTime
-                    .map(vt =>
+                  (props.visualizationTime, props.pendingTime)
+                    .mapN((vt, pt) =>
                       js.Array(
                         SeriesZonesOptionsObject()
                           .setValue(vt.toEpochMilli.toDouble),
                         SeriesZonesOptionsObject()
-                          .setValue(vt.plus(props.visualizationDuration).toEpochMilli.toDouble)
+                          .setValue(vt.plus(pt).toEpochMilli.toDouble)
                           .setClassName("elevation-plot-visualization-period")
                       )
                     )
