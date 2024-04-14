@@ -147,10 +147,7 @@ object ElevationPlotSection:
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
-                  opt.site,
                   props.coords,
-                  opt.date,
-                  opt.timeDisplay,
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   options
@@ -158,10 +155,8 @@ object ElevationPlotSection:
               case PlotRange.Semester =>
                 val coords = props.coords
                 ElevationPlotSemester(
-                  opt.site,
+                  options.get,
                   coords,
-                  opt.semester,
-                  opt.date,
                   windowsNetExcludeIntervals
                 )
           },
