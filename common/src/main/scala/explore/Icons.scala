@@ -19,6 +19,10 @@ object Icons {
   val faArrowDownLeft: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowUp")
+  val faArrowUp: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowLeftFromLine")
   val faArrowLeftFromLine: FAIcon = js.native
 
@@ -333,6 +337,7 @@ object Icons {
     faArrowRight,
     faArrowRightFromLine,
     faArrowRightToLine,
+    faArrowUp,
     faArrowsRepeat,
     faGears,
     faBars,
@@ -413,6 +418,7 @@ object Icons {
   val ArrowRight           = FontAwesomeIcon(faArrowRight)
   val ArrowRightFromLine   = FontAwesomeIcon(faArrowRightFromLine)
   val ArrowRightToLine     = FontAwesomeIcon(faArrowRightToLine)
+  val ArrowUp              = FontAwesomeIcon(faArrowUp)
   val ArrowsRepeat         = FontAwesomeIcon(faArrowsRepeat)
   val Bars                 = FontAwesomeIcon(faBars)
   val BarCodeRead          = FontAwesomeIcon(faBarCodeRead)
