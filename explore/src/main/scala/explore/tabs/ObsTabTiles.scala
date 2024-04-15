@@ -409,6 +409,8 @@ object ObsTabTiles:
               props.observation.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
 
+          val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+
           val skyPlotTile: Tile =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
@@ -416,6 +418,7 @@ object ObsTabTiles:
               props.observation.get.observingMode.map(_.siteFor),
               targetCoords,
               vizTime,
+              pendingTime.map(_.toDuration),
               timingWindows.get,
               props.globalPreferences.get
             )
@@ -434,8 +437,6 @@ object ObsTabTiles:
 
           val paProps: PAProperties =
             PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
-
-          val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
 
           val averagePA: Option[Angle] =
             (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime, pendingTime)

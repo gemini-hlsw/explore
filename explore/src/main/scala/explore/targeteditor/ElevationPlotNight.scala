@@ -16,7 +16,6 @@ import explore.model.enums.Visible
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
 import lucuma.core.math.BoundedInterval
@@ -39,7 +38,6 @@ import org.scalajs.dom
 
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -51,15 +49,12 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class ElevationPlotNight(
-  site:              Site,
   coords:            CoordinatesAtVizTime,
-  date:              LocalDate,
-  timeDisplay:       TimeDisplay,
   visualizationTime: Option[Instant],
   excludeIntervals:  List[BoundedInterval[Instant]],
+  pendingTime:       Option[Duration],
   options:           View[ElevationPlotOptions]
-) extends ReactFnProps(ElevationPlotNight.component):
-  val visualizationDuration: Duration = Duration.ofHours(1)
+) extends ReactFnProps(ElevationPlotNight.component)
 
 object ElevationPlotNight:
   private type Props = ElevationPlotNight
@@ -197,14 +192,17 @@ object ElevationPlotNight:
               .when(series === ElevationSeries.SkyBrightness)
               .void
 
-        val observingNight  = ObservingNight.fromSiteAndLocalDate(props.site, props.date)
+        val site = props.options.get.site
+        val td   = props.options.get.timeDisplay
+
+        val observingNight  = ObservingNight.fromSiteAndLocalDate(site, props.options.get.date)
         val tbOfficialNight = observingNight.twilightBoundedUnsafe(TwilightType.Official)
         val tbNauticalNight = observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
 
         val start          = tbOfficialNight.start
         val end            = tbOfficialNight.end
         val skyCalcResults =
-          SkyCalc.forInterval(props.site, start, end, PlotEvery, _ => props.coords.value)
+          SkyCalc.forInterval(site, start, end, PlotEvery, _ => props.coords.value)
         val series         = skyCalcResults
           .map { (instant, results) =>
             val millisSinceEpoch = instant.toEpochMilli.toDouble
@@ -236,11 +234,11 @@ object ElevationPlotNight:
             .format(Constants.GppTimeFormatter)
 
         def instantFormat(instant: Instant): String =
-          props.timeDisplay match
-            case TimeDisplay.Site     => timezoneInstantFormat(instant, props.site.timezone)
+          td match
+            case TimeDisplay.Site     => timezoneInstantFormat(instant, site.timezone)
             case TimeDisplay.UT       => timezoneInstantFormat(instant, ZoneOffset.UTC)
             case TimeDisplay.Sidereal =>
-              val skycalc = ImprovedSkyCalc(props.site.place)
+              val skycalc = ImprovedSkyCalc(site.place)
               val sid     = {
                 val sid = skycalc.getSiderealTime(instant)
                 if (sid < 0) sid + 24 else sid
@@ -253,16 +251,14 @@ object ElevationPlotNight:
           instantFormat(Instant.ofEpochMilli(value.toLong))
 
         val timeDisplay: String =
-          props.timeDisplay match
-            case TimeDisplay.Site     => props.site.timezone.getId
+          td match
+            case TimeDisplay.Site     => site.timezone.getId
             case TimeDisplay.UT       => "UTC"
             case TimeDisplay.Sidereal => "Site Sidereal"
 
         val tickFormatter: AxisLabelsFormatterCallbackFunction =
-          (
-            labelValue: AxisLabelsFormatterContextObject,
-            _:          AxisLabelsFormatterContextObject
-          ) => timeFormat(labelValue.value.asInstanceOf[Double])
+          (labelValue: AxisLabelsFormatterContextObject, _: AxisLabelsFormatterContextObject) =>
+            timeFormat(labelValue.value.asInstanceOf[Double])
 
         val tooltipFormatter: TooltipFormatterCallbackFunction =
           (ctx: TooltipFormatterContextObject, _: Tooltip) =>
@@ -410,13 +406,13 @@ object ElevationPlotNight:
             ElevationSeries.values
               .map(series =>
                 val zones       =
-                  props.visualizationTime
-                    .map(vt =>
+                  (props.visualizationTime, props.pendingTime)
+                    .mapN((vt, pt) =>
                       js.Array(
                         SeriesZonesOptionsObject()
                           .setValue(vt.toEpochMilli.toDouble),
                         SeriesZonesOptionsObject()
-                          .setValue(vt.plus(props.visualizationDuration).toEpochMilli.toDouble)
+                          .setValue(vt.plus(pt).toEpochMilli.toDouble)
                           .setClassName("elevation-plot-visualization-period")
                       )
                     )

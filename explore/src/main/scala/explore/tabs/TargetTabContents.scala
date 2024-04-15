@@ -308,6 +308,7 @@ object TargetTabContents extends TwoPanels:
           configuration.map(_.siteFor),
           selectedCoordinates.map(CoordinatesAtVizTime(_)),
           vizTimeView.get,
+          none,
           Nil,
           props.globalPreferences.get
         )
@@ -348,6 +349,7 @@ object TargetTabContents extends TwoPanels:
           none,
           // TODO PM correct the coordinates
           CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
+          none,
           none,
           Nil,
           props.globalPreferences.get

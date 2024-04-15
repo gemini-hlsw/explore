@@ -11,15 +11,14 @@ import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
 import explore.model.Constants
+import explore.model.ElevationPlotOptions
 import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.Site
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.Semester
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.ResizingChart
 import lucuma.react.resizeDetector.hooks.*
@@ -29,7 +28,6 @@ import lucuma.ui.syntax.all.given
 
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
@@ -40,10 +38,8 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class ElevationPlotSemester(
-  site:             Site,
+  options:          ElevationPlotOptions,
   coords:           CoordinatesAtVizTime,
-  semester:         Semester,
-  date:             LocalDate,
   excludeIntervals: List[BoundedInterval[Instant]]
 ) extends ReactFnProps(ElevationPlotSemester.component)
 
@@ -74,8 +70,8 @@ object ElevationPlotSemester:
                 PlotClient[IO]
                   .request(
                     RequestSemesterSidereal(
-                      props.semester,
-                      props.site,
+                      props.options.semester,
+                      props.options.site,
                       props.coords.value,
                       PlotDayRate
                     )
@@ -138,38 +134,39 @@ object ElevationPlotSemester:
               .getOrElse(Resource.pure(fs2.Stream()))
               .use(_.compile.drain)
       )
-      .useEffectWithDepsBy((props, _, _, chartOpt) => (props.date, chartOpt))((props, _, _, _) =>
-        (date, chartOpt) =>
-          CallbackTo(chartOpt.value.value) >>=
-            (_.map(chart =>
-              Callback {
-                // 2pm of the selected day, same as for semester start and end
-                val localDateTime: LocalDateTime =
-                  LocalDateTime.of(date, LocalTime.MIDNIGHT).plusHours(14)
-                val zonedDateTime: ZonedDateTime =
-                  ZonedDateTime.of(localDateTime, props.site.timezone)
+      .useEffectWithDepsBy((props, _, _, chartOpt) => (props.options.date, chartOpt))(
+        (props, _, _, _) =>
+          (date, chartOpt) =>
+            CallbackTo(chartOpt.value.value) >>=
+              (_.map(chart =>
+                Callback {
+                  // 2pm of the selected day, same as for semester start and end
+                  val localDateTime: LocalDateTime =
+                    LocalDateTime.of(date, LocalTime.MIDNIGHT).plusHours(14)
+                  val zonedDateTime: ZonedDateTime =
+                    ZonedDateTime.of(localDateTime, props.options.site.timezone)
 
-                // Axes maybe undefined or empty when remounting.
-                if (!js.isUndefined(chart.axes) && chart.axes.length > 0) {
-                  val xAxis = chart.xAxis(0)
-                  xAxis.removePlotLine("date")
-                  xAxis.addPlotLine(
-                    AxisPlotLinesOptions
-                      .XAxisPlotLinesOptions()
-                      .setId("date")
-                      .setValue(zonedDateTime.toInstant.toEpochMilli.toDouble)
-                      .setZIndex(1000)
-                      .setClassName("plot-plot-line-date")
-                  )
-                  ()
+                  // Axes maybe undefined or empty when remounting.
+                  if (!js.isUndefined(chart.axes) && chart.axes.length > 0) {
+                    val xAxis = chart.xAxis(0)
+                    xAxis.removePlotLine("date")
+                    xAxis.addPlotLine(
+                      AxisPlotLinesOptions
+                        .XAxisPlotLinesOptions()
+                        .setId("date")
+                        .setValue(zonedDateTime.toInstant.toEpochMilli.toDouble)
+                        .setZIndex(1000)
+                        .setClassName("plot-plot-line-date")
+                    )
+                    ()
+                  }
                 }
-              }
-            ).orEmpty)
+              ).orEmpty)
       )
       .render { (props, _, resize, chartOpt) =>
         def timeFormat(value: Double): String =
           ZonedDateTime
-            .ofInstant(Instant.ofEpochMilli(value.toLong), props.site.timezone)
+            .ofInstant(Instant.ofEpochMilli(value.toLong), props.options.site.timezone)
             .format(Constants.GppDateFormatter)
 
         val tickFormatter: AxisLabelsFormatterCallbackFunction =
@@ -203,6 +200,9 @@ object ElevationPlotSemester:
             s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
         }
 
+        val semester = props.options.semester
+        val site     = props.options.site
+
         val options = Options()
           .setChart(
             commonOptions
@@ -211,7 +211,7 @@ object ElevationPlotSemester:
           )
           .setTitle(
             TitleOptions().setText(
-              s"Semester ${props.semester.format}"
+              s"Semester ${semester.format}"
             )
           )
           .setCredits(CreditsOptions().setEnabled(false))
@@ -222,8 +222,8 @@ object ElevationPlotSemester:
               .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
               .setTickInterval(MillisPerDay * 10)
               .setMinorTickInterval(MillisPerDay * 5)
-              .setMin(props.semester.start.atSite(props.site).toInstant.toEpochMilli.toDouble)
-              .setMax(props.semester.end.atSite(props.site).toInstant.toEpochMilli.toDouble)
+              .setMin(semester.start.atSite(site).toInstant.toEpochMilli.toDouble)
+              .setMax(semester.end.atSite(site).toInstant.toEpochMilli.toDouble)
               .setPlotBands(
                 props.excludeIntervals
                   .map(window =>
@@ -273,7 +273,7 @@ object ElevationPlotSemester:
         <.div(
           ResizingChart(options, c => chartOpt.setState(c.some))
             .withKey(
-              s"${props.site}-${props.coords}-${props.semester}-${resize}-${props.excludeIntervals}"
+              s"$site-${props.coords}-$semester-${resize}-${props.excludeIntervals}"
             )
             .when(resize.height.isDefined)
         ).withRef(resize.ref)

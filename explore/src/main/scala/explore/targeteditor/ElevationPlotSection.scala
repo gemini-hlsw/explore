@@ -52,6 +52,7 @@ case class ElevationPlotSection(
   tid:               Target.Id,
   site:              Option[Site],
   visualizationTime: Option[Instant],
+  pendingTime:       Option[Duration],
   coords:            CoordinatesAtVizTime,
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
@@ -147,21 +148,16 @@ object ElevationPlotSection:
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
-                  opt.site,
                   props.coords,
-                  opt.date,
-                  opt.timeDisplay,
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
+                  props.pendingTime,
                   options
                 )
               case PlotRange.Semester =>
-                val coords = props.coords
                 ElevationPlotSemester(
-                  opt.site,
-                  coords,
-                  opt.semester,
-                  opt.date,
+                  options.get,
+                  props.coords,
                   windowsNetExcludeIntervals
                 )
           },
