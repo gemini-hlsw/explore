@@ -12,9 +12,12 @@ import crystal.react.hooks.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Focused
 import explore.model.IsActive
 import explore.model.ProgramInvitation
+import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
@@ -61,14 +64,24 @@ object RedeemInvitationsPopup:
       def redeem(key: String): IO[Unit] =
         RedeemInvitationMutation[IO]
           .execute(key)
-          .flatMap(l => result.set(l.redeemUserInvitation.invitation.some).to[IO])
+          .flatMap(l =>
+            (process.set(RedeemInviteProcess.Done) *>
+              errorMsg.set(ErrorMsg(none)) *>
+              result.set(l.redeemUserInvitation.invitation.some))
+              .to[IO]
+          )
           .handleErrorWith {
             case ResponseException(errors, _) =>
-              val msg = errors.foldMap(_.message)
-              errorMsg.set(ErrorMsg(msg.some)).to[IO]
+              val msg = errors
+                .foldMap(_.message)
+
+              (process.set(RedeemInviteProcess.Error) *>
+                errorMsg.set(ErrorMsg(msg.some)))
+                .to[IO]
             case e                            =>
               val msg = s"Error redeeming invitation with key $key"
-              Logger[IO].error(e)(msg) *> errorMsg.set(ErrorMsg(msg.some)).to[IO]
+              Logger[IO].error(e)(msg) *>
+                (process.set(RedeemInviteProcess.Error) *> errorMsg.set(ErrorMsg(msg.some))).to[IO]
           }
           .void
 
@@ -85,7 +98,20 @@ object RedeemInvitationsPopup:
           disabled = key.get.isEmpty || process.get === RedeemInviteProcess.Done,
           onClick = redeem(key.get).runAsync,
           label = "Redeem"
-        ).compact
+        ).compact.unless(process.get === RedeemInviteProcess.Done),
+        result.get.map(r =>
+          Button(
+            icon = Icons.ArrowUp,
+            onClick = isOpen.setState(IsOpen(false)) *>
+              ctx.setPageVia(AppTab.Program, r.pid, Focused.None, SetRouteVia.HistoryPush),
+            label = s"Open program ${r.pid}"
+          ).compact
+        ),
+        Button(
+          icon = Icons.Close,
+          onClick = isOpen.setState(IsOpen(false)),
+          label = "Close"
+        ).compact.when(process.get === RedeemInviteProcess.Done)
       )
 
       Dialog(

@@ -98,12 +98,12 @@ object InviteUserPopup:
               ),
               <.div(LucumaPrimeStyles.FormColumn)(
                 <.label(
-                  "Invite ready, please send the link below to you collaborator, it won't be displayed again"
+                  "Invite ready, please send send the key below to you CoI, it won't be displayed again"
                 )
               ).when(key.when(_.isDefined)),
               key.get.map(key =>
                 <.div(LucumaPrimeStyles.FormColumn)(
-                  CopyControl("Invite code", key)
+                  CopyControl("Invite key", key)
                 )
               )
             ),
@@ -113,6 +113,11 @@ object InviteUserPopup:
                         severity = Message.Severity.Error
                 ).when(inviteState.get === CreateInviteProcess.Error),
                 Button(
+                  icon = Icons.Close,
+                  onClickE = e => inviteState.set(CreateInviteProcess.Idle) *> props.ref.toggle(e),
+                  label = "Close"
+                ).compact.when(inviteState.get === CreateInviteProcess.Done),
+                Button(
                   icon = Icons.PaperPlaneTop,
                   loading = inviteState.get === CreateInviteProcess.Running,
                   disabled = !validEmail.value || inviteState.get === CreateInviteProcess.Done,
@@ -121,7 +126,7 @@ object InviteUserPopup:
                     .getOrEmpty,
                   tooltip = "Send",
                   label = "Invite"
-                ).compact
+                ).compact.when(inviteState.get =!= CreateInviteProcess.Done)
               )
             )
           )
