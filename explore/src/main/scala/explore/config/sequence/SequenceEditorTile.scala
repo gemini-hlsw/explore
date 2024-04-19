@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AsterismIds
@@ -20,6 +21,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.TimeSpan
+import lucuma.refined.*
 
 object SequenceEditorTile:
 
@@ -46,6 +48,7 @@ object SequenceEditorTile:
             val pending = timeDisplay("Pending", plannedTime)
             val planned = timeDisplay("Planned", total)
             <.span(ExploreStyles.SequenceTileTitle)(
+              HelpIcon("target/main/sequence-times.md".refined),
               planned,
               executed,
               pending
