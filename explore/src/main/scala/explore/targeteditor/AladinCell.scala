@@ -225,7 +225,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[AsterismVisualOptions])
       // to get faster reusability use a serial state, rather than check every candidate
-      .useSerialState(List.empty[GuideStarCandidate])
+      .useSerialState(none[List[GuideStarCandidate]])
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
       // Request data again if vizTime changes more than a month
@@ -237,10 +237,11 @@ object AladinCell extends ModelOptics with AladinCommon:
             _          <- props.obsConf
                             .flatMap(_.agsState)
                             .foldMap(_.async.set(AgsState.LoadingCandidates))
-            candidates <- CatalogClient[IO].requestSingle(
-                            CatalogMessage.GSRequest(baseTracking, vizTime)
-                          )
-            _          <- candidates.map(gs.setStateAsync(_)).orEmpty
+            candidates <- CatalogClient[IO]
+                            .requestSingle(
+                              CatalogMessage.GSRequest(baseTracking, vizTime)
+                            )
+            _          <- gs.setStateAsync(candidates)
           } yield ()).guarantee(
             props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
           )
@@ -309,60 +310,63 @@ object AladinCell extends ModelOptics with AladinCommon:
               ) =>
             import ctx.given
 
-            val runAgs = (positions, tracking.at(vizTime), props.obsConf.flatMap(_.agsState)).mapN {
-              (positions, base, agsState) =>
+            val runAgs = (positions,
+                          tracking.at(vizTime),
+                          props.obsConf.flatMap(_.agsState),
+                          candidates.value
+            ).mapN { (positions, base, agsState, candidates) =>
 
-                val fpu    = observingMode.flatMap(_.fpuAlternative)
-                val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
+              val fpu    = observingMode.flatMap(_.fpuAlternative)
+              val params = AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 
-                val request = AgsMessage.AgsRequest(props.asterism.focus.id,
-                                                    constraints,
-                                                    wavelength,
-                                                    base.value,
-                                                    props.sciencePositionsAt(vizTime),
-                                                    positions,
-                                                    params,
-                                                    candidates
+              val request = AgsMessage.AgsRequest(props.asterism.focus.id,
+                                                  constraints,
+                                                  wavelength,
+                                                  base.value,
+                                                  props.sciencePositionsAt(vizTime),
+                                                  positions,
+                                                  params,
+                                                  candidates
+              )
+
+              def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
+                (for {
+                  // Set the analysis
+                  _ <- r.map(ags.setState).getOrEmpty
+                  // If we need to flip change the constraint
+                  _ <- r
+                         .map(_.headOption)
+                         .map(flipAngle(props, agsOverride))
+                         .orEmpty
+                         .unlessA(agsOverride.get.value)
+                  // set the selected index to the first entry
+                  _ <- {
+                    val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
+                    val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
+                    (selectedIndex.set(index) *>
+                      props.obsConf
+                        .flatMap(_.selectedGS)
+                        .map(_.set(selectedGS))
+                        .getOrEmpty).unlessA(agsOverride.get.value)
+                  }
+                } yield ()).toAsync
+
+              val process: IO[Unit] =
+                for {
+                  _ <- agsState.set(AgsState.Calculating).toAsync
+                  _ <-
+                    AgsClient[IO]
+                      .requestSingle(request)
+                      .flatMap(processResults(_))
+                      .unlessA(candidates.isEmpty)
+                      .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
+                } yield ()
+
+              process.guarantee(
+                agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
+                  AgsState.Idle
                 )
-
-                def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
-                  (for {
-                    // Set the analysis
-                    _ <- r.map(ags.setState).getOrEmpty
-                    // If we need to flip change the constraint
-                    _ <- r
-                           .map(_.headOption)
-                           .map(flipAngle(props, agsOverride))
-                           .orEmpty
-                           .unlessA(agsOverride.get.value)
-                    // set the selected index to the first entry
-                    _ <- {
-                      val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
-                      val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                      (selectedIndex.set(index) *>
-                        props.obsConf
-                          .flatMap(_.selectedGS)
-                          .map(_.set(selectedGS))
-                          .getOrEmpty).unlessA(agsOverride.get.value)
-                    }
-                  } yield ()).toAsync
-
-                val process: IO[Unit] =
-                  for {
-                    _ <- agsState.set(AgsState.Calculating).toAsync
-                    _ <-
-                      AgsClient[IO]
-                        .requestSingle(request)
-                        .flatMap(processResults(_))
-                        .unlessA(candidates.isEmpty)
-                        .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
-                  } yield ()
-
-                process.guarantee(
-                  agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
-                    AgsState.Idle
-                  )
-                )
+              )
             }.orEmpty
 
             (selectedIndex.set(none) *>
@@ -483,7 +487,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                         agsResults.value.count(_.isUsable),
                         selectedGuideStar,
                         agsState.get,
-                        props.canRunAGS && candidates.value.nonEmpty
+                        props.canRunAGS,
+                        candidates.value.isDefined
                       )
                     )
                   )
