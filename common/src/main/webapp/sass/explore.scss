@@ -2289,6 +2289,14 @@ $help-title-height: 40px;
   }
 }
 
+.explore-average-pa {
+  display: flex;
+  flex-grow: 1;
+  justify-content: space-between;
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
 // Move to lucuma-ui?
 .explore-table:has(.p-datatable-emptymessage) {
   tr > td.p-datatable-emptymessage {

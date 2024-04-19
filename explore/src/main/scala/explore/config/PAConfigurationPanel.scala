@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.model.AveragePABasis
 import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all.*
@@ -33,7 +34,7 @@ case class PAConfigurationPanel(
   obsId:        Observation.Id,
   posAngleView: View[PosAngleConstraint],
   selectedPA:   Option[Angle],
-  averagePA:    Option[Angle],
+  averagePA:    Option[AveragePABasis],
   agsState:     View[AgsState],
   readonly:     Boolean
 ) extends ReactFnProps(PAConfigurationPanel.component)
@@ -82,8 +83,18 @@ object PAConfigurationPanel:
             .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
         case PosAngleConstraint.AverageParallactic =>
           props.selectedPA
-            .orElse(props.averagePA)
             .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
+            .orElse(
+              props.averagePA
+                .map(a =>
+                  <.div(
+                    ExploreStyles.AveragePA,
+                    <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
+                    <.label(a.when.toString),
+                    <.label(a.duration.toHoursMinutes)
+                  )
+                )
+            )
             .orElse(<.label("Not Visible").some)
         case _                                     => None
 

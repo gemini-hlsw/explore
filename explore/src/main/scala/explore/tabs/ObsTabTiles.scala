@@ -438,7 +438,7 @@ object ObsTabTiles:
           val paProps: PAProperties =
             PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
 
-          val averagePA: Option[Angle] =
+          val averagePA: Option[AveragePABasis] =
             (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime, pendingTime)
               .mapN((site, asterism, vizTime, pendingTime) =>
                 posAngleConstraintView.get match
@@ -448,7 +448,7 @@ object ObsTabTiles:
                                             asterism.baseTracking,
                                             vizTime,
                                             pendingTime.toDuration
-                    )
+                    ).map(AveragePABasis(vizTime, pendingTime, _))
                   case _                                     => none
               )
               .flatten
