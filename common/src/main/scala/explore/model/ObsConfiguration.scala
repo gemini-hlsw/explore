@@ -24,7 +24,7 @@ case class ObsConfiguration(
   wavelength:         Option[Wavelength],
   scienceOffsets:     Option[NonEmptyList[Offset]],
   acquisitionOffsets: Option[NonEmptyList[Offset]],
-  averagePA:          Option[Angle]
+  averagePA:          Option[AveragePABasis]
 ) derives Eq:
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
@@ -35,7 +35,7 @@ case class ObsConfiguration(
       case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
       case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
       case Some(PosAngleConstraint.AverageParallactic)     =>
-        averagePA.orElse(Angle.Angle0.some)
+        averagePA.map(_.averagePA).orElse(Angle.Angle0.some)
       case _                                               => none
 
   def posAngleConstraintView: Option[View[PosAngleConstraint]] =
