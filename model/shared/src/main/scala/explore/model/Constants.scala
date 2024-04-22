@@ -50,7 +50,8 @@ trait Constants:
       .mkString(", ")
 
   val NoGuideStarMessage = "No guidestar available"
-  val MissingInfo        = "No mode or target information available"
+  val MissingITC         = "Mode or ITC not available"
+  val MissingCandidates  = "No catalog stars available"
   val BadTimingWindow    = "Review the dates on this timing window."
   val MissingInfoMsg     = "Not enough information to call ITC"
 

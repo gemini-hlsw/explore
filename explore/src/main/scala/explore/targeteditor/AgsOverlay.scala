@@ -23,12 +23,15 @@ import lucuma.ui.syntax.all.given
 import scala.math.BigDecimal.RoundingMode
 
 case class AgsOverlay(
-  selectedGSIndex:   View[Option[Int]],
-  maxIndex:          Int,
-  selectedGuideStar: Option[AgsAnalysis],
-  agsState:          AgsState,
-  canCalculate:      Boolean
-) extends ReactFnProps[AgsOverlay](AgsOverlay.component)
+  selectedGSIndex:     View[Option[Int]],
+  maxIndex:            Int,
+  selectedGuideStar:   Option[AgsAnalysis],
+  agsState:            AgsState,
+  itcAvailable:        Boolean,
+  candidatesAvailable: Boolean
+) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
+  val canCalculate: Boolean = itcAvailable && candidatesAvailable
+}
 
 object AgsOverlay {
   type Props = AgsOverlay
@@ -119,7 +122,8 @@ object AgsOverlay {
               .withSize(IconSize.LG)
               .unless(props.canCalculate),
             <.span(Constants.NoGuideStarMessage).when(props.canCalculate),
-            <.span(Constants.MissingInfo).unless(props.canCalculate)
+            <.span(Constants.MissingITC).unless(props.itcAvailable),
+            <.span(Constants.MissingCandidates).unless(props.candidatesAvailable)
           )
         }
     }
