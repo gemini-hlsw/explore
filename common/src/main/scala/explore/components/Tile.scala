@@ -75,7 +75,7 @@ object Tile:
       .withHooks[Props]
       // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
       .useState(none[dom.html.Element])
-      .render { (p, infoRef) =>
+      .render: (p, infoRef) =>
         val maximizeButton =
           Button(
             text = true,
@@ -84,9 +84,9 @@ object Tile:
             disabled = p.isResizing.value,
             onClick = p
               .sizeStateCallback(TileSizeState.Normal)
-              .when_(p.state === TileSizeState.Minimized) *> p
-              .sizeStateCallback(TileSizeState.Maximized)
-              .when_(p.state === TileSizeState.Normal)
+              .when_(p.state === TileSizeState.Minimized) *>
+              p.sizeStateCallback(TileSizeState.Maximized)
+                .when_(p.state === TileSizeState.Normal || p.state === TileSizeState.Minimized)
           )
 
         val minimizeButton =
@@ -152,4 +152,3 @@ object Tile:
               .whenDefined
           )
         } else EmptyVdom
-      }
