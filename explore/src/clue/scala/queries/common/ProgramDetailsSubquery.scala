@@ -18,8 +18,6 @@ object ProgramDetailsSubquery
       proposalStatus
       pi $ProgramUserSubquery
       users $ProgramUserWithRoleSubquery
-      timeEstimateRange $ProgramTimeRangeSubquery
-      timeCharge $ProgramTimeSubquery
       userInvitations $ProgramInvitationsSubquery
     }
   """
