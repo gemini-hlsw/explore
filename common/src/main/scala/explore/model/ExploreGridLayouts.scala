@@ -261,17 +261,17 @@ object ExploreGridLayouts:
           y =
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
           w = DefaultWidth.value,
-          h = SequenceMaxHeight.value,
-          minH = SequenceMinHeight.value,
-          i = ObsTabTilesIds.SequenceId.id.value
+          h = ItcMaxHeight.value,
+          i = ObsTabTilesIds.ItcId.id.value
         ),
         LayoutItem(
           x = 0,
           y =
-            (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| SequenceMaxHeight).value,
+            (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| ItcMaxHeight).value,
           w = DefaultWidth.value,
-          h = ItcMaxHeight.value,
-          i = ObsTabTilesIds.ItcId.id.value
+          h = SequenceMaxHeight.value,
+          minH = SequenceMinHeight.value,
+          i = ObsTabTilesIds.SequenceId.id.value
         )
       )
     )
