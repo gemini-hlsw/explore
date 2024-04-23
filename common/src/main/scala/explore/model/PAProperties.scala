@@ -7,7 +7,6 @@ import cats.Eq
 import crystal.react.*
 import explore.model.enums.AgsState
 import japgolly.scalajs.react.ReactCats.*
-import japgolly.scalajs.react.Reusability
 import lucuma.ags.AgsAnalysis
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
@@ -24,6 +23,3 @@ case class PAProperties(
 object PAProperties:
   given Eq[PAProperties] =
     Eq.by(x => (x.oid, x.selectedGS.get, x.agsState.get, x.constraint.get))
-
-  given Reusability[PAProperties] =
-    Reusability.byEq

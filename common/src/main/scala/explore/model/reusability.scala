@@ -142,3 +142,5 @@ object reusability:
   given Reusability[CoIInvitation] = Reusability.byEq
 
   given Reusability[IsActive] = Reusability.byEq
+
+  given Reusability[PAProperties] = Reusability.byEq

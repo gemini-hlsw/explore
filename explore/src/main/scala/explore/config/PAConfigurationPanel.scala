@@ -82,18 +82,14 @@ object PAConfigurationPanel:
           props.selectedPA
             .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
         case PosAngleConstraint.AverageParallactic =>
-          props.selectedPA
-            .map(a => <.label(f"${a.toDoubleDegrees}%.2f °"))
-            .orElse(
-              props.averagePA
-                .map(a =>
-                  <.div(
-                    ExploreStyles.AveragePA,
-                    <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
-                    <.label(a.when.toString),
-                    <.label(a.duration.toHoursMinutes)
-                  )
-                )
+          props.averagePA
+            .map(a =>
+              <.div(
+                ExploreStyles.AveragePA,
+                <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
+                <.label(a.when.toString),
+                <.label(a.duration.toHoursMinutes)
+              )
             )
             .orElse(<.label("Not Visible").some)
         case _                                     => None
