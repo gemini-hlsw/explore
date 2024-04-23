@@ -3,6 +3,7 @@
 
 package explore.proposal
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -36,7 +37,7 @@ enum CreateInviteProcess(private val tag: String) derives Enumerated:
 
 case class ProgramUsers(
   pid:         Program.Id,
-  users:       List[ProgramUserWithRole],
+  users:       View[NonEmptyList[ProgramUserWithRole]],
   invitations: View[List[CoIInvitation]],
   inTitle:     RenderInTitle,
   ref:         OverlayPanelRef
@@ -46,7 +47,7 @@ object ProgramUsers:
 
   def programUsersTile(
     pid:          Program.Id,
-    users:        List[ProgramUserWithRole],
+    users:        View[NonEmptyList[ProgramUserWithRole]],
     invitations:  View[List[CoIInvitation]],
     createInvite: View[CreateInviteProcess],
     ref:          OverlayPanelRef
@@ -91,7 +92,7 @@ object ProgramUsers:
               onClickE = props.ref.toggle
             ).tiny.compact
           ),
-          ProgramUsersTable(props.users),
+          ProgramUsersTable(props.pid, props.users),
           React
             .Fragment(
               "Pending invitations",

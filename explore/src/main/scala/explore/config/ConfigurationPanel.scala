@@ -240,4 +240,5 @@ object ConfigurationPanel:
                 )
           )
         )
+
       }
