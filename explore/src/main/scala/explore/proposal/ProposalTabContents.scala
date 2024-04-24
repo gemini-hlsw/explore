@@ -95,7 +95,7 @@ object ProposalTabContents:
     import ctx.given
 
     val details = programDetails.get
-    val users   = programDetails.zoom(ProgramDetails.users)
+    val users   = programDetails.zoom(ProgramDetails.allUsers)
 
     val isStdUser      = userVault.map(_.user).collect { case _: StandardUser => () }.isDefined
     val proposalStatus = programDetails.get.proposalStatus

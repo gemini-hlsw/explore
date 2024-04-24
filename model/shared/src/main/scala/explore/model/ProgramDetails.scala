@@ -26,9 +26,9 @@ case class ProgramDetails(
   val allUsers: NonEmptyList[ProgramUserWithRole] = NonEmptyList(pi, users)
 
 object ProgramDetails:
-  val proposal: Lens[ProgramDetails, Option[Proposal]]               = Focus[ProgramDetails](_.proposal)
-  val proposalStatus: Lens[ProgramDetails, ProposalStatus]           = Focus[ProgramDetails](_.proposalStatus)
-  val users: Lens[ProgramDetails, NonEmptyList[ProgramUserWithRole]] =
+  val proposal: Lens[ProgramDetails, Option[Proposal]]                  = Focus[ProgramDetails](_.proposal)
+  val proposalStatus: Lens[ProgramDetails, ProposalStatus]              = Focus[ProgramDetails](_.proposalStatus)
+  val allUsers: Lens[ProgramDetails, NonEmptyList[ProgramUserWithRole]] =
     Lens[ProgramDetails, NonEmptyList[ProgramUserWithRole]](_.allUsers)(a =>
       b => b.copy(pi = a.head, users = a.tail)
     )
