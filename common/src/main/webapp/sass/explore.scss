@@ -2353,6 +2353,14 @@ div.spectroscopy-table-emptymessage {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(34em, 1fr));
     column-gap: 0.5dvw;
+    padding: 0.3em;
+  }
+
+  .explore-proposal-cfp-fields {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: 0.5dvw;
   }
 
   .explore-proposal-abstract {
