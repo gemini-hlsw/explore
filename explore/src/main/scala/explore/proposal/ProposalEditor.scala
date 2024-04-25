@@ -5,6 +5,7 @@ package explore.proposal
 
 import cats.Order.*
 import cats.data.Chain
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Input
@@ -84,7 +85,7 @@ case class ProposalEditor(
   proposal:          View[Proposal],
   undoStacks:        View[UndoStacks[IO, Proposal]],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  users:             List[ProgramUserWithRole],
+  users:             View[NonEmptyList[ProgramUserWithRole]],
   invitations:       List[CoIInvitation],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
@@ -397,7 +398,7 @@ object ProposalEditor:
     splitsList:        View[List[PartnerSplit]],
     createInvite:      View[CreateInviteProcess],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
-    users:             List[ProgramUserWithRole],
+    users:             View[NonEmptyList[ProgramUserWithRole]],
     invitations:       View[List[CoIInvitation]],
     attachments:       View[List[ProposalAttachment]],
     authToken:         Option[NonEmptyString],
