@@ -18,6 +18,7 @@ object ProgramDetailsSubquery
       proposalStatus
       pi $ProgramUserSubquery
       users $ProgramUserWithRoleSubquery
+      reference $ProgramReferenceSubquery
       userInvitations $ProgramInvitationsSubquery
     }
   """

@@ -217,7 +217,6 @@ object ExploreStyles:
 
   val ProposalTab: Css         = Css("explore-proposal-tab")
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
-  val ProposalCfpFields: Css   = Css("explore-proposal-cfp-fields")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
   val PartnerSplitsGrid: Css       = Css("partner-splits-grid")
