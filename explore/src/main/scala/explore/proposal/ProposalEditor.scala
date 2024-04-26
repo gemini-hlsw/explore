@@ -8,6 +8,7 @@ import cats.data.Chain
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.*
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.Pot
@@ -25,6 +26,7 @@ import explore.components.TileController
 import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
+import explore.model.CallForProposal
 import explore.model.CoIInvitation
 import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
@@ -55,7 +57,6 @@ import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.Divider
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
 import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
@@ -74,6 +75,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
+import queries.common.CallsQueriesGQL.*
 import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
@@ -202,6 +204,8 @@ object ProposalEditor:
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
+    cfps:              List[CallForProposal],
+    selectedCfp:       View[Option[CallForProposal]],
     readonly:          Boolean,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
@@ -355,11 +359,25 @@ object ProposalEditor:
             )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            FormEnumDropdownView(
-              id = "proposal-class".refined,
-              value = proposalClassType.withOnMod(onClassTypeMod),
-              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
-              disabled = readonly
+            <.div(
+              LucumaPrimeStyles.FormField,
+              ExploreStyles.ProposalCfpFields,
+              FormDropdownOptional(
+                id = "cfp".refined,
+                label =
+                  React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+                value = selectedCfp.get,
+                options = cfps.map(r => SelectItem(r, r.semester.format)),
+                onChange = _.map(v => selectedCfp.set(v.some)).orEmpty,
+                disabled = readonly,
+                modifiers = List(^.id := "cfp")
+              ),
+              FormEnumDropdownView(
+                id = "proposal-class".refined,
+                value = proposalClassType.withOnMod(onClassTypeMod),
+                label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
+                disabled = readonly
+              )
             ),
             FormDropdownOptional(
               id = "category".refined,
@@ -380,8 +398,7 @@ object ProposalEditor:
               disabled = readonly
             )
           )
-        ),
-        Divider(borderType = Divider.BorderType.Solid)
+        )
       )
     )
   }
@@ -401,6 +418,8 @@ object ProposalEditor:
     users:             View[NonEmptyList[ProgramUserWithRole]],
     invitations:       View[List[CoIInvitation]],
     attachments:       View[List[ProposalAttachment]],
+    cfps:              List[CallForProposal],
+    selectedCfp:       View[Option[CallForProposal]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
     readonly:          Boolean,
@@ -448,6 +467,8 @@ object ProposalEditor:
           splitsList,
           splitsView.get,
           timeEstimateRange,
+          cfps,
+          selectedCfp,
           readonly,
           _
         )
@@ -500,7 +521,13 @@ object ProposalEditor:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateViewBy((props, _) =>
+      // cfps
+      .useEffectResultOnMountBy: (_, ctx) =>
+        import ctx.given
+        ReadOpenCFPs[IO]
+          .query()
+          .map(_.map(_.callsForProposals.matches)) // .map(_: CallForProposal))
+      .useStateViewBy((props, _, _) =>
         // total time - we need `Hours` for editing and also to preserve if
         // the user switches between classes with and without total time.
         props.proposal
@@ -509,23 +536,23 @@ object ProposalEditor:
           .map(toHours)
           .getOrElse(Hours.unsafeFrom(0))
       )
-      .useStateViewBy((props, _, _) =>
+      .useStateViewBy((props, _, _, _) =>
         // mininum percent total time = need to preserve between class switches
         props.proposal
           .zoom(Proposal.proposalClass.andThen(ProposalClass.minPercentTotalTime))
           .get
           .getOrElse(IntPercent.unsafeFrom(80))
       )
-      .useStateViewBy((props, _, _, _) =>
+      .useStateViewBy((props, _, _, _, _) =>
         // Initial proposal class type
         ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
       )
       .useStateView(false) // show partner splits modal
       .useStateView(List.empty[PartnerSplit])
-      .useStateViewBy((props, _, _, _, _, _, _) => props.proposal.get.proposalClass)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
+      .useStateViewBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
         // Deal with changes to the ProposalClass.
-        (props, _, totalHours, minPct2, classType, _, _, oldClass) =>
+        (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
           newClass => {
             val setClass =
               if (oldClass.get === newClass) Callback.empty
@@ -545,11 +572,13 @@ object ProposalEditor:
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
-      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _) => props.invitations)
+      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) => props.invitations)
+      .useStateView(none[CallForProposal])
       .render {
         (
           props,
           ctx,
+          cfps,
           totalHours,
           minPct2,
           proposalClassType,
@@ -559,7 +588,8 @@ object ProposalEditor:
           resize,
           createInvite,
           overlayRef,
-          invitations
+          invitations,
+          selectedCfp
         ) =>
           renderFn(
             props.programId,
@@ -576,6 +606,8 @@ object ProposalEditor:
             props.users,
             invitations,
             props.attachments,
+            cfps.toOption.orEmpty,
+            selectedCfp,
             props.authToken,
             props.layout,
             props.readonly,
