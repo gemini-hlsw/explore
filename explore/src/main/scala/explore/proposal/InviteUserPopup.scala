@@ -98,7 +98,7 @@ object InviteUserPopup:
               ),
               <.div(LucumaPrimeStyles.FormColumn)(
                 <.label(
-                  "Invite ready, please send send the key below to you CoI, it won't be displayed again"
+                  "An invitation email has been sent. If you wish to send the invitation another way, copy and send the key below to your CoI, it won't be displayed again."
                 )
               ).when(key.when(_.isDefined)),
               key.get.map(key =>

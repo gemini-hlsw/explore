@@ -19,6 +19,7 @@ import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.UserInvitation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
@@ -44,8 +45,9 @@ case class RedeemInvitationsPopup(vault: UserVault, onClose: Option[Callback] = 
 object RedeemInvitationsPopup:
   private type Props = RedeemInvitationsPopup
 
-  private object IsOpen   extends NewType[Boolean]
-  private object ErrorMsg extends NewType[Option[String]]
+  private object IsOpen     extends NewType[Boolean]
+  private object ErrorMsg   extends NewType[Option[String]]
+  private object IsKeyValid extends NewType[Boolean]
 
   private val component = ScalaFnComponent
     .withHooks[Props]
@@ -54,12 +56,17 @@ object RedeemInvitationsPopup:
     .useStateView[IsActive](IsActive(false))
     .useStateView(RedeemInviteProcess.Idle)
     .useStateView("")
+    .useStateView(IsKeyValid(false))
     .useStateView(ErrorMsg(none))
     .useStateView(none[ProgramInvitation])
-    .render: (props, ctx, isOpen, active, process, key, errorMsg, result) =>
+    .render: (props, ctx, isOpen, active, process, key, isKeyValid, errorMsg, result) =>
       import ctx.given
 
       val onHide = props.onClose.map(oc => isOpen.setState(IsOpen(false)) >> oc)
+
+      // tolerate leading and trailing spaces from copy/paste
+      def validateKey(key: String): Callback =
+        isKeyValid.set(IsKeyValid(UserInvitation.fromString.getOption(key.trim).isDefined))
 
       def redeem(key: String): IO[Unit] =
         RedeemInvitationMutation[IO]
@@ -95,8 +102,8 @@ object RedeemInvitationsPopup:
         Button(
           icon = Icons.PaperPlaneTop,
           loading = process.get === RedeemInviteProcess.Running,
-          disabled = key.get.isEmpty || process.get === RedeemInviteProcess.Done,
-          onClick = redeem(key.get).runAsync,
+          disabled = !isKeyValid.get.value || process.get === RedeemInviteProcess.Done,
+          onClick = redeem(key.get.trim).runAsync,
           label = "Redeem"
         ).compact.unless(process.get === RedeemInviteProcess.Done),
         result.get.map(r =>
@@ -134,6 +141,7 @@ object RedeemInvitationsPopup:
               id = "email-invite".refined,
               value = key,
               label = "Key:",
+              onTextChange = validateKey,
               disabled = process.get === RedeemInviteProcess.Running
             )(^.autoComplete := "off")
           )

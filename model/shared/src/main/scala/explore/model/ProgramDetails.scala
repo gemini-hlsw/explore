@@ -28,6 +28,7 @@ case class ProgramDetails(
 object ProgramDetails:
   val proposal: Lens[ProgramDetails, Option[Proposal]]                  = Focus[ProgramDetails](_.proposal)
   val proposalStatus: Lens[ProgramDetails, ProposalStatus]              = Focus[ProgramDetails](_.proposalStatus)
+  val invitations: Lens[ProgramDetails, List[CoIInvitation]]            = Focus[ProgramDetails](_.invitations)
   val allUsers: Lens[ProgramDetails, NonEmptyList[ProgramUserWithRole]] =
     Lens[ProgramDetails, NonEmptyList[ProgramUserWithRole]](_.allUsers)(a =>
       b => b.copy(pi = a.head, users = a.tail)

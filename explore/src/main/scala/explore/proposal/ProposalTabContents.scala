@@ -94,8 +94,8 @@ object ProposalTabContents:
   ): VdomNode = {
     import ctx.given
 
-    val details = programDetails.get
-    val users   = programDetails.zoom(ProgramDetails.allUsers)
+    val invitations = programDetails.zoom(ProgramDetails.invitations)
+    val users       = programDetails.zoom(ProgramDetails.allUsers)
 
     val isStdUser      = userVault.map(_.user).collect { case _: StandardUser => () }.isDefined
     val proposalStatus = programDetails.get.proposalStatus
@@ -127,7 +127,7 @@ object ProposalTabContents:
               undoStacks,
               timeEstimateRange,
               users,
-              details.invitations,
+              invitations,
               attachments,
               userVault.map(_.token),
               layout,
