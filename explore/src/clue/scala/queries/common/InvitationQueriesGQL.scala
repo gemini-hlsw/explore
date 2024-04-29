@@ -24,6 +24,9 @@ object InvitationQueriesGQL:
             id
             status
             recipientEmail
+            email {
+              status
+            }
           }
         }
       }

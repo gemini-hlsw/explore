@@ -19,6 +19,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.InvitationStatus
 import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.*
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
@@ -36,14 +37,16 @@ object ProgramUserInvitations:
 
   private val ColDef = ColumnDef[CoIInvitation]
 
-  private val KeyId: ColumnId    = ColumnId("id")
-  private val EmailId: ColumnId  = ColumnId("email")
-  private val RevokeId: ColumnId = ColumnId("revoke")
+  private val KeyId: ColumnId         = ColumnId("id")
+  private val EmailId: ColumnId       = ColumnId("email")
+  private val EmailStatusId: ColumnId = ColumnId("emailStatus")
+  private val RevokeId: ColumnId      = ColumnId("revoke")
 
   private val columnNames: Map[ColumnId, String] = Map(
-    KeyId    -> "ID",
-    EmailId  -> "email",
-    RevokeId -> ""
+    KeyId         -> "ID",
+    EmailId       -> "email",
+    EmailStatusId -> "",
+    RevokeId      -> ""
   )
 
   private def column[V](
@@ -59,6 +62,16 @@ object ProgramUserInvitations:
     List(
       column(KeyId, _.id),
       column(EmailId, _.email),
+      ColDef(
+        EmailStatusId,
+        _.emailStatus,
+        "Email Status",
+        cell = { cell =>
+          cell.value
+            .map(es => <.span(es.tag.toUpperCase).withTooltip(es.description))
+            .getOrElse(<.span())
+        }
+      ),
       ColDef(
         RevokeId,
         identity,

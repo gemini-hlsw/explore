@@ -88,7 +88,7 @@ case class ProposalEditor(
   undoStacks:        View[UndoStacks[IO, Proposal]],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   users:             View[NonEmptyList[ProgramUserWithRole]],
-  invitations:       List[CoIInvitation],
+  invitations:       View[List[CoIInvitation]],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
   layout:            LayoutsMap,
@@ -572,7 +572,6 @@ object ProposalEditor:
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
-      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) => props.invitations)
       .useStateView(none[CallForProposal])
       .render {
         (
@@ -588,7 +587,6 @@ object ProposalEditor:
           resize,
           createInvite,
           overlayRef,
-          invitations,
           selectedCfp
         ) =>
           renderFn(
@@ -604,7 +602,7 @@ object ProposalEditor:
             createInvite,
             props.timeEstimateRange,
             props.users,
-            invitations,
+            props.invitations,
             props.attachments,
             cfps.toOption.orEmpty,
             selectedCfp,
