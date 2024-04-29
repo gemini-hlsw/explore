@@ -11,7 +11,6 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.tree.KeyedIndexedTree.Index
 import io.circe.Decoder
-import io.circe.HCursor
 import io.circe.refined.given
 import lucuma.core.model.Group
 import lucuma.core.model.Observation
