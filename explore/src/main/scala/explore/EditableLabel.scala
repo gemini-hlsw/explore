@@ -89,7 +89,8 @@ object EditableLabel {
       .withHooks[Props]
       .useState(NotEditing) // editing
       .useState("")         // displayValue
-      .render { (props, editing, displayValue) =>
+      .useId
+      .render { (props, editing, displayValue, id) =>
         def editCB(e: ReactMouseEvent): Callback =
           e.stopPropagationCB >> e.preventDefaultCB >>
             displayValue.setState(props.value.map(_.value).orEmpty) >>
@@ -139,13 +140,15 @@ object EditableLabel {
         if (editing.value.value)
           <.div(^.width := "100%", ^.display.flex)(
             InputText(
-              id = "editable-label-input", // won't necesessarily be unique...
+              id = id,
               value = displayValue.value,
               onChange = (e: ReactEventFromInput) => displayValue.setState(e.target.value),
               clazz = props.inputClass
             ).mini.withMods(
               ^.onKeyUp ==> (e =>
-                if (e.key === "Enter") submitCB
+                // This is odd, it works fine in demo but not in explore
+                if (e.key === " ") displayValue.modState(_ + " ")
+                else if (e.key === "Enter") submitCB
                 else if (e.key === "Escape") editing.setState(NotEditing)
                 else Callback.empty
               ),

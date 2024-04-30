@@ -14,6 +14,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
+import lucuma.core.enums.Band
 import lucuma.core.enums.GuideSpeed
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.IconSize
@@ -22,12 +23,15 @@ import lucuma.ui.syntax.all.given
 import scala.math.BigDecimal.RoundingMode
 
 case class AgsOverlay(
-  selectedGSIndex:   View[Option[Int]],
-  maxIndex:          Int,
-  selectedGuideStar: Option[AgsAnalysis],
-  agsState:          AgsState,
-  canCalculate:      Boolean
-) extends ReactFnProps[AgsOverlay](AgsOverlay.component)
+  selectedGSIndex:     View[Option[Int]],
+  maxIndex:            Int,
+  selectedGuideStar:   Option[AgsAnalysis],
+  agsState:            AgsState,
+  itcAvailable:        Boolean,
+  candidatesAvailable: Boolean
+) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
+  val canCalculate: Boolean = itcAvailable && candidatesAvailable
+}
 
 object AgsOverlay {
   type Props = AgsOverlay
@@ -88,10 +92,14 @@ object AgsOverlay {
                 case AgsAnalysis.Usable(_, _, speed, _, _) =>
                   React.Fragment(
                     <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
-                    <.div(ExploreStyles.AgsGBrightness,
-                          analysis.target.gBrightness.map(g =>
-                            s"G: ${g.value.value.setScale(1, RoundingMode.HALF_DOWN).toString()}"
-                          )
+                    <.div(
+                      ExploreStyles.AgsGBrightness,
+                      analysis.target.gBrightness.map { case (b, v) =>
+                        React.Fragment(
+                          if (b === Band.GaiaRP) React.Fragment(s"G", <.sub("RP")) else b.shortName,
+                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}"
+                        )
+                      }
                     ),
                     <.div(ExploreStyles.AgsCoordinates,
                           s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
@@ -114,7 +122,8 @@ object AgsOverlay {
               .withSize(IconSize.LG)
               .unless(props.canCalculate),
             <.span(Constants.NoGuideStarMessage).when(props.canCalculate),
-            <.span(Constants.MissingInfo).unless(props.canCalculate)
+            <.span(Constants.MissingITC).unless(props.itcAvailable),
+            <.span(Constants.MissingCandidates).unless(props.candidatesAvailable)
           )
         }
     }

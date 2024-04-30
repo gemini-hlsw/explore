@@ -13,4 +13,4 @@ trait SSO:
     type ApiKeyId = String
 
   object Enums:
-    type RoleType = explore.model.enums.RoleType
+    type RoleType = lucuma.core.enums.RoleType

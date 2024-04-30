@@ -9,6 +9,7 @@ import crystal.react.*
 import eu.timepit.refined.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.model.Constants.MissingInfoMsg
 import explore.model.LoadingState
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
@@ -32,10 +33,7 @@ case class ItcPanelTitle(
 object ItcPanelTitle:
   private type Props = ItcPanelTitle
 
-  private val MissingInfoMsg  = "Not enough information to call ITC"
-  private val MissingInfoIcon =
-    Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
-  private val pendingChart    =
+  private val pendingChart =
     Pot.pending[ItcChartResult]
 
   private val component =
@@ -68,10 +66,10 @@ object ItcPanelTitle:
             selectedResult.renderPot(
               fn,
               Icons.Spinner.withSpin(true),
-              e => <.span(MissingInfoIcon).withTooltip(e.getMessage)
+              e => <.span(Icons.MissingInfoIcon).withTooltip(e.getMessage)
             )
           } else {
-            <.span(MissingInfoIcon).withTooltip(MissingInfoMsg)
+            <.span(Icons.MissingInfoIcon).withTooltip(MissingInfoMsg)
           }
         )
 

@@ -37,7 +37,7 @@ import monocle.Lens
 import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.syntax.all.*
-import org.scalajs.dom.{File => DOMFile}
+import org.scalajs.dom.File as DOMFile
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 

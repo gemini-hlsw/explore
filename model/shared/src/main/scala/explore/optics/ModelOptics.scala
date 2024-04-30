@@ -16,9 +16,9 @@ import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.units.*
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
+import monocle.*
 import monocle.Getter
 import monocle.Optional
-import monocle.*
 
 import scala.collection.immutable.SortedMap
 

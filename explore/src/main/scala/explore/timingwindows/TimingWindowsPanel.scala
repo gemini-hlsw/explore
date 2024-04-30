@@ -12,6 +12,8 @@ import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.model.Constants.BadTimingWindow
+import explore.model.ObsTabTilesIds
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
@@ -29,6 +31,7 @@ import lucuma.core.util.Timestamp
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
 import lucuma.react.datepicker.Datepicker
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
@@ -39,8 +42,8 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.render.*
-import lucuma.ui.table.PrimeTable
 import lucuma.ui.table.*
+import lucuma.ui.table.PrimeTable
 import lucuma.ui.utils.Render
 import monocle.Iso
 import monocle.function.Index
@@ -58,6 +61,18 @@ case class TimingWindowsPanel(
 ) extends ReactFnProps(TimingWindowsPanel.component)
 
 object TimingWindowsPanel:
+  def timingWindowsPanel(
+    timingWindows: View[List[TimingWindow]],
+    readonly:      Boolean
+  ) = {
+    val base  = "Scheduling Windows"
+    val title =
+      if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
+    Tile(ObsTabTilesIds.TimingWindowsId.id, title, canMinimize = true)(renderInTitle =>
+      TimingWindowsPanel(timingWindows, readonly, renderInTitle)
+    )
+  }
+
   private type Props = TimingWindowsPanel
 
   private val ColDef = ColumnDef[(TimingWindow, Int)]
@@ -86,6 +101,7 @@ object TimingWindowsPanel:
 
   private val DeleteColWidth = 20
   private val WindowColId    = "TimingWindow"
+  private val ErrorColId     = "Error"
   private val DeleteColId    = "Delete"
 
   private val component =
@@ -101,6 +117,16 @@ object TimingWindowsPanel:
               _._1,
               size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
             ).setCell(_.value.renderVdom).some,
+            ColDef(
+              ColumnId(ErrorColId),
+              _._2,
+              size = DeleteColWidth.toPx
+            ).setCell { c =>
+              val tw: TimingWindow = c.row.getValue(WindowColId)
+              if (tw.isValid) EmptyVdom
+              else
+                <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow)
+            }.some,
             ColDef(
               ColumnId(DeleteColId),
               _._2,
@@ -198,8 +224,8 @@ object TimingWindowsPanel:
                   renderInclusionRadio(TimingWindowInclusion.Include, "include-option"),
                   renderInclusionRadio(TimingWindowInclusion.Exclude, "exclude-option")
                 ),
-                <.span(ExploreStyles.TimingWindowFromEditor)(
-                  " from",
+                <.div(ExploreStyles.TimingWindowFromEditor)(
+                  <.span(" from"),
                   Datepicker(onChange =
                     (newValue, _) =>
                       newValue.fromDatePickerToZDTOpt.foldMap { zdt =>
@@ -212,8 +238,17 @@ object TimingWindowsPanel:
                   )
                     .showTimeInput(true)
                     .selected(selectedStart.get.toInstant.toDatePickerJsDate)
-                    .dateFormat("yyyy-MM-dd HH:mm"),
-                  " UTC"
+                    .dateFormat("yyyy-MM-dd HH:mm")
+                    .maxDate(
+                      selectedEnd.get
+                        .flatMap(TimingWindowEnd.at.getOption)
+                        .map(_.instant.toInstant.toDatePickerJsDate)
+                        .orNull
+                    ),
+                  <.span(" UTC "),
+                  <.span(Icons.ErrorIcon)
+                    .withTooltip("Check start date is before the end")
+                    .unless(tw.get.isValid)
                 )
               ),
               <.div(ExploreStyles.TimingWindowEditorBody)(
@@ -227,6 +262,7 @@ object TimingWindowsPanel:
                   <.label("Forever", ^.htmlFor := "forever-option")
                 ),
                 <.div(
+                  ExploreStyles.TimingWindowThroughEditor,
                   RadioButton(
                     "through",
                     id = "through-option",
@@ -262,8 +298,13 @@ object TimingWindowsPanel:
                       )
                         .showTimeInput(true)
                         .selected(endAt.get.toInstant.toDatePickerJsDate)
-                        .dateFormat("yyyy-MM-dd HH:mm"),
-                      <.span(" UTC")
+                        .dateFormat("yyyy-MM-dd HH:mm")
+                        .minDate(selectedStart.get.toInstant.toDatePickerJsDate),
+                      <.span(" UTC "),
+                      if (tw.get.isValid) EmptyVdom
+                      else
+                        <.span(Icons.ErrorIcon)
+                          .withTooltip("Check start date is before the end")
                     )
                   )
                 ),

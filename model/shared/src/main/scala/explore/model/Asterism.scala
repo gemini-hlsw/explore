@@ -12,8 +12,8 @@ import lucuma.core.data.Zipper
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
-import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.*
+import lucuma.schemas.model.TargetWithId
 import monocle.*
 
 import java.time.Instant

@@ -13,11 +13,11 @@ object ProgramDetailsSubquery
     extends GraphQLSubquery.Typed[ObservationDB, ProgramDetails]("Program"):
   override val subquery: String = s"""
     {
+      type
       proposal $ProposalSubquery
       proposalStatus
       pi $ProgramUserSubquery
       users $ProgramUserWithRoleSubquery
-      timeEstimateRange $ProgramTimeRangeSubquery
-      timeCharge $ProgramTimeSubquery
+      userInvitations $ProgramInvitationsSubquery
     }
   """

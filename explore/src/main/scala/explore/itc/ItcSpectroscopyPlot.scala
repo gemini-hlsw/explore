@@ -22,8 +22,8 @@ import lucuma.react.highcharts.ResizingChart
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.typed.highcharts.highchartsStrings.line
-import lucuma.typed.highcharts.mod.DashStyleValue
 import lucuma.typed.highcharts.mod.*
+import lucuma.typed.highcharts.mod.DashStyleValue
 import lucuma.ui.syntax.all.given
 
 import scala.scalajs.js

@@ -18,6 +18,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
 
+import java.time.Duration
 import java.time.Instant
 
 object ElevationPlotTile:
@@ -28,6 +29,7 @@ object ElevationPlotTile:
     site:              Option[Site],
     coordinates:       Option[CoordinatesAtVizTime],
     vizTime:           Option[Instant],
+    pendingTime:       Option[Duration],
     timingWindows:     List[TimingWindow] = List.empty,
     globalPreferences: GlobalPreferences
   ) =
@@ -43,6 +45,7 @@ object ElevationPlotTile:
                                targetId,
                                site,
                                vizTime,
+                               pendingTime,
                                coordinates,
                                timingWindows,
                                globalPreferences

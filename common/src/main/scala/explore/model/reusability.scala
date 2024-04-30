@@ -6,6 +6,7 @@ package explore.model
 import cats.kernel.Eq
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.model.IsActive
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
@@ -57,6 +58,7 @@ object reusability:
   given Reusability[ProgramInfo]             = Reusability.byEq
   given Reusability[ProgramDetails]          = Reusability.byEq
   given Reusability[Execution]               = Reusability.byEq
+  given Reusability[GroupTree]               = Reusability.byEq
 
   /**
    */
@@ -132,3 +134,13 @@ object reusability:
   given [F[_]]: Reusability[OdbRestClient[F]] = Reusability.by(_.authToken)
 
   given [D: Eq]: Reusability[Atom[D]] = Reusability.byEq
+
+  given Reusability[ExecutionVisits] = Reusability.byEq
+
+  given Reusability[ProgramUserWithRole] = Reusability.byEq
+
+  given Reusability[CoIInvitation] = Reusability.byEq
+
+  given Reusability[IsActive] = Reusability.byEq
+
+  given Reusability[PAProperties] = Reusability.byEq

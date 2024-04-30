@@ -35,12 +35,13 @@ import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.ToggleButton
 import lucuma.refined.*
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.SelectButtonEnumView
-import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.TableIcons
 import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
@@ -51,6 +52,7 @@ case class ElevationPlotSection(
   tid:               Target.Id,
   site:              Option[Site],
   visualizationTime: Option[Instant],
+  pendingTime:       Option[Duration],
   coords:            CoordinatesAtVizTime,
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
@@ -70,7 +72,14 @@ object ElevationPlotSection:
           .copy(
             range = props.globalPreferences.elevationPlotRange,
             timeDisplay = props.globalPreferences.elevationPlotTime,
-            showScheduling = props.globalPreferences.elevationPlotScheduling
+            showScheduling = props.globalPreferences.elevationPlotScheduling,
+            elevationPlotElevationVisible = props.globalPreferences.elevationPlotElevationVisible,
+            elevationPlotParallacticAngleVisible =
+              props.globalPreferences.elevationPlotParallacticAngleVisible,
+            elevationPlotSkyBrightnessVisible =
+              props.globalPreferences.elevationPlotSkyBrightnessVisible,
+            elevationPlotLunarElevationVisible =
+              props.globalPreferences.elevationPlotLunarElevationVisible
           )
       )
       // If predefined site changes, switch to it.
@@ -86,10 +95,15 @@ object ElevationPlotSection:
 
         val options = elevationPlotOptions.withOnMod(opts =>
           ElevationPlotPreference
-            .updatePlotPreferences[IO](props.uid,
-                                       opts.range,
-                                       opts.timeDisplay,
-                                       opts.showScheduling.value
+            .updatePlotPreferences[IO](
+              props.uid,
+              opts.range,
+              opts.timeDisplay,
+              opts.showScheduling.value,
+              opts.elevationPlotElevationVisible,
+              opts.elevationPlotParallacticAngleVisible,
+              opts.elevationPlotSkyBrightnessVisible,
+              opts.elevationPlotLunarElevationVisible
             )
             .runAsync
         )
@@ -134,20 +148,16 @@ object ElevationPlotSection:
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
-                  opt.site,
                   props.coords,
-                  opt.date,
-                  opt.timeDisplay,
                   props.visualizationTime,
-                  windowsNetExcludeIntervals
+                  windowsNetExcludeIntervals,
+                  props.pendingTime,
+                  options
                 )
               case PlotRange.Semester =>
-                val coords = props.coords
                 ElevationPlotSemester(
-                  opt.site,
-                  coords,
-                  opt.semester,
-                  opt.date,
+                  options.get,
+                  props.coords,
                   windowsNetExcludeIntervals
                 )
           },
@@ -192,7 +202,7 @@ object ElevationPlotSection:
                 ,
                 clazz = ExploreStyles.ElevationPlotDateButton,
                 text = false,
-                icon = Icons.ChevronRightLight
+                icon = TableIcons.ChevronRight
               ).tiny.compact
             ),
             SelectButtonEnumView(

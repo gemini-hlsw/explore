@@ -15,7 +15,6 @@ import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.odb.input.*
 import queries.common.ProgramQueriesGQL.*
 
@@ -62,18 +61,6 @@ object ProgramQueries:
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(name = name.orUnassign)
-        )
-      )
-      .void
-
-  def updateProposalStatus[F[_]: Async](id: Program.Id, status: ProposalStatus)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
-    UpdateProgramsMutation[F]
-      .execute(
-        UpdateProgramsInput(
-          WHERE = id.toWhereProgram.assign,
-          SET = ProgramPropertiesInput(proposalStatus = status.assign)
         )
       )
       .void

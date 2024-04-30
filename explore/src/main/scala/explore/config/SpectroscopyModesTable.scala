@@ -26,20 +26,20 @@ import explore.model.BasicConfigAndItc
 import explore.model.Progress
 import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
-import explore.model.boopickle.ItcPicklers.given
 import explore.model.boopickle.*
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.TableId
-import explore.model.itc.ItcTarget
 import explore.model.itc.*
+import explore.model.itc.ItcTarget
 import explore.model.reusability.given
 import explore.modes.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.*
+import lucuma.core.enums.FocalPlane
 import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
@@ -55,13 +55,13 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.BasicConfiguration
-import lucuma.typed.{tanstackVirtualCore => rawVirtual}
+import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.*
+import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 import lucuma.ui.utils.*
 
@@ -84,7 +84,7 @@ case class SpectroscopyModesTable(
   val brightestTarget: Option[ItcTarget] =
     for
       w <- spectroscopyRequirements.wavelength
-      t <- targets.flatMap(_.brightestProfileAt(_.profile)(w))
+      t <- targets.flatMap(_.map(_.gaiaFree).brightestProfileAt(_.profile)(w))
       if t.canQueryITC
     yield t
 
@@ -262,11 +262,11 @@ private object SpectroscopyModesTable:
         }
         .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
-        .setCell(cell => formatSlitWidth(cell.value))
+        .setCell(cell => formatSlitWidth(cell.value.value))
         .setColumnSize(FixedSize(100.toPx))
         .sortable,
       column(SlitLengthColumnId, row => SpectroscopyModeRow.slitLength.get(row.entry))
-        .setCell(cell => formatSlitLength(cell.value))
+        .setCell(cell => formatSlitLength(cell.value.value))
         .setColumnSize(FixedSize(105.toPx))
         .sortable,
       column(GratingColumnId, row => SpectroscopyModeRow.grating.get(row.entry))
@@ -371,7 +371,7 @@ private object SpectroscopyModesTable:
               focalPlane = s.focalPlane,
               capability = s.capability,
               wavelength = s.wavelength,
-              slitWidth = s.focalPlaneAngle,
+              slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
               resolution = s.resolution,
               range = s.wavelengthCoverage,
               declination = dec
@@ -439,7 +439,7 @@ private object SpectroscopyModesTable:
           TableOptions(
             cols,
             rows,
-            getRowId = (row, _, _) => RowId(row.entry.id.toString),
+            getRowId = (row, _, _) => RowId(row.entry.id.orEmpty.toString),
             enableSorting = true
           ),
           TableStore(props.userId, TableId.SpectroscopyModes, cols)

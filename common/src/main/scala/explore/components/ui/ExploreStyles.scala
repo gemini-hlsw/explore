@@ -116,8 +116,6 @@ object ExploreStyles:
   val ObsItem: Css                  = Css("obs-item")
   val TrashIcon: Css                = Css("trash-icon")
   val EraserIcon: Css               = Css("eraser-icon")
-  val ExpanderChevron: Css          = Css("expander-chevron")
-  val ExpanderChevronOpen: Css      = Css("expander-chevron-open")
 
   val GroupEditTile: Css      = Css("group-edit-tile")
   val GroupEditTitle: Css     = Css("group-edit-title")
@@ -219,6 +217,7 @@ object ExploreStyles:
 
   val ProposalTab: Css         = Css("explore-proposal-tab")
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
+  val ProposalCfpFields: Css   = Css("explore-proposal-cfp-fields")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
   val PartnerSplitsGrid: Css       = Css("partner-splits-grid")
@@ -228,6 +227,10 @@ object ExploreStyles:
   val PartnerSplitFlag: Css        = Css("partner-split-flag")
 
   val PartnerSplitsEditorDialog: Css = Css("partner-splits-editor-dialog")
+  val CompactOverlayPanel: Css       = Css("compact-overlay-panel")
+
+  // User invite
+  val InviteUserPopup: Css = Css("invite-user-popup")
 
   // Semantic UI form overrides and extensions
   val Grid: Css                   = Css("explore-grid")
@@ -236,10 +239,6 @@ object ExploreStyles:
   val InputErrorTooltip: Css      = Css("explore-input-error-tooltip")
   val InputErrorTooltipBelow: Css = Css("explore-input-error-tooltip-below")
   val FlatFormField: Css          = Css("flat-form-field")
-
-  val IndicatorOK: Css      = Css("indicator-ok")
-  val IndicatorWarning: Css = Css("indicator-warning")
-  val IndicatorFail: Css    = Css("indicator-fail")
 
   // WIP
   val WIP: Css        = Css("wip")
@@ -307,7 +306,6 @@ object ExploreStyles:
   val HelpIconFloating: Css = Css("explore-help-icon-floating")
   val HelpSidebar: Css      = Css("explore-help-sidebar")
   val HelpTitle: Css        = Css("explore-help-title")
-  val HelpTitleLabel: Css   = Css("explore-help-title-label")
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
 
@@ -320,6 +318,7 @@ object ExploreStyles:
   val ConfigurationTileBody: Css        = Css("explore-configuration-tile-body")
   val PAConfigurationForm: Css          = Css("explore-pa-configuration-form")
   val PAConfigurationAngle: Css         = Css("explore-pa-configuration-angle")
+  val AveragePA: Css                    = Css("explore-average-pa")
   val ObsInstantTileTitle: Css          = Css("explore-obs-instant-tile-title")
   val ConfigurationGrid: Css            = Css("explore-configuration-grid")
   val BasicConfigurationGrid: Css       = Css("explore-basic-configuration-grid")
@@ -353,21 +352,13 @@ object ExploreStyles:
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
 
   // Sequence Viewer
-  val SequencesPanel                   = Css("explore-sequences-panel")
-  val SequencesPanelError              = Css("explore-sequences-panel-error")
-  val SequenceTable                    = Css("explore-sequence-table")
-  val CellHideBorder                   = Css("explore-table-cell-hide-border")
-  val SequenceBracketCell              = Css("explore-sequence-bracket-cell")
-  val SequenceTileTitle                = Css("explore-sequence-tile-title")
-  val SequenceTileTitleItem            = Css("explore-sequence-tile-title-item")
-  val VisitSection                     = Css("explore-visit-section")
-  val VisitHeader                      = Css("explore-visit-header")
-  val VisitStepExtra                   = Css("explore-visit-step-extra")
-  val VisitStepExtraDatetime           = Css("explore-visit-step-extra-datetime")
-  val VisitStepExtraDatasets           = Css("explore-visit-step-extra-datasets")
-  val VisitStepExtraDatasetItem        = Css("explore-visit-step-extra-dataset-item")
-  val VisitStepExtraDatasetStatusIcon  = Css("explore-visit-step-extra-dataset-status-icon")
-  val VisitStepExtraDatasetStatusLabel = Css("explore-visit-step-extra-dataset-status-label")
+  val SequencesPanel        = Css("explore-sequences-panel")
+  val SequencesPanelError   = Css("explore-sequences-panel-error")
+  val CellHideBorder        = Css("explore-table-cell-hide-border")
+  val SequenceBracketCell   = Css("explore-sequence-bracket-cell")
+  val SequenceTileTitle     = Css("explore-sequence-tile-title")
+  val SequenceTileTitleItem = Css("explore-sequence-tile-title-item")
+  val VisitSection          = Css("explore-visit-section")
 
   val ButtonCopy: Css            = Css("explore-button-copy")
   val ButtonsUndo: Css           = Css("explore-buttons-undo")
@@ -474,6 +465,7 @@ object ExploreStyles:
   val TimingWindowEditorHeader: Css             = Css("timing-window-editor-header")
   val TimingWindowInclusionEditor: Css          = Css("timing-window-inclusion-editor")
   val TimingWindowFromEditor: Css               = Css("timing-window-from-editor")
+  val TimingWindowThroughEditor: Css            = Css("timing-window-through-editor")
   val TimingWindowEditorBody: Css               = Css("timing-window-editor-body")
   val TimingWindowEndAfter: Css                 = Css("timing-window-end-after")
   val TimingWindowRepeatEditor: Css             = Css("timing-window-repeat-editor")

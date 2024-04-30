@@ -6,8 +6,8 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.model as schemasModel
 import lucuma.schemas.odb.*
-import lucuma.schemas.{model => schemasModel}
 // gql: import lucuma.schemas.decoders.given
 
 object TargetQueriesGQL {

@@ -11,7 +11,7 @@ import munit.DisciplineSuite
 import org.scalacheck.Arbitrary.*
 
 class ModelOpticsSuite extends DisciplineSuite:
-  import ArbRadialVelocity.*
+  import ArbRadialVelocity.given
   import ArbTarget.given
 
   checkAll("targetRV", OptionalTests(TargetRV))

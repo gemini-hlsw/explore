@@ -3,6 +3,7 @@
 
 package explore.undo
 
+import eu.timepit.refined.scalacheck.numeric.*
 import explore.data.KeyedIndexedList
 import explore.optics.AdjusterTests
 import monocle.Focus

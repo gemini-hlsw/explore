@@ -5,9 +5,10 @@ package explore.proposal
 
 import cats.Order.*
 import cats.data.Chain
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.*
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.Pot
@@ -16,7 +17,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.Aligner
 import explore.components.FormStaticData
@@ -26,6 +26,8 @@ import explore.components.TileController
 import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
+import explore.model.CallForProposal
+import explore.model.CoIInvitation
 import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
 import explore.model.Hours
@@ -55,8 +57,9 @@ import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.Divider
+import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
+import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
@@ -72,7 +75,8 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
-import queries.common.ProgramQueriesGQL
+import queries.common.CallsQueriesGQL.*
+import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
@@ -83,7 +87,8 @@ case class ProposalEditor(
   proposal:          View[Proposal],
   undoStacks:        View[UndoStacks[IO, Proposal]],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  users:             List[ProgramUserWithRole],
+  users:             View[NonEmptyList[ProgramUserWithRole]],
+  invitations:       View[List[CoIInvitation]],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
   layout:            LayoutsMap,
@@ -190,7 +195,7 @@ object ProposalEditor:
       .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
   private def renderDetails(
-    aligner:           Aligner[Proposal, Input[ProposalInput]],
+    aligner:           Aligner[Proposal, ProposalPropertiesInput],
     undoCtx:           UndoContext[Proposal],
     totalHours:        View[Hours],
     minPct2:           View[IntPercent],
@@ -199,27 +204,28 @@ object ProposalEditor:
     splitsList:        View[List[PartnerSplit]],
     splitsMap:         SortedMap[Partner, IntPercent],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
-    users:             List[ProgramUserWithRole],
+    cfps:              List[CallForProposal],
+    selectedCfp:       View[Option[CallForProposal]],
     readonly:          Boolean,
     renderInTitle:     Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.title, t => _.map(ProposalInput.title.modify(t)))
+      aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
 
     val classAligner: Aligner[ProposalClass, Input[ProposalClassInput]] =
-      aligner.zoom(Proposal.proposalClass, c => _.map(ProposalInput.proposalClass.modify(c)))
+      aligner.zoom(Proposal.proposalClass, ProposalPropertiesInput.proposalClass.modify)
 
     val classView: View[ProposalClass] = classAligner.view(_.toInput.assign)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
-      aligner.zoom(Proposal.category, c => _.map(ProposalInput.category.modify(c)))
+      aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
 
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
 
     val activationAligner: Aligner[ToOActivation, Input[ToOActivation]] =
-      aligner.zoom(Proposal.toOActivation, a => _.map(ProposalInput.toOActivation.modify(a)))
+      aligner.zoom(Proposal.toOActivation, ProposalPropertiesInput.toOActivation.modify)
 
     val activationView: View[ToOActivation] = activationAligner.view(_.assign)
 
@@ -353,11 +359,25 @@ object ProposalEditor:
             )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            FormEnumDropdownView(
-              id = "proposal-class".refined,
-              value = proposalClassType.withOnMod(onClassTypeMod),
-              label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
-              disabled = readonly
+            <.div(
+              LucumaPrimeStyles.FormField,
+              ExploreStyles.ProposalCfpFields,
+              FormDropdownOptional(
+                id = "cfp".refined,
+                label =
+                  React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+                value = selectedCfp.get,
+                options = cfps.map(r => SelectItem(r, r.semester.format)),
+                onChange = _.map(v => selectedCfp.set(v.some)).orEmpty,
+                disabled = readonly,
+                modifiers = List(^.id := "cfp")
+              ),
+              FormEnumDropdownView(
+                id = "proposal-class".refined,
+                value = proposalClassType.withOnMod(onClassTypeMod),
+                label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
+                disabled = readonly
+              )
             ),
             FormDropdownOptional(
               id = "category".refined,
@@ -378,9 +398,7 @@ object ProposalEditor:
               disabled = readonly
             )
           )
-        ),
-        Divider(borderType = Divider.BorderType.Solid),
-        ProgramUsersTable(users)
+        )
       )
     )
   }
@@ -395,31 +413,36 @@ object ProposalEditor:
     proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
+    createInvite:      View[CreateInviteProcess],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
-    users:             List[ProgramUserWithRole],
+    users:             View[NonEmptyList[ProgramUserWithRole]],
+    invitations:       View[List[CoIInvitation]],
     attachments:       View[List[ProposalAttachment]],
+    cfps:              List[CallForProposal],
+    selectedCfp:       View[Option[CallForProposal]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
     readonly:          Boolean,
-    resize:            UseResizeDetectorReturn
-  )(using FetchClient[IO, ObservationDB], Logger[IO]) = {
+    resize:            UseResizeDetectorReturn,
+    ref:               OverlayPanelRef
+  )(using ctx: AppContext[IO]) = {
+    import ctx.given
+
     def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
-    val undoCtx: UndoContext[Proposal]                   = UndoContext(undoStacks, proposal)
-    val aligner: Aligner[Proposal, Input[ProposalInput]] =
+    val undoCtx: UndoContext[Proposal]                      = UndoContext(undoStacks, proposal)
+    val aligner: Aligner[Proposal, ProposalPropertiesInput] =
       Aligner(
         undoCtx,
-        UpdateProgramsInput(
-          WHERE = programId.toWhereProgram.assign,
-          SET = ProgramPropertiesInput(proposal = ProposalInput().assign)
+        UpdateProposalInput(
+          programId = programId.assign,
+          SET = ProposalPropertiesInput()
         ),
-        (ProgramQueriesGQL.UpdateProgramsMutation[IO].execute(_)).andThen(_.void)
-      ).zoom(Iso.id[Proposal].asLens,
-             UpdateProgramsInput.SET.andThen(ProgramPropertiesInput.proposal).modify
-      )
+        (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
+      ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
     val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitInput]]] =
-      aligner.zoom(Proposal.partnerSplits, s => _.map(ProposalInput.partnerSplits.modify(s)))
+      aligner.zoom(Proposal.partnerSplits, ProposalPropertiesInput.partnerSplits.modify)
 
     val splitsView: View[SortedMap[Partner, IntPercent]] =
       splitsAligner.view(
@@ -444,14 +467,17 @@ object ProposalEditor:
           splitsList,
           splitsView.get,
           timeEstimateRange,
-          users,
+          cfps,
+          selectedCfp,
           readonly,
           _
         )
       )
 
+    val usersTile = ProgramUsers.programUsersTile(programId, users, invitations, createInvite, ref)
+
     val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.abstrakt, t => _.map(ProposalInput.`abstract`.modify(t)))
+      aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
 
     val abstractView = abstractAligner.view(_.orUnassign)
     val abstractTile =
@@ -478,7 +504,7 @@ object ProposalEditor:
         resize.width.getOrElse(1),
         defaultLayouts,
         layout,
-        List(detailsTile, abstractTile, attachmentsTile),
+        List(detailsTile, usersTile, abstractTile, attachmentsTile),
         GridLayoutSection.ProposalLayout,
         storeLayout = true
       ),
@@ -495,7 +521,13 @@ object ProposalEditor:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateViewBy((props, _) =>
+      // cfps
+      .useEffectResultOnMountBy: (_, ctx) =>
+        import ctx.given
+        ReadOpenCFPs[IO]
+          .query()
+          .map(_.map(_.callsForProposals.matches)) // .map(_: CallForProposal))
+      .useStateViewBy((props, _, _) =>
         // total time - we need `Hours` for editing and also to preserve if
         // the user switches between classes with and without total time.
         props.proposal
@@ -504,23 +536,23 @@ object ProposalEditor:
           .map(toHours)
           .getOrElse(Hours.unsafeFrom(0))
       )
-      .useStateViewBy((props, _, _) =>
+      .useStateViewBy((props, _, _, _) =>
         // mininum percent total time = need to preserve between class switches
         props.proposal
           .zoom(Proposal.proposalClass.andThen(ProposalClass.minPercentTotalTime))
           .get
           .getOrElse(IntPercent.unsafeFrom(80))
       )
-      .useStateViewBy((props, _, _, _) =>
+      .useStateViewBy((props, _, _, _, _) =>
         // Initial proposal class type
         ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
       )
       .useStateView(false) // show partner splits modal
       .useStateView(List.empty[PartnerSplit])
-      .useStateViewBy((props, _, _, _, _, _, _) => props.proposal.get.proposalClass)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
+      .useStateViewBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
         // Deal with changes to the ProposalClass.
-        (props, _, totalHours, minPct2, classType, _, _, oldClass) =>
+        (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
           newClass => {
             val setClass =
               if (oldClass.get === newClass) Callback.empty
@@ -538,10 +570,25 @@ object ProposalEditor:
           }
       )
       .useResizeDetector()
+      .useStateView(CreateInviteProcess.Idle)
+      .useOverlayPanelRef
+      .useStateView(none[CallForProposal])
       .render {
-        (props, ctx, totalHours, minPct2, proposalClassType, showDialog, splitsList, _, resize) =>
-          import ctx.given
-
+        (
+          props,
+          ctx,
+          cfps,
+          totalHours,
+          minPct2,
+          proposalClassType,
+          showDialog,
+          splitsList,
+          _,
+          resize,
+          createInvite,
+          overlayRef,
+          selectedCfp
+        ) =>
           renderFn(
             props.programId,
             props.optUserId,
@@ -552,12 +599,17 @@ object ProposalEditor:
             proposalClassType,
             showDialog,
             splitsList,
+            createInvite,
             props.timeEstimateRange,
             props.users,
+            props.invitations,
             props.attachments,
+            cfps.toOption.orEmpty,
+            selectedCfp,
             props.authToken,
             props.layout,
             props.readonly,
-            resize
-          )
+            resize,
+            overlayRef
+          )(using ctx)
       }

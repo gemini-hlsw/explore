@@ -21,8 +21,8 @@ import lucuma.core.enums.StellarLibrarySpectrum
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.dimensional.*
+import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.units.*
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
@@ -78,7 +78,7 @@ sealed abstract class SEDTypeEnum[T](
       )
   case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
   case object BlackBodyType
-      extends BandNormalizedSED("Black Body", BlackBody(1000.refined[Positive].withUnit[Kelvin]))
+      extends BandNormalizedSED("Black Body", BlackBody(10000.refined[Positive].withUnit[Kelvin]))
   case object UserDefinedType
       extends BandNormalizedSED(
         "User Defined",

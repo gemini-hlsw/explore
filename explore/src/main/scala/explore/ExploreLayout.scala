@@ -9,27 +9,30 @@ import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.cache.ModesCache
 import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import explore.events.ExploreEvent.LogoutEventId
-import explore.model.AppContext
 import explore.model.*
+import explore.model.AppContext
 import explore.model.enums.AppTab
 import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.utils.*
-import japgolly.scalajs.react.React
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.React
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramType
 import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
+import lucuma.react.primereact.ConfirmDialog
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
@@ -183,6 +186,7 @@ object ExploreLayout:
             }
 
           React.Fragment(
+            ConfirmDialog(),
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
             Sidebar(
               position = Sidebar.Position.Right,
@@ -203,6 +207,7 @@ object ExploreLayout:
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
               // selection popup.
+              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.set),
               ProgramCache(
                 routingInfo.programId,
                 props.view.zoom(RootModel.user).get.map(_.role.name),
@@ -230,7 +235,12 @@ object ExploreLayout:
                 "side-tabs".refined,
                 routingInfoView.zoom(RoutingInfo.appTab),
                 ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
-                _.separatorAfter
+                _.separatorAfter,
+                tab =>
+                  props.view.get.programSummaries
+                    .flatMap(_.optProgramDetails)
+                    .map(_.programType === ProgramType.Science || tab =!= AppTab.Proposal)
+                    .getOrElse(true)
               ),
               if (showProgsPopup)
                 ProgramsPopup(

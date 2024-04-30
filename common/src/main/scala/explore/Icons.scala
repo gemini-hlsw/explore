@@ -19,6 +19,10 @@ object Icons {
   val faArrowDownLeft: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowUp")
+  val faArrowUp: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowLeftFromLine")
   val faArrowLeftFromLine: FAIcon = js.native
 
@@ -139,6 +143,14 @@ object Icons {
   val faUserGears: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faUserGroupSimple")
+  val faUserGroupSimple: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faUserPlus")
+  val faUserPlus: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faTriangleExclamation")
   val faExclamationTriangle: FAIcon = js.native
 
@@ -157,10 +169,6 @@ object Icons {
   @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronRight")
   val faChevronRight: FAIcon = js.native
-
-  @js.native
-  @JSImport("@fortawesome/pro-light-svg-icons", "faChevronRight")
-  val faChevronRightLight: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faChevronLeft")
@@ -185,6 +193,10 @@ object Icons {
   @js.native
   @JSImport("@fortawesome/pro-regular-svg-icons", "faChevronsDown")
   val faChevronDoubleDown: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faPaperPlaneTop")
+  val faPaperPlaneTop: FAIcon = js.native
 
   @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faRectangleList")
@@ -325,6 +337,7 @@ object Icons {
     faArrowRight,
     faArrowRightFromLine,
     faArrowRightToLine,
+    faArrowUp,
     faArrowsRepeat,
     faGears,
     faBars,
@@ -352,18 +365,20 @@ object Icons {
     faInfoCircleLight,
     faTimes,
     faUserGears,
+    faUserGroupSimple,
+    faUserPlus,
     faExclamationTriangle,
     faExclamationDiamond,
     faSkullCrossbones,
     faCheck,
     faChevronRight,
-    faChevronRightLight,
     faChevronLeft,
     faChevronLeftLight,
     faChevronsLeft,
     faChevronDown,
     faChevronDoubleUp,
     faChevronDoubleDown,
+    faPaperPlaneTop,
     faListAlt,
     faListCheck,
     faCompress,
@@ -403,6 +418,7 @@ object Icons {
   val ArrowRight           = FontAwesomeIcon(faArrowRight)
   val ArrowRightFromLine   = FontAwesomeIcon(faArrowRightFromLine)
   val ArrowRightToLine     = FontAwesomeIcon(faArrowRightToLine)
+  val ArrowUp              = FontAwesomeIcon(faArrowUp)
   val ArrowsRepeat         = FontAwesomeIcon(faArrowsRepeat)
   val Bars                 = FontAwesomeIcon(faBars)
   val BarCodeRead          = FontAwesomeIcon(faBarCodeRead)
@@ -423,7 +439,6 @@ object Icons {
   val Eraser               = FontAwesomeIcon(faEraser).withClass(ExploreStyles.EraserIcon)
   val Search               = FontAwesomeIcon(faSearch)
   val ChevronRight         = FontAwesomeIcon(faChevronRight)
-  val ChevronRightLight    = FontAwesomeIcon(faChevronRightLight)
   val ChevronLeft          = FontAwesomeIcon(faChevronLeft)
   val ChevronLeftLight     = FontAwesomeIcon(faChevronLeftLight)
   val ChevronsLeft         = FontAwesomeIcon(faChevronsLeft)
@@ -434,6 +449,8 @@ object Icons {
   val ExclamationTriangle  = FontAwesomeIcon(faExclamationTriangle)
   val ExclamationDiamond   = FontAwesomeIcon(faExclamationDiamond)
   val UserGears            = FontAwesomeIcon(faUserGears)
+  val UserGroupSimple      = FontAwesomeIcon(faUserGroupSimple)
+  val UserPlus             = FontAwesomeIcon(faUserPlus)
   val Logout               = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones      = FontAwesomeIcon(faSkullCrossbones)
   val Note                 = FontAwesomeIcon(faNote)
@@ -476,4 +493,8 @@ object Icons {
   val CircleHalfStroke     = FontAwesomeIcon(faCircleHalfStroke)
   val Files                = FontAwesomeIcon(faFiles)
   val Angle                = FontAwesomeIcon(faAngle)
+  val PaperPlaneTop        = FontAwesomeIcon(faPaperPlaneTop)
+
+  val MissingInfoIcon = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
+  val ErrorIcon       = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)
 }

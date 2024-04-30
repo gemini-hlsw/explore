@@ -8,8 +8,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.ErrorPolicy
 import clue.FetchClient
-import crystal.Pot.Ready
 import crystal.*
+import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.*
@@ -17,16 +17,14 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.config.sequence.GeneratedSequenceViewer
 import explore.config.sequence.SequenceEditorTile
-import explore.config.sequence.VisitsViewer
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
+import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
-import explore.model.*
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
@@ -36,7 +34,7 @@ import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
-import explore.model.syntax.all.toHoursMinutes
+import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
@@ -52,15 +50,14 @@ import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.math.skycalc.parallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.syntax.all.*
-import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
@@ -77,7 +74,6 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 
-import java.time.Duration
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 
@@ -85,6 +81,7 @@ case class ObsTabTiles(
   vault:                    Option[UserVault],
   userId:                   Option[User.Id],
   programId:                Program.Id,
+  modes:                    SpectroscopyModesMatrix,
   backButton:               VdomNode,
   observation:              UndoSetter[ObsSummary],
   obsExecution:             Pot[Execution],
@@ -171,6 +168,7 @@ object ObsTabTiles:
                 o.itc.science.selected.exposureTime,
                 o.itc.science.selected.exposures,
                 o.itc.science.selected.signalToNoise,
+                o.itc.acquisition.selected.exposures,
                 o.itc.acquisition.selected.signalToNoise
               )
             )
@@ -375,42 +373,12 @@ object ObsTabTiles:
             )
 
           val sequenceTile =
-            SequenceEditorTile.sequenceTile(renderInTitle =>
-              React.Fragment(
-                renderInTitle {
-                  props.obsExecution.orSpinner { execution =>
-                    val programTimeCharge = execution.programTimeCharge.value
-
-                    def timeDisplay(name: String, time: TimeSpan) =
-                      <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "),
-                             time.toHoursMinutes
-                      )
-
-                    val executed = timeDisplay("Executed", programTimeCharge)
-
-                    execution.programTimeEstimate
-                      .map { plannedTime =>
-                        val total   = programTimeCharge +| plannedTime
-                        val pending = timeDisplay("Pending", plannedTime)
-                        val planned = timeDisplay("Planned", total)
-                        <.span(ExploreStyles.SequenceTileTitle)(
-                          planned,
-                          executed,
-                          pending
-                        )
-                      }
-                      .getOrElse(executed)
-                  }
-                },
-                VisitsViewer(props.obsId),
-                GeneratedSequenceViewer(
-                  props.programId,
-                  props.obsId,
-                  asterismIds.get.toList,
-                  itc.toOption.flatten.map(_.snPerClass).getOrElse(Map.empty),
-                  sequenceChanged
-                )
-              )
+            SequenceEditorTile.sequenceTile(props.programId,
+                                            props.obsId,
+                                            props.obsExecution,
+                                            asterismIds.get,
+                                            itc.toOption.flatten,
+                                            sequenceChanged
             )
 
           val itcTile: Tile =
@@ -441,6 +409,8 @@ object ObsTabTiles:
               props.observation.undoableView[List[TimingWindow]](ObsSummary.timingWindows)
             )
 
+          val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+
           val skyPlotTile: Tile =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
@@ -448,6 +418,7 @@ object ObsTabTiles:
               props.observation.get.observingMode.map(_.siteFor),
               targetCoords,
               vizTime,
+              pendingTime.map(_.toDuration),
               timingWindows.get,
               props.globalPreferences.get
             )
@@ -467,19 +438,17 @@ object ObsTabTiles:
           val paProps: PAProperties =
             PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
 
-          val averagePA: Option[Angle] =
-            (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
-              .mapN((site, asterism, vizTime) =>
+          val averagePA: Option[AveragePABasis] =
+            (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime, pendingTime)
+              .mapN((site, asterism, vizTime, pendingTime) =>
                 posAngleConstraintView.get match
                   case PosAngleConstraint.AverageParallactic =>
-                    // TODO: When we have the calculated observation time, we probably want to use that
-                    // for the duration below, although we can't know if the observation will be splt.
                     // See also `anglesToTestAt` in AladinCell.scala.
                     averageParallacticAngle(site,
                                             asterism.baseTracking,
                                             vizTime,
-                                            Duration.ofHours(1)
-                    )
+                                            pendingTime.toDuration
+                    ).map(AveragePABasis(vizTime, pendingTime, _))
                   case _                                     => none
               )
               .flatten
@@ -542,9 +511,7 @@ object ObsTabTiles:
             )
 
           val timingWindowsTile =
-            Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-              renderInTitle => TimingWindowsPanel(timingWindows, props.readonly, renderInTitle)
-            )
+            TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
 
           val configurationTile =
             ConfigurationTile.configurationTile(
@@ -558,6 +525,7 @@ object ObsTabTiles:
               targetCoords,
               obsConf,
               selectedConfig,
+              props.modes,
               props.allTargets.get,
               sequenceChanged.mod {
                 case Ready(x) => Pot.pending

@@ -293,12 +293,6 @@ object Dependencies {
     )(mUnitCatsEffect)
   )
 
-  val PPrint = Def.setting(
-    deps(
-      "com.lihaoyi" %%% "pprint"
-    )(pprint)
-  )
-
   val ReactAladin = Def.setting(
     deps(
       "edu.gemini" %%% "react-aladin"

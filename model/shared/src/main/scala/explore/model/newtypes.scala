@@ -19,3 +19,6 @@ object AladinFullScreen extends NewType[Boolean]:
       if (s.value) AladinFullScreen.Normal else AladinFullScreen.FullScreen
 
 type AladinFullScreen = AladinFullScreen.Type
+
+object IsActive extends NewType[Boolean]
+type IsActive = IsActive.Type

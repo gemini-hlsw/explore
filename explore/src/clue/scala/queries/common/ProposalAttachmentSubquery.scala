@@ -4,9 +4,9 @@
 package queries.common
 
 import clue.GraphQLSubquery
+import clue.annotation.GraphQL
 import explore.model.ProposalAttachment
 import lucuma.schemas.ObservationDB
-import clue.annotation.GraphQL
 
 @GraphQL
 object ProposalAttachmentSubquery

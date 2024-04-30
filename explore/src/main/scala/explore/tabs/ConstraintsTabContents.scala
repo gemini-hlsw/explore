@@ -16,11 +16,11 @@ import explore.components.TileController
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTable
 import explore.data.KeyedIndexedList
+import explore.model.*
 import explore.model.AppContext
 import explore.model.ConstraintGroupList
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
-import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
@@ -152,7 +152,7 @@ object ConstraintsTabContents extends TwoPanels:
 
               val twTraversal = obsTraversal.andThen(ObsSummary.timingWindows)
 
-              val twView: View[List[TimingWindow]] =
+              val timingWindows: View[List[TimingWindow]] =
                 TimingWindowsQueries.viewWithRemoteMod(
                   idsToEdit,
                   observations
@@ -163,9 +163,7 @@ object ConstraintsTabContents extends TwoPanels:
                 )
 
               val timingWindowsTile =
-                Tile(ObsTabTilesIds.TimingWindowsId.id, "Scheduling Windows", canMinimize = true)(
-                  renderInTitle => TimingWindowsPanel(twView, props.readonly, renderInTitle)
-                )
+                TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
 
               TileController(
                 props.userId,

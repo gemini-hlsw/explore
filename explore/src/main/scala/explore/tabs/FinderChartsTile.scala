@@ -15,10 +15,10 @@ import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
-import lucuma.core.model.{ObsAttachment => ObsAtt}
-import lucuma.ui.syntax.all.given
+import lucuma.ui.react.given
 
 import scala.collection.immutable.SortedSet
 

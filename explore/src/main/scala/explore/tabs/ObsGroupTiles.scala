@@ -9,9 +9,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.GroupEditIds
-import explore.model.GroupElement
-import explore.model.GroupList
-import explore.model.Grouping
+import explore.model.GroupTree
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -19,15 +17,14 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.*
-import lucuma.react.common.ReactFnProps
 import lucuma.react.common.*
+import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
-import monocle.Traversal
 
 case class ObsGroupTiles(
   userId:            Option[User.Id],
   groupId:           Group.Id,
-  groups:            UndoSetter[GroupList],
+  groups:            UndoSetter[GroupTree],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   resize:            UseResizeDetectorReturn,
   defaultLayouts:    LayoutsMap,
@@ -43,18 +40,37 @@ object ObsGroupTiles:
     .withHooks[Props]
     .render { props =>
 
-      val lens  = Traversal
-        .fromTraverse[List, GroupElement]
-        .andThen(GroupElement.grouping)
-        .filter(_.id === props.groupId)
-      val group = props.groups.zoom(lens.headOption.andThen(_.get), lens.modify)
+      val groupTreeKey = props.groupId.asRight
+      // First zoom to the node, to get the number of child elements
+      // We can safely .get here because we know the key is in the tree and that the value is a Grouping
+      val node         = props.groups
+        .zoom(
+          _.getNodeAndIndexByKey(groupTreeKey).get,
+          modF =>
+            groups =>
+              groups
+                .getNodeAndIndexByKey(groupTreeKey)
+                .map(modF)
+                .map((newValue, newIndex) => groups.updated(groupTreeKey, newValue.value, newIndex))
+                .getOrElse(groups)
+        )
+
+      // Then zoom to the Grouping itself
+      val group =
+        node.zoom(_._1.value.toOption.get,
+                  modF => _.leftMap(node => node.copy(value = node.value.map(modF)))
+        )
 
       val editTile = Tile(
         GroupEditIds.GroupEditId.id,
         s"${if group.get.isAnd then "AND" else "OR"} Group",
         props.backButton.some,
         tileTitleClass = ExploreStyles.GroupEditTitle
-      )(GroupEditTile(group, props.timeEstimateRange, _))
+      )(
+        GroupEditTile(group, node.get._1.children.length, props.timeEstimateRange, _)
+          .withKey(props.groupId.toString)
+          .toUnmounted
+      )
 
       val notesTile = Tile(
         GroupEditIds.GroupNotesId.id,

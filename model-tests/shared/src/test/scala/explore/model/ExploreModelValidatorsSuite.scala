@@ -9,10 +9,10 @@ import eu.timepit.refined.scalacheck.all.*
 import lucuma.core.arb.*
 import lucuma.core.math.Angle
 import lucuma.core.math.BrightnessValue
-import lucuma.core.math.arb.ArbAngle.*
+import lucuma.core.math.arb.ArbAngle.given
 import lucuma.core.math.arb.ArbBrightnessValue.given
-import lucuma.core.math.arb.ArbOffset.*
-import lucuma.core.math.arb.ArbParallax.*
+import lucuma.core.math.arb.ArbOffset.given
+import lucuma.core.math.arb.ArbParallax.given
 import lucuma.core.math.arb.ArbProperMotion.given
 import lucuma.core.math.arb.ArbWavelengthDither.given
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
@@ -21,7 +21,8 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Gen
 
-final class ExploreModelValidatorsSuite extends DisciplineSuite:
+class ExploreModelValidatorsSuite extends DisciplineSuite:
+
   checkAll(
     "brightnessValidWedge",
     ValidWedgeTests(ExploreModelValidators.brightnessValidWedge).validWedgeLaws
@@ -74,4 +75,16 @@ final class ExploreModelValidatorsSuite extends DisciplineSuite:
     "pmDecValidWedge",
     ValidWedgeTests(ExploreModelValidators.pmDecValidWedge)
       .validWedgeLawsWith(milliArcSecondsGen)
+  )
+
+  val arcSecondsGen: Gen[String] =
+    arbitrary[Angle]
+      .map(Angle.signedDecimalArcseconds.get(_).toString)
+      .flatMapOneOf(Gen.const[String], perturbations*)
+
+  checkAll(
+    "decimalArcsecondsValidWedge",
+    ValidWedgeTests(
+      ExploreModelValidators.decimalArcsecondsValidWedge
+    ).validWedgeLawsWith(arcSecondsGen)
   )

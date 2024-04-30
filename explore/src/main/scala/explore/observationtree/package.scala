@@ -8,14 +8,16 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
+import explore.data.tree.KeyedIndexedTree
+import explore.data.tree.KeyedIndexedTree.Index
+import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.GroupElement
-import explore.model.GroupList
-import explore.model.Grouping
+import explore.model.GroupTree
 import explore.model.ObsSummary
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
@@ -56,7 +58,7 @@ def setGroup[F[_]](
 def cloneObs(
   programId:    Program.Id,
   obsId:        Observation.Id,
-  pos:          Int,
+  pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
   ctx:          AppContext[IO],
   before:       IO[Unit] = IO.unit,
@@ -80,7 +82,7 @@ private def obsWithId(
 ]] =
   obsListMod
     .withKey(obsId)
-    .composeOptionLens(Focus[(ObsSummary, Int)](_._1))
+    .composeOptionLens(Focus[(ObsSummary, NonNegInt)](_._1))
 
 def obsEditStatus(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
@@ -171,7 +173,7 @@ type AddingObservation = AddingObservation.Type
 
 def insertObs(
   programId:    Program.Id,
-  pos:          Int,
+  pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
   adding:       View[AddingObservation],
   ctx:          AppContext[IO]
@@ -186,17 +188,22 @@ def insertObs(
     }
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 
-private def findGrouping(groupId: Group.Id): GroupList => Option[Grouping] = _.collectFirstSome(
-  _.value.toOption.filter(_.id === groupId)
-)
+private def findGrouping(
+  groupId: Group.Id
+): GroupTree => Option[(GroupTree.Node, GroupTree.Index)] =
+  _.getNodeAndIndexByKey(groupId.asRight)
 
-def groupExistence(groupId: Group.Id): Action[GroupList, Option[Grouping]] = Action(
+def groupExistence(
+  groupId: Group.Id
+): Action[GroupTree, Option[(GroupTree.Node, GroupTree.Index)]] = Action(
   getter = findGrouping(groupId),
-  setter = group =>
+  setter = maybeGroup =>
     groupList =>
-      val groupEl =
-        group.map(grouping => GroupElement(grouping.asRight, grouping.parentId))
-      groupList ++ groupEl
+      maybeGroup match
+        case None              => groupList.removed(groupId.asRight)
+        case Some((node, idx)) =>
+          val group = node.value
+          groupList.updated(groupId.asRight, group, idx)
 )(
   // TODO: handle undo by removing (and undoing remove) of groups
   onSet = (_, _) => IO.unit
@@ -204,12 +211,18 @@ def groupExistence(groupId: Group.Id): Action[GroupList, Option[Grouping]] = Act
 
 def insertGroup(
   programId: Program.Id,
-  groups:    UndoSetter[GroupList],
+  groups:    UndoSetter[GroupTree],
   adding:    View[AddingObservation],
   ctx:       AppContext[IO]
 ): IO[Unit] =
   import ctx.given
   GroupQueries
     .createGroup[IO](programId)
-    .flatMap(group => groupExistence(group.id).set(groups)(group.some).toAsync)
+    .flatMap(group =>
+      groupExistence(group.id)
+        .set(groups)(
+          (Node(group.toGroupTreeGroup.asRight), group.toIndex).some
+        )
+        .toAsync
+    )
     .switching(adding.zoom(AddingObservation.value.asLens).async)

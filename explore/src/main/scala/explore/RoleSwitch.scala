@@ -5,8 +5,8 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.View
 import crystal.react.*
+import crystal.react.View
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole

@@ -27,8 +27,8 @@ import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
-import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Coordinates
@@ -42,9 +42,10 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
+import lucuma.react.table.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
-import lucuma.react.table.*
+import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -179,12 +180,12 @@ object ObsSummaryTable:
             if (cell.row.getCanExpand())
               <.span(
                 ^.cursor.pointer,
-                ExploreStyles.ExpanderChevron,
-                ExploreStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
+                TableStyles.ExpanderChevron,
+                TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
                 ^.onClick ==> (_.stopPropagationCB *> Callback(
                   cell.row.getToggleExpandedHandler()()
                 ))
-              )(Icons.ChevronRightLight.withFixedWidth(true))
+              )(TableIcons.ChevronRight.withFixedWidth(true))
             else "",
           enableResizing = false
         ).setSize(35.toPx),
@@ -355,8 +356,13 @@ object ObsSummaryTable:
               loading = adding.get.value,
               label = "Add an observation",
               clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick =
-                insertObs(props.programId, 0, props.observations, adding, ctx).runAsyncAndForget
+              onClick = insertObs(
+                props.programId,
+                0.refined,
+                props.observations,
+                adding,
+                ctx
+              ).runAsyncAndForget
             ).tiny.compact
           )
         )

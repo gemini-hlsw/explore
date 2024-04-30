@@ -27,8 +27,9 @@ import explore.model.display.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.ModeCommonWavelengths
+import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
-import explore.modes.ModeWavelengthDelta
+import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.*
@@ -53,8 +54,8 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
@@ -206,7 +207,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     resolution:        PosInt,
     λmin:              ModeWavelength,
     λmax:              ModeWavelength,
-    λdelta:            ModeWavelengthDelta
+    λdelta:            WavelengthDelta
   ) extends ModeCommonWavelengths
 
   private object ModeData {
@@ -407,7 +408,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           props.confMatrix.filtered(
             focalPlane = fp,
             capability = cap,
-            slitWidth = fpa,
+            slitLength = fpa.map(s => SlitLength(ModeSlitSize(s))),
             resolution = res,
             range = rng
           )
@@ -470,11 +471,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         val validDithers = modeData.value
           .map(mode =>
-            ExploreModelValidators.dithersValidWedge(
-              centralWavelengthView.get,
-              mode.λmin.value,
-              mode.λmax.value,
-              mode.λdelta.value
+            ExploreModelValidators.dithersValidWedge(centralWavelengthView.get,
+                                                     mode.λmin.value,
+                                                     mode.λmax.value,
+                                                     mode.λdelta
             )
           )
           .getOrElse(

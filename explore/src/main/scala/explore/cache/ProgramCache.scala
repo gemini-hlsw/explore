@@ -11,8 +11,7 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import explore.DefaultErrorPolicy
-import explore.model.GroupElement
-import explore.model.GroupList
+import explore.model.GroupTree
 import explore.model.ObsAttachment
 import explore.model.ObsSummary
 import explore.model.ObservationExecutionMap
@@ -141,11 +140,12 @@ object ProgramCache
           _.id
         )
 
-      val groups: IO[List[GroupElement]] =
+      val groups: IO[GroupTree] =
         ProgramQueriesGQL
           .ProgramGroupsQuery[IO]
           .query(props.programId)
           .map(_.program.toList.flatMap(_.allGroupElements))
+          .map(GroupTree.fromList)
 
       val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
         ProgramSummaryQueriesGQL
@@ -168,11 +168,11 @@ object ProgramCache
 
       def initializeSummaries(
         observations: List[ObsSummary],
-        groups:       GroupList
+        groups:       GroupTree
       ): IO[ProgramSummaries] =
         val obsPots   = observations.map(o => (o.id, Pot.pending)).toMap
         val groupPots =
-          groups.flatMap(GroupElement.groupId.getOption).map(g => (g, Pot.pending)).toMap
+          groups.collect { case (Right(gId), _, _) => gId -> Pot.pending }.toMap
         (optProgramDetails, targets, attachments, programs).mapN { case (pd, ts, (oas, pas), ps) =>
           ProgramSummaries.fromLists(pd,
                                      ts,
@@ -189,14 +189,14 @@ object ProgramCache
 
       def combineTimesUpdates(
         observations: List[ObsSummary],
-        groups:       GroupList
+        groups:       GroupTree
       ): Stream[IO, ProgramSummaries => ProgramSummaries] =
         // We want to update all the observations first, followed by the groups,
         // and then the program, because the program requires all of the observation times be calculated.
         // So, if we do it first, it could take a long time.
         Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
           Stream
-            .emits(groups.flatMap(GroupElement.groupId.getOption))
+            .emits(groups.collect { case (Right(id), _, _) => id })
             .evalMap(updateGroupTimeRange) ++
           Stream.eval(updateProgramTimes(props.programId))
 
@@ -224,10 +224,8 @@ object ProgramCache
           ProgramQueriesGQL.ProgramEditDetailsSubscription
             .subscribe[IO](props.programId.toProgramEditInput)
             .map:
-              _.map: data => // Replace program and reset times.
-                ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some) >>>
-                  ProgramSummaries.programTimesPot.replace(Pot.pending)
-            .evalTap(_ => queryProgramTimes)
+              _.map: data => // Replace program.
+                ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some)
 
         val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
           TargetQueriesGQL.ProgramTargetsDelta

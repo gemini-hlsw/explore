@@ -1,3 +1,9 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
   """measured in seconds"""
@@ -1595,6 +1601,7 @@ enum LucumaGridLayoutIdEnum {
   OBSERVATIONS
   OVERVIEW
   PROGRAMS
+  PROPOSAL
   SCHEDULING
   TARGETS
 }
@@ -2800,8 +2807,12 @@ type LucumaUserPreferences {
   agsOverlay: Boolean!
   aladinMouseScroll: Boolean!
   createdAt: timestamptz
+  elevationPlotElevationVisible: Boolean!
+  elevationPlotLunarElevationVisible: Boolean!
+  elevationPlotParallacticAngleVisible: Boolean!
   elevationPlotRange: ExplorePlotRangeEnum!
   elevationPlotScheduling: Boolean!
+  elevationPlotSkyBrightnessVisible: Boolean!
   elevationPlotTime: ExplorePlotTimeEnum!
   fullScreen: Boolean!
   itcChartType: ItcChartTypeEnum!
@@ -2843,8 +2854,12 @@ input LucumaUserPreferencesBoolExp {
   agsOverlay: BooleanComparisonExp
   aladinMouseScroll: BooleanComparisonExp
   createdAt: TimestamptzComparisonExp
+  elevationPlotElevationVisible: BooleanComparisonExp
+  elevationPlotLunarElevationVisible: BooleanComparisonExp
+  elevationPlotParallacticAngleVisible: BooleanComparisonExp
   elevationPlotRange: ExplorePlotRangeEnumComparisonExp
   elevationPlotScheduling: BooleanComparisonExp
+  elevationPlotSkyBrightnessVisible: BooleanComparisonExp
   elevationPlotTime: ExplorePlotTimeEnumComparisonExp
   fullScreen: BooleanComparisonExp
   itcChartType: ItcChartTypeEnumComparisonExp
@@ -2874,8 +2889,12 @@ input LucumaUserPreferencesInsertInput {
   agsOverlay: Boolean
   aladinMouseScroll: Boolean
   createdAt: timestamptz
+  elevationPlotElevationVisible: Boolean
+  elevationPlotLunarElevationVisible: Boolean
+  elevationPlotParallacticAngleVisible: Boolean
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotScheduling: Boolean
+  elevationPlotSkyBrightnessVisible: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
   itcChartType: ItcChartTypeEnum
@@ -2927,8 +2946,12 @@ input LucumaUserPreferencesOrderBy {
   agsOverlay: OrderBy
   aladinMouseScroll: OrderBy
   createdAt: OrderBy
+  elevationPlotElevationVisible: OrderBy
+  elevationPlotLunarElevationVisible: OrderBy
+  elevationPlotParallacticAngleVisible: OrderBy
   elevationPlotRange: OrderBy
   elevationPlotScheduling: OrderBy
+  elevationPlotSkyBrightnessVisible: OrderBy
   elevationPlotTime: OrderBy
   fullScreen: OrderBy
   itcChartType: OrderBy
@@ -2962,10 +2985,22 @@ enum LucumaUserPreferencesSelectColumn {
   createdAt
 
   """column name"""
+  elevationPlotElevationVisible
+
+  """column name"""
+  elevationPlotLunarElevationVisible
+
+  """column name"""
+  elevationPlotParallacticAngleVisible
+
+  """column name"""
   elevationPlotRange
 
   """column name"""
   elevationPlotScheduling
+
+  """column name"""
+  elevationPlotSkyBrightnessVisible
 
   """column name"""
   elevationPlotTime
@@ -3000,8 +3035,12 @@ input LucumaUserPreferencesSetInput {
   agsOverlay: Boolean
   aladinMouseScroll: Boolean
   createdAt: timestamptz
+  elevationPlotElevationVisible: Boolean
+  elevationPlotLunarElevationVisible: Boolean
+  elevationPlotParallacticAngleVisible: Boolean
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotScheduling: Boolean
+  elevationPlotSkyBrightnessVisible: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
   itcChartType: ItcChartTypeEnum
@@ -3029,10 +3068,22 @@ enum LucumaUserPreferencesUpdateColumn {
   createdAt
 
   """column name"""
+  elevationPlotElevationVisible
+
+  """column name"""
+  elevationPlotLunarElevationVisible
+
+  """column name"""
+  elevationPlotParallacticAngleVisible
+
+  """column name"""
   elevationPlotRange
 
   """column name"""
   elevationPlotScheduling
+
+  """column name"""
+  elevationPlotSkyBrightnessVisible
 
   """column name"""
   elevationPlotTime
@@ -3589,8 +3640,12 @@ input lucumaUserPreferences_streamCursorValueInput {
   agsOverlay: Boolean
   aladinMouseScroll: Boolean
   createdAt: timestamptz
+  elevationPlotElevationVisible: Boolean
+  elevationPlotLunarElevationVisible: Boolean
+  elevationPlotParallacticAngleVisible: Boolean
   elevationPlotRange: ExplorePlotRangeEnum
   elevationPlotScheduling: Boolean
+  elevationPlotSkyBrightnessVisible: Boolean
   elevationPlotTime: ExplorePlotTimeEnum
   fullScreen: Boolean
   itcChartType: ItcChartTypeEnum

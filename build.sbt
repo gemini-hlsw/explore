@@ -1,10 +1,8 @@
-import org.scalajs.linker.interface.ModuleSplitStyle
-import scala.sys.process.*
 import Dependencies.*
+import org.scalajs.linker.interface.ModuleSplitStyle
 
-val reactJS = "17.0.2"
+import scala.sys.process.*
 
-ThisBuild / Test / bspEnabled                                        := false
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 ThisBuild / evictionErrorLevel := Level.Info
@@ -31,8 +29,8 @@ ThisBuild / description                         := "Explore"
 Global / onChangedBuildSource                   := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
 ThisBuild / scalafixScalaBinaryVersion          := "2.13"
-ThisBuild / scalaVersion                        := "3.4.0"
-ThisBuild / crossScalaVersions                  := Seq("3.4.0")
+ThisBuild / scalaVersion                        := "3.4.1"
+ThisBuild / crossScalaVersions                  := Seq("3.4.1")
 ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
 ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
   "https://s01.oss.sonatype.org/content/repositories/snapshots/"
@@ -159,7 +157,6 @@ lazy val commonLibSettings = Seq(
       CoulombRefined.value ++
       Crystal.value ++
       FS2.value ++
-      FS2Data.value ++
       Http4sCore.value ++
       Kittens.value ++
       LucumaCore.value ++
@@ -171,7 +168,6 @@ lazy val commonLibSettings = Seq(
       RefinedAlgebra.value ++
       Monocle.value ++
       Mouse.value ++
-      PPrint.value ++
       Boopickle.value ++
       In(Test)(
         MUnit.value ++
@@ -223,6 +219,7 @@ lazy val esModule = Seq(
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
+  Compile / fullLinkJS / scalaJSLinkerConfig ~= { _.withMinify(true) },
   Compile / fastLinkJS / scalaJSLinkerConfig ~= (_.withModuleSplitStyle(
     // Linking with smaller modules seems to take way longer.
     // ModuleSplitStyle.SmallModulesFor(List("explore"))

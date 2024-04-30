@@ -7,8 +7,8 @@ import cats.syntax.all.*
 import coulomb.*
 import eu.timepit.refined.collection.NonEmpty
 import explore.optics.all.*
-import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.*
+import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.units.*
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
@@ -65,9 +65,6 @@ trait formats:
            _.toMicrometers.value.value.toString
     )
 
-  val formatArcsec: Format[String, Angle] =
-    Format(_.parseIntOption.map(Angle.arcseconds.reverseGet(_)), Angle.arcseconds.get(_).toString)
-
   private def formatHMS(hms: HMS): String =
     f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"
 
@@ -102,13 +99,6 @@ trait formats:
     else
       f"$arcseconds%01d.$mas%02d″"
   }
-
-  // TODO: Move these to lucuma-core?
-  extension (ts: TimeSpan)
-    def toSecondsPart: Int = (ts.toSeconds.longValue      % 60L).toInt
-    def toMinutesPart: Int = (ts.toMinutes.longValue      % 60L).toInt
-    def toHoursPart: Int   = (ts.toHours.longValue        % 24L).toInt
-    def toMillisPart: Int  = (ts.toMilliseconds.longValue % 1000L).toInt
 
   val durationHM: InputValidWedge[TimeSpan] =
     InputValidWedge(

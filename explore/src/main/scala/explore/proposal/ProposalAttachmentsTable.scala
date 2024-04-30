@@ -19,10 +19,10 @@ import explore.model.AppContext
 import explore.model.Constants
 import explore.model.ProposalAttachment
 import explore.model.reusability.given
-import explore.utils.OdbRestClient
 import explore.utils.*
-import japgolly.scalajs.react.Reusability
+import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
@@ -36,8 +36,8 @@ import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
 import lucuma.schemas.enums.ProposalAttachmentType
+import lucuma.ui.react.given
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import org.typelevel.log4cats.Logger
 

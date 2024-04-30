@@ -14,6 +14,7 @@ import explore.data.KeyedIndexedList
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
+import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
@@ -21,7 +22,6 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
-import lucuma.core.model.{ObsAttachment => ObsAtt}
 import lucuma.core.util.NewType
 import lucuma.refined.*
 
@@ -59,8 +59,6 @@ type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
 type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
 type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
-
-type GroupList = List[GroupElement]
 
 object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
 type ObservationExecutionMap = ObservationExecutionMap.Type

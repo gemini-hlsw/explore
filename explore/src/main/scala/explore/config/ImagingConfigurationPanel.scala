@@ -14,7 +14,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AvailableFilter
 import explore.model.ImagingConfigurationOptions
 import explore.model.enums.ImagingCapabilities
-import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -42,7 +41,7 @@ case class ImagingConfigurationPanel(
   options: View[ImagingConfigurationOptions]
 ) extends ReactFnProps(ImagingConfigurationPanel.component)
 
-object ImagingConfigurationPanel {
+object ImagingConfigurationPanel extends ConfigurationFormats {
   private type Props = ImagingConfigurationPanel
 
   private given Display[ImagingCapabilities] = Display.by(_.label, _.label)
@@ -110,8 +109,8 @@ object ImagingConfigurationPanel {
           value = fov,
           label = ReactFragment("Field of View", HelpIcon("configuration/fov.md".refined)),
           units = "arcsec",
-          validFormat = InputValidWedge.fromFormat(formatArcsec).optional,
-          changeAuditor = ChangeAuditor.fromFormat(formatArcsec).optional
+          validFormat = slitLengthFormat,
+          changeAuditor = slitLengthChangeAuditor
         ),
         FormInputTextView(
           id = "signal-to-noise".refined,

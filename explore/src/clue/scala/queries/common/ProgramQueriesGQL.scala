@@ -7,6 +7,8 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 
+import GroupQueriesGQL.*
+
 object ProgramQueriesGQL {
   @GraphQL
   trait CreateProgramMutation extends GraphQLOperation[ObservationDB] {
@@ -50,7 +52,7 @@ object ProgramQueriesGQL {
     val document: String = s"""#graphql
       query ($$programId: ProgramId!) {
         program(programId: $$programId) {
-          allGroupElements ${GroupQueriesGQL.GroupElementsSubQuery}
+          allGroupElements $GroupElementsSubQuery
         }
       }
     """
@@ -61,7 +63,7 @@ object ProgramQueriesGQL {
     val document: String = s"""
       subscription($$input: ProgramEditInput!) {
         groupEdit(input: $$input) {
-          value ${GroupQueriesGQL.GroupSubQuery}
+          value $GroupSubQuery
           editType
         }
       }

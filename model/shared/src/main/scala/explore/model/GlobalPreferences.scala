@@ -33,32 +33,43 @@ object ElevationPlotScheduling extends NewType[Boolean]:
 type ElevationPlotScheduling = ElevationPlotScheduling.Type
 
 case class GlobalPreferences(
-  aladinMouseScroll:       AladinMouseScroll,
-  fullScreen:              AladinFullScreen,
-  showCatalog:             Visible,
-  agsOverlay:              Visible,
-  scienceOffsets:          Visible,
-  acquisitionOffsets:      Visible,
-  elevationPlotRange:      PlotRange,
-  elevationPlotTime:       TimeDisplay,
-  elevationPlotScheduling: ElevationPlotScheduling,
-  itcChartType:            ChartType,
-  itcDetailsOpen:          PlotDetails
+  aladinMouseScroll:                    AladinMouseScroll,
+  fullScreen:                           AladinFullScreen,
+  showCatalog:                          Visible,
+  agsOverlay:                           Visible,
+  scienceOffsets:                       Visible,
+  acquisitionOffsets:                   Visible,
+  elevationPlotRange:                   PlotRange,
+  elevationPlotTime:                    TimeDisplay,
+  elevationPlotScheduling:              ElevationPlotScheduling,
+  itcChartType:                         ChartType,
+  itcDetailsOpen:                       PlotDetails,
+  elevationPlotElevationVisible:        Visible,
+  elevationPlotParallacticAngleVisible: Visible,
+  elevationPlotSkyBrightnessVisible:    Visible,
+  elevationPlotLunarElevationVisible:   Visible
 ) derives Eq,
       Decoder
 
 object GlobalPreferences:
-  val aladinMouseScroll       = Focus[GlobalPreferences](_.aladinMouseScroll)
-  val showCatalog             = Focus[GlobalPreferences](_.showCatalog)
-  val agsOverlay              = Focus[GlobalPreferences](_.agsOverlay)
-  val scienceOffsets          = Focus[GlobalPreferences](_.scienceOffsets)
-  val acquisitionOffsets      = Focus[GlobalPreferences](_.acquisitionOffsets)
-  val fullScreen              = Focus[GlobalPreferences](_.fullScreen)
-  val elevationPlotRange      = Focus[GlobalPreferences](_.elevationPlotRange)
-  val elevationPlotTime       = Focus[GlobalPreferences](_.elevationPlotTime)
-  val elevationPlotScheduling = Focus[GlobalPreferences](_.elevationPlotScheduling)
-  val itcChartType            = Focus[GlobalPreferences](_.itcChartType)
-  val itcDetailsOpen          = Focus[GlobalPreferences](_.itcDetailsOpen)
+  val aladinMouseScroll                    = Focus[GlobalPreferences](_.aladinMouseScroll)
+  val showCatalog                          = Focus[GlobalPreferences](_.showCatalog)
+  val agsOverlay                           = Focus[GlobalPreferences](_.agsOverlay)
+  val scienceOffsets                       = Focus[GlobalPreferences](_.scienceOffsets)
+  val acquisitionOffsets                   = Focus[GlobalPreferences](_.acquisitionOffsets)
+  val fullScreen                           = Focus[GlobalPreferences](_.fullScreen)
+  val elevationPlotRange                   = Focus[GlobalPreferences](_.elevationPlotRange)
+  val elevationPlotTime                    = Focus[GlobalPreferences](_.elevationPlotTime)
+  val elevationPlotScheduling              = Focus[GlobalPreferences](_.elevationPlotScheduling)
+  val itcChartType                         = Focus[GlobalPreferences](_.itcChartType)
+  val itcDetailsOpen                       = Focus[GlobalPreferences](_.itcDetailsOpen)
+  val elevationPlotElevationVisible        = Focus[GlobalPreferences](_.elevationPlotElevationVisible)
+  val elevationPlotParallacticAngleVisible =
+    Focus[GlobalPreferences](_.elevationPlotParallacticAngleVisible)
+  val elevationPlotSkyBrightnessVisible    =
+    Focus[GlobalPreferences](_.elevationPlotSkyBrightnessVisible)
+  val elevationPlotLunarElevationVisible   =
+    Focus[GlobalPreferences](_.elevationPlotLunarElevationVisible)
 
   val Default =
     GlobalPreferences(
@@ -72,5 +83,9 @@ object GlobalPreferences:
       TimeDisplay.Site,
       ElevationPlotScheduling.On,
       ChartType.S2NChart,
-      PlotDetails.Hidden
+      PlotDetails.Hidden,
+      Visible.Shown,
+      Visible.Hidden,
+      Visible.Shown,
+      Visible.Hidden
     )

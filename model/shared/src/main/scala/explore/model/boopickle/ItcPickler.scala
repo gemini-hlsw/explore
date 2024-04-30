@@ -4,6 +4,7 @@
 package explore.model.boopickle
 
 import boopickle.DefaultBasic.*
+import boopickle.Pickler
 import cats.implicits.*
 import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
@@ -17,13 +18,13 @@ import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.OverridenExposureTime
+import explore.modes.*
 import explore.modes.InstrumentRow
 import explore.modes.ModeAO
 import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
-import explore.modes.*
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.BrightnessUnits
@@ -37,6 +38,7 @@ import lucuma.core.math.LineWidthValue
 import lucuma.core.math.RadialVelocity
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
@@ -93,7 +95,11 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ModeSlitSize] = picklerNewType(ModeSlitSize)
 
-  given Pickler[ModeWavelengthDelta] = picklerNewType(ModeWavelengthDelta)
+  given Pickler[SlitLength] = picklerNewType(SlitLength)
+
+  given Pickler[SlitWidth] = picklerNewType(SlitWidth)
+
+  given Pickler[ModeAO] = picklerNewType(ModeAO)
 
   given Pickler[SpectroscopyModeRow] = generatePickler
 

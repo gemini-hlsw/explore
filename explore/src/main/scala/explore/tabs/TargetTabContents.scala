@@ -14,9 +14,9 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
+import explore.model.*
 import explore.model.AppContext
 import explore.model.ObsSummary
-import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
@@ -308,6 +308,7 @@ object TargetTabContents extends TwoPanels:
           configuration.map(_.siteFor),
           selectedCoordinates.map(CoordinatesAtVizTime(_)),
           vizTimeView.get,
+          none,
           Nil,
           props.globalPreferences.get
         )
@@ -348,6 +349,7 @@ object TargetTabContents extends TwoPanels:
           none,
           // TODO PM correct the coordinates
           CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
+          none,
           none,
           Nil,
           props.globalPreferences.get
