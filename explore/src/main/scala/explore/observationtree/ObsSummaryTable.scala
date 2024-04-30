@@ -358,6 +358,7 @@ object ObsSummaryTable:
               clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
               onClick = insertObs(
                 props.programId,
+                none,
                 0.refined,
                 props.observations,
                 adding,
