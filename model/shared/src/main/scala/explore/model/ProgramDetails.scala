@@ -9,6 +9,7 @@ import cats.derived.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import lucuma.core.enums.ProgramType
+import lucuma.core.model.ProgramReference
 import lucuma.core.model.Proposal
 import lucuma.schemas.decoders.given
 import lucuma.schemas.enums.ProposalStatus
@@ -21,7 +22,8 @@ case class ProgramDetails(
   proposalStatus: ProposalStatus,
   pi:             ProgramUserWithRole,
   users:          List[ProgramUserWithRole],
-  invitations:    List[CoIInvitation]
+  invitations:    List[CoIInvitation],
+  reference:      Option[ProgramReference]
 ) derives Eq:
   val allUsers: NonEmptyList[ProgramUserWithRole] = NonEmptyList(pi, users)
 
@@ -42,5 +44,6 @@ object ProgramDetails:
       pi <- c.get[ProgramUser]("pi")
       us <- c.get[List[ProgramUserWithRole]]("users")
       in <- c.get[List[CoIInvitation]]("userInvitations")
-    } yield ProgramDetails(t, p, ps, ProgramUserWithRole(pi, None), us, in)
+      r  <- c.get[Option[ProgramReference]]("reference")
+    } yield ProgramDetails(t, p, ps, ProgramUserWithRole(pi, None), us, in, r)
   )

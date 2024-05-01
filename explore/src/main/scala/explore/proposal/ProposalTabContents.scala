@@ -6,6 +6,7 @@ package explore.proposal
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import clue.ResponseException
 import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
@@ -23,6 +24,7 @@ import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.Program
@@ -90,7 +92,8 @@ object ProposalTabContents:
     ctx:               AppContext[IO],
     layout:            LayoutsMap,
     isUpdatingStatus:  View[IsUpdatingStatus],
-    readonly:          Boolean
+    readonly:          Boolean,
+    errorMessage:      UseState[Option[String]]
   ): VdomNode = {
     import ctx.given
 
@@ -104,6 +107,12 @@ object ProposalTabContents:
       (for {
         _ <- SetProposalStatus[IO]
                .execute(SetProposalStatusInput(programId = programId.assign, status = newStatus))
+               .onError {
+                 case ResponseException(errors, _) =>
+                   errorMessage.setState(errors.head.message.some).to[IO]
+                 case e                            =>
+                   errorMessage.setState(Some(e.getMessage.toString)).to[IO]
+               }
                .void
         _ <- programDetails.zoom(ProgramDetails.proposalStatus).set(newStatus).toAsync
       } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
@@ -157,7 +166,8 @@ object ProposalTabContents:
                 ).compact.tiny
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.Submitted
-                  )
+                  ),
+                errorMessage.value.map(r => Message(text = r, severity = Message.Severity.Error))
               )
             )
           )
@@ -200,7 +210,8 @@ object ProposalTabContents:
     .useMemoBy((props, _, _) => props.programDetails.get.proposalStatus)((_, _, _) =>
       _ === ProposalStatus.Submitted
     )
-    .render { (props, ctx, isUpdatingStatus, readonly) =>
+    .useState(none[String]) // Submission error message
+    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg) =>
       renderFn(
         props.programId,
         props.userVault,
@@ -211,6 +222,7 @@ object ProposalTabContents:
         ctx,
         props.layout,
         isUpdatingStatus,
-        readonly
+        readonly,
+        errorMsg
       )
     }

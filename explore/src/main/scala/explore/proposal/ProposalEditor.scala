@@ -12,7 +12,7 @@ import clue.*
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.Pot
-import crystal.react.View
+import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
@@ -76,6 +76,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.CallsQueriesGQL.*
+import queries.common.ProgramQueriesGQL.UpdateProgramsMutation
 import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
@@ -285,6 +286,8 @@ object ProposalEditor:
       classView.set(newClass) >> minPct2.set(minPctTotalTime) >> totalHours.set(toHours(totalTime))
     }
 
+    val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
+
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
       <.form(
@@ -359,25 +362,18 @@ object ProposalEditor:
             )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            <.div(
-              LucumaPrimeStyles.FormField,
-              ExploreStyles.ProposalCfpFields,
-              FormDropdownOptional(
-                id = "cfp".refined,
-                label =
-                  React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-                value = selectedCfp.get,
-                options = cfps.map(r => SelectItem(r, r.semester.format)),
-                onChange = _.map(v => selectedCfp.set(v.some)).orEmpty,
-                disabled = readonly,
-                modifiers = List(^.id := "cfp")
-              ),
-              FormEnumDropdownView(
-                id = "proposal-class".refined,
-                value = proposalClassType.withOnMod(onClassTypeMod),
-                label = React.Fragment("Class", HelpIcon("proposal/main/class.md".refined)),
-                disabled = readonly
-              )
+            FormDropdownOptional(
+              id = "cfp".refined,
+              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+              value = selectedCfp.get,
+              options = cfps.map(r => SelectItem(r, r.title)),
+              onChange =
+                // So far we only support queue for the current crop of CfP
+                _.map(v =>
+                  proposalClass.set(ProposalClassType.Queue) *> selectedCfp.set(v.some)
+                ).orEmpty,
+              disabled = readonly,
+              modifiers = List(^.id := "cfp")
             ),
             FormDropdownOptional(
               id = "category".refined,
@@ -455,6 +451,20 @@ object ProposalEditor:
 
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
+    // This is a workaround until we can properly set cfps in the proposal
+    val cfpMod = selectedCfp.withOnMod {
+      case Some(cfp) =>
+        UpdateProgramsMutation[IO]
+          .execute(
+            UpdateProgramsInput(WHERE = programId.toWhereProgram.assign,
+                                SET = ProgramPropertiesInput(semester = cfp.semester.assign)
+            )
+          )
+          .void
+          .runAsync
+      case None      => Callback.empty
+    }
+
     val detailsTile =
       Tile(ProposalTabTileIds.DetailsId.id, "Details", canMinimize = true)(
         renderDetails(
@@ -468,7 +478,7 @@ object ProposalEditor:
           splitsView.get,
           timeEstimateRange,
           cfps,
-          selectedCfp,
+          cfpMod,
           readonly,
           _
         )
@@ -527,7 +537,7 @@ object ProposalEditor:
         ReadOpenCFPs[IO]
           .query()
           .map(_.map(_.callsForProposals.matches)) // .map(_: CallForProposal))
-      .useStateViewBy((props, _, _) =>
+      .useStateViewBy: (props, _, _) =>
         // total time - we need `Hours` for editing and also to preserve if
         // the user switches between classes with and without total time.
         props.proposal
@@ -535,7 +545,6 @@ object ProposalEditor:
           .get
           .map(toHours)
           .getOrElse(Hours.unsafeFrom(0))
-      )
       .useStateViewBy((props, _, _, _) =>
         // mininum percent total time = need to preserve between class switches
         props.proposal
