@@ -120,10 +120,18 @@ object ObsQueries:
   }
 
   def createObservation[F[_]: Async](
-    programId: Program.Id
+    programId: Program.Id,
+    parentId:  Option[Group.Id]
   )(using FetchClient[F, ObservationDB]): F[ObsSummary] =
     ProgramCreateObservation[F]
-      .execute(CreateObservationInput(programId = programId.assign))
+      .execute(
+        CreateObservationInput(
+          programId = programId.assign,
+          SET = parentId
+            .map(gId => ObservationPropertiesInput(groupId = gId.assign))
+            .orIgnore
+        )
+      )
       .map(_.createObservation.observation)
 
   def createObservationWithTargets[F[_]: Async](

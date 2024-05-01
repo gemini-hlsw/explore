@@ -173,6 +173,7 @@ type AddingObservation = AddingObservation.Type
 
 def insertObs(
   programId:    Program.Id,
+  parentId:     Option[Group.Id],
   pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
   adding:       View[AddingObservation],
@@ -180,7 +181,7 @@ def insertObs(
 ): IO[Unit] =
   import ctx.given
 
-  createObservation[IO](programId)
+  createObservation[IO](programId, parentId)
     .flatMap { obs =>
       obsExistence(obs.id, o => setObs(programId, o.some, ctx))
         .mod(observations)(obsListMod.upsert(obs, pos))
@@ -211,13 +212,14 @@ def groupExistence(
 
 def insertGroup(
   programId: Program.Id,
+  parentId:  Option[Group.Id],
   groups:    UndoSetter[GroupTree],
   adding:    View[AddingObservation],
   ctx:       AppContext[IO]
 ): IO[Unit] =
   import ctx.given
   GroupQueries
-    .createGroup[IO](programId)
+    .createGroup[IO](programId, parentId)
     .flatMap(group =>
       groupExistence(group.id)
         .set(groups)(

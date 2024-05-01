@@ -284,6 +284,8 @@ object ObsList:
                 )
               )
 
+        val expandFocusedGroup: Callback = props.expandedGroups.mod(_ ++ props.focusedGroup)
+
         val tree =
           if (props.deckShown.get === DeckShown.Shown) {
             React.Fragment(
@@ -299,11 +301,13 @@ object ObsList:
                       loading = adding.get.value,
                       onClick = insertObs(
                         props.programId,
+                        // Set the focused group as the new obs parent if it is selected
+                        props.focusedGroup,
                         props.observations.get.length,
                         props.observations,
                         adding,
                         ctx
-                      ).runAsync
+                      ).runAsync *> expandFocusedGroup
                     ).mini.compact,
                     Button(
                       severity = Button.Severity.Success,
@@ -313,10 +317,12 @@ object ObsList:
                       loading = adding.get.value,
                       onClick = insertGroup(
                         props.programId,
+                        // Set the focused group as the new group parent if it is selected
+                        props.focusedGroup,
                         props.groups,
                         adding,
                         ctx
-                      ).runAsync
+                      ).runAsync *> expandFocusedGroup
                     ).mini.compact
                   ),
                 <.div(

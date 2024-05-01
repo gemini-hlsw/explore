@@ -54,10 +54,13 @@ object GroupQueries:
       )
       .void
 
-  def createGroup[F[_]: Async](programId: Program.Id)(using
+  def createGroup[F[_]: Async](programId: Program.Id, parentId: Option[Group.Id])(using
     FetchClient[F, ObservationDB]
   ): F[Grouping] =
     CreateGroupMutation[F]
       .execute:
-        CreateGroupInput(programId = programId.assign)
+        CreateGroupInput(
+          programId = programId.assign,
+          SET = parentId.map(gId => GroupPropertiesInput(parentGroup = gId.assign)).orIgnore
+        )
       .map(_.createGroup.group)
