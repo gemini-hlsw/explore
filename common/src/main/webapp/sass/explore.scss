@@ -946,6 +946,7 @@ svg.fa-triangle-exclamation.explore-error-icon {
       /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
       font-size: var(--pl-large-font-size);
       font-weight: 400;
+      word-break: break-all;
     }
 
     .p-component.p-button.obs-clone-button,
@@ -962,6 +963,7 @@ svg.fa-triangle-exclamation.explore-error-icon {
     font-weight: normal;
     font-size: small;
     opacity: 0.5;
+    word-break: normal;
   }
 
   .obs-badge-description {
