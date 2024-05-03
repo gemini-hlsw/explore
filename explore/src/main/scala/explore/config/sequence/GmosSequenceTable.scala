@@ -44,8 +44,8 @@ sealed trait GmosSequenceTable[S, D]:
           // Only show S/N for science or acq if FPU is None
           snPerClass
             .get(obsClass)
-            .filter(_ =>
-              i.observeClass match {
+            .filter: _ =>
+              i.observeClass match
                 case a @ ObserveClass.Acquisition =>
                   i.instrumentConfig match
                     case DynamicConfig.GmosNorth(_, _, _, _, _, _, None) => true
@@ -53,8 +53,6 @@ sealed trait GmosSequenceTable[S, D]:
                     case _                                               => false
                 case ObserveClass.Science         => true
                 case _                            => false
-              }
-            )
       )
 
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
@@ -142,7 +140,9 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
         (_, _, _) =>
           (visitsData, acquisitionSteps, scienceSteps) =>
             val (visits, nextIndex): (List[VisitData], StepIndex) = visitsData.value
-            stitchSequence(visits, nextIndex, acquisitionSteps, scienceSteps)
+            // TODO Remove duplicate steps if an atom is being executed.
+            // (This needs the new information from the ODB about an atom's execution status.)
+            stitchSequence(visits, none, none, nextIndex, acquisitionSteps, scienceSteps)
       .useResizeDetector()
       .useDynTableBy: (_, _, _, _, resize) =>
         (DynTableDef, SizePx(resize.width.orEmpty))
