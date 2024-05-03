@@ -18,7 +18,7 @@ object Versions {
   val http4s                 = "0.23.26"
   val http4sDom              = "0.2.11"
   val kittens                = "3.3.0"
-  val log4Cats               = "2.6.0"
+  val log4Cats               = "2.7.0"
   val log4CatsLogLevel       = "0.3.1"
   val lucumaBC               = "0.4.0"
   val lucumaCore             = "0.97.0"
