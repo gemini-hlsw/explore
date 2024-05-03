@@ -10,9 +10,5 @@
     }
   },
   "editor.formatOnSave": true,
-  "stylelint.validate": [
-    "css",
-    "scss"
-  ],
-  "metals.inlayHints.implicitArguments.enable": true
+  "stylelint.validate": ["css", "scss"]
 }
