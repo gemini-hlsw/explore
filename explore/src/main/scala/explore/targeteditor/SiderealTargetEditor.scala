@@ -353,13 +353,15 @@ object SiderealTargetEditor:
               ExploreStyles.WithCatalogInfo
                 .when(props.target.get.catalogInfo.flatMap(_.objectType).isDefined)
             )(
+              // The `withKey` is important because React wasn't updating the BrightnessesEditor
+              // or the EmissionsLineEditor when the obsIdSubset changed, resulting in targets always
+              // being cloned even when all targets should have been edited.
               SourceProfileEditor(
                 sourceProfileAligner,
                 props.target.get.catalogInfo,
                 disabled
-              )
+              ).withKey(props.obsIdSubset.mkString)
             )
           )
         )
-        // }
       }
