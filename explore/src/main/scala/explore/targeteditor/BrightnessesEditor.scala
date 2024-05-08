@@ -90,7 +90,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                 _._1,
                 "Band",
                 _.value.shortName,
-                size = 70.toPx
+                size = 67.toPx
               ).sortable,
               ColDef(
                 ValueColumnId,
@@ -105,7 +105,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                       ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
                     disabled = disabled
                   ),
-                size = 100.toPx
+                size = 77.toPx
               ).sortableBy(_.get),
               ColDef(
                 UnitsColumnId,
@@ -118,7 +118,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     disabled = disabled,
                     clazz = ExploreStyles.BrightnessesTableUnitsDropdown
                   ),
-                size = 183.toPx
+                size = 145.toPx
               ).sortableBy(_.get),
               ColDef(
                 DeleteColumnId,
