@@ -5,7 +5,6 @@ package explore.config
 
 import boopickle.DefaultBasic.*
 import cats.Eq
-import cats.Order
 import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
@@ -68,6 +67,7 @@ import lucuma.ui.utils.*
 import java.text.DecimalFormat
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
+import scala.math.Ordering.OptionOrdering
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -166,10 +166,17 @@ private object SpectroscopyModesTable:
     case _: None.type             => "none"
     case r                        => r.toString
 
-  private given Order[InstrumentRow#Grating] = Order.by(_.toString)
-  private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
-  private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
-  private given Order[TimeSpan | Unit]       = Order.by(_.toOption)
+  // I think these are valid Orderings because they should be consistent with ==
+  // They could probably be Orders, as well, but only Ordering is actually needed here.
+  private given Ordering[InstrumentRow#Grating] = Ordering.by(_.toString)
+  private given Ordering[InstrumentRow#Filter]  = Ordering.by(_.toString)
+  private given Ordering[TimeSpan | Unit]       = Ordering.by(_.toOption)
+
+  // This one is not lawful, so we're not making in implicit
+  private val ordConf: Ordering[BasicConfigAndItc]                   =
+    Ordering.by(_.configuration.configurationSummary)
+  private val orderingOptConfig: Ordering[Option[BasicConfigAndItc]] =
+    new OptionOrdering[BasicConfigAndItc] { val optionOrdering = ordConf }
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -294,7 +301,7 @@ private object SpectroscopyModesTable:
       column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
-        .sortable
+        .sortable(using orderingOptConfig)
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRowWithResult)
