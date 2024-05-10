@@ -465,7 +465,15 @@ private object SpectroscopyModesTable:
         table.getSortedRowModel().rows.map(_.original).toList
       }
       // selectedRow
-      .useState(none[SpectroscopyModeRow])
+      .useStateBy((props, _, _, rows, _, _, _, _, _, _, _) =>
+        props.selectedConfig.get
+          .flatMap(c =>
+            rows.value.find(
+              _.equalsConf(c.configuration, props.spectroscopyRequirements.wavelength)
+            )
+          )
+          .map(_.entry)
+      )
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
       // the virtualizer uses for scrollTo.
