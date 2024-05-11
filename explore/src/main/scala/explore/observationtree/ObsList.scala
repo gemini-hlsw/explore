@@ -352,7 +352,14 @@ object ObsList:
               <.div(
                 ^.overflow := "auto",
                 Tree(
-                  treeNodes.get,
+                  treeNodes.get.filter(_.data match {
+                    case Left(GroupTree.Obs(id)) =>
+                      props.observations.get
+                        .getValue(id)
+                        .map(o => !o.deleted)
+                        .getOrElse(false)
+                    case _                       => true
+                  }),
                   renderItem,
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set,

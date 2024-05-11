@@ -1854,6 +1854,10 @@ input[type='file'].explore-fileupload {
     border: none;
     overflow-y: auto;
   }
+
+  .p-tree .p-treenode-droppoint {
+    height: 0;
+  }
 }
 
 // -------

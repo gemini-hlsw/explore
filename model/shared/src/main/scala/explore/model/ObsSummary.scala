@@ -33,6 +33,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Timestamp
 import lucuma.odb.json.wavelength.decoder.given
+import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
@@ -49,6 +50,7 @@ case class ObsSummary(
   subtitle:            Option[NonEmptyString],
   status:              ObsStatus,
   activeStatus:        ObsActiveStatus,
+  deleted:             Boolean,
   scienceTargetIds:    AsterismIds,
   constraints:         ConstraintSet,
   timingWindows:       List[TimingWindow],
@@ -155,6 +157,7 @@ object ObsSummary:
       subtitle            <- c.get[Option[NonEmptyString]]("subtitle")
       status              <- c.get[ObsStatus]("status")
       activeStatus        <- c.get[ObsActiveStatus]("activeStatus")
+      existence           <- c.get[Existence]("existence")
       scienceTargetIds    <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
       constraints         <- c.get[ConstraintSet]("constraintSet")
       timingWindows       <- c.get[List[TimingWindow]]("timingWindows")
@@ -174,6 +177,7 @@ object ObsSummary:
       subtitle,
       status,
       activeStatus,
+      existence === Existence.Deleted,
       SortedSet.from(scienceTargetIds.map(_.id)),
       constraints,
       timingWindows,

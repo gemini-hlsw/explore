@@ -49,6 +49,7 @@ trait ArbObsSummary:
         subtitle            <- arbitrary[Option[NonEmptyString]]
         status              <- arbitrary[ObsStatus]
         activeStatus        <- arbitrary[ObsActiveStatus]
+        deleted             <- arbitrary[Boolean]
         scienceTargetIds    <- arbitrary[Set[Target.Id]]
         constraints         <- arbitrary[ConstraintSet]
         timingWindows       <- arbitrary[List[TimingWindow]]
@@ -66,6 +67,7 @@ trait ArbObsSummary:
         subtitle,
         status,
         activeStatus,
+        deleted,
         SortedSet.from(scienceTargetIds),
         constraints,
         timingWindows,
@@ -87,6 +89,7 @@ trait ArbObsSummary:
        Option[String],
        ObsStatus,
        ObsActiveStatus,
+       Boolean,
        List[Target.Id],
        ConstraintSet,
        List[TimingWindow],
@@ -105,6 +108,7 @@ trait ArbObsSummary:
          o.subtitle.map(_.value),
          o.status,
          o.activeStatus,
+         o.deleted,
          o.scienceTargetIds.toList,
          o.constraints,
          o.timingWindows,

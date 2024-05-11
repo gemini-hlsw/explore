@@ -20,6 +20,7 @@ object ObservationSummarySubquery
           subtitle
           status
           activeStatus
+          existence
           visualizationTime
           posAngleConstraint $PosAngleConstraintSubquery
           targetEnvironment {
