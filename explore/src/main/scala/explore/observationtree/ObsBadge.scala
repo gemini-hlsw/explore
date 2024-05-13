@@ -26,6 +26,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.InputSwitch
+import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.EnumDropdownView
@@ -154,7 +155,7 @@ object ObsBadge:
                     case ObsActiveStatus.Active   => "Observation is active"
                     case ObsActiveStatus.Inactive => "Observation is not active"
                   ,
-                  tooltipOptions = TooltipOptions(position = TooltipOptions.Position.Left),
+                  tooltipOptions = TooltipOptions(position = Tooltip.Position.Left),
                   disabled = props.readonly
                 )
               )(

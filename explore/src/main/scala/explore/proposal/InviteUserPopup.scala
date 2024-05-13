@@ -81,7 +81,10 @@ object InviteUserPopup:
                   createInvite.set(CreateInviteProcess.Done).to[IO]
             }
 
-        OverlayPanel(closeOnEscape = true)(
+        OverlayPanel(
+          closeOnEscape = true,
+          onHide = key.set(None) >> emailView.set(None).runAsyncAndForget
+        )(
           <.div(
             PrimeStyles.Dialog,
             <.div(PrimeStyles.DialogHeader, "Create CoI invitation"),
