@@ -294,10 +294,7 @@ private object SpectroscopyModesTable:
       column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
-        .sortableBy(
-          // None are first, just like in Ordering[Option[?]]
-          _.fold("")(_.configuration.configurationSummary)
-        )
+        .sortableBy(_.map(_.configuration.configurationSummary))
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRowWithResult)
