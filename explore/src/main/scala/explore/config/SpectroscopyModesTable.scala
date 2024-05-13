@@ -5,7 +5,6 @@ package explore.config
 
 import boopickle.DefaultBasic.*
 import cats.Eq
-import cats.Order
 import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
@@ -166,10 +165,11 @@ private object SpectroscopyModesTable:
     case _: None.type             => "none"
     case r                        => r.toString
 
-  private given Order[InstrumentRow#Grating] = Order.by(_.toString)
-  private given Order[InstrumentRow#Filter]  = Order.by(_.toString)
-  private given Order[BasicConfigAndItc]     = Order.by(_.configuration.configurationSummary)
-  private given Order[TimeSpan | Unit]       = Order.by(_.toOption)
+  // I think these are valid Orderings because they should be consistent with ==
+  // They could probably be Orders, as well, but only Ordering is actually needed here.
+  private given Ordering[InstrumentRow#Grating] = Ordering.by(_.toString)
+  private given Ordering[InstrumentRow#Filter]  = Ordering.by(_.toString)
+  private given Ordering[TimeSpan | Unit]       = Ordering.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -294,7 +294,7 @@ private object SpectroscopyModesTable:
       column(AvailablityColumnId, row => row.rowToConf(cw))
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
-        .sortable
+        .sortableBy(_.map(_.configuration.configurationSummary))
     ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
 
   extension (row: SpectroscopyModeRowWithResult)
@@ -465,7 +465,15 @@ private object SpectroscopyModesTable:
         table.getSortedRowModel().rows.map(_.original).toList
       }
       // selectedRow
-      .useState(none[SpectroscopyModeRow])
+      .useStateBy((props, _, _, rows, _, _, _, _, _, _, _) =>
+        props.selectedConfig.get
+          .flatMap(c =>
+            rows.value.find(
+              _.equalsConf(c.configuration, props.spectroscopyRequirements.wavelength)
+            )
+          )
+          .map(_.entry)
+      )
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
       // the virtualizer uses for scrollTo.
