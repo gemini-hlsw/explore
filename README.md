@@ -64,7 +64,10 @@ http://local.lucuma.xyz:5000/
 
 Besides doing a full deployment you need to comment out the condition about local.lucuma.xyz on main.jsx
 
-Normally you want to test changes thus you need to do even a tiny change and build again to trigger an update prompt
+Normally you want to test changes thus you need to do even a tiny change and build again to trigger an update prompt.
+
+For sanity, you may want to uninstall the Service Worker after testing, going to the developer tools
+and Application -> Service Workers (in Chrome) -> unregister.
 
 ## Bundle sizes
 
