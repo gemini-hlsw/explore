@@ -60,6 +60,12 @@ npx vite build && npx vite preview
 As before you can now see the app locally but in a different port
 http://local.lucuma.xyz:5000/
 
+## Testing PWA locally
+
+Besides doing a full deployment you need to comment out the condition about local.lucuma.xyz on main.jsx
+
+Normally you want to test changes thus you need to do even a tiny change and build again to trigger an update prompt
+
 ## Bundle sizes
 
 You can check the evolution of bundle sizes [here](https://app.bundlemon.dev/projects/61a698e5de59ab000954f941/reports?branch=master&resolution=all)
