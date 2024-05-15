@@ -122,7 +122,7 @@ object ExplorePWA {
               !(!(r.installing && !js.isUndefined(org.scalajs.dom.window.navigator))) ||
                 (dom.window.navigator.hasOwnProperty("connection") && dom.window.navigator.onLine)
             (IO.println(
-              s"Service worker registered, setup self update task, offline: $isOffline"
+              s"Service worker registered, check for updates every $updateInteval, offline: $isOffline"
             ) *>
               // initial check
               pingSW(u)
