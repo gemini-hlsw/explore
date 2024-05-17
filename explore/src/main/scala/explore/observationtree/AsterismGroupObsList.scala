@@ -372,7 +372,12 @@ object AsterismGroupObsList:
                         highlightSelected = true,
                         forceHighlight = isObsSelected(obs.id),
                         linkToObsTab = false,
-                        onSelect = obsId => setFocused(props.focused.withSingleObs(obsId)),
+                        onSelect = obsId =>
+                          setFocused(
+                            props.focused
+                              .withSingleObs(obsId)
+                              .validateOrSetTarget(obs.scienceTargetIds)
+                          ),
                         onDelete = delete.some,
                         onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
                         ctx = ctx
