@@ -23,6 +23,7 @@ import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.undo.*
+import explore.utils.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -248,6 +249,12 @@ object ConstraintGroupObsList:
               csHeader,
               TagMod.when(props.expandedIds.get.contains(obsIds))(
                 cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                  val delete =
+                    props.undoableDeleteObs(obs.id,
+                                            props.observations,
+                                            o => setObsSet(obsIds.add(o).some)
+                    )
+
                   props.renderObsBadgeItem(
                     ObsBadge.Layout.ConstraintsTab,
                     selectable = true,
@@ -255,8 +262,9 @@ object ConstraintGroupObsList:
                     forceHighlight = isObsSelected(obs.id),
                     linkToObsTab = false,
                     onSelect = setObs,
+                    onDelete = delete.some,
                     onCtrlClick = id => handleCtrlClick(id, obsIds),
-                    ctx
+                    ctx = ctx
                   )(obs, idx)
                 }
               ),

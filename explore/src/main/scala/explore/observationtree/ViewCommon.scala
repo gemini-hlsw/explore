@@ -5,18 +5,24 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.FetchClient
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
 import explore.model.ObsSummary
 import explore.model.ObservationExecutionMap
+import explore.model.ObservationList
+import explore.undo.UndoSetter
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.react.beautifuldnd.*
+import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
+import org.typelevel.log4cats.Logger
 
 trait ViewCommon {
   def programId: Program.Id
@@ -28,20 +34,23 @@ trait ViewCommon {
     obs:               ObsSummary,
     layout:            ObsBadge.Layout,
     highlightSelected: Boolean = true,
-    forceHighlight:    Boolean = false // if true, overrides highlightSelected
+    forceHighlight:    Boolean = false, // if true, overrides highlightSelected
+    onDelete:          Option[Callback] = none
   ): TagMod =
     ObsBadge(
       obs,
       obsExecutions.getPot(obs.id).map(_.programTimeEstimate),
       layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
-      readonly = readonly
+      readonly = readonly,
+      deleteCB = onDelete
     )
 
   def renderObsBadgeItem(
     layout:            ObsBadge.Layout,
     selectable:        Boolean,
     onSelect:          Observation.Id => Callback,
+    onDelete:          Option[Callback] = none,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false,
     linkToObsTab:      Boolean = false,
@@ -68,7 +77,7 @@ trait ViewCommon {
           }).when(linkToObsTab)
         )(
           <.span(provided.dragHandleProps)(
-            renderObsBadge(obs, layout, highlightSelected, forceHighlight)
+            renderObsBadge(obs, layout, highlightSelected, forceHighlight, onDelete)
           )
         )
       }
@@ -85,5 +94,18 @@ trait ViewCommon {
 
   def getListStyle(isDragging: Boolean): TagMod =
     ExploreStyles.DraggingOver.when(isDragging)
+
+  def undoableDeleteObs(
+    obsId:        Observation.Id,
+    observations: UndoSetter[ObservationList],
+    afterUndo:    Observation.Id => Callback
+  )(using
+    FetchClient[IO, ObservationDB],
+    Logger[IO],
+    ToastCtx[IO]
+  ): Callback =
+    obsExistence(obsId, afterUndo)
+      .mod(observations)(obsListMod.delete)
+      .showToastCB(s"Deleted obs ${obsId.show}")
 
 }
