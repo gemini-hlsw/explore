@@ -178,7 +178,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
           import ctx.given
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
-            : ColumnDef.Single[View[ObsAttachment], V] =
+            : ColumnDef.Single.NoMeta[View[ObsAttachment], V] =
             ColDef(id, v => accessor(v.get), columnNames(id))
 
           def goToObs(obsId: Observation.Id): Callback =

@@ -94,7 +94,7 @@ object ConstraintsSummaryTable:
         (props, ctx) =>
           _ =>
             def column[V](id: ColumnId, accessor: ConstraintGroup => V)
-              : ColumnDef.Single[ConstraintGroup, V] =
+              : ColumnDef.Single.NoMeta[ConstraintGroup, V] =
               ColDef(id, accessor, columnNames(id))
 
             def goToObsSet(obsIdSet: ObsIdSet): Callback =
@@ -249,9 +249,9 @@ object ConstraintsSummaryTable:
             emptyMessage = <.div("No constraints present"),
             headerCellMod = headerCell =>
               columnClasses
-                .get(ColumnId(headerCell.column.id))
+                .get(headerCell.column.id)
                 .orEmpty |+| ExploreStyles.StickyHeader,
-            cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
+            cellMod = cell => columnClasses.get(cell.column.id).orEmpty
           )
         )
       }

@@ -121,7 +121,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
           (_, client, urlMap) =>
             import ctx.given
 
-            def column[V](id: ColumnId, accessor: Row => V): ColumnDef.Single[Row, V] =
+            def column[V](id: ColumnId, accessor: Row => V): ColumnDef.Single.NoMeta[Row, V] =
               ColDef(id, v => accessor(v), columnNames(id))
 
             List(
@@ -213,10 +213,11 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
           )
       )
       .useReactTableBy((prop, _, _, _, _, cols, rows) =>
-        TableOptions(cols,
-                     rows,
-                     enableSorting = false,
-                     getRowId = (row, _, _) => RowId(row.attachmentType.tag)
+        TableOptions(
+          cols,
+          rows,
+          enableSorting = false,
+          getRowId = (row, _, _) => RowId(row.attachmentType.tag)
         )
       )
       .render { (props, _, client, action, _, _, _, table) =>

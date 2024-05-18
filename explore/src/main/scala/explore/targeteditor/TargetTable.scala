@@ -184,7 +184,7 @@ object TargetTable extends AsterismModifier:
                 tableMod = ExploreStyles.ExploreTable,
                 headerCellMod = headerCell =>
                   columnClasses
-                    .get(ColumnId(headerCell.column.id))
+                    .get(headerCell.column.id)
                     .orEmpty |+| ExploreStyles.StickyHeader,
                 rowMod = row =>
                   TagMod(
@@ -192,7 +192,7 @@ object TargetTable extends AsterismModifier:
                       .when_(props.selectedTarget.get.exists(_ === row.original.id)),
                     ^.onClick --> props.selectedTarget.set(row.original.id.some)
                   ),
-                cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
+                cellMod = cell => columnClasses.get(cell.column.id).orEmpty
               )
             )
           }

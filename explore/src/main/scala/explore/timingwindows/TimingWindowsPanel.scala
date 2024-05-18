@@ -99,10 +99,10 @@ object TimingWindowsPanel:
       React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUtcWithZone), " forever")
   }
 
-  private val DeleteColWidth = 20
-  private val WindowColId    = "TimingWindow"
-  private val ErrorColId     = "Error"
-  private val DeleteColId    = "Delete"
+  private val DeleteColWidth: Int   = 20
+  private val WindowColId: ColumnId = ColumnId("TimingWindow")
+  private val ErrorColId: ColumnId  = ColumnId("Error")
+  private val DeleteColId: ColumnId = ColumnId("Delete")
 
   private val component =
     ScalaFnComponent
@@ -113,12 +113,12 @@ object TimingWindowsPanel:
         (props, _) => (_, readonly, resize) =>
           List(
             ColDef(
-              ColumnId(WindowColId),
+              WindowColId,
               _._1,
               size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
             ).setCell(_.value.renderVdom).some,
             ColDef(
-              ColumnId(ErrorColId),
+              ErrorColId,
               _._2,
               size = DeleteColWidth.toPx
             ).setCell { c =>
@@ -128,7 +128,7 @@ object TimingWindowsPanel:
                 <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow)
             }.some,
             ColDef(
-              ColumnId(DeleteColId),
+              DeleteColId,
               _._2,
               size = DeleteColWidth.toPx
             ).setCell(c =>
@@ -182,8 +182,7 @@ object TimingWindowsPanel:
               rowMod = row =>
                 TagMod(
                   ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                  ^.onClick -->
-                    (table.toggleAllRowsSelected(false) >> Callback(row.toggleSelected()))
+                  ^.onClick --> (table.toggleAllRowsSelected(false) >> row.toggleSelected())
                 ),
               cellMod = _.column.id match
                 case DeleteColId => ^.textAlign.right

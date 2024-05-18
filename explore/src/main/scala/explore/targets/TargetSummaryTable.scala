@@ -225,7 +225,7 @@ object TargetSummaryTable:
                   idx         <- table
                                    .getRowModel()
                                    .flatRows
-                                   .indexWhere(_.id === selectedIdStr)
+                                   .indexWhere(_.id.value === selectedIdStr)
                                    .some
                                    .filterNot(_ == -1)
                 yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
@@ -325,7 +325,7 @@ object TargetSummaryTable:
             tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
             headerCellMod = headerCell =>
               columnClasses
-                .get(ColumnId(headerCell.column.id))
+                .get(headerCell.column.id)
                 .orEmpty |+| ExploreStyles.StickyHeader,
             rowMod = row =>
               TagMod(
@@ -344,33 +344,33 @@ object TargetSummaryTable:
                       // selectedRow is not empty, these won't fail
                       val firstId        = selectedRows.head.id
                       val lastId         = selectedRows.last.id
-                      val indexOfCurrent = allRows.indexWhere(_._1.id === currentId)
-                      val indexOfFirst   = allRows.indexWhere(_._1.id === firstId)
-                      val indexOfLast    = allRows.indexWhere(_._1.id === lastId)
+                      val indexOfCurrent = allRows.indexWhere(_._1.id == currentId)
+                      val indexOfFirst   = allRows.indexWhere(_._1.id == firstId)
+                      val indexOfLast    = allRows.indexWhere(_._1.id == lastId)
                       if (indexOfCurrent =!= -1 && indexOfFirst =!= -1 && indexOfLast =!= -1) {
                         if (indexOfCurrent < indexOfFirst) {
                           table.setRowSelection(
                             RowSelection(
-                              (RowId(firstId) -> true) :: allRows
+                              (firstId -> true) :: allRows
                                 .slice(indexOfCurrent, indexOfFirst)
-                                .map { case (row, _) => RowId(row.id) -> true }*
+                                .map { case (row, _) => row.id -> true }*
                             )
                           )
                         } else {
                           table.setRowSelection(
                             RowSelection(
-                              (RowId(currentId) -> true) :: allRows
+                              (currentId -> true) :: allRows
                                 .slice(indexOfLast, indexOfCurrent)
-                                .map { case (row, _) => RowId(row.id) -> true }*
+                                .map { case (row, _) => row.id -> true }*
                             )
                           )
                         }
                       } else Callback.empty
-                    } else Callback(row.toggleSelected())
+                    } else row.toggleSelected()
                   }
                 }
               ),
-            cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty,
+            cellMod = cell => columnClasses.get(cell.column.id).orEmpty,
             virtualizerRef = virtualizerRef,
             emptyMessage = <.div("No targets present")
             // workaround to redraw when files are imported

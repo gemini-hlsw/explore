@@ -59,7 +59,7 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
             val obsIds = p.obsAttachmentIds.get
 
             def column[V](id: ColumnId, accessor: ObsAttachment => V)
-              : ColumnDef.Single[ObsAttachment, V] =
+              : ColumnDef.Single.NoMeta[ObsAttachment, V] =
               ColDef(id, v => accessor(v), columnNames(id))
 
             List(
@@ -138,12 +138,13 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                 TagMod(
                   ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
                   ^.onClick ==> { e =>
-                    val selectedId = ObsAtt.Id.parse(row.id).filter(p.obsAttachmentIds.get.contains)
+                    val selectedId =
+                      ObsAtt.Id.parse(row.id.value).filter(p.obsAttachmentIds.get.contains)
                     for {
                       _ <- e.preventDefaultCB *> e.stopPropagationCB
                       _ <- p.selected.set(selectedId)
                       _ <- table.toggleAllRowsSelected(false)
-                      _ <- Callback(row.toggleSelected())
+                      _ <- row.toggleSelected()
                     } yield ()
                   }
                 )

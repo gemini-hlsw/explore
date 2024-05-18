@@ -53,13 +53,13 @@ object ProgramUsersTable:
   private def column[V](
     id:       ColumnId,
     accessor: ProgramUserWithRole => V
-  ): ColumnDef.Single[ProgramUserWithRole, V] =
+  ): ColumnDef.Single.NoMeta[ProgramUserWithRole, V] =
     ColDef(id, accessor, columnNames(id))
 
   private def columns(
     props:  Props,
     active: View[IsActive]
-  )(ctx: AppContext[IO]): List[ColumnDef[ProgramUserWithRole, ?]] =
+  )(ctx: AppContext[IO]): List[ColumnDef.NoMeta[ProgramUserWithRole, ?]] =
     List(
       column(NameColumnId, _.name),
       column(EmailColumnId, _.user.profile.flatMap(_.primaryEmail).orEmpty),
