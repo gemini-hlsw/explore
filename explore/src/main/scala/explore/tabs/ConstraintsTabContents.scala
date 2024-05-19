@@ -11,6 +11,7 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.common.TimingWindowsQueries
+import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
@@ -189,5 +190,8 @@ object ConstraintsTabContents extends TwoPanels:
             props.readonly
           )
 
-        makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
+        React.Fragment(
+          FocusedStatus(AppTab.Constraints, props.programId, Focused(props.focusedObsSet)),
+          makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
+        )
       }

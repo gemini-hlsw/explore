@@ -10,6 +10,7 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.common.TimingWindowsQueries
+import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.data.KeyedIndexedList
@@ -146,5 +147,8 @@ object SchedulingTabContents extends TwoPanels:
             props.readonly
           )
 
-        makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
+        React.Fragment(
+          FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet)),
+          makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
+        )
       }

@@ -250,9 +250,16 @@ object ConstraintGroupObsList:
               TagMod.when(props.expandedIds.get.contains(obsIds))(
                 cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
                   val delete =
-                    props.undoableDeleteObs(obs.id,
-                                            props.observations,
-                                            o => setObsSet(obsIds.add(o).some)
+                    props.undoableDeleteObs(
+                      obs.id,
+                      props.observations,
+                      o => setObsSet(obsIds.add(o).some), {
+                        // After deletion keep expanded group
+                        val newObsIds = obsIds - obs.id
+                        val expansion =
+                          newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
+                        expansion *> setObsSet(newObsIds)
+                      }
                     )
 
                   props.renderObsBadgeItem(

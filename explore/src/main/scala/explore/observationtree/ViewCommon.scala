@@ -5,8 +5,8 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.react.*
 import clue.FetchClient
+import crystal.react.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
@@ -100,7 +100,7 @@ trait ViewCommon {
     obsId:        Observation.Id,
     observations: UndoSetter[ObservationList],
     afterUndo:    Observation.Id => Callback,
-    afterDelete:  Callback = Callback.empty
+    afterDelete:  Callback
   )(using
     FetchClient[IO, ObservationDB],
     Logger[IO],

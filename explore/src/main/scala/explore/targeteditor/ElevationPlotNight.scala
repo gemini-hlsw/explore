@@ -447,12 +447,6 @@ object ElevationPlotNight:
         val moonPhase = MoonCalc.approxPhase(midOfNight)
         val moonIllum = midOfNightResult.lunarIlluminatedFraction.toDouble
 
-        // dom.console.log(
-        //   s"Nautical Twilights:\n",
-        //   s" >>> [${tbNauticalNight.start.atZone(ZoneOffset.UTC)}]\n",
-        //   s" <<< [${tbNauticalNight.end.atZone(ZoneOffset.UTC)}]"
-        // )
-
         <.div(
           // Include the size in the key
           ResizingChart(options).withKey(s"$props-$resize").when(resize.height.isDefined),
