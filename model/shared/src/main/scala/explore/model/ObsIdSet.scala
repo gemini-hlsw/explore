@@ -6,6 +6,7 @@ package explore.model
 import cats.Order
 import cats.Order.*
 import cats.Semigroup
+import cats.Show
 import cats.data.NonEmptySet
 import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
@@ -22,6 +23,8 @@ case class ObsIdSet(idSet: NonEmptySet[Observation.Id]):
 
 object ObsIdSet {
   given Order[ObsIdSet] = Order.by(_.idSet)
+
+  given Show[ObsIdSet] = Show.show(_.idSet.toList.mkString(", "))
 
   given Semigroup[ObsIdSet] = Semigroup.instance((a, b) => ObsIdSet(a.idSet |+| b.idSet))
 

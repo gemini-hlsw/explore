@@ -10,6 +10,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
+import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -409,12 +410,15 @@ object TargetTabContents extends TwoPanels:
       // so that it clears its internal state.
     }
 
-    makeOneOrTwoPanels(
-      selectedView,
-      targetTree(props.programSummaries),
-      rightSide,
-      RightSideCardinality.Multi,
-      resize
+    React.Fragment(
+      FocusedStatus(AppTab.Targets, props.programId, props.focused),
+      makeOneOrTwoPanels(
+        selectedView,
+        targetTree(props.programSummaries),
+        rightSide,
+        RightSideCardinality.Multi,
+        resize
+      )
     )
   }
 
