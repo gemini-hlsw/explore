@@ -5,6 +5,7 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.react.*
 import clue.FetchClient
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -98,14 +99,21 @@ trait ViewCommon {
   def undoableDeleteObs(
     obsId:        Observation.Id,
     observations: UndoSetter[ObservationList],
-    afterUndo:    Observation.Id => Callback
+    afterUndo:    Observation.Id => Callback,
+    afterDelete:  Callback = Callback.empty
   )(using
     FetchClient[IO, ObservationDB],
     Logger[IO],
     ToastCtx[IO]
   ): Callback =
-    obsExistence(obsId, afterUndo)
+    obsExistence(
+      obsId,
+      oid =>
+        ToastCtx[IO].showToast(s"Restore deleted obs: ${obsId.show}").runAsyncAndForget *>
+          afterUndo(oid)
+    )
       .mod(observations)(obsListMod.delete)
-      .showToastCB(s"Deleted obs ${obsId.show}")
+      .flatMap(_ => afterDelete)
+      .showToastCB(s"Deleted obs: ${obsId.show}")
 
 }

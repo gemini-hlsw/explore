@@ -342,51 +342,50 @@ object AsterismGroupObsList:
                 )
                 .orEmpty
             )(
-              <.a(
-                ExploreStyles.ObsTreeGroup |+| Option
-                  .when(groupSelected)(ExploreStyles.SelectedObsTreeGroup)
-                  .orElse(
-                    Option.when(!dragging.value.value)(ExploreStyles.UnselectedObsTreeGroup)
-                  )
-                  .orEmpty
-              )(
-                ^.cursor.pointer,
-                ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
-                ^.onClick ==> { (e: ReactEvent) =>
-                  e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
-                }
-              )(
-                csHeader,
-                TagMod.when(props.expandedIds.get.contains(obsIds))(
-                  TagMod(
-                    cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                      val delete = props.undoableDeleteObs(
-                        obs.id,
-                        props.observations,
-                        o => setFocused(props.focused)
-                      )
+              ^.cursor.pointer,
+              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
+              ^.onClick ==> { (e: ReactEvent) =>
+                e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
+              }
+            )(
+              csHeader,
+              TagMod.when(props.expandedIds.get.contains(obsIds))(
+                TagMod(
+                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
+                    val delete = props.undoableDeleteObs(
+                      obs.id,
+                      props.observations,
+                      o => setFocused(props.focused), {
+                        // After deletion change focus and keep expanded target
+                        val newObsIds = obsIds - obs.id
+                        val newFocus  =
+                          newObsIds.fold(Focused.None)(props.focused.withObsSet)
+                        val expansion =
+                          newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
+                        expansion *> setFocused(newFocus)
+                      }
+                    )
 
-                      props.renderObsBadgeItem(
-                        ObsBadge.Layout.TargetsTab,
-                        selectable = true,
-                        highlightSelected = true,
-                        forceHighlight = isObsSelected(obs.id),
-                        linkToObsTab = false,
-                        onSelect = obsId =>
-                          setFocused(
-                            props.focused
-                              .withSingleObs(obsId)
-                              .validateOrSetTarget(obs.scienceTargetIds)
-                          ),
-                        onDelete = delete.some,
-                        onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
-                        ctx = ctx
-                      )(obs, idx)
-                    }
-                  )
-                ),
-                provided.placeholder
-              )
+                    props.renderObsBadgeItem(
+                      ObsBadge.Layout.TargetsTab,
+                      selectable = true,
+                      highlightSelected = true,
+                      forceHighlight = isObsSelected(obs.id),
+                      linkToObsTab = false,
+                      onSelect = obsId =>
+                        setFocused(
+                          props.focused
+                            .withSingleObs(obsId)
+                            .validateOrSetTarget(obs.scienceTargetIds)
+                        ),
+                      onDelete = delete.some,
+                      onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
+                      ctx = ctx
+                    )(obs, idx)
+                  }
+                )
+              ),
+              provided.placeholder
             )
           )
         }
