@@ -98,7 +98,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
     AtomStepsColumnId -> FixedSize(30.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
-  private lazy val columns: List[ColumnDef[SequenceTableRowType, ?]] =
+  private lazy val columns: List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
     List(
       SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
@@ -135,14 +135,14 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
       .withHooks[Props]
       .useMemo(())(_ => columns) // cols
       .useMemoBy((props, _) => props.visits): (_, _) =>
-        visitsSequences // (List[Visit], nextIndex)
+        visitsSequences(_, none) // (List[Visit], nextIndex)
       .useMemoBy((props, _, visitsData) => (visitsData, props.acquisitionRows, props.scienceRows)):
         (_, _, _) =>
-          (visitsData, acquisitionSteps, scienceSteps) =>
-            val (visits, nextIndex): (List[VisitData], StepIndex) = visitsData.value
+          (visitsData, acquisitionRows, scienceRows) =>
+            val (visits, nextScienceIndex): (List[VisitData], StepIndex) = visitsData.value
             // TODO Remove duplicate steps if an atom is being executed.
             // (This needs the new information from the ODB about an atom's execution status.)
-            stitchSequence(visits, none, none, nextIndex, acquisitionSteps, scienceSteps)
+            stitchSequence(visits, none, nextScienceIndex, acquisitionRows, scienceRows)
       .useResizeDetector()
       .useDynTableBy: (_, _, _, _, resize) =>
         (DynTableDef, SizePx(resize.width.orEmpty))
@@ -187,9 +187,9 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           celled = true,
           tableMod = SequenceStyles.SequenceTable,
           headerCellMod = _.column.id match
-            case id if id == HeaderColumnId.value   => SequenceStyles.HiddenColTableHeader
-            case id if id == ExtraRowColumnId.value => SequenceStyles.HiddenColTableHeader
-            case _                                  => TagMod.empty,
+            case id if id == HeaderColumnId   => SequenceStyles.HiddenColTableHeader
+            case id if id == ExtraRowColumnId => SequenceStyles.HiddenColTableHeader
+            case _                            => TagMod.empty,
           rowMod = _.original.value.toOption
             .map(_.step)
             .map: s =>
@@ -206,19 +206,19 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
             cell.row.original.value match
               case Left(_)        => // Header
                 cell.column.id match
-                  case id if id == HeaderColumnId.value => TagMod(^.colSpan := cols.length)
-                  case _                                => ^.display.none
+                  case id if id == HeaderColumnId => TagMod(^.colSpan := cols.length)
+                  case _                          => ^.display.none
               case Right(stepRow) =>
                 cell.column.id match
-                  case id if id == ExtraRowColumnId.value                            =>
+                  case id if id == ExtraRowColumnId                           =>
                     stepRow.step match // Extra row is shown in a selected row or in an executed step row.
                       case SequenceRow.Executed.ExecutedStep(_, _) => extraRowMod
                       case _                                       => TagMod.empty
-                  case colId if colId === AtomStepsColumnId.value                    =>
+                  case colId if colId == AtomStepsColumnId                    =>
                     ExploreStyles.SequenceBracketCell
-                  case colId if colId === SequenceColumns.IndexAndTypeColumnId.value =>
+                  case colId if colId == SequenceColumns.IndexAndTypeColumnId =>
                     ExploreStyles.CellHideBorder // Hide border between bracket column and next one
-                  case _                                                             =>
+                  case _                                                      =>
                     TagMod.empty
         )
 

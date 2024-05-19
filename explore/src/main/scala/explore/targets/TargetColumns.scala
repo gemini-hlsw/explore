@@ -100,8 +100,11 @@ object TargetColumns:
     )
 
   object Builder:
-    trait Common[D](colDef: ColumnDef.Applied[D], getTarget: D => Option[Target]):
-      def baseColumn[V](id: ColumnId, accessor: Target => V): ColumnDef.Single[D, Option[V]] =
+    trait Common[D](colDef: ColumnDef.Applied.NoMeta[D], getTarget: D => Option[Target]):
+      def baseColumn[V](
+        id:       ColumnId,
+        accessor: Target => V
+      ): ColumnDef.Single.NoMeta[D, Option[V]] =
         colDef(id, getTarget.andThen(_.map(accessor)), BaseColNames(id))
 
       val NameColumn =
@@ -139,19 +142,19 @@ object TargetColumns:
         )
 
     trait CommonSidereal[D](
-      colDef:            ColumnDef.Applied[D],
+      colDef:            ColumnDef.Applied.NoMeta[D],
       getSiderealTarget: D => Option[Target.Sidereal]
     ):
       def siderealColumnOpt[V](
         id:       ColumnId,
         accessor: Target.Sidereal => Option[V]
-      ): ColumnDef.Single[D, Option[V]] =
+      ): ColumnDef.Single.NoMeta[D, Option[V]] =
         colDef(id, getSiderealTarget.andThen(_.flatMap(accessor)), SiderealColNames(id))
 
       def siderealColumn[V](
         id:       ColumnId,
         accessor: Target.Sidereal => V
-      ): ColumnDef.Single[D, Option[V]] =
+      ): ColumnDef.Single.NoMeta[D, Option[V]] =
         siderealColumnOpt(id, accessor.andThen(_.some))
 
       /** Display measure without the uncertainty */
@@ -221,7 +224,7 @@ object TargetColumns:
           )
 
     case class ForProgram[D](
-      colDef:    ColumnDef.Applied[D],
+      colDef:    ColumnDef.Applied.NoMeta[D],
       getTarget: D => Option[Target]
     ) extends Common(colDef, getTarget)
         with CommonSidereal(
@@ -271,7 +274,7 @@ object TargetColumns:
       lazy val AllColumns = BaseColumns ++ CatalogColumns ++ SiderealColumns ++ ProgramColumns
 
     case class ForSimbad[D](
-      colDef:    ColumnDef.Applied[D],
+      colDef:    ColumnDef.Applied.NoMeta[D],
       getTarget: D => Option[Target]
     ) extends Common(colDef, getTarget)
         with CommonSidereal(colDef, getTarget.andThen(_.flatMap(Target.sidereal.getOption))):

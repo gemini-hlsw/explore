@@ -52,12 +52,12 @@ object ProgramUserInvitations:
   private def column[V](
     id:       ColumnId,
     accessor: CoIInvitation => V
-  ): ColumnDef.Single[CoIInvitation, V] =
+  ): ColumnDef.Single.NoMeta[CoIInvitation, V] =
     ColDef(id, accessor, columnNames(id))
 
   private def columns(active: View[IsActive], invitations: View[List[CoIInvitation]])(
     ctx: AppContext[IO]
-  ): List[ColumnDef[CoIInvitation, ?]] =
+  ): List[ColumnDef.NoMeta[CoIInvitation, ?]] =
     import ctx.given
     List(
       column(KeyId, _.id),

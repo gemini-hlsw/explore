@@ -83,12 +83,12 @@ object TargetSelectionTable:
         compact = Compact.Very,
         tableMod = ExploreStyles.ExploreTable,
         headerCellMod = headerCell =>
-          columnClasses.get(ColumnId(headerCell.column.id)).orEmpty |+| ExploreStyles.StickyHeader,
+          columnClasses.get(headerCell.column.id).orEmpty |+| ExploreStyles.StickyHeader,
         rowMod = row =>
           TagMod(
             ExploreStyles.TableRowSelected.when_(props.selectedIndex.contains_(row.index.toInt)),
             ^.onClick --> props.onClick(row.original, row.index.toInt)
           ),
-        cellMod = cell => columnClasses.get(ColumnId(cell.column.id)).orEmpty
+        cellMod = cell => columnClasses.get(cell.column.id).orEmpty
       )
     )

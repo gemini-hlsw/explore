@@ -134,7 +134,7 @@ object ObsSummaryTable:
   private def column[V](
     id:       ColumnId,
     accessor: ObsRow => V
-  ): ColumnDef.Single[Expandable[ObsSummaryRow], js.UndefOr[V]] =
+  ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], js.UndefOr[V]] =
     ColDef(id, v => v.value.fold(_ => js.undefined, accessor), columnNames(id))
 
   // Column with expanded accessor. For rows that have data in the expanded target row.
@@ -142,7 +142,7 @@ object ObsSummaryTable:
     id:               ColumnId,
     accessor:         ObsRow => V,
     expandedAccessor: ExpandedTargetRow => V
-  ): ColumnDef.Single[Expandable[ObsSummaryRow], V] =
+  ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], V] =
     ColDef(id, v => v.value.fold(expandedAccessor, accessor), columnNames(id))
 
   private val component = ScalaFnComponent
@@ -182,9 +182,7 @@ object ObsSummaryTable:
                 ^.cursor.pointer,
                 TableStyles.ExpanderChevron,
                 TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
-                ^.onClick ==> (_.stopPropagationCB *> Callback(
-                  cell.row.getToggleExpandedHandler()()
-                ))
+                ^.onClick ==> (_.stopPropagationCB *> cell.row.getToggleExpandedHandler())
               )(TableIcons.ChevronRight.withFixedWidth(true))
             else "",
           enableResizing = false

@@ -113,7 +113,7 @@ private object SpectroscopyModesTable:
   private def column[V](
     id:       ColumnId,
     accessor: SpectroscopyModeRowWithResult => V
-  ): ColumnDef.Single[SpectroscopyModeRowWithResult, V] =
+  ): ColumnDef.Single.NoMeta[SpectroscopyModeRowWithResult, V] =
     ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
   private val InstrumentColumnId: ColumnId         = ColumnId("instrument")
