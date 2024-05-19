@@ -301,7 +301,7 @@ object SchedulingGroupObsList:
                     forceHighlight = isObsSelected(obs.id),
                     linkToObsTab = false,
                     onSelect = setObs,
-                    onDelete = delete.some,
+                    onDelete = delete,
                     onCtrlClick = id => handleCtrlClick(id, obsIds),
                     ctx = ctx
                   )(obs, idx)

@@ -378,7 +378,7 @@ object AsterismGroupObsList:
                             .withSingleObs(obsId)
                             .validateOrSetTarget(obs.scienceTargetIds)
                         ),
-                      onDelete = delete.some,
+                      onDelete = delete,
                       onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
                       ctx = ctx
                     )(obs, idx)

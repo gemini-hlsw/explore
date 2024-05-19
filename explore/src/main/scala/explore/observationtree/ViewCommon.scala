@@ -36,7 +36,7 @@ trait ViewCommon {
     layout:            ObsBadge.Layout,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false, // if true, overrides highlightSelected
-    onDelete:          Option[Callback] = none
+    onDelete:          Callback = Callback.empty
   ): TagMod =
     ObsBadge(
       obs,
@@ -51,7 +51,7 @@ trait ViewCommon {
     layout:            ObsBadge.Layout,
     selectable:        Boolean,
     onSelect:          Observation.Id => Callback,
-    onDelete:          Option[Callback] = none,
+    onDelete:          Callback,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false,
     linkToObsTab:      Boolean = false,
