@@ -159,7 +159,7 @@ object ElevationPlotSection:
                   options.get,
                   props.coords,
                   windowsNetExcludeIntervals
-                ).withKey(s"${options.get}-${props.coords}")
+                )
           },
           <.div(
             ExploreStyles.ElevationPlotControls,
