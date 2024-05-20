@@ -274,6 +274,11 @@ object ObsTabTiles:
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useStateView(ChartSelector.Closed)
+      .useEffectResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        p.observation.model.get.visualizationTime
+      ) { (_, _, _, _, _, _, _, _, _, _, _, _, _, _) => vizTime =>
+        IO(vizTime.getOrElse(Instant.now()))
+      }
       .render {
         (
           props,
@@ -289,7 +294,8 @@ object ObsTabTiles:
           selectedItcTarget,
           selectedAttachment,
           sequenceChanged,
-          chartSelector
+          chartSelector,
+          vizTimeOrNow
         ) =>
           import ctx.given
 
@@ -343,9 +349,9 @@ object ObsTabTiles:
             PosAngleConstraint.angle
               .getOption(posAngleConstraintView.get)
               .orElse(
-                (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
-                  .mapN((site, asterism, vizTime) =>
-                    parallacticAngle(site, asterism.baseTracking, vizTime)
+                (basicConfiguration.map(_.siteFor), asterismAsNel, vizTimeOrNow.toOption)
+                  .mapN((site, asterism, vizOrNow) =>
+                    parallacticAngle(site, asterism.baseTracking, vizOrNow)
                   )
               )
 
