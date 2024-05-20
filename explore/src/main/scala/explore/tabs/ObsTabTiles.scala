@@ -340,9 +340,13 @@ object ObsTabTiles:
             }
 
           val pa: Option[Angle] =
-            (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
-              .mapN((site, asterism, vizTime) =>
-                parallacticAngle(site, asterism.baseTracking, vizTime)
+            PosAngleConstraint.angle
+              .getOption(posAngleConstraintView.get)
+              .orElse(
+                (basicConfiguration.map(_.siteFor), asterismAsNel, vizTime)
+                  .mapN((site, asterism, vizTime) =>
+                    parallacticAngle(site, asterism.baseTracking, vizTime)
+                  )
               )
 
           val finderChartsTile =
