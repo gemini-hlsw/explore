@@ -53,6 +53,7 @@ object GroupTree:
     val rootGroups =
       groups
         .mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
+        .filter(_.left.forall(_.existence === Existence.Present))
         .sortBy(_.groupIndex)
 
     val nodes = rootGroups.map(_.fold(createObsNode, createGroupNode))
