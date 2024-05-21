@@ -20,6 +20,7 @@ import explore.model.IsActive
 import explore.model.display.given
 import explore.model.reusability.given
 import explore.syntax.ui.*
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.RoleType
@@ -194,22 +195,20 @@ object UserPreferencesContent:
       ) =>
         import ctx.given
 
-        val layoutsPopup = ctx.toastRef.get.flatMap(
-          _.show(
-            MessageItem(
-              content = <.div(
-                ExploreStyles.ExplorePromptToast,
-                <.span(
-                  "Layouts reset. You may need to reload page for it to take effect."
-                ),
-                Button(size = Button.Size.Small, onClick = Callback(window.location.reload()))(
-                  "Reload ..."
-                )
+        val layoutsPopup = ToastCtx[IO].showToast(
+          MessageItem(
+            content = <.div(
+              ExploreStyles.ExplorePromptToast,
+              <.span(
+                "Layouts reset. You may need to reload page for it to take effect."
               ),
-              clazz = ExploreStyles.ExploreToast,
-              sticky = false
-            )
-          ).to[IO]
+              Button(size = Button.Size.Small, onClick = Callback(window.location.reload()))(
+                "Reload ..."
+              )
+            ),
+            clazz = ExploreStyles.ExploreToast,
+            sticky = false
+          )
         )
 
         user.renderPot(
