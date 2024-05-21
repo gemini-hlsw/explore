@@ -1836,7 +1836,6 @@ input[type='file'].explore-fileupload {
   .p-tree-container > .p-treenode > .p-treenode-content {
     > .obs-tree-group-leaf {
       margin: 8px;
-      width: 100%;
       text-decoration: none;
     }
   }
@@ -1853,6 +1852,39 @@ input[type='file'].explore-fileupload {
     padding: 0;
     border: none;
     overflow-y: auto;
+  }
+
+  .obs-tree-group-leaf {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    color: var(--site-text-color);
+
+    .delete-button,
+    :has(.delete-button) {
+      margin-left: auto;
+
+      &.p-button {
+        // Reduce padding to make the button fit inside the row
+        padding-top: 1px;
+        padding-bottom: 1px;
+      }
+    }
+  }
+
+  .p-treenode-content.p-treenode-dragover {
+    background-color: var(--explore-group-dragging) !important;
+  }
+
+  .p-treenode-droppoint {
+    transition: height 0.2s;
+
+    &.p-treenode-droppoint-active {
+      background-color: var(--explore-group-dragging) !important;
+      height: 32px;
+    }
   }
 }
 

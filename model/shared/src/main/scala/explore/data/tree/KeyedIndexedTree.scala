@@ -32,6 +32,9 @@ case class KeyedIndexedTree[K: Eq, A] private (
       (node.map(_.elem), node.value.index)
     }
 
+  def contains(key: K): Boolean =
+    byKey.contains(key)
+
   def getKeyedNodeByIdx(index: Index[K]): Option[(K, Node[A])] =
     index.parentKey
       .fold(tree.children.some)(pkey => byKey.get(pkey).map(_.children))

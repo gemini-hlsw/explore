@@ -40,7 +40,7 @@ object ObsGroupTiles:
     .withHooks[Props]
     .render { props =>
 
-      val groupTreeKey = props.groupId.asRight
+      val groupTreeKey: GroupTree.Key = props.groupId.asRight
       // First zoom to the node, to get the number of child elements
       // We can safely .get here because we know the key is in the tree and that the value is a Grouping
       val node         = props.groups

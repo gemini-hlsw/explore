@@ -62,33 +62,38 @@ trait CacheModifierUpdaters {
   }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
-    groupEdit.value
-      .map { newGrouping =>
-        val groupId  = newGrouping.id
-        val editType = groupEdit.editType
+    (groupEdit.value, groupEdit.meta).tupled
+      .map: (newGrouping, meta) =>
+        val groupId   = newGrouping.id
+        val editType  = groupEdit.editType
+        val existence = meta.existence
 
-        // TODO: remove groups (data not available yet)
         val groupUpdate = ProgramSummaries.groups.modify:
-          editType match
-            case Created          =>
-              _.inserted(
-                newGrouping.id.asRight,
-                Node(newGrouping.toGroupTreeGroup.asRight),
-                newGrouping.toIndex
-              )
-            case EditType.Updated =>
-              _.updated(
-                newGrouping.id.asRight,
-                newGrouping.toGroupTreeGroup.asRight,
-                newGrouping.toIndex
-              )
+          if (existence === Existence.Deleted)
+            _.removed(groupId.asRight)
+          else
+            editType match
+              case Created          =>
+                _.inserted(
+                  newGrouping.id.asRight,
+                  Node(newGrouping.toGroupTreeGroup.asRight),
+                  newGrouping.toIndex
+                )
+              case EditType.Updated =>
+                _.updated(
+                  newGrouping.id.asRight,
+                  newGrouping.toGroupTreeGroup.asRight,
+                  newGrouping.toIndex
+                )
 
         val groupTimeRangePotsReset = ProgramSummaries.groupTimeRangePots
-          .modify(_.withUpdatePending(groupId))
+          .modify(
+            if existence === Existence.Present then _.withUpdatePending(groupId)
+            else _.removed(groupId)
+          )
           .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
         groupUpdate.andThen(groupTimeRangePotsReset)
-      }
       .getOrElse(identity)
 
   protected def modifyAttachments(
