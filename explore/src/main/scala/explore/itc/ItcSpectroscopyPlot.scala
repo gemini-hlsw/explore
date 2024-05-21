@@ -10,6 +10,7 @@ import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.LoadingState
 import explore.model.itc.*
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
@@ -18,12 +19,12 @@ import lucuma.itc.ItcCcd
 import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.math.roundToSignificantFigures
 import lucuma.react.common.ReactFnProps
-import lucuma.react.highcharts.ResizingChart
-import lucuma.react.resizeDetector.hooks.*
+import lucuma.react.highcharts.Chart
 import lucuma.refined.*
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.*
 import lucuma.typed.highcharts.mod.DashStyleValue
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
 import scala.scalajs.js
@@ -48,8 +49,7 @@ object ItcSpectroscopyPlot {
     targetName:      Option[String],
     loading:         LoadingState,
     signalToNoiseAt: Option[Wavelength],
-    maxSNWavelength: Option[Wavelength],
-    height:          Double
+    maxSNWavelength: Option[Wavelength]
   ) = {
     val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis.yAxis)
     val title            = chart.chartType match
@@ -92,10 +92,10 @@ object ItcSpectroscopyPlot {
       case ChartType.SignalChart      => js.Array()
       case ChartType.SignalPixelChart => js.Array()
       case ChartType.S2NChart         =>
-        val value = signalToNoiseAt.orElse(maxSNWavelength).map(_.toNanometers.value.value.toDouble)
-
-        value
-          .foldMap(value =>
+        signalToNoiseAt
+          .orElse(maxSNWavelength)
+          .map(_.toNanometers.value.value.toDouble)
+          .foldMap: value =>
             List(
               XAxisPlotLinesOptions()
                 .setDashStyle(DashStyleValue.LongDash)
@@ -105,13 +105,11 @@ object ItcSpectroscopyPlot {
                 .setZIndex(10)
                 .setLabel(XAxisPlotLinesLabelOptions().setText(f"$value%.1f nm"))
             )
-          )
           .toJSArray
 
     Options()
       .setChart(
         commonOptions
-          .setHeight(height)
           .clazz(
             ExploreStyles.ItcPlotChart |+|
               ExploreStyles.ItcPlotLoading.when_(loading.value)
@@ -145,24 +143,23 @@ object ItcSpectroscopyPlot {
       )
       .setSeries(
         chart.series
-          .map(series =>
+          .map: series =>
             SeriesLineOptions((), (), line)
               .setName(series.title)
               .setYAxis(0)
               .setData(
                 series.data
-                  .map(p => (p(0), p(1)): ResizingChart.Data)
+                  .map(p => (p(0), p(1)): Chart.Data)
                   .toJSArray
               )
               .setClassName(chartClassName)
               .setLineWidth(1)
-          )
           .map(_.asInstanceOf[SeriesOptionsType])
           .toJSArray
       )
   }
 
-  private def emptyChartOptions(height: Double) = {
+  private val EmptyChartOptions = Reusable.always {
     val yAxis = YAxisOptions()
       .setAllowDecimals(false)
       .setMin(0)
@@ -172,7 +169,6 @@ object ItcSpectroscopyPlot {
     Options()
       .setChart(
         ChartOptions()
-          .setHeight(height)
           .setStyledMode(true)
           .setAlignTicks(false)
           .clazz(
@@ -204,31 +200,34 @@ object ItcSpectroscopyPlot {
 
   private val component = ScalaFnComponent
     .withHooks[Props]
-    .useResizeDetector()
-    .render { (props, resize) =>
+    .useMemoBy(props =>
+      (props.charts, props.targetName, props.loading, props.signalToNoiseAt, props.ccds)
+    ): _ =>
+      (charts, targetName, loading, signalToNoiseAt, ccds) =>
+        val series: List[OptimizedChartResult] =
+          charts.filterNot(_ => loading.value).foldMap(_.toList)
+
+        val maxSNWavelength: Option[Wavelength] =
+          ccds
+            .foldMap(_.toList)
+            .map(c => (c.maxTotalSNRatio, c.wavelengthForMaxTotalSNRatio))
+            .maxByOption(_._1)
+            .map(_._2)
+
+        series
+          .map: chart =>
+            chart.chartType -> chartOptions(
+              chart,
+              targetName,
+              loading,
+              signalToNoiseAt,
+              maxSNWavelength
+            )
+          .toMap
+    .useMemoBy((props, itcChartOptions) => (props.chartType, itcChartOptions)): (_, _) =>
+      (chartType, itcChartOptions) => itcChartOptions.get(chartType)
+    .render: (props, _, options) =>
       val loading = props.loading.value
-
-      val series: List[OptimizedChartResult] =
-        props.charts.filterNot(_ => loading).foldMap(_.toList)
-
-      val height = resize.height.getOrElse(1).toDouble
-
-      val maxSNWavelength: Option[Wavelength] =
-        props.ccds
-          .foldMap(_.toList)
-          .map(c => (c.maxTotalSNRatio, c.wavelengthForMaxTotalSNRatio))
-          .maxByOption(_._1)
-          .map(_._2)
-
-      val itcChartOptions = series.map { chart =>
-        chart.chartType -> chartOptions(chart,
-                                        props.targetName,
-                                        props.loading,
-                                        props.signalToNoiseAt,
-                                        maxSNWavelength,
-                                        height
-        )
-      }.toMap
 
       def formatErrorMessage(c: Chart_): Callback =
         c.showLoadingCB.when_(loading) *>
@@ -236,27 +235,12 @@ object ItcSpectroscopyPlot {
             .map(e => c.showLoadingCB(e).unless_(loading))
             .orEmpty
 
-      <.div(
-        ExploreStyles.ItcPlotBody,
+      <.div(ExploreStyles.ItcPlotBody)(
         HelpIcon("target/main/itc-spectroscopy-plot.md".refined, ExploreStyles.HelpIconFloating),
-        itcChartOptions
-          .get(props.chartType)
-          .map { opt =>
-            ResizingChart(
-              opt,
-              onCreate = c =>
-                c.reflowCB *>
-                  formatErrorMessage(c),
-            )
-              .withKey(s"$props-$resize")
-              .when(resize.height.isDefined)
-          }
-          .getOrElse(
-            ResizingChart(emptyChartOptions(height), onCreate = formatErrorMessage)
-              .withKey(s"$props-$resize")
-              .when(resize.height.isDefined)
-          )
+        options.sequenceOption
+          .map: opt =>
+            Chart(opt, allowUpdate = false, onCreate = formatErrorMessage)
+          .getOrElse:
+            Chart(EmptyChartOptions, onCreate = formatErrorMessage)
       )
-        .withRef(resize.ref)
-    }
 }

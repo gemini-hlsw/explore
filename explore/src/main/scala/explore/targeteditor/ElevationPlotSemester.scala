@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
+import crystal.react.*
 import crystal.react.hooks.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
@@ -15,16 +16,16 @@ import explore.model.ElevationPlotOptions
 import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.react.common.ReactFnProps
-import lucuma.react.highcharts.ResizingChart
-import lucuma.react.resizeDetector.hooks.*
+import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import org.typelevel.cats.time.given
 
 import java.time.Duration
 import java.time.Instant
@@ -55,29 +56,26 @@ object ElevationPlotSemester:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useResizeDetector()
-      .useSerialState(none[Chart_])
-      .useEffectWithDepsBy((props, _, _, chartOpt) => chartOpt.value.isDefined)(
-        (props, ctx, _, chartOpt) =>
-          _ =>
-            chartOpt.value.value
-              .map { chart =>
-                import ctx.given
+      .useState(none[Chart_]) // chart handler (chartOpt)
+      .useResourceBy((props, _, chartOpt) =>
+        (props.options.semester, props.options.site, props.coords.value, chartOpt.value.isDefined)
+      ): (_, ctx, chartOpt) =>
+        (semester, site, coords, _) =>
+          chartOpt.value
+            .map { chart =>
+              import ctx.given
 
-                val series = chart.series(0)
-                val xAxis  = chart.xAxis(0)
+              val series = chart.series(0)
+              val xAxis  = chart.xAxis(0)
 
-                PlotClient[IO]
-                  .request(
-                    RequestSemesterSidereal(
-                      props.options.semester,
-                      props.options.site,
-                      props.coords.value,
-                      PlotDayRate
-                    )
-                  )
-                  .map(
-                    _.groupWithin(100, 1500.millis)
+              PlotClient[IO]
+                .request:
+                  RequestSemesterSidereal(semester, site, coords, PlotDayRate)
+                .map(updateStream =>
+                  fs2.Stream(chart.showLoading("Computing...")) ++
+                    fs2.Stream(xAxis.removePlotLine("progress")) ++ // Clear previous progress line
+                    updateStream
+                      .groupWithin(100, 1500.millis)
                       .evalMap { chunk =>
                         IO(xAxis.removePlotLine("progress")) >>
                           IO {
@@ -128,153 +126,141 @@ object ElevationPlotSemester:
                           )
                           .orEmpty
                       ) ++
-                      fs2.Stream(xAxis.removePlotLine("progress"))
-                  )
-              }
-              .getOrElse(Resource.pure(fs2.Stream()))
-              .use(_.compile.drain)
-      )
-      .useEffectWithDepsBy((props, _, _, chartOpt) => (props.options.date, chartOpt))(
-        (props, _, _, _) =>
-          (date, chartOpt) =>
-            CallbackTo(chartOpt.value.value) >>=
-              (_.map(chart =>
-                Callback {
-                  // 2pm of the selected day, same as for semester start and end
-                  val localDateTime: LocalDateTime =
-                    LocalDateTime.of(date, LocalTime.MIDNIGHT).plusHours(14)
-                  val zonedDateTime: ZonedDateTime =
-                    ZonedDateTime.of(localDateTime, props.options.site.timezone)
-
-                  // Axes maybe undefined or empty when remounting.
-                  if (!js.isUndefined(chart.axes) && chart.axes.length > 0) {
-                    val xAxis = chart.xAxis(0)
-                    xAxis.removePlotLine("date")
-                    xAxis.addPlotLine(
-                      AxisPlotLinesOptions
-                        .XAxisPlotLinesOptions()
-                        .setId("date")
-                        .setValue(zonedDateTime.toInstant.toEpochMilli.toDouble)
-                        .setZIndex(1000)
-                        .setClassName("plot-plot-line-date")
-                    )
-                    ()
-                  }
-                }
-              ).orEmpty)
-      )
-      .render { (props, _, resize, chartOpt) =>
-        def timeFormat(value: Double): String =
-          ZonedDateTime
-            .ofInstant(Instant.ofEpochMilli(value.toLong), props.options.site.timezone)
-            .format(Constants.GppDateFormatter)
-
-        val tickFormatter: AxisLabelsFormatterCallbackFunction =
-          (
-            labelValue: AxisLabelsFormatterContextObject, // [Double],
-            _:          AxisLabelsFormatterContextObject  // [String]
-          ) =>
-            (labelValue.value: Any) match {
-              case ms: Double => timeFormat(ms)
-              case s          => s.toString
+                    fs2.Stream(xAxis.removePlotLine("progress")) ++
+                    fs2.Stream(chart.hideLoading())
+                )
             }
+            .getOrElse(Resource.pure(fs2.Stream()))
+            .flatMap: s =>
+              Resource.make(s.compile.drain.start)(_.cancel)
+      .useEffectWithDepsBy((props, _, chartOpt, _) =>
+        (props.options.date, props.options.site, chartOpt.value.isDefined)
+      ): (_, _, chartOpt, _) =>
+        (date, site, _) =>
+          chartOpt.value
+            .map(chart =>
+              Callback {
+                // 2pm of the selected day, same as for semester start and end
+                val localDateTime: LocalDateTime =
+                  LocalDateTime.of(date, LocalTime.MIDNIGHT).plusHours(14)
+                val zonedDateTime: ZonedDateTime =
+                  ZonedDateTime.of(localDateTime, site.timezone)
 
-        def dateFormat(value: Double): String =
-          ZonedDateTime
-            .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
-            .format(Constants.GppDateFormatter)
-
-        val tooltipFormatter: TooltipFormatterCallbackFunction = {
-          (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-            val x          = ctx.x match
-              case x: Double => x
-              case x: String => x.toDouble
-              case _         => 0.0
-            val y          = ctx.y.asInstanceOf[js.UndefOr[String | Double]] match
-              case y: Double => y
-              case y: String => y.toDouble
-              case _         => 0.0
-            val date       = dateFormat(x)
-            val visibility = Duration.ofMillis((y * MillisPerHour).toLong)
-            val minutes    = visibility.getSeconds / 60
-            s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
-        }
-
-        val semester = props.options.semester
-        val site     = props.options.site
-
-        val options = Options()
-          .setChart(
-            commonOptions
-              .setHeight(resize.height.getOrElse(1).toDouble)
-              .setAnimation(false)
-          )
-          .setTitle(
-            TitleOptions().setText(
-              s"Semester ${semester.format}"
-            )
-          )
-          .setCredits(CreditsOptions().setEnabled(false))
-          .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
-          .setXAxis(
-            XAxisOptions()
-              .setType(AxisTypeValue.datetime)
-              .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
-              .setTickInterval(MillisPerDay * 10)
-              .setMinorTickInterval(MillisPerDay * 5)
-              .setMin(semester.start.atSite(site).toInstant.toEpochMilli.toDouble)
-              .setMax(semester.end.atSite(site).toInstant.toEpochMilli.toDouble)
-              .setPlotBands(
-                props.excludeIntervals
-                  .map(window =>
-                    XAxisPlotBandsOptions()
-                      .setFrom(window.lower.toEpochMilli.toDouble)
-                      .setTo(window.upper.toEpochMilli.toDouble)
-                      .setClassName("plot-band-exclude-window")
+                // Axes maybe undefined or empty when remounting.
+                if (!js.isUndefined(chart.axes) && chart.axes.length > 0) {
+                  val xAxis = chart.xAxis(0)
+                  xAxis.removePlotLine("date")
+                  xAxis.addPlotLine(
+                    AxisPlotLinesOptions
+                      .XAxisPlotLinesOptions()
+                      .setId("date")
+                      .setValue(zonedDateTime.toInstant.toEpochMilli.toDouble)
+                      .setZIndex(1000)
+                      .setClassName("plot-plot-line-date")
                   )
-                  .toJSArray
-              )
-          )
-          .setYAxis(
-            List(
-              YAxisOptions()
-                .setTitle(YAxisTitleOptions().setText("Hours"))
-                .setAllowDecimals(false)
-                .setMin(0)
-                .setMax(15)
-                .setTickInterval(1)
-                .setMinorTickInterval(0.5)
-                .setLabels(YAxisLabelsOptions().setFormat("{value}"))
-            ).toJSArray
-          )
-          .setPlotOptions(
-            PlotOptions()
-              .setSeries(
-                PlotSeriesOptions()
-                  .setLineWidth(4)
-                  .setMarker(PointMarkerOptionsObject().setEnabled(false).setRadius(0))
-                  .setStates(
-                    SeriesStatesOptionsObject()
-                      .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
-                  )
-              )
-          )
-          .setSeries(
-            List(
-              SeriesLineOptions((), (), line)
-                .setName("Visibility")
-                .setYAxis(0)
-                .setAnimation(false)
+                  ()
+                }
+              }
             )
-              .map(_.asInstanceOf[SeriesOptionsType])
-              .toJSArray
-          )
+            .orEmpty
+      .useMemoBy((props, _, _, _) =>
+        (props.options.semester, props.options.site, props.excludeIntervals)
+      ): (_, _, _, _) =>
+        (semester, site, excludeIntervals) =>
+          def timeFormat(value: Double): String =
+            ZonedDateTime
+              .ofInstant(Instant.ofEpochMilli(value.toLong), site.timezone)
+              .format(Constants.GppDateFormatter)
 
-        <.div(
-          ResizingChart(options, c => chartOpt.setState(c.some))
-            .withKey(
-              s"$site-${props.coords}-$semester-${resize}-${props.excludeIntervals}"
+          val tickFormatter: AxisLabelsFormatterCallbackFunction =
+            (
+              labelValue: AxisLabelsFormatterContextObject, // [Double],
+              _:          AxisLabelsFormatterContextObject  // [String]
+            ) =>
+              (labelValue.value: Any) match {
+                case ms: Double => timeFormat(ms)
+                case s          => s.toString
+              }
+
+          def dateFormat(value: Double): String =
+            ZonedDateTime
+              .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
+              .format(Constants.GppDateFormatter)
+
+          val tooltipFormatter: TooltipFormatterCallbackFunction = {
+            (ctx: TooltipFormatterContextObject, _: Tooltip) =>
+              val x          = ctx.x match
+                case x: Double => x
+                case x: String => x.toDouble
+                case _         => 0.0
+              val y          = ctx.y.asInstanceOf[js.UndefOr[String | Double]] match
+                case y: Double => y
+                case y: String => y.toDouble
+                case _         => 0.0
+              val date       = dateFormat(x)
+              val visibility = Duration.ofMillis((y * MillisPerHour).toLong)
+              val minutes    = visibility.getSeconds / 60
+              s"<strong>$date</strong><br/>${ctx.series.name}: ${minutes / 60}h${minutes % 60}m"
+          }
+
+          Options()
+            .setChart(commonOptions.setAnimation(false))
+            .setTitle(TitleOptions().setText(s"Semester ${semester.format}"))
+            .setCredits(CreditsOptions().setEnabled(false))
+            .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
+            .setXAxis(
+              XAxisOptions()
+                .setType(AxisTypeValue.datetime)
+                .setLabels(XAxisLabelsOptions().setFormatter(tickFormatter))
+                .setTickInterval(MillisPerDay * 10)
+                .setMinorTickInterval(MillisPerDay * 5)
+                .setMin(semester.start.atSite(site).toInstant.toEpochMilli.toDouble)
+                .setMax(semester.end.atSite(site).toInstant.toEpochMilli.toDouble)
+                .setPlotBands(
+                  excludeIntervals
+                    .map(window =>
+                      XAxisPlotBandsOptions()
+                        .setFrom(window.lower.toEpochMilli.toDouble)
+                        .setTo(window.upper.toEpochMilli.toDouble)
+                        .setClassName("plot-band-exclude-window")
+                    )
+                    .toJSArray
+                )
             )
-            .when(resize.height.isDefined)
-        ).withRef(resize.ref)
-      }
+            .setYAxis(
+              List(
+                YAxisOptions()
+                  .setTitle(YAxisTitleOptions().setText("Hours"))
+                  .setAllowDecimals(false)
+                  .setMin(0)
+                  .setMax(15)
+                  .setTickInterval(1)
+                  .setMinorTickInterval(0.5)
+                  .setLabels(YAxisLabelsOptions().setFormat("{value}"))
+              ).toJSArray
+            )
+            .setPlotOptions(
+              PlotOptions()
+                .setSeries(
+                  PlotSeriesOptions()
+                    .setLineWidth(4)
+                    .setMarker(PointMarkerOptionsObject().setEnabled(false).setRadius(0))
+                    .setStates(
+                      SeriesStatesOptionsObject()
+                        .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
+                    )
+                )
+            )
+            .setSeries(
+              List(
+                SeriesLineOptions((), (), line)
+                  .setName("Visibility")
+                  .setYAxis(0)
+                  .setAnimation(false)
+                  .setData(js.Array())
+              )
+                .map(_.asInstanceOf[SeriesOptionsType])
+                .toJSArray
+            )
+      .render: (props, _, chartOpt, _, options) =>
+        Chart(options, onCreate = c => chartOpt.setState(c.some))
