@@ -248,8 +248,7 @@ object ObsList:
                         o => setObs(props.programId, o.some, ctx)
                       )
                         .mod(props.observations)(obsListMod.delete)
-                        .showToastCB(s"Deleted obs ${id.show}")
-                        .some,
+                        .showToastCB(s"Deleted obs ${id.show}"),
                       cloneCB = cloneObs(
                         props.programId,
                         id,

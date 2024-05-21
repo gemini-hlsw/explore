@@ -10,6 +10,7 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.common.TimingWindowsQueries
+import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.data.KeyedIndexedList
@@ -44,6 +45,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 
 import scala.collection.immutable.SortedSet
+import scala.scalajs.LinkingInfo
 
 case class SchedulingTabContents(
   userId:           Option[User.Id],
@@ -146,5 +148,10 @@ object SchedulingTabContents extends TwoPanels:
             props.readonly
           )
 
-        makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
+        React.Fragment(
+          if (LinkingInfo.developmentMode)
+            FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
+          else EmptyVdom,
+          makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
+        )
       }

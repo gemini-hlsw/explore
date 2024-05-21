@@ -6,6 +6,7 @@ package explore.model
 import cats.Order
 import cats.Order.*
 import cats.Semigroup
+import cats.Show
 import cats.data.NonEmptySet
 import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
@@ -17,11 +18,15 @@ import scala.collection.immutable.SortedSet
 
 case class ObsIdSet(idSet: NonEmptySet[Observation.Id]):
   def ++(other: ObsIdSet): ObsIdSet = ObsIdSet(idSet ++ other.idSet)
-  def --(other: ObsIdSet): Option[ObsIdSet] =
+  def --(other: ObsIdSet): Option[ObsIdSet]      =
     NonEmptySet.fromSet(idSet -- (other.idSet)).map(ObsIdSet(_))
+  def -(other: Observation.Id): Option[ObsIdSet] =
+    NonEmptySet.fromSet(idSet - other).map(ObsIdSet(_))
 
 object ObsIdSet {
   given Order[ObsIdSet] = Order.by(_.idSet)
+
+  given Show[ObsIdSet] = Show.show(_.idSet.toList.mkString(", "))
 
   given Semigroup[ObsIdSet] = Semigroup.instance((a, b) => ObsIdSet(a.idSet |+| b.idSet))
 
