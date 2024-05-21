@@ -16,7 +16,7 @@
     "highcharts": "11.4.0",
     "loglevel": "1.9.1",
     "primeicons": "^7.0.0",
-    "primereact": "~10.6.5",
+    "primereact": "~10.5.1",
     "prop-types": "15.8.1",
     "react": "18.2.0",
     "react-beautiful-dnd": "13.1.1",
