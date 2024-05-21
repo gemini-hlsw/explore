@@ -25,7 +25,7 @@ import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
 import lucuma.schemas.model.ExecutionVisits
-import lucuma.schemas.odb.SequenceSQL.*
+import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
