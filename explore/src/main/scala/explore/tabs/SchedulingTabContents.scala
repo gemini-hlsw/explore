@@ -45,6 +45,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 
 import scala.collection.immutable.SortedSet
+import scala.scalajs.LinkingInfo
 
 case class SchedulingTabContents(
   userId:           Option[User.Id],
@@ -148,7 +149,9 @@ object SchedulingTabContents extends TwoPanels:
           )
 
         React.Fragment(
-          FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet)),
+          if (LinkingInfo.developmentMode)
+            FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
+          else EmptyVdom,
           makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
         )
       }

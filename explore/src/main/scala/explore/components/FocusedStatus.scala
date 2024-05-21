@@ -13,8 +13,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 
-import scala.scalajs.LinkingInfo
-
 case class FocusedStatus(tab: AppTab, programId: Program.Id, focused: Focused)
     extends ReactFnProps(FocusedStatus.component)
 
@@ -29,12 +27,10 @@ object FocusedStatus:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .render: (props, ctx) =>
-        if (LinkingInfo.developmentMode)
+        <.div(
+          ExploreStyles.FocusedInfo,
           <.div(
-            ExploreStyles.FocusedInfo,
-            <.div(
-              s"Target: ${props.focused.target.foldMap(_.show)}, obs: ${props.focused.obsSet.foldMap(_.show)}"
-            ),
-            <.div(ctx.pageUrl(props.tab, props.programId, props.focused))
-          )
-        else EmptyVdom
+            s"Target: ${props.focused.target.foldMap(_.show)}, obs: ${props.focused.obsSet.foldMap(_.show)}"
+          ),
+          <.div(ctx.pageUrl(props.tab, props.programId, props.focused))
+        )

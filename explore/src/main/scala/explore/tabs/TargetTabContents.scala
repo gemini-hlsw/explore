@@ -57,6 +57,7 @@ import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import scala.scalajs.LinkingInfo
 
 case class TargetTabContents(
   userId:           Option[User.Id],
@@ -411,7 +412,8 @@ object TargetTabContents extends TwoPanels:
     }
 
     React.Fragment(
-      FocusedStatus(AppTab.Targets, props.programId, props.focused),
+      if (LinkingInfo.developmentMode) FocusedStatus(AppTab.Targets, props.programId, props.focused)
+      else EmptyVdom,
       makeOneOrTwoPanels(
         selectedView,
         targetTree(props.programSummaries),

@@ -51,6 +51,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 
 import scala.collection.immutable.SortedSet
+import scala.scalajs.LinkingInfo
 
 case class ConstraintsTabContents(
   userId:           Option[User.Id],
@@ -191,7 +192,9 @@ object ConstraintsTabContents extends TwoPanels:
           )
 
         React.Fragment(
-          FocusedStatus(AppTab.Constraints, props.programId, Focused(props.focusedObsSet)),
+          if (LinkingInfo.developmentMode)
+            FocusedStatus(AppTab.Constraints, props.programId, Focused(props.focusedObsSet))
+          else EmptyVdom,
           makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
         )
       }
