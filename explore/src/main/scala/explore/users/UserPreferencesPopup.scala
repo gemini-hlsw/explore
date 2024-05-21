@@ -20,7 +20,7 @@ import explore.model.IsActive
 import explore.model.display.given
 import explore.model.reusability.given
 import explore.syntax.ui.*
-import explore.utils.*
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.RoleType
@@ -42,6 +42,7 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import lucuma.ui.table.*
+import org.scalajs.dom.window
 import org.typelevel.log4cats.Logger
 import queries.common.SSOQueriesGQL.*
 import queries.schemas.SSO
@@ -194,6 +195,22 @@ object UserPreferencesContent:
       ) =>
         import ctx.given
 
+        val layoutsPopup = ToastCtx[IO].showToast(
+          MessageItem(
+            content = <.div(
+              ExploreStyles.ExplorePromptToast,
+              <.span(
+                "Layouts reset. You may need to reload page for it to take effect."
+              ),
+              Button(size = Button.Size.Small, onClick = Callback(window.location.reload()))(
+                "Reload ..."
+              )
+            ),
+            clazz = ExploreStyles.ExploreToast,
+            sticky = false
+          )
+        )
+
         user.renderPot(
           ssoUser => {
             val id   = ssoUser.user.id
@@ -226,11 +243,11 @@ object UserPreferencesContent:
                 loading = isDeletingLayouts.get.value,
                 icon = Icons.Trash,
                 tooltip = "Revert to the default tile layouts for the various tabs",
-                onClick = GridLayouts
+                onClick = (GridLayouts
                   .deleteLayoutsPreference(props.vault.user.id)
-                  .switching(isDeletingLayouts.async, IsDeletingLayouts(_))
-                  .withToast("Layouts reset. You may need to reload page for it to take effect.")
-                  .runAsyncAndForget
+                  .switching(isDeletingLayouts.async,
+                             IsDeletingLayouts(_)
+                  ) *> layoutsPopup).runAsyncAndForget
               ).small.compact
 
             val unsupportedRoles = Enumerated[RoleType].all.filterNot { rt =>

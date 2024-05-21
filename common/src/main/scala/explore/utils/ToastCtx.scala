@@ -9,6 +9,7 @@ import cats.effect.Sync
 import cats.syntax.all.given
 import crystal.react.*
 import lucuma.react.primereact.Message
+import lucuma.react.primereact.MessageItem
 import lucuma.react.primereact.ToastRef
 
 class ToastCtx[F[_]: Sync](toastRef: Deferred[F, ToastRef]):
@@ -19,6 +20,11 @@ class ToastCtx[F[_]: Sync](toastRef: Deferred[F, ToastRef]):
   ): F[Unit] =
     toastRef.tryGet.flatMap(
       _.map(_.show(text, severity, sticky).to[F]).getOrElse(Applicative[F].unit)
+    )
+
+  def showToast(messages: MessageItem*): F[Unit] =
+    toastRef.tryGet.flatMap(
+      _.map(_.show(messages*).to[F]).getOrElse(Applicative[F].unit)
     )
 
   def clear(): F[Unit] =
