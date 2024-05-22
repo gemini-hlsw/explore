@@ -2551,3 +2551,13 @@ a.explore-upgrade-link {
     }
   }
 }
+
+.explore-focused-info {
+  display: none; // enable for debugging
+  position: fixed;
+  bottom: 40px;
+  left: 120px;
+  font-size: smaller;
+  color: yellow;
+  z-index: 100;
+}

@@ -10,6 +10,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
+import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -56,6 +57,7 @@ import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import scala.scalajs.LinkingInfo
 
 case class TargetTabContents(
   userId:           Option[User.Id],
@@ -409,12 +411,16 @@ object TargetTabContents extends TwoPanels:
       // so that it clears its internal state.
     }
 
-    makeOneOrTwoPanels(
-      selectedView,
-      targetTree(props.programSummaries),
-      rightSide,
-      RightSideCardinality.Multi,
-      resize
+    React.Fragment(
+      if (LinkingInfo.developmentMode) FocusedStatus(AppTab.Targets, props.programId, props.focused)
+      else EmptyVdom,
+      makeOneOrTwoPanels(
+        selectedView,
+        targetTree(props.programSummaries),
+        rightSide,
+        RightSideCardinality.Multi,
+        resize
+      )
     )
   }
 

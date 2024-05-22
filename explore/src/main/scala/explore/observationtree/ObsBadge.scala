@@ -41,7 +41,7 @@ case class ObsBadge(
   setStatusCB:       Option[ObsStatus => Callback] = none,
   setActiveStatusCB: Option[ObsActiveStatus => Callback] = none,
   setSubtitleCB:     Option[Option[NonEmptyString] => Callback] = none,
-  deleteCB:          Option[Callback] = none,
+  deleteCB:          Callback,
   cloneCB:           Option[Callback] = none,
   readonly:          Boolean = false
 ) extends ReactFnProps(ObsBadge.component)
@@ -83,7 +83,7 @@ object ObsBadge:
           clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
           icon = Icons.Trash,
           tooltip = "Delete",
-          onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB.getOrEmpty
+          onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
         ).small.unless(props.readonly)
 
       val duplicateButton =
@@ -105,7 +105,7 @@ object ObsBadge:
               ExploreStyles.ObsBadgeId,
               s"[${idIso.get(obs.id).value.toHexString}]",
               props.cloneCB.whenDefined(_ => duplicateButton),
-              props.deleteCB.whenDefined(_ => deleteButton)
+              deleteButton
             )
           )
         )

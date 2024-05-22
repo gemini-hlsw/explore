@@ -11,6 +11,7 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.common.TimingWindowsQueries
+import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
@@ -50,6 +51,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 
 import scala.collection.immutable.SortedSet
+import scala.scalajs.LinkingInfo
 
 case class ConstraintsTabContents(
   userId:           Option[User.Id],
@@ -189,5 +191,10 @@ object ConstraintsTabContents extends TwoPanels:
             props.readonly
           )
 
-        makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
+        React.Fragment(
+          if (LinkingInfo.developmentMode)
+            FocusedStatus(AppTab.Constraints, props.programId, Focused(props.focusedObsSet))
+          else EmptyVdom,
+          makeOneOrTwoPanels(state, constraintsTree, rightSide, RightSideCardinality.Multi, resize)
+        )
       }
