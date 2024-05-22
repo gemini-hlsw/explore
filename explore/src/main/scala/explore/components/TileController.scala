@@ -66,7 +66,7 @@ object TileController:
       .headOption
 
     val h = k.map(layoutItemHeight.get)
-    if (h.exists(_ === 1)) TileSizeState.Minimized else TileSizeState.Normal
+    if (h.exists(_ === 1)) TileSizeState.Minimized else TileSizeState.Maximized
   }
 
   private val allTiles: Traversal[LayoutsMap, LayoutItem] =
@@ -77,19 +77,14 @@ object TileController:
       .filter(_.i === id.value)
       .andThen(layoutItemHeight)
 
-  private def tileResizable(id: Tile.TileId): Traversal[LayoutsMap, Boolean | Unit] =
-    allTiles
-      .filter(_.i === id.value)
-      .andThen(layoutItemResizable)
-
   private def updateResizableState(tiles: List[Tile], p: LayoutsMap): LayoutsMap =
     allLayouts
       .andThen(layoutItems)
       .modify {
         case r if tiles.exists(t => t.id.value === r.i && t.hidden) =>
           // height to 0 for hidden tiles
-          r.copy(isResizable = false, minH = 0, h = 0)
-        case r if r.h === 1                                         => r.copy(isResizable = false, minH = 1)
+          r.copy(minH = 0, h = 0)
+        case r if r.h === 1                                         => r.copy(minH = 1)
         case r                                                      => r
       }(p)
 
@@ -103,39 +98,29 @@ object TileController:
       }
       // Make a local copy of the layout fixing the state of minimized layouts
       .useStateViewBy((p, _, _) => updateResizableState(p.tiles, p.layoutMap))
-      // resizing
-      .useState(TileResizing(false))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap))(
-        (p, _, _, currentLayout, resizing) =>
-          (_, layout) =>
-            resizing.setState(TileResizing(false)) *>
-              currentLayout.set(updateResizableState(p.tiles, layout))
+      .useEffectWithDepsBy((p, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap))(
+        (p, _, _, currentLayout) =>
+          (_, layout) => currentLayout.set(updateResizableState(p.tiles, layout))
       )
-      .render { (p, ctx, breakpoint, currentLayout, resizing) =>
+      .render { (p, ctx, breakpoint, currentLayout) =>
         import ctx.given
 
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
-          resizing.setState(TileResizing(true)) *>
-            currentLayout
-              .zoom(allTiles)
-              .mod {
-                case l if l.i === id.value =>
-                  if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1, isResizable = false)
-                  else if (st === TileSizeState.Normal) {
-                    val defaultHeight =
-                      unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
-                    // restore the resizable state
-                    val resizable     =
-                      tileResizable(id).headOption(p.defaultLayout).getOrElse(true: Boolean | Unit)
-                    // TODO: Restore to the previous size
-                    l.copy(h = defaultHeight,
-                           isResizable = resizable,
-                           minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
-                    )
-                  } else l
-                case l                     => l
-              } *> resizing.setState(TileResizing(false)).when(p.storeLayout === false).void
+          currentLayout
+            .zoom(allTiles)
+            .mod {
+              case l if l.i === id.value =>
+                if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1)
+                else if (st === TileSizeState.Maximized) {
+                  val defaultHeight =
+                    unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
+                  l.copy(h = defaultHeight,
+                         minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
+                  )
+                } else l
+              case l                     => l
+            }
 
         def addBackButton: List[Tile] = {
           val topTile =
@@ -204,10 +189,7 @@ object TileController:
                 }
                 .getOrElse(EmptyVdom),
               t.controllerClass,
-              t.withState(unsafeSizeToState(currentLayout.get, t.id),
-                          resizing.value,
-                          sizeState(t.id)
-              )
+              t.withState(unsafeSizeToState(currentLayout.get, t.id), sizeState(t.id))
             )
           }.toVdomArray
         )
