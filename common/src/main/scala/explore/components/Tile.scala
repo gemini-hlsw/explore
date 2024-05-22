@@ -12,15 +12,11 @@ import explore.model.enums.TileSizeState
 import explore.model.layout
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.*
 import lucuma.react.primereact.Button
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
-
-object TileResizing extends NewType[Boolean]
-type TileResizing = TileResizing.Type
 
 case class Tile(
   id:                 Tile.TileId,
@@ -30,8 +26,7 @@ case class Tile(
   canMinimize:        Boolean = false,
   canMaximize:        Boolean = false,
   hidden:             Boolean = false,
-  isResizing:         TileResizing = TileResizing(false),
-  state:              TileSizeState = TileSizeState.Normal,
+  state:              TileSizeState = TileSizeState.Maximized,
   sizeStateCallback:  TileSizeState => Callback = _ => Callback.empty,
   controllerClass:    Css = Css.Empty, // applied to wrapping div when in a TileController.
   bodyClass:          Css = Css.Empty, // applied to tile body
@@ -41,17 +36,16 @@ case class Tile(
 )(val render: Tile.RenderInTitle => VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
-    state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Normal)
+    state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Minimized)
 
   def showMinimize: Boolean =
-    state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Normal)
+    state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Maximized)
 
   def withState(
     state:             TileSizeState,
-    isResizing:        TileResizing,
     sizeStateCallback: TileSizeState => Callback
   ): Tile =
-    copy(state = state, isResizing = isResizing, sizeStateCallback = sizeStateCallback)(render)
+    copy(state = state, sizeStateCallback = sizeStateCallback)(render)
 }
 
 object Tile:
@@ -81,12 +75,9 @@ object Tile:
             text = true,
             clazz = ExploreStyles.TileStateButton,
             icon = Icons.Maximize,
-            disabled = p.isResizing.value,
             onClick = p
-              .sizeStateCallback(TileSizeState.Normal)
-              .when_(p.state === TileSizeState.Minimized) *>
-              p.sizeStateCallback(TileSizeState.Maximized)
-                .when_(p.state === TileSizeState.Normal || p.state === TileSizeState.Minimized)
+              .sizeStateCallback(TileSizeState.Maximized)
+              .when_(p.state === TileSizeState.Minimized)
           )
 
         val minimizeButton =
@@ -94,12 +85,9 @@ object Tile:
             text = true,
             clazz = ExploreStyles.TileStateButton,
             icon = Icons.Minimize,
-            disabled = p.isResizing.value,
             onClick = p
-              .sizeStateCallback(TileSizeState.Normal)
-              .when_(p.state === TileSizeState.Maximized) *> p
               .sizeStateCallback(TileSizeState.Minimized)
-              .when_(p.state === TileSizeState.Normal)
+              .when_(p.state === TileSizeState.Maximized)
           )
 
         def setInfoRef(node: dom.Node | Null): Unit =
