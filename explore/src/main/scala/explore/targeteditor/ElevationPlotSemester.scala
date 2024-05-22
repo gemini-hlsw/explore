@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import cats.effect.Resource
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -57,85 +56,81 @@ object ElevationPlotSemester:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useState(none[Chart_]) // chart handler (chartOpt)
-      .useResourceBy((props, _, chartOpt) =>
-        (props.options.semester, props.options.site, props.coords.value, chartOpt.value.isDefined)
-      ): (_, ctx, chartOpt) =>
-        (semester, site, coords, _) =>
-          chartOpt.value
-            .map { chart =>
-              import ctx.given
+      .useEffectStreamResourceWithDepsBy((props, _, chartOpt) =>
+        chartOpt.value.map: chart =>
+          (props.options.semester, props.options.site, props.coords.value, Reusable.always(chart))
+      ): (_, ctx, _) =>
+        _.map { (semester, site, coords, chart) =>
+          import ctx.given
 
-              val series = chart.series(0)
-              val xAxis  = chart.xAxis(0)
+          val series = chart.series(0)
+          val xAxis  = chart.xAxis(0)
 
-              PlotClient[IO]
-                .request:
-                  RequestSemesterSidereal(semester, site, coords, PlotDayRate)
-                .map(updateStream =>
-                  fs2.Stream(chart.showLoading("Computing...")) ++
-                    fs2.Stream(xAxis.removePlotLine("progress")) ++ // Clear previous progress line
-                    updateStream
-                      .groupWithin(100, 1500.millis)
-                      .evalMap { chunk =>
-                        IO(xAxis.removePlotLine("progress")) >>
-                          IO {
-                            chunk.toList
-                              .map { case SemesterPoint(instant, visibility) =>
-                                val instantD: Double    = instant.toDouble
-                                val visibilityD: Double = visibility / MillisPerHour
+          PlotClient[IO]
+            .request:
+              RequestSemesterSidereal(semester, site, coords, PlotDayRate)
+            .map(updateStream =>
+              fs2.Stream(chart.showLoading("Computing...")) ++
+                fs2.Stream(xAxis.removePlotLine("progress")) ++ // Clear previous progress line
+                updateStream
+                  .groupWithin(100, 1500.millis)
+                  .evalMap { chunk =>
+                    IO(xAxis.removePlotLine("progress")) >>
+                      IO {
+                        chunk.toList
+                          .map { case SemesterPoint(instant, visibility) =>
+                            val instantD: Double    = instant.toDouble
+                            val visibilityD: Double = visibility / MillisPerHour
 
-                                series.addPoint(
-                                  PointOptionsObject().setAccessibilityUndefined
-                                    .setX(instantD)
-                                    // Trick to leave small values out of the plot
-                                    .setY(if (visibilityD > MinVisibility) visibilityD else -1),
-                                  redraw = true,
-                                  shift = false,
-                                  animation = false
-                                )
+                            series.addPoint(
+                              PointOptionsObject().setAccessibilityUndefined
+                                .setX(instantD)
+                                // Trick to leave small values out of the plot
+                                .setY(if (visibilityD > MinVisibility) visibilityD else -1),
+                              redraw = true,
+                              shift = false,
+                              animation = false
+                            )
 
-                                (instantD, visibilityD)
-                              }
-                              .foldLeft((0.0, 0.0)) {
-                                case ((maxInstantD, maxVisibilityD), (instantD, visibilityD)) =>
-                                  (instantD.max(maxInstantD), visibilityD.max(maxVisibilityD))
-                              }
+                            (instantD, visibilityD)
                           }
-                            .flatTap { case (maxInstant, _) =>
-                              IO(
-                                xAxis.addPlotLine(
-                                  AxisPlotLinesOptions
-                                    .XAxisPlotLinesOptions()
-                                    .setId("progress")
-                                    .setValue(maxInstant)
-                                    .setZIndex(1000)
-                                    .setClassName("plot-plot-line-progress")
-                                )
-                              ).void
-                            }
-                            .map { case (_, maxVisibility) => maxVisibility }
+                          .foldLeft((0.0, 0.0)) {
+                            case ((maxInstantD, maxVisibilityD), (instantD, visibilityD)) =>
+                              (instantD.max(maxInstantD), visibilityD.max(maxVisibilityD))
+                          }
                       }
-                      .scan1(math.max)
-                      .last
-                      .evalMap(
-                        _.filterNot(_ > MinVisibility)
-                          .map(_ =>
-                            IO(
-                              xAxis.setTitle(XAxisTitleOptions().setText("Target is below horizon"))
-                            ).void
-                          )
-                          .orEmpty
-                      ) ++
-                    fs2.Stream(xAxis.removePlotLine("progress")) ++
-                    fs2.Stream(chart.hideLoading())
-                )
-            }
-            .getOrElse(Resource.pure(fs2.Stream()))
-            .flatMap: s =>
-              Resource.make(s.compile.drain.start)(_.cancel)
-      .useEffectWithDepsBy((props, _, chartOpt, _) =>
+                        .flatTap { case (maxInstant, _) =>
+                          IO(
+                            xAxis.addPlotLine(
+                              AxisPlotLinesOptions
+                                .XAxisPlotLinesOptions()
+                                .setId("progress")
+                                .setValue(maxInstant)
+                                .setZIndex(1000)
+                                .setClassName("plot-plot-line-progress")
+                            )
+                          ).void
+                        }
+                        .map { case (_, maxVisibility) => maxVisibility }
+                  }
+                  .scan1(math.max)
+                  .last
+                  .evalMap(
+                    _.filterNot(_ > MinVisibility)
+                      .map(_ =>
+                        IO(
+                          xAxis.setTitle(XAxisTitleOptions().setText("Target is below horizon"))
+                        ).void
+                      )
+                      .orEmpty
+                  ) ++
+                fs2.Stream(xAxis.removePlotLine("progress")) ++
+                fs2.Stream(chart.hideLoading())
+            )
+        }.orEmpty
+      .useEffectWithDepsBy((props, _, chartOpt) =>
         (props.options.date, props.options.site, chartOpt.value.isDefined)
-      ): (_, _, chartOpt, _) =>
+      ): (_, _, chartOpt) =>
         (date, site, _) =>
           chartOpt.value
             .map(chart =>
@@ -163,9 +158,9 @@ object ElevationPlotSemester:
               }
             )
             .orEmpty
-      .useMemoBy((props, _, _, _) =>
+      .useMemoBy((props, _, _) =>
         (props.options.semester, props.options.site, props.excludeIntervals)
-      ): (_, _, _, _) =>
+      ): (_, _, _) =>
         (semester, site, excludeIntervals) =>
           def timeFormat(value: Double): String =
             ZonedDateTime
@@ -262,5 +257,5 @@ object ElevationPlotSemester:
                 .map(_.asInstanceOf[SeriesOptionsType])
                 .toJSArray
             )
-      .render: (props, _, chartOpt, _, options) =>
+      .render: (props, _, chartOpt, options) =>
         Chart(options, onCreate = c => chartOpt.setState(c.some))
