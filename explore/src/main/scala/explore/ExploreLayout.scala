@@ -255,7 +255,7 @@ object ExploreLayout:
                 ): VdomElement
               else
                 <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
-                  props.resolution.renderP(props.view),
+                  React.StrictMode(props.resolution.renderP(props.view)),
                   if (isSubmitted)
                     Message(text = "The proposal has been submitted, so the program is readonly.")
                   else EmptyVdom
