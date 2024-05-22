@@ -17,7 +17,6 @@ import explore.model.syntax.all.*
 import lucuma.core.model.Group.Id as GroupId
 import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
-import lucuma.schemas.ObservationDB.Enums.Existence
 import monocle.Focus
 import monocle.Lens
 
@@ -42,7 +41,7 @@ object GroupTree:
       val children = group.elements
         .flatMap(
           _.fold(
-            obs => obsMap.get(obs.id).filter(_.existence === Existence.Present).map(_.asLeft),
+            obs => obsMap.get(obs.id).map(_.asLeft),
             group => groupMap.get(group.id).map(_.asRight)
           )
         )
@@ -53,7 +52,6 @@ object GroupTree:
     val rootGroups =
       groups
         .mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
-        .filter(_.left.forall(_.existence === Existence.Present))
         .sortBy(_.groupIndex)
 
     val nodes = rootGroups.map(_.fold(createObsNode, createGroupNode))

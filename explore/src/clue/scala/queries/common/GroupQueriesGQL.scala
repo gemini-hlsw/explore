@@ -22,7 +22,6 @@ object GroupQueriesGQL:
         observation {
           id
           groupIndex
-          existence
         }
         group $GroupSubQuery
       }
