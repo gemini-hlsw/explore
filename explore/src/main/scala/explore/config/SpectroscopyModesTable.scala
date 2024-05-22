@@ -11,6 +11,7 @@ import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
 import crystal.react.*
+import crystal.react.hooks.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
@@ -499,7 +500,7 @@ private object SpectroscopyModesTable:
       // atTop
       .useState(false)
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -553,19 +554,18 @@ private object SpectroscopyModesTable:
                     )
                   }
 
-              if (modes.nonEmpty) {
+              Option.when(modes.nonEmpty):
                 val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-                (for
+                for
                   _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
                   request <-
                     ItcClient[IO]
-                      .request(
+                      .request:
                         ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), snAt)
-                      )
-                      .map(
+                      .map:
                         // Avoid rerendering on every single result, it's slow.
                         _.groupWithin(100, 500.millis)
-                          .evalTap(itcResponseChunk =>
+                          .evalMap: itcResponseChunk =>
                             itcProgress
                               .modStateAsync(
                                 _.map(_.increment(NonNegInt.unsafeFrom(itcResponseChunk.size)))
@@ -575,15 +575,11 @@ private object SpectroscopyModesTable:
                               itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
                               // Enable scrolling to the selected row (which might have moved due to sorting)
                               scrollTo.setState(ScrollTo.Scroll).to[IO]
-                          )
                           .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
-                      )
-                yield request).some
-              } else none
+                yield request
             }
             .flatten
-            .getOrElse(Resource.pure(fs2.Stream()))
-            .use(_.compile.drain)
+            .orEmpty
       }
       .useRef(none[HTMLTableVirtualizer])
       // scroll to the currently selected row.

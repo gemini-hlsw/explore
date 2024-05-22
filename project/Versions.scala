@@ -8,7 +8,7 @@ object Versions {
   val circeGolden            = "0.3.0"
   val coulomb                = "0.8.0"
   val clue                   = "0.35.2"
-  val crystal                = "0.37.3"
+  val crystal                = "0.38.0"
   val discipline             = "1.7.0"
   val disciplineMUnit        = "1.0.9"
   val fs2                    = "3.10.2"

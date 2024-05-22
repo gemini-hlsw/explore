@@ -26,7 +26,7 @@ trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
     ScalaFnComponent
       .withHooks[P]
       .useEffectResultWithDepsBy(props => props): _ =>
-        props => // TODO Could we actually useResource? or useStreamResource?
+        props => // TODO Could we actually useEffectStreamResource?
           for
             latch                        <- Deferred[F, SignallingRef[F, S]]
             // Start the update fiber. We want subscriptions to start before initial query.
