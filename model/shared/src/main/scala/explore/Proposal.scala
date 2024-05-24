@@ -11,6 +11,7 @@ import lucuma.core.enums.TacCategory
 import monocle.Focus
 import monocle.Lens
 import io.circe.Decoder
+import io.circe.refined.*
 import eu.timepit.refined.cats.given
 
 case class Proposal(
@@ -33,6 +34,11 @@ object Proposal:
   val proposalType: Lens[Proposal, Option[ProposalType]] =
     Focus[Proposal](_.proposalType)
 
-  given Decoder[Proposal] = ???
+  given Decoder[Proposal] = c =>
+    for {
+      title    <- c.downField("title").as[Option[NonEmptyString]]
+      category <- c.downField("category").as[Option[TacCategory]]
+      abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]
+    } yield Proposal(None, title, category, abstrakt, None)
 
   val Default = Proposal(None, None, None, None, None)

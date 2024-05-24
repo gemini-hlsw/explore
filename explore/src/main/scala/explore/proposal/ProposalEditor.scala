@@ -34,12 +34,12 @@ import explore.model.Hours
 import explore.model.PartnerSplit
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
+import explore.model.Proposal
 import explore.model.ProposalAttachment
 import explore.model.ProposalTabTileIds
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
-import explore.proposal.ProposalClassType.*
 import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -48,8 +48,6 @@ import lucuma.core.enums.*
 import lucuma.core.model.IntPercent
 import lucuma.core.model.Partner
 import lucuma.core.model.Program
-import lucuma.core.model.Proposal
-import lucuma.core.model.ProposalClass
 import lucuma.core.model.User
 import lucuma.core.model.ZeroTo100
 import lucuma.core.util.Enumerated
@@ -197,97 +195,98 @@ object ProposalEditor:
       .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
   private def renderDetails(
-    aligner:           Aligner[Proposal, ProposalPropertiesInput],
-    undoCtx:           UndoContext[Proposal],
-    totalHours:        View[Hours],
-    minPct2:           View[IntPercent],
-    proposalClassType: View[ProposalClassType],
-    showDialog:        View[Boolean],
-    splitsList:        View[List[PartnerSplit]],
-    splitsMap:         SortedMap[Partner, IntPercent],
-    timeEstimateRange: Pot[Option[ProgramTimeRange]],
-    cfps:              List[CallForProposal],
-    selectedCfp:       View[Option[CallForProposal]],
-    readonly:          Boolean,
-    renderInTitle:     Tile.RenderInTitle
+    aligner:       Aligner[Proposal, ProposalPropertiesInput],
+    undoCtx:       UndoContext[Proposal],
+    // totalHours:        View[Hours],
+    // minPct2:           View[IntPercent],
+    // proposalClassType: View[ProposalClassType],
+    showDialog:    View[Boolean],
+    splitsList:    View[List[PartnerSplit]],
+    // splitsMap:     SortedMap[Partner, IntPercent],
+    // timeEstimateRange: Pot[Option[ProgramTimeRange]],
+    cfps:          List[CallForProposal],
+    selectedCfp:   View[Option[CallForProposal]],
+    readonly:      Boolean,
+    renderInTitle: Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
 
-    val classAligner: Aligner[ProposalClass, Input[ProposalClassInput]] =
-      aligner.zoom(Proposal.proposalClass, ProposalPropertiesInput.proposalClass.modify)
-
-    val classView: View[ProposalClass] = classAligner.view(_.toInput.assign)
+    // val classAligner: Aligner[ProposalClass, Input[ProposalClassInput]] =
+    //   aligner.zoom(Proposal.proposalClass, ProposalPropertiesInput.proposalClass.modify)
+    //
+    // val classView: View[ProposalClass] = classAligner.view(_.toInput.assign)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
 
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
 
-    val activationAligner: Aligner[ToOActivation, Input[ToOActivation]] =
-      aligner.zoom(Proposal.toOActivation, ProposalPropertiesInput.toOActivation.modify)
+    // val activationAligner: Aligner[ToOActivation, Input[ToOActivation]] =
+    //   aligner.zoom(Proposal.toOActivation, ProposalPropertiesInput.toOActivation.modify)
 
-    val activationView: View[ToOActivation] = activationAligner.view(_.assign)
+    // val activationView: View[ToOActivation] = activationAligner.view(_.assign)
 
-    val totalTimeView   = classView.zoom(ProposalClass.totalTime)
-    val totalTime       = totalTimeView.get
-    val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
-    val minimumPct2View = classView.zoom(ProposalClass.minPercentTotalTime)
+    // val totalTimeView   = classView.zoom(ProposalClass.totalTime)
+    // val totalTime       = totalTimeView.get
+    // val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
+    // val minimumPct2View = classView.zoom(ProposalClass.minPercentTotalTime)
 
-    val minExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.minimum.value).orEmpty)
-    val maxExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
+    // val minExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.minimum.value).orEmpty)
+    // val maxExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
 
-    val (maxTimeLabel, minTimeLabel) =
-      ProposalClassType.fromProposalClass(classView.get) match {
-        case LargeProgram | Intensive => ("Semester Max", "Semester Min")
-        case _                        => ("Max Time", "Min Time")
-      }
+    // val (maxTimeLabel, minTimeLabel) =
+    //   ("Max Time", "Min Time")
+    // ProposalClassType.fromProposalClass(classView.get) match {
+    //   case LargeProgram | Intensive => ("Semester Max", "Semester Min")
+    //   case _                        => ("Max Time", "Min Time")
+    // }
 
-    def makeMinimumPctInput[A](pctView: View[IntPercent], id: NonEmptyString): TagMod =
-      FormInputTextView(
-        value = pctView,
-        validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
-        changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
-        label = React.Fragment("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
-        id = id,
-        disabled = readonly,
-        inputClass = ExploreStyles.PartnerSplitsGridMinPct
-      )
+    // def makeMinimumPctInput[A](pctView: View[IntPercent], id: NonEmptyString): TagMod =
+    //   FormInputTextView(
+    //     value = pctView,
+    //     validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
+    //     changeAuditor = ChangeAuditor.refinedInt[ZeroTo100](),
+    //     label = React.Fragment("Minimum %", HelpIcon("proposal/main/minimum-pct.md".refined)),
+    //     id = id,
+    //     disabled = readonly,
+    //     inputClass = ExploreStyles.PartnerSplitsGridMinPct
+    //   )
 
-    def totalTimeEntry[A]: VdomNode =
-      FormInputTextView(
-        value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
-        validFormat = ExploreModelValidators.hoursValidWedge,
-        changeAuditor = ChangeAuditor.accept.decimal(2.refined),
-        label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
-        id = "total-time-entry".refined,
-        disabled = readonly,
-        inputClass = ExploreStyles.PartnerSplitsGridTotal
-      )
+    // def totalTimeEntry[A]: VdomNode =
+    //   FormInputTextView(
+    //     value = totalHours.withOnMod(h => totalTimeView.set(fromHours(h))),
+    //     validFormat = ExploreModelValidators.hoursValidWedge,
+    //     changeAuditor = ChangeAuditor.accept.decimal(2.refined),
+    //     label = React.Fragment("Total", HelpIcon("proposal/main/total-time.md".refined)),
+    //     id = "total-time-entry".refined,
+    //     disabled = readonly,
+    //     inputClass = ExploreStyles.PartnerSplitsGridTotal
+    //   )
 
-    def openPartnerSplitsEditor: Callback = {
-      val allPartners = Partner.EnumeratedPartner.all.map(p =>
-        splitsMap
-          .get(p)
-          .fold(PartnerSplit(p, 0.refined))(pct => PartnerSplit(p, pct))
-      )
-      splitsList.set(allPartners) >> showDialog.set(true)
-    }
+    // def openPartnerSplitsEditor: Callback = {
+    //   val allPartners = Partner.EnumeratedPartner.all.map(p =>
+    //     splitsMap
+    //       .get(p)
+    //       .fold(PartnerSplit(p, 0.refined))(pct => PartnerSplit(p, pct))
+    //   )
+    //   splitsList.set(allPartners) >> showDialog.set(true)
+    // }
 
-    def onClassTypeMod(classType: ProposalClassType): Callback = {
-      val currentClass    = classView.get
-      val minPctTime      = currentClass.minPercentTime
-      val minPctTotalTime =
-        ProposalClass.minPercentTotalTime.getOption(currentClass).getOrElse(minPct2.get)
-      val totalTime       =
-        ProposalClass.totalTime.getOption(currentClass).getOrElse(fromHours(totalHours.get))
-      val newClass        = classType.toProposalClass(minPctTime, minPctTotalTime, totalTime)
-      classView.set(newClass) >> minPct2.set(minPctTotalTime) >> totalHours.set(toHours(totalTime))
-    }
+    // def onClassTypeMod(classType: ProposalClassType): Callback = {
+    //   val currentClass    = classView.get
+    //   val minPctTime      = currentClass.minPercentTime
+    //   val minPctTotalTime =
+    //     ProposalClass.minPercentTotalTime.getOption(currentClass).getOrElse(minPct2.get)
+    //   val totalTime       =
+    //     ProposalClass.totalTime.getOption(currentClass).getOrElse(fromHours(totalHours.get))
+    //   val newClass        = classType.toProposalClass(minPctTime, minPctTotalTime, totalTime)
+    //   classView.set(newClass) >> minPct2.set(minPctTotalTime) >> totalHours.set(toHours(totalTime))
+    // }
 
-    val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
+    // val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
 
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
@@ -306,76 +305,76 @@ object ProposalEditor:
               ExploreStyles.PartnerSplitsGrid,
               // The first partner splits row, with the button and the flags
               <.div(
-                <.label("Partners"),
-                <.div(
-                  Button(
-                    icon = Icons.Edit,
-                    severity = Button.Severity.Secondary,
-                    tpe = Button.Type.Button,
-                    onClick = openPartnerSplitsEditor,
-                    tooltip = "Edit Partner Splits",
-                    disabled = readonly
-                  ).mini.compact
-                )
-              ),
-              partnerSplits(splitsMap),
-              <.div(
-                makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
-              ),
+                <.label("Partners")
+                // <.div(
+                //   Button(
+                //     icon = Icons.Edit,
+                //     severity = Button.Severity.Secondary,
+                //     tpe = Button.Type.Button,
+                //     onClick = openPartnerSplitsEditor,
+                //     tooltip = "Edit Partner Splits",
+                //     disabled = readonly
+                //   ).mini.compact
+                // )
+              )
+              // partnerSplits(splitsMap)
+              // <.div(
+              //   makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
+              // ),
               // The second partner splits row, for maximum times - is always there
-              FormStaticData(
-                value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
-                label = maxTimeLabel,
-                id = "maxTime"
-              ),
-              maxExecutionPot.renderPot(
-                valueRender = maxExecutionTime =>
-                  React.Fragment(timeSplits(splitsMap, maxExecutionTime),
-                                 minimumTime(minimumPct1View.get, maxExecutionTime)
-                  ),
-                pendingRender = React.Fragment(<.span(), <.span())
-              ),
+              // FormStaticData(
+              //   value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
+              //   label = maxTimeLabel,
+              //   id = "maxTime"
+              // ),
+              // maxExecutionPot.renderPot(
+              //   valueRender = maxExecutionTime =>
+              //     React.Fragment(timeSplits(splitsMap, maxExecutionTime),
+              //                    minimumTime(minimumPct1View.get, maxExecutionTime)
+              //     ),
+              //   pendingRender = React.Fragment(<.span(), <.span())
+              // ),
               // The third partner splits row, for minimum times - is always there
-              FormStaticData(
-                value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
-                label = minTimeLabel,
-                id = "maxTime"
-              ),
-              minExecutionPot.renderPot(
-                valueRender = minExecutionTime =>
-                  React.Fragment(timeSplits(splitsMap, minExecutionTime),
-                                 minimumTime(minimumPct1View.get, minExecutionTime)
-                  ),
-                pendingRender = React.Fragment(<.span(), <.span())
-              ),
-              // The third partner splits row - only exists for a few observation classes
-              totalTime.fold(React.Fragment()) { tt =>
-                React.Fragment(
-                  <.div(totalTimeEntry),
-                  timeSplits(splitsMap, tt),
-                  <.div(
-                    minimumPct2View
-                      .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
-                      .getOrElse(minimumTime(minimumPct1View.get, tt))
-                  )
-                )
-              }
+              // FormStaticData(
+              //   value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
+              //   label = minTimeLabel,
+              //   id = "maxTime"
+              // )
+              // minExecutionPot.renderPot(
+              //   valueRender = minExecutionTime =>
+              //     React.Fragment(timeSplits(splitsMap, minExecutionTime),
+              //                    minimumTime(minimumPct1View.get, minExecutionTime)
+              //     ),
+              //   pendingRender = React.Fragment(<.span(), <.span())
+              // ),
+              // // The third partner splits row - only exists for a few observation classes
+              // totalTime.fold(React.Fragment()) { tt =>
+              //   React.Fragment(
+              //     <.div(totalTimeEntry),
+              //     timeSplits(splitsMap, tt),
+              //     <.div(
+              //       minimumPct2View
+              //         .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
+              //         .getOrElse(minimumTime(minimumPct1View.get, tt))
+              //     )
+              //   )
+              // }
             )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            FormDropdownOptional(
-              id = "cfp".refined,
-              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-              value = selectedCfp.get,
-              options = cfps.map(r => SelectItem(r, r.title)),
-              onChange =
-                // So far we only support queue for the current crop of CfP
-                _.map(v =>
-                  proposalClass.set(ProposalClassType.Queue) *> selectedCfp.set(v.some)
-                ).orEmpty,
-              disabled = readonly,
-              modifiers = List(^.id := "cfp")
-            ),
+            // FormDropdownOptional(
+            //   id = "cfp".refined,
+            //   label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+            //   value = selectedCfp.get,
+            //   options = cfps.map(r => SelectItem(r, r.title)),
+            //   onChange =
+            //     // So far we only support queue for the current crop of CfP
+            //     _.map(v =>
+            //       proposalClass.set(ProposalClassType.Queue) *> selectedCfp.set(v.some)
+            //     ).orEmpty,
+            //   disabled = readonly,
+            //   modifiers = List(^.id := "cfp")
+            // ),
             FormDropdownOptional(
               id = "category".refined,
               label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
@@ -384,16 +383,16 @@ object ProposalEditor:
               onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
               disabled = readonly,
               modifiers = List(^.id := "category")
-            ),
-            FormEnumDropdownView(
-              id = "too-activation".refined,
-              value = activationView,
-              label = React.Fragment(
-                "ToO Activation",
-                HelpIcon("proposal/main/too-activation.md".refined)
-              ),
-              disabled = readonly
             )
+            // FormEnumDropdownView(
+            //   id = "too-activation".refined,
+            //   value = activationView,
+            //   label = React.Fragment(
+            //     "ToO Activation",
+            //     HelpIcon("proposal/main/too-activation.md".refined)
+            //   ),
+            //   disabled = readonly
+            // )
           )
         )
       )
@@ -405,9 +404,9 @@ object ProposalEditor:
     optUserId:         Option[User.Id],
     proposal:          View[Proposal],
     undoStacks:        View[UndoStacks[IO, Proposal]],
-    totalHours:        View[Hours],
-    minPct2:           View[IntPercent],
-    proposalClassType: View[ProposalClassType],
+    // totalHours:        View[Hours],
+    // minPct2:           View[IntPercent],
+    // proposalClassType: View[ProposalClassType],
     showDialog:        View[Boolean],
     splitsList:        View[List[PartnerSplit]],
     createInvite:      View[CreateInviteProcess],
@@ -438,31 +437,32 @@ object ProposalEditor:
         (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
       ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
-    val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitInput]]] =
-      aligner.zoom(Proposal.partnerSplits, ProposalPropertiesInput.partnerSplits.modify)
+    // val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitInput]]] =
+    //   aligner.zoom(Proposal.partnerSplits, ProposalPropertiesInput.partnerSplits.modify)
 
-    val splitsView: View[SortedMap[Partner, IntPercent]] =
-      splitsAligner.view(
-        _.toList
-          .map { case (par, pct) =>
-            PartnerSplitInput(partner = par, percent = pct)
-          }
-          .assign
-      )
+    // val splitsView: View[SortedMap[Partner, IntPercent]] =
+    //   splitsAligner.view(
+    //     _.toList
+    //       .map { case (par, pct) =>
+    //         PartnerSplitInput(partner = par, percent = pct)
+    //       }
+    //       .assign
+    //   )
 
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
     // This is a workaround until we can properly set cfps in the proposal
     val cfpMod = selectedCfp.withOnMod {
       case Some(cfp) =>
-        UpdateProgramsMutation[IO]
-          .execute(
-            UpdateProgramsInput(WHERE = programId.toWhereProgram.assign,
-                                SET = ProgramPropertiesInput(semester = cfp.semester.assign)
-            )
-          )
-          .void
-          .runAsync
+        // UpdateProgramsMutation[IO]
+        //   .execute(
+        //     UpdateProgramsInput(WHERE = programId.toWhereProgram.assign,
+        //                         SET = ProgramPropertiesInput(semester = cfp.semester.assign)
+        //     )
+        //   )
+        //   .void
+        //   .runAsync
+        Callback.empty
       case None      => Callback.empty
     }
 
@@ -471,13 +471,13 @@ object ProposalEditor:
         renderDetails(
           aligner,
           undoCtx,
-          totalHours,
-          minPct2,
-          proposalClassType,
+          // totalHours,
+          // minPct2,
+          // proposalClassType,
           showDialog,
           splitsList,
-          splitsView.get,
-          timeEstimateRange,
+          // splitsView.get,
+          // timeEstimateRange,
           cfps,
           cfpMod,
           readonly,
@@ -518,13 +518,13 @@ object ProposalEditor:
         List(detailsTile, usersTile, abstractTile, attachmentsTile),
         GridLayoutSection.ProposalLayout,
         storeLayout = true
-      ),
-      PartnerSplitsEditor(
-        showDialog.get,
-        splitsList,
-        closePartnerSplitsEditor,
-        saveStateSplits(splitsView, _)
       )
+      // PartnerSplitsEditor(
+      //   showDialog.get,
+      //   splitsList,
+      //   closePartnerSplitsEditor,
+      //   saveStateSplits(splitsView, _)
+      // )
     ).withRef(resize.ref)
   }
 
@@ -538,47 +538,47 @@ object ProposalEditor:
         ReadOpenCFPs[IO]
           .query()
           .map(_.map(_.callsForProposals.matches)) // .map(_: CallForProposal))
-      .useStateViewBy: (props, _, _) =>
-        // total time - we need `Hours` for editing and also to preserve if
-        // the user switches between classes with and without total time.
-        props.proposal
-          .zoom(Proposal.proposalClass.andThen(ProposalClass.totalTime))
-          .get
-          .map(toHours)
-          .getOrElse(Hours.unsafeFrom(0))
-      .useStateViewBy((props, _, _, _) =>
-        // mininum percent total time = need to preserve between class switches
-        props.proposal
-          .zoom(Proposal.proposalClass.andThen(ProposalClass.minPercentTotalTime))
-          .get
-          .getOrElse(IntPercent.unsafeFrom(80))
-      )
-      .useStateViewBy((props, _, _, _, _) =>
-        // Initial proposal class type
-        ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
-      )
+      // .useStateViewBy: (props, _, _) =>
+      //   // total time - we need `Hours` for editing and also to preserve if
+      //   // the user switches between classes with and without total time.
+      //   props.proposal
+      //     .zoom(Proposal.proposalClass.andThen(ProposalClass.totalTime))
+      //     .get
+      //     .map(toHours)
+      //     .getOrElse(Hours.unsafeFrom(0))
+      // .useStateViewBy((props, _, _, _) =>
+      //   // mininum percent total time = need to preserve between class switches
+      //   props.proposal
+      //     .zoom(Proposal.proposalClass.andThen(ProposalClass.minPercentTotalTime))
+      //     .get
+      //     .getOrElse(IntPercent.unsafeFrom(80))
+      // )
+      // .useStateViewBy((props, _, _, _, _) =>
+      //   // Initial proposal class type
+      //   ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
+      // )
       .useStateView(false) // show partner splits modal
       .useStateView(List.empty[PartnerSplit])
-      .useStateViewBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
-        // Deal with changes to the ProposalClass.
-        (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
-          newClass => {
-            val setClass =
-              if (oldClass.get === newClass) Callback.empty
-              else props.proposal.zoom(Proposal.proposalClass).set(newClass)
-            val newType  = ProposalClassType.fromProposalClass(newClass)
-            val setType  = if (classType.get === newType) Callback.empty else classType.set(newType)
-            val newHours = ProposalClass.totalTime.getOption(newClass).map(toHours)
-            val setHours = newHours
-              .flatMap(h => if (h === totalHours.get) none else h.some)
-              .foldMap(totalHours.set)
-            val newPct2  = ProposalClass.minPercentTotalTime.getOption(newClass)
-            val setPct2  =
-              newPct2.flatMap(p => if (p === minPct2.get) none else p.some).foldMap(minPct2.set)
-            setClass >> setType >> setHours >> setPct2
-          }
-      )
+      // .useStateViewBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)
+      // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
+      //   // Deal with changes to the ProposalClass.
+      //   (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
+      //     newClass => {
+      //       val setClass =
+      //         if (oldClass.get === newClass) Callback.empty
+      //         else props.proposal.zoom(Proposal.proposalClass).set(newClass)
+      //       val newType  = ProposalClassType.fromProposalClass(newClass)
+      //       val setType  = if (classType.get === newType) Callback.empty else classType.set(newType)
+      //       val newHours = ProposalClass.totalTime.getOption(newClass).map(toHours)
+      //       val setHours = newHours
+      //         .flatMap(h => if (h === totalHours.get) none else h.some)
+      //         .foldMap(totalHours.set)
+      //       val newPct2  = ProposalClass.minPercentTotalTime.getOption(newClass)
+      //       val setPct2  =
+      //         newPct2.flatMap(p => if (p === minPct2.get) none else p.some).foldMap(minPct2.set)
+      //       setClass >> setType >> setHours >> setPct2
+      //     }
+      // )
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
@@ -588,12 +588,12 @@ object ProposalEditor:
           props,
           ctx,
           cfps,
-          totalHours,
-          minPct2,
-          proposalClassType,
+          // totalHours,
+          // minPct2,
+          // proposalClassType,
           showDialog,
           splitsList,
-          _,
+          // _,
           resize,
           createInvite,
           overlayRef,
@@ -604,9 +604,9 @@ object ProposalEditor:
             props.optUserId,
             props.proposal,
             props.undoStacks,
-            totalHours,
-            minPct2,
-            proposalClassType,
+            // totalHours,
+            // minPct2,
+            // proposalClassType,
             showDialog,
             splitsList,
             createInvite,

@@ -15,6 +15,7 @@ object ProgramDetailsSubquery
     {
       type
       pi $ProgramUserSubquery
+      proposal $ProposalSubquery
       proposalStatus
       users $ProgramUserWithRoleSubquery
       reference $ProgramReferenceSubquery

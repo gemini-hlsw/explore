@@ -7,35 +7,37 @@ import clue.GraphQLSubquery
 import clue.annotation.GraphQL
 import explore.model.Proposal
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.decoders.given
 
 @GraphQL
 object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("Proposal"):
   override val subquery: String = """
     {
       title
-      proposalClass {
-        __typename
-        minPercentTime
-        ... on LargeProgram {
-          minPercentTotalTime
-          totalTime {
-            microseconds
-          }
-        }
-        ... on Intensive {
-          minPercentTotalTime
-          totalTime {
-            microseconds
-          }
-        }
-      }
-      category
-      toOActivation
       abstract
-      partnerSplits {
-        partner
-        percent
-      }
+      category
     }
   """
+
+  // proposalClass {
+  //   __typename
+  //   minPercentTime
+  //   ... on LargeProgram {
+  //     minPercentTotalTime
+  //     totalTime {
+  //       microseconds
+  //     }
+  //   }
+  //   ... on Intensive {
+  //     minPercentTotalTime
+  //     totalTime {
+  //       microseconds
+  //     }
+  //   }
+  // }
+  // category
+  // toOActivation
+  // abstract
+  // partnerSplits {
+  //   partner
+  //   percent
+  // }

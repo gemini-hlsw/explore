@@ -6,12 +6,13 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+import explore.model.Proposal
 
 import GroupQueriesGQL.*
 
-object ProgramQueriesGQL {
+object ProgramQueriesGQL:
   @GraphQL
-  trait CreateProgramMutation extends GraphQLOperation[ObservationDB] {
+  trait CreateProgramMutation extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       mutation($$input: CreateProgramInput!) {
         createProgram(input: $$input) {
@@ -19,10 +20,9 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait UpdateProgramsMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateProgramsMutation extends GraphQLOperation[ObservationDB]:
     val document: String = """
       mutation($input: UpdateProgramsInput!) {
         updatePrograms(input: $input) {
@@ -32,10 +32,9 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait UpdateObsAttachmentMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateObsAttachmentMutation extends GraphQLOperation[ObservationDB]:
     val document: String = """
     mutation($input: UpdateObsAttachmentsInput!) {
       updateObsAttachments(input: $input) {
@@ -45,10 +44,9 @@ object ProgramQueriesGQL {
       }
     }
    """
-  }
 
   @GraphQL
-  trait ProgramGroupsQuery extends GraphQLOperation[ObservationDB] {
+  trait ProgramGroupsQuery extends GraphQLOperation[ObservationDB]:
     val document: String = s"""#graphql
       query ($$programId: ProgramId!) {
         program(programId: $$programId) {
@@ -56,10 +54,9 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait GroupEditSubscription extends GraphQLOperation[ObservationDB] {
+  trait GroupEditSubscription extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       subscription($$input: ProgramEditInput!) {
         groupEdit(input: $$input) {
@@ -71,10 +68,9 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB] {
+  trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       subscription($$input: ProgramEditInput!) {
         programEdit(input: $$input) {
@@ -85,14 +81,13 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
 
   // TODO: We now have 2 bits of ProgramSummaries that start a `programEdit` subscription
   // for the current program. The program attachments could be moved into the program details
   // to avoid this. But, we also need to change the ODB so that editing a proposal triggers a
   // subscription update.
   @GraphQL
-  trait ProgramEditDetailsSubscription extends GraphQLOperation[ObservationDB] {
+  trait ProgramEditDetailsSubscription extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       subscription($$input: ProgramEditInput!) {
         programEdit(input: $$input) {
@@ -100,10 +95,9 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait ProgramInfoDelta extends GraphQLOperation[ObservationDB] {
+  trait ProgramInfoDelta extends GraphQLOperation[ObservationDB]:
     val document = s"""
       subscription {
         programEdit {
@@ -111,5 +105,4 @@ object ProgramQueriesGQL {
         }
       }
     """
-  }
-}
+

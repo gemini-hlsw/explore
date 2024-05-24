@@ -71,16 +71,17 @@ object ProposalTabContents:
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     programDetails.zoom(ProgramDetails.proposal).set(proposal.some) >>
-      CreateProposalMutation[IO]
-        .execute(
-          CreateProposalInput(
-            programId = programId,
-            SET = proposal.toInput
-          )
-        )
-        .toastErrors
-        .void
-        .runAsync
+      Callback.empty
+    // CreateProposalMutation[IO]
+    //   .execute(
+    //     CreateProposalInput(
+    //       programId = programId,
+    //       SET = proposal.toInput
+    //     )
+    //   )
+    //   .toastErrors
+    //   .void
+    //   .runAsync
 
   private def renderFn(
     programId:         Program.Id,
