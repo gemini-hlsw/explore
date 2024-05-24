@@ -86,15 +86,19 @@ object ControlOverlay {
                 .withFixedWidth(true)
                 .withTransform(Transform(rotate = 90))
             ),
-            <.div(
-              ExploreStyles.FinderChartsButton,
-              ^.onClick --> p.ops
-                .mod(r => p.parallacticAngle.fold(r)(r.rotateTo(_))),
-              <.div(ExploreStyles.FinderChartsButtonPA,
-                    "Align to PA",
-                    Icons.Angle.withBorder(true).withFixedWidth(true)
+            p.parallacticAngle
+              .map(pa =>
+                <.div(
+                  ExploreStyles.FinderChartsButton,
+                  ^.onClick --> p.ops
+                    .mod(_.rotateTo(pa)),
+                  <.div(ExploreStyles.FinderChartsButtonPA,
+                        "Align to PA",
+                        Icons.Angle.withBorder(true).withFixedWidth(true)
+                  )
+                )
               )
-            ),
+              .getOrElse(<.div()), // keep the table working OK
             <.div(
               ExploreStyles.FinderChartsButton,
               Icons.ArrowsRepeatLight.withBorder(true).withFixedWidth(true),
