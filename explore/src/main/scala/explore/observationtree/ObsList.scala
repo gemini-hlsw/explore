@@ -144,6 +144,14 @@ object ObsList:
             }
           }
       }
+      .useEffectWithDepsBy((props, _, _) => (props.focusedGroup, props.groups.get)) {
+        (props, ctx, _) => (focusedGroup, groups) =>
+          // If the focused group is not in the tree, reset the focused group
+          focusedGroup
+            .filter(g => !groups.contains(g.asRight))
+            .as(setGroup(props.programId, none, ctx))
+            .getOrEmpty
+      }
       // adding new observation
       .useStateView(AddingObservation(false))
       // treeNodes
@@ -265,7 +273,9 @@ object ObsList:
                     )
                   )
             case Right(group)            =>
-              val isEmpty = props.groups.get.getNodeAndIndexByKey(group.id.asRight).exists(_._1.children.isEmpty)
+              val isEmpty = props.groups.get
+                .getNodeAndIndexByKey(group.id.asRight)
+                .exists(_._1.children.isEmpty)
               GroupBadge(
                 group,
                 selected = props.focusedGroup.contains_(group.id),

@@ -194,8 +194,7 @@ object ObsTabContents extends TwoPanels:
     def rightSide(resize: UseResizeDetectorReturn): VdomNode =
       (props.focusedObs, props.focusedGroup) match {
         case (Some(obsId), _)   => obsTiles(obsId, resize)
-        // TODO: better redirect for non-existing groups
-        case (_, Some(groupId)) if props.groups.get.contains(groupId.asRight) => groupTiles(groupId, resize)
+        case (_, Some(groupId)) => groupTiles(groupId, resize)
         case _                  => obsSummaryTable()
       }
 
