@@ -31,6 +31,7 @@ import explore.model.CoIInvitation
 import explore.model.ExploreGridLayouts
 import explore.model.ExploreModelValidators
 import explore.model.Hours
+import explore.model.PartnerSplit
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalAttachment

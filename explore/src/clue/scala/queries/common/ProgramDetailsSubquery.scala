@@ -14,8 +14,8 @@ object ProgramDetailsSubquery
   override val subquery: String = s"""
     {
       type
-      proposalStatus
       pi $ProgramUserSubquery
+      proposalStatus
       users $ProgramUserWithRoleSubquery
       reference $ProgramReferenceSubquery
       userInvitations $ProgramInvitationsSubquery

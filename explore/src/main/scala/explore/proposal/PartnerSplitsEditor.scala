@@ -27,6 +27,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
+import explore.model.PartnerSplit
 
 case class PartnerSplitsEditor(
   show:    Boolean,

@@ -28,7 +28,7 @@ import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.Program
-import lucuma.core.model.Proposal
+import explore.model.Proposal
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.core.util.NewType

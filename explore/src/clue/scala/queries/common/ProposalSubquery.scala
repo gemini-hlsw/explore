@@ -5,7 +5,7 @@ package queries.common
 
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
-import lucuma.core.model.Proposal
+import explore.model.Proposal
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.decoders.given
 
