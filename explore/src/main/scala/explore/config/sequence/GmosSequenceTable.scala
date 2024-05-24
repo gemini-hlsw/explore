@@ -10,6 +10,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObserveClass
+import lucuma.core.enums.SequenceType
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
@@ -20,6 +21,7 @@ import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.Visit
+import lucuma.schemas.model.enums.AtomExecutionState
 import lucuma.ui.reusability.given
 import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
@@ -40,8 +42,7 @@ sealed trait GmosSequenceTable[S, D]:
     SequenceRow.FutureStep
       .fromAtoms(
         sequence.nextAtom +: sequence.possibleFuture,
-        i =>
-          // Only show S/N for science or acq if FPU is None
+        i => // Only show S/N for science or acq if FPU is None
           snPerClass
             .get(obsClass)
             .filter: _ =>
@@ -55,11 +56,36 @@ sealed trait GmosSequenceTable[S, D]:
                 case _                            => false
       )
 
+  private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Int)] =
+    // If the last atom of the last visit is incomplete, we assume it is executing.
+    // TODO: Also check that the last atom's original id is the same as nextAtom (when ODB provides this info).
+    visits.lastOption
+      .filter(_.atoms.lastOption.exists(_.executionState =!= AtomExecutionState.Completed))
+      .map(visit => (visit.id, visit.atoms.last.sequenceType, visit.atoms.last.steps.length))
+
+  protected[sequence] lazy val currentVisitId: Option[Visit.Id]              = currentVisitData.map(_._1)
+  protected[sequence] lazy val currentAtomSequenceType: Option[SequenceType] =
+    currentVisitData.map(_._2)
+  protected[sequence] lazy val currentAtomExecutedSteps: Option[Int]         = currentVisitData.map(_._3)
+
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
-    config.acquisition.map(steps(ObserveClass.Acquisition)).orEmpty
+    config.acquisition // If we are executing Science, don't show any future acquisition rows.
+      .filter(_ => currentAtomSequenceType.contains_(SequenceType.Acquisition))
+      .map(steps(ObserveClass.Acquisition))
+      .orEmpty
+      .drop:
+        currentAtomExecutedSteps
+          .filter(_ => currentAtomSequenceType.contains_(SequenceType.Acquisition))
+          .orEmpty
 
   protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
-    config.science.map(steps(ObserveClass.Science)).orEmpty
+    config.science
+      .map(steps(ObserveClass.Science))
+      .orEmpty
+      .drop:
+        currentAtomExecutedSteps
+          .filter(_ => currentAtomSequenceType.contains_(SequenceType.Science))
+          .orEmpty
 
 case class GmosNorthSequenceTable(
   visits:     List[Visit.GmosNorth],
@@ -134,15 +160,20 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
     ScalaFnComponent
       .withHooks[Props]
       .useMemo(())(_ => columns) // cols
-      .useMemoBy((props, _) => props.visits): (_, _) =>
-        visitsSequences(_, none) // (List[Visit], nextIndex)
-      .useMemoBy((props, _, visitsData) => (visitsData, props.acquisitionRows, props.scienceRows)):
-        (_, _, _) =>
-          (visitsData, acquisitionRows, scienceRows) =>
-            val (visits, nextScienceIndex): (List[VisitData], StepIndex) = visitsData.value
-            // TODO Remove duplicate steps if an atom is being executed.
-            // (This needs the new information from the ODB about an atom's execution status.)
-            stitchSequence(visits, none, nextScienceIndex, acquisitionRows, scienceRows)
+      .useMemoBy((props, _) => props.visits): (_, _) => // (visitRows, nextIndex)
+        visitsSequences(_, none)
+      .useMemoBy((props, _, visitsData) =>
+        (visitsData, props.acquisitionRows, props.scienceRows, props.currentVisitId)
+      ): (_, _, _) =>
+        (visitsData, acquisitionRows, scienceRows, currentVisitId) =>
+          val (visitRows, nextScienceIndex): (List[VisitData], StepIndex) = visitsData.value
+          stitchSequence(
+            visitRows,
+            currentVisitId,
+            nextScienceIndex,
+            acquisitionRows,
+            scienceRows
+          )
       .useResizeDetector()
       .useDynTableBy: (_, _, _, _, resize) =>
         (DynTableDef, SizePx(resize.width.orEmpty))
