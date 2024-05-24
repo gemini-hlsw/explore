@@ -144,6 +144,14 @@ object ObsList:
             }
           }
       }
+      .useEffectWithDepsBy((props, _, _) => (props.focusedGroup, props.groups.get)) {
+        (props, ctx, _) => (focusedGroup, groups) =>
+          // If the focused group is not in the tree, reset the focused group
+          focusedGroup
+            .filter(g => !groups.contains(g.asRight))
+            .as(setGroup(props.programId, none, ctx))
+            .getOrEmpty
+      }
       // adding new observation
       .useStateView(AddingObservation(false))
       // treeNodes
@@ -265,22 +273,28 @@ object ObsList:
                     )
                   )
             case Right(group)            =>
-              val selected = props.focusedGroup.contains_(group.id)
-              <.a(
-                if group.isAnd then "AND" else "OR",
-                ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(selected),
-                group.name.map(n => <.em(n.value, ^.marginLeft := 8.px)),
-                ^.title := group.id.show,
-                ^.id        := show"obs-group-${group.id}",
-                ^.draggable := false,
-                ^.onClick ==> linkOverride(
+              val isEmpty = props.groups.get
+                .getNodeAndIndexByKey(group.id.asRight)
+                .exists(_._1.children.isEmpty)
+              GroupBadge(
+                group,
+                selected = props.focusedGroup.contains_(group.id),
+                onClickCB = linkOverride(
                   setGroup(props.programId, group.id.some, ctx)
                 ),
-                ^.href      := ctx.pageUrl(
+                href = ctx.pageUrl(
                   AppTab.Observations,
                   props.programId,
                   Focused.group(group.id)
+                ),
+                deleteCB = groupExistence(
+                  group.id,
+                  g => setGroup(props.programId, g.some, ctx)
                 )
+                  .mod(props.groups)(groupTreeMod.delete)
+                  .showToastCB(s"Deleted group ${group.id.show}"),
+                isEmpty = isEmpty,
+                readonly = props.readonly
               )
 
         val expandFocusedGroup: Callback = props.expandedGroups.mod(_ ++ props.focusedGroup)

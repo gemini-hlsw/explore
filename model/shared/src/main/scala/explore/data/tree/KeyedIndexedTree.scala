@@ -5,10 +5,9 @@ package explore.data.tree
 
 import cats.kernel.Eq
 import cats.syntax.all.*
-import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.NonNegShort
-import lucuma.refined.*
+import explore.model.syntax.all.*
 
 import scala.annotation.tailrec
 import scala.collection.immutable.HashMap
@@ -31,6 +30,9 @@ case class KeyedIndexedTree[K: Eq, A] private (
     byKey.get(key).map { node =>
       (node.map(_.elem), node.value.index)
     }
+
+  def contains(key: K): Boolean =
+    byKey.contains(key)
 
   def getKeyedNodeByIdx(index: Index[K]): Option[(K, Node[A])] =
     index.parentKey
@@ -76,8 +78,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
       if (parentKey === idx.parentKey) {
         val fixedPos: NonNegInt = idx.childPos.value match {
           case i if i > children.length => NonNegInt.unsafeFrom(children.length)
-          case i if i < 0               => 0.refined[NonNegative]
-          case i                        => NonNegInt.unsafeFrom(i)
+          case i                        => idx.childPos
         }
         (children.take(fixedPos.value) :+
           Node(IndexedElem(node.value, Index(parentKey, fixedPos)),
@@ -146,7 +147,7 @@ object KeyedIndexedTree {
   case class Index[K](parentKey: Option[K], childPos: NonNegInt)
   object Index:
     inline def apply[K](parentKey: Option[K], childPos: NonNegShort): Index[K] =
-      Index(parentKey, NonNegInt.unsafeFrom(childPos.value.toInt))
+      Index(parentKey, childPos.toNonNegInt)
 
   protected case class IndexedElem[K, A](elem: A, index: Index[K])
 

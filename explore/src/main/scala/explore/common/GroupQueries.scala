@@ -14,6 +14,7 @@ import explore.model.Grouping
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.GroupQueriesGQL.*
 
@@ -42,7 +43,11 @@ object GroupQueries:
     )
     UpdateGroupsMutation[F].execute(input).void
 
-  def updateGroup[F[_]: Async](groupId: Group.Id, set: GroupPropertiesInput)(using
+  def updateGroup[F[_]: Async](
+    groupId:        Group.Id,
+    set:            GroupPropertiesInput,
+    includeDeleted: Boolean = false
+  )(using
     FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateGroupsMutation[F]
@@ -64,3 +69,12 @@ object GroupQueries:
           SET = parentId.map(gId => GroupPropertiesInput(parentGroup = gId.assign)).orIgnore
         )
       .map(_.createGroup.group)
+
+  def deleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateGroup(groupId, GroupPropertiesInput(existence = Existence.Deleted.assign))
+
+  def undeleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateGroup(groupId,
+                GroupPropertiesInput(existence = Existence.Present.assign),
+                includeDeleted = true
+    )

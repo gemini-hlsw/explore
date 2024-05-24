@@ -100,7 +100,7 @@ object ObsTabContents extends TwoPanels:
     ctx:          AppContext[IO]
   ): VdomNode = {
 
-    def observationsTree(observations: View[ObservationList]) =
+    def observationsTree() =
       if (deckShown.get === DeckShown.Shown) {
         ObsList(
           props.observations,
@@ -200,7 +200,7 @@ object ObsTabContents extends TwoPanels:
 
     makeOneOrTwoPanels(
       selectedView,
-      observationsTree(props.observations.model),
+      observationsTree(),
       rightSide,
       RightSideCardinality.Multi,
       resize,

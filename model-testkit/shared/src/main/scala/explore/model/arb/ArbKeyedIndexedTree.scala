@@ -3,13 +3,13 @@
 
 package explore.model.arb
 
+import cats.kernel.Eq
+import explore.data.tree.KeyedIndexedTree
+import explore.data.tree.Tree
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
 import org.scalacheck.Cogen.*
-import explore.data.tree.Tree
-import explore.data.tree.KeyedIndexedTree
-import cats.kernel.Eq
 
 trait ArbKeyedIndexedTree {
   implicit def keyedIndexedTreeArb[K, A](implicit

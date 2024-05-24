@@ -25,6 +25,7 @@ import explore.optics.all.*
 import explore.syntax.ui.*
 import explore.undo.Action
 import explore.undo.KIListMod
+import explore.undo.KITreeMod
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import lucuma.core.model.Group
@@ -40,6 +41,9 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
 
 val obsListMod = KIListMod[ObsSummary, Observation.Id](ObsSummary.id)
+
+val groupTreeMod: KITreeMod[GroupTree.Value, GroupTree.Key] =
+  KITreeMod[GroupTree.Value, GroupTree.Key](GroupTree.key)
 
 def setObs[F[_]](
   programId: Program.Id,
@@ -195,7 +199,10 @@ private def findGrouping(
   _.getNodeAndIndexByKey(groupId.asRight)
 
 def groupExistence(
-  groupId: Group.Id
+  groupId:  Group.Id,
+  setGroup: Group.Id => Callback
+)(using
+  FetchClient[IO, ObservationDB]
 ): Action[GroupTree, Option[(GroupTree.Node, GroupTree.Index)]] = Action(
   getter = findGrouping(groupId),
   setter = maybeGroup =>
@@ -206,8 +213,16 @@ def groupExistence(
           val group = node.value
           groupList.updated(groupId.asRight, group, idx)
 )(
-  // TODO: handle undo by removing (and undoing remove) of groups
-  onSet = (_, _) => IO.unit
+  onSet = (_, node) =>
+    node.fold {
+      GroupQueries.deleteGroup[IO](groupId)
+    } { case (_, _) => setGroup(groupId).toAsync },
+  onRestore = (_, node) =>
+    node.fold {
+      GroupQueries.deleteGroup[IO](groupId)
+    } { case (_, _) =>
+      GroupQueries.undeleteGroup[IO](groupId) >> setGroup(groupId).toAsync
+    }
 )
 
 def insertGroup(
@@ -221,7 +236,7 @@ def insertGroup(
   GroupQueries
     .createGroup[IO](programId, parentId)
     .flatMap(group =>
-      groupExistence(group.id)
+      groupExistence(group.id, g => setGroup(programId, g.some, ctx))
         .set(groups)(
           (Node(group.toGroupTreeGroup.asRight), group.toIndex).some
         )

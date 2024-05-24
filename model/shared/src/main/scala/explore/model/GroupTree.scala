@@ -30,6 +30,17 @@ object GroupTree:
   type Value = Either[Obs, Group]
   type Node  = TreeNode[Value]
 
+  def key: Lens[Value, Key] = Lens[Value, Key](_.bimap(_.id, _.id))(newId =>
+    case Left(obs)    =>
+      newId match
+        case Left(id) => Obs.id.replace(id)(obs).asLeft
+        case _        => obs.asLeft
+    case Right(group) =>
+      newId match
+        case Right(id) => Group.id.replace(id)(group).asRight
+        case _         => group.asRight
+  )
+
   def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
     val (obsList, groupList) = groups.partitionMap(_.value)
@@ -71,6 +82,8 @@ object GroupTree:
     def isAnd: Boolean = minimumRequired.isEmpty
 
   object Group:
+    val id: Lens[Group, GroupId] = Focus[Group](_.id)
+
     val name: Lens[Group, Option[NonEmptyString]] = Focus[Group](_.name)
 
     val minimumRequired: Lens[Group, Option[NonNegShort]] =
@@ -84,3 +97,6 @@ object GroupTree:
       Focus[Group](_.maximumInterval)
 
   case class Obs(id: Observation.Id) derives Eq
+
+  object Obs:
+    val id: Lens[Obs, Observation.Id] = Focus[Obs](_.id)

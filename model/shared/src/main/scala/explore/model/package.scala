@@ -76,3 +76,5 @@ trait PotMap[K, V] extends NewType[Map[K, Pot[V]]]:
       updated(k, Pot.pending)
     def allUpdated(map: Map[K, Pot[V]]): this.Type =
       apply(t.value ++ map)
+    def removed(k: K): this.Type                   =
+      apply(t.value.removed(k))

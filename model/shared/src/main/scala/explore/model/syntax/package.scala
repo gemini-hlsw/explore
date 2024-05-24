@@ -5,6 +5,7 @@ package explore.model.syntax
 
 import cats.effect.IO
 import cats.syntax.all.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.*
 import explore.model.enums.PosAngleOptions
@@ -102,3 +103,5 @@ object all:
     def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)
 
   extension (e: GroupTree.Value) def id: GroupTree.Key = e.bimap(_.id, _.id)
+
+  extension (e: NonNegShort) def toNonNegInt: NonNegInt = NonNegInt.unsafeFrom(e.value)
