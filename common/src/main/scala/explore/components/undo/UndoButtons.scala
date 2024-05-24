@@ -28,7 +28,7 @@ object UndoButtons:
       <.div(
         ExploreStyles.ButtonsUndo,
         <.span(
-          Css("p-buttonset"),
+          Css("p-button-group"),
           Button(
             severity = Button.Severity.Secondary,
             outlined = true,

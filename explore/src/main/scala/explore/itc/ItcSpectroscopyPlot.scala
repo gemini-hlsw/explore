@@ -21,7 +21,6 @@ import lucuma.itc.math.roundToSignificantFigures
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.refined.*
-import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.*
 import lucuma.typed.highcharts.mod.DashStyleValue
 import lucuma.ui.reusability.given
@@ -144,7 +143,7 @@ object ItcSpectroscopyPlot {
       .setSeries(
         chart.series
           .map: series =>
-            SeriesLineOptions((), (), line)
+            SeriesLineOptions((), ())
               .setName(series.title)
               .setYAxis(0)
               .setData(

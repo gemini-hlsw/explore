@@ -20,7 +20,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
-import lucuma.typed.highcharts.highchartsStrings.line
 import lucuma.typed.highcharts.mod.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -248,7 +247,7 @@ object ElevationPlotSemester:
             )
             .setSeries(
               List(
-                SeriesLineOptions((), (), line)
+                SeriesLineOptions((), ())
                   .setName("Visibility")
                   .setYAxis(0)
                   .setAnimation(false)
