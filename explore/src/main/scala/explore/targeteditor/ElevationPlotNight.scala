@@ -28,7 +28,6 @@ import lucuma.core.model.ObservingNight
 import lucuma.core.util.time.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
-import lucuma.typed.highcharts.highchartsStrings.area
 import lucuma.typed.highcharts.mod.*
 import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.ui.components.MoonPhase
@@ -441,7 +440,7 @@ object ElevationPlotNight:
                           .setClassName("elevation-plot-visualization-period")
                       )
                   val baseSeries  =
-                    SeriesAreaOptions((), (), area, ())
+                    SeriesAreaOptions((), (), ())
                       .setName(series.name)
                       .setClassName("elevation-plot-series")
                       .setYAxis(series.yAxis)

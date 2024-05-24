@@ -232,7 +232,7 @@ body.hide-reusability {
 .explore-buttons-undo {
   margin-left: auto;
 
-  .p-buttonset .p-component.p-button {
+  .p-button-group .p-component.p-button {
     color: var(--site-text-color);
   }
 }
@@ -1080,7 +1080,7 @@ svg.fa-triangle-exclamation.explore-error-icon {
       align-items: baseline;
       gap: var(--inline-spacing);
 
-      .p-buttonset {
+      .p-button-group {
         display: flex;
         gap: var(--inline-spacing);
       }
