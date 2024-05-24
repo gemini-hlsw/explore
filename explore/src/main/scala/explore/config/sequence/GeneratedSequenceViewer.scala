@@ -3,6 +3,7 @@
 
 package explore.config.sequence
 
+import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.ErrorPolicy
@@ -25,10 +26,13 @@ import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
 import lucuma.schemas.model.ExecutionVisits
+import lucuma.schemas.model.Visit
+import lucuma.schemas.model.enums.AtomExecutionState
 import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Optional
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL.*
@@ -46,6 +50,37 @@ object GeneratedSequenceViewer:
 
   private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
 
+  private val gmosNorthVisits: Optional[ExecutionVisits, List[Visit.GmosNorth]] =
+    ExecutionVisits.gmosNorth
+      .andThen(ExecutionVisits.GmosNorth.visits)
+
+  private val removeGmosNorthIncompleteAtoms: Endo[ExecutionVisits] =
+    gmosNorthVisits.modify: visits =>
+      visits.init ++
+        visits.lastOption
+          .map:
+            Visit.GmosNorth.atoms.modify: atoms =>
+              atoms.init ++ atoms.lastOption.filter:
+                _.executionState === AtomExecutionState.Completed
+          .filter(_.atoms.nonEmpty)
+
+  private val gmosSouthVisits: Optional[ExecutionVisits, List[Visit.GmosSouth]] =
+    ExecutionVisits.gmosSouth
+      .andThen(ExecutionVisits.GmosSouth.visits)
+
+  private val removeGmosSouthIncompleteAtoms: Endo[ExecutionVisits] =
+    gmosSouthVisits.modify: visits =>
+      visits.init ++
+        visits.lastOption
+          .map:
+            Visit.GmosSouth.atoms.modify: atoms =>
+              atoms.init ++ atoms.lastOption.filter:
+                _.executionState === AtomExecutionState.Completed
+          .filter(_.atoms.nonEmpty)
+
+  private val removeIncompleteAtoms: Endo[ExecutionVisits] =
+    removeGmosNorthIncompleteAtoms >>> removeGmosSouthIncompleteAtoms
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -55,7 +90,7 @@ object GeneratedSequenceViewer:
 
         ObservationVisits[IO]
           .query(props.obsId)(ErrorPolicy.IgnoreOnData)
-          .map(_.flatMap(_.observation.flatMap(_.execution)))
+          .map(_.flatMap(_.observation.flatMap(_.execution.map(removeIncompleteAtoms))))
           .attemptPot
           .resetOnResourceSignals:
             ObsQueriesGQL.ObservationEditSubscription
