@@ -13,9 +13,11 @@ import monocle.Lens
 import io.circe.Decoder
 import io.circe.refined.*
 import eu.timepit.refined.cats.given
+import lucuma.core.model.CallForProposals
+import lucuma.odb.json.all.*
 
 case class Proposal(
-  call:         Option[CallForProposal],
+  cfpId:        Option[CallForProposals.Id],
   title:        Option[NonEmptyString],
   category:     Option[TacCategory],
   abstrakt:     Option[NonEmptyString],
@@ -23,8 +25,8 @@ case class Proposal(
 ) derives Eq
 
 object Proposal:
-  val call: Lens[Proposal, Option[CallForProposal]]      =
-    Focus[Proposal](_.call)
+  val cfpId: Lens[Proposal, Option[CallForProposals.Id]] =
+    Focus[Proposal](_.cfpId)
   val title: Lens[Proposal, Option[NonEmptyString]]      =
     Focus[Proposal](_.title)
   val category: Lens[Proposal, Option[TacCategory]]      =
@@ -36,9 +38,10 @@ object Proposal:
 
   given Decoder[Proposal] = c =>
     for {
+      cfpId    <- c.downField("call").field("id").as[Option[CallForProposals.Id]]
       title    <- c.downField("title").as[Option[NonEmptyString]]
       category <- c.downField("category").as[Option[TacCategory]]
       abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]
-    } yield Proposal(None, title, category, abstrakt, None)
+    } yield Proposal(cfpId, title, category, abstrakt, None)
 
   val Default = Proposal(None, None, None, None, None)

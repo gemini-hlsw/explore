@@ -13,6 +13,7 @@ import lucuma.schemas.decoders.given
 import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.cats.given
 import io.circe.refined.given
+import lucuma.core.model.CallForProposals
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:
@@ -24,6 +25,10 @@ enum CallForProposalType(val tag: String) derives Enumerated:
   case RegularSemester    extends CallForProposalType("RegularSemester")
   case SystemVerification extends CallForProposalType("SystemVerification")
 
-case class CallForProposal(semester: Semester, title: NonEmptyString, cfpType: CallForProposalType)
-    derives Eq,
+case class CallForProposal(
+  id:       CallForProposals.Id,
+  semester: Semester,
+  title:    NonEmptyString,
+  cfpType:  CallForProposalType
+) derives Eq,
       Decoder

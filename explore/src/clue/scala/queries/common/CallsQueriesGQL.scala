@@ -14,6 +14,7 @@ object CallsQueriesGQL:
       query {
         callsForProposals(WHERE: {isOpen: {EQ: true}}) {
           matches {
+            id
             semester
             title
             cfpType: type

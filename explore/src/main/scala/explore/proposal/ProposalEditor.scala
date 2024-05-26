@@ -41,6 +41,7 @@ import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
+import lucuma.core.model.CallForProposals
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -205,7 +206,6 @@ object ProposalEditor:
     // splitsMap:     SortedMap[Partner, IntPercent],
     // timeEstimateRange: Pot[Option[ProgramTimeRange]],
     cfps:          List[CallForProposal],
-    selectedCfp:   View[Option[CallForProposal]],
     readonly:      Boolean,
     renderInTitle: Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
@@ -213,6 +213,11 @@ object ProposalEditor:
       aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
+
+    val callIdAligner: Aligner[Option[CallForProposals.Id], Input[CallForProposals.Id]] =
+      aligner.zoom(Proposal.cfpId, ProposalPropertiesInput.callId.modify)
+
+    val callIdView: View[Option[CallForProposals.Id]] = callIdAligner.view(_.orUnassign)
 
     // val classAligner: Aligner[ProposalClass, Input[ProposalClassInput]] =
     //   aligner.zoom(Proposal.proposalClass, ProposalPropertiesInput.proposalClass.modify)
@@ -362,19 +367,17 @@ object ProposalEditor:
             )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            // FormDropdownOptional(
-            //   id = "cfp".refined,
-            //   label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-            //   value = selectedCfp.get,
-            //   options = cfps.map(r => SelectItem(r, r.title)),
-            //   onChange =
-            //     // So far we only support queue for the current crop of CfP
-            //     _.map(v =>
-            //       proposalClass.set(ProposalClassType.Queue) *> selectedCfp.set(v.some)
-            //     ).orEmpty,
-            //   disabled = readonly,
-            //   modifiers = List(^.id := "cfp")
-            // ),
+            FormDropdownOptional(
+              id = "cfp".refined,
+              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+              value = callIdView.get,
+              options = cfps.map(r => SelectItem(r.id, r.title)),
+              onChange =
+                // So far we only support queue for the current crop of CfP
+                _.map(v => callIdView.set(v.some)).orEmpty,
+              disabled = readonly,
+              modifiers = List(^.id := "cfp")
+            ),
             FormDropdownOptional(
               id = "category".refined,
               label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
@@ -415,7 +418,6 @@ object ProposalEditor:
     invitations:       View[List[CoIInvitation]],
     attachments:       View[List[ProposalAttachment]],
     cfps:              List[CallForProposal],
-    selectedCfp:       View[Option[CallForProposal]],
     authToken:         Option[NonEmptyString],
     layout:            LayoutsMap,
     readonly:          Boolean,
@@ -451,21 +453,6 @@ object ProposalEditor:
 
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
-    // This is a workaround until we can properly set cfps in the proposal
-    val cfpMod = selectedCfp.withOnMod {
-      case Some(cfp) =>
-        // UpdateProgramsMutation[IO]
-        //   .execute(
-        //     UpdateProgramsInput(WHERE = programId.toWhereProgram.assign,
-        //                         SET = ProgramPropertiesInput(semester = cfp.semester.assign)
-        //     )
-        //   )
-        //   .void
-        //   .runAsync
-        Callback.empty
-      case None      => Callback.empty
-    }
-
     val detailsTile =
       Tile(ProposalTabTileIds.DetailsId.id, "Details", canMinimize = true)(
         renderDetails(
@@ -479,7 +466,6 @@ object ProposalEditor:
           // splitsView.get,
           // timeEstimateRange,
           cfps,
-          cfpMod,
           readonly,
           _
         )
@@ -582,7 +568,6 @@ object ProposalEditor:
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
-      .useStateView(none[CallForProposal])
       .render {
         (
           props,
@@ -596,8 +581,7 @@ object ProposalEditor:
           // _,
           resize,
           createInvite,
-          overlayRef,
-          selectedCfp
+          overlayRef
         ) =>
           renderFn(
             props.programId,
@@ -615,7 +599,6 @@ object ProposalEditor:
             props.invitations,
             props.attachments,
             cfps.toOption.orEmpty,
-            selectedCfp,
             props.authToken,
             props.layout,
             props.readonly,
