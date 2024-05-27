@@ -455,7 +455,7 @@ object TargetTabContents extends TwoPanels:
       .useContext(AppContext.ctx)
       // Two panel state
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, state) => props.focused) { (_, _, selected) => focused =>
+      .useEffectWithDepsBy((props, _, _) => props.focused) { (_, _, selected) => focused =>
         (focused, selected.get) match
           case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
           case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
