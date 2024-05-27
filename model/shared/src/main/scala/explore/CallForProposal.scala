@@ -14,6 +14,8 @@ import eu.timepit.refined.types.string.NonEmptyString
 import eu.timepit.refined.cats.given
 import io.circe.refined.given
 import lucuma.core.model.CallForProposals
+import cats.data.NonEmptyList
+import lucuma.core.enums.ScienceSubtype
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:
@@ -24,6 +26,18 @@ enum CallForProposalType(val tag: String) derives Enumerated:
   case PoorWeather        extends CallForProposalType("PoorWeather")
   case RegularSemester    extends CallForProposalType("RegularSemester")
   case SystemVerification extends CallForProposalType("SystemVerification")
+
+  def subTypes: NonEmptyList[ScienceSubtype] =
+    this match
+      case CallForProposalType.LargeProgram       => NonEmptyList.of(ScienceSubtype.LargeProgram)
+      case CallForProposalType.FastTurnaround     => NonEmptyList.of(ScienceSubtype.FastTurnaround)
+      case CallForProposalType.RegularSemester    =>
+        NonEmptyList.of(ScienceSubtype.Classical, ScienceSubtype.Queue)
+      case CallForProposalType.SystemVerification =>
+        NonEmptyList.of(ScienceSubtype.SystemVerification)
+      case CallForProposalType.PoorWeather        => NonEmptyList.of(ScienceSubtype.PoorWeather)
+      case CallForProposalType.DemoScience        => NonEmptyList.of(ScienceSubtype.DemoScience)
+      case CallForProposalType.DirectorsTime      => NonEmptyList.of(ScienceSubtype.DirectorsTime)
 
 case class CallForProposal(
   id:       CallForProposals.Id,

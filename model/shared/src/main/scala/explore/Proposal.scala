@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.TacCategory
 
@@ -14,7 +15,6 @@ import io.circe.Decoder
 import io.circe.refined.*
 import eu.timepit.refined.cats.given
 import lucuma.core.model.CallForProposals
-import lucuma.odb.json.all.*
 
 case class Proposal(
   cfpId:        Option[CallForProposals.Id],
@@ -38,10 +38,12 @@ object Proposal:
 
   given Decoder[Proposal] = c =>
     for {
-      cfpId    <- c.downField("call").field("id").as[Option[CallForProposals.Id]]
+      cfpId    <-
+        c.downField("call").downField("id").success.traverse(_.as[Option[CallForProposals.Id]])
       title    <- c.downField("title").as[Option[NonEmptyString]]
       category <- c.downField("category").as[Option[TacCategory]]
       abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]
-    } yield Proposal(cfpId, title, category, abstrakt, None)
+      pte      <- c.downField("type").as[Option[ProposalType]]
+    } yield Proposal(cfpId.flatten, title, category, abstrakt, pte)
 
   val Default = Proposal(None, None, None, None, None)

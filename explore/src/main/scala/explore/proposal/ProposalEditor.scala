@@ -53,6 +53,7 @@ import lucuma.core.model.User
 import lucuma.core.model.ZeroTo100
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
+import lucuma.core.syntax.all.*
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -81,6 +82,9 @@ import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
+import explore.model.ProposalType
+import explore.common.ProposalQueries.*
+import monocle.Lens
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -195,6 +199,11 @@ object ProposalEditor:
     splitView
       .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
+  private def convertingLens: Lens[Option[ProposalType], Option[ScienceSubtype]] =
+    Lens[Option[ProposalType], Option[ScienceSubtype]](
+      _.map(_.scienceSubtype)
+    )(subtype => _.map(ProposalType.fromScienceSubtype(subtype)))
+
   private def renderDetails(
     aligner:       Aligner[Proposal, ProposalPropertiesInput],
     undoCtx:       UndoContext[Proposal],
@@ -219,15 +228,18 @@ object ProposalEditor:
 
     val callIdView: View[Option[CallForProposals.Id]] = callIdAligner.view(_.orUnassign)
 
-    // val classAligner: Aligner[ProposalClass, Input[ProposalClassInput]] =
-    //   aligner.zoom(Proposal.proposalClass, ProposalPropertiesInput.proposalClass.modify)
-    //
-    // val classView: View[ProposalClass] = classAligner.view(_.toInput.assign)
+    val proposalTypeAligner: Aligner[Option[ProposalType], Input[ProposalTypeInput]] =
+      aligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
+
+    val proposalTypeView: View[Option[ProposalType]] =
+      proposalTypeAligner.view(_.map(_.toInput).orUnassign)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
 
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
+
+    println(aligner.get)
 
     // val activationAligner: Aligner[ToOActivation, Input[ToOActivation]] =
     //   aligner.zoom(Proposal.toOActivation, ProposalPropertiesInput.toOActivation.modify)
@@ -292,12 +304,23 @@ object ProposalEditor:
     // }
 
     // val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
+    //
+    val isCfPSelected =
+      callIdView.get.isDefined
+    val subtypes      =
+      callIdView.get.flatMap(id => cfps.find(_.id === id).map(_.cfpType.subTypes))
+    val hasSubtypes   =
+      isCfPSelected && subtypes.exists(_.size > 1)
+
+    val scienceSubtypeView: View[Option[ScienceSubtype]] =
+      proposalTypeView.zoom(convertingLens)
 
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
       <.form(
         <.div(ExploreStyles.ProposalDetailsGrid)(
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+            // Title input
             FormInputTextView(
               id = "title".refined,
               inputClass = Css("inverse"),
@@ -306,6 +329,16 @@ object ProposalEditor:
               label = "Title",
               disabled = readonly
             )(^.autoFocus := true),
+            // Category selector
+            FormDropdownOptional(
+              id = "category".refined,
+              label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
+              value = categoryView.get.map(categoryTag),
+              options = categoryOptions,
+              onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+              disabled = readonly,
+              modifiers = List(^.id := "category")
+            ),
             <.div(
               ExploreStyles.PartnerSplitsGrid,
               // The first partner splits row, with the button and the flags
@@ -364,9 +397,10 @@ object ProposalEditor:
               //     )
               //   )
               // }
-            )
+            ).when(isCfPSelected)
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+            // Call for proposal selector
             FormDropdownOptional(
               id = "cfp".refined,
               label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
@@ -378,15 +412,17 @@ object ProposalEditor:
               disabled = readonly,
               modifiers = List(^.id := "cfp")
             ),
-            FormDropdownOptional(
-              id = "category".refined,
-              label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
-              value = categoryView.get.map(categoryTag),
-              options = categoryOptions,
-              onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+            // Proposal type selector, visible when cfp is selected and has more than one subtpye
+            FormDropdown(
+              id = "proposalType".refined,
+              options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
+              label =
+                React.Fragment("Proposal Type", HelpIcon("proposal/main/proposal-type.md".refined)),
+              value = proposalTypeView.get.map(_.scienceSubtype).orNull,
+              // value = scienceSubtypeView,
               disabled = readonly,
-              modifiers = List(^.id := "category")
-            )
+              modifiers = List(^.id := "proposalType")
+            ).when(hasSubtypes)
             // FormEnumDropdownView(
             //   id = "too-activation".refined,
             //   value = activationView,
