@@ -41,7 +41,7 @@ import lucuma.react.primereact.Toolbar
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.enums.ProposalStatus
-import lucuma.schemas.odb.input.*
+// import lucuma.schemas.odb.input.*
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
@@ -50,6 +50,7 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
+import explore.common.ProposalQueries.*
 
 case class ProposalTabContents(
   programId:         Program.Id,
@@ -71,17 +72,16 @@ object ProposalTabContents:
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     programDetails.zoom(ProgramDetails.proposal).set(proposal.some) >>
-      Callback.empty
-    // CreateProposalMutation[IO]
-    //   .execute(
-    //     CreateProposalInput(
-    //       programId = programId,
-    //       SET = proposal.toInput
-    //     )
-    //   )
-    //   .toastErrors
-    //   .void
-    //   .runAsync
+      CreateProposalMutation[IO]
+        .execute(
+          CreateProposalInput(
+            programId = programId,
+            SET = proposal.toInput
+          )
+        )
+        .toastErrors
+        .void
+        .runAsync
 
   private def renderFn(
     programId:         Program.Id,

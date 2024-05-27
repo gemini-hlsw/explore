@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package queries.common
+package explore.common
 
 import explore.model.Proposal
 import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
@@ -53,18 +53,24 @@ import clue.data.syntax.*
 //         PoorWeatherInput(minPercentTime = minPercentTime.assign).assign
 //       )
 
-extension (proposal: Proposal)
-  def toInput: ProposalPropertiesInput = ProposalPropertiesInput(
-    callId = proposal.cfpId.orUnassign,
-    title = proposal.title.orUnassign,
-    category = proposal.category.orUnassign,
-    `abstract` = proposal.abstrakt.orUnassign
-    // The API allows the partner splits to be missing, but not empty. We only use this on
-    // create, and it results in an empty partner splits in the response.
-    // partnerSplits =
-    //   if (proposal.partnerSplits.isEmpty) Input.unassign
-    //   else
-    //     proposal.partnerSplits.toList.map { case (par, pct) =>
-    //       PartnerSplitInput(par, pct)
-    //     }.assign
-  )
+trait ProposalQueries:
+  extension (proposal: Proposal)
+    def toInput: ProposalPropertiesInput = {
+      println(proposal.abstrakt)
+      ProposalPropertiesInput(
+        callId = proposal.cfpId.orUnassign,
+        title = proposal.title.orUnassign,
+        category = proposal.category.orUnassign,
+        `abstract` = proposal.abstrakt.orUnassign
+        // The API allows the partner splits to be missing, but not empty. We only use this on
+        // create, and it results in an empty partner splits in the response.
+        // partnerSplits =
+        //   if (proposal.partnerSplits.isEmpty) Input.unassign
+        //   else
+        //     proposal.partnerSplits.toList.map { case (par, pct) =>
+        //       PartnerSplitInput(par, pct)
+        //     }.assign
+      )
+    }
+
+object ProposalQueries extends ProposalQueries
