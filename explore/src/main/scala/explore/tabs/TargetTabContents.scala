@@ -286,7 +286,8 @@ object TargetTabContents extends TwoPanels:
           props.searching,
           title,
           props.globalPreferences,
-          props.readonly
+          props.readonly,
+          backButton = backButton.some
         )
 
       val selectedCoordinates: Option[Coordinates] =
