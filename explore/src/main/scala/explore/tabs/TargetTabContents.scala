@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import explore.*
 import explore.components.FocusedStatus
 import explore.components.Tile
@@ -21,7 +20,6 @@ import explore.model.ObsSummary
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
-import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
@@ -457,14 +455,13 @@ object TargetTabContents extends TwoPanels:
       .useContext(AppContext.ctx)
       // Two panel state
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, state) => (props.focused, state.reuseByValue)) {
-        (_, _, selected) => (focused, _) =>
-          (focused, selected.get) match
-            case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
-            case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
-            case (Focused(None, None, _), SelectedPanel.Editor) =>
-              selected.set(SelectedPanel.Summary)
-            case _                                              => Callback.empty
+      .useEffectWithDepsBy((props, _, state) => props.focused) { (_, _, selected) => focused =>
+        (focused, selected.get) match
+          case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
+          case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
+          case (Focused(None, None, _), SelectedPanel.Editor) =>
+            selected.set(SelectedPanel.Summary)
+          case _                                              => Callback.empty
       }
       .useStateViewBy((props, _, _) => props.focused.target.toList)
       .useEffectWithDepsBy((props, _, _, _) => props.focused.target)((_, _, _, selIds) =>
