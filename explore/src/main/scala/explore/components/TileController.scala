@@ -155,10 +155,17 @@ object TileController:
                 .setState(bk),
           onLayoutChange = (m: Layout, newLayouts: Layouts) =>
             // Store the current layout in the state for debugging
-            currentLayout
-              .mod(breakpointLayout(breakpoint.value).replace(m)) *>
-              storeLayouts(p.userId, p.section, newLayouts)
-                .when_(p.storeLayout),
+            // But only update local or user preferences state if the layouts are valid, otherwise
+            // an issue with all the tiles being shrunk to nothing can happen. The error about
+            // `minWidth larger than item width/maxWidth` will still occur in the console, and
+            // the tiles will sometimes shrink, but it will usually return to normal from the saved
+            // state and the problem will not be persisted to user preferences.
+            if (newLayouts.areValid)
+              currentLayout
+                .mod(breakpointLayout(breakpoint.value).replace(m)) *>
+                storeLayouts(p.userId, p.section, newLayouts)
+                  .when_(p.storeLayout)
+            else Callback.empty,
           layouts = currentLayout.get,
           className = p.clazz.map(_.htmlClass).orUndefined
         )(
