@@ -15,12 +15,6 @@ import io.circe.refined.*
 import lucuma.core.enums.ScienceSubtype
 import lucuma.odb.json.time.decoder.given
 import io.circe.ACursor
-import monocle.Lens
-import monocle.Focus
-import monocle.macros.GenPrism
-import monocle.Prism
-import lucuma.core.enums.SequenceType.Science
-import cats.data.NonEmptyList
 
 // Define the ProposalType trait
 sealed trait ProposalType derives Eq {
@@ -28,6 +22,20 @@ sealed trait ProposalType derives Eq {
 }
 
 object ProposalType:
+  def toScienceSubtype(s: ScienceSubtype): ProposalType => ProposalType =
+    s match
+      case ScienceSubtype.Classical => {
+        case Queue(_, _, minTime, splits) =>
+          Classical(ScienceSubtype.Classical, minTime, splits)
+        case i                            => i
+      }
+      case ScienceSubtype.Queue     => {
+        case Classical(_, minTime, splits) =>
+          Queue(ScienceSubtype.Queue, ToOActivation.None, minTime, splits)
+        case i                             => i
+      }
+      case _                        => identity
+
   def fromScienceSubtype(s: Option[ScienceSubtype]): ProposalType => ProposalType =
     println(s)
     s match

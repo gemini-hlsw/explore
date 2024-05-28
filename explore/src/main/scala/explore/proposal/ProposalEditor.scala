@@ -83,6 +83,7 @@ import spire.std.any.*
 
 import scala.collection.immutable.SortedMap
 import explore.model.ProposalType
+import explore.model.ProposalType.*
 import explore.common.ProposalQueries.*
 import monocle.Lens
 
@@ -305,133 +306,143 @@ object ProposalEditor:
 
     // val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
     //
-    val isCfPSelected =
+    val isCfPSelected                                    =
       callIdView.get.isDefined
-    val subtypes      =
-      callIdView.get.flatMap(id => cfps.find(_.id === id).map(_.cfpType.subTypes))
-    val hasSubtypes   =
-      isCfPSelected && subtypes.exists(_.size > 1)
-
+    val selectedCfp                                      =
+      callIdView.get.flatMap(id => cfps.find(_.id === id))
+    val subtypes                                         =
+      selectedCfp.map(_.cfpType.subTypes)
+    val hasSubtypes                                      =
+      subtypes.exists(_.size > 1)
+    val needsPartnerSelection                            =
+      proposalTypeView.get.map(_.scienceSubtype) match {
+        case Some(ScienceSubtype.Queue) | Some(ScienceSubtype.Classical) => true
+        case _                                                           => false
+      }
     val scienceSubtypeView: View[Option[ScienceSubtype]] =
       proposalTypeView.zoom(convertingLens)
 
-    React.Fragment(
-      renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
-      <.form(
-        <.div(ExploreStyles.ProposalDetailsGrid)(
-          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            // Title input
-            FormInputTextView(
-              id = "title".refined,
-              inputClass = Css("inverse"),
-              value = titleView,
-              validFormat = InputValidSplitEpi.nonEmptyString.optional,
-              label = "Title",
-              disabled = readonly
-            )(^.autoFocus := true),
-            // Category selector
-            FormDropdownOptional(
-              id = "category".refined,
-              label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
-              value = categoryView.get.map(categoryTag),
-              options = categoryOptions,
-              onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
-              disabled = readonly,
-              modifiers = List(^.id := "category")
-            ),
-            <.div(
-              ExploreStyles.PartnerSplitsGrid,
-              // The first partner splits row, with the button and the flags
+    React.StrictMode(
+      React.Fragment(
+        renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
+        <.form(
+          <.div(ExploreStyles.ProposalDetailsGrid)(
+            <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+              // Title input
+              FormInputTextView(
+                id = "title".refined,
+                inputClass = Css("inverse"),
+                value = titleView,
+                validFormat = InputValidSplitEpi.nonEmptyString.optional,
+                label = "Title",
+                disabled = readonly
+              )(^.autoFocus := true),
+              // Category selector
+              FormDropdownOptional(
+                id = "category".refined,
+                label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
+                value = categoryView.get.map(categoryTag),
+                options = categoryOptions,
+                onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+                disabled = readonly,
+                modifiers = List(^.id := "category")
+              ),
               <.div(
-                <.label("Partners")
+                ExploreStyles.PartnerSplitsGrid,
+                // The first partner splits row, with the button and the flags
+                <.div(
+                  <.label("Partners")
+                  // <.div(
+                  //   Button(
+                  //     icon = Icons.Edit,
+                  //     severity = Button.Severity.Secondary,
+                  //     tpe = Button.Type.Button,
+                  //     onClick = openPartnerSplitsEditor,
+                  //     tooltip = "Edit Partner Splits",
+                  //     disabled = readonly
+                  //   ).mini.compact
+                  // )
+                )
+                // partnerSplits(splitsMap)
                 // <.div(
-                //   Button(
-                //     icon = Icons.Edit,
-                //     severity = Button.Severity.Secondary,
-                //     tpe = Button.Type.Button,
-                //     onClick = openPartnerSplitsEditor,
-                //     tooltip = "Edit Partner Splits",
-                //     disabled = readonly
-                //   ).mini.compact
+                //   makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
+                // ),
+                // The second partner splits row, for maximum times - is always there
+                // FormStaticData(
+                //   value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
+                //   label = maxTimeLabel,
+                //   id = "maxTime"
+                // ),
+                // maxExecutionPot.renderPot(
+                //   valueRender = maxExecutionTime =>
+                //     React.Fragment(timeSplits(splitsMap, maxExecutionTime),
+                //                    minimumTime(minimumPct1View.get, maxExecutionTime)
+                //     ),
+                //   pendingRender = React.Fragment(<.span(), <.span())
+                // ),
+                // The third partner splits row, for minimum times - is always there
+                // FormStaticData(
+                //   value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
+                //   label = minTimeLabel,
+                //   id = "maxTime"
                 // )
-              )
-              // partnerSplits(splitsMap)
-              // <.div(
-              //   makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
-              // ),
-              // The second partner splits row, for maximum times - is always there
-              // FormStaticData(
-              //   value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
-              //   label = maxTimeLabel,
-              //   id = "maxTime"
-              // ),
-              // maxExecutionPot.renderPot(
-              //   valueRender = maxExecutionTime =>
-              //     React.Fragment(timeSplits(splitsMap, maxExecutionTime),
-              //                    minimumTime(minimumPct1View.get, maxExecutionTime)
-              //     ),
-              //   pendingRender = React.Fragment(<.span(), <.span())
-              // ),
-              // The third partner splits row, for minimum times - is always there
-              // FormStaticData(
-              //   value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
-              //   label = minTimeLabel,
-              //   id = "maxTime"
-              // )
-              // minExecutionPot.renderPot(
-              //   valueRender = minExecutionTime =>
-              //     React.Fragment(timeSplits(splitsMap, minExecutionTime),
-              //                    minimumTime(minimumPct1View.get, minExecutionTime)
-              //     ),
-              //   pendingRender = React.Fragment(<.span(), <.span())
-              // ),
-              // // The third partner splits row - only exists for a few observation classes
-              // totalTime.fold(React.Fragment()) { tt =>
-              //   React.Fragment(
-              //     <.div(totalTimeEntry),
-              //     timeSplits(splitsMap, tt),
-              //     <.div(
-              //       minimumPct2View
-              //         .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
-              //         .getOrElse(minimumTime(minimumPct1View.get, tt))
-              //     )
-              //   )
-              // }
-            ).when(isCfPSelected)
-          ),
-          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-            // Call for proposal selector
-            FormDropdownOptional(
-              id = "cfp".refined,
-              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-              value = callIdView.get,
-              options = cfps.map(r => SelectItem(r.id, r.title)),
-              onChange =
-                // So far we only support queue for the current crop of CfP
-                _.map(v => callIdView.set(v.some)).orEmpty,
-              disabled = readonly,
-              modifiers = List(^.id := "cfp")
+                // minExecutionPot.renderPot(
+                //   valueRender = minExecutionTime =>
+                //     React.Fragment(timeSplits(splitsMap, minExecutionTime),
+                //                    minimumTime(minimumPct1View.get, minExecutionTime)
+                //     ),
+                //   pendingRender = React.Fragment(<.span(), <.span())
+                // ),
+                // // The third partner splits row - only exists for a few observation classes
+                // totalTime.fold(React.Fragment()) { tt =>
+                //   React.Fragment(
+                //     <.div(totalTimeEntry),
+                //     timeSplits(splitsMap, tt),
+                //     <.div(
+                //       minimumPct2View
+                //         .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
+                //         .getOrElse(minimumTime(minimumPct1View.get, tt))
+                //     )
+                //   )
+                // }
+              ).when(needsPartnerSelection)
             ),
-            // Proposal type selector, visible when cfp is selected and has more than one subtpye
-            FormDropdown(
-              id = "proposalType".refined,
-              options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
-              label =
-                React.Fragment("Proposal Type", HelpIcon("proposal/main/proposal-type.md".refined)),
-              value = proposalTypeView.get.map(_.scienceSubtype).orNull,
-              // value = scienceSubtypeView,
-              disabled = readonly,
-              modifiers = List(^.id := "proposalType")
-            ).when(hasSubtypes)
-            // FormEnumDropdownView(
-            //   id = "too-activation".refined,
-            //   value = activationView,
-            //   label = React.Fragment(
-            //     "ToO Activation",
-            //     HelpIcon("proposal/main/too-activation.md".refined)
-            //   ),
-            //   disabled = readonly
-            // )
+            <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+              // Call for proposal selector
+              FormDropdownOptional(
+                id = "cfp".refined,
+                label =
+                  React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+                value = callIdView.get,
+                options = cfps.map(r => SelectItem(r.id, r.title)),
+                onChange =
+                  // So far we only support queue for the current crop of CfP
+                  _.map(v => callIdView.set(v.some)).orEmpty,
+                disabled = readonly,
+                modifiers = List(^.id := "cfp")
+              ),
+              // Proposal type selector, visible when cfp is selected and has more than one subtpye
+              FormDropdown(
+                id = "proposalType".refined,
+                options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
+                label = React.Fragment("Regular Proposal Type",
+                                       HelpIcon("proposal/main/proposal-type.md".refined)
+                ),
+                value = proposalTypeView.get.map(_.scienceSubtype).orNull,
+                onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
+                disabled = readonly,
+                modifiers = List(^.id := "proposalType")
+              ).when(hasSubtypes)
+              // FormEnumDropdownView(
+              //   id = "too-activation".refined,
+              //   value = activationView,
+              //   label = React.Fragment(
+              //     "ToO Activation",
+              //     HelpIcon("proposal/main/too-activation.md".refined)
+              //   ),
+              //   disabled = readonly
+              // )
+            )
           )
         )
       )
