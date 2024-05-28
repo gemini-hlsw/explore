@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
 import explore.Icons
@@ -22,7 +21,6 @@ import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
-import explore.model.reusability.given
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.*
 import explore.shortcuts.*
@@ -31,7 +29,6 @@ import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Group
@@ -213,14 +210,12 @@ object ObsTabContents extends TwoPanels:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, panels) => (props.focusedObs, panels.reuseByValue)) {
-        (_, _, _) => params =>
-          val (focusedObs, selected) = params
-          (focusedObs, selected.get) match {
-            case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
-            case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-            case _                            => Callback.empty
-          }
+      .useEffectWithDepsBy((props, _, _) => props.focusedObs) { (_, _, selected) => focusedObs =>
+        (focusedObs, selected.get) match {
+          case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
+          case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+          case _                            => Callback.empty
+        }
       }
       // Measure its size
       .useResizeDetector()
