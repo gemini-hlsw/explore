@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import cats.syntax.all.*
 import lucuma.core.model.Partner
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
@@ -15,6 +16,9 @@ import io.circe.refined.*
 import lucuma.core.enums.ScienceSubtype
 import lucuma.odb.json.time.decoder.given
 import io.circe.ACursor
+import monocle.Lens
+import monocle.Focus
+import monocle.Optional
 
 // Define the ProposalType trait
 sealed trait ProposalType derives Eq {
@@ -36,15 +40,23 @@ object ProposalType:
       }
       case _                        => identity
 
-  def fromScienceSubtype(s: Option[ScienceSubtype]): ProposalType => ProposalType =
-    println(s)
-    s match
-      case Some(ScienceSubtype.Classical) => {
-        case Queue(_, _, minTime, splits) =>
-          Classical(ScienceSubtype.Classical, minTime, splits)
-        case i                            => i
-      }
-      case _                              => identity
+  val toOActivation: Optional[ProposalType, ToOActivation] = Optional[ProposalType, ToOActivation] {
+    case d: DemoScience        => d.toOActivation.some
+    case d: DirectorsTime      => d.toOActivation.some
+    case d: FastTurnaround     => d.toOActivation.some
+    case d: LargeProgram       => d.toOActivation.some
+    case d: Queue              => d.toOActivation.some
+    case d: SystemVerification => d.toOActivation.some
+    case _                     => none
+  }(a => {
+    case d: DemoScience        => d.copy(toOActivation = a)
+    case d: DirectorsTime      => d.copy(toOActivation = a)
+    case d: FastTurnaround     => d.copy(toOActivation = a)
+    case d: LargeProgram       => d.copy(toOActivation = a)
+    case d: Queue              => d.copy(toOActivation = a)
+    case d: SystemVerification => d.copy(toOActivation = a)
+    case i                     => i
+  })
 
   // Define the Classical case class implementing ProposalType
   case class Classical(
@@ -54,6 +66,10 @@ object ProposalType:
   ) extends ProposalType
       derives Eq
 
+  object Classical {
+    val minPercentTime: Lens[Classical, IntPercent] = Focus[Classical](_.minPercentTime)
+  }
+
   // Define the DemoScience case class implementing ProposalType
   case class DemoScience(
     scienceSubtype: ScienceSubtype,
@@ -62,6 +78,11 @@ object ProposalType:
   ) extends ProposalType
       derives Eq
 
+  object DemoScience {
+    val minPercentTime: Lens[DemoScience, IntPercent]   = Focus[DemoScience](_.minPercentTime)
+    val toOActivation: Lens[DemoScience, ToOActivation] = Focus[DemoScience](_.toOActivation)
+  }
+
   // Define the DirectorsTime case class implementing ProposalType
   case class DirectorsTime(
     scienceSubtype: ScienceSubtype,
@@ -69,6 +90,11 @@ object ProposalType:
     minPercentTime: IntPercent
   ) extends ProposalType
       derives Eq
+
+  object DirectorsTime {
+    val minPercentTime: Lens[DirectorsTime, IntPercent]   = Focus[DirectorsTime](_.minPercentTime)
+    val toOActivation: Lens[DirectorsTime, ToOActivation] = Focus[DirectorsTime](_.toOActivation)
+  }
 
   // Define the FastTurnaround case class implementing ProposalType
   case class FastTurnaround(

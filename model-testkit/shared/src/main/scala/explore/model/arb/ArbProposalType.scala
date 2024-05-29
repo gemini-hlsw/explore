@@ -15,10 +15,10 @@ import org.scalacheck.Cogen.*
 import explore.model.arb.ArbPartnerSplit.given
 import explore.model.ProposalType
 import explore.model.ProposalType.*
-import explore.model.enums.ScienceSubtype
 import explore.model.PartnerSplit
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbTimeSpan.given
+import lucuma.core.enums.ScienceSubtype
 
 trait ArbProposalType:
 

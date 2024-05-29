@@ -200,11 +200,6 @@ object ProposalEditor:
     splitView
       .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
-  private def convertingLens: Lens[Option[ProposalType], Option[ScienceSubtype]] =
-    Lens[Option[ProposalType], Option[ScienceSubtype]](
-      _.map(_.scienceSubtype)
-    )(subtype => _.map(ProposalType.fromScienceSubtype(subtype)))
-
   private def renderDetails(
     aligner:       Aligner[Proposal, ProposalPropertiesInput],
     undoCtx:       UndoContext[Proposal],
@@ -229,12 +224,6 @@ object ProposalEditor:
 
     val callIdView: View[Option[CallForProposals.Id]] = callIdAligner.view(_.orUnassign)
 
-    val proposalTypeAligner: Aligner[Option[ProposalType], Input[ProposalTypeInput]] =
-      aligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
-
-    val proposalTypeView: View[Option[ProposalType]] =
-      proposalTypeAligner.view(_.map(_.toInput).orUnassign)
-
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
 
@@ -242,10 +231,18 @@ object ProposalEditor:
 
     println(aligner.get)
 
-    // val activationAligner: Aligner[ToOActivation, Input[ToOActivation]] =
-    //   aligner.zoom(Proposal.toOActivation, ProposalPropertiesInput.toOActivation.modify)
+    val proposalTypeAligner: Aligner[Option[ProposalType], Input[ProposalTypeInput]] =
+      aligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
 
-    // val activationView: View[ToOActivation] = activationAligner.view(_.assign)
+    val proposalTypeView: View[Option[ProposalType]] =
+      proposalTypeAligner.view(_.map(_.toInput).orUnassign)
+
+    val activationAligner: Option[Aligner[ToOActivation, Input[ToOActivation]]] =
+      aligner.zoomOpt(Proposal.proposalType.some.andThen(ProposalType.toOActivation),
+                      modifyToOActivation
+      )
+
+    val activationView: Option[View[ToOActivation]] = activationAligner.map(_.view(_.assign))
 
     // val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     // val totalTime       = totalTimeView.get
@@ -306,21 +303,21 @@ object ProposalEditor:
 
     // val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
     //
-    val isCfPSelected                                    =
+    val isCfPSelected         =
       callIdView.get.isDefined
-    val selectedCfp                                      =
+    val selectedCfp           =
       callIdView.get.flatMap(id => cfps.find(_.id === id))
-    val subtypes                                         =
+    val subtypes              =
       selectedCfp.map(_.cfpType.subTypes)
-    val hasSubtypes                                      =
+    val hasSubtypes           =
       subtypes.exists(_.size > 1)
-    val needsPartnerSelection                            =
+    val needsPartnerSelection =
       proposalTypeView.get.map(_.scienceSubtype) match {
         case Some(ScienceSubtype.Queue) | Some(ScienceSubtype.Classical) => true
         case _                                                           => false
       }
-    val scienceSubtypeView: View[Option[ScienceSubtype]] =
-      proposalTypeView.zoom(convertingLens)
+    // val scienceSubtypeView: View[Option[ScienceSubtype]] =
+    //   proposalTypeView.zoom(convertingLens)
 
     React.StrictMode(
       React.Fragment(
@@ -432,16 +429,18 @@ object ProposalEditor:
                 onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
                 disabled = readonly,
                 modifiers = List(^.id := "proposalType")
-              ).when(hasSubtypes)
-              // FormEnumDropdownView(
-              //   id = "too-activation".refined,
-              //   value = activationView,
-              //   label = React.Fragment(
-              //     "ToO Activation",
-              //     HelpIcon("proposal/main/too-activation.md".refined)
-              //   ),
-              //   disabled = readonly
-              // )
+              ).when(hasSubtypes),
+              activationView.map(activationView =>
+                FormEnumDropdownView(
+                  id = "too-activation".refined,
+                  value = activationView,
+                  label = React.Fragment(
+                    "ToO Activation",
+                    HelpIcon("proposal/main/too-activation.md".refined)
+                  ),
+                  disabled = readonly
+                )
+              )
             )
           )
         )
