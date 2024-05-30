@@ -6,7 +6,7 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
-import lucuma.core.model.Partner
+import lucuma.core.enums.Partner
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
 import eu.timepit.refined.cats.given

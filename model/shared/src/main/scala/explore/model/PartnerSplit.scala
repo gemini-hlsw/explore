@@ -7,7 +7,7 @@ import cats.Eq
 import cats.derived.*
 import eu.timepit.refined.cats.given
 import lucuma.core.model.IntPercent
-import lucuma.core.model.Partner
+import lucuma.core.enums.Partner
 import monocle.Focus
 import monocle.Lens
 import io.circe.Decoder

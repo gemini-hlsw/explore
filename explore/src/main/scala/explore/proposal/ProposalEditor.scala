@@ -47,7 +47,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.model.IntPercent
-import lucuma.core.model.Partner
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.core.model.ZeroTo100
@@ -140,7 +139,7 @@ object ProposalEditor:
   private def partnerSplitData(partner: Partner, id: String, data: String) = {
     val img: TagMod  =
       <.img(^.src        := PartnerFlags.smallFlag(partner),
-            ^.alt := s"${partner.name}  Flag",
+            ^.alt := s"${partner.shortName}  Flag",
             ExploreStyles.PartnerSplitFlag
       )
     val span: TagMod = <.span(data)

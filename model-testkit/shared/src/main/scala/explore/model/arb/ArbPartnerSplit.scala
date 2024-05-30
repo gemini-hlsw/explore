@@ -5,7 +5,7 @@ package explore.model.arb
 
 import eu.timepit.refined.scalacheck.all.*
 import lucuma.core.model.IntPercent
-import lucuma.core.model.Partner
+import lucuma.core.enums.Partner
 import lucuma.core.util.arb.ArbEnumerated
 import org.scalacheck.*
 import org.scalacheck.Arbitrary.arbitrary
