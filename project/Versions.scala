@@ -34,7 +34,7 @@ object Versions {
   val mouse                  = "1.2.3"
   val mUnit                  = "1.0.0"
   val mUnitCatsEffect        = "2.0.0"
-  val reactAladin            = "0.32.0"
+  val reactAladin            = "0.32.1"
   val refinedAlgebra         = "0.1.1"
   val sbtBuildInfo           = "0.12.0"
   val sbtLucuma              = "0.11.15"
