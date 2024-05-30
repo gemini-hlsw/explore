@@ -22,20 +22,16 @@ import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 
 trait ProposalQueries:
   private def toOAUpdater(f: Input[ToOActivation] => Input[ToOActivation]) =
-    ProposalTypeInput.demoScience.modify(_.map(DemoScienceInput.toOActivation.modify(f))) >>>
-      ProposalTypeInput.directorsTime.modify(
-        _.map(DirectorsTimeInput.toOActivation.modify(f))
-      ) >>>
-      ProposalTypeInput.fastTurnaround.modify(
-        _.map(FastTurnaroundInput.toOActivation.modify(f))
-      ) >>>
-      ProposalTypeInput.largeProgram.modify(
-        _.map(LargeProgramInput.toOActivation.modify(f))
-      ) >>>
-      ProposalTypeInput.queue.modify(_.map(QueueInput.toOActivation.modify(f))) >>>
-      ProposalTypeInput.systemVerification.modify(
-        _.map(SystemVerificationInput.toOActivation.modify(f))
-      )
+    ProposalTypeInput.demoScience.assign.andThen(DemoScienceInput.toOActivation).modify(f) >>>
+      ProposalTypeInput.directorsTime.assign.andThen(DirectorsTimeInput.toOActivation).modify(f) >>>
+      ProposalTypeInput.fastTurnaround.assign
+        .andThen(FastTurnaroundInput.toOActivation)
+        .modify(f) >>>
+      ProposalTypeInput.largeProgram.assign.andThen(LargeProgramInput.toOActivation).modify(f) >>>
+      ProposalTypeInput.queue.assign.andThen(QueueInput.toOActivation).modify(f) >>>
+      ProposalTypeInput.systemVerification.assign
+        .andThen(SystemVerificationInput.toOActivation)
+        .modify(f)
 
   def modifyToOActivation(
     f: Input[ToOActivation] => Input[ToOActivation]

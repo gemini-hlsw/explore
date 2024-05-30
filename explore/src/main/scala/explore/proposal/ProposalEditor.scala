@@ -212,8 +212,6 @@ object ProposalEditor:
 
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
 
-    println(aligner.get)
-
     val proposalTypeAligner: Aligner[Option[ProposalType], Input[ProposalTypeInput]] =
       aligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
 
