@@ -154,6 +154,17 @@ trait DisplayImplicits:
     case SequenceType.Science     => "Science"
   }
 
+  given Display[ScienceSubtype] = Display.byShortName {
+    case ScienceSubtype.Classical          => "Classical"
+    case ScienceSubtype.DirectorsTime      => "Director's Time"
+    case ScienceSubtype.FastTurnaround     => "Fast Turnaround"
+    case ScienceSubtype.LargeProgram       => "Large Program"
+    case ScienceSubtype.PoorWeather        => "Poor Weather"
+    case ScienceSubtype.Queue              => "Queue"
+    case ScienceSubtype.DemoScience        => "Demo Science"
+    case ScienceSubtype.SystemVerification => "System Verification"
+  }
+
   given Display[BoundedInterval[Wavelength]] = Display.byShortName(interval =>
     List(interval.lower, interval.upper)
       .map(q =>

@@ -14,22 +14,11 @@ object ProgramDetailsSubquery
   override val subquery: String = s"""
     {
       type
-      proposalStatus
       pi $ProgramUserSubquery
+      proposal $ProposalSubquery
+      proposalStatus
       users $ProgramUserWithRoleSubquery
       reference $ProgramReferenceSubquery
       userInvitations $ProgramInvitationsSubquery
     }
   """
-  // Restore when integrating API CfP changes
-  // override val subquery: String = s"""
-  //   {
-  //     type
-  //     proposal $ProposalSubquery
-  //     proposalStatus
-  //     pi $ProgramUserSubquery
-  //     users $ProgramUserWithRoleSubquery
-  //     reference $ProgramReferenceSubquery
-  //     userInvitations $ProgramInvitationsSubquery
-  //   }
-  // """
