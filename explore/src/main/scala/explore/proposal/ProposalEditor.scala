@@ -17,9 +17,8 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
 import explore.common.Aligner
-import explore.components.FormStaticData
+import explore.common.ProposalQueries.*
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.TileController
@@ -29,34 +28,29 @@ import explore.model.AppContext
 import explore.model.CallForProposal
 import explore.model.CoIInvitation
 import explore.model.ExploreGridLayouts
-import explore.model.ExploreModelValidators
-import explore.model.Hours
 import explore.model.PartnerSplit
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.Proposal
 import explore.model.ProposalAttachment
 import explore.model.ProposalTabTileIds
+import explore.model.ProposalType
+import explore.model.ProposalType.*
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
-import explore.syntax.ui.*
-import lucuma.core.model.CallForProposals
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
-import lucuma.core.model.IntPercent
+import lucuma.core.model.CallForProposals
 import lucuma.core.model.Program
 import lucuma.core.model.User
-import lucuma.core.model.ZeroTo100
-import lucuma.core.util.Enumerated
-import lucuma.core.util.TimeSpan
 import lucuma.core.syntax.all.*
+import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
 import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
@@ -65,26 +59,16 @@ import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
 import lucuma.ui.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.CallsQueriesGQL.*
-import queries.common.ProgramQueriesGQL.UpdateProgramsMutation
 import queries.common.ProposalQueriesGQL
 import spire.std.any.*
-
-import scala.collection.immutable.SortedMap
-import explore.model.ProposalType
-import explore.model.ProposalType.*
-import explore.common.ProposalQueries.*
-import monocle.Lens
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -103,73 +87,73 @@ case class ProposalEditor(
 object ProposalEditor:
   private type Props = ProposalEditor
 
-  private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
+  // private val Hours2Micros = BigDecimal(60L * 60L * 1000L * 1000L)
 
-  private def toHours(time: TimeSpan): Hours =
-    Hours.from(time.toHours).getOrElse(Hours.Max)
+  // private def toHours(time: TimeSpan): Hours =
+  //   Hours.from(time.toHours).getOrElse(Hours.Max)
 
-  private def fromHours(hours: Hours): TimeSpan =
-    TimeSpan.unsafeFromMicroseconds((hours.value * Hours2Micros).longValue)
+  // private def fromHours(hours: Hours): TimeSpan =
+  //   TimeSpan.unsafeFromMicroseconds((hours.value * Hours2Micros).longValue)
 
-  private def formatHours(hours: BigDecimal) = f"$hours%.2fh"
+  // private def formatHours(hours: BigDecimal) = f"$hours%.2fh"
 
-  private def sortedSplits(splits: SortedMap[Partner, IntPercent]): List[PartnerSplit] =
-    splits.toList
-      .map { case (part, perc) => PartnerSplit(part, perc) }
-      .sortBy(_.percent.value)(Ordering[Int].reverse)
+  // private def sortedSplits(splits: SortedMap[Partner, IntPercent]): List[PartnerSplit] =
+  //   splits.toList
+  //     .map { case (part, perc) => PartnerSplit(part, perc) }
+  //     .sortBy(_.percent.value)(Ordering[Int].reverse)
 
-  private def partnerSplits(splits: SortedMap[Partner, IntPercent]): TagMod = splits match {
-    case a if a.isEmpty =>
-      <.span(
-        Icons.ExclamationTriangle,
-        "Partner time allocations are required."
-      )
-    case _              =>
-      val ps = sortedSplits(splits)
-        .toTagMod(ps => partnerSplit(ps))
-      <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
-  }
+  // private def partnerSplits(splits: SortedMap[Partner, IntPercent]): TagMod = splits match {
+  //   case a if a.isEmpty =>
+  //     <.span(
+  //       Icons.ExclamationTriangle,
+  //       "Partner time allocations are required."
+  //     )
+  //   case _              =>
+  //     val ps = sortedSplits(splits)
+  //       .toTagMod(ps => partnerSplit(ps))
+  //     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  // }
 
-  private def partnerSplit(ps: PartnerSplit): TagMod = {
-    val id   = s"${ps.partner.tag}-split"
-    val text = f"${ps.percent.value}%%"
-    partnerSplitData(ps.partner, id, text)
-  }
+  // private def partnerSplit(ps: PartnerSplit): TagMod = {
+  //   val id   = s"${ps.partner.tag}-split"
+  //   val text = f"${ps.percent.value}%%"
+  //   partnerSplitData(ps.partner, id, text)
+  // }
 
-  private def partnerSplitData(partner: Partner, id: String, data: String) = {
-    val img: TagMod  =
-      <.img(^.src        := PartnerFlags.smallFlag(partner),
-            ^.alt := s"${partner.shortName}  Flag",
-            ExploreStyles.PartnerSplitFlag
-      )
-    val span: TagMod = <.span(data)
+  // private def partnerSplitData(partner: Partner, id: String, data: String) = {
+  //   val img: TagMod  =
+  //     <.img(^.src        := PartnerFlags.smallFlag(partner),
+  //           ^.alt := s"${partner.shortName}  Flag",
+  //           ExploreStyles.PartnerSplitFlag
+  //     )
+  //   val span: TagMod = <.span(data)
+  //
+  //   FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
+  //     ExploreStyles.FlexShrink(0.refined),
+  //     ExploreStyles.PartnerSplitData
+  //   )
+  // }
 
-    FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
-      ExploreStyles.FlexShrink(0.refined),
-      ExploreStyles.PartnerSplitData
-    )
-  }
+  // private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): VdomNode =
+  //   val tagmod = splits match {
+  //     case a if a.isEmpty => TagMod.empty
+  //     case _              =>
+  //       sortedSplits(splits)
+  //         .toTagMod(ps => timeSplit(ps, total))
+  //   }
+  //   <.div(tagmod, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  //
+  // private def timeSplit(ps: PartnerSplit, total: TimeSpan) = {
+  //   val splitTime = ps.percent.value * toHours(total).value / 100
+  //   val timeText  = formatHours(splitTime)
+  //   <.span(timeText, ExploreStyles.PartnerSplitData)
+  // }
 
-  private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): VdomNode =
-    val tagmod = splits match {
-      case a if a.isEmpty => TagMod.empty
-      case _              =>
-        sortedSplits(splits)
-          .toTagMod(ps => timeSplit(ps, total))
-    }
-    <.div(tagmod, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
-
-  private def timeSplit(ps: PartnerSplit, total: TimeSpan) = {
-    val splitTime = ps.percent.value * toHours(total).value / 100
-    val timeText  = formatHours(splitTime)
-    <.span(timeText, ExploreStyles.PartnerSplitData)
-  }
-
-  private def minimumTime(pct: IntPercent, total: TimeSpan) = {
-    val time     = pct.value * toHours(total).value / 100
-    val timeText = formatHours(time)
-    <.div(<.span(timeText), ExploreStyles.PartnerSplitsGridMinPct)
-  }
+  // private def minimumTime(pct: IntPercent, total: TimeSpan) = {
+  //   val time     = pct.value * toHours(total).value / 100
+  //   val timeText = formatHours(time)
+  //   <.div(<.span(timeText), ExploreStyles.PartnerSplitsGridMinPct)
+  // }
 
   private def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
 
@@ -192,12 +176,12 @@ object ProposalEditor:
       }
       .toList
 
-  private def saveStateSplits(
-    splitView: View[SortedMap[Partner, IntPercent]],
-    splitList: List[PartnerSplit]
-  ): Callback =
-    splitView
-      .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
+  // private def saveStateSplits(
+  //   splitView: View[SortedMap[Partner, IntPercent]],
+  //   splitList: List[PartnerSplit]
+  // ): Callback =
+  //   splitView
+  //     .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
 
   private def renderDetails(
     aligner:       Aligner[Proposal, ProposalPropertiesInput],
@@ -205,8 +189,8 @@ object ProposalEditor:
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
     // proposalClassType: View[ProposalClassType],
-    showDialog:    View[Boolean],
-    splitsList:    View[List[PartnerSplit]],
+    // showDialog:    View[Boolean],
+    // splitsList:    View[List[PartnerSplit]],
     // splitsMap:     SortedMap[Partner, IntPercent],
     // timeEstimateRange: Pot[Option[ProgramTimeRange]],
     cfps:          List[CallForProposal],
@@ -302,8 +286,6 @@ object ProposalEditor:
 
     // val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
     //
-    val isCfPSelected         =
-      callIdView.get.isDefined
     val selectedCfp           =
       callIdView.get.flatMap(id => cfps.find(_.id === id))
     val subtypes              =
@@ -448,30 +430,30 @@ object ProposalEditor:
   }
 
   private def renderFn(
-    programId:         Program.Id,
-    optUserId:         Option[User.Id],
-    proposal:          View[Proposal],
-    undoStacks:        View[UndoStacks[IO, Proposal]],
+    programId:    Program.Id,
+    optUserId:    Option[User.Id],
+    proposal:     View[Proposal],
+    undoStacks:   View[UndoStacks[IO, Proposal]],
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
     // proposalClassType: View[ProposalClassType],
-    showDialog:        View[Boolean],
-    splitsList:        View[List[PartnerSplit]],
-    createInvite:      View[CreateInviteProcess],
-    timeEstimateRange: Pot[Option[ProgramTimeRange]],
-    users:             View[NonEmptyList[ProgramUserWithRole]],
-    invitations:       View[List[CoIInvitation]],
-    attachments:       View[List[ProposalAttachment]],
-    cfps:              List[CallForProposal],
-    authToken:         Option[NonEmptyString],
-    layout:            LayoutsMap,
-    readonly:          Boolean,
-    resize:            UseResizeDetectorReturn,
-    ref:               OverlayPanelRef
+    // showDialog:   View[Boolean],
+    // splitsList:        View[List[PartnerSplit]],
+    createInvite: View[CreateInviteProcess],
+    // timeEstimateRange: Pot[Option[ProgramTimeRange]],
+    users:        View[NonEmptyList[ProgramUserWithRole]],
+    invitations:  View[List[CoIInvitation]],
+    attachments:  View[List[ProposalAttachment]],
+    cfps:         List[CallForProposal],
+    authToken:    Option[NonEmptyString],
+    layout:       LayoutsMap,
+    readonly:     Boolean,
+    resize:       UseResizeDetectorReturn,
+    ref:          OverlayPanelRef
   )(using ctx: AppContext[IO]) = {
     import ctx.given
 
-    def closePartnerSplitsEditor: Callback = showDialog.set(false)
+    // def closePartnerSplitsEditor: Callback = showDialog.set(false)
 
     val undoCtx: UndoContext[Proposal]                      = UndoContext(undoStacks, proposal)
     val aligner: Aligner[Proposal, ProposalPropertiesInput] =
@@ -506,8 +488,8 @@ object ProposalEditor:
           // totalHours,
           // minPct2,
           // proposalClassType,
-          showDialog,
-          splitsList,
+          // showDialog,
+          // splitsList,
           // splitsView.get,
           // timeEstimateRange,
           cfps,
@@ -636,10 +618,10 @@ object ProposalEditor:
             // totalHours,
             // minPct2,
             // proposalClassType,
-            showDialog,
-            splitsList,
+            // showDialog,
+            // splitsList,
             createInvite,
-            props.timeEstimateRange,
+            // props.timeEstimateRange,
             props.users,
             props.invitations,
             props.attachments,

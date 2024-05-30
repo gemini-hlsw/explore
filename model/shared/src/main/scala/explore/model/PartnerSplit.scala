@@ -6,12 +6,12 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import eu.timepit.refined.cats.given
-import lucuma.core.model.IntPercent
-import lucuma.core.enums.Partner
-import monocle.Focus
-import monocle.Lens
 import io.circe.Decoder
 import io.circe.refined.*
+import lucuma.core.enums.Partner
+import lucuma.core.model.IntPercent
+import monocle.Focus
+import monocle.Lens
 
 case class PartnerSplit(partner: Partner, percent: IntPercent) derives Eq:
   def toTuple = (partner, percent)

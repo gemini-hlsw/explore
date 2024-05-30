@@ -3,22 +3,22 @@
 
 package explore.common
 
-import explore.model.Proposal
-import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
+import explore.model.Proposal
 import explore.model.ProposalType
-import lucuma.schemas.ObservationDB.Types.ProposalTypeInput
+import lucuma.core.enums.ToOActivation
+import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.DemoScienceInput
 import lucuma.schemas.ObservationDB.Types.DirectorsTimeInput
 import lucuma.schemas.ObservationDB.Types.FastTurnaroundInput
 import lucuma.schemas.ObservationDB.Types.LargeProgramInput
-import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.PoorWeatherInput
-import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
+import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
+import lucuma.schemas.ObservationDB.Types.ProposalTypeInput
 import lucuma.schemas.ObservationDB.Types.QueueInput
-import lucuma.core.enums.ToOActivation
+import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 
 trait ProposalQueries:
   private def toOAUpdater(f: Input[ToOActivation] => Input[ToOActivation]) =

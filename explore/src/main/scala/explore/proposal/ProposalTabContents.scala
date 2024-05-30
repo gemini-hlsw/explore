@@ -14,10 +14,12 @@ import crystal.react.hooks.*
 import explore.*
 import explore.DefaultErrorPolicy
 import explore.Icons
+import explore.common.ProposalQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
+import explore.model.Proposal
 import explore.model.ProposalAttachment
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
@@ -28,7 +30,6 @@ import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.Program
-import explore.model.Proposal
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.core.util.NewType
@@ -41,7 +42,6 @@ import lucuma.react.primereact.Toolbar
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.enums.ProposalStatus
-// import lucuma.schemas.odb.input.*
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
@@ -50,7 +50,6 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
-import explore.common.ProposalQueries.*
 
 case class ProposalTabContents(
   programId:         Program.Id,

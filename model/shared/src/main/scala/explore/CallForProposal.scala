@@ -4,18 +4,18 @@
 package explore.model
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.given
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
+import io.circe.refined.given
+import lucuma.core.enums.ScienceSubtype
+import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
 import lucuma.schemas.decoders.given
-import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.cats.given
-import io.circe.refined.given
-import lucuma.core.model.CallForProposals
-import cats.data.NonEmptyList
-import lucuma.core.enums.ScienceSubtype
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:

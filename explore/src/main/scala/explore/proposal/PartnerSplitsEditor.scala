@@ -10,6 +10,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
+import explore.model.PartnerSplit
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
@@ -27,7 +28,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import explore.model.PartnerSplit
 
 case class PartnerSplitsEditor(
   show:    Boolean,

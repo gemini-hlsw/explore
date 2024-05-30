@@ -6,18 +6,18 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
-import lucuma.core.enums.Partner
-import lucuma.core.enums.ToOActivation
-import lucuma.core.model.IntPercent
 import eu.timepit.refined.cats.given
-import lucuma.core.util.TimeSpan
+import io.circe.ACursor
 import io.circe.Decoder
 import io.circe.refined.*
+import lucuma.core.enums.Partner
 import lucuma.core.enums.ScienceSubtype
+import lucuma.core.enums.ToOActivation
+import lucuma.core.model.IntPercent
+import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
-import io.circe.ACursor
-import monocle.Lens
 import monocle.Focus
+import monocle.Lens
 import monocle.Optional
 
 // Define the ProposalType trait
