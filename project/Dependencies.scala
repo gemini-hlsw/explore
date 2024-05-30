@@ -289,7 +289,7 @@ object Dependencies {
 
   val MUnitCatsEffect = Def.setting(
     deps(
-      "org.typelevel" %%% "munit-cats-effect-3"
+      "org.typelevel" %%% "munit-cats-effect"
     )(mUnitCatsEffect)
   )
 
