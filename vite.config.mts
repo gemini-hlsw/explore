@@ -10,7 +10,7 @@ import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { RuntimeCaching } from 'workbox-build';
 
-const scalaVersion = '3.4.1';
+const scalaVersion = '3.4.2';
 
 const fixCssRoot: PluginCreator<void> = () => {
   return {
