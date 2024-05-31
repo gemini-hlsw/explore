@@ -16,6 +16,7 @@ import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
 import lucuma.schemas.decoders.given
+import lucuma.core.enums.Partner
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:
@@ -39,10 +40,13 @@ enum CallForProposalType(val tag: String) derives Enumerated:
       case CallForProposalType.DemoScience        => NonEmptyList.of(ScienceSubtype.DemoScience)
       case CallForProposalType.DirectorsTime      => NonEmptyList.of(ScienceSubtype.DirectorsTime)
 
+case class CallPartner(partner: Partner) derives Eq, Decoder
+
 case class CallForProposal(
   id:       CallForProposals.Id,
   semester: Semester,
   title:    NonEmptyString,
-  cfpType:  CallForProposalType
+  cfpType:  CallForProposalType,
+  partners: List[CallPartner]
 ) derives Eq,
       Decoder

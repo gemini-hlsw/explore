@@ -15,8 +15,24 @@ import lucuma.core.model.CallForProposals
 import monocle.Focus
 import monocle.Lens
 
+case class ProposalCall(cfpId: CallForProposals.Id, cfpType: Option[CallForProposalType]) derives Eq
+
+object ProposalCall:
+  val cfpId: Lens[ProposalCall, CallForProposals.Id]           =
+    Focus[ProposalCall](_.cfpId)
+  val cfpType: Lens[ProposalCall, Option[CallForProposalType]] =
+    Focus[ProposalCall](_.cfpType)
+
+  given Decoder[ProposalCall] = c =>
+    for {
+      cfpId   <- c.downField("id").as[CallForProposals.Id]
+      cfpType <- c.downField("type").as[CallForProposalType]
+    } yield ProposalCall(cfpId, cfpType.some)
+
+  val Default = Proposal(None, None, None, None, None)
+
 case class Proposal(
-  cfpId:        Option[CallForProposals.Id],
+  call:         Option[ProposalCall],
   title:        Option[NonEmptyString],
   category:     Option[TacCategory],
   abstrakt:     Option[NonEmptyString],
@@ -24,8 +40,8 @@ case class Proposal(
 ) derives Eq
 
 object Proposal:
-  val cfpId: Lens[Proposal, Option[CallForProposals.Id]] =
-    Focus[Proposal](_.cfpId)
+  val call: Lens[Proposal, Option[ProposalCall]]         =
+    Focus[Proposal](_.call)
   val title: Lens[Proposal, Option[NonEmptyString]]      =
     Focus[Proposal](_.title)
   val category: Lens[Proposal, Option[TacCategory]]      =
@@ -37,12 +53,12 @@ object Proposal:
 
   given Decoder[Proposal] = c =>
     for {
-      cfpId    <-
-        c.downField("call").downField("id").success.traverse(_.as[Option[CallForProposals.Id]])
+      call     <-
+        c.downField("call").as[Option[ProposalCall]]
       title    <- c.downField("title").as[Option[NonEmptyString]]
       category <- c.downField("category").as[Option[TacCategory]]
       abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]
       pte      <- c.downField("type").as[Option[ProposalType]]
-    } yield Proposal(cfpId.flatten, title, category, abstrakt, pte)
+    } yield Proposal(call, title, category, abstrakt, pte)
 
   val Default = Proposal(None, None, None, None, None)

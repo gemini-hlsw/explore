@@ -15,6 +15,7 @@ object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("
     {
       call {
         id
+        type
       }
       title
       abstract

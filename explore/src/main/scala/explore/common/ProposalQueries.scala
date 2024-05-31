@@ -3,6 +3,7 @@
 
 package explore.common
 
+import cats.Endo
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
@@ -19,9 +20,22 @@ import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
 import lucuma.schemas.ObservationDB.Types.ProposalTypeInput
 import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
+import lucuma.schemas.ObservationDB.Types.PartnerSplitInput
+import lucuma.core.model.CallForProposals
+import clue.data.Unassign
 
 trait ProposalQueries:
-  private def toOAUpdater(f: Input[ToOActivation] => Input[ToOActivation]) =
+  def modifyCfp(f: Endo[Input[CallForProposals.Id]]): Endo[ProposalPropertiesInput] =
+    ProposalPropertiesInput.`type`.replace(Unassign) >>>
+      ProposalPropertiesInput.callId.modify(f)
+
+  def modifyProposalType(f: Endo[Input[ProposalTypeInput]]): Endo[ProposalPropertiesInput] =
+    t =>
+      pprint.pprintln(t)
+      t
+      // ProposalPropertiesInput.`type`.modify(f)
+
+  private def toOAUpdater(f: Endo[Input[ToOActivation]]) =
     ProposalTypeInput.demoScience.assign.andThen(DemoScienceInput.toOActivation).modify(f) >>>
       ProposalTypeInput.directorsTime.assign.andThen(DirectorsTimeInput.toOActivation).modify(f) >>>
       ProposalTypeInput.fastTurnaround.assign
@@ -33,10 +47,12 @@ trait ProposalQueries:
         .andThen(SystemVerificationInput.toOActivation)
         .modify(f)
 
-  def modifyToOActivation(
-    f: Input[ToOActivation] => Input[ToOActivation]
-  ): ProposalPropertiesInput => ProposalPropertiesInput =
+  def modifyToOActivation(f: Endo[Input[ToOActivation]]): Endo[ProposalPropertiesInput] =
     ProposalPropertiesInput.`type`.modify(_.map(toOAUpdater(f)))
+
+  def modifyPartnerSplits(f: Endo[Input[List[PartnerSplitInput]]]): Endo[ProposalPropertiesInput] =
+    ???
+    // ProposalPropertiesInput.`type`.modify(_.map(toOAUpdater(f)))
 
   extension (proposalType: ProposalType)
     def toInput: ProposalTypeInput =
@@ -104,7 +120,7 @@ trait ProposalQueries:
   extension (proposal: Proposal)
     def toInput: ProposalPropertiesInput =
       ProposalPropertiesInput(
-        callId = proposal.cfpId.orUnassign,
+        callId = proposal.call.map(_.cfpId).orUnassign,
         title = proposal.title.orUnassign,
         category = proposal.category.orUnassign,
         `abstract` = proposal.abstrakt.orUnassign,

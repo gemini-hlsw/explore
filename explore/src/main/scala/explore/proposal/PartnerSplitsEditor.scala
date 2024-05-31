@@ -30,7 +30,7 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 
 case class PartnerSplitsEditor(
-  show:    Boolean,
+  show:    PartnersDialogState,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
   onSave:  List[PartnerSplit] => Callback
@@ -119,7 +119,7 @@ object PartnerSplitsEditor {
     )
     .render { (props, _, _, table) =>
       Dialog(
-        visible = props.show,
+        visible = props.show.value,
         onHide = props.closeMe,
         header = "PartnerSplits",
         footer = footer(props),
