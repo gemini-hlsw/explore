@@ -241,13 +241,9 @@ jobs:
           cat vars.css
 
       - name: Run linters in dark mode
-        uses: wearerequired/lint-action@v2
-        with:
-          stylelint: true
-          stylelint_extensions: css,sass,scss
-          stylelint_args: common/src/main/webapp/sass
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          prettier: true
+        run: |
+          npx prettier --check .
+          npx stylelint --formatter github common/src/main/webapp/sass
 
       - name: Setup and expand vars light
         if: github.event_name != 'pull_request'
@@ -257,10 +253,6 @@ jobs:
 
       - name: Run linters in light mode
         if: github.event_name != 'pull_request'
-        uses: wearerequired/lint-action@v2
-        with:
-          stylelint: true
-          stylelint_extensions: css,sass,scss
-          stylelint_args: common/src/main/webapp/sass
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          prettier: true
+        run: |
+          npx prettier --check .
+          npx stylelint --formatter github common/src/main/webapp/sass
