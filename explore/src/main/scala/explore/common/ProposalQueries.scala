@@ -9,6 +9,7 @@ import clue.data.Input
 import clue.data.syntax.*
 import explore.model.Proposal
 import explore.model.ProposalType
+import explore.model.CallForProposalType
 import lucuma.core.enums.ToOActivation
 import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.DemoScienceInput
@@ -23,17 +24,20 @@ import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 import lucuma.schemas.ObservationDB.Types.PartnerSplitInput
 import lucuma.core.model.CallForProposals
 import clue.data.Unassign
+import explore.model.CallForProposal
 
 trait ProposalQueries:
-  def modifyCfp(f: Endo[Input[CallForProposals.Id]]): Endo[ProposalPropertiesInput] =
-    ProposalPropertiesInput.`type`.replace(Unassign) >>>
-      ProposalPropertiesInput.callId.modify(f)
+  def modifyCfp(f: Endo[Input[CallForProposal]]): Endo[ProposalPropertiesInput] =
+    // This is wrong in principle
+    ProposalPropertiesInput.`type`.replace(Unassign)
+    // >>>
+    //   ProposalPropertiesInput.callId.modify(f)
 
-  def modifyProposalType(f: Endo[Input[ProposalTypeInput]]): Endo[ProposalPropertiesInput] =
-    t =>
-      pprint.pprintln(t)
-      t
-      // ProposalPropertiesInput.`type`.modify(f)
+  // def modifyProposalType(f: Endo[Input[ProposalTypeInput]]): Endo[ProposalPropertiesInput] =
+  //   t =>
+  //     pprint.pprintln(t)
+  //     t
+  // ProposalPropertiesInput.`type`.modify(f)
 
   private def toOAUpdater(f: Endo[Input[ToOActivation]]) =
     ProposalTypeInput.demoScience.assign.andThen(DemoScienceInput.toOActivation).modify(f) >>>
@@ -117,10 +121,21 @@ trait ProposalQueries:
         case ProposalType.PoorWeather(scienceSubtype)                                     =>
           ProposalTypeInput(poorWeather = PoorWeatherInput().assign)
 
+  // Used to reset the proposal type when the call changes
+  extension (cfpType: CallForProposalType)
+    def defaultType: ProposalType = cfpType match
+      case CallForProposalType.DemoScience        => ProposalType.DemoScience.Default
+      case CallForProposalType.DirectorsTime      => ProposalType.DirectorsTime.Default
+      case CallForProposalType.FastTurnaround     => ProposalType.FastTurnaround.Default
+      case CallForProposalType.LargeProgram       => ProposalType.LargeProgram.Default
+      case CallForProposalType.PoorWeather        => ProposalType.PoorWeather.Default
+      case CallForProposalType.RegularSemester    => ProposalType.Queue.Default
+      case CallForProposalType.SystemVerification => ProposalType.SystemVerification.Default
+
   extension (proposal: Proposal)
     def toInput: ProposalPropertiesInput =
       ProposalPropertiesInput(
-        callId = proposal.call.map(_.cfpId).orUnassign,
+        callId = proposal.call.map(_.id).orUnassign,
         title = proposal.title.orUnassign,
         category = proposal.category.orUnassign,
         `abstract` = proposal.abstrakt.orUnassign,

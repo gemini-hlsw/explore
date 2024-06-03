@@ -209,30 +209,39 @@ object ProposalEditor:
     readonly:      Boolean,
     renderInTitle: Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
-    val proposalView = aligner.view(_.toInput)
+    val proposalView =
+      aligner.viewMod { p =>
+        println(s"viewMode ${p.proposalType}");
+        println(s"viewMode ${p.call.map(_.id)}");
+        ProposalPropertiesInput.callId.replace(p.call.map(_.id).orUnassign) >>>
+          ProposalPropertiesInput.`type`.replace(p.proposalType.map(_.toInput).orUnassign)
+      }
+
+    val proposalTypeView1 = proposalView.zoom(Proposal.proposalTypeConverter)
 
     // used to set CfP for new proposals
-    def setCfpId(callId: CallForProposals.Id): Callback =
-      proposalView.mod(p => p.copy(call = ProposalCall(callId, None).some)).runAsyncAndForget
+    // def setCfpId(callId: CallForProposals.Id): Callback =
+    //   proposalView.mod(p => p.copy(call = ProposalCall(callId, None).some)).runAsyncAndForget
 
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
 
-    val callIdAligner: Option[Aligner[CallForProposals.Id, Input[CallForProposals.Id]]] =
-      aligner.zoomOpt(Proposal.call.some.andThen(ProposalCall.cfpId), modifyCfp)
+    // val callIdAligner: Option[Aligner[CallForProposals.Id, Input[CallForProposals.Id]]] =
+    //   aligner.zoomOpt(Proposal.call.some.andThen(ProposalCall.cfpId), modifyCfp)
+    //
+    // val callView: Option[View[CallForProposals.Id]] = callIdAligner.map(_.view(_.assign))
+    val callView = proposalTypeView1.zoom(Proposal.call)
 
-    val callIdView: Option[View[CallForProposals.Id]] = callIdAligner.map(_.view(_.assign))
-
-    val selectedCfp   =
-      callIdView.map { ci =>
-        val id = ci.get
-        cfps.find(_.id === id)
-      }
+    val selectedCfp   = none[CallForProposal]
+    // callView.map { ci =>
+    //   val id = ci.get
+    //   cfps.find(_.id === id)
+    // }
     val isCfpSelected = selectedCfp.isDefined
     val subtypes      =
-      selectedCfp.flatMap(_.map(_.cfpType.subTypes))
+      selectedCfp.map(_.cfpType.subTypes)
     val hasSubtypes   =
       subtypes.exists(_.size > 1)
 
@@ -242,7 +251,7 @@ object ProposalEditor:
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
 
     val proposalTypeAligner: Aligner[Option[ProposalType], Input[ProposalTypeInput]] =
-      aligner.zoom(Proposal.proposalType, modifyProposalType)
+      aligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
 
     val proposalTypeView: View[Option[ProposalType]] =
       proposalTypeAligner.view(_.map(_.toInput).orUnassign)
@@ -275,8 +284,9 @@ object ProposalEditor:
         _.view(_.map(p => PartnerSplitInput(p.partner, p.percent)).assign)
       )
 
-    println(s"sub type; ${proposalTypeView.get.map(_.scienceSubtype)}")
-    println(s"Selected call:: $selectedCfp")
+    // println(s"sub type; ${proposalTypeView.get.map(_.scienceSubtype)}")
+    println(s"Selected call:: ${selectedCfp.map(_.id)}")
+    // println(s"Selected partners:: ${selectedCfp.foldMap(_.partners)}")
     // println(needsPartnerSelection)
     // println(splitsView)
     // pprint.pprintln(aligner.get)
@@ -382,14 +392,15 @@ object ProposalEditor:
                         disabled = readonly
                       ).mini.compact
                     )
-                  ),
-                  PartnerSplitsEditor(
-                    showDialog.get,
-                    splits,
-                    showDialog.set(PartnersDialogState.Hidden),
-                    // saveStateSplits(splitsView, _)
-                    splits => Callback.log(splits)
                   )
+                  //   PartnerSplitsEditor(
+                  //     showDialog.get,
+                  //     selectedCfp.foldMap(_.partners.map(_.partner)),
+                  //     splits,
+                  //     showDialog.set(PartnersDialogState.Hidden),
+                  //     // saveStateSplits(splitsView, _)
+                  //     splits => Callback.log(splits)
+                  //   )
                 )
                 // partnerSplits(splitsMap)
                 // <.div(
@@ -441,11 +452,15 @@ object ProposalEditor:
                 id = "cfp".refined,
                 label =
                   React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-                value = callIdView.map(_.get),
+                value = callView.get.map(_.id),
                 options = cfps.map(r => SelectItem(r.id, r.title)),
-                onChange = _.map(v =>
-                  Callback.log(s"$v $callIdView") *> callIdView.fold(setCfpId(v))(_.set(v))
-                ).orEmpty,
+                onChange = _.map { cid =>
+                  proposalView.mod(
+                    _.copy(call = cfps.find(_.id === cid),
+                           proposalType = cfps.find(_.id === cid).map(_.cfpType.defaultType)
+                    )
+                  )
+                }.orEmpty,
                 disabled = readonly,
                 modifiers = List(^.id := "cfp")
               ),

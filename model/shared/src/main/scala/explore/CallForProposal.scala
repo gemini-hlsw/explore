@@ -17,6 +17,8 @@ import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
 import lucuma.schemas.decoders.given
 import lucuma.core.enums.Partner
+import monocle.Lens
+import monocle.Focus
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:
@@ -50,3 +52,7 @@ case class CallForProposal(
   partners: List[CallPartner]
 ) derives Eq,
       Decoder
+
+object CallForProposal:
+  val id: Lens[CallForProposal, CallForProposals.Id] =
+    Focus[CallForProposal](_.id)

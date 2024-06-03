@@ -14,6 +14,7 @@ import lucuma.core.enums.TacCategory
 import lucuma.core.model.CallForProposals
 import monocle.Focus
 import monocle.Lens
+import monocle.Iso
 
 case class ProposalCall(cfpId: CallForProposals.Id, cfpType: Option[CallForProposalType]) derives Eq
 
@@ -32,7 +33,7 @@ object ProposalCall:
   val Default = Proposal(None, None, None, None, None)
 
 case class Proposal(
-  call:         Option[ProposalCall],
+  call:         Option[CallForProposal],
   title:        Option[NonEmptyString],
   category:     Option[TacCategory],
   abstrakt:     Option[NonEmptyString],
@@ -40,7 +41,18 @@ case class Proposal(
 ) derives Eq
 
 object Proposal:
-  val call: Lens[Proposal, Option[ProposalCall]]         =
+  // Used to reset the proposal type when the call changes
+  extension (cfpType: CallForProposalType)
+    def defaultType: ProposalType = cfpType match
+      case CallForProposalType.DemoScience        => ProposalType.DemoScience.Default
+      case CallForProposalType.DirectorsTime      => ProposalType.DirectorsTime.Default
+      case CallForProposalType.FastTurnaround     => ProposalType.FastTurnaround.Default
+      case CallForProposalType.LargeProgram       => ProposalType.LargeProgram.Default
+      case CallForProposalType.PoorWeather        => ProposalType.PoorWeather.Default
+      case CallForProposalType.RegularSemester    => ProposalType.Queue.Default
+      case CallForProposalType.SystemVerification => ProposalType.SystemVerification.Default
+
+  val call: Lens[Proposal, Option[CallForProposal]]      =
     Focus[Proposal](_.call)
   val title: Lens[Proposal, Option[NonEmptyString]]      =
     Focus[Proposal](_.title)
@@ -50,11 +62,23 @@ object Proposal:
     Focus[Proposal](_.abstrakt)
   val proposalType: Lens[Proposal, Option[ProposalType]] =
     Focus[Proposal](_.proposalType)
+  val callWithType: Lens[Proposal, Option[ProposalType]] =
+    Focus[Proposal](_.proposalType)
+  val proposalTypeConverter: Lens[Proposal, Proposal]    = Iso[Proposal, Proposal] { p =>
+    println(s"PRop $p");
+    println(p.call.map(_.cfpType.defaultType))
+    p.copy(call = p.call, proposalType = p.call.map(_.cfpType.defaultType))
+  } { p =>
+    println(s"PRop 2 $p");
+    println(p.call.map(_.cfpType.defaultType))
+    p.copy(call = p.call, proposalType = p.call.map(_.cfpType.defaultType))
+  }
+  // Focus[Proposal](_.proposalType)
 
   given Decoder[Proposal] = c =>
     for {
       call     <-
-        c.downField("call").as[Option[ProposalCall]]
+        c.downField("call").as[Option[CallForProposal]]
       title    <- c.downField("title").as[Option[NonEmptyString]]
       category <- c.downField("category").as[Option[TacCategory]]
       abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]

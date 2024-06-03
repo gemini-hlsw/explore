@@ -122,3 +122,4 @@ object reusability:
   given Reusability[OptimizedChartResult]             = Reusability.byEq
   given Reusability[ItcCcd]                           = Reusability.byEq
   given Reusability[ElevationPlotOptions]             = Reusability.byEq
+  given Reusability[PartnerSplit]                     = Reusability.byEq
