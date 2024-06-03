@@ -339,16 +339,12 @@ def setupVars(mode: String) = WorkflowStep.Run(
   cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 
-def runLinters(mode: String) = WorkflowStep.Use(
-  UseRef.Public("wearerequired", "lint-action", "v2"),
-  name = Some(s"Run linters in $mode mode"),
-  params = Map(
-    "github_token"         -> "${{ secrets.GITHUB_TOKEN }}",
-    "prettier"             -> "true",
-    "stylelint"            -> "true",
-    "stylelint_args"       -> "common/src/main/webapp/sass",
-    "stylelint_extensions" -> "css,sass,scss"
+def runLinters(mode: String) = WorkflowStep.Run(
+  List(
+    "npx prettier --check .",
+    "npx stylelint --formatter github common/src/main/webapp/sass"
   ),
+  name = Some(s"Run linters in $mode mode"),
   cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
 )
 

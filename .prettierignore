@@ -11,3 +11,5 @@ hasura/user-prefs/
 node_modules
 target
 heroku/static
+
+explore/src/clue/resources/*.graphql
