@@ -1513,6 +1513,12 @@ img.partner-split-flag {
 
 .invite-user-popup {
   min-width: 40%;
+
+  .p-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5em;
+  }
 }
 
 // ------

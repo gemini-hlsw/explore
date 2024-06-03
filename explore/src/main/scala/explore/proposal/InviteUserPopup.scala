@@ -21,7 +21,9 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.EmailAddress
 import lucuma.core.data.EmailPred
+import lucuma.core.enums.Partner
 import lucuma.core.model.Program
+import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -50,6 +52,8 @@ object InviteUserPopup:
     // Scala doesn't like type aliases with refined types?
     InputValidSplitEpi.refinedString[EmailPred].asInstanceOf[InputValidSplitEpi[EmailAddress]]
 
+  private given Display[Partner] = Display.by(_.shortName, _.longName)
+
   private type Props = InviteUserPopup
 
   private val component =
@@ -58,19 +62,21 @@ object InviteUserPopup:
       .useContext(AppContext.ctx)
       .useStateView(CreateInviteProcess.Idle)
       .useStateView(none[EmailAddress])
+      .useStateView(none[Partner])
       .useState(false)
       .useStateView(none[String])
-      .render: (props, ctx, inviteState, emailView, validEmail, key) =>
+      .render: (props, ctx, inviteState, emailView, partnerView, validEmail, key) =>
         import ctx.given
 
         def createInvitation(
           createInvite: View[CreateInviteProcess],
           pid:          Program.Id,
           email:        EmailAddress,
+          partner:      Partner,
           viewKey:      View[Option[String]]
         ): IO[Unit] =
           (createInvite.set(CreateInviteProcess.Running).to[IO] *>
-            CreateInviteMutation[IO].execute(pid, email.value.value)).attempt
+            CreateInviteMutation[IO].execute(pid, email.value.value, partner)).attempt
             .flatMap {
               case Left(e)  =>
                 Logger[IO].error(e)("Error creating invitation") *>
@@ -93,11 +99,17 @@ object InviteUserPopup:
                 FormInputTextView(
                   id = "email-invite".refined,
                   value = emailView,
-                  label = "email",
+                  label = "Email",
                   disabled = inviteState.get === CreateInviteProcess.Running,
                   validFormat = MailValidator.optional,
                   onValidChange = v => validEmail.setState(v)
-                )(^.autoComplete := "off")
+                )(^.autoComplete := "off"),
+                FormEnumDropdownOptionalView(
+                  id = "partner-invite".refined,
+                  value = partnerView,
+                  label = "Partner",
+                  disabled = inviteState.get === CreateInviteProcess.Running
+                )
               ),
               <.div(LucumaPrimeStyles.FormColumn)(
                 <.label(
@@ -111,26 +123,27 @@ object InviteUserPopup:
               )
             ),
             <.div(PrimeStyles.DialogFooter)(
-              <.div(
-                Message(text = "Error submitting user invite, try later",
-                        severity = Message.Severity.Error
-                ).when(inviteState.get === CreateInviteProcess.Error),
-                Button(
-                  icon = Icons.Close,
-                  onClickE = e => inviteState.set(CreateInviteProcess.Idle) *> props.ref.toggle(e),
-                  label = "Close"
-                ).compact.when(inviteState.get === CreateInviteProcess.Done),
-                Button(
-                  icon = Icons.PaperPlaneTop,
-                  loading = inviteState.get === CreateInviteProcess.Running,
-                  disabled = !validEmail.value || inviteState.get === CreateInviteProcess.Done,
-                  onClick = emailView.get
-                    .map(e => createInvitation(inviteState, props.pid, e, key).runAsync)
+              Message(text = "Error submitting user invite, try later",
+                      severity = Message.Severity.Error
+              ).when(inviteState.get === CreateInviteProcess.Error),
+              Button(
+                icon = Icons.Close,
+                onClickE = e => inviteState.set(CreateInviteProcess.Idle) *> props.ref.toggle(e),
+                label = "Close"
+              ).compact.when(inviteState.get === CreateInviteProcess.Done),
+              Button(
+                icon = Icons.PaperPlaneTop,
+                loading = inviteState.get === CreateInviteProcess.Running,
+                disabled = (!validEmail.value || partnerView.when(_.isEmpty)) || inviteState.when(
+                  _ === CreateInviteProcess.Done
+                ),
+                onClick = inviteState.set(CreateInviteProcess.Idle) *>
+                  (emailView.get, partnerView.get).tupled
+                    .map((e, p) => createInvitation(inviteState, props.pid, e, p, key).runAsync)
                     .getOrEmpty,
-                  tooltip = "Send",
-                  label = "Invite"
-                ).compact.when(inviteState.get =!= CreateInviteProcess.Done)
-              )
+                tooltip = "Send",
+                label = "Invite"
+              ).compact.when(inviteState.get =!= CreateInviteProcess.Done)
             )
           )
         ).addModifiers(Seq(ExploreStyles.CompactOverlayPanel, ExploreStyles.InviteUserPopup))
