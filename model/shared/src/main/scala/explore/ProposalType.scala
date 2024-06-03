@@ -81,7 +81,7 @@ object ProposalType:
   object Classical {
     val minPercentTime: Lens[Classical, IntPercent] = Focus[Classical](_.minPercentTime)
 
-    val Default: Classical = Classical(ScienceSubtype.Classical, 0.refined, List.empty)
+    val Default: Classical = Classical(ScienceSubtype.Classical, 100.refined, List.empty)
   }
 
   // Define the DemoScience case class implementing ProposalType
@@ -97,7 +97,7 @@ object ProposalType:
     val toOActivation: Lens[DemoScience, ToOActivation] = Focus[DemoScience](_.toOActivation)
 
     val Default: DemoScience =
-      DemoScience(ScienceSubtype.DemoScience, ToOActivation.None, 0.refined)
+      DemoScience(ScienceSubtype.DemoScience, ToOActivation.None, 100.refined)
   }
 
   // Define the DirectorsTime case class implementing ProposalType
@@ -113,7 +113,7 @@ object ProposalType:
     val toOActivation: Lens[DirectorsTime, ToOActivation] = Focus[DirectorsTime](_.toOActivation)
 
     val Default: DirectorsTime =
-      DirectorsTime(ScienceSubtype.DirectorsTime, ToOActivation.None, 0.refined)
+      DirectorsTime(ScienceSubtype.DirectorsTime, ToOActivation.None, 100.refined)
   }
 
   // Define the FastTurnaround case class implementing ProposalType
@@ -132,7 +132,7 @@ object ProposalType:
       Focus[FastTurnaround](_.piAffiliation)
 
     val Default: FastTurnaround =
-      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 0.refined, None)
+      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 100.refined, None)
   }
 
   // Define the LargeProgram case class implementing ProposalType
@@ -140,24 +140,19 @@ object ProposalType:
     scienceSubtype:      ScienceSubtype,
     toOActivation:       ToOActivation,
     minPercentTime:      IntPercent,
-    minPercentTotalTime: IntPercent,
-    totalTime:           TimeSpan
+    minPercentTotalTime: Option[IntPercent],
+    totalTime:           Option[TimeSpan]
   ) extends ProposalType
       derives Eq
 
   object LargeProgram {
-    val minPercentTime: Lens[LargeProgram, IntPercent]      = Focus[LargeProgram](_.minPercentTime)
-    val minPercentTotalTime: Lens[LargeProgram, IntPercent] =
+    val minPercentTime: Lens[LargeProgram, IntPercent]              = Focus[LargeProgram](_.minPercentTime)
+    val minPercentTotalTime: Lens[LargeProgram, Option[IntPercent]] =
       Focus[LargeProgram](_.minPercentTotalTime)
-    val toOActivation: Lens[LargeProgram, ToOActivation]    = Focus[LargeProgram](_.toOActivation)
+    val toOActivation: Lens[LargeProgram, ToOActivation]            = Focus[LargeProgram](_.toOActivation)
 
     val Default: LargeProgram =
-      LargeProgram(ScienceSubtype.LargeProgram,
-                   ToOActivation.None,
-                   0.refined,
-                   0.refined,
-                   TimeSpan.Zero
-      )
+      LargeProgram(ScienceSubtype.LargeProgram, ToOActivation.None, 100.refined, none, none)
   }
 
   // Define the PoorWeather case class implementing ProposalType
@@ -183,7 +178,7 @@ object ProposalType:
     val minPercentTime: Lens[Queue, IntPercent]   = Focus[Queue](_.minPercentTime)
     val toOActivation: Lens[Queue, ToOActivation] = Focus[Queue](_.toOActivation)
 
-    val Default: Queue = Queue(ScienceSubtype.Queue, ToOActivation.None, 0.refined, List.empty)
+    val Default: Queue = Queue(ScienceSubtype.Queue, ToOActivation.None, 100.refined, List.empty)
   }
 
   // Define the SystemVerification case class implementing ProposalType
@@ -200,7 +195,7 @@ object ProposalType:
       Focus[SystemVerification](_.toOActivation)
 
     val Default: SystemVerification =
-      SystemVerification(ScienceSubtype.SystemVerification, ToOActivation.None, 0.refined)
+      SystemVerification(ScienceSubtype.SystemVerification, ToOActivation.None, 100.refined)
   }
 
   given Decoder[ProposalType] = {
@@ -232,8 +227,8 @@ object ProposalType:
           for {
             toOActivation       <- c.downField("toOActivation").as[ToOActivation]
             minPercentTime      <- c.downField("minPercentTime").as[IntPercent]
-            minPercentTotalTime <- c.downField("minPercentTotalTime").as[IntPercent]
-            totalTime           <- c.downField("totalTime").as[TimeSpan]
+            minPercentTotalTime <- c.downField("minPercentTotalTime").as[Option[IntPercent]]
+            totalTime           <- c.downField("totalTime").as[Option[TimeSpan]]
           } yield LargeProgram(tpe, toOActivation, minPercentTime, minPercentTotalTime, totalTime)
         case ScienceSubtype.PoorWeather        =>
           Right(PoorWeather(tpe))

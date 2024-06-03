@@ -38,6 +38,7 @@ import explore.model.ProposalType
 import explore.model.ProposalType.*
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
+import explore.model.display.given
 import explore.model.layout.LayoutsMap
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -46,9 +47,9 @@ import lucuma.core.enums.*
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Program
 import lucuma.core.model.User
-import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
+import lucuma.core.syntax.all.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.OverlayPanelRef
@@ -69,18 +70,9 @@ import org.typelevel.log4cats.Logger
 import queries.common.CallsQueriesGQL.*
 import queries.common.ProposalQueriesGQL
 import spire.std.any.*
-import scala.collection.immutable.SortedMap
-import lucuma.core.model.IntPercent
 import explore.Icons
 import lucuma.react.primereact.Button
-import lucuma.core.util.NewType
-import explore.model.ProposalCall
-
-object PartnersDialogState extends NewType[Boolean]:
-  val Shown: PartnersDialogState  = PartnersDialogState(true)
-  val Hidden: PartnersDialogState = PartnersDialogState(false)
-
-type PartnersDialogState = PartnersDialogState.Type
+import lucuma.core.util.Display
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -209,19 +201,11 @@ object ProposalEditor:
     readonly:      Boolean,
     renderInTitle: Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
-    val proposalView =
+    val proposalCfpView: View[Proposal] =
       aligner.viewMod { p =>
-        println(s"viewMode ${p.proposalType}");
-        println(s"viewMode ${p.call.map(_.id)}");
-        ProposalPropertiesInput.callId.replace(p.call.map(_.id).orUnassign) >>>
+        ProposalPropertiesInput.callId.replace(p.callId.orUnassign) >>>
           ProposalPropertiesInput.`type`.replace(p.proposalType.map(_.toInput).orUnassign)
       }
-
-    val proposalTypeView1 = proposalView.zoom(Proposal.proposalTypeConverter)
-
-    // used to set CfP for new proposals
-    // def setCfpId(callId: CallForProposals.Id): Callback =
-    //   proposalView.mod(p => p.copy(call = ProposalCall(callId, None).some)).runAsyncAndForget
 
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
@@ -232,13 +216,11 @@ object ProposalEditor:
     //   aligner.zoomOpt(Proposal.call.some.andThen(ProposalCall.cfpId), modifyCfp)
     //
     // val callView: Option[View[CallForProposals.Id]] = callIdAligner.map(_.view(_.assign))
-    val callView = proposalTypeView1.zoom(Proposal.call)
+    // val callView                            = aligner.zoom(Proposal.call, ProposalPropertiesInput.callId.modify)
+    val callId: Option[CallForProposals.Id] = aligner.get.callId
+    val scienceSubtype                      = aligner.get.proposalType.map(_.scienceSubtype)
 
-    val selectedCfp   = none[CallForProposal]
-    // callView.map { ci =>
-    //   val id = ci.get
-    //   cfps.find(_.id === id)
-    // }
+    val selectedCfp   = callId.flatMap(id => cfps.find(_.id === id))
     val isCfpSelected = selectedCfp.isDefined
     val subtypes      =
       selectedCfp.map(_.cfpType.subTypes)
@@ -266,7 +248,7 @@ object ProposalEditor:
     val activationView: Option[View[ToOActivation]] = activationAligner.map(_.view(_.assign))
 
     val needsPartnerSelection =
-      proposalTypeView.get.map(_.scienceSubtype) match {
+      scienceSubtype match {
         // Queue is set by default even if there is no CfP selection
         case Some(ScienceSubtype.Queue) | Some(ScienceSubtype.Classical) => isCfpSelected
         case _                                                           => false
@@ -452,13 +434,12 @@ object ProposalEditor:
                 id = "cfp".refined,
                 label =
                   React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-                value = callView.get.map(_.id),
+                value = callId,
                 options = cfps.map(r => SelectItem(r.id, r.title)),
                 onChange = _.map { cid =>
-                  proposalView.mod(
-                    _.copy(call = cfps.find(_.id === cid),
-                           proposalType = cfps.find(_.id === cid).map(_.cfpType.defaultType)
-                    )
+                  val call = cfps.find(_.id === cid)
+                  proposalCfpView.mod(
+                    _.copy(callId = cid.some, proposalType = call.map(_.cfpType.defaultType))
                   )
                 }.orEmpty,
                 disabled = readonly,

@@ -23,22 +23,8 @@ import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 import lucuma.schemas.ObservationDB.Types.PartnerSplitInput
 import lucuma.core.model.CallForProposals
-import clue.data.Unassign
-import explore.model.CallForProposal
 
 trait ProposalQueries:
-  def modifyCfp(f: Endo[Input[CallForProposal]]): Endo[ProposalPropertiesInput] =
-    // This is wrong in principle
-    ProposalPropertiesInput.`type`.replace(Unassign)
-    // >>>
-    //   ProposalPropertiesInput.callId.modify(f)
-
-  // def modifyProposalType(f: Endo[Input[ProposalTypeInput]]): Endo[ProposalPropertiesInput] =
-  //   t =>
-  //     pprint.pprintln(t)
-  //     t
-  // ProposalPropertiesInput.`type`.modify(f)
-
   private def toOAUpdater(f: Endo[Input[ToOActivation]]) =
     ProposalTypeInput.demoScience.assign.andThen(DemoScienceInput.toOActivation).modify(f) >>>
       ProposalTypeInput.directorsTime.assign.andThen(DirectorsTimeInput.toOActivation).modify(f) >>>
@@ -93,7 +79,7 @@ trait ProposalQueries:
             LargeProgramInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign,
-              minPercentTotalTime = minPercentTotalTime.assign
+              minPercentTotalTime = minPercentTotalTime.orUnassign
               // totalTime = totalTime.toInput.assign
             ).assign
           )
@@ -135,19 +121,11 @@ trait ProposalQueries:
   extension (proposal: Proposal)
     def toInput: ProposalPropertiesInput =
       ProposalPropertiesInput(
-        callId = proposal.call.map(_.id).orUnassign,
+        callId = proposal.callId.orUnassign,
         title = proposal.title.orUnassign,
         category = proposal.category.orUnassign,
         `abstract` = proposal.abstrakt.orUnassign,
         `type` = proposal.proposalType.map(_.toInput).orUnassign
-        // The API allows the partner splits to be missing, but not empty. We only use this on
-        // create, and it results in an empty partner splits in the response.
-        // partnerSplits =
-        //   if (proposal.partnerSplits.isEmpty) Input.unassign
-        //   else
-        //     proposal.partnerSplits.toList.map { case (par, pct) =>
-        //       PartnerSplitInput(par, pct)
-        //     }.assign
       )
 
 object ProposalQueries extends ProposalQueries

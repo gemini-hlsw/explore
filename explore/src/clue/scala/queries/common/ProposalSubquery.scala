@@ -15,13 +15,6 @@ object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("
     {
       call {
         id
-        id
-        semester
-        title
-        cfpType: type
-        partners {
-          partner
-        }
       }
       title
       abstract
