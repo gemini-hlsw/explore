@@ -5,37 +5,63 @@ package queries.common
 
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
-import lucuma.core.model.Proposal
+import explore.model.Proposal
+import explore.model.PartnerSplit
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.decoders.given
 
 @GraphQL
 object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("Proposal"):
+  override val subquery: String = s"""
+    {
+      call {
+        id
+      }
+      title
+      abstract
+      category
+      type {
+        scienceSubtype
+        ... on Classical {
+          minPercentTime
+          partnerSplits $PartnerSplitSubquery
+        }
+        ... on DirectorsTime {
+          toOActivation
+          minPercentTime
+        }
+        ... on FastTurnaround {
+          toOActivation
+          minPercentTime
+          piAffiliation
+        }
+        ... on LargeProgram {
+          toOActivation
+          minPercentTime
+          minPercentTotalTime
+          totalTime {
+            hours
+            minutes
+          }
+        }
+        ... on Queue {
+          toOActivation
+          minPercentTime
+          partnerSplits $PartnerSplitSubquery
+        }
+        ... on SystemVerification {
+          toOActivation
+          minPercentTime
+        }
+      }
+    }
+  """
+
+@GraphQL
+object PartnerSplitSubquery
+    extends GraphQLSubquery.Typed[ObservationDB, PartnerSplit]("PartnerSplit"):
   override val subquery: String = """
     {
-      title
-      proposalClass {
-        __typename
-        minPercentTime
-        ... on LargeProgram {
-          minPercentTotalTime
-          totalTime {
-            microseconds
-          }
-        }
-        ... on Intensive {
-          minPercentTotalTime
-          totalTime {
-            microseconds
-          }
-        }
-      }
-      category
-      toOActivation
-      abstract
-      partnerSplits {
-        partner
-        percent
-      }
+      partner
+      percent
     }
   """

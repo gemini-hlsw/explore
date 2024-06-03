@@ -10,8 +10,6 @@ import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.ProgramReference
-import lucuma.core.model.Proposal
-import lucuma.schemas.decoders.given
 import lucuma.schemas.enums.ProposalStatus
 import monocle.Focus
 import monocle.Lens

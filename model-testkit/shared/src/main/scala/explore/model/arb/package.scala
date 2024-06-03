@@ -11,3 +11,7 @@ object all
     with ArbKeyedIndexedTree
     with ArbObsSummary
     with ArbAsterism
+    with ArbCallForProposal
+    with ArbProposalType
+    with ArbPartnerSplit
+    with ArbProposal

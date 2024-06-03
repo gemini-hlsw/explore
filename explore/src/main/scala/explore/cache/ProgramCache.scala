@@ -174,17 +174,8 @@ object ProgramCache
         val groupPots =
           groups.collect { case (Right(gId), _, _) => gId -> Pot.pending }.toMap
         (optProgramDetails, targets, attachments, programs).mapN { case (pd, ts, (oas, pas), ps) =>
-          ProgramSummaries.fromLists(pd,
-                                     ts,
-                                     observations,
-                                     groups,
-                                     oas,
-                                     pas,
-                                     ps,
-                                     Pot.pending,
-                                     obsPots,
-                                     groupPots
-          )
+          ProgramSummaries
+            .fromLists(pd, ts, observations, groups, oas, pas, ps, Pot.pending, obsPots, groupPots)
         }
 
       def combineTimesUpdates(

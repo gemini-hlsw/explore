@@ -10,9 +10,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
+import explore.model.PartnerSplit
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Partner
+import lucuma.core.enums.Partner
 import lucuma.core.model.ZeroTo100
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
@@ -63,10 +64,10 @@ object PartnerSplitsEditor {
   private def makePartnerCell(partner: Partner): VdomNode =
     <.label(
       <.img(^.src        := PartnerFlags.smallFlag(partner),
-            ^.alt := s"${partner.name} Flag",
+            ^.alt := s"${partner.shortName} Flag",
             ExploreStyles.PartnerSplitFlag
       ),
-      partner.name,
+      partner.longName,
       ^.htmlFor := makeId(partner)
     )
 
@@ -78,7 +79,7 @@ object PartnerSplitsEditor {
         validFormat = InputValidSplitEpi.refinedInt[ZeroTo100],
         changeAuditor = ChangeAuditor.refinedInt[ZeroTo100]()
       ).withMods(
-        ^.autoFocus := split.get.partner === Partner.Ar
+        ^.autoFocus := split.get.partner === Partner.AR
       )
     )
 

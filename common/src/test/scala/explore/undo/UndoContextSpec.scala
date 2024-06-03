@@ -25,7 +25,7 @@ import monocle.macros.GenLens
 import org.typelevel.log4cats.Logger
 
 class UndoContextSpec extends munit.CatsEffectSuite {
-  implicit val logger: Logger[IO] = LogLevelLogger.createForRoot[IO]
+  given Logger[IO] = LogLevelLogger.createForRoot[IO]
 
   def idLens[A] = Iso.id[A]
 

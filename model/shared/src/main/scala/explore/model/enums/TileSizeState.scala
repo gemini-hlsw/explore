@@ -8,7 +8,6 @@ import cats.Eq
 enum TileSizeState:
   case Maximized extends TileSizeState
   case Minimized extends TileSizeState
-  // case Normal    extends TileSizeState
 
 object TileSizeState:
   given Eq[TileSizeState] = Eq.fromUniversalEquals
@@ -16,4 +15,3 @@ object TileSizeState:
   extension (s: TileSizeState)
     inline def isMinimized = s == Minimized
     inline def isMaximized = s == Maximized
-    // inline def isNormal    = s == Normal

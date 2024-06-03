@@ -3,7 +3,7 @@
 
 package explore.components.ui
 
-import lucuma.core.model.Partner
+import lucuma.core.enums.Partner
 
 import scala.annotation.nowarn
 import scala.scalajs.js
@@ -40,12 +40,12 @@ object PartnerFlags {
   val usSmall: String = js.native
 
   def smallFlag(partner: Partner): String = partner match {
-    case Partner.Ar => arSmall
-    case Partner.Br => brSmall
-    case Partner.Ca => caSmall
-    case Partner.Cl => clSmall
-    case Partner.Kr => krSmall
-    case Partner.Uh => uhSmall
-    case Partner.Us => usSmall
+    case Partner.AR => arSmall
+    case Partner.BR => brSmall
+    case Partner.CA => caSmall
+    case Partner.CL => clSmall
+    case Partner.KR => krSmall
+    case Partner.UH => uhSmall
+    case Partner.US => usSmall
   }
 }
