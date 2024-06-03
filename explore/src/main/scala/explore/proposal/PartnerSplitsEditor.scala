@@ -11,7 +11,6 @@ import explore.*
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model.PartnerSplit
-import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
@@ -29,14 +28,12 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import lucuma.ui.reusability.given
 
 case class PartnerSplitsEditor(
-  show:        PartnersDialogState,
-  cfpPartners: List[Partner],
-  splits:      View[List[PartnerSplit]],
-  closeMe:     Callback,
-  onSave:      List[PartnerSplit] => Callback
+  show:    PartnersDialogState,
+  splits:  View[List[PartnerSplit]],
+  closeMe: Callback,
+  onSave:  List[PartnerSplit] => Callback
 ) extends ReactFnProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor {

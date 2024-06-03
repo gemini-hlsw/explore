@@ -28,7 +28,9 @@ object ProposalQueriesGQL:
       mutation($$input: UpdateProposalInput!) {
         updateProposal(input: $$input) {
           proposal {
-            title
+            call {
+              id
+            }
           }
         }
       }

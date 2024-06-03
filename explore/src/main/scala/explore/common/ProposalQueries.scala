@@ -23,6 +23,8 @@ import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 import lucuma.schemas.ObservationDB.Types.PartnerSplitInput
 import lucuma.core.model.CallForProposals
+import explore.model.PartnerSplit
+import clue.data.Unassign
 
 trait ProposalQueries:
   private def toOAUpdater(f: Endo[Input[ToOActivation]]) =
@@ -80,21 +82,25 @@ trait ProposalQueries:
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign,
               minPercentTotalTime = minPercentTotalTime.orUnassign
-              // totalTime = totalTime.toInput.assign
+              // totalTime = totalTime.map((r: TimeSpan) => r.toInput).orUnassign
             ).assign
           )
         case ProposalType.Classical(_, minPercentTime, partnerSplits)                     =>
           ProposalTypeInput(classical =
             ClassicalInput(
-              minPercentTime = minPercentTime.assign
-              // partnerSplits = partnerSplits.map(_.toInput).assign
+              minPercentTime = minPercentTime.assign,
+              partnerSplits =
+                if (partnerSplits.nonEmpty) partnerSplits.map(_.toInput).assign else Unassign
             ).assign
           )
         case ProposalType.Queue(_, toOActivation, minPercentTime, partnerSplits)          =>
+          println(toOActivation)
           ProposalTypeInput(queue =
             QueueInput(
               toOActivation = toOActivation.assign,
-              minPercentTime = minPercentTime.assign
+              minPercentTime = minPercentTime.assign,
+              partnerSplits =
+                if (partnerSplits.nonEmpty) partnerSplits.map(_.toInput).assign else Unassign
             ).assign
           )
         case ProposalType.SystemVerification(_, toOActivation, minPercentTime)            =>
@@ -117,6 +123,10 @@ trait ProposalQueries:
       case CallForProposalType.PoorWeather        => ProposalType.PoorWeather.Default
       case CallForProposalType.RegularSemester    => ProposalType.Queue.Default
       case CallForProposalType.SystemVerification => ProposalType.SystemVerification.Default
+
+  extension (split: PartnerSplit)
+    def toInput: PartnerSplitInput =
+      PartnerSplitInput(partner = split.partner, percent = split.percent)
 
   extension (proposal: Proposal)
     def toInput: ProposalPropertiesInput =
