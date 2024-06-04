@@ -73,6 +73,7 @@ import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 import explore.Icons
 import lucuma.react.primereact.Button
+import explore.components.FormStaticData
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -101,42 +102,41 @@ object ProposalEditor:
 
   // private def formatHours(hours: BigDecimal) = f"$hours%.2fh"
 
-  // private def sortedSplits(splits: SortedMap[Partner, IntPercent]): List[PartnerSplit] =
-  //   splits.toList
-  //     .map { case (part, perc) => PartnerSplit(part, perc) }
-  //     .sortBy(_.percent.value)(Ordering[Int].reverse)
+  private def sortedSplits(splits: List[PartnerSplit]): List[PartnerSplit] =
+    splits
+      .sortBy(_.percent.value)(Ordering[Int].reverse)
 
-  // private def partnerSplits(splits: SortedMap[Partner, IntPercent]): TagMod = splits match {
-  //   case a if a.isEmpty =>
-  //     <.span(
-  //       Icons.ExclamationTriangle,
-  //       "Partner time allocations are required."
-  //     )
-  //   case _              =>
-  //     val ps = sortedSplits(splits)
-  //       .toTagMod(ps => partnerSplit(ps))
-  //     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
-  // }
+  private def partnerSplits(splits: List[PartnerSplit]): TagMod = splits match {
+    case a if a.isEmpty =>
+      <.span(
+        Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
+        " Partner time allocations are required."
+      )
+    case _              =>
+      val ps = sortedSplits(splits)
+        .toTagMod(ps => partnerSplit(ps))
+      <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  }
 
-  // private def partnerSplit(ps: PartnerSplit): TagMod = {
-  //   val id   = s"${ps.partner.tag}-split"
-  //   val text = f"${ps.percent.value}%%"
-  //   partnerSplitData(ps.partner, id, text)
-  // }
+  private def partnerSplit(ps: PartnerSplit): TagMod = {
+    val id   = s"${ps.partner.tag}-split"
+    val text = f"${ps.percent.value}%%"
+    partnerSplitData(ps.partner, id, text)
+  }
 
-  // private def partnerSplitData(partner: Partner, id: String, data: String) = {
-  //   val img: TagMod  =
-  //     <.img(^.src        := PartnerFlags.smallFlag(partner),
-  //           ^.alt := s"${partner.shortName}  Flag",
-  //           ExploreStyles.PartnerSplitFlag
-  //     )
-  //   val span: TagMod = <.span(data)
-  //
-  //   FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
-  //     ExploreStyles.FlexShrink(0.refined),
-  //     ExploreStyles.PartnerSplitData
-  //   )
-  // }
+  private def partnerSplitData(partner: Partner, id: String, data: String) = {
+    val img: TagMod  =
+      <.img(^.src        := PartnerFlags.smallFlag(partner),
+            ^.alt := s"${partner.shortName}  Flag",
+            ExploreStyles.PartnerSplitFlag
+      )
+    val span: TagMod = <.span(data)
+
+    FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
+      ExploreStyles.FlexShrink(0.refined),
+      ExploreStyles.PartnerSplitData
+    )
+  }
 
   // private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): VdomNode =
   //   val tagmod = splits match {
@@ -356,9 +356,9 @@ object ProposalEditor:
                   splitsList,
                   showDialog.set(PartnersDialogState.Hidden),
                   splits => psView.set(splits)
-                )
+                ),
+                partnerSplits(psView.get)
               )
-              // partnerSplits(splitsMap)
               // <.div(
               //   makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
               // ),

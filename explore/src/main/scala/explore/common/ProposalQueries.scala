@@ -42,9 +42,12 @@ trait ProposalQueries:
   def modifyToOActivation(f: Endo[Input[ToOActivation]]): Endo[ProposalPropertiesInput] =
     ProposalPropertiesInput.`type`.modify(_.map(toOAUpdater(f)))
 
+  private def psUpdater(f: Endo[Input[List[PartnerSplitInput]]]) =
+    ProposalTypeInput.queue.assign.andThen(QueueInput.partnerSplits).modify(f) >>>
+      ProposalTypeInput.classical.assign.andThen(ClassicalInput.partnerSplits).modify(f)
+
   def modifyPartnerSplits(f: Endo[Input[List[PartnerSplitInput]]]): Endo[ProposalPropertiesInput] =
-    ???
-    // ProposalPropertiesInput.`type`.modify(_.map(toOAUpdater(f)))
+    ProposalPropertiesInput.`type`.modify(_.map(psUpdater(f)))
 
   extension (proposalType: ProposalType)
     def toInput: ProposalTypeInput =
