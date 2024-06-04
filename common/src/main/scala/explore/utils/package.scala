@@ -16,7 +16,6 @@ import eu.timepit.refined.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import fs2.Chunk
 import fs2.Pipe
@@ -33,6 +32,8 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.MessageItem
 import lucuma.react.primereact.ToastRef
+import lucuma.ui.LucumaIcons
+import lucuma.ui.LucumaStyles
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
@@ -92,41 +93,26 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
       case Assign(edit) => modS(edit).assign
       case _            => modS(base).assign
 
-// TODO Move these to lucuma-ui
-extension (toastRef: ToastRef)
-  def show(
-    text:     String,
-    severity: Message.Severity = Message.Severity.Info,
-    sticky:   Boolean = false
-  ): Callback =
-    toastRef.show(
-      MessageItem(
-        content = <.span(Icons.InfoLight.withSize(IconSize.LG), text),
-        severity = severity,
-        sticky = sticky,
-        clazz = ExploreStyles.ExploreToast
-      )
-    )
+extension [F[_]: Sync: ToastCtx](f: F[Unit])
+  def withToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
+    f <* ToastCtx[F].showToast(text, severity)
 
+extension (toastRef: ToastRef)
   def upgradePrompt(text: VdomNode, callback: Callback): Callback =
     toastRef.show(
       MessageItem(
         content = <.div(
           ExploreStyles.ExplorePromptToast,
           <.span(
-            Icons.InfoLight.withSize(IconSize.LG),
+            LucumaIcons.CircleInfo.withSize(IconSize.LG),
             text
           ),
           Button(size = Button.Size.Small, onClick = toastRef.clear() *> callback)("Upgrade ...")
         ),
-        clazz = ExploreStyles.ExploreToast,
+        clazz = LucumaStyles.Toast,
         sticky = true
       )
     )
-
-extension [F[_]: Sync: ToastCtx](f: F[Unit])
-  def withToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
-    f <* ToastCtx[F].showToast(text, severity)
 
 // TODO Move these to react-datetime
 extension (instant: Instant)

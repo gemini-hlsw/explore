@@ -440,7 +440,6 @@ object ExploreStyles:
   val AladinSettingsMenu           = Css("explore-aladin-settings-menu")
   val BlendedSVG                   = Css("blended-svg")
 
-  val ExploreToast       = Css("explore-toast")
   val ExplorePromptToast = Css("explore-prompt-toast")
 
   // For icons that will be show instead of an input during some circumstances.
