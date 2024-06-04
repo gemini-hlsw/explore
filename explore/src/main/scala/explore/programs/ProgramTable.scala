@@ -146,8 +146,8 @@ object ProgramTable:
             _.get.id,
             "Id",
             _.value.toString,
-            size = 50.toPx,
-            minSize = 50.toPx,
+            size = 60.toPx,
+            minSize = 60.toPx,
             maxSize = 70.toPx
           ).sortable,
           ColDef(

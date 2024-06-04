@@ -203,6 +203,9 @@ object ExploreStyles:
   val AladinFullScreen: Css       = Css("aladin-full-screen")
   val AladinRangeControl: Css     = Css("aladin-range-control")
 
+  val VisualizationTooltip: Css       = Css("visualization-tooltip")
+  val VisualizationTooltipTarget: Css = Css("visualization-tooltip-target")
+
   val AgsOverlay: Css          = Css("ags-overlay")
   val AgsDescription: Css      = Css("ags-description")
   val AgsGuideSpeed: Css       = Css("ags-guide-speed")
@@ -210,6 +213,7 @@ object ExploreStyles:
   val AgsNotFound: Css         = Css("ags-not-found")
   val AgsMedium: Css           = Css("ags-medium-color")
   val AgsSlow: Css             = Css("ags-slow-color")
+  val AgsTooltip: Css          = Css("ags-tooltip")
   val AgsGBrightness: Css      = Css("ags-g-brightness")
   val AgsCoordinates: Css      = Css("ags-coordinates")
   val AgsNavigationButton: Css = Css("ags-navigation-button")
@@ -412,8 +416,6 @@ object ExploreStyles:
   val ScienceTarget: Css           = Css("science-target")
   val ScienceSelectedTarget: Css   = Css("science-selected-target")
   val CircleTarget: Css            = Css("circle-target")
-  val TargetTooltip: Css           = Css("svg-target-tooltip")
-  val TargetTooltipArea: Css       = Css("svg-target-tooltip-area")
   val BaseTarget                   = Css("base-target")
   val CrosshairTarget              = Css("crosshair-target")
   val ArrowBetweenTargets          = Css("arrow-between-targets")
