@@ -225,14 +225,17 @@ object ProposalEditor:
     val proposalTypeView: View[Option[ProposalType]] =
       proposalTypeAligner.view(_.map(_.toInput).orUnassign)
 
-    val activationAligner: Option[Aligner[ToOActivation, Input[ToOActivation]]] =
-      aligner
-        .zoomOpt(Proposal.proposalType.some.andThen(ProposalType.toOActivation),
-                 modifyToOActivation
-        )
-        .filter(_ => isCfpSelected)
+    val activationView: Option[View[ToOActivation]] =
+      proposalTypeView.toOptionView.map(_.zoom(ProposalType.toOActivation).toOptionView).flatten
 
-    val activationView: Option[View[ToOActivation]] = activationAligner.map(_.view(_.assign))
+    // val activationAligner: Option[Aligner[ToOActivation, Input[ToOActivation]]] =
+    //   aligner
+    //     .zoomOpt(Proposal.proposalType.some.andThen(ProposalType.toOActivation),
+    //              modifyToOActivation
+    //     )
+    //     .filter(_ => isCfpSelected)
+
+    // val activationView: Option[View[ToOActivation]] = activationAligner.map(_.view(_.assign))
 
     val needsPartnerSelection =
       scienceSubtype match {
