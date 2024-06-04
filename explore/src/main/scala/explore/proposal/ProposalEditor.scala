@@ -17,8 +17,10 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
 import explore.common.Aligner
 import explore.common.ProposalQueries.*
+import explore.components.FormStaticData
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.TileController
@@ -39,19 +41,20 @@ import explore.model.ProposalType.*
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
-import explore.undo.*
 import explore.model.reusability.given
+import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
-import lucuma.core.syntax.all.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
 import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
@@ -64,16 +67,13 @@ import lucuma.ui.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.given
 import lucuma.ui.reusability.given
+import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.CallsQueriesGQL.*
 import queries.common.ProposalQueriesGQL
 import spire.std.any.*
-import explore.Icons
-import lucuma.react.primereact.Button
-import explore.components.FormStaticData
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -185,7 +185,6 @@ object ProposalEditor:
     undoCtx:       UndoContext[Proposal],
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
-    // proposalClassType: View[ProposalClassType],
     showDialog:    View[PartnersDialogState],
     splitsList:    View[List[PartnerSplit]],
     // splitsMap:     SortedMap[Partner, IntPercent],
@@ -254,16 +253,6 @@ object ProposalEditor:
         _.view(_.map(p => PartnerSplitInput(p.partner, p.percent)).assign)
       )
 
-    // println(s"sub type; ${proposalTypeView.get.map(_.scienceSubtype)}")
-    println(s"Selected call:: ${selectedCfp.map(_.id)}")
-    // println(s"Selected partners:: ${selectedCfp.foldMap(_.partners)}")
-    // println(needsPartnerSelection)
-    // println(splitsView)
-    // pprint.pprintln(aligner.get)
-    pprint.pprintln(activationView.map(_.get))
-
-    // val splitsList = splitsView.foldMap(_.get)
-
     // val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     // val totalTime       = totalTimeView.get
     // val minimumPct1View = classView.zoom(ProposalClass.minPercentTime)
@@ -300,15 +289,6 @@ object ProposalEditor:
     //     disabled = readonly,
     //     inputClass = ExploreStyles.PartnerSplitsGridTotal
     //   )
-
-    // def openPartnerSplitsEditor: Callback = {
-    //   val allPartners = Enumerated[Partner].all.map(p =>
-    //     splitsMap
-    //       .get(p)
-    //       .fold(PartnerSplit(p, 0.refined))(pct => PartnerSplit(p, pct))
-    //   )
-    //   splitsList.set(allPartners) >> showDialog.set(true)
-    // }
 
     React.Fragment(
       renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),

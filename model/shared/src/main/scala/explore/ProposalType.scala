@@ -16,10 +16,10 @@ import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
+import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
-import lucuma.refined.*
 
 // Define the ProposalType trait
 sealed trait ProposalType derives Eq {

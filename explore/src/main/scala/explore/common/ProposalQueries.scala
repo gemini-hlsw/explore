@@ -6,25 +6,25 @@ package explore.common
 import cats.Endo
 import cats.syntax.all.*
 import clue.data.Input
+import clue.data.Unassign
 import clue.data.syntax.*
+import explore.model.CallForProposalType
+import explore.model.PartnerSplit
 import explore.model.Proposal
 import explore.model.ProposalType
-import explore.model.CallForProposalType
 import lucuma.core.enums.ToOActivation
+import lucuma.core.model.CallForProposals
 import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.DemoScienceInput
 import lucuma.schemas.ObservationDB.Types.DirectorsTimeInput
 import lucuma.schemas.ObservationDB.Types.FastTurnaroundInput
 import lucuma.schemas.ObservationDB.Types.LargeProgramInput
+import lucuma.schemas.ObservationDB.Types.PartnerSplitInput
 import lucuma.schemas.ObservationDB.Types.PoorWeatherInput
 import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
 import lucuma.schemas.ObservationDB.Types.ProposalTypeInput
 import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
-import lucuma.schemas.ObservationDB.Types.PartnerSplitInput
-import lucuma.core.model.CallForProposals
-import explore.model.PartnerSplit
-import clue.data.Unassign
 
 trait ProposalQueries:
   private def toOAUpdater(f: Endo[Input[ToOActivation]]) =
@@ -85,7 +85,7 @@ trait ProposalQueries:
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign,
               minPercentTotalTime = minPercentTotalTime.orUnassign
-              // totalTime = totalTime.map((r: TimeSpan) => r.toInput).orUnassign
+              // totalTime = totalTime.map(_.toInput).orUnassign
             ).assign
           )
         case ProposalType.Classical(_, minPercentTime, partnerSplits)                     =>

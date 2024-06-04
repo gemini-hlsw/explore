@@ -11,14 +11,14 @@ import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.refined.given
+import lucuma.core.enums.Partner
 import lucuma.core.enums.ScienceSubtype
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
 import lucuma.schemas.decoders.given
-import lucuma.core.enums.Partner
-import monocle.Lens
 import monocle.Focus
+import monocle.Lens
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:

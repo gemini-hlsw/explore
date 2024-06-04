@@ -13,8 +13,8 @@ import io.circe.refined.*
 import lucuma.core.enums.TacCategory
 import lucuma.core.model.CallForProposals
 import monocle.Focus
-import monocle.Lens
 import monocle.Iso
+import monocle.Lens
 
 case class Proposal(
   callId:       Option[CallForProposals.Id],
