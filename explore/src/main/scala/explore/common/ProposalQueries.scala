@@ -12,6 +12,7 @@ import explore.model.Proposal
 import explore.model.ProposalType
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.CallForProposals
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.DemoScienceInput
 import lucuma.schemas.ObservationDB.Types.DirectorsTimeInput
@@ -23,7 +24,6 @@ import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
 import lucuma.schemas.ObservationDB.Types.ProposalTypeInput
 import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
-import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
 
 trait ProposalQueries:

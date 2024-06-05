@@ -3,6 +3,8 @@
 
 package explore.optics
 
+import eu.timepit.refined.cats.given
+import eu.timepit.refined.scalacheck.all.given
 import explore.model.ProposalType
 import explore.model.arb.ArbPartnerSplit.given
 import explore.model.arb.ArbProposalType.given
@@ -10,11 +12,10 @@ import explore.optics.all.*
 import lucuma.core.math.arb.ArbRadialVelocity
 import lucuma.core.model.arb.ArbTarget
 import lucuma.core.util.arb.ArbEnumerated.given
+import lucuma.core.util.arb.ArbTimeSpan.given
 import monocle.law.discipline.OptionalTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary.*
-import eu.timepit.refined.cats.given
-import eu.timepit.refined.scalacheck.all.given
 
 class ModelOpticsSuite extends DisciplineSuite:
   import ArbRadialVelocity.given

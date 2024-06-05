@@ -219,11 +219,13 @@ object ExploreStyles:
   val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
   val ProposalAbstract: Css    = Css("explore-proposal-abstract")
 
-  val PartnerSplitsGrid: Css       = Css("partner-splits-grid")
-  val PartnerSplitsGridMinPct: Css = Css("partner-splits-grid-min-pct")
-  val PartnerSplitsGridTotal: Css  = Css("partner-splits-grid-total")
-  val PartnerSplitData: Css        = Css("partner-split-data")
-  val PartnerSplitFlag: Css        = Css("partner-split-flag")
+  val PartnerSplitsMissing: Css        = Css("partner-splits-missing")
+  val PartnerSplitsGrid: Css           = Css("partner-splits-grid")
+  val PartnerSplitsGridMinPctItem: Css = Css("partner-splits-grid-min-pct-item")
+  val PartnerSplitsGridMinPct: Css     = Css("partner-splits-grid-min-pct")
+  val PartnerSplitsGridTotal: Css      = Css("partner-splits-grid-total")
+  val PartnerSplitData: Css            = Css("partner-split-data")
+  val PartnerSplitFlag: Css            = Css("partner-split-flag")
 
   val PartnerSplitsEditorDialog: Css = Css("partner-splits-editor-dialog")
   val CompactOverlayPanel: Css       = Css("compact-overlay-panel")
