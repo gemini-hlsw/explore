@@ -13,10 +13,11 @@ import io.circe.refined.*
 import lucuma.core.enums.TacCategory
 import lucuma.core.model.CallForProposals
 import monocle.Focus
+import monocle.Iso
 import monocle.Lens
 
 case class Proposal(
-  cfpId:        Option[CallForProposals.Id],
+  callId:       Option[CallForProposals.Id],
   title:        Option[NonEmptyString],
   category:     Option[TacCategory],
   abstrakt:     Option[NonEmptyString],
@@ -24,25 +25,27 @@ case class Proposal(
 ) derives Eq
 
 object Proposal:
-  val cfpId: Lens[Proposal, Option[CallForProposals.Id]] =
-    Focus[Proposal](_.cfpId)
-  val title: Lens[Proposal, Option[NonEmptyString]]      =
+  val callId: Lens[Proposal, Option[CallForProposals.Id]] =
+    Focus[Proposal](_.callId)
+  val title: Lens[Proposal, Option[NonEmptyString]]       =
     Focus[Proposal](_.title)
-  val category: Lens[Proposal, Option[TacCategory]]      =
+  val category: Lens[Proposal, Option[TacCategory]]       =
     Focus[Proposal](_.category)
-  val abstrakt: Lens[Proposal, Option[NonEmptyString]]   =
+  val abstrakt: Lens[Proposal, Option[NonEmptyString]]    =
     Focus[Proposal](_.abstrakt)
-  val proposalType: Lens[Proposal, Option[ProposalType]] =
+  val proposalType: Lens[Proposal, Option[ProposalType]]  =
+    Focus[Proposal](_.proposalType)
+  val callWithType: Lens[Proposal, Option[ProposalType]]  =
     Focus[Proposal](_.proposalType)
 
   given Decoder[Proposal] = c =>
     for {
-      cfpId    <-
+      callId   <-
         c.downField("call").downField("id").success.traverse(_.as[Option[CallForProposals.Id]])
       title    <- c.downField("title").as[Option[NonEmptyString]]
       category <- c.downField("category").as[Option[TacCategory]]
       abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]
       pte      <- c.downField("type").as[Option[ProposalType]]
-    } yield Proposal(cfpId.flatten, title, category, abstrakt, pte)
+    } yield Proposal(callId.flatten, title, category, abstrakt, pte)
 
   val Default = Proposal(None, None, None, None, None)

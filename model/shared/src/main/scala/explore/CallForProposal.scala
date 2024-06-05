@@ -11,11 +11,14 @@ import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.refined.given
+import lucuma.core.enums.Partner
 import lucuma.core.enums.ScienceSubtype
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
 import lucuma.schemas.decoders.given
+import monocle.Focus
+import monocle.Lens
 
 // TODO move to lucuma-core
 enum CallForProposalType(val tag: String) derives Enumerated:
@@ -39,10 +42,17 @@ enum CallForProposalType(val tag: String) derives Enumerated:
       case CallForProposalType.DemoScience        => NonEmptyList.of(ScienceSubtype.DemoScience)
       case CallForProposalType.DirectorsTime      => NonEmptyList.of(ScienceSubtype.DirectorsTime)
 
+case class CallPartner(partner: Partner) derives Eq, Decoder
+
 case class CallForProposal(
   id:       CallForProposals.Id,
   semester: Semester,
   title:    NonEmptyString,
-  cfpType:  CallForProposalType
+  cfpType:  CallForProposalType,
+  partners: List[CallPartner]
 ) derives Eq,
       Decoder
+
+object CallForProposal:
+  val id: Lens[CallForProposal, CallForProposals.Id] =
+    Focus[CallForProposal](_.id)

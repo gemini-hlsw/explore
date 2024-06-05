@@ -21,6 +21,7 @@ import lucuma.core.model.Program
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
@@ -88,7 +89,7 @@ object PAConfigurationPanel:
                 ExploreStyles.AveragePA,
                 <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
                 <.label(a.when.toString),
-                <.label(a.duration.toHoursMinutes)
+                <.label(TimeSpanView(a.duration))
               )
             )
             .orElse(<.label("Not Visible").some)

@@ -14,7 +14,6 @@ import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTilesIds
 import explore.model.OdbItcResult
-import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -22,6 +21,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.TimeSpan
 import lucuma.refined.*
+import lucuma.ui.components.TimeSpanView
 
 object SequenceEditorTile:
 
@@ -38,7 +38,7 @@ object SequenceEditorTile:
         val programTimeCharge = execution.programTimeCharge.value
 
         def timeDisplay(name: String, time: TimeSpan) =
-          <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), time.toHoursMinutes)
+          <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
 
         val executed = timeDisplay("Executed", programTimeCharge)
 

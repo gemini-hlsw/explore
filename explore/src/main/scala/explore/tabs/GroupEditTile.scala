@@ -21,7 +21,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.GroupTree
 import explore.model.ProgramTimeRange
-import explore.model.syntax.all.toHoursMinutes
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -36,8 +35,10 @@ import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.syntax.all.*
 import monocle.Iso
 import monocle.Lens
 
@@ -212,14 +213,14 @@ object GroupEditTile:
             if timeEstimateRange.maximum === timeEstimateRange.minimum then
               React.Fragment(
                 FormLabel(htmlFor = "plannedTime".refined)("Planned Time"),
-                <.span(^.id := "plannedTime", timeEstimateRange.maximum.value.toHoursMinutes)
+                TimeSpanView(timeEstimateRange.maximum.value).withMods(^.id := "plannedTime")
               )
             else
               React.Fragment(
                 FormLabel(htmlFor = "maxPlannedTime".refined)("Maximum Planned Time"),
-                <.span(^.id := "maxPlannedTime", timeEstimateRange.maximum.value.toHoursMinutes),
+                TimeSpanView(timeEstimateRange.maximum.value).withMods(^.id := "maxPlannedTime"),
                 FormLabel(htmlFor = "minPlannedTime".refined)("Minimum Planned Time"),
-                <.span(^.id := "minPlannedTime", timeEstimateRange.minimum.value.toHoursMinutes)
+                TimeSpanView(timeEstimateRange.minimum.value).withMods(^.id := "minPlannedTime")
               )
           ))
 

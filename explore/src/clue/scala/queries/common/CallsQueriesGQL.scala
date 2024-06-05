@@ -18,6 +18,9 @@ object CallsQueriesGQL:
             semester
             title
             cfpType: type
+            partners {
+              partner
+            }
           }
         }
       }

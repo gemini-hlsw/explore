@@ -16,6 +16,8 @@ import explore.model.CallForProposal
 import explore.model.CallForProposalType
 import lucuma.core.model.Semester
 import lucuma.core.model.CallForProposals
+import explore.model.CallPartner
+import lucuma.core.enums.Partner
 
 trait ArbCallForProposal {
   import ArbEnumerated.given
@@ -27,13 +29,14 @@ trait ArbCallForProposal {
         semester <- arbitrary[Semester]
         title    <- arbitrary[NonEmptyString]
         cfpType  <- arbitrary[CallForProposalType]
-      } yield CallForProposal(id, semester, title, cfpType)
+        partners <- arbitrary[List[Partner]]
+      } yield CallForProposal(id, semester, title, cfpType, partners.map(CallPartner(_)))
     }
 
   given Cogen[CallForProposal] =
     Cogen[
-      (CallForProposals.Id, Semester, NonEmptyString, CallForProposalType)
-    ].contramap(p => (p.id, p.semester, p.title, p.cfpType))
+      (CallForProposals.Id, Semester, NonEmptyString, CallForProposalType, List[Partner])
+    ].contramap(p => (p.id, p.semester, p.title, p.cfpType, p.partners.map(_.partner)))
 }
 
 object ArbCallForProposal extends ArbCallForProposal
