@@ -4,6 +4,7 @@
 package explore.optics
 
 import explore.model.ProposalType
+import explore.model.arb.ArbPartnerSplit.given
 import explore.model.arb.ArbProposalType.given
 import explore.optics.all.*
 import lucuma.core.math.arb.ArbRadialVelocity
@@ -19,3 +20,4 @@ class ModelOpticsSuite extends DisciplineSuite:
 
   checkAll("targetRV", OptionalTests(TargetRV))
   checkAll("toOActivation", OptionalTests(ProposalType.toOActivation))
+  checkAll("partnerSplits", OptionalTests(ProposalType.partnerSplits))

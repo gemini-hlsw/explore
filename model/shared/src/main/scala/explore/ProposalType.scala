@@ -16,6 +16,7 @@ import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
+import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
@@ -58,6 +59,17 @@ object ProposalType:
     case i                     => i
   })
 
+  val partnerSplits: Optional[ProposalType, List[PartnerSplit]] =
+    Optional[ProposalType, List[PartnerSplit]] {
+      case c: Classical => c.partnerSplits.some
+      case q: Queue     => q.partnerSplits.some
+      case _            => none
+    }(a => {
+      case c: Classical => c.copy(partnerSplits = a)
+      case q: Queue     => q.copy(partnerSplits = a)
+      case i            => i
+    })
+
   // Define the Classical case class implementing ProposalType
   case class Classical(
     scienceSubtype: ScienceSubtype,
@@ -68,6 +80,8 @@ object ProposalType:
 
   object Classical {
     val minPercentTime: Lens[Classical, IntPercent] = Focus[Classical](_.minPercentTime)
+
+    val Default: Classical = Classical(ScienceSubtype.Classical, 100.refined, List.empty)
   }
 
   // Define the DemoScience case class implementing ProposalType
@@ -81,6 +95,9 @@ object ProposalType:
   object DemoScience {
     val minPercentTime: Lens[DemoScience, IntPercent]   = Focus[DemoScience](_.minPercentTime)
     val toOActivation: Lens[DemoScience, ToOActivation] = Focus[DemoScience](_.toOActivation)
+
+    val Default: DemoScience =
+      DemoScience(ScienceSubtype.DemoScience, ToOActivation.None, 100.refined)
   }
 
   // Define the DirectorsTime case class implementing ProposalType
@@ -94,6 +111,9 @@ object ProposalType:
   object DirectorsTime {
     val minPercentTime: Lens[DirectorsTime, IntPercent]   = Focus[DirectorsTime](_.minPercentTime)
     val toOActivation: Lens[DirectorsTime, ToOActivation] = Focus[DirectorsTime](_.toOActivation)
+
+    val Default: DirectorsTime =
+      DirectorsTime(ScienceSubtype.DirectorsTime, ToOActivation.None, 100.refined)
   }
 
   // Define the FastTurnaround case class implementing ProposalType
@@ -105,21 +125,45 @@ object ProposalType:
   ) extends ProposalType
       derives Eq
 
+  object FastTurnaround {
+    val minPercentTime: Lens[FastTurnaround, IntPercent]     = Focus[FastTurnaround](_.minPercentTime)
+    val toOActivation: Lens[FastTurnaround, ToOActivation]   = Focus[FastTurnaround](_.toOActivation)
+    val piAffiliation: Lens[FastTurnaround, Option[Partner]] =
+      Focus[FastTurnaround](_.piAffiliation)
+
+    val Default: FastTurnaround =
+      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 100.refined, None)
+  }
+
   // Define the LargeProgram case class implementing ProposalType
   case class LargeProgram(
     scienceSubtype:      ScienceSubtype,
     toOActivation:       ToOActivation,
     minPercentTime:      IntPercent,
-    minPercentTotalTime: IntPercent,
-    totalTime:           TimeSpan
+    minPercentTotalTime: Option[IntPercent],
+    totalTime:           Option[TimeSpan]
   ) extends ProposalType
       derives Eq
+
+  object LargeProgram {
+    val minPercentTime: Lens[LargeProgram, IntPercent]              = Focus[LargeProgram](_.minPercentTime)
+    val minPercentTotalTime: Lens[LargeProgram, Option[IntPercent]] =
+      Focus[LargeProgram](_.minPercentTotalTime)
+    val toOActivation: Lens[LargeProgram, ToOActivation]            = Focus[LargeProgram](_.toOActivation)
+
+    val Default: LargeProgram =
+      LargeProgram(ScienceSubtype.LargeProgram, ToOActivation.None, 100.refined, none, none)
+  }
 
   // Define the PoorWeather case class implementing ProposalType
   case class PoorWeather(
     scienceSubtype: ScienceSubtype
   ) extends ProposalType
       derives Eq
+
+  object PoorWeather {
+    val Default: PoorWeather = PoorWeather(ScienceSubtype.PoorWeather)
+  }
 
   // Define the Queue case class implementing ProposalType
   case class Queue(
@@ -130,12 +174,29 @@ object ProposalType:
   ) extends ProposalType
       derives Eq
 
+  object Queue {
+    val minPercentTime: Lens[Queue, IntPercent]   = Focus[Queue](_.minPercentTime)
+    val toOActivation: Lens[Queue, ToOActivation] = Focus[Queue](_.toOActivation)
+
+    val Default: Queue = Queue(ScienceSubtype.Queue, ToOActivation.None, 100.refined, List.empty)
+  }
+
   // Define the SystemVerification case class implementing ProposalType
   case class SystemVerification(
     scienceSubtype: ScienceSubtype,
     toOActivation:  ToOActivation,
     minPercentTime: IntPercent
   ) extends ProposalType
+
+  object SystemVerification {
+    val minPercentTime: Lens[SystemVerification, IntPercent]   =
+      Focus[SystemVerification](_.minPercentTime)
+    val toOActivation: Lens[SystemVerification, ToOActivation] =
+      Focus[SystemVerification](_.toOActivation)
+
+    val Default: SystemVerification =
+      SystemVerification(ScienceSubtype.SystemVerification, ToOActivation.None, 100.refined)
+  }
 
   given Decoder[ProposalType] = {
 
@@ -166,8 +227,8 @@ object ProposalType:
           for {
             toOActivation       <- c.downField("toOActivation").as[ToOActivation]
             minPercentTime      <- c.downField("minPercentTime").as[IntPercent]
-            minPercentTotalTime <- c.downField("minPercentTotalTime").as[IntPercent]
-            totalTime           <- c.downField("totalTime").as[TimeSpan]
+            minPercentTotalTime <- c.downField("minPercentTotalTime").as[Option[IntPercent]]
+            totalTime           <- c.downField("totalTime").as[Option[TimeSpan]]
           } yield LargeProgram(tpe, toOActivation, minPercentTime, minPercentTotalTime, totalTime)
         case ScienceSubtype.PoorWeather        =>
           Right(PoorWeather(tpe))

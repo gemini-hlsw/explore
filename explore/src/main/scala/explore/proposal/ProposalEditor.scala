@@ -17,8 +17,10 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
 import explore.common.Aligner
 import explore.common.ProposalQueries.*
+import explore.components.FormStaticData
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.TileController
@@ -38,7 +40,9 @@ import explore.model.ProposalType
 import explore.model.ProposalType.*
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.Visible
 import explore.model.layout.LayoutsMap
+import explore.model.reusability.given
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -51,6 +55,7 @@ import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
 import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
@@ -63,6 +68,7 @@ import lucuma.ui.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
@@ -97,42 +103,41 @@ object ProposalEditor:
 
   // private def formatHours(hours: BigDecimal) = f"$hours%.2fh"
 
-  // private def sortedSplits(splits: SortedMap[Partner, IntPercent]): List[PartnerSplit] =
-  //   splits.toList
-  //     .map { case (part, perc) => PartnerSplit(part, perc) }
-  //     .sortBy(_.percent.value)(Ordering[Int].reverse)
+  private def sortedSplits(splits: List[PartnerSplit]): List[PartnerSplit] =
+    splits
+      .sortBy(_.percent.value)(Ordering[Int].reverse)
 
-  // private def partnerSplits(splits: SortedMap[Partner, IntPercent]): TagMod = splits match {
-  //   case a if a.isEmpty =>
-  //     <.span(
-  //       Icons.ExclamationTriangle,
-  //       "Partner time allocations are required."
-  //     )
-  //   case _              =>
-  //     val ps = sortedSplits(splits)
-  //       .toTagMod(ps => partnerSplit(ps))
-  //     <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
-  // }
+  private def partnerSplits(splits: List[PartnerSplit]): TagMod = splits match {
+    case a if a.isEmpty =>
+      <.span(
+        Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
+        " Partner time allocations are required."
+      )
+    case _              =>
+      val ps = sortedSplits(splits)
+        .toTagMod(ps => partnerSplit(ps))
+      <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
+  }
 
-  // private def partnerSplit(ps: PartnerSplit): TagMod = {
-  //   val id   = s"${ps.partner.tag}-split"
-  //   val text = f"${ps.percent.value}%%"
-  //   partnerSplitData(ps.partner, id, text)
-  // }
+  private def partnerSplit(ps: PartnerSplit): TagMod = {
+    val id   = s"${ps.partner.tag}-split"
+    val text = f"${ps.percent.value}%%"
+    partnerSplitData(ps.partner, id, text)
+  }
 
-  // private def partnerSplitData(partner: Partner, id: String, data: String) = {
-  //   val img: TagMod  =
-  //     <.img(^.src        := PartnerFlags.smallFlag(partner),
-  //           ^.alt := s"${partner.shortName}  Flag",
-  //           ExploreStyles.PartnerSplitFlag
-  //     )
-  //   val span: TagMod = <.span(data)
-  //
-  //   FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
-  //     ExploreStyles.FlexShrink(0.refined),
-  //     ExploreStyles.PartnerSplitData
-  //   )
-  // }
+  private def partnerSplitData(partner: Partner, id: String, data: String) = {
+    val img: TagMod  =
+      <.img(^.src        := PartnerFlags.smallFlag(partner),
+            ^.alt := s"${partner.shortName}  Flag",
+            ExploreStyles.PartnerSplitFlag
+      )
+    val span: TagMod = <.span(data)
+
+    FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
+      ExploreStyles.FlexShrink(0.refined),
+      ExploreStyles.PartnerSplitData
+    )
+  }
 
   // private def timeSplits(splits: SortedMap[Partner, IntPercent], total: TimeSpan): VdomNode =
   //   val tagmod = splits match {
@@ -176,36 +181,37 @@ object ProposalEditor:
       }
       .toList
 
-  // private def saveStateSplits(
-  //   splitView: View[SortedMap[Partner, IntPercent]],
-  //   splitList: List[PartnerSplit]
-  // ): Callback =
-  //   splitView
-  //     .set(SortedMap.from(splitList.filter(_.percent.value > 0).map(_.toTuple)))
-
   private def renderDetails(
     aligner:       Aligner[Proposal, ProposalPropertiesInput],
     undoCtx:       UndoContext[Proposal],
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
-    // proposalClassType: View[ProposalClassType],
-    // showDialog:    View[Boolean],
-    // splitsList:    View[List[PartnerSplit]],
+    showDialog:    View[Visible],
+    splitsList:    View[List[PartnerSplit]],
     // splitsMap:     SortedMap[Partner, IntPercent],
     // timeEstimateRange: Pot[Option[ProgramTimeRange]],
     cfps:          List[CallForProposal],
     readonly:      Boolean,
     renderInTitle: Tile.RenderInTitle
   )(using Logger[IO]): VdomNode = {
+    val proposalCfpView: View[Proposal] =
+      aligner.viewMod { p =>
+        ProposalPropertiesInput.callId.replace(p.callId.orUnassign) >>>
+          ProposalPropertiesInput.`type`.replace(p.proposalType.map(_.toInput).orUnassign)
+      }
+
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
       aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
 
-    val callIdAligner: Aligner[Option[CallForProposals.Id], Input[CallForProposals.Id]] =
-      aligner.zoom(Proposal.cfpId, ProposalPropertiesInput.callId.modify)
+    val callId: Option[CallForProposals.Id] = aligner.get.callId
+    val scienceSubtype                      = aligner.get.proposalType.map(_.scienceSubtype)
 
-    val callIdView: View[Option[CallForProposals.Id]] = callIdAligner.view(_.orUnassign)
+    val selectedCfp   = callId.flatMap(id => cfps.find(_.id === id))
+    val isCfpSelected = selectedCfp.isDefined
+    val subtypes      = selectedCfp.map(_.cfpType.subTypes)
+    val hasSubtypes   = subtypes.exists(_.size > 1)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
@@ -218,12 +224,21 @@ object ProposalEditor:
     val proposalTypeView: View[Option[ProposalType]] =
       proposalTypeAligner.view(_.map(_.toInput).orUnassign)
 
-    val activationAligner: Option[Aligner[ToOActivation, Input[ToOActivation]]] =
-      aligner.zoomOpt(Proposal.proposalType.some.andThen(ProposalType.toOActivation),
-                      modifyToOActivation
-      )
+    val activationView: Option[View[ToOActivation]] =
+      proposalTypeView.toOptionView.map(_.zoom(ProposalType.toOActivation).toOptionView).flatten
 
-    val activationView: Option[View[ToOActivation]] = activationAligner.map(_.view(_.assign))
+    val needsPartnerSelection =
+      scienceSubtype match {
+        // Queue is set by default even if there is no CfP selection
+        case Some(ScienceSubtype.Queue) | Some(ScienceSubtype.Classical) => isCfpSelected
+        case _                                                           => false
+      }
+
+    val partnerSplitsView: Option[View[List[PartnerSplit]]] =
+      proposalTypeView.toOptionView
+        .map(_.zoom(ProposalType.partnerSplits).toOptionView)
+        .flatten
+        .filter(_ => needsPartnerSelection)
 
     // val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     // val totalTime       = totalTimeView.get
@@ -262,163 +277,135 @@ object ProposalEditor:
     //     inputClass = ExploreStyles.PartnerSplitsGridTotal
     //   )
 
-    // def openPartnerSplitsEditor: Callback = {
-    //   val allPartners = Partner.EnumeratedPartner.all.map(p =>
-    //     splitsMap
-    //       .get(p)
-    //       .fold(PartnerSplit(p, 0.refined))(pct => PartnerSplit(p, pct))
-    //   )
-    //   splitsList.set(allPartners) >> showDialog.set(true)
-    // }
-
-    // def onClassTypeMod(classType: ProposalClassType): Callback = {
-    //   val currentClass    = classView.get
-    //   val minPctTime      = currentClass.minPercentTime
-    //   val minPctTotalTime =
-    //     ProposalClass.minPercentTotalTime.getOption(currentClass).getOrElse(minPct2.get)
-    //   val totalTime       =
-    //     ProposalClass.totalTime.getOption(currentClass).getOrElse(fromHours(totalHours.get))
-    //   val newClass        = classType.toProposalClass(minPctTime, minPctTotalTime, totalTime)
-    //   classView.set(newClass) >> minPct2.set(minPctTotalTime) >> totalHours.set(toHours(totalTime))
-    // }
-
-    // val proposalClass = proposalClassType.withOnMod(onClassTypeMod)
-    //
-    val selectedCfp           =
-      callIdView.get.flatMap(id => cfps.find(_.id === id))
-    val subtypes              =
-      selectedCfp.map(_.cfpType.subTypes)
-    val hasSubtypes           =
-      subtypes.exists(_.size > 1)
-    val needsPartnerSelection =
-      proposalTypeView.get.map(_.scienceSubtype) match {
-        case Some(ScienceSubtype.Queue) | Some(ScienceSubtype.Classical) => true
-        case _                                                           => false
-      }
-    // val scienceSubtypeView: View[Option[ScienceSubtype]] =
-    //   proposalTypeView.zoom(convertingLens)
-
-    React.StrictMode(
-      React.Fragment(
-        renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
-        <.form(
-          <.div(ExploreStyles.ProposalDetailsGrid)(
-            <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-              // Title input
-              FormInputTextView(
-                id = "title".refined,
-                inputClass = Css("inverse"),
-                value = titleView,
-                validFormat = InputValidSplitEpi.nonEmptyString.optional,
-                label = "Title",
-                disabled = readonly
-              )(^.autoFocus := true),
-              // Category selector
-              FormDropdownOptional(
-                id = "category".refined,
-                label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
-                value = categoryView.get.map(categoryTag),
-                options = categoryOptions,
-                onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
-                disabled = readonly,
-                modifiers = List(^.id := "category")
-              ),
+    React.Fragment(
+      renderInTitle(<.div(ExploreStyles.TitleUndoButtons)(UndoButtons(undoCtx))),
+      <.form(
+        <.div(ExploreStyles.ProposalDetailsGrid)(
+          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+            // Title input
+            FormInputTextView(
+              id = "title".refined,
+              inputClass = Css("inverse"),
+              value = titleView,
+              validFormat = InputValidSplitEpi.nonEmptyString.optional,
+              label = "Title",
+              disabled = readonly
+            )(^.autoFocus := true),
+            // Category selector
+            FormDropdownOptional(
+              id = "category".refined,
+              label = React.Fragment("Category", HelpIcon("proposal/main/category.md".refined)),
+              value = categoryView.get.map(categoryTag),
+              options = categoryOptions,
+              onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
+              disabled = readonly,
+              modifiers = List(^.id := "category")
+            ),
+            partnerSplitsView.map(psView =>
               <.div(
                 ExploreStyles.PartnerSplitsGrid,
                 // The first partner splits row, with the button and the flags
                 <.div(
-                  <.label("Partners")
-                  // <.div(
-                  //   Button(
-                  //     icon = Icons.Edit,
-                  //     severity = Button.Severity.Secondary,
-                  //     tpe = Button.Type.Button,
-                  //     onClick = openPartnerSplitsEditor,
-                  //     tooltip = "Edit Partner Splits",
-                  //     disabled = readonly
-                  //   ).mini.compact
-                  // )
-                )
-                // partnerSplits(splitsMap)
-                // <.div(
-                //   makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
-                // ),
-                // The second partner splits row, for maximum times - is always there
-                // FormStaticData(
-                //   value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
-                //   label = maxTimeLabel,
-                //   id = "maxTime"
-                // ),
-                // maxExecutionPot.renderPot(
-                //   valueRender = maxExecutionTime =>
-                //     React.Fragment(timeSplits(splitsMap, maxExecutionTime),
-                //                    minimumTime(minimumPct1View.get, maxExecutionTime)
-                //     ),
-                //   pendingRender = React.Fragment(<.span(), <.span())
-                // ),
-                // The third partner splits row, for minimum times - is always there
-                // FormStaticData(
-                //   value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
-                //   label = minTimeLabel,
-                //   id = "maxTime"
-                // )
-                // minExecutionPot.renderPot(
-                //   valueRender = minExecutionTime =>
-                //     React.Fragment(timeSplits(splitsMap, minExecutionTime),
-                //                    minimumTime(minimumPct1View.get, minExecutionTime)
-                //     ),
-                //   pendingRender = React.Fragment(<.span(), <.span())
-                // ),
-                // // The third partner splits row - only exists for a few observation classes
-                // totalTime.fold(React.Fragment()) { tt =>
-                //   React.Fragment(
-                //     <.div(totalTimeEntry),
-                //     timeSplits(splitsMap, tt),
-                //     <.div(
-                //       minimumPct2View
-                //         .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
-                //         .getOrElse(minimumTime(minimumPct1View.get, tt))
-                //     )
-                //   )
-                // }
-              ).when(needsPartnerSelection)
-            ),
-            <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-              // Call for proposal selector
-              FormDropdownOptional(
-                id = "cfp".refined,
-                label =
-                  React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-                value = callIdView.get,
-                options = cfps.map(r => SelectItem(r.id, r.title)),
-                onChange =
-                  // So far we only support queue for the current crop of CfP
-                  _.map(v => callIdView.set(v.some)).orEmpty,
-                disabled = readonly,
-                modifiers = List(^.id := "cfp")
-              ),
-              // Proposal type selector, visible when cfp is selected and has more than one subtpye
-              FormDropdown(
-                id = "proposalType".refined,
-                options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
-                label = React.Fragment("Regular Proposal Type",
-                                       HelpIcon("proposal/main/proposal-type.md".refined)
+                  <.label("Partners"),
+                  <.div(
+                    Button(
+                      icon = Icons.Edit,
+                      severity = Button.Severity.Secondary,
+                      tpe = Button.Type.Button,
+                      onClick = showDialog.set(Visible.Shown),
+                      tooltip = "Edit Partner Splits",
+                      disabled = readonly
+                    ).mini.compact
+                  )
                 ),
-                value = proposalTypeView.get.map(_.scienceSubtype).orNull,
-                onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
-                disabled = readonly,
-                modifiers = List(^.id := "proposalType")
-              ).when(hasSubtypes),
-              activationView.map(activationView =>
-                FormEnumDropdownView(
-                  id = "too-activation".refined,
-                  value = activationView,
-                  label = React.Fragment(
-                    "ToO Activation",
-                    HelpIcon("proposal/main/too-activation.md".refined)
-                  ),
-                  disabled = readonly
+                PartnerSplitsEditor(
+                  showDialog.get,
+                  splitsList,
+                  showDialog.set(Visible.Hidden),
+                  splits => psView.set(splits)
+                ),
+                partnerSplits(psView.get)
+              )
+              // <.div(
+              //   makeMinimumPctInput(minimumPct1View, "min-pct-1".refined)
+              // ),
+              // The second partner splits row, for maximum times - is always there
+              // FormStaticData(
+              //   value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
+              //   label = maxTimeLabel,
+              //   id = "maxTime"
+              // ),
+              // maxExecutionPot.renderPot(
+              //   valueRender = maxExecutionTime =>
+              //     React.Fragment(timeSplits(splitsMap, maxExecutionTime),
+              //                    minimumTime(minimumPct1View.get, maxExecutionTime)
+              //     ),
+              //   pendingRender = React.Fragment(<.span(), <.span())
+              // ),
+              // The third partner splits row, for minimum times - is always there
+              // FormStaticData(
+              //   value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
+              //   label = minTimeLabel,
+              //   id = "maxTime"
+              // )
+              // minExecutionPot.renderPot(
+              //   valueRender = minExecutionTime =>
+              //     React.Fragment(timeSplits(splitsMap, minExecutionTime),
+              //                    minimumTime(minimumPct1View.get, minExecutionTime)
+              //     ),
+              //   pendingRender = React.Fragment(<.span(), <.span())
+              // ),
+              // // The third partner splits row - only exists for a few observation classes
+              // totalTime.fold(React.Fragment()) { tt =>
+              //   React.Fragment(
+              //     <.div(totalTimeEntry),
+              //     timeSplits(splitsMap, tt),
+              //     <.div(
+              //       minimumPct2View
+              //         .mapValue(pctView => makeMinimumPctInput(pctView, "min-pct-2".refined))
+              //         .getOrElse(minimumTime(minimumPct1View.get, tt))
+              //     )
+              //   )
+              // }
+            )
+          ),
+          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+            // Call for proposal selector
+            FormDropdownOptional(
+              id = "cfp".refined,
+              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+              value = callId,
+              options = cfps.map(r => SelectItem(r.id, r.title)),
+              onChange = _.map { cid =>
+                val call = cfps.find(_.id === cid)
+                proposalCfpView.mod(
+                  _.copy(callId = cid.some, proposalType = call.map(_.cfpType.defaultType))
                 )
+              }.orEmpty,
+              disabled = readonly,
+              modifiers = List(^.id := "cfp")
+            ),
+            // Proposal type selector, visible when cfp is selected and has more than one subtpye
+            FormDropdown(
+              id = "proposalType".refined,
+              options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
+              label = React.Fragment("Regular Proposal Type",
+                                     HelpIcon("proposal/main/proposal-type.md".refined)
+              ),
+              value = proposalTypeView.get.map(_.scienceSubtype).orNull,
+              onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
+              disabled = readonly,
+              modifiers = List(^.id := "proposalType")
+            ).when(hasSubtypes),
+            activationView.map(activationView =>
+              FormEnumDropdownView(
+                id = "too-activation".refined,
+                value = activationView,
+                label = React.Fragment(
+                  "ToO Activation",
+                  HelpIcon("proposal/main/too-activation.md".refined)
+                ),
+                disabled = readonly
               )
             )
           )
@@ -434,9 +421,8 @@ object ProposalEditor:
     undoStacks:   View[UndoStacks[IO, Proposal]],
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
-    // proposalClassType: View[ProposalClassType],
-    // showDialog:   View[Boolean],
-    // splitsList:        View[List[PartnerSplit]],
+    showDialog:   View[Visible],
+    splitsList:   View[List[PartnerSplit]],
     createInvite: View[CreateInviteProcess],
     // timeEstimateRange: Pot[Option[ProgramTimeRange]],
     users:        View[NonEmptyList[ProgramUserWithRole]],
@@ -451,8 +437,6 @@ object ProposalEditor:
   )(using ctx: AppContext[IO]) = {
     import ctx.given
 
-    // def closePartnerSplitsEditor: Callback = showDialog.set(false)
-
     val undoCtx: UndoContext[Proposal]                      = UndoContext(undoStacks, proposal)
     val aligner: Aligner[Proposal, ProposalPropertiesInput] =
       Aligner(
@@ -464,17 +448,10 @@ object ProposalEditor:
         (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
       ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
-    // val splitsAligner: Aligner[SortedMap[Partner, IntPercent], Input[List[PartnerSplitInput]]] =
-    //   aligner.zoom(Proposal.partnerSplits, ProposalPropertiesInput.partnerSplits.modify)
+    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
+      aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
 
-    // val splitsView: View[SortedMap[Partner, IntPercent]] =
-    //   splitsAligner.view(
-    //     _.toList
-    //       .map { case (par, pct) =>
-    //         PartnerSplitInput(partner = par, percent = pct)
-    //       }
-    //       .assign
-    //   )
+    val abstractView = abstractAligner.view(_.orUnassign)
 
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
@@ -485,9 +462,8 @@ object ProposalEditor:
           undoCtx,
           // totalHours,
           // minPct2,
-          // proposalClassType,
-          // showDialog,
-          // splitsList,
+          showDialog,
+          splitsList,
           // splitsView.get,
           // timeEstimateRange,
           cfps,
@@ -498,10 +474,6 @@ object ProposalEditor:
 
     val usersTile = ProgramUsers.programUsersTile(programId, users, invitations, createInvite, ref)
 
-    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
-
-    val abstractView = abstractAligner.view(_.orUnassign)
     val abstractTile =
       Tile(ProposalTabTileIds.AbstractId.id,
            "Abstract",
@@ -530,14 +502,9 @@ object ProposalEditor:
         GridLayoutSection.ProposalLayout,
         storeLayout = true
       )
-      // PartnerSplitsEditor(
-      //   showDialog.get,
-      //   splitsList,
-      //   closePartnerSplitsEditor,
-      //   saveStateSplits(splitsView, _)
-      // )
     ).withRef(resize.ref)
   }
+  summon[Reusability[CallForProposals.Id]]
 
   private val component =
     ScalaFnComponent
@@ -548,7 +515,7 @@ object ProposalEditor:
         import ctx.given
         ReadOpenCFPs[IO]
           .query()
-          .map(_.map(_.callsForProposals.matches)) // .map(_: CallForProposal))
+          .map(_.map(_.callsForProposals.matches))
       // .useStateViewBy: (props, _, _) =>
       //   // total time - we need `Hours` for editing and also to preserve if
       //   // the user switches between classes with and without total time.
@@ -568,9 +535,23 @@ object ProposalEditor:
       //   // Initial proposal class type
       //   ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
       // )
-      .useStateView(false) // show partner splits modal
-      .useStateView(List.empty[PartnerSplit])
-      // .useStateViewBy((props, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)
+      .useStateView(Visible.Hidden)           // show partner splits modal
+      .useStateView(List.empty[PartnerSplit]) // show partner splits modal
+      // Update the partner splits when a new callId is set
+      .useEffectWithDepsBy((props, _, cfps, _, _) =>
+        (props.proposal.get.callId, cfps.toOption.orEmpty)
+      ) { (props, _, _, _, ps) => (callId, cfps) =>
+        callId.fold(Callback.empty)(cid =>
+          val currentSplits = Proposal.proposalType.some
+            .andThen(ProposalType.partnerSplits)
+            .getOption(props.proposal.get)
+          val cfpPartners   = cfps
+            .find(_.id === cid)
+            .foldMap(_.partners.map(_.partner))
+          ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
+            .when_(currentSplits.foldMap(_.map(_.partner)) =!= cfpPartners)
+        )
+      }
       // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
       //   // Deal with changes to the ProposalClass.
       //   (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
@@ -600,10 +581,8 @@ object ProposalEditor:
           cfps,
           // totalHours,
           // minPct2,
-          // proposalClassType,
           showDialog,
           splitsList,
-          // _,
           resize,
           createInvite,
           overlayRef
@@ -615,9 +594,8 @@ object ProposalEditor:
             props.undoStacks,
             // totalHours,
             // minPct2,
-            // proposalClassType,
-            // showDialog,
-            // splitsList,
+            showDialog,
+            splitsList,
             createInvite,
             // props.timeEstimateRange,
             props.users,

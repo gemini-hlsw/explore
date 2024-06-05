@@ -39,6 +39,6 @@ trait ArbProposal:
         Option[NonEmptyString],
         Option[ProposalType]
       )
-    ].contramap(p => (p.cfpId, p.title, p.category, p.abstrakt, p.proposalType))
+    ].contramap(p => (p.callId, p.title, p.category, p.abstrakt, p.proposalType))
 
 object ArbProposal extends ArbProposal
