@@ -17,12 +17,10 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.GroupQueries
 import explore.components.Tile
-import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.GroupTree
 import explore.model.ProgramTimeRange
-import explore.model.syntax.all.toHoursMinutes
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -37,8 +35,10 @@ import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.syntax.all.*
 import monocle.Iso
 import monocle.Lens
 

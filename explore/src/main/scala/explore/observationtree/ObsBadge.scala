@@ -11,7 +11,6 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
-import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
 import explore.syntax.ui.*
@@ -28,6 +27,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.InputSwitch
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given

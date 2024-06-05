@@ -9,7 +9,6 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.Tile
-import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.AsterismIds
 import explore.model.Execution
@@ -22,6 +21,7 @@ import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.TimeSpan
 import lucuma.refined.*
+import lucuma.ui.components.TimeSpanView
 
 object SequenceEditorTile:
 

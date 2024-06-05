@@ -6,7 +6,6 @@ package explore.config
 import cats.syntax.all.*
 import crystal.react.*
 import explore.components.HelpIcon
-import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.AveragePABasis
 import explore.model.enums.AgsState
@@ -22,6 +21,7 @@ import lucuma.core.model.Program
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.FormInputTextView

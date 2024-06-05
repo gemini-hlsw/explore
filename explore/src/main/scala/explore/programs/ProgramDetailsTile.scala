@@ -5,13 +5,13 @@ package explore.programs
 
 import cats.syntax.all.*
 import crystal.Pot
-import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.ProgramTimes
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.*
 
 case class ProgramDetailsTile(
