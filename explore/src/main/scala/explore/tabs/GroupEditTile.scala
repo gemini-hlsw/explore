@@ -17,6 +17,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.GroupQueries
 import explore.components.Tile
+import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.GroupTree
@@ -212,14 +213,14 @@ object GroupEditTile:
             if timeEstimateRange.maximum === timeEstimateRange.minimum then
               React.Fragment(
                 FormLabel(htmlFor = "plannedTime".refined)("Planned Time"),
-                <.span(^.id := "plannedTime", timeEstimateRange.maximum.value.toHoursMinutes)
+                TimeSpanView(timeEstimateRange.maximum.value).withMods(^.id := "plannedTime")
               )
             else
               React.Fragment(
                 FormLabel(htmlFor = "maxPlannedTime".refined)("Maximum Planned Time"),
-                <.span(^.id := "maxPlannedTime", timeEstimateRange.maximum.value.toHoursMinutes),
+                TimeSpanView(timeEstimateRange.maximum.value).withMods(^.id := "maxPlannedTime"),
                 FormLabel(htmlFor = "minPlannedTime".refined)("Minimum Planned Time"),
-                <.span(^.id := "minPlannedTime", timeEstimateRange.minimum.value.toHoursMinutes)
+                TimeSpanView(timeEstimateRange.minimum.value).withMods(^.id := "minPlannedTime")
               )
           ))
 

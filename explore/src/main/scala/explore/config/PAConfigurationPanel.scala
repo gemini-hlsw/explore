@@ -6,6 +6,7 @@ package explore.config
 import cats.syntax.all.*
 import crystal.react.*
 import explore.components.HelpIcon
+import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.AveragePABasis
 import explore.model.enums.AgsState
@@ -88,7 +89,7 @@ object PAConfigurationPanel:
                 ExploreStyles.AveragePA,
                 <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
                 <.label(a.when.toString),
-                <.label(a.duration.toHoursMinutes)
+                <.label(TimeSpanView(a.duration))
               )
             )
             .orElse(<.label("Not Visible").some)

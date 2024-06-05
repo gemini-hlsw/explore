@@ -11,9 +11,9 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
+import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
-import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -189,7 +189,7 @@ object ObsBadge:
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            props.executionTime.orSpinner(_.map(ts => <.span(ts.toHoursMinutes)))
+            props.executionTime.orSpinner(_.map(TimeSpanView(_)))
           )
         )
       )

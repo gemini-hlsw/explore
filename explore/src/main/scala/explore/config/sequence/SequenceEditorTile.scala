@@ -9,12 +9,12 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.Tile
+import explore.components.TimeSpanView
 import explore.components.ui.ExploreStyles
 import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTilesIds
 import explore.model.OdbItcResult
-import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -38,7 +38,7 @@ object SequenceEditorTile:
         val programTimeCharge = execution.programTimeCharge.value
 
         def timeDisplay(name: String, time: TimeSpan) =
-          <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), time.toHoursMinutes)
+          <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
 
         val executed = timeDisplay("Executed", programTimeCharge)
 
