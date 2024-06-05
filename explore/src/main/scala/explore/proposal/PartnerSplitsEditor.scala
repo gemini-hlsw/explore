@@ -11,6 +11,7 @@ import explore.*
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model.PartnerSplit
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
@@ -40,8 +41,6 @@ object PartnerSplitsEditor {
   private type Props = PartnerSplitsEditor
 
   private val ColDef = ColumnDef[View[PartnerSplit]]
-
-  private given Reusability[PartnerSplit] = Reusability.byEq
 
   private def save(props: Props) =
     if (addsUpTo100(props.splits.get))

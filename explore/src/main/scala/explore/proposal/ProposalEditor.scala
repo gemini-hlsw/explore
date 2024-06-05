@@ -209,10 +209,8 @@ object ProposalEditor:
 
     val selectedCfp   = callId.flatMap(id => cfps.find(_.id === id))
     val isCfpSelected = selectedCfp.isDefined
-    val subtypes      =
-      selectedCfp.map(_.cfpType.subTypes)
-    val hasSubtypes   =
-      subtypes.exists(_.size > 1)
+    val subtypes      = selectedCfp.map(_.cfpType.subTypes)
+    val hasSubtypes   = subtypes.exists(_.size > 1)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
@@ -228,15 +226,6 @@ object ProposalEditor:
     val activationView: Option[View[ToOActivation]] =
       proposalTypeView.toOptionView.map(_.zoom(ProposalType.toOActivation).toOptionView).flatten
 
-    // val activationAligner: Option[Aligner[ToOActivation, Input[ToOActivation]]] =
-    //   aligner
-    //     .zoomOpt(Proposal.proposalType.some.andThen(ProposalType.toOActivation),
-    //              modifyToOActivation
-    //     )
-    //     .filter(_ => isCfpSelected)
-
-    // val activationView: Option[View[ToOActivation]] = activationAligner.map(_.view(_.assign))
-
     val needsPartnerSelection =
       scienceSubtype match {
         // Queue is set by default even if there is no CfP selection
@@ -244,17 +233,11 @@ object ProposalEditor:
         case _                                                           => false
       }
 
-    val splitsAligner: Option[Aligner[List[PartnerSplit], Input[List[PartnerSplitInput]]]] =
-      aligner
-        .zoomOpt(Proposal.proposalType.some.andThen(ProposalType.partnerSplits),
-                 modifyPartnerSplits
-        )
-        .filter(_ => needsPartnerSelection)
-
     val partnerSplitsView: Option[View[List[PartnerSplit]]] =
-      splitsAligner.map(
-        _.view(_.map(p => PartnerSplitInput(p.partner, p.percent)).assign)
-      )
+      proposalTypeView.toOptionView
+        .map(_.zoom(ProposalType.partnerSplits).toOptionView)
+        .flatten
+        .filter(_ => needsPartnerSelection)
 
     // val totalTimeView   = classView.zoom(ProposalClass.totalTime)
     // val totalTime       = totalTimeView.get
@@ -557,7 +540,6 @@ object ProposalEditor:
       .useEffectWithDepsBy((props, _, cfps, _, _) =>
         (props.proposal.get.callId, cfps.toOption.orEmpty)
       ) { (props, _, _, _, ps) => (callId, cfps) =>
-        // val m: Int = cfps.foldMap(_.find(_.id === proposal.get.callId))
         callId.fold(Callback.empty)(cid =>
           val currentSplits = Proposal.proposalType.some
             .andThen(ProposalType.partnerSplits)
