@@ -11,6 +11,7 @@ import explore.*
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model.PartnerSplit
+import explore.model.enums.Visible
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -31,7 +32,7 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 
 case class PartnerSplitsEditor(
-  show:    PartnersDialogState,
+  show:    Visible,
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
   onSave:  List[PartnerSplit] => Callback

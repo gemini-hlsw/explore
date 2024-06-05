@@ -40,6 +40,7 @@ import explore.model.ProposalType
 import explore.model.ProposalType.*
 import explore.model.display.given
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.Visible
 import explore.model.layout.LayoutsMap
 import explore.model.reusability.given
 import explore.undo.*
@@ -185,7 +186,7 @@ object ProposalEditor:
     undoCtx:       UndoContext[Proposal],
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
-    showDialog:    View[PartnersDialogState],
+    showDialog:    View[Visible],
     splitsList:    View[List[PartnerSplit]],
     // splitsMap:     SortedMap[Partner, IntPercent],
     // timeEstimateRange: Pot[Option[ProgramTimeRange]],
@@ -311,7 +312,7 @@ object ProposalEditor:
                       icon = Icons.Edit,
                       severity = Button.Severity.Secondary,
                       tpe = Button.Type.Button,
-                      onClick = showDialog.set(PartnersDialogState.Shown),
+                      onClick = showDialog.set(Visible.Shown),
                       tooltip = "Edit Partner Splits",
                       disabled = readonly
                     ).mini.compact
@@ -320,7 +321,7 @@ object ProposalEditor:
                 PartnerSplitsEditor(
                   showDialog.get,
                   splitsList,
-                  showDialog.set(PartnersDialogState.Hidden),
+                  showDialog.set(Visible.Hidden),
                   splits => psView.set(splits)
                 ),
                 partnerSplits(psView.get)
@@ -420,7 +421,7 @@ object ProposalEditor:
     undoStacks:   View[UndoStacks[IO, Proposal]],
     // totalHours:        View[Hours],
     // minPct2:           View[IntPercent],
-    showDialog:   View[PartnersDialogState],
+    showDialog:   View[Visible],
     splitsList:   View[List[PartnerSplit]],
     createInvite: View[CreateInviteProcess],
     // timeEstimateRange: Pot[Option[ProgramTimeRange]],
@@ -514,7 +515,7 @@ object ProposalEditor:
         import ctx.given
         ReadOpenCFPs[IO]
           .query()
-          .map(_.map(_.callsForProposals.matches)) // .map(_: CallForProposal))
+          .map(_.map(_.callsForProposals.matches))
       // .useStateViewBy: (props, _, _) =>
       //   // total time - we need `Hours` for editing and also to preserve if
       //   // the user switches between classes with and without total time.
@@ -534,7 +535,7 @@ object ProposalEditor:
       //   // Initial proposal class type
       //   ProposalClassType.fromProposalClass(props.proposal.get.proposalClass)
       // )
-      .useStateView(PartnersDialogState.Hidden) // show partner splits modal
+      .useStateView(Visible.Hidden)           // show partner splits modal
       .useStateView(List.empty[PartnerSplit]) // show partner splits modal
       // Update the partner splits when a new callId is set
       .useEffectWithDepsBy((props, _, cfps, _, _) =>
