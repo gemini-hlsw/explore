@@ -27,20 +27,20 @@ import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 
 trait ProposalQueries:
-  private def toOAUpdater(f: Endo[Input[ToOActivation]]) =
-    ProposalTypeInput.demoScience.assign.andThen(DemoScienceInput.toOActivation).modify(f) >>>
-      ProposalTypeInput.directorsTime.assign.andThen(DirectorsTimeInput.toOActivation).modify(f) >>>
-      ProposalTypeInput.fastTurnaround.assign
-        .andThen(FastTurnaroundInput.toOActivation)
-        .modify(f) >>>
-      ProposalTypeInput.largeProgram.assign.andThen(LargeProgramInput.toOActivation).modify(f) >>>
-      ProposalTypeInput.queue.assign.andThen(QueueInput.toOActivation).modify(f) >>>
-      ProposalTypeInput.systemVerification.assign
-        .andThen(SystemVerificationInput.toOActivation)
-        .modify(f)
+  // private def toOAUpdater(f: Endo[Input[ToOActivation]]): Endo[ProposalTypeInput] =
+  //   ProposalTypeInput.demoScience.assign.andThen(DemoScienceInput.toOActivation).modify(f) >>>
+  //     ProposalTypeInput.directorsTime.assign.andThen(DirectorsTimeInput.toOActivation).modify(f) >>>
+  //     ProposalTypeInput.fastTurnaround.assign
+  //       .andThen(FastTurnaroundInput.toOActivation)
+  //       .modify(f) >>>
+  //     ProposalTypeInput.largeProgram.assign.andThen(LargeProgramInput.toOActivation).modify(f) >>>
+  //     ProposalTypeInput.queue.assign.andThen(QueueInput.toOActivation).modify(f) >>>
+  //     ProposalTypeInput.systemVerification.assign
+  //       .andThen(SystemVerificationInput.toOActivation)
+  //       .modify(f)
 
-  def modifyToOActivation(f: Endo[Input[ToOActivation]]): Endo[ProposalPropertiesInput] =
-    ProposalPropertiesInput.`type`.modify(_.map(toOAUpdater(f)))
+  // def modifyToOActivation(f: Endo[Input[ToOActivation]]): Endo[ProposalPropertiesInput] =
+  //   ProposalPropertiesInput.`type`.modify(_.map(toOAUpdater(f)))
 
   private def psUpdater(f: Endo[Input[List[PartnerSplitInput]]]) =
     ProposalTypeInput.queue.assign.andThen(QueueInput.partnerSplits).modify(f) >>>
