@@ -13,6 +13,7 @@ import crystal.react.*
 import explore.Icons
 import explore.model.Constants
 import explore.utils.*
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.VdomNode

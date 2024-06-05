@@ -33,6 +33,7 @@ import lucuma.react.primereact.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.ui.LucumaStyles
 import lucuma.ui.components.CopyControl
 import lucuma.ui.components.SolarProgress
 import lucuma.ui.primereact.*
@@ -206,7 +207,7 @@ object UserPreferencesContent:
                 "Reload ..."
               )
             ),
-            clazz = ExploreStyles.ExploreToast,
+            clazz = LucumaStyles.Toast,
             sticky = false
           )
         )

@@ -131,10 +131,6 @@ object Icons {
   val faInfoCircle: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-regular-svg-icons", "faCircleInfo")
-  val faInfoCircleLight: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faXmark")
   val faTimes: FAIcon = js.native
 
@@ -362,7 +358,6 @@ object Icons {
     faCircle,
     faNote,
     faInfoCircle,
-    faInfoCircleLight,
     faTimes,
     faUserGears,
     faUserGroupSimple,
@@ -455,7 +450,6 @@ object Icons {
   val SkullCrossBones      = FontAwesomeIcon(faSkullCrossbones)
   val Note                 = FontAwesomeIcon(faNote)
   val Info                 = FontAwesomeIcon(faInfoCircle)
-  val InfoLight            = FontAwesomeIcon(faInfoCircleLight)
   val Close                = FontAwesomeIcon(faTimes)
   val MousePointer         = FontAwesomeIcon(faMousePointer)
   val Minimize             = FontAwesomeIcon(faCompress)

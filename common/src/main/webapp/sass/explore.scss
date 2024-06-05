@@ -1602,17 +1602,8 @@ table.explore-border-table {
 // ------
 // Toasts
 // ------
-.explore-toast {
+.lucuma-toast {
   .p-toast-message-content {
-    align-items: center;
-    font-size: small;
-    justify-content: space-between;
-
-    /* stylelint-disable-next-line selector-class-pattern */
-    span > svg.svg-inline--fa {
-      padding-right: 0.5em;
-    }
-
     .explore-prompt-toast {
       display: flex;
       flex-direction: column;
