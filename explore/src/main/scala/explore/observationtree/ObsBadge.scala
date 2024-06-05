@@ -13,7 +13,6 @@ import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ObsSummary
-import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -28,6 +27,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.InputSwitch
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
@@ -189,7 +189,7 @@ object ObsBadge:
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            props.executionTime.orSpinner(_.map(ts => <.span(ts.toHoursMinutes)))
+            props.executionTime.orSpinner(_.map(TimeSpanView(_)))
           )
         )
       )

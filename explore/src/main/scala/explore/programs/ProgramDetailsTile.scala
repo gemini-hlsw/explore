@@ -7,11 +7,11 @@ import cats.syntax.all.*
 import crystal.Pot
 import explore.components.ui.ExploreStyles
 import explore.model.ProgramTimes
-import explore.model.syntax.all.toHoursMinutes
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.*
 
 case class ProgramDetailsTile(
@@ -34,14 +34,14 @@ object ProgramDetailsTile:
           isSingleTime = minTime == maxTime
         } yield table(
           headers = Seq("Time accounting"),
-          rows = (if (isSingleTime) Seq(Seq[TagMod]("Planned", minTime.toHoursMinutes))
+          rows = (if (isSingleTime) Seq(Seq[TagMod]("Planned", TimeSpanView(minTime)))
                   else
                     Seq(
-                      Seq[TagMod]("Min Time", minTime.toHoursMinutes),
-                      Seq[TagMod]("Max Time", maxTime.toHoursMinutes)
+                      Seq[TagMod]("Min Time", TimeSpanView(minTime)),
+                      Seq[TagMod]("Max Time", TimeSpanView(maxTime))
                     )) ++
-            Seq(Seq[TagMod]("Used", used.toHoursMinutes)),
-          footer = Seq(Seq[TagMod]("Remain", remain.toHoursMinutes))
+            Seq(Seq[TagMod]("Used", TimeSpanView(used))),
+          footer = Seq(Seq[TagMod]("Remain", TimeSpanView(remain)))
         )
 
         <.div(

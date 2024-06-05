@@ -49,7 +49,7 @@ import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.all.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import org.scalajs.dom.html.Anchor

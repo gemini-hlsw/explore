@@ -15,7 +15,6 @@ import lucuma.core.math.Declination
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
-import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 
 import java.time.Instant
@@ -70,19 +69,6 @@ object all:
         case d if d < -40.0 => site === Site.GS
         case d if d > 30.0  => site === Site.GN
         case _              => true
-
-  extension (timespan: TimeSpan)
-    /**
-     * Format a timespan in the format `${hh}hrs ${mm}mins`
-     */
-    def toHoursMinutes: String =
-      val hours   = timespan.toHoursPart
-      // Remaining minutes, rounded to the nearest minute
-      val minutes = timespan.toMinutes.setScale(0, BigDecimal.RoundingMode.HALF_UP) % 60
-
-      if hours === 0 then s"${minutes}mins"
-      else if minutes === 0 then s"${hours}hrs"
-      else s"${hours}hrs ${minutes}mins"
 
   extension (cs: ConstraintSet)
     def summaryString: String =
