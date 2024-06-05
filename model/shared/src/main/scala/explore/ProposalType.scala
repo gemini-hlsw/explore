@@ -70,6 +70,45 @@ object ProposalType:
       case i            => i
     })
 
+  val minPercentTime: Optional[ProposalType, IntPercent] =
+    Optional[ProposalType, IntPercent] {
+      case c: Classical          => c.minPercentTime.some
+      case d: DemoScience        => d.minPercentTime.some
+      case d: DirectorsTime      => d.minPercentTime.some
+      case d: FastTurnaround     => d.minPercentTime.some
+      case d: LargeProgram       => d.minPercentTime.some
+      case d: Queue              => d.minPercentTime.some
+      case d: SystemVerification => d.minPercentTime.some
+      case _                     => none
+    }(a => {
+      case c: Classical          => c.copy(minPercentTime = a)
+      case d: DemoScience        => d.copy(minPercentTime = a)
+      case d: DirectorsTime      => d.copy(minPercentTime = a)
+      case d: FastTurnaround     => d.copy(minPercentTime = a)
+      case d: LargeProgram       => d.copy(minPercentTime = a)
+      case d: Queue              => d.copy(minPercentTime = a)
+      case d: SystemVerification => d.copy(minPercentTime = a)
+      case i                     => i
+    })
+
+  val minPercentTotalTime: Optional[ProposalType, IntPercent] =
+    Optional[ProposalType, IntPercent] {
+      case l: LargeProgram => l.minPercentTotalTime.some
+      case _               => none
+    }(a => {
+      case l: LargeProgram => l.copy(minPercentTotalTime = a)
+      case i               => i
+    })
+
+  val totalTime: Optional[ProposalType, TimeSpan] =
+    Optional[ProposalType, TimeSpan] {
+      case l: LargeProgram => l.totalTime.some
+      case _               => none
+    }(a => {
+      case l: LargeProgram => l.copy(totalTime = a)
+      case i               => i
+    })
+
   // Define the Classical case class implementing ProposalType
   case class Classical(
     scienceSubtype: ScienceSubtype,
@@ -140,19 +179,25 @@ object ProposalType:
     scienceSubtype:      ScienceSubtype,
     toOActivation:       ToOActivation,
     minPercentTime:      IntPercent,
-    minPercentTotalTime: Option[IntPercent],
-    totalTime:           Option[TimeSpan]
+    minPercentTotalTime: IntPercent,
+    totalTime:           TimeSpan
   ) extends ProposalType
       derives Eq
 
   object LargeProgram {
-    val minPercentTime: Lens[LargeProgram, IntPercent]              = Focus[LargeProgram](_.minPercentTime)
-    val minPercentTotalTime: Lens[LargeProgram, Option[IntPercent]] =
+    val minPercentTime: Lens[LargeProgram, IntPercent]      = Focus[LargeProgram](_.minPercentTime)
+    val minPercentTotalTime: Lens[LargeProgram, IntPercent] =
       Focus[LargeProgram](_.minPercentTotalTime)
-    val toOActivation: Lens[LargeProgram, ToOActivation]            = Focus[LargeProgram](_.toOActivation)
+    val toOActivation: Lens[LargeProgram, ToOActivation]    = Focus[LargeProgram](_.toOActivation)
+    val totalTime: Lens[LargeProgram, TimeSpan]             = Focus[LargeProgram](_.totalTime)
 
     val Default: LargeProgram =
-      LargeProgram(ScienceSubtype.LargeProgram, ToOActivation.None, 100.refined, none, none)
+      LargeProgram(ScienceSubtype.LargeProgram,
+                   ToOActivation.None,
+                   100.refined,
+                   100.refined,
+                   TimeSpan.Zero
+      )
   }
 
   // Define the PoorWeather case class implementing ProposalType
@@ -227,8 +272,8 @@ object ProposalType:
           for {
             toOActivation       <- c.downField("toOActivation").as[ToOActivation]
             minPercentTime      <- c.downField("minPercentTime").as[IntPercent]
-            minPercentTotalTime <- c.downField("minPercentTotalTime").as[Option[IntPercent]]
-            totalTime           <- c.downField("totalTime").as[Option[TimeSpan]]
+            minPercentTotalTime <- c.downField("minPercentTotalTime").as[IntPercent]
+            totalTime           <- c.downField("totalTime").as[TimeSpan]
           } yield LargeProgram(tpe, toOActivation, minPercentTime, minPercentTotalTime, totalTime)
         case ScienceSubtype.PoorWeather        =>
           Right(PoorWeather(tpe))

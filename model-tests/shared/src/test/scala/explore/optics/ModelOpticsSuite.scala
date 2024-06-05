@@ -13,6 +13,8 @@ import lucuma.core.util.arb.ArbEnumerated.given
 import monocle.law.discipline.OptionalTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary.*
+import eu.timepit.refined.cats.given
+import eu.timepit.refined.scalacheck.all.given
 
 class ModelOpticsSuite extends DisciplineSuite:
   import ArbRadialVelocity.given
@@ -21,3 +23,5 @@ class ModelOpticsSuite extends DisciplineSuite:
   checkAll("targetRV", OptionalTests(TargetRV))
   checkAll("toOActivation", OptionalTests(ProposalType.toOActivation))
   checkAll("partnerSplits", OptionalTests(ProposalType.partnerSplits))
+  checkAll("minPercentTime", OptionalTests(ProposalType.minPercentTime))
+  checkAll("totalTime", OptionalTests(ProposalType.totalTime))
