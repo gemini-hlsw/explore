@@ -76,8 +76,9 @@ object all:
      * Format a timespan in the format `${hh}hrs ${mm}mins`
      */
     def toHoursMinutes: String =
-      val hours   = timespan.toHours.toLong
-      val minutes = (timespan.toMinutes.toLong) % 60
+      val hours   = timespan.toHoursPart
+      // Remaining minutes, rounded to the nearest minute
+      val minutes = timespan.toMinutes.setScale(0, BigDecimal.RoundingMode.HALF_UP) % 60
 
       if hours === 0 then s"${minutes}mins"
       else if minutes === 0 then s"${hours}hrs"
