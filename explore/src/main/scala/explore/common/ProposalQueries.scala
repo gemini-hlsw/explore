@@ -12,6 +12,7 @@ import explore.model.Proposal
 import explore.model.ProposalType
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.CallForProposals
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.DemoScienceInput
 import lucuma.schemas.ObservationDB.Types.DirectorsTimeInput
@@ -23,8 +24,12 @@ import lucuma.schemas.ObservationDB.Types.ProposalPropertiesInput
 import lucuma.schemas.ObservationDB.Types.ProposalTypeInput
 import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
+import lucuma.schemas.ObservationDB.Types.TimeSpanInput
 
 trait ProposalQueries:
+  // This is on import lucuma.schemas.odb.input.* but it is not picked up for some reason
+  extension (ts: TimeSpan)
+    def toInput: TimeSpanInput = TimeSpanInput(microseconds = ts.toMicroseconds.assign)
 
   extension (proposalType: ProposalType)
     def toInput: ProposalTypeInput =
@@ -61,8 +66,8 @@ trait ProposalQueries:
             LargeProgramInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign,
-              minPercentTotalTime = minPercentTotalTime.orUnassign
-              // totalTime = totalTime.map(_.toInput).orUnassign
+              minPercentTotalTime = minPercentTotalTime.assign,
+              totalTime = totalTime.toInput.assign
             ).assign
           )
         case ProposalType.Classical(_, minPercentTime, partnerSplits)                     =>

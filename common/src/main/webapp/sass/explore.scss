@@ -1426,20 +1426,37 @@ svg.fa-triangle-exclamation.explore-error-icon {
 // Proposals and Partner Splits
 // ------
 .partner-splits-grid {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.5em 0.5em;
-  width: 100%;
+  --gap: 0.5em;
 
-  .partner-splits-grid-min-pct,
+  display: grid;
+  grid-template-columns: auto 1fr 12ch;
+  gap: var(--gap);
+  width: 100%;
+  font-size: smaller;
+
+  .partner-splits-missing {
+    align-self: center;
+    font-size: initial;
+  }
+
   .partner-splits-grid-total {
     width: 3em;
+  }
+
+  & > div {
+    position: relative;
+  }
+
+  & > .partner-splits-grid-min-pct-item {
+    grid-column-start: 3;
   }
 
   // only applies to the text field, not the input - pushes text to bottom
   & > .partner-splits-grid-min-pct {
     display: flex;
+    justify-self: stretch;
     flex-direction: column-reverse;
+    text-align: end;
   }
 
   & > .explore-flex-container {
@@ -1448,13 +1465,14 @@ svg.fa-triangle-exclamation.explore-error-icon {
 
   // align the partner split hours to the end to align with the percents
   span.partner-split-data {
+    display: inline-block;
+    justify-self: stretch;
     text-align: end;
   }
 
   .partner-split-data {
     margin-right: 2em;
     width: 4.5em;
-    font-size: smaller;
 
     // The div containing the flag and percent text.
     data > div {

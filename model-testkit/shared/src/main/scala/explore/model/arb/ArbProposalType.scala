@@ -102,8 +102,8 @@ trait ArbProposalType:
         scienceSubtype      <- arbitrary[ScienceSubtype]
         toOActivation       <- arbitrary[ToOActivation]
         minPercentType      <- arbitrary[IntPercent]
-        minPercentTotalTime <- arbitrary[Option[IntPercent]]
-        totalTime           <- arbitrary[Option[TimeSpan]]
+        minPercentTotalTime <- arbitrary[IntPercent]
+        totalTime           <- arbitrary[TimeSpan]
       } yield LargeProgram(scienceSubtype,
                            toOActivation,
                            minPercentType,
@@ -117,8 +117,8 @@ trait ArbProposalType:
       ScienceSubtype,
       ToOActivation,
       IntPercent,
-      Option[IntPercent],
-      Option[TimeSpan]
+      IntPercent,
+      TimeSpan
     )
   ].contramap(p =>
     (p.scienceSubtype, p.toOActivation, p.minPercentTime, p.minPercentTotalTime, p.totalTime)
