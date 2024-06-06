@@ -525,7 +525,8 @@ object ProposalEditor:
         )
       )
 
-    val usersTile = ProgramUsers.programUsersTile(programId, users, invitations, createInvite, ref)
+    val usersTile =
+      ProgramUsers.programUsersTile(programId, users, invitations, createInvite, readonly, ref)
 
     val abstractTile =
       Tile(ProposalTabTileIds.AbstractId.id,

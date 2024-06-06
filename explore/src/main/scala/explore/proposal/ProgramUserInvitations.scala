@@ -29,7 +29,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
 
-case class ProgramUserInvitations(invitations: View[List[CoIInvitation]])
+case class ProgramUserInvitations(invitations: View[List[CoIInvitation]], readOnly: Boolean)
     extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
@@ -55,8 +55,12 @@ object ProgramUserInvitations:
   ): ColumnDef.Single.NoMeta[CoIInvitation, V] =
     ColDef(id, accessor, columnNames(id))
 
-  private def columns(active: View[IsActive], invitations: View[List[CoIInvitation]])(
-    ctx: AppContext[IO]
+  private def columns(
+    active:      View[IsActive],
+    invitations: View[List[CoIInvitation]],
+    readOnly:    Boolean
+  )(
+    ctx:         AppContext[IO]
   ): List[ColumnDef.NoMeta[CoIInvitation, ?]] =
     import ctx.given
     List(
@@ -96,7 +100,7 @@ object ProgramUserInvitations:
             Button(
               icon = Icons.Trash,
               severity = Button.Severity.Secondary,
-              disabled = active.get.value,
+              disabled = readOnly || active.get.value,
               onClick = revoke,
               tooltip = s"Revoke invitation"
             ).mini.compact
@@ -111,8 +115,8 @@ object ProgramUserInvitations:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
-      .useMemoBy((_, _, x) => x.reuseByValue)((p, ctx, _) =>
-        active => columns(active, p.invitations)(ctx)
+      .useMemoBy((p, _, x) => (x.reuseByValue, p.readOnly))((p, ctx, _) =>
+        (active, ro) => columns(active, p.invitations, ro)(ctx)
       )                           // columns
       .useMemoBy((props, _, _, _) =>
         props.invitations.get.filter(_.status === InvitationStatus.Pending)
