@@ -257,7 +257,6 @@ object ProposalEditor:
     val maxExecutionPot: Pot[TimeSpan] = timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
 
     val areTimesSame = minExecutionPot.toOption === maxExecutionPot.toOption
-    println(areTimesSame)
 
     val (maxTimeLabel, minTimeLabel) =
       aligner.get.proposalType match {
@@ -637,7 +636,6 @@ object ProposalEditor:
           createInvite,
           overlayRef
         ) =>
-          println(props.timeEstimateRange.toOption.flatten)
           renderFn(
             props.programId,
             props.optUserId,
