@@ -4,10 +4,11 @@
 package explore.visualization
 
 import cats.Semigroup
-import explore.components.ui.ExploreStyles
+import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Offset
 import lucuma.core.util.NewType
 import lucuma.react.aladin.Fov
+import lucuma.react.common.Css
 import org.locationtech.jts.geom.Geometry
 
 import scala.math.*
@@ -112,7 +113,6 @@ def textDomSize(textValue: String): (Double, Double) =
   val text     = document.createElement("span")
   document.body.appendChild(text)
 
-  text.classList.add(ExploreStyles.TargetTooltip.htmlClass)
   text.innerHTML = textValue;
 
   val width  = Math.ceil(text.clientWidth)
@@ -120,3 +120,7 @@ def textDomSize(textValue: String): (Double, Double) =
 
   document.body.removeChild(text)
   (width, height)
+
+extension (target: GuideStarCandidate)
+  protected def selector: Css =
+    Css(s"guide-star-${target.id}")

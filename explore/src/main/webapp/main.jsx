@@ -13,7 +13,6 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import '/common/less/style.less';
 import '/common/sass/visualization.scss';
-import '/common/sass/tooltips.scss';
 import '/common/sass/aladin.scss';
 import '/common/sass/charts.scss';
 import '/common/sass/datepicker.scss';
