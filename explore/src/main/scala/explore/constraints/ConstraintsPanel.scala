@@ -10,7 +10,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ConstraintsQueries
 import explore.common.ConstraintsQueries.*
 import explore.components.HelpIcon
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
@@ -38,10 +37,9 @@ import lucuma.ui.utils.given
 import monocle.Lens
 
 case class ConstraintsPanel(
-  obsIds:        ObsIdSet,
-  undoCtx:       UndoSetter[ConstraintSet],
-  renderInTitle: Tile.RenderInTitle,
-  readonly:      Boolean
+  obsIds:   ObsIdSet,
+  undoCtx:  UndoSetter[ConstraintSet],
+  readonly: Boolean
 ) extends ReactFnProps(ConstraintsPanel.component):
   val constraintSet: ConstraintSet = undoCtx.model.get
 
