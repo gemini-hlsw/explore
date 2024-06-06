@@ -147,7 +147,6 @@ object ConstraintsTabContents extends TwoPanels:
                 ConstraintsPanel(
                   idsToEdit,
                   constraintSet,
-                  renderInTitle,
                   props.readonly
                 )
               )

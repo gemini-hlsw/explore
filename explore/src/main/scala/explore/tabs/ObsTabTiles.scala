@@ -104,12 +104,14 @@ object ObsTabTiles:
   private def makeConstraintsSelector(
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
-    allConstraintSets: Set[ConstraintSet]
+    allConstraintSets: Set[ConstraintSet],
+    readOnly:          Boolean
   )(using FetchClient[IO, ObservationDB]): VdomNode =
     <.div(
       ExploreStyles.JustifiedEndTileControl,
       Dropdown[ConstraintSet](
         value = constraintSet.get,
+        disabled = readOnly,
         onChange = (cs: ConstraintSet) =>
           constraintSet.set(cs) >>
             ObsQueries
@@ -422,7 +424,8 @@ object ObsTabTiles:
               makeConstraintsSelector(
                 props.obsId,
                 props.observation.model.zoom(ObsSummary.constraints),
-                props.allConstraintSets
+                props.allConstraintSets,
+                props.readonly
               )
 
             val timingWindows: View[List[TimingWindow]] =
@@ -507,7 +510,6 @@ object ObsTabTiles:
                 ConstraintsPanel(
                   ObsIdSet.one(props.obsId),
                   props.observation.zoom(ObsSummary.constraints),
-                  renderInTitle,
                   props.readonly
                 )
               )
