@@ -43,8 +43,8 @@ import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
 
 case class InviteUserPopup(
   pid:         Program.Id,
-  ref:         OverlayPanelRef,
-  invitations: View[List[CoIInvitation]]
+  invitations: View[List[CoIInvitation]],
+  ref:         OverlayPanelRef
 ) extends ReactFnProps(InviteUserPopup.component)
 
 object InviteUserPopup:

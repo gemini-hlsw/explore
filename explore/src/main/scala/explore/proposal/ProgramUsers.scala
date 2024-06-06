@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
+import crystal.react.hooks.*
 import explore.Icons
 import explore.components.Tile
 import explore.components.Tile.RenderInTitle
@@ -39,39 +40,49 @@ case class ProgramUsers(
   pid:         Program.Id,
   users:       View[NonEmptyList[ProgramUserWithRole]],
   invitations: View[List[CoIInvitation]],
+  readOnly:    Boolean,
   inTitle:     RenderInTitle,
   ref:         OverlayPanelRef
 ) extends ReactFnProps(ProgramUsers.component)
 
 object ProgramUsers:
 
+  def inviteControl(
+    createInvite: View[CreateInviteProcess],
+    readOnly:     Boolean,
+    ref:          OverlayPanelRef
+  ) =
+    Button(
+      severity = Button.Severity.Secondary,
+      size = Button.Size.Small,
+      disabled = readOnly,
+      loading = createInvite.get == CreateInviteProcess.Running,
+      icon = Icons.UserPlus,
+      tooltip = "Create CoI invitation",
+      onClickE = ref.toggle
+    ).tiny.compact
+
   def programUsersTile(
     pid:          Program.Id,
     users:        View[NonEmptyList[ProgramUserWithRole]],
     invitations:  View[List[CoIInvitation]],
     createInvite: View[CreateInviteProcess],
+    readOnly:     Boolean,
     ref:          OverlayPanelRef
   )(using AppContext[IO], Logger[IO]) = {
 
     val control =
       <.div(
         ExploreStyles.JustifiedEndTileControl,
-        InviteUserPopup(pid, ref, invitations),
-        Button(
-          severity = Button.Severity.Secondary,
-          size = Button.Size.Small,
-          loading = createInvite.get == CreateInviteProcess.Running,
-          icon = Icons.UserPlus,
-          tooltip = "Create CoI invitation",
-          onClickE = ref.toggle
-        ).tiny.compact
+        InviteUserPopup(pid, invitations, ref),
+        inviteControl(createInvite, readOnly, ref)
       )
 
     Tile(ProposalTabTileIds.UsersId.id,
          "Investigators",
          canMinimize = true,
          control = s => control.some.filter(_ => s === TileSizeState.Minimized)
-    )(r => ProgramUsers(pid, users, invitations, r, ref))
+    )(r => ProgramUsers(pid, users, invitations, readOnly, r, ref))
   }
 
   private type Props = ProgramUsers
@@ -79,24 +90,16 @@ object ProgramUsers:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(CreateInviteProcess.Idle)
+      .useStateView(CreateInviteProcess.Idle)
       .render: (props, create) =>
         <.div(
-          InviteUserPopup(props.pid, props.ref, props.invitations),
-          props.inTitle(
-            Button(
-              severity = Button.Severity.Secondary,
-              size = Button.Size.Small,
-              icon = Icons.UserPlus,
-              tooltip = "Create CoI invitation",
-              onClickE = props.ref.toggle
-            ).tiny.compact
-          ),
-          ProgramUsersTable(props.pid, props.users),
+          InviteUserPopup(props.pid, props.invitations, props.ref),
+          props.inTitle(inviteControl(create, props.readOnly, props.ref)),
+          ProgramUsersTable(props.pid, props.users, props.readOnly),
           React
             .Fragment(
               "Pending invitations",
-              ProgramUserInvitations(props.invitations)
+              ProgramUserInvitations(props.invitations, props.readOnly)
             )
             .when(props.invitations.when(_.filter(_.status === InvitationStatus.Pending).nonEmpty))
         )

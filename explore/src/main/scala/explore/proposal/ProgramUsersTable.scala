@@ -28,8 +28,11 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
 
-case class ProgramUsersTable(pid: Program.Id, users: View[NonEmptyList[ProgramUserWithRole]])
-    extends ReactFnProps(ProgramUsersTable.component)
+case class ProgramUsersTable(
+  pid:      Program.Id,
+  users:    View[NonEmptyList[ProgramUserWithRole]],
+  readOnly: Boolean
+) extends ReactFnProps(ProgramUsersTable.component)
 
 object ProgramUsersTable:
   private type Props = ProgramUsersTable
@@ -91,7 +94,7 @@ object ProgramUsersTable:
             Button(
               icon = Icons.Trash,
               severity = Button.Severity.Secondary,
-              disabled = active.get.value,
+              disabled = props.readOnly || active.get.value,
               onClick = unlink
             ).mini.compact.unless(cell.value.role.isEmpty) // don't allow removing the PI
           )
@@ -105,7 +108,9 @@ object ProgramUsersTable:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
-      .useMemoBy((_, _, x) => x.reuseByValue)((p, ctx, _) => a => columns(p, a)(ctx))  // columns
+      .useMemoBy((p, _, x) => (x.reuseByValue, p.readOnly))((p, ctx, _) =>
+        (a, _) => columns(p, a)(ctx)
+      )                                                                                // columns
       .useMemoBy((props, _, _, _) => props.users.get.toList)((_, _, _, _) => identity) // rows
       .useReactTableBy((props, _, _, cols, rows) =>
         TableOptions(cols, rows, getRowId = (row, _, _) => RowId(row.user.id.toString))
