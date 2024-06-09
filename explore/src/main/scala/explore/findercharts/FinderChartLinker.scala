@@ -149,7 +149,7 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                   }
                 )
             )
-          )
+          ).withRef(resizer.ref)
         )
       }
 }

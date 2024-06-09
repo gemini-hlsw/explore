@@ -70,7 +70,7 @@ object SearchForm:
             .void
       )
       .useRefToVdom[HTMLButtonElement]
-      .render { (props, ctx, term, enabled, error, buttonRef) =>
+      .render: (props, ctx, term, enabled, error, buttonRef) =>
         import ctx.given
 
         val searchComplete: Callback = props.searching.mod(_ - props.id)
@@ -82,7 +82,7 @@ object SearchForm:
             Callback.empty
 
         val searchIcon: VdomNode =
-          if (enabled.value)
+          if (enabled.value && !props.readonly)
             TargetSelectionPopup(
               "Replace Target Data",
               TargetSource.forAllSiderealCatalogs[IO],
@@ -92,7 +92,7 @@ object SearchForm:
               Icons.ArrowDownLeft,
               trigger = Button(
                 severity = Button.Severity.Success,
-                disabled = props.searching.get.nonEmpty,
+                disabled = props.readonly || props.searching.get.nonEmpty,
                 icon = Icons.Search,
                 loading = props.searching.get.nonEmpty,
                 onClick = error.setState(none) >> props.searching.mod(_ + props.id),
@@ -119,9 +119,8 @@ object SearchForm:
           validFormat = InputValidSplitEpi.nonEmptyString,
           error = error.value.orUndefined,
           disabled = disabled,
-          postAddons = List(searchIcon),
+          postAddons = List(searchIcon).filter(_ => !props.readonly),
           onTextChange = (_: String) => error.setState(none),
           onValidChange = valid => enabled.setState(valid),
           placeholder = "Name"
         ).withMods(^.onKeyPress ==> onKeyPress)
-      }

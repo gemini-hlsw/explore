@@ -378,7 +378,8 @@ object ObsTabTiles:
                 props.obsAttachments,
                 selectedAttachment,
                 pa,
-                chartSelector
+                chartSelector,
+                props.readonly
               )
 
             val notesTile =
