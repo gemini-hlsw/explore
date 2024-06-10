@@ -24,6 +24,7 @@ import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.schemas.ObservationDB
 import lucuma.ui.sso.SSOClient
+import org.http4s.client.Client
 import org.typelevel.log4cats.Logger
 import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
@@ -34,6 +35,7 @@ case class AppContext[F[_]](
   clients:          GraphQLClients[F],
   workerClients:    WorkerClients[F],
   sso:              SSOClient[F],
+  httpClient:       Client[F],
   pageUrl:          (AppTab, Program.Id, Focused) => String,
   setPageVia:       (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
   environment:      ExecutionEnvironment,
@@ -60,6 +62,7 @@ case class AppContext[F[_]](
   given plotWorker: WorkerClient[F, PlotMessage.Request]       = workerClients.plot
 
   given ToastCtx[F] = new ToastCtx(toastRef)
+  given Client[F]   = httpClient
 
   export explore.DefaultErrorPolicy
 
@@ -72,6 +75,7 @@ object AppContext:
     pageUrl:              (AppTab, Program.Id, Focused) => String,
     setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
     workerClients:        WorkerClients[F],
+    httpClient:           Client[F],
     broadcastChannel:     BroadcastChannel[F, ExploreEvent],
     toastRef:             Deferred[F, ToastRef]
   ): F[AppContext[F]] =
@@ -91,6 +95,7 @@ object AppContext:
       clients,
       workerClients,
       SSOClient(config.sso),
+      httpClient,
       pageUrl,
       setPageVia,
       config.environment,

@@ -8,6 +8,7 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import explore.model.Help
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -20,9 +21,8 @@ import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import org.http4s.*
-import org.http4s.dom.FetchClientBuilder
+import org.http4s.client.Client
 
-import scala.concurrent.duration.*
 import scala.util.Try
 
 case class HelpBody(base: HelpContext, helpId: Help.Id) extends ReactFnProps(HelpBody.component):
@@ -46,10 +46,8 @@ case class HelpBody(base: HelpContext, helpId: Help.Id) extends ReactFnProps(Hel
 object HelpBody:
   private type Props = HelpBody
 
-  private def load(uri: Uri): IO[Try[String]] =
-    FetchClientBuilder[IO]
-      .withRequestTimeout(5.seconds)
-      .create
+  private def load(uri: Uri)(using client: Client[IO]): IO[Try[String]] =
+    client
       .get(uri)(r => r.attemptAs[String].value)
       .map(_.toTry)
       .handleError { case x =>
@@ -59,12 +57,14 @@ object HelpBody:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
+      .useContext(AppContext.ctx)
       .useContext(HelpContext.ctx)
       .useStateView(Pot.pending[String])
-      .useEffectOnMountBy { (props, _, state) =>
+      .useEffectOnMountBy: (props, ctx, _, state) =>
+        import ctx.given
+
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
-      }
-      .render { (props, helpCtx, state) =>
+      .render: (props, _, helpCtx, state) =>
         val imageConv = (s: Uri) => s.host.fold(props.baseUrl.addPath(s.path))(_ => s)
 
         val helpView = helpCtx.displayedHelp
@@ -78,12 +78,14 @@ object HelpBody:
             ExploreStyles.HelpTitle,
             <.h4("Help"),
             <.div(
-              <.a(Button(icon = Icons.Edit,
-                         severity = Button.Severity.Secondary,
-                         onClick = helpView.set(None)
-                  ).mini.compact,
-                  ^.href   := editUrl.toString(),
-                  ^.target := "_blank"
+              <.a(
+                Button(
+                  icon = Icons.Edit,
+                  severity = Button.Severity.Secondary,
+                  onClick = helpView.set(None)
+                ).mini.compact,
+                ^.href   := editUrl.toString(),
+                ^.target := "_blank"
               ),
               Button(icon = Icons.Close,
                      severity = Button.Severity.Secondary,
@@ -118,4 +120,3 @@ object HelpBody:
             }
           )
         )
-      }
