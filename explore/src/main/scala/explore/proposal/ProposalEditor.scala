@@ -285,21 +285,33 @@ object ProposalEditor:
       <.div(tagmod, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
 
     val timeFields = if (areTimesSame) {
-      React.Fragment(
-        FormStaticData(
-          value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
-          label = "Prog. Time",
-          id = "programTime"
-        ),
-        maxExecutionPot.renderPot(
-          valueRender = maxExecutionTime =>
-            React.Fragment(
-              timeSplits(maxExecutionTime),
-              minimumPct1View.map(r => minimumTime(r.get, maxExecutionTime))
-            ),
-          pendingRender = React.Fragment(<.span(), <.span())
+      // If min and max time are the same we only show one line
+      val validTime = maxExecutionPot.toOption.exists(_ > TimeSpan.Zero)
+      if (validTime) {
+        React.Fragment(
+          FormStaticData(
+            value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
+            label = "Prog. Time",
+            id = "programTime"
+          ),
+          maxExecutionPot.renderPot(
+            valueRender = maxExecutionTime =>
+              React.Fragment(
+                timeSplits(maxExecutionTime),
+                minimumPct1View.map(r => minimumTime(r.get, maxExecutionTime))
+              ),
+            pendingRender = React.Fragment(<.span(), <.span())
+          )
         )
-      )
+      } else
+        React.Fragment(
+          <.span, // ugly
+          <.div(
+            ExploreStyles.PartnerSplitsMissing,
+            Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
+            "No observations included in proposal."
+          )
+        )
     } else {
       React.Fragment(
         // The second partner splits row, for maximum times - is always there
