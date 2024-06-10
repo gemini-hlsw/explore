@@ -155,7 +155,7 @@ object TargetTabContents extends TwoPanels:
     /**
      * Render the summary table.
      */
-    def renderSummary(single: Boolean): Tile =
+    def renderSummary: Tile =
       Tile(
         ObsTabTilesIds.TargetSummaryId.id,
         "Target Summary",
@@ -356,7 +356,7 @@ object TargetTabContents extends TwoPanels:
           props.globalPreferences.get
         )
 
-      List(renderSummary(false), targetTile, skyPlotTile)
+      List(renderSummary, targetTile, skyPlotTile)
     }
 
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
@@ -366,48 +366,60 @@ object TargetTabContents extends TwoPanels:
 
     val renderNonSiderealTargetEditor: List[Tile] =
       List(
-        renderSummary(false),
+        renderSummary,
         Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
           <.div("Editing of Non-Sidereal targets not supported")
         )
       )
 
     val rightSide = { (resize: UseResizeDetectorReturn) =>
-      val tileListObSelectedOpt: Option[(List[Tile], Boolean)] = optSelected.flatMap(
-        _ match
-          case Left(targetId) =>
-            props.targets.get
-              .get(targetId)
-              .map {
-                case Nonsidereal(_, _, _)     => (renderNonSiderealTargetEditor, false)
-                case s @ Sidereal(_, _, _, _) =>
-                  (renderSiderealTargetEditor(resize, targetId, s), false)
-              }
-          case Right(obsIds)  =>
-            findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
-              .map(asterismGroup => (renderAsterismEditor(resize, obsIds, asterismGroup), true))
-      )
+      val tileListKeyOpt = optSelected
+        .flatMap(
+          _ match
+            case Left(targetId) =>
+              props.targets.get
+                .get(targetId)
+                .map {
+                  case Nonsidereal(_, _, _)     =>
+                    (renderNonSiderealTargetEditor, "target-non-sidereal-controller")
+                  case s @ Sidereal(_, _, _, _) =>
+                    (renderSiderealTargetEditor(resize, targetId, s), "target-sidereal-controller")
+                }
+            case Right(obsIds)  =>
+              findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
+                .map(asterismGroup =>
+                  (renderAsterismEditor(resize, obsIds, asterismGroup), "target-obs-controller")
+                )
+        )
 
-      val tileList: Option[List[Tile]] = tileListObSelectedOpt.map(_._1)
-      val obsSelected: Boolean         = tileListObSelectedOpt.map(_._2).exists(identity)
+      val (tiles, key, current, default) =
+        tileListKeyOpt.fold(
+          (List(renderSummary),
+           "target-summary-controller",
+           ExploreGridLayouts.targets.defaultSingleLayouts,
+           ExploreGridLayouts.targets.defaultSingleLayouts
+          )
+        )((tiles, key) =>
+          (tiles,
+           key,
+           props.userPreferences.get.targetTabLayout,
+           ExploreGridLayouts.targets.defaultTargetLayouts
+          )
+        )
 
       TileController(
         props.userId,
         resize.width.getOrElse(1),
-        tileList.fold(ExploreGridLayouts.targets.defaultSingleLayouts)(_ =>
-          ExploreGridLayouts.targets.defaultTargetLayouts
-        ),
-        tileList.fold(ExploreGridLayouts.targets.defaultSingleLayouts)(_ =>
-          props.userPreferences.get.targetTabLayout
-        ),
-        tileList.getOrElse(List(renderSummary(true))),
+        default,
+        current,
+        tiles,
         GridLayoutSection.TargetLayout,
         backButton.some,
-        Option.when(tileList.isEmpty)(ExploreStyles.SingleTileMaximized),
-        storeLayout = tileList.nonEmpty
-      ).withKey(if (obsSelected) "target-obs-controller" else "target-summary-controller"): VdomNode
-      // We need different tile controller keys when in observations than when in target summary,
-      // so that it clears its internal state.
+        Option.when(tileListKeyOpt.isEmpty)(ExploreStyles.SingleTileMaximized),
+        storeLayout = tileListKeyOpt.nonEmpty
+      ).withKey(key): VdomNode
+      // withKey is required for the controller to clear it's state between the different
+      // layouts or it can get into an invalid state.
     }
 
     React.Fragment(

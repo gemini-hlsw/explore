@@ -64,8 +64,9 @@ object HelpBody:
         import ctx.given
 
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
-      .render: (props, _, helpCtx, state) =>
-        val imageConv = (s: Uri) => props.baseUrl.addPath(s.path)
+      }
+      .render { (props, helpCtx, state) =>
+        val imageConv = (s: Uri) => s.host.fold(props.baseUrl.addPath(s.path))(_ => s)
 
         val helpView = helpCtx.displayedHelp
         val editUrl  = state.get match {
@@ -100,7 +101,7 @@ object HelpBody:
                   clazz = ExploreStyles.HelpMarkdownBody,
                   imageConv,
                   remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
-                  rehypePlugins = List(RehypePlugin.RehypeKatex)
+                  rehypePlugins = List(RehypePlugin.RehypeExternalLinks, RehypePlugin.RehypeKatex)
                 )
               case Pot.Pending                                  =>
                 <.div(ExploreStyles.HelpMarkdownBody, "Loading...")

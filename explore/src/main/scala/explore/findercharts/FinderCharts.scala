@@ -44,7 +44,8 @@ case class FinderCharts(
   selected:         View[Option[ObsAtt.Id]],
   chartSelector:    View[ChartSelector],
   parallacticAngle: Option[Angle],
-  renderInTitle:    Tile.RenderInTitle
+  renderInTitle:    Tile.RenderInTitle,
+  readOnly:         Boolean
 ) extends ReactFnProps(FinderCharts.component)
 
 object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
@@ -146,7 +147,8 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
                                props.selected,
                                action,
                                added,
-                               props.chartSelector
+                               props.chartSelector,
+                               props.readOnly
             )
           ),
           <.div(
@@ -186,7 +188,8 @@ case class FinderChartsSelector(
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
   selected:         View[Option[ObsAtt.Id]],
-  chartSelector:    View[ChartSelector]
+  chartSelector:    View[ChartSelector],
+  readOnly:         Boolean
 ) extends ReactFnProps(FinderChartsSelector.component)
 
 object FinderChartsSelector:
@@ -196,9 +199,8 @@ object FinderChartsSelector:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+      .useMemoBy((p, _) => p.authToken): (_, ctx) =>
         token => OdbRestClient[IO](ctx.environment, token)
-      )
       .useStateView(Action.None)
       // added attachment, FIXME once we can upload and assign in one step
       .useState(none[ObsAtt.Id])
@@ -211,5 +213,6 @@ object FinderChartsSelector:
                            props.selected,
                            action,
                            added,
-                           props.chartSelector
+                           props.chartSelector,
+                           props.readOnly
         )

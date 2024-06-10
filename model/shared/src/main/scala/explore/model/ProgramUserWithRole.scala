@@ -7,11 +7,13 @@ import cats.Eq
 import cats.derived.*
 import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
+import lucuma.core.enums.Partner
 
 // an empty role implies PI
 case class ProgramUserWithRole(
-  user: ProgramUser,
-  role: Option[ProgramUserRole]
+  user:    ProgramUser,
+  partner: Option[Partner],
+  role:    Option[ProgramUserRole]
 ) derives Decoder,
       Eq {
   val roleName: String = role match {

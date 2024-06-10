@@ -89,15 +89,6 @@ object layout {
       }(l)
     }
 
-  extension (li: LayoutItem)
-    def isValid: Boolean =
-      li.w > 0 && li.minW.forall(_ <= li.w) && li.maxW.forall(_ >= li.w) &&
-        li.h > 0 && li.minH.forall(_ <= li.h) && li.maxH.forall(_ >= li.h) &&
-        li.i.nonEmpty
-
-  extension (ls: Layouts)
-    def areValid: Boolean = ls.layouts.flatMap(_.layout.asList).forall(_.isValid)
-
   val layoutItem: Lens[Layout, List[LayoutItem]] =
     Lens[Layout, List[LayoutItem]](_.asList)(list => _ => Layout(list))
   val layoutItems: Traversal[Layout, LayoutItem] = layoutItem.each

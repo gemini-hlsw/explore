@@ -2541,7 +2541,13 @@ a.explore-upgrade-link {
   display: flex;
 
   .p-dropdown {
-    min-width: 20ch;
+    min-width: 5ch;
+    max-width: 12ch;
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      min-width: 20ch;
+      max-width: 20ch;
+    }
   }
 }
 

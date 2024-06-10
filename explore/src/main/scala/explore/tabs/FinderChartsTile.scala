@@ -32,7 +32,8 @@ object FinderChartsTile:
     obsAttachments:   View[ObsAttachmentList],
     selected:         View[Option[ObsAtt.Id]],
     parallacticAngle: Option[Angle],
-    chartSelector:    View[ChartSelector]
+    chartSelector:    View[ChartSelector],
+    readOnly:         Boolean
   ) =
     val control = authToken.map: a =>
       <.div(
@@ -42,7 +43,8 @@ object FinderChartsTile:
                              obsAttachmentIds,
                              obsAttachments,
                              selected,
-                             chartSelector
+                             chartSelector,
+                             readOnly
         )
       )
 
@@ -64,7 +66,8 @@ object FinderChartsTile:
                        selected,
                        chartSelector,
                        parallacticAngle,
-                       renderInTitle
+                       renderInTitle,
+                       readOnly
           )
         )
         .orEmpty
