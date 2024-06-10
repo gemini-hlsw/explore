@@ -64,8 +64,7 @@ object HelpBody:
         import ctx.given
 
         load(props.url).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
-      }
-      .render { (props, helpCtx, state) =>
+      .render: (props, _, helpCtx, state) =>
         val imageConv = (s: Uri) => s.host.fold(props.baseUrl.addPath(s.path))(_ => s)
 
         val helpView = helpCtx.displayedHelp
@@ -79,12 +78,14 @@ object HelpBody:
             ExploreStyles.HelpTitle,
             <.h4("Help"),
             <.div(
-              <.a(Button(icon = Icons.Edit,
-                         severity = Button.Severity.Secondary,
-                         onClick = helpView.set(None)
-                  ).mini.compact,
-                  ^.href   := editUrl.toString(),
-                  ^.target := "_blank"
+              <.a(
+                Button(
+                  icon = Icons.Edit,
+                  severity = Button.Severity.Secondary,
+                  onClick = helpView.set(None)
+                ).mini.compact,
+                ^.href   := editUrl.toString(),
+                ^.target := "_blank"
               ),
               Button(icon = Icons.Close,
                      severity = Button.Severity.Secondary,
