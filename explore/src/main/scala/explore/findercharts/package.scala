@@ -80,7 +80,8 @@ def attachmentSelector(
   selected:         View[Option[ObsAtt.Id]],
   action:           View[Action],
   added:            UseState[Option[ObsAtt.Id]],
-  chartSelector:    View[ChartSelector]
+  chartSelector:    View[ChartSelector],
+  readOnly:         Boolean
 ): VdomNode = {
   import ctx.given
 
@@ -111,7 +112,7 @@ def attachmentSelector(
     ).withTooltip(
       tooltip = s"Upload new finder chart",
       placement = Placement.Right
-    ),
+    ).when(!readOnly),
     <.input(
       ExploreStyles.FileUpload,
       ^.tpe    := "file",
@@ -119,7 +120,7 @@ def attachmentSelector(
       ^.id     := "attachment-upload",
       ^.name   := "file",
       ^.accept := ObsAttachmentType.Finder.accept
-    ),
+    ).when(!readOnly),
     finderChartsSelector(obsAttachments.get, obsAttachmentIds.get, selected)
   )
 }
