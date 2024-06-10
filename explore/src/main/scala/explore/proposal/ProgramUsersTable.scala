@@ -11,6 +11,7 @@ import crystal.react.hooks.*
 import explore.Icons
 import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
+import explore.components.ui.PartnerFlags
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.ProgramUserWithRole
@@ -19,6 +20,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -40,6 +42,7 @@ object ProgramUsersTable:
   private val ColDef = ColumnDef[ProgramUserWithRole]
 
   private val NameColumnId: ColumnId    = ColumnId("name")
+  private val PartnerColumnId: ColumnId = ColumnId("partner")
   private val EmailColumnId: ColumnId   = ColumnId("email")
   private val OrcidIdColumnId: ColumnId = ColumnId("orcid-id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
@@ -47,6 +50,7 @@ object ProgramUsersTable:
 
   private val columnNames: Map[ColumnId, String] = Map(
     NameColumnId    -> "Name",
+    PartnerColumnId -> "Partner",
     EmailColumnId   -> "email",
     OrcidIdColumnId -> "ORCID",
     RoleColumnId    -> "Role",
@@ -65,8 +69,23 @@ object ProgramUsersTable:
   )(ctx: AppContext[IO]): List[ColumnDef.NoMeta[ProgramUserWithRole, ?]] =
     List(
       column(NameColumnId, _.name),
-      column(EmailColumnId, _.user.profile.flatMap(_.primaryEmail).orEmpty),
-      column(OrcidIdColumnId, _.user.profile.map(_.orcidId.value).orEmpty),
+      ColDef(
+        PartnerColumnId,
+        _.partner,
+        "",
+        enableSorting = true,
+        enableResizing = true,
+        cell = _.value.map(partner =>
+          <.span(
+            <.img(^.src        := PartnerFlags.smallFlag(partner),
+                  ^.alt := s"${partner.shortName} Flag",
+                  ExploreStyles.PartnerSplitFlag
+            )
+          ).withTooltip(partner.longName)
+        )
+      ),
+      column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail)),
+      column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
       column(RoleColumnId, _.roleName),
       ColDef(
         UnlinkId,

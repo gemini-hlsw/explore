@@ -14,6 +14,7 @@ object ProgramUserWithRoleSubquery
   override val subquery: String = s"""
     {
       user $ProgramUserSubquery
+      partner
       role
     } 
   """
