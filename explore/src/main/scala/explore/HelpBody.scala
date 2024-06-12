@@ -46,13 +46,11 @@ case class HelpBody(base: HelpContext, helpId: Help.Id) extends ReactFnProps(Hel
 object HelpBody:
   private type Props = HelpBody
 
-  private def load(uri: Uri, client: Client[IO]): IO[Try[String]] =
+  private def load(uri: Uri)(using client: Client[IO]): IO[Try[String]] =
     client
       .get(uri)(r => r.attemptAs[String].value)
-      .map(_.toTry)
-      .handleError { case x =>
-        scala.util.Failure(x)
-      }
+      .attempt
+      .map(_.flatten.toTry)
 
   private val component =
     ScalaFnComponent
