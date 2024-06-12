@@ -46,7 +46,7 @@ case class HelpBody(base: HelpContext, helpId: Help.Id) extends ReactFnProps(Hel
 object HelpBody:
   private type Props = HelpBody
 
-  private def load(uri: Uri)(using client: Client[IO]): IO[Try[String]] =
+  private def load(uri: Uri, client: Client[IO]): IO[Try[String]] =
     client
       .get(uri)(r => r.attemptAs[String].value)
       .map(_.toTry)
@@ -61,9 +61,7 @@ object HelpBody:
       .useContext(HelpContext.ctx)
       .useStateView(Pot.pending[String])
       .useEffectOnMountBy: (props, ctx, _, state) =>
-        import ctx.given
-
-        load(props.url).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
+        load(props.url, ctx.httpClient).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
       .render: (props, _, helpCtx, state) =>
         val imageConv = (s: Uri) => s.host.fold(props.baseUrl.addPath(s.path))(_ => s)
 

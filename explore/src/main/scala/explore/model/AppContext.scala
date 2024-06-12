@@ -62,7 +62,6 @@ case class AppContext[F[_]](
   given plotWorker: WorkerClient[F, PlotMessage.Request]       = workerClients.plot
 
   given ToastCtx[F] = new ToastCtx(toastRef)
-  given Client[F]   = httpClient
 
   export explore.DefaultErrorPolicy
 
