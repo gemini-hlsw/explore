@@ -128,8 +128,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
     AtomStepsColumnId -> FixedSize(30.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
-  private def columns(using
-    Client[IO],
+  private def columns(httpClient: Client[IO])(using
     Logger[IO]
   ): List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
     List(
@@ -150,7 +149,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           .map(_.step)
           .collect:
             case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
-              renderVisitExtraRow(step)
+              renderVisitExtraRow(httpClient)(step)
       ).setColumnSize(ColumnSizes(ExtraRowColumnId))
     ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
@@ -170,7 +169,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
       .useMemoBy((_, _) => ()): (_, ctx) =>
         _ =>
           import ctx.given
-          columns
+          columns(ctx.httpClient)
       .useMemoBy((props, _, _) => props.visits): (_, _, _) => // (visitRows, nextIndex)
         visitsSequences(_, none)
       .useMemoBy((props, _, _, visitsData) =>
