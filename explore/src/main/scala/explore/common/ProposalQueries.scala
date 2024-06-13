@@ -6,10 +6,10 @@ package explore.common
 import clue.data.Input
 import clue.data.Unassign
 import clue.data.syntax.*
-import explore.model.CallForProposalType
 import explore.model.PartnerSplit
 import explore.model.Proposal
 import explore.model.ProposalType
+import lucuma.core.enums.CallForProposalsType
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.CallForProposals
 import lucuma.core.util.TimeSpan
@@ -98,15 +98,15 @@ trait ProposalQueries:
           ProposalTypeInput(poorWeather = PoorWeatherInput().assign)
 
   // Used to reset the proposal type when the call changes
-  extension (cfpType: CallForProposalType)
+  extension (cfpType: CallForProposalsType)
     def defaultType: ProposalType = cfpType match
-      case CallForProposalType.DemoScience        => ProposalType.DemoScience.Default
-      case CallForProposalType.DirectorsTime      => ProposalType.DirectorsTime.Default
-      case CallForProposalType.FastTurnaround     => ProposalType.FastTurnaround.Default
-      case CallForProposalType.LargeProgram       => ProposalType.LargeProgram.Default
-      case CallForProposalType.PoorWeather        => ProposalType.PoorWeather.Default
-      case CallForProposalType.RegularSemester    => ProposalType.Queue.Default
-      case CallForProposalType.SystemVerification => ProposalType.SystemVerification.Default
+      case CallForProposalsType.DemoScience        => ProposalType.DemoScience.Default
+      case CallForProposalsType.DirectorsTime      => ProposalType.DirectorsTime.Default
+      case CallForProposalsType.FastTurnaround     => ProposalType.FastTurnaround.Default
+      case CallForProposalsType.LargeProgram       => ProposalType.LargeProgram.Default
+      case CallForProposalsType.PoorWeather        => ProposalType.PoorWeather.Default
+      case CallForProposalsType.RegularSemester    => ProposalType.Queue.Default
+      case CallForProposalsType.SystemVerification => ProposalType.SystemVerification.Default
 
   extension (split: PartnerSplit)
     def toInput: PartnerSplitInput =
