@@ -2,3 +2,6 @@
 ff60db6718ffaac939a1656db92fa53bbfbe5110
 # hugo-vrijswijk: Format with prettier
 7a56aa2f9783f1ccfcf5b58627bca58679f05a02
+
+# Scala Steward: Reformat with scalafmt 3.8.2
+7dd80b2329b2c3fd140a3c821608ef811c4c7d71
