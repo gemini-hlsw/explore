@@ -35,6 +35,7 @@ import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.ui.sso.UserVault
+import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.scalajs.dom.Element
@@ -59,14 +60,11 @@ object ExploreMain {
     LogLevelLogger.createForRoot[F]
   }
 
-  def fetchConfig[F[_]: Async](host: String): F[AppConfig] =
-    // We want to avoid caching the static server redirect and the config files (they are not fingerprinted by vite).
-    AppConfig.fetchConfig[F](host,
-                             FetchClientBuilder[F]
-                               .withRequestTimeout(5.seconds)
-                               .withCache(RequestCache.`no-store`)
-                               .create
-    )
+  private def buildNonCachingHttpClient[F[_]: Async]: Client[F] =
+    FetchClientBuilder[F]
+      .withRequestTimeout(4.seconds)
+      .withCache(dom.RequestCache.`no-store`)
+      .create
 
   def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) =
     RootModel(vault = vault, localPreferences = pref)
@@ -152,7 +150,8 @@ object ExploreMain {
 
       for {
         host                 <- IO(dom.window.location.host)
-        appConfig            <- fetchConfig[IO](host)
+        httpClient            = buildNonCachingHttpClient[IO]
+        appConfig            <- AppConfig.fetchConfig[IO](host, httpClient)
         _                    <- workerClients.itc.requestAndForget(ItcMessage.Initialize(appConfig.itcURI))
         _                    <- Logger[IO].info(s"Git Commit: [${utils.gitHash.getOrElse("NONE")}]")
         _                    <- Logger[IO].info(s"Config: ${appConfig.show}")
@@ -164,6 +163,7 @@ object ExploreMain {
             pageUrl,
             setPageVia,
             workerClients,
+            httpClient,
             bc,
             toastRef
           )

@@ -43,5 +43,5 @@ object ProgramDetails:
       us <- c.get[List[ProgramUserWithRole]]("users")
       in <- c.get[List[CoIInvitation]]("userInvitations")
       r  <- c.get[Option[ProgramReference]]("reference")
-    } yield ProgramDetails(t, p, ps, ProgramUserWithRole(pi, None), us, in, r)
+    } yield ProgramDetails(t, p, ps, ProgramUserWithRole(pi, None, None), us, in, r)
   )

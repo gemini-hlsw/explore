@@ -4,8 +4,10 @@
 package explore.config.sequence
 
 import cats.Eq
+import cats.effect.IO
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
+import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -28,6 +30,8 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
+import org.http4s.client.Client
+import org.typelevel.log4cats.Logger
 
 import scala.scalajs.LinkingInfo
 
@@ -124,7 +128,9 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
     AtomStepsColumnId -> FixedSize(30.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
-  private lazy val columns: List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
+  private def columns(httpClient: Client[IO])(using
+    Logger[IO]
+  ): List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
     List(
       SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
@@ -143,7 +149,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           .map(_.step)
           .collect:
             case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
-              renderVisitExtraRow(step)
+              renderVisitExtraRow(httpClient)(step)
       ).setColumnSize(ColumnSizes(ExtraRowColumnId))
     ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
@@ -159,12 +165,16 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
   protected[sequence] val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemo(())(_ => columns) // cols
-      .useMemoBy((props, _) => props.visits): (_, _) => // (visitRows, nextIndex)
+      .useContext(AppContext.ctx)
+      .useMemoBy((_, _) => ()): (_, ctx) =>
+        _ =>
+          import ctx.given
+          columns(ctx.httpClient)
+      .useMemoBy((props, _, _) => props.visits): (_, _, _) => // (visitRows, nextIndex)
         visitsSequences(_, none)
-      .useMemoBy((props, _, visitsData) =>
+      .useMemoBy((props, _, _, visitsData) =>
         (visitsData, props.acquisitionRows, props.scienceRows, props.currentVisitId)
-      ): (_, _, _) =>
+      ): (_, _, _, _) =>
         (visitsData, acquisitionRows, scienceRows, currentVisitId) =>
           val (visitRows, nextScienceIndex): (List[VisitData], StepIndex) = visitsData.value
           stitchSequence(
@@ -175,9 +185,9 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
             scienceRows
           )
       .useResizeDetector()
-      .useDynTableBy: (_, _, _, _, resize) =>
+      .useDynTableBy: (_, _, _, _, _, resize) =>
         (DynTableDef, SizePx(resize.width.orEmpty))
-      .useReactTableBy: (props, cols, _, rows, _, dynTable) =>
+      .useReactTableBy: (props, _, cols, _, rows, _, dynTable) =>
         TableOptions(
           cols.map(dynTable.setInitialColWidths),
           rows,
@@ -198,7 +208,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           )
           // onColumnSizingChange = dynTable.onColumnSizingChangeHandler
         )
-      .render: (_, cols, _, _, resize, _, table) =>
+      .render: (_, _, cols, _, _, resize, _, table) =>
         val extraRowMod: TagMod =
           TagMod(
             SequenceStyles.ExtraRowShown,
