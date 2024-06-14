@@ -13,11 +13,11 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen.*
 
 import explore.model.CallForProposal
-import explore.model.CallForProposalType
-import lucuma.core.model.Semester
-import lucuma.core.model.CallForProposals
 import explore.model.CallPartner
+import lucuma.core.enums.CallForProposalsType
 import lucuma.core.enums.Partner
+import lucuma.core.model.CallForProposals
+import lucuma.core.model.Semester
 
 trait ArbCallForProposal {
   import ArbEnumerated.given
@@ -28,14 +28,14 @@ trait ArbCallForProposal {
         id       <- arbitrary[CallForProposals.Id]
         semester <- arbitrary[Semester]
         title    <- arbitrary[NonEmptyString]
-        cfpType  <- arbitrary[CallForProposalType]
+        cfpType  <- arbitrary[CallForProposalsType]
         partners <- arbitrary[List[Partner]]
       } yield CallForProposal(id, semester, title, cfpType, partners.map(CallPartner(_)))
     }
 
   given Cogen[CallForProposal] =
     Cogen[
-      (CallForProposals.Id, Semester, NonEmptyString, CallForProposalType, List[Partner])
+      (CallForProposals.Id, Semester, NonEmptyString, CallForProposalsType, List[Partner])
     ].contramap(p => (p.id, p.semester, p.title, p.cfpType, p.partners.map(_.partner)))
 }
 
