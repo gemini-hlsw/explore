@@ -27,6 +27,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
+import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
@@ -59,7 +60,8 @@ case class ObsSummary(
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
   groupId:             Option[Group.Id],
-  groupIndex:          NonNegShort
+  groupIndex:          NonNegShort,
+  validations:         List[ObservationValidation]
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
     case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
@@ -139,6 +141,7 @@ object ObsSummary:
   val wavelength          = Focus[ObsSummary](_.wavelength)
   val groupId             = Focus[ObsSummary](_.groupId)
   val groupIndex          = Focus[ObsSummary](_.groupIndex)
+  val validations         = Focus[ObsSummary](_.validations)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -168,6 +171,7 @@ object ObsSummary:
                                .get[Option[Wavelength]]("wavelength")
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
+      validations         <- c.get[List[ObservationValidation]]("validations")
     } yield ObsSummary(
       id,
       title,
@@ -184,6 +188,7 @@ object ObsSummary:
       posAngleConstraint,
       wavelength,
       groupId,
-      groupIndex
+      groupIndex,
+      validations
     )
   )

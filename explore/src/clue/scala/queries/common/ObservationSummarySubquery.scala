@@ -47,5 +47,9 @@ object ObservationSummarySubquery
           observingMode $ObservingModeSubquery
           groupId
           groupIndex
+          validations {
+            code
+            messages
+          }
         }
       """
