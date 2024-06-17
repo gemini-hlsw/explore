@@ -192,9 +192,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           cols.map(dynTable.setInitialColWidths),
           rows,
           enableSorting = false,
-          // TODO We are having trouble with reisizable cols, will be addressed in future PR
-          // enableColumnResizing = true,
-          enableColumnResizing = false,
+          enableColumnResizing = true,
           enableExpanding = true,
           getRowId = (row, _, _) => getRowId(row),
           getSubRows = (row, _) => row.subRows,
@@ -205,8 +203,8 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           state = PartialTableState(
             columnSizing = dynTable.columnSizing,
             columnVisibility = dynTable.columnVisibility
-          )
-          // onColumnSizingChange = dynTable.onColumnSizingChangeHandler
+          ),
+          onColumnSizingChange = dynTable.onColumnSizingChangeHandler
         )
       .render: (_, _, cols, _, _, resize, _, table) =>
         val extraRowMod: TagMod =
