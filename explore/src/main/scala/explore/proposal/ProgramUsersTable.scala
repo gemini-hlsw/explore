@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
@@ -32,7 +31,7 @@ import queries.common.ProposalQueriesGQL.UnlinkUser
 
 case class ProgramUsersTable(
   pid:      Program.Id,
-  users:    View[NonEmptyList[ProgramUserWithRole]],
+  users:    View[List[ProgramUserWithRole]],
   readOnly: Boolean
 ) extends ReactFnProps(ProgramUsersTable.component)
 
@@ -98,7 +97,7 @@ object ProgramUsersTable:
           val uid    = cell.value.user.id
           val action =
             UnlinkUser[IO].execute(UnlinkUserInput(props.pid, uid)) *>
-              props.users.mod(t => t.copy(tail = t.tail.filterNot(_.user.id === uid))).to[IO]
+              props.users.mod(_.filterNot(_.user.id === uid)).to[IO]
 
           val unlink = deleteConfirmation(
             s"This action will remove the user from this proposal. This action cannot be reversed.",

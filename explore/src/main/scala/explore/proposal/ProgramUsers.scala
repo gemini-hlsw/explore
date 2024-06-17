@@ -38,7 +38,7 @@ enum CreateInviteProcess(private val tag: String) derives Enumerated:
 
 case class ProgramUsers(
   pid:         Program.Id,
-  users:       View[NonEmptyList[ProgramUserWithRole]],
+  users:       View[List[ProgramUserWithRole]],
   invitations: View[List[CoIInvitation]],
   readOnly:    Boolean,
   inTitle:     RenderInTitle,
@@ -64,7 +64,7 @@ object ProgramUsers:
 
   def programUsersTile(
     pid:          Program.Id,
-    users:        View[NonEmptyList[ProgramUserWithRole]],
+    users:        View[List[ProgramUserWithRole]],
     invitations:  View[List[CoIInvitation]],
     createInvite: View[CreateInviteProcess],
     readOnly:     Boolean,
