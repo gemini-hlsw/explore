@@ -131,6 +131,13 @@ object ObsBadge:
         renderEnumProgress(obs.status)
       )
 
+      val validationTooltip = <.div(
+        obs.validations.toTagMod(ov =>
+          <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_))))
+        )
+      )
+      val validationIcon    = Tooltip.Fragment(content = validationTooltip)(<.span(Icons.ErrorIcon))
+
       <.div(
         <.div(ExploreStyles.ObsBadge, ExploreStyles.ObsBadgeSelected.when(props.selected))(
           header,
@@ -189,7 +196,8 @@ object ObsBadge:
                 ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
               )
             ),
-            props.executionTime.orSpinner(_.map(TimeSpanView(_)))
+            props.executionTime.orSpinner(_.map(TimeSpanView(_))),
+            validationIcon.unless(obs.validations.isEmpty)
           )
         )
       )

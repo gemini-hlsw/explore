@@ -19,10 +19,12 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
+import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.arb.ArbConstraintSet.given
+import lucuma.core.model.arb.ArbObservationValidation.given
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
 import lucuma.core.model.arb.ArbTimingWindow.given
 import lucuma.core.util.arb.ArbEnumerated.given
@@ -60,6 +62,7 @@ trait ArbObsSummary:
         wavelength          <- arbitrary[Option[Wavelength]]
         groupId             <- arbitrary[Option[Group.Id]]
         groupIndex          <- arbitrary[NonNegShort]
+        validations         <- arbitrary[List[ObservationValidation]]
       yield ObsSummary(
         id,
         title,
@@ -76,7 +79,8 @@ trait ArbObsSummary:
         posAngleConstraint,
         wavelength,
         groupId,
-        groupIndex
+        groupIndex,
+        validations
       )
     )
 
@@ -96,7 +100,8 @@ trait ArbObsSummary:
        PosAngleConstraint,
        Option[Wavelength],
        Option[Group.Id],
-       Short
+       Short,
+       List[ObservationValidation]
       )
     ]
       .contramap(o =>
@@ -114,7 +119,8 @@ trait ArbObsSummary:
          o.posAngleConstraint,
          o.wavelength,
          o.groupId,
-         o.groupIndex.value
+         o.groupIndex.value,
+         o.validations
         )
       )
 
