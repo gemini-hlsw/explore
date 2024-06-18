@@ -6,7 +6,6 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import explore.UnderConstruction
 import explore.attachments.ObsAttachmentsTable
 import explore.components.Tile
 import explore.components.TileController
@@ -15,8 +14,10 @@ import explore.model.ExploreGridLayouts
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
+import explore.model.ObservationList
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
+import explore.validations.ObservationValidationsTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -30,6 +31,7 @@ case class OverviewTabContents(
   userVault:                Option[UserVault],
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
+  observations:             ObservationList,
   layout:                   LayoutsMap,
   readonly:                 Boolean
 ) extends ReactFnProps(OverviewTabContents.component)
@@ -50,7 +52,9 @@ object OverviewTabContents {
           "Warnings And Errors",
           none,
           canMinimize = true
-        )(_ => UnderConstruction())
+        )(renderInTitle =>
+          ObservationValidationsTable(props.programId, props.observations, renderInTitle)
+        )
 
         val obsAttachmentsTile = Tile(
           ObsTabTilesIds.ObsAttachmentsId.id,

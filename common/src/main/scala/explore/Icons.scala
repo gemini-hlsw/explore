@@ -326,6 +326,14 @@ object Icons {
   @JSImport("@fortawesome/pro-regular-svg-icons", "faAngle")
   val faAngle: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faSquareMinus")
+  val faSquareMinus: FAIcon = js.native
+
+  @js.native
+  @JSImport("@fortawesome/pro-light-svg-icons", "faSquarePlus")
+  val faSquarePlus: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   FontAwesome.library.add(
     faArrowDownLeft,
@@ -405,7 +413,9 @@ object Icons {
     faArrowsRepeatLight,
     faCircleHalfStroke,
     faFiles,
-    faAngle
+    faAngle,
+    faSquareMinus,
+    faSquarePlus
   )
 
   val ArrowDownLeft        = FontAwesomeIcon(faArrowDownLeft)
@@ -488,6 +498,8 @@ object Icons {
   val Files                = FontAwesomeIcon(faFiles)
   val Angle                = FontAwesomeIcon(faAngle)
   val PaperPlaneTop        = FontAwesomeIcon(faPaperPlaneTop)
+  val SquareMinus          = FontAwesomeIcon(faSquareMinus)
+  val SquarePlus           = FontAwesomeIcon(faSquarePlus)
 
   val MissingInfoIcon = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
   val ErrorIcon       = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)
