@@ -35,7 +35,13 @@ case class ProgramUserInvitations(invitations: View[List[CoIInvitation]], readOn
 object ProgramUserInvitations:
   private type Props = ProgramUserInvitations
 
-  private val ColDef = ColumnDef[CoIInvitation]
+  private case class TableMeta(
+    isActive:    View[IsActive],
+    invitations: View[List[CoIInvitation]],
+    readOnly:    Boolean
+  )
+
+  private val ColDef = ColumnDef.WithTableMeta[CoIInvitation, TableMeta]
 
   private val KeyId: ColumnId         = ColumnId("id")
   private val EmailId: ColumnId       = ColumnId("email")
@@ -52,17 +58,14 @@ object ProgramUserInvitations:
   private def column[V](
     id:       ColumnId,
     accessor: CoIInvitation => V
-  ): ColumnDef.Single.NoMeta[CoIInvitation, V] =
+  ): ColumnDef.Single.WithTableMeta[CoIInvitation, V, TableMeta] =
     ColDef(id, accessor, columnNames(id))
 
   private def columns(
-    active:      View[IsActive],
-    invitations: View[List[CoIInvitation]],
-    readOnly:    Boolean
-  )(
-    ctx:         AppContext[IO]
-  ): List[ColumnDef.NoMeta[CoIInvitation, ?]] =
+    ctx: AppContext[IO]
+  ): List[ColumnDef.WithTableMeta[CoIInvitation, ?, TableMeta]] =
     import ctx.given
+
     List(
       column(KeyId, _.id),
       column(EmailId, _.email),
@@ -80,32 +83,35 @@ object ProgramUserInvitations:
         RevokeId,
         identity,
         "Revoke",
-        cell = { cell =>
-          val email  = cell.value.email
-          val id     = cell.value.id
-          val action =
-            RevokeInvitationMutation[IO].execute(id) *>
-              invitations.mod(_.filterNot(_.id === id)).to[IO]
+        cell = cell =>
+          cell.table.options.meta.map: meta =>
+            val email = cell.value.email
+            val id    = cell.value.id
 
-          val revoke = deleteConfirmation(
-            s"This action will revoke the invitation to $email. This action cannot be reversed.",
-            "Revoke invitation",
-            "Yes, revoke",
-            action.void,
-            active
-          )
+            val action: IO[Unit] =
+              RevokeInvitationMutation[IO].execute(id) *>
+                meta.invitations.mod(_.filterNot(_.id === id)).to[IO]
 
-          <.div(
-            ExploreStyles.ApiKeyDelete,
-            Button(
-              icon = Icons.Trash,
-              severity = Button.Severity.Secondary,
-              disabled = readOnly || active.get.value,
-              onClick = revoke,
-              tooltip = s"Revoke invitation"
-            ).mini.compact
-          )
-        },
+            val revoke: Callback =
+              Callback.log(s"Revoke invitation to $email") >>
+                deleteConfirmation(
+                  s"This action will revoke the invitation to $email. This action cannot be reversed.",
+                  "Revoke invitation",
+                  "Yes, revoke",
+                  action.void,
+                  meta.isActive
+                )
+
+            <.div(ExploreStyles.ApiKeyDelete)(
+              Button(
+                icon = Icons.Trash,
+                severity = Button.Severity.Secondary,
+                disabled = meta.readOnly || meta.isActive.get.value,
+                onClick = revoke,
+                tooltip = s"Revoke invitation"
+              ).mini.compact
+            )
+        ,
         size = 35.toPx
       )
     )
@@ -114,16 +120,23 @@ object ProgramUserInvitations:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView(IsActive(false))
-      .useMemoBy((p, _, x) => (x.reuseByValue, p.readOnly))((p, ctx, _) =>
-        (active, ro) => columns(active, p.invitations, ro)(ctx)
-      )                           // columns
-      .useMemoBy((props, _, _, _) =>
+      .useStateView(IsActive(false)) // isActive
+      .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
+        _ => columns(ctx)
+      .useMemoBy((props, _, _, _) => // rows
         props.invitations.get.filter(_.status === InvitationStatus.Pending)
-      )((_, _, _, _) => identity) // rows
-      .useReactTableBy((props, _, _, cols, rows) =>
-        TableOptions(cols, rows, getRowId = (row, _, _) => RowId(row.id.toString))
-      )
+      )((_, _, _, _) => identity)
+      .useReactTableBy: (props, _, isActive, cols, rows) =>
+        TableOptions(
+          cols,
+          rows,
+          getRowId = (row, _, _) => RowId(row.id.toString),
+          meta = TableMeta(
+            isActive = isActive,
+            invitations = props.invitations,
+            readOnly = props.readOnly
+          )
+        )
       .render: (props, _, _, _, _, table) =>
         React.Fragment(
           PrimeTable(

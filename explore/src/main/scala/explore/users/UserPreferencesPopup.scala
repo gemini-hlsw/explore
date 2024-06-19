@@ -59,7 +59,7 @@ object UserPreferencesPopup:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useState(IsOpen(true))
-    .render((props, isOpen) =>
+    .render: (props, isOpen) =>
       val onHide = props.onClose.map(oc => isOpen.setState(IsOpen(false)) >> oc)
       Dialog(
         visible = isOpen.value.value,
@@ -74,7 +74,6 @@ object UserPreferencesPopup:
       )(
         UserPreferencesContent(props.vault, props.onClose)
       )
-    )
 
 case class UserPreferencesContent(vault: UserVault, onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesContent.component)
@@ -112,13 +111,12 @@ object UserPreferencesContent:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useStateView[IsActive](IsActive(false))
-    .useEffectResultWithDepsBy((_, ctx, isActive) => isActive.get) { (props, ctx, _) => _ =>
-      import ctx.given
-      UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo)
-    }
+    .useEffectResultWithDepsBy((_, ctx, isActive) => isActive.get): (props, ctx, _) =>
+      _ =>
+        import ctx.given
+        UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo)
     .useStateView(NewKey(none)) // id fo the new role id to create
-    // Columns
-    .useMemoBy((_, _, isActive, _, _) => isActive.get)((props, ctx, isActive, _, newKey) =>
+    .useMemoBy((_, _, _, _, _) => ()): (props, ctx, isActive, _, newKey) => // Columns
       _ =>
         import ctx.given
 
@@ -169,18 +167,15 @@ object UserPreferencesContent:
             size = 35.toPx
           )
         )
-    )
     // Rows
-    .useMemoBy((_, _, _, user, _, _) => user.toOption.foldMap(_.user.apiKeys)) {
+    .useMemoBy((_, _, _, user, _, _) => user.toOption.foldMap(_.user.apiKeys)):
       (_, _, _, _, _, _) => apiKeys => apiKeys.sortBy(_.id)
-    }
-    .useReactTableBy((_, _, _, _, _, cols, rows) =>
+    .useReactTableBy: (_, _, _, _, _, cols, rows) =>
       TableOptions(cols, rows, enableSorting = true, enableColumnResizing = false)
-    )
     .useStateView(RoleType.Pi)
     .useState(IsCleaningTheCache(false))
     .useStateView(IsDeletingLayouts(false))
-    .render {
+    .render:
       (
         props,
         ctx,
@@ -316,4 +311,3 @@ object UserPreferencesContent:
           },
           pendingRender = <.div(ExploreStyles.EmptyUserPreferences, SolarProgress())
         )
-    }

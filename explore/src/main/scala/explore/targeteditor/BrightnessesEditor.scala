@@ -7,7 +7,6 @@ import cats.Order.*
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
@@ -67,83 +66,81 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  private val ColDef = ColumnDef[RowValue]
+  protected[targeteditor] case class TableMeta(disabled: Boolean)
+
+  private val ColDef = ColumnDef.WithTableMeta[RowValue, TableMeta]
 
   private val BandColumnId: ColumnId   = ColumnId("band")
   private val ValueColumnId: ColumnId  = ColumnId("value")
   private val UnitsColumnId: ColumnId  = ColumnId("units")
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
-  val component =
+  protected[targeteditor] val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewBy(props => State.fromUsedBrightnesses(props.brightnesses.get))
-      .useEffectWithDepsBy((props, _) => props.brightnesses.get)((_, state) =>
+      .useEffectWithDepsBy((props, _) => props.brightnesses.get): (_, state) =>
         brightnesses => state.set(State.fromUsedBrightnesses(brightnesses))
-      )
-      .useMemoBy((props, _) => (props.brightnesses.reuseByValue, props.disabled)) {
-        (_, _) => // Memo cols
-          case (brightnesses, disabled) =>
-            List(
-              ColDef(
-                BandColumnId,
-                _._1,
-                "Band",
-                _.value.shortName,
-                size = 67.toPx
-              ).sortable,
-              ColDef(
-                ValueColumnId,
-                _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]),
-                "Value",
-                cell =>
-                  FormInputTextView(
-                    id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
-                    value = cell.value,
-                    validFormat = ExploreModelValidators.brightnessValidWedge,
-                    changeAuditor =
-                      ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
-                    disabled = disabled
-                  ),
-                size = 77.toPx
-              ).sortableBy(_.get),
-              ColDef(
-                UnitsColumnId,
-                _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]),
-                "Units",
-                cell =>
-                  EnumDropdownView(
-                    id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
-                    value = cell.value,
-                    disabled = disabled,
-                    clazz = ExploreStyles.BrightnessesTableUnitsDropdown
-                  ),
-                size = 145.toPx
-              ).sortableBy(_.get),
-              ColDef(
-                DeleteColumnId,
-                _._1,
-                "",
-                cell =>
-                  <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
-                    Button(
-                      icon = Icons.Trash,
-                      clazz = ExploreStyles.DeleteButton,
-                      text = true,
-                      disabled = disabled,
-                      onClick = brightnesses.mod(_ - cell.value)
-                    ).small
-                  ),
-                size = 20.toPx,
-                enableSorting = false
-              )
+      // .useMemoBy((props, _) => (props.brightnesses.reuseByValue, props.disabled)) {
+      .useMemoBy((_, _) => ()): (props, _) => // cols
+        _ =>
+          List(
+            ColDef(
+              BandColumnId,
+              _._1,
+              "Band",
+              _.value.shortName,
+              size = 67.toPx
+            ).sortable,
+            ColDef(
+              ValueColumnId,
+              _._2.zoom(Measure.valueTagged[BrightnessValue, Brightness[T]]),
+              "Value",
+              cell =>
+                FormInputTextView(
+                  id = NonEmptyString.unsafeFrom(s"brightnessValue_${cell.row.id}"),
+                  value = cell.value,
+                  validFormat = ExploreModelValidators.brightnessValidWedge,
+                  changeAuditor =
+                    ChangeAuditor.bigDecimal(2.refined, 3.refined).allowExp(2.refined),
+                  disabled = cell.table.options.meta.exists(_.disabled)
+                ),
+              size = 77.toPx
+            ).sortableBy(_.get),
+            ColDef(
+              UnitsColumnId,
+              _._2.zoom(Measure.unitsTagged[BrightnessValue, Brightness[T]]),
+              "Units",
+              cell =>
+                EnumDropdownView(
+                  id = NonEmptyString.unsafeFrom(s"brightnessUnits_${cell.row.id}"),
+                  value = cell.value,
+                  disabled = cell.table.options.meta.exists(_.disabled),
+                  clazz = ExploreStyles.BrightnessesTableUnitsDropdown
+                ),
+              size = 145.toPx
+            ).sortableBy(_.get),
+            ColDef(
+              DeleteColumnId,
+              _._1,
+              "",
+              cell =>
+                <.div(ExploreStyles.BrightnessesTableDeletButtonWrapper)(
+                  Button(
+                    icon = Icons.Trash,
+                    clazz = ExploreStyles.DeleteButton,
+                    text = true,
+                    disabled = cell.table.options.meta.exists(_.disabled),
+                    onClick = props.brightnesses.mod(_ - cell.value)
+                  ).small
+                ),
+              size = 20.toPx,
+              enableSorting = false
             )
-      }
-      // rows
-      .useMemoBy((props, _, _) => props.brightnesses.get)((props, _, _) =>
+          )
+      .useMemoBy((props, _, _) => props.brightnesses.get): (props, _, _) => // rows
         _ => props.brightnesses.widen[Map[Band, BrightnessMeasure[T]]].toListOfViews
-      )
-      .useReactTableBy((_, _, cols, rows) =>
+      .useReactTableBy: (props, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -151,10 +148,10 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
           enableSorting = true,
           enableColumnResizing = true,
           columnResizeMode = ColumnResizeMode.OnChange,
-          initialState = TableState(sorting = Sorting(ColumnId("band") -> SortDirection.Ascending))
+          initialState = TableState(sorting = Sorting(ColumnId("band") -> SortDirection.Ascending)),
+          meta = TableMeta(disabled = props.disabled)
         )
-      )
-      .render { (props, state, _, _, table) =>
+      .render: (props, state, _, _, table) =>
         val footer =
           <.tr(
             <.td(
@@ -211,7 +208,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             )
           )
         )
-      }
 
 case class IntegratedBrightnessEditor(
   brightnesses: View[SortedMap[Band, BrightnessMeasure[Integrated]]],
