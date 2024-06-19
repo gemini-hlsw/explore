@@ -56,22 +56,21 @@ import java.time.ZonedDateTime
 
 case class TimingWindowsPanel(
   windows:       View[List[TimingWindow]],
-  readonly:      Boolean,
+  readOnly:      Boolean,
   renderInTitle: Tile.RenderInTitle
 ) extends ReactFnProps(TimingWindowsPanel.component)
 
 object TimingWindowsPanel:
   def timingWindowsPanel(
     timingWindows: View[List[TimingWindow]],
-    readonly:      Boolean
-  ) = {
+    readOnly:      Boolean
+  ) =
     val base  = "Scheduling Windows"
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
     Tile(ObsTabTilesIds.TimingWindowsId.id, title, canMinimize = true)(renderInTitle =>
-      TimingWindowsPanel(timingWindows, readonly, renderInTitle)
+      TimingWindowsPanel(timingWindows, readOnly, renderInTitle)
     )
-  }
 
   private type Props = TimingWindowsPanel
 
@@ -101,32 +100,24 @@ object TimingWindowsPanel:
 
   private val DeleteColWidth: Int   = 20
   private val WindowColId: ColumnId = ColumnId("TimingWindow")
-  private val ErrorColId: ColumnId  = ColumnId("Error")
   private val DeleteColId: ColumnId = ColumnId("Delete")
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useResizeDetector()
-      // cols
-      .useMemoBy((props, resize) => (props.windows.get, props.readonly, resize)) {
-        (props, _) => (_, readonly, resize) =>
+      .useMemoBy((_, _) => ()): (props, _) => // cols
+        _ =>
           List(
             ColDef(
               WindowColId,
               _._1,
-              size = resize.width.map(z => (z - DeleteColWidth).toPx).getOrElse(400.toPx)
-            ).setCell(_.value.renderVdom).some,
-            ColDef(
-              ErrorColId,
-              _._2,
-              size = DeleteColWidth.toPx
-            ).setCell { c =>
-              val tw: TimingWindow = c.row.getValue(WindowColId)
-              if (tw.isValid) EmptyVdom
-              else
-                <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow)
-            }.some,
+              size = 400.toPx
+            ).setCell: cell =>
+              <.span(
+                cell.value.renderVdom,
+                <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow).unless(cell.value.isValid)
+              ),
             ColDef(
               DeleteColId,
               _._2,
@@ -138,26 +129,31 @@ object TimingWindowsPanel:
                   e.stopPropagationCB >>
                     props.windows.mod(tws => tws.take(c.value) ++ tws.drop(c.value + 1))
               ).compact.small(Icons.Trash)
-            ).some
-              .filterNot(_ => readonly)
-          ).flatten
-      }
-      // rows
-      .useMemoBy((props, _, _) => props.windows.get)((_, _, _) => _.zipWithIndex.sorted)
-      .useReactTableBy((props, _, cols, rows) =>
+            )
+          )
+      .useMemoBy((props, _, _) => props.windows.get): // rows
+        (_, _, _) => _.zipWithIndex.sorted
+      .useReactTableBy: (props, resize, cols, rows) =>
         TableOptions(
           cols,
           rows,
           enableRowSelection = true,
-          getRowId = (row, _, _) => RowId(row._2.toString)
+          getRowId = (row, _, _) => RowId(row._2.toString),
+          state = PartialTableState(
+            columnSizing = ColumnSizing(
+              WindowColId -> resize.width.map(w => (w - DeleteColWidth).toPx).getOrElse(400.toPx)
+            ),
+            columnVisibility = ColumnVisibility(
+              DeleteColId -> Visibility.fromVisible(!props.readOnly)
+            )
+          )
         )
-      )
-      .render { (props, resize, dbActive, rows, table) =>
+      .render: (props, resize, dbActive, rows, table) =>
         val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
 
         val selectedTW: Option[View[TimingWindow]] =
           pos
-            .filterNot(_ => props.readonly)
+            .filterNot(_ => props.readOnly)
             .flatMap(p =>
               props.windows
                 .zoom(Index.index[List[TimingWindow], Int, TimingWindow](p))
@@ -171,7 +167,7 @@ object TimingWindowsPanel:
         val hmsChangeAuditor: ChangeAuditor = ChangeAuditor.accept.allow(HMSPartialRegEx.matches)
 
         <.div(ExploreStyles.TimingWindowsBody)(
-          <.div(ExploreStyles.TimingWindowsTable)(
+          <.div.withRef(resize.ref)(ExploreStyles.TimingWindowsTable)(
             PrimeTable(
               table,
               striped = true,
@@ -191,7 +187,7 @@ object TimingWindowsPanel:
               // If cmd is pressed add to the selection
               emptyMessage = <.div(ExploreStyles.ExploreTableEmpty, "No scheduling windows defined")
             )
-          ).withRef(resize.ref),
+          ),
           selectedTW.map { tw =>
             val selectedInclusion: View[TimingWindowInclusion]   = tw.zoom(TimingWindow.inclusion)
             val selectedStart: View[Timestamp]                   = tw.zoom(TimingWindow.start)
@@ -415,7 +411,7 @@ object TimingWindowsPanel:
             )
           },
           props.renderInTitle(
-            if (props.readonly) EmptyVdom
+            if (props.readOnly) EmptyVdom
             else
               Button(
                 severity = Button.Severity.Success,
@@ -431,4 +427,3 @@ object TimingWindowsPanel:
               ).tiny.compact
           )
         )
-      }
