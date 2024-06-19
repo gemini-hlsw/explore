@@ -114,9 +114,8 @@ object AladinContainer extends AladinCommon {
           _ =>
             val (base, science) = baseAndScience(p)
             baseCoordinates.setState((base, science)) *>
-              currentPos.setState(
+              currentPos.setState:
                 base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
-              )
       // Ref to the aladin component
       .useRefToScalaComponent(AladinComp)
       // If view offset changes upstream to zero, redraw
@@ -125,24 +124,23 @@ object AladinContainer extends AladinCommon {
           (_, offset) => {
             val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
             newCoords
-              .map(coords =>
+              .map: coords =>
                 aladinRef.get.asCBO
-                  .flatMapCB(
-                    _.backend.gotoRaDec(coords.ra.toAngle.toDoubleDegrees,
-                                        coords.dec.toAngle.toSignedDoubleDegrees
+                  .flatMapCB:
+                    _.backend.gotoRaDec(
+                      coords.ra.toAngle.toDoubleDegrees,
+                      coords.dec.toAngle.toSignedDoubleDegrees
                     )
-                  )
                   .asCallback
                   .void
                   .when_(offset === Offset.Zero)
-              )
               .getOrEmpty
           }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
         (allCoordinates, p.obsConf, p.globalPreferences.agsOverlay, p.selectedGuideStar)
-      ) {
-        (_, _, _, _) => (
+      ): (_, _, _, _) =>
+        (
           allCoordinates,
           configuration,
           agsOverlay,
@@ -158,8 +156,6 @@ object AladinContainer extends AladinCommon {
             gs,
             candidatesVisibilityCss
           )
-
-      }
       // resize detector
       .useResizeDetector()
       // memoized catalog targets with their proper motions corrected
@@ -173,7 +169,7 @@ object AladinContainer extends AladinCommon {
          props.selectedGuideStar,
          allCoordinates
         )
-      ) { case (_, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _) =>
         (
           candidates,
           visible,
@@ -258,173 +254,166 @@ object AladinContainer extends AladinCommon {
                 .flatten
             }
             .getOrElse(Nil)
-
-      }
       // Use fov from aladin
       .useState(none[Fov])
-      .render {
-        (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
-          val (baseCoordinates, scienceTargets) = allCoordinates.value
+      .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
+        (props.globalPreferences.showCatalog, resize)
+      ): (_, _, _, aladinRef, _, _, _, _) =>
+        (_, _) => aladinRef.get.asCBO.flatMapCB(_.backend.fixLayoutDimensions).asCallback.void
+      .render: (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
+        val (baseCoordinates, scienceTargets) = allCoordinates.value
 
-          /**
-           * Called when the position changes, i.e. aladin pans. We want to offset the visualization
-           * to keep the internal target correct
-           */
-          def onPositionChanged(u: PositionChanged): Callback = {
-            val viewCoords = Coordinates(u.ra, u.dec)
-            val viewOffset = baseCoordinates.value.diff(viewCoords).offset
-            currentPos.setState(Some(viewCoords)) *>
-              props.updateViewOffset(viewOffset)
+        /**
+         * Called when the position changes, i.e. aladin pans. We want to offset the visualization
+         * to keep the internal target correct
+         */
+        def onPositionChanged(u: PositionChanged): Callback = {
+          val viewCoords = Coordinates(u.ra, u.dec)
+          val viewOffset = baseCoordinates.value.diff(viewCoords).offset
+          currentPos.setState(Some(viewCoords)) *>
+            props.updateViewOffset(viewOffset)
+        }
+
+        def onZoom =
+          (v: Fov) => {
+            // Sometimes get 0 fov, ignore those
+            val ignore =
+              (v.x === Angle.Angle0 && v.y === Angle.Angle0) ||
+                fov.value.exists(_.isDifferentEnough(v))
+            (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
           }
 
-          def onZoom =
-            (v: Fov) => {
-              // Sometimes get 0 fov, ignore those
-              val ignore =
-                (v.x === Angle.Angle0 && v.y === Angle.Angle0) ||
-                  fov.value.exists(_.isDifferentEnough(v))
-              (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
-            }
-
-          def includeSvg(v: JsAladin): Callback =
-            v.onZoom(onZoom) *> // re render on zoom
-              v.onPositionChanged(u => onPositionChanged(u)) *>
-              v.onMouseMove(s =>
-                props
-                  .updateMouseCoordinates(Coordinates(s.ra, s.dec))
-                  .rateLimit(200.millis, 1)
-                  .void
-              )
-
-          val baseCoordinatesForAladin: String =
-            currentPos.value
-              .map(Coordinates.fromHmsDms.reverseGet)
-              .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
-
-          val basePosition =
-            List(
-              SVGTarget.CrosshairTarget(baseCoordinates.value, Css.Empty, 10),
-              SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
-              SVGTarget.LineTo(baseCoordinates.value,
-                               props.asterism.baseTracking.baseCoordinates,
-                               ExploreStyles.PMCorrectionLine
-              )
+        def includeSvg(v: JsAladin): Callback =
+          v.onZoom(onZoom) *> // re render on zoom
+            v.onPositionChanged(u => onPositionChanged(u)) *>
+            v.onMouseMove(s =>
+              props
+                .updateMouseCoordinates(Coordinates(s.ra, s.dec))
+                .rateLimit(200.millis, 1)
+                .void
             )
 
-          val sciencePositions        =
-            if (scienceTargets.length > 1)
-              scienceTargets.flatMap { (selected, name, pm, base) =>
-                pm.foldMap { pm =>
-                  List(
-                    SVGTarget.ScienceTarget(pm,
-                                            ExploreStyles.ScienceTarget,
-                                            ExploreStyles.ScienceSelectedTarget,
-                                            3,
-                                            selected,
-                                            name.value.some
-                    ),
-                    SVGTarget.LineTo(pm, base, ExploreStyles.PMCorrectionLine)
-                  )
-                }
-              }
-            else Nil
+        val baseCoordinatesForAladin: String =
+          currentPos.value
+            .map(Coordinates.fromHmsDms.reverseGet)
+            .getOrElse(Coordinates.fromHmsDms.reverseGet(baseCoordinates.value))
 
-          def offsetIndicators(
-            f:       ObsConfiguration => Option[NonEmptyList[Offset]],
-            oType:   SequenceType,
-            css:     Css,
-            visible: Visible
-          ) =
-            props.obsConf.foldMap(f).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
-              for {
-                idx <- refineV[NonNegative](i).toOption
-                gs  <- props.selectedGuideStar
-                pa  <- gs.posAngle
-                c   <- baseCoordinates.value.offsetBy(pa, o)
-                if visible.isVisible
-              } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
-            }
-          val scienceOffsetIndicators =
-            offsetIndicators(_.scienceOffsets,
-                             SequenceType.Science,
-                             ExploreStyles.ScienceOffsetPosition,
-                             props.globalPreferences.scienceOffsets
+        val basePosition =
+          List(
+            SVGTarget.CrosshairTarget(baseCoordinates.value, Css.Empty, 10),
+            SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
+            SVGTarget.LineTo(
+              baseCoordinates.value,
+              props.asterism.baseTracking.baseCoordinates,
+              ExploreStyles.PMCorrectionLine
             )
-
-          val acquisitionOffsetIndicators =
-            offsetIndicators(_.acquisitionOffsets,
-                             SequenceType.Acquisition,
-                             ExploreStyles.AcquisitionOffsetPosition,
-                             props.globalPreferences.acquisitionOffsets
-            )
-
-          val offsetTargets =
-            // order is important, scienc to be drawn above acq
-            (acquisitionOffsetIndicators |+| scienceOffsetIndicators).flattenOption
-
-          val screenOffset =
-            currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
-
-          val key =
-            s"aladin-${resize.width}-${resize.height}-${props.globalPreferences.showCatalog}"
-
-          <.div(
-            ExploreStyles.AladinContainerBody,
-            ^.key := key,
-            // This is a bit tricky. Sometimes the height can be 0 or a very low number.
-            // This happens during a second render. If we let the height to be zero, aladin
-            // will take it as 1. This height ends up being a denominator, which, if low,
-            // will make aladin request a large amount of tiles and end up freeze explore.
-            if (resize.height.exists(_ >= 100)) {
-              ReactFragment(
-                AladinZoomControl(aladinRef),
-                (resize.width, resize.height, fov.value)
-                  .mapN(
-                    TargetsOverlay(
-                      _,
-                      _,
-                      _,
-                      screenOffset,
-                      baseCoordinates.value,
-                      // Order matters
-                      candidates ++ basePosition ++ sciencePositions ++ offsetTargets
-                    )
-                  ),
-                (resize.width,
-                 resize.height,
-                 fov.value,
-                 vizShapes.value.flatMap(NonEmptyMap.fromMap)
-                )
-                  .mapN(
-                    SVGVisualizationOverlay(
-                      _,
-                      _,
-                      _,
-                      screenOffset,
-                      _
-                    )
-                  ),
-                AladinComp
-                  .withRef(aladinRef) {
-                    Aladin(
-                      ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
-                        .unless_(props.globalPreferences.aladinMouseScroll.value),
-                      showReticle = false,
-                      showLayersControl = false,
-                      target = baseCoordinatesForAladin,
-                      fov = Angle.fromMicroarcseconds(
-                        props.options.fovDec.toMicroarcseconds
-                          .max(props.options.fovRA.toMicroarcseconds)
-                      ),
-                      showGotoControl = false,
-                      showZoomControl = false,
-                      showFullscreenControl = false,
-                      customize = (v: JsAladin) => includeSvg(v)
-                    )
-                  }
-              )
-            } else EmptyVdom
           )
-            .withRef(resize.ref)
-      }
+
+        val sciencePositions        =
+          if (scienceTargets.length > 1)
+            scienceTargets.flatMap { (selected, name, pm, base) =>
+              pm.foldMap { pm =>
+                List(
+                  SVGTarget.ScienceTarget(
+                    pm,
+                    ExploreStyles.ScienceTarget,
+                    ExploreStyles.ScienceSelectedTarget,
+                    3,
+                    selected,
+                    name.value.some
+                  ),
+                  SVGTarget.LineTo(pm, base, ExploreStyles.PMCorrectionLine)
+                )
+              }
+            }
+          else Nil
+
+        def offsetIndicators(
+          f:       ObsConfiguration => Option[NonEmptyList[Offset]],
+          oType:   SequenceType,
+          css:     Css,
+          visible: Visible
+        ) =
+          props.obsConf.foldMap(f).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
+            for {
+              idx <- refineV[NonNegative](i).toOption
+              gs  <- props.selectedGuideStar
+              pa  <- gs.posAngle
+              c   <- baseCoordinates.value.offsetBy(pa, o)
+              if visible.isVisible
+            } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
+          }
+        val scienceOffsetIndicators =
+          offsetIndicators(
+            _.scienceOffsets,
+            SequenceType.Science,
+            ExploreStyles.ScienceOffsetPosition,
+            props.globalPreferences.scienceOffsets
+          )
+
+        val acquisitionOffsetIndicators =
+          offsetIndicators(
+            _.acquisitionOffsets,
+            SequenceType.Acquisition,
+            ExploreStyles.AcquisitionOffsetPosition,
+            props.globalPreferences.acquisitionOffsets
+          )
+
+        val offsetTargets =
+          // order is important, scienc to be drawn above acq
+          (acquisitionOffsetIndicators |+| scienceOffsetIndicators).flattenOption
+
+        val screenOffset =
+          currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
+
+        <.div.withRef(resize.ref)(ExploreStyles.AladinContainerBody)(
+          // This is a bit tricky. Sometimes the height can be 0 or a very low number.
+          // This happens during a second render. If we let the height to be zero, aladin
+          // will take it as 1. This height ends up being a denominator, which, if low,
+          // will make aladin request a large amount of tiles and end up freeze explore.
+          if (resize.height.exists(_ >= 100)) {
+            ReactFragment(
+              AladinZoomControl(aladinRef),
+              (resize.width, resize.height, fov.value)
+                .mapN(
+                  TargetsOverlay(
+                    _,
+                    _,
+                    _,
+                    screenOffset,
+                    baseCoordinates.value,
+                    // Order matters
+                    candidates ++ basePosition ++ sciencePositions ++ offsetTargets
+                  )
+                ),
+              (resize.width, resize.height, fov.value, vizShapes.value.flatMap(NonEmptyMap.fromMap))
+                .mapN(
+                  SVGVisualizationOverlay(
+                    _,
+                    _,
+                    _,
+                    screenOffset,
+                    _
+                  )
+                ),
+              AladinComp.withRef(aladinRef) {
+                Aladin(
+                  ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
+                    .unless_(props.globalPreferences.aladinMouseScroll.value),
+                  showReticle = false,
+                  showLayersControl = false,
+                  target = baseCoordinatesForAladin,
+                  fov = Angle.fromMicroarcseconds(
+                    props.options.fovDec.toMicroarcseconds
+                      .max(props.options.fovRA.toMicroarcseconds)
+                  ),
+                  showGotoControl = false,
+                  showZoomControl = false,
+                  showFullscreenControl = false,
+                  customize = (v: JsAladin) => includeSvg(v)
+                )
+              }
+            )
+          } else EmptyVdom
+        )
 }
