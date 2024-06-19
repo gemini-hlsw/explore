@@ -30,15 +30,22 @@ import lucuma.ui.table.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
 
 case class ProgramUsersTable(
-  pid:      Program.Id,
-  users:    View[List[ProgramUserWithRole]],
-  readOnly: Boolean
+  programId: Program.Id,
+  users:     View[List[ProgramUserWithRole]],
+  readOnly:  Boolean
 ) extends ReactFnProps(ProgramUsersTable.component)
 
 object ProgramUsersTable:
   private type Props = ProgramUsersTable
 
-  private val ColDef = ColumnDef[ProgramUserWithRole]
+  private case class TableMeta(
+    programId: Program.Id,
+    users:     View[List[ProgramUserWithRole]],
+    readOnly:  Boolean,
+    isActive:  View[IsActive]
+  )
+
+  private val ColDef = ColumnDef.WithTableMeta[ProgramUserWithRole, TableMeta]
 
   private val NameColumnId: ColumnId    = ColumnId("name")
   private val PartnerColumnId: ColumnId = ColumnId("partner")
@@ -59,13 +66,12 @@ object ProgramUsersTable:
   private def column[V](
     id:       ColumnId,
     accessor: ProgramUserWithRole => V
-  ): ColumnDef.Single.NoMeta[ProgramUserWithRole, V] =
+  ): ColumnDef.Single.WithTableMeta[ProgramUserWithRole, V, TableMeta] =
     ColDef(id, accessor, columnNames(id))
 
   private def columns(
-    props:  Props,
-    active: View[IsActive]
-  )(ctx: AppContext[IO]): List[ColumnDef.NoMeta[ProgramUserWithRole, ?]] =
+    ctx: AppContext[IO]
+  ): List[ColumnDef.WithTableMeta[ProgramUserWithRole, ?, TableMeta]] =
     List(
       column(NameColumnId, _.name),
       ColDef(
@@ -92,31 +98,32 @@ object ProgramUsersTable:
         "",
         enableSorting = false,
         enableResizing = false,
-        cell = { cell =>
-          import ctx.given
-          val uid    = cell.value.user.id
-          val action =
-            UnlinkUser[IO].execute(UnlinkUserInput(props.pid, uid)) *>
-              props.users.mod(_.filterNot(_.user.id === uid)).to[IO]
+        cell = cell =>
+          cell.table.options.meta.map: meta =>
+            import ctx.given
 
-          val unlink = deleteConfirmation(
-            s"This action will remove the user from this proposal. This action cannot be reversed.",
-            "Remove user",
-            "Yes",
-            action.void,
-            active
-          )
+            val userId = cell.value.user.id
+            val action =
+              UnlinkUser[IO].execute(UnlinkUserInput(meta.programId, userId)) *>
+                meta.users.mod(_.filterNot(_.user.id === userId)).to[IO]
 
-          <.div(
-            ExploreStyles.ApiKeyDelete,
-            Button(
-              icon = Icons.Trash,
-              severity = Button.Severity.Secondary,
-              disabled = props.readOnly || active.get.value,
-              onClick = unlink
-            ).mini.compact.unless(cell.value.role.isEmpty) // don't allow removing the PI
-          )
-        },
+            val unlink = deleteConfirmation(
+              s"This action will remove the user from this proposal. This action cannot be reversed.",
+              "Remove user",
+              "Yes",
+              action.void,
+              meta.isActive
+            )
+
+            <.div(ExploreStyles.ApiKeyDelete)(
+              Button(
+                icon = Icons.Trash,
+                severity = Button.Severity.Secondary,
+                disabled = meta.readOnly || meta.isActive.get.value,
+                onClick = unlink
+              ).mini.compact.unless(cell.value.role.isEmpty) // don't allow removing the PI
+            )
+        ,
         size = 35.toPx
       )
     )
@@ -126,13 +133,17 @@ object ProgramUsersTable:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
-      .useMemoBy((p, _, x) => (x.reuseByValue, p.readOnly))((p, ctx, _) =>
-        (a, _) => columns(p, a)(ctx)
-      )                                                                                // columns
-      .useMemoBy((props, _, _, _) => props.users.get.toList)((_, _, _, _) => identity) // rows
-      .useReactTableBy((props, _, _, cols, rows) =>
-        TableOptions(cols, rows, getRowId = (row, _, _) => RowId(row.user.id.toString))
-      )
+      .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
+        _ => columns(ctx)
+      .useMemoBy((props, _, _, _) => props.users.get.toList): (_, _, _, _) => // rows
+        identity
+      .useReactTableBy: (props, _, isActive, cols, rows) =>
+        TableOptions(
+          cols,
+          rows,
+          getRowId = (row, _, _) => RowId(row.user.id.toString),
+          meta = TableMeta(props.programId, props.users, props.readOnly, isActive)
+        )
       .render: (props, _, _, _, _, table) =>
         PrimeTable(
           table,
