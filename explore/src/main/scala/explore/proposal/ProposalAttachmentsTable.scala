@@ -3,11 +3,11 @@
 
 package explore.proposal
 
+import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.given
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.types.numeric.NonNegLong
@@ -45,7 +45,7 @@ case class ProposalAttachmentsTable(
   programId:   Program.Id,
   authToken:   NonEmptyString,
   attachments: View[List[ProposalAttachment]],
-  readonly:    Boolean
+  readOnly:    Boolean
 ) extends ReactFnProps(ProposalAttachmentsTable.component)
 
 object ProposalAttachmentsTable extends ProposalAttachmentUtils {
@@ -59,21 +59,23 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
     def fileSize: Option[NonNegLong]           = row.flatMap(pa => NonNegLong.from(pa.fileSize)).toOption
     def updatedAt: Option[Timestamp]           = row.toOption.map(_.updatedAt)
 
-  private val ColDef = ColumnDef[Row]
+  private type UrlMapKey = (ProposalAttachmentType, Timestamp)
+  private type UrlMap    = Map[UrlMapKey, Pot[String]]
 
-  type UrlMapKey = (ProposalAttachmentType, Timestamp)
-  type UrlMap    = Map[UrlMapKey, Pot[String]]
+  private case class TableMeta(action: View[Action], urlMap: UrlMap)
 
-  given Reusability[UrlMap] = Reusability.map
+  private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
 
-  extension (pa: ProposalAttachment) def toMapKey: UrlMapKey = (pa.attachmentType, pa.updatedAt)
+  extension (pa: ProposalAttachment)
+    private def toMapKey: UrlMapKey = (pa.attachmentType, pa.updatedAt)
 
   def deletePrompt(
-    props:  Props,
-    client: OdbRestClient[IO],
-    att:    ProposalAttachment
+    programId:      Program.Id,
+    modAttachments: Endo[List[ProposalAttachment]] => Callback,
+    client:         OdbRestClient[IO],
+    att:            ProposalAttachment
   )(
-    e:      ReactMouseEvent
+    e:              ReactMouseEvent
   )(using Logger[IO], ToastCtx[IO]): Callback =
     ConfirmPopup
       .confirmPopup(
@@ -81,8 +83,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
         s"Delete attachment? This action is not undoable.",
         acceptLabel = "Delete",
         rejectLabel = "Cancel",
-        accept =
-          deleteAttachment(props.programId, props.attachments, client, att.attachmentType).runAsync
+        accept = deleteAttachment(programId, modAttachments, client, att.attachmentType).runAsync
       )
       .show
 
@@ -90,12 +91,11 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+      .useMemoBy((p, _) => p.authToken): (_, ctx) =>
         token => OdbRestClient[IO](ctx.environment, token)
-      )
       .useStateView(Action.None)
       .useStateView[UrlMap](Map.empty)
-      .useEffectWithDepsBy((props, _, _, _, _) => props.attachments.get)(
+      .useEffectWithDepsBy((props, _, _, _, _) => props.attachments.get):
         (props, _, client, _, urlMap) =>
           attachments =>
             val allCurrentKeys = attachments.map(_.toMapKey).toSet
@@ -114,84 +114,92 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
               )
 
             updateUrlMap *> getUrls
-      )
-      // Columns
-      .useMemoBy((props, _, client, _, urlMap) => (props.readonly, client, urlMap.get))(
-        (props, ctx, _, action, _) =>
-          (_, client, urlMap) =>
+      .useMemoBy((props, _, client, _, _) => (props.readOnly, client)): // cols
+        (props, ctx, _, _, _) =>
+          (readOnly, client) =>
             import ctx.given
 
-            def column[V](id: ColumnId, accessor: Row => V): ColumnDef.Single.NoMeta[Row, V] =
+            def column[V](id: ColumnId, accessor: Row => V)
+              : ColumnDef.Single.WithTableMeta[Row, V, TableMeta] =
               ColDef(id, v => accessor(v), columnNames(id))
 
             List(
               column(ActionsColumnId, identity)
                 .setCell(cell =>
-                  cell.value.fold(
-                    attType =>
-                      <.div(
-                        <.label(
-                          tableLabelButtonClasses,
-                          ^.htmlFor := s"attachment-upload-$attType",
-                          Icons.FileArrowUp
-                        ).withTooltip(
-                          tooltip = s"Upload new ${attType.shortName} attachment"
-                        ).unless(props.readonly),
-                        <.input(
-                          ExploreStyles.FileUpload,
-                          ^.tpe    := "file",
-                          ^.onChange ==> onInsertFileSelected(props.programId,
-                                                              props.attachments,
-                                                              attType,
-                                                              client,
-                                                              action
-                          ),
-                          ^.id     := s"attachment-upload-$attType",
-                          ^.name   := "file",
-                          ^.accept := ProposalAttachmentType.accept
-                        ).unless(props.readonly)
-                      ),
-                    thisAtt =>
-                      val attType = thisAtt.attachmentType
-                      <.div(
-                        // The upload "button" needs to be a label. In order to make
-                        // the styling consistent they're all labels.
-                        <.label(
-                          tableLabelButtonClasses,
-                          Icons.Trash,
-                          ^.onClick ==> deletePrompt(props, client, thisAtt)
-                        ).withTooltip("Delete attachment").unless(props.readonly),
-                        <.label(
-                          tableLabelButtonClasses,
-                          ^.htmlFor := s"attachment-replace-$attType",
-                          Icons.FileArrowUp
-                        ).withTooltip(
-                          tooltip = s"Upload replacement file",
-                          placement = Placement.Right
-                        ).unless(props.readonly),
-                        <.input(
-                          ExploreStyles.FileUpload,
-                          ^.tpe    := "file",
-                          ^.onChange ==> onUpdateFileSelected(props.programId,
-                                                              props.attachments,
-                                                              thisAtt,
-                                                              client,
-                                                              action
-                          ),
-                          ^.id     := s"attachment-replace-$attType",
-                          ^.name   := "file",
-                          ^.accept := ProposalAttachmentType.accept
-                        ).unless(props.readonly),
-                        urlMap.get(thisAtt.toMapKey).foldMap {
-                          case Pot.Ready(url) =>
-                            <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
-                              .withTooltip("Download File")
-                          case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
-                          case Pot.Error(t)   =>
-                            <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
-                        }
-                      )
-                  )
+                  cell.table.options.meta.map: meta =>
+                    cell.value.fold(
+                      attType =>
+                        <.div(
+                          <.label(
+                            tableLabelButtonClasses,
+                            ^.htmlFor := s"attachment-upload-$attType",
+                            Icons.FileArrowUp
+                          ).withTooltip(
+                            tooltip = s"Upload new ${attType.shortName} attachment"
+                          ).unless(readOnly),
+                          <.input(
+                            ExploreStyles.FileUpload,
+                            ^.tpe    := "file",
+                            ^.onChange ==> onInsertFileSelected(
+                              props.programId,
+                              props.attachments.mod,
+                              attType,
+                              client,
+                              meta.action
+                            ),
+                            ^.id     := s"attachment-upload-$attType",
+                            ^.name   := "file",
+                            ^.accept := ProposalAttachmentType.accept
+                          ).unless(readOnly)
+                        ),
+                      thisAtt =>
+                        val attType = thisAtt.attachmentType
+                        <.div(
+                          // The upload "button" needs to be a label. In order to make
+                          // the styling consistent they're all labels.
+                          <.label(
+                            tableLabelButtonClasses,
+                            Icons.Trash,
+                            ^.onClick ==> deletePrompt(
+                              props.programId,
+                              props.attachments.mod,
+                              client,
+                              thisAtt
+                            )
+                          ).withTooltip("Delete attachment").unless(readOnly),
+                          <.label(
+                            tableLabelButtonClasses,
+                            ^.htmlFor := s"attachment-replace-$attType",
+                            Icons.FileArrowUp
+                          ).withTooltip(
+                            tooltip = s"Upload replacement file",
+                            placement = Placement.Right
+                          ).unless(readOnly),
+                          <.input(
+                            ExploreStyles.FileUpload,
+                            ^.tpe    := "file",
+                            ^.onChange ==> onUpdateFileSelected(
+                              props.programId,
+                              props.attachments.mod,
+                              thisAtt,
+                              client,
+                              meta.action
+                            ),
+                            ^.id     := s"attachment-replace-$attType",
+                            ^.name   := "file",
+                            ^.accept := ProposalAttachmentType.accept
+                          ).unless(readOnly),
+                          meta.urlMap
+                            .get(thisAtt.toMapKey)
+                            .foldMap:
+                              case Pot.Ready(url) =>
+                                <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
+                                  .withTooltip("Download File")
+                              case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
+                              case Pot.Error(t)   =>
+                                <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
+                        )
+                    )
                 ),
               column(AttachmentTypeColumnId, _.attachmentType)
                 .setCell(_.value.shortName),
@@ -203,30 +211,29 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                   _.value.foldMap(ts => Constants.GppDateFormatter.format(ts.toLocalDateTime))
                 )
             )
-      )
       // Rows
-      .useMemoBy((props, _, _, _, _, _) => props.attachments.reuseByValue)((_, _, _, _, _, _) =>
+      .useMemoBy((props, _, _, _, _, _) => props.attachments.reuseByValue): (_, _, _, _, _, _) =>
         vl =>
           val pas = vl.get
           Enumerated[ProposalAttachmentType].all.map(pat =>
             pas.find(_.attachmentType === pat).toRight(pat)
           )
-      )
-      .useReactTableBy((prop, _, _, _, _, cols, rows) =>
+      .useReactTableBy: (props, _, _, action, urlMap, cols, rows) =>
         TableOptions(
           cols,
           rows,
           enableSorting = false,
-          getRowId = (row, _, _) => RowId(row.attachmentType.tag)
+          getRowId = (row, _, _) => RowId(row.attachmentType.tag),
+          meta = TableMeta(action = action, urlMap = urlMap.get)
         )
-      )
       .render { (props, _, client, action, _, _, _, table) =>
         React.Fragment(
-          PrimeTable(table,
-                     striped = true,
-                     compact = Compact.Very,
-                     emptyMessage = <.div("No proposal attachments uploaded"),
-                     tableMod = ExploreStyles.AttachmentsTable
+          PrimeTable(
+            table,
+            striped = true,
+            compact = Compact.Very,
+            emptyMessage = <.div("No proposal attachments uploaded"),
+            tableMod = ExploreStyles.AttachmentsTable
           ),
           ConfirmPopup(),
           Dialog(
