@@ -189,9 +189,9 @@ object ObsSummaryTable:
               else "",
             enableResizing = false
           ).setSize(35.toPx),
-          obsColumn(ObservationIdColumnId, _.obs.id),
+          obsColumn(ObservationIdColumnId, _.obs.id).setCell(_.value.map(_.toString).orEmpty),
           // TODO: ValidationCheckColumnId
-          obsColumn(StatusColumnId, _.obs.status),
+          obsColumn(StatusColumnId, _.obs.status).setCell(_.value.map(_.toString).orEmpty),
           // TODO: CompletionColumnId
           // TODO: TargetTypeColumnId
           obsColumn(TargetTypeColumnId, _ => ())
@@ -249,7 +249,8 @@ object ObsSummaryTable:
                 )
             .sortableBy(_.map(_._2)),
           // TODO: FindingChartColumnId
-          obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty),
+          obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty)
+            .setCell(_.value.orEmpty),
           obsColumn(
             DurationColumnId,
             _.execution.map(_.programTimeEstimate)
