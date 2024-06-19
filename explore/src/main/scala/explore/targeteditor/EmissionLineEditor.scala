@@ -9,7 +9,6 @@ import coulomb.*
 import coulomb.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -61,18 +60,19 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
 
   private type RowValue = (Wavelength, View[EmissionLine[T]])
 
-  private val ColDef = ColumnDef[RowValue]
+  protected[targeteditor] case class TableMeta(disabled: Boolean)
+
+  private val ColDef = ColumnDef.WithTableMeta[RowValue, TableMeta]
 
   private val WavelengthColumnId: ColumnId = ColumnId("wavelength")
   private val LineValueColumnId: ColumnId  = ColumnId("lineValue")
   private val LineUnitsColumnId: ColumnId  = ColumnId("lineUnits")
   private val DeleteColumnId: ColumnId     = ColumnId("delete")
 
-  val component = ScalaFnComponent
+  protected[targeteditor] val component = ScalaFnComponent
     .withHooks[Props]
-    // Memo cols
-    .useMemoBy(props => (props.emissionLines.reuseByValue, props.disabled)) {
-      _ => (emissionLines, disabled) =>
+    .useMemoBy(_ => ()): props => // cols
+      _ =>
         List(
           ColDef(
             WavelengthColumnId,
@@ -97,7 +97,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                   .refinedBigDecimal[LineWidthValueRefinement]
                   .andThen(LineWidthValue.value.reverse),
                 changeAuditor = ChangeAuditor.posBigDecimal(3.refined).allowEmpty,
-                disabled = disabled
+                disabled = cell.table.options.meta.exists(_.disabled)
               ),
             size = 116.toPx
           ),
@@ -113,7 +113,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                   .refinedBigDecimalWithScientificNotation[LineFluxValueRefinement]
                   .andThen(LineFluxValue.value.reverse),
                 changeAuditor = ChangeAuditor.posScientificNotation(),
-                disabled = disabled
+                disabled = cell.table.options.meta.exists(_.disabled)
               ),
             size = 102.toPx
           ),
@@ -125,7 +125,7 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
               EnumDropdownView(
                 id = NonEmptyString.unsafeFrom(s"lineUnits_${cell.row.id}"),
                 value = cell.value,
-                disabled = disabled,
+                disabled = cell.table.options.meta.exists(_.disabled),
                 clazz = ExploreStyles.BrightnessesTableUnitsDropdown
               ),
             size = 171.toPx
@@ -141,20 +141,17 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
                   icon = Icons.Trash,
                   clazz = ExploreStyles.DeleteButton,
                   text = true,
-                  disabled = disabled,
-                  onClick = emissionLines.mod(_ - cell.value)
+                  disabled = cell.table.options.meta.exists(_.disabled),
+                  onClick = props.emissionLines.mod(_ - cell.value)
                 ).small
               ),
             size = 20.toPx,
             enableSorting = false
           )
         )
-    }
-    // rows
-    .useMemoBy((props, _) => props.emissionLines.get)((props, _) =>
+    .useMemoBy((props, _) => props.emissionLines.get): (props, _) => // rows
       _ => props.emissionLines.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
-    )
-    .useReactTableBy((_, cols, rows) =>
+    .useReactTableBy: (props, cols, rows) =>
       TableOptions(
         cols,
         rows,
@@ -163,14 +160,12 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
         enableColumnResizing = true,
         columnResizeMode = ColumnResizeMode.OnChange,
         initialState =
-          TableState(sorting = Sorting(ColumnId("wavelength") -> SortDirection.Ascending))
+          TableState(sorting = Sorting(ColumnId("wavelength") -> SortDirection.Ascending)),
+        meta = TableMeta(disabled = props.disabled)
       )
-    )
-    // newWavelength
-    .useStateView(none[Wavelength])
-    // addDisabled
-    .useStateView(AddDisabled(true))
-    .render { (props, _, _, table, newWavelength, addDisabled) =>
+    .useStateView(none[Wavelength]) // newWavelength
+    .useStateView(AddDisabled(true)) // addDisabled
+    .render: (props, _, _, table, newWavelength, addDisabled) =>
       val addLine =
         newWavelength.get.foldMap(wavelength =>
           props.emissionLines.mod(emissionLines =>
@@ -224,7 +219,6 @@ sealed abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T
           footer
         )
       )
-    }
 
 case class IntegratedEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
