@@ -416,7 +416,7 @@ object UserPreferencesQueries:
   case class TableStore[F[_]: MonadThrow](
     userId:  Option[User.Id],
     tableId: TableId,
-    columns: List[ColumnDef.NoMeta[?, ?]]
+    columns: List[ColumnDef[?, ?, ?, ?]]
   )(using FetchClient[F, UserPreferencesDB], Logger[F])
       extends TableStateStore[F]:
     def load(): F[TableState => TableState] =

@@ -65,14 +65,21 @@ case class ObsAttachmentsTable(
   authToken:                NonEmptyString,
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  readonly:                 Boolean,
+  readOnly:                 Boolean,
   renderInTitle:            Tile.RenderInTitle
 ) extends ReactFnProps(ObsAttachmentsTable.component)
 
 object ObsAttachmentsTable extends ObsAttachmentUtils:
   private type Props = ObsAttachmentsTable
 
-  private val ColDef = ColumnDef[View[ObsAttachment]]
+  private case class TableMeta(
+    client:      OdbRestClient[IO],
+    assignments: ObsAttachmentAssignmentMap,
+    urlMap:      UrlMap,
+    readOnly:    Boolean
+  )
+
+  private val ColDef = ColumnDef.WithTableMeta[View[ObsAttachment], TableMeta]
 
   given Reusability[UrlMap]                     = Reusability.map
   given Reusability[ObsAttachmentAssignmentMap] = Reusability.map
@@ -149,12 +156,11 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+      .useMemoBy((p, _) => p.authToken): (_, ctx) => // client
         token => OdbRestClient[IO](ctx.environment, token)
-      )
-      .useStateView(Action.None)
-      .useStateView[UrlMap](Map.empty)
-      .useEffectWithDepsBy((props, _, _, _, _) => props.obsAttachments.get)(
+      .useStateView(Action.None) // action
+      .useStateView[UrlMap](Map.empty) // urlMap
+      .useEffectWithDepsBy((props, _, _, _, _) => props.obsAttachments.get):
         (props, _, client, _, urlMap) =>
           obsAttachments =>
             val allCurrentKeys = obsAttachments.values.map(_.toMapKey).toSet
@@ -169,16 +175,13 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
               newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
             updateUrlMap *> getUrls
-      )
       // Columns
-      .useMemoBy((props, _, client, _, urlMap) =>
-        (client, props.obsAttachmentAssignments, urlMap.get, props.readonly)
-      )((props, ctx, _, action, _) =>
-        (client, assignments, urlMap, readonly) =>
+      .useMemoBy((_, _, _, _, _) => ()): (props, ctx, _, action, _) =>
+        _ =>
           import ctx.given
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
-            : ColumnDef.Single.NoMeta[View[ObsAttachment], V] =
+            : ColumnDef.Single.WithTableMeta[View[ObsAttachment], V, TableMeta] =
             ColDef(id, v => accessor(v.get), columnNames(id))
 
           def goToObs(obsId: Observation.Id): Callback =
@@ -189,52 +192,58 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
 
           List(
             column(ActionsColumnId, identity)
-              .setCell(cell =>
-                val thisOa = cell.value
-                val id     = thisOa.id
+              .setCell: cell =>
+                cell.table.options.meta.map: meta =>
+                  val thisOa: ObsAttachment = cell.value
+                  val id: ObsAtt.Id         = thisOa.id
 
-                def onUpdateFileSelected(e: ReactEventFromInput): Callback =
-                  val files = e.target.files.toList
-                  (Callback(e.target.value = null) *>
-                    updateAttachment(props, client, thisOa, files)
-                      .switching(action.async, Action.Replace, Action.None)
-                      .runAsync)
-                    .when_(files.nonEmpty)
+                  def onUpdateFileSelected(e: ReactEventFromInput): Callback =
+                    val files = e.target.files.toList
+                    (Callback(e.target.value = null) *>
+                      updateAttachment(props, meta.client, thisOa, files)
+                        .switching(action.async, Action.Replace, Action.None)
+                        .runAsync)
+                      .when_(files.nonEmpty)
 
-                <.div(
-                  // The upload "button" needs to be a label. In order to make
-                  // the styling consistent they're all labels.
-                  <.label(
-                    tableLabelButtonClasses,
-                    Icons.Trash,
-                    ^.onClick ==> deletePrompt(props, client, thisOa, assignments.get(id).orEmpty)
-                  ).withTooltip("Delete attachment").unless(readonly),
-                  <.label(
-                    tableLabelButtonClasses,
-                    ^.htmlFor := s"attachment-replace-$id",
-                    Icons.FileArrowUp
-                  ).withTooltip(
-                    tooltip = s"Upload replacement file",
-                    placement = Placement.Right
-                  ).unless(readonly),
-                  <.input(
-                    ExploreStyles.FileUpload,
-                    ^.tpe    := "file",
-                    ^.onChange ==> onUpdateFileSelected,
-                    ^.id     := s"attachment-replace-$id",
-                    ^.name   := "file",
-                    ^.accept := thisOa.attachmentType.accept
-                  ).unless(readonly),
-                  urlMap.get(thisOa.toMapKey).foldMap {
-                    case Pot.Ready(url) =>
-                      <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
-                        .withTooltip("Download File")
-                    case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
-                    case Pot.Error(t)   =>
-                      <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
-                  }
-                )
-              )
+                  <.div(
+                    // The upload "button" needs to be a label. In order to make
+                    // the styling consistent they're all labels.
+                    <.label(
+                      tableLabelButtonClasses,
+                      Icons.Trash,
+                      ^.onClick ==> deletePrompt(
+                        props,
+                        meta.client,
+                        thisOa,
+                        meta.assignments.get(id).orEmpty
+                      )
+                    ).withTooltip("Delete attachment").unless(meta.readOnly),
+                    <.label(
+                      tableLabelButtonClasses,
+                      ^.htmlFor := s"attachment-replace-$id",
+                      Icons.FileArrowUp
+                    ).withTooltip(
+                      tooltip = s"Upload replacement file",
+                      placement = Placement.Right
+                    ).unless(meta.readOnly),
+                    <.input(
+                      ExploreStyles.FileUpload,
+                      ^.tpe    := "file",
+                      ^.onChange ==> onUpdateFileSelected,
+                      ^.id     := s"attachment-replace-$id",
+                      ^.name   := "file",
+                      ^.accept := thisOa.attachmentType.accept
+                    ).unless(meta.readOnly),
+                    meta.urlMap
+                      .get(thisOa.toMapKey)
+                      .foldMap:
+                        case Pot.Ready(url) =>
+                          <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
+                            .withTooltip("Download File")
+                        case Pot.Pending    => <.span(Icons.Spinner.withSpin(true))
+                        case Pot.Error(t)   =>
+                          <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
+                  )
               .setEnableSorting(false),
             column(FileNameColumnId, ObsAttachment.fileName.get)
               .setCell(_.value.value)
@@ -252,22 +261,22 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                   .format(cell.value.toLocalDateTime)
               ),
             column(ObservationsColumnId, ObsAttachment.id.get)
-              .setCell(cell =>
-                <.span(
-                  assignments
-                    .get(cell.value)
-                    .orEmpty
-                    .toList
-                    .map(obsId =>
-                      <.a(
-                        ^.href := obsUrl(obsId),
-                        ^.onClick ==> (_.preventDefaultCB >> goToObs(obsId)),
-                        obsId.toString
+              .setCell: cell =>
+                cell.table.options.meta.map: meta =>
+                  <.span(
+                    meta.assignments
+                      .get(cell.value)
+                      .orEmpty
+                      .toList
+                      .map(obsId =>
+                        <.a(
+                          ^.href := obsUrl(obsId),
+                          ^.onClick ==> (_.preventDefaultCB >> goToObs(obsId)),
+                          obsId.toString
+                        )
                       )
-                    )
-                    .mkReactFragment(", ")
-                )
-              )
+                      .mkReactFragment(", ")
+                  )
               .setEnableSorting(false),
             ColDef(
               DescriptionColumnId,
@@ -279,17 +288,18 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                 .zoom(ObsAttachment.description),
               columnNames(DescriptionColumnId),
               cell =>
-                EditableLabel.fromView(
-                  value = cell.value,
-                  addButtonLabel = ("Add description": VdomNode).reuseAlways,
-                  textClass = ExploreStyles.AttachmentName,
-                  inputClass = ExploreStyles.AttachmentNameInput,
-                  editButtonTooltip = "Edit description".some,
-                  deleteButtonTooltip = "Delete description".some,
-                  okButtonTooltip = "Accept".some,
-                  discardButtonTooltip = "Discard".some,
-                  readonly = readonly
-                )
+                cell.table.options.meta.map: meta =>
+                  EditableLabel.fromView(
+                    value = cell.value,
+                    addButtonLabel = ("Add description": VdomNode).reuseAlways,
+                    textClass = ExploreStyles.AttachmentName,
+                    inputClass = ExploreStyles.AttachmentNameInput,
+                    editButtonTooltip = "Edit description".some,
+                    deleteButtonTooltip = "Delete description".some,
+                    okButtonTooltip = "Accept".some,
+                    discardButtonTooltip = "Discard".some,
+                    readonly = meta.readOnly
+                  )
             )
               .sortableBy(_.get.map(_.value.toUpperCase).orEmpty),
             ColDef(
@@ -297,39 +307,38 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
               identity,
               columnNames(CheckedColumnId),
               cell =>
-                CheckboxView(
-                  id = NonEmptyString.unsafeFrom(s"checked-${cell.value.get.id}"),
-                  value = cell.value
-                    .withOnMod(oa =>
-                      ProgramQueries
-                        .updateObsAttachmentChecked[IO](oa.id, oa.checked)
-                        .runAsync
-                    )
-                    .zoom(ObsAttachment.checked),
-                  label = "",
-                  disabled = readonly
-                )
+                cell.table.options.meta.map: meta =>
+                  CheckboxView(
+                    id = NonEmptyString.unsafeFrom(s"checked-${cell.value.get.id}"),
+                    value = cell.value
+                      .withOnMod(oa =>
+                        ProgramQueries
+                          .updateObsAttachmentChecked[IO](oa.id, oa.checked)
+                          .runAsync
+                      )
+                      .zoom(ObsAttachment.checked),
+                    label = "",
+                    disabled = meta.readOnly
+                  )
             ).sortableBy(_.get.checked)
           )
-      )
       // Rows
-      .useMemoBy((props, _, _, _, _, _) => props.obsAttachments.reuseByValue)((_, _, _, _, _, _) =>
+      .useMemoBy((props, _, _, _, _, _) => props.obsAttachments.reuseByValue): (_, _, _, _, _, _) =>
         _.value.toListOfViews.map(_._2)
-      )
-      .useReactTableBy((prop, _, _, _, _, cols, rows) =>
+      .useReactTableBy: (props, _, client, _, urlMap, cols, rows) =>
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => RowId(row.get.id.toString)
+          getRowId = (row, _, _) => RowId(row.get.id.toString),
+          meta = TableMeta(client, props.obsAttachmentAssignments, urlMap.get, props.readOnly)
         )
-      )
       .useStateView(Enumerated[ObsAttachmentType].all.head)
-      .render { (props, ctx, client, action, _, _, _, table, newAttType) =>
+      .render: (props, ctx, client, action, _, _, _, table, newAttType) =>
         import ctx.given
 
         React.Fragment(
           props.renderInTitle(
-            if (props.readonly) EmptyVdom
+            if (props.readOnly) EmptyVdom
             else
               <.div(
                 ExploreStyles.TableSelectionToolbar,
@@ -349,11 +358,12 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                 <.input(
                   ExploreStyles.FileUpload,
                   ^.tpe    := "file",
-                  ^.onChange ==> onInsertFileSelected(props.pid,
-                                                      props.obsAttachments,
-                                                      newAttType.get,
-                                                      client,
-                                                      action
+                  ^.onChange ==> onInsertFileSelected(
+                    props.pid,
+                    props.obsAttachments,
+                    newAttType.get,
+                    client,
+                    action
                   ),
                   ^.id     := "attachment-upload",
                   ^.name   := "file",
@@ -381,4 +391,3 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
             showHeader = true
           )("Please wait...")
         )
-      }

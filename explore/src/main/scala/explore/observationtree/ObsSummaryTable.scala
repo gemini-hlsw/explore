@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.syntax.pot.given
@@ -16,6 +17,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.Execution
 import explore.model.Focused
 import explore.model.ObsSummary
 import explore.model.ObservationExecutionMap
@@ -57,7 +59,6 @@ import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
 import java.util.UUID
-import scala.scalajs.js
 
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
@@ -131,14 +132,15 @@ object ObsSummaryTable:
     ChargedTimeColumnId   -> Visibility.Hidden
   )
 
-  private def column[V](
+  // For columns that only have data in the base observation row.
+  private def obsColumn[V](
     id:       ColumnId,
     accessor: ObsRow => V
-  ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], js.UndefOr[V]] =
-    ColDef(id, v => v.value.fold(_ => js.undefined, accessor), columnNames(id))
+  ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
+    ColDef(id, v => v.value.fold(_ => none, accessor(_).some), columnNames(id))
 
   // Column with expanded accessor. For rows that have data in the expanded target row.
-  private def column[V](
+  private def mixedColumn[V](
     id:               ColumnId,
     accessor:         ObsRow => V,
     expandedAccessor: ExpandedTargetRow => V
@@ -148,147 +150,137 @@ object ObsSummaryTable:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    // Columns
-    .useMemoBy((props, _) => props.obsExecutions) { (props, ctx) => obsExecutions =>
-      def constraintUrl(constraintId: Observation.Id): String =
-        ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+    .useMemoBy((_, _) => ()): (props, ctx) => // Columns
+      _ =>
+        def constraintUrl(constraintId: Observation.Id): String =
+          ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
-      def goToConstraint(constraintId: Observation.Id): Callback =
-        ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+        def goToConstraint(constraintId: Observation.Id): Callback =
+          ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
-      def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
-        ^.href := ctx.pageUrl(
-          AppTab.Observations,
-          props.programId,
-          Focused.singleObs(obsId, tWId.id.some)
-        ),
-        ^.onClick ==> (e =>
-          e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
+        def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
+          ^.href := ctx.pageUrl(
             AppTab.Observations,
             props.programId,
             Focused.singleObs(obsId, tWId.id.some)
-          )
-        ),
-        tWId.target.name.value
-      )
-
-      List(
-        // TODO: GroupsColumnId
-        ColDef(
-          ColumnId("expander"),
-          cell = cell =>
-            if (cell.row.getCanExpand())
-              <.span(
-                ^.cursor.pointer,
-                TableStyles.ExpanderChevron,
-                TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
-                ^.onClick ==> (_.stopPropagationCB *> cell.row.getToggleExpandedHandler())
-              )(TableIcons.ChevronRight.withFixedWidth(true))
-            else "",
-          enableResizing = false
-        ).setSize(35.toPx),
-        column(ObservationIdColumnId, _.obs.id),
-        // TODO: ValidationCheckColumnId
-        column(StatusColumnId, _.obs.status),
-        // TODO: CompletionColumnId
-        // TODO: TargetTypeColumnId
-        column(TargetTypeColumnId, _ => ())
-          .setCell(_ => Icons.Star.withFixedWidth())
-          .setSize(35.toPx),
-        column(TargetColumnId, r => <.span(r.obs.title), r => targetUrl(r.obsId, r.targetWithId))
-          .setCell(_.value),
-        column(
-          RAColumnId,
-          // at visualization time, defaults to base coordinates
-          r => r.coordsAtVizTime.map(_.ra),
-          r => r.coordsAtVizTime.map(_.ra)
-        )
-          .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
-          .sortable,
-        column(
-          DecColumnId,
-          // at visualization time, defaults to base coordinates
-          r => r.coordsAtVizTime.map(_.dec),
-          r => r.coordsAtVizTime.map(_.dec)
-        )
-          .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
-          .sortable,
-        // TODO: TimingColumnId
-        // TODO: SEDColumnId
-        ColDef(
-          SEDColumnId,
-          v =>
-            v.value
-              .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
-              .flatMap(Target.sidereal.getOption)
-              .flatMap(t =>
-                Target.Sidereal.integratedSpectralDefinition
-                  .getOption(t)
-                  .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t))
-              )
-              .map(_.shortName),
-          columnNames(SEDColumnId)
-        ).setCell(cell =>
-          cell.value
-            .filterNot(_ => cell.row.getCanExpand())
-            .orEmpty
-        ).sortable,
-        column(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
-          .setCell(cell =>
-            cell.value.map((id, constraintsSummary) =>
-              <.a(
-                ^.href := constraintUrl(id),
-                ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
-                constraintsSummary
-              )
+          ),
+          ^.onClick ==> (e =>
+            e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
+              AppTab.Observations,
+              props.programId,
+              Focused.singleObs(obsId, tWId.id.some)
             )
-          )
-          .sortableBy(_.toOption.map(_._2)),
-        // TODO: FindingChartColumnId
-        column(ConfigurationColumnId, _.obs.configurationSummary.orEmpty),
-        column(
-          DurationColumnId,
-          r =>
-            obsExecutions
-              .getPot(r.obs.id)
-              .map(_.programTimeEstimate)
-        ).setCell(cell =>
-          cell.value.map(
-            _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
-          )
+          ),
+          tWId.target.name.value
         )
-        // TODO: PriorityColumnId
-        // TODO: ChargedTimeColumnId
-      )
-    }
-    // Rows
-    .useMemoBy((props, _, _) =>
+
+        List(
+          // TODO: GroupsColumnId
+          ColDef(
+            ColumnId("expander"),
+            cell = cell =>
+              if (cell.row.getCanExpand())
+                <.span(
+                  ^.cursor.pointer,
+                  TableStyles.ExpanderChevron,
+                  TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
+                  ^.onClick ==> (_.stopPropagationCB *> cell.row.getToggleExpandedHandler())
+                )(TableIcons.ChevronRight.withFixedWidth(true))
+              else "",
+            enableResizing = false
+          ).setSize(35.toPx),
+          obsColumn(ObservationIdColumnId, _.obs.id),
+          // TODO: ValidationCheckColumnId
+          obsColumn(StatusColumnId, _.obs.status),
+          // TODO: CompletionColumnId
+          // TODO: TargetTypeColumnId
+          obsColumn(TargetTypeColumnId, _ => ())
+            .setCell(_ => Icons.Star.withFixedWidth())
+            .setSize(35.toPx),
+          mixedColumn(
+            TargetColumnId,
+            r => <.span(r.obs.title),
+            r => targetUrl(r.obsId, r.targetWithId)
+          )
+            .setCell(_.value),
+          mixedColumn(
+            RAColumnId,
+            // at visualization time, defaults to base coordinates
+            r => r.coordsAtVizTime.map(_.ra),
+            r => r.coordsAtVizTime.map(_.ra)
+          )
+            .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
+            .sortable,
+          mixedColumn(
+            DecColumnId,
+            // at visualization time, defaults to base coordinates
+            r => r.coordsAtVizTime.map(_.dec),
+            r => r.coordsAtVizTime.map(_.dec)
+          )
+            .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
+            .sortable,
+          // TODO: TimingColumnId
+          // TODO: SEDColumnId
+          ColDef(
+            SEDColumnId,
+            v =>
+              v.value
+                .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
+                .flatMap(Target.sidereal.getOption)
+                .flatMap(t =>
+                  Target.Sidereal.integratedSpectralDefinition
+                    .getOption(t)
+                    .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t))
+                )
+                .map(_.shortName),
+            columnNames(SEDColumnId)
+          ).setCell(cell =>
+            cell.value
+              .filterNot(_ => cell.row.getCanExpand())
+              .orEmpty
+          ).sortable,
+          obsColumn(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
+            .setCell: cell =>
+              cell.value.map: (id, constraintsSummary) =>
+                <.a(
+                  ^.href := constraintUrl(id),
+                  ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
+                  constraintsSummary
+                )
+            .sortableBy(_.map(_._2)),
+          // TODO: FindingChartColumnId
+          obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty),
+          obsColumn(
+            DurationColumnId,
+            _.execution.map(_.programTimeEstimate)
+          ).setCell: cell =>
+            cell.value.map:
+              _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
+          // TODO: PriorityColumnId
+          // TODO: ChargedTimeColumnId
+        )
+    .useMemoBy((props, _, _) => // Rows
       (props.observations.get.toList, props.allTargets, props.obsExecutions)
-    )((_, _, _) =>
-      (obsList, allTargets, _) =>
+    ): (_, _, _) =>
+      (obsList, allTargets, obsExecutions) =>
         obsList
-          .map(obs =>
+          .map: obs =>
             obs -> obs.scienceTargetIds.toList
               .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
               .flattenOption
-          )
-          .map((obs, targets) =>
+          .map: (obs, targets) =>
             val asterism = Asterism.fromTargets(targets)
             Expandable(
-              ObsRow(obs, targets.headOption, asterism),
+              ObsRow(obs, targets.headOption, asterism, obsExecutions.getPot(obs.id)),
               // Only expand if there are multiple targets
               if (targets.sizeIs > 1)
-                targets.map(target =>
-                  Expandable(
-                    ExpandedTargetRow(obs.id, target, obs.visualizationTime)
-                  )
-                )
+                targets.map: target =>
+                  Expandable(ExpandedTargetRow(obs.id, target, obs.visualizationTime))
               else Nil
             )
-          )
-    )
-    .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+    .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
       import ctx.given
+
       TableOptionsWithStateStore(
         TableOptions(
           cols,
@@ -306,11 +298,10 @@ object ObsSummaryTable:
         ),
         TableStore(props.userId, TableId.ObservationsSummary, cols)
       )
-    )
     .useResizeDetector()
     // adding new observation
     .useStateView(AddingObservation(false))
-    .render { (props, ctx, _, rows, table, resizer, adding) =>
+    .render: (props, ctx, _, rows, table, resizer, adding) =>
       React.Fragment(
         props.renderInTitle(
           React.Fragment(
@@ -366,11 +357,9 @@ object ObsSummaryTable:
           )
         )
       )
-    }
 
   // Helper ADT for table rows type
   enum ObsSummaryRow:
-
     case ExpandedTargetRow(
       obsId:        Observation.Id,
       targetWithId: TargetWithId,
@@ -380,7 +369,8 @@ object ObsSummaryTable:
     case ObsRow(
       obs:          ObsSummary,
       targetWithId: Option[TargetWithId],
-      asterism:     Option[Asterism]
+      asterism:     Option[Asterism],
+      execution:    Pot[Execution]
     ) extends ObsSummaryRow
 
     def fold[A](f: ExpandedTargetRow => A, g: ObsRow => A): A =
