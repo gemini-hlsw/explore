@@ -23,7 +23,6 @@ import explore.model.ObsIdSet
 import explore.model.TargetList
 import explore.model.enums.TableId
 import explore.model.extensions.*
-import explore.model.reusability.given
 import explore.targets.TargetColumns
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -57,7 +56,7 @@ case class TargetTable(
   vizTime:        Option[Instant],
   renderInTitle:  Tile.RenderInTitle,
   fullScreen:     AladinFullScreen,
-  readonly:       Boolean
+  readOnly:       Boolean
 ) extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
@@ -87,19 +86,17 @@ object TargetTable extends AsterismModifier:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // cols
-      .useMemoBy((props, _) => (props.obsIds, props.targetIds.get, props.readonly)) {
-        (props, ctx) => _ =>
+      .useMemoBy((props, _) => props.readOnly): (props, ctx) => // cols
+        readOnly =>
           import ctx.given
 
-          List(
-            ColDef(
-              DeleteColumnId,
-              _.id,
-              "",
-              cell =>
-                if (props.readonly) EmptyVdom
-                else
+          Option
+            .unless(readOnly)(
+              ColDef(
+                DeleteColumnId,
+                _.id,
+                "",
+                cell =>
                   Button(
                     text = true,
                     clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
@@ -111,18 +108,16 @@ object TargetTable extends AsterismModifier:
                         props.targetIds.mod(_ - cell.value) >>
                         deleteSiderealTarget(props.obsIds, cell.value).runAsync
                   ).tiny.compact,
-              size = 35.toPx,
-              enableSorting = false
+                size = 35.toPx,
+                enableSorting = false
+              )
             )
-          ) ++
+            .toList ++
             TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
-      }
       // If vizTime is not set, change it to now
-      .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Instant.now()))
-      }
-      // rows
-      .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo.get, vizTime))(
+      .useEffectResultWithDepsBy((p, _, _) => p.vizTime): (_, _, _) =>
+        vizTime => IO(vizTime.getOrElse(Instant.now()))
+      .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo.get, vizTime)): // rows
         (_, _, _, _) =>
           case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
             targetIds.toList
@@ -134,8 +129,7 @@ object TargetTable extends AsterismModifier:
               )
               .flattenOption
           case _                                           => Nil
-      )
-      .useReactTableWithStateStoreBy((props, ctx, cols, _, rows) =>
+      .useReactTableWithStateStoreBy: (props, ctx, cols, _, rows) =>
         import ctx.given
 
         TableOptionsWithStateStore(
@@ -150,9 +144,8 @@ object TargetTable extends AsterismModifier:
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
-      )
       .useStateView(AreAdding(false))
-      .render((props, ctx, _, _, rows, table, adding) =>
+      .render: (props, ctx, _, _, rows, table, adding) =>
         import ctx.given
 
         React.Fragment(
@@ -163,8 +156,7 @@ object TargetTable extends AsterismModifier:
             )
           ),
           if (rows.isEmpty) {
-            <.div(
-              ExploreStyles.HVCenter,
+            <.div(ExploreStyles.HVCenter)(
               AsterismEditor.targetSelectionPopup(
                 "Add a target",
                 props.programId,
@@ -197,4 +189,3 @@ object TargetTable extends AsterismModifier:
             )
           }
         )
-      )
