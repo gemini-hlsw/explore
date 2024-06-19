@@ -396,25 +396,23 @@ object AladinContainer extends AladinCommon {
                     _
                   )
                 ),
-              AladinComp
-                .withRef(aladinRef) {
-                  // .withKey(key) {
-                  Aladin(
-                    ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
-                      .unless_(props.globalPreferences.aladinMouseScroll.value),
-                    showReticle = false,
-                    showLayersControl = false,
-                    target = baseCoordinatesForAladin,
-                    fov = Angle.fromMicroarcseconds(
-                      props.options.fovDec.toMicroarcseconds
-                        .max(props.options.fovRA.toMicroarcseconds)
-                    ),
-                    showGotoControl = false,
-                    showZoomControl = false,
-                    showFullscreenControl = false,
-                    customize = (v: JsAladin) => includeSvg(v)
-                  )
-                }
+              AladinComp.withRef(aladinRef) {
+                Aladin(
+                  ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
+                    .unless_(props.globalPreferences.aladinMouseScroll.value),
+                  showReticle = false,
+                  showLayersControl = false,
+                  target = baseCoordinatesForAladin,
+                  fov = Angle.fromMicroarcseconds(
+                    props.options.fovDec.toMicroarcseconds
+                      .max(props.options.fovRA.toMicroarcseconds)
+                  ),
+                  showGotoControl = false,
+                  showZoomControl = false,
+                  showFullscreenControl = false,
+                  customize = (v: JsAladin) => includeSvg(v)
+                )
+              }
             )
           } else EmptyVdom
         )
