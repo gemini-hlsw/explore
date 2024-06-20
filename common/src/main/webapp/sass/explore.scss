@@ -1,8 +1,6 @@
 @use '/lucuma-css/lucuma-ui-common.scss' as lucumaUICommon;
 @use 'explore-common.scss' as exploreCommon;
 
-$tree-section-width: 300px;
-
 // Scrollbar
 *::-webkit-scrollbar-track {
   background: var(--scrollbar-background) !important;
@@ -42,6 +40,10 @@ $tree-section-width: 300px;
   text-decoration: line-through;
 }
 /* stylelint-enable selector-class-pattern */
+
+:root {
+  color-scheme: dark;
+}
 
 // Full viewport settings taken from https://dev.to/lennythedev/css-gotcha-how-to-fill-page-with-a-div-270j
 
@@ -100,13 +102,6 @@ body.hide-reusability {
   }
 }
 
-.tile-xs-width {
-  // For very small tables make the undo buttons remove the text
-  .explore-buttons-undo .p-button-label {
-    display: none;
-  }
-}
-
 .explore-tile-body {
   flex-grow: 1;
   overflow-y: auto;
@@ -119,6 +114,15 @@ body.hide-reusability {
   display: flex;
   flex-direction: column;
   background-color: var(--tile-background);
+  container-name: tile;
+  container-type: inline-size;
+}
+
+@container tile (min-width > #{exploreCommon.$tile-xtra-small-cutoff}) {
+  // For very small tiles make the undo buttons remove the text
+  .explore-buttons-undo .p-button-label {
+    display: none;
+  }
 }
 
 .fade-in {
@@ -528,32 +532,31 @@ body.hide-reusability {
   }
 }
 
-.tile-xl-width,
-.tile-lg-width,
-.tile-md-width,
-.tile-sm-width {
+// simpler target view for small tile
+@container tile (max-width: #{exploreCommon.$tile-small-cutoff}) {
+  .target-grid {
+    @include hide-hidden-target-cells(false);
+
+    grid-template:
+      'undo' min-content
+      'coordinates' min-content
+      'aladin' 1fr / 1fr;
+  }
+}
+
+// full target view for larger tile
+@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
   .target-grid {
     grid-template:
       'undo           aladin' min-content
       'coordinates    aladin' min-content
       'proper-motion  aladin' min-content
-      'source-profile aladin' 1fr
-      / 1fr 2fr;
+      'source-profile aladin' 1fr / 1fr 2fr;
   }
 
   .target-aladin-cell {
     grid-row: span 4;
   }
-}
-
-.tile-xs-width .target-grid {
-  @include hide-hidden-target-cells(false);
-
-  grid-template:
-    'undo' min-content
-    'coordinates' min-content
-    'aladin' 1fr
-    / 1fr;
 }
 
 .target-tile-body {
@@ -1206,9 +1209,8 @@ svg.fa-triangle-exclamation.explore-error-icon {
   }
 }
 
-.tile-sm-width,
-.tile-xxs-width,
-.tile-xs-width {
+// on small tiles, we want to stack the form fields
+@container tile (max-width: #{exploreCommon.$tile-medium-cutoff}) {
   .explore-advanced-configuration-grid {
     grid-template:
       'col1' auto
@@ -1269,8 +1271,8 @@ svg.fa-triangle-exclamation.explore-error-icon {
   }
 }
 
-.tile-xxs-width,
-.tile-xs-width {
+// on small tiles, we want to stack the form fields
+@container tile (max-width: #{exploreCommon.$tile-small-cutoff}) {
   .constraints-grid {
     --column-wide-span: 1;
 
@@ -1778,7 +1780,7 @@ input[type='file'].explore-fileupload {
   }
 
   @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
-    width: $tree-section-width;
+    width: exploreCommon.$tree-section-width;
 
     border: {
       right: solid 1px var(--under-tab-border-color);

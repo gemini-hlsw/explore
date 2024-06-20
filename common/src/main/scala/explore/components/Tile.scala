@@ -9,7 +9,6 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.ExploreStyles.*
 import explore.model.enums.TileSizeState
-import explore.model.layout
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
@@ -54,16 +53,6 @@ object Tile:
 
   private type Props = Tile
 
-  private val heightBreakpoints =
-    List((200, TileXSH), 700 -> TileSMH, 1024 -> TileMDH)
-
-  private val widthBreakpoints =
-    List(layout.XtraSmallCutoff -> TileXSW,
-         layout.SmallCutoff     -> TileSMW,
-         layout.MediumCutoff    -> TileMDW,
-         layout.LargeCutoff     -> TileLGW
-    )
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -100,41 +89,31 @@ object Tile:
             ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass,
             ^.key := p.id.value
           )(
-            // Tile title, set classes based on size
-            ResponsiveComponent(
-              widthBreakpoints,
-              heightBreakpoints,
-              clazz = ExploreStyles.TileTitle |+| p.tileTitleClass
-            )(
-              React.Fragment(
-                <.div(
-                  ExploreStyles.TileTitleMenu,
-                  p.back.map(b => <.div(ExploreStyles.TileButton, b)),
-                  <.span(ExploreStyles.TileTitleControlArea, p.title)
-                ),
-                <.div(
-                  p.control(p.state)
-                    .map(b => <.div(ExploreStyles.TileControl, b)),
-                  <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
-                    ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
-                    ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
-                  )
-                ),
-                <.div(ExploreStyles.TileControlButtons,
-                      minimizeButton.when(p.showMinimize),
-                      maximizeButton.when(p.showMaximize)
+            // Tile title
+            <.div(ExploreStyles.TileTitle |+| p.tileTitleClass)(
+              <.div(
+                ExploreStyles.TileTitleMenu |+| ExploreStyles.TileTitle |+| p.tileTitleClass,
+                p.back.map(b => <.div(ExploreStyles.TileButton, b)),
+                <.span(ExploreStyles.TileTitleControlArea, p.title)
+              ),
+              <.div(
+                p.control(p.state)
+                  .map(b => <.div(ExploreStyles.TileControl, b)),
+                <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
+                  ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
+                  ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
                 )
+              ),
+              <.div(ExploreStyles.TileControlButtons,
+                    minimizeButton.when(p.showMinimize),
+                    maximizeButton.when(p.showMaximize)
               )
             ),
             // Tile body
             infoRef.value
               .map(node =>
-                ResponsiveComponent(
-                  widthBreakpoints,
-                  heightBreakpoints,
-                  clazz = ExploreStyles.TileBody |+| p.bodyClass
-                )(
-                  p.render(info => ReactPortal(info, node))
+                <.div(ExploreStyles.TileBody |+| p.bodyClass,
+                      p.render(info => ReactPortal(info, node))
                 ).when(p.state =!= TileSizeState.Minimized)
               )
               .whenDefined
