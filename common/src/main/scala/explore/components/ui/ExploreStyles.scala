@@ -164,7 +164,6 @@ object ExploreStyles:
 
   val ElevationPlotTileBody: Css           = Css("elevation-plot-tile-body")
   val ElevationPlot: Css                   = Css("elevation-plot")
-  val ElevationPlotSection: Css            = Css("elevation-plot-section")
   val ElevationPlotControls: Css           = Css("elevation-plot-controls")
   val ElevationPlotDatePickerControls: Css = Css("elevation-plot-datepicker-controls")
   val ElevationPlotDateInput: Css          = Css("elevation-plot-date-input")
