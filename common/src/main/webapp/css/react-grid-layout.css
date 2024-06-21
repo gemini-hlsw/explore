@@ -49,7 +49,7 @@
 }
 
 .react-grid-item > .react-resizable-handle::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 3px;
   bottom: 3px;
@@ -64,7 +64,7 @@
 }
 
 .rgl-tile-overlay {
-  display: none; // Enable for grid debugging
+  display: none; /* Enable for grid debugging */
   position: absolute;
   top: 5px;
   left: 200px;
