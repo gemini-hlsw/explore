@@ -144,7 +144,7 @@ object ElevationPlotSection:
 
         React.Fragment(
           HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
-          <.span(ExploreStyles.ElevationPlot)(
+          <.div(ExploreStyles.ElevationPlot)(
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
