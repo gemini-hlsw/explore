@@ -9,8 +9,8 @@
   background-repeat: no-repeat;
   background-origin: content-box;
   box-sizing: border-box;
-  // encoded resizable-handle.svg
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2IiBoZWlnaHQ9IjYiPgogIDxwYXRoIGQ9Ik02IDZIMFY0LjJoNC4yVjBINnY2eiIgZmlsbD0iI2UzZGVkYiIvPgo8L3N2Zz4K");
+  /* encoded resizable-handle.svg */
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2IiBoZWlnaHQ9IjYiPgogIDxwYXRoIGQ9Ik02IDZIMFY0LjJoNC4yVjBINnY2eiIgZmlsbD0iI2UzZGVkYiIvPgo8L3N2Zz4K');
   background-position: bottom right;
   padding: 0 3px 3px 0;
   filter: brightness(var(--tile-resize-handle-brightness)) opacity(0.302);

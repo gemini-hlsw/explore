@@ -112,7 +112,6 @@ export default defineConfig(async ({ mode }) => {
   const imagesCommon = path.resolve(webappCommon, 'images');
   const themeConfig = path.resolve(webappCommon, 'theme/theme.config');
   const themeSite = path.resolve(webappCommon, 'theme');
-  const suithemes = path.resolve(webappCommon, 'suithemes');
   const publicDirProd = path.resolve(common, 'src/main/public');
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
   const lucumaCss = path.resolve(_dirname, `explore/target/lucuma-css`);
@@ -177,10 +176,6 @@ export default defineConfig(async ({ mode }) => {
         {
           find: 'theme/site',
           replacement: themeSite,
-        },
-        {
-          find: 'suithemes',
-          replacement: suithemes,
         },
         {
           find: '/lucuma-css',
