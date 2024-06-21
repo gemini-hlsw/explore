@@ -51,19 +51,22 @@ import queries.schemas.SSO
 case class UserPreferencesPopup(vault: UserVault, onClose: Option[Callback] = none)
     extends ReactFnProps(UserPreferencesPopup.component)
 
+private object IsOpen extends NewType[Boolean]
+private type IsOpen = IsOpen.Type
+
 object UserPreferencesPopup:
   private type Props = UserPreferencesPopup
 
-  private object IsOpen extends NewType[Boolean]
-
   private val component = ScalaFnComponent
     .withHooks[Props]
-    .useState(IsOpen(true))
+    .useStateView(IsOpen(true))
     .render: (props, isOpen) =>
-      val onHide = props.onClose.map(oc => isOpen.setState(IsOpen(false)) >> oc)
+      val onHide =
+        props.onClose.map(oc => isOpen.set(IsOpen(false)) >> oc).orEmpty
+
       Dialog(
-        visible = isOpen.value.value,
-        onHide = onHide.orEmpty,
+        visible = isOpen.get.value,
+        onHide = onHide,
         position = DialogPosition.Top,
         closeOnEscape = props.onClose.isDefined,
         closable = props.onClose.isDefined,
@@ -72,11 +75,14 @@ object UserPreferencesPopup:
         clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ApiKeysPopup,
         header = "User Preferences"
       )(
-        UserPreferencesContent(props.vault, props.onClose)
+        UserPreferencesContent(props.vault, props.onClose, isOpen.withOnMod(_ => onHide))
       )
 
-case class UserPreferencesContent(vault: UserVault, onClose: Option[Callback] = none)
-    extends ReactFnProps(UserPreferencesContent.component)
+case class UserPreferencesContent(
+  vault:   UserVault,
+  onClose: Option[Callback] = none,
+  isOpen:  View[IsOpen]
+) extends ReactFnProps(UserPreferencesContent.component)
 
 object UserPreferencesContent:
   private type Props = UserPreferencesContent
@@ -232,6 +238,15 @@ object UserPreferencesContent:
                 onClick = requestCacheClean.runAsyncAndForget
               ).small.compact
 
+            val closeButton =
+              Button(
+                label = "Close",
+                severity = Button.Severity.Success,
+                disabled = isCleaningTheCache.value.value,
+                loading = isCleaningTheCache.value.value,
+                onClick = props.isOpen.set(IsOpen(false))
+              ).small.compact
+
             val deleteGridLayoutsButton =
               Button(
                 label = "Reset Tile Layouts",
@@ -283,7 +298,8 @@ object UserPreferencesContent:
                   <.label(ExploreStyles.NewApiKeyLabel, "This API key won't be displayed again.")
                 )
               },
-              <.div(ExploreStyles.ProgramsPopupFauxFooter)(
+              <.div(
+                ExploreStyles.UserPreferencesNewKey,
                 Button(
                   label = "New Key with role: ",
                   icon = Icons.New,
@@ -304,8 +320,10 @@ object UserPreferencesContent:
               ),
               Divider(),
               <.div(
+                ExploreStyles.UserPreferencesFooter,
                 cleanCacheButton,
-                deleteGridLayoutsButton
+                deleteGridLayoutsButton,
+                closeButton
               )
             )
           },
