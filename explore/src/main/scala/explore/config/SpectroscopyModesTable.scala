@@ -101,20 +101,26 @@ private object SpectroscopyModesTable:
   private given Reusability[ItcResultsCache]         = Reusability.by(_.cache.size)
 
   private case class SpectroscopyModeRowWithResult(
-    entry:  SpectroscopyModeRow,
-    result: EitherNec[ItcQueryProblems, ItcResult]
+    entry:                SpectroscopyModeRow,
+    result:               EitherNec[ItcQueryProblems, ItcResult],
+    wavelengthInterval:   Option[BoundedInterval[Wavelength]],
+    configurationSummary: Option[String]
   ):
+    lazy val rowId: RowId = RowId(entry.id.orEmpty.toString)
+
     lazy val totalItcTime: Option[TimeSpan] =
       result.toOption.collect { case ItcResult.Result(e, t) => e *| t.value }
 
-  private val ColDef = ColumnDef[SpectroscopyModeRowWithResult]
+  private case class TableMeta(centralWavelength: Option[Wavelength], itcProgress: Option[Progress])
+
+  private val ColDef = ColumnDef.WithTableMeta[SpectroscopyModeRowWithResult, TableMeta]
 
   private val decFormat = new DecimalFormat("0.###")
 
   private def column[V](
     id:       ColumnId,
     accessor: SpectroscopyModeRowWithResult => V
-  ): ColumnDef.Single.NoMeta[SpectroscopyModeRowWithResult, V] =
+  ): ColumnDef.Single.WithTableMeta[SpectroscopyModeRowWithResult, V, TableMeta] =
     ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
   private val InstrumentColumnId: ColumnId         = ColumnId("instrument")
@@ -224,12 +230,7 @@ private object SpectroscopyModesTable:
     <.div(ExploreStyles.ITCCell, content)
   }
 
-  private def columns(
-    cw:                Option[Wavelength],
-    fpu:               Option[FocalPlane],
-    progress:          Option[Progress],
-    timeSortDirection: Option[SortDirection]
-  ) =
+  private val columns =
     List(
       column(
         InstrumentColumnId,
@@ -239,10 +240,12 @@ private object SpectroscopyModesTable:
         .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx))
         .sortable,
       column(TimeColumnId, _.totalItcTime.orUndefined)
-        .setHeader(_ =>
+        .setHeader: header =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",
-            progress
+            header.table.options.meta
+              .map(_.itcProgress)
+              .flatten
               .map(p =>
                 CircularProgressbar(
                   p.percentage.value.value,
@@ -251,16 +254,12 @@ private object SpectroscopyModesTable:
                 )
               )
           )
-        )
-        .setCell(cell => itcCell(cell.row.original.result, cw))
-        .setColumnSize(FixedSize(80.toPx))
-        .setEnableSorting(progress.isEmpty)
+        .setCell: cell =>
+          cell.table.options.meta.map: meta =>
+            itcCell(cell.row.original.result, meta.centralWavelength)
+        .setColumnSize(FixedSize(85.toPx))
         .setEnableSorting(true)
-        .setSortUndefined {
-          timeSortDirection match
-            case Some(SortDirection.Descending) => UndefinedPriority.Higher
-            case _                              => UndefinedPriority.Lower
-        }
+        .setSortUndefined(UndefinedPriority.Last)
         .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
         .setCell(cell => formatSlitWidth(cell.value.value))
@@ -282,52 +281,53 @@ private object SpectroscopyModesTable:
         .setCell(cell => formatFPU(cell.value))
         .setColumnSize(FixedSize(62.toPx))
         .sortable,
-      column(
-        WavelengthIntervalColumnId,
-        row => cw.map(w => ModeCommonWavelengths.wavelengthInterval(w)(row.entry))
-      ).setCell(cell => cell.value.flatten.fold("-")(_.shortName))
+      column(WavelengthIntervalColumnId, row => row.wavelengthInterval)
+        .setCell(cell => cell.value.fold("-")(_.shortName))
         .setColumnSize(FixedSize(100.toPx))
-        .sortableBy(_.flatMap(_.map(_.lower))),
+        .sortableBy(_.map(_.lower)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .setCell(_.value.toString)
         .setColumnSize(FixedSize(70.toPx))
         .sortable,
-      column(AvailablityColumnId, row => row.rowToConf(cw))
+      column(AvailablityColumnId, _.configurationSummary)
         .setCell(_.value.fold("No")(_ => "Yes"))
         .setColumnSize(FixedSize(66.toPx))
-        .sortableBy(_.map(_.configuration.configurationSummary))
-    ).filter { case c => (c.id.toString) != FPUColumnId.value || fpu.isEmpty }
+        .sortable
+    )
+
+  extension (row: SpectroscopyModeRow)
+    private def rowToConf(cw: Option[Wavelength]): Option[BasicConfiguration] =
+      cw.flatMap(row.intervalCenter)
+        .flatMap: cc =>
+          row.instrument match
+            case GmosNorthSpectroscopyRow(grating, fpu, filter, _)
+                if row.focalPlane === FocalPlane.SingleSlit =>
+              BasicConfiguration
+                .GmosNorthLongSlit(
+                  grating = grating,
+                  filter = filter,
+                  fpu = fpu,
+                  centralWavelength = cc
+                )
+                .some
+            case GmosSouthSpectroscopyRow(grating, fpu, filter, _)
+                if row.focalPlane === FocalPlane.SingleSlit =>
+              BasicConfiguration
+                .GmosSouthLongSlit(
+                  grating = grating,
+                  filter = filter,
+                  fpu = fpu,
+                  centralWavelength = cc
+                )
+                .some
+            case _ => none
 
   extension (row: SpectroscopyModeRowWithResult)
-    private def rowToConf(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
-      val config = cw.flatMap(row.entry.intervalCenter).flatMap { cc =>
-        row.entry.instrument match
-          case GmosNorthSpectroscopyRow(grating, fpu, filter, _)
-              if row.entry.focalPlane === FocalPlane.SingleSlit =>
-            BasicConfiguration
-              .GmosNorthLongSlit(
-                grating = grating,
-                filter = filter,
-                fpu = fpu,
-                centralWavelength = cc
-              )
-              .some
-          case GmosSouthSpectroscopyRow(grating, fpu, filter, _)
-              if row.entry.focalPlane === FocalPlane.SingleSlit =>
-            BasicConfiguration
-              .GmosSouthLongSlit(
-                grating = grating,
-                filter = filter,
-                fpu = fpu,
-                centralWavelength = cc
-              )
-              .some
-          case _ => none
-      }
-      config.map(c => BasicConfigAndItc(c, row.result.some))
+    private def rowToConfAndItc(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
+      row.entry.rowToConf(cw).map(c => BasicConfigAndItc(c, row.result.some))
 
     private def equalsConf(conf: BasicConfiguration, cw: Option[Wavelength]): Boolean =
-      rowToConf(cw).exists(_.configuration === conf)
+      row.entry.rowToConf(cw).contains_(conf)
 
   extension (row: SpectroscopyModeRow)
     private def enabledRow: Boolean =
@@ -352,12 +352,9 @@ private object SpectroscopyModesTable:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // itcResults
-      .useState(
+      .useState:                       // itcResults
         ItcResultsCache(Map.empty[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]])
-      )
-      // rows
-      .useMemoBy((props, _, itcResults) =>
+      .useMemoBy((props, _, itcResults) => // rows
         (props.matrix,
          props.spectroscopyRequirements,
          props.baseCoordinates.map(_.value.dec),
@@ -365,29 +362,37 @@ private object SpectroscopyModesTable:
          props.brightestTarget,
          props.constraints
         )
-      ) { (_, _, _) => (matrix, s, dec, itc, target, constraints) =>
-        val rows       =
-          matrix
-            .filtered(
-              focalPlane = s.focalPlane,
-              capability = s.capability,
-              wavelength = s.wavelength,
-              slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
-              resolution = s.resolution,
-              range = s.wavelengthCoverage,
-              declination = dec
+      ): (_, _, _) =>
+        (matrix, s, dec, itc, target, constraints) =>
+          val rows       =
+            matrix
+              .filtered(
+                focalPlane = s.focalPlane,
+                capability = s.capability,
+                wavelength = s.wavelength,
+                slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
+                resolution = s.resolution,
+                range = s.wavelengthCoverage,
+                declination = dec
+              )
+          val sortedRows = rows.sortBy(_.enabledRow)
+          sortedRows.map: row =>
+            SpectroscopyModeRowWithResult(
+              row,
+              itc.forRow(
+                s.wavelength,
+                s.signalToNoise,
+                s.signalToNoiseAt,
+                constraints,
+                target,
+                row
+              ),
+              s.wavelength.flatMap: w =>
+                ModeCommonWavelengths.wavelengthInterval(w)(row),
+              row.rowToConf(s.wavelength).map(_.configurationSummary)
             )
-        val sortedRows = rows.sortBy(_.enabledRow)
-        sortedRows.map(row =>
-          SpectroscopyModeRowWithResult(
-            row,
-            itc.forRow(s.wavelength, s.signalToNoise, s.signalToNoiseAt, constraints, target, row)
-          )
-        )
-      }
-      // itcProgress
-      .useState(none[Progress])
-      .useMemoBy { (props, _, itcResults, rows, _) => // Calculate the common errors
+      .useState(none[Progress])        // itcProgress
+      .useMemoBy((props, _, itcResults, rows, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
          props.spectroscopyRequirements.signalToNoiseAt,
@@ -396,111 +401,79 @@ private object SpectroscopyModesTable:
          rows,
          itcResults.value
         )
-      } { (_, _, _, _, _) => (_, _, _, _, _, rows, _) =>
-        rows.value
-          .map(_.result)
-          .collect { case Left(p) =>
-            p.toList.filter {
-              case ItcQueryProblems.MissingTargetInfo => true
-              case ItcQueryProblems.MissingBrightness => true
-              case _                                  => false
-            }.distinct
-          }
-          .flatten
-          .toList
-          .distinct
-      }
-      // timeSortDescending: Time sort needs special treatment
-      .useState(none[SortDirection])
-      .useMemoBy { (props, _, itcResults, _, itcProgress, _, timeSortDirection) => // Memo Cols
-        (props.spectroscopyRequirements.wavelength,
-         props.spectroscopyRequirements.focalPlane,
-         itcProgress.value,
-         timeSortDirection.value
-        )
-      } {
-        (_, _, _, _, _, _, _) => (
-          wavelength,
-          focalPlane,
-          itcProgress,
-          timeSortDirection
-        ) =>
-          columns(
-            wavelength,
-            focalPlane,
-            itcProgress,
-            timeSortDirection
-          )
-      }
-      // table
-      .useReactTableWithStateStoreBy((props, ctx, _, rows, _, _, _, cols) =>
+      ): (_, _, _, _, _) =>
+        (_, _, _, _, _, rows, _) =>
+          rows.value
+            .map(_.result)
+            .collect { case Left(p) =>
+              p.toList.filter {
+                case ItcQueryProblems.MissingTargetInfo => true
+                case ItcQueryProblems.MissingBrightness => true
+                case _                                  => false
+              }.distinct
+            }
+            .flatten
+            .toList
+            .distinct
+      .useReactTableWithStateStoreBy: (props, ctx, _, rows, itcProgress, _) => // table
         import ctx.given
 
         TableOptionsWithStateStore(
           TableOptions(
-            cols,
+            Reusable.always(columns),
             rows,
-            getRowId = (row, _, _) => RowId(row.entry.id.orEmpty.toString),
-            enableSorting = true
+            getRowId = (row, _, _) => row.rowId,
+            enableSorting = true,
+            state = PartialTableState(
+              columnVisibility = ColumnVisibility( // Hide FPU column if empty
+                FPUColumnId -> Visibility.fromVisible:
+                  props.spectroscopyRequirements.focalPlane.isDefined
+              )
+            ),
+            meta = TableMeta(props.spectroscopyRequirements.wavelength, itcProgress.value)
           ),
-          TableStore(props.userId, TableId.SpectroscopyModes, cols)
+          TableStore(props.userId, TableId.SpectroscopyModes, columns)
         )
-      )
       // We need to have an indicator of whether we need to scrollTo the selectedIndex as
       // a state because otherwise the scrollTo effect below would often run in the same "hook cyle"
       // as the index change, and it would use the old index so it would scroll to the wrong location.
       // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
       // in the following "hook cycle" and get the proper index.
       .useState(ScrollTo.Scroll)
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, table, _) => table.getState().sorting) {
-        (_, _, _, _, _, _, timeSortDirection, _, table, scrollTo) => sorting =>
-          table.setSorting(sorting) *> // Necessary to restore sorting after page reload
-            timeSortDirection.setState(sorting.value.collectFirst {
-              case ColumnSort(colId, direction) if colId == TimeColumnId => direction
-            }) *>
-            scrollTo.setState(ScrollTo.Scroll)
-      }
-      .useMemoBy((_, _, _, rows, _, _, timeSort, _, table, _) =>
-        (rows, timeSort.value, table.getState().sorting)
-      ) { (_, _, _, _, _, _, sorting, _, table, _) => (_, _, _) =>
-        table.getSortedRowModel().rows.map(_.original).toList
-      }
-      // selectedRow
-      .useStateBy((props, _, _, rows, _, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((_, _, _, _, _, _, table, _) => table.getState().sorting):
+        (_, _, _, _, _, _, table, scrollTo) => _ => scrollTo.setState(ScrollTo.Scroll)
+      .useMemoBy((_, _, _, rows, _, _, table, _) => // sortedRows
+        (rows, table.getState().sorting)
+      ): (_, _, _, _, _, sorting, table, _) =>
+        (_, _) => table.getSortedRowModel().rows.map(_.original).toList
+      .useStateBy: (props, _, _, rows, _, _, _, _, _) => // selectedRow
         props.selectedConfig.get
-          .flatMap(c =>
-            rows.value.find(
+          .flatMap: c =>
+            rows.value.find:
               _.equalsConf(c.configuration, props.spectroscopyRequirements.wavelength)
-            )
-          )
           .map(_.entry)
-      )
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
       // the virtualizer uses for scrollTo.
-      .useMemoBy((props, _, _, _, _, _, _, _, _, _, sortedRows, selectedRow) =>
+      .useMemoBy((props, _, _, _, _, _, _, _, sortedRows, selectedRow) =>
         (sortedRows, selectedRow.value)
-      )((_, _, _, _, _, _, _, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _, _, _, _, _) =>
         (sortedRows, selectedRow) =>
           selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry == sRow))
-      )
-
       // Set the selected config if the rows change because it might have different itc data.
       // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
-      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _, _, _) => rows) {
-        (props, _, _, _, _, _, _, _, _, _, sortedRows, _, selectedIndex) => _ =>
-          val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
-          val conf   = optRow.flatMap(_.rowToConf(props.spectroscopyRequirements.wavelength))
-          if (props.selectedConfig.get =!= conf)
-            props.selectedConfig.set(conf)
-          else Callback.empty
-      }
-      // visibleRows
-      .useState(none[Range.Inclusive])
-      // atTop
-      .useState(false)
+      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _) => rows):
+        (props, _, _, _, _, _, _, _, sortedRows, _, selectedIndex) =>
+          _ =>
+            val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
+            val conf   = optRow.flatMap(_.rowToConfAndItc(props.spectroscopyRequirements.wavelength))
+            if (props.selectedConfig.get =!= conf)
+              props.selectedConfig.set(conf)
+            else Callback.empty
+      .useState(none[Range.Inclusive]) // visibleRows
+      .useState(false)                 // atTop
       // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
         (
           props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
@@ -509,7 +482,7 @@ private object SpectroscopyModesTable:
           props.brightestTarget,
           rows.length
         )
-      ) {
+      ):
         (
           _,
           ctx,
@@ -518,78 +491,69 @@ private object SpectroscopyModesTable:
           itcProgress,
           _,
           _,
-          _,
-          _,
           scrollTo,
           sortedRows,
           _,
           _,
           _,
           _
-        ) => (
-          wavelength,
-          signalToNoise,
-          signalToNoiseAt,
-          constraints,
-          brightestTarget,
-          _
         ) =>
-          import ctx.given
+          (
+            wavelength,
+            signalToNoise,
+            signalToNoiseAt,
+            constraints,
+            brightestTarget,
+            _
+          ) =>
+            import ctx.given
 
-          (wavelength, signalToNoise, signalToNoiseAt, brightestTarget)
-            .mapN { (w, sn, snAt, t) =>
-              val modes =
-                sortedRows
-                  .filterNot { row => // Discard modes already in the cache
-                    val cache = itcResults.value.cache
-                    val cw    = row.entry.intervalCenter(w)
+            (wavelength, signalToNoise, signalToNoiseAt, brightestTarget)
+              .mapN: (w, sn, snAt, t) =>
+                val modes =
+                  sortedRows
+                    .filterNot: row => // Discard modes already in the cache
+                      val cache = itcResults.value.cache
+                      val cw    = row.entry.intervalCenter(w)
 
-                    cw.exists(w =>
-                      row.entry.instrument.instrument match
-                        case Instrument.GmosNorth | Instrument.GmosSouth =>
-                          cache.contains(
-                            ItcRequestParams(w, sn, snAt, constraints, t, row.entry.instrument)
-                          )
-                        case _                                           => true
-                    )
-                  }
+                      cw.exists: w =>
+                        row.entry.instrument.instrument match
+                          case Instrument.GmosNorth | Instrument.GmosSouth =>
+                            cache.contains:
+                              ItcRequestParams(w, sn, snAt, constraints, t, row.entry.instrument)
+                          case _                                           => true
 
-              Option.when(modes.nonEmpty):
-                val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-                for
-                  _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
-                  request <-
-                    ItcClient[IO]
-                      .request:
-                        ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), snAt)
-                      .map:
-                        // Avoid rerendering on every single result, it's slow.
-                        _.groupWithin(100, 500.millis)
-                          .evalMap: itcResponseChunk =>
-                            itcProgress
-                              .modStateAsync(
-                                _.map(_.increment(NonNegInt.unsafeFrom(itcResponseChunk.size)))
-                                  .filterNot(_.complete)
-                              ) >>
-                              // Update the cache
-                              itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
-                              // Enable scrolling to the selected row (which might have moved due to sorting)
-                              scrollTo.setState(ScrollTo.Scroll).to[IO]
-                          .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
-                yield request
-            }
-            .flatten
-            .orEmpty
-      }
+                Option.when(modes.nonEmpty):
+                  val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
+                  for
+                    _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
+                    request <-
+                      ItcClient[IO]
+                        .request:
+                          ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), snAt)
+                        .map:
+                          // Avoid rerendering on every single result, it's slow.
+                          _.groupWithin(100, 500.millis)
+                            .evalMap: itcResponseChunk =>
+                              itcProgress
+                                .modStateAsync(
+                                  _.map(_.increment(NonNegInt.unsafeFrom(itcResponseChunk.size)))
+                                    .filterNot(_.complete)
+                                ) >>
+                                // Update the cache
+                                itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
+                                // Enable scrolling to the selected row (which might have moved due to sorting)
+                                scrollTo.setState(ScrollTo.Scroll).to[IO]
+                            .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
+                  yield request
+              .flatten
+              .orEmpty
       .useRef(none[HTMLTableVirtualizer])
-      // scroll to the currently selected row.
-      .useEffectWithDepsBy(
-        (_, _, _, _, _, sortedRows, _, _, _, scrollTo, _, _, selectedIndex, _, _, _) =>
+      .useEffectWithDepsBy( // scroll to the currently selected row.
+        (_, _, _, _, sortedRows, _, _, scrollTo, _, _, selectedIndex, _, _, _) =>
           (scrollTo, selectedIndex.value, sortedRows)
-      ) {
+      ):
         (
-          _,
-          _,
           _,
           _,
           _,
@@ -604,13 +568,13 @@ private object SpectroscopyModesTable:
           _,
           _,
           virtualizerRef
-        ) => (scrollTo, selectedIndex, _) =>
-          Callback.when(scrollTo.value === ScrollTo.Scroll)(
-            selectedIndex.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
-              scrollTo.setState(ScrollTo.NoScroll)
-          )
-      }
-      .render {
+        ) =>
+          (scrollTo, selectedIndex, _) =>
+            Callback.when(scrollTo.value === ScrollTo.Scroll)(
+              selectedIndex.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
+                scrollTo.setState(ScrollTo.NoScroll)
+            )
+      .render:
         (
           props,
           _,
@@ -618,8 +582,6 @@ private object SpectroscopyModesTable:
           rows,
           _,
           errs,
-          _,
-          _,
           table,
           _,
           _,
@@ -634,7 +596,7 @@ private object SpectroscopyModesTable:
             row: SpectroscopyModeRowWithResult
           ): Option[explore.model.BasicConfigAndItc] =
             row
-              .rowToConf(props.spectroscopyRequirements.wavelength)
+              .rowToConfAndItc(props.spectroscopyRequirements.wavelength)
               .filterNot(conf => props.selectedConfig.get.contains_(conf))
 
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
@@ -735,4 +697,3 @@ private object SpectroscopyModesTable:
               )
             )
           )
-      }
