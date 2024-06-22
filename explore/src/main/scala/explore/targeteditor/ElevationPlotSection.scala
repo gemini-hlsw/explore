@@ -142,9 +142,9 @@ object ElevationPlotSection:
                 .map(BoundedInterval.fromInterval)
                 .flattenOption
 
-        <.div(ExploreStyles.ElevationPlotSection)(
+        React.Fragment(
           HelpIcon("target/main/elevation-plot.md".refined, ExploreStyles.HelpIconFloating),
-          <.div(ExploreStyles.ElevationPlot) {
+          <.div(ExploreStyles.ElevationPlot)(
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
@@ -159,8 +159,8 @@ object ElevationPlotSection:
                   options.get,
                   props.coords,
                   windowsNetExcludeIntervals
-                )
-          },
+                ),
+          ),
           <.div(
             ExploreStyles.ElevationPlotControls,
             SelectButtonEnumView(
