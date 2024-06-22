@@ -561,7 +561,7 @@ thead tr th.sticky-header {
   flex-direction: column;
   background-color: var(--tile-background);
   container-name: tile;
-  container-type: inline-size;
+  container-type: size;
 }
 
 @container tile (min-width > #{exploreCommon.$tile-xtra-small-cutoff}) {
@@ -2507,10 +2507,63 @@ $help-title-height: 40px;
 
 .elevation-plot-controls {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-around;
   align-items: center;
   background-color: var(--plot-background-color);
   color: var(--plot-text-color);
+}
+
+// When small, reduce the font size
+@container tile (max-width: #{exploreCommon.$tile-small-cutoff}) or (max-height: #{exploreCommon.$tile-small-height}) {
+  .elevation-plot {
+    .highcharts-plot-band-label {
+      font-size: x-small;
+    }
+
+    .highcharts-title {
+      font-size: small;
+    }
+
+    .moon-phase {
+      transform: scale(0.8);
+    }
+
+    .elevation-plot-controls {
+      .p-button {
+        font-size: smaller;
+      }
+    }
+  }
+}
+
+// When short, hide the controls
+@container tile (max-height: #{exploreCommon.$tile-small-height}) {
+  .elevation-plot-controls {
+    display: none;
+  }
+}
+
+// When very short, show a placeholder
+@container tile (max-height: #{exploreCommon.$tile-tiny-height}) {
+  .elevation-plot {
+    position: relative;
+
+    &::after {
+      height: 100%;
+      text-align: center;
+      z-index: 10;
+      content: 'Elevation plot';
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+    }
+
+    .moon-phase {
+      display: none;
+    }
+  }
 }
 
 .elevation-plot-datepicker-controls {

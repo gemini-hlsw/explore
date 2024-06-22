@@ -65,6 +65,7 @@
 
 .rgl-tile-overlay {
   display: none; /* Enable for grid debugging */
+  pointer-events: none;
   position: absolute;
   top: 5px;
   left: 200px;
