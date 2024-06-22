@@ -477,7 +477,7 @@ object ElevationPlotNight:
         val moonPhase = MoonCalc.approxPhase(midOfNight)
         val moonIllum = midOfNightResult.lunarIlluminatedFraction.toDouble
 
-        <.div(
+        React.Fragment(
           Chart(computed.map(_._1)),
           MoonPhase(moonPhase)(<.small("%1.0f%%".format(moonIllum * 100)))
         )
