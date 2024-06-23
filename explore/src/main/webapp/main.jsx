@@ -26,12 +26,6 @@ import { Explore, ExplorePWA } from '@sjs/explore.js';
 
 import { registerSW } from 'virtual:pwa-register';
 
-// but for now we can survive setting this only on dev
-if (!process) {
-  process = {
-    env: {},
-  };
-}
 if (import.meta.env.DEV) {
   process.env = { CATS_EFFECT_TRACING_MODE: 'none' };
 }
@@ -59,8 +53,6 @@ fetch('/environments.conf.json').then((response) => {
       if ('serviceWorker' in navigator && !/local.lucuma.xyz/.test(window.location)) {
         ExplorePWA.runServiceWorker();
       }
-
-      // Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
 
       if (import.meta.hot) {
         import.meta.hot.accept();

@@ -9,6 +9,7 @@ import { defineConfig, UserConfig } from 'vite';
 import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { RuntimeCaching } from 'workbox-build';
+import env from 'vite-plugin-env-compatible';
 
 const scalaVersion = '3.4.2';
 
@@ -222,6 +223,7 @@ export default defineConfig(async ({ mode }) => {
       format: 'es', // We need this for workers to be able to do dynamic imports.
     },
     plugins: [
+      env(),
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       fontImport,
       VitePWA({
