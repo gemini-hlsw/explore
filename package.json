@@ -12,7 +12,7 @@
     "@fortawesome/pro-thin-svg-icons": "^6.5.2",
     "@react-hook/size": "^2.1.2",
     "@tanstack/react-table": "^8.17.3",
-    "@tanstack/react-virtual": "v3.5.0",
+    "@tanstack/react-virtual": "v3.7.0",
     "github-markdown-css": "^5.6.1",
     "highcharts": "11.4.3",
     "loglevel": "1.9.1",
