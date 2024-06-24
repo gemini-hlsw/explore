@@ -1,12 +1,19 @@
 $datepicker__background-color: var(--date-picker-header-background-color) !default;
 $datepicker__border-color: var(--date-picker-border-color) !default;
 $datepicker__highlighted-color: var(--date-picker-highlighted-color) !default;
+$datepicker__highlighted-color-darken-5: var(--date-picker-highlighted-color-darken-5) !default;
+$datepicker__holidays-color: #ff6803 !default;
 $datepicker__muted-color: var(--date-picker-muted-color) !default;
+$datepicker__muted-color-darken-10: var(--date-picker-muted-color-darken-10) !default;
+$datepicker__muted-color-darken-15: var(--date-picker-muted-color-darken-15) !default;
 $datepicker__selected-color: var(--date-picker-selected-color) !default;
+$datepicker__selected-color-darken-5: var(--date-picker-selected-color-darken-5) !default;
+$datepicker__selected-color-lighten-5: var(--date-picker-selected-color-lighten-5) !default;
+$datepicker__selected-color-lighten-10: var(--date-picker-selected-color-lighten-5) !default;
+$datepicker__selected-color-lighten-45: var(--date-picker-selected-color-lighten-5) !default;
 $datepicker__text-color: var(--date-picker-text-color) !default;
 $datepicker__header-color: var(--date-picker-header-color) !default;
-$datepicker__navigation-disabled-color: var(--date-picker-muted-color-lighten-10);
-
+$datepicker__navigation-disabled-color: var(--date-picker-muted-color-lighten-10) !default;
 $datepicker__border-radius: 0.3rem !default;
 $datepicker__day-margin: 0.166rem !default;
 $datepicker__font-size: 0.8rem !default;
@@ -14,4 +21,3 @@ $datepicker__font-family: 'Lato', helvetica, arial, sans-serif !default;
 $datepicker__item-size: 1.7rem !default;
 $datepicker__margin: 0.4rem !default;
 $datepicker__navigation-button-size: 32px !default;
-$datepicker__triangle-size: 8px !default;
