@@ -9,6 +9,7 @@ import { defineConfig, UserConfig } from 'vite';
 import mkcert from 'vite-plugin-mkcert';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { RuntimeCaching } from 'workbox-build';
+import env from 'vite-plugin-env-compatible';
 
 const scalaVersion = '3.4.2';
 
@@ -110,8 +111,6 @@ export default defineConfig(async ({ mode }) => {
   const common = path.resolve(_dirname, 'common/');
   const webappCommon = path.resolve(common, 'src/main/webapp/');
   const imagesCommon = path.resolve(webappCommon, 'images');
-  const themeConfig = path.resolve(webappCommon, 'theme/theme.config');
-  const themeSite = path.resolve(webappCommon, 'theme');
   const publicDirProd = path.resolve(common, 'src/main/public');
   const publicDirDev = path.resolve(common, 'src/main/publicdev');
   const lucumaCss = path.resolve(_dirname, `explore/target/lucuma-css`);
@@ -170,14 +169,6 @@ export default defineConfig(async ({ mode }) => {
           replacement: imagesCommon,
         },
         {
-          find: '../../theme.config',
-          replacement: themeConfig,
-        },
-        {
-          find: 'theme/site',
-          replacement: themeSite,
-        },
-        {
           find: '/lucuma-css',
           replacement: lucumaCss,
         },
@@ -232,6 +223,7 @@ export default defineConfig(async ({ mode }) => {
       format: 'es', // We need this for workers to be able to do dynamic imports.
     },
     plugins: [
+      env(),
       mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
       fontImport,
       VitePWA({

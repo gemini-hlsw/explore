@@ -10,11 +10,11 @@
      The explore-column-span-* classes can be used to control how many
      columns an item spans in a css grid
      */
-  each(range(16), {
-    .explore-column-span-@{value} {
-      grid-column: span @value;
+  @for $i from 1 through 16 {
+    .explore-column-span-#{$i} {
+      grid-column: span $i;
     }
-  });
+  }
 }
 
 /*
@@ -23,8 +23,7 @@
 
  Note that flex containers don't participate in the responsive
  nature of the grid - they will remain grouped together even
- when the grid goes down to one column.
-*/
+ when the grid goes down to one column. */
 .explore-flex-container {
   display: flex;
   width: 100%;
@@ -34,24 +33,24 @@
   }
 
   /*
-     The explore-grow-* classes can be used to control the width of 
+     The explore-grow-* classes can be used to control the width of
      elements in a flex container via the flex grow attribute.
      */
-  each(range(0, 4), {
-    .explore-grow-@{value} {
-      flex: @value;
+  @for $i from 0 through 4 {
+    .explore-grow-#{$i} {
+      flex: $i;
     }
-  });
+  }
 
   /*
-      The explore-shrink-* classes can be used to control the width of 
+      The explore-shrink-* classes can be used to control the width of
       elements in a flex container via the flex shrink attribute.
       */
-  each(range(0, 4), {
-    .explore-shrink-@{value} {
-      flex-shrink: @value;
+  @for $i from 0 through 4 {
+    .explore-shrink-#{$i} {
+      flex-shrink: $i;
     }
-  });
+  }
 
   /*
      Applying to-end to an field will push that field and the ones

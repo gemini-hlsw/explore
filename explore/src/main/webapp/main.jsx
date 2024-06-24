@@ -13,7 +13,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import '/common/css/react-resizable.css';
 import '/common/css/react-grid-layout.css';
-import '/common/less/explore-grid.less';
+import '/common/sass/explore-grid.scss';
 import '/common/sass/visualization.scss';
 import '/common/sass/aladin.scss';
 import '/common/sass/charts.scss';
@@ -26,12 +26,6 @@ import { Explore, ExplorePWA } from '@sjs/explore.js';
 
 import { registerSW } from 'virtual:pwa-register';
 
-// but for now we can survive setting this only on dev
-if (!process) {
-  process = {
-    env: {},
-  };
-}
 if (import.meta.env.DEV) {
   process.env = { CATS_EFFECT_TRACING_MODE: 'none' };
 }
@@ -59,8 +53,6 @@ fetch('/environments.conf.json').then((response) => {
       if ('serviceWorker' in navigator && !/local.lucuma.xyz/.test(window.location)) {
         ExplorePWA.runServiceWorker();
       }
-
-      // Setting this here shouldn't be necessary if we get `vite-plugin-environment` to work.
 
       if (import.meta.hot) {
         import.meta.hot.accept();

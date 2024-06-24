@@ -38,8 +38,6 @@
   },
   "devDependencies": {
     "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties": "^4.0.1",
-    "less": "4.2.0",
-    "less-watch-compiler": "1.16.3",
     "prettier": "^3.3.2",
     "sass": "^1.77.6",
     "stylelint": "^15.11.0",
@@ -48,7 +46,8 @@
     "unplugin-fonts": "^1.1.1",
     "vite": "4.5.0",
     "vite-plugin-mkcert": "^1.17.5",
-    "vite-plugin-pwa": "^0.20.0"
+    "vite-plugin-pwa": "^0.20.0",
+    "vite-plugin-env-compatible": "^2.0.1"
   },
   "scripts": {
     "lint-dark": "sed '/^[\\.\\}\\@]/d;/^[[:blank:]]*\\..*/d;/\\/\\/.*/d' common/src/main/webapp/less/variables-dark.less > vars.css;trap \"rm vars.css\" EXIT;npx stylelint common/src/main/webapp/sass",
