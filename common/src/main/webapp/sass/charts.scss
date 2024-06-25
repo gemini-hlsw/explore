@@ -171,9 +171,11 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     color: var(--plot-text-color);
     display: grid;
     flex: 0 0 100%;
+    /* stylelint-disable declaration-block-no-redundant-longhand-properties */
     grid-template-areas: 'description plot' 'description plot-controls';
     grid-template-rows: 1fr max-content;
     grid-template-columns: max-content 1fr;
+    /* stylelint-enable declaration-block-no-redundant-longhand-properties */
 
     &.itc-plot-details-hidden {
       grid-template-columns: 0 1fr;
