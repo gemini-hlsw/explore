@@ -5,7 +5,6 @@ package explore.itc
 
 import cats.data.NonEmptyList
 import cats.syntax.all.*
-import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.LoadingState
@@ -20,9 +19,8 @@ import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.math.roundToSignificantFigures
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
-import lucuma.refined.*
-import lucuma.typed.highcharts.mod.*
 import lucuma.typed.highcharts.mod.DashStyleValue
+import lucuma.typed.highcharts.mod.{^ as _, *}
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
@@ -158,44 +156,46 @@ object ItcSpectroscopyPlot {
       )
   }
 
-  private val EmptyChartOptions = Reusable.always {
-    val yAxis = YAxisOptions()
-      .setAllowDecimals(false)
-      .setMin(0)
-      .setMax(100)
-      .setTickInterval(10)
+  private val EmptyChartOptions: Reusable[Options] =
+    Reusable.always {
+      val yAxis = YAxisOptions()
+        .setAllowDecimals(false)
+        .setMin(0)
+        .setMax(100)
+        .setTickInterval(10)
 
-    Options()
-      .setChart(
-        ChartOptions()
-          .setStyledMode(true)
-          .setAlignTicks(false)
-          .clazz(
-            ExploreStyles.ItcPlotChart |+| ExploreStyles.ItcPlotLoading
-          )
-          // Will be used in the future to persist the soom
-          // .selectionCB(s => Callback.log(s"selection ${s.xAxis(0).min}"))
-      )
-      .setTitle(TitleOptions().setTextUndefined)
-      .setCredits(CreditsOptions().setEnabled(false))
-      .setXAxis(
-        XAxisOptions()
-          .setType(AxisTypeValue.linear)
-      )
-      .setYAxis(List(yAxis).toJSArray)
-      .setPlotOptions(
-        PlotOptions()
-          .setSeries(
-            PlotSeriesOptions()
-              .setLineWidth(4)
-              .setMarker(PointMarkerOptionsObject().setEnabled(false).setRadius(0))
-              .setStates(
-                SeriesStatesOptionsObject()
-                  .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
-              )
-          )
-      )
-  }
+      Options()
+        .setChart(
+          ChartOptions()
+            .setStyledMode(true)
+            .setAlignTicks(false)
+            .clazz(
+              ExploreStyles.ItcPlotChart |+| ExploreStyles.ItcPlotLoading
+            )
+            // Will be used in the future to persist the soom
+            // .selectionCB(s => Callback.log(s"selection ${s.xAxis(0).min}"))
+        )
+        .setTitle(TitleOptions().setTextUndefined)
+        .setCredits(CreditsOptions().setEnabled(false))
+        .setXAxis(
+          XAxisOptions()
+            .setType(AxisTypeValue.linear)
+        )
+        .setYAxis(List(yAxis).toJSArray)
+        .setPlotOptions(
+          PlotOptions()
+            .setSeries(
+              PlotSeriesOptions()
+                .setLineWidth(4)
+                .setMarker(PointMarkerOptionsObject().setEnabled(false).setRadius(0))
+                .setStates(
+                  SeriesStatesOptionsObject()
+                    .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
+                )
+            )
+            // .setHeight("100%")
+        )
+    }
 
   private val component = ScalaFnComponent
     .withHooks[Props]
@@ -228,18 +228,18 @@ object ItcSpectroscopyPlot {
     .render: (props, _, options) =>
       val loading = props.loading.value
 
+      val chartOptions: Reusable[Options] = options.sequenceOption.getOrElse(EmptyChartOptions)
+
       def formatErrorMessage(c: Chart_): Callback =
         c.showLoadingCB.when_(loading) *>
           props.error
             .map(e => c.showLoadingCB(e).unless_(loading))
             .orEmpty
 
-      <.div(ExploreStyles.ItcPlotBody)(
-        HelpIcon("target/main/itc-spectroscopy-plot.md".refined, ExploreStyles.HelpIconFloating),
-        options.sequenceOption
-          .map: opt =>
-            Chart(opt, allowUpdate = false, onCreate = formatErrorMessage)
-          .getOrElse:
-            Chart(EmptyChartOptions, onCreate = formatErrorMessage)
+      Chart(
+        chartOptions,
+        allowUpdate = false,
+        onCreate = formatErrorMessage,
+        containerMod = TagMod(ExploreStyles.ItcPlotBody)
       )
 }

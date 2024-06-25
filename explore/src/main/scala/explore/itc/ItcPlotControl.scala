@@ -5,6 +5,7 @@ package explore.itc
 
 import cats.syntax.all.*
 import crystal.react.View
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.itc.PlotDetails
 import japgolly.scalajs.react.*
@@ -51,8 +52,11 @@ object ItcPlotControl:
     val descText     = if (props.showDetails.get.value) "Hide details" else "Show details"
     val allowedChart = props.chartType.zoom(typePrism).asView
 
-    <.div(
-      ExploreStyles.ItcPlotControls,
+    <.div(ExploreStyles.ItcPlotControls)(
+      HelpIcon(
+        "target/main/itc-spectroscopy-plot.md".refined,
+        ExploreStyles.HelpIconFloating |+| ExploreStyles.ItcPlotHelpIcon
+      ),
       Button(
         onClick = props.showDetails.mod {
           case PlotDetails.Shown  => PlotDetails.Hidden

@@ -170,17 +170,24 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     background-color: var(--plot-background-color);
     color: var(--plot-text-color);
     display: grid;
-    width: 100%;
-    overflow: hidden;
-    min-height: 0;
-    grid-template: 'description plot' minmax(0, 1fr) // minmax is required to properly shrink
-      'description plot-controls' / minmax(max-content, 2fr) minmax(0, 5fr);
+    flex: 0 0 100%;
+    grid-template-areas: 'description plot' 'description plot-controls';
+    grid-template-rows: 1fr max-content;
+    grid-template-columns: max-content 1fr;
+
+    &.itc-plot-details-hidden {
+      grid-template-columns: 0 1fr;
+    }
   }
 
-  .itc-plot-body {
-    position: relative;
+  .tile-xs-width {
+    .itc-plot-section.itc-plot-description {
+      grid-template-columns: 0 1fr;
+    }
+  }
+
+  .itc-plot-body {  
     grid-area: plot;
-    width: 100%;
     background-color: var(--plot-background-color);
   }
 
@@ -193,6 +200,11 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     padding-right: 1em;
     padding-left: 1em;
     justify-content: space-between;
+
+    .itc-plot-help-icon {
+      top: exploreCommon.$tile-title-height + 8px;
+      margin-left: -10px;
+    }
   }
 
   $description-column-count: 2;
@@ -228,20 +240,6 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 
     span {
       font-weight: lighter;
-    }
-  }
-
-  .itc-plot-details-hidden {
-    grid-template-columns: 0 3fr;
-
-    .itc-plot-description {
-      display: none;
-    }
-  }
-
-  .tile-xs-width {
-    .itc-plot-description {
-      display: none;
     }
   }
 
