@@ -5,8 +5,8 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import cats.syntax.all.*
 import io.circe.Decoder
-import io.circe.generic.semiauto.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.ProgramReference
 import lucuma.schemas.enums.ProposalStatus
@@ -41,6 +41,7 @@ object ProgramDetails:
       pi <- c.downField("pi").as[Option[ProgramUser]]
       us <- c.get[List[ProgramUserWithRole]]("users")
       in <- c.get[List[CoIInvitation]]("userInvitations")
-      r  <- c.get[Option[ProgramReference]]("reference")
-    } yield ProgramDetails(t, p, ps, pi.map(ProgramUserWithRole(_, None, None)), us, in, r)
+      r  <-
+        c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
+    } yield ProgramDetails(t, p, ps, pi.map(ProgramUserWithRole(_, None, None)), us, in, r.flatten)
   )
