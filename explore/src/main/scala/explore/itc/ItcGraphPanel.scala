@@ -39,7 +39,7 @@ object ItcGraphPanel:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .render { (props, ctx) =>
+      .render: (props, ctx) =>
         import ctx.given
 
         val globalPreferences = props.globalPreferences.withOnMod(prefs =>
@@ -79,7 +79,8 @@ object ItcGraphPanel:
 
         <.div(
           ExploreStyles.ItcPlotSection,
-          ExploreStyles.ItcPlotDetailsHidden.unless(detailsView.get.value),
+          ExploreStyles.ItcPlotDetailsHidden.unless(detailsView.get.value)
+        )(
           ItcSpectroscopyPlotDescription(
             selectedTarget.flatMap(props.itcProps.targetBrightness),
             selectedResult.map(_.itcExposureTime),
@@ -99,5 +100,3 @@ object ItcGraphPanel:
           ),
           ItcPlotControl(chartTypeView, detailsView)
         )
-
-      }
