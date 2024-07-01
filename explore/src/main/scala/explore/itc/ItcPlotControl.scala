@@ -58,6 +58,7 @@ object ItcPlotControl:
         ExploreStyles.HelpIconFloating |+| ExploreStyles.ItcPlotHelpIcon
       ),
       Button(
+        clazz = ExploreStyles.ItcPlotDetailsToggle,
         onClick = props.showDetails.mod {
           case PlotDetails.Shown  => PlotDetails.Hidden
           case PlotDetails.Hidden => PlotDetails.Shown

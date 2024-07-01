@@ -166,28 +166,6 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     }
   }
 
-  .itc-plot-section {
-    background-color: var(--plot-background-color);
-    color: var(--plot-text-color);
-    display: grid;
-    flex: 0 0 100%;
-    /* stylelint-disable declaration-block-no-redundant-longhand-properties */
-    grid-template-areas: 'description plot' 'description plot-controls';
-    grid-template-rows: 1fr max-content;
-    grid-template-columns: max-content 1fr;
-    /* stylelint-enable declaration-block-no-redundant-longhand-properties */
-
-    &.itc-plot-details-hidden {
-      grid-template-columns: 0 1fr;
-    }
-  }
-
-  .tile-xs-width {
-    .itc-plot-section.itc-plot-description {
-      grid-template-columns: 0 1fr;
-    }
-  }
-
   .itc-plot-body {
     grid-area: plot;
     background-color: var(--plot-background-color);
@@ -201,7 +179,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     display: flex;
     padding-right: 1em;
     padding-left: 1em;
-    justify-content: space-between;
+    justify-content: flex-end;
 
     .itc-plot-help-icon {
       top: exploreCommon.$tile-title-height + 8px;
@@ -219,7 +197,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 
   .itc-plot-description {
     grid-area: description;
-    display: grid;
+    display: none;
     column-gap: 0.5em;
     padding: 0.5em;
     grid-template-columns: minmax(100px, 1fr) 1fr;
@@ -242,6 +220,45 @@ See https://github.com/highcharts/highcharts/issues/13320 */
 
     span {
       font-weight: lighter;
+    }
+  }
+
+  .itc-plot-section {
+    background-color: var(--plot-background-color);
+    color: var(--plot-text-color);
+    display: grid;
+    flex: 0 0 100%;
+    grid-template-columns: 1fr;
+    grid-template-areas: 'plot' 'plot-controls';
+  }
+
+  .itc-plot-details-toggle {
+    display: none;
+  }
+
+  @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+    .itc-plot-section {
+      /* stylelint-disable declaration-block-no-redundant-longhand-properties */
+      grid-template-areas: 'description plot' 'description plot-controls';
+      grid-template-rows: 1fr max-content;
+      grid-template-columns: max-content 1fr;
+      /* stylelint-enable declaration-block-no-redundant-longhand-properties */
+
+      &.itc-plot-details-hidden {
+        grid-template-columns: 0 1fr;
+      }
+    }
+
+    .itc-plot-description {
+      display: grid;
+    }
+
+    .itc-plot-details-toggle {
+      display: block;
+    }
+
+    .itc-plot-controls {
+      justify-content: space-between;
     }
   }
 
