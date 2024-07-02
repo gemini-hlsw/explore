@@ -104,6 +104,17 @@ case class ProgramSummaries(
   def removeObs(obsId: Observation.Id): ProgramSummaries =
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
 
+  def cloneTargetForObservations(
+    oldTid:    Target.Id,
+    newTarget: TargetWithId,
+    obsIds:    ObsIdSet
+  ): ProgramSummaries =
+    val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
+      list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ - oldTid + newTarget.id))
+    )
+    val ts  = targets + (newTarget.id -> newTarget.target)
+    copy(observations = obs, targets = ts)
+
 object ProgramSummaries:
   val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]     =
     Focus[ProgramSummaries](_.optProgramDetails)

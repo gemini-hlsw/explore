@@ -36,8 +36,11 @@ object ObsIdSet {
   implicit def nonEmptySetWrapper(ids: ObsIdSet): NonEmptySetWrapper[ObsIdSet, Observation.Id] =
     NonEmptySetWrapper(ids, iso)
 
+  def fromSortedSet(obsIds: SortedSet[Observation.Id]): Option[ObsIdSet] =
+    NonEmptySet.fromSet(obsIds).map(ObsIdSet.apply)
+
   def fromList(obsIds: List[Observation.Id]): Option[ObsIdSet] =
-    NonEmptySet.fromSet(SortedSet.from(obsIds)).map(ObsIdSet.apply)
+    fromSortedSet(SortedSet.from(obsIds))
 
   val fromString: Prism[String, ObsIdSet] =
     Prism(parse)(ids =>

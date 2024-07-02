@@ -10,7 +10,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.GlobalPreferences
+import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
+import explore.model.TargetEditObsInfo
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -19,8 +21,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
-
-import java.time.Instant
 
 object SiderealTargetEditorTile {
 
@@ -33,6 +33,8 @@ object SiderealTargetEditorTile {
     fullScreen:        View[AladinFullScreen],
     globalPreferences: View[GlobalPreferences],
     readonly:          Boolean,
+    obsInfo:           TargetEditObsInfo,
+    onClone:           (Target.Id, TargetWithId, ObsIdSet) => Callback,
     backButton:        Option[VdomNode] = none
   ) =
     Tile(
@@ -51,9 +53,11 @@ object SiderealTargetEditorTile {
               uid,
               target,
               Asterism.one(TargetWithId(targetId, target.get)),
-              none,
-              none,
-              searching,
+              vizTime = none,
+              obsConf = none,
+              searching = searching,
+              obsInfo = obsInfo,
+              onClone = onClone,
               renderInTitle = renderInTitle.some,
               fullScreen = fullScreen,
               globalPreferences = globalPreferences,

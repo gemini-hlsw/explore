@@ -16,6 +16,7 @@ import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
+import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
@@ -28,6 +29,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
@@ -47,7 +49,8 @@ object AsterismEditorTile:
     obsConf:           ObsConfiguration,
     currentTarget:     Option[Target.Id],
     setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-    otherObsCount:     Target.Id => Int,
+    onCloneTarget:     (Target.Id, TargetWithId, ObsIdSet) => Callback,
+    obsInfo:           Target.Id => TargetEditObsInfo,
     searching:         View[Set[Target.Id]],
     title:             String,
     globalPreferences: View[GlobalPreferences],
@@ -81,7 +84,8 @@ object AsterismEditorTile:
           obsConf,
           currentTarget,
           setTarget,
-          otherObsCount,
+          onCloneTarget,
+          obsInfo,
           searching,
           renderInTitle,
           globalPreferences,

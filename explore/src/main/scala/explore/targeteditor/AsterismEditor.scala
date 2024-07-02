@@ -17,6 +17,7 @@ import explore.model.AsterismIds
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -26,12 +27,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
-import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
-import lucuma.ui.primereact.*
-import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
@@ -49,7 +46,8 @@ case class AsterismEditor(
   configuration:     ObsConfiguration,
   focusedTargetId:   Option[Target.Id],
   setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-  otherObsCount:     Target.Id => Int,
+  onCloneTarget:     (Target.Id, TargetWithId, ObsIdSet) => Callback,
+  obsInfo:           Target.Id => TargetEditObsInfo,
   searching:         View[Set[Target.Id]],
   renderInTitle:     Tile.RenderInTitle,
   globalPreferences: View[GlobalPreferences],
@@ -63,31 +61,13 @@ type AreAdding = AreAdding.Type
 object AsterismEditor extends AsterismModifier:
   private type Props = AsterismEditor
 
-  private object EditScope extends NewType[Boolean]:
-    inline def AllInstances: EditScope = EditScope(true)
-    inline def CurrentOnly: EditScope  = EditScope(false)
-
-  private type EditScope = EditScope.Type
-
-  private def onCloneTarget(
-    asterismIds: View[AsterismIds],
-    allTargets:  View[TargetList],
-    setTarget:   (Option[Target.Id], SetRouteVia) => Callback
-  )(
-    newTwid:     TargetWithId
-  ): Callback =
-    allTargets.mod(_ + (newTwid.id -> newTwid.target)) >>
-      asterismIds.mod(_ + newTwid.id) >>
-      setTarget(newTwid.id.some, SetRouteVia.HistoryPush)
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(AreAdding(false))
-      .useStateView(EditScope.CurrentOnly)
-      .useEffectWithDepsBy((props, _, _, _) => (props.asterismIds.get, props.focusedTargetId)) {
-        (props, _, _, _) => (asterismIds, focusedTargetId) =>
+      .useEffectWithDepsBy((props, _, _) => (props.asterismIds.get, props.focusedTargetId)) {
+        (props, _, _) => (asterismIds, focusedTargetId) =>
           // If the selected targetId is None, or not in the asterism, select the first target (if any).
           // Need to replace history here.
           focusedTargetId.filter(asterismIds.contains_) match
@@ -96,7 +76,7 @@ object AsterismEditor extends AsterismModifier:
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
-      .render { (props, ctx, adding, editScope, fullScreen) =>
+      .render { (props, ctx, adding, fullScreen) =>
         import ctx.given
 
         val targetView: View[Option[Target.Id]] =
@@ -163,26 +143,12 @@ object AsterismEditor extends AsterismModifier:
               props.allTargets
                 .zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
 
-            val otherObsCount = props.otherObsCount(focusedTargetId)
-            val plural        = if (otherObsCount === 1) "" else "s"
+            val obsInfo = props.obsInfo(focusedTargetId)
 
             selectedTargetOpt
               .map(siderealTarget =>
                 <.div(
                   ExploreStyles.TargetTileEditor,
-                  <.div(
-                    ExploreStyles.SharedEditWarning,
-                    s"${siderealTarget.get.name.value} is in ${otherObsCount} other observation$plural. Edits here should apply to:",
-                    BooleanRadioButtons(
-                      view = editScope.as(EditScope.value),
-                      idBase = "editscope".refined,
-                      name = "editScope".refined,
-                      trueLabel = "all observations of this target".refined,
-                      falseLabel =
-                        if (props.obsIds.size === 1) "only this observation".refined
-                        else "only the current observations".refined,
-                    ).toFalseTrueFragment
-                  ).when(otherObsCount > 0 && !props.readonly),
                   SiderealTargetEditor(
                     props.userId,
                     siderealTarget,
@@ -190,15 +156,8 @@ object AsterismEditor extends AsterismModifier:
                     vizTime,
                     props.configuration.some,
                     props.searching,
-                    onClone = onCloneTarget(
-                      props.asterismIds,
-                      props.allTargets.model,
-                      props.setTarget
-                    ),
-                    obsIdSubset =
-                      if (otherObsCount > 0 && editScope.get === EditScope.CurrentOnly)
-                        props.obsIds.some
-                      else none,
+                    onClone = props.onCloneTarget,
+                    obsInfo = obsInfo,
                     fullScreen = fullScreen,
                     globalPreferences = props.globalPreferences,
                     readonly = props.readonly,

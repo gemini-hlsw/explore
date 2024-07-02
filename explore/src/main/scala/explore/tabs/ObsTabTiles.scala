@@ -25,6 +25,8 @@ import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
+import explore.model.ProgramSummaries
+import explore.model.TargetEditObsInfo
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
@@ -38,6 +40,7 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
+import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -76,27 +79,31 @@ import java.time.Instant
 import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
-  vault:                    Option[UserVault],
-  userId:                   Option[User.Id],
-  programId:                Program.Id,
-  modes:                    SpectroscopyModesMatrix,
-  backButton:               VdomNode,
-  observation:              UndoSetter[ObsSummary],
-  obsExecution:             Pot[Execution],
-  allTargets:               UndoSetter[TargetList],
-  allConstraintSets:        Set[ConstraintSet],
-  targetObservations:       Map[Target.Id, SortedSet[Observation.Id]],
-  focusedTarget:            Option[Target.Id],
-  searching:                View[Set[Target.Id]],
-  defaultLayouts:           LayoutsMap,
-  layouts:                  LayoutsMap,
-  resize:                   UseResizeDetectorReturn,
-  obsAttachments:           View[ObsAttachmentList],
-  obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  globalPreferences:        View[GlobalPreferences],
-  readonly:                 Boolean
+  vault:             Option[UserVault],
+  userId:            Option[User.Id],
+  programId:         Program.Id,
+  modes:             SpectroscopyModesMatrix,
+  backButton:        VdomNode,
+  observation:       UndoSetter[ObsSummary],
+  programSummaries:  UndoContext[ProgramSummaries],
+  focusedTarget:     Option[Target.Id],
+  searching:         View[Set[Target.Id]],
+  defaultLayouts:    LayoutsMap,
+  layouts:           LayoutsMap,
+  resize:            UseResizeDetectorReturn,
+  globalPreferences: View[GlobalPreferences],
+  readonly:          Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
-  val obsId: Observation.Id = observation.get.id
+  val obsId: Observation.Id                                         = observation.get.id
+  val allConstraintSets: Set[ConstraintSet]                         = programSummaries.get.constraintGroups.map(_._2).toSet
+  val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
+    programSummaries.get.targetObservations
+  val obsExecution: Pot[Execution]                                  = programSummaries.get.obsExecutionPots.getPot(obsId)
+  val allTargets: UndoSetter[TargetList]                            = programSummaries.zoom(ProgramSummaries.targets)
+  val obsAttachments: View[ObsAttachmentList]                       =
+    programSummaries.model.zoom(ProgramSummaries.obsAttachments)
+  val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
+    programSummaries.get.obsAttachmentAssignments
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -460,20 +467,30 @@ object ObsTabTiles:
                 averagePA
               )
 
-            def otherObsCount(obsId: Observation.Id, targetId: Target.Id): Int =
-              props.targetObservations.get(targetId).fold(0)(obsIds => (obsIds - obsId).size)
+            def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
+              TargetEditObsInfo.fromProgramSummaries(
+                targetId,
+                ObsIdSet.one(obsId).some,
+                props.programSummaries.get
+              )
 
-            def setCurrentTarget(programId: Program.Id, oid: Option[Observation.Id])(
+            def setCurrentTarget(
               tid: Option[Target.Id],
               via: SetRouteVia
             ): Callback =
               // Set the route base on the selected target
               ctx.setPageVia(
                 AppTab.Observations,
-                programId,
-                Focused(oid.map(ObsIdSet.one), tid),
+                props.programId,
+                Focused(ObsIdSet.one(props.obsId).some, tid),
                 via
               )
+
+            def onCloneTarget(oldTid: Target.Id, newTarget: TargetWithId, obsIds: ObsIdSet)
+              : Callback =
+              props.programSummaries.model.mod(
+                _.cloneTargetForObservations(oldTid, newTarget, obsIds)
+              ) *> setCurrentTarget(newTarget.id.some, SetRouteVia.HistoryReplace)
 
             val targetTile: Tile =
               AsterismEditorTile.asterismEditorTile(
@@ -486,8 +503,9 @@ object ObsTabTiles:
                 vizTimeView,
                 obsConf,
                 props.focusedTarget,
-                setCurrentTarget(props.programId, props.obsId.some),
-                otherObsCount(props.obsId, _),
+                setCurrentTarget,
+                onCloneTarget,
+                getObsInfo(props.obsId),
                 props.searching,
                 "Targets",
                 props.globalPreferences,

@@ -24,6 +24,7 @@ import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.TargetEditObsInfo
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -63,8 +64,9 @@ case class SiderealTargetEditor(
   vizTime:            Option[Instant],
   obsConf:            Option[ObsConfiguration],
   searching:          View[Set[Target.Id]],
-  obsIdSubset:        Option[ObsIdSet] = None,
-  onClone:            TargetWithId => Callback = _ => Callback.empty,
+  obsInfo:            TargetEditObsInfo,
+  // params are oldTargetId, newTarget, observationids for which the target will be cloned
+  onClone:            (Target.Id, TargetWithId, ObsIdSet) => Callback,
   renderInTitle:      Option[Tile.RenderInTitle] = None,
   fullScreen:         View[AladinFullScreen],
   globalPreferences:  View[GlobalPreferences],
@@ -88,7 +90,7 @@ object SiderealTargetEditor:
     id:      Target.Id,
     optObs:  Option[ObsIdSet],
     cloning: View[Boolean],
-    onClone: TargetWithId => Callback
+    onClone: (Target.Id, TargetWithId, ObsIdSet) => Callback
   )(
     input:   UpdateTargetsInput
   )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
@@ -105,7 +107,9 @@ object SiderealTargetEditor:
             TargetQueriesGQL
               .UpdateTargetsMutationWithResult[IO]
               .execute(newInput)
-              .flatMap(data => data.updateTargets.targets.headOption.foldMap(onClone(_).toAsync))
+              .flatMap(data =>
+                data.updateTargets.targets.headOption.foldMap(onClone(id, _, obsIds).toAsync)
+              )
           }
           .switching(cloning.async)
 
@@ -122,18 +126,19 @@ object SiderealTargetEditor:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView(false) // cloning
+      .useStateView(false)          // cloning
+      .useStateView(none[ObsIdSet]) // obs ids to clone to.
       // If vizTime is not set, change it to now
-      .useEffectResultWithDepsBy((p, _, _) => p.vizTime) { (_, _, _) => vizTime =>
+      .useEffectResultWithDepsBy((p, _, _, _) => p.vizTime) { (_, _, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
       }
-      .render { (props, ctx, cloning, vizTime) =>
+      .render { (props, ctx, cloning, obsToCloneTo, vizTime) =>
         import ctx.given
 
         val remoteOnMod: UpdateTargetsInput => IO[Unit] =
           getRemoteOnMod(
             props.asterism.focus.id,
-            props.obsIdSubset,
+            obsToCloneTo.get,
             cloning,
             props.onClone
           ).andThen(
@@ -259,9 +264,12 @@ object SiderealTargetEditor:
           )
 
         val disabled =
-          props.searching.get.exists(_ === props.asterism.focus.id) || cloning.get || props.readonly
+          props.searching.get.exists(
+            _ === props.asterism.focus.id
+          ) || cloning.get || props.readonly || props.obsInfo.isReadonly
 
         React.Fragment(
+          TargetCloneSelector(props.obsInfo, obsToCloneTo),
           <.div(ExploreStyles.TargetGrid)(
             vizTime.renderPot(vt =>
               AladinCell(
@@ -283,7 +291,7 @@ object SiderealTargetEditor:
                 nameView,
                 allView.set,
                 props.searching,
-                props.readonly
+                props.readonly || props.obsInfo.isReadonly
               ),
               FormInputTextView(
                 id = "ra".refined,
@@ -360,7 +368,7 @@ object SiderealTargetEditor:
                 sourceProfileAligner,
                 props.target.get.catalogInfo,
                 disabled
-              ).withKey(props.obsIdSubset.mkString)
+              ).withKey(obsToCloneTo.get.fold("none")(_.show))
             )
           )
         )
