@@ -115,43 +115,52 @@ object TopBar:
           )
 
           val lastItems = List(
-            MenuItem.Separator,
-            MenuItem.Item(
-              label = "Login with ORCID",
-              icon = Image(
-                src = Resources.OrcidLogo,
-                clazz = ExploreStyles.OrcidIconMenu |+| LoginStyles.LoginOrcidIcon
-              ),
-              visible = role === GuestRole,
-              command = ctx.sso.switchToORCID.runAsync
-            ),
-            MenuItem.Item(label = "Logout", icon = Icons.Logout, command = logout.runAsync),
-            MenuItem.SubMenu(
-              label = "Log Level",
-              icon = Icons.BarCodeRead,
-              visible = ctx.environment =!= ExecutionEnvironment.Production
-            )(
-              MenuItem.Item(
-                label = "Info",
-                command = setLogLevel(LogLevelDesc.INFO),
-                disabled = level =!= LogLevelDesc.DEBUG,
-                icon = Icons.Info
-              ),
-              MenuItem.Item(
-                label = "Debug",
-                command = setLogLevel(LogLevelDesc.DEBUG),
-                disabled = level === LogLevelDesc.DEBUG,
-                icon = Icons.Bug
+            MenuItem.Separator.some,
+            MenuItem
+              .Item(
+                label = "Login with ORCID",
+                icon = Image(
+                  src = Resources.OrcidLogo,
+                  clazz = ExploreStyles.OrcidIconMenu |+| LoginStyles.LoginOrcidIcon
+                ),
+                visible = role === GuestRole,
+                command = ctx.sso.switchToORCID.runAsync
               )
-            ),
-            ThemeSubMenu(props.theme),
-            MenuItem.Item(
-              label = "Toggle Reusability",
-              icon = Icons.CrystalBall,
-              command = utils.toggleReusabilityOverlay[CallbackTo](),
-              visible = ctx.environment === ExecutionEnvironment.Development
-            )
-          )
+              .some,
+            MenuItem.Item(label = "Logout", icon = Icons.Logout, command = logout.runAsync).some,
+            MenuItem
+              .SubMenu(
+                label = "Log Level",
+                icon = Icons.BarCodeRead,
+                visible = ctx.environment =!= ExecutionEnvironment.Production
+              )(
+                MenuItem.Item(
+                  label = "Info",
+                  command = setLogLevel(LogLevelDesc.INFO),
+                  disabled = level =!= LogLevelDesc.DEBUG,
+                  icon = Icons.Info
+                ),
+                MenuItem.Item(
+                  label = "Debug",
+                  command = setLogLevel(LogLevelDesc.DEBUG),
+                  disabled = level === LogLevelDesc.DEBUG,
+                  icon = Icons.Bug
+                )
+              )
+              .some,
+            if (ctx.environment === ExecutionEnvironment.Development)
+              ThemeSubMenu(props.theme).some
+            else
+              None,
+            MenuItem
+              .Item(
+                label = "Toggle Reusability",
+                icon = Icons.CrystalBall,
+                command = utils.toggleReusabilityOverlay[CallbackTo](),
+                visible = ctx.environment === ExecutionEnvironment.Development
+              )
+              .some
+          ).flattenOption
 
           val menuItems =
             if (role =!= GuestRole) {
