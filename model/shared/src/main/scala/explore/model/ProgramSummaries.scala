@@ -13,6 +13,7 @@ import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Observation
+import lucuma.core.model.ProposalReference
 import lucuma.core.model.Target
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
@@ -34,8 +35,10 @@ case class ProgramSummaries(
   obsExecutionPots:    ObservationExecutionMap,
   groupTimeRangePots:  GroupTimeRangeMap
 ) derives Eq:
-  lazy val proposalIsSubmitted =
+  lazy val proposalIsSubmitted                   =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
+  lazy val proposalId: Option[ProposalReference] =
+    optProgramDetails.flatMap(_.proposal.flatMap(_.reference))
 
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from(

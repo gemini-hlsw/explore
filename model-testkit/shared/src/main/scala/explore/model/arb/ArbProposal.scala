@@ -9,6 +9,7 @@ import lucuma.core.enums.TacCategory
 import explore.model.Proposal
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
+import lucuma.core.model.arb.ArbProposalReference.given
 import org.scalacheck.*
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen.*
@@ -16,6 +17,7 @@ import org.scalacheck.Cogen.*
 import explore.model.arb.ArbProposalType.given
 import explore.model.ProposalType
 import lucuma.core.model.CallForProposals
+import lucuma.core.model.ProposalReference
 
 trait ArbProposal:
 
@@ -27,7 +29,8 @@ trait ArbProposal:
         category     <- arbitrary[Option[TacCategory]]
         abstrakt     <- arbitrary[Option[NonEmptyString]]
         proposalType <- arbitrary[Option[ProposalType]]
-      } yield Proposal(callId, title, category, abstrakt, proposalType)
+        reference    <- arbitrary[Option[ProposalReference]]
+      } yield Proposal(callId, title, category, abstrakt, proposalType, reference)
     }
 
   given Cogen[Proposal] =
@@ -37,8 +40,9 @@ trait ArbProposal:
         Option[NonEmptyString],
         Option[TacCategory],
         Option[NonEmptyString],
-        Option[ProposalType]
+        Option[ProposalType],
+        Option[ProposalReference]
       )
-    ].contramap(p => (p.callId, p.title, p.category, p.abstrakt, p.proposalType))
+    ].contramap(p => (p.callId, p.title, p.category, p.abstrakt, p.proposalType, p.reference))
 
 object ArbProposal extends ArbProposal
