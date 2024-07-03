@@ -172,7 +172,7 @@ object ExploreLayout:
 
           given Display[AppTab] = _.title
 
-          val (showProgsPopup, msg, isSubmitted, ref) =
+          val (showProgsPopup, msg, isSubmitted, proposalReference) =
             props.view.get.programSummaries.fold((false, none, false, none)) { pss =>
               routingInfo.optProgramId.fold((true, none, false, none)) { id =>
                 if (pss.programs.get(id).exists(!_.deleted))
@@ -259,7 +259,7 @@ object ExploreLayout:
                   props.resolution.renderP(props.view),
                   if (isSubmitted)
                     Message(text =
-                      s"The proposal has been submitted as ${ref.foldMap(_.label)} and may be retracted to allow modifications until the proposal deadline."
+                      s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted to allow modifications until the proposal deadline."
                     )
                   else EmptyVdom
                 )
