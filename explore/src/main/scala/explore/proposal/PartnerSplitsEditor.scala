@@ -38,7 +38,7 @@ case class PartnerSplitsEditor(
   onSave:  List[PartnerSplit] => Callback
 ) extends ReactFnProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
 
-object PartnerSplitsEditor {
+object PartnerSplitsEditor:
   private type Props = PartnerSplitsEditor
 
   private val ColDef = ColumnDef[View[PartnerSplit]]
@@ -109,15 +109,14 @@ object PartnerSplitsEditor {
     }
     // rows
     .useMemoBy((props, _) => props.splits.reuseByValue)((_, _) => _.value.toListOfViews)
-    .useReactTableBy((_, cols, rows) =>
+    .useReactTableBy: (_, cols, rows) =>
       TableOptions(cols,
                    rows,
                    getRowId = (row, _, _) => RowId(row.get.partner.tag),
                    enableSorting = false,
                    enableColumnResizing = false
       )
-    )
-    .render { (props, _, _, table) =>
+    .render: (props, _, _, table) =>
       Dialog(
         visible = props.show.value,
         onHide = props.closeMe,
@@ -134,5 +133,3 @@ object PartnerSplitsEditor {
                    tableMod = ExploreStyles.ExploreBorderTable
         )
       )
-    }
-}
