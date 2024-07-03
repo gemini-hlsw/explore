@@ -172,15 +172,16 @@ object ExploreLayout:
 
           given Display[AppTab] = _.title
 
-          val (showProgsPopup, msg, isSubmitted) =
-            props.view.get.programSummaries.fold((false, none, false)) { pss =>
-              routingInfo.optProgramId.fold((true, none, false)) { id =>
+          val (showProgsPopup, msg, isSubmitted, proposalReference) =
+            props.view.get.programSummaries.fold((false, none, false, none)) { pss =>
+              routingInfo.optProgramId.fold((true, none, false, none)) { id =>
                 if (pss.programs.get(id).exists(!_.deleted))
-                  (false, none, pss.proposalIsSubmitted)
+                  (false, none, pss.proposalIsSubmitted, pss.proposalId)
                 else
                   (true,
                    s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
-                   false
+                   false,
+                   none
                   )
               }
             }
@@ -257,7 +258,9 @@ object ExploreLayout:
                 <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
                   props.resolution.renderP(props.view),
                   if (isSubmitted)
-                    Message(text = "The proposal has been submitted, so the program is readonly.")
+                    Message(text =
+                      s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted to allow modifications until the proposal deadline."
+                    )
                   else EmptyVdom
                 )
             )

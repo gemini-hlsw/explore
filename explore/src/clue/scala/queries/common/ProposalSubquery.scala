@@ -19,6 +19,9 @@ object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("
       title
       abstract
       category
+      reference {
+        label
+      }
       type {
         scienceSubtype
         ... on Classical {
