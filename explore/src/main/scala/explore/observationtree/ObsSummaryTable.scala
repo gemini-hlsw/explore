@@ -3,7 +3,8 @@
 
 package explore.observationtree
 
-import cats.Order.*
+import cats.Order
+import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
@@ -40,6 +41,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
@@ -54,7 +56,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
-import org.scalajs.dom.html.Anchor
 import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
@@ -147,6 +148,8 @@ object ObsSummaryTable:
   ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], V] =
     ColDef(id, v => v.value.fold(expandedAccessor, accessor), columnNames(id))
 
+  val tsOrder = summon[Order[Option[TimeSpan]]]
+
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
@@ -199,10 +202,28 @@ object ObsSummaryTable:
             .setSize(35.toPx),
           mixedColumn(
             TargetColumnId,
-            r => <.span(r.obs.title),
-            r => targetUrl(r.obsId, r.targetWithId)
+            r => r.obs.title,
+            r => (r.obsId, r.targetWithId)
           )
-            .setCell(_.value),
+            .setCell { c =>
+              c.value match {
+                case s: String => <.span(s)
+                case (a, b)    => targetUrl(a, b)
+              }
+            }
+            .setSortingFn { (a, b, c) =>
+              val aʹ: String | (Observation.Id, TargetWithId) = a.getValue(c)
+              val aʹʹ                                         = aʹ match {
+                case s: String => s
+                case (_, b)    => b.target.name.value
+              }
+              val bʹ: String | (Observation.Id, TargetWithId) = b.getValue(c)
+              val bʹʹ                                         = bʹ match {
+                case s: String => s
+                case (_, b)    => b.target.name.value
+              }
+              aʹʹ.compareTo(bʹʹ)
+            },
           mixedColumn(
             RAColumnId,
             // at visualization time, defaults to base coordinates
@@ -254,9 +275,14 @@ object ObsSummaryTable:
           obsColumn(
             DurationColumnId,
             _.execution.map(_.programTimeEstimate)
-          ).setCell: cell =>
+          ).setCell { cell =>
             cell.value.map:
               _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
+          }.setSortingFn { (a, b, c) =>
+            val aʹ: Option[Pot[Option[TimeSpan]]] = a.getValue(c)
+            val bʹ: Option[Pot[Option[TimeSpan]]] = b.getValue(c)
+            tsOrder.compare(aʹ.flatMap(_.toOption).flatten, bʹ.flatMap(_.toOption).flatten)
+          }
           // TODO: PriorityColumnId
           // TODO: ChargedTimeColumnId
         )
