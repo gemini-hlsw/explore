@@ -377,8 +377,8 @@ object ExploreGridLayouts:
     )
 
   object proposal:
-    private lazy val DetailsHeight: NonNegInt        = 6.refined
-    private lazy val DetailsMinHeight: NonNegInt     = 6.refined
+    private lazy val DetailsHeight: NonNegInt        = 7.refined
+    private lazy val DetailsMinHeight: NonNegInt     = 1.refined
     private lazy val UsersHeight: NonNegInt          = 6.refined
     private lazy val UsersMinHeight: NonNegInt       = 4.refined
     private lazy val AbstractHeight: NonNegInt       = 8.refined

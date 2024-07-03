@@ -285,7 +285,8 @@ object ProposalEditor:
 
     val timeFields = if (areTimesSame) {
       // If min and max time are the same we only show one line
-      val validTime = maxExecutionPot.toOption.exists(_ > TimeSpan.Zero)
+      val validTime =
+        maxExecutionPot.isPending || maxExecutionPot.toOption.exists(_ > TimeSpan.Zero)
       if (validTime) {
         React.Fragment(
           FormStaticData(
@@ -597,20 +598,24 @@ object ProposalEditor:
       //     .getOrElse(IntPercent.unsafeFrom(80))
       // )
       .useStateView(Visible.Hidden)           // show partner splits modal
-      .useStateView(List.empty[PartnerSplit]) // show partner splits modal
+      .useStateView(List.empty[PartnerSplit]) // partner splits modal
       // Update the partner splits when a new callId is set
       .useEffectWithDepsBy((props, _, cfps, _, _, _) =>
         (props.proposal.get.callId, cfps.toOption.orEmpty)
       ) { (props, _, _, _, _, ps) => (callId, cfps) =>
         callId.fold(Callback.empty)(cid =>
-          val currentSplits = Proposal.proposalType.some
+          val currentSplits    = Proposal.proposalType.some
             .andThen(ProposalType.partnerSplits)
             .getOption(props.proposal.get)
-          val cfpPartners   = cfps
+          val cfpPartners      = cfps
             .find(_.id === cid)
             .foldMap(_.partners.map(_.partner))
-          ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
-            .when_(currentSplits.foldMap(_.map(_.partner)) =!= cfpPartners)
+          val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
+
+          if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
+            ps.set(currentSplits.orEmpty)
+          else
+            ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
         )
       }
       // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
