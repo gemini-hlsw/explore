@@ -66,7 +66,11 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
 
   private type RowValue = (Band, View[BrightnessMeasure[T]])
 
-  protected[targeteditor] case class TableMeta(disabled: Boolean)
+  protected[targeteditor] case class TableMeta(
+    // needs to be in the table meta because it is needed by the `delete` column.
+    brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]],
+    disabled:     Boolean
+  )
 
   private val ColDef = ColumnDef.WithTableMeta[RowValue, TableMeta]
 
@@ -81,7 +85,6 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
       .useStateViewBy(props => State.fromUsedBrightnesses(props.brightnesses.get))
       .useEffectWithDepsBy((props, _) => props.brightnesses.get): (_, state) =>
         brightnesses => state.set(State.fromUsedBrightnesses(brightnesses))
-      // .useMemoBy((props, _) => (props.brightnesses.reuseByValue, props.disabled)) {
       .useMemoBy((_, _) => ()): (props, _) => // cols
         _ =>
           List(
@@ -131,7 +134,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
                     clazz = ExploreStyles.DeleteButton,
                     text = true,
                     disabled = cell.table.options.meta.exists(_.disabled),
-                    onClick = props.brightnesses.mod(_ - cell.value)
+                    onClick = cell.table.options.meta.foldMap(_.brightnesses.mod(_ - cell.value))
                   ).small
                 ),
               size = 20.toPx,
@@ -149,7 +152,7 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
           enableColumnResizing = true,
           columnResizeMode = ColumnResizeMode.OnChange,
           initialState = TableState(sorting = Sorting(ColumnId("band") -> SortDirection.Ascending)),
-          meta = TableMeta(disabled = props.disabled)
+          meta = TableMeta(brightnesses = props.brightnesses, disabled = props.disabled)
         )
       .render: (props, state, _, _, table) =>
         val footer =
