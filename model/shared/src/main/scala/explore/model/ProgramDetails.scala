@@ -33,6 +33,7 @@ object ProgramDetails:
     Lens[ProgramDetails, List[ProgramUserWithRole]](_.allUsers)(a =>
       b => b.copy(pi = a.headOption, users = a.tail)
     )
+  val reference: Lens[ProgramDetails, Option[ProgramReference]] = Focus[ProgramDetails](_.reference)
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {

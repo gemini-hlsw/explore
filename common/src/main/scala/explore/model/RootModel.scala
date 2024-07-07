@@ -12,6 +12,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoStacks
 import lucuma.core.model.GuestUser
+import lucuma.core.model.ProgramReference
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
@@ -58,7 +59,12 @@ object RootModel:
   )
 
   val user: Optional[RootModel, User] =
-    RootModel.vault.some.andThen(UserVault.user)
+    vault.some.andThen(UserVault.user)
 
   val userId: Optional[RootModel, User.Id] =
     user.andThen(userUserId)
+
+  val programReference: Optional[RootModel, ProgramReference] =
+    programSummaries.some.andThen(
+      ProgramSummaries.optProgramDetails.some.andThen(ProgramDetails.reference.some)
+    )

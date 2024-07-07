@@ -18,6 +18,7 @@ import explore.events.ExploreEvent.LogoutEventId
 import explore.model.*
 import explore.model.AppContext
 import explore.model.enums.AppTab
+import explore.model.reusability.given
 import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
@@ -47,6 +48,7 @@ import lucuma.ui.hooks.*
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
+import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
 
 case class ExploreLayout(
@@ -65,6 +67,12 @@ object ExploreLayout:
       .withHooks[Props]
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
+      .useEffectWithDepsBy((p, _, _) => p.view.zoom(RootModel.programReference).get)((_, _, _) =>
+        // Set the title of the page to the program reference
+        // scalajs-react suggest to use setTitle for this but we'd need to put the
+        // reference in the url for that
+        _.map(r => Callback(document.title = s"Explore - ${r.label}")).orEmpty
+      )
       .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
         (props, help, ctx) => _ =>
           val routingInfo          = RoutingInfo.from(props.resolution.page)
@@ -226,6 +234,7 @@ object ExploreLayout:
                   TopBar(
                     vault,
                     routingInfo.optProgramId,
+                    props.view.zoom(RootModel.programReference).get,
                     props.view.zoom(RootModel.localPreferences).get,
                     props.view.zoom(RootModel.undoStacks),
                     props.view

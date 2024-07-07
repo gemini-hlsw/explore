@@ -25,6 +25,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
+import lucuma.core.model.ProgramReference
 import lucuma.core.util.NewType
 import lucuma.react.common.*
 import lucuma.react.fa.FontAwesomeIcon
@@ -48,13 +49,14 @@ import org.scalajs.dom.window
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(
-  vault:        View[UserVault],
-  programId:    Option[Program.Id],
-  preferences:  ExploreLocalPreferences,
-  undoStacks:   View[UndoStacks[IO, ProgramSummaries]],
-  programInfos: ViewOpt[ProgramInfoList],
-  theme:        View[Theme],
-  onLogout:     IO[Unit]
+  vault:            View[UserVault],
+  programId:        Option[Program.Id],
+  programReference: Option[ProgramReference],
+  preferences:      ExploreLocalPreferences,
+  undoStacks:       View[UndoStacks[IO, ProgramSummaries]],
+  programInfos:     ViewOpt[ProgramInfoList],
+  theme:            View[Theme],
+  onLogout:         IO[Unit]
 ) extends ReactFnProps(TopBar.component)
 
 object TopBar:
@@ -184,7 +186,14 @@ object TopBar:
           React.Fragment(
             Toolbar(
               clazz = LayoutStyles.MainHeader,
-              left = <.span(LayoutStyles.MainTitle, "Explore"),
+              left = React.Fragment(
+                <.span(LayoutStyles.MainTitle, s"Explore"),
+                props.programReference.map { r =>
+                  React.Fragment(<.span(LayoutStyles.MainTitle, "- "),
+                                 <.span(ExploreStyles.MainTitleProgramId, r.label)
+                  )
+                }
+              ),
               right = React.Fragment(
                 <.span(LayoutStyles.MainUserName)(user.displayName),
                 RoleSwitch(props.vault, ctx.sso),

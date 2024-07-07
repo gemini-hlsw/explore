@@ -126,6 +126,15 @@ tfoot {
   height: 100%;
 }
 
+.main-title-program-id {
+  font-size: 0.85em;
+  letter-spacing: 0.1em;
+}
+
+.p-toolbar-group-start.p-toolbar-group-left {
+  align-items: baseline;
+}
+
 .obs-tree {
   display: flex;
   flex-direction: column;

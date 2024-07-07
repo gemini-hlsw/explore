@@ -25,6 +25,7 @@ import lucuma.catalog.CatalogTargetResult
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.ProgramReference
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.Atom
 import lucuma.itc.ItcCcd
@@ -126,3 +127,4 @@ object reusability:
   given Reusability[PartnerSplit]                     = Reusability.byEq
   given Reusability[CallForProposal]                  = Reusability.byEq
   given Reusability[PartnerAllocationList]            = Reusability.byEq
+  given Reusability[ProgramReference]                 = Reusability.byEq
