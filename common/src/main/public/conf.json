@@ -7,7 +7,6 @@
   "sso": {
     "uri": "https://sso.gpp.gemini.edu",
     "readTimeoutSeconds": 10,
-    "refreshTimeoutDeltaSeconds": 10,
-    "refreshIntervalFactor": 1
+    "expirationAnticipationSeconds": 10
   }
 }
