@@ -155,7 +155,7 @@ object TargetTabContents extends TwoPanels:
     /**
      * Render the summary table.
      */
-    def renderSummary: Tile =
+    val renderSummary: Tile =
       Tile(
         ObsTabTilesIds.TargetSummaryId.id,
         "Target Summary",
@@ -320,44 +320,42 @@ object TargetTabContents extends TwoPanels:
 
     def renderSiderealTargetEditor(
       resize:   UseResizeDetectorReturn,
-      targetId: Target.Id,
-      target:   Target.Sidereal
+      targetId: Target.Id
     ): List[Tile] = {
-      val getTarget: TargetList => Target.Sidereal = _ => target
+      val targetTiles: List[Tile] =
+        props.targets
+          .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
+          .map { target =>
+            val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+              props.userId,
+              targetId,
+              // props.targets.zoom(getTarget, modTarget),
+              target,
+              props.searching,
+              s"Editing Target ${target.get.name.value} [$targetId]",
+              fullScreen,
+              props.globalPreferences,
+              props.readonly
+            )
 
-      def modTarget(mod: Target.Sidereal => Target.Sidereal): TargetList => TargetList =
-        _.updatedWith(targetId) {
-          case Some(s @ Target.Sidereal(_, _, _, _)) => mod(s).some
-          case other                                 => other
-        }
+            val skyPlotTile: Tile =
+              ElevationPlotTile.elevationPlotTile(
+                props.userId,
+                targetId.some,
+                none,
+                // TODO PM correct the coordinates
+                CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target.get)).some,
+                none,
+                none,
+                Nil,
+                props.globalPreferences.get
+              )
 
-      val title = s"Editing Target ${target.name.value} [$targetId]"
+            List(targetTile, skyPlotTile)
+          }
+          .orEmpty
 
-      val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
-        props.userId,
-        targetId,
-        props.targets.zoom(getTarget, modTarget),
-        props.searching,
-        title,
-        fullScreen,
-        props.globalPreferences,
-        props.readonly
-      )
-
-      val skyPlotTile =
-        ElevationPlotTile.elevationPlotTile(
-          props.userId,
-          targetId.some,
-          none,
-          // TODO PM correct the coordinates
-          CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target)).some,
-          none,
-          none,
-          Nil,
-          props.globalPreferences.get
-        )
-
-      List(renderSummary, targetTile, skyPlotTile)
+      renderSummary +: targetTiles
     }
 
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
@@ -374,24 +372,22 @@ object TargetTabContents extends TwoPanels:
       )
 
     val rightSide = { (resize: UseResizeDetectorReturn) =>
-      val tileListKeyOpt = optSelected
-        .flatMap(
-          _ match
-            case Left(targetId) =>
-              props.targets.get
-                .get(targetId)
-                .map {
-                  case Nonsidereal(_, _, _)     =>
-                    (renderNonSiderealTargetEditor, "target-non-sidereal-controller")
-                  case s @ Sidereal(_, _, _, _) =>
-                    (renderSiderealTargetEditor(resize, targetId, s), "target-sidereal-controller")
-                }
-            case Right(obsIds)  =>
-              findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
-                .map(asterismGroup =>
-                  (renderAsterismEditor(resize, obsIds, asterismGroup), "target-obs-controller")
-                )
-        )
+      val tileListKeyOpt: Option[(List[Tile], String)] =
+        optSelected
+          .flatMap:
+            _ match
+              case Left(targetId) =>
+                props.targets.get
+                  .get(targetId)
+                  .map:
+                    case Nonsidereal(_, _, _) =>
+                      (renderNonSiderealTargetEditor, "target-non-sidereal-controller")
+                    case Sidereal(_, _, _, _) =>
+                      (renderSiderealTargetEditor(resize, targetId), "target-sidereal-controller")
+              case Right(obsIds)  =>
+                findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
+                  .map: asterismGroup =>
+                    (renderAsterismEditor(resize, obsIds, asterismGroup), "target-obs-controller")
 
       val (tiles, key, current, default) =
         tileListKeyOpt.fold(

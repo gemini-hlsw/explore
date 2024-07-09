@@ -203,7 +203,7 @@ object ConfigurationPanel:
                 )
             else
               ScienceRequirements.spectroscopy
-                .getOption(props.requirements.model.get)
+                .getOption(props.requirements.get)
                 .map(spectroscopyRequirements =>
                   React.Fragment(
                     // Gmos North Long Slit
