@@ -41,7 +41,7 @@ case class ConstraintsPanel(
   undoCtx:  UndoSetter[ConstraintSet],
   readonly: Boolean
 ) extends ReactFnProps(ConstraintsPanel.component):
-  val constraintSet: ConstraintSet = undoCtx.model.get
+  val constraintSet: ConstraintSet = undoCtx.get
 
 object ConstraintsPanel:
   private type Props = ConstraintsPanel
@@ -118,16 +118,15 @@ object ConstraintsPanel:
           View[ElevationRangeType](
             elevationRangeOptions.value.rangeType,
             (mod, cb) =>
+              val previous = elevationRangeOptions.value.rangeType
               erView
                 .setCB(
-                  mod(elevationRangeOptions.value.rangeType) match {
+                  mod(elevationRangeOptions.value.rangeType) match
                     case AirMass   => elevationRangeOptions.value.airMass
-                    case HourAngle => elevationRangeOptions.value.hourAngle
-                  },
-                  _ match {
-                    case ElevationRange.AirMass(_, _)   => cb(AirMass)
-                    case ElevationRange.HourAngle(_, _) => cb(HourAngle)
-                  }
+                    case HourAngle => elevationRangeOptions.value.hourAngle,
+                  _ match
+                    case ElevationRange.AirMass(_, _)   => cb(previous, AirMass)
+                    case ElevationRange.HourAngle(_, _) => cb(previous, HourAngle)
                 )
           )
 
@@ -137,7 +136,10 @@ object ConstraintsPanel:
             (mod, cb) =>
               erView
                 .zoom(ElevationRange.airMass)
-                .modCB(mod, _.map(cb).orEmpty)
+                .modCB(
+                  mod,
+                  (previous, current) => (previous, current).tupled.map((p, c) => cb(p, c)).orEmpty
+                )
           )
 
         val hourAngleView: View[ElevationRange.HourAngle] =
@@ -146,7 +148,10 @@ object ConstraintsPanel:
             (mod, cb) =>
               erView
                 .zoom(ElevationRange.hourAngle)
-                .modCB(mod, _.map(cb).orEmpty)
+                .modCB(
+                  mod,
+                  (previous, current) => (previous, current).tupled.map((p, c) => cb(p, c)).orEmpty
+                )
           )
 
         React.Fragment(

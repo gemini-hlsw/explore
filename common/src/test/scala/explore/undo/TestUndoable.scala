@@ -34,8 +34,8 @@ class TestUndoable[M](
 
   private def varRefModCB[A](
     ref: VarRef[DefaultS, A]
-  ): (A => A, A => DefaultS[Unit]) => DefaultS[Unit] =
-    (f, cb) => ref.update(f) >>= cb
+  ): (A => A, (A, A) => DefaultS[Unit]) => DefaultS[Unit] =
+    (f, cb) => ref.update(f) >>= ((p, c) => cb(p, c))
 
   private def varRefView[A](ref: VarRef[DefaultS, A]): DefaultS[View[A]] =
     ref.get.map(a => View(a, varRefModCB(ref)))

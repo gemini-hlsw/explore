@@ -62,12 +62,7 @@ case class TargetTable(
 object TargetTable extends AsterismModifier:
   private type Props = TargetTable
 
-  private case class TableMeta(
-    obsIds:    ObsIdSet,
-    targetIds: View[AsterismIds]
-  )
-
-  private val ColDef = ColumnDef.WithTableMeta[SiderealTargetWithId, TableMeta]
+  private val ColDef = ColumnDef[SiderealTargetWithId]
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
@@ -110,10 +105,8 @@ object TargetTable extends AsterismModifier:
                     onClickE = (e: ReactMouseEvent) =>
                       e.preventDefaultCB >>
                         e.stopPropagationCB >>
-                        cell.table.options.meta.foldMap(m =>
-                          m.targetIds.mod(_ - cell.value) >>
-                            deleteSiderealTarget(m.obsIds, cell.value).runAsync
-                        )
+                        props.targetIds.mod(_ - cell.value) >>
+                        deleteSiderealTarget(props.obsIds, cell.value).runAsync
                   ).tiny.compact,
                 size = 35.toPx,
                 enableSorting = false
@@ -147,8 +140,7 @@ object TargetTable extends AsterismModifier:
             enableSorting = true,
             enableColumnResizing = true,
             columnResizeMode = ColumnResizeMode.OnChange,
-            initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility),
-            meta = TableMeta(props.obsIds, props.targetIds)
+            initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility)
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )

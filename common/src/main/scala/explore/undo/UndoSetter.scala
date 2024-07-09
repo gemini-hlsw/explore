@@ -78,8 +78,9 @@ trait UndoSetter[M] { self =>
 
   def zoom[N](getN: M => N, modN: (N => N) => (M => M)): UndoSetter[N] =
     new UndoSetter[N] {
-
       override def model: View[N] = self.model.zoom(getN)(modN)
+
+      override def get: N = model.get
 
       override def set[A](
         getter:    N => A,
@@ -111,10 +112,16 @@ trait UndoSetter[M] { self =>
   def zoom[N](lens: Lens[M, N]): UndoSetter[N] = zoom(lens.get, lens.modify)
 
   def zoom[N](optional: Optional[M, N]): Option[UndoSetter[N]] =
-    optional.getOption(get).map(n => zoom(_ => n, optional.modify))
+    // _.get is safe here since it's only being called when the value is defined.
+    // The zoom getter function is stored to use in callbacks, so we have to pass _.get
+    // instead of capturing the value here. Otherwise, callbacks see a stale value.
+    optional.getOption(get).map(_ => zoom(m => optional.getOption(m).get, optional.modify))
 
   def zoom[N](prism: Prism[M, N]): Option[UndoSetter[N]] =
-    prism.getOption(get).map(n => zoom(_ => n, prism.modify))
+    // _.get is safe here since it's only being called when the value is defined.
+    // The zoom getter function is stored to use in callbacks, so we have to pass _.get
+    // instead of capturing the value here. Otherwise, callbacks see a stale value.
+    prism.getOption(get).map(_ => zoom(m => prism.getOption(m).get, prism.modify))
 
   /**
    * Allows accessing the `UndoSetter` as a `View`.
@@ -128,8 +135,13 @@ trait UndoSetter[M] { self =>
    */
   def undoableView[N](getN: M => N, modN: (N => N) => M => M): View[N] =
     View[N](
-      getN(model.get),
-      (f, cb) => mod(getN, (n: N) => modN(_ => n), (n: N) => cb(n).to[DefaultA])(f)
+      getN(get),
+      (f, cb) =>
+        mod(
+          getN,
+          (n: N) => modN(_ => n),
+          (n: N) => cb(getN(get), n).to[DefaultA]
+        )(f)
     )
 
   def undoableView[N](lens: Lens[M, N]): View[N] =

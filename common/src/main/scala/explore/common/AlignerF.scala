@@ -41,7 +41,7 @@ trait AlignerF[F[_], B, S]:
   protected val _remoteMod: (S => S) => _T => _T // Delta structure drill-down modifier function
 
   /** Get the value of the model. */
-  def get: B = _modelGet(_undoCtx.model.get)
+  def get: B = _modelGet(_undoCtx.get)
 
   /**
    * Build an undoable `View` at the current level, specifying a function that modifies the delta
@@ -78,12 +78,13 @@ trait AlignerF[F[_], B, S]:
     modelMod:  (C => C) => B => B,
     remoteMod: (U => U) => S => S
   ): AlignerF[F, C, U] =
-    AlignerF(_undoCtx,
-             _remoteBaseInput,
-             _onMod,
-             _modelGet.andThen(modelGet),
-             _modelMod.compose(modelMod),
-             _remoteMod.compose(remoteMod)
+    AlignerF(
+      _undoCtx,
+      _remoteBaseInput,
+      _onMod,
+      _modelGet.andThen(modelGet),
+      _modelMod.compose(modelMod),
+      _remoteMod.compose(remoteMod)
     )
 
   /** Drill-down specifying model `Lens` and delta structure modification function. */

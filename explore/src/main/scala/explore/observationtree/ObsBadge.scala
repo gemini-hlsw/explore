@@ -181,10 +181,10 @@ object ObsBadge:
                   id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
                   value = View[ObsStatus](
                     obs.status,
-                    { (f, cb) =>
+                    (f, cb) =>
+                      val oldValue = obs.status
                       val newValue = f(obs.status)
-                      setStatus(newValue) >> cb(newValue)
-                    }
+                      setStatus(newValue) >> cb(oldValue, newValue)
                   ),
                   size = PlSize.Mini,
                   clazz = ExploreStyles.ObsStatusSelect,

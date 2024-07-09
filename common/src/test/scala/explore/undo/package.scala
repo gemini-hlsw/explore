@@ -4,6 +4,7 @@
 package explore
 
 import cats.Applicative
+import cats.syntax.all.*
 
 package undo {
   class VarRef[F[_]: Applicative, A](init: A) {
@@ -11,9 +12,10 @@ package undo {
 
     def get: F[A] = Applicative[F].pure(a)
 
-    def update(f: A => A): F[A] = {
+    def update(f: A => A): F[(A, A)] = {
+      val previous = a
       a = f(a)
-      get
+      get.map((previous, _))
     }
   }
 
