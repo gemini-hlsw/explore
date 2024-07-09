@@ -9,8 +9,7 @@
     "sso": {
       "uri": "https://sso-dev.gpp.lucuma.xyz",
       "readTimeoutSeconds": 10,
-      "refreshTimeoutDeltaSeconds": 10,
-      "refreshIntervalFactor": 1
+      "expirationAnticipationSeconds": 10
     }
   },
   {
@@ -23,8 +22,7 @@
     "sso": {
       "uri": "https://sso.gpp.lucuma.xyz",
       "readTimeoutSeconds": 10,
-      "refreshTimeoutDeltaSeconds": 10,
-      "refreshIntervalFactor": 1
+      "expirationAnticipationSeconds": 10
     }
   },
   {
@@ -37,8 +35,7 @@
     "sso": {
       "uri": "https://sso.gpp.gemini.edu",
       "readTimeoutSeconds": 10,
-      "refreshTimeoutDeltaSeconds": 10,
-      "refreshIntervalFactor": 1
+      "expirationAnticipationSeconds": 10
     }
   }
 ]

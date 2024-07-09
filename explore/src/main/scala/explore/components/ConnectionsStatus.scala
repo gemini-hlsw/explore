@@ -29,11 +29,10 @@ object ConnectionsStatus:
       case Pot.Error(t)     => (t.getMessage, (LucumaStyles.IndicatorFail, true))
       case Pot.Ready(value) =>
         (value.toString,
-         value match {
-           case Connecting                             => (LucumaStyles.IndicatorWarning, true)
-           case Connected | Initializing | Initialized => (LucumaStyles.IndicatorOK, false)
-           case Disconnected                           => (LucumaStyles.IndicatorFail, true)
-         }
+         value match
+           case Connecting | Connected | Initializing => (LucumaStyles.IndicatorWarning, true)
+           case Initialized                           => (LucumaStyles.IndicatorOK, false)
+           case Disconnected                          => (LucumaStyles.IndicatorFail, true)
         )
 
     if (show)
