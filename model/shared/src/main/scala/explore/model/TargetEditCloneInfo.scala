@@ -65,11 +65,18 @@ object TargetEditCloneInfo:
   val unexecutedOfCurrentMsg: NonEmptyString  =
     "unexecuted observations of the current asterism".refined
   val allUnexectedMsg: NonEmptyString         = "all unexecuted observations".refined
+  val allThisMsg: NonEmptyString              =
+    "Target will only be modified for this observation. All other observations have been executed.".refined
+  val allCurrentMsg: NonEmptyString           =
+    "Target will only be modified for the current observations. All other observations have been executed.".refined
 
   extension (obsIds: ObsIdSet)
-    def onlyCurrentText: NonEmptyString =
+    def onlyCurrentText: NonEmptyString      =
       if (obsIds.size === 1) onlyThisMsg
       else onlyCurrentMsg
+    def allOtherExecutedText: NonEmptyString =
+      if (obsIds.size === 1) allThisMsg
+      else allCurrentMsg
 
   def otherMessage(otherCount: Long, hasExecuted: Boolean): NonEmptyString =
     val plural = if (otherCount === 1) "" else "s"
@@ -94,17 +101,25 @@ object TargetEditCloneInfo:
             onlyUnexecutedMsg,
             obsInfo.unexecutedForTarget
           )
-      case Some(editing) if obsInfo.allCurrentAreExecuted         =>
+      case Some(_) if obsInfo.allCurrentAreExecuted               =>
         TargetEditCloneInfo.readonly(allCurrentExecutedMsg)
-      // need to know if the other observations are executed or not
+      // There are no other unexecuted observations, but maybe there are others.
       case Some(editing) if obsInfo.otherUnexecutedObsCount === 0 =>
-        if (obsInfo.allCurrentAreOK)
-          TargetEditCloneInfo.noMessages
+        if (obsInfo.allCurrentAreOK && obsInfo.otherObsCount === 0)
+          TargetEditCloneInfo.noMessages // We're editing all, and they're OK
+        else if (obsInfo.allCurrentAreOK)
+          // we're not editing all of them and they're OK, but the rest are executed.
+          TargetEditCloneInfo.simple(
+            editing.allOtherExecutedText,
+            editing.some
+          )
         else
+          // We're not editing all of them, but some are executed, as are any others.
           TargetEditCloneInfo.simple(
             onlyUnexecutedMsg,
             obsInfo.unexecutedForTarget
           )
+      // There are some other unexecuted observations
       case Some(editing)                                          =>
         if (obsInfo.allForTargetAreOK)
           TargetEditCloneInfo.choice(
@@ -122,7 +137,7 @@ object TargetEditCloneInfo:
             obsInfo.unexecutedForTarget,
             allForTargetMsg(true)
           )
-        else                              // some of observations being edited have been executed
+        else                              // some of observations being edited have been executed, too
           TargetEditCloneInfo.choice(
             someExecutedMsg,
             obsInfo.unexecutedForCurrent,

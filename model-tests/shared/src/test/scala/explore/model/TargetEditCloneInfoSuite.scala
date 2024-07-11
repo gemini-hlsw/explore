@@ -277,13 +277,13 @@ class TargetEditCloneInfoSuite extends FunSuite with MyAssertions {
   test("all besides current are executed") {
     val obsInfo   = TargetEditObsInfo(oneThree.some, allFour.some, twoFour.some)
     val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertNoMessage(cloneInfo)
+    assertSimple(cloneInfo, TargetEditCloneInfo.allCurrentMsg, oneThree.some)
   }
 
   test("all besides current are executed 2") {
     val obsInfo   = TargetEditObsInfo(three.some, allFour.some, oneTwoFour.some)
     val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertNoMessage(cloneInfo)
+    assertSimple(cloneInfo, TargetEditCloneInfo.allThisMsg, three.some)
   }
 
   test("all of current are executed") {
