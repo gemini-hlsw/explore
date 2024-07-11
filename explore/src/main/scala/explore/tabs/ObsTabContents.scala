@@ -72,19 +72,15 @@ case class ObsTabContents(
   expandedGroups:   View[Set[Group.Id]],
   readonly:         Boolean
 ) extends ReactFnProps(ObsTabContents.component):
-  val focusedObs: Option[Observation.Id]                   = focused.obsSet.map(_.head)
-  val focusedTarget: Option[Target.Id]                     = focused.target
-  val focusedGroup: Option[Group.Id]                       = focused.group
-  val obsAttachments: View[ObsAttachmentList]              =
-    programSummaries.model.zoom(ProgramSummaries.obsAttachments)
-  val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
-    programSummaries.get.obsAttachmentAssignments
-  val observations: UndoSetter[ObservationList]            =
+  val focusedObs: Option[Observation.Id]        = focused.obsSet.map(_.head)
+  val focusedTarget: Option[Target.Id]          = focused.target
+  val focusedGroup: Option[Group.Id]            = focused.group
+  val observations: UndoSetter[ObservationList] =
     programSummaries.zoom(ProgramSummaries.observations)
-  val obsExecutions: ObservationExecutionMap               = programSummaries.get.obsExecutionPots
-  val groupTimeRanges: GroupTimeRangeMap                   = programSummaries.get.groupTimeRangePots
-  val groups: UndoSetter[GroupTree]                        = programSummaries.zoom(ProgramSummaries.groups)
-  val targets: UndoSetter[TargetList]                      = programSummaries.zoom(ProgramSummaries.targets)
+  val obsExecutions: ObservationExecutionMap    = programSummaries.get.obsExecutionPots
+  val groupTimeRanges: GroupTimeRangeMap        = programSummaries.get.groupTimeRangePots
+  val groups: UndoSetter[GroupTree]             = programSummaries.zoom(ProgramSummaries.groups)
+  val targets: UndoSetter[TargetList]           = programSummaries.zoom(ProgramSummaries.targets)
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -159,18 +155,12 @@ object ObsTabContents extends TwoPanels:
             // FIXME Find a better mechanism for this.
             // Something like .mapValue but for UndoContext
             props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
-            props.obsExecutions.getPot(obsView.get.id),
-            props.targets,
-            // maybe we want constraintGroups, so we can get saner ids?
-            props.programSummaries.get.constraintGroups.map(_._2).toSet,
-            props.programSummaries.get.targetObservations,
+            props.programSummaries,
             props.focusedTarget,
             props.searching,
             ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
             props.userPreferences.get.observationsTabLayout,
             resize,
-            props.obsAttachments,
-            props.obsAttachmentAssignments,
             props.userPreferences.zoom(UserPreferences.globalPreferences),
             props.readonly
           ).withKey(s"${obsId.show}")

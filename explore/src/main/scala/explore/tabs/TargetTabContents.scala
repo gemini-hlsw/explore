@@ -17,6 +17,7 @@ import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.ObsSummary
+import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
@@ -85,14 +86,8 @@ object TargetTabContents extends TwoPanels:
   ): VdomNode = {
     import ctx.given
 
-    def otherObsCount(obsIds: ObsIdSet)(targetId: Target.Id): Int =
-      props.targets.get
-        .get(targetId)
-        .fold(0)(tg =>
-          (props.programSummaries.get.targetObservations
-            .get(targetId)
-            .orEmpty -- obsIds.toSortedSet).size
-        )
+    def getObsInfo(editing: Option[ObsIdSet])(targetId: Target.Id): TargetEditObsInfo =
+      TargetEditObsInfo.fromProgramSummaries(targetId, editing, props.programSummaries.get)
 
     def targetTree(programSummaries: UndoContext[ProgramSummaries]) =
       AsterismGroupObsList(
@@ -265,11 +260,43 @@ object TargetTabContents extends TwoPanels:
       val configuration: Option[BasicConfiguration] = obsConf.map(_._2)
       val wavelength                                = obsConf.map(_._4)
 
-      def setCurrentTarget(programId: Program.Id, oids: ObsIdSet)(
+      def setCurrentTarget(oids: Option[ObsIdSet])(
         tid: Option[Target.Id],
         via: SetRouteVia
       ): Callback =
-        ctx.setPageVia(AppTab.Targets, programId, Focused(oids.some, tid), via)
+        ctx.setPageVia(AppTab.Targets, props.programId, Focused(oids, tid), via)
+
+      def onCloneTarget4Asterism(
+        oldTid:        Target.Id,
+        newTarget:     TargetWithId,
+        obsIdsToClone: ObsIdSet
+      ): Callback =
+        // the new observation ids in the url will be the intersection of what were editing and
+        // what was cloned. This should always have something because otherwise the target editor
+        // would have been readonly.
+        val obsIds4Url = ObsIdSet.fromSortedSet(idsToEdit.idSet.intersect(obsIdsToClone.idSet))
+        // all of the current groups that contain any of the obsIdsToClone
+        val allGroups  = props.programSummaries.model.get.asterismGroups
+          .filterNot(_._1.idSet.intersect(obsIdsToClone.idSet).isEmpty)
+          .map(_._1)
+          .toList
+          .distinct
+        // update the programSummaries
+        props.programSummaries.model.mod {
+          _.cloneTargetForObservations(oldTid, newTarget, obsIdsToClone)
+        } *>
+          setCurrentTarget(obsIds4Url)(newTarget.id.some, SetRouteVia.HistoryReplace) *>
+          // Deal with the expanded groups - we'll open all affected groups
+          allGroups.traverse { ids =>
+            val intersect = ids.idSet.intersect(obsIdsToClone.idSet)
+            if (intersect === ids.idSet.toSortedSet)
+              props.expandedIds.mod(_ + ids) // it is the whole group, so make sure it is open
+            else
+              // otherwise, close the original and open the subsets
+              ObsIdSet
+                .fromSortedSet(intersect)
+                .foldMap(i => props.expandedIds.mod(_ - ids + i + ids.removeUnsafe(i)))
+          }.void
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
@@ -282,8 +309,9 @@ object TargetTabContents extends TwoPanels:
           vizTimeView,
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none),
           props.focused.target,
-          setCurrentTarget(props.programId, idsToEdit),
-          otherObsCount(idsToEdit),
+          setCurrentTarget(idsToEdit.some),
+          onCloneTarget4Asterism,
+          getObsInfo(idsToEdit.some),
           props.searching,
           title,
           props.globalPreferences,
@@ -322,6 +350,15 @@ object TargetTabContents extends TwoPanels:
       resize:   UseResizeDetectorReturn,
       targetId: Target.Id
     ): List[Tile] = {
+
+      def onCloneTarget4Target(
+        oldTid:    Target.Id,
+        newTarget: TargetWithId,
+        obsIds:    ObsIdSet
+      ): Callback =
+        props.programSummaries.model.mod(_.cloneTargetForObservations(oldTid, newTarget, obsIds))
+          *> ctx.replacePage(AppTab.Targets, props.programId, Focused(none, newTarget.id.some))
+
       val targetTiles: List[Tile] =
         props.targets
           .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
@@ -335,7 +372,9 @@ object TargetTabContents extends TwoPanels:
               s"Editing Target ${target.get.name.value} [$targetId]",
               fullScreen,
               props.globalPreferences,
-              props.readonly
+              props.readonly,
+              getObsInfo(none)(targetId),
+              onCloneTarget4Target
             )
 
             val skyPlotTile: Tile =
