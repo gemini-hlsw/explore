@@ -282,15 +282,13 @@ object TargetTabContents extends TwoPanels:
           .toList
           .distinct
         // update the programSummaries
-        props.programSummaries.model.mod { ps =>
-          val newPs = ps.cloneTargetForObservations(oldTid, newTarget, obsIdsToClone)
-          newPs
+        props.programSummaries.model.mod {
+          _.cloneTargetForObservations(oldTid, newTarget, obsIdsToClone)
         } *>
           setCurrentTarget(obsIds4Url)(newTarget.id.some, SetRouteVia.HistoryReplace) *>
           // Deal with the expanded groups - we'll open all affected groups
           allGroups.traverse { ids =>
             val intersect = ids.idSet.intersect(obsIdsToClone.idSet)
-            println(s"Group Ids: $ids intersection: $intersect")
             if (intersect === ids.idSet.toSortedSet)
               props.expandedIds.mod(_ + ids) // it is the whole group, so make sure it is open
             else
