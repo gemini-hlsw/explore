@@ -100,11 +100,11 @@ object TargetColumns:
     )
 
   object Builder:
-    trait Common[D, TM](colDef: ColumnDef.Applied[D, TM], getTarget: D => Option[Target]):
+    trait Common[D](colDef: ColumnDef.Applied.NoMeta[D], getTarget: D => Option[Target]):
       def baseColumn[V](
         id:       ColumnId,
         accessor: Target => V
-      ): ColumnDef.Single.WithTableMeta[D, Option[V], TM] =
+      ): ColumnDef.Single.NoMeta[D, Option[V]] =
         colDef(id, getTarget.andThen(_.map(accessor)), BaseColNames(id))
 
       val NameColumn =
@@ -141,20 +141,20 @@ object TargetColumns:
             .sortableBy(_.flatten.map(_.toString))
         )
 
-    trait CommonSidereal[D, TM](
-      colDef:            ColumnDef.Applied[D, TM],
+    trait CommonSidereal[D](
+      colDef:            ColumnDef.Applied.NoMeta[D],
       getSiderealTarget: D => Option[Target.Sidereal]
     ):
       def siderealColumnOpt[V](
         id:       ColumnId,
         accessor: Target.Sidereal => Option[V]
-      ): ColumnDef.Single.WithTableMeta[D, Option[V], TM] =
+      ): ColumnDef.Single.NoMeta[D, Option[V]] =
         colDef(id, getSiderealTarget.andThen(_.flatMap(accessor)), SiderealColNames(id))
 
       def siderealColumn[V](
         id:       ColumnId,
         accessor: Target.Sidereal => V
-      ): ColumnDef.Single.WithTableMeta[D, Option[V], TM] =
+      ): ColumnDef.Single.NoMeta[D, Option[V]] =
         siderealColumnOpt(id, accessor.andThen(_.some))
 
       /** Display measure without the uncertainty */
@@ -223,8 +223,8 @@ object TargetColumns:
               .sortable
           )
 
-    case class ForProgram[D, TM](
-      colDef:    ColumnDef.Applied[D, TM],
+    case class ForProgram[D](
+      colDef:    ColumnDef.Applied.NoMeta[D],
       getTarget: D => Option[Target]
     ) extends Common(colDef, getTarget)
         with CommonSidereal(

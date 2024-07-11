@@ -164,8 +164,10 @@ object ExploreLayout:
             View(
               routingInfo,
               (mod, cb) =>
+                val oldRoute = routingInfo
                 val newRoute = mod(routingInfo)
-                ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >> cb(newRoute)
+                ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >>
+                  cb(oldRoute, newRoute)
             )
 
           val helpView = helpCtx.displayedHelp

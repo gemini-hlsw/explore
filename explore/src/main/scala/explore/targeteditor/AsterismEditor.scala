@@ -102,10 +102,10 @@ object AsterismEditor extends AsterismModifier:
         val targetView: View[Option[Target.Id]] =
           View[Option[Target.Id]](
             props.focusedTargetId,
-            { (f, cb) =>
+            (f, cb) =>
+              val oldValue = props.focusedTargetId
               val newValue = f(props.focusedTargetId)
-              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
-            }
+              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
           )
 
         // Save the time here. this works for the obs and target tabs
@@ -121,8 +121,9 @@ object AsterismEditor extends AsterismModifier:
           View(
             props.focusedTargetId,
             (mod, cb) =>
+              val oldValue = props.focusedTargetId
               val newValue = mod(props.focusedTargetId)
-              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(newValue)
+              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
           )
 
         <.div(

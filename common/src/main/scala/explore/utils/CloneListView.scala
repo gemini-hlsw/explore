@@ -12,5 +12,7 @@ import crystal.ViewListF
 final class CloneListView[F[_]: Monad, A](val underlying: ViewListF[F, A])
     extends ViewF[F, A](
       get = underlying.get.head,
-      modCB = (mod, cb) => underlying.modCB(mod, l => cb(l.head))
+      modCB = (mod, cb) =>
+        val previous = underlying.get.head
+        underlying.modCB(mod, l => cb(previous, l.head))
     )

@@ -19,6 +19,7 @@ case class UndoContext[M](
   model:  View[M]
 ) extends UndoSetter[M]
     with Undoer {
+
   private lazy val undoStack: View[UndoStack[DefaultA, M]] = stacks.zoom(UndoStacks.undo)
   private lazy val redoStack: View[UndoStack[DefaultA, M]] = stacks.zoom(UndoStacks.redo)
 
@@ -51,7 +52,7 @@ case class UndoContext[M](
 
   def restore(restorerOpt: Option[Restorer[DefaultA, M]]): DefaultS[Unit] =
     restorerOpt
-      .map(restorer =>
+      .map: restorer =>
         for {
           _ <- model.mod(restorer.setter(restorer.value))
           f <-
@@ -62,29 +63,29 @@ case class UndoContext[M](
                 .set(false)
                 .to[DefaultA]).runAsyncAndForget
         } yield f
-      )
       .getOrEmpty
 
   def set[A](
     getter:    M => A,
     setter:    A => M => M,
-    onSet:     (M, A) => DefaultA[Unit],
-    onRestore: (M, A) => DefaultA[Unit]
+    onSet:     (M, A) => DefaultA[Unit], // M is the old model, A is the new value
+    onRestore: (M, A) => DefaultA[Unit]  // M is the old model, A is the new value
   )(v: A): DefaultS[Unit] =
-    for {
-      _ <- push(undoStack)(Restorer[DefaultA, M, A](model.get, getter, setter, onRestore))
-      _ <- reset(redoStack)
-      _ <- model.mod.compose(setter)(v)
-      f <- onSet(model.get, v).runAsyncAndForget // TODO: Log errors
-    } yield f
+    mod(getter, setter, onSet, onRestore)(_ => v)
 
   def mod[A](
     getter:    M => A,
     setter:    A => M => M,
-    onSet:     (M, A) => DefaultA[Unit],
-    onRestore: (M, A) => DefaultA[Unit]
+    onSet:     (M, A) => DefaultA[Unit], // M is the old model, A is the new value
+    onRestore: (M, A) => DefaultA[Unit]  // M is the old model, A is the new value
   )(f: A => A): DefaultS[Unit] =
-    set(getter, setter, onSet, onRestore)(f(getter(model.get)))
+    model.modCB(
+      oldModel => setter(f(getter(oldModel)))(oldModel),
+      (oldModel, newModel) =>
+        push(undoStack)(Restorer[DefaultA, M, A](oldModel, getter, setter, onRestore)) >>
+          reset(redoStack) >>
+          onSet(oldModel, getter(newModel)).runAsyncAndForget
+    )
 
   val undo: DefaultS[Unit] = undoStacks >>= restore
 
