@@ -15,8 +15,11 @@ object ExploreStyles:
 
   val Tile: Css                       = Css("explore-tile")
   val TileTitle: Css                  = Css("explore-tile-title")
+  val TileTitleText: Css              = Css("explore-tile-title-text")
   val TileTitleMenu: Css              = Css("explore-tile-title-menu")
+  val TileTitleControl: Css           = Css("explore-tile-title-control")
   val TileTitleStrip: Css             = Css("explore-tile-title-strip")
+  val TileDraggable: Css              = Css("explore-tile-draggable")
   val TileTitleControlArea: Css       = Css("explore-tile-title-control-area")
   val JustifiedEndTileControl: Css    = Css("justified-end-tile-control")
   val JustifiedCenterTileControl: Css = Css("justified-center-tile-control")
@@ -152,12 +155,12 @@ object ExploreStyles:
   val FinderChartsBackground: Css    = Css("finder-charts-background")
 
   val FinderChartsSelectorSection: Css = Css("finder-charts-selector-section")
-  val FinderChartsInTitle: Css         = Css("finder-charts-in-title")
 
   val DraggingOver: Css = Css("dragging-over")
 
   val TargetTileBody: Css            = Css("target-tile-body")
   val TargetTileEditor: Css          = Css("target-tile-editor")
+  val AddTargetButton: Css           = Css("add-target-button")
   val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
   val WithGaussian: Css              = Css("with-gaussian")
   val WithCatalogInfo: Css           = Css("with-catalog-info")
