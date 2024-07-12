@@ -11,10 +11,12 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ExploreGridLayouts
+import explore.model.PartnerAllocationList
 import explore.model.ProgramTabTileIds
 import explore.model.ProgramTimes
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
+import explore.model.layout.LayoutsMap
 import explore.programs.ProgramChangeRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
@@ -32,42 +34,46 @@ case class ProgramTabContents(
   programId:       Program.Id,
   userVault:       Option[UserVault],
   programTimes:    Pot[ProgramTimes],
+  allocations:     PartnerAllocationList,
   userPreferences: UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 
 object ProgramTabContents:
-
   private type Props = ProgramTabContents
 
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useResizeDetector()
-    .render { (props, _, resize) =>
-      val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
+    .render: (props, _, resize) =>
+      val defaultLayouts: LayoutsMap =
+        ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
 
-      val layouts = props.userPreferences.programsTabLayout
+      val layouts: LayoutsMap =
+        props.userPreferences.programsTabLayout
 
-      val detailsTile = Tile(
-        ProgramTabTileIds.DetailsId.id,
-        "Program Details",
-        canMinimize = true
-      )(_ => ProgramDetailsTile(props.programTimes))
+      val detailsTile: Tile =
+        Tile(
+          ProgramTabTileIds.DetailsId.id,
+          "Program Details",
+          canMinimize = true
+        )(_ => ProgramDetailsTile(props.allocations, props.programTimes))
 
-      val notesTile = Tile(
-        ProgramTabTileIds.NotesId.id,
-        "Notes",
-        canMinimize = true
-      )(_ => ProgramNotesTile())
+      val notesTile: Tile =
+        Tile(
+          ProgramTabTileIds.NotesId.id,
+          "Notes",
+          canMinimize = true
+        )(_ => ProgramNotesTile())
 
-      val changeRequestsTile = Tile(
-        ProgramTabTileIds.ChangeRequestsId.id,
-        "Change Requests",
-        canMinimize = true
-      )(_ => ProgramChangeRequestsTile())
+      val changeRequestsTile: Tile =
+        Tile(
+          ProgramTabTileIds.ChangeRequestsId.id,
+          "Change Requests",
+          canMinimize = true
+        )(_ => ProgramChangeRequestsTile())
 
-      <.div(
-        ExploreStyles.MultiPanelTile,
+      <.div(ExploreStyles.MultiPanelTile)(
         TileController(
           props.userVault.map(_.user.id),
           resize.width.getOrElse(1),
@@ -81,5 +87,3 @@ object ProgramTabContents:
           GridLayoutSection.ProgramsLayout
         )
       ).withRef(resize.ref)
-
-    }

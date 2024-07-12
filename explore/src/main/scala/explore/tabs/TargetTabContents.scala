@@ -320,16 +320,13 @@ object TargetTabContents extends TwoPanels:
         )
 
       val selectedCoordinates: Option[Coordinates] =
-        props.focused.target.flatMap(id =>
+        props.focused.target.flatMap: id =>
           props.targets.get
             .get(id)
-            .flatMap {
-              case t @ Target.Sidereal(_, _, _, _) =>
-                // TODO PM correction
+            .flatMap:
+              case t @ Target.Sidereal(_, _, _, _) => // TODO PM correction
                 Target.Sidereal.baseCoordinates.get(t).some
               case _                               => none
-            }
-        )
 
       val skyPlotTile =
         ElevationPlotTile.elevationPlotTile(
@@ -366,7 +363,6 @@ object TargetTabContents extends TwoPanels:
             val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
               props.userId,
               targetId,
-              // props.targets.zoom(getTarget, modTarget),
               target,
               props.searching,
               s"Editing Target ${target.get.name.value} [$targetId]",

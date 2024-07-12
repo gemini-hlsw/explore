@@ -21,7 +21,7 @@ object PartnerSplit:
   val percent: Lens[PartnerSplit, IntPercent] = Focus[PartnerSplit](_.percent)
 
   given Decoder[PartnerSplit] = c =>
-    for {
+    for
       partner <- c.downField("partner").as[Partner]
       percent <- c.downField("percent").as[IntPercent]
-    } yield PartnerSplit(partner, percent)
+    yield PartnerSplit(partner, percent)

@@ -57,7 +57,6 @@ import ObsQueries.*
 
 case class ObsList(
   observations:      UndoSetter[ObservationList],
-  // observations:      UndoContext[ObservationList],
   obsExecutionTimes: ObservationExecutionMap,
   undoer:            Undoer,
   programId:         Program.Id,
@@ -66,7 +65,6 @@ case class ObsList(
   focusedGroup:      Option[Group.Id],
   setSummaryPanel:   Callback,
   groups:            UndoSetter[GroupTree],
-  // groups:            UndoContext[GroupTree],
   expandedGroups:    View[Set[Group.Id]],
   deckShown:         View[DeckShown],
   readonly:          Boolean

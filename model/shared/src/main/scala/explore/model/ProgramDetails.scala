@@ -20,7 +20,8 @@ case class ProgramDetails(
   pi:             Option[ProgramUserWithRole],
   users:          List[ProgramUserWithRole],
   invitations:    List[CoIInvitation],
-  reference:      Option[ProgramReference]
+  reference:      Option[ProgramReference],
+  allocations:    PartnerAllocationList
 ) derives Eq:
   val allUsers: List[ProgramUserWithRole] = pi.fold(users)(_ :: users)
 
@@ -43,5 +44,15 @@ object ProgramDetails:
       in <- c.get[List[CoIInvitation]]("userInvitations")
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
-    } yield ProgramDetails(t, p, ps, pi.map(ProgramUserWithRole(_, None, None)), us, in, r.flatten)
+      as <- c.downField("allocations").as[PartnerAllocationList]
+    } yield ProgramDetails(
+      t,
+      p,
+      ps,
+      pi.map(ProgramUserWithRole(_, None, None)),
+      us,
+      in,
+      r.flatten,
+      as
+    )
   )

@@ -3117,14 +3117,45 @@ a.explore-upgrade-link {
   justify-content: space-between;
 }
 
-.program-tab-table {
+.pl-react-table.program-tab-table {
+  width: initial; // undo width: 100% from lucuma-ui
   border-collapse: collapse;
   margin: 1em;
+
+  thead,
+  tbody,
+  tfoot {
+    tr {
+      th, td {
+        padding: 0.5em;
+        text-align: right;
+
+        &:first-child:not(:last-child) {
+          font-weight: bold;
+          border-right: 1px solid var(--site-border-color);
+        }
+
+        &:last-child:not(:first-child) {
+          font-weight: bold;
+          border-left: 1px solid var(--site-border-color);
+        }
+      }
+    }
+  }
 
   thead {
     tr {
       th {
-        padding: 0.5em;
+        border: 0;
+        text-align: center;
+        font-weight: bold;
+      }
+    }
+  }
+
+  tfoot {
+    tr {
+      td {
         font-weight: bold;
       }
     }
@@ -3134,24 +3165,6 @@ a.explore-upgrade-link {
   tfoot {
     border-top: 1.5px solid var(--site-border-color);
     background-color: transparent;
-
-    tr {
-      td {
-        &:first-child {
-          font-weight: bold;
-          border-right: 1px solid var(--site-border-color);
-          text-align: right;
-        }
-
-        &:last-child {
-          border-left: 1px solid var(--site-border-color);
-        }
-
-        vertical-align: middle;
-        padding: 0.5em;
-        font-weight: normal;
-      }
-    }
   }
 }
 
@@ -3164,3 +3177,4 @@ a.explore-upgrade-link {
   color: yellow;
   z-index: 100;
 }
+
