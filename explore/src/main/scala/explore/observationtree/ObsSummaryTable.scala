@@ -140,6 +140,16 @@ object ObsSummaryTable:
   ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
     ColDef(id, v => v.value.fold(_ => none, accessor(_).some), columnNames(id))
 
+  extension [A](name: String | (A, TargetWithId))
+    def sortableValue =
+      name match
+        case s: String => s
+        case (_, b)    => b.target.name.value
+
+  extension (a: Option[Pot[Option[TimeSpan]]])
+    def sortableValue =
+      a.flatMap(_.toOption).flatten
+
   // Column with expanded accessor. For rows that have data in the expanded target row.
   private def mixedColumn[V](
     id:               ColumnId,
@@ -212,17 +222,7 @@ object ObsSummaryTable:
               }
             }
             .setSortingFn { (a, b, c) =>
-              val aʹ: String | (Observation.Id, TargetWithId) = a.getValue(c)
-              val aʹʹ                                         = aʹ match {
-                case s: String => s
-                case (_, b)    => b.target.name.value
-              }
-              val bʹ: String | (Observation.Id, TargetWithId) = b.getValue(c)
-              val bʹʹ                                         = bʹ match {
-                case s: String => s
-                case (_, b)    => b.target.name.value
-              }
-              aʹʹ.compareTo(bʹʹ)
+              a.getValue(c).sortableValue.compareTo(b.getValue(c).sortableValue)
             },
           mixedColumn(
             RAColumnId,
@@ -279,9 +279,7 @@ object ObsSummaryTable:
             cell.value.map:
               _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
           }.setSortingFn { (a, b, c) =>
-            val aʹ: Option[Pot[Option[TimeSpan]]] = a.getValue(c)
-            val bʹ: Option[Pot[Option[TimeSpan]]] = b.getValue(c)
-            tsOrder.compare(aʹ.flatMap(_.toOption).flatten, bʹ.flatMap(_.toOption).flatten)
+            tsOrder.compare(a.getValue(c).sortableValue, b.getValue(c).sortableValue)
           }
           // TODO: PriorityColumnId
           // TODO: ChargedTimeColumnId
