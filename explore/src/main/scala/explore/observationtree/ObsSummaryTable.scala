@@ -158,8 +158,6 @@ object ObsSummaryTable:
   ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], V] =
     ColDef(id, v => v.value.fold(expandedAccessor, accessor), columnNames(id))
 
-  val tsOrder = summon[Order[Option[TimeSpan]]]
-
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
@@ -221,9 +219,7 @@ object ObsSummaryTable:
                 case (a, b)    => targetUrl(a, b)
               }
             }
-            .setSortingFn { (a, b, c) =>
-              a.getValue(c).sortableValue.compareTo(b.getValue(c).sortableValue)
-            },
+            .sortableBy(_.sortableValue),
           mixedColumn(
             RAColumnId,
             // at visualization time, defaults to base coordinates
@@ -278,9 +274,7 @@ object ObsSummaryTable:
           ).setCell { cell =>
             cell.value.map:
               _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
-          }.setSortingFn { (a, b, c) =>
-            tsOrder.compare(a.getValue(c).sortableValue, b.getValue(c).sortableValue)
-          }
+          }.sortableBy(_.sortableValue)
           // TODO: PriorityColumnId
           // TODO: ChargedTimeColumnId
         )
