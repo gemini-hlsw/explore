@@ -3,7 +3,8 @@
 
 package explore.observationtree
 
-import cats.Order.*
+import cats.Order
+import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
@@ -40,6 +41,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
@@ -54,7 +56,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
-import org.scalajs.dom.html.Anchor
 import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
@@ -139,6 +140,16 @@ object ObsSummaryTable:
   ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
     ColDef(id, v => v.value.fold(_ => none, accessor(_).some), columnNames(id))
 
+  extension [A](name: String | (A, TargetWithId))
+    def sortableValue =
+      name match
+        case s: String => s
+        case (_, b)    => b.target.name.value
+
+  extension (a: Option[Pot[Option[TimeSpan]]])
+    def sortableValue =
+      a.flatMap(_.toOption).flatten
+
   // Column with expanded accessor. For rows that have data in the expanded target row.
   private def mixedColumn[V](
     id:               ColumnId,
@@ -199,10 +210,16 @@ object ObsSummaryTable:
             .setSize(35.toPx),
           mixedColumn(
             TargetColumnId,
-            r => <.span(r.obs.title),
-            r => targetUrl(r.obsId, r.targetWithId)
+            r => r.obs.title,
+            r => (r.obsId, r.targetWithId)
           )
-            .setCell(_.value),
+            .setCell { c =>
+              c.value match {
+                case s: String => <.span(s)
+                case (a, b)    => targetUrl(a, b)
+              }
+            }
+            .sortableBy(_.sortableValue),
           mixedColumn(
             RAColumnId,
             // at visualization time, defaults to base coordinates
@@ -254,9 +271,10 @@ object ObsSummaryTable:
           obsColumn(
             DurationColumnId,
             _.execution.map(_.programTimeEstimate)
-          ).setCell: cell =>
+          ).setCell { cell =>
             cell.value.map:
               _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
+          }.sortableBy(_.sortableValue)
           // TODO: PriorityColumnId
           // TODO: ChargedTimeColumnId
         )
