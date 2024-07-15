@@ -89,7 +89,7 @@ object ProgramUsersTable:
           ).withTooltip(partner.longName)
         )
       ),
-      column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail)),
+      column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
       column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
       column(RoleColumnId, _.roleName),
       ColDef(
