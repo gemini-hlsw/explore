@@ -49,3 +49,14 @@ object AsterismQueries:
       SET = EditAsterismsPatchInput(DELETE = targetIds.assign)
     )
     UpdateAsterismsMutation[F].execute(input).void
+
+  def addAndRemoveTargetsFromAsterisms[F[_]: Async](
+    obsIds:   List[Observation.Id],
+    toAdd:    List[Target.Id],
+    toRemove: List[Target.Id]
+  )(using FetchClient[F, ObservationDB]) =
+    val input = UpdateAsterismsInput(
+      WHERE = obsIds.toWhereObservation.assign,
+      SET = EditAsterismsPatchInput(ADD = toAdd.assign, DELETE = toRemove.assign)
+    )
+    UpdateAsterismsMutation[F].execute(input).void

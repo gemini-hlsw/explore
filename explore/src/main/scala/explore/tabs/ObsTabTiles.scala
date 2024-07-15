@@ -26,6 +26,7 @@ import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
+import explore.model.OnCloneParameters
 import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.model.display.given
@@ -483,11 +484,8 @@ object ObsTabTiles:
                 via
               )
 
-            def onCloneTarget(oldTid: Target.Id, newTarget: TargetWithId, obsIds: ObsIdSet)
-              : Callback =
-              props.programSummaries.model.mod(
-                _.cloneTargetForObservations(oldTid, newTarget, obsIds)
-              ) *> setCurrentTarget(newTarget.id.some, SetRouteVia.HistoryReplace)
+            def onCloneTarget(params: OnCloneParameters): Callback =
+              setCurrentTarget(params.idToAdd.some, SetRouteVia.HistoryReplace)
 
             val targetTile: Tile =
               AsterismEditorTile.asterismEditorTile(
@@ -496,6 +494,7 @@ object ObsTabTiles:
                 ObsIdSet.one(props.obsId),
                 asterismIds,
                 props.allTargets,
+                props.programSummaries,
                 basicConfiguration,
                 vizTimeView,
                 obsConf,

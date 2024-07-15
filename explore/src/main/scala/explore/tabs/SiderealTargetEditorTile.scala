@@ -10,13 +10,16 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.GlobalPreferences
-import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
+import explore.model.OnCloneParameters
+import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.targeteditor.SiderealTargetEditor
+import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
@@ -25,16 +28,18 @@ import lucuma.ui.syntax.all.given
 object SiderealTargetEditorTile {
 
   def noObsSiderealTargetEditorTile(
+    programId:         Program.Id,
     userId:            Option[User.Id],
     targetId:          Target.Id,
     target:            UndoSetter[Target.Sidereal],
+    programSummaries:  UndoContext[ProgramSummaries],
     searching:         View[Set[Target.Id]],
     title:             String,
     fullScreen:        View[AladinFullScreen],
     globalPreferences: View[GlobalPreferences],
     readonly:          Boolean,
     obsInfo:           TargetEditObsInfo,
-    onClone:           (Target.Id, TargetWithId, ObsIdSet) => Callback,
+    onClone:           OnCloneParameters => Callback,
     backButton:        Option[VdomNode] = none
   ) =
     Tile(
@@ -50,8 +55,10 @@ object SiderealTargetEditorTile {
           ExploreStyles.TargetTileEditor,
           userId.map(uid =>
             SiderealTargetEditor(
+              programId,
               uid,
               target,
+              programSummaries,
               Asterism.one(TargetWithId(targetId, target.get)),
               vizTime = none,
               obsConf = none,

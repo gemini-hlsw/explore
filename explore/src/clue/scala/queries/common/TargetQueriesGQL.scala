@@ -6,7 +6,6 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.model as schemasModel
 import lucuma.schemas.odb.*
 // gql: import lucuma.schemas.decoders.given
 
@@ -53,30 +52,11 @@ object TargetQueriesGQL {
   }
 
   @GraphQL
-  trait UpdateTargetsMutationWithResult extends GraphQLOperation[ObservationDB] {
-    val document = s"""
-      mutation($$input: UpdateTargetsInput!) {
-        updateTargets(input: $$input) {
-          targets $TargetWithIdSubquery
-        }
-      }
-    """
-
-    object Data {
-      object UpdateTargets {
-        type Targets = schemasModel.TargetWithId
-      }
-    }
-  }
-
-  @GraphQL
   trait CloneTargetMutation extends GraphQLOperation[ObservationDB] {
-    val document = """
-      mutation($input: CloneTargetInput!) {
-        cloneTarget(input: $input) {
-          newTarget {
-            id
-          }
+    val document = s"""
+      mutation($$input: CloneTargetInput!) {
+        cloneTarget(input: $$input) {
+          newTarget $TargetWithIdSubquery
         }
       }
     """

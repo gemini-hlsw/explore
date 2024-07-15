@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -17,6 +18,7 @@ import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.ObsSummary
+import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
@@ -68,7 +70,7 @@ case class TargetTabContents(
   expandedIds:      View[SortedSet[ObsIdSet]],
   readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
-  val targets: UndoSetter[TargetList] = props.programSummaries.zoom(ProgramSummaries.targets)
+  val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
   val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
@@ -267,37 +269,38 @@ object TargetTabContents extends TwoPanels:
       ): Callback =
         ctx.setPageVia(AppTab.Targets, props.programId, Focused(oids, tid), via)
 
-      def onCloneTarget4Asterism(
-        oldTid:        Target.Id,
-        newTarget:     TargetWithId,
-        obsIdsToClone: ObsIdSet
-      ): Callback =
-        // the new observation ids in the url will be the intersection of what were editing and
-        // what was cloned. This should always have something because otherwise the target editor
-        // would have been readonly.
-        val obsIds4Url = ObsIdSet.fromSortedSet(idsToEdit.idSet.intersect(obsIdsToClone.idSet))
-        // all of the current groups that contain any of the obsIdsToClone
-        val allGroups  = props.programSummaries.model.get.asterismGroups
-          .filterNot(_._1.idSet.intersect(obsIdsToClone.idSet).isEmpty)
+      def onCloneTarget4Asterism(params: OnCloneParameters): Callback =
+        // props.programSummaries.get will always contain the original groups. On creating,
+        // params.summaries would contain the groups after the clone, but that isn't as useful here.
+        val allOriginalGroups = props.programSummaries.get.asterismGroups
+          .filterForObsInSet(params.obsIds)
           .map(_._1)
-          .toList
-          .distinct
-        // update the programSummaries
-        props.programSummaries.model.mod {
-          _.cloneTargetForObservations(oldTid, newTarget, obsIdsToClone)
-        } *>
-          setCurrentTarget(obsIds4Url)(newTarget.id.some, SetRouteVia.HistoryReplace) *>
-          // Deal with the expanded groups - we'll open all affected groups
-          allGroups.traverse { ids =>
-            val intersect = ids.idSet.intersect(obsIdsToClone.idSet)
-            if (intersect === ids.idSet.toSortedSet)
-              props.expandedIds.mod(_ + ids) // it is the whole group, so make sure it is open
-            else
-              // otherwise, close the original and open the subsets
-              ObsIdSet
-                .fromSortedSet(intersect)
-                .foldMap(i => props.expandedIds.mod(_ - ids + i + ids.removeUnsafe(i)))
-          }.void
+          .toSet
+        selectedTargetIds.set(List(params.idToAdd)) >>
+          (if (params.areCreating) {
+             val obsIds4Url =
+               ObsIdSet.fromSortedSet(idsToEdit.idSet.intersect(params.obsIds.idSet))
+               // all of the original groups that have any of the cloned ids
+               // Deal with the expanded groups - we'll open all affected groups
+             allOriginalGroups.toList.traverse { ids =>
+               val intersect = ids.idSet.intersect(params.obsIds.idSet)
+               if (intersect === ids.idSet.toSortedSet)
+                 props.expandedIds.mod(_ + ids) // it is the whole group, so make sure it is open
+               else
+                 // otherwise, close the original and open the subsets
+                 ObsIdSet
+                   .fromSortedSet(intersect)
+                   .foldMap(i =>
+                     Callback.log(s"Setting expanded ids for $ids subset $i") >>
+                       props.expandedIds.mod(_ - ids + i + ids.removeUnsafe(i))
+                   )
+             }.void >>
+               setCurrentTarget(obsIds4Url)(params.cloneId.some, SetRouteVia.HistoryReplace)
+           } else {
+             // We'll open all of the original groups who had any observations affected by the cloning.
+             props.expandedIds.mod(_ ++ SortedSet.from(allOriginalGroups)) >>
+               setCurrentTarget(idsToEdit.some)(params.originalId.some, SetRouteVia.HistoryReplace)
+           })
 
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
@@ -306,6 +309,7 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           asterismView,
           props.targets,
+          props.programSummaries,
           configuration,
           vizTimeView,
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none),
@@ -349,22 +353,22 @@ object TargetTabContents extends TwoPanels:
       targetId: Target.Id
     ): List[Tile] = {
 
-      def onCloneTarget4Target(
-        oldTid:    Target.Id,
-        newTarget: TargetWithId,
-        obsIds:    ObsIdSet
-      ): Callback =
-        props.programSummaries.model.mod(_.cloneTargetForObservations(oldTid, newTarget, obsIds))
-          *> ctx.replacePage(AppTab.Targets, props.programId, Focused(none, newTarget.id.some))
+      def onCloneTarget4Target(params: OnCloneParameters): Callback =
+        // It's not perfect, but we'll go to whatever url has the "new" id. This means
+        // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
+        selectedTargetIds.set(List(params.idToAdd)) >>
+          ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
 
       val targetTiles: List[Tile] =
         props.targets
           .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
           .map { target =>
             val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+              props.programId,
               props.userId,
               targetId,
               target,
+              props.programSummaries,
               props.searching,
               s"Editing Target ${target.get.name.value} [$targetId]",
               fullScreen,

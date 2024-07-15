@@ -24,8 +24,11 @@ import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.OnCloneParameters
+import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.syntax.ui.*
+import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -33,6 +36,7 @@ import japgolly.scalajs.react.util.DefaultEffects.Sync as DefaultS
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators
+import lucuma.core.model.Program
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -42,7 +46,7 @@ import lucuma.react.primereact.Message
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.model.*
+import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
@@ -58,15 +62,16 @@ import queries.common.TargetQueriesGQL
 import java.time.Instant
 
 case class SiderealTargetEditor(
+  programId:          Program.Id,
   userId:             User.Id,
   target:             UndoSetter[Target.Sidereal],
+  programSummaries:   UndoContext[ProgramSummaries],
   asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
   vizTime:            Option[Instant],
   obsConf:            Option[ObsConfiguration],
   searching:          View[Set[Target.Id]],
   obsInfo:            TargetEditObsInfo,
-  // params are oldTargetId, newTarget, observationids for which the target will be cloned
-  onClone:            (Target.Id, TargetWithId, ObsIdSet) => Callback,
+  onClone:            OnCloneParameters => Callback,
   renderInTitle:      Option[Tile.RenderInTitle] = None,
   fullScreen:         View[AladinFullScreen],
   globalPreferences:  View[GlobalPreferences],
@@ -77,22 +82,25 @@ case class SiderealTargetEditor(
 object SiderealTargetEditor:
   private type Props = SiderealTargetEditor
 
-  private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet)(using
+  private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet, set: TargetPropertiesInput)(using
     FetchClient[IO, ObservationDB]
-  ): IO[Target.Id] = TargetQueriesGQL
-    .CloneTargetMutation[IO]
-    .execute(
-      CloneTargetInput(targetId = targetId, REPLACE_IN = obsIds.toList.assign)
-    )
-    .map(_.cloneTarget.newTarget.id)
+  ): IO[TargetWithId] =
+    TargetQueriesGQL
+      .CloneTargetMutation[IO]
+      .execute(
+        CloneTargetInput(targetId = targetId, REPLACE_IN = obsIds.toList.assign, SET = set.assign)
+      )
+      .map(_.cloneTarget.newTarget)
 
   private def getRemoteOnMod(
-    id:      Target.Id,
-    optObs:  Option[ObsIdSet],
-    cloning: View[Boolean],
-    onClone: (Target.Id, TargetWithId, ObsIdSet) => Callback
+    programId:        Program.Id,
+    id:               Target.Id,
+    optObs:           Option[ObsIdSet],
+    cloning:          View[Boolean],
+    programSummaries: UndoContext[ProgramSummaries],
+    onClone:          OnCloneParameters => Callback
   )(
-    input:   UpdateTargetsInput
+    input:            UpdateTargetsInput
   )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     optObs
       .fold(
@@ -101,15 +109,15 @@ object SiderealTargetEditor:
           .execute(input)
           .void
       ) { obsIds =>
-        cloneTarget(id, obsIds)
-          .flatMap { newId =>
-            val newInput = UpdateTargetsInput.WHERE.replace(newId.toWhereTarget.assign)(input)
-            TargetQueriesGQL
-              .UpdateTargetsMutationWithResult[IO]
-              .execute(newInput)
-              .flatMap(data =>
-                data.updateTargets.targets.headOption.foldMap(onClone(id, _, obsIds).toAsync)
-              )
+        cloneTarget(id, obsIds, input.SET)
+          .flatMap { clone =>
+            (TargetCloneAction
+              .cloneTarget(programId, id, clone, obsIds, onClone)
+              .set(
+                programSummaries
+              )(clone.target.some) >>
+              // If we do the first `onClone` here, the UI works correctly.
+              onClone(OnCloneParameters(id, clone.id, obsIds, true))).toAsync
           }
           .switching(cloning.async)
 
@@ -137,9 +145,11 @@ object SiderealTargetEditor:
 
         val remoteOnMod: UpdateTargetsInput => IO[Unit] =
           getRemoteOnMod(
+            props.programId,
             props.asterism.focus.id,
             obsToCloneTo.get,
             cloning,
+            props.programSummaries,
             props.onClone
           ).andThen(
             _.handleErrorWith(t =>
