@@ -28,7 +28,6 @@ addCommandAlias(
 ThisBuild / description                         := "Explore"
 Global / onChangedBuildSource                   := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
-ThisBuild / scalafixScalaBinaryVersion          := "2.13"
 ThisBuild / scalaVersion                        := "3.4.2"
 ThisBuild / crossScalaVersions                  := Seq("3.4.2")
 ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
