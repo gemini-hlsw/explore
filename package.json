@@ -13,7 +13,6 @@
     "@react-hook/size": "^2.1.2",
     "@tanstack/react-table": "^8.19.2",
     "@tanstack/react-virtual": "v3.8.3",
-    "github-markdown-css": "^5.6.1",
     "highcharts": "11.4.6",
     "loglevel": "1.9.1",
     "primeicons": "^7.0.0",

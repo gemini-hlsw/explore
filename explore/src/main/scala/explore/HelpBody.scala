@@ -52,6 +52,8 @@ object HelpBody:
       .attempt
       .map(_.flatten.toTry)
 
+  val themeAttr = VdomAttr("data-theme")
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -91,6 +93,7 @@ object HelpBody:
           ),
           <.div(
             ExploreStyles.HelpBody,
+            themeAttr := "light",
             state.get match {
               case Pot.Ready(a)                                 =>
                 ReactMarkdown(

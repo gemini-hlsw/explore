@@ -249,6 +249,7 @@ object TargetTabContents extends TwoPanels:
                   Some(wavelength),
                   _,
                   _,
+                  _,
                   _
                 ) if obsId === id =>
               (const, conf.toBasicConfiguration, posAngle, wavelength)

@@ -12,6 +12,7 @@ import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.TimingWindowsQueries
 import explore.components.Tile
@@ -389,20 +390,16 @@ object ObsTabTiles:
                 props.readonly
               )
 
-            val notesTile =
-              Tile(
-                ObsTabTilesIds.NotesId.id,
-                s"Note for Observer",
-                canMinimize = true
-              )(_ =>
-                <.div(
-                  ExploreStyles.NotesWrapper,
-                  <.div(
-                    ExploreStyles.ObserverNotes,
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-                  )
-                )
-              )
+            val notesView: View[Option[NonEmptyString]] =
+              props.observation.model
+                .zoom(ObsSummary.observerNotes)
+                .withOnMod { notes =>
+                  ObsQueries
+                    .updateNotes[IO](List(props.obsId), notes)
+                    .runAsync
+                }
+
+            val notesTile = NotesTile.notesTile(props.obsId, notesView)
 
             val sequenceTile =
               SequenceEditorTile.sequenceTile(props.programId,

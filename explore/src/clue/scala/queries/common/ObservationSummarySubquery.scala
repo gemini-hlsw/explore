@@ -51,5 +51,6 @@ object ObservationSummarySubquery
             code
             messages
           }
+          observerNotes
         }
       """

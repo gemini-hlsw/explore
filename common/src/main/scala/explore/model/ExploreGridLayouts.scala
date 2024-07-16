@@ -173,7 +173,7 @@ object ExploreGridLayouts:
     )
 
   object observations:
-    private lazy val NotesMaxHeight: NonNegInt         = 3.refined
+    private lazy val NotesMaxHeight: NonNegInt         = 5.refined
     private lazy val TargetHeight: NonNegInt           = 18.refined
     private lazy val TargetMinHeight: NonNegInt        = 15.refined
     private lazy val SkyPlotHeight: NonNegInt          = 9.refined
@@ -197,8 +197,7 @@ object ExploreGridLayouts:
           y = 0,
           w = DefaultWidth.value,
           h = NotesMaxHeight.value,
-          i = ObsTabTilesIds.NotesId.id.value,
-          isResizable = false
+          i = ObsTabTilesIds.NotesId.id.value
         ),
         LayoutItem(
           x = 0,
