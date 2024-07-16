@@ -53,7 +53,6 @@ object FinderChartsTile:
       s"Finder Charts",
       bodyClass = ExploreStyles.FinderChartsTile,
       canMinimize = true,
-      renderInTitleClass = ExploreStyles.FinderChartsInTitle,
       control = state => control.filter(_ => state.isMinimized)
     )(renderInTitle =>
       authToken

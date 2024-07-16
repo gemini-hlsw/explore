@@ -65,6 +65,7 @@ trait AsterismModifier:
     targetInfo:  View[TargetList],
     adding:      View[AreAdding],
     after:       Option[Target.Id] => IO[Unit] = _ => IO.unit,
+    readOnly:    Boolean = false,
     buttonClass: Css = Css.Empty
   )(using
     FetchClient[IO, ObservationDB],
@@ -81,7 +82,7 @@ trait AsterismModifier:
       trigger = Button(
         severity = Button.Severity.Success,
         icon = Icons.New,
-        disabled = adding.get.value,
+        disabled = readOnly || adding.get.value,
         loading = adding.get.value,
         label = label,
         clazz = buttonClass

@@ -111,7 +111,7 @@ def attachmentSelector(
       Icons.FileArrowUp.withFixedWidth(true)
     ).withTooltip(
       tooltip = s"Upload new finder chart",
-      placement = Placement.Right
+      placement = Placement.Bottom
     ).when(!readOnly),
     <.input(
       ExploreStyles.FileUpload,

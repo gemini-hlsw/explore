@@ -601,9 +601,16 @@ thead tr th.sticky-header {
   justify-content: space-between;
   height: exploreCommon.$tile-title-height;
 
-  & .tabular.menu .item {
-    color: var(--tile-title-color);
-    letter-spacing: 0.1em;
+  .explore-tile-title-text {
+    @include lucumaUICommon.text-ellipsis;
+
+    flex-shrink: 1;
+  }
+
+  .explore-tile-title-control-area {
+    flex: 1;
+    display: flex;
+    justify-items: center;
   }
 }
 
@@ -613,13 +620,9 @@ thead tr th.sticky-header {
   cursor: move;
   padding: 0.5em;
   letter-spacing: 2px;
-  min-width: min-content;
+  min-width: 100px;
   display: flex;
   align-items: center;
-}
-
-.explore-tile-title-control-area {
-  flex-grow: 1;
 }
 
 .explore-tile-control {
@@ -631,7 +634,7 @@ thead tr th.sticky-header {
   flex-shrink: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-evenly;
 }
 
 .explore-tile-control-buttons {
@@ -1134,6 +1137,22 @@ thead tr th.sticky-header {
   }
 }
 
+.add-target-button {
+  .p-button-label {
+    display: none;
+  }
+}
+
+@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+  .add-target-button {
+    margin-left: 1em;
+
+    .p-button-label {
+      display: block;
+    }
+  }
+}
+
 $search-preview-height-mobile: 150px;
 $search-preview-width: 250px;
 $search-preview-margin: 5px;
@@ -1237,13 +1256,22 @@ $search-preview-margin: 5px;
   display: flex;
   gap: 1rem;
 
+  // Hide the info icon on small screens
+  > :first-child {
+    display: none;
+  }
+
   .explore-sequence-tile-title-item {
     font-weight: bold;
   }
 }
 
-.explore-visit-section .p-accordion-header-text {
-  width: 100%;
+@container tile (min-width: #{exploreCommon.$tile-xtra-small-cutoff}) {
+  .explore-sequence-tile-title {
+    > :first-child {
+      display: inline;
+    }
+  }
 }
 
 .pl-react-table.pl-celled-table {
@@ -2644,6 +2672,7 @@ $help-title-height: 40px;
     @include timing-window-list;
 
     table-layout: auto;
+    overflow: auto;
   }
 
   .timing-window-editor {
@@ -3050,11 +3079,6 @@ a.explore-upgrade-link {
   list-style: none;
   padding-left: 0;
   margin: 0;
-}
-
-.finder-charts-in-title {
-  flex-grow: 1;
-  justify-content: end;
 }
 
 .finder-charts-background {

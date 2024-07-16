@@ -108,19 +108,19 @@ object AsterismEditor extends AsterismModifier:
 
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
-          if (props.readonly) EmptyVdom
-          else
-            props.renderInTitle(
-              targetSelectionPopup(
-                "Add",
-                props.programId,
-                props.obsIds,
-                props.asterismIds,
-                props.allTargets.model,
-                adding,
-                targetView.async.set
-              )
-            ),
+          props.renderInTitle(
+            targetSelectionPopup(
+              "Add",
+              props.programId,
+              props.obsIds,
+              props.asterismIds,
+              props.allTargets.model,
+              adding,
+              targetView.async.set,
+              props.readonly,
+              ExploreStyles.AddTargetButton
+            )
+          ),
           props.renderInTitle(VizTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,

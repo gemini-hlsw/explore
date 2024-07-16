@@ -78,10 +78,11 @@ object ProgramUsers:
         inviteControl(createInvite, readOnly, ref)
       )
 
-    Tile(ProposalTabTileIds.UsersId.id,
-         "Investigators",
-         canMinimize = true,
-         control = s => control.some.filter(_ => s === TileSizeState.Minimized)
+    Tile(
+      ProposalTabTileIds.UsersId.id,
+      "Investigators",
+      canMinimize = true,
+      control = s => control.some.filter(_ => s === TileSizeState.Minimized)
     )(r => ProgramUsers(pid, users, invitations, readOnly, r, ref))
   }
 

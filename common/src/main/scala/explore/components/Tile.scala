@@ -18,20 +18,19 @@ import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 
 case class Tile(
-  id:                 Tile.TileId,
-  title:              String,
-  back:               Option[VdomNode] = None,
-  control:            TileSizeState => Option[VdomNode] = _ => None,
-  canMinimize:        Boolean = false,
-  canMaximize:        Boolean = false,
-  hidden:             Boolean = false,
-  state:              TileSizeState = TileSizeState.Maximized,
-  sizeStateCallback:  TileSizeState => Callback = _ => Callback.empty,
-  controllerClass:    Css = Css.Empty, // applied to wrapping div when in a TileController.
-  bodyClass:          Css = Css.Empty, // applied to tile body
-  tileClass:          Css = Css.Empty, // applied to the tile
-  tileTitleClass:     Css = Css.Empty, // applied to the title
-  renderInTitleClass: Css = Css.Empty  // applied to the portal in the title
+  id:                Tile.TileId,
+  title:             String,
+  back:              Option[VdomNode] = None,
+  control:           TileSizeState => Option[VdomNode] = _ => None,
+  canMinimize:       Boolean = false,
+  canMaximize:       Boolean = false,
+  hidden:            Boolean = false,
+  state:             TileSizeState = TileSizeState.Maximized,
+  sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
+  controllerClass:   Css = Css.Empty, // applied to wrapping div when in a TileController.
+  bodyClass:         Css = Css.Empty, // applied to tile body
+  tileClass:         Css = Css.Empty, // applied to the tile
+  tileTitleClass:    Css = Css.Empty  // applied to the title
 )(val render: Tile.RenderInTitle => VdomNode)
     extends ReactFnProps[Tile](Tile.component) {
   def showMaximize: Boolean =
@@ -90,17 +89,18 @@ object Tile:
             ^.key := p.id.value
           )(
             // Tile title
-            <.div(ExploreStyles.TileTitle |+| p.tileTitleClass)(
+            <.div(ExploreStyles.TileTitle)(
               <.div(
-                ExploreStyles.TileTitleMenu |+| ExploreStyles.TileTitle |+| p.tileTitleClass,
+                ExploreStyles.TileTitleMenu |+| p.tileTitleClass,
                 p.back.map(b => <.div(ExploreStyles.TileButton, b)),
-                <.span(ExploreStyles.TileTitleControlArea, p.title)
+                <.div(ExploreStyles.TileTitleText |+| ExploreStyles.TileDraggable, p.title)
               ),
               <.div(
+                ExploreStyles.TileTitleControlArea,
                 p.control(p.state)
-                  .map(b => <.div(ExploreStyles.TileControl, b)),
+                  .map(b => <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl, b)),
                 <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
-                  ExploreStyles.TileTitleStrip |+| p.renderInTitleClass,
+                  ExploreStyles.TileTitleStrip,
                   ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
                 )
               ),

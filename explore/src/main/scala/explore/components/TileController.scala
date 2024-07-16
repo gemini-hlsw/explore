@@ -146,7 +146,7 @@ object TileController:
           margin = (Constants.GridRowPadding, Constants.GridRowPadding),
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
-          draggableHandle = s".${ExploreStyles.TileTitleControlArea.htmlClass}",
+          draggableHandle = s".${ExploreStyles.TileDraggable.htmlClass}",
           onBreakpointChange = (bk: BreakpointName, i: Int) =>
             currentLayout
               .mod(_.breakpointProportionalWidth(breakpoint.value, bk))
