@@ -18,11 +18,11 @@ case class Action[M, A](
   onSet:     (M, A) => DefaultA[Unit],
   onRestore: (M, A) => DefaultA[Unit]
 ) {
-  def set(undoCtx: UndoSetter[M])(v: A): DefaultS[Unit] =
-    undoCtx.set(getter, setter, onSet, onRestore)(v)
+  def set(undoSetter: UndoSetter[M])(v: A): DefaultS[Unit] =
+    undoSetter.set(getter, setter, onSet, onRestore)(v)
 
-  def mod(undoCtx: UndoSetter[M])(f: A => A): DefaultS[Unit] =
-    undoCtx.mod(getter, setter, onSet, onRestore)(f)
+  def mod(undoSetter: UndoSetter[M])(f: A => A): DefaultS[Unit] =
+    undoSetter.mod(getter, setter, onSet, onRestore)(f)
 }
 
 object Action {

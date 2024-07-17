@@ -16,13 +16,11 @@ import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
+import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
-import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
-import explore.model.TargetList
 import explore.model.enums.TileSizeState
 import explore.targeteditor.AsterismEditor
-import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -45,8 +43,7 @@ object AsterismEditorTile:
     programId:         Program.Id,
     obsIds:            ObsIdSet,
     asterismIds:       View[AsterismIds],
-    allTargets:        UndoSetter[TargetList],
-    programSummaries:  UndoContext[ProgramSummaries],
+    obsAndTargets:     UndoSetter[ObservationsAndTargets],
     configuration:     Option[BasicConfiguration],
     vizTime:           View[Option[Instant]],
     obsConf:           ObsConfiguration,
@@ -82,8 +79,7 @@ object AsterismEditorTile:
           programId,
           obsIds,
           asterismIds,
-          allTargets,
-          programSummaries,
+          obsAndTargets,
           vizTime,
           obsConf,
           currentTarget,

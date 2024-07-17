@@ -11,11 +11,10 @@ import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTilesIds
+import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
-import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.targeteditor.SiderealTargetEditor
-import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -32,7 +31,7 @@ object SiderealTargetEditorTile {
     userId:            Option[User.Id],
     targetId:          Target.Id,
     target:            UndoSetter[Target.Sidereal],
-    programSummaries:  UndoContext[ProgramSummaries],
+    obsAndTargets:     UndoSetter[ObservationsAndTargets],
     searching:         View[Set[Target.Id]],
     title:             String,
     fullScreen:        View[AladinFullScreen],
@@ -58,7 +57,7 @@ object SiderealTargetEditorTile {
               programId,
               uid,
               target,
-              programSummaries,
+              obsAndTargets,
               Asterism.one(TargetWithId(targetId, target.get)),
               vizTime = none,
               obsConf = none,

@@ -24,11 +24,10 @@ import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
-import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.syntax.ui.*
-import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -65,7 +64,7 @@ case class SiderealTargetEditor(
   programId:          Program.Id,
   userId:             User.Id,
   target:             UndoSetter[Target.Sidereal],
-  programSummaries:   UndoContext[ProgramSummaries],
+  obsAndTargets:      UndoSetter[ObservationsAndTargets],
   asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
   vizTime:            Option[Instant],
   obsConf:            Option[ObsConfiguration],
@@ -93,14 +92,14 @@ object SiderealTargetEditor:
       .map(_.cloneTarget.newTarget)
 
   private def getRemoteOnMod(
-    programId:        Program.Id,
-    id:               Target.Id,
-    optObs:           Option[ObsIdSet],
-    cloning:          View[Boolean],
-    programSummaries: UndoContext[ProgramSummaries],
-    onClone:          OnCloneParameters => Callback
+    programId:     Program.Id,
+    id:            Target.Id,
+    optObs:        Option[ObsIdSet],
+    cloning:       View[Boolean],
+    obsAndTargets: UndoSetter[ObservationsAndTargets],
+    onClone:       OnCloneParameters => Callback
   )(
-    input:            UpdateTargetsInput
+    input:         UpdateTargetsInput
   )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     optObs
       .fold(
@@ -113,9 +112,7 @@ object SiderealTargetEditor:
           .flatMap { clone =>
             (TargetCloneAction
               .cloneTarget(programId, id, clone, obsIds, onClone)
-              .set(
-                programSummaries
-              )(clone.target.some) >>
+              .set(obsAndTargets)(clone.target.some) >>
               // If we do the first `onClone` here, the UI works correctly.
               onClone(OnCloneParameters(id, clone.id, obsIds, true))).toAsync
           }
@@ -149,7 +146,7 @@ object SiderealTargetEditor:
             props.asterism.focus.id,
             obsToCloneTo.get,
             cloning,
-            props.programSummaries,
+            props.obsAndTargets,
             props.onClone
           ).andThen(
             _.handleErrorWith(t =>

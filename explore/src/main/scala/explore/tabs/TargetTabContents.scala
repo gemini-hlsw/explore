@@ -50,6 +50,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.model.*
+import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
@@ -70,7 +71,9 @@ case class TargetTabContents(
   expandedIds:      View[SortedSet[ObsIdSet]],
   readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
-  val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
+  val targets: UndoSetter[TargetList]                   = programSummaries.zoom(ProgramSummaries.targets)
+  val obsAndTargets: UndoSetter[ObservationsAndTargets] =
+    programSummaries.zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip)
 
   val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
@@ -308,8 +311,7 @@ object TargetTabContents extends TwoPanels:
           props.programId,
           idsToEdit,
           asterismView,
-          props.targets,
-          props.programSummaries,
+          props.obsAndTargets,
           configuration,
           vizTimeView,
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none),
@@ -368,7 +370,7 @@ object TargetTabContents extends TwoPanels:
               props.userId,
               targetId,
               target,
-              props.programSummaries,
+              props.obsAndTargets,
               props.searching,
               s"Editing Target ${target.get.name.value} [$targetId]",
               fullScreen,

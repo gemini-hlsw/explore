@@ -4,14 +4,17 @@
 package explore.targeteditor
 
 import cats.effect.IO
+import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.syntax.all.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.model.ObsIdSet
+import explore.model.ObsSummary
+import explore.model.ObservationList
+import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
-import explore.model.ProgramSummaries
 import explore.undo.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
@@ -23,38 +26,79 @@ import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import queries.common.TargetQueriesGQL
 
-object TargetCloneAction {
-  private def getter(cloneId: Target.Id): ProgramSummaries => Option[Target] =
-    _.targets.get(cloneId)
+import scala.annotation.unused
 
-  def setter(originalId: Target.Id, clone: TargetWithId, obsIds: ObsIdSet)(
-    optClone: Option[Target]
-  ): ProgramSummaries => ProgramSummaries = ps =>
+object TargetCloneAction {
+  extension (obsAndTargets: ObservationsAndTargets)
+    private def cloneTargetForObservations(
+      originalId: Target.Id,
+      clone:      TargetWithId,
+      obsIds:     ObsIdSet
+    ): ObservationsAndTargets =
+      val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
+        list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ - originalId + clone.id))
+      )
+      val ts  = obsAndTargets._2 + (clone.id -> clone.target)
+      (obs, ts)
+    private def unCloneTargetForObservations(
+      originalId: Target.Id,
+      cloneId:    Target.Id,
+      obsIds:     ObsIdSet
+    ): ObservationsAndTargets =
+      val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
+        list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ + originalId - cloneId))
+      )
+      val ts  = obsAndTargets._2 - cloneId
+      (obs, ts)
+
+  private def getter(cloneId: Target.Id): ObservationsAndTargets => Option[Target] =
+    _._2.get(cloneId)
+
+  private def setter(originalId: Target.Id, clone: TargetWithId, obsIds: ObsIdSet)(
+    @unused optClone: Option[Target]
+  ): ObservationsAndTargets => ObservationsAndTargets = ps =>
     // if the clone is in programs summaries, we're undoing.
-    ps.targets
+    ps._2
       .get(clone.id)
       .fold(
         ps.cloneTargetForObservations(originalId, clone, obsIds)
       )(_ => ps.unCloneTargetForObservations(originalId, clone.id, obsIds))
 
-  def updateRemote(
+  private def updateRemote(
     programId:    Program.Id,
-    onCloneParms: OnCloneParameters
+    onCloneParms: OnCloneParameters,
+    observations: ObservationList
   )(using
     FetchClient[IO, ObservationDB]
   ): IO[Unit] =
-    val existence = if (onCloneParms.areCreating) Existence.Present else Existence.Deleted
-    TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
-      .execute(
-        UpdateTargetsInput(
-          WHERE = onCloneParms.cloneId.toWhereTarget
-            .copy(program = programId.toWhereProgram.assign)
-            .assign,
-          SET = TargetPropertiesInput(existence = existence.assign),
-          includeDeleted = true.assign
+    val optExistence =
+      if (onCloneParms.areCreating) Existence.Present.some
+      else {
+        // If the clone has been assigned to another observation (unlikely), perhaps by another
+        // user or in another session , then we won't delete it
+        val allObsWithTarget =
+          observations.values
+            .filter(_.scienceTargetIds.contains(onCloneParms.cloneId))
+            .map(_.id)
+            .toSet
+        if ((allObsWithTarget -- onCloneParms.obsIds.idSet.toSortedSet).isEmpty)
+          Existence.Deleted.some
+        else none
+      }
+    optExistence.foldMap(existence =>
+      TargetQueriesGQL
+        .UpdateTargetsMutation[IO]
+        .execute(
+          UpdateTargetsInput(
+            WHERE = onCloneParms.cloneId.toWhereTarget
+              .copy(program = programId.toWhereProgram.assign)
+              .assign,
+            SET = TargetPropertiesInput(existence = existence.assign),
+            includeDeleted = true.assign
+          )
         )
-      ) >>
+        .void
+    ) >>
       AsterismQueries.addAndRemoveTargetsFromAsterisms(onCloneParms.obsIds.toList,
                                                        toAdd = List(onCloneParms.idToAdd),
                                                        toRemove = List(onCloneParms.idToRemove)
@@ -68,12 +112,14 @@ object TargetCloneAction {
     onClone:    OnCloneParameters => Callback
   )(using
     FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[Target]] =
-    Action[ProgramSummaries, Option[Target]](getter(clone.id), setter(originalId, clone, obsIds))(
+  ): Action[ObservationsAndTargets, Option[Target]] =
+    Action[ObservationsAndTargets, Option[Target]](getter(clone.id),
+                                                   setter(originalId, clone, obsIds)
+    )(
       onSet = (_, _) => IO.unit, // clone is created and first `onClone` called outside of Action
-      onRestore = (ps, optClone) =>
+      onRestore = (obsAndTargets, optClone) =>
         val params = OnCloneParameters(originalId, clone.id, obsIds, optClone.isDefined)
         onClone(params).toAsync >>
-          updateRemote(programId, params)
+          updateRemote(programId, params, obsAndTargets._1)
     )
 }

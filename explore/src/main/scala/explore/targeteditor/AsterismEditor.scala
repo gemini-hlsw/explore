@@ -17,11 +17,10 @@ import explore.model.AsterismIds
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
-import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
-import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -43,8 +42,7 @@ case class AsterismEditor(
   programId:         Program.Id,
   obsIds:            ObsIdSet,
   asterismIds:       View[AsterismIds],
-  allTargets:        UndoSetter[TargetList],
-  programSummaries:  UndoContext[ProgramSummaries],
+  obsAndTargets:     UndoSetter[ObservationsAndTargets],
   vizTime:           View[Option[Instant]],
   configuration:     ObsConfiguration,
   focusedTargetId:   Option[Target.Id],
@@ -56,7 +54,8 @@ case class AsterismEditor(
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean,
   sequenceChanged:   Callback
-) extends ReactFnProps(AsterismEditor.component)
+) extends ReactFnProps(AsterismEditor.component):
+  val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
 object AreAdding extends NewType[Boolean]
 type AreAdding = AreAdding.Type
@@ -147,7 +146,7 @@ object AsterismEditor extends AsterismModifier:
                     props.programId,
                     props.userId,
                     siderealTarget,
-                    props.programSummaries,
+                    props.obsAndTargets,
                     asterism.focusOn(focusedTargetId),
                     vizTime,
                     props.configuration.some,

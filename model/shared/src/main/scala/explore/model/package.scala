@@ -24,6 +24,8 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.util.NewType
 import lucuma.refined.*
+import monocle.Focus
+import monocle.Lens
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -59,6 +61,13 @@ type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
 type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]
 type ObsAttachmentAssignmentMap = Map[ObsAtt.Id, SortedSet[Observation.Id]]
 type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
+
+type ObservationsAndTargets = (ObservationList, TargetList)
+
+object ObservationsAndTargets:
+  val observations: Lens[ObservationsAndTargets, ObservationList] =
+    Focus[ObservationsAndTargets](_._1)
+  val targets: Lens[ObservationsAndTargets, TargetList]           = Focus[ObservationsAndTargets](_._2)
 
 object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
 type ObservationExecutionMap = ObservationExecutionMap.Type
