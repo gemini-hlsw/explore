@@ -106,4 +106,3 @@ extension (partner: Partner)
       ^.alt := s"${partner.shortName} Flag",
       ExploreStyles.PartnerSplitFlag
     )
-
