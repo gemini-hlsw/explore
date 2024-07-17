@@ -1,5 +1,5 @@
 object Versions {
-  val boopickle              = "1.4.0"
+  val boopickle              = "1.5.0"
   val cats                   = "2.12.0"
   val catsEffect             = "3.5.4"
   val catsRetry              = "3.1.3"
