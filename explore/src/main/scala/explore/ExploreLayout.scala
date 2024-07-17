@@ -18,7 +18,6 @@ import explore.events.ExploreEvent.LogoutEventId
 import explore.model.*
 import explore.model.AppContext
 import explore.model.enums.AppTab
-import explore.model.reusability.given
 import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
@@ -67,11 +66,13 @@ object ExploreLayout:
       .withHooks[Props]
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
-      .useEffectWithDepsBy((p, _, _) => p.view.zoom(RootModel.programReference).get)((_, _, _) =>
+      .useEffectWithDepsBy((p, _, _) => p.view.get.programOrProposalReference)((_, _, _) =>
         // Set the title of the page to the program reference
         // scalajs-react suggest to use setTitle for this but we'd need to put the
         // reference in the url for that
-        _.map(r => Callback(document.title = s"Explore - ${r.label}")).orEmpty
+        _.fold(Callback(document.title = "Explore"))(r =>
+          Callback(document.title = s"Explore - ${r}")
+        )
       )
       .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
         (props, help, ctx) => _ =>
@@ -234,7 +235,7 @@ object ExploreLayout:
                   TopBar(
                     vault,
                     routingInfo.optProgramId,
-                    props.view.zoom(RootModel.programReference).get,
+                    props.view.get.programOrProposalReference,
                     props.view.zoom(RootModel.localPreferences).get,
                     props.view.zoom(RootModel.undoStacks),
                     props.view
