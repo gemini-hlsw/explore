@@ -11,6 +11,8 @@ import clue.js.FetchJSRequest
 import crystal.*
 import crystal.react.*
 import explore.Icons
+import explore.components.ui.ExploreStyles
+import explore.components.ui.PartnerFlags
 import explore.model.Constants
 import explore.utils.*
 import explore.utils.ToastCtx
@@ -18,6 +20,7 @@ import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Partner
 import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
@@ -95,3 +98,11 @@ extension [F[_]: MonadCancelThrow, A](f: F[A])
 extension [A](pot: Pot[A])
   def orSpinner(f: A => VdomNode): VdomNode =
     pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
+
+extension (partner: Partner)
+  def renderFlag: VdomNode =
+    <.img(
+      ^.src := PartnerFlags.smallFlag(partner),
+      ^.alt := s"${partner.shortName} Flag",
+      ExploreStyles.PartnerSplitFlag
+    )

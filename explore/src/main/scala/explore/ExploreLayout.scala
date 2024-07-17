@@ -39,6 +39,7 @@ import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
 import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
+import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
@@ -242,8 +243,10 @@ object ExploreLayout:
                 tab =>
                   props.view.get.programSummaries
                     .flatMap(_.optProgramDetails)
-                    .map(_.programType === ProgramType.Science || tab =!= AppTab.Proposal)
-                    .getOrElse(true)
+                    .forall: program =>
+                      // Only show Program tab for Accepted Science proposals
+                      tab =!= AppTab.Proposal ||
+                        (program.programType === ProgramType.Science && program.proposalStatus === ProposalStatus.Accepted)
               ),
               if (showProgsPopup)
                 ProgramsPopup(

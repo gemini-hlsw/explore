@@ -42,22 +42,19 @@ trait DisplayImplicits:
     Display.by(_.shortName, _.longName)
 
   given Display[SpectroscopyCapabilities] =
-    Display.byShortName {
+    Display.byShortName:
       case SpectroscopyCapabilities.NodAndShuffle => "Nod & Shuffle"
       case SpectroscopyCapabilities.Polarimetry   => "Polarimetry"
       case SpectroscopyCapabilities.Coronagraphy  => "Coronagraphy"
-    }
 
-  given Display[FocalPlane] = Display.byShortName {
+  given Display[FocalPlane] = Display.byShortName:
     case FocalPlane.SingleSlit   => "Single Slit"
     case FocalPlane.MultipleSlit => "Multiple Slits"
     case FocalPlane.IFU          => "IFU"
-  }
 
-  given Display[ScienceMode] = Display.byShortName {
+  given Display[ScienceMode] = Display.byShortName:
     case ScienceMode.Imaging      => "Imaging"
     case ScienceMode.Spectroscopy => "Spectroscopy"
-  }
 
   given Display[ImageQuality] = Display.byShortName(_.label)
 
@@ -67,7 +64,7 @@ trait DisplayImplicits:
 
   given Display[SkyBackground] = Display.byShortName(_.label)
 
-  given Display[ConstraintSet] = Display.byShortName { cs =>
+  given Display[ConstraintSet] = Display.byShortName: cs =>
     val wv = if (cs.waterVapor === WaterVapor.Wet) "" else s" ${cs.waterVapor.label}"
     val er = cs.elevationRange match {
       case ElevationRange.AirMass(min, max)
@@ -88,9 +85,8 @@ trait DisplayImplicits:
     }
 
     s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label}$wv$er"
-  }
 
-  given Display[BrightnessValue] = Display.byShortName { x =>
+  given Display[BrightnessValue] = Display.byShortName: x =>
     val f = new DecimalFormat("#.###")
     // We don't want scientific notation to kick in for magnitude units.
     // We assume it's magnitudes when x.abs >= 0.00001, since other units are usually
@@ -102,12 +98,11 @@ trait DisplayImplicits:
       f.format(x.value).replace("-0", "0")
     else
       InputValidSplitEpi.bigDecimalWithScientificNotation.reverseGet(x.value.value)
-  }
 
   given Display[StellarLibrarySpectrum] = Display.byShortName(_.sedSpectrum)
 
   import UnnormalizedSED.*
-  given Display[UnnormalizedSED] = Display.byShortName {
+  given Display[UnnormalizedSED] = Display.byShortName:
     case StellarLibrary(librarySpectrum)          => librarySpectrum.shortName
     case CoolStarModel(temperature)               => s"Cool Star (${temperature.temperature.value} °K)"
     case Galaxy(galaxySpectrum)                   => galaxySpectrum.shortName
@@ -118,13 +113,11 @@ trait DisplayImplicits:
     case PowerLaw(index)                          => s"Power Law ($index)"
     case BlackBody(temperature)                   => s"Black Body (${temperature.value} °K)"
     case UserDefined(_)                           => "User Defined"
-  }
 
-  given displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName {
+  given displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName:
     case SpectralDefinition.BandNormalized(Some(band), _) => band.shortName
     case SpectralDefinition.BandNormalized(_, _)          => "No SED"
     case SpectralDefinition.EmissionLines(_, _)           => "Emission Lines"
-  }
 
   given Display[GmosXBinning] = Display.by(_.shortName, _.longName)
 
@@ -149,12 +142,11 @@ trait DisplayImplicits:
 
   given Display[GmosRoi] = Display.byShortName(_.longName)
 
-  given Display[SequenceType] = Display.byShortName {
+  given Display[SequenceType] = Display.byShortName:
     case SequenceType.Acquisition => "Acquisition"
     case SequenceType.Science     => "Science"
-  }
 
-  given Display[ScienceSubtype] = Display.byShortName {
+  given Display[ScienceSubtype] = Display.byShortName:
     case ScienceSubtype.Classical          => "Classical"
     case ScienceSubtype.DirectorsTime      => "Director's Time"
     case ScienceSubtype.FastTurnaround     => "Fast Turnaround"
@@ -163,38 +155,33 @@ trait DisplayImplicits:
     case ScienceSubtype.Queue              => "Queue"
     case ScienceSubtype.DemoScience        => "Demo Science"
     case ScienceSubtype.SystemVerification => "System Verification"
-  }
 
-  given Display[BoundedInterval[Wavelength]] = Display.byShortName(interval =>
+  given Display[BoundedInterval[Wavelength]] = Display.byShortName: interval =>
     List(interval.lower, interval.upper)
       .map(q =>
         "%.3f".format(q.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN))
       )
       .mkString(" - ")
-  )
 
-  given Display[CatalogName] = Display.byShortName {
+  given Display[CatalogName] = Display.byShortName:
     case CatalogName.Simbad => "SIMBAD"
     case CatalogName.Gaia   => "GAIA"
     case CatalogName.Import => "IMPORT"
-  }
 
   given Display[Semester] = Display.by(_.formatShort, _.format)
 
-  given Display[RoleType] = Display.byShortName {
+  given Display[RoleType] = Display.byShortName:
     case RoleType.Pi    => "Principal Investigator"
     case RoleType.NGO   => "NGO"
     case RoleType.Staff => "Staff"
     case RoleType.Admin => "Administrator"
-  }
 
-  given Display[ChartType] = Display.byShortName {
+  given Display[ChartType] = Display.byShortName:
     case ChartType.SignalChart      => "Signal"
     case ChartType.SignalPixelChart => "Pixel"
     case ChartType.S2NChart         => "S/N"
-  }
 
-  given Display[ItcQueryProblems] = Display.byShortName {
+  given Display[ItcQueryProblems] = Display.byShortName:
     case ItcQueryProblems.UnsupportedMode               => "Mode not supported"
     case ItcQueryProblems.MissingWavelength             => "Provide a wavelength"
     case ItcQueryProblems.MissingSignalToNoise          => "Provide a signal to noise"
@@ -204,7 +191,12 @@ trait DisplayImplicits:
     case ItcQueryProblems.SourceTooBright(halfWellTime) =>
       f"Source too bright, well half filled in $halfWellTime%.2f seconds"
     case ItcQueryProblems.GenericError(e)               => e
-  }
+
+  given Display[ScienceBand] = Display.byShortName:
+    case ScienceBand.Band1 => "Band-1"
+    case ScienceBand.Band2 => "Band-2"
+    case ScienceBand.Band3 => "Band-3"
+    case ScienceBand.Band4 => "Band-4"
 
   extension (configuration: BasicConfiguration)
     def configurationSummary: String = configuration match

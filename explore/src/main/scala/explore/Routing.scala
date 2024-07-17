@@ -163,6 +163,7 @@ object Routing:
         routingInfo.programId,
         model.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
+        programSummaries.get.optProgramDetails.map(_.allocations).orEmpty,
         userPreferences(model)
       )
     }

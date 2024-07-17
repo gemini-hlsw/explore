@@ -36,7 +36,7 @@ case class PartnerSplitsEditor(
   splits:  View[List[PartnerSplit]],
   closeMe: Callback,
   onSave:  List[PartnerSplit] => Callback
-) extends ReactFnProps[PartnerSplitsEditor](PartnerSplitsEditor.component)
+) extends ReactFnProps(PartnerSplitsEditor.component)
 
 object PartnerSplitsEditor:
   private type Props = PartnerSplitsEditor
@@ -53,19 +53,21 @@ object PartnerSplitsEditor:
       Message(text = "Must add up to 100", severity = Message.Severity.Error)
         .unless(addsUpTo100(props.splits.get)),
       Button(label = "Cancel", severity = Button.Severity.Danger, onClick = props.closeMe),
-      Button(label = "OK",
-             severity = Button.Severity.Success,
-             onClick = save(props),
-             disabled = !addsUpTo100(props.splits.get)
+      Button(
+        label = "OK",
+        severity = Button.Severity.Success,
+        onClick = save(props),
+        disabled = !addsUpTo100(props.splits.get)
       )
     )
 
   private def makeId(partner: Partner) = s"${partner.tag}-percent"
   private def makePartnerCell(partner: Partner): VdomNode =
     <.label(
-      <.img(^.src        := PartnerFlags.smallFlag(partner),
-            ^.alt := s"${partner.shortName} Flag",
-            ExploreStyles.PartnerSplitFlag
+      <.img(
+        ^.src := PartnerFlags.smallFlag(partner),
+        ^.alt := s"${partner.shortName} Flag",
+        ExploreStyles.PartnerSplitFlag
       ),
       partner.longName,
       ^.htmlFor := makeId(partner)
@@ -86,16 +88,15 @@ object PartnerSplitsEditor:
   private def total(splits:       List[PartnerSplit]) = splits.map(_.percent.value).sum
   private def addsUpTo100(splits: List[PartnerSplit]) = total(splits) === 100
 
-  protected val component = ScalaFnComponent
-    .withHooks[Props]
-    // columns
-    .useMemo(()) { _ =>
+  private val columns: Reusable[List[ColumnDef.NoMeta[View[PartnerSplit], ?]]] =
+    Reusable.always:
       List(
-        ColDef(id = ColumnId("partner"),
-               accessor = _.get.partner,
-               header = "Partner",
-               cell = cell => makePartnerCell(cell.value),
-               footer = _ => "Total"
+        ColDef(
+          id = ColumnId("partner"),
+          accessor = _.get.partner,
+          header = "Partner",
+          cell = cell => makePartnerCell(cell.value),
+          footer = _ => "Total"
         ),
         ColDef(
           id = ColumnId("percent"),
@@ -106,17 +107,19 @@ object PartnerSplitsEditor:
             s"${tot}%"
         )
       )
-    }
-    // rows
-    .useMemoBy((props, _) => props.splits.reuseByValue)((_, _) => _.value.toListOfViews)
-    .useReactTableBy: (_, cols, rows) =>
-      TableOptions(cols,
-                   rows,
-                   getRowId = (row, _, _) => RowId(row.get.partner.tag),
-                   enableSorting = false,
-                   enableColumnResizing = false
+
+  protected val component = ScalaFnComponent
+    .withHooks[Props]
+    .useMemoBy(props => props.splits.reuseByValue)(_ => _.value.toListOfViews) // rows
+    .useReactTableBy: (_, rows) =>
+      TableOptions(
+        columns,
+        rows,
+        getRowId = (row, _, _) => RowId(row.get.partner.tag),
+        enableSorting = false,
+        enableColumnResizing = false
       )
-    .render: (props, _, _, table) =>
+    .render: (props, _, table) =>
       Dialog(
         visible = props.show.value,
         onHide = props.closeMe,
@@ -127,9 +130,10 @@ object PartnerSplitsEditor:
         focusOnShow = true,
         clazz = ExploreStyles.PartnerSplitsEditorDialog
       )(
-        PrimeTable(table,
-                   striped = true,
-                   compact = Compact.Very,
-                   tableMod = ExploreStyles.ExploreBorderTable
+        PrimeTable(
+          table,
+          striped = true,
+          compact = Compact.Very,
+          tableMod = ExploreStyles.ExploreBorderTable
         )
       )

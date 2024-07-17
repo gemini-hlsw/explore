@@ -10,7 +10,7 @@ import lucuma.odb.json.time.decoder.given_Decoder_TimeSpan
 
 opaque type ProgramTime = TimeSpan
 
-object ProgramTime {
+object ProgramTime:
   inline def apply(ts: TimeSpan): ProgramTime                  = ts
   extension (pt:       ProgramTime) inline def value: TimeSpan = pt
 
@@ -19,9 +19,5 @@ object ProgramTime {
   // This decoder is meant to decode a `CategorizedTime` with just a `program` time in it.
   // If we need more information from CategorizedTime, we can switch to using
   // lucuma.core.model.sequence.CategorizedTime instead of ProgramTime.
-  given Decoder[ProgramTime] = Decoder.instance(c =>
-    for {
-      ts <- c.get[TimeSpan]("program")(given_Decoder_TimeSpan)
-    } yield ts
-  )
-}
+  given Decoder[ProgramTime] =
+    Decoder.instance(_.get[TimeSpan]("program")(using given_Decoder_TimeSpan))

@@ -20,5 +20,6 @@ object ProgramDetailsSubquery
       users $ProgramUserWithRoleSubquery
       reference $ProgramReferenceSubquery
       userInvitations $ProgramInvitationsSubquery
+      allocations $AllocationSubquery
     }
   """

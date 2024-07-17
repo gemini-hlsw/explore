@@ -114,53 +114,46 @@ object ProposalEditor:
       .filter(_.percent.value > 0)
       .sortBy(_.percent.value)(Ordering[Int].reverse)
 
-  private def partnerSplits(splits: List[PartnerSplit]): VdomNode = splits match {
-    case a if a.isEmpty =>
-      <.div(
-        ExploreStyles.PartnerSplitsMissing,
-        Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
-        " Partner time allocations are required."
-      )
-    case _              =>
-      val ps = sortedSplits(splits)
-        .toTagMod(ps => partnerSplit(ps))
-      <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
-  }
+  private def partnerSplits(splits: List[PartnerSplit]): VdomNode =
+    splits match
+      case a if a.isEmpty =>
+        <.div(
+          ExploreStyles.PartnerSplitsMissing,
+          Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
+          " Partner time allocations are required."
+        )
+      case _              =>
+        val ps = sortedSplits(splits).toTagMod(ps => partnerSplit(ps))
+        <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
 
-  private def partnerSplit(ps: PartnerSplit): TagMod = {
+  private def partnerSplit(ps: PartnerSplit): TagMod =
     val id   = s"${ps.partner.tag}-split"
     val text = f"${ps.percent.value}%%"
     partnerSplitData(ps.partner, id, text)
-  }
 
-  private def partnerSplitData(partner: Partner, id: String, data: String) = {
-    val img: TagMod  =
-      <.img(^.src        := PartnerFlags.smallFlag(partner),
-            ^.alt := s"${partner.shortName}  Flag",
-            ExploreStyles.PartnerSplitFlag
-      )
-    val span: TagMod = <.span(data)
-
-    FormStaticData(id = id, value = <.div(img, span), label = partner.shortName)(
+  private def partnerSplitData(partner: Partner, id: String, data: String) =
+    FormStaticData(
+      id = id,
+      value = <.div(partner.renderFlag, <.span(data)),
+      label = partner.shortName
+    )(
       ExploreStyles.FlexShrink(0.refined),
       ExploreStyles.PartnerSplitData
     )
-  }
 
-  private def timeSplit(ps: PartnerSplit, total: TimeSpan) = {
+  private def timeSplit(ps: PartnerSplit, total: TimeSpan) =
     val splitTime = ps.percent.value * toHours(total).value / 100
     val timeText  = formatHours(splitTime)
     <.span(timeText, ExploreStyles.PartnerSplitData)
-  }
 
-  private def minimumTime(pct: IntPercent, total: TimeSpan) = {
+  private def minimumTime(pct: IntPercent, total: TimeSpan) =
     val time     = pct.value * toHours(total).value / 100
     val timeText = formatHours(time)
-    <.div(ExploreStyles.PartnerSplitsGridMinPctItem,
-          ExploreStyles.PartnerSplitsGridMinPct,
-          <.span(timeText)
+    <.div(
+      ExploreStyles.PartnerSplitsGridMinPctItem,
+      ExploreStyles.PartnerSplitsGridMinPct,
+      <.span(timeText)
     )
-  }
 
   private def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
 
@@ -602,22 +595,22 @@ object ProposalEditor:
       // Update the partner splits when a new callId is set
       .useEffectWithDepsBy((props, _, cfps, _, _, _) =>
         (props.proposal.get.callId, cfps.toOption.orEmpty)
-      ) { (props, _, _, _, _, ps) => (callId, cfps) =>
-        callId.fold(Callback.empty)(cid =>
-          val currentSplits    = Proposal.proposalType.some
-            .andThen(ProposalType.partnerSplits)
-            .getOption(props.proposal.get)
-          val cfpPartners      = cfps
-            .find(_.id === cid)
-            .foldMap(_.partners.map(_.partner))
-          val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
+      ): (props, _, _, _, _, ps) =>
+        (callId, cfps) =>
+          callId.fold(Callback.empty)(cid =>
+            val currentSplits    = Proposal.proposalType.some
+              .andThen(ProposalType.partnerSplits)
+              .getOption(props.proposal.get)
+            val cfpPartners      = cfps
+              .find(_.id === cid)
+              .foldMap(_.partners.map(_.partner))
+            val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
 
-          if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
-            ps.set(currentSplits.orEmpty)
-          else
-            ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
-        )
-      }
+            if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
+              ps.set(currentSplits.orEmpty)
+            else
+              ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
+          )
       // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
       //   // Deal with changes to the ProposalClass.
       //   (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
@@ -640,7 +633,7 @@ object ProposalEditor:
       .useResizeDetector()
       .useStateView(CreateInviteProcess.Idle)
       .useOverlayPanelRef
-      .render {
+      .render:
         (
           props,
           ctx,
@@ -674,4 +667,3 @@ object ProposalEditor:
             resize,
             overlayRef
           )(using ctx)
-      }
