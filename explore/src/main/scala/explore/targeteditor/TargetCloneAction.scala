@@ -17,6 +17,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.undo.*
 import japgolly.scalajs.react.*
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -29,6 +30,17 @@ import queries.common.TargetQueriesGQL
 import scala.annotation.unused
 
 object TargetCloneAction {
+  extension (observations: ObservationList)
+    private def allWithTarget(targetId: Target.Id): Set[Observation.Id]     =
+      observations.values
+        .filter(_.scienceTargetIds.contains(targetId))
+        .map(_.id)
+        .toSet
+    // determine if the observation has been assigned to additional observations since the cloning.
+    // If it has been assigned to other observations, we won't delete it locally or remotely.
+    private def areExtraObs(targetId: Target.Id, obsIds: ObsIdSet): Boolean =
+      (allWithTarget(targetId) -- obsIds.idSet.toSortedSet).nonEmpty
+
   extension (obsAndTargets: ObservationsAndTargets)
     private def cloneTargetForObservations(
       originalId: Target.Id,
@@ -48,7 +60,11 @@ object TargetCloneAction {
       val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
         list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ + originalId - cloneId))
       )
-      val ts  = obsAndTargets._2 - cloneId
+      val ts  =
+        if (obsAndTargets._1.areExtraObs(cloneId, obsIds))
+          obsAndTargets._2
+        else
+          obsAndTargets._2 - cloneId
       (obs, ts)
 
   private def getter(cloneId: Target.Id): ObservationsAndTargets => Option[Target] =
@@ -56,13 +72,13 @@ object TargetCloneAction {
 
   private def setter(originalId: Target.Id, clone: TargetWithId, obsIds: ObsIdSet)(
     @unused optClone: Option[Target]
-  ): ObservationsAndTargets => ObservationsAndTargets = ps =>
-    // if the clone is in programs summaries, we're undoing.
-    ps._2
+  ): ObservationsAndTargets => ObservationsAndTargets = obsAndTargets =>
+    // if the clone is in the targets, we're undoing.
+    obsAndTargets._2
       .get(clone.id)
       .fold(
-        ps.cloneTargetForObservations(originalId, clone, obsIds)
-      )(_ => ps.unCloneTargetForObservations(originalId, clone.id, obsIds))
+        obsAndTargets.cloneTargetForObservations(originalId, clone, obsIds)
+      )(_ => obsAndTargets.unCloneTargetForObservations(originalId, clone.id, obsIds))
 
   private def updateRemote(
     programId:    Program.Id,
@@ -76,14 +92,10 @@ object TargetCloneAction {
       else {
         // If the clone has been assigned to another observation (unlikely), perhaps by another
         // user or in another session , then we won't delete it
-        val allObsWithTarget =
-          observations.values
-            .filter(_.scienceTargetIds.contains(onCloneParms.cloneId))
-            .map(_.id)
-            .toSet
-        if ((allObsWithTarget -- onCloneParms.obsIds.idSet.toSortedSet).isEmpty)
+        if (observations.areExtraObs(onCloneParms.cloneId, onCloneParms.obsIds))
+          none
+        else
           Existence.Deleted.some
-        else none
       }
     optExistence.foldMap(existence =>
       TargetQueriesGQL
