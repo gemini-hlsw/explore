@@ -48,13 +48,14 @@ import org.scalajs.dom.window
 import typings.loglevel.mod.LogLevelDesc
 
 case class TopBar(
-  vault:        View[UserVault],
-  programId:    Option[Program.Id],
-  preferences:  ExploreLocalPreferences,
-  undoStacks:   View[UndoStacks[IO, ProgramSummaries]],
-  programInfos: ViewOpt[ProgramInfoList],
-  theme:        View[Theme],
-  onLogout:     IO[Unit]
+  vault:                      View[UserVault],
+  programId:                  Option[Program.Id],
+  programOrProposalReference: Option[String],
+  preferences:                ExploreLocalPreferences,
+  undoStacks:                 View[UndoStacks[IO, ProgramSummaries]],
+  programInfos:               ViewOpt[ProgramInfoList],
+  theme:                      View[Theme],
+  onLogout:                   IO[Unit]
 ) extends ReactFnProps(TopBar.component)
 
 object TopBar:
@@ -184,7 +185,14 @@ object TopBar:
           React.Fragment(
             Toolbar(
               clazz = LayoutStyles.MainHeader,
-              left = <.span(LayoutStyles.MainTitle, "Explore"),
+              left = React.Fragment(
+                <.span(LayoutStyles.MainTitle, s"Explore"),
+                props.programOrProposalReference.map { r =>
+                  React.Fragment(<.span(LayoutStyles.MainTitle, "- "),
+                                 <.span(ExploreStyles.MainTitleProgramId, r)
+                  )
+                }
+              ),
               right = React.Fragment(
                 <.span(LayoutStyles.MainUserName)(user.displayName),
                 RoleSwitch(props.vault, ctx.sso),

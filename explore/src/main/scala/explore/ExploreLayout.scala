@@ -47,6 +47,7 @@ import lucuma.ui.hooks.*
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
+import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
 
 case class ExploreLayout(
@@ -65,6 +66,14 @@ object ExploreLayout:
       .withHooks[Props]
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
+      .useEffectWithDepsBy((p, _, _) => p.view.get.programOrProposalReference)((_, _, _) =>
+        // Set the title of the page to the program reference
+        // scalajs-react suggest to use setTitle for this but we'd need to put the
+        // reference in the url for that
+        _.fold(Callback(document.title = "Explore"))(r =>
+          Callback(document.title = s"Explore - ${r}")
+        )
+      )
       .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
         (props, help, ctx) => _ =>
           val routingInfo          = RoutingInfo.from(props.resolution.page)
@@ -226,6 +235,7 @@ object ExploreLayout:
                   TopBar(
                     vault,
                     routingInfo.optProgramId,
+                    props.view.get.programOrProposalReference,
                     props.view.zoom(RootModel.localPreferences).get,
                     props.view.zoom(RootModel.undoStacks),
                     props.view

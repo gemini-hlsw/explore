@@ -9,9 +9,12 @@ import cats.effect.IO
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.RootModel.programReference
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoStacks
 import lucuma.core.model.GuestUser
+import lucuma.core.model.ProgramReference
+import lucuma.core.model.ProposalReference
 import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
@@ -34,7 +37,13 @@ case class RootModel(
   spectroscopyModes:    Option[SpectroscopyModesMatrix] = none,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
-) derives Eq
+) derives Eq {
+  val programOrProposalReference: Option[String] =
+    RootModel.programReference
+      .getOption(this)
+      .map(_.label)
+      .orElse(RootModel.proposalReference.getOption(this).map(_.label))
+}
 
 object RootModel:
   val vault                = Focus[RootModel](_.vault)
@@ -58,7 +67,19 @@ object RootModel:
   )
 
   val user: Optional[RootModel, User] =
-    RootModel.vault.some.andThen(UserVault.user)
+    vault.some.andThen(UserVault.user)
 
   val userId: Optional[RootModel, User.Id] =
     user.andThen(userUserId)
+
+  val programReference: Optional[RootModel, ProgramReference] =
+    programSummaries.some.andThen(
+      ProgramSummaries.optProgramDetails.some.andThen(ProgramDetails.reference.some)
+    )
+
+  val proposalReference: Optional[RootModel, ProposalReference] =
+    programSummaries.some.andThen(
+      ProgramSummaries.optProgramDetails.some.andThen(
+        ProgramDetails.proposal.some.andThen(Proposal.reference.some)
+      )
+    )

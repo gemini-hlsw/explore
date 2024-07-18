@@ -176,13 +176,13 @@ object Routing:
       import dsl.*
 
       // We can't use gid.regexPattern because capture groups don't work here.
-      def gidRegEx[Id](implicit gid: Gid[Id]): String =
+      def gidRegEx[Id](using gid: Gid[Id]): String =
         s"${gid.tag.value.toString}-[1-9a-f][0-9a-f]*"
 
-      def id[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[Id] =
+      def id[Id](using gid: Gid[Id]): StaticDsl.RouteB[Id] =
         string(gidRegEx).pmapL(gid.fromString)
 
-      def idList[Id](implicit gid: Gid[Id]): StaticDsl.RouteB[NonEmptySet[Id]] = {
+      def idList[Id](using gid: Gid[Id]): StaticDsl.RouteB[NonEmptySet[Id]] = {
         val separator = ":"
         val regex     = s"${gidRegEx[Id]}(?:\\$separator${gidRegEx[Id]})*"
         string(regex).pmap(
