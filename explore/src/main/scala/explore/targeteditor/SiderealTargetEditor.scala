@@ -27,6 +27,7 @@ import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
+import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -45,7 +46,6 @@ import lucuma.react.primereact.Message
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
@@ -81,44 +81,55 @@ case class SiderealTargetEditor(
 object SiderealTargetEditor:
   private type Props = SiderealTargetEditor
 
-  private def cloneTarget(targetId: Target.Id, obsIds: ObsIdSet, set: TargetPropertiesInput)(using
-    FetchClient[IO, ObservationDB]
-  ): IO[TargetWithId] =
-    TargetQueriesGQL
-      .CloneTargetMutation[IO]
-      .execute(
-        CloneTargetInput(targetId = targetId, REPLACE_IN = obsIds.toList.assign, SET = set.assign)
-      )
-      .map(_.cloneTarget.newTarget)
-
-  private def getRemoteOnMod(
+  private def cloneTarget(
     programId:     Program.Id,
-    id:            Target.Id,
-    optObs:        Option[ObsIdSet],
+    targetId:      Target.Id,
+    obsIds:        ObsIdSet,
     cloning:       View[Boolean],
     obsAndTargets: UndoSetter[ObservationsAndTargets],
     onClone:       OnCloneParameters => Callback
-  )(
-    input:         UpdateTargetsInput
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    optObs
-      .fold(
-        TargetQueriesGQL
-          .UpdateTargetsMutation[IO]
-          .execute(input)
-          .void
-      ) { obsIds =>
-        cloneTarget(id, obsIds, input.SET)
-          .flatMap { clone =>
-            (TargetCloneAction
-              .cloneTarget(programId, id, clone, obsIds, onClone)
-              .set(obsAndTargets)(clone.target.some) >>
-              // If we do the first `onClone` here, the UI works correctly.
-              onClone(OnCloneParameters(id, clone.id, obsIds, true))).toAsync
-          }
-          .switching(cloning.async)
-
+  )(input: UpdateTargetsInput)(using
+    FetchClient[IO, ObservationDB],
+    Logger[IO],
+    ToastCtx[IO]
+  ): IO[Unit] =
+    TargetQueriesGQL
+      .CloneTargetMutation[IO]
+      .execute(
+        CloneTargetInput(
+          targetId = targetId,
+          REPLACE_IN = obsIds.toList.assign,
+          SET = input.SET.assign
+        )
+      )
+      .map(_.cloneTarget.newTarget)
+      .flatMap { clone =>
+        (TargetCloneAction
+          .cloneTarget(programId, targetId, clone, obsIds, onClone)
+          .set(obsAndTargets)(clone.target.some) >>
+          // If we do the first `onClone` here, the UI works correctly.
+          onClone(OnCloneParameters(targetId, clone.id, obsIds, true))).toAsync
       }
+      .switching(cloning.async)
+      .handleErrorWith(t =>
+        val msg = s"Error cloning target [$targetId]"
+        Logger[IO].error(t)(msg) >>
+          ToastCtx[IO].showToast(msg, Message.Severity.Error)
+      )
+
+  private def remoteOnMod(
+    targetId: Target.Id,
+    input:    UpdateTargetsInput
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+    TargetQueriesGQL
+      .UpdateTargetsMutation[IO]
+      .execute(input)
+      .void
+      .handleErrorWith(t =>
+        val msg = s"Error updating target [$targetId]"
+        Logger[IO].error(t)(msg) >>
+          ToastCtx[IO].showToast(msg, Message.Severity.Error)
+      )
 
   private def buildProperMotion(
     ra:  Option[ProperMotion.RA],
@@ -126,6 +137,30 @@ object SiderealTargetEditor:
   ): Option[ProperMotion] =
     attemptCombine(ra, dec)
       .map(ProperMotion.apply.tupled)
+
+  // An UndoSetter that doesn't really update any undo stacks
+  private def noopUndoSetter[M](view: View[M]): UndoSetter[M] =
+    new UndoSetter[M] {
+      val model = view
+      def set[A](
+        getter:    M => A,
+        setter:    A => M => M,
+        onSet:     (M, A) => IO[Unit],
+        onRestore: (M, A) => IO[Unit]
+      )(v: A): Callback =
+        mod(getter, setter, onSet, onRestore)(_ => v)
+
+      def mod[A](
+        getter:    M => A,
+        setter:    A => M => M,
+        onSet:     (M, A) => IO[Unit],
+        onRestore: (M, A) => IO[Unit]
+      )(f: A => A): Callback =
+        model.modCB(
+          oldModel => setter(f(getter(oldModel)))(oldModel),
+          (oldModel, newModel) => onSet(oldModel, getter(newModel)).runAsyncAndForget
+        )
+    }
 
   private val component =
     ScalaFnComponent
@@ -137,37 +172,40 @@ object SiderealTargetEditor:
       .useEffectResultWithDepsBy((p, _, _, _) => p.vizTime) { (_, _, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
       }
-      .render { (props, ctx, cloning, obsToCloneTo, vizTime) =>
+      // select the aligner to use based on whether a clone will be created or not.
+      .useMemoBy((props, _, _, toCloneTo, _) =>
+        (props.programId, props.target.get, props.asterism.focus.id, toCloneTo.get)
+      ) { (props, ctx, cloning, _, _) => (pid, target, tid, toCloneTo) =>
         import ctx.given
-
-        val remoteOnMod: UpdateTargetsInput => IO[Unit] =
-          getRemoteOnMod(
-            props.programId,
-            props.asterism.focus.id,
-            obsToCloneTo.get,
-            cloning,
-            props.obsAndTargets,
-            props.onClone
-          ).andThen(
-            _.handleErrorWith(t =>
-              Logger[IO].error(t)(s"Error updating target [${props.asterism.focus.id}]") >>
-                ToastCtx[IO].showToast(
-                  s"Error saving target [${props.asterism.focus.id}]",
-                  Message.Severity.Error
-                )
-            )
-          )
-
-        val siderealTargetAligner: Aligner[Target.Sidereal, UpdateTargetsInput] =
+        toCloneTo.fold(
           Aligner(
             props.target,
             UpdateTargetsInput(
-              WHERE = props.asterism.focus.id.toWhereTarget.assign,
+              WHERE = tid.toWhereTarget.assign,
               SET = TargetPropertiesInput()
             ),
             // Invalidate the sequence if the target changes
-            u => props.invalidateSequence.to[IO] *> remoteOnMod(u)
+            u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
           )
+        ) { obsIds =>
+          val view = View(target, (mod, cb) => cb(target, mod(target)))
+          Aligner(
+            noopUndoSetter(view),
+            // noopUndoSetter(noUndoTargetView),
+            UpdateTargetsInput(SET = TargetPropertiesInput()),
+            u =>
+              props.invalidateSequence.to[IO] *> cloneTarget(pid,
+                                                             tid,
+                                                             obsIds,
+                                                             cloning,
+                                                             props.obsAndTargets,
+                                                             props.onClone
+              )(u)
+          )
+        }
+      }
+      .render { (props, ctx, cloning, obsToCloneTo, vizTime, siderealTargetAligner) =>
+        import ctx.given
 
         val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)
         val siderealLens      = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.sidereal)
