@@ -356,6 +356,13 @@ $brightness: var(--aladin-image-brightness);
     aspect-ratio: 1;
   }
 
+  .aladin-help-icon {
+    @include aladin-button-mixin;
+
+    right: 5px;
+    top: 40px;
+  }
+
   .explore-aladin-zoom-control {
     @include aladin-button-mixin;
 
