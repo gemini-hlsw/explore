@@ -254,9 +254,10 @@ object ExploreLayout:
                   props.view.get.programSummaries
                     .flatMap(_.optProgramDetails)
                     .forall: program =>
-                      // Only show Program tab for Accepted Science proposals
-                      tab =!= AppTab.Proposal ||
-                        (program.programType === ProgramType.Science && program.proposalStatus === ProposalStatus.Accepted)
+                      // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                      (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                        program.programType === ProgramType.Science &&
+                        (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
               ),
               if (showProgsPopup)
                 ProgramsPopup(
