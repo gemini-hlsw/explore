@@ -30,7 +30,26 @@ case class TimeAwardTable(allocations: PartnerAllocationList)
 object TimeAwardTable:
   private type Props = TimeAwardTable
 
-  private val ColDef = ColumnDef[(Partner, PartnerAllocations)]
+  private case class Row(partner: Partner, allocations: PartnerAllocations):
+    lazy val partnerTotal: TimeSpan = allocations.value.values.toList.combineAll
+
+  private object Row:
+    def fromPartnerAllocationList(allocations: PartnerAllocationList): List[Row] =
+      allocations.value.toList.map(Row(_, _))
+
+  private case class TableMeta(totalByBand: Map[ScienceBand, TimeSpan]):
+    lazy val grandTotal: TimeSpan = totalByBand.values.toList.combineAll
+
+  private object TableMeta:
+    def fromPartnerAllocationList(allocations: PartnerAllocationList): TableMeta =
+      TableMeta(
+        totalByBand = Enumerated[ScienceBand].all
+          .map: band =>
+            band -> allocations.value.values.flatMap(_.value.get(band)).toList.combineAll
+          .toMap
+      )
+
+  private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
 
   private val PartnerColId: ColumnId                = ColumnId("partner")
   private val BandColId: Map[ScienceBand, ColumnId] =
@@ -43,7 +62,7 @@ object TimeAwardTable:
   private val partnerColDef =
     ColDef(
       PartnerColId,
-      _._1,
+      _.partner,
       "Time Award",
       cell = cell => <.span(cell.value.abbreviation, cell.value.renderFlag),
       footer = _ => "Total"
@@ -52,46 +71,41 @@ object TimeAwardTable:
   private def bandColDef(band: ScienceBand) =
     ColDef(
       BandColId(band),
-      _._2.value.get(band).getOrElse(TimeSpan.Zero),
+      _.allocations.value.get(band).orEmpty,
       band.shortName,
       cell = cell => TimeSpanView(cell.value, TimeUnitsFormat.Letter),
       footer = footer =>
-        val total = footer.table
-          .getRowModel()
-          .rows
-          .map(_.original._2.value.get(band).getOrElse(TimeSpan.Zero))
-          .combineAll
-        TimeSpanView(total, TimeUnitsFormat.Letter)
+        TimeSpanView(footer.table.options.meta.foldMap(_.totalByBand(band)), TimeUnitsFormat.Letter)
     ).setSize(90.toPx)
 
   private val totalColDef =
     ColDef(
       TotalColId,
-      _._2.value.values.toList.combineAll,
+      _.partnerTotal,
       "Total",
       cell = cell => TimeSpanView(cell.value, TimeUnitsFormat.Letter),
       footer = footer =>
-        val total = footer.table
-          .getRowModel()
-          .rows
-          .map(_.original._2.value.values.toList.combineAll)
-          .combineAll
-        TimeSpanView(total, TimeUnitsFormat.Letter)
+        println(footer.table.options.meta.foldMap(_.grandTotal))
+        TimeSpanView(
+          footer.table.options.meta.foldMap(_.grandTotal),
+          TimeUnitsFormat.Letter
+        )
     ).setSize(90.toPx)
 
-  private val columns: Reusable[List[ColumnDef.NoMeta[(Partner, PartnerAllocations), ?]]] =
+  private val columns: Reusable[List[ColumnDef.WithTableMeta[Row, ?, TableMeta]]] =
     Reusable.always:
       partnerColDef +: Enumerated[ScienceBand].all.map(bandColDef) :+ totalColDef
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(props => props.allocations)(_ => _.value.toList)
-      .useReactTableBy: (_, rows) =>
+      .useMemoBy(props => props.allocations)(_ => Row.fromPartnerAllocationList)
+      .useReactTableBy: (props, rows) =>
         TableOptions(
           columns,
           rows,
           getRowId = (row, _, _) => RowId(row._1.tag),
+          meta = TableMeta.fromPartnerAllocationList(props.allocations),
           enableSorting = false,
           enableColumnResizing = false
         )
