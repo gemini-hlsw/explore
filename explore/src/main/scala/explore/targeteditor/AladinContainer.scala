@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
 import explore.aladin.AladinZoomControl
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
@@ -37,6 +38,7 @@ import lucuma.react.aladin.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.hooks.*
+import lucuma.refined.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
@@ -374,6 +376,7 @@ object AladinContainer extends AladinCommon {
           if (resize.height.exists(_ >= 100)) {
             ReactFragment(
               AladinZoomControl(aladinRef),
+              HelpIcon("aladin-cell.md".refined, ExploreStyles.AladinHelpIcon),
               (resize.width, resize.height, fov.value)
                 .mapN(
                   TargetsOverlay(
