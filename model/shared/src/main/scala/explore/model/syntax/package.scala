@@ -42,8 +42,13 @@ object all:
       case PosAngleConstraint.Unbounded              => PosAngleOptions.Unconstrained
 
   extension (self: AsterismGroupList)
+    // find the first group which contains the entirety of obsIds
     def findContainingObsIds(obsIds: ObsIdSet): Option[AsterismGroup] =
       self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(AsterismGroup.fromTuple)
+
+    // find all the groups that contain any of the obsIds
+    def filterForObsInSet(obsIds: ObsIdSet): AsterismGroupList =
+      self.filterNot(_._1.idSet.intersect(obsIds.idSet).isEmpty)
 
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
       self.find { case (_, grpIds) => grpIds === targetIds }.map(AsterismGroup.fromTuple)

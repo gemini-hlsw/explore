@@ -44,6 +44,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
+import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
@@ -155,7 +156,10 @@ object ObsTabContents extends TwoPanels:
             // FIXME Find a better mechanism for this.
             // Something like .mapValue but for UndoContext
             props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
-            props.programSummaries,
+            props.programSummaries
+              .zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip),
+            props.programSummaries.model.zoom(ProgramSummaries.obsAttachments),
+            props.programSummaries.get,
             props.focusedTarget,
             props.searching,
             ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),

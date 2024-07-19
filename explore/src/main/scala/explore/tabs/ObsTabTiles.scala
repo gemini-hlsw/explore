@@ -26,6 +26,8 @@ import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.ObsSummary.observingMode
+import explore.model.ObservationsAndTargets
+import explore.model.OnCloneParameters
 import explore.model.ProgramSummaries
 import explore.model.TargetEditObsInfo
 import explore.model.display.given
@@ -41,7 +43,6 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.timingwindows.TimingWindowsPanel
-import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -86,7 +87,9 @@ case class ObsTabTiles(
   modes:             SpectroscopyModesMatrix,
   backButton:        VdomNode,
   observation:       UndoSetter[ObsSummary],
-  programSummaries:  UndoContext[ProgramSummaries],
+  obsAndTargets:     UndoSetter[ObservationsAndTargets],
+  obsAttachments:    View[ObsAttachmentList],
+  programSummaries:  ProgramSummaries,
   focusedTarget:     Option[Target.Id],
   searching:         View[Set[Target.Id]],
   defaultLayouts:    LayoutsMap,
@@ -96,15 +99,13 @@ case class ObsTabTiles(
   readonly:          Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsId: Observation.Id                                         = observation.get.id
-  val allConstraintSets: Set[ConstraintSet]                         = programSummaries.get.constraintGroups.map(_._2).toSet
+  val allConstraintSets: Set[ConstraintSet]                         = programSummaries.constraintGroups.map(_._2).toSet
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
-    programSummaries.get.targetObservations
-  val obsExecution: Pot[Execution]                                  = programSummaries.get.obsExecutionPots.getPot(obsId)
-  val allTargets: UndoSetter[TargetList]                            = programSummaries.zoom(ProgramSummaries.targets)
-  val obsAttachments: View[ObsAttachmentList]                       =
-    programSummaries.model.zoom(ProgramSummaries.obsAttachments)
+    programSummaries.targetObservations
+  val obsExecution: Pot[Execution]                                  = programSummaries.obsExecutionPots.getPot(obsId)
+  val allTargets: TargetList                                        = programSummaries.targets
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
-    programSummaries.get.obsAttachmentAssignments
+    programSummaries.obsAttachmentAssignments
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -224,7 +225,7 @@ object ObsTabTiles:
           props.observation.get,
           time,
           selectedConfig.get,
-          props.allTargets.get
+          props.allTargets
         )
       )
       // Chart results
@@ -238,7 +239,7 @@ object ObsTabTiles:
           props.observation.get,
           time,
           selectedConfig.get,
-          props.allTargets.get
+          props.allTargets
         )
       } { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
         import ctx.given
@@ -331,7 +332,7 @@ object ObsTabTiles:
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
               NonEmptyList.fromList(
                 props.observation.get.scienceTargetIds.toList
-                  .map(id => props.allTargets.get.get(id).map(t => TargetWithId(id, t)))
+                  .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
                   .flattenOption
               )
 
@@ -415,7 +416,7 @@ object ObsTabTiles:
                 props.userId,
                 props.obsId,
                 selectedItcTarget,
-                props.allTargets.get,
+                props.allTargets,
                 itcProps.value,
                 itcChartResults.value,
                 itcLoading.value,
@@ -468,7 +469,7 @@ object ObsTabTiles:
               TargetEditObsInfo.fromProgramSummaries(
                 targetId,
                 ObsIdSet.one(obsId).some,
-                props.programSummaries.get
+                props.programSummaries
               )
 
             def setCurrentTarget(
@@ -483,11 +484,8 @@ object ObsTabTiles:
                 via
               )
 
-            def onCloneTarget(oldTid: Target.Id, newTarget: TargetWithId, obsIds: ObsIdSet)
-              : Callback =
-              props.programSummaries.model.mod(
-                _.cloneTargetForObservations(oldTid, newTarget, obsIds)
-              ) *> setCurrentTarget(newTarget.id.some, SetRouteVia.HistoryReplace)
+            def onCloneTarget(params: OnCloneParameters): Callback =
+              setCurrentTarget(params.idToAdd.some, SetRouteVia.HistoryReplace)
 
             val targetTile: Tile =
               AsterismEditorTile.asterismEditorTile(
@@ -495,7 +493,7 @@ object ObsTabTiles:
                 props.programId,
                 ObsIdSet.one(props.obsId),
                 asterismIds,
-                props.allTargets,
+                props.obsAndTargets,
                 basicConfiguration,
                 vizTimeView,
                 obsConf,
@@ -546,7 +544,7 @@ object ObsTabTiles:
                 obsConf,
                 selectedConfig,
                 props.modes,
-                props.allTargets.get,
+                props.allTargets,
                 sequenceChanged.mod {
                   case Ready(x) => Pot.pending
                   case x        => x

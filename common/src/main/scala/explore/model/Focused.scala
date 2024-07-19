@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.derived.*
 import cats.syntax.all.*
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
@@ -19,7 +20,7 @@ case class Focused(
   obsSet: Option[ObsIdSet] = none,
   target: Option[Target.Id] = none,
   group:  Option[Group.Id] = none
-) {
+) derives Eq {
   def withObsSetOpt(obsSet: Option[ObsIdSet]): Focused = Focused.obsSet.replace(obsSet)(this)
 
   def withObsSet(obsSet: ObsIdSet): Focused = withObsSetOpt(obsSet.some)
@@ -59,8 +60,6 @@ object Focused {
     Focused(ObsIdSet.one(obsId).some, targetId, none)
 
   def group(group: Group.Id): Focused = Focused(none, none, group.some)
-
-  given Eq[Focused] = Eq.by(x => (x.obsSet, x.target, x.group))
 
   given Reusability[Focused] = Reusability.byEq
 

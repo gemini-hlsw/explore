@@ -17,6 +17,8 @@ import explore.model.AsterismIds
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
+import explore.model.ObservationsAndTargets
+import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.undo.UndoSetter
@@ -28,7 +30,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
-import lucuma.schemas.model.TargetWithId
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
@@ -41,19 +42,20 @@ case class AsterismEditor(
   programId:         Program.Id,
   obsIds:            ObsIdSet,
   asterismIds:       View[AsterismIds],
-  allTargets:        UndoSetter[TargetList],
+  obsAndTargets:     UndoSetter[ObservationsAndTargets],
   vizTime:           View[Option[Instant]],
   configuration:     ObsConfiguration,
   focusedTargetId:   Option[Target.Id],
   setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-  onCloneTarget:     (Target.Id, TargetWithId, ObsIdSet) => Callback,
+  onCloneTarget:     OnCloneParameters => Callback,
   obsInfo:           Target.Id => TargetEditObsInfo,
   searching:         View[Set[Target.Id]],
   renderInTitle:     Tile.RenderInTitle,
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean,
   sequenceChanged:   Callback
-) extends ReactFnProps(AsterismEditor.component)
+) extends ReactFnProps(AsterismEditor.component):
+  val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
 object AreAdding extends NewType[Boolean]
 type AreAdding = AreAdding.Type
@@ -78,15 +80,6 @@ object AsterismEditor extends AsterismModifier:
       .useStateView(AladinFullScreen.Normal)
       .render { (props, ctx, adding, fullScreen) =>
         import ctx.given
-
-        val targetView: View[Option[Target.Id]] =
-          View[Option[Target.Id]](
-            props.focusedTargetId,
-            (f, cb) =>
-              val oldValue = props.focusedTargetId
-              val newValue = f(props.focusedTargetId)
-              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
-          )
 
         // Save the time here. this works for the obs and target tabs
         val vizTimeView = props.vizTime.withOnMod(t =>
@@ -116,7 +109,7 @@ object AsterismEditor extends AsterismModifier:
               props.asterismIds,
               props.allTargets.model,
               adding,
-              targetView.async.set,
+              selectedTargetView.async.set,
               props.readonly,
               ExploreStyles.AddTargetButton
             )
@@ -150,8 +143,10 @@ object AsterismEditor extends AsterismModifier:
                 <.div(
                   ExploreStyles.TargetTileEditor,
                   SiderealTargetEditor(
+                    props.programId,
                     props.userId,
                     siderealTarget,
+                    props.obsAndTargets,
                     asterism.focusOn(focusedTargetId),
                     vizTime,
                     props.configuration.some,

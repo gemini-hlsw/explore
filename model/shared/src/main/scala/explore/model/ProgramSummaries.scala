@@ -105,14 +105,25 @@ case class ProgramSummaries(
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
 
   def cloneTargetForObservations(
-    oldTid:    Target.Id,
-    newTarget: TargetWithId,
-    obsIds:    ObsIdSet
+    originalId: Target.Id,
+    clone:      TargetWithId,
+    obsIds:     ObsIdSet
   ): ProgramSummaries =
     val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
-      list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ - oldTid + newTarget.id))
+      list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ - originalId + clone.id))
     )
-    val ts  = targets + (newTarget.id -> newTarget.target)
+    val ts  = targets + (clone.id -> clone.target)
+    copy(observations = obs, targets = ts)
+
+  def unCloneTargetForObservations(
+    originalId: Target.Id,
+    cloneId:    Target.Id,
+    obsIds:     ObsIdSet
+  ): ProgramSummaries =
+    val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
+      list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ + originalId - cloneId))
+    )
+    val ts  = targets - cloneId
     copy(observations = obs, targets = ts)
 
 object ProgramSummaries:
