@@ -35,17 +35,18 @@ object TimeAwardTable:
 
   private object Row:
     def fromPartnerAllocationList(allocations: PartnerAllocationList): List[Row] =
-      allocations.value.toList.map(Row(_,_))
+      allocations.value.toList.map(Row(_, _))
 
-  private case class TableMeta(totalByBand:    Map[ScienceBand, TimeSpan]):
+  private case class TableMeta(totalByBand: Map[ScienceBand, TimeSpan]):
     lazy val grandTotal: TimeSpan = totalByBand.values.toList.combineAll
 
   private object TableMeta:
     def fromPartnerAllocationList(allocations: PartnerAllocationList): TableMeta =
       TableMeta(
-        totalByBand = Enumerated[ScienceBand].all.map: band =>
-          band -> allocations.value.values.flatMap(_.value.get(band)).toList.combineAll
-        .toMap,
+        totalByBand = Enumerated[ScienceBand].all
+          .map: band =>
+            band -> allocations.value.values.flatMap(_.value.get(band)).toList.combineAll
+          .toMap
       )
 
   private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
