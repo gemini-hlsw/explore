@@ -21,8 +21,9 @@ object ProgramSummaryQueriesGQL {
       }
     """
   }
+
   @GraphQL
-  trait AllProgramTargets      extends GraphQLOperation[ObservationDB] {
+  trait AllProgramTargets extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
       query($$where: WhereTarget!, $$OFFSET: TargetId) {
         targets(WHERE: $$where, OFFSET: $$OFFSET) {

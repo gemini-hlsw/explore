@@ -119,6 +119,24 @@ object ObsQueries:
       .void
   }
 
+  def updateNotes[F[_]: Async](
+    obsIds: List[Observation.Id],
+    notes:  Option[NonEmptyString]
+  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+
+    val editInput =
+      ObservationPropertiesInput(observerNotes = notes.orUnassign)
+
+    UpdateObservationMutation[F]
+      .execute(
+        UpdateObservationsInput(
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = editInput
+        )
+      )
+      .void
+  }
+
   def createObservation[F[_]: Async](
     programId: Program.Id,
     parentId:  Option[Group.Id]

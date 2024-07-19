@@ -61,7 +61,8 @@ case class ObsSummary(
   wavelength:          Option[Wavelength],
   groupId:             Option[Group.Id],
   groupIndex:          NonNegShort,
-  validations:         List[ObservationValidation]
+  validations:         List[ObservationValidation],
+  observerNotes:       Option[NonEmptyString]
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
     case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
@@ -142,6 +143,7 @@ object ObsSummary:
   val groupId             = Focus[ObsSummary](_.groupId)
   val groupIndex          = Focus[ObsSummary](_.groupIndex)
   val validations         = Focus[ObsSummary](_.validations)
+  val observerNotes       = Focus[ObsSummary](_.observerNotes)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -172,6 +174,7 @@ object ObsSummary:
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
       validations         <- c.get[List[ObservationValidation]]("validations")
+      observerNotes       <- c.get[Option[NonEmptyString]]("observerNotes")
     } yield ObsSummary(
       id,
       title,
@@ -189,6 +192,7 @@ object ObsSummary:
       wavelength,
       groupId,
       groupIndex,
-      validations
+      validations,
+      observerNotes
     )
   )

@@ -63,6 +63,7 @@ trait ArbObsSummary:
         groupId             <- arbitrary[Option[Group.Id]]
         groupIndex          <- arbitrary[NonNegShort]
         validations         <- arbitrary[List[ObservationValidation]]
+        observerNotes       <- arbitrary[Option[NonEmptyString]]
       yield ObsSummary(
         id,
         title,
@@ -80,7 +81,8 @@ trait ArbObsSummary:
         wavelength,
         groupId,
         groupIndex,
-        validations
+        validations,
+        observerNotes
       )
     )
 
@@ -101,7 +103,8 @@ trait ArbObsSummary:
        Option[Wavelength],
        Option[Group.Id],
        Short,
-       List[ObservationValidation]
+       List[ObservationValidation],
+       Option[String]
       )
     ]
       .contramap(o =>
@@ -120,7 +123,8 @@ trait ArbObsSummary:
          o.wavelength,
          o.groupId,
          o.groupIndex.value,
-         o.validations
+         o.validations,
+         o.observerNotes.map(_.value)
         )
       )
 

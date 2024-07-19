@@ -139,7 +139,10 @@ object ExploreStyles:
   val ProgramsPopupFauxFooter: Css = Css("explore-programs-popup-faux-footer")
 
   val ObserverNotes: Css = Css("observer-notes")
-  val NotesWrapper: Css  = Css("observer-notes-wrapper")
+  val NotesTile: Css     = Css("observer-notes-tile")
+  val NotesEditor: Css   = Css("observer-notes-editor")
+  val NotesControls: Css = Css("observer-notes-controls")
+  val NoNotes: Css       = Css("observer-notes-empty")
 
   val FinderChartsTile: Css          = Css("finder-charts-tile")
   val FinderChartsBody: Css          = Css("finder-charts-body")

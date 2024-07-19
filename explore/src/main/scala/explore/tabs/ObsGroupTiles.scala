@@ -83,7 +83,7 @@ object ObsGroupTiles:
             canMinimize = true
           )(_ =>
             <.div(
-              ExploreStyles.NotesWrapper,
+              ExploreStyles.NotesTile,
               <.div(
                 ExploreStyles.ObserverNotes,
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
