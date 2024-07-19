@@ -20,7 +20,7 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
   preferencesDB: WebSocketJSClient[F, UserPreferencesDB],
   sso:           FetchJSClient[F, SSO]
 ):
-  def init(payload: Map[String, Json]): F[Unit] =
+  def init(payload: F[Map[String, Json]]): F[Unit] =
     (
       preferencesDB.connect() >> preferencesDB.initialize(),
       odb.connect() >> odb.initialize(payload)
