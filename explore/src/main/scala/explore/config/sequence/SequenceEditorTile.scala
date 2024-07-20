@@ -38,7 +38,7 @@ object SequenceEditorTile:
         val programTimeCharge = execution.programTimeCharge.value
 
         def timeDisplay(name: String, time: TimeSpan) =
-          <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
+          <.div(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
 
         val executed = timeDisplay("Executed", programTimeCharge)
 

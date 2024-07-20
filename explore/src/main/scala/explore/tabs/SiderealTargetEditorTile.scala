@@ -47,7 +47,7 @@ object SiderealTargetEditorTile {
       back = backButton,
       canMinimize = true,
       bodyClass = ExploreStyles.TargetTileBody
-    ) { (renderInTitle: Tile.RenderInTitle) =>
+    ) { renderInTitle =>
       <.div(
         ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
         <.div(
