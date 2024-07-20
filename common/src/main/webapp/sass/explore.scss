@@ -840,11 +840,19 @@ thead tr th.sticky-header {
     content: attr(data-abbrv);
   }
 
-  label[data-abbrv] > span {
+  label[data-abbrv] {
     display: none;
   }
 
-  @media (min-width: lucumaUICommon.$tablet-responsive-cutoff) {
+  .react-datepicker__input-container {
+    input {
+      font-size: small;
+    }
+  }
+}
+
+@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+  .explore-obs-instant-tile-title {
     label:first-child {
       max-width: unset;
     }
@@ -861,8 +869,10 @@ thead tr th.sticky-header {
       display: inline;
     }
   }
+}
 
-  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+  .explore-obs-instant-tile-title {
     label:first-child {
       display: unset;
     }
@@ -1274,6 +1284,10 @@ $search-preview-margin: 5px;
   display: flex;
   justify-content: center;
   padding-top: 1em;
+}
+
+.explore-tile-control:has(.explore-sequence-tile-title) {
+  justify-self: stretch;
 }
 
 .explore-sequence-tile-title {
@@ -2733,6 +2747,7 @@ $help-title-height: 40px;
   padding: 0.5em;
   display: grid;
   min-height: 100%;
+  border-collapse: collapse;
   grid-template:
     'table table' 1fr
     'editor add' min-content / 1fr min-content;

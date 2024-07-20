@@ -34,11 +34,27 @@ object ExploreGridLayouts:
     case GridLayoutSection.GroupEditLayout    => groupEdit.defaultGroupEditLayouts
   }
 
+  extension (l: LayoutsMap)
+    def withMinWidth: LayoutsMap =
+      l.map {
+        case (BreakpointName.lg, v) =>
+          BreakpointName.lg -> (v.copy(_3 =
+            Layout(v._3.asList.map(_.copy(w = DefaultLargeWidth.value, minW = TileMinWidth.value)))
+          ): LayoutEntry)
+        case (BreakpointName.md, v) =>
+          BreakpointName.md -> (v.copy(_3 =
+            Layout(v._3.asList.map(_.copy(w = DefaultWidth.value, minW = TileMinWidth.value)))
+          ): LayoutEntry)
+      }
+
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =
     SortedMap.from(GridLayoutSection.values.map(l => l -> sectionLayout(l)))
 
-  lazy val DefaultWidth: NonNegInt      = 10.refined
-  lazy val DefaultLargeWidth: NonNegInt = 16.refined
+  private lazy val DefaultWidth: NonNegInt      = 16.refined
+  private lazy val DefaultLargeWidth: NonNegInt = 32.refined
+
+  // Restricted to GridRowHeight * 10 = 360px which is basically the min width for a mobile device
+  private lazy val TileMinWidth: NonNegInt = 8.refined
 
   object constraints:
     private lazy val ConstraintsHeight: NonNegInt   = 4.refined
@@ -51,16 +67,14 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = ConstraintsHeight.value,
-          isResizable = false
+          h = ConstraintsHeight.value
         ),
         LayoutItem(
           i = ObsTabTilesIds.TimingWindowsId.id.value,
           x = 0,
           y = ConstraintsHeight.value,
           w = DefaultWidth.value,
-          h = TimingWindowsHeight.value,
-          isResizable = false
+          h = TimingWindowsHeight.value
         )
       )
     )
@@ -72,7 +86,8 @@ object ExploreGridLayouts:
         ),
         (BreakpointName.md, layoutMedium)
       )
-    )
+    ).withMinWidth
+  end constraints
 
   object scheduling:
     private lazy val SchedulingHeight: NonNegInt = 14.refined
@@ -84,8 +99,7 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = SchedulingHeight.value,
-          isResizable = false
+          h = SchedulingHeight.value
         )
       )
     )
@@ -97,16 +111,13 @@ object ExploreGridLayouts:
         ),
         (BreakpointName.md, layoutMedium)
       )
-    )
+    ).withMinWidth
+  end scheduling
 
   object targets:
-    private lazy val SummaryHeight: NonNegInt    = 6.refined
-    private lazy val SummaryMinHeight: NonNegInt = 4.refined
-    private lazy val TargetHeight: NonNegInt     = 18.refined
-    private lazy val TargetMinHeight: NonNegInt  = 15.refined
-    private lazy val SkyPlotHeight: NonNegInt    = 9.refined
-    private lazy val SkyPlotMinHeight: NonNegInt = 6.refined
-    private lazy val TileMinWidth: NonNegInt     = 5.refined
+    private lazy val SummaryHeight: NonNegInt = 6.refined
+    private lazy val TargetHeight: NonNegInt  = 18.refined
+    private lazy val SkyPlotHeight: NonNegInt = 9.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -115,27 +126,21 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = SummaryHeight.value,
-          minH = SummaryMinHeight.value,
-          minW = TileMinWidth.value
+          h = SummaryHeight.value
         ),
         LayoutItem(
           i = ObsTabTilesIds.TargetId.id.value,
           x = 0,
           y = SummaryHeight.value,
           w = DefaultWidth.value,
-          h = TargetHeight.value,
-          minH = TargetMinHeight.value,
-          minW = TileMinWidth.value
+          h = TargetHeight.value
         ),
         LayoutItem(
           i = ObsTabTilesIds.PlotId.id.value,
           x = 0,
           y = SummaryHeight.value + TargetHeight.value,
           w = DefaultWidth.value,
-          h = SkyPlotHeight.value,
-          minH = SkyPlotMinHeight.value,
-          minW = TileMinWidth.value
+          h = SkyPlotHeight.value
         )
       )
     )
@@ -149,23 +154,39 @@ object ExploreGridLayouts:
       )
     )
 
+    private lazy val singleLayoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = ObsTabTilesIds.TargetSummaryId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = 100, // This doesn't matter, we are forcing 100%.
+          static = true
+        )
+      )
+    )
+
+    lazy val defaultSingleLayouts = defineStdLayouts(
+      Map(
+        (BreakpointName.lg,
+         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(singleLayoutMedium)
+        ),
+        (BreakpointName.md, singleLayoutMedium)
+      )
+    ).withMinWidth
+  end targets
+
   object observations:
     private lazy val NotesMaxHeight: NonNegInt         = 5.refined
     private lazy val TargetHeight: NonNegInt           = 18.refined
-    private lazy val TargetMinHeight: NonNegInt        = 15.refined
     private lazy val SkyPlotHeight: NonNegInt          = 9.refined
-    private lazy val SkyPlotMinHeight: NonNegInt       = 6.refined
-    private lazy val ConstraintsMinHeight: NonNegInt   = 4.refined
     private lazy val ConstraintsMaxHeight: NonNegInt   = 7.refined
-    private lazy val SequenceMinHeight: NonNegInt      = 10.refined
     private lazy val SequenceMaxHeight: NonNegInt      = 14.refined
-    private lazy val TimingWindowsMinHeight: NonNegInt = 8.refined
     private lazy val TimingWindowsMaxHeight: NonNegInt = 12.refined
     private lazy val ConfigurationMaxHeight: NonNegInt = 10.refined
     private lazy val ItcMaxHeight: NonNegInt           = 9.refined
-    private lazy val FinderChartMinHeight: NonNegInt   = 6.refined
     private lazy val FinderChartHeight: NonNegInt      = 9.refined
-    private lazy val TileMinWidth: NonNegInt           = 6.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -181,8 +202,6 @@ object ExploreGridLayouts:
           y = NotesMaxHeight.value,
           w = DefaultWidth.value,
           h = TargetHeight.value,
-          minH = TargetMinHeight.value,
-          minW = TileMinWidth.value,
           i = ObsTabTilesIds.TargetId.id.value
         ),
         LayoutItem(
@@ -190,8 +209,6 @@ object ExploreGridLayouts:
           y = (NotesMaxHeight |+| TargetHeight).value,
           w = DefaultWidth.value,
           h = FinderChartHeight.value,
-          minH = FinderChartMinHeight.value,
-          minW = TileMinWidth.value,
           i = ObsTabTilesIds.FinderChartsId.id.value
         ),
         LayoutItem(
@@ -199,8 +216,6 @@ object ExploreGridLayouts:
           y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight).value,
           w = DefaultWidth.value,
           h = SkyPlotHeight.value,
-          minH = SkyPlotMinHeight.value,
-          minW = TileMinWidth.value,
           i = ObsTabTilesIds.PlotId.id.value
         ),
         LayoutItem(
@@ -208,9 +223,6 @@ object ExploreGridLayouts:
           y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight).value,
           w = DefaultWidth.value,
           h = ConstraintsMaxHeight.value,
-          minH = ConstraintsMinHeight.value,
-          maxH = ConstraintsMaxHeight.value,
-          minW = TileMinWidth.value,
           i = ObsTabTilesIds.ConstraintsId.id.value
         ),
         LayoutItem(
@@ -219,9 +231,6 @@ object ExploreGridLayouts:
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
           w = DefaultWidth.value,
           h = TimingWindowsMaxHeight.value,
-          minH = TimingWindowsMinHeight.value,
-          maxH = TimingWindowsMaxHeight.value,
-          minW = TileMinWidth.value,
           i = ObsTabTilesIds.TimingWindowsId.id.value
         ),
         LayoutItem(
@@ -246,7 +255,6 @@ object ExploreGridLayouts:
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| ItcMaxHeight).value,
           w = DefaultWidth.value,
           h = SequenceMaxHeight.value,
-          minH = SequenceMinHeight.value,
           i = ObsTabTilesIds.SequenceId.id.value
         )
       )
@@ -255,21 +263,16 @@ object ExploreGridLayouts:
     lazy val defaultObsLayouts: LayoutsMap =
       defineStdLayouts(
         Map(
-          (BreakpointName.lg,
-           layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
-          ),
+          (BreakpointName.lg, layoutMedium),
           (BreakpointName.md, layoutMedium)
         )
-      )
+      ).withMinWidth
+  end observations
 
   object programs:
-    private lazy val DetailsHeight: NonNegInt           = 6.refined
-    private lazy val DetailsMinHeight: NonNegInt        = 4.refined
-    private lazy val NotesHeight: NonNegInt             = 6.refined
-    private lazy val NotesMinHeight: NonNegInt          = 4.refined
-    private lazy val ChangeRequestsHeight: NonNegInt    = 6.refined
-    private lazy val ChangeRequestsMinHeight: NonNegInt = 4.refined
-    private lazy val TileMinWidth: NonNegInt            = 6.refined
+    private lazy val DetailsHeight: NonNegInt        = 6.refined
+    private lazy val NotesHeight: NonNegInt          = 6.refined
+    private lazy val ChangeRequestsHeight: NonNegInt = 6.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -278,27 +281,21 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = DetailsHeight.value,
-          minH = DetailsMinHeight.value,
-          minW = TileMinWidth.value
+          h = DetailsHeight.value
         ),
         LayoutItem(
           i = ProgramTabTileIds.NotesId.id.value,
           x = 0,
           y = DetailsHeight.value,
           w = DefaultWidth.value,
-          h = NotesHeight.value,
-          minH = NotesMinHeight.value,
-          minW = TileMinWidth.value
+          h = NotesHeight.value
         ),
         LayoutItem(
           i = ProgramTabTileIds.ChangeRequestsId.id.value,
           x = 0,
           y = (DetailsHeight |+| NotesHeight).value,
           w = DefaultWidth.value,
-          h = ChangeRequestsHeight.value,
-          minH = ChangeRequestsMinHeight.value,
-          minW = TileMinWidth.value
+          h = ChangeRequestsHeight.value
         )
       )
     )
@@ -310,15 +307,13 @@ object ExploreGridLayouts:
         ),
         (BreakpointName.md, layoutMedium)
       )
-    )
+    ).withMinWidth
+  end programs
 
   object overview:
 
-    private lazy val WarningsAndErrorsHeight: NonNegInt    = 8.refined
-    private lazy val WarningsAndErrorsMinHeight: NonNegInt = 6.refined
-    private lazy val ObsAttachmentsHeight: NonNegInt       = 8.refined
-    private lazy val ObsAttachmentsMinHeight: NonNegInt    = 6.refined
-    private lazy val TileMinWidth: NonNegInt               = 8.refined
+    private lazy val WarningsAndErrorsHeight: NonNegInt = 8.refined
+    private lazy val ObsAttachmentsHeight: NonNegInt    = 8.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -327,18 +322,14 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = WarningsAndErrorsHeight.value,
-          minH = WarningsAndErrorsMinHeight.value,
-          minW = TileMinWidth.value
+          h = WarningsAndErrorsHeight.value
         ),
         LayoutItem(
           i = ObsTabTilesIds.ObsAttachmentsId.id.value,
           x = 0,
           y = WarningsAndErrorsHeight.value,
           w = DefaultWidth.value,
-          h = ObsAttachmentsHeight.value,
-          minH = ObsAttachmentsMinHeight.value,
-          minW = TileMinWidth.value
+          h = ObsAttachmentsHeight.value
         )
       )
     )
@@ -350,18 +341,14 @@ object ExploreGridLayouts:
         ),
         (BreakpointName.md, layoutMedium)
       )
-    )
+    ).withMinWidth
+  end overview
 
   object proposal:
-    private lazy val DetailsHeight: NonNegInt        = 7.refined
-    private lazy val DetailsMinHeight: NonNegInt     = 1.refined
-    private lazy val UsersHeight: NonNegInt          = 6.refined
-    private lazy val UsersMinHeight: NonNegInt       = 4.refined
-    private lazy val AbstractHeight: NonNegInt       = 8.refined
-    private lazy val AbstractMinHeight: NonNegInt    = 4.refined
-    private lazy val AttachmentsHeight: NonNegInt    = 8.refined
-    private lazy val AttachmentsMinHeight: NonNegInt = 6.refined
-    private lazy val TileMinWidth: NonNegInt         = 6.refined
+    private lazy val DetailsHeight: NonNegInt     = 7.refined
+    private lazy val UsersHeight: NonNegInt       = 6.refined
+    private lazy val AbstractHeight: NonNegInt    = 8.refined
+    private lazy val AttachmentsHeight: NonNegInt = 8.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -370,36 +357,28 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = DetailsHeight.value,
-          minH = DetailsMinHeight.value,
-          minW = TileMinWidth.value
+          h = DetailsHeight.value
         ),
         LayoutItem(
           i = ProposalTabTileIds.UsersId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = UsersHeight.value,
-          minH = UsersMinHeight.value,
-          minW = TileMinWidth.value
+          h = UsersHeight.value
         ),
         LayoutItem(
           i = ProposalTabTileIds.AbstractId.id.value,
           x = 0,
           y = DetailsHeight.value,
           w = DefaultWidth.value,
-          h = AbstractHeight.value,
-          minH = AbstractMinHeight.value,
-          minW = TileMinWidth.value
+          h = AbstractHeight.value
         ),
         LayoutItem(
           i = ProposalTabTileIds.AttachmentsId.id.value,
           x = 0,
           y = (DetailsHeight |+| AbstractHeight).value,
           w = DefaultWidth.value,
-          h = AttachmentsHeight.value,
-          minH = AttachmentsMinHeight.value,
-          minW = TileMinWidth.value
+          h = AttachmentsHeight.value
         )
       )
     )
@@ -411,7 +390,8 @@ object ExploreGridLayouts:
         ),
         (BreakpointName.md, layoutMedium)
       )
-    )
+    ).withMinWidth
+  end proposal
 
   object groupEdit:
     lazy val GroupEditHeight: NonNegInt    = 12.refined
@@ -427,18 +407,14 @@ object ExploreGridLayouts:
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = GroupEditHeight.value,
-          minH = GroupEditMinHeight.value,
-          minW = TileMinWidth.value
+          h = GroupEditHeight.value
         ),
         LayoutItem(
           i = GroupEditIds.GroupNotesId.id.value,
           x = 0,
           y = GroupEditHeight.value,
           w = DefaultWidth.value,
-          h = NotesHeight.value,
-          minH = NotesMinHeight.value,
-          minW = TileMinWidth.value
+          h = NotesHeight.value
         )
       )
     )
@@ -450,4 +426,5 @@ object ExploreGridLayouts:
         ),
         (BreakpointName.md, layoutMedium)
       )
-    )
+    ).withMinWidth
+  end groupEdit
