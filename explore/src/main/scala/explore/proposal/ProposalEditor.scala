@@ -599,7 +599,7 @@ object ProposalEditor:
         (props.proposal.get.callId, cfps.toOption.orEmpty)
       ): (props, _, _, _, _, ps) =>
         (callId, cfps) =>
-          callId.fold(Callback.empty)(cid =>
+          callId.foldMap(cid =>
             val currentSplits    = Proposal.proposalType.some
               .andThen(ProposalType.partnerSplits)
               .getOption(props.proposal.get)
