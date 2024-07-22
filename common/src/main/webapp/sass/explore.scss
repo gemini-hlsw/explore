@@ -3011,6 +3011,19 @@ div.spectroscopy-table-emptymessage {
     padding: 0.3em;
   }
 
+  .explore-proposal-submission-line {
+    display: flex;
+    align-items: center;
+  }
+
+  .explore-proposal-deadline {
+    .p-inline-message-text {
+      /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+      font-size: var(--pl-tiny-font-size);
+      line-height: normal;
+    }
+  }
+
   .explore-proposal-abstract {
     .pl-form-field {
       height: 100%;

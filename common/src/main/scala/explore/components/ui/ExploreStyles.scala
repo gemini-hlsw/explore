@@ -221,9 +221,11 @@ object ExploreStyles:
   val AgsNavigationButton: Css = Css("ags-navigation-button")
   val AgsNavigation: Css       = Css("ags-navigation")
 
-  val ProposalTab: Css         = Css("explore-proposal-tab")
-  val ProposalDetailsGrid: Css = Css("explore-proposal-details-grid")
-  val ProposalAbstract: Css    = Css("explore-proposal-abstract")
+  val ProposalTab: Css           = Css("explore-proposal-tab")
+  val ProposalDetailsGrid: Css   = Css("explore-proposal-details-grid")
+  val ProposalAbstract: Css      = Css("explore-proposal-abstract")
+  val ProposalSubmissionBar: Css = Css("explore-proposal-submission-line")
+  val ProposalDeadline: Css      = Css("explore-proposal-deadline")
 
   val PartnerSplitsMissing: Css        = Css("partner-splits-missing")
   val PartnerSplitsGrid: Css           = Css("partner-splits-grid")

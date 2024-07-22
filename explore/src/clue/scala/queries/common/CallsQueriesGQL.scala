@@ -20,6 +20,7 @@ object CallsQueriesGQL:
             cfpType: type
             partners {
               partner
+              submissionDeadline
             }
           }
         }

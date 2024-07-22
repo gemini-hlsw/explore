@@ -57,6 +57,7 @@ import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -92,6 +93,7 @@ case class ProposalEditor(
   invitations:       View[List[CoIInvitation]],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
+  deadline:          View[Option[Timestamp]],
   layout:            LayoutsMap,
   readonly:          Boolean
 ) extends ReactFnProps(ProposalEditor.component)
@@ -610,6 +612,25 @@ object ProposalEditor:
               ps.set(currentSplits.orEmpty)
             else
               ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
+          )
+      // Update the deadline when the call or partner splits change
+      .useEffectWithDepsBy((props, _, cfps, _, _, splits) =>
+        (props.proposal.get.callId, cfps.toOption.orEmpty, splits.get)
+      ): (props, _, _, _, _, ps) =>
+        (callId, cfps, splits) =>
+          callId.fold(Callback.empty)(cid =>
+            val proposalPartners = splits.filter(_._2 > 0).map(_.partner)
+            props.deadline.set(
+              cfps
+                .find(_.id === cid)
+                .flatMap { c =>
+                  val callPartners = c.partners
+                  proposalPartners
+                    .map(p => callPartners.find(_.partner === p).flatMap(_.submissionDeadline))
+                    .minimumOption
+                    .flatten
+                }
+            )
           )
       // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
       //   // Deal with changes to the ProposalClass.
