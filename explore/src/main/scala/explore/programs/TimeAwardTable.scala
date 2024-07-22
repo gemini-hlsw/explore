@@ -85,7 +85,6 @@ object TimeAwardTable:
       "Total",
       cell = cell => TimeSpanView(cell.value, TimeUnitsFormat.Letter),
       footer = footer =>
-        println(footer.table.options.meta.foldMap(_.grandTotal))
         TimeSpanView(
           footer.table.options.meta.foldMap(_.grandTotal),
           TimeUnitsFormat.Letter

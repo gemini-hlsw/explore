@@ -49,6 +49,16 @@ trait Constants:
       .map((nOpt, units) => nOpt.map(n => s"$n $units" + (if (n != 1) "s" else "")))
       .flattenOption
       .mkString(", ")
+  val DurationLongWithSecondsFormatter: Duration => String     = d =>
+    val days: Option[Long]   = d.toDays.some.filter(_ > 0)
+    val hours: Option[Int]   = d.toHoursPart.some.filter(_ > 0)
+    val minutes: Option[Int] = d.toMinutesPart.some.filter(_ > 0 || (days.isEmpty && hours.isEmpty))
+    val seconds: Int         = d.toSecondsPart
+    List(days, hours, minutes)
+      .zip(List("day", "hour", "minute"))
+      .map((nOpt, units) => nOpt.map(n => s"$n $units" + (if (n != 1) "s" else "")))
+      .flattenOption
+      .mkString(", ") + s", ${seconds}s"
 
   val NoGuideStarMessage = "No guidestar available"
   val MissingITC         = "Mode or ITC not available"

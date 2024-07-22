@@ -27,11 +27,12 @@ case class CallPartner(
       Decoder
 
 case class CallForProposal(
-  id:       CallForProposals.Id,
-  semester: Semester,
-  title:    NonEmptyString,
-  cfpType:  CallForProposalsType,
-  partners: List[CallPartner]
+  id:                        CallForProposals.Id,
+  semester:                  Semester,
+  title:                     NonEmptyString,
+  cfpType:                   CallForProposalsType,
+  partners:                  List[CallPartner],
+  submissionDeadlineDefault: Option[Timestamp]
 ) derives Eq,
       Decoder
 

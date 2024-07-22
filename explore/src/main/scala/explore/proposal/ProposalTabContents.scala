@@ -26,6 +26,7 @@ import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
+import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -52,6 +53,11 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
+
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import scala.concurrent.duration.*
 
 case class ProposalTabContents(
   programId:         Program.Id,
@@ -96,7 +102,8 @@ object ProposalTabContents:
     isUpdatingStatus:  View[IsUpdatingStatus],
     readonly:          Boolean,
     errorMessage:      UseState[Option[String]],
-    deadline:          View[Option[Timestamp]]
+    deadline:          View[Option[Timestamp]],
+    now:               Option[Instant]
   ): VdomNode = {
     import ctx.given
 
@@ -162,16 +169,26 @@ object ProposalTabContents:
                          onClick = updateStatus(ProposalStatus.Submitted),
                          disabled = isUpdatingStatus.get.value
                   ).compact.tiny,
-                  deadline.get
-                    .map(t =>
-                      <.span(
-                        ExploreStyles.ProposalDeadline,
-                        Message(text =
-                                  s"Deadline: ${Constants.UtcFormatter.format(t.toInstant)} UTC",
-                                severity = Message.Severity.Info
-                        )
+                  (deadline.get, now).mapN((t, n) =>
+                    val deadline = t.toLocalDateTime
+                    val now      = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
+                    val diff     = java.time.Duration.between(now, deadline)
+                    val left     = Constants.DurationLongWithSecondsFormatter(diff)
+                    val dateFmt  =
+                      if (diff.isNegative)
+                        s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
+                            .format(deadline)}"
+                      else
+                        s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
+                            .format(deadline)} [$left]"
+                    <.span(
+                      ExploreStyles.ProposalDeadline,
+                      Message(
+                        text = s"Deadline: $dateFmt",
+                        severity = Message.Severity.Info
                       )
                     )
+                  )
                 )
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.NotSubmitted
@@ -229,7 +246,10 @@ object ProposalTabContents:
     )
     .useState(none[String])        // Submission error message
     .useStateView(none[Timestamp]) // CFP/Proposal Deadline
-    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline) =>
+    .useStreamOnMount(
+      Stream.awakeDelay[IO](1.seconds).flatMap(_ => Stream.eval(IO(Instant.now())))
+    )
+    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline, timer) =>
       renderFn(
         props.programId,
         props.userVault,
@@ -242,6 +262,7 @@ object ProposalTabContents:
         isUpdatingStatus,
         readonly,
         errorMsg,
-        deadline
+        deadline,
+        timer.toOption
       )
     }
