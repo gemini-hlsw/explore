@@ -17,6 +17,7 @@ import explore.Icons
 import explore.common.ProposalQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Constants
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
 import explore.model.Proposal
@@ -33,6 +34,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Image
@@ -93,7 +95,8 @@ object ProposalTabContents:
     layout:            LayoutsMap,
     isUpdatingStatus:  View[IsUpdatingStatus],
     readonly:          Boolean,
-    errorMessage:      UseState[Option[String]]
+    errorMessage:      UseState[Option[String]],
+    deadline:          View[Option[Timestamp]]
   ): VdomNode = {
     import ctx.given
 
@@ -139,6 +142,7 @@ object ProposalTabContents:
               invitations,
               attachments,
               userVault.map(_.token),
+              deadline,
               layout,
               readonly
             ),
@@ -152,10 +156,23 @@ object ProposalTabContents:
                 )
                   .when(proposalStatus > ProposalStatus.Submitted),
                 // TODO: Validate proposal before allowing submission
-                Button(label = "Submit Proposal",
-                       onClick = updateStatus(ProposalStatus.Submitted),
-                       disabled = isUpdatingStatus.get.value
-                ).compact.tiny
+                <.div(
+                  ExploreStyles.ProposalSubmissionBar,
+                  Button(label = "Submit Proposal",
+                         onClick = updateStatus(ProposalStatus.Submitted),
+                         disabled = isUpdatingStatus.get.value
+                  ).compact.tiny,
+                  deadline.get
+                    .map(t =>
+                      <.span(
+                        ExploreStyles.ProposalDeadline,
+                        Message(text =
+                                  s"Deadline: ${Constants.UtcFormatter.format(t.toInstant)} UTC",
+                                severity = Message.Severity.Info
+                        )
+                      )
+                    )
+                )
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.NotSubmitted
                   ),
@@ -210,8 +227,9 @@ object ProposalTabContents:
     .useMemoBy((props, _, _) => props.programDetails.get.proposalStatus)((_, _, _) =>
       _ === ProposalStatus.Submitted
     )
-    .useState(none[String]) // Submission error message
-    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg) =>
+    .useState(none[String])        // Submission error message
+    .useStateView(none[Timestamp]) // CFP/Proposal Deadline
+    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline) =>
       renderFn(
         props.programId,
         props.userVault,
@@ -223,6 +241,7 @@ object ProposalTabContents:
         props.layout,
         isUpdatingStatus,
         readonly,
-        errorMsg
+        errorMsg,
+        deadline
       )
     }

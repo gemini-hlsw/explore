@@ -82,7 +82,7 @@ object NotesTile:
         ).tiny.compact
 
         val editControls = <.div(ExploreStyles.NotesControls,
-                                 HelpIcon("observet-notes.md".refined),
+                                 HelpIcon("observer-notes.md".refined),
                                  if (editing.value.value) saveButton else editButton
         )
 

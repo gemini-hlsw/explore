@@ -15,11 +15,16 @@ import lucuma.core.enums.Partner
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
+import lucuma.core.util.Timestamp
 import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Lens
 
-case class CallPartner(partner: Partner) derives Eq, Decoder
+case class CallPartner(
+  partner:            Partner,
+  submissionDeadline: Option[Timestamp]
+) derives Eq,
+      Decoder
 
 case class CallForProposal(
   id:       CallForProposals.Id,
