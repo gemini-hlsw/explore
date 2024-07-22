@@ -167,7 +167,7 @@ object ProposalTabContents:
                   ExploreStyles.ProposalSubmissionBar,
                   Button(label = "Submit Proposal",
                          onClick = updateStatus(ProposalStatus.Submitted),
-                         disabled = isUpdatingStatus.get.value
+                         disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
                   ).compact.tiny,
                   (deadline.get, now).mapN((t, n) =>
                     val deadline = t.toLocalDateTime
