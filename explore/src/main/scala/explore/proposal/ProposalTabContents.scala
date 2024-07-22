@@ -225,7 +225,7 @@ object ProposalTabContents:
     .useContext(AppContext.ctx)
     .useStateView(IsUpdatingStatus(false))
     .useMemoBy((props, _, _) => props.programDetails.get.proposalStatus)((_, _, _) =>
-      _ === ProposalStatus.Submitted
+      p => p === ProposalStatus.Submitted || p === ProposalStatus.Accepted
     )
     .useState(none[String])        // Submission error message
     .useStateView(none[Timestamp]) // CFP/Proposal Deadline
