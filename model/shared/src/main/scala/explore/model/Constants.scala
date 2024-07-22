@@ -25,22 +25,22 @@ trait Constants:
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
 
-  val GppDateFormatter: DateTimeFormatter           = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
-  val GppTimeFormatter: DateTimeFormatter           = DateTimeFormatter.ofPattern("HH:mm")
-  val GppTimeTZFormatter: DateTimeFormatter         =
+  val GppDateFormatter: DateTimeFormatter                  = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
+  val GppTimeFormatter: DateTimeFormatter                  = DateTimeFormatter.ofPattern("HH:mm")
+  val GppTimeTZFormatter: DateTimeFormatter                =
     DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneOffset.UTC)
-  val GppTimeTZFormatterWithZone: DateTimeFormatter =
+  val GppTimeTZFormatterWithZone: DateTimeFormatter        =
     DateTimeFormatter.ofPattern("HH:mm 'UTC'").withZone(ZoneOffset.UTC)
-  val IsoUTCFormatter: DateTimeFormatter            =
+  val IsoUTCFormatter: DateTimeFormatter                   =
     DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneOffset.UTC)
-  val UtcFormatter: DateTimeFormatter               =
+  val UtcFormatter: DateTimeFormatter                      =
     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC)
-  val DurationFormatter: Duration => String         = d =>
+  val DurationFormatter: Duration => String                = d =>
     val hours: Option[Long]  = d.toHours.some.filter(_ > 0)
     val minutes: Option[Int] = d.toMinutesPart.some.filter(_ > 0 || hours.isDefined)
     val seconds: Int         = d.toSecondsPart
     hours.map(h => s"${h}h").orEmpty + minutes.map(m => s"${m}m").orEmpty + s"${seconds}s"
-  val DurationLongFormatter: Duration => String     = d =>
+  val DurationLongFormatter: Duration => String            = d =>
     val days: Option[Long]   = d.toDays.some.filter(_ > 0)
     val hours: Option[Int]   = d.toHoursPart.some.filter(_ > 0)
     val minutes: Option[Int] = d.toMinutesPart.some.filter(_ > 0 || (days.isEmpty && hours.isEmpty))
@@ -49,7 +49,7 @@ trait Constants:
       .map((nOpt, units) => nOpt.map(n => s"$n $units" + (if (n != 1) "s" else "")))
       .flattenOption
       .mkString(", ")
-  val DurationLongWithSecondsFormatter: Duration => String     = d =>
+  val DurationLongWithSecondsFormatter: Duration => String = d =>
     val days: Option[Long]   = d.toDays.some.filter(_ > 0)
     val hours: Option[Int]   = d.toHoursPart.some.filter(_ > 0)
     val minutes: Option[Int] = d.toMinutesPart.some.filter(_ > 0 || (days.isEmpty && hours.isEmpty))
