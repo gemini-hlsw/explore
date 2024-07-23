@@ -26,6 +26,7 @@ import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
+import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -52,6 +53,46 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
+
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import scala.concurrent.duration.*
+
+case class CallDeadline(
+  deadline: Timestamp
+) extends ReactFnProps(CallDeadline.component):
+  val deadlineLDT: LocalDateTime = deadline.toLocalDateTime
+  val deadlineStr: String        =
+    s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone.format(deadlineLDT)}"
+
+object CallDeadline:
+  private type Props = CallDeadline
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStreamOnMount(
+        Stream.awakeDelay[IO](1.seconds).flatMap(_ => Stream.eval(IO(Instant.now())))
+      )
+      .render { (p, n) =>
+        n.toOption.map(n =>
+          val now     = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
+          val diff    = java.time.Duration.between(now, p.deadlineLDT)
+          val dateFmt =
+            if (diff.isNegative) p.deadlineStr
+            else
+              val left = Constants.DurationLongWithSecondsFormatter(diff)
+              s"${p.deadlineStr} [$left]"
+          <.span(
+            ExploreStyles.ProposalDeadline,
+            Message(
+              text = s"Deadline: $dateFmt",
+              severity = Message.Severity.Info
+            )
+          )
+        )
+      }
 
 case class ProposalTabContents(
   programId:         Program.Id,
@@ -160,18 +201,9 @@ object ProposalTabContents:
                   ExploreStyles.ProposalSubmissionBar,
                   Button(label = "Submit Proposal",
                          onClick = updateStatus(ProposalStatus.Submitted),
-                         disabled = isUpdatingStatus.get.value
+                         disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
                   ).compact.tiny,
-                  deadline.get
-                    .map(t =>
-                      <.span(
-                        ExploreStyles.ProposalDeadline,
-                        Message(text =
-                                  s"Deadline: ${Constants.UtcFormatter.format(t.toInstant)} UTC",
-                                severity = Message.Severity.Info
-                        )
-                      )
-                    )
+                  deadline.get.map(CallDeadline.apply)
                 )
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.NotSubmitted

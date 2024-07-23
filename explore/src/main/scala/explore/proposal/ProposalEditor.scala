@@ -629,6 +629,7 @@ object ProposalEditor:
                     .map(p => callPartners.find(_.partner === p).flatMap(_.submissionDeadline))
                     .minimumOption
                     .flatten
+                    .orElse(c.submissionDeadlineDefault)
                 }
             )
           )

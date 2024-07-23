@@ -43,13 +43,22 @@ trait ArbCallForProposal {
         title    <- arbitrary[NonEmptyString]
         cfpType  <- arbitrary[CallForProposalsType]
         partners <- arbitrary[List[CallPartner]]
-      } yield CallForProposal(id, semester, title, cfpType, partners)
+        deadline <- arbitrary[Option[Timestamp]]
+      } yield CallForProposal(id, semester, title, cfpType, partners, deadline)
     }
 
   given Cogen[CallForProposal] =
     Cogen[
-      (CallForProposals.Id, Semester, NonEmptyString, CallForProposalsType, List[CallPartner])
-    ].contramap(p => (p.id, p.semester, p.title, p.cfpType, p.partners))
+      (CallForProposals.Id,
+       Semester,
+       NonEmptyString,
+       CallForProposalsType,
+       Option[Timestamp],
+       List[CallPartner]
+      )
+    ].contramap(p =>
+      (p.id, p.semester, p.title, p.cfpType, p.submissionDeadlineDefault, p.partners)
+    )
 }
 
 object ArbCallForProposal extends ArbCallForProposal
