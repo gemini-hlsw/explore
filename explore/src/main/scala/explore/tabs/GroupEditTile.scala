@@ -36,9 +36,9 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
 import lucuma.ui.components.TimeSpanView
+import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 import monocle.Iso
 import monocle.Lens
 
@@ -243,9 +243,10 @@ object GroupEditTile:
   ) =
     val timeStr: VdomNode  = timeEstimateRange.renderReady(_.map: timeEstimateRange =>
       if timeEstimateRange.maximum === timeEstimateRange.minimum then
-        timeEstimateRange.maximum.value.toHoursMinutes
+        HoursMinutesAbbreviation.format(timeEstimateRange.maximum.value)
       else
-        s"${timeEstimateRange.maximum.value.toHoursMinutes} max - ${timeEstimateRange.minimum.value.toHoursMinutes} min"
+        s"${HoursMinutesAbbreviation.format(timeEstimateRange.maximum.value)} max - ${HoursMinutesAbbreviation
+            .format(timeEstimateRange.minimum.value)} min"
     .map(s => s", $s"))
     val andOrStr: VdomNode =
       if group.isAnd then if group.ordered then "Ordered" else "Any order"
