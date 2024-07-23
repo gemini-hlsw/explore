@@ -80,14 +80,12 @@ object CallDeadline:
           val deadline = p.deadline.toLocalDateTime
           val now      = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
           val diff     = java.time.Duration.between(now, deadline)
-          val left     = Constants.DurationLongWithSecondsFormatter(diff)
           val dateFmt  =
             if (diff.isNegative)
-              s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
-                  .format(deadline)}"
+              props.deadlineStr
             else
-              s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
-                  .format(deadline)} [$left]"
+              val left = Constants.DurationLongWithSecondsFormatter(diff)
+              s"${props.deadlineStr} [$left]"
           <.span(
             ExploreStyles.ProposalDeadline,
             Message(
