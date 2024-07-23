@@ -21,15 +21,12 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
   sso:           FetchJSClient[F, SSO]
 ):
   def init(payload: F[Map[String, Json]]): F[Unit] =
-    (
-      preferencesDB.connect() >> preferencesDB.initialize(),
-      odb.connect() >> odb.initialize(payload)
-    ).parTupled.void
+    (preferencesDB.connect(), odb.connect(payload)).parTupled.void
 
   def close(): F[Unit] =
     List(
-      preferencesDB.terminate() >> preferencesDB.disconnect(CloseParams(code = 1000)),
-      odb.terminate() >> odb.disconnect(CloseParams(code = 1000))
+      preferencesDB.disconnect(CloseParams(code = 1000)),
+      odb.disconnect(CloseParams(code = 1000))
     ).sequence.void
 
 object GraphQLClients:

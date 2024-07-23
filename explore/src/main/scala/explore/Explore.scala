@@ -116,14 +116,12 @@ object ExploreMain {
 
     val reconnectionStrategy: ReconnectionStrategy =
       (attempt, reason) =>
-        // Web Socket close codes: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
-        if (reason.toOption.flatMap(_.toOption.flatMap(_.code)).exists(_ === 1000))
-          none
-        else // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
-          FiniteDuration(
-            math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
-            TimeUnit.SECONDS
-          ).some
+        // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
+        // TODO If it's a Not authorized, do not backoff, retry on constant period.
+        FiniteDuration(
+          math.min(60.0, math.pow(2, attempt.toDouble - 1)).toLong,
+          TimeUnit.SECONDS
+        ).some
 
     def buildPage(
       dispatcher:       Dispatcher[IO],
