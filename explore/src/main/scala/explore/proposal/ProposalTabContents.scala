@@ -62,9 +62,9 @@ import scala.concurrent.duration.*
 case class CallDeadline(
   deadline: Timestamp
 ) extends ReactFnProps(CallDeadline.component):
-  val deadlineLDT: LocalDateTime = p.deadline.toLocalDateTime
-  val deadlineStr: String = s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone
-                  .format(deadlineLDT)}
+  val deadlineLDT: LocalDateTime = deadline.toLocalDateTime
+  val deadlineStr: String        =
+    s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone.format(deadlineLDT)}"
 
 object CallDeadline:
   private type Props = CallDeadline
@@ -77,15 +77,13 @@ object CallDeadline:
       )
       .render { (p, n) =>
         n.toOption.map(n =>
-          val deadline = p.deadline.toLocalDateTime
-          val now      = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
-          val diff     = java.time.Duration.between(now, deadline)
-          val dateFmt  =
-            if (diff.isNegative)
-              props.deadlineStr
+          val now     = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
+          val diff    = java.time.Duration.between(now, p.deadlineLDT)
+          val dateFmt =
+            if (diff.isNegative) p.deadlineStr
             else
               val left = Constants.DurationLongWithSecondsFormatter(diff)
-              s"${props.deadlineStr} [$left]"
+              s"${p.deadlineStr} [$left]"
           <.span(
             ExploreStyles.ProposalDeadline,
             Message(
