@@ -61,7 +61,10 @@ import scala.concurrent.duration.*
 
 case class CallDeadline(
   deadline: Timestamp
-) extends ReactFnProps(CallDeadline.component)
+) extends ReactFnProps(CallDeadline.component):
+  val deadlineLDT: LocalDateTime = p.deadline.toLocalDateTime
+  val deadlineStr: String = s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone
+                  .format(deadlineLDT)}
 
 object CallDeadline:
   private type Props = CallDeadline
