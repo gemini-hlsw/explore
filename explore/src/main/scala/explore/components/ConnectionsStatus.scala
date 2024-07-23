@@ -30,9 +30,9 @@ object ConnectionsStatus:
       case Pot.Ready(value) =>
         (value.toString,
          value match
-           case Connecting | Connected | Initializing => (LucumaStyles.IndicatorWarning, true)
-           case Initialized                           => (LucumaStyles.IndicatorOK, false)
-           case Disconnected                          => (LucumaStyles.IndicatorFail, true)
+           case Connected    => (LucumaStyles.IndicatorOK, false)
+           case Connecting   => (LucumaStyles.IndicatorWarning, true)
+           case Disconnected => (LucumaStyles.IndicatorFail, true)
         )
 
     if (show)
