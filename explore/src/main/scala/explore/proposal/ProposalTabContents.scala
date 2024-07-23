@@ -59,6 +59,42 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import scala.concurrent.duration.*
 
+case class CallDeadline(
+  deadline: Timestamp
+) extends ReactFnProps(CallDeadline.component)
+
+object CallDeadline:
+  private type Props = CallDeadline
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useStreamOnMount(
+        Stream.awakeDelay[IO](1.seconds).flatMap(_ => Stream.eval(IO(Instant.now())))
+      )
+      .render { (p, n) =>
+        n.toOption.map(n =>
+          val deadline = p.deadline.toLocalDateTime
+          val now      = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
+          val diff     = java.time.Duration.between(now, deadline)
+          val left     = Constants.DurationLongWithSecondsFormatter(diff)
+          val dateFmt  =
+            if (diff.isNegative)
+              s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
+                  .format(deadline)}"
+            else
+              s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
+                  .format(deadline)} [$left]"
+          <.span(
+            ExploreStyles.ProposalDeadline,
+            Message(
+              text = s"Deadline: $dateFmt",
+              severity = Message.Severity.Info
+            )
+          )
+        )
+      }
+
 case class ProposalTabContents(
   programId:         Program.Id,
   userVault:         Option[UserVault],
@@ -102,8 +138,7 @@ object ProposalTabContents:
     isUpdatingStatus:  View[IsUpdatingStatus],
     readonly:          Boolean,
     errorMessage:      UseState[Option[String]],
-    deadline:          View[Option[Timestamp]],
-    now:               Option[Instant]
+    deadline:          View[Option[Timestamp]]
   ): VdomNode = {
     import ctx.given
 
@@ -169,26 +204,7 @@ object ProposalTabContents:
                          onClick = updateStatus(ProposalStatus.Submitted),
                          disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
                   ).compact.tiny,
-                  (deadline.get, now).mapN((t, n) =>
-                    val deadline = t.toLocalDateTime
-                    val now      = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
-                    val diff     = java.time.Duration.between(now, deadline)
-                    val left     = Constants.DurationLongWithSecondsFormatter(diff)
-                    val dateFmt  =
-                      if (diff.isNegative)
-                        s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
-                            .format(deadline)}"
-                      else
-                        s"${Constants.GppDateFormatter.format(deadline)} ${Constants.GppTimeTZFormatterWithZone
-                            .format(deadline)} [$left]"
-                    <.span(
-                      ExploreStyles.ProposalDeadline,
-                      Message(
-                        text = s"Deadline: $dateFmt",
-                        severity = Message.Severity.Info
-                      )
-                    )
-                  )
+                  deadline.get.map(CallDeadline.apply)
                 )
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.NotSubmitted
@@ -246,10 +262,7 @@ object ProposalTabContents:
     )
     .useState(none[String])        // Submission error message
     .useStateView(none[Timestamp]) // CFP/Proposal Deadline
-    .useStreamOnMount(
-      Stream.awakeDelay[IO](1.seconds).flatMap(_ => Stream.eval(IO(Instant.now())))
-    )
-    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline, timer) =>
+    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline) =>
       renderFn(
         props.programId,
         props.userVault,
@@ -262,7 +275,6 @@ object ProposalTabContents:
         isUpdatingStatus,
         readonly,
         errorMsg,
-        deadline,
-        timer.toOption
+        deadline
       )
     }
