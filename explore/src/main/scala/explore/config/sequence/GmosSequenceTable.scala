@@ -72,14 +72,18 @@ sealed trait GmosSequenceTable[S, D]:
     currentVisitData.map(_._2)
   protected[sequence] lazy val currentAtomExecutedSteps: Option[Int]         = currentVisitData.map(_._3)
 
+  // Hide acquisition when science is executing.
+  protected[sequence] lazy val isAcquisitionDisplayed: Boolean =
+    !currentAtomSequenceType.contains_(SequenceType.Science)
+
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
     config.acquisition // If we are executing Science, don't show any future acquisition rows.
-      .filter(_ => currentAtomSequenceType.contains_(SequenceType.Acquisition))
+      .filter(_ => isAcquisitionDisplayed)
       .map(steps(ObserveClass.Acquisition))
       .orEmpty
       .drop:
         currentAtomExecutedSteps
-          .filter(_ => currentAtomSequenceType.contains_(SequenceType.Acquisition))
+          .filter(_ => isAcquisitionDisplayed)
           .orEmpty
 
   protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
