@@ -6,6 +6,7 @@ package explore.proposal
 import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -72,11 +73,11 @@ object InviteUserPopup:
           createInvite: View[CreateInviteProcess],
           pid:          Program.Id,
           email:        EmailAddress,
-          partner:      Partner,
+          partner:      Option[Partner],
           viewKey:      View[Option[String]]
         ): IO[Unit] =
           (createInvite.set(CreateInviteProcess.Running).to[IO] *>
-            CreateInviteMutation[IO].execute(pid, email.value.value, partner)).attempt
+            CreateInviteMutation[IO].execute(pid, email.value.value, partner.orUnassign)).attempt
             .flatMap {
               case Left(e)  =>
                 Logger[IO].error(e)("Error creating invitation") *>
@@ -107,6 +108,7 @@ object InviteUserPopup:
                 FormEnumDropdownOptionalView(
                   id = "partner-invite".refined,
                   value = partnerView,
+                  showClear = true,
                   label = "Partner",
                   disabled = inviteState.get === CreateInviteProcess.Running
                 )
@@ -134,12 +136,12 @@ object InviteUserPopup:
               Button(
                 icon = Icons.PaperPlaneTop,
                 loading = inviteState.get === CreateInviteProcess.Running,
-                disabled = (!validEmail.value || partnerView.when(_.isEmpty)) || inviteState.when(
-                  _ === CreateInviteProcess.Done
-                ),
+                disabled = !validEmail.value || inviteState.when(_ === CreateInviteProcess.Done),
                 onClick = inviteState.set(CreateInviteProcess.Idle) *>
-                  (emailView.get, partnerView.get).tupled
-                    .map((e, p) => createInvitation(inviteState, props.pid, e, p, key).runAsync)
+                  emailView.get
+                    .map(e =>
+                      createInvitation(inviteState, props.pid, e, partnerView.get, key).runAsync
+                    )
                     .getOrEmpty,
                 tooltip = "Send",
                 label = "Invite"
