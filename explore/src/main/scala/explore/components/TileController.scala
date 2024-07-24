@@ -122,7 +122,7 @@ object TileController:
               case l                     => l
             }
 
-        def addBackButton: List[Tile] = {
+        val tilesWithBackButton: List[Tile] = {
           val topTile =
             currentLayout.get.get(breakpoint.value).flatMap(_._3.asList.sortBy(_.y).headOption)
           (topTile, p.backButton)
@@ -162,15 +162,15 @@ object TileController:
           layouts = currentLayout.get,
           className = p.clazz.map(_.htmlClass).orUndefined
         )(
-          addBackButton.map { t =>
+          tilesWithBackButton.map { tile =>
             <.div(
-              ^.key := t.id.value,
+              ^.key := tile.id.value,
               // Show tile properties on the title if enabled
               currentLayout.get
                 .get(breakpoint.value)
                 .flatMap { case (p, c, l) =>
                   l.asList
-                    .find(_.i === t.id.value)
+                    .find(_.i === tile.id.value)
                     .flatMap { i =>
                       TagMod
                         .devOnly(
@@ -188,8 +188,8 @@ object TileController:
                     }
                 }
                 .getOrElse(EmptyVdom),
-              t.controllerClass,
-              t.withState(unsafeSizeToState(currentLayout.get, t.id), sizeState(t.id))
+              tile.controllerClass,
+              tile.withState(unsafeSizeToState(currentLayout.get, tile.id), sizeState(tile.id))
             )
           }.toVdomArray
         )

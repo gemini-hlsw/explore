@@ -1010,6 +1010,13 @@ thead tr th.sticky-header {
   }
 }
 
+.target-tile-controller {
+  // Container size queries provoke new stacking contexts at the tile controller level.
+  // In the observation tile, the target tile controller's z-index must be greater than 
+  // the z-index of the other tiles' controllers for the obs time picker to be visible over them.
+  z-index: 20;
+}
+
 .target-tile-body {
   display: flex;
   flex-direction: column;

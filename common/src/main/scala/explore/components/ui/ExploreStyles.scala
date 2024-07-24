@@ -162,6 +162,7 @@ object ExploreStyles:
 
   val DraggingOver: Css = Css("dragging-over")
 
+  val TargetTileController: Css      = Css("target-tile-controller")
   val TargetTileBody: Css            = Css("target-tile-body")
   val TargetTileEditor: Css          = Css("target-tile-editor")
   val AddTargetButton: Css           = Css("add-target-button")
