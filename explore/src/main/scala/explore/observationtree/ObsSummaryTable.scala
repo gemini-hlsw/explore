@@ -51,9 +51,9 @@ import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import queries.schemas.odb.ObsQueries.ObservationList
@@ -273,7 +273,7 @@ object ObsSummaryTable:
             _.execution.map(_.programTimeEstimate)
           ).setCell { cell =>
             cell.value.map:
-              _.orSpinner(_.map(_.toHoursMinutes).orEmpty)
+              _.orSpinner(_.map(HoursMinutesAbbreviation.format).orEmpty)
           }.sortableBy(_.sortableValue)
           // TODO: PriorityColumnId
           // TODO: ChargedTimeColumnId

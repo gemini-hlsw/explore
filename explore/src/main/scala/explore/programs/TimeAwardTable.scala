@@ -20,8 +20,8 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.ui.TimeUnitsFormat
 import lucuma.ui.components.TimeSpanView
+import lucuma.ui.format.TimeSpanFormatter
 import lucuma.ui.table.*
 
 case class TimeAwardTable(allocations: PartnerAllocationList)
@@ -73,9 +73,12 @@ object TimeAwardTable:
       BandColId(band),
       _.allocations.value.get(band).orEmpty,
       band.shortName,
-      cell = cell => TimeSpanView(cell.value, TimeUnitsFormat.Letter),
+      cell = cell => TimeSpanView(cell.value, TimeSpanFormatter.DecimalHours),
       footer = footer =>
-        TimeSpanView(footer.table.options.meta.foldMap(_.totalByBand(band)), TimeUnitsFormat.Letter)
+        TimeSpanView(
+          footer.table.options.meta.foldMap(_.totalByBand(band)),
+          TimeSpanFormatter.DecimalHours
+        )
     ).setSize(90.toPx)
 
   private val totalColDef =
@@ -83,11 +86,11 @@ object TimeAwardTable:
       TotalColId,
       _.partnerTotal,
       "Total",
-      cell = cell => TimeSpanView(cell.value, TimeUnitsFormat.Letter),
+      cell = cell => TimeSpanView(cell.value, TimeSpanFormatter.DecimalHours),
       footer = footer =>
         TimeSpanView(
           footer.table.options.meta.foldMap(_.grandTotal),
-          TimeUnitsFormat.Letter
+          TimeSpanFormatter.DecimalHours
         )
     ).setSize(90.toPx)
 
