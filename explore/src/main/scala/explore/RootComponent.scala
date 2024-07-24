@@ -27,10 +27,7 @@ object RootComponent:
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewBy(_.initialModel)
-      .render((props, rootModel) =>
-        AppContext.ctx.provide(props.ctx)(
-          HelpContext.Provider(
+      .render: (props, rootModel) =>
+        AppContext.ctx.provide(props.ctx):
+          HelpContext.Provider:
             props.router(rootModel)
-          )
-        )
-      )

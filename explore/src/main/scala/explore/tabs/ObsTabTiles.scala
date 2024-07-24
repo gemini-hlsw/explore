@@ -166,13 +166,13 @@ object ObsTabTiles:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStreamResourceOnMountBy { (props, ctx) =>
+      .useStreamResourceOnMountBy: (props, ctx) =>
         import ctx.given
 
         ObsItcQuery[IO]
           .query(props.obsId)(ErrorPolicy.RaiseOnNoData)
-          .map(
-            _.data.observation.map(o =>
+          .map:
+            _.data.observation.map: o =>
               OdbItcResult.Success(
                 o.itc.science.selected.exposureTime,
                 o.itc.science.selected.exposures,
@@ -180,19 +180,15 @@ object ObsTabTiles:
                 o.itc.acquisition.selected.exposures,
                 o.itc.acquisition.selected.signalToNoise
               )
-            )
-          )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(
+          .reRunOnResourceSignals:
             ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
-          )
-      }
-      .useStreamResourceOnMountBy { (props, ctx, _) =>
+      .useStreamResourceOnMountBy: (props, ctx, _) =>
         import ctx.given
 
         SequenceOffsets[IO]
           .query(props.obsId)
-          .map(data =>
+          .map: data =>
             Offsets(
               science = NonEmptyList.fromList(
                 data.observation
@@ -205,12 +201,9 @@ object ObsTabTiles:
                   .distinct
               )
             )
-          )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals(
+          .reRunOnResourceSignals:
             ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
-          )
-      }
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
       // Selected GS. to share the PA chosen for Unconstrained and average modes
@@ -218,7 +211,7 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateWithReuseBy((props, _, odbItc, _, _, _, selectedConfig) =>
+      .useStateWithReuseBy: (props, _, odbItc, _, _, _, selectedConfig) =>
         val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
 
         itcQueryProps(
@@ -227,7 +220,6 @@ object ObsTabTiles:
           selectedConfig.get,
           props.allTargets
         )
-      )
       // Chart results
       .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
@@ -274,21 +266,19 @@ object ObsTabTiles:
       // ITC selected target. Here to be shared by the ITC tile body and title
       .useStateView(none[ItcTarget])
       // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value)(
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value):
         (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
           itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
-      )
       // selected attachment
       .useStateView(none[ObsAtt.Id])
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useStateView(ChartSelector.Closed)
-      .useEffectResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
         p.observation.model.get.visualizationTime
-      ) { (_, _, _, _, _, _, _, _, _, _, _, _, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Instant.now()))
-      }
-      .render {
+      ): (_, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        vizTime => IO(vizTime.getOrElse(Instant.now()))
+      .render:
         (
           props,
           ctx,
@@ -307,7 +297,8 @@ object ObsTabTiles:
           vizTimeOrNowPot
         ) =>
           import ctx.given
-          vizTimeOrNowPot.renderPot { vizTimeOrNow =>
+
+          vizTimeOrNowPot.renderPot: vizTimeOrNow =>
             // This view is shared between AGS and the configuration editor
             // when PA changes it gets saved to the db
             val posAngleConstraintView: View[PosAngleConstraint] =
@@ -330,11 +321,10 @@ object ObsTabTiles:
               props.observation.model.zoom(ObsSummary.visualizationTime)
 
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
-              NonEmptyList.fromList(
+              NonEmptyList.fromList:
                 props.observation.get.scienceTargetIds.toList
                   .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
                   .flattenOption
-              )
 
             // asterism base coordinates at viz time or current time
             val targetCoords: Option[CoordinatesAtVizTime] =
@@ -353,17 +343,17 @@ object ObsTabTiles:
 
             val averagePA: Option[AveragePABasis] =
               (basicConfiguration.map(_.siteFor), asterismAsNel, pendingTime)
-                .mapN((site, asterism, pendingTime) =>
+                .mapN: (site, asterism, pendingTime) =>
                   posAngleConstraintView.get match
                     case PosAngleConstraint.AverageParallactic =>
                       // See also `anglesToTestAt` in AladinCell.scala.
-                      averageParallacticAngle(site,
-                                              asterism.baseTracking,
-                                              vizTimeOrNow,
-                                              pendingTime.toDuration
+                      averageParallacticAngle(
+                        site,
+                        asterism.baseTracking,
+                        vizTimeOrNow,
+                        pendingTime.toDuration
                       ).map(AveragePABasis(vizTimeOrNow, pendingTime, _))
                     case _                                     => none
-                )
                 .flatten
 
             // The angle used for `Align to PA` in the finder charts tile.
@@ -394,21 +384,21 @@ object ObsTabTiles:
             val notesView: View[Option[NonEmptyString]] =
               props.observation.model
                 .zoom(ObsSummary.observerNotes)
-                .withOnMod { notes =>
+                .withOnMod: notes =>
                   ObsQueries
                     .updateNotes[IO](List(props.obsId), notes)
                     .runAsync
-                }
 
             val notesTile = NotesTile.notesTile(props.obsId, notesView)
 
             val sequenceTile =
-              SequenceEditorTile.sequenceTile(props.programId,
-                                              props.obsId,
-                                              props.obsExecution,
-                                              asterismIds.get,
-                                              itc.toOption.flatten,
-                                              sequenceChanged
+              SequenceEditorTile.sequenceTile(
+                props.programId,
+                props.obsId,
+                props.obsExecution,
+                asterismIds.get,
+                itc.toOption.flatten,
+                sequenceChanged
               )
 
             val itcTile: Tile =
@@ -571,5 +561,3 @@ object ObsTabTiles:
               GridLayoutSection.ObservationsLayout,
               props.backButton.some
             )
-          }
-      }

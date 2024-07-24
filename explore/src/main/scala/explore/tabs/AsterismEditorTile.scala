@@ -71,7 +71,8 @@ object AsterismEditorTile:
       back = backButton,
       canMinimize = true,
       control = s => control.some.filter(_ => s === TileSizeState.Minimized),
-      bodyClass = ExploreStyles.TargetTileBody
+      bodyClass = ExploreStyles.TargetTileBody,
+      controllerClass = ExploreStyles.TargetTileController
     )((renderInTitle: Tile.RenderInTitle) =>
       userId.map(uid =>
         AsterismEditor(
