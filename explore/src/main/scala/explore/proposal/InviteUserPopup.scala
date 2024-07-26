@@ -6,7 +6,6 @@ package explore.proposal
 import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -22,9 +21,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.EmailAddress
 import lucuma.core.data.EmailPred
-import lucuma.core.enums.Partner
 import lucuma.core.model.Program
-import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -53,8 +50,6 @@ object InviteUserPopup:
     // Scala doesn't like type aliases with refined types?
     InputValidSplitEpi.refinedString[EmailPred].asInstanceOf[InputValidSplitEpi[EmailAddress]]
 
-  private given Display[Partner] = Display.by(_.shortName, _.longName)
-
   private type Props = InviteUserPopup
 
   private val component =
@@ -63,21 +58,19 @@ object InviteUserPopup:
       .useContext(AppContext.ctx)
       .useStateView(CreateInviteProcess.Idle)
       .useStateView(none[EmailAddress])
-      .useStateView(none[Partner])
       .useState(false)
       .useStateView(none[String])
-      .render: (props, ctx, inviteState, emailView, partnerView, validEmail, key) =>
+      .render: (props, ctx, inviteState, emailView, validEmail, key) =>
         import ctx.given
 
         def createInvitation(
           createInvite: View[CreateInviteProcess],
           pid:          Program.Id,
           email:        EmailAddress,
-          partner:      Option[Partner],
           viewKey:      View[Option[String]]
         ): IO[Unit] =
           (createInvite.set(CreateInviteProcess.Running).to[IO] *>
-            CreateInviteMutation[IO].execute(pid, email.value.value, partner.orUnassign)).attempt
+            CreateInviteMutation[IO].execute(pid, email.value.value)).attempt
             .flatMap {
               case Left(e)  =>
                 Logger[IO].error(e)("Error creating invitation") *>
@@ -104,14 +97,7 @@ object InviteUserPopup:
                   disabled = inviteState.get === CreateInviteProcess.Running,
                   validFormat = MailValidator.optional,
                   onValidChange = v => validEmail.setState(v)
-                )(^.autoComplete := "off"),
-                FormEnumDropdownOptionalView(
-                  id = "partner-invite".refined,
-                  value = partnerView,
-                  showClear = true,
-                  label = "Partner",
-                  disabled = inviteState.get === CreateInviteProcess.Running
-                )
+                )(^.autoComplete := "off")
               ),
               <.div(LucumaPrimeStyles.FormColumn)(
                 <.label(
@@ -139,9 +125,7 @@ object InviteUserPopup:
                 disabled = !validEmail.value || inviteState.when(_ === CreateInviteProcess.Done),
                 onClick = inviteState.set(CreateInviteProcess.Idle) *>
                   emailView.get
-                    .map(e =>
-                      createInvitation(inviteState, props.pid, e, partnerView.get, key).runAsync
-                    )
+                    .map(e => createInvitation(inviteState, props.pid, e, key).runAsync)
                     .getOrEmpty,
                 tooltip = "Send",
                 label = "Invite"
