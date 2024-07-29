@@ -25,6 +25,7 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -35,7 +36,6 @@ import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
@@ -63,7 +63,6 @@ type DeckShown = DeckShown.Type
 
 case class ObsTabContents(
   vault:            Option[UserVault],
-  userId:           Option[User.Id],
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
   userPreferences:  View[UserPreferences],
@@ -131,7 +130,7 @@ object ObsTabContents extends TwoPanels:
       backButton.some
     )(renderInTitle =>
       ObsSummaryTable(
-        props.userId,
+        props.vault.userId,
         props.programId,
         props.observations,
         props.obsExecutions,
@@ -149,7 +148,6 @@ object ObsTabContents extends TwoPanels:
         .mapValue(obsView =>
           ObsTabTiles(
             props.vault,
-            props.userId,
             props.programId,
             props.modes,
             backButton,
@@ -172,7 +170,7 @@ object ObsTabContents extends TwoPanels:
 
     def groupTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
       ObsGroupTiles(
-        props.userId,
+        props.vault.userId,
         groupId,
         props.groups,
         props.groupTimeRanges.getPot(groupId),
