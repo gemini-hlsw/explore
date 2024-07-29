@@ -21,6 +21,8 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
+import lucuma.core.model.GuestRole
+import lucuma.core.model.User
 import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
@@ -106,3 +108,7 @@ extension (partner: Partner)
       ^.alt := s"${partner.shortName} Flag",
       ExploreStyles.PartnerSplitFlag
     )
+
+extension (vault: Option[UserVault])
+  def userId: Option[User.Id] = vault.map(_.user).map(_.id)
+  def isGuest: Boolean        = vault.map(_.user).map(_.role === GuestRole).getOrElse(true)

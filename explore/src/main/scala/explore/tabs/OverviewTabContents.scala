@@ -17,6 +17,7 @@ import explore.model.ObsTabTilesIds
 import explore.model.ObservationList
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
+import explore.syntax.ui.*
 import explore.validations.ObservationValidationsTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -79,7 +80,9 @@ object OverviewTabContents {
             resize.width.getOrElse(1),
             defaultLayouts,
             props.layout,
-            List(warningsAndErrorsTile, obsAttachmentsTile),
+            List(warningsAndErrorsTile.some,
+                 if (!props.userVault.isGuest) obsAttachmentsTile.some else none
+            ).flattenOption,
             GridLayoutSection.OverviewLayout
           )
         ).withRef(resize.ref)

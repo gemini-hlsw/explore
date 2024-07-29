@@ -95,7 +95,6 @@ object Routing:
         .mapValue(userPrefs =>
           ObsTabContents(
             model.zoom(RootModel.vault).get,
-            model.zoom(RootModel.userId).get,
             routingInfo.programId,
             programSummaries,
             userPrefs,

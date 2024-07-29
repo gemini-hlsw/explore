@@ -59,7 +59,6 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
-import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
@@ -82,7 +81,6 @@ import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
   vault:             Option[UserVault],
-  userId:            Option[User.Id],
   programId:         Program.Id,
   modes:             SpectroscopyModesMatrix,
   backButton:        VdomNode,
@@ -403,7 +401,7 @@ object ObsTabTiles:
 
             val itcTile: Tile =
               ItcTile.itcTile(
-                props.userId,
+                props.vault.userId,
                 props.obsId,
                 selectedItcTarget,
                 props.allTargets,
@@ -432,7 +430,7 @@ object ObsTabTiles:
 
             val skyPlotTile: Tile =
               ElevationPlotTile.elevationPlotTile(
-                props.userId,
+                props.vault.userId,
                 props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
                 props.observation.get.observingMode.map(_.siteFor),
                 targetCoords,
@@ -479,7 +477,7 @@ object ObsTabTiles:
 
             val targetTile: Tile =
               AsterismEditorTile.asterismEditorTile(
-                props.userId,
+                props.vault.userId,
                 props.programId,
                 ObsIdSet.one(props.obsId),
                 asterismIds,
@@ -523,7 +521,7 @@ object ObsTabTiles:
 
             val configurationTile =
               ConfigurationTile.configurationTile(
-                props.userId,
+                props.vault.userId,
                 props.programId,
                 props.obsId,
                 props.observation.zoom(ObsSummary.scienceRequirements),
@@ -543,21 +541,21 @@ object ObsTabTiles:
               )
 
             TileController(
-              props.userId,
+              props.vault.userId,
               props.resize.width.getOrElse(0),
               props.defaultLayouts,
               props.layouts,
               List(
-                notesTile,
-                targetTile,
-                finderChartsTile,
-                skyPlotTile,
-                constraintsTile,
-                timingWindowsTile,
-                configurationTile,
-                sequenceTile,
-                itcTile
-              ),
+                notesTile.some,
+                targetTile.some,
+                if (!props.vault.isGuest) finderChartsTile.some else none,
+                skyPlotTile.some,
+                constraintsTile.some,
+                timingWindowsTile.some,
+                configurationTile.some,
+                sequenceTile.some,
+                itcTile.some
+              ).flattenOption,
               GridLayoutSection.ObservationsLayout,
               props.backButton.some
             )
