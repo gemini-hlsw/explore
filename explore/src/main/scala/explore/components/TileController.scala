@@ -93,34 +93,31 @@ object TileController:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // Get the breakpoint from the layout
-      .useStateBy { (p, _) =>
+      .useStateBy: (p, _) =>
         getBreakpointFromWidth(p.layoutMap.map { case (x, (w, _, _)) => x -> w }, p.gridWidth)
-      }
       // Make a local copy of the layout fixing the state of minimized layouts
       .useStateViewBy((p, _, _) => updateResizableState(p.tiles, p.layoutMap))
       // Update the current layout if it changes upstream
-      .useEffectWithDepsBy((p, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap))(
+      .useEffectWithDepsBy((p, _, _, _) => (p.tiles.map(_.hidden), p.layoutMap)):
         (p, _, _, currentLayout) =>
           (_, layout) => currentLayout.set(updateResizableState(p.tiles, layout))
-      )
-      .render { (p, ctx, breakpoint, currentLayout) =>
+      .render: (p, ctx, breakpoint, currentLayout) =>
         import ctx.given
 
         def sizeState(id: Tile.TileId) = (st: TileSizeState) =>
           currentLayout
             .zoom(allTiles)
-            .mod {
+            .mod:
               case l if l.i === id.value =>
                 if (st === TileSizeState.Minimized) l.copy(h = 1, minH = 1)
-                else if (st === TileSizeState.Maximized) {
-                  val defaultHeight =
-                    unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
-                  l.copy(h = defaultHeight,
-                         minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
+                else if (st === TileSizeState.Maximized)
+                  val defaultHeight = unsafeTileHeight(id).headOption(p.defaultLayout).getOrElse(1)
+                  l.copy(
+                    h = defaultHeight,
+                    minH = scala.math.max(l.minH.getOrElse(1), defaultHeight)
                   )
-                } else l
+                else l
               case l                     => l
-            }
 
         val tilesWithBackButton: List[Tile] = {
           val topTile =
@@ -193,4 +190,3 @@ object TileController:
             )
           }.toVdomArray
         )
-      }

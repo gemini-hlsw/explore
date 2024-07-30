@@ -163,7 +163,7 @@ object ExploreGridLayouts:
       )
     )
 
-    lazy val defaultSingleLayouts = defineStdLayouts(
+    lazy val defaultSingleLayouts: LayoutsMap = defineStdLayouts(
       Map(
         (BreakpointName.lg,
          layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(singleLayoutMedium)

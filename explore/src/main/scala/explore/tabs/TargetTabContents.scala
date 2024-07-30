@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.components.FocusedStatus
 import explore.components.Tile
@@ -23,6 +24,7 @@ import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
+import explore.model.layout.LayoutsMap
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
@@ -405,16 +407,21 @@ object TargetTabContents extends TwoPanels:
       case Focused(None, Some(targetId), _) => targetId.asLeft.some
       case _                                => none
 
+    // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
+    val dummyTargetTile: Tile    = Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
+    val dummyElevationTile: Tile = Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
+
     val renderNonSiderealTargetEditor: List[Tile] =
       List(
         renderSummary,
         Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
           <.div("Editing of Non-Sidereal targets not supported")
-        )
+        ),
+        dummyElevationTile
       )
 
     val rightSide = { (resize: UseResizeDetectorReturn) =>
-      val tileListKeyOpt: Option[(List[Tile], String)] =
+      val tileListKeyOpt: Option[(List[Tile], NonEmptyString)] =
         optSelected
           .flatMap:
             _ match
@@ -423,18 +430,28 @@ object TargetTabContents extends TwoPanels:
                   .get(targetId)
                   .map:
                     case Nonsidereal(_, _, _) =>
-                      (renderNonSiderealTargetEditor, "target-non-sidereal-controller")
+                      (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
                     case Sidereal(_, _, _, _) =>
-                      (renderSiderealTargetEditor(resize, targetId), "target-sidereal-controller")
+                      (renderSiderealTargetEditor(resize, targetId),
+                       TargetTabControllerIds.Summary.id
+                      )
               case Right(obsIds)  =>
                 findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
                   .map: asterismGroup =>
-                    (renderAsterismEditor(resize, obsIds, asterismGroup), "target-obs-controller")
+                    (renderAsterismEditor(resize, obsIds, asterismGroup),
+                     TargetTabControllerIds.AsterismEditor.id
+                    )
 
-      val (tiles, key, current, default) =
+      val justSummaryTiles: List[Tile] = List(
+        renderSummary,
+        dummyTargetTile,
+        dummyElevationTile
+      )
+
+      val (tiles, key, current, default): (List[Tile], NonEmptyString, LayoutsMap, LayoutsMap) =
         tileListKeyOpt.fold(
-          (List(renderSummary),
-           "target-summary-controller",
+          (justSummaryTiles,
+           TargetTabControllerIds.Summary.id,
            ExploreGridLayouts.targets.defaultSingleLayouts,
            ExploreGridLayouts.targets.defaultSingleLayouts
           )
@@ -456,7 +473,7 @@ object TargetTabContents extends TwoPanels:
         backButton.some,
         Option.when(tileListKeyOpt.isEmpty)(ExploreStyles.SingleTileMaximized),
         storeLayout = tileListKeyOpt.nonEmpty
-      ).withKey(key): VdomNode
+      ).withKey(key.value): VdomNode
       // withKey is required for the controller to clear it's state between the different
       // layouts or it can get into an invalid state.
     }
