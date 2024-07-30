@@ -47,3 +47,7 @@ enum GroupEditIds:
   def id: NonEmptyString = this match
     case GroupEditId  => "groupEdit".refined
     case GroupNotesId => "groupNotes".refined
+
+enum TargetTabControllerIds(val id: NonEmptyString):
+  case Summary        extends TargetTabControllerIds("target-summary-controller".refined)
+  case AsterismEditor extends TargetTabControllerIds("target-obs-controller".refined)
