@@ -28,6 +28,7 @@
             pkgs.nodePackages.prettier
             pkgs.nodePackages.typescript
             pkgs.nodePackages.graphqurl
+            pkgs.hasura-cli
           ];
           typelevelShell = {
             nodejs.enable = true;
