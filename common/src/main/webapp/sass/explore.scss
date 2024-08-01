@@ -800,6 +800,7 @@ thead tr th.sticky-header {
 }
 
 .explore-datepicker-with-now-button {
+  /* stylelint-disable-next-line selector-class-pattern */
   .react-datepicker__children-container {
     position: absolute;
     bottom: 0;

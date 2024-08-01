@@ -31,7 +31,6 @@ object ObsTimeEditor {
     ScalaFnComponent
       .withHooks[Props]
       .useRef[Option[ReactDatePicker[Any, Any]]](none)
-      // .useRefToJsComponentWithMountedFacade[js.Object, js.Object, js.Object]
       .render: (props, ref) =>
         <.div(ExploreStyles.ObsInstantTileTitle)(
           React.Fragment(
@@ -42,9 +41,8 @@ object ObsTimeEditor {
             ),
             Datepicker(onChange =
               (newValue, _) =>
-                newValue.fromDatePickerToInstantOpt.foldMap { i =>
+                newValue.fromDatePickerToInstantOpt.foldMap: i =>
                   props.vizTimeView.set(i.some)
-                }
             )
               .calendarClassName(ExploreStyles.DatePickerWithNowButton.htmlClass)
               .showTimeInput(true)
