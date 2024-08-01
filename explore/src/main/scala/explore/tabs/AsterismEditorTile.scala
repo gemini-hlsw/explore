@@ -10,7 +10,7 @@ import crystal.*
 import crystal.react.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.config.VizTimeEditor
+import explore.config.ObsTimeEditor
 import explore.model.AsterismIds
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
@@ -63,7 +63,7 @@ object AsterismEditorTile:
       vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
 
     val control: VdomNode =
-      <.div(ExploreStyles.JustifiedEndTileControl, VizTimeEditor(vizTimeView))
+      <.div(ExploreStyles.JustifiedEndTileControl, ObsTimeEditor(vizTimeView))
 
     Tile(
       ObsTabTilesIds.TargetId.id,

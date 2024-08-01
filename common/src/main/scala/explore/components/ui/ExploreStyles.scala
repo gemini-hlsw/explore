@@ -331,6 +331,7 @@ object ExploreStyles:
   val PAConfigurationAngle: Css         = Css("explore-pa-configuration-angle")
   val AveragePA: Css                    = Css("explore-average-pa")
   val ObsInstantTileTitle: Css          = Css("explore-obs-instant-tile-title")
+  val DatePickerWithNowButton: Css      = Css("explore-datepicker-with-now-button")
   val ConfigurationGrid: Css            = Css("explore-configuration-grid")
   val BasicConfigurationGrid: Css       = Css("explore-basic-configuration-grid")
   val BasicConfigurationForm: Css       = Css("explore-basic-configuration-form")
