@@ -799,6 +799,23 @@ thead tr th.sticky-header {
   }
 }
 
+.explore-datepicker-with-now-button {
+  /* stylelint-disable-next-line selector-class-pattern */
+  .react-datepicker__children-container {
+    position: absolute;
+    bottom: 0;
+    text-align: right;
+    pointer-events: none; // Let clicks pass through to the time selector.
+
+    .p-button {
+      padding-top: 5px;
+      padding-bottom: 6px;
+      margin-bottom: 3px;
+      pointer-events: all; // Capture clicks again.
+    }
+  }
+}
+
 .explore-obs-instant-tile-title {
   @include small-tile-title;
   @include react-datepicker-input;

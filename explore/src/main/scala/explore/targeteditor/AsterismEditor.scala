@@ -9,7 +9,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.config.VizTimeEditor
+import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
@@ -114,7 +114,7 @@ object AsterismEditor extends AsterismModifier:
               ExploreStyles.AddTargetButton
             )
           ),
-          props.renderInTitle(VizTimeEditor(vizTimeView)),
+          props.renderInTitle(ObsTimeEditor(vizTimeView)),
           TargetTable(
             props.userId.some,
             props.programId,
