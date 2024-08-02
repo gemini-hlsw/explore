@@ -146,6 +146,12 @@ object TopBar:
                   command = setLogLevel(LogLevelDesc.DEBUG),
                   disabled = level === LogLevelDesc.DEBUG,
                   icon = Icons.Bug
+                ),
+                MenuItem.Item(
+                  label = "Trace",
+                  command = setLogLevel(LogLevelDesc.TRACE),
+                  disabled = level === LogLevelDesc.TRACE,
+                  icon = Icons.Pencil
                 )
               )
               .some,
