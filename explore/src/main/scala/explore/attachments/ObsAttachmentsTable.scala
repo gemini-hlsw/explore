@@ -34,7 +34,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObsAttachment as ObsAtt
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp

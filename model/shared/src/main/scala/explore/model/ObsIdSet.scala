@@ -10,7 +10,6 @@ import cats.Show
 import cats.data.NonEmptySet
 import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
-import lucuma.core.model.Observation
 import monocle.Iso
 import monocle.Prism
 

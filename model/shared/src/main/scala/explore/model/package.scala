@@ -15,7 +15,6 @@ import lucuma.core.math.Coordinates
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment as ObsAtt
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
@@ -55,7 +54,7 @@ type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]
 // KeyedIndexedList is only useful is manual order is going to matter.
 // For the moment I'm keeping it because it seems it will matter at some point.
 // Otherwise, we should change to a SortedMap.
-type ObservationList            = KeyedIndexedList[Observation.Id, ObsSummary]
+type ObservationList            = KeyedIndexedList[Observation.Id, Observation]
 type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
 type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
 type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]

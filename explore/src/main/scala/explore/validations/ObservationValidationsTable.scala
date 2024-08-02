@@ -9,7 +9,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.enums.AppTab
 import explore.model.reusability.given
@@ -18,7 +18,6 @@ import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationValidationCode
-import lucuma.core.model.Observation
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
@@ -187,7 +186,7 @@ object ObservationValidationsTable {
 
   enum ValidationsTableRow {
     case ObsRow(
-      obs: ObsSummary
+      obs: Observation
     )
 
     case ValidationRow(

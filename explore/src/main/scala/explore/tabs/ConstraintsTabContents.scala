@@ -36,7 +36,7 @@ import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
@@ -129,7 +129,7 @@ object ConstraintsTabContents extends TwoPanels:
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
                 .andThen(KeyedIndexedList.value)
 
-              val csTraversal = obsTraversal.andThen(ObsSummary.constraints)
+              val csTraversal = obsTraversal.andThen(Observation.constraints)
 
               val constraintSet: UndoSetter[ConstraintSet] =
                 observations.zoom(csTraversal.getAll.andThen(_.head), csTraversal.modify)
@@ -151,7 +151,7 @@ object ConstraintsTabContents extends TwoPanels:
                 )
               )
 
-              val twTraversal = obsTraversal.andThen(ObsSummary.timingWindows)
+              val twTraversal = obsTraversal.andThen(Observation.timingWindows)
 
               val timingWindows: View[List[TimingWindow]] =
                 TimingWindowsQueries.viewWithRemoteMod(

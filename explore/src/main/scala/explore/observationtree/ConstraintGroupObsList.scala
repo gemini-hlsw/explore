@@ -16,7 +16,7 @@ import explore.model.AppContext
 import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.display.given
@@ -28,7 +28,6 @@ import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.react.beautifuldnd.*
@@ -106,7 +105,7 @@ object ConstraintGroupObsList:
         oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
       )
       .andThen(KeyedIndexedList.value)
-      .andThen(ObsSummary.constraints)
+      .andThen(Observation.constraints)
 
     val constraintSet =
       observations.zoom(traversal.getAll.andThen(_.head), traversal.modify)

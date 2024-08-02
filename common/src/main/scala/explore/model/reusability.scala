@@ -54,7 +54,7 @@ object reusability:
   given Reusability[TargetWithIdAndObs]      = Reusability.byEq
   given Reusability[TargetWithObs]           = Reusability.byEq
   given Reusability[ConstraintGroup]         = Reusability.byEq
-  given Reusability[ObsSummary]              = Reusability.byEq
+  given Reusability[Observation]             = Reusability.byEq
   given Reusability[ExploreLocalPreferences] = Reusability.byEq
   given Reusability[ObsAttachment]           = Reusability.byEq
   given Reusability[ProposalAttachment]      = Reusability.byEq

@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import monocle.Focus
 import monocle.Lens

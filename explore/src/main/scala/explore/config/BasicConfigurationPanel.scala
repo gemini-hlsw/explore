@@ -25,7 +25,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps

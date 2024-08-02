@@ -9,11 +9,10 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import explore.undo.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
@@ -23,11 +22,11 @@ import scala.collection.immutable.SortedSet
 object ObservationPasteAction {
   private def obsListGetter(
     ids: List[(Observation.Id, List[Target.Id])]
-  ): ProgramSummaries => Option[List[ObsSummary]] = agwo =>
+  ): ProgramSummaries => Option[List[Observation]] = agwo =>
     ids.map((obsId, _) => agwo.observations.getValue(obsId)).sequence
 
   private def obsListSetter(ids: List[(Observation.Id, List[Target.Id])])(
-    otwol: Option[List[ObsSummary]]
+    otwol: Option[List[Observation]]
   ): ProgramSummaries => ProgramSummaries = agwo =>
     otwol.fold {
       // the Option[List]] is empty, so we're deleting.
@@ -66,7 +65,7 @@ object ObservationPasteAction {
     expandedIds: View[SortedSet[ObsIdSet]]
   )(using
     c:           FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[List[ObsSummary]]] =
+  ): Action[ProgramSummaries, Option[List[Observation]]] =
     Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
       onSet = (agwo, _) => expandedIds.mod(updateExpandedIds(ids, agwo, true)).toAsync,
       onRestore = (agwo, olObsSumm) =>

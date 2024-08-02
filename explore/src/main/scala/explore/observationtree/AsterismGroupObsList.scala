@@ -18,7 +18,7 @@ import explore.model.AsterismGroup
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
@@ -30,7 +30,6 @@ import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
@@ -176,7 +175,7 @@ object AsterismGroupObsList:
             selectObsOrSummary(_).toAsync,
             ToastCtx[IO].showToast(_)
           )
-          .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
+          .set(undoCtx)(Observation.scienceTargetIds.replace(targetIds)(obs).some)
           .toAsync
       }
       .switching(adding.async, AddingTargetOrObs(_))

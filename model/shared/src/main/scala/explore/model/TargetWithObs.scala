@@ -9,7 +9,6 @@ import cats.implicits.*
 import io.circe.Decoder
 import io.circe.Decoder.*
 import io.circe.generic.semiauto.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.*

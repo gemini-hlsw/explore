@@ -15,7 +15,6 @@ import explore.data.tree.Node as TreeNode
 import explore.data.tree.Tree
 import explore.model.syntax.all.*
 import lucuma.core.model.Group.Id as GroupId
-import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
 import monocle.Focus
 import monocle.Lens

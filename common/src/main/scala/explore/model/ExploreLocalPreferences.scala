@@ -16,7 +16,6 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.core.math.Angle
-import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import monocle.Focus
 import org.scalajs.dom.window

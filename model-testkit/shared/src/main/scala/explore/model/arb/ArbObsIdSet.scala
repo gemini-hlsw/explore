@@ -6,7 +6,7 @@ package explore.model.arb
 import cats.data.NonEmptySet
 import cats.laws.discipline.arbitrary.*
 import explore.model.ObsIdSet
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.util.arb.ArbGid.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*

@@ -16,7 +16,7 @@ import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.SchedulingGroupList
@@ -29,7 +29,6 @@ import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.TimingWindowInclusion
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
@@ -139,7 +138,7 @@ object SchedulingGroupObsList:
         oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
       )
       .andThen(KeyedIndexedList.value)
-      .andThen(ObsSummary.timingWindows)
+      .andThen(Observation.timingWindows)
 
     val twUndoCtx =
       undoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)

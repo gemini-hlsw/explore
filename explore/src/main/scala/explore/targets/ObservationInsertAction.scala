@@ -9,11 +9,10 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import explore.undo.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
@@ -21,11 +20,11 @@ import queries.schemas.odb.ObsQueries
 import scala.collection.immutable.SortedSet
 
 object ObservationInsertAction {
-  private def getter(obsId: Observation.Id): ProgramSummaries => Option[ObsSummary] =
+  private def getter(obsId: Observation.Id): ProgramSummaries => Option[Observation] =
     _.observations.getValue(obsId)
 
   private def setter(obsId: Observation.Id)(
-    optObs: Option[ObsSummary]
+    optObs: Option[Observation]
   ): ProgramSummaries => ProgramSummaries = agwo =>
     optObs.fold { // undo
       agwo.removeObs(obsId)
@@ -36,7 +35,7 @@ object ObservationInsertAction {
   private def updateExpandedIds(
     obsId:  Observation.Id,
     agwo:   ProgramSummaries,
-    optObs: Option[ObsSummary]
+    optObs: Option[Observation]
   )(expandedIds: SortedSet[ObsIdSet]) =
     // We'll just expand the associated asterism.
     val setOfOne = ObsIdSet.one(obsId)
@@ -62,7 +61,7 @@ object ObservationInsertAction {
     postMessage: String => IO[Unit]
   )(using
     FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[ObsSummary]] =
+  ): Action[ProgramSummaries, Option[Observation]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>
         expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).toAsync >> setPage(obsId.some),

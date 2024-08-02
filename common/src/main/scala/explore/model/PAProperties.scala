@@ -8,7 +8,6 @@ import crystal.react.*
 import explore.model.enums.AgsState
 import japgolly.scalajs.react.ReactCats.*
 import lucuma.ags.AgsAnalysis
-import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 
 case class PAProperties(

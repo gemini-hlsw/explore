@@ -18,7 +18,7 @@ import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
 import explore.optics.all.*
@@ -30,7 +30,6 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
@@ -40,7 +39,7 @@ import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
 
-val obsListMod = KIListMod[ObsSummary, Observation.Id](ObsSummary.id)
+val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 
 val groupTreeMod: KITreeMod[GroupTree.Value, GroupTree.Key] =
   KITreeMod[GroupTree.Value, GroupTree.Key](GroupTree.key)
@@ -81,17 +80,17 @@ def cloneObs(
 
 private def obsWithId(
   obsId: Observation.Id
-): GetAdjust[KeyedIndexedList[Observation.Id, ObsSummary], Option[
-  ObsSummary
+): GetAdjust[KeyedIndexedList[Observation.Id, Observation], Option[
+  Observation
 ]] =
   obsListMod
     .withKey(obsId)
-    .composeOptionLens(Focus[(ObsSummary, NonNegInt)](_._1))
+    .composeOptionLens(Focus[(Observation, NonNegInt)](_._1))
 
 def obsEditStatus(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
 ) = Action(
-  access = obsWithId(obsId).composeOptionLens(ObsSummary.status)
+  access = obsWithId(obsId).composeOptionLens(Observation.status)
 )(onSet =
   (_, status) =>
     UpdateObservationMutation[IO]
@@ -107,7 +106,7 @@ def obsEditStatus(obsId: Observation.Id)(using
 def obsEditSubtitle(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
 ) = Action(
-  access = obsWithId(obsId).composeOptionLens(ObsSummary.subtitle)
+  access = obsWithId(obsId).composeOptionLens(Observation.subtitle)
 )(onSet =
   (_, subtitleOpt) =>
     UpdateObservationMutation[IO]
@@ -137,7 +136,7 @@ def obsEditAttachments(
 def obsActiveStatus(obsId: Observation.Id)(using
   FetchClient[IO, ObservationDB]
 ) = Action(
-  access = obsWithId(obsId).composeOptionLens(ObsSummary.activeStatus)
+  access = obsWithId(obsId).composeOptionLens(Observation.activeStatus)
 )(onSet =
   (_, activeStatus) =>
     UpdateObservationMutation[IO]

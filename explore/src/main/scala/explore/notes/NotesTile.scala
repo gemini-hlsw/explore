@@ -15,7 +15,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsTabTilesIds
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.util.NewType
 import lucuma.react.common.*
 import lucuma.react.common.ReactFnProps

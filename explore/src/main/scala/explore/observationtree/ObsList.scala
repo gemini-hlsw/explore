@@ -20,7 +20,7 @@ import explore.data.tree.Tree as ExploreTree
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.enums.AppTab
 import explore.model.reusability.given
@@ -34,7 +34,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
@@ -194,9 +193,9 @@ object ObsList:
                   .mod(
                     _.updatedValueWith(
                       obs.id,
-                      ObsSummary.groupId
+                      Observation.groupId
                         .replace(dropNodeId)
-                        .andThen(ObsSummary.groupIndex.replace(dropIndex))
+                        .andThen(Observation.groupIndex.replace(dropIndex))
                     )
                   )
               .getOrEmpty

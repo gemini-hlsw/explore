@@ -19,7 +19,7 @@ import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.optics.syntax.lens.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*

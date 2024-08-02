@@ -13,7 +13,6 @@ import explore.data.tree.KeyedIndexedTree.Index
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
 

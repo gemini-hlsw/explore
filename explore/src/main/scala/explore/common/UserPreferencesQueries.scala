@@ -33,7 +33,7 @@ import explore.model.layout.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.ObsAttachment
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated

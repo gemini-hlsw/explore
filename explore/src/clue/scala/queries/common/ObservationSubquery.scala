@@ -5,13 +5,12 @@ package queries.common
 
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
-import explore.model.ObsSummary
+import explore.model.Observation
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
 @GraphQL
-object ObservationSummarySubquery
-    extends GraphQLSubquery.Typed[ObservationDB, ObsSummary]("Observation"):
+object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observation]("Observation"):
 
   override val subquery: String = s"""
         {
@@ -52,5 +51,6 @@ object ObservationSummarySubquery
             messages
           }
           observerNotes
+          calibrationRole
         }
       """

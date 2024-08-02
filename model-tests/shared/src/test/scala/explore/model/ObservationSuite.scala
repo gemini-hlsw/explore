@@ -4,10 +4,10 @@
 package explore.model
 
 import cats.kernel.laws.discipline.EqTests
-import explore.model.arb.ArbObsSummary
+import explore.model.arb.ArbObservation
 import munit.DisciplineSuite
 
-class ObsSummarySuite extends DisciplineSuite:
-  import ArbObsSummary.given
+class ObservationSuite extends DisciplineSuite:
+  import ArbObservation.given
 
-  checkAll("Eq[ObsSummary]", EqTests[ObsSummary].eqv)
+  checkAll("Eq[ObsSummary]", EqTests[Observation].eqv)

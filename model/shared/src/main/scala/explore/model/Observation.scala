@@ -26,7 +26,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
-import lucuma.core.model.Observation
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
@@ -42,9 +41,9 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import lucuma.core.enums.CalibrationRole
 
-// TODO Rename to Observation??
-case class ObsSummary(
+case class Observation(
   id:                  Observation.Id,
   title:               String,
   subtitle:            Option[NonEmptyString],
@@ -62,7 +61,8 @@ case class ObsSummary(
   groupId:             Option[Group.Id],
   groupIndex:          NonNegShort,
   validations:         List[ObservationValidation],
-  observerNotes:       Option[NonEmptyString]
+  observerNotes:       Option[NonEmptyString],
+  calibrationRole:     Option[CalibrationRole]
 ) derives Eq:
   lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
     case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
@@ -125,25 +125,29 @@ case class ObsSummary(
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
-object ObsSummary:
-  val id                  = Focus[ObsSummary](_.id)
-  val title               = Focus[ObsSummary](_.title)
-  val subtitle            = Focus[ObsSummary](_.subtitle)
-  val status              = Focus[ObsSummary](_.status)
-  val activeStatus        = Focus[ObsSummary](_.activeStatus)
-  val scienceTargetIds    = Focus[ObsSummary](_.scienceTargetIds)
-  val constraints         = Focus[ObsSummary](_.constraints)
-  val timingWindows       = Focus[ObsSummary](_.timingWindows)
-  val attachmentIds       = Focus[ObsSummary](_.attachmentIds)
-  val scienceRequirements = Focus[ObsSummary](_.scienceRequirements)
-  val observingMode       = Focus[ObsSummary](_.observingMode)
-  val visualizationTime   = Focus[ObsSummary](_.visualizationTime)
-  val posAngleConstraint  = Focus[ObsSummary](_.posAngleConstraint)
-  val wavelength          = Focus[ObsSummary](_.wavelength)
-  val groupId             = Focus[ObsSummary](_.groupId)
-  val groupIndex          = Focus[ObsSummary](_.groupIndex)
-  val validations         = Focus[ObsSummary](_.validations)
-  val observerNotes       = Focus[ObsSummary](_.observerNotes)
+object Observation:
+  type Id = lucuma.core.model.Observation.Id
+  val Id = lucuma.core.model.Observation.Id
+
+  val id                  = Focus[Observation](_.id)
+  val title               = Focus[Observation](_.title)
+  val subtitle            = Focus[Observation](_.subtitle)
+  val status              = Focus[Observation](_.status)
+  val activeStatus        = Focus[Observation](_.activeStatus)
+  val scienceTargetIds    = Focus[Observation](_.scienceTargetIds)
+  val constraints         = Focus[Observation](_.constraints)
+  val timingWindows       = Focus[Observation](_.timingWindows)
+  val attachmentIds       = Focus[Observation](_.attachmentIds)
+  val scienceRequirements = Focus[Observation](_.scienceRequirements)
+  val observingMode       = Focus[Observation](_.observingMode)
+  val visualizationTime   = Focus[Observation](_.visualizationTime)
+  val posAngleConstraint  = Focus[Observation](_.posAngleConstraint)
+  val wavelength          = Focus[Observation](_.wavelength)
+  val groupId             = Focus[Observation](_.groupId)
+  val groupIndex          = Focus[Observation](_.groupIndex)
+  val validations         = Focus[Observation](_.validations)
+  val observerNotes       = Focus[Observation](_.observerNotes)
+  val calibrationRole     = Focus[Observation](_.calibrationRole)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -153,7 +157,7 @@ object ObsSummary:
   private object AttachmentIdWrapper:
     given Decoder[AttachmentIdWrapper] = deriveDecoder
 
-  given Decoder[ObsSummary] = Decoder.instance(c =>
+  given Decoder[Observation] = Decoder.instance(c =>
     for {
       id                  <- c.get[Observation.Id]("id")
       title               <- c.get[String]("title")
@@ -175,7 +179,8 @@ object ObsSummary:
       groupIndex          <- c.get[NonNegShort]("groupIndex")
       validations         <- c.get[List[ObservationValidation]]("validations")
       observerNotes       <- c.get[Option[NonEmptyString]]("observerNotes")
-    } yield ObsSummary(
+      calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
+    } yield Observation(
       id,
       title,
       subtitle,
@@ -193,6 +198,7 @@ object ObsSummary:
       groupId,
       groupIndex,
       validations,
-      observerNotes
+      observerNotes,
+      calibrationRole
     )
   )

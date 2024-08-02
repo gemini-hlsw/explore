@@ -12,13 +12,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
-import lucuma.core.model.Observation
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Gid
 import lucuma.core.util.TimeSpan
@@ -34,7 +33,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class ObsBadge(
-  obs:               ObsSummary,
+  obs:               Observation,
   executionTime:     Pot[Option[TimeSpan]],
   layout:            ObsBadge.Layout,
   selected:          Boolean = false,

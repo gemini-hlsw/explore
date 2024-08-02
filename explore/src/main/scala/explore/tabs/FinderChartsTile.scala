@@ -16,7 +16,7 @@ import explore.model.ObsTabTilesIds
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.ObsAttachment as ObsAtt
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.ui.react.given
 

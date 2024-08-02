@@ -8,7 +8,7 @@ import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*

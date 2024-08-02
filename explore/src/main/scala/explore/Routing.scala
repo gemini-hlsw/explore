@@ -23,7 +23,7 @@ import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.Gid

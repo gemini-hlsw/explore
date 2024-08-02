@@ -19,7 +19,7 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.Callback
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User

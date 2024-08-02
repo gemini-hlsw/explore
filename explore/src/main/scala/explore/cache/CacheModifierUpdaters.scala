@@ -12,7 +12,7 @@ import explore.model.GroupTree
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
+import explore.model.Observation
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.Created
 import lucuma.schemas.ObservationDB.Enums.Existence
