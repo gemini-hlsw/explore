@@ -68,9 +68,8 @@ object GroupEditTile:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     // editType
-    .useStateViewBy((props, _) =>
+    .useStateViewBy: (props, _) =>
       if props.group.get.isAnd then GroupEditType.And else GroupEditType.Or
-    )
     // isLoading
     .useStateView(false)
     // nameDisplay

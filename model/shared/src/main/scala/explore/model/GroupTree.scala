@@ -75,24 +75,19 @@ object GroupTree:
     minimumRequired: Option[NonNegShort],
     minimumInterval: Option[TimeSpan],
     maximumInterval: Option[TimeSpan],
-    ordered:         Boolean
+    ordered:         Boolean,
+    system:          Boolean
   ) derives Eq:
     def isAnd: Boolean = minimumRequired.isEmpty
 
   object Group:
-    val id: Lens[Group, GroupId] = Focus[Group](_.id)
-
-    val name: Lens[Group, Option[NonEmptyString]] = Focus[Group](_.name)
-
-    val minimumRequired: Lens[Group, Option[NonNegShort]] =
-      Focus[Group](_.minimumRequired)
-
-    val ordered: Lens[Group, Boolean] = Focus[Group](_.ordered)
-
-    val minimumInterval: Lens[Group, Option[TimeSpan]] =
-      Focus[Group](_.minimumInterval)
-    val maximumInterval: Lens[Group, Option[TimeSpan]] =
-      Focus[Group](_.maximumInterval)
+    val id: Lens[Group, GroupId]                          = Focus[Group](_.id)
+    val name: Lens[Group, Option[NonEmptyString]]         = Focus[Group](_.name)
+    val minimumInterval: Lens[Group, Option[TimeSpan]]    = Focus[Group](_.minimumInterval)
+    val maximumInterval: Lens[Group, Option[TimeSpan]]    = Focus[Group](_.maximumInterval)
+    val minimumRequired: Lens[Group, Option[NonNegShort]] = Focus[Group](_.minimumRequired)
+    val ordered: Lens[Group, Boolean]                     = Focus[Group](_.ordered)
+    val system: Lens[Group, Boolean]                      = Focus[Group](_.system)
 
   case class Obs(id: Observation.Id) derives Eq
 

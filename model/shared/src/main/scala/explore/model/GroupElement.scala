@@ -54,11 +54,12 @@ case class Grouping(
   parentIndex:     NonNegShort,
   minimumInterval: Option[TimeSpan],
   maximumInterval: Option[TimeSpan],
-  ordered:         Boolean
+  ordered:         Boolean,
+  system:          Boolean
 ) derives Eq,
       Decoder:
   def toGroupTreeGroup: GroupTree.Group =
-    GroupTree.Group(id, name, minimumRequired, minimumInterval, maximumInterval, ordered)
+    GroupTree.Group(id, name, minimumRequired, minimumInterval, maximumInterval, ordered, system)
 
   def toIndex: GroupTree.Index = Index(parentId.map(_.asRight), parentIndex)
 
