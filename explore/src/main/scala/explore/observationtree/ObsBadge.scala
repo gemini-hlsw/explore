@@ -43,7 +43,8 @@ case class ObsBadge(
   deleteCB:          Callback,
   cloneCB:           Option[Callback] = none,
   readonly:          Boolean = false
-) extends ReactFnProps(ObsBadge.component)
+) extends ReactFnProps(ObsBadge.component):
+  val isDisabled: Boolean = readonly || obs.isCalibration
 
 object ObsBadge:
   private type Props = ObsBadge
@@ -83,7 +84,7 @@ object ObsBadge:
           icon = Icons.Trash,
           tooltip = "Delete",
           onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
-        ).small.unless(props.readonly)
+        ).small.unless(props.isDisabled)
 
       val duplicateButton =
         Button(
@@ -92,7 +93,7 @@ object ObsBadge:
           icon = Icons.Clone,
           tooltip = "Duplicate",
           onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.cloneCB.getOrEmpty
-        ).small.unless(props.readonly)
+        ).small.unless(props.isDisabled)
 
       val header =
         <.div(ExploreStyles.ObsBadgeHeader)(
@@ -122,7 +123,7 @@ object ObsBadge:
               addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
               leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
               rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete,
-              readonly = props.readonly
+              readonly = props.isDisabled
             )
           )
           .whenDefined
@@ -162,12 +163,12 @@ object ObsBadge:
                     case ObsActiveStatus.Inactive => "Observation is not active"
                   ,
                   tooltipOptions = TooltipOptions(position = Tooltip.Position.Left),
-                  disabled = props.readonly
+                  disabled = props.isDisabled
                 )
               )(
                 // don't select the observation when changing the active status
                 ^.onClick ==> { e =>
-                  (e.preventDefaultCB >> e.stopPropagationCB).unless_(props.readonly)
+                  (e.preventDefaultCB >> e.stopPropagationCB).unless_(props.isDisabled)
                 }
               )
             )
@@ -188,7 +189,7 @@ object ObsBadge:
                   size = PlSize.Mini,
                   clazz = ExploreStyles.ObsStatusSelect,
                   panelClass = ExploreStyles.ObsStatusSelectPanel,
-                  disabled = props.readonly
+                  disabled = props.isDisabled
                 )
               )(
                 // don't select the observation when changing the status
