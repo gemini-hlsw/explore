@@ -53,6 +53,9 @@ import queries.schemas.odb.ObsQueries
 import scala.scalajs.js
 
 import ObsQueries.*
+import japgolly.scalajs.react.vdom.TagOf
+import org.scalajs.dom.HTMLElement
+import lucuma.react.common.Css
 
 case class ObsList(
   observations:      UndoSetter[ObservationList],
@@ -83,12 +86,24 @@ object ObsList:
   /**
    * Iso between GroupTree and primereact.Tree nodes
    */
-  private val groupTreeNodeIso: Iso[GroupTree, List[Node[GroupTree.Value]]] =
+  private def groupTreeNodeIsoBuilder(
+    allObservations: ObservationList
+  ): Iso[GroupTree, List[Node[GroupTree.Value]]] =
     Iso[GroupTree, List[Node[GroupTree.Value]]](groups =>
       def createNode(node: GroupTree.Node): Node[GroupTree.Value] =
+        val isSystemGroup: Boolean    = node.value.toOption.exists(_.system)
+        val isCalibrationObs: Boolean = node.value.left.toOption
+          .flatMap(obs => allObservations.getValue(obs.id))
+          .exists(_.isCalibration)
+
         Tree.Node(
           Tree.Id(node.value.id.fold(_.toString, _.toString)),
           node.value,
+          draggable = !isCalibrationObs && !isSystemGroup,
+          // Setting `droppable` to false for groups will break the tree.
+          // We handle the case in `onDragDrop`. See https://github.com/primefaces/primereact/issues/6976.
+          droppable = !isCalibrationObs,
+          clazz = ExploreStyles.UndroppableNode.when_(isSystemGroup),
           children = node.children.map(createNode)
         )
 
@@ -117,52 +132,48 @@ object ObsList:
       .useContext(AppContext.ctx)
       // Saved index into the observation list
       .useState(none[NonNegInt])
-      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)) {
-        (props, ctx, optIndex) => params =>
-          val (focusedObs, obsList) = params
+      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)):
+        (props, ctx, optIndex) =>
+          params =>
+            val (focusedObs, obsList) = params
 
-          focusedObs.fold(optIndex.setState(none)) { obsId =>
-            // there is a focused obsId, look for it in the list
-            val foundIdx = obsList.getIndex(obsId)
-            (optIndex.value, foundIdx) match {
-              case (_, Some(fidx))    =>
-                optIndex.setState(fidx.some) // focused obs is in list
-              case (None, None)       =>
-                setObs(props.programId, none, ctx) >> optIndex.setState(none)
-              case (Some(oidx), None) =>
-                // focused obs no longer exists, but we have a previous index.
-                val newIdx = math.min(oidx.value, obsList.length.value - 1)
-                obsList.toList
-                  .get(newIdx.toLong)
-                  .fold(
-                    optIndex.setState(none) >> setObs(props.programId, none, ctx)
-                  )(obsSumm =>
-                    optIndex.setState(NonNegInt.from(newIdx).toOption) >>
-                      setObs(props.programId, obsSumm.id.some, ctx)
-                  )
-            }
-          }
-      }
-      .useEffectWithDepsBy((props, _, _) => (props.focusedGroup, props.groups.get)) {
-        (props, ctx, _) => (focusedGroup, groups) =>
-          // If the focused group is not in the tree, reset the focused group
-          focusedGroup
-            .filter(g => !groups.contains(g.asRight))
-            .as(setGroup(props.programId, none, ctx))
-            .getOrEmpty
-      }
+            focusedObs.fold(optIndex.setState(none)): obsId =>
+              // there is a focused obsId, look for it in the list
+              val foundIdx = obsList.getIndex(obsId)
+              (optIndex.value, foundIdx) match
+                case (_, Some(fidx))    =>
+                  optIndex.setState(fidx.some) // focused obs is in list
+                case (None, None)       =>
+                  setObs(props.programId, none, ctx) >> optIndex.setState(none)
+                case (Some(oidx), None) =>
+                  // focused obs no longer exists, but we have a previous index.
+                  val newIdx = math.min(oidx.value, obsList.length.value - 1)
+                  obsList.toList
+                    .get(newIdx.toLong)
+                    .fold(
+                      optIndex.setState(none) >> setObs(props.programId, none, ctx)
+                    )(obsSumm =>
+                      optIndex.setState(NonNegInt.from(newIdx).toOption) >>
+                        setObs(props.programId, obsSumm.id.some, ctx)
+                    )
+      .useEffectWithDepsBy((props, _, _) => (props.focusedGroup, props.groups.get)):
+        (props, ctx, _) =>
+          (focusedGroup, groups) =>
+            // If the focused group is not in the tree, reset the focused group
+            focusedGroup
+              .filter(g => !groups.contains(g.asRight))
+              .as(setGroup(props.programId, none, ctx))
+              .getOrEmpty
       // adding new observation
       .useStateView(AddingObservation(false))
       // treeNodes
-      .useMemoBy((props, _, _, _) => props.groups.model.reuseByValue)((_, _, _, _) =>
-        _.as(groupTreeNodeIso)
-      )
+      .useMemoBy((props, _, _, _) => (props.groups.model.reuseByValue, props.observations.get)):
+        (_, _, _, _) => (groups, observations) => groups.as(groupTreeNodeIsoBuilder(observations))
       // Scroll to newly created/selected observation
-      .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs)((_, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs): (_, _, _, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
-      )
       // Open the group (and all super-groups) of the focused observation
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups.get))(
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups.get)):
         (props, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
@@ -171,14 +182,16 @@ object ObsList:
               .flatMap(_.toOption)
 
             props.expandedGroups.mod(_ ++ groupsToAddFocus).when_(groupsToAddFocus.nonEmpty)
-      )
-      .render { (props, ctx, _, adding, treeNodes) =>
+      .render: (props, ctx, _, adding, treeNodes) =>
         import ctx.given
 
         val expandedGroups = props.expandedGroups.as(groupTreeIdLens)
 
         def onDragDrop(e: Tree.DragDropEvent[GroupTree.Value]): Callback =
-          if (e.dropNode.exists(_.data.isLeft)) Callback.empty
+          // If PrimeReact fixes https://github.com/primefaces/primereact/issues/6976,
+          // then we can remove the 2nd check and set `droppable` to false for groups.
+          if (e.dropNode.exists(node => node.data.isLeft || node.data.toOption.exists(_.system)))
+            Callback.empty
           else {
             val dragNode   = e.dragNode.data
             val dropNodeId = e.dropNode.flatMap(_.data.id.toOption)
@@ -218,8 +231,10 @@ object ObsList:
               props.observations.get
                 .getValue(id)
                 .map: obs =>
-                  val selected = props.focusedObs.contains_(id)
-                  <.a(
+                  val selected: Boolean       = props.focusedObs.contains_(id)
+                  val tag: TagOf[HTMLElement] = if obs.isCalibration then <.div else <.a
+
+                  tag(
                     ^.id        := s"obs-list-${id.toString}",
                     ^.href      := ctx.pageUrl(
                       AppTab.Observations,
@@ -293,7 +308,7 @@ object ObsList:
                   .mod(props.groups)(groupTreeMod.delete)
                   .showToastCB(s"Deleted group ${group.id.show}"),
                 isEmpty = isEmpty,
-                readonly = props.readonly
+                readonly = props.readonly || group.system
               )
 
         val expandFocusedGroup: Callback = props.expandedGroups.mod(_ ++ props.focusedGroup)
@@ -304,12 +319,18 @@ object ObsList:
               <.div(ExploreStyles.TreeToolbar)(
                 if (props.readonly) EmptyVdom
                 else
+                  val isSystemGroupFocused: Boolean =
+                    props.focusedGroup
+                      .flatMap: groupId =>
+                        props.groups.get.getNodeAndIndexByKey(groupId.asRight)
+                      .exists(_._1.value.toOption.exists(_.system))
+
                   React.Fragment(
                     Button(
                       severity = Button.Severity.Success,
                       icon = Icons.New,
                       label = "Obs",
-                      disabled = adding.get.value,
+                      disabled = adding.get.value || isSystemGroupFocused,
                       loading = adding.get.value,
                       onClick = insertObs(
                         props.programId,
@@ -325,7 +346,7 @@ object ObsList:
                       severity = Button.Severity.Success,
                       icon = Icons.New,
                       label = "Group",
-                      disabled = adding.get.value,
+                      disabled = adding.get.value || isSystemGroupFocused,
                       loading = adding.get.value,
                       onClick = insertGroup(
                         props.programId,
@@ -336,7 +357,8 @@ object ObsList:
                         ctx
                       ).runAsync *> expandFocusedGroup
                     ).mini.compact
-                  ),
+                  )
+                ,
                 <.div(
                   ExploreStyles.ObsTreeButtons,
                   Button(
@@ -376,4 +398,3 @@ object ObsList:
           } else EmptyVdom
 
         <.div(ExploreStyles.ObsTreeWrapper)(tree)
-      }

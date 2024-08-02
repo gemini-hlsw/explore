@@ -2430,7 +2430,7 @@ input[type='file'].explore-fileupload {
     }
   }
 
-  .p-treenode-content.p-treenode-dragover {
+  .p-treenode-content.p-treenode-dragover:not(.undroppable-node) {
     background-color: var(--explore-group-dragging) !important;
   }
 
@@ -3265,4 +3265,10 @@ a.explore-upgrade-link {
   font-size: smaller;
   color: yellow;
   z-index: 100;
+}
+
+.undroppable-node {
+  .p-treenode-droppoint {
+    display: none;
+  }
 }

@@ -492,3 +492,5 @@ object ExploreStyles:
   val ProgramTabTable: Css    = Css("program-tab-table")
 
   val FocusedInfo: Css = Css("explore-focused-info")
+
+  val UndroppableNode: Css = Css("undroppable-node")
