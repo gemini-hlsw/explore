@@ -14,6 +14,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ImagingConfigurationOptions
+import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.itc.ItcTarget
@@ -25,7 +26,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
-import explore.model.Observation
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps

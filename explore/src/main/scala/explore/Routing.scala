@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.View
 import explore.model.*
+import explore.model.Observation
 import explore.model.Page
 import explore.model.Page.*
 import explore.modes.SpectroscopyModesMatrix
@@ -23,7 +24,6 @@ import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Group
-import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.Gid

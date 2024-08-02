@@ -20,6 +20,7 @@ import explore.model.AsterismVisualOptions
 import explore.model.ChartOp
 import explore.model.ColorsInverted
 import explore.model.GlobalPreferences
+import explore.model.Observation
 import explore.model.Transformation
 import explore.model.enums.GridBreakpointName
 import explore.model.enums.GridLayoutSection
@@ -33,7 +34,6 @@ import explore.model.layout.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.ObsAttachment
-import explore.model.Observation
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated

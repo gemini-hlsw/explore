@@ -9,10 +9,10 @@ import crystal.Pot
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree.Node
 import explore.model.GroupTree
+import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
-import explore.model.Observation
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.Created
 import lucuma.schemas.ObservationDB.Enums.Existence

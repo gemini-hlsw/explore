@@ -16,6 +16,7 @@ import explore.model.ConstraintGroup
 import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.Observation
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.syntax.all.*
@@ -23,7 +24,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.common.Css

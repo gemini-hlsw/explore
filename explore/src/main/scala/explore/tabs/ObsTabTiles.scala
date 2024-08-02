@@ -25,6 +25,7 @@ import explore.itc.ItcProps
 import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
+import explore.model.Observation
 import explore.model.Observation.observingMode
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
@@ -54,7 +55,6 @@ import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObsAttachment as ObsAtt
-import explore.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -97,6 +97,7 @@ case class ObsTabTiles(
   readonly:          Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsId: Observation.Id                                         = observation.get.id
+  val isDisabled: Boolean                                           = readonly || observation.get.isCalibration
   val allConstraintSets: Set[ConstraintSet]                         = programSummaries.constraintGroups.map(_._2).toSet
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     programSummaries.targetObservations
@@ -112,13 +113,13 @@ object ObsTabTiles:
     observationId:     Observation.Id,
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet],
-    readOnly:          Boolean
+    isDisabled:        Boolean
   )(using FetchClient[IO, ObservationDB]): VdomNode =
     <.div(
       ExploreStyles.JustifiedEndTileControl,
       Dropdown[ConstraintSet](
         value = constraintSet.get,
-        disabled = readOnly,
+        disabled = isDisabled,
         onChange = (cs: ConstraintSet) =>
           constraintSet.set(cs) >>
             ObsQueries
@@ -376,7 +377,7 @@ object ObsTabTiles:
                 selectedAttachment,
                 pa,
                 chartSelector,
-                props.readonly
+                props.isDisabled
               )
 
             val notesView: View[Option[NonEmptyString]] =
@@ -419,7 +420,7 @@ object ObsTabTiles:
                 props.obsId,
                 props.observation.model.zoom(Observation.constraints),
                 props.allConstraintSets,
-                props.readonly
+                props.isDisabled
               )
 
             val timingWindows: View[List[TimingWindow]] =
@@ -492,7 +493,7 @@ object ObsTabTiles:
                 props.searching,
                 "Targets",
                 props.globalPreferences,
-                props.readonly,
+                props.isDisabled,
                 // Any target changes invalidate the sequence
                 sequenceChanged.set(Pot.pending)
               )
@@ -512,12 +513,12 @@ object ObsTabTiles:
                 ConstraintsPanel(
                   ObsIdSet.one(props.obsId),
                   props.observation.zoom(Observation.constraints),
-                  props.readonly
+                  props.isDisabled
                 )
               )
 
             val timingWindowsTile =
-              TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
+              TimingWindowsPanel.timingWindowsPanel(timingWindows, props.isDisabled)
 
             val configurationTile =
               ConfigurationTile.configurationTile(
@@ -537,7 +538,7 @@ object ObsTabTiles:
                   case Ready(x) => Pot.pending
                   case x        => x
                 },
-                props.readonly
+                props.isDisabled
               )
 
             TileController(

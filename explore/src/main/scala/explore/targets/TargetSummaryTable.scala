@@ -16,6 +16,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.enums.AppTab
@@ -25,7 +26,6 @@ import explore.undo.UndoContext
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User

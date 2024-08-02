@@ -20,6 +20,7 @@ import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.ConstraintGroupList
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
@@ -36,7 +37,6 @@ import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
-import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User

@@ -14,11 +14,11 @@ import explore.itc.ItcProps
 import explore.model.GlobalPreferences
 import explore.model.LoadingState
 import explore.model.ObsTabTilesIds
+import explore.model.Observation
 import explore.model.TargetList
 import explore.model.itc.ItcChartResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
-import explore.model.Observation
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
 

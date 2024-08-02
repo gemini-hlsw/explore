@@ -10,4 +10,4 @@ import munit.DisciplineSuite
 class ObservationSuite extends DisciplineSuite:
   import ArbObservation.given
 
-  checkAll("Eq[ObsSummary]", EqTests[Observation].eqv)
+  checkAll("Eq[Observation]", EqTests[Observation].eqv)

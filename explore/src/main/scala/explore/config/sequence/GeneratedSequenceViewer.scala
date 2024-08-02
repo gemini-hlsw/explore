@@ -13,12 +13,12 @@ import crystal.react.hooks.*
 import explore.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Observation
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObserveClass
 import lucuma.core.math.SignalToNoise
-import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig

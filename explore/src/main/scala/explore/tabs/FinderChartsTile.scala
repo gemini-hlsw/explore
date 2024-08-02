@@ -13,10 +13,10 @@ import explore.findercharts.FinderCharts
 import explore.findercharts.FinderChartsSelector
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
+import explore.model.Observation
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.ObsAttachment as ObsAtt
-import explore.model.Observation
 import lucuma.core.model.Program
 import lucuma.ui.react.given
 

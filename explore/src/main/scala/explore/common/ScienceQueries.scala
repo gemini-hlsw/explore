@@ -11,6 +11,7 @@ import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.DefaultErrorPolicy
+import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
@@ -19,7 +20,6 @@ import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
-import explore.model.Observation
 import lucuma.core.optics.syntax.lens.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*

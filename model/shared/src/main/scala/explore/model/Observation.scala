@@ -15,6 +15,7 @@ import explore.modes.InstrumentOverrides
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.GmosAmpCount
 import lucuma.core.enums.GmosAmpGain
 import lucuma.core.enums.GmosAmpReadMode
@@ -41,7 +42,6 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import lucuma.core.enums.CalibrationRole
 
 case class Observation(
   id:                  Observation.Id,
@@ -64,66 +64,109 @@ case class Observation(
   observerNotes:       Option[NonEmptyString],
   calibrationRole:     Option[CalibrationRole]
 ) derives Eq:
-  lazy val configurationSummary: Option[String] = observingMode.map(_.toBasicConfiguration) match
-    case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
-      s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-    case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>
-      s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-    case _                                                              =>
-      none
+  lazy val configurationSummary: Option[String] =
+    observingMode.map(_.toBasicConfiguration) match
+      case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
+        s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
+      case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>
+        s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
+      case _                                                              =>
+        none
 
   val toModeOverride: Option[InstrumentOverrides] = observingMode.map {
-    case n: ObservingMode.GmosNorthLongSlit =>
-      val defaultMode   = GmosCcdMode(n.defaultXBin,
-                                    n.defaultYBin,
-                                    GmosAmpCount.Twelve,
-                                    n.defaultAmpGain,
-                                    n.defaultAmpReadMode
-      )
-      val overridenMode =
-        List(n.explicitXBin, n.explicitYBin, n.explicitAmpGain, n.explicitAmpReadMode).foldLeft(
+    case ObservingMode.GmosNorthLongSlit(
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          defaultXBin,
+          explicitXBin,
+          defaultYBin,
+          explicitYBin,
+          defaultAmpReadMode,
+          explicitAmpReadMode,
+          defaultAmpGain,
+          explicitAmpGain,
+          _,
+          explicitRoi,
+          _,
+          _,
+          _,
+          _
+        ) =>
+      val defaultMode                =
+        GmosCcdMode(
+          defaultXBin,
+          defaultYBin,
+          GmosAmpCount.Twelve,
+          defaultAmpGain,
+          defaultAmpReadMode
+        )
+      val overridenMode: GmosCcdMode =
+        List(explicitXBin, explicitYBin, explicitAmpGain, explicitAmpReadMode).foldLeft(
           defaultMode
         ) {
-          case (mode, Some(x: GmosXBinning))    =>
-            mode.copy(xBin = x)
-          case (mode, Some(x: GmosYBinning))    =>
-            mode.copy(yBin = x)
-          case (mode, Some(x: GmosAmpGain))     =>
-            mode.copy(ampGain = x)
-          case (mode, Some(x: GmosAmpReadMode)) =>
-            mode.copy(ampReadMode = x)
-          case (mode, _)                        =>
-            mode
+          case (mode, Some(x: GmosXBinning))    => mode.copy(xBin = x)
+          case (mode, Some(x: GmosYBinning))    => mode.copy(yBin = x)
+          case (mode, Some(x: GmosAmpGain))     => mode.copy(ampGain = x)
+          case (mode, Some(x: GmosAmpReadMode)) => mode.copy(ampReadMode = x)
+          case (mode, _)                        => mode
         }
 
-      GmosSpectroscopyOverrides(overridenMode.some, n.explicitRoi)
-    case s: ObservingMode.GmosSouthLongSlit =>
-      val defaultMode   = GmosCcdMode(s.defaultXBin,
-                                    s.defaultYBin,
-                                    GmosAmpCount.Twelve,
-                                    s.defaultAmpGain,
-                                    s.defaultAmpReadMode
-      )
-      val overridenMode =
-        List(s.explicitXBin, s.explicitYBin, s.explicitAmpGain, s.explicitAmpReadMode).foldLeft(
+      GmosSpectroscopyOverrides(overridenMode.some, explicitRoi)
+    case ObservingMode.GmosSouthLongSlit(
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          defaultXBin,
+          explicitXBin,
+          defaultYBin,
+          explicitYBin,
+          defaultAmpReadMode,
+          explicitAmpReadMode,
+          defaultAmpGain,
+          explicitAmpGain,
+          _,
+          explicitRoi,
+          _,
+          _,
+          _,
+          _
+        ) =>
+      val defaultMode                =
+        GmosCcdMode(
+          defaultXBin,
+          defaultYBin,
+          GmosAmpCount.Twelve,
+          defaultAmpGain,
+          defaultAmpReadMode
+        )
+      val overridenMode: GmosCcdMode =
+        List(explicitXBin, explicitYBin, explicitAmpGain, explicitAmpReadMode).foldLeft(
           defaultMode
         ) {
-          case (mode, Some(x: GmosXBinning))    =>
-            mode.copy(xBin = x)
-          case (mode, Some(x: GmosYBinning))    =>
-            mode.copy(yBin = x)
-          case (mode, Some(x: GmosAmpGain))     =>
-            mode.copy(ampGain = x)
-          case (mode, Some(x: GmosAmpReadMode)) =>
-            mode.copy(ampReadMode = x)
-          case (mode, _)                        =>
-            mode
+          case (mode, Some(x: GmosXBinning))    => mode.copy(xBin = x)
+          case (mode, Some(x: GmosYBinning))    => mode.copy(yBin = x)
+          case (mode, Some(x: GmosAmpGain))     => mode.copy(ampGain = x)
+          case (mode, Some(x: GmosAmpReadMode)) => mode.copy(ampReadMode = x)
+          case (mode, _)                        => mode
         }
-      GmosSpectroscopyOverrides(overridenMode.some, s.explicitRoi)
+      GmosSpectroscopyOverrides(overridenMode.some, explicitRoi)
   }
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
+
+  inline def isCalibration: Boolean = calibrationRole.isDefined
 
 object Observation:
   type Id = lucuma.core.model.Observation.Id
