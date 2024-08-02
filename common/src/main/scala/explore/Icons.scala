@@ -287,6 +287,10 @@ object Icons {
   val faBug: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-regular-svg-icons", "faPencil")
+  val faPencil: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-light-svg-icons", "faArrowsFromLine")
   val faArrowsFromLine: FAIcon = js.native
 
@@ -408,6 +412,7 @@ object Icons {
     faSquareXMark,
     faSquareXMarkLarge,
     faBug,
+    faPencil,
     faArrowsFromLine,
     faWrench,
     faArrowRotateLeft,
@@ -492,6 +497,7 @@ object Icons {
   val SquareXMark          = FontAwesomeIcon(faSquareXMark)
   val SquareXMarkLarge     = FontAwesomeIcon(faSquareXMarkLarge)
   val Bug                  = FontAwesomeIcon(faBug)
+  val Pencil               = FontAwesomeIcon(faPencil)
   val ArrowsFromLine       = FontAwesomeIcon(faArrowsFromLine)
   val Wrench               = FontAwesomeIcon(faWrench)
   val ArrowRotateLeft      = FontAwesomeIcon(faArrowRotateLeft)
