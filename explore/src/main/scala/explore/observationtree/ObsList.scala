@@ -53,8 +53,6 @@ import queries.schemas.odb.ObsQueries
 import scala.scalajs.js
 
 import ObsQueries.*
-import japgolly.scalajs.react.vdom.TagOf
-import org.scalajs.dom.HTMLElement
 import lucuma.react.common.Css
 
 case class ObsList(
@@ -231,10 +229,9 @@ object ObsList:
               props.observations.get
                 .getValue(id)
                 .map: obs =>
-                  val selected: Boolean       = props.focusedObs.contains_(id)
-                  val tag: TagOf[HTMLElement] = if obs.isCalibration then <.div else <.a
+                  val selected: Boolean = props.focusedObs.contains_(id)
 
-                  tag(
+                  <.a(
                     ^.id        := s"obs-list-${id.toString}",
                     ^.href      := ctx.pageUrl(
                       AppTab.Observations,

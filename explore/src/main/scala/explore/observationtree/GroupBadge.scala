@@ -15,7 +15,6 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import japgolly.scalajs.react.vdom.TagOf
-import org.scalajs.dom.HTMLElement
 
 case class GroupBadge(
   group:     Group,
@@ -49,9 +48,7 @@ object GroupBadge:
         // Completely hidden when disabled
         .unless(props.isDisabled)
 
-    val tag: TagOf[HTMLElement] = if props.isDisabled then <.div else <.a
-
-    tag(
+    <.a(
       ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(props.selected),
       ^.title     := group.id.show,
       ^.id        := show"obs-group-${group.id}",
