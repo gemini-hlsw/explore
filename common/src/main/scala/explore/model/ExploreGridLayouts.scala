@@ -149,29 +149,6 @@ object ExploreGridLayouts:
       )
     )
 
-    private lazy val singleLayoutMedium: Layout = Layout(
-      List(
-        LayoutItem(
-          i = ObsTabTilesIds.TargetSummaryId.id.value,
-          x = 0,
-          y = 0,
-          w = DefaultWidth.value,
-          h = 100, // This doesn't matter, we are forcing 100%.
-          minW = TileMinWidth.value,
-          static = true
-        )
-      )
-    )
-
-    lazy val defaultSingleLayouts: LayoutsMap = defineStdLayouts(
-      Map(
-        (BreakpointName.lg,
-         layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(singleLayoutMedium)
-        ),
-        (BreakpointName.md, singleLayoutMedium)
-      )
-    )
-
   object observations:
     private lazy val NotesMaxHeight: NonNegInt         = 5.refined
     private lazy val TargetHeight: NonNegInt           = 18.refined
