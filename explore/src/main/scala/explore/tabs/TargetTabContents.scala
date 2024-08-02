@@ -24,7 +24,6 @@ import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
-import explore.model.layout.LayoutsMap
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
@@ -448,26 +447,16 @@ object TargetTabContents extends TwoPanels:
         dummyElevationTile
       )
 
-      val (tiles, key, current, default): (List[Tile], NonEmptyString, LayoutsMap, LayoutsMap) =
+      val (tiles, key): (List[Tile], NonEmptyString) =
         tileListKeyOpt.fold(
-          (justSummaryTiles,
-           TargetTabControllerIds.Summary.id,
-           ExploreGridLayouts.targets.defaultSingleLayouts,
-           ExploreGridLayouts.targets.defaultSingleLayouts
-          )
-        )((tiles, key) =>
-          (tiles,
-           key,
-           props.userPreferences.get.targetTabLayout,
-           ExploreGridLayouts.targets.defaultTargetLayouts
-          )
-        )
+          (justSummaryTiles, TargetTabControllerIds.Summary.id)
+        )((tiles, key) => (tiles, key))
 
       TileController(
         props.userId,
         resize.width.getOrElse(1),
-        default,
-        current,
+        ExploreGridLayouts.targets.defaultTargetLayouts,
+        props.userPreferences.get.targetTabLayout,
         tiles,
         GridLayoutSection.TargetLayout,
         backButton.some,
