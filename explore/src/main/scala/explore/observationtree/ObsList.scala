@@ -36,6 +36,7 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tree
@@ -53,7 +54,6 @@ import queries.schemas.odb.ObsQueries
 import scala.scalajs.js
 
 import ObsQueries.*
-import lucuma.react.common.Css
 
 case class ObsList(
   observations:      UndoSetter[ObservationList],

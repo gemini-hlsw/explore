@@ -8,13 +8,13 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.GroupTree.Group
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.*
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
-import japgolly.scalajs.react.vdom.TagOf
 
 case class GroupBadge(
   group:     Group,

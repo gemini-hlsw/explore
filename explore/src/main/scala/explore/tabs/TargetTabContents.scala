@@ -166,6 +166,7 @@ object TargetTabContents extends TwoPanels:
           props.programId,
           props.targets.model,
           props.programSummaries.get.targetObservations,
+          props.programSummaries.get.calibrationObservations,
           selectObservationAndTarget(props.expandedIds),
           selectTargetOrSummary,
           renderInTitle,

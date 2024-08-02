@@ -45,15 +45,16 @@ import org.typelevel.log4cats.Logger
 import scala.collection.immutable.SortedSet
 
 case class ConstraintGroupObsList(
-  programId:        Program.Id,
-  observations:     UndoSetter[ObservationList],
-  undoer:           Undoer,
-  constraintGroups: ConstraintGroupList,
-  obsExecutions:    ObservationExecutionMap,
-  focusedObsSet:    Option[ObsIdSet],
-  setSummaryPanel:  Callback,
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  readonly:         Boolean
+  programId:               Program.Id,
+  observations:            UndoSetter[ObservationList],
+  undoer:                  Undoer,
+  constraintGroups:        ConstraintGroupList,
+  calibrationObservations: Set[Observation.Id],
+  obsExecutions:           ObservationExecutionMap,
+  focusedObsSet:           Option[ObsIdSet],
+  setSummaryPanel:         Callback,
+  expandedIds:             View[SortedSet[ObsIdSet]],
+  readonly:                Boolean
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon
 
@@ -130,7 +131,7 @@ object ConstraintGroupObsList:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useState(false) // dragging
-    .useEffectOnMountBy { (props, ctx, _) =>
+    .useEffectOnMountBy: (props, ctx, _) =>
       val expandedIds = props.expandedIds
 
       val selectedGroupObsIds =
@@ -154,11 +155,17 @@ object ConstraintGroupObsList:
         _ <- expandSelected
         _ <- cleanupExpandedIds
       } yield ()
-    }
-    .render { (props, ctx, dragging) =>
+    .render: (props, ctx, dragging) =>
       import ctx.given
 
-      val constraintGroups = props.constraintGroups.toList.sortBy(_._2.summaryString)
+      val constraintGroups: List[(ObsIdSet, ConstraintSet)] =
+        props.constraintGroups
+          .map: (obsIdSet, constraintGroups) =>
+            (obsIdSet -- props.calibrationObservations).map: filteredObsIdSet =>
+              (filteredObsIdSet, constraintGroups)
+          .toList
+          .flattenOption
+          .sortBy(_._2.summaryString)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -306,4 +313,3 @@ object ConstraintGroupObsList:
           )
         )
       )
-    }

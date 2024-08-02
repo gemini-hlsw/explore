@@ -282,6 +282,7 @@ object ObsSummaryTable:
     ): (_, _, _) =>
       (obsList, allTargets, obsExecutions) =>
         obsList
+          .filterNot(_.isCalibration)
           .map: obs =>
             obs -> obs.scienceTargetIds.toList
               .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))

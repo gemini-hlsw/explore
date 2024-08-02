@@ -52,16 +52,17 @@ import org.scalajs.dom.File as DOMFile
 import scala.collection.immutable.SortedSet
 
 case class TargetSummaryTable(
-  userId:                Option[User.Id],
-  programId:             Program.Id,
-  targets:               View[TargetList],
-  targetObservations:    Map[Target.Id, SortedSet[Observation.Id]],
-  selectObservation:     (Observation.Id, Target.Id) => Callback,
-  selectTargetOrSummary: Option[Target.Id] => Callback,
-  renderInTitle:         Tile.RenderInTitle,
-  selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[ProgramSummaries],
-  readonly:              Boolean
+  userId:                  Option[User.Id],
+  programId:               Program.Id,
+  targets:                 View[TargetList],
+  targetObservations:      Map[Target.Id, SortedSet[Observation.Id]],
+  calibrationObservations: Set[Observation.Id],
+  selectObservation:       (Observation.Id, Target.Id) => Callback,
+  selectTargetOrSummary:   Option[Target.Id] => Callback,
+  renderInTitle:           Tile.RenderInTitle,
+  selectedTargetIds:       View[List[Target.Id]],
+  undoCtx:                 UndoContext[ProgramSummaries],
+  readonly:                Boolean
 ) extends ReactFnProps(TargetSummaryTable.component)
 
 object TargetSummaryTable:
@@ -96,62 +97,69 @@ object TargetSummaryTable:
       .setBehavior(rawVirtual.mod.ScrollBehavior.auto)
       .setAlign(rawVirtual.mod.ScrollAlignment.center)
 
-  protected val component =
+  private given Reusability[Map[Target.Id, SortedSet[Observation.Id]]] = Reusability.map
+
+  private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // cols
-      .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
-        def column[V](id: ColumnId, accessor: TargetWithId => V) =
-          ColDef(id, row => accessor(row), ColNames(id))
+      .useMemoBy((_, _) => ()): (props, ctx) => // cols
+        _ =>
+          def column[V](id: ColumnId, accessor: TargetWithId => V) =
+            ColDef(id, row => accessor(row), ColNames(id))
 
-        def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
-          ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
+          def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
+            ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
 
-        List(
-          ColDef(
-            IdColumnId,
-            _.id,
-            "id",
-            _.value.toString
-          ).sortable
-        ) ++
-          TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
           List(
-            column(
-              CountColumnId,
-              x => props.targetObservations.get(x.id).map(_.size).orEmpty
-            ) // TODO Right align
-              .setCell(_.value.toString),
-            column(
-              ObservationsColumnId,
-              x => (x.id, props.targetObservations.get(x.id).orEmpty.toList)
-            )
-              .setCell(cell =>
-                val (tid, obsIds) = cell.value
-                <.span(
-                  obsIds
-                    .map(obsId =>
-                      <.a(
-                        ^.href := obsUrl(tid, obsId),
-                        ^.onClick ==> (e =>
-                          e.preventDefaultCB *>
-                            props.selectObservation(obsId, cell.row.original.id)
-                        ),
-                        obsId.show
-                      )
-                    )
-                    .mkReactFragment(", ")
-                )
+            ColDef(
+              IdColumnId,
+              _.id,
+              "id",
+              _.value.toString
+            ).sortable
+          ) ++
+            TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
+            List(
+              column(
+                CountColumnId,
+                x => props.targetObservations.get(x.id).map(_.size).orEmpty
+              ) // TODO Right align
+                .setCell(_.value.toString),
+              column(
+                ObservationsColumnId,
+                x => (x.id, props.targetObservations.get(x.id).orEmpty.toList)
               )
-              .setEnableSorting(false)
-          )
-      }
-      // rows
-      .useMemoBy((props, _, _) => props.targets.get)((_, _, _) =>
-        _.toList.map((id, target) => TargetWithId(id, target))
-      )
-      .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+                .setCell(cell =>
+                  val (tid, obsIds) = cell.value
+                  <.span(
+                    obsIds
+                      .map(obsId =>
+                        <.a(
+                          ^.href := obsUrl(tid, obsId),
+                          ^.onClick ==> (e =>
+                            e.preventDefaultCB *>
+                              props.selectObservation(obsId, cell.row.original.id)
+                          ),
+                          obsId.show
+                        )
+                      )
+                      .mkReactFragment(", ")
+                  )
+                )
+                .setEnableSorting(false)
+            )
+      .useMemoBy((props, _, _) => // rows
+        (props.targets.get, props.targetObservations, props.calibrationObservations)
+      ): (_, _, _) =>
+        (targets, targetObservations, calibrationObservations) =>
+          def isCalibrationTarget(targetId: Target.Id): Boolean =
+            targetObservations.get(targetId).exists(_.forall(calibrationObservations.contains_))
+
+          targets.toList
+            .filterNot((id, _) => isCalibrationTarget(id))
+            .map((id, target) => TargetWithId(id, target))
+      .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
         import ctx.given
 
         def targetIds2RowSelection: List[Target.Id] => RowSelection = targetIds =>
@@ -193,14 +201,13 @@ object TargetSummaryTable:
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
-      )
       // Files to be imported
       .useStateView(List.empty[DOMFile])
       .useStateView(DeletingTargets(false))
       // Copy the selection upstream
       .useEffectWithDepsBy((_, _, _, _, table, _, _) =>
         table.getSelectedRowModel().rows.toList.map(_.original.id)
-      )((props, ctx, _, _, _, _, _) =>
+      ): (props, ctx, _, _, _, _, _) =>
         ids =>
           props.selectedTargetIds.set(ids) >>
             ids.headOption
@@ -209,12 +216,11 @@ object TargetSummaryTable:
                 ctx.pushPage(AppTab.Targets, props.programId, Focused.target(targetId))
               )
               .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
-      )
       .useRef(none[HTMLTableVirtualizer])
       .useResizeDetector()
       .useEffectWithDepsBy((props, _, _, _, _, _, _, _, resizer) =>
         (props.selectedTargetIds.get.headOption, resizer)
-      )((_, _, _, _, table, _, _, virtualizerRef, _) =>
+      ): (_, _, _, _, table, _, _, virtualizerRef, _) =>
         (selectedTargetIds, _) =>
           selectedTargetIds.foldMap(selectedHead =>
             virtualizerRef.get.flatMap(refOpt =>
@@ -232,8 +238,7 @@ object TargetSummaryTable:
               )
             )
           )
-      )
-      .render((props, ctx, _, _, table, filesToImport, deletingTargets, virtualizerRef, resizer) =>
+      .render: (props, ctx, _, _, table, filesToImport, deletingTargets, virtualizerRef, resizer) =>
         import ctx.given
 
         val selectedRows    = table.getSelectedRowModel().rows.toList
@@ -376,4 +381,3 @@ object TargetSummaryTable:
             // workaround to redraw when files are imported
           ).withKey(s"summary-table-${filesToImport.get.size}")
         )
-      )

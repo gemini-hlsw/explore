@@ -86,6 +86,9 @@ case class ProgramSummaries(
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )
 
+  lazy val calibrationObservations: Set[Observation.Id] =
+    observations.toList.filter(_.isCalibration).map(_.id).toSet
+
   def cloneObsWithTargets(
     originalId: Observation.Id,
     clonedId:   Observation.Id,

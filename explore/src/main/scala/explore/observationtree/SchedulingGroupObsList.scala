@@ -48,15 +48,16 @@ import org.typelevel.log4cats.Logger
 import scala.collection.immutable.SortedSet
 
 case class SchedulingGroupObsList(
-  programId:        Program.Id,
-  observations:     UndoSetter[ObservationList],
-  undoer:           Undoer,
-  schedulingGroups: SchedulingGroupList,
-  obsExecutions:    ObservationExecutionMap,
-  focusedObsSet:    Option[ObsIdSet],
-  setSummaryPanel:  Callback,
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  readonly:         Boolean
+  programId:               Program.Id,
+  observations:            UndoSetter[ObservationList],
+  undoer:                  Undoer,
+  schedulingGroups:        SchedulingGroupList,
+  calibrationObservations: Set[Observation.Id],
+  obsExecutions:           ObservationExecutionMap,
+  focusedObsSet:           Option[ObsIdSet],
+  setSummaryPanel:         Callback,
+  expandedIds:             View[SortedSet[ObsIdSet]],
+  readonly:                Boolean
 ) extends ReactFnProps[SchedulingGroupObsList](SchedulingGroupObsList.component)
     with ViewCommon
 
@@ -161,7 +162,7 @@ object SchedulingGroupObsList:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useState(false) // dragging
-    .useEffectOnMountBy { (props, ctx, _) =>
+    .useEffectOnMountBy: (props, ctx, _) =>
       val expandedIds = props.expandedIds
 
       val selectedGroupObsIds =
@@ -185,11 +186,17 @@ object SchedulingGroupObsList:
         _ <- expandSelected
         _ <- cleanupExpandedIds
       } yield ()
-    }
-    .render { (props, ctx, dragging) =>
+    .render: (props, ctx, dragging) =>
       import ctx.given
 
-      val schedulingGroups = props.schedulingGroups.toList.sortBy(_._2.headOption)
+      val schedulingGroups: List[(ObsIdSet, List[TimingWindow])] =
+        props.schedulingGroups
+          .map: (obsIdSet, constraintGroups) =>
+            (obsIdSet -- props.calibrationObservations).map: filteredObsIdSet =>
+              (filteredObsIdSet, constraintGroups)
+          .toList
+          .flattenOption
+          .sortBy(_._2.headOption)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -328,4 +335,3 @@ object SchedulingGroupObsList:
           )
         )
       )
-    }
