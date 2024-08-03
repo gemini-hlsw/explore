@@ -8,7 +8,7 @@ import eu.timepit.refined.scalacheck.numeric.given
 import eu.timepit.refined.scalacheck.string.given
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ScienceRequirements
 import lucuma.core.arb.ArbTime
 import lucuma.core.enums.ObsActiveStatus
@@ -18,7 +18,6 @@ import lucuma.core.math.arb.ArbWavelength.given
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
-import lucuma.core.model.Observation
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
@@ -37,13 +36,14 @@ import org.scalacheck.Cogen
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import lucuma.core.enums.CalibrationRole
 
-trait ArbObsSummary:
+trait ArbObservation:
   import ArbTime.given
   import ArbScienceRequirements.given
   import ArbObservingMode.given
 
-  given Arbitrary[ObsSummary] =
+  given Arbitrary[Observation] =
     Arbitrary(
       for
         id                  <- arbitrary[Observation.Id]
@@ -64,7 +64,8 @@ trait ArbObsSummary:
         groupIndex          <- arbitrary[NonNegShort]
         validations         <- arbitrary[List[ObservationValidation]]
         observerNotes       <- arbitrary[Option[NonEmptyString]]
-      yield ObsSummary(
+        calibrationRole     <- arbitrary[Option[CalibrationRole]]
+      yield Observation(
         id,
         title,
         subtitle,
@@ -82,11 +83,12 @@ trait ArbObsSummary:
         groupId,
         groupIndex,
         validations,
-        observerNotes
+        observerNotes,
+        calibrationRole
       )
     )
 
-  given Cogen[ObsSummary] =
+  given Cogen[Observation] =
     Cogen[
       (Observation.Id,
        String,
@@ -104,7 +106,8 @@ trait ArbObsSummary:
        Option[Group.Id],
        Short,
        List[ObservationValidation],
-       Option[String]
+       Option[String],
+       Option[CalibrationRole]
       )
     ]
       .contramap(o =>
@@ -124,8 +127,9 @@ trait ArbObsSummary:
          o.groupId,
          o.groupIndex.value,
          o.validations,
-         o.observerNotes.map(_.value)
+         o.observerNotes.map(_.value),
+         o.calibrationRole
         )
       )
 
-object ArbObsSummary extends ArbObsSummary
+object ArbObservation extends ArbObservation

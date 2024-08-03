@@ -13,7 +13,7 @@ import crystal.Pot
 import explore.DefaultErrorPolicy
 import explore.model.GroupTree
 import explore.model.ObsAttachment
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
@@ -26,7 +26,6 @@ import fs2.Stream
 import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
@@ -129,8 +128,8 @@ object ProgramCache
           _.id
         )
 
-      val observations: IO[List[ObsSummary]] =
-        drain[ObsSummary, Observation.Id, ProgramSummaryQueriesGQL.AllProgramObservations.Data](
+      val observations: IO[List[Observation]] =
+        drain[Observation, Observation.Id, ProgramSummaryQueriesGQL.AllProgramObservations.Data](
           offset =>
             ProgramSummaryQueriesGQL
               .AllProgramObservations[IO]
@@ -167,7 +166,7 @@ object ProgramCache
         )
 
       def initializeSummaries(
-        observations: List[ObsSummary],
+        observations: List[Observation],
         groups:       GroupTree
       ): IO[ProgramSummaries] =
         val obsPots   = observations.map(o => (o.id, Pot.pending)).toMap
@@ -179,7 +178,7 @@ object ProgramCache
         }
 
       def combineTimesUpdates(
-        observations: List[ObsSummary],
+        observations: List[Observation],
         groups:       GroupTree
       ): Stream[IO, ProgramSummaries => ProgramSummaries] =
         // We want to update all the observations first, followed by the groups,

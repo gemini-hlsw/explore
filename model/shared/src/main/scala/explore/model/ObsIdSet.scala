@@ -10,7 +10,6 @@ import cats.Show
 import cats.data.NonEmptySet
 import cats.syntax.all.*
 import explore.model.util.NonEmptySetWrapper
-import lucuma.core.model.Observation
 import monocle.Iso
 import monocle.Prism
 
@@ -18,9 +17,11 @@ import scala.collection.immutable.SortedSet
 
 case class ObsIdSet(idSet: NonEmptySet[Observation.Id]):
   def ++(other: ObsIdSet): ObsIdSet = ObsIdSet(idSet ++ other.idSet)
-  def --(other: ObsIdSet): Option[ObsIdSet]      =
-    NonEmptySet.fromSet(idSet -- (other.idSet)).map(ObsIdSet(_))
-  def -(other: Observation.Id): Option[ObsIdSet] =
+  def --(other: Set[Observation.Id]): Option[ObsIdSet] =
+    NonEmptySet.fromSet(idSet.toSortedSet -- other).map(ObsIdSet(_))
+  def --(other: ObsIdSet): Option[ObsIdSet]            =
+    --(other.idSet.toSortedSet)
+  def -(other: Observation.Id): Option[ObsIdSet]       =
     NonEmptySet.fromSet(idSet - other).map(ObsIdSet(_))
 
 object ObsIdSet {

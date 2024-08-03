@@ -12,7 +12,6 @@ import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
-import lucuma.core.model.Observation
 import lucuma.core.model.ProposalReference
 import lucuma.core.model.Target
 import lucuma.schemas.enums.ProposalStatus
@@ -87,18 +86,21 @@ case class ProgramSummaries(
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )
 
+  lazy val calibrationObservations: Set[Observation.Id] =
+    observations.toList.filter(_.isCalibration).map(_.id).toSet
+
   def cloneObsWithTargets(
     originalId: Observation.Id,
     clonedId:   Observation.Id,
     targetIds:  List[Target.Id]
-  ): Option[ObsSummary] =
+  ): Option[Observation] =
     observations
       .getValue(originalId)
       .map(_.copy(id = clonedId, scienceTargetIds = SortedSet.from(targetIds)))
 
-  def insertObs(obsSummary: ObsSummary): ProgramSummaries =
+  def insertObs(observation: Observation): ProgramSummaries =
     ProgramSummaries.observations.modify(
-      _.inserted(obsSummary.id, obsSummary, observations.length)
+      _.inserted(observation.id, observation, observations.length)
     )(this)
 
   def removeObs(obsId: Observation.Id): ProgramSummaries =
@@ -110,7 +112,7 @@ case class ProgramSummaries(
     obsIds:     ObsIdSet
   ): ProgramSummaries =
     val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
-      list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ - originalId + clone.id))
+      list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - originalId + clone.id))
     )
     val ts  = targets + (clone.id -> clone.target)
     copy(observations = obs, targets = ts)
@@ -121,7 +123,7 @@ case class ProgramSummaries(
     obsIds:     ObsIdSet
   ): ProgramSummaries =
     val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
-      list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ + originalId - cloneId))
+      list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ + originalId - cloneId))
     )
     val ts  = targets - cloneId
     copy(observations = obs, targets = ts)
@@ -148,7 +150,7 @@ object ProgramSummaries:
   def fromLists(
     optProgramDetails:   Option[ProgramDetails],
     targetList:          List[TargetWithId],
-    obsList:             List[ObsSummary],
+    obsList:             List[Observation],
     groups:              GroupTree,
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
@@ -160,7 +162,7 @@ object ProgramSummaries:
     ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
-      KeyedIndexedList.fromList(obsList, ObsSummary.id.get),
+      KeyedIndexedList.fromList(obsList, Observation.id.get),
       groups,
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,

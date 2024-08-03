@@ -19,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
+import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
@@ -26,7 +27,6 @@ import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User

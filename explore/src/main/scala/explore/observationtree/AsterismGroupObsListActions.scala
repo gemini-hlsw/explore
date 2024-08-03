@@ -10,12 +10,11 @@ import explore.common.AsterismQueries
 import explore.common.AsterismQueries.*
 import explore.data.KeyedIndexedList
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.TargetList
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
-import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import monocle.Iso
@@ -37,7 +36,7 @@ object AsterismGroupObsListActions {
         .id[ObservationList]
         .filterIndex((id: Observation.Id) => draggedIds.contains(id))
         .andThen(KeyedIndexedList.value)
-        .andThen(ObsSummary.scienceTargetIds)
+        .andThen(Observation.scienceTargetIds)
 
     Action(getter = traversal.getAll.andThen(_.head), setter = traversal.replace)(
       onSet = (observationList, asterismIds) =>

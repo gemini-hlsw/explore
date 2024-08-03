@@ -213,7 +213,7 @@ object TargetSelectionPopup:
               .orEmpty
 
         React.Fragment(
-          <.span(^.onClick --> onOpen, props.trigger),
+          props.trigger.copy(onClick = props.trigger.onClick >> onOpen),
           Dialog(
             clazz = ExploreStyles.TargetSearchForm |+| LucumaPrimeStyles.Dialog.Large,
             contentClass = ExploreStyles.TargetSearchContent,

@@ -9,7 +9,7 @@ object all
     with ArbKeyedIndexedList
     with ArbTree
     with ArbKeyedIndexedTree
-    with ArbObsSummary
+    with ArbObservation
     with ArbAsterism
     with ArbCallForProposal
     with ArbProposalType

@@ -16,6 +16,7 @@ import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
@@ -33,7 +34,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
@@ -124,7 +124,7 @@ object ObsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    def obsSummaryTable(): VdomNode = Tile(
+    def observationTable(): VdomNode = Tile(
       "observations".refined,
       "Observations Summary",
       backButton.some
@@ -184,7 +184,7 @@ object ObsTabContents extends TwoPanels:
       (props.focusedObs, props.focusedGroup) match {
         case (Some(obsId), _)   => obsTiles(obsId, resize)
         case (_, Some(groupId)) => groupTiles(groupId, resize)
-        case _                  => obsSummaryTable()
+        case _                  => observationTable()
       }
 
     makeOneOrTwoPanels(

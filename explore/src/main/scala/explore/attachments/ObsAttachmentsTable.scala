@@ -24,6 +24,7 @@ import explore.model.Focused
 import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
+import explore.model.Observation
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
@@ -34,7 +35,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObsAttachment as ObsAtt
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp

@@ -12,7 +12,7 @@ import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
@@ -52,7 +52,7 @@ object TargetPasteAction {
       ProgramSummaries.observations
         .andThen(Iso.id[ObservationList].filterIndex(obsIds.idSet.contains))
         .andThen(KeyedIndexedList.value)
-        .andThen(ObsSummary.scienceTargetIds)
+        .andThen(Observation.scienceTargetIds)
         .replace(newTargetIds)(ps)
     )
 

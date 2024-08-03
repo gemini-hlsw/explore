@@ -18,7 +18,7 @@ import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
@@ -38,7 +38,6 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
@@ -167,6 +166,7 @@ object TargetTabContents extends TwoPanels:
           props.programId,
           props.targets.model,
           props.programSummaries.get.targetObservations,
+          props.programSummaries.get.calibrationObservations,
           selectObservationAndTarget(props.expandedIds),
           selectTargetOrSummary,
           renderInTitle,
@@ -208,7 +208,7 @@ object TargetTabContents extends TwoPanels:
             ProgramSummaries.observations
               .filterIndex((id: Observation.Id) => id === i)
               .andThen(KeyedIndexedList.value)
-              .andThen(ObsSummary.visualizationTime)
+              .andThen(Observation.visualizationTime)
               .modify(mod)(ps)
           )
           .getOrElse(ps)
@@ -218,7 +218,7 @@ object TargetTabContents extends TwoPanels:
           .id[ObservationList]
           .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
           .andThen(KeyedIndexedList.value)
-          .andThen(ObsSummary.scienceTargetIds)
+          .andThen(Observation.scienceTargetIds)
 
       val asterismView: View[AsterismIds] =
         CloneListView(
@@ -238,7 +238,7 @@ object TargetTabContents extends TwoPanels:
       val obsConf = idsToEdit.single match {
         case Some(id) =>
           props.programSummaries.get.observations.values.collect {
-            case ObsSummary(
+            case Observation(
                   obsId,
                   _,
                   _,
@@ -253,6 +253,7 @@ object TargetTabContents extends TwoPanels:
                   _,
                   posAngle,
                   Some(wavelength),
+                  _,
                   _,
                   _,
                   _,

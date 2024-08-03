@@ -8,6 +8,7 @@ import crystal.react.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AveragePABasis
+import explore.model.Observation
 import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
 import explore.model.syntax.all.*
@@ -15,7 +16,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
-import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.react.common.Css

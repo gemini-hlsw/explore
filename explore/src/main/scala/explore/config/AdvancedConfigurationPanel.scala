@@ -22,6 +22,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
+import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.display.given
 import explore.modes.GmosNorthSpectroscopyRow
@@ -41,7 +42,6 @@ import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display

@@ -15,7 +15,7 @@ object ProgramSummaryQueriesGQL {
     val document: String = s"""
       query($$where: WhereObservation!, $$OFFSET: ObservationId) {
         observations(WHERE: $$where, OFFSET: $$OFFSET) {
-          matches $ObservationSummarySubquery
+          matches $ObservationSubquery
           hasMore
         }
       }

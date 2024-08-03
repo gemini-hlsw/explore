@@ -13,9 +13,9 @@ import explore.components.Tile
 import explore.components.Tile.RenderInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.ObsTabTilesIds
+import explore.model.Observation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.util.NewType
 import lucuma.react.common.*
 import lucuma.react.common.ReactFnProps

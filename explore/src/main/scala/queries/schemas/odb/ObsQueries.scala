@@ -15,13 +15,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.OdbItcResult
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.ExposureTimeMode.FixedExposureMode
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -36,7 +35,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries:
-  type ObservationList = KeyedIndexedList[Observation.Id, ObsSummary]
+  type ObservationList = KeyedIndexedList[Observation.Id, Observation]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
@@ -140,7 +139,7 @@ object ObsQueries:
   def createObservation[F[_]: Async](
     programId: Program.Id,
     parentId:  Option[Group.Id]
-  )(using FetchClient[F, ObservationDB]): F[ObsSummary] =
+  )(using FetchClient[F, ObservationDB]): F[Observation] =
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
@@ -157,7 +156,7 @@ object ObsQueries:
     targetIds: Set[Target.Id]
   )(using
     FetchClient[F, ObservationDB]
-  ): F[ObsSummary] =
+  ): F[Observation] =
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
@@ -173,7 +172,7 @@ object ObsQueries:
     obsId: Observation.Id
   )(using
     FetchClient[F, ObservationDB]
-  ): F[ObsSummary] =
+  ): F[Observation] =
     CloneObservationMutation[F]
       .execute(CloneObservationInput(observationId = obsId.assign))
       .map(_.cloneObservation.newObservation)
@@ -183,7 +182,7 @@ object ObsQueries:
     targetIds: List[Target.Id]
   )(using
     FetchClient[F, ObservationDB]
-  ): F[ObsSummary] =
+  ): F[Observation] =
     CloneObservationMutation[F]
       .execute(
         CloneObservationInput(

@@ -16,7 +16,7 @@ import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.SchedulingGroupList
@@ -29,7 +29,6 @@ import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.TimingWindowInclusion
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
@@ -49,15 +48,16 @@ import org.typelevel.log4cats.Logger
 import scala.collection.immutable.SortedSet
 
 case class SchedulingGroupObsList(
-  programId:        Program.Id,
-  observations:     UndoSetter[ObservationList],
-  undoer:           Undoer,
-  schedulingGroups: SchedulingGroupList,
-  obsExecutions:    ObservationExecutionMap,
-  focusedObsSet:    Option[ObsIdSet],
-  setSummaryPanel:  Callback,
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  readonly:         Boolean
+  programId:               Program.Id,
+  observations:            UndoSetter[ObservationList],
+  undoer:                  Undoer,
+  schedulingGroups:        SchedulingGroupList,
+  calibrationObservations: Set[Observation.Id],
+  obsExecutions:           ObservationExecutionMap,
+  focusedObsSet:           Option[ObsIdSet],
+  setSummaryPanel:         Callback,
+  expandedIds:             View[SortedSet[ObsIdSet]],
+  readonly:                Boolean
 ) extends ReactFnProps[SchedulingGroupObsList](SchedulingGroupObsList.component)
     with ViewCommon
 
@@ -139,7 +139,7 @@ object SchedulingGroupObsList:
         oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
       )
       .andThen(KeyedIndexedList.value)
-      .andThen(ObsSummary.timingWindows)
+      .andThen(Observation.timingWindows)
 
     val twUndoCtx =
       undoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
@@ -162,7 +162,7 @@ object SchedulingGroupObsList:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useState(false) // dragging
-    .useEffectOnMountBy { (props, ctx, _) =>
+    .useEffectOnMountBy: (props, ctx, _) =>
       val expandedIds = props.expandedIds
 
       val selectedGroupObsIds =
@@ -186,11 +186,17 @@ object SchedulingGroupObsList:
         _ <- expandSelected
         _ <- cleanupExpandedIds
       } yield ()
-    }
-    .render { (props, ctx, dragging) =>
+    .render: (props, ctx, dragging) =>
       import ctx.given
 
-      val schedulingGroups = props.schedulingGroups.toList.sortBy(_._2.headOption)
+      val schedulingGroups: List[(ObsIdSet, List[TimingWindow])] =
+        props.schedulingGroups
+          .map: (obsIdSet, constraintGroups) =>
+            (obsIdSet -- props.calibrationObservations).map: filteredObsIdSet =>
+              (filteredObsIdSet, constraintGroups)
+          .toList
+          .flattenOption
+          .sortBy(_._2.headOption)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(
@@ -329,4 +335,3 @@ object SchedulingGroupObsList:
           )
         )
       )
-    }

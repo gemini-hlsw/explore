@@ -13,7 +13,6 @@ import explore.data.tree.KeyedIndexedTree.Index
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
 
@@ -55,11 +54,12 @@ case class Grouping(
   parentIndex:     NonNegShort,
   minimumInterval: Option[TimeSpan],
   maximumInterval: Option[TimeSpan],
-  ordered:         Boolean
+  ordered:         Boolean,
+  system:          Boolean
 ) derives Eq,
       Decoder:
   def toGroupTreeGroup: GroupTree.Group =
-    GroupTree.Group(id, name, minimumRequired, minimumInterval, maximumInterval, ordered)
+    GroupTree.Group(id, name, minimumRequired, minimumInterval, maximumInterval, ordered, system)
 
   def toIndex: GroupTree.Index = Index(parentId.map(_.asRight), parentIndex)
 

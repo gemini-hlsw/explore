@@ -13,7 +13,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import explore.events.ItcMessage
 import explore.model.BasicConfigAndItc
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
@@ -41,26 +41,26 @@ import workers.WorkerClient
 import scala.collection.immutable.SortedMap
 
 case class ItcProps(
-  obsSummary:         ObsSummary,
+  observation:        Observation,
   remoteExposureTime: Option[ItcExposureTime],   // time provided by the db
   selectedConfig:     Option[BasicConfigAndItc], // selected row in spectroscopy modes table
   at:                 TargetList,
   modeOverrides:      Option[InstrumentOverrides]
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
-    ScienceRequirements.spectroscopy.getOption(obsSummary.scienceRequirements)
+    ScienceRequirements.spectroscopy.getOption(observation.scienceRequirements)
 
   private val allTargets: TargetList =
     SortedMap.from(
       at.view.mapValues(Target.sourceProfile.modify(_.gaiaFree))
     )
 
-  private val constraints = obsSummary.constraints
-  private val asterismIds = obsSummary.scienceTargetIds
+  private val constraints = observation.constraints
+  private val asterismIds = observation.scienceTargetIds
 
   // The remote configuration is read in a different query than the itc results
   // This will work even in the case the user has overriden some parameters
-  private val remoteConfig = obsSummary.observingMode.map { o =>
+  private val remoteConfig = observation.observingMode.map { o =>
     BasicConfigAndItc(o.toBasicConfiguration,
                       remoteExposureTime.map(ItcResult.fromItcExposureTime(_).rightNec)
     )

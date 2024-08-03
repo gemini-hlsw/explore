@@ -37,6 +37,7 @@ object GroupQueriesGQL:
         parentId
         parentIndex
         ordered
+        system
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
         elements {

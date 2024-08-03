@@ -16,6 +16,7 @@ import explore.components.TileController
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
@@ -31,7 +32,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
@@ -109,7 +109,7 @@ object SchedulingTabContents extends TwoPanels:
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
                 .andThen(KeyedIndexedList.value)
 
-              val twTraversal = obsTraversal.andThen(ObsSummary.timingWindows)
+              val twTraversal = obsTraversal.andThen(Observation.timingWindows)
 
               val timingWindows: View[List[TimingWindow]] =
                 TimingWindowsQueries.viewWithRemoteMod(
@@ -141,6 +141,7 @@ object SchedulingTabContents extends TwoPanels:
             observations,
             props.programSummaries,
             props.programSummaries.get.schedulingGroups,
+            props.programSummaries.get.calibrationObservations,
             props.programSummaries.get.obsExecutionPots,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),

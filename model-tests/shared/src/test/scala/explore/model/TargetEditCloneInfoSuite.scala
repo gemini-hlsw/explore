@@ -5,7 +5,6 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.model.Observation
 import munit.FunSuite
 import munit.Location
 

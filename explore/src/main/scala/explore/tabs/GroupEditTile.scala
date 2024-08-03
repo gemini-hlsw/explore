@@ -48,6 +48,7 @@ case class GroupEditTile(
   group:             UndoSetter[GroupTree.Group],
   elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  readonly:          Boolean,
   renderInTitle:     Tile.RenderInTitle
 ) extends ReactFnProps(GroupEditTile.component)
 
@@ -68,9 +69,8 @@ object GroupEditTile:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     // editType
-    .useStateViewBy((props, _) =>
+    .useStateViewBy: (props, _) =>
       if props.group.get.isAnd then GroupEditType.And else GroupEditType.Or
-    )
     // isLoading
     .useStateView(false)
     // nameDisplay
@@ -80,6 +80,8 @@ object GroupEditTile:
 
       val group = props.group.get
       val isAnd = group.isAnd
+
+      val isDisabled: Boolean = props.readonly || isLoading.get
 
       def groupModView[A](lens: Lens[GroupTree.Group, A], prop: A => GroupPropertiesInput) =
         props.group
@@ -116,48 +118,48 @@ object GroupEditTile:
           )
       )
 
-      val changeGroupTypeButtons = <.div(
-        ExploreStyles.GroupChangeButtons,
-        SelectButtonEnumView(
-          "groupType".refined,
-          editType,
-          label = "Type",
-          disabled = isLoading.get,
-          itemTemplate = _.value match
-            case GroupEditType.And => <.span("AND (Scheduling)")
-            case GroupEditType.Or  => <.span("OR (Choose ", <.i("n"), ")")
-          ,
-          onChange = tp => minRequiredV.set(minimumForGroup(tp))
+      val changeGroupTypeButtons =
+        <.div(ExploreStyles.GroupChangeButtons)(
+          SelectButtonEnumView(
+            "groupType".refined,
+            editType,
+            label = "Type",
+            disabled = isDisabled,
+            itemTemplate = _.value match
+              case GroupEditType.And => <.span("AND (Scheduling)")
+              case GroupEditType.Or  => <.span("OR (Choose ", <.i("n"), ")")
+            ,
+            onChange = tp => minRequiredV.set(minimumForGroup(tp))
+          )
         )
-      )
 
-      val note = <.div(
-        ExploreStyles.GroupEditNote,
-        Icons.Note,
-        if isAnd then
-          <.div(
-            "The scheduler will respect any absolute timing constraints each individual observation may have, but also apply any relative timing constraints between them as specified here."
-          )
-        else
-          <.div(
-            "The scheduler will select only ",
-            <.i("n"),
-            " of the observations in this group, respecting any timing constraints the individual observations may have. Once they have been started, no others in the group will be considered for future scheduling."
-          )
-      )
+      val note =
+        <.div(ExploreStyles.GroupEditNote)(
+          Icons.Note,
+          if isAnd then
+            <.div(
+              "The scheduler will respect any absolute timing constraints each individual observation may have, but also apply any relative timing constraints between them as specified here."
+            )
+          else
+            <.div(
+              "The scheduler will select only ",
+              <.i("n"),
+              " of the observations in this group, respecting any timing constraints the individual observations may have. Once they have been started, no others in the group will be considered for future scheduling."
+            )
+        )
 
-      val selectGroupForm = <.div(
-        ExploreStyles.GroupTypeSelect,
-        changeGroupTypeButtons,
-        note
-      )
+      val selectGroupForm =
+        <.div(ExploreStyles.GroupTypeSelect)(
+          changeGroupTypeButtons,
+          note
+        )
 
       val nameForm = <.div(
         FormInputText(
           id = "nameInput".refined,
           label = "Name",
           value = nameDisplay.value.fold(js.undefined)(_.value),
-          disabled = isLoading.get,
+          disabled = isDisabled,
           onChange = e => nameDisplay.setState(NonEmptyString.from(e.target.value).toOption),
           onBlur = e => nameV.set(NonEmptyString.from(e.target.value).toOption)
         )
@@ -169,7 +171,7 @@ object GroupEditTile:
           "minRequiredInput",
           placeholder = "1",
           value = minRequiredV.get.fold(js.undefined)(_.value),
-          disabled = isLoading.get,
+          disabled = isDisabled,
           min = 0,
           max = props.elementsLength,
           size = minRequiredV.get.fold(js.undefined)(_.toString.length),
@@ -186,24 +188,26 @@ object GroupEditTile:
           id = "orderedCheck".refined,
           value = orderedV,
           label = "Ordered",
-          disabled = isLoading.get
+          disabled = isDisabled
         )
       )
 
       val delaysForm = <.div(
         ExploreStyles.GroupDelaysForm,
-        FormTimeSpanInput(value = minIntervalV,
-                          id = "minDelay".refined,
-                          label = "Minimum delay",
-                          min = TimeSpan.Zero,
-                          max = maxIntervalV.get,
-                          disabled = isLoading.get
+        FormTimeSpanInput(
+          value = minIntervalV,
+          id = "minDelay".refined,
+          label = "Minimum delay",
+          min = TimeSpan.Zero,
+          max = maxIntervalV.get,
+          disabled = isDisabled
         ),
-        FormTimeSpanInput(value = maxIntervalV,
-                          id = "maxDelay".refined,
-                          label = "Maximum delay",
-                          min = minIntervalV.get,
-                          disabled = isLoading.get
+        FormTimeSpanInput(
+          value = maxIntervalV,
+          id = "maxDelay".refined,
+          label = "Maximum delay",
+          min = minIntervalV.get,
+          disabled = isDisabled
         )
       )
 

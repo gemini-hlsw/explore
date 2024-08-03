@@ -10,6 +10,7 @@ import crystal.react.*
 import explore.Icons
 import explore.common.AsterismQueries
 import explore.common.TargetQueries
+import explore.components.ui.ExploreStyles
 import explore.model.AsterismIds
 import explore.model.ObsIdSet
 import explore.model.TargetList
@@ -85,7 +86,7 @@ trait AsterismModifier:
         disabled = readOnly || adding.get.value,
         loading = adding.get.value,
         label = label,
-        clazz = buttonClass
+        clazz = buttonClass |+| ExploreStyles.Hidden.when_(readOnly)
       ).tiny.compact,
       onSelected = targetWithOptId =>
         insertSiderealTarget(

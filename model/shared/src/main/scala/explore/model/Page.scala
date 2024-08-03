@@ -8,7 +8,6 @@ import cats.data.NonEmptySet
 import cats.derived.*
 import cats.syntax.all.*
 import lucuma.core.model.Group
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import monocle.Iso

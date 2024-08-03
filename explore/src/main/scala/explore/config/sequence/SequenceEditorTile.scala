@@ -13,11 +13,11 @@ import explore.components.ui.ExploreStyles
 import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTilesIds
+import explore.model.Observation
 import explore.model.OdbItcResult
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.util.TimeSpan
 import lucuma.refined.*

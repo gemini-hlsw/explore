@@ -8,6 +8,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.GroupTree.Group
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.*
 import lucuma.react.floatingui.Placement
@@ -23,7 +24,8 @@ case class GroupBadge(
   deleteCB:  Callback,
   isEmpty:   Boolean,
   readonly:  Boolean
-) extends ReactFnProps(GroupBadge.component)
+) extends ReactFnProps(GroupBadge.component):
+  val isDisabled: Boolean = readonly || group.system
 
 object GroupBadge:
   private type Props = GroupBadge
@@ -43,8 +45,8 @@ object GroupBadge:
         ).small
           // Tooltip is shown only if the group is not empty
       ).withTooltipUnless(props.isEmpty, "Empty group before deleting", Placement.Right)
-        // Completely hidden for readonly mode
-        .unless(props.readonly)
+        // Completely hidden when disabled
+        .unless(props.isDisabled)
 
     <.a(
       ExploreStyles.ObsTreeGroupLeaf |+| ExploreStyles.SelectedGroupItem.when_(props.selected),

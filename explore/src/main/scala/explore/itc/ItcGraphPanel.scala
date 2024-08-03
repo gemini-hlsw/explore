@@ -14,10 +14,10 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.GlobalPreferences
 import explore.model.LoadingState
+import explore.model.Observation
 import explore.model.itc.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given

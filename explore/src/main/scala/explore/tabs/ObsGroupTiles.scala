@@ -72,7 +72,13 @@ object ObsGroupTiles:
             props.backButton.some,
             tileTitleClass = ExploreStyles.GroupEditTitle
           )(
-            GroupEditTile(group, node.get._1.children.length, props.timeEstimateRange, _)
+            GroupEditTile(
+              group,
+              node.get._1.children.length,
+              props.timeEstimateRange,
+              group.get.system,
+              _
+            )
               .withKey(props.groupId.toString)
               .toUnmounted
           )

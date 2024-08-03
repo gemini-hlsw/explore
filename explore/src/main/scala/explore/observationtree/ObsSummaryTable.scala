@@ -20,7 +20,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Focused
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.TargetList
 import explore.model.display.given
@@ -36,7 +36,6 @@ import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Coordinates
 import lucuma.core.math.validation.MathValidators
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
@@ -283,6 +282,7 @@ object ObsSummaryTable:
     ): (_, _, _) =>
       (obsList, allTargets, obsExecutions) =>
         obsList
+          .filterNot(_.isCalibration)
           .map: obs =>
             obs -> obs.scienceTargetIds.toList
               .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
@@ -386,7 +386,7 @@ object ObsSummaryTable:
     ) extends ObsSummaryRow
 
     case ObsRow(
-      obs:          ObsSummary,
+      obs:          Observation,
       targetWithId: Option[TargetWithId],
       asterism:     Option[Asterism],
       execution:    Pot[Execution]

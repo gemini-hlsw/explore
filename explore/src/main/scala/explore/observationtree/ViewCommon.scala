@@ -10,7 +10,7 @@ import crystal.react.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.undo.UndoSetter
@@ -18,7 +18,6 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.react.beautifuldnd.*
 import lucuma.schemas.ObservationDB
@@ -32,7 +31,7 @@ trait ViewCommon {
   def readonly: Boolean
 
   def renderObsBadge(
-    obs:               ObsSummary,
+    obs:               Observation,
     layout:            ObsBadge.Layout,
     highlightSelected: Boolean = true,
     forceHighlight:    Boolean = false, // if true, overrides highlightSelected
@@ -58,7 +57,7 @@ trait ViewCommon {
     onCtrlClick:       Observation.Id => Callback = _ => Callback.empty,
     ctx:               AppContext[IO]
   )(
-    obs:               ObsSummary,
+    obs:               Observation,
     idx:               Int
   ): TagMod =
     <.div(ExploreStyles.ObsTreeItem)(

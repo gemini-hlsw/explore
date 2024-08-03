@@ -11,7 +11,7 @@
 // import lucuma.core.enums.ObsActiveStatus
 // import lucuma.core.enums.ObsStatus
 // import lucuma.core.model.Asterism
-// import lucuma.core.model.Observation
+// import explore.model.Observation
 // import lucuma.core.model.Target
 // import lucuma.core.util.arb.ArbEnumerated.*
 // import lucuma.core.util.arb.ArbGid.*

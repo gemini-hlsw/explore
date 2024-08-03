@@ -11,13 +11,12 @@ import crystal.react.syntax.all.*
 import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.undo.*
 import japgolly.scalajs.react.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -48,7 +47,7 @@ object TargetCloneAction {
       obsIds:     ObsIdSet
     ): ObservationsAndTargets =
       val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
-        list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ - originalId + clone.id))
+        list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - originalId + clone.id))
       )
       val ts  = obsAndTargets._2 + (clone.id -> clone.target)
       (obs, ts)
@@ -58,7 +57,7 @@ object TargetCloneAction {
       obsIds:     ObsIdSet
     ): ObservationsAndTargets =
       val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
-        list.updatedValueWith(obsId, ObsSummary.scienceTargetIds.modify(_ + originalId - cloneId))
+        list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ + originalId - cloneId))
       )
       val ts  =
         if (obsAndTargets._1.areExtraObs(cloneId, obsIds))

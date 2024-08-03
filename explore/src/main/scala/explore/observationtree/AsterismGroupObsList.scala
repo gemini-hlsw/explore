@@ -18,9 +18,10 @@ import explore.model.AsterismGroup
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.ObsIdSet
-import explore.model.ObsSummary
+import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
+import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
@@ -30,7 +31,6 @@ import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
@@ -45,6 +45,7 @@ import mouse.boolean.*
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
+import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroupObsList(
@@ -57,11 +58,13 @@ case class AsterismGroupObsList(
   readonly:               Boolean
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
-  val programSummaries                          = undoCtx.model
-  val obsExecutions                             = programSummaries.get.obsExecutionPots
-  val observations: UndoSetter[ObservationList] =
+  val programSummaries                             = undoCtx.model
+  val obsExecutions                                = programSummaries.get.obsExecutionPots
+  val observations: UndoSetter[ObservationList]    =
     undoCtx.zoom(ProgramSummaries.observations)
-  override val focusedObsSet: Option[ObsIdSet]  = focused.obsSet
+  val calibrationObservations: Set[Observation.Id] =
+    undoCtx.get.calibrationObservations
+  override val focusedObsSet: Option[ObsIdSet]     = focused.obsSet
 
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
@@ -176,7 +179,7 @@ object AsterismGroupObsList:
             selectObsOrSummary(_).toAsync,
             ToastCtx[IO].showToast(_)
           )
-          .set(undoCtx)(ObsSummary.scienceTargetIds.replace(targetIds)(obs).some)
+          .set(undoCtx)(Observation.scienceTargetIds.replace(targetIds)(obs).some)
           .toAsync
       }
       .switching(adding.async, AddingTargetOrObs(_))
@@ -186,7 +189,7 @@ object AsterismGroupObsList:
     .useContext(AppContext.ctx)
     .useState(Dragging(false))
     .useStateView(AddingTargetOrObs(false))
-    .useEffectOnMountBy { (props, ctx, _, _) =>
+    .useEffectOnMountBy: (props, ctx, _, _) =>
       val programSummaries = props.programSummaries.get
       val asterismGroups   = programSummaries.asterismGroups
       val expandedIds      = props.expandedIds
@@ -222,13 +225,21 @@ object AsterismGroupObsList:
         _ <- expandSelected
         _ <- cleanupExpandedIds
       } yield ()
-    }
-    .render { (props, ctx, dragging, addingTargetOrObs) =>
+    .render: (props, ctx, dragging, addingTargetOrObs) =>
       import ctx.given
 
-      val observations     = props.programSummaries.get.observations
-      val asterismGroups   = props.programSummaries.get.asterismGroups.map(AsterismGroup.fromTuple)
-      val targetWithObsMap = props.programSummaries.get.targetsWithObs
+      val observations: ObservationList                         =
+        props.programSummaries.get.observations
+      val asterismGroups: List[AsterismGroup]                   =
+        props.programSummaries.get.asterismGroups
+          .map(AsterismGroup.fromTuple)
+          .map: asterismGroup =>
+            (asterismGroup.obsIds -- props.calibrationObservations).map: filteredObsIds =>
+              AsterismGroup(filteredObsIds, asterismGroup.targetIds)
+          .toList
+          .flattenOption
+      val targetWithObsMap: SortedMap[Target.Id, TargetWithObs] =
+        props.programSummaries.get.targetsWithObs
 
       // first look to see if something is focused in the tree, else see if something is focused in the summary
       val selectedTargetIds: SortedSet[Target.Id] =
@@ -312,9 +323,10 @@ object AsterismGroupObsList:
           )
           .withFixedWidth()
 
-        Droppable(ObsIdSet.fromString.reverseGet(obsIds),
-                  renderClone = renderClone,
-                  isDropDisabled = props.readonly
+        Droppable(
+          ObsIdSet.fromString.reverseGet(obsIds),
+          renderClone = renderClone,
+          isDropDisabled = props.readonly
         ) { case (provided, snapshot) =>
           val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
             icon,
@@ -458,4 +470,3 @@ object AsterismGroupObsList:
           )
         )
       }
-    }
