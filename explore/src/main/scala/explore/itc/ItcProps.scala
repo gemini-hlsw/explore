@@ -19,12 +19,12 @@ import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
+import explore.model.reusability.given
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.GmosSpectroscopyOverrides
 import explore.modes.InstrumentOverrides
 import explore.modes.InstrumentRow
-import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessValue
@@ -35,6 +35,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.brightestProfileAt
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
+import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
 
@@ -150,4 +151,15 @@ case class ItcProps(
     action.getOrElse(orElse)
 
 object ItcProps:
-  given Reusability[ItcProps] = Reusability.byEq
+  given Reusability[ItcProps] = Reusability.by(p =>
+    (p.observation.scienceTargetIds.toList,
+     p.observation.constraints,
+     p.observation.scienceRequirements,
+     p.observation.observingMode,
+     p.observation.wavelength,
+     p.remoteExposureTime,
+     p.selectedConfig,
+     p.at,
+     p.modeOverrides
+    )
+  )

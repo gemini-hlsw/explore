@@ -44,6 +44,7 @@ object ItcPanelTitle:
       val selectedResult: Pot[ItcChartResult] =
         Pot
           .fromOption(props.selectedTarget.get)
+          .filterNot(_ => props.itcLoading.value)
           .flatMap(t => props.itcChartResults.getOrElse(t, pendingChart))
 
       val selectedTarget = props.selectedTarget.get

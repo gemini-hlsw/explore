@@ -11,6 +11,7 @@ import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
+import explore.modes.InstrumentOverrides
 import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
 import explore.utils.OdbRestClient
@@ -126,3 +127,4 @@ object reusability:
   given Reusability[PartnerSplit]                     = Reusability.byEq
   given Reusability[CallForProposal]                  = Reusability.byEq
   given Reusability[CategoryAllocationList]           = Reusability.byEq
+  given Reusability[InstrumentOverrides]              = Reusability.byEq

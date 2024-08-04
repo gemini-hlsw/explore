@@ -77,7 +77,7 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id
   def obsId: Observation.Id
   def observingMode: Aligner[T, Input]
-  def spectroscopyRequirements: ScienceRequirements.Spectroscopy
+  def spectroscopyRequirements: View[ScienceRequirements.Spectroscopy]
   def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
   def selectedConfig: View[Option[BasicConfigAndItc]]
@@ -96,7 +96,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ReadMode: Enumerated: Display,
   Gain: Enumerated: Display,
   Roi: Enumerated: Display
-] {
+] extends ConfigurationFormats {
   protected type AA = Aligner[T, Input]
 
   @inline protected def isCustomized(aligner: AA): Boolean = aligner.get.isCustomized
@@ -396,11 +396,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       // filter the spectroscopy matrix by the requirements that don't get overridden
       // by the advanced config (wavelength, for example).
       .useMemoBy((props, _) =>
-        (props.spectroscopyRequirements.focalPlane,
-         props.spectroscopyRequirements.capability,
-         props.spectroscopyRequirements.focalPlaneAngle,
-         props.spectroscopyRequirements.resolution,
-         props.spectroscopyRequirements.wavelengthCoverage,
+        (props.spectroscopyRequirements.get.focalPlane,
+         props.spectroscopyRequirements.get.capability,
+         props.spectroscopyRequirements.get.focalPlaneAngle,
+         props.spectroscopyRequirements.get.resolution,
+         props.spectroscopyRequirements.get.wavelengthCoverage,
          props.confMatrix.matrix.length
         )
       ) { (props, _) =>
@@ -418,7 +418,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       .useMemoBy { (props, ctx, rows) =>
         import ctx.given
 
-        (props.spectroscopyRequirements.wavelength,
+        (props.spectroscopyRequirements.get.wavelength,
          rows,
          centralWavelength(props.observingMode).get,
          grating(props.observingMode).get,
@@ -444,13 +444,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         // val exposureTimeView: Option[View[NonNegDuration]] =
         //   exposureModeView
         //     .mapValue((v: View[ExposureTimeMode]) => v.zoom(ExposureTimeMode.exposureTime).asView)
-        //     .flatten
-
-        // val signalToNoiseView: Option[View[PosBigDecimal]] =
-        //   exposureModeView
-        //     .mapValue((v: View[ExposureTimeMode]) =>
-        //       v.zoom(ExposureTimeMode.signalToNoiseValue).asView
-        //     )
         //     .flatten
 
         val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
@@ -526,35 +519,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val invalidateITC: Callback =
           Callback.empty
 
-        // val originalSignalToNoiseText =
-        //   props.spectroscopyRequirements.signalToNoise.fold("None")(sn =>
-        //     s"S/N ${InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)}"
-        //   )
-
-        // def onModeMod(modType: Option[ExposureTimeModeType]): Callback = {
-        //   val optITC: Option[OdbItcResult.Success] = props.potITC.get.toOption.flatten
-        //   val oetm                                 = modType.map {
-        //     case ExposureTimeModeType.SignalToNoise =>
-        //       val sn: PosBigDecimal = signalToNoiseView
-        //         .map(_.get)
-        //         .orElse(props.spectroscopyRequirements.signalToNoise)
-        //         .orElse(optITC.map(_.signalToNoise))
-        //         .getOrElse(BigDecimal(100).refined)
-        //       ExposureTimeMode.SignalToNoise(sn)
-        //     case ExposureTimeModeType.FixedExposure =>
-        //       val time  = exposureTimeView
-        //         .map(_.get)
-        //         .orElse(optITC.map(_.exposureTime))
-        //         .getOrElse(zeroDuration)
-        //       val count = exposureCountView
-        //         .map(_.get)
-        //         .orElse(optITC.map(_.exposures))
-        //         .getOrElse(NonNegInt.unsafeFrom(0))
-        //       ExposureTimeMode.FixedExposure(count, time)
-        //   }
-        //   exposureModeView.set(oetm) >> invalidateITC
-        // }
-
         <.div(
           ExploreStyles.AdvancedConfigurationGrid
         )(
@@ -611,7 +575,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               originalValue = initialCentralWavelength,
               disabled = disableSimpleEdit
             ),
-            dithersControl(props.sequenceChanged)
+            dithersControl(props.sequenceChanged),
+            SignalToNoiseAt(props.spectroscopyRequirements, false)
             // FormLabel(htmlFor = "exposureMode".refined)(
             //   "Exposure Mode",
             //   HelpIcon("configuration/exposure-mode.md".refined)
@@ -832,7 +797,7 @@ object AdvancedConfigurationPanel {
     programId:                Program.Id,
     obsId:                    Observation.Id,
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
-    spectroscopyRequirements: ScienceRequirements.Spectroscopy,
+    spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]],
@@ -1033,7 +998,7 @@ object AdvancedConfigurationPanel {
     programId:                Program.Id,
     obsId:                    Observation.Id,
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
-    spectroscopyRequirements: ScienceRequirements.Spectroscopy,
+    spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]],

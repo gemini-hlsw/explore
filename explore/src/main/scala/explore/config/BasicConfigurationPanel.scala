@@ -8,8 +8,6 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
-import explore.common.ScienceQueries
-import explore.common.ScienceQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
@@ -20,7 +18,6 @@ import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
-import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceMode
@@ -34,19 +31,18 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import monocle.Iso
 
 case class BasicConfigurationPanel(
-  userId:          Option[User.Id],
-  obsId:           Observation.Id,
-  requirementsCtx: UndoSetter[ScienceRequirements],
-  selectedConfig:  View[Option[BasicConfigAndItc]],
-  constraints:     ConstraintSet,
-  itcTargets:      List[ItcTarget],
-  baseCoordinates: Option[CoordinatesAtVizTime],
-  createConfig:    IO[Unit],
-  confMatrix:      SpectroscopyModesMatrix,
-  readonly:        Boolean
+  userId:           Option[User.Id],
+  obsId:            Observation.Id,
+  spectroscopyView: ViewOpt[Spectroscopy],
+  selectedConfig:   View[Option[BasicConfigAndItc]],
+  constraints:      ConstraintSet,
+  itcTargets:       List[ItcTarget],
+  baseCoordinates:  Option[CoordinatesAtVizTime],
+  createConfig:     IO[Unit],
+  confMatrix:       SpectroscopyModesMatrix,
+  readonly:         Boolean
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
 private object BasicConfigurationPanel:
@@ -64,26 +60,12 @@ private object BasicConfigurationPanel:
       .render { (props, ctx, mode, imaging, creating) =>
         import ctx.given
 
-        val requirementsViewSet: ScienceRequirementsUndoView =
-          ScienceRequirementsUndoView(props.obsId, props.requirementsCtx)
-
-        val requirementsView: View[ScienceRequirements] =
-          requirementsViewSet(
-            Iso.id.asLens,
-            _ match
-              case s @ ScienceRequirements.Spectroscopy(_, _, _, _, _, focalPlane, _, _) =>
-                UpdateScienceRequirements.spectroscopyRequirements(s)
-          )
-
-        val spectroscopyView: ViewOpt[Spectroscopy] =
-          requirementsView.zoom(ScienceRequirements.spectroscopy)
-
         val canAccept: Boolean =
           props.selectedConfig.get.flatMap(_.itcResult).flatMap(_.toOption).exists(_.isSuccess)
 
         // wavelength has to be handled special because you can't select a row without a wavelength.
         val message: String =
-          spectroscopyView.get
+          props.spectroscopyView.get
             .map(_.wavelength)
             .fold("Wavelength is required for creating a configuration.")(_ =>
               props.selectedConfig.get match {
@@ -112,12 +94,12 @@ private object BasicConfigurationPanel:
             //                      value = mode,
             //                      disabled = props.readonly
             // ),
-            spectroscopyView.mapValue(v => SpectroscopyConfigurationPanel(v, props.readonly))
+            props.spectroscopyView.mapValue(v => SpectroscopyConfigurationPanel(v, props.readonly))
             // TODO Pending reinstate
             // ImagingConfigurationPanel(imaging)
             //   .unless(isSpectroscopy)
           ),
-          spectroscopyView.mapValue(spectroscopy =>
+          props.spectroscopyView.mapValue(spectroscopy =>
             SpectroscopyModesTable(
               props.userId,
               props.selectedConfig,
@@ -137,6 +119,6 @@ private object BasicConfigurationPanel:
               severity = Button.Severity.Secondary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
-          ).when(spectroscopyView.get.isDefined && !props.readonly)
+          ).when(props.spectroscopyView.get.isDefined && !props.readonly)
         )
       }
