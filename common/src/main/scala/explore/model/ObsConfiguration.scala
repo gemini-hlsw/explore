@@ -16,6 +16,9 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
+import org.typelevel.cats.time.instances.duration.*
+
+import java.time.Duration
 
 case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],
@@ -24,7 +27,8 @@ case class ObsConfiguration(
   wavelength:         Option[Wavelength],
   scienceOffsets:     Option[NonEmptyList[Offset]],
   acquisitionOffsets: Option[NonEmptyList[Offset]],
-  averagePA:          Option[AveragePABasis]
+  averagePA:          Option[AveragePABasis],
+  obsDuration:        Option[Duration]
 ) derives Eq:
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization

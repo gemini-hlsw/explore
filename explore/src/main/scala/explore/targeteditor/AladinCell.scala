@@ -69,13 +69,13 @@ case class AladinCell(
     for {
       conf          <- obsConf
       configuration <- conf.configuration
+      obsDuration   <- conf.obsDuration
       paConstraint  <- conf.posAngleConstraint
       angles        <-
-        paConstraint.anglesToTestAt(configuration.siteFor,
-                                    asterism.baseTracking,
-                                    vizTime,
-                                    Duration.ofHours(1)
-        )
+        // For visual mode we want to default to PA 0 if needed e.g. average parallactic not available
+        paConstraint
+          .anglesToTestAt(configuration.siteFor, asterism.baseTracking, vizTime, obsDuration)
+          .orElse(NonEmptyList.one(Angle.Angle0).some)
       // We sort the angles or we could end up in a loop where the angles are tested back and forth
       // This is rare but can happen if each angle finds an equivalent guide star
     } yield angles.sorted(using Angle.AngleOrder)
@@ -97,9 +97,13 @@ case class AladinCell(
         off <- offsets
       } yield AgsPosition(pa, off)
 
-  def canRunAGS: Boolean = obsConf.exists(o =>
-    o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined && positions.isDefined
-  )
+  def canRunITC: Boolean =
+    obsConf.exists { o =>
+      o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined && positions.isDefined
+    }
+
+  def modeSelected: Boolean =
+    obsConf.exists(_.configuration.isDefined)
 
   def sciencePositionsAt(vizTime: Instant): List[Coordinates] =
     asterism.asList
@@ -487,7 +491,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                         agsResults.value.count(_.isUsable),
                         selectedGuideStar,
                         agsState.get,
-                        props.canRunAGS,
+                        props.modeSelected,
+                        props.canRunITC,
                         candidates.value.isDefined
                       )
                     )

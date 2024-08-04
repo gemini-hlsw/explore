@@ -14,7 +14,7 @@ import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB.Enums.EditType
-import lucuma.schemas.ObservationDB.Enums.EditType.Created
+import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit

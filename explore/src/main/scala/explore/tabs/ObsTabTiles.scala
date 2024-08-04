@@ -450,7 +450,8 @@ object ObsTabTiles:
                   .flatMap(_.wavelength),
                 sequenceOffsets.toOption.flatMap(_.science),
                 sequenceOffsets.toOption.flatMap(_.acquisition),
-                averagePA
+                averagePA,
+                pendingTime.map(_.toDuration)
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
