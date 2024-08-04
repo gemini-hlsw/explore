@@ -42,6 +42,9 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.common.ObsQueriesGQL
+import explore.common.ScienceQueries.ScienceRequirementsUndoView
+import explore.common.ScienceQueries.UpdateScienceRequirements
+import explore.model.ScienceRequirements.Spectroscopy
 
 case class ConfigurationPanel(
   userId:          Option[User.Id],
