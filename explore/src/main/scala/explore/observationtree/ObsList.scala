@@ -126,10 +126,7 @@ object ObsList:
           Tree.Id(node.value.id.fold(_.toString, _.toString)),
           node.value,
           draggable = !isCalibrationObs && !isSystemGroup,
-          // Setting `droppable` to false for groups will break the tree.
-          // We handle the case in `onDragDrop`. See https://github.com/primefaces/primereact/issues/6976.
-          droppable = !isCalibrationObs,
-          clazz = ExploreStyles.UndroppableNode.when_(isSystemGroup),
+          droppable = !isCalibrationObs && !isSystemGroup,
           children = node.children.map(createNode)
         )
 
@@ -214,12 +211,7 @@ object ObsList:
         val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
 
         def onDragDrop(e: Tree.DragDropEvent[GroupTree.Value]): Callback =
-          // If PrimeReact fixes https://github.com/primefaces/primereact/issues/6976,
-          // then we can remove the 2nd check and set `droppable` to false for groups.
-          if (
-            e.dropNode
-              .exists(node => node.data.elem.isLeft || node.data.elem.toOption.exists(_.system))
-          )
+          if (e.dropNode.exists(node => node.data.elem.isLeft))
             Callback.empty
           else {
             val dragNode: ServerIndexed[Either[Observation.Id, Group]] = e.dragNode.data
