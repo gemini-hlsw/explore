@@ -41,6 +41,16 @@ object ItcMessage extends ItcPicklers:
   ) extends Request:
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
 
+  case class QuerySingle(
+    wavelength:      CentralWavelength,
+    signalToNoise:   SignalToNoise,
+    constraints:     ConstraintSet,
+    targets:         ItcTarget,
+    mode:            InstrumentRow,
+    signalToNoiseAt: Wavelength
+  ) extends Request:
+    type ResponseType = EitherNec[ItcQueryProblems, ItcResult]
+
   case class GraphQuery(
     wavelength:      CentralWavelength,
     exposureTime:    TimeSpan,
@@ -53,6 +63,8 @@ object ItcMessage extends ItcPicklers:
     type ResponseType = Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]
 
   private given Pickler[Query] = generatePickler
+
+  private given Pickler[QuerySingle] = generatePickler
 
   private given Pickler[GraphQuery] = generatePickler
 

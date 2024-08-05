@@ -142,9 +142,7 @@ object ObsQueriesGQL:
     val document = """
       subscription($input: ObservationEditInput!) {
         observationEdit(input: $input) {
-          value {
-            id
-          }
+          observationId
         }
       }
     """

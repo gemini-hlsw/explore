@@ -5,9 +5,12 @@ package explore.itc
 
 import boopickle.Default.eitherPickler
 import boopickle.Default.mapPickler
+import boopickle.DefaultBasic.*
 import cats.Eq
 import cats.Order.given
 import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
+import cats.data.EitherNec
 import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
@@ -25,13 +28,17 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.GmosSpectroscopyOverrides
 import explore.modes.InstrumentOverrides
 import explore.modes.InstrumentRow
+import explore.model.reusability.given
+import lucuma.ui.reusability.given
 import japgolly.scalajs.react.Reusability
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Wavelength
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.dimensional.Units
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
+import lucuma.core.util.TimeSpan
 import lucuma.core.model.brightestProfileAt
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
@@ -40,6 +47,9 @@ import queries.schemas.itc.syntax.*
 import workers.WorkerClient
 
 import scala.collection.immutable.SortedMap
+import explore.model.ScienceRequirements.Spectroscopy
+import explore.modes.SpectroscopyModeRow
+import lucuma.refined.*
 
 case class ItcProps(
   observation:        Observation,
@@ -74,6 +84,9 @@ case class ItcProps(
 
   val signalToNoiseAt: Option[Wavelength] =
     spectroscopyRequirements.flatMap(_.signalToNoiseAt)
+
+  val signalToNoise: Option[SignalToNoise] =
+    spectroscopyRequirements.flatMap(_.signalToNoise)
 
   private val wavelength: Option[CentralWavelength] = finalConfig.map {
     case BasicConfigAndItc(c: BasicConfiguration.GmosNorthLongSlit, _) => c.centralWavelength
@@ -120,6 +133,42 @@ case class ItcProps(
         b <- t.brightestProfileAt(_.profile)(w.value)
       yield b
     r.orElse(t.headOption)
+
+  def requestTime(
+    onComplete:  EitherNec[ItcQueryProblems, ItcResult] => IO[Unit],
+    // beforeStart: IO[Unit]
+  )(using WorkerClient[IO, ItcMessage.Request]) =
+    val action: Option[IO[Unit]] =
+      for {
+        w    <- wavelength
+        s    <- signalToNoise
+        at   <- signalToNoiseAt
+        t    <- itcTargets
+        mode <- instrumentRow
+      } yield //beforeStart *>
+        ItcClient[IO]
+          .requestSingle(
+            ItcMessage.QuerySingle(w, s, constraints, t.head, mode, at)
+            // ItcMessage.GraphQuery(w, TimeSpan.Zero, 1.refined, at, null, null, null)
+          )
+          // .flatMap { (a: Option[Either[ItcQueryProblems, ItcResult]]) =>
+          // .flatMap { (a: Option[Int]) =>
+          // val u      = ItcMessage.QuerySingle(w, s, constraints, t.head, mode, at)
+          // val v: Int = ItcMessage.QuerySingle.ResponseType
+          // ItcMessage.GraphQuery(w, TimeSpan.Zero, 1.refined, at, null, null, null)
+          .flatTap(IO.println)
+          .flatMap(
+            _.fold(
+              onComplete(
+                NonEmptyChain
+                  .one(ItcQueryProblems.GenericError("No response from ITC server"))
+                  .asLeft[ItcResult]
+              )
+            )(onComplete)
+          )
+    action.getOrElse(IO.unit)
+    // IO.unit
+    // }
 
   def requestChart(
     onComplete:  Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => IO[Unit],

@@ -33,6 +33,7 @@ import lucuma.itc.client.OptimizedChartResult
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
+import explore.modes.InstrumentOverrides
 
 /**
  * Reusability instances for model classes

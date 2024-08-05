@@ -29,6 +29,7 @@ import lucuma.itc.client.SpectroscopyIntegrationTimeInput
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
+import lucuma.schemas.model.CentralWavelength
 
 object ITCRequests:
   val cacheVersion = CacheVersion(12)
@@ -61,6 +62,23 @@ object ITCRequests:
     }
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
+    wavelength:      CentralWavelength,
+    signalToNoise:   SignalToNoise,
+    constraints:     ConstraintSet,
+    targets:         ItcTarget,
+    mode:            InstrumentRow,
+    signalToNoiseAt: Wavelength,
+    cache:           Cache[F],
+    callback:        EitherNec[ItcQueryProblems, ItcResult] => F[Unit]
+  )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
+    val param =
+      ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, mode)
+    baseQueryItc(List(param),
+                 cache,
+                 _.headOption.map((_, r) => callback(r)).getOrElse(Applicative[F].unit)
+    )
+
+  def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      Wavelength,
     signalToNoise:   SignalToNoise,
     constraints:     ConstraintSet,
@@ -69,6 +87,24 @@ object ITCRequests:
     signalToNoiseAt: Wavelength,
     cache:           Cache[F],
     callback:        Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
+  )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
+    val itcRowsParams = modes
+      .map(x => (x.intervalCenter(wavelength), x.instrument))
+      // Only handle known modes
+      .collect {
+        case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>
+          ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, m)
+        case (Some(wavelength), m: GmosSouthSpectroscopyRow) =>
+          ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, m)
+      }
+
+    baseQueryItc(itcRowsParams, cache, callback)
+  }
+
+  private def baseQueryItc[F[_]: Concurrent: Parallel: Logger](
+    itcParams: List[ItcRequestParams],
+    cache:     Cache[F],
+    callback:  Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
     def itcResults(r: IntegrationTimeResult): EitherNec[ItcQueryProblems, ItcResult] =
       // Convert to usable types
@@ -122,19 +158,9 @@ object ITCRequests:
           })
       )
 
-    val itcRowsParams = modes
-      .map(x => (x.intervalCenter(wavelength), x.instrument))
-      // Only handle known modes
-      .collect {
-        case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>
-          ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, m)
-        case (Some(wavelength), m: GmosSouthSpectroscopyRow) =>
-          ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, targets, m)
-      }
-
     parTraverseN(
       Constants.MaxConcurrentItcRequests.toLong,
-      itcRowsParams.reverse
+      itcParams.reverse
     ) { params =>
       // ITC supports sending many modes at once, but sending them one by one
       // maximizes cache hits

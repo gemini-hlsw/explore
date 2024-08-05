@@ -150,15 +150,16 @@ object ObsTabTiles:
   )
 
   private def expTime(
-    selectedConfig: Option[BasicConfigAndItc],
-    odbItc:         Option[OdbItcResult.Success]
+    selectedConfig:        Option[BasicConfigAndItc],
+    odbItc:                Option[OdbItcResult.Success],
+    locallyCalculatedTime: Option[ItcExposureTime]
   ): Option[ItcExposureTime] =
     val tableItc = for {
       conf <- selectedConfig
       res  <- conf.itcResult.flatMap(_.toOption)
       itc  <- res.toItcExposureTime
     } yield itc
-    odbItc.map(_.toItcExposureTime).orElse(tableItc)
+    locallyCalculatedTime.orElse(odbItc.map(_.toItcExposureTime)).orElse(tableItc)
 
   private val component =
     ScalaFnComponent
@@ -209,8 +210,10 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateWithReuseBy: (props, _, odbItc, _, _, _, selectedConfig) =>
-        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
+      // locally calculated exp time
+      .useStateView(none[ItcExposureTime])
+      .useStateWithReuseBy: (props, _, odbItc, _, _, _, selectedConfig, locallyCalculatedTime) =>
+        val time = expTime(selectedConfig.get, odbItc.toOption.flatten, locallyCalculatedTime.get)
 
         itcQueryProps(
           props.observation.get,
@@ -222,50 +225,93 @@ object ObsTabTiles:
       .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
       // itc loading
       .useStateWithReuse(LoadingState.Done)
-      .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
-        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
+      // React to changes that require an itc recalculation
+      .useEffectWithDepsBy {
+        (props, _, odbItc, _, _, _, selectedConfig, locallyCalculatedTime, _, _, _) =>
+          val time = expTime(selectedConfig.get, odbItc.toOption.flatten, locallyCalculatedTime.get)
 
-        itcQueryProps(
-          props.observation.get,
-          time,
-          selectedConfig.get,
-          props.allTargets
-        )
-      } { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
-        import ctx.given
+          itcQueryProps(
+            props.observation.get,
+            time,
+            selectedConfig.get,
+            props.allTargets
+          )
+      } {
+        (
+          props,
+          ctx,
+          _,
+          _,
+          _,
+          _,
+          selectedConfig,
+          locallyCalculatedTime,
+          oldItcProps,
+          charts,
+          loading
+        ) => itcProps =>
+          import ctx.given
+          // println(
+          //   "Request chart " + itcProps.observation.scienceRequirements + " " + itcProps.remoteExposureTime
+          // )
 
-        oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
-          itcProps
-            .requestChart(
-              m => {
-                val r = m.map {
-                  case (k, Left(e))  =>
-                    k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcChartResult])
-                  case (k, Right(e)) =>
-                    k -> (Pot.Ready(e): Pot[ItcChartResult])
-                }.toMap
-                charts
-                  .setStateAsync(r) *> loading.setState(LoadingState.Done).value.toAsync
-              },
-              (charts.setState(
-                itcProps.targets
-                  .map(t =>
-                    t -> Pot.error(
-                      new RuntimeException("Not enough information to calculate the ITC graph")
+          oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
+            // (IO.println("Recalculate time locally") *> locallyCalculatedTime.set(none).to[IO] *>
+            //   itcProps
+            //     // .requestTime(a => IO.println(s"Ready time $a"), IO.unit)
+            //     .requestTime {
+            //       case Left(e)  => IO.println(s"time error $e") *> locallyCalculatedTime.set(none).to[IO]
+            //       case Right(e) => IO.println("done time") *> locallyCalculatedTime.set(e.toItcExposureTime).to[IO]
+            //     }).whenA(itcProps.isExecutable).runAsyncAndForget *>
+            itcProps
+              .requestChart(
+                m => {
+                  val r = m.map {
+                    case (k, Left(e))  =>
+                      k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcChartResult])
+                    case (k, Right(e)) =>
+                      k -> (Pot.Ready(e): Pot[ItcChartResult])
+                  }.toMap
+                  IO.println(s"Done loading ${itcProps.observation.scienceRequirements}") *>
+                    charts
+                      .setStateAsync(r) *> loading.setState(LoadingState.Done).value.toAsync
+                },
+                (charts.setState(
+                  itcProps.targets
+                    .map(t =>
+                      t -> Pot.error(
+                        new RuntimeException("Not enough information to calculate the ITC graph")
+                      )
                     )
-                  )
-                  .toMap
-              ) *> loading.setState(LoadingState.Done)).toAsync,
-              loading.setState(LoadingState.Loading).value.toAsync
-            )
-            .whenA(itcProps.isExecutable)
-            .runAsyncAndForget
+                    .toMap
+                ) *> loading.setState(LoadingState.Done)).toAsync,
+                IO.println(s"Loading ${itcProps.observation.scienceRequirements}") *> loading
+                  .setState(LoadingState.Loading)
+                  .value
+                  .toAsync
+              )
+              .whenA(itcProps.isExecutable)
+              .runAsyncAndForget
       }
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _, _, _, _) =>
+      // ITC selected target. Here to be shared by the ITC tile body and title
+      .useStateView(none[ItcTarget])
+      // Reset the selected target if itcProps changes
+      .useEffectWithDepsBy((_, _, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value):
+        (_, _, _, _, _, _, _, _, _, _, _, selectedTarget) =>
+          itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
+      // selected attachment
+      .useStateView(none[ObsAtt.Id])
+      // Signal that the sequence has changed
+      .useStateView(().ready)
+      .useStateView(ChartSelector.Closed)
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        p.observation.model.get.visualizationTime
+      ): (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       .render:
         (
@@ -276,6 +322,7 @@ object ObsTabTiles:
           agsState,
           selectedPA,
           selectedConfig,
+          _,
           itcProps,
           itcChartResults,
           itcLoading,

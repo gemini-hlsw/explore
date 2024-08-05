@@ -47,12 +47,12 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
       _      <- Resource.eval(initLatch.get) // Ensure server is initialized
       id     <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId(_))
       _      <- Resource.make(
-                  Logger[F].debug(s">>> Starting request with id [$id]") >>
+                  Logger[F].info(s">>> Starting request with id [$id]") >>
                     worker.postTransferable(
                       asTypedArray[FromClient](FromClient.Start(id, Pickled(asBytes[R](requestMessage))))
                     )
                 )(_ =>
-                  Logger[F].debug(s">>> Ending request with id [$id]") >>
+                  Logger[F].info(s">>> Ending request with id [$id]") >>
                     worker.postTransferable(
                       asTypedArray[FromClient](FromClient.End(id))
                     )
@@ -68,8 +68,11 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
           none
         case FromServer.Error(mid, error) if mid === id  =>
           error.asLeft.some
+        case a => 
+          println(s" else $a")
+          none
       }
-      .evalTap(msg => Logger[F].debug(s"<<< Received msg from server with id [$id]: [$msg]"))
+      .evalTap(msg => Logger[F].info(s"<<< Received msg from server with id [$id]: [$msg]"))
       .unNoneTerminate
       .rethrow
 
