@@ -10,8 +10,8 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.CategoryAllocationList
 import explore.model.ExploreGridLayouts
-import explore.model.PartnerAllocationList
 import explore.model.ProgramTabTileIds
 import explore.model.ProgramTimes
 import explore.model.UserPreferences
@@ -34,7 +34,7 @@ case class ProgramTabContents(
   programId:       Program.Id,
   userVault:       Option[UserVault],
   programTimes:    Pot[ProgramTimes],
-  allocations:     PartnerAllocationList,
+  allocations:     CategoryAllocationList,
   userPreferences: UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 

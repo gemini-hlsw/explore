@@ -13,7 +13,7 @@ import lucuma.schemas.odb.TimeSpanSubquery
 object AllocationSubquery extends GraphQLSubquery.Typed[ObservationDB, Allocation]("Allocation"):
   override val subquery: String = s"""
     {
-      partner
+      category
       scienceBand
       duration $TimeSpanSubquery
     }

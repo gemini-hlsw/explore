@@ -21,7 +21,7 @@ case class ProgramDetails(
   users:          List[ProgramUserWithRole],
   invitations:    List[CoIInvitation],
   reference:      Option[ProgramReference],
-  allocations:    PartnerAllocationList
+  allocations:    CategoryAllocationList
 ) derives Eq:
   val allUsers: List[ProgramUserWithRole] = pi.fold(users)(_ :: users)
 
@@ -45,7 +45,7 @@ object ProgramDetails:
       in <- c.get[List[CoIInvitation]]("userInvitations")
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
-      as <- c.downField("allocations").as[PartnerAllocationList]
+      as <- c.downField("allocations").as[CategoryAllocationList]
     } yield ProgramDetails(
       t,
       p,

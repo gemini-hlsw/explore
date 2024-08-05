@@ -6,14 +6,14 @@ package explore.programs
 import cats.syntax.all.*
 import crystal.Pot
 import explore.components.ui.ExploreStyles
-import explore.model.PartnerAllocationList
+import explore.model.CategoryAllocationList
 import explore.model.ProgramTimes
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
 
 case class ProgramDetailsTile(
-  allocations:  PartnerAllocationList,
+  allocations:  CategoryAllocationList,
   programTimes: Pot[ProgramTimes]
 ) extends ReactFnProps(ProgramDetailsTile.component)
 
