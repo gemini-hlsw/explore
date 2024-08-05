@@ -27,6 +27,7 @@ case class AgsOverlay(
   maxIndex:            Int,
   selectedGuideStar:   Option[AgsAnalysis],
   agsState:            AgsState,
+  modeAvailable:       Boolean,
   itcAvailable:        Boolean,
   candidatesAvailable: Boolean
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
@@ -122,7 +123,8 @@ object AgsOverlay {
               .withSize(IconSize.LG)
               .unless(props.canCalculate),
             <.span(Constants.NoGuideStarMessage).when(props.canCalculate),
-            <.span(Constants.MissingITC).unless(props.itcAvailable),
+            <.span(Constants.MissingITC).when(!props.itcAvailable && props.modeAvailable),
+            <.span(Constants.MissingMode).when(!props.modeAvailable),
             <.span(Constants.MissingCandidates).unless(props.candidatesAvailable)
           )
         }

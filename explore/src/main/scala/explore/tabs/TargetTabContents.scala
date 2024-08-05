@@ -316,7 +316,7 @@ object TargetTabContents extends TwoPanels:
           props.obsAndTargets,
           configuration,
           vizTimeView,
-          ObsConfiguration(configuration, none, constraints, wavelength, none, none, none),
+          ObsConfiguration(configuration, none, constraints, wavelength, none, none, none, none),
           props.focused.target,
           setCurrentTarget(idsToEdit.some),
           onCloneTarget4Asterism,

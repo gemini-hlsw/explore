@@ -431,7 +431,7 @@ $brightness: var(--aladin-image-brightness);
 
       display: flex;
       gap: 0.1em;
-      align-items: baselinee;
+      align-items: baseline;
 
       .ags-navigation {
         margin-left: 0.3em;
@@ -468,6 +468,8 @@ $brightness: var(--aladin-image-brightness);
       /* stylelint-disable-next-line selector-class-pattern */
       .svg-inline--fa {
         margin-right: 0.3em;
+        align-self: center;
+        padding-top: 0;
       }
     }
 
