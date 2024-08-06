@@ -15,12 +15,15 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.DefaultErrorPolicy
 import explore.common.Aligner
+import explore.common.ScienceQueries.ScienceRequirementsUndoView
+import explore.common.ScienceQueries.UpdateScienceRequirements
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
 import explore.model.Observation
 import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
@@ -167,6 +170,20 @@ object ConfigurationPanel:
           )
         }
 
+        val requirementsViewSet: ScienceRequirementsUndoView =
+          ScienceRequirementsUndoView(props.obsId, props.requirements)
+
+        val requirementsView: View[ScienceRequirements] =
+          requirementsViewSet(
+            Iso.id.asLens,
+            _ match
+              case s @ ScienceRequirements.Spectroscopy(_, _, _, _, _, focalPlane, _, _) =>
+                UpdateScienceRequirements.spectroscopyRequirements(s)
+          )
+
+        val spectroscopyView: ViewOpt[Spectroscopy] =
+          requirementsView.zoom(ScienceRequirements.spectroscopy)
+
         React.Fragment(
           <.div(ExploreStyles.ConfigurationGrid)(
             props.obsConf.agsState
@@ -187,7 +204,7 @@ object ConfigurationPanel:
                   BasicConfigurationPanel(
                     props.userId,
                     props.obsId,
-                    props.requirements,
+                    spectroscopyView,
                     props.selectedConfig,
                     constraints,
                     props.itcTargets,
@@ -202,42 +219,38 @@ object ConfigurationPanel:
                   )
                 )
             else
-              ScienceRequirements.spectroscopy
-                .getOption(props.requirements.get)
-                .map(spectroscopyRequirements =>
-                  React.Fragment(
-                    // Gmos North Long Slit
-                    optNorthAligner.map(northAligner =>
-                      AdvancedConfigurationPanel
-                        .GmosNorthLongSlit(
-                          props.programId,
-                          props.obsId,
-                          northAligner,
-                          spectroscopyRequirements,
-                          deleteConfiguration,
-                          props.modes,
-                          props.selectedConfig,
-                          props.sequenceChanged,
-                          props.readonly
-                        )
-                    ),
-                    // Gmos South Long Slit
-                    optSouthAligner.map(southAligner =>
-                      AdvancedConfigurationPanel
-                        .GmosSouthLongSlit(
-                          props.programId,
-                          props.obsId,
-                          southAligner,
-                          spectroscopyRequirements,
-                          deleteConfiguration,
-                          props.modes,
-                          props.selectedConfig,
-                          props.sequenceChanged,
-                          props.readonly
-                        )
+              React.Fragment(
+                // Gmos North Long Slit
+                (optNorthAligner, spectroscopyView.asView).mapN((northAligner, specView) =>
+                  AdvancedConfigurationPanel
+                    .GmosNorthLongSlit(
+                      props.programId,
+                      props.obsId,
+                      northAligner,
+                      specView,
+                      deleteConfiguration,
+                      props.modes,
+                      props.selectedConfig,
+                      props.sequenceChanged,
+                      props.readonly
                     )
-                  )
+                ),
+                // Gmos South Long Slit
+                (optSouthAligner, spectroscopyView.asView).mapN((southAligner, specView) =>
+                  AdvancedConfigurationPanel
+                    .GmosSouthLongSlit(
+                      props.programId,
+                      props.obsId,
+                      southAligner,
+                      specView,
+                      deleteConfiguration,
+                      props.modes,
+                      props.selectedConfig,
+                      props.sequenceChanged,
+                      props.readonly
+                    )
                 )
+              )
           )
         )
 

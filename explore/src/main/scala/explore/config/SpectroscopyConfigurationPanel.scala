@@ -11,14 +11,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
-import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.display.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.FocalPlane
-import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.react.common.Css
@@ -38,17 +36,8 @@ case class SpectroscopyConfigurationPanel(
   readonly: Boolean
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
-trait ConfigurationFormats:
-  private val slitLengthBaseAuditor = ChangeAuditor
-    .fromInputValidWedge(ExploreModelValidators.decimalArcsecondsValidWedge)
-    .allow(s => s === "0" || s === "0.")
-  val slitLengthChangeAuditor       = slitLengthBaseAuditor
-    .decimal(2.refined)
-    .optional
-  val slitLengthFormat              = ExploreModelValidators.decimalArcsecondsValidWedge.optional
-
 object SpectroscopyConfigurationPanel extends ConfigurationFormats {
-  type Props = SpectroscopyConfigurationPanel
+  private type Props = SpectroscopyConfigurationPanel
 
   protected val component =
     ScalaFnComponent
@@ -67,25 +56,11 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
         )
 
         val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
-        val signalToNoise          = options.zoom(ScienceRequirements.Spectroscopy.signalToNoise)
-        val signalToNoiseAt        = options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseAt)
         val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
         val wavelengthDelta        = options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
         val focalPlaneAngle        = options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
         val spectroscopyCapability =
           options.zoom(ScienceRequirements.Spectroscopy.capability)
-
-        val wvMicroInput        = ExploreModelValidators.wavelengthValidWedge.optional
-        val wvcMicroInput       = ExploreModelValidators.wavelengthDeltaValidWedge.optional
-        val wvBaseAuditor       = ChangeAuditor
-          .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
-          .allow(s => s === "0" || s === "0.")
-        val wvChangeAuditor     = wvBaseAuditor
-          .decimal(3.refined)
-          .optional
-        val snAtWvChangeAuditor = wvBaseAuditor
-          .decimal(4.refined)
-          .optional
 
         ReactFragment(
           FormInputTextView[View, Option[Wavelength]](
@@ -113,33 +88,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          FormLabel("signal-to-noise".refined)(
-            "S / N",
-            HelpIcon("configuration/signal_to_noise.md".refined)
-          ),
-          <.div(
-            LucumaPrimeStyles.FormField |+| ExploreStyles.BasicConfigurationSNAt,
-            FormInputTextView(
-              id = "signal-to-noise".refined,
-              value = signalToNoise,
-              groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-              validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
-              postAddons = signalToNoise.get.fold(List(requiredForITC))(_ => Nil),
-              changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional,
-              disabled = p.readonly
-            ).withMods(^.autoComplete.off),
-            FormLabel("signal-to-noise-at".refined)("at"),
-            FormInputTextView(
-              id = "signal-to-noise-at".refined,
-              groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-              postAddons = signalToNoiseAt.get.fold(List(requiredForITC))(_ => Nil),
-              value = signalToNoiseAt,
-              units = "μm",
-              validFormat = wvMicroInput,
-              changeAuditor = snAtWvChangeAuditor,
-              disabled = p.readonly
-            ).clearable(^.autoComplete.off)
-          ),
+          SignalToNoiseAt(options, p.readonly),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,
