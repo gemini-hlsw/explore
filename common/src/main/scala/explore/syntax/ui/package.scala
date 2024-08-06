@@ -21,8 +21,10 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
+import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
+import lucuma.core.util.Enumerated
 import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
@@ -108,6 +110,10 @@ extension (partner: Partner)
       ^.alt := s"${partner.shortName} Flag",
       ExploreStyles.PartnerSplitFlag
     )
+
+extension (tac: TimeAccountingCategory)
+  def partner: Option[Partner]     = Enumerated[Partner].all.find(_.timeAccountingCategory === tac)
+  def renderFlag: Option[VdomNode] = partner.map(_.renderFlag)
 
 extension (vault: Option[UserVault])
   def userId: Option[User.Id] = vault.map(_.user).map(_.id)

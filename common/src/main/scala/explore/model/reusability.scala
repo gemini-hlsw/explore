@@ -125,4 +125,4 @@ object reusability:
   given Reusability[ElevationPlotOptions]             = Reusability.byEq
   given Reusability[PartnerSplit]                     = Reusability.byEq
   given Reusability[CallForProposal]                  = Reusability.byEq
-  given Reusability[PartnerAllocationList]            = Reusability.byEq
+  given Reusability[CategoryAllocationList]           = Reusability.byEq

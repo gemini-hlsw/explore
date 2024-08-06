@@ -3222,6 +3222,12 @@ a.explore-upgrade-link {
         &:first-child:not(:last-child) {
           font-weight: bold;
           border-right: 1px solid var(--site-border-color);
+          text-align: left;
+
+          div:has(.partner-split-flag) {
+            display: flex;
+            justify-content: space-between;
+          }
         }
 
         &:last-child:not(:first-child) {

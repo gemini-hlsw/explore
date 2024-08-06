@@ -5,15 +5,15 @@ package explore.programs
 
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
-import explore.model.PartnerAllocationList
-import explore.model.PartnerAllocations
+import explore.model.BandAllocations
+import explore.model.CategoryAllocationList
 import explore.model.display.given
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.Partner
 import lucuma.core.enums.ScienceBand
+import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
@@ -24,24 +24,24 @@ import lucuma.ui.components.TimeSpanView
 import lucuma.ui.format.TimeSpanFormatter
 import lucuma.ui.table.*
 
-case class TimeAwardTable(allocations: PartnerAllocationList)
+case class TimeAwardTable(allocations: CategoryAllocationList)
     extends ReactFnProps(TimeAwardTable.component)
 
 object TimeAwardTable:
   private type Props = TimeAwardTable
 
-  private case class Row(partner: Partner, allocations: PartnerAllocations):
-    lazy val partnerTotal: TimeSpan = allocations.value.values.toList.combineAll
+  private case class Row(category: TimeAccountingCategory, allocations: BandAllocations):
+    lazy val categoryTotal: TimeSpan = allocations.value.values.toList.combineAll
 
   private object Row:
-    def fromPartnerAllocationList(allocations: PartnerAllocationList): List[Row] =
+    def fromCategoryAllocationList(allocations: CategoryAllocationList): List[Row] =
       allocations.value.toList.map(Row(_, _))
 
   private case class TableMeta(totalByBand: Map[ScienceBand, TimeSpan]):
     lazy val grandTotal: TimeSpan = totalByBand.values.toList.combineAll
 
   private object TableMeta:
-    def fromPartnerAllocationList(allocations: PartnerAllocationList): TableMeta =
+    def fromCategoryAllocationList(allocations: CategoryAllocationList): TableMeta =
       TableMeta(
         totalByBand = Enumerated[ScienceBand].all
           .map: band =>
@@ -62,9 +62,9 @@ object TimeAwardTable:
   private val partnerColDef =
     ColDef(
       PartnerColId,
-      _.partner,
+      _.category,
       "Time Award",
-      cell = cell => <.span(cell.value.abbreviation, cell.value.renderFlag),
+      cell = cell => <.div(cell.value.description, cell.value.renderFlag),
       footer = _ => "Total"
     ).setSize(90.toPx)
 
@@ -84,7 +84,7 @@ object TimeAwardTable:
   private val totalColDef =
     ColDef(
       TotalColId,
-      _.partnerTotal,
+      _.categoryTotal,
       "Total",
       cell = cell => TimeSpanView(cell.value, TimeSpanFormatter.DecimalHours),
       footer = footer =>
@@ -101,13 +101,13 @@ object TimeAwardTable:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useMemoBy(props => props.allocations)(_ => Row.fromPartnerAllocationList)
+      .useMemoBy(props => props.allocations)(_ => Row.fromCategoryAllocationList)
       .useReactTableBy: (props, rows) =>
         TableOptions(
           columns,
           rows,
           getRowId = (row, _, _) => RowId(row._1.tag),
-          meta = TableMeta.fromPartnerAllocationList(props.allocations),
+          meta = TableMeta.fromCategoryAllocationList(props.allocations),
           enableSorting = false,
           enableColumnResizing = false
         )
