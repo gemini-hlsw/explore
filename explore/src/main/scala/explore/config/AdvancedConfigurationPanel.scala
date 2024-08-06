@@ -96,7 +96,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ReadMode: Enumerated: Display,
   Gain: Enumerated: Display,
   Roi: Enumerated: Display
-] extends ConfigurationFormats {
+] {
   protected type AA = Aligner[T, Input]
 
   @inline protected def isCustomized(aligner: AA): Boolean = aligner.get.isCustomized
