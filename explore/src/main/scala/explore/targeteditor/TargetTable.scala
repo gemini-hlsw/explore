@@ -115,7 +115,7 @@ object TargetTable extends AsterismModifier:
             .toList ++
             TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
       // If vizTime is not set, change it to now
-      .useEffectResultWithDepsBy((p, _, _) => p.vizTime): (_, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _) => p.vizTime): (_, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo.get, vizTime)): // rows
         (_, _, _, _) =>
