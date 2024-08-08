@@ -801,17 +801,25 @@ thead tr th.sticky-header {
 
 .explore-datepicker-with-now-button {
   /* stylelint-disable-next-line selector-class-pattern */
+  .react-datepicker__input-time-container {
+    text-align: center;
+    margin: 5px 0 0;
+  }
+
+  /* stylelint-disable-next-line selector-class-pattern */
   .react-datepicker__children-container {
-    position: absolute;
-    bottom: 0;
-    text-align: right;
-    pointer-events: none; // Let clicks pass through to the time selector.
+    text-align: center;
+    margin: 5px 0 0;
+    width: 100%;
 
     .p-button {
+      display: inline-block;
+      width: 100%;
       padding-top: 5px;
-      padding-bottom: 6px;
-      margin-bottom: 3px;
-      pointer-events: all; // Capture clicks again.
+      padding-bottom: 5px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+      font-size: 0.944rem;
     }
   }
 }
