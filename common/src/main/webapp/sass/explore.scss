@@ -3235,6 +3235,19 @@ a.explore-upgrade-link {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+
+  .program-details-info-area {
+    display: grid;
+    grid-template-columns: [label] auto [value] 1fr;
+    row-gap: 0.25em;
+    column-gap: 1em;
+    grid-auto-rows: max-content;
+
+    label {
+      text-align: right;
+      font-weight: bold;
+    }
+  }
 }
 
 .pl-react-table.program-tab-table {

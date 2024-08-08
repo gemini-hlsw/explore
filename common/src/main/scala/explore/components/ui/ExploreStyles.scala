@@ -488,8 +488,9 @@ object ExploreStyles:
   val SingleTileMaximized: Css = Css("explore-single-tile-maximized")
 
   // Program Tab
-  val ProgramDetailsTile: Css = Css("program-details-tile")
-  val ProgramTabTable: Css    = Css("program-tab-table")
+  val ProgramDetailsTile: Css     = Css("program-details-tile")
+  val ProgramDetailsInfoArea: Css = Css("program-details-info-area")
+  val ProgramTabTable: Css        = Css("program-tab-table")
 
   val FocusedInfo: Css = Css("explore-focused-info")
 

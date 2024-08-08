@@ -18,6 +18,10 @@ case class ProgramUser(
   id:      User.Id,
   profile: Option[OrcidProfile]
 ) derives Eq
+// lazy val name: String = profile.fold("Guest User")(p => p.displayName)
+
+// lazy val nameWithEmail: String =
+//   name + profile.flatMap(_.primaryEmail).foldMap(email => s" ($email)")
 
 object ProgramUser:
   private def toOrcidId(s: String): Decoder.Result[OrcidId] =

@@ -33,6 +33,7 @@ import lucuma.ui.syntax.all.given
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
+import queries.common.ProgramQueriesGQL.CreateProgramMutation.Data.CreateProgram.program
 
 object Routing:
 
@@ -156,17 +157,21 @@ object Routing:
         )
     )
 
-  private def programTab(page: Page, model: RootModelViews): VdomElement =
-    withProgramSummaries(model) { programSummaries =>
-      val routingInfo = RoutingInfo.from(page)
-      ProgramTabContents(
-        routingInfo.programId,
+  private def programTab(model: RootModelViews): VdomElement =
+    withProgramSummaries(model): programSummaries =>
+      for
+        programDetails <- programSummaries.model.get.optProgramDetails
+        proposal       <- programDetails.proposal
+        callId         <- proposal.callId
+        cfps           <- model.rootModel.get.cfps
+        cfp            <- cfps.find(_.id === callId)
+      yield ProgramTabContents(
+        programDetails,
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
-        programSummaries.get.optProgramDetails.map(_.allocations).orEmpty,
+        cfp.semester,
         userPreferences(model.rootModel)
       )
-    }
 
   // The programs popup will be shown
   private def noProgram: VdomElement = React.Fragment()
@@ -203,7 +208,7 @@ object Routing:
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "program").xmapL(ProgramPage.iso)
-          ) ~> dynRenderP { case (p, m) => programTab(p, m) }
+          ) ~> dynRenderP { case (_, m) => programTab(m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "proposal").xmapL(ProposalPage.iso)
