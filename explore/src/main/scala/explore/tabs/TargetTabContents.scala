@@ -523,7 +523,7 @@ object TargetTabContents extends TwoPanels:
           case _                                              => Callback.empty
       }
       .useStateViewBy((props, _, _) => props.focused.target.toList)
-      .useEffectWithDepsBy((props, _, _, _) => props.focused.target)((_, _, _, selIds) =>
+      .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target)((_, _, _, selIds) =>
         _.foldMap(focusedTarget => selIds.set(List(focusedTarget)))
       )
       .useGlobalHotkeysWithDepsBy((props, ctx, _, selIds) =>
