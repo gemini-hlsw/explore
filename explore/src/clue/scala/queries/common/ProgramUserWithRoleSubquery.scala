@@ -14,7 +14,7 @@ object ProgramUserWithRoleSubquery
   override val subquery: String = s"""
     {
       user $ProgramUserSubquery
-      partner {
+      partnerLink {
         linkType
         ... on HasPartner {
           partner
