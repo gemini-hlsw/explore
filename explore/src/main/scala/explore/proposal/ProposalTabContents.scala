@@ -261,7 +261,7 @@ object ProposalTabContents:
       p => p === ProposalStatus.Submitted || p === ProposalStatus.Accepted
     )
     .useState(none[String])        // Submission error message
-    .useEffectWithDepsBy((props, _, _, _, _) =>
+    .useLayoutEffectWithDepsBy((props, _, _, _, _) =>
       props.programDetails.get.proposal.flatMap(_.callId)
     )((_, _, _, _, e) => _ => e.setState(none))
     .useStateView(none[Timestamp]) // CFP/Proposal Deadline
