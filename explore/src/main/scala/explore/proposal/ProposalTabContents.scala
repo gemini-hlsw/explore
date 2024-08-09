@@ -188,7 +188,8 @@ object ProposalTabContents:
               readonly
             ),
             Toolbar(left =
-              <.span(
+              <.div(
+                ExploreStyles.ProposalSubmissionBar,
                 Tag(
                   value = programDetails.get.proposalStatus.name,
                   severity =
@@ -197,14 +198,14 @@ object ProposalTabContents:
                 )
                   .when(proposalStatus > ProposalStatus.Submitted),
                 // TODO: Validate proposal before allowing submission
-                <.div(
-                  ExploreStyles.ProposalSubmissionBar,
-                  Button(label = "Submit Proposal",
-                         onClick = updateStatus(ProposalStatus.Submitted),
-                         disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
-                  ).compact.tiny,
-                  deadline.get.map(CallDeadline.apply)
-                )
+                React
+                  .Fragment(
+                    Button(label = "Submit Proposal",
+                           onClick = updateStatus(ProposalStatus.Submitted),
+                           disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
+                    ).compact.tiny,
+                    deadline.get.map(CallDeadline.apply)
+                  )
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.NotSubmitted
                   ),
@@ -260,6 +261,9 @@ object ProposalTabContents:
       p => p === ProposalStatus.Submitted || p === ProposalStatus.Accepted
     )
     .useState(none[String])        // Submission error message
+    .useLayoutEffectWithDepsBy((props, _, _, _, _) =>
+      props.programDetails.get.proposal.flatMap(_.callId)
+    )((_, _, _, _, e) => _ => e.setState(none))
     .useStateView(none[Timestamp]) // CFP/Proposal Deadline
     .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline) =>
       renderFn(
