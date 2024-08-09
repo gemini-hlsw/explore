@@ -132,11 +132,10 @@ object ExploreStyles:
   val UserPreferencesNewKey = Css("user-preferences-new-key")
   val EmptyUserPreferences  = Css("empty-user-preferences")
 
-  val ProgramsPopup                = Css("programs-popup")
-  val ProgramTable                 = Css("program-table")
-  val ProgramName                  = Css("program-name")
-  val ProgramNameInput             = Css("program-name-input")
-  val ProgramsPopupFauxFooter: Css = Css("explore-programs-popup-faux-footer")
+  val ProgramsPopup    = Css("programs-popup")
+  val ProgramTable     = Css("program-table")
+  val ProgramName      = Css("program-name")
+  val ProgramNameInput = Css("program-name-input")
 
   val ObserverNotes: Css = Css("observer-notes")
   val NotesTile: Css     = Css("observer-notes-tile")

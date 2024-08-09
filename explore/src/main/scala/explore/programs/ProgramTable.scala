@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
-import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
@@ -18,36 +17,31 @@ import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ProgramInfo
-import explore.model.ProgramInfoList
 import explore.model.reusability.given
-import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
 
 case class ProgramTable(
   currentProgramId: Option[Program.Id],
-  programInfos:     View[ProgramInfoList],
+  programInfos:     List[View[ProgramInfo]],
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean,
   onClose:          Option[Callback],
-  onLogout:         Option[IO[Unit]]
+  onLogout:         Option[IO[Unit]],
+  virtualizerRef:   UseRef[Option[HTMLTableVirtualizer]]
 ) extends ReactFnProps(ProgramTable.component)
 
 object ProgramTable:
@@ -57,22 +51,7 @@ object ProgramTable:
 
   private val ColDef = ColumnDef.WithTableMeta[View[ProgramInfo], TableMeta]
 
-  private object IsAdding extends NewType[Boolean]
-  private type IsAdding = IsAdding.Type
-
-  private object ShowDeleted extends NewType[Boolean]
-
-  private given Reusability[Map[Program.Id, ProgramInfo]] = Reusability.map
-  private given Reusability[ProgramInfoList]              = Reusability.by(_.unsorted)
-
-  private def addProgram(programs: View[ProgramInfoList], adding: View[IsAdding])(using
-    FetchClient[IO, ObservationDB],
-    Logger[IO]
-  ): IO[Unit] =
-    ProgramQueries
-      .createProgram[IO](none)
-      .flatMap(pi => programs.async.mod(_.updated(pi.id, pi)))
-      .switching(adding.async, IsAdding(_))
+  private given Reusability[List[View[ProgramInfo]]] = Reusability.by(_.map(_.get))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
     FetchClient[IO, ObservationDB]
@@ -100,9 +79,7 @@ object ProgramTable:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useStateView(IsAdding(false))    // Adding new program
-    .useStateView(ShowDeleted(false)) // Show deleted
-    .useMemoBy((_, _, _, _) => ()): (props, ctx, _, _) => // Columns
+    .useMemoBy((_, _) => ()): (props, ctx) => // Columns
       _ =>
         import ctx.given
 
@@ -175,72 +152,22 @@ object ProgramTable:
             maxSize = 1000.toPx
           ).sortableBy(_.get.foldMap(_.value))
         )
-    // Rows
-    .useMemoBy((props, _, _, showDeleted, _) => (props.programInfos.reuseByValue, showDeleted.get)):
-      (_, _, _, _, _) =>
-        (programs, showDeleted) =>
-          programs.value.toListOfViews
-            .map(_._2)
-            .filter(vpi => showDeleted.value || !vpi.get.deleted)
-            .sortBy(_.get.id)
-    .useReactTableBy: (props, _, _, _, cols, rows) =>
+    .useMemoBy((props, _, _) => props.programInfos)((_, _, _) => identity) // Rows
+    .useReactTableBy: (props, _, cols, rows) =>
       TableOptions(
         cols,
         rows,
         enableSorting = true,
         enableColumnResizing = false,
-        meta = TableMeta(props.currentProgramId, props.programInfos.get.size)
+        meta = TableMeta(props.currentProgramId, props.programInfos.size)
       )
-    .render: (props, ctx, adding, showDeleted, _, _, table) =>
-      import ctx.given
-
-      val closeButton =
-        props.onClose.fold(none)(cb =>
-          Button(
-            label = "Cancel",
-            icon = Icons.Close,
-            severity = Button.Severity.Danger,
-            onClick = cb
-          ).small.compact.some
-        )
-
-      val logoutButton =
-        props.onLogout.fold(none)(io =>
-          Button(
-            label = "Logout",
-            icon = Icons.Logout,
-            severity = Button.Severity.Danger,
-            onClick = (ctx.sso.logout >> io).runAsync
-          ).small.compact.some
-        )
-
-      <.div(
-        <.div(ExploreStyles.ProgramTable)(
-          PrimeAutoHeightVirtualizedTable(
-            table,
-            estimateSize = _ => 32.toPx,
-            striped = true,
-            compact = Compact.Very,
-            tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
-            emptyMessage = "No programs available"
-          )
-        ),
-        // Since we can't add a footer to the Dialog here, we pretend to be one.
-        <.div(ExploreStyles.ProgramsPopupFauxFooter)(
-          Button(
-            label = "Program",
-            icon = Icons.New,
-            severity = Button.Severity.Success,
-            disabled = adding.get.value,
-            loading = adding.get.value,
-            onClick = addProgram(props.programInfos, adding).runAsync
-          ).small.compact,
-          CheckboxView(
-            id = "show-deleted".refined,
-            value = showDeleted.zoom(ShowDeleted.value.asLens),
-            label = "Show deleted"
-          ),
-          closeButton,
-          logoutButton
-        )
+    .render: (props, ctx, _, _, table) =>
+      PrimeAutoHeightVirtualizedTable(
+        table,
+        estimateSize = _ => 32.toPx,
+        striped = true,
+        compact = Compact.Very,
+        tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
+        virtualizerRef = props.virtualizerRef,
+        emptyMessage = "No programs available"
       )
