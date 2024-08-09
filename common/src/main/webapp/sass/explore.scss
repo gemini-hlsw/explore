@@ -1868,13 +1868,9 @@ svg.fa-triangle-exclamation.explore-error-icon {
 
 .api-keys-popup.p-dialog,
 .programs-popup.p-dialog {
-  .api-keys-table
-  // ,
-  // .program-table {
-  //   // height: 200px;
-  //   // height: 80vh;
-  //   height: 100%;
-  // }
+  .api-keys-table {
+    height: 200px;
+  }
 
   .program-name {
     @include lucumaUICommon.text-ellipsis;

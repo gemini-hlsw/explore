@@ -20,6 +20,7 @@ import explore.model.ProgramInfo
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability
+import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -39,7 +40,8 @@ case class ProgramTable(
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean,
   onClose:          Option[Callback],
-  onLogout:         Option[IO[Unit]]
+  onLogout:         Option[IO[Unit]],
+  virtualizerRef:   UseRef[Option[HTMLTableVirtualizer]]
 ) extends ReactFnProps(ProgramTable.component)
 
 object ProgramTable:
@@ -166,5 +168,6 @@ object ProgramTable:
         striped = true,
         compact = Compact.Very,
         tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreBorderTable,
+        virtualizerRef = props.virtualizerRef,
         emptyMessage = "No programs available"
       )

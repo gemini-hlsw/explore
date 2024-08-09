@@ -32,8 +32,10 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.Message
+import lucuma.react.table.HTMLTableVirtualizer
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
+import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.*
@@ -70,7 +72,16 @@ object ProgramsPopup:
       (if (onClose.isEmpty) ctx.replacePage(AppTab.Overview, programId, Focused.None)
        else ctx.pushPage(AppTab.Overview, programId, Focused.None))
 
-  private def addProgram(programs: View[ProgramInfoList], adding: View[IsAdding])(using
+  private val ScrollOptions =
+    rawVirtual.mod
+      .ScrollToOptions()
+      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
+      .setAlign(rawVirtual.mod.ScrollAlignment.start) // force to go as far as possible
+
+  private def addProgram(
+    programs: View[ProgramInfoList],
+    adding:   View[IsAdding]
+  )(using
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
@@ -85,7 +96,8 @@ object ProgramsPopup:
     .useStateView(IsOpen(true))
     .useStateView(IsAdding(false))    // Adding new program
     .useStateView(ShowDeleted(false)) // Show deleted
-    .render: (props, ctx, isOpen, isAdding, showDeleted) =>
+    .useRef(none[HTMLTableVirtualizer])
+    .render: (props, ctx, isOpen, isAdding, showDeleted, virtualizerRef) =>
       import ctx.given
 
       val onHide = props.onClose.map(oc => isOpen.set(IsOpen(false)) >> oc)
@@ -120,6 +132,16 @@ object ProgramsPopup:
             .filter(vpi => showDeleted.get.value || !vpi.get.deleted)
             .sortBy(_.get.id)
 
+      // When "isAdding" is switched off, it is safe to scroll to the bottom since the new program has been added.
+      val isAddingWithScroll: View[IsAdding] =
+        isAdding.withOnMod: newValue =>
+          if (!newValue.value)
+            virtualizerRef.get
+              .map:
+                _.foreach: virtualizer =>
+                  virtualizer.scrollToIndex(virtualizer.getTotalSize(), ScrollOptions)
+          else Callback.empty
+
       Dialog(
         visible = isOpen.get.value,
         onHide = onHide.orEmpty,
@@ -138,7 +160,7 @@ object ProgramsPopup:
               severity = Button.Severity.Success,
               disabled = isAdding.get.value,
               loading = isAdding.get.value,
-              onClick = addProgram(pis, isAdding).runAsync
+              onClick = addProgram(pis, isAddingWithScroll).runAsync
             ).small.compact,
             CheckboxView(
               id = "show-deleted".refined,
@@ -157,7 +179,8 @@ object ProgramsPopup:
               selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
               props.onClose.isEmpty,
               onHide,
-              props.onLogout
+              props.onLogout,
+              virtualizerRef
             ),
         props.message.map(msg =>
           Message(text = msg, severity = Message.Severity.Warning, icon = Icons.ExclamationTriangle)
