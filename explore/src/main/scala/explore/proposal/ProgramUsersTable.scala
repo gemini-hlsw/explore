@@ -18,6 +18,7 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.odb.data.PartnerLink
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
@@ -76,7 +77,11 @@ object ProgramUsersTable:
       column(NameColumnId, _.name),
       ColDef(
         PartnerColumnId,
-        _.partner,
+        _.partnerLink.flatMap {
+          case PartnerLink.HasPartner(partner)   => Some(partner)
+          case PartnerLink.HasNonPartner         => None
+          case PartnerLink.HasUnspecifiedPartner => None
+        },
         "",
         enableSorting = true,
         enableResizing = true,
