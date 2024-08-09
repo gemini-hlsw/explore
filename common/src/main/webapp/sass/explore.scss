@@ -766,12 +766,12 @@ thead tr th.sticky-header {
 
 @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
   .explore-itc-tile-title {
-    @include small-tile-title;
-
     display: grid;
     justify-content: end;
     grid-template-rows: 1fr;
     grid-template-columns: repeat(6, min-content);
+    
+    @include small-tile-title;
 
     *,
     *:nth-child(2n) {
@@ -825,13 +825,13 @@ thead tr th.sticky-header {
 }
 
 .explore-obs-instant-tile-title {
-  @include small-tile-title;
-  @include react-datepicker-input;
-  @include react-datepicker-wrapper;
-
   justify-content: center;
   flex-grow: 0;
   font-size: smaller;
+
+  @include small-tile-title;
+  @include react-datepicker-input;
+  @include react-datepicker-wrapper;
 
   label:first-child {
     @include lucumaUICommon.text-ellipsis;
@@ -980,12 +980,11 @@ thead tr th.sticky-header {
 
 .target-sed-type-dropdown {
   display: flex;
+  justify-self: stretch;
 
   .p-dropdown {
     flex-grow: 1;
   }
-
-  justify-self: stretch;
 }
 
 @mixin hide-hidden-target-cells($all) {
@@ -1011,12 +1010,12 @@ thead tr th.sticky-header {
 // simpler target view for small tile
 @container tile (max-width: #{exploreCommon.$tile-small-cutoff}) {
   .target-grid {
-    @include hide-hidden-target-cells(false);
-
     grid-template:
       'undo' min-content
       'coordinates' min-content
       'aladin' 1fr / 1fr;
+
+    @include hide-hidden-target-cells(false);
   }
 }
 
@@ -1070,11 +1069,11 @@ thead tr th.sticky-header {
   }
 
   > div .target-grid {
-    @include hide-hidden-target-cells(true);
-
     grid-template:
       'aladin' 1fr
       / 1fr;
+      
+    @include hide-hidden-target-cells(true);
   }
 }
 
@@ -1246,8 +1245,6 @@ $search-preview-margin: 5px;
 }
 
 .explore-target-search-preview-placeholder {
-  @include target-search-preview;
-
   display: flex;
   border: 1px solid var(--site-border-color);
   border-radius: 0.28rem;
@@ -1260,6 +1257,8 @@ $search-preview-margin: 5px;
     var(--site-border-color) 10px,
     var(--site-border-color) 11px
   );
+
+  @include target-search-preview;
 }
 
 .explore-target-search-results {
@@ -1357,19 +1356,19 @@ $search-preview-margin: 5px;
 }
 
 .aladin-status-gs {
-  @include aladin-gs-status;
-  @include lucumaUICommon.text-ellipsis;
-
   grid-area: guidestar;
   font-size: smaller;
   align-items: center;
+
+  @include lucumaUICommon.text-ellipsis;
+  @include aladin-gs-status;
 }
 
 .aladin-status-gs-loading {
-  @include aladin-gs-status;
-
   grid-area: agsstatus;
   align-self: center;
+
+  @include aladin-gs-status;
 
   svg.fa-circle-small.explore-warning-icon {
     --fa-beat-scale: 1.2;
@@ -1631,12 +1630,6 @@ svg.fa-triangle-exclamation.explore-error-icon {
     --group-row-count: 3;
     --group-column-count: 3;
 
-    // Move to 2 columns on mobile
-    @media (max-width: lucumaUICommon.$tablet-responsive-cutoff) {
-      --group-row-count: 4;
-      --group-column-count: 2;
-    }
-
     margin-top: var(--content-padding);
     margin-bottom: var(--content-padding);
     display: grid;
@@ -1644,6 +1637,12 @@ svg.fa-triangle-exclamation.explore-error-icon {
     grid-template-rows: repeat(var(--group-row-count), auto); /* 3 rows of equal height */
     grid-template-columns: repeat(var(--group-column-count), auto); /* 3 columns of equal width */
     grid-auto-flow: column; /* fill the rows first, then move to the next column */
+
+    // Move to 2 columns on mobile
+    @media (max-width: lucumaUICommon.$tablet-responsive-cutoff) {
+      --group-row-count: 4;
+      --group-column-count: 2;
+    }
   }
 
   .group-delays-form,
@@ -2762,12 +2761,12 @@ $help-title-height: 40px;
   }
 
   .timing-window-editor {
-    @include react-datepicker-input;
-    @include react-datepicker-wrapper;
-
     grid-area: editor;
     padding: 0.5em;
     font-size: smaller;
+    
+    @include react-datepicker-input;
+    @include react-datepicker-wrapper;
 
     .p-inputgroup input {
       font-size: 96%;
