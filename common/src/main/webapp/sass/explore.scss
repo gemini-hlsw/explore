@@ -1862,12 +1862,19 @@ svg.fa-triangle-exclamation.explore-error-icon {
 // ------
 // Programs Popup
 // ------
+.programs-popup.p-dialog {
+  height: 90vh;
+}
+
 .api-keys-popup.p-dialog,
 .programs-popup.p-dialog {
-  .api-keys-table,
-  .program-table {
-    height: 200px;
-  }
+  .api-keys-table
+  // ,
+  // .program-table {
+  //   // height: 200px;
+  //   // height: 80vh;
+  //   height: 100%;
+  // }
 
   .program-name {
     @include lucumaUICommon.text-ellipsis;
@@ -1889,9 +1896,9 @@ svg.fa-triangle-exclamation.explore-error-icon {
     }
   }
 
-  .p-dialog-content .explore-programs-popup-faux-footer {
+  .p-dialog-footer {
     padding-top: 1rem;
-    vertical-align: middle;
+    text-align: justify;
 
     .p-button:first-child {
       margin-right: 1.5em;
