@@ -770,7 +770,7 @@ thead tr th.sticky-header {
     justify-content: end;
     grid-template-rows: 1fr;
     grid-template-columns: repeat(6, min-content);
-    
+
     @include small-tile-title;
 
     *,
@@ -1072,7 +1072,7 @@ thead tr th.sticky-header {
     grid-template:
       'aladin' 1fr
       / 1fr;
-      
+
     @include hide-hidden-target-cells(true);
   }
 }
@@ -2764,7 +2764,7 @@ $help-title-height: 40px;
     grid-area: editor;
     padding: 0.5em;
     font-size: smaller;
-    
+
     @include react-datepicker-input;
     @include react-datepicker-wrapper;
 
