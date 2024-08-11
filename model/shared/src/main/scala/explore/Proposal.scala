@@ -10,12 +10,18 @@ import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.refined.*
+import lucuma.core.enums.Partner
 import lucuma.core.enums.TacCategory
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.ProposalReference
+import lucuma.core.util.Timestamp
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
+
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 case class Proposal(
   callId:       Option[CallForProposals.Id],
@@ -24,7 +30,17 @@ case class Proposal(
   abstrakt:     Option[NonEmptyString],
   proposalType: Option[ProposalType],
   reference:    Option[ProposalReference]
-) derives Eq
+) derives Eq {
+  val partners: List[Partner] =
+    proposalType
+      .flatMap(ProposalType.partnerSplits.getOption)
+      .orEmpty
+      .map(_.partner)
+
+  def deadline(cfps: List[CallForProposal]): Option[Timestamp] =
+    cfps.find(u => callId.exists(_ === u.id)).flatMap(_.deadline(partners))
+
+}
 
 object Proposal:
   val callId: Lens[Proposal, Option[CallForProposals.Id]]  =
@@ -58,3 +74,19 @@ object Proposal:
     } yield Proposal(callId.flatten, title, category, abstrakt, pte, r.flatten)
 
   val Default = Proposal(None, None, None, None, None, None)
+
+  def deadlineStrings(n: Instant, deadline: Timestamp): (String, Option[String]) = {
+    val deadlineLDT         = deadline.toLocalDateTime
+    val now                 = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
+    val diff                = java.time.Duration.between(now, deadlineLDT)
+    val deadlineStr: String = deadlineString(deadline)
+    if (diff.isNegative) (deadlineStr, None)
+    else
+      val left = Constants.DurationLongWithSecondsFormatter(diff)
+      (deadlineStr, left.some)
+  }
+
+  def deadlineString(deadline: Timestamp): String = {
+    val deadlineLDT = deadline.toLocalDateTime
+    s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone.format(deadlineLDT)}"
+  }

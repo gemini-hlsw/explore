@@ -18,6 +18,7 @@ import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
+import monocle.Optional
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -131,6 +132,8 @@ case class ProgramSummaries(
 object ProgramSummaries:
   val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]     =
     Focus[ProgramSummaries](_.optProgramDetails)
+  val proposal: Optional[ProgramSummaries, Option[Proposal]]                =
+    optProgramDetails.some.andThen(ProgramDetails.proposal)
   val targets: Lens[ProgramSummaries, TargetList]                           = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)

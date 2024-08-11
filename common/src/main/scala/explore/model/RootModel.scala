@@ -35,6 +35,7 @@ case class RootModel(
   programSummaries:     Option[ProgramSummaries] = none,
   userPreferences:      Option[UserPreferences] = none,
   spectroscopyModes:    Option[SpectroscopyModesMatrix] = none,
+  cfps:                 Option[List[CallForProposal]] = none,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq {
@@ -54,6 +55,7 @@ object RootModel:
   val programSummaries     = Focus[RootModel](_.programSummaries)
   val userPreferences      = Focus[RootModel](_.userPreferences)
   val spectroscopyModes    = Focus[RootModel](_.spectroscopyModes)
+  val cfps                 = Focus[RootModel](_.cfps)
   val undoStacks           = Focus[RootModel](_.undoStacks)
   val otherUndoStacks      = Focus[RootModel](_.otherUndoStacks)
 
@@ -83,3 +85,6 @@ object RootModel:
         ProgramDetails.proposal.some.andThen(Proposal.reference.some)
       )
     )
+
+  val proposal: Optional[RootModel, Option[Proposal]] =
+    programSummaries.some.andThen(ProgramSummaries.proposal)

@@ -147,6 +147,7 @@ object Routing:
             routingInfo.programId,
             model.zoom(RootModel.vault).get,
             detailsView,
+            model.zoom(RootModel.cfps).get.orEmpty,
             programSummaries.model.get.programTimesPot.map(_.timeEstimateRange),
             programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
             model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
