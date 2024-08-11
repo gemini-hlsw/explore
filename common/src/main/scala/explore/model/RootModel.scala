@@ -19,6 +19,7 @@ import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.Timestamp
 import lucuma.ui.sso.UserVault
 import monocle.Focus
 import monocle.Lens
@@ -44,6 +45,12 @@ case class RootModel(
       .getOption(this)
       .map(_.label)
       .orElse(RootModel.proposalReference.getOption(this).map(_.label))
+
+  val deadline: Option[Timestamp] =
+    (RootModel.proposal.getOption(this).flatten, RootModel.cfps.get(this))
+      .mapN(_.deadline(_))
+      .flatten
+
 }
 
 object RootModel:

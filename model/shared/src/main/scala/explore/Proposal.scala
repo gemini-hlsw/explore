@@ -75,7 +75,7 @@ object Proposal:
 
   val Default = Proposal(None, None, None, None, None, None)
 
-  def deadlineStrings(n: Instant, deadline: Timestamp): (String, Option[String]) = {
+  def deadlineAndTimeLeft(n: Instant, deadline: Timestamp): (String, Option[String]) = {
     val deadlineLDT         = deadline.toLocalDateTime
     val now                 = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
     val diff                = java.time.Duration.between(now, deadlineLDT)

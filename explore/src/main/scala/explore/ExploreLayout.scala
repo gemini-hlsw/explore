@@ -200,16 +200,10 @@ object ExploreLayout:
               }
             }
 
-          val deadline: Option[Timestamp] =
-            props.view
-              .zoom(RootModel.proposal)
-              .get
-              .flatten
-              .flatMap(_.deadline(props.view.get.cfps.orEmpty))
-
-          val deadlineStr = deadline
-            .map(Proposal.deadlineString)
-            .orEmpty
+          val deadlineStr =
+            props.view.get.deadline
+              .map(Proposal.deadlineString)
+              .orEmpty
 
           React.Fragment(
             ConfirmDialog(),

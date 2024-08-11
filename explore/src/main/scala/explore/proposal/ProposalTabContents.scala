@@ -73,7 +73,7 @@ object CallDeadline:
       )
       .render { (p, n) =>
         n.toOption.map(n =>
-          val (deadlineStr, left) = Proposal.deadlineStrings(n, p.deadline)
+          val (deadlineStr, left) = Proposal.deadlineAndTimeLeft(n, p.deadline)
           val text                = left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
           <.span(
             ExploreStyles.ProposalDeadline,
