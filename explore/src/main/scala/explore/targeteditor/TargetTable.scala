@@ -11,7 +11,6 @@ import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import explore.Icons
-import explore.common.AsterismQueries
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
@@ -19,11 +18,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.AsterismIds
+import explore.model.ObservationsAndTargets
 import explore.model.ObsIdSet
-import explore.model.TargetList
 import explore.model.enums.TableId
 import explore.model.extensions.*
 import explore.targets.TargetColumns
+import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -36,6 +36,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.SiderealTargetWithId
+import lucuma.schemas.model.TargetWithId
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
@@ -44,25 +45,33 @@ import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 
 import java.time.Instant
+import explore.model.OnAsterismUpdateParams
 
 case class TargetTable(
-  userId:         Option[User.Id],
-  programId:      Program.Id,
-  obsIds:         ObsIdSet, // Only used to invoke DB
+  userId:           Option[User.Id],
+  programId:        Program.Id,
+  obsIds:           ObsIdSet, // Only used to invoke DB - should only be unexecuted observations
   // Targets are not modified here, we only modify which ones belong to the Asterism.
-  targetIds:      View[AsterismIds],
-  targetInfo:     View[TargetList],
-  selectedTarget: View[Option[Target.Id]],
-  vizTime:        Option[Instant],
-  renderInTitle:  Tile.RenderInTitle,
-  fullScreen:     AladinFullScreen,
-  readOnly:       Boolean
+  targetIds:        AsterismIds,
+  obsAndTargets:    UndoSetter[ObservationsAndTargets],
+  selectedTarget:   View[Option[Target.Id]],
+  onAsterismUpdate: OnAsterismUpdateParams => Callback,
+  vizTime:          Option[Instant],
+  renderInTitle:    Tile.RenderInTitle,
+  fullScreen:       AladinFullScreen,
+  readOnly:         Boolean
 ) extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
   private type Props = TargetTable
 
-  private val ColDef = ColumnDef[SiderealTargetWithId]
+  private case class TableMeta(
+    obsIds:           ObsIdSet,
+    obsAndTargets:    UndoSetter[ObservationsAndTargets],
+    onAsterismUpdate: OnAsterismUpdateParams => Callback
+  )
+
+  private val ColDef = ColumnDef.WithTableMeta[SiderealTargetWithId, TableMeta]
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
@@ -77,16 +86,22 @@ object TargetTable extends AsterismModifier:
   )
 
   private def deleteSiderealTarget(
-    obsIds:   ObsIdSet,
-    targetId: Target.Id
-  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-    AsterismQueries.removeTargetsFromAsterisms[IO](obsIds.toList, List(targetId))
+    obsIds:           ObsIdSet,
+    obsAndTargets:    UndoSetter[ObservationsAndTargets],
+    target:           TargetWithId,
+    onAsterismUpdate: OnAsterismUpdateParams => Callback
+  )(using FetchClient[IO, ObservationDB]): Callback =
+    AsterismActions
+      .removeTargetFromAsterisms(target, obsIds, onAsterismUpdate)
+      .set(obsAndTargets)(true) >>
+      // the ".async.toCallback" seems to let the model update before we try changing the UI
+      onAsterismUpdate(OnAsterismUpdateParams(target.id, obsIds, false, false)).async.toCallback
 
   protected val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((props, _) => props.readOnly): (props, ctx) => // cols
+      .useMemoBy((props, _) => props.readOnly): (_, ctx) => // cols
         readOnly =>
           import ctx.given
 
@@ -105,8 +120,14 @@ object TargetTable extends AsterismModifier:
                     onClickE = (e: ReactMouseEvent) =>
                       e.preventDefaultCB >>
                         e.stopPropagationCB >>
-                        props.targetIds.mod(_ - cell.value) >>
-                        deleteSiderealTarget(props.obsIds, cell.value).runAsync
+                        cell.table.options.meta.foldMap(m =>
+                          deleteSiderealTarget(
+                            m.obsIds,
+                            m.obsAndTargets,
+                            cell.row.original.toTargetWithId,
+                            m.onAsterismUpdate
+                          )
+                        )
                   ).tiny.compact,
                 size = 35.toPx,
                 enableSorting = false
@@ -117,7 +138,7 @@ object TargetTable extends AsterismModifier:
       // If vizTime is not set, change it to now
       .useEffectKeepResultWithDepsBy((p, _, _) => p.vizTime): (_, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
-      .useMemoBy((props, _, _, vizTime) => (props.targetIds.get, props.targetInfo.get, vizTime)): // rows
+      .useMemoBy((props, _, _, vizTime) => (props.targetIds, props.obsAndTargets.get._2, vizTime)): // rows
         (_, _, _, _) =>
           case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
             targetIds.toList
@@ -140,7 +161,8 @@ object TargetTable extends AsterismModifier:
             enableSorting = true,
             enableColumnResizing = true,
             columnResizeMode = ColumnResizeMode.OnChange,
-            initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility)
+            initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility),
+            meta = TableMeta(props.obsIds, props.obsAndTargets, props.onAsterismUpdate)
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
@@ -157,13 +179,13 @@ object TargetTable extends AsterismModifier:
           ),
           if (rows.isEmpty) {
             <.div(ExploreStyles.HVCenter)(
-              AsterismEditor.targetSelectionPopup(
+              targetSelectionPopup(
                 "Add a target",
                 props.programId,
                 props.obsIds,
-                props.targetIds,
-                props.targetInfo,
+                props.obsAndTargets,
                 adding,
+                props.onAsterismUpdate,
                 buttonClass = LucumaPrimeStyles.Massive
               )
             )

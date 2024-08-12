@@ -11,6 +11,7 @@ import explore.DefaultErrorPolicy
 import explore.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.AsterismQueriesGQL.*
@@ -60,3 +61,33 @@ object AsterismQueries:
       SET = EditAsterismsPatchInput(ADD = toAdd.assign, DELETE = toRemove.assign)
     )
     UpdateAsterismsMutation[F].execute(input).void
+
+  def undeleteTargetsAndAddToAsterism[F[_]: Async](
+    obsIds:    List[Observation.Id],
+    targetIds: List[Target.Id]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    val targetInput   = UpdateTargetsInput(
+      WHERE = targetIds.toWhereTargets.assign,
+      SET = TargetPropertiesInput(existence = Existence.Present.assign),
+      includeDeleted = true.assign
+    )
+    val asterismInput = UpdateAsterismsInput(
+      WHERE = obsIds.toWhereObservation.assign,
+      SET = EditAsterismsPatchInput(ADD = targetIds.assign)
+    )
+    UpdateTargetsAndAsterismsMutation[F].execute(targetInput, asterismInput).void
+
+  def deleteTargetsAndRemoveFromAsterism[F[_]: Async](
+    obsIds:    List[Observation.Id],
+    targetIds: List[Target.Id]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    val targetInput   = UpdateTargetsInput(
+      WHERE = targetIds.toWhereTargets.assign,
+      SET = TargetPropertiesInput(existence = Existence.Deleted.assign),
+      includeDeleted = true.assign
+    )
+    val asterismInput = UpdateAsterismsInput(
+      WHERE = obsIds.toWhereObservation.assign,
+      SET = EditAsterismsPatchInput(DELETE = targetIds.assign)
+    )
+    UpdateTargetsAndAsterismsMutation[F].execute(targetInput, asterismInput).void

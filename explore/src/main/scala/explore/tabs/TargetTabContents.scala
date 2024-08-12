@@ -54,7 +54,6 @@ import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import monocle.Traversal
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
@@ -128,27 +127,6 @@ object TargetTabContents extends TwoPanels:
           setPage(Focused.None)
       )(targetId => setPage(Focused.target(targetId)))
 
-    def onModAsterismsWithObs(
-      groupIds:  ObsIdSet,
-      editedIds: ObsIdSet
-    )(ps: ProgramSummaries): Callback =
-      findAsterismGroup(editedIds, ps.asterismGroups).foldMap { tlg =>
-        // We should always find the group.
-        // If a group was edited while closed and it didn't create a merger, keep it closed,
-        // otherwise expand all affected groups.
-        props.expandedIds
-          .mod { eids =>
-            val withOld       =
-              if (groupIds === editedIds) eids
-              else eids + groupIds.removeUnsafe(editedIds)
-            val withOldAndNew =
-              if (editedIds === tlg.obsIds && editedIds === groupIds) withOld
-              else withOld + tlg.obsIds
-
-            withOldAndNew.filter(ids => ps.asterismGroups.contains(ids)) // clean up
-          }
-      }
-
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Targets, selectedView, ctx)
 
@@ -191,8 +169,6 @@ object TargetTabContents extends TwoPanels:
       idsToEdit:     ObsIdSet,
       asterismGroup: AsterismGroup
     ): List[Tile] = {
-      val groupIds = asterismGroup.obsIds
-
       val getVizTime: ProgramSummaries => Option[Instant] = a =>
         for
           id <- idsToEdit.single
@@ -212,20 +188,6 @@ object TargetTabContents extends TwoPanels:
               .modify(mod)(ps)
           )
           .getOrElse(ps)
-
-      val traversal: Traversal[ObservationList, AsterismIds] =
-        Iso
-          .id[ObservationList]
-          .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-          .andThen(KeyedIndexedList.value)
-          .andThen(Observation.scienceTargetIds)
-
-      val asterismView: View[AsterismIds] =
-        CloneListView(
-          props.programSummaries.model
-            .withOnMod(onModAsterismsWithObs(groupIds, idsToEdit))
-            .zoom(ProgramSummaries.observations.andThen(traversal))
-        )
 
       val vizTimeView: View[Option[Instant]] =
         props.programSummaries.model.zoom(getVizTime)(modVizTime)
@@ -276,7 +238,6 @@ object TargetTabContents extends TwoPanels:
 
       def onCloneTarget4Asterism(params: OnCloneParameters): Callback =
         // props.programSummaries.get will always contain the original groups. On creating,
-        // params.summaries would contain the groups after the clone, but that isn't as useful here.
         val allOriginalGroups = props.programSummaries.get.asterismGroups
           .filterForObsInSet(params.obsIds)
           .map(_._1)
@@ -307,12 +268,41 @@ object TargetTabContents extends TwoPanels:
                setCurrentTarget(idsToEdit.some)(params.originalId.some, SetRouteVia.HistoryReplace)
            })
 
+      def onAsterismUpdate(params: OnAsterismUpdateParams): Callback =
+        val originalGroups = props.programSummaries.get.asterismGroups
+        // props.programSummaries.get will always contain the original groups, so we should find the group
+        originalGroups
+          .findContainingObsIds(params.obsIds)
+          .foldMap(group =>
+            val newAsterism                      =
+              if (params.isAddAction) group.targetIds + params.targetId
+              else group.targetIds - params.targetId
+            val existingGroup                    = originalGroups.findWithTargetIds(newAsterism)
+            val mergedObs                        = existingGroup.map(_.obsIds ++ params.obsIds)
+            val obsIdsAfterAction                = mergedObs.getOrElse(params.obsIds)
+            val unmodified                       = group.obsIds -- params.obsIds
+            val setExpanded                      = unmodified.fold {
+              if (params.isUndo) props.expandedIds.mod(_ - obsIdsAfterAction + group.obsIds)
+              else props.expandedIds.mod(_ - group.obsIds + obsIdsAfterAction)
+            }(unmod =>
+              if (params.isUndo) props.expandedIds.mod(_ - obsIdsAfterAction - unmod + group.obsIds)
+              else props.expandedIds.mod(_ - group.obsIds + obsIdsAfterAction + unmod)
+            )
+            val targetForPage: Option[Target.Id] =
+              if (params.areAddingTarget) params.targetId.some
+              else none // if we're deleting, let UI focus the first one in the asterism
+            val setPage =
+              if (params.isUndo)
+                setCurrentTarget(idsToEdit.some)(targetForPage, SetRouteVia.HistoryReplace)
+              else setCurrentTarget(params.obsIds.some)(targetForPage, SetRouteVia.HistoryReplace)
+            setExpanded >> setPage
+          )
+
       val asterismEditorTile =
         AsterismEditorTile.asterismEditorTile(
           props.userId,
           props.programId,
           idsToEdit,
-          asterismView,
           props.obsAndTargets,
           configuration,
           vizTimeView,
@@ -320,6 +310,7 @@ object TargetTabContents extends TwoPanels:
           props.focused.target,
           setCurrentTarget(idsToEdit.some),
           onCloneTarget4Asterism,
+          onAsterismUpdate,
           getObsInfo(idsToEdit.some),
           props.searching,
           title,
