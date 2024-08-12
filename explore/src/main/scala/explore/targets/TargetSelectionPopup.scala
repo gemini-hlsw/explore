@@ -310,7 +310,7 @@ object TargetSelectionPopup:
                   else
                     s"Add a new target from ${source.name} (${showCount(sourceResults.length, "result")})"
 
-                React.Fragment.withKey(source.name)(
+                React.Fragment(
                   <.div(ExploreStyles.SmallHeader, header),
                   <.div(ExploreStyles.TargetSearchResults)(
                     TargetSelectionTable(

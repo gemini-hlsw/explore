@@ -48,9 +48,6 @@ val EmptySiderealTarget =
 
 type AsterismIds = SortedSet[Target.Id]
 
-object AsterismIds:
-  val empty: AsterismIds = SortedSet.empty[Target.Id]
-
 type AsterismGroupList          = SortedMap[ObsIdSet, AsterismIds]
 type TargetList                 = SortedMap[Target.Id, Target]
 type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]

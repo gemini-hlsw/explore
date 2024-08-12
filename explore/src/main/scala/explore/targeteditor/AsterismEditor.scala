@@ -13,16 +13,14 @@ import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ObsIdSetEditInfo
 import explore.model.ObservationsAndTargets
-import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
-import explore.model.reusability.given
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -43,13 +41,13 @@ case class AsterismEditor(
   userId:            User.Id,
   programId:         Program.Id,
   obsIds:            ObsIdSet,
+  asterismIds:       View[AsterismIds],
   obsAndTargets:     UndoSetter[ObservationsAndTargets],
   vizTime:           View[Option[Instant]],
   configuration:     ObsConfiguration,
   focusedTargetId:   Option[Target.Id],
   setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
   onCloneTarget:     OnCloneParameters => Callback,
-  onAsterismUpdate:  OnAsterismUpdateParams => Callback,
   obsInfo:           Target.Id => TargetEditObsInfo,
   searching:         View[Set[Target.Id]],
   renderInTitle:     Tile.RenderInTitle,
@@ -70,24 +68,20 @@ object AsterismEditor extends AsterismModifier:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(AreAdding(false))
-      .useMemoBy((props, _, _) => (props.obsIds, props.obsAndTargets.get._1)) { (_, _, _) =>
-        ObsIdSetEditInfo.fromObservationList
-      }
-      .useLayoutEffectWithDepsBy((props, _, _, obsEditInfo) =>
-        (obsEditInfo.asterismIds, props.focusedTargetId)
-      ) { (props, _, _, _) => (asterismIds, focusedTargetId) =>
-        // If the selected targetId is None, or not in the asterism, select the first target (if any).
-        // Need to replace history here.
-        focusedTargetId.filter(asterismIds.contains_) match
-          case None => props.setTarget(asterismIds.headOption, SetRouteVia.HistoryReplace)
-          case _    => Callback.empty
+      .useEffectWithDepsBy((props, _, _) => (props.asterismIds.get, props.focusedTargetId)) {
+        (props, _, _) => (asterismIds, focusedTargetId) =>
+          // If the selected targetId is None, or not in the asterism, select the first target (if any).
+          // Need to replace history here.
+          focusedTargetId.filter(asterismIds.contains_) match
+            case None => props.setTarget(asterismIds.headOption, SetRouteVia.HistoryReplace)
+            case _    => Callback.empty
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
-      .render { (props, ctx, adding, obsEditInfo, fullScreen) =>
+      .render { (props, ctx, adding, fullScreen) =>
         import ctx.given
+
         // Save the time here. this works for the obs and target tabs
-        // It's OK to set the viz time for executed observations, I think.
         val vizTimeView = props.vizTime.withOnMod(t =>
           ObsQueries
             .updateVisualizationTime[IO](props.obsIds.toList, t)
@@ -105,51 +99,37 @@ object AsterismEditor extends AsterismModifier:
               props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
           )
 
-        // the 'getOrElse doesn't matter. Controls will be readonly if all are executed
-        val unexecutedObs = obsEditInfo.unExecuted.getOrElse(props.obsIds)
-
-        val editWarningMsg: Option[String] =
-          if (obsEditInfo.allAreExecuted)
-            if (obsEditInfo.editing.length > 1)
-              "All of the current observations are executed. Asterism is readonly.".some
-            else "The current observation has been executed. Asterism is readonly.".some
-          else if (obsEditInfo.executed.isDefined)
-            "Adding and removing targets will only affect the unexecuted observations.".some
-          else none
-
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
-          // only pass in the unexecuted observations. Will be readonly if there aren't any
           props.renderInTitle(
             targetSelectionPopup(
               "Add",
               props.programId,
-              unexecutedObs,
-              props.obsAndTargets,
+              props.obsIds,
+              props.asterismIds,
+              props.allTargets.model,
               adding,
-              props.onAsterismUpdate,
-              props.readonly || obsEditInfo.allAreExecuted,
+              selectedTargetView.async.set,
+              props.readonly,
               ExploreStyles.AddTargetButton
             )
           ),
           props.renderInTitle(ObsTimeEditor(vizTimeView)),
-          editWarningMsg.map(msg => <.div(ExploreStyles.SharedEditWarning, msg)),
           TargetTable(
             props.userId.some,
             props.programId,
-            unexecutedObs,
-            obsEditInfo.asterismIds,
-            props.obsAndTargets,
+            props.obsIds,
+            props.asterismIds,
+            props.allTargets.model,
             selectedTargetView,
-            props.onAsterismUpdate,
             vizTime,
             props.renderInTitle,
             fullScreen.get,
-            props.readonly || obsEditInfo.allAreExecuted
+            props.readonly
           ),
           // it's possible for us to get here without an asterism but with a focused target id. This will get
           // corrected, but we need to not render the target editor before it is corrected.
-          (Asterism.fromIdsAndTargets(obsEditInfo.asterismIds, props.allTargets.get),
+          (Asterism.fromIdsAndTargets(props.asterismIds.get, props.allTargets.get),
            props.focusedTargetId
           ).mapN { (asterism, focusedTargetId) =>
             val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =

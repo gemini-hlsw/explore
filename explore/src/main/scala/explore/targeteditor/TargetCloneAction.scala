@@ -6,9 +6,10 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import clue.data.syntax.*
 import crystal.react.syntax.all.*
+import explore.DefaultErrorPolicy
 import explore.common.AsterismQueries
-import explore.common.TargetQueries
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationList
@@ -20,12 +21,25 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.TargetWithId
+import lucuma.schemas.odb.input.*
+import queries.common.TargetQueriesGQL
 
 import scala.annotation.unused
-import explore.model.syntax.all.isTargetInOtherObs
 
 object TargetCloneAction {
+  extension (observations: ObservationList)
+    private def allWithTarget(targetId: Target.Id): Set[Observation.Id]     =
+      observations.values
+        .filter(_.scienceTargetIds.contains(targetId))
+        .map(_.id)
+        .toSet
+    // determine if the observation has been assigned to additional observations since the cloning.
+    // If it has been assigned to other observations, we won't delete it locally or remotely.
+    private def areExtraObs(targetId: Target.Id, obsIds: ObsIdSet): Boolean =
+      (allWithTarget(targetId) -- obsIds.idSet.toSortedSet).nonEmpty
+
   extension (obsAndTargets: ObservationsAndTargets)
     private def cloneTargetForObservations(
       originalId: Target.Id,
@@ -45,10 +59,8 @@ object TargetCloneAction {
       val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
         list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ + originalId - cloneId))
       )
-      val ts =
-        // determine if the observation has been assigned to additional observations since the cloning.
-        // If it has been assigned to other observations, we won't delete it locally or remotely.
-        if (obsAndTargets._1.isTargetInOtherObs(cloneId, obsIds))
+      val ts  =
+        if (obsAndTargets._1.areExtraObs(cloneId, obsIds))
           obsAndTargets._2
         else
           obsAndTargets._2 - cloneId
@@ -79,13 +91,24 @@ object TargetCloneAction {
       else {
         // If the clone has been assigned to another observation (unlikely), perhaps by another
         // user or in another session , then we won't delete it
-        if (observations.isTargetInOtherObs(onCloneParms.cloneId, onCloneParms.obsIds))
+        if (observations.areExtraObs(onCloneParms.cloneId, onCloneParms.obsIds))
           none
         else
           Existence.Deleted.some
       }
     optExistence.foldMap(existence =>
-      TargetQueries.setTargetExistence[IO](programId, onCloneParms.cloneId, existence)
+      TargetQueriesGQL
+        .UpdateTargetsMutation[IO]
+        .execute(
+          UpdateTargetsInput(
+            WHERE = onCloneParms.cloneId.toWhereTarget
+              .copy(program = programId.toWhereProgram.assign)
+              .assign,
+            SET = TargetPropertiesInput(existence = existence.assign),
+            includeDeleted = true.assign
+          )
+        )
+        .void
     ) >>
       AsterismQueries.addAndRemoveTargetsFromAsterisms(onCloneParms.obsIds.toList,
                                                        toAdd = List(onCloneParms.idToAdd),

@@ -8,71 +8,66 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import explore.Icons
+import explore.common.AsterismQueries
 import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
-import explore.model.ObservationsAndTargets
+import explore.model.AsterismIds
 import explore.model.ObsIdSet
-import explore.model.OnAsterismUpdateParams
+import explore.model.TargetList
 import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
-import explore.undo.UndoSetter
 import explore.utils.ToastCtx
-import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.Css
 import lucuma.react.primereact.Button
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.TargetWithOptId
 import lucuma.ui.primereact.*
 import org.typelevel.log4cats.Logger
 
 trait AsterismModifier:
 
+  // In the future, we could unify all this into an operation over ProgramSummaries,
+  // and add undo.
+  // We have to be careful with undo, though. The inserted target could be in use in
+  // another asterism by the time we undo its creation. What happens then?
+  // Can the DB handle this (ie: keep the target if it's in use)?
+  // Does the DB remove it from all asterisms?
+  // If we keep it, what happens if we redo?
   protected def insertSiderealTarget(
-    programId:        Program.Id,
-    obsIds:           ObsIdSet,
-    obsAndTargets:    UndoSetter[ObservationsAndTargets],
-    targetWithOptId:  TargetWithOptId,
-    onAsterismUpdate: OnAsterismUpdateParams => Callback
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+    programId:       Program.Id,
+    obsIds:          ObsIdSet,
+    asterismIds:     View[AsterismIds],
+    allTargets:      View[TargetList],
+    targetWithOptId: TargetWithOptId
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Option[Target.Id]] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
-        oTargetId
-          .fold(
-            TargetQueries
-              .insertTarget[IO](programId, target)
-              .map((_, true))
-          )(id => IO((id, false)))
-          .flatMap((id, created) =>
-            (AsterismActions
-              .addTargetToAsterisms(
-                TargetWithId(id, targetWithOptId.target),
-                obsIds,
-                created,
-                onAsterismUpdate
-              )
-              .set(obsAndTargets)(false) >>
-              // Do the first onAsterismUpdate here so it is synchronous with the setter in the Action.
-              // the ".async.toCallback" seems to let the model update before we try changing the UI
-              onAsterismUpdate(
-                OnAsterismUpdateParams(id, obsIds, true, true)
-              ).async.toCallback).toAsync
-          )
+        val targetId: IO[Target.Id] = oTargetId.fold(
+          TargetQueries
+            .insertTarget[IO](programId, target)
+            .flatTap(id => allTargets.async.mod(_ + (id -> target)))
+        )(IO(_))
+
+        targetId
+          .flatTap(tid => AsterismQueries.addTargetsToAsterisms[IO](obsIds.toList, List(tid)))
+          .flatTap(tid => asterismIds.async.mod(_ + tid))
+          .map(_.some)
       case _                                                                =>
-        IO.unit
+        IO(none)
 
   def targetSelectionPopup(
-    label:            String,
-    programId:        Program.Id,
-    obsIds:           ObsIdSet,
-    obsAndTargets:    UndoSetter[ObservationsAndTargets],
-    adding:           View[AreAdding],
-    onAsterismUpdate: OnAsterismUpdateParams => Callback,
-    readOnly:         Boolean = false,
-    buttonClass:      Css = Css.Empty
+    label:       String,
+    programId:   Program.Id,
+    obsIds:      ObsIdSet,
+    targetIds:   View[AsterismIds],
+    targetInfo:  View[TargetList],
+    adding:      View[AreAdding],
+    after:       Option[Target.Id] => IO[Unit] = _ => IO.unit,
+    readOnly:    Boolean = false,
+    buttonClass: Css = Css.Empty
   )(using
     FetchClient[IO, ObservationDB],
     Logger[IO],
@@ -97,8 +92,10 @@ trait AsterismModifier:
         insertSiderealTarget(
           programId,
           obsIds,
-          obsAndTargets,
-          targetWithOptId,
-          onAsterismUpdate
-        ).switching(adding.async, AreAdding(_)).runAsync
+          targetIds,
+          targetInfo,
+          targetWithOptId
+        ).flatMap(after)
+          .switching(adding.async, AreAdding(_))
+          .runAsync
     )

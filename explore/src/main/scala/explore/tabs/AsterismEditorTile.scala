@@ -11,12 +11,12 @@ import crystal.react.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeEditor
+import explore.model.AsterismIds
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
 import explore.model.ObservationsAndTargets
-import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.enums.TileSizeState
@@ -42,6 +42,7 @@ object AsterismEditorTile:
     userId:            Option[User.Id],
     programId:         Program.Id,
     obsIds:            ObsIdSet,
+    asterismIds:       View[AsterismIds],
     obsAndTargets:     UndoSetter[ObservationsAndTargets],
     configuration:     Option[BasicConfiguration],
     vizTime:           View[Option[Instant]],
@@ -49,7 +50,6 @@ object AsterismEditorTile:
     currentTarget:     Option[Target.Id],
     setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
     onCloneTarget:     OnCloneParameters => Callback,
-    onAsterismUpdate:  OnAsterismUpdateParams => Callback,
     obsInfo:           Target.Id => TargetEditObsInfo,
     searching:         View[Set[Target.Id]],
     title:             String,
@@ -59,7 +59,6 @@ object AsterismEditorTile:
     backButton:        Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
     // Save the time here. this works for the obs and target tabs
-    // It's OK to save the viz time for executed observations, I think.
     val vizTimeView =
       vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
 
@@ -80,13 +79,13 @@ object AsterismEditorTile:
           uid,
           programId,
           obsIds,
+          asterismIds,
           obsAndTargets,
           vizTime,
           obsConf,
           currentTarget,
           setTarget,
           onCloneTarget,
-          onAsterismUpdate,
           obsInfo,
           searching,
           renderInTitle,

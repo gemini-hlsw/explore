@@ -167,7 +167,6 @@ case class Observation(
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
   inline def isCalibration: Boolean = calibrationRole.isDefined
-  inline def isExecuted: Boolean    = status >= ObsStatus.Ongoing
 
 object Observation:
   type Id = lucuma.core.model.Observation.Id
