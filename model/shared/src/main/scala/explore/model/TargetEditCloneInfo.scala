@@ -56,12 +56,14 @@ object TargetEditCloneInfo:
   val onlyCurrentMsg: NonEmptyString          = "only the current observations".refined
   val allCurrentExecutedMsg: NonEmptyString   =
     "All the current observations have been executed. Target is readonly.".refined
+  val thisExecutedMsg: NonEmptyString         =
+    "The current observation has been executed. Target is readonly.".refined
   val allForTargetExecutedMsg: NonEmptyString =
     "All associated observations have been executed. Target is readonly".refined
   val onlyUnexecutedMsg: NonEmptyString       =
     "Target will only be modified for the un-executed observations.".refined
   val someExecutedMsg: NonEmptyString         =
-    "Some of the observations being edited have been executed.".refined
+    "Some of the observations being edited have been executed. Edits should apply to ".refined
   val unexecutedOfCurrentMsg: NonEmptyString  =
     "unexecuted observations of the current asterism".refined
   val allUnexectedMsg: NonEmptyString         = "all unexecuted observations".refined
@@ -77,12 +79,15 @@ object TargetEditCloneInfo:
     def allOtherExecutedText: NonEmptyString =
       if (obsIds.size === 1) allThisMsg
       else allCurrentMsg
+    def allExecutedMsg: NonEmptyString       =
+      if (obsIds.size === 1) thisExecutedMsg
+      else allCurrentExecutedMsg
 
   def otherMessage(otherCount: Long, hasExecuted: Boolean): NonEmptyString =
     val plural = if (otherCount === 1) "" else "s"
     val ex     = if (hasExecuted) "unexecuted " else ""
     NonEmptyString.unsafeFrom(
-      s"Target is in $otherCount other ${ex}observation$plural. Edits here should apply to."
+      s"Target is in $otherCount other ${ex}observation$plural. Edits here should apply to "
     )
 
   def allForTargetMsg(hasExecuted: Boolean): NonEmptyString =
@@ -101,8 +106,8 @@ object TargetEditCloneInfo:
             onlyUnexecutedMsg,
             obsInfo.unexecutedForTarget
           )
-      case Some(_) if obsInfo.allCurrentAreExecuted               =>
-        TargetEditCloneInfo.readonly(allCurrentExecutedMsg)
+      case Some(editing) if obsInfo.allCurrentAreExecuted         =>
+        TargetEditCloneInfo.readonly(editing.allExecutedMsg)
       // There are no other unexecuted observations, but maybe there are others.
       case Some(editing) if obsInfo.otherUnexecutedObsCount === 0 =>
         if (obsInfo.allCurrentAreOK && obsInfo.otherObsCount === 0)

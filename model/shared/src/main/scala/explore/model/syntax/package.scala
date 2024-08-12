@@ -53,6 +53,27 @@ object all:
     def findWithTargetIds(targetIds: SortedSet[Target.Id]): Option[AsterismGroup] =
       self.find { case (_, grpIds) => grpIds === targetIds }.map(AsterismGroup.fromTuple)
 
+  extension (observations: ObservationList)
+    def executedOf(obsIds: ObsIdSet): Option[ObsIdSet]                                       =
+      val executed = obsIds.idSet.filter(id => observations.getValue(id).fold(false)(_.isExecuted))
+      ObsIdSet.fromSortedSet(executed)
+    def addTargetToObservations(targetId: Target.Id, obsIds: ObsIdSet): ObservationList      =
+      obsIds.idSet.foldLeft(observations)((list, obsId) =>
+        list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ + targetId))
+      )
+    def removeTargetFromObservations(targetId: Target.Id, obsIds: ObsIdSet): ObservationList =
+      obsIds.idSet.foldLeft(observations)((list, obsId) =>
+        list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - targetId))
+      )
+    def allWithTarget(targetId: Target.Id): Set[Observation.Id]                              =
+      observations.values
+        .filter(_.scienceTargetIds.contains(targetId))
+        .map(_.id)
+        .toSet
+    // determine if the target is in any other observations other than the ones in obsIds
+    def isTargetInOtherObs(targetId: Target.Id, obsIds: ObsIdSet): Boolean                   =
+      (allWithTarget(targetId) -- obsIds.idSet.toSortedSet).nonEmpty
+
   extension (self: ConstraintGroupList)
     @targetName("findContainingObsIdsCS")
     def findContainingObsIds(obsIds: ObsIdSet): Option[ConstraintGroup] =

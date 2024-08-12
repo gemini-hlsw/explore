@@ -6,7 +6,7 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
-import lucuma.core.enums.ObsStatus
+import explore.model.syntax.all.*
 import lucuma.core.model.Target
 
 /**
@@ -51,16 +51,11 @@ object TargetEditObsInfo:
     current:   Option[ObsIdSet],
     summaries: ProgramSummaries
   ): TargetEditObsInfo =
-    val allObsIds = summaries.targetsWithObs.get(tid).map(_.obsIds)
+    val allObsIds = summaries.targetsWithObs.get(tid).map(_.obsIds).flatMap(ObsIdSet.fromSortedSet)
     // we should always find the ids in `observations`
-    val executed  =
-      allObsIds.map(
-        _.filter(id =>
-          summaries.observations.getValue(id).fold(false)(_.status >= ObsStatus.Ongoing)
-        )
-      )
+    val executed  = allObsIds.flatMap(summaries.observations.executedOf)
     TargetEditObsInfo(
       current,
-      allObsIds.flatMap(ObsIdSet.fromSortedSet),
-      executed.flatMap(ObsIdSet.fromSortedSet)
+      allObsIds,
+      executed
     )
