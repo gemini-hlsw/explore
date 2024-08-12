@@ -57,7 +57,6 @@ import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
-import lucuma.core.util.Timestamp
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -79,7 +78,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import monocle.Iso
 import org.typelevel.log4cats.Logger
-import queries.common.CallsQueriesGQL.*
 import queries.common.ProposalQueriesGQL
 import spire.std.any.*
 
@@ -93,7 +91,7 @@ case class ProposalEditor(
   invitations:       View[List[CoIInvitation]],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
-  deadline:          View[Option[Timestamp]],
+  cfps:              List[CallForProposal],
   layout:            LayoutsMap,
   readonly:          Boolean
 ) extends ReactFnProps(ProposalEditor.component)
@@ -571,15 +569,9 @@ object ProposalEditor:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // cfps
-      .useEffectResultOnMountBy: (_, ctx) =>
-        import ctx.given
-        ReadOpenCFPs[IO]
-          .query()
-          .map(_.map(_.callsForProposals.matches))
       // total time - we need `Hours` for editing and also to preserve if
       // the user switches between classes with and without total time.
-      .useStateViewBy: (props, _, _) =>
+      .useStateViewBy: (props, _) =>
         props.proposal
           .zoom(Proposal.proposalType.some.andThen(ProposalType.totalTime))
           .get
@@ -595,44 +587,23 @@ object ProposalEditor:
       .useStateView(Visible.Hidden)           // show partner splits modal
       .useStateView(List.empty[PartnerSplit]) // partner splits modal
       // Update the partner splits when a new callId is set
-      .useEffectWithDepsBy((props, _, cfps, _, _, _) =>
-        (props.proposal.get.callId, cfps.toOption.orEmpty)
-      ): (props, _, _, _, _, ps) =>
-        (callId, cfps) =>
-          callId.foldMap(cid =>
-            val currentSplits    = Proposal.proposalType.some
-              .andThen(ProposalType.partnerSplits)
-              .getOption(props.proposal.get)
-            val cfpPartners      = cfps
-              .find(_.id === cid)
-              .foldMap(_.partners.map(_.partner))
-            val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
-
-            if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
-              ps.set(currentSplits.orEmpty)
-            else
-              ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
-          )
-      // Update the deadline when the call or partner splits change
-      .useEffectWithDepsBy((props, _, cfps, _, _, splits) =>
-        (props.proposal.get.callId, cfps.toOption.orEmpty, splits.get)
-      ): (props, _, _, _, _, ps) =>
-        (callId, cfps, splits) =>
-          callId.fold(Callback.empty)(cid =>
-            val proposalPartners = splits.filter(_._2 > 0).map(_.partner)
-            props.deadline.set(
-              cfps
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.proposal.get.callId, props.cfps)):
+        (props, _, _, _, ps) =>
+          (callId, cfps) =>
+            callId.foldMap(cid =>
+              val currentSplits    = Proposal.proposalType.some
+                .andThen(ProposalType.partnerSplits)
+                .getOption(props.proposal.get)
+              val cfpPartners      = cfps
                 .find(_.id === cid)
-                .flatMap { c =>
-                  val callPartners = c.partners
-                  proposalPartners
-                    .map(p => callPartners.find(_.partner === p).flatMap(_.submissionDeadline))
-                    .minimumOption
-                    .flatten
-                    .orElse(c.submissionDeadlineDefault)
-                }
+                .foldMap(_.partners.map(_.partner))
+              val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
+
+              if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
+                ps.set(currentSplits.orEmpty)
+              else
+                ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
             )
-          )
       // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
       //   // Deal with changes to the ProposalClass.
       //   (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
@@ -659,7 +630,6 @@ object ProposalEditor:
         (
           props,
           ctx,
-          cfps,
           totalHours,
           // minPct2,
           showDialog,
@@ -682,7 +652,7 @@ object ProposalEditor:
             props.users,
             props.invitations,
             props.attachments,
-            cfps.toOption.orEmpty,
+            props.cfps,
             props.authToken,
             props.layout,
             props.readonly,

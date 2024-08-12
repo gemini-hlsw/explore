@@ -17,7 +17,7 @@ import explore.Icons
 import explore.common.ProposalQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Constants
+import explore.model.CallForProposal
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
 import explore.model.Proposal
@@ -55,16 +55,9 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
 
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import scala.concurrent.duration.*
 
-case class CallDeadline(
-  deadline: Timestamp
-) extends ReactFnProps(CallDeadline.component):
-  val deadlineLDT: LocalDateTime = deadline.toLocalDateTime
-  val deadlineStr: String        =
-    s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone.format(deadlineLDT)}"
+case class CallDeadline(deadline: Timestamp) extends ReactFnProps(CallDeadline.component)
 
 object CallDeadline:
   private type Props = CallDeadline
@@ -73,21 +66,19 @@ object CallDeadline:
     ScalaFnComponent
       .withHooks[Props]
       .useStreamOnMount(
-        Stream.awakeDelay[IO](1.seconds).flatMap(_ => Stream.eval(IO(Instant.now())))
+        Stream.eval(IO(Instant.now())) ++
+          Stream
+            .awakeDelay[IO](1.seconds)
+            .flatMap(_ => Stream.eval(IO(Instant.now())))
       )
       .render { (p, n) =>
         n.toOption.map(n =>
-          val now     = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
-          val diff    = java.time.Duration.between(now, p.deadlineLDT)
-          val dateFmt =
-            if (diff.isNegative) p.deadlineStr
-            else
-              val left = Constants.DurationLongWithSecondsFormatter(diff)
-              s"${p.deadlineStr} [$left]"
+          val (deadlineStr, left) = Proposal.deadlineAndTimeLeft(n, p.deadline)
+          val text                = left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
           <.span(
             ExploreStyles.ProposalDeadline,
             Message(
-              text = s"Deadline: $dateFmt",
+              text = s"Deadline: $text",
               severity = Message.Severity.Info
             )
           )
@@ -98,6 +89,7 @@ case class ProposalTabContents(
   programId:         Program.Id,
   userVault:         Option[UserVault],
   programDetails:    View[ProgramDetails],
+  cfps:              List[CallForProposal],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   attachments:       View[List[ProposalAttachment]],
   undoStacks:        View[UndoStacks[IO, Proposal]],
@@ -129,6 +121,7 @@ object ProposalTabContents:
     programId:         Program.Id,
     userVault:         Option[UserVault],
     programDetails:    View[ProgramDetails],
+    cfps:              List[CallForProposal],
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
     attachments:       View[List[ProposalAttachment]],
     undoStacks:        View[UndoStacks[IO, Proposal]],
@@ -136,8 +129,7 @@ object ProposalTabContents:
     layout:            LayoutsMap,
     isUpdatingStatus:  View[IsUpdatingStatus],
     readonly:          Boolean,
-    errorMessage:      UseState[Option[String]],
-    deadline:          View[Option[Timestamp]]
+    errorMessage:      UseState[Option[String]]
   ): VdomNode = {
     import ctx.given
 
@@ -171,6 +163,9 @@ object ProposalTabContents:
       programDetails
         .zoom(ProgramDetails.proposal)
         .mapValue((proposalView: View[Proposal]) =>
+          val deadline: Option[Timestamp] =
+            proposalView.get.deadline(cfps)
+
           <.div(
             ExploreStyles.ProposalTab,
             ProposalEditor(
@@ -183,7 +178,7 @@ object ProposalTabContents:
               invitations,
               attachments,
               userVault.map(_.token),
-              deadline,
+              cfps,
               layout,
               readonly
             ),
@@ -204,7 +199,7 @@ object ProposalTabContents:
                            onClick = updateStatus(ProposalStatus.Submitted),
                            disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
                     ).compact.tiny,
-                    deadline.get.map(CallDeadline.apply)
+                    deadline.map(CallDeadline.apply)
                   )
                   .when(
                     isStdUser && proposalStatus === ProposalStatus.NotSubmitted
@@ -260,16 +255,16 @@ object ProposalTabContents:
     .useMemoBy((props, _, _) => props.programDetails.get.proposalStatus)((_, _, _) =>
       p => p === ProposalStatus.Submitted || p === ProposalStatus.Accepted
     )
-    .useState(none[String])        // Submission error message
+    .useState(none[String]) // Submission error message
     .useLayoutEffectWithDepsBy((props, _, _, _, _) =>
       props.programDetails.get.proposal.flatMap(_.callId)
     )((_, _, _, _, e) => _ => e.setState(none))
-    .useStateView(none[Timestamp]) // CFP/Proposal Deadline
-    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg, deadline) =>
+    .render { (props, ctx, isUpdatingStatus, readonly, errorMsg) =>
       renderFn(
         props.programId,
         props.userVault,
         props.programDetails,
+        props.cfps,
         props.timeEstimateRange,
         props.attachments,
         props.undoStacks,
@@ -277,7 +272,6 @@ object ProposalTabContents:
         props.layout,
         isUpdatingStatus,
         readonly,
-        errorMsg,
-        deadline
+        errorMsg
       )
     }

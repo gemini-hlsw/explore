@@ -34,7 +34,15 @@ case class CallForProposal(
   partners:                  List[CallPartner],
   submissionDeadlineDefault: Option[Timestamp]
 ) derives Eq,
-      Decoder
+      Decoder:
+
+  def deadline(proposalPartners: List[Partner]): Option[Timestamp] =
+    val callPartners = partners
+    proposalPartners
+      .map(p => callPartners.find(_.partner === p).flatMap(_.submissionDeadline))
+      .minimumOption
+      .flatten
+      .orElse(submissionDeadlineDefault)
 
 object CallForProposal:
   val id: Lens[CallForProposal, CallForProposals.Id] =

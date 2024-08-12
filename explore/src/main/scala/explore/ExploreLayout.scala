@@ -9,6 +9,7 @@ import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.cache.CfpCache
 import explore.cache.ModesCache
 import explore.cache.PreferencesCache
 import explore.cache.ProgramCache
@@ -29,6 +30,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.util.Display
+import lucuma.core.util.Timestamp
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
@@ -198,6 +200,11 @@ object ExploreLayout:
               }
             }
 
+          val deadlineStr =
+            props.view.get.deadline
+              .map(Proposal.deadlineString)
+              .orEmpty
+
           React.Fragment(
             ConfirmDialog(),
             Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
@@ -216,11 +223,12 @@ object ExploreLayout:
               )
             ),
             <.div(LayoutStyles.MainGrid)(
+              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.set),
+              CfpCache(props.view.zoom(RootModel.cfps).async.set),
               // This might use the `RoutingInfo.dummyProgramId` if the URL had no
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
               // selection popup.
-              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.set),
               ProgramCache(
                 routingInfo.programId,
                 props.view.zoom(RootModel.user).get.map(_.role.name),
@@ -275,7 +283,7 @@ object ExploreLayout:
                   props.resolution.renderP(props.view),
                   if (isSubmitted)
                     Message(text =
-                      s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted to allow modifications until the proposal deadline."
+                      s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted until the proposal deadline at ${deadlineStr}."
                     )
                   else EmptyVdom
                 )

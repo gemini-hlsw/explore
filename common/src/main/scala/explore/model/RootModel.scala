@@ -19,6 +19,7 @@ import lucuma.core.model.ServiceUser
 import lucuma.core.model.StandardUser
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.Timestamp
 import lucuma.ui.sso.UserVault
 import monocle.Focus
 import monocle.Lens
@@ -35,6 +36,7 @@ case class RootModel(
   programSummaries:     Option[ProgramSummaries] = none,
   userPreferences:      Option[UserPreferences] = none,
   spectroscopyModes:    Option[SpectroscopyModesMatrix] = none,
+  cfps:                 Option[List[CallForProposal]] = none,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq {
@@ -43,6 +45,12 @@ case class RootModel(
       .getOption(this)
       .map(_.label)
       .orElse(RootModel.proposalReference.getOption(this).map(_.label))
+
+  val deadline: Option[Timestamp] =
+    (RootModel.proposal.getOption(this).flatten, RootModel.cfps.get(this))
+      .mapN(_.deadline(_))
+      .flatten
+
 }
 
 object RootModel:
@@ -54,6 +62,7 @@ object RootModel:
   val programSummaries     = Focus[RootModel](_.programSummaries)
   val userPreferences      = Focus[RootModel](_.userPreferences)
   val spectroscopyModes    = Focus[RootModel](_.spectroscopyModes)
+  val cfps                 = Focus[RootModel](_.cfps)
   val undoStacks           = Focus[RootModel](_.undoStacks)
   val otherUndoStacks      = Focus[RootModel](_.otherUndoStacks)
 
@@ -83,3 +92,6 @@ object RootModel:
         ProgramDetails.proposal.some.andThen(Proposal.reference.some)
       )
     )
+
+  val proposal: Optional[RootModel, Option[Proposal]] =
+    programSummaries.some.andThen(ProgramSummaries.proposal)
