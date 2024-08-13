@@ -13,7 +13,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
 
-trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
+trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]: Reusability]:
   private type F[T] = DefaultA[T]
 
   // Initial model and a stream of delayed updates.
@@ -65,6 +65,6 @@ trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
       // )
       .render((_, _, _) => React.Fragment())
 
-object CacheComponent:
+object CacheControllerComponent:
   trait Props[S]:
     val modState: (Option[S] => Option[S]) => DefaultA[Unit]

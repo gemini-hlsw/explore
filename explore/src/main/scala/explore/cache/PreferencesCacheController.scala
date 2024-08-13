@@ -24,19 +24,20 @@ import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesUpdates
 import queries.schemas.UserPreferencesDB
 
-case class PreferencesCache(
+case class PreferencesCacheController(
   userId:            User.Id,
   modUserPrefrences: (Option[UserPreferences] => Option[UserPreferences]) => IO[Unit]
 )(using client: StreamingClient[IO, UserPreferencesDB])
-    extends ReactFnProps[PreferencesCache](PreferencesCache.component)
-    with CacheComponent.Props[UserPreferences]:
+    extends ReactFnProps[PreferencesCacheController](PreferencesCacheController.component)
+    with CacheControllerComponent.Props[UserPreferences]:
   val modState                                 = modUserPrefrences
   given StreamingClient[IO, UserPreferencesDB] = client
 
-object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache]:
-  given Reusability[PreferencesCache] = Reusability.by(_.userId)
+object PreferencesCacheController
+    extends CacheControllerComponent[UserPreferences, PreferencesCacheController]:
+  given Reusability[PreferencesCacheController] = Reusability.by(_.userId)
 
-  override protected val initial: PreferencesCache => IO[
+  override protected val initial: PreferencesCacheController => IO[
     (UserPreferences, fs2.Stream[IO, UserPreferences => UserPreferences])
   ] = props =>
     import props.given
@@ -54,7 +55,7 @@ object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache
 
     (grids, userPrefs).parMapN(UserPreferences.apply).map(prefs => (prefs, fs2.Stream.empty))
 
-  override protected val updateStream: PreferencesCache => Resource[
+  override protected val updateStream: PreferencesCacheController => Resource[
     cats.effect.IO,
     fs2.Stream[cats.effect.IO, UserPreferences => UserPreferences]
   ] = props =>
