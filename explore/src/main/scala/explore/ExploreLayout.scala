@@ -9,10 +9,10 @@ import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.cache.CfpCache
-import explore.cache.ModesCache
-import explore.cache.PreferencesCache
-import explore.cache.ProgramCache
+import explore.cache.CfpCacheController
+import explore.cache.ModesCacheController
+import explore.cache.PreferencesCacheController
+import explore.cache.ProgramCacheController
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import explore.events.ExploreEvent.LogoutEventId
@@ -223,22 +223,22 @@ object ExploreLayout:
               )
             ),
             <.div(LayoutStyles.MainGrid)(
-              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.set),
-              CfpCache(props.view.zoom(RootModel.cfps).async.set),
+              ModesCacheController(props.view.zoom(RootModel.spectroscopyModes).async.mod),
+              CfpCacheController(props.view.zoom(RootModel.cfps).async.mod),
               // This might use the `RoutingInfo.dummyProgramId` if the URL had no
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
               // selection popup.
-              ProgramCache(
+              ProgramCacheController(
                 routingInfo.programId,
                 props.view.zoom(RootModel.user).get.map(_.role.name),
-                props.view.zoom(RootModel.programSummaries).async.set
+                props.view.zoom(RootModel.programSummaries).async.mod
               ),
               userVault.mapValue: (vault: View[UserVault]) =>
                 React.Fragment(
-                  PreferencesCache(
+                  PreferencesCacheController(
                     vault.get.user.id,
-                    props.view.zoom(RootModel.userPreferences).async.set
+                    props.view.zoom(RootModel.userPreferences).async.mod
                   ),
                   TopBar(
                     vault,

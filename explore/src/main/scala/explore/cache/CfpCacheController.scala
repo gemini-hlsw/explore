@@ -15,23 +15,26 @@ import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import queries.common.CallsQueriesGQL.ReadOpenCFPs
 
-case class CfpCache(
-  setCalls: Option[List[CallForProposal]] => IO[Unit]
+case class CfpCacheController(
+  modCalls: (Option[List[CallForProposal]] => Option[List[CallForProposal]]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
-    extends ReactFnProps[CfpCache](CfpCache.component)
-    with CacheComponent.Props[List[CallForProposal]]:
-  val setState                             = setCalls
+    extends ReactFnProps[CfpCacheController](CfpCacheController.component)
+    with CacheControllerComponent.Props[List[CallForProposal]]:
+  val modState                             = modCalls
   given StreamingClient[IO, ObservationDB] = client
 
-object CfpCache extends CacheComponent[List[CallForProposal], CfpCache]:
+object CfpCacheController
+    extends CacheControllerComponent[List[CallForProposal], CfpCacheController]:
 
   override protected val updateStream
-    : CfpCache => Resource[IO, Stream[IO, List[CallForProposal] => List[CallForProposal]]] =
+    : CfpCacheController => Resource[IO,
+                                     Stream[IO, List[CallForProposal] => List[CallForProposal]]
+    ] =
     _ => Resource.pure(Stream.empty)
 
-  given Reusability[CfpCache] = Reusability.always
+  given Reusability[CfpCacheController] = Reusability.always
 
-  override protected val initial: CfpCache => IO[
+  override protected val initial: CfpCacheController => IO[
     (List[CallForProposal], fs2.Stream[IO, List[CallForProposal] => List[CallForProposal]])
   ] = props =>
     import props.given

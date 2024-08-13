@@ -5,14 +5,15 @@ package explore.cache
 
 import cats.effect.Resource
 import cats.effect.kernel.Deferred
+import cats.effect.std.Queue
 import cats.syntax.all.*
 import crystal.react.hooks.*
-import fs2.concurrent.SignallingRef
+import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
 
-trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
+trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]: Reusability]:
   private type F[T] = DefaultA[T]
 
   // Initial model and a stream of delayed updates.
@@ -28,7 +29,7 @@ trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
       .useEffectResultWithDepsBy(props => props): _ =>
         props => // TODO Could we actually useEffectStreamResource?
           for
-            latch                        <- Deferred[F, SignallingRef[F, S]]
+            latch                        <- Deferred[F, Queue[F, S => S]]
             // Start the update fiber. We want subscriptions to start before initial query.
             // This way we don't miss updates.
             // The update fiber will only update the cache once it is initialized (via latch).
@@ -37,29 +38,33 @@ trait CacheComponent[S, P <: CacheComponent.Props[S]: Reusability]:
               updateStream(props)
                 .evalTap:
                   _.evalTap: mod =>
-                    latch.get.flatMap(_.update(mod))
+                    latch.get.flatMap(_.offer(mod))
                   .compile.drain
                 .useForever
                 .start
             (initialValue, delayedInits) <- initial(props)
-            cache                        <- SignallingRef[F].of(initialValue)
+            _                            <- props.modState((_: Option[S]) => initialValue.some)
+            queue                        <- Queue.unbounded[F, S => S]
+            _                            <- latch.complete(queue)
             _                            <-
               delayedInits
                 .evalMap: mod =>
-                  cache.update(mod)
+                  queue.offer(mod)
                 .compile
                 .drain
-                .flatMap: _ =>
-                  latch.complete(cache) // Allow stream updates to proceed.
                 .start
-          yield cache
-      .useStreamBy((props, cache) => (props, cache.isReady)): (props, cache) =>
-        _ => cache.toOption.map(_.discrete).orEmpty.evalTap(value => props.setState(value.some))
+          yield queue
+      .useStreamBy((props, queue) => (props, queue.isReady)): (props, queue) =>
+        _ =>
+          queue.toOption
+            .map(q => Stream.fromQueueUnterminated(q))
+            .orEmpty
+            .evalTap(f => props.modState(_.map(f)))
       // .useEffectWithDepsBy((_, _, value) => value.toOption)((props, _, _) =>
       //   value => props.setState(value)
       // )
       .render((_, _, _) => React.Fragment())
 
-object CacheComponent:
+object CacheControllerComponent:
   trait Props[S]:
-    val setState: Option[S] => DefaultA[Unit]
+    val modState: (Option[S] => Option[S]) => DefaultA[Unit]

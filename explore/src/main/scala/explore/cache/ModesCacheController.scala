@@ -15,23 +15,26 @@ import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import queries.common.ModesQueriesGQL
 
-case class ModesCache(
-  setModes: Option[SpectroscopyModesMatrix] => IO[Unit]
+case class ModesCacheController(
+  modModes: (Option[SpectroscopyModesMatrix] => Option[SpectroscopyModesMatrix]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
-    extends ReactFnProps[ModesCache](ModesCache.component)
-    with CacheComponent.Props[SpectroscopyModesMatrix]:
-  val setState                             = setModes
+    extends ReactFnProps[ModesCacheController](ModesCacheController.component)
+    with CacheControllerComponent.Props[SpectroscopyModesMatrix]:
+  val modState                             = modModes
   given StreamingClient[IO, ObservationDB] = client
 
-object ModesCache extends CacheComponent[SpectroscopyModesMatrix, ModesCache]:
+object ModesCacheController
+    extends CacheControllerComponent[SpectroscopyModesMatrix, ModesCacheController]:
 
   override protected val updateStream
-    : ModesCache => Resource[IO, Stream[IO, SpectroscopyModesMatrix => SpectroscopyModesMatrix]] =
+    : ModesCacheController => Resource[IO, Stream[IO,
+                                                  SpectroscopyModesMatrix => SpectroscopyModesMatrix
+    ]] =
     _ => Resource.pure(Stream.empty)
 
-  given Reusability[ModesCache] = Reusability.always
+  given Reusability[ModesCacheController] = Reusability.always
 
-  override protected val initial: ModesCache => IO[
+  override protected val initial: ModesCacheController => IO[
     (SpectroscopyModesMatrix, fs2.Stream[IO, SpectroscopyModesMatrix => SpectroscopyModesMatrix])
   ] = props =>
     import props.given
