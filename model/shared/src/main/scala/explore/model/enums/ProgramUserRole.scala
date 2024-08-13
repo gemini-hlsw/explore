@@ -6,6 +6,7 @@ package explore.model.enums
 import lucuma.core.util.Enumerated
 
 enum ProgramUserRole(val tag: String) derives Enumerated {
+  case Pi       extends ProgramUserRole("Pi")
   case Coi      extends ProgramUserRole("Coi")
   case Observer extends ProgramUserRole("Observer")
   case Support  extends ProgramUserRole("Support")

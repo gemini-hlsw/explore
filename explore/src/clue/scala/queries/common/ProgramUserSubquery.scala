@@ -13,7 +13,6 @@ object ProgramUserSubquery extends GraphQLSubquery.Typed[ObservationDB, ProgramU
   override val subquery: String = """
     {
       id
-      type
       orcidId
       orcidGivenName
       orcidCreditName
