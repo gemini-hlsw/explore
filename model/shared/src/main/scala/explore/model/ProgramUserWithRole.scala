@@ -15,12 +15,18 @@ case class ProgramUserWithRole(
   user:        ProgramUser,
   partnerLink: Option[PartnerLink],
   role:        Option[ProgramUserRole]
-) derives Decoder,
-      Eq {
+) derives Eq:
   val roleName: String = role match {
     case None       => "Pi"
     case Some(role) => role.tag
   }
 
   val name: String = user.profile.fold("Guest User")(p => p.displayName)
-}
+
+object ProgramUserWithRole:
+  given Decoder[ProgramUserWithRole] = c =>
+    for {
+      u    <- c.downField("user").as[ProgramUser]
+      pl   <- c.downField("partnerLink").as[Option[PartnerLink]]
+      role <- c.downField("role").as[Option[ProgramUserRole]]
+    } yield ProgramUserWithRole(u, pl, role)

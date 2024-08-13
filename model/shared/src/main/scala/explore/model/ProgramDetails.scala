@@ -40,20 +40,11 @@ object ProgramDetails:
       t  <- c.get[ProgramType]("type")
       p  <- c.get[Option[Proposal]]("proposal")
       ps <- c.get[ProposalStatus]("proposalStatus")
-      pi <- c.downField("pi").as[Option[ProgramUser]]
+      pi <- c.downField("pi").as[Option[ProgramUserWithRole]]
       us <- c.get[List[ProgramUserWithRole]]("users")
       in <- c.get[List[CoIInvitation]]("userInvitations")
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]
-    } yield ProgramDetails(
-      t,
-      p,
-      ps,
-      pi.map(ProgramUserWithRole(_, None, None)),
-      us,
-      in,
-      r.flatten,
-      as
-    )
+    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as)
   )
