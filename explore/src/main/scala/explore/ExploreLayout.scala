@@ -223,8 +223,8 @@ object ExploreLayout:
               )
             ),
             <.div(LayoutStyles.MainGrid)(
-              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.set),
-              CfpCache(props.view.zoom(RootModel.cfps).async.set),
+              ModesCache(props.view.zoom(RootModel.spectroscopyModes).async.mod),
+              CfpCache(props.view.zoom(RootModel.cfps).async.mod),
               // This might use the `RoutingInfo.dummyProgramId` if the URL had no
               // no program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
@@ -232,13 +232,13 @@ object ExploreLayout:
               ProgramCache(
                 routingInfo.programId,
                 props.view.zoom(RootModel.user).get.map(_.role.name),
-                props.view.zoom(RootModel.programSummaries).async.set
+                props.view.zoom(RootModel.programSummaries).async.mod
               ),
               userVault.mapValue: (vault: View[UserVault]) =>
                 React.Fragment(
                   PreferencesCache(
                     vault.get.user.id,
-                    props.view.zoom(RootModel.userPreferences).async.set
+                    props.view.zoom(RootModel.userPreferences).async.mod
                   ),
                   TopBar(
                     vault,

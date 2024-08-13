@@ -16,11 +16,11 @@ import lucuma.schemas.ObservationDB
 import queries.common.CallsQueriesGQL.ReadOpenCFPs
 
 case class CfpCache(
-  setCalls: Option[List[CallForProposal]] => IO[Unit]
+  modCalls: (Option[List[CallForProposal]] => Option[List[CallForProposal]]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[CfpCache](CfpCache.component)
     with CacheComponent.Props[List[CallForProposal]]:
-  val setState                             = setCalls
+  val modState                             = modCalls
   given StreamingClient[IO, ObservationDB] = client
 
 object CfpCache extends CacheComponent[List[CallForProposal], CfpCache]:

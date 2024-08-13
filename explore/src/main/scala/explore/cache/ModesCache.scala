@@ -16,11 +16,11 @@ import lucuma.schemas.ObservationDB
 import queries.common.ModesQueriesGQL
 
 case class ModesCache(
-  setModes: Option[SpectroscopyModesMatrix] => IO[Unit]
+  modModes: (Option[SpectroscopyModesMatrix] => Option[SpectroscopyModesMatrix]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[ModesCache](ModesCache.component)
     with CacheComponent.Props[SpectroscopyModesMatrix]:
-  val setState                             = setModes
+  val modState                             = modModes
   given StreamingClient[IO, ObservationDB] = client
 
 object ModesCache extends CacheComponent[SpectroscopyModesMatrix, ModesCache]:

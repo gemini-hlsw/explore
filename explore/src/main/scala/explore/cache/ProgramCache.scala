@@ -43,11 +43,11 @@ import scala.concurrent.duration.*
 case class ProgramCache(
   programId:           Program.Id,
   roleId:              Option[String], // Just to refresh if the role has changed
-  setProgramSummaries: Option[ProgramSummaries] => IO[Unit]
+  modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[ProgramCache](ProgramCache.component)
     with CacheComponent.Props[ProgramSummaries]:
-  val setState                             = setProgramSummaries
+  val modState                             = modProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
 
 object ProgramCache

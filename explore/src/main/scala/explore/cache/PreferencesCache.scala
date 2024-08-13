@@ -26,11 +26,11 @@ import queries.schemas.UserPreferencesDB
 
 case class PreferencesCache(
   userId:            User.Id,
-  setUserPrefrences: Option[UserPreferences] => IO[Unit]
+  modUserPrefrences: (Option[UserPreferences] => Option[UserPreferences]) => IO[Unit]
 )(using client: StreamingClient[IO, UserPreferencesDB])
     extends ReactFnProps[PreferencesCache](PreferencesCache.component)
     with CacheComponent.Props[UserPreferences]:
-  val setState                                 = setUserPrefrences
+  val modState                                 = modUserPrefrences
   given StreamingClient[IO, UserPreferencesDB] = client
 
 object PreferencesCache extends CacheComponent[UserPreferences, PreferencesCache]:
