@@ -23,6 +23,7 @@ case class ObsIdSet(idSet: NonEmptySet[Observation.Id]):
     --(other.idSet.toSortedSet)
   def -(other: Observation.Id): Option[ObsIdSet]       =
     NonEmptySet.fromSet(idSet - other).map(ObsIdSet(_))
+  def head: Observation.Id                             = idSet.head
 
 object ObsIdSet {
   given Order[ObsIdSet] = Order.by(_.idSet)
