@@ -55,7 +55,7 @@ case class Observation(
   attachmentIds:       SortedSet[ObsAttachment.Id],
   scienceRequirements: ScienceRequirements,
   observingMode:       Option[ObservingMode],
-  visualizationTime:   Option[Instant],
+  observationTime:     Option[Instant],
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
   groupId:             Option[Group.Id],
@@ -98,7 +98,7 @@ case class Observation(
           _,
           _
         ) =>
-      val defaultMode                =
+      val defaultMode =
         GmosCcdMode(
           defaultXBin,
           defaultYBin,
@@ -106,6 +106,7 @@ case class Observation(
           defaultAmpGain,
           defaultAmpReadMode
         )
+
       val overridenMode: GmosCcdMode =
         List(explicitXBin, explicitYBin, explicitAmpGain, explicitAmpReadMode).foldLeft(
           defaultMode
@@ -142,7 +143,7 @@ case class Observation(
           _,
           _
         ) =>
-      val defaultMode                =
+      val defaultMode =
         GmosCcdMode(
           defaultXBin,
           defaultYBin,
@@ -150,6 +151,7 @@ case class Observation(
           defaultAmpGain,
           defaultAmpReadMode
         )
+
       val overridenMode: GmosCcdMode =
         List(explicitXBin, explicitYBin, explicitAmpGain, explicitAmpReadMode).foldLeft(
           defaultMode
@@ -183,7 +185,7 @@ object Observation:
   val attachmentIds       = Focus[Observation](_.attachmentIds)
   val scienceRequirements = Focus[Observation](_.scienceRequirements)
   val observingMode       = Focus[Observation](_.observingMode)
-  val visualizationTime   = Focus[Observation](_.visualizationTime)
+  val observationTime     = Focus[Observation](_.observationTime)
   val posAngleConstraint  = Focus[Observation](_.posAngleConstraint)
   val wavelength          = Focus[Observation](_.wavelength)
   val groupId             = Focus[Observation](_.groupId)
@@ -213,7 +215,7 @@ object Observation:
       attachmentIds       <- c.get[List[AttachmentIdWrapper]]("obsAttachments")
       scienceRequirements <- c.get[ScienceRequirements]("scienceRequirements")
       observingMode       <- c.get[Option[ObservingMode]]("observingMode")
-      visualizationTime   <- c.get[Option[Timestamp]]("visualizationTime")
+      observationTime     <- c.get[Option[Timestamp]]("observationTime")
       posAngleConstraint  <- c.get[PosAngleConstraint]("posAngleConstraint")
       wavelength          <- c.downField("scienceRequirements")
                                .downField("spectroscopy")
@@ -235,7 +237,7 @@ object Observation:
       SortedSet.from(attachmentIds.map(_.id)),
       scienceRequirements,
       observingMode,
-      visualizationTime.map(_.toInstant),
+      observationTime.map(_.toInstant),
       posAngleConstraint,
       wavelength,
       groupId,

@@ -274,7 +274,7 @@ object ObsTabTiles:
       .useStateView(().ready)
       .useStateView(ChartSelector.Closed)
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
-        p.observation.model.get.visualizationTime
+        p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       .render:
@@ -317,7 +317,7 @@ object ObsTabTiles:
               props.observation.get.observingMode.map(_.toBasicConfiguration)
 
             val vizTimeView: View[Option[Instant]] =
-              props.observation.model.zoom(Observation.visualizationTime)
+              props.observation.model.zoom(Observation.observationTime)
 
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
               NonEmptyList.fromList:

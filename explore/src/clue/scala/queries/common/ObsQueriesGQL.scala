@@ -162,6 +162,18 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
+  trait UpdateObservationTimesMutation extends GraphQLOperation[ObservationDB]:
+    val document = """
+      mutation ($input: UpdateObservationsTimesInput!){
+        updateObservationsTimes(input: $input) {
+          observations {
+            id
+          }
+        }
+      }
+    """
+
+  @GraphQL
   trait CreateConfigurationMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation ($$input: UpdateObservationsInput!){
