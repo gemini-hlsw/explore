@@ -33,8 +33,8 @@ case class ElevationPlotOptions(
   elevationPlotSkyBrightnessVisible:    Visible,
   elevationPlotLunarElevationVisible:   Visible
 ) derives Eq:
-  def withDateAndSemesterOf(visualizationTime: Instant): ElevationPlotOptions =
-    val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(visualizationTime.some, site)
+  def withDateAndSemesterOf(observationTime: Instant): ElevationPlotOptions =
+    val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(observationTime.some, site)
     copy(date = date, semester = semester)
 
   def minInstant: Instant =
@@ -73,12 +73,12 @@ object ElevationPlotOptions:
     Focus[ElevationPlotOptions](_.elevationPlotLunarElevationVisible)
 
   private def dateAndSemesterOf(
-    visualizationTime: Option[Instant],
-    site:              Site
+    observationTime: Option[Instant],
+    site:            Site
   ): (LocalDate, Semester) =
     val date: LocalDate =
       ObservingNight
-        .fromSiteAndInstant(site, visualizationTime.getOrElse(Instant.now))
+        .fromSiteAndInstant(site, observationTime.getOrElse(Instant.now))
         .toLocalDate
     // if `fromLocalDate` returns None, date is out of range, so clamp
     // semester to the Min and Max semesters
@@ -89,14 +89,14 @@ object ElevationPlotOptions:
     (date, semester)
 
   def default(
-    predefinedSite:    Option[Site],
-    visualizationTime: Option[Instant],
-    coords:            CoordinatesAtVizTime
+    predefinedSite:  Option[Site],
+    observationTime: Option[Instant],
+    coords:          CoordinatesAtVizTime
   ) =
     val site: Site       = predefinedSite.getOrElse(
       if (coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
     )
-    val (date, semester) = dateAndSemesterOf(visualizationTime, site)
+    val (date, semester) = dateAndSemesterOf(observationTime, site)
 
     ElevationPlotOptions(
       site,

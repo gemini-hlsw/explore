@@ -82,17 +82,17 @@ object ObsQueries:
   }
 
   def updateVisualizationTime[F[_]: Async](
-    obsIds:            List[Observation.Id],
-    visualizationTime: Option[Instant]
+    obsIds:          List[Observation.Id],
+    observationTime: Option[Instant]
   )(using FetchClient[F, ObservationDB]): F[Unit] = {
 
-    val editInput = ObservationPropertiesInput(visualizationTime =
-      visualizationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
+    val editInput = ObservationTimesInput(observationTime =
+      observationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
     )
 
-    UpdateObservationMutation[F]
+    UpdateObservationTimesMutation[F]
       .execute(
-        UpdateObservationsInput(
+        UpdateObservationsTimesInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )

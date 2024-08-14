@@ -197,7 +197,7 @@ object TargetTabContents extends TwoPanels:
         for
           id <- idsToEdit.single
           o  <- a.observations.getValue(id)
-          t  <- o.visualizationTime
+          t  <- o.observationTime
         yield t
 
       def modVizTime(
@@ -208,7 +208,7 @@ object TargetTabContents extends TwoPanels:
             ProgramSummaries.observations
               .filterIndex((id: Observation.Id) => id === i)
               .andThen(KeyedIndexedList.value)
-              .andThen(Observation.visualizationTime)
+              .andThen(Observation.observationTime)
               .modify(mod)(ps)
           )
           .getOrElse(ps)

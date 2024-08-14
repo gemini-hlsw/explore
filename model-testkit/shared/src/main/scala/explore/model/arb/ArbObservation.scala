@@ -121,7 +121,7 @@ trait ArbObservation:
          o.timingWindows,
          o.scienceRequirements,
          o.observingMode,
-         o.visualizationTime,
+         o.observationTime,
          o.posAngleConstraint,
          o.wavelength,
          o.groupId,

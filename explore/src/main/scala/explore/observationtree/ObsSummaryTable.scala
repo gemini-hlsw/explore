@@ -294,7 +294,7 @@ object ObsSummaryTable:
               // Only expand if there are multiple targets
               if (targets.sizeIs > 1)
                 targets.map: target =>
-                  Expandable(ExpandedTargetRow(obs.id, target, obs.visualizationTime))
+                  Expandable(ExpandedTargetRow(obs.id, target, obs.observationTime))
               else Nil
             )
     .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
@@ -401,8 +401,8 @@ object ObsSummaryTable:
       this match
         case r: ExpandedTargetRow => targetCoords(r.targetWithId, r.vizTime)
         case r: ObsRow            =>
-          asterismCoords(r.asterism, r.obs.visualizationTime)
-            .orElse(r.targetWithId.flatMap(t => targetCoords(t, r.obs.visualizationTime)))
+          asterismCoords(r.asterism, r.obs.observationTime)
+            .orElse(r.targetWithId.flatMap(t => targetCoords(t, r.obs.observationTime)))
 
     private def targetCoords(twid: TargetWithId, vizTime: Option[Instant]): Option[Coordinates] =
       Target.sidereal
