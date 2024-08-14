@@ -20,8 +20,11 @@ import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.enums.TileSizeState
+import explore.targeteditor.AreAdding
 import explore.targeteditor.AsterismEditor
+import explore.targeteditor.AsterismModifier
 import explore.undo.UndoSetter
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -36,7 +39,7 @@ import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 
-object AsterismEditorTile:
+object AsterismEditorTile extends AsterismModifier:
 
   def asterismEditorTile(
     userId:            Option[User.Id],
@@ -56,15 +59,28 @@ object AsterismEditorTile:
     globalPreferences: View[GlobalPreferences],
     readonly:          Boolean,
     sequenceChanged:   Callback = Callback.empty,
+    adding:            View[AreAdding],
     backButton:        Option[VdomNode] = none
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Tile = {
+
+    val targetAdd   =
+      targetSelectionPopup(
+        "Add",
+        programId,
+        obsIds,
+        obsAndTargets,
+        adding,
+        onAsterismUpdate,
+        readonly,
+        ExploreStyles.AddTargetButton
+      )
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
     val vizTimeView =
       vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
 
     val control: VdomNode =
-      <.div(ExploreStyles.JustifiedEndTileControl, ObsTimeEditor(vizTimeView))
+      <.div(ExploreStyles.TileTitleStrip, targetAdd, ObsTimeEditor(vizTimeView))
 
     Tile(
       ObsTabTilesIds.TargetId.id,

@@ -19,6 +19,7 @@ import explore.targets.TargetSource
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.extra.router.SetRouteVia
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.Css
@@ -63,6 +64,18 @@ trait AsterismModifier:
           )
       case _                                                                =>
         IO.unit
+
+  def selectedTargetView(
+    focusedTargetId: Option[Target.Id],
+    setTarget:       (Option[Target.Id], SetRouteVia) => Callback
+  ): View[Option[Target.Id]] =
+    View(
+      focusedTargetId,
+      (mod, cb) =>
+        val oldValue = focusedTargetId
+        val newValue = mod(focusedTargetId)
+        setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
+    )
 
   def targetSelectionPopup(
     label:            String,

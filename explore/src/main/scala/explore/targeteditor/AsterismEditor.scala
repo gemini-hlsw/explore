@@ -96,15 +96,6 @@ object AsterismEditor extends AsterismModifier:
 
         val vizTime = props.vizTime.get
 
-        val selectedTargetView: View[Option[Target.Id]] =
-          View(
-            props.focusedTargetId,
-            (mod, cb) =>
-              val oldValue = props.focusedTargetId
-              val newValue = mod(props.focusedTargetId)
-              props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
-          )
-
         // the 'getOrElse doesn't matter. Controls will be readonly if all are executed
         val unexecutedObs = obsEditInfo.unExecuted.getOrElse(props.obsIds)
 
@@ -140,7 +131,7 @@ object AsterismEditor extends AsterismModifier:
             unexecutedObs,
             obsEditInfo.asterismIds,
             props.obsAndTargets,
-            selectedTargetView,
+            selectedTargetView(props.focusedTargetId, props.setTarget),
             props.onAsterismUpdate,
             vizTime,
             props.renderInTitle,

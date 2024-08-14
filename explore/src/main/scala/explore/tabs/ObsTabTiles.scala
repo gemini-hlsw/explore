@@ -44,6 +44,7 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
+import explore.targeteditor.AreAdding
 import explore.timingwindows.TimingWindowsPanel
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -278,6 +279,7 @@ object ObsTabTiles:
         p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
+      .useStateView(AreAdding(false))
       .render:
         (
           props,
@@ -294,7 +296,8 @@ object ObsTabTiles:
           selectedAttachment,
           sequenceChanged,
           chartSelector,
-          vizTimeOrNowPot
+          vizTimeOrNowPot,
+          adding
         ) =>
           import ctx.given
 
@@ -502,7 +505,8 @@ object ObsTabTiles:
                 props.globalPreferences,
                 props.isDisabled,
                 // Any target changes invalidate the sequence
-                sequenceChanged.set(Pot.pending)
+                sequenceChanged.set(Pot.pending),
+                adding
               )
 
             // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper

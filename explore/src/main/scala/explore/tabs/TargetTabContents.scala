@@ -28,6 +28,7 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.targeteditor.AreAdding
 import explore.targets.ObservationPasteAction
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryTable
@@ -86,7 +87,8 @@ object TargetTabContents extends TwoPanels:
     selectedView:      View[SelectedPanel],
     selectedTargetIds: View[List[Target.Id]],
     fullScreen:        View[AladinFullScreen],
-    resize:            UseResizeDetectorReturn
+    resize:            UseResizeDetectorReturn,
+    adding:            View[AreAdding]
   ): VdomNode = {
     import ctx.given
 
@@ -316,6 +318,7 @@ object TargetTabContents extends TwoPanels:
           title,
           props.globalPreferences,
           props.readonly,
+          adding = adding,
           backButton = backButton.some
         )
 
@@ -608,4 +611,5 @@ object TargetTabContents extends TwoPanels:
       .useStateView(AladinFullScreen.Normal)
       // Measure its size
       .useResizeDetector()
+      .useStateView(AreAdding(false))
       .render(renderFn)
