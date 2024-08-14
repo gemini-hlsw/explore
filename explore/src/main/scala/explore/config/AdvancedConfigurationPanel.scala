@@ -131,12 +131,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     Logger[IO]
   ): View[Fpu]
 
-  // @inline protected def overrideExposureTimeMode(aligner: AA)(using
-  //   MonadError[IO, Throwable],
-  //   Effect.Dispatch[IO],
-  //   Logger[IO]
-  // ): View[Option[ExposureTimeMode]]
-
   @inline protected def explicitBinning(aligner: AA)(using
     MonadError[IO, Throwable],
     Effect.Dispatch[IO],
@@ -576,7 +570,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            SignalToNoiseAt(props.spectroscopyRequirements, false)
+            SignalToNoiseAt(props.spectroscopyRequirements, props.readonly)
             // FormLabel(htmlFor = "exposureMode".refined)(
             //   "Exposure Mode",
             //   HelpIcon("configuration/exposure-mode.md".refined)
