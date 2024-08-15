@@ -98,7 +98,8 @@ object ProposalEditor:
                             props.timeEstimateRange,
                             props.cfps,
                             props.readonly
-        )(_), ProposalDetailsTitle(undoCtx)(_)
+        ),
+        ProposalDetailsTitle(undoCtx)
       )
 
     val usersTile =

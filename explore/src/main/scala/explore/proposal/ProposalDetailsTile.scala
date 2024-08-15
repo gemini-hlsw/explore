@@ -62,6 +62,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import org.typelevel.log4cats.Logger
 import spire.std.any.*
+import explore.model.enums.TileSizeState
 
 case class ProposalDetailsTileState()
 
@@ -519,7 +520,8 @@ object ProposalDetailsBody:
           )(using ctx.logger)
 
 case class ProposalDetailsTitle(undoCtx: UndoContext[Proposal])(
-  state: View[ProposalDetailsTileState]
+  state:        View[ProposalDetailsTileState],
+  val tileSize: TileSizeState
 ) extends ReactFnProps(ProposalDetailsTitle.component)
 
 object ProposalDetailsTitle:
@@ -527,4 +529,5 @@ object ProposalDetailsTitle:
 
   private val component =
     ScalaFnComponent[Props]: props =>
-      <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.undoCtx))
+      if (props.tileSize === TileSizeState.Minimized) EmptyVdom
+      else <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.undoCtx))

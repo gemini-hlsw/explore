@@ -24,7 +24,6 @@ case class Tile[A](
   initialState:      A,
   title:             String,
   back:              Option[VdomNode] = None,
-  // control:           TileSizeState => Option[VdomNode] = _ => None,
   canMinimize:       Boolean = true,
   canMaximize:       Boolean = true,
   hidden:            Boolean = false,
@@ -34,8 +33,10 @@ case class Tile[A](
   bodyClass:         Css = Css.Empty, // applied to tile body
   tileClass:         Css = Css.Empty, // applied to the tile
   tileTitleClass:    Css = Css.Empty  // applied to the title
-)(val tileBody: View[A] => VdomNode, val tileTitle: View[A] => VdomNode = (_: View[A]) => EmptyVdom)
-    extends ReactFnProps(Tile.component) {
+)(
+  val tileBody:      View[A] => VdomNode,
+  val tileTitle:     (View[A], TileSizeState) => VdomNode = (_: View[A], _: TileSizeState) => EmptyVdom
+) extends ReactFnProps(Tile.component) {
   def showMaximize: Boolean =
     sizeState === TileSizeState.Minimized || (canMaximize && sizeState === TileSizeState.Minimized)
 
@@ -107,9 +108,8 @@ object Tile:
               <.div(
                 ExploreStyles.TileTitleControlArea,
                 <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
-                      p.tileTitle(sharedState)
+                      p.tileTitle(sharedState, p.sizeState)
                 ),
-                // .map(b => <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl, b)),
                 <.div(^.key := s"tileTitle-${p.id.value}",
                       ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty)
                 )(

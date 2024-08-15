@@ -51,7 +51,10 @@ case class ProgramUsers(
 
 object ProgramUsers:
 
-  def inviteControl(readOnly: Boolean, ref: OverlayPanelRef)(state: View[ProgramUsersState]) =
+  def inviteControl(readOnly: Boolean, ref: OverlayPanelRef)(
+    state: View[ProgramUsersState],
+    s:     TileSizeState
+  ) =
     Button(
       severity = Button.Severity.Secondary,
       size = Button.Size.Small,
@@ -73,7 +76,7 @@ object ProgramUsers:
       ProposalTabTileIds.UsersId.id,
       ProgramUsersState(CreateInviteProcess.Idle),
       "Investigators"
-    )(ProgramUsers(pid, readOnly, users, invitations)(_), inviteControl(readOnly, ref)(_))
+    )(ProgramUsers(pid, readOnly, users, invitations), inviteControl(readOnly, ref))
 
   private type Props = ProgramUsers
 

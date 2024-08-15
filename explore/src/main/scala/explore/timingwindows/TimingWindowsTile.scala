@@ -53,6 +53,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import explore.model.enums.TileSizeState
 
 case class TimingWindowsTileState(
   setRowSelection: RowSelection => Callback = _ => Callback.empty
@@ -73,8 +74,8 @@ object TimingWindowsTile:
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
     Tile(ObsTabTilesIds.TimingWindowsId.id, TimingWindowsTileState(), title)(
-      TimingWindowsBody(timingWindows, readOnly)(_),
-      TimingWindowsTitle(timingWindows, readOnly)(_)
+      TimingWindowsBody(timingWindows, readOnly),
+      TimingWindowsTitle(timingWindows, readOnly)
     )
 
 object TimingWindowsBody:
@@ -425,7 +426,7 @@ object TimingWindowsBody:
 case class TimingWindowsTitle(
   windows:  View[List[TimingWindow]],
   readOnly: Boolean
-)(val state: View[TimingWindowsTileState])
+)(val state: View[TimingWindowsTileState], val tileSize: TileSizeState)
     extends ReactFnProps(TimingWindowsTitle.component)
 
 object TimingWindowsTitle:
@@ -433,7 +434,7 @@ object TimingWindowsTitle:
 
   private val component =
     ScalaFnComponent[Props]: props =>
-      if (props.readOnly) EmptyVdom
+      if (props.readOnly || props.tileSize === TileSizeState.Minimized) EmptyVdom
       else
         Button(
           severity = Button.Severity.Success,

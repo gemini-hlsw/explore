@@ -33,6 +33,7 @@ import lucuma.ui.table.*
 
 import scala.scalajs.js
 import lucuma.core.util.NewType
+import explore.model.enums.TileSizeState
 
 object ObservationValidationsTableTileState extends NewType[Boolean => Callback]
 type ObservationValidationsTableTileState = ObservationValidationsTableTileState.Type
@@ -233,25 +234,30 @@ object ObservationValidationsTableBody {
   }
 }
 
-case class ObservationValidationsTableTitle(state: View[ObservationValidationsTableTileState])
-    extends ReactFnProps(ObservationValidationsTableTitle.component)
+case class ObservationValidationsTableTitle(
+  state:    View[ObservationValidationsTableTileState],
+  tileSize: TileSizeState
+) extends ReactFnProps(ObservationValidationsTableTitle.component)
 
 object ObservationValidationsTableTitle:
   private type Props = ObservationValidationsTableTitle
 
   private val component = ScalaFnComponent[Props]: p =>
-    <.div(
-      ExploreStyles.TableSelectionToolbar,
-      Button(
-        size = Button.Size.Small,
-        icon = Icons.SquarePlus,
-        tooltip = "Expand All",
-        onClick = p.state.get.value(true)
-      ).compact,
-      Button(
-        size = Button.Size.Small,
-        icon = Icons.SquareMinus,
-        tooltip = "Collapse All",
-        onClick = p.state.get.value(false)
-      ).compact
-    )
+    if (p.tileSize === TileSizeState.Minimized)
+      EmptyVdom
+    else
+      <.div(
+        ExploreStyles.TableSelectionToolbar,
+        Button(
+          size = Button.Size.Small,
+          icon = Icons.SquarePlus,
+          tooltip = "Expand All",
+          onClick = p.state.get.value(true)
+        ).compact,
+        Button(
+          size = Button.Size.Small,
+          icon = Icons.SquareMinus,
+          tooltip = "Collapse All",
+          onClick = p.state.get.value(false)
+        ).compact
+      )
