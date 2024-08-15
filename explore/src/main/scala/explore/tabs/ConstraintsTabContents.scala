@@ -30,7 +30,7 @@ import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.timingwindows.TimingWindowsPanel
+import explore.timingwindows.TimingWindowsTile
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*

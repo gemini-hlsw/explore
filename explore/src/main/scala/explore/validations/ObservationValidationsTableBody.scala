@@ -38,7 +38,7 @@ object ObservationValidationsTableTileState extends NewType[Boolean => Callback]
 type ObservationValidationsTableTileState = ObservationValidationsTableTileState.Type
 
 case class ObservationValidationsTableBody(programId: Program.Id, observations: ObservationList)(
-  val cb: View[ObservationValidationsTableTileState]
+  val state: View[ObservationValidationsTableTileState]
 ) extends ReactFnProps(ObservationValidationsTableBody.component)
 
 object ObservationValidationsTableBody {
@@ -156,7 +156,7 @@ object ObservationValidationsTableBody {
     )
     .useEffectOnMountBy((p, _, _, _, table) =>
       val cb = (a: Boolean) => table.toggleAllRowsExpanded(a)
-      p.cb.set(ObservationValidationsTableTileState(cb))
+      p.state.set(ObservationValidationsTableTileState(cb))
     )
     .useResizeDetector()
     .render((props, _, rows, _, table, resizer) =>

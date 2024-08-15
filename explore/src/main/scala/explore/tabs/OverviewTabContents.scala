@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import explore.attachments.ObsAttachmentsTableBody
 import explore.attachments.ObsAttachmentsTableTitle
-import explore.attachments.ObsAttachmentsTableState
+import explore.attachments.ObsAttachmentsTableTileState
 import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
@@ -66,7 +66,7 @@ object OverviewTabContents {
           .map(vault =>
             Tile(
               ObsTabTilesIds.ObsAttachmentsId.id,
-              ObsAttachmentsTableState(),
+              ObsAttachmentsTableTileState(),
               "Observation Attachments",
               none,
               canMinimize = true

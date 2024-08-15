@@ -44,7 +44,7 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
-import explore.timingwindows.TimingWindowsPanel
+import explore.timingwindows.TimingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia

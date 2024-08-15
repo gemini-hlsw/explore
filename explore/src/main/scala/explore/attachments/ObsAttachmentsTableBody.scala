@@ -60,9 +60,9 @@ import org.typelevel.log4cats.Logger
 import scala.collection.immutable.SortedSet
 import lucuma.core.util.NewType
 
-object ObsAttachmentsTableState extends NewType[Action]:
-  def apply(): ObsAttachmentsTableState = ObsAttachmentsTableState(Action.None)
-type ObsAttachmentsTableState = ObsAttachmentsTableState.Type
+object ObsAttachmentsTableTileState extends NewType[Action]:
+  def apply(): ObsAttachmentsTableTileState = ObsAttachmentsTableTileState(Action.None)
+type ObsAttachmentsTableTileState = ObsAttachmentsTableTileState.Type
 
 case class ObsAttachmentsTableBody(
   pid:                      Program.Id,
@@ -71,7 +71,7 @@ case class ObsAttachmentsTableBody(
   obsAttachments:           View[ObsAttachmentList],
   readOnly:                 Boolean
 )(
-  val state:                View[ObsAttachmentsTableState]
+  val state:                View[ObsAttachmentsTableTileState]
 ) extends ReactFnProps(ObsAttachmentsTableBody.component)
 
 object ObsAttachmentsTableBody extends ObsAttachmentUtils:
@@ -183,7 +183,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
       .useMemoBy((_, _, _, _) => ()): (props, ctx, _, _) =>
         _ =>
           import ctx.given
-          val action = props.state.zoom(ObsAttachmentsTableState.value.asLens)
+          val action = props.state.zoom(ObsAttachmentsTableTileState.value.asLens)
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
             : ColumnDef.Single.WithTableMeta[View[ObsAttachment], V, TableMeta] =
@@ -338,7 +338,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
           meta = TableMeta(client, props.obsAttachmentAssignments, urlMap.get, props.readOnly)
         )
       .render: (props, ctx, client, _, _, _, table) =>
-        val action = props.state.zoom(ObsAttachmentsTableState.value.asLens)
+        val action = props.state.zoom(ObsAttachmentsTableTileState.value.asLens)
 
         React.Fragment(
           PrimeTable(
@@ -368,7 +368,7 @@ case class ObsAttachmentsTableTitle(
   obsAttachments: View[ObsAttachmentList],
   readOnly:       Boolean
 )(
-  val state:      View[ObsAttachmentsTableState]
+  val state:      View[ObsAttachmentsTableTileState]
 ) extends ReactFnProps(ObsAttachmentsTableTitle.component)
 
 object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
@@ -409,7 +409,7 @@ object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
                 props.obsAttachments,
                 newAttType.get,
                 client,
-                props.state.zoom(ObsAttachmentsTableState.value.asLens)
+                props.state.zoom(ObsAttachmentsTableTileState.value.asLens)
               ),
               ^.id     := "attachment-upload",
               ^.name   := "file",
