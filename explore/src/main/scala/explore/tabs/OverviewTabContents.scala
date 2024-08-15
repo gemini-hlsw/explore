@@ -6,8 +6,8 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
-import explore.attachments.ObsAttachmentsTable
+import explore.attachments.ObsAttachmentsTableBody
+import explore.attachments.ObsAttachmentsTableTitle
 import explore.attachments.ObsAttachmentsTableState
 import explore.components.Tile
 import explore.components.TileController
@@ -49,32 +49,42 @@ object OverviewTabContents {
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useResizeDetector()
-      .useStateView(none[Boolean => Callback])
-      .render { (props, _, resize, cb) =>
+      .render { (props, _, resize) =>
         val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.OverviewLayout)
 
         val warningsAndErrorsTile = Tile(
           ObsTabTilesIds.WarningsAndErrorsId.id,
-          ObservationValidationsTableTileState(props.programId, props.observations, cb),
+          ObservationValidationsTableTileState(_ => Callback.empty),
           "Warnings And Errors",
           none,
           canMinimize = true
-        )(ObservationValidationsTableBody.apply, ObservationValidationsTableTitle.apply)
+        )(ObservationValidationsTableBody(props.programId, props.observations)(_),
+          ObservationValidationsTableTitle.apply
+        )
 
         val obsAttachmentsTile = props.userVault
           .map(vault =>
             Tile(
               ObsTabTilesIds.ObsAttachmentsId.id,
-              ObsAttachmentsTableState(props.programId,
-                                       vault.token,
-                                       props.obsAttachments,
-                                       props.obsAttachmentAssignments,
-                                       props.readonly
-              ),
+              ObsAttachmentsTableState(),
               "Observation Attachments",
               none,
               canMinimize = true
-            )(ObsAttachmentsTable.apply)
+            )(
+              ObsAttachmentsTableBody(props.programId,
+                                      vault.token,
+                                      props.obsAttachmentAssignments,
+                                      props.obsAttachments,
+                                      props.readonly
+              )(
+                _
+              ),
+              ObsAttachmentsTableTitle(props.programId,
+                                       vault.token,
+                                       props.obsAttachments,
+                                       props.readonly
+              )(_)
+            )
           )
           .filterNot(_ => props.userVault.isGuest)
 

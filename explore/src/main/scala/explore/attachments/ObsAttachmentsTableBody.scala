@@ -16,7 +16,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
 import explore.common.ProgramQueries
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
@@ -59,27 +58,24 @@ import org.scalajs.dom.File as DomFile
 import org.typelevel.log4cats.Logger
 
 import scala.collection.immutable.SortedSet
+import lucuma.core.util.NewType
 
-case class ObsAttachmentsTableState(
+object ObsAttachmentsTableState extends NewType[Action]:
+  def apply(): ObsAttachmentsTableState = ObsAttachmentsTableState(Action.None)
+type ObsAttachmentsTableState = ObsAttachmentsTableState.Type
+
+case class ObsAttachmentsTableBody(
   pid:                      Program.Id,
   authToken:                NonEmptyString,
-  obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
+  obsAttachments:           View[ObsAttachmentList],
   readOnly:                 Boolean
-)
+)(
+  val state:                View[ObsAttachmentsTableState]
+) extends ReactFnProps(ObsAttachmentsTableBody.component)
 
-case class ObsAttachmentsTable(
-  state: ObsAttachmentsTableState
-  // pid:                      Program.Id,
-  // authToken:                NonEmptyString,
-  // obsAttachments:           View[ObsAttachmentList],
-  // obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  // readOnly:                 Boolean,
-  // renderInTitle:            Tile.RenderInTitle
-) extends ReactFnProps(ObsAttachmentsTable.component)
-
-object ObsAttachmentsTable extends ObsAttachmentUtils:
-  private type Props = ObsAttachmentsTable
+object ObsAttachmentsTableBody extends ObsAttachmentUtils:
+  private type Props = ObsAttachmentsTableBody
 
   private case class TableMeta(
     client:      OdbRestClient[IO],
@@ -106,7 +102,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
         checkFileSize(f) {
           val name = NonEmptyString.unsafeFrom(f.name)
           client
-            .updateObsAttachment(props.state.pid,
+            .updateObsAttachment(props.pid,
                                  oa.id,
                                  name,
                                  oa.description,
@@ -114,7 +110,7 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
             ) *>
             IO.now()
               .flatMap { now =>
-                props.state.obsAttachments
+                props.obsAttachments
                   .mod(
                     _.updatedWith(oa.id)(
                       _.map(
@@ -137,8 +133,8 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
     client: OdbRestClient[IO],
     aid:    ObsAtt.Id
   )(using ToastCtx[IO]): IO[Unit] =
-    props.state.obsAttachments.mod(_.removed(aid)).toAsync *>
-      client.deleteObsAttachment(props.state.pid, aid).toastErrors
+    props.obsAttachments.mod(_.removed(aid)).toAsync *>
+      client.deleteObsAttachment(props.pid, aid).toastErrors
 
   def deletePrompt(
     props:  Props,
@@ -165,12 +161,11 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useMemoBy((p, _) => p.state.authToken): (_, ctx) => // client
-        token => OdbRestClient[IO](ctx.environment, token)
-      .useStateView(Action.None) // action
+      .useMemoBy((p, _) => p.authToken): (_, ctx) => // client
+        token => OdbRestClient[IO](ctx.environment, token) // This could be in the shared state
       .useStateView[UrlMap](Map.empty) // urlMap
-      .useEffectWithDepsBy((props, _, _, _, _) => props.state.obsAttachments.get):
-        (props, _, client, _, urlMap) =>
+      .useEffectWithDepsBy((props, _, _, _) => props.obsAttachments.get):
+        (props, _, client, urlMap) =>
           obsAttachments =>
             val allCurrentKeys = obsAttachments.values.map(_.toMapKey).toSet
             val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
@@ -181,23 +176,24 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
                 newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
               }.toAsync
             val getUrls      =
-              newOas.traverse_(key => getAttachmentUrl(props.state.pid, client, key, urlMap))
+              newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
             updateUrlMap *> getUrls
       // Columns
-      .useMemoBy((_, _, _, _, _) => ()): (props, ctx, _, action, _) =>
+      .useMemoBy((_, _, _, _) => ()): (props, ctx, _, _) =>
         _ =>
           import ctx.given
+          val action = props.state.zoom(ObsAttachmentsTableState.value.asLens)
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
             : ColumnDef.Single.WithTableMeta[View[ObsAttachment], V, TableMeta] =
             ColDef(id, v => accessor(v.get), columnNames(id))
 
           def goToObs(obsId: Observation.Id): Callback =
-            ctx.pushPage(AppTab.Observations, props.state.pid, Focused.singleObs(obsId))
+            ctx.pushPage(AppTab.Observations, props.pid, Focused.singleObs(obsId))
 
           def obsUrl(obsId: Observation.Id): String =
-            ctx.pageUrl(AppTab.Observations, props.state.pid, Focused.singleObs(obsId))
+            ctx.pageUrl(AppTab.Observations, props.pid, Focused.singleObs(obsId))
 
           List(
             column(ActionsColumnId, identity)
@@ -332,58 +328,19 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
             ).sortableBy(_.get.checked)
           )
       // Rows
-      .useMemoBy((props, _, _, _, _, _) => props.state.obsAttachments.reuseByValue):
-        (_, _, _, _, _, _) => _.value.toListOfViews.map(_._2)
-      .useReactTableBy: (props, _, client, _, urlMap, cols, rows) =>
+      .useMemoBy((props, _, _, _, _) => props.obsAttachments.reuseByValue): (_, _, _, _, _) =>
+        _.value.toListOfViews.map(_._2)
+      .useReactTableBy: (props, _, client, urlMap, cols, rows) =>
         TableOptions(
           cols,
           rows,
           getRowId = (row, _, _) => RowId(row.get.id.toString),
-          meta = TableMeta(client,
-                           props.state.obsAttachmentAssignments,
-                           urlMap.get,
-                           props.state.readOnly
-          )
+          meta = TableMeta(client, props.obsAttachmentAssignments, urlMap.get, props.readOnly)
         )
-      .useStateView(Enumerated[ObsAttachmentType].all.head)
-      .render: (props, ctx, client, action, _, _, _, table, newAttType) =>
-        import ctx.given
+      .render: (props, ctx, client, _, _, _, table) =>
+        val action = props.state.zoom(ObsAttachmentsTableState.value.asLens)
 
         React.Fragment(
-          // props.renderInTitle(
-          //   if (props.readOnly) EmptyVdom
-          //   else
-          //     <.div(
-          //       ExploreStyles.TableSelectionToolbar,
-          //       EnumDropdownView(
-          //         id = "attachment-type".refined,
-          //         value = newAttType,
-          //         clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
-          //       ),
-          //       <.label(
-          //         LabelButtonClasses,
-          //         ^.htmlFor := "attachment-upload",
-          //         Icons.FileArrowUp
-          //       ).withTooltip(
-          //         tooltip = s"Upload new ${newAttType.get.shortName} attachment",
-          //         placement = Placement.Right
-          //       ),
-          //       <.input(
-          //         ExploreStyles.FileUpload,
-          //         ^.tpe    := "file",
-          //         ^.onChange ==> onInsertFileSelected(
-          //           props.pid,
-          //           props.obsAttachments,
-          //           newAttType.get,
-          //           client,
-          //           action
-          //         ),
-          //         ^.id     := "attachment-upload",
-          //         ^.name   := "file",
-          //         ^.accept := newAttType.get.accept
-          //       )
-          //     )
-          // ),
           PrimeTable(
             table,
             striped = true,
@@ -404,3 +361,58 @@ object ObsAttachmentsTable extends ObsAttachmentUtils:
             showHeader = true
           )("Please wait...")
         )
+
+case class ObsAttachmentsTableTitle(
+  pid:            Program.Id,
+  authToken:      NonEmptyString,
+  obsAttachments: View[ObsAttachmentList],
+  readOnly:       Boolean
+)(
+  val state:      View[ObsAttachmentsTableState]
+) extends ReactFnProps(ObsAttachmentsTableTitle.component)
+
+object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
+  private type Props = ObsAttachmentsTableTitle
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useMemoBy((p, _) => p.authToken): (_, ctx) => // client
+        token => OdbRestClient[IO](ctx.environment, token)
+      .useStateView(Enumerated[ObsAttachmentType].all.head)
+      .render: (props, ctx, client, newAttType) =>
+        import ctx.given
+
+        if (props.readOnly) EmptyVdom
+        else
+          <.div(
+            ExploreStyles.TableSelectionToolbar,
+            EnumDropdownView(
+              id = "attachment-type".refined,
+              value = newAttType,
+              clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
+            ),
+            <.label(
+              LabelButtonClasses,
+              ^.htmlFor := "attachment-upload",
+              Icons.FileArrowUp
+            ).withTooltip(
+              tooltip = s"Upload new ${newAttType.get.shortName} attachment",
+              placement = Placement.Right
+            ),
+            <.input(
+              ExploreStyles.FileUpload,
+              ^.tpe    := "file",
+              ^.onChange ==> onInsertFileSelected(
+                props.pid,
+                props.obsAttachments,
+                newAttType.get,
+                client,
+                props.state.zoom(ObsAttachmentsTableState.value.asLens)
+              ),
+              ^.id     := "attachment-upload",
+              ^.name   := "file",
+              ^.accept := newAttType.get.accept
+            )
+          )

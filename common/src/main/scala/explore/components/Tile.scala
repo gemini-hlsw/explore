@@ -4,6 +4,8 @@
 package explore.components
 
 import cats.syntax.all.*
+import crystal.react.View
+import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -19,7 +21,7 @@ import org.scalajs.dom
 
 case class Tile[A](
   id:                Tile.TileId,
-  state:             A,
+  initialState:      A,
   title:             String,
   back:              Option[VdomNode] = None,
   control:           TileSizeState => Option[VdomNode] = _ => None,
@@ -32,7 +34,7 @@ case class Tile[A](
   bodyClass:         Css = Css.Empty, // applied to tile body
   tileClass:         Css = Css.Empty, // applied to the tile
   tileTitleClass:    Css = Css.Empty  // applied to the title
-)(val tileBody: A => VdomNode, val tileTitle: A => VdomNode = (_: A) => EmptyVdom)
+)(val tileBody: View[A] => VdomNode, val tileTitle: View[A] => VdomNode = (_: View[A]) => EmptyVdom)
     extends ReactFnProps(Tile.component) {
   def showMaximize: Boolean =
     sizeState === TileSizeState.Minimized || (canMaximize && sizeState === TileSizeState.Minimized)
@@ -61,9 +63,10 @@ object Tile:
   private def componentBuilder[A] =
     ScalaFnComponent
       .withHooks[Props[A]]
+      .useStateViewBy(_.initialState)
       // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
       .useState(none[dom.html.Element])
-      .render: (p, infoRef) =>
+      .render: (p, sharedState, infoRef) =>
         val maximizeButton =
           Button(
             text = true,
@@ -104,7 +107,7 @@ object Tile:
               <.div(
                 ExploreStyles.TileTitleControlArea,
                 <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
-                      p.tileTitle(p.state)
+                      p.tileTitle(sharedState)
                 ),
                 // .map(b => <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl, b)),
                 <.div(^.key := s"tileTitle-${p.id.value}",
@@ -122,7 +125,7 @@ object Tile:
             // Tile body
             infoRef.value
               .map(node =>
-                <.div(ExploreStyles.TileBody |+| p.bodyClass, p.tileBody(p.state))
+                <.div(ExploreStyles.TileBody |+| p.bodyClass, p.tileBody(sharedState))
                   .when(p.sizeState =!= TileSizeState.Minimized)
               )
               .whenDefined
