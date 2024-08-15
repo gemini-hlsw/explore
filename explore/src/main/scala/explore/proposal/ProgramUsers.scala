@@ -29,6 +29,7 @@ import lucuma.react.primereact.OverlayPanelRef
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
+import lucuma.core.util.NewType
 
 enum CreateInviteProcess(private val tag: String) derives Enumerated:
   case Idle    extends CreateInviteProcess("idle")
@@ -36,71 +37,57 @@ enum CreateInviteProcess(private val tag: String) derives Enumerated:
   case Error   extends CreateInviteProcess("error")
   case Done    extends CreateInviteProcess("done")
 
+object ProgramUsersState extends NewType[CreateInviteProcess]
+type ProgramUsersState = ProgramUsersState.Type
+
 case class ProgramUsers(
   pid:         Program.Id,
-  users:       View[List[ProgramUserWithRole]],
-  invitations: View[List[CoIInvitation]],
   readOnly:    Boolean,
-  inTitle:     RenderInTitle,
-  ref:         OverlayPanelRef
+  users:       View[List[ProgramUserWithRole]],
+  invitations: View[List[CoIInvitation]]
+)(
+  val state:   View[ProgramUsersState]
 ) extends ReactFnProps(ProgramUsers.component)
 
 object ProgramUsers:
 
-  def inviteControl(
-    createInvite: View[CreateInviteProcess],
-    readOnly:     Boolean,
-    ref:          OverlayPanelRef
-  ) =
+  def inviteControl(readOnly: Boolean, ref: OverlayPanelRef)(state: View[ProgramUsersState]) =
     Button(
       severity = Button.Severity.Secondary,
       size = Button.Size.Small,
       disabled = readOnly,
-      loading = createInvite.get == CreateInviteProcess.Running,
+      loading = state.get.value == CreateInviteProcess.Running,
       icon = Icons.UserPlus,
       tooltip = "Create CoI invitation",
       onClickE = ref.toggle
     ).tiny.compact
 
-  // def programUsersTile(
-  //   pid:          Program.Id,
-  //   users:        View[List[ProgramUserWithRole]],
-  //   invitations:  View[List[CoIInvitation]],
-  //   createInvite: View[CreateInviteProcess],
-  //   readOnly:     Boolean,
-  //   ref:          OverlayPanelRef
-  // )(using AppContext[IO], Logger[IO]) = {
-  //
-  //   val control =
-  //     <.div(
-  //       ExploreStyles.JustifiedEndTileControl,
-  //       InviteUserPopup(pid, invitations, ref),
-  //       inviteControl(createInvite, readOnly, ref)
-  //     )
-  //
-  //   Tile(
-  //     ProposalTabTileIds.UsersId.id,
-  //     "Investigators",
-  //     canMinimize = true,
-  //     control = s => control.some.filter(_ => s === TileSizeState.Minimized)
-  //   )(r => ProgramUsers(pid, users, invitations, readOnly, r, ref))
-  // }
+  def programUsersTile(
+    pid:         Program.Id,
+    readOnly:    Boolean,
+    users:       View[List[ProgramUserWithRole]],
+    invitations: View[List[CoIInvitation]],
+    ref:         OverlayPanelRef
+  )(using AppContext[IO], Logger[IO]) =
+    Tile(
+      ProposalTabTileIds.UsersId.id,
+      ProgramUsersState(CreateInviteProcess.Idle),
+      "Investigators"
+    )(ProgramUsers(pid, readOnly, users, invitations)(_), inviteControl(readOnly, ref)(_))
 
   private type Props = ProgramUsers
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useStateView(CreateInviteProcess.Idle)
-      .render: (props, create) =>
-        <.div(
-          InviteUserPopup(props.pid, props.invitations, props.ref),
-          props.inTitle(inviteControl(create, props.readOnly, props.ref)),
-          ProgramUsersTable(props.pid, props.users, props.readOnly),
-          React
-            .Fragment(
-              "Pending invitations",
-              ProgramUserInvitations(props.invitations, props.readOnly)
-            )
-            .when(props.invitations.when(_.filter(_.status === InvitationStatus.Pending).nonEmpty))
-        )
+    ScalaFnComponent[Props]: props =>
+      <.div(
+        ProgramUsersTable(props.pid, props.users, props.readOnly),
+        React
+          .Fragment(
+            "Pending invitations",
+            ProgramUserInvitations(props.invitations, props.readOnly)
+          )
+          .when(
+            props.invitations
+              .when(_.filter(_.status === InvitationStatus.Pending).nonEmpty)
+          )
+      )
