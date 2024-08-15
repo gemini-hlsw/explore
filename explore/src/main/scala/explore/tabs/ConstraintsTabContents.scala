@@ -103,80 +103,80 @@ object ConstraintsTabContents extends TwoPanels:
         val observations: UndoSetter[ObservationList] =
           props.programSummaries.zoom(ProgramSummaries.observations)
 
-        val rightSide = (_: UseResizeDetectorReturn) =>
-          props.focusedObsSet
-            .flatMap(ids =>
-              findConstraintGroup(ids, props.programSummaries.get.constraintGroups)
-                .map(cg => (ids, cg))
-            )
-            .fold[VdomNode] {
-              Tile(
-                "constraints".refined,
-                "Constraints Summary",
-                backButton.some
-              )(renderInTitle =>
-                ConstraintsSummaryTable(
-                  props.userId,
-                  props.programId,
-                  props.programSummaries.get.constraintGroups,
-                  props.expandedIds,
-                  renderInTitle
-                )
-              )
-            } { case (idsToEdit, constraintGroup) =>
-              val obsTraversal = Iso
-                .id[ObservationList]
-                .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-                .andThen(KeyedIndexedList.value)
-
-              val csTraversal = obsTraversal.andThen(Observation.constraints)
-
-              val constraintSet: UndoSetter[ConstraintSet] =
-                observations.zoom(csTraversal.getAll.andThen(_.head), csTraversal.modify)
-
-              val constraintsTitle = idsToEdit.single match
-                case Some(id) => s"Observation $id"
-                case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
-
-              val constraintsTile = Tile(
-                ObsTabTilesIds.ConstraintsId.id,
-                constraintsTitle,
-                backButton.some,
-                canMinimize = true
-              )(renderInTitle =>
-                ConstraintsPanel(
-                  idsToEdit,
-                  constraintSet,
-                  props.readonly
-                )
-              )
-
-              val twTraversal = obsTraversal.andThen(Observation.timingWindows)
-
-              val timingWindows: View[List[TimingWindow]] =
-                TimingWindowsQueries.viewWithRemoteMod(
-                  idsToEdit,
-                  observations
-                    .undoableView[List[TimingWindow]](
-                      twTraversal.getAll.andThen(_.head),
-                      twTraversal.modify
-                    )
-                )
-
-              val timingWindowsTile =
-                TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
-
-              TileController(
-                props.userId,
-                resize.width.getOrElse(1),
-                ExploreGridLayouts.sectionLayout(GridLayoutSection.ConstraintsLayout),
-                props.userPreferences.constraintsTabLayout,
-                List(constraintsTile, timingWindowsTile),
-                GridLayoutSection.ConstraintsLayout,
-                None
-              )
-            }
-
+        val rightSide       = (_: UseResizeDetectorReturn) => <.div("Right Side")
+        //     props.focusedObsSet
+        //       .flatMap(ids =>
+        //         findConstraintGroup(ids, props.programSummaries.get.constraintGroups)
+        //           .map(cg => (ids, cg))
+        //       )
+        //       .fold[VdomNode] {
+        //         Tile(
+        //           "constraints".refined,
+        //           "Constraints Summary",
+        //           backButton.some
+        //         )(renderInTitle =>
+        //           ConstraintsSummaryTable(
+        //             props.userId,
+        //             props.programId,
+        //             props.programSummaries.get.constraintGroups,
+        //             props.expandedIds,
+        //             renderInTitle
+        //           )
+        //         )
+        //       } { case (idsToEdit, constraintGroup) =>
+        //         val obsTraversal = Iso
+        //           .id[ObservationList]
+        //           .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+        //           .andThen(KeyedIndexedList.value)
+        //
+        //         val csTraversal = obsTraversal.andThen(Observation.constraints)
+        //
+        //         val constraintSet: UndoSetter[ConstraintSet] =
+        //           observations.zoom(csTraversal.getAll.andThen(_.head), csTraversal.modify)
+        //
+        //         val constraintsTitle = idsToEdit.single match
+        //           case Some(id) => s"Observation $id"
+        //           case None     => s"Editing Constraints for ${idsToEdit.size} Observations"
+        //
+        //         val constraintsTile = Tile(
+        //           ObsTabTilesIds.ConstraintsId.id,
+        //           constraintsTitle,
+        //           backButton.some,
+        //           canMinimize = true
+        //         )(renderInTitle =>
+        //           ConstraintsPanel(
+        //             idsToEdit,
+        //             constraintSet,
+        //             props.readonly
+        //           )
+        //         )
+        //
+        //         val twTraversal = obsTraversal.andThen(Observation.timingWindows)
+        //
+        //         val timingWindows: View[List[TimingWindow]] =
+        //           TimingWindowsQueries.viewWithRemoteMod(
+        //             idsToEdit,
+        //             observations
+        //               .undoableView[List[TimingWindow]](
+        //                 twTraversal.getAll.andThen(_.head),
+        //                 twTraversal.modify
+        //               )
+        //           )
+        //
+        //         val timingWindowsTile =
+        //           TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
+        //
+        //         TileController(
+        //           props.userId,
+        //           resize.width.getOrElse(1),
+        //           ExploreGridLayouts.sectionLayout(GridLayoutSection.ConstraintsLayout),
+        //           props.userPreferences.constraintsTabLayout,
+        //           List(constraintsTile, timingWindowsTile),
+        //           GridLayoutSection.ConstraintsLayout,
+        //           None
+        //         )
+        //       }
+        //
         val constraintsTree =
           ConstraintGroupObsList(
             props.programId,

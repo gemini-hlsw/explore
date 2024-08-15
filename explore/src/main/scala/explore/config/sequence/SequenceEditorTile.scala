@@ -23,51 +23,51 @@ import lucuma.core.util.TimeSpan
 import lucuma.refined.*
 import lucuma.ui.components.TimeSpanView
 
-object SequenceEditorTile:
+object SequenceEditorTile
 
-  def sequenceTile(
-    programId:       Program.Id,
-    obsId:           Observation.Id,
-    obsExecution:    Pot[Execution],
-    asterismIds:     AsterismIds,
-    itc:             Option[OdbItcResult.Success],
-    sequenceChanged: View[Pot[Unit]]
-  ) =
-    val control =
-      obsExecution.orSpinner { execution =>
-        val programTimeCharge = execution.programTimeCharge.value
-
-        def timeDisplay(name: String, time: TimeSpan) =
-          <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
-
-        val executed = timeDisplay("Executed", programTimeCharge)
-
-        execution.programTimeEstimate
-          .map { plannedTime =>
-            val total   = programTimeCharge +| plannedTime
-            val pending = timeDisplay("Pending", plannedTime)
-            val planned = timeDisplay("Planned", total)
-            <.span(ExploreStyles.SequenceTileTitle)(
-              HelpIcon("target/main/sequence-times.md".refined),
-              planned,
-              executed,
-              pending
-            )
-          }
-          .getOrElse(executed)
-      }
-
-    Tile(
-      ObsTabTilesIds.SequenceId.id,
-      s"Sequence",
-      canMinimize = true,
-      control = _ => control.some
-    )(_ =>
-      GeneratedSequenceViewer(
-        programId,
-        obsId,
-        asterismIds.toList,
-        itc.map(_.snPerClass).getOrElse(Map.empty),
-        sequenceChanged
-      )
-    )
+  // def sequenceTile(
+  //   programId:       Program.Id,
+  //   obsId:           Observation.Id,
+  //   obsExecution:    Pot[Execution],
+  //   asterismIds:     AsterismIds,
+  //   itc:             Option[OdbItcResult.Success],
+  //   sequenceChanged: View[Pot[Unit]]
+  // ) =
+  //   val control =
+  //     obsExecution.orSpinner { execution =>
+  //       val programTimeCharge = execution.programTimeCharge.value
+  //
+  //       def timeDisplay(name: String, time: TimeSpan) =
+  //         <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
+  //
+  //       val executed = timeDisplay("Executed", programTimeCharge)
+  //
+  //       execution.programTimeEstimate
+  //         .map { plannedTime =>
+  //           val total   = programTimeCharge +| plannedTime
+  //           val pending = timeDisplay("Pending", plannedTime)
+  //           val planned = timeDisplay("Planned", total)
+  //           <.span(ExploreStyles.SequenceTileTitle)(
+  //             HelpIcon("target/main/sequence-times.md".refined),
+  //             planned,
+  //             executed,
+  //             pending
+  //           )
+  //         }
+  //         .getOrElse(executed)
+  //     }
+  //
+  //   Tile(
+  //     ObsTabTilesIds.SequenceId.id,
+  //     s"Sequence",
+  //     canMinimize = true,
+  //     control = _ => control.some
+  //   )(_ =>
+  //     GeneratedSequenceViewer(
+  //       programId,
+  //       obsId,
+  //       asterismIds.toList,
+  //       itc.map(_.snPerClass).getOrElse(Map.empty),
+  //       sequenceChanged
+  //     )
+  //   )

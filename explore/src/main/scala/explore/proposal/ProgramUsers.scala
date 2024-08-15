@@ -62,29 +62,29 @@ object ProgramUsers:
       onClickE = ref.toggle
     ).tiny.compact
 
-  def programUsersTile(
-    pid:          Program.Id,
-    users:        View[List[ProgramUserWithRole]],
-    invitations:  View[List[CoIInvitation]],
-    createInvite: View[CreateInviteProcess],
-    readOnly:     Boolean,
-    ref:          OverlayPanelRef
-  )(using AppContext[IO], Logger[IO]) = {
-
-    val control =
-      <.div(
-        ExploreStyles.JustifiedEndTileControl,
-        InviteUserPopup(pid, invitations, ref),
-        inviteControl(createInvite, readOnly, ref)
-      )
-
-    Tile(
-      ProposalTabTileIds.UsersId.id,
-      "Investigators",
-      canMinimize = true,
-      control = s => control.some.filter(_ => s === TileSizeState.Minimized)
-    )(r => ProgramUsers(pid, users, invitations, readOnly, r, ref))
-  }
+  // def programUsersTile(
+  //   pid:          Program.Id,
+  //   users:        View[List[ProgramUserWithRole]],
+  //   invitations:  View[List[CoIInvitation]],
+  //   createInvite: View[CreateInviteProcess],
+  //   readOnly:     Boolean,
+  //   ref:          OverlayPanelRef
+  // )(using AppContext[IO], Logger[IO]) = {
+  //
+  //   val control =
+  //     <.div(
+  //       ExploreStyles.JustifiedEndTileControl,
+  //       InviteUserPopup(pid, invitations, ref),
+  //       inviteControl(createInvite, readOnly, ref)
+  //     )
+  //
+  //   Tile(
+  //     ProposalTabTileIds.UsersId.id,
+  //     "Investigators",
+  //     canMinimize = true,
+  //     control = s => control.some.filter(_ => s === TileSizeState.Minimized)
+  //   )(r => ProgramUsers(pid, users, invitations, readOnly, r, ref))
+  // }
 
   private type Props = ProgramUsers
 

@@ -17,44 +17,50 @@ import lucuma.react.primereact.Button
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 
-case class Tile(
+case class Tile[A](
   id:                Tile.TileId,
+  state:             A,
   title:             String,
   back:              Option[VdomNode] = None,
   control:           TileSizeState => Option[VdomNode] = _ => None,
   canMinimize:       Boolean = false,
   canMaximize:       Boolean = false,
   hidden:            Boolean = false,
-  state:             TileSizeState = TileSizeState.Maximized,
+  sizeState:         TileSizeState = TileSizeState.Maximized,
   sizeStateCallback: TileSizeState => Callback = _ => Callback.empty,
   controllerClass:   Css = Css.Empty, // applied to wrapping div when in a TileController.
   bodyClass:         Css = Css.Empty, // applied to tile body
   tileClass:         Css = Css.Empty, // applied to the tile
   tileTitleClass:    Css = Css.Empty  // applied to the title
-)(val render: Tile.RenderInTitle => VdomNode)
-    extends ReactFnProps[Tile](Tile.component) {
+)(val tileBody: A => VdomNode, val tileTitle: A => VdomNode = (_: A) => EmptyVdom)
+    extends ReactFnProps(Tile.component) {
   def showMaximize: Boolean =
-    state === TileSizeState.Minimized || (canMaximize && state === TileSizeState.Minimized)
+    sizeState === TileSizeState.Minimized || (canMaximize && sizeState === TileSizeState.Minimized)
 
   def showMinimize: Boolean =
-    state === TileSizeState.Maximized || (canMinimize && state === TileSizeState.Maximized)
+    sizeState === TileSizeState.Maximized || (canMinimize && sizeState === TileSizeState.Maximized)
 
   def withState(
     state:             TileSizeState,
     sizeStateCallback: TileSizeState => Callback
-  ): Tile =
-    copy(state = state, sizeStateCallback = sizeStateCallback)(render)
+  ): Tile[A] =
+    copy(sizeState = state, sizeStateCallback = sizeStateCallback)(tileBody, tileTitle)
+
+  def withBackButton(
+    back: Option[VdomNode]
+  ): Tile[A] =
+    copy(back = back)(tileBody, tileTitle)
 }
 
 object Tile:
   type TileId        = NonEmptyString
   type RenderInTitle = VdomNode => VdomNode
 
-  private type Props = Tile
+  private type Props[A] = Tile[A]
 
-  private val component =
+  private def componentBuilder[A] =
     ScalaFnComponent
-      .withHooks[Props]
+      .withHooks[Props[A]]
       // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
       .useState(none[dom.html.Element])
       .render: (p, infoRef) =>
@@ -65,7 +71,7 @@ object Tile:
             icon = Icons.Maximize,
             onClick = p
               .sizeStateCallback(TileSizeState.Maximized)
-              .when_(p.state === TileSizeState.Minimized)
+              .when_(p.sizeState === TileSizeState.Minimized)
           )
 
         val minimizeButton =
@@ -75,7 +81,7 @@ object Tile:
             icon = Icons.Minimize,
             onClick = p
               .sizeStateCallback(TileSizeState.Minimized)
-              .when_(p.state === TileSizeState.Maximized)
+              .when_(p.sizeState === TileSizeState.Maximized)
           )
 
         def setInfoRef(node: dom.Node | Null): Unit =
@@ -97,9 +103,13 @@ object Tile:
               ),
               <.div(
                 ExploreStyles.TileTitleControlArea,
-                p.control(p.state)
-                  .map(b => <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl, b)),
-                <.div(^.key := "tileTitle", ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty))(
+                <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
+                      p.tileTitle(p.state)
+                ),
+                // .map(b => <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl, b)),
+                <.div(^.key := s"tileTitle-${p.id.value}",
+                      ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty)
+                )(
                   ExploreStyles.TileTitleStrip,
                   ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
                 )
@@ -112,10 +122,11 @@ object Tile:
             // Tile body
             infoRef.value
               .map(node =>
-                <.div(ExploreStyles.TileBody |+| p.bodyClass,
-                      p.render(info => ReactPortal(info, node))
-                ).when(p.state =!= TileSizeState.Minimized)
+                <.div(ExploreStyles.TileBody |+| p.bodyClass, p.tileBody(p.state))
+                  .when(p.sizeState =!= TileSizeState.Minimized)
               )
               .whenDefined
           )
         } else EmptyVdom
+
+  private val component = componentBuilder[Any]

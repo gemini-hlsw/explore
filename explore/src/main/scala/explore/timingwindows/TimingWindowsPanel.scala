@@ -65,12 +65,13 @@ object TimingWindowsPanel:
     timingWindows: View[List[TimingWindow]],
     readOnly:      Boolean
   ) =
-    val base  = "Scheduling Windows"
-    val title =
-      if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
-    Tile(ObsTabTilesIds.TimingWindowsId.id, title, canMinimize = true)(renderInTitle =>
-      TimingWindowsPanel(timingWindows, readOnly, renderInTitle)
-    )
+    // val base  = "Scheduling Windows"
+    // val title =
+    //   if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
+    // Tile(ObsTabTilesIds.TimingWindowsId.id, title, canMinimize = true)(renderInTitle =>
+    //   TimingWindowsPanel(timingWindows, readOnly, renderInTitle)
+    // )
+    <.div("TWP")
 
   private type Props = TimingWindowsPanel
 
@@ -149,281 +150,282 @@ object TimingWindowsPanel:
           )
         )
       .render: (props, resize, dbActive, rows, table) =>
-        val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
-
-        val selectedTW: Option[View[TimingWindow]] =
-          pos
-            .filterNot(_ => props.readOnly)
-            .flatMap(p =>
-              props.windows
-                .zoom(Index.index[List[TimingWindow], Int, TimingWindow](p))
-                .asView
-            )
-
-        // TODO Should we move this to lucuma-ui?
-        val HMPartialRegEx                  = "\\d*(:\\d{0,2})?".r
-        val hmChangeAuditor: ChangeAuditor  = ChangeAuditor.accept.allow(HMPartialRegEx.matches)
-        val HMSPartialRegEx                 = "\\d*(:\\d{0,2}(:\\d{0,2})?)?".r
-        val hmsChangeAuditor: ChangeAuditor = ChangeAuditor.accept.allow(HMSPartialRegEx.matches)
-
-        <.div(ExploreStyles.TimingWindowsBody)(
-          <.div.withRef(resize.ref)(ExploreStyles.TimingWindowsTable)(
-            PrimeTable(
-              table,
-              striped = true,
-              compact = Compact.Very,
-              headerMod = ExploreStyles.TimingWindowsHeader,
-              tableMod =
-                ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable |+| ExploreStyles.TimingWindowsTable,
-              rowMod = row =>
-                TagMod(
-                  ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                  ^.onClick --> (table.toggleAllRowsSelected(false) >> row.toggleSelected())
-                ),
-              cellMod = _.column.id match
-                case DeleteColId => ^.textAlign.right
-                case _           => TagMod.empty
-              ,
-              // If cmd is pressed add to the selection
-              emptyMessage = <.div(ExploreStyles.ExploreTableEmpty, "No scheduling windows defined")
-            )
-          ),
-          selectedTW.map { tw =>
-            val selectedInclusion: View[TimingWindowInclusion]   = tw.zoom(TimingWindow.inclusion)
-            val selectedStart: View[Timestamp]                   = tw.zoom(TimingWindow.start)
-            val selectedEnd: View[Option[TimingWindowEnd]]       = tw.zoom(TimingWindow.end)
-            val selectedEndAt: ViewOpt[Timestamp]                =
-              selectedEnd
-                .zoom(Iso.id[Option[TimingWindowEnd]].some)
-                .zoom(TimingWindowEnd.at)
-                .zoom(TimingWindowEnd.At.instant)
-            val selectedEndAfter: ViewOpt[TimingWindowEnd.After] =
-              selectedEnd
-                .zoom(Iso.id[Option[TimingWindowEnd]].some)
-                .zoom(TimingWindowEnd.after)
-
-            def renderInclusionRadio(twt: TimingWindowInclusion, id: String): VdomNode =
-              <.span(
-                RadioButton(
-                  twt,
-                  id = id,
-                  checked = selectedInclusion.get === twt,
-                  onChange = (v, checked) => selectedInclusion.set(v).when_(checked)
-                ),
-                <.label(^.htmlFor := id, twt.renderVdom)
-              )
-
-            <.div(ExploreStyles.TimingWindowEditor)(
-              <.span(ExploreStyles.TimingWindowEditorHeader)(
-                <.span(ExploreStyles.TimingWindowInclusionEditor)(
-                  renderInclusionRadio(TimingWindowInclusion.Include, "include-option"),
-                  renderInclusionRadio(TimingWindowInclusion.Exclude, "exclude-option")
-                ),
-                <.div(ExploreStyles.TimingWindowFromEditor)(
-                  <.span(" from"),
-                  Datepicker(onChange =
-                    (newValue, _) =>
-                      newValue.fromDatePickerToZDTOpt.foldMap { zdt =>
-                        selectedStart.set(
-                          Timestamp.unsafeFromInstantTruncated(
-                            zdt.withSecond(0).withNano(0).toInstant
-                          )
-                        )
-                      }
-                  )
-                    .showTimeInput(true)
-                    .selected(selectedStart.get.toInstant.toDatePickerJsDate)
-                    .dateFormat("yyyy-MM-dd HH:mm")
-                    .maxDate(
-                      selectedEnd.get
-                        .flatMap(TimingWindowEnd.at.getOption)
-                        .map(_.instant.toInstant.toDatePickerJsDate)
-                        .orNull
-                    ),
-                  <.span(" UTC "),
-                  <.span(Icons.ErrorIcon)
-                    .withTooltip("Check start date is before the end")
-                    .unless(tw.get.isValid)
-                )
-              ),
-              <.div(ExploreStyles.TimingWindowEditorBody)(
-                <.div(
-                  RadioButton(
-                    "forever",
-                    id = "forever-option",
-                    checked = selectedEnd.get.isEmpty,
-                    onChange = (_, checked) => selectedEnd.set(none).when_(checked)
-                  ),
-                  <.label("Forever", ^.htmlFor := "forever-option")
-                ),
-                <.div(
-                  ExploreStyles.TimingWindowThroughEditor,
-                  RadioButton(
-                    "through",
-                    id = "through-option",
-                    checked = selectedEndAt.get.isDefined,
-                    onChange = (_, checked) =>
-                      selectedEnd
-                        .set(
-                          TimingWindowEnd
-                            .At(
-                              Timestamp.unsafeFromInstantTruncated(
-                                ZonedDateTime
-                                  .ofInstant(selectedStart.get.toInstant, ZoneOffset.UTC)
-                                  .plusHours(1)
-                                  .toInstant
-                              )
-                            )
-                            .some
-                        )
-                        .when_(checked)
-                  ),
-                  <.label("Through ", ^.htmlFor := "through-option"),
-                  selectedEndAt.mapValue(endAt =>
-                    React.Fragment(
-                      Datepicker(onChange =
-                        (newValue, _) =>
-                          newValue.fromDatePickerToZDTOpt.foldMap(zdt =>
-                            endAt.set(
-                              Timestamp.unsafeFromInstantTruncated(
-                                zdt.withSecond(0).withNano(0).toInstant
-                              )
-                            )
-                          )
-                      )
-                        .showTimeInput(true)
-                        .selected(endAt.get.toInstant.toDatePickerJsDate)
-                        .dateFormat("yyyy-MM-dd HH:mm")
-                        .minDate(selectedStart.get.toInstant.toDatePickerJsDate),
-                      <.span(" UTC "),
-                      if (tw.get.isValid) EmptyVdom
-                      else
-                        <.span(Icons.ErrorIcon)
-                          .withTooltip("Check start date is before the end")
-                    )
-                  )
-                ),
-                <.div(ExploreStyles.TimingWindowEndAfter)(
-                  RadioButton(
-                    "for",
-                    id = "for",
-                    checked = selectedEndAfter.get.isDefined,
-                    onChange = (_, checked) =>
-                      selectedEnd
-                        .set(
-                          TimingWindowEnd
-                            .After(
-                              duration = TimeSpan.unsafeFromDuration(Duration.ofDays(2)),
-                              repeat = none
-                            )
-                            .some
-                        )
-                        .when_(checked)
-                  ),
-                  <.label("For", ^.htmlFor := "for"),
-                  selectedEndAfter.mapValue { endAfter =>
-                    React.Fragment(
-                      FormInputTextView(
-                        id = "for-duration".refined,
-                        value = endAfter.zoom(TimingWindowEnd.After.duration),
-                        validFormat = durationHM,
-                        changeAuditor = hmChangeAuditor
-                      ),
-                      " hours"
-                    )
-                  }
-                ),
-                selectedEndAfter.mapValue { endAfter =>
-                  val selectedRepeat: View[Option[TimingWindowRepeat]] =
-                    endAfter.zoom(TimingWindowEnd.After.repeat)
-                  val selectedRepeatOpt: ViewOpt[TimingWindowRepeat]   =
-                    selectedRepeat.zoom(Iso.id[Option[TimingWindowRepeat]].some)
-                  val selectedRepeatPeriod: ViewOpt[TimeSpan]          =
-                    selectedRepeatOpt.zoom(TimingWindowRepeat.period)
-
-                  <.div(
-                    <.div(ExploreStyles.TimingWindowRepeatEditor)(
-                      <.div(LucumaPrimeStyles.CheckboxWithLabel)(
-                        Checkbox(
-                          id = "repeat-with-period",
-                          checked = selectedRepeat.get.isDefined,
-                          onChange = checked =>
-                            selectedRepeat
-                              .set(
-                                TimingWindowRepeat(
-                                  period = TimeSpan
-                                    .unsafeFromDuration(
-                                      endAfter.get.duration.toDuration.plusHours(12)
-                                    ),
-                                  times = none
-                                ).some
-                              )
-                              .when_(checked) >>
-                              selectedRepeat.set(none).unless_(checked)
-                        ),
-                        <.label("Repeat with a period of", ^.htmlFor := "repeat-with-period")
-                      ),
-                      FormInputTextView(
-                        id = "repat-period".refined,
-                        value = selectedRepeatPeriod,
-                        validFormat = durationHMS,
-                        changeAuditor = hmsChangeAuditor,
-                        disabled = selectedRepeat.get.isEmpty
-                      ),
-                      " hours"
-                    ),
-                    selectedRepeatOpt.mapValue { repeat =>
-                      val selectedRepeatTimes: View[Option[PosInt]] =
-                        repeat.zoom(TimingWindowRepeat.times)
-
-                      <.div(ExploreStyles.TimingWindowRepeatEditorAlternatives)(
-                        <.div(
-                          RadioButton(
-                            "repeat-forever",
-                            id = "repeat-forever-option",
-                            checked = selectedRepeatTimes.get.isEmpty,
-                            onChange = (_, checked) => selectedRepeatTimes.set(none).when_(checked)
-                          ),
-                          <.label("Forever", ^.htmlFor := "repeat-forever-option")
-                        ),
-                        <.div(ExploreStyles.TimingWindowRepeatEditorNTimes)(
-                          RadioButton(
-                            "repeat-n-times",
-                            id = "repeat-n-times",
-                            checked = selectedRepeatTimes.get.isDefined,
-                            onChange = (_, checked) =>
-                              selectedRepeatTimes.set(1.refined[Positive].some).when_(checked)
-                          ),
-                          FormInputTextView(
-                            id = "repeat-n-times-value".refined,
-                            value = selectedRepeatTimes.zoom(Iso.id[Option[PosInt]].some),
-                            validFormat = InputValidSplitEpi.posInt,
-                            changeAuditor = ChangeAuditor.posInt,
-                            disabled = selectedRepeatTimes.get.isEmpty
-                          ),
-                          <.label("times", ^.htmlFor := "repeat-n-times-value")
-                        )
-                      )
-                    }
-                  )
-                }
-              )
-            )
-          },
-          props.renderInTitle(
-            if (props.readOnly) EmptyVdom
-            else
-              Button(
-                severity = Button.Severity.Success,
-                icon = Icons.New,
-                label = "Add",
-                onClick = props.windows.mod(
-                  _ :+ TimingWindow(
-                    inclusion = TimingWindowInclusion.Include,
-                    start = Timestamp.unsafeFromInstantTruncated(Instant.now),
-                    end = none
-                  )
-                ) >> table.setRowSelection(RowSelection(RowId(rows.length.toString) -> true))
-              ).tiny.compact
-          )
-        )
+        // val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
+        //
+        // val selectedTW: Option[View[TimingWindow]] =
+        //   pos
+        //     .filterNot(_ => props.readOnly)
+        //     .flatMap(p =>
+        //       props.windows
+        //         .zoom(Index.index[List[TimingWindow], Int, TimingWindow](p))
+        //         .asView
+        //     )
+        //
+        // // TODO Should we move this to lucuma-ui?
+        // val HMPartialRegEx                  = "\\d*(:\\d{0,2})?".r
+        // val hmChangeAuditor: ChangeAuditor  = ChangeAuditor.accept.allow(HMPartialRegEx.matches)
+        // val HMSPartialRegEx                 = "\\d*(:\\d{0,2}(:\\d{0,2})?)?".r
+        // val hmsChangeAuditor: ChangeAuditor = ChangeAuditor.accept.allow(HMSPartialRegEx.matches)
+        //
+        // <.div(ExploreStyles.TimingWindowsBody)(
+        //   <.div.withRef(resize.ref)(ExploreStyles.TimingWindowsTable)(
+        //     PrimeTable(
+        //       table,
+        //       striped = true,
+        //       compact = Compact.Very,
+        //       headerMod = ExploreStyles.TimingWindowsHeader,
+        //       tableMod =
+        //         ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable |+| ExploreStyles.TimingWindowsTable,
+        //       rowMod = row =>
+        //         TagMod(
+        //           ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
+        //           ^.onClick --> (table.toggleAllRowsSelected(false) >> row.toggleSelected())
+        //         ),
+        //       cellMod = _.column.id match
+        //         case DeleteColId => ^.textAlign.right
+        //         case _           => TagMod.empty
+        //       ,
+        //       // If cmd is pressed add to the selection
+        //       emptyMessage = <.div(ExploreStyles.ExploreTableEmpty, "No scheduling windows defined")
+        //     )
+        //   ),
+        //   selectedTW.map { tw =>
+        //     val selectedInclusion: View[TimingWindowInclusion]   = tw.zoom(TimingWindow.inclusion)
+        //     val selectedStart: View[Timestamp]                   = tw.zoom(TimingWindow.start)
+        //     val selectedEnd: View[Option[TimingWindowEnd]]       = tw.zoom(TimingWindow.end)
+        //     val selectedEndAt: ViewOpt[Timestamp]                =
+        //       selectedEnd
+        //         .zoom(Iso.id[Option[TimingWindowEnd]].some)
+        //         .zoom(TimingWindowEnd.at)
+        //         .zoom(TimingWindowEnd.At.instant)
+        //     val selectedEndAfter: ViewOpt[TimingWindowEnd.After] =
+        //       selectedEnd
+        //         .zoom(Iso.id[Option[TimingWindowEnd]].some)
+        //         .zoom(TimingWindowEnd.after)
+        //
+        //     def renderInclusionRadio(twt: TimingWindowInclusion, id: String): VdomNode =
+        //       <.span(
+        //         RadioButton(
+        //           twt,
+        //           id = id,
+        //           checked = selectedInclusion.get === twt,
+        //           onChange = (v, checked) => selectedInclusion.set(v).when_(checked)
+        //         ),
+        //         <.label(^.htmlFor := id, twt.renderVdom)
+        //       )
+        //
+        //     <.div(ExploreStyles.TimingWindowEditor)(
+        //       <.span(ExploreStyles.TimingWindowEditorHeader)(
+        //         <.span(ExploreStyles.TimingWindowInclusionEditor)(
+        //           renderInclusionRadio(TimingWindowInclusion.Include, "include-option"),
+        //           renderInclusionRadio(TimingWindowInclusion.Exclude, "exclude-option")
+        //         ),
+        //         <.div(ExploreStyles.TimingWindowFromEditor)(
+        //           <.span(" from"),
+        //           Datepicker(onChange =
+        //             (newValue, _) =>
+        //               newValue.fromDatePickerToZDTOpt.foldMap { zdt =>
+        //                 selectedStart.set(
+        //                   Timestamp.unsafeFromInstantTruncated(
+        //                     zdt.withSecond(0).withNano(0).toInstant
+        //                   )
+        //                 )
+        //               }
+        //           )
+        //             .showTimeInput(true)
+        //             .selected(selectedStart.get.toInstant.toDatePickerJsDate)
+        //             .dateFormat("yyyy-MM-dd HH:mm")
+        //             .maxDate(
+        //               selectedEnd.get
+        //                 .flatMap(TimingWindowEnd.at.getOption)
+        //                 .map(_.instant.toInstant.toDatePickerJsDate)
+        //                 .orNull
+        //             ),
+        //           <.span(" UTC "),
+        //           <.span(Icons.ErrorIcon)
+        //             .withTooltip("Check start date is before the end")
+        //             .unless(tw.get.isValid)
+        //         )
+        //       ),
+        //       <.div(ExploreStyles.TimingWindowEditorBody)(
+        //         <.div(
+        //           RadioButton(
+        //             "forever",
+        //             id = "forever-option",
+        //             checked = selectedEnd.get.isEmpty,
+        //             onChange = (_, checked) => selectedEnd.set(none).when_(checked)
+        //           ),
+        //           <.label("Forever", ^.htmlFor := "forever-option")
+        //         ),
+        //         <.div(
+        //           ExploreStyles.TimingWindowThroughEditor,
+        //           RadioButton(
+        //             "through",
+        //             id = "through-option",
+        //             checked = selectedEndAt.get.isDefined,
+        //             onChange = (_, checked) =>
+        //               selectedEnd
+        //                 .set(
+        //                   TimingWindowEnd
+        //                     .At(
+        //                       Timestamp.unsafeFromInstantTruncated(
+        //                         ZonedDateTime
+        //                           .ofInstant(selectedStart.get.toInstant, ZoneOffset.UTC)
+        //                           .plusHours(1)
+        //                           .toInstant
+        //                       )
+        //                     )
+        //                     .some
+        //                 )
+        //                 .when_(checked)
+        //           ),
+        //           <.label("Through ", ^.htmlFor := "through-option"),
+        //           selectedEndAt.mapValue(endAt =>
+        //             React.Fragment(
+        //               Datepicker(onChange =
+        //                 (newValue, _) =>
+        //                   newValue.fromDatePickerToZDTOpt.foldMap(zdt =>
+        //                     endAt.set(
+        //                       Timestamp.unsafeFromInstantTruncated(
+        //                         zdt.withSecond(0).withNano(0).toInstant
+        //                       )
+        //                     )
+        //                   )
+        //               )
+        //                 .showTimeInput(true)
+        //                 .selected(endAt.get.toInstant.toDatePickerJsDate)
+        //                 .dateFormat("yyyy-MM-dd HH:mm")
+        //                 .minDate(selectedStart.get.toInstant.toDatePickerJsDate),
+        //               <.span(" UTC "),
+        //               if (tw.get.isValid) EmptyVdom
+        //               else
+        //                 <.span(Icons.ErrorIcon)
+        //                   .withTooltip("Check start date is before the end")
+        //             )
+        //           )
+        //         ),
+        //         <.div(ExploreStyles.TimingWindowEndAfter)(
+        //           RadioButton(
+        //             "for",
+        //             id = "for",
+        //             checked = selectedEndAfter.get.isDefined,
+        //             onChange = (_, checked) =>
+        //               selectedEnd
+        //                 .set(
+        //                   TimingWindowEnd
+        //                     .After(
+        //                       duration = TimeSpan.unsafeFromDuration(Duration.ofDays(2)),
+        //                       repeat = none
+        //                     )
+        //                     .some
+        //                 )
+        //                 .when_(checked)
+        //           ),
+        //           <.label("For", ^.htmlFor := "for"),
+        //           selectedEndAfter.mapValue { endAfter =>
+        //             React.Fragment(
+        //               FormInputTextView(
+        //                 id = "for-duration".refined,
+        //                 value = endAfter.zoom(TimingWindowEnd.After.duration),
+        //                 validFormat = durationHM,
+        //                 changeAuditor = hmChangeAuditor
+        //               ),
+        //               " hours"
+        //             )
+        //           }
+        //         ),
+        //         selectedEndAfter.mapValue { endAfter =>
+        //           val selectedRepeat: View[Option[TimingWindowRepeat]] =
+        //             endAfter.zoom(TimingWindowEnd.After.repeat)
+        //           val selectedRepeatOpt: ViewOpt[TimingWindowRepeat]   =
+        //             selectedRepeat.zoom(Iso.id[Option[TimingWindowRepeat]].some)
+        //           val selectedRepeatPeriod: ViewOpt[TimeSpan]          =
+        //             selectedRepeatOpt.zoom(TimingWindowRepeat.period)
+        //
+        //           <.div(
+        //             <.div(ExploreStyles.TimingWindowRepeatEditor)(
+        //               <.div(LucumaPrimeStyles.CheckboxWithLabel)(
+        //                 Checkbox(
+        //                   id = "repeat-with-period",
+        //                   checked = selectedRepeat.get.isDefined,
+        //                   onChange = checked =>
+        //                     selectedRepeat
+        //                       .set(
+        //                         TimingWindowRepeat(
+        //                           period = TimeSpan
+        //                             .unsafeFromDuration(
+        //                               endAfter.get.duration.toDuration.plusHours(12)
+        //                             ),
+        //                           times = none
+        //                         ).some
+        //                       )
+        //                       .when_(checked) >>
+        //                       selectedRepeat.set(none).unless_(checked)
+        //                 ),
+        //                 <.label("Repeat with a period of", ^.htmlFor := "repeat-with-period")
+        //               ),
+        //               FormInputTextView(
+        //                 id = "repat-period".refined,
+        //                 value = selectedRepeatPeriod,
+        //                 validFormat = durationHMS,
+        //                 changeAuditor = hmsChangeAuditor,
+        //                 disabled = selectedRepeat.get.isEmpty
+        //               ),
+        //               " hours"
+        //             ),
+        //             selectedRepeatOpt.mapValue { repeat =>
+        //               val selectedRepeatTimes: View[Option[PosInt]] =
+        //                 repeat.zoom(TimingWindowRepeat.times)
+        //
+        //               <.div(ExploreStyles.TimingWindowRepeatEditorAlternatives)(
+        //                 <.div(
+        //                   RadioButton(
+        //                     "repeat-forever",
+        //                     id = "repeat-forever-option",
+        //                     checked = selectedRepeatTimes.get.isEmpty,
+        //                     onChange = (_, checked) => selectedRepeatTimes.set(none).when_(checked)
+        //                   ),
+        //                   <.label("Forever", ^.htmlFor := "repeat-forever-option")
+        //                 ),
+        //                 <.div(ExploreStyles.TimingWindowRepeatEditorNTimes)(
+        //                   RadioButton(
+        //                     "repeat-n-times",
+        //                     id = "repeat-n-times",
+        //                     checked = selectedRepeatTimes.get.isDefined,
+        //                     onChange = (_, checked) =>
+        //                       selectedRepeatTimes.set(1.refined[Positive].some).when_(checked)
+        //                   ),
+        //                   FormInputTextView(
+        //                     id = "repeat-n-times-value".refined,
+        //                     value = selectedRepeatTimes.zoom(Iso.id[Option[PosInt]].some),
+        //                     validFormat = InputValidSplitEpi.posInt,
+        //                     changeAuditor = ChangeAuditor.posInt,
+        //                     disabled = selectedRepeatTimes.get.isEmpty
+        //                   ),
+        //                   <.label("times", ^.htmlFor := "repeat-n-times-value")
+        //                 )
+        //               )
+        //             }
+        //           )
+        //         }
+        //       )
+        //     )
+        //   },
+        //   props.renderInTitle(
+        //     if (props.readOnly) EmptyVdom
+        //     else
+        //       Button(
+        //         severity = Button.Severity.Success,
+        //         icon = Icons.New,
+        //         label = "Add",
+        //         onClick = props.windows.mod(
+        //           _ :+ TimingWindow(
+        //             inclusion = TimingWindowInclusion.Include,
+        //             start = Timestamp.unsafeFromInstantTruncated(Instant.now),
+        //             end = none
+        //           )
+        //         ) >> table.setRowSelection(RowSelection(RowId(rows.length.toString) -> true))
+        //       ).tiny.compact
+        //   )
+        // )
+        <.div("TWP")

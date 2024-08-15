@@ -39,74 +39,75 @@ object ObsGroupTiles:
   val component = ScalaFnComponent
     .withHooks[Props]
     .render { props =>
-
-      val tiles =
-        if !props.groups.get.contains(props.groupId.asRight) then List.empty
-        else
-          val groupTreeKey = props.groupId.asRight
-          // First zoom to the node, to get the number of child elements
-          // We can safely .get here because we know the key is in the tree and that the value is a Grouping
-          val node         = props.groups
-            .zoom(
-              _.getNodeAndIndexByKey(groupTreeKey).get,
-              modF =>
-                groups =>
-                  groups
-                    .getNodeAndIndexByKey(groupTreeKey)
-                    .map(modF)
-                    .map((newValue, newIndex) =>
-                      groups.updated(groupTreeKey, newValue.value, newIndex)
-                    )
-                    .getOrElse(groups)
-            )
-
-          // Then zoom to the Grouping itself
-          val group =
-            node.zoom(_._1.value.toOption.get,
-                      modF => _.leftMap(node => node.copy(value = node.value.map(modF)))
-            )
-
-          val editTile = Tile(
-            GroupEditIds.GroupEditId.id,
-            s"${if group.get.isAnd then "AND" else "OR"} Group",
-            props.backButton.some,
-            tileTitleClass = ExploreStyles.GroupEditTitle
-          )(
-            GroupEditTile(
-              group,
-              node.get._1.children.length,
-              props.timeEstimateRange,
-              group.get.system,
-              _
-            )
-              .withKey(props.groupId.toString)
-              .toUnmounted
-          )
-
-          val notesTile = Tile(
-            GroupEditIds.GroupNotesId.id,
-            s"Note for Observer",
-            canMinimize = true
-          )(_ =>
-            <.div(
-              ExploreStyles.NotesTile,
-              <.div(
-                ExploreStyles.ObserverNotes,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-              )
-            )
-          )
-
-          List(editTile, notesTile)
-
-      TileController(
-        props.userId,
-        props.resize.width.orEmpty,
-        props.defaultLayouts,
-        props.layouts,
-        tiles,
-        GridLayoutSection.GroupEditLayout,
-        props.backButton.some
-      )
-
+    //
+    //   val tiles =
+    //     if !props.groups.get.contains(props.groupId.asRight) then List.empty
+    //     else
+    //       val groupTreeKey = props.groupId.asRight
+    //       // First zoom to the node, to get the number of child elements
+    //       // We can safely .get here because we know the key is in the tree and that the value is a Grouping
+    //       val node         = props.groups
+    //         .zoom(
+    //           _.getNodeAndIndexByKey(groupTreeKey).get,
+    //           modF =>
+    //             groups =>
+    //               groups
+    //                 .getNodeAndIndexByKey(groupTreeKey)
+    //                 .map(modF)
+    //                 .map((newValue, newIndex) =>
+    //                   groups.updated(groupTreeKey, newValue.value, newIndex)
+    //                 )
+    //                 .getOrElse(groups)
+    //         )
+    //
+    //       // Then zoom to the Grouping itself
+    //       val group =
+    //         node.zoom(_._1.value.toOption.get,
+    //                   modF => _.leftMap(node => node.copy(value = node.value.map(modF)))
+    //         )
+    //
+    //       val editTile = Tile(
+    //         GroupEditIds.GroupEditId.id,
+    //         s"${if group.get.isAnd then "AND" else "OR"} Group",
+    //         props.backButton.some,
+    //         tileTitleClass = ExploreStyles.GroupEditTitle
+    //       )(
+    //         GroupEditTile(
+    //           group,
+    //           node.get._1.children.length,
+    //           props.timeEstimateRange,
+    //           group.get.system,
+    //           _
+    //         )
+    //           .withKey(props.groupId.toString)
+    //           .toUnmounted
+    //       )
+    //
+    //       val notesTile = Tile(
+    //         GroupEditIds.GroupNotesId.id,
+    //         s"Note for Observer",
+    //         canMinimize = true
+    //       )(_ =>
+    //         <.div(
+    //           ExploreStyles.NotesTile,
+    //           <.div(
+    //             ExploreStyles.ObserverNotes,
+    //             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
+    //           )
+    //         )
+    //       )
+    //
+    //       List(editTile, notesTile)
+    //
+    //   TileController(
+    //     props.userId,
+    //     props.resize.width.orEmpty,
+    //     props.defaultLayouts,
+    //     props.layouts,
+    //     tiles,
+    //     GridLayoutSection.GroupEditLayout,
+    //     props.backButton.some
+    //   )
+    //
+      <.div("GR ")
     }

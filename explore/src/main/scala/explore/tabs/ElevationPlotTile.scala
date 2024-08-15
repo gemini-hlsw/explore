@@ -21,40 +21,40 @@ import lucuma.ui.syntax.all.given
 import java.time.Duration
 import java.time.Instant
 
-object ElevationPlotTile:
+object ElevationPlotTile
 
-  def elevationPlotTile(
-    uid:               Option[User.Id],
-    tid:               Option[Target.Id],
-    site:              Option[Site],
-    coordinates:       Option[CoordinatesAtVizTime],
-    vizTime:           Option[Instant],
-    pendingTime:       Option[Duration],
-    timingWindows:     List[TimingWindow] = List.empty,
-    globalPreferences: GlobalPreferences
-  ) =
-    Tile(
-      ObsTabTilesIds.PlotId.id,
-      "Elevation Plot",
-      canMinimize = true,
-      bodyClass = ExploreStyles.ElevationPlotTileBody
-    ) { _ =>
-      (uid, tid, coordinates)
-        .mapN { (uid, targetId, coordinates) =>
-          ElevationPlotSection(uid,
-                               targetId,
-                               site,
-                               vizTime,
-                               pendingTime,
-                               coordinates,
-                               timingWindows,
-                               globalPreferences
-          ): VdomNode
-        }
-        .getOrElse {
-          <.div(
-            ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
-            <.div("Select a target")
-          )
-        }
-    }
+// def elevationPlotTile(
+//   uid:               Option[User.Id],
+//   tid:               Option[Target.Id],
+//   site:              Option[Site],
+//   coordinates:       Option[CoordinatesAtVizTime],
+//   vizTime:           Option[Instant],
+//   pendingTime:       Option[Duration],
+//   timingWindows:     List[TimingWindow] = List.empty,
+//   globalPreferences: GlobalPreferences
+// ) =
+//   Tile(
+//     ObsTabTilesIds.PlotId.id,
+//     "Elevation Plot",
+//     canMinimize = true,
+//     bodyClass = ExploreStyles.ElevationPlotTileBody
+//   ) { _ =>
+//     (uid, tid, coordinates)
+//       .mapN { (uid, targetId, coordinates) =>
+//         ElevationPlotSection(uid,
+//                              targetId,
+//                              site,
+//                              vizTime,
+//                              pendingTime,
+//                              coordinates,
+//                              timingWindows,
+//                              globalPreferences
+//         ): VdomNode
+//       }
+//       .getOrElse {
+//         <.div(
+//           ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+//           <.div("Select a target")
+//         )
+//       }
+//   }

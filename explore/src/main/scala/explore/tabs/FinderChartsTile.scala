@@ -22,52 +22,52 @@ import lucuma.ui.react.given
 
 import scala.collection.immutable.SortedSet
 
-object FinderChartsTile:
+object FinderChartsTile
 
-  def finderChartsTile(
-    programId:        Program.Id,
-    oid:              Observation.Id,
-    obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
-    authToken:        Option[NonEmptyString],
-    obsAttachments:   View[ObsAttachmentList],
-    selected:         View[Option[ObsAtt.Id]],
-    parallacticAngle: Option[Angle],
-    chartSelector:    View[ChartSelector],
-    readOnly:         Boolean
-  ) =
-    val control = authToken.map: a =>
-      <.div(
-        ExploreStyles.JustifiedEndTileControl,
-        FinderChartsSelector(programId,
-                             a,
-                             obsAttachmentIds,
-                             obsAttachments,
-                             selected,
-                             chartSelector,
-                             readOnly
-        )
-      )
-
-    Tile(
-      ObsTabTilesIds.FinderChartsId.id,
-      s"Finder Charts",
-      bodyClass = ExploreStyles.FinderChartsTile,
-      canMinimize = true,
-      control = state => control.filter(_ => state.isMinimized)
-    )(renderInTitle =>
-      authToken
-        .map[VdomNode](t =>
-          FinderCharts(programId,
-                       oid,
-                       t,
-                       obsAttachmentIds,
-                       obsAttachments,
-                       selected,
-                       chartSelector,
-                       parallacticAngle,
-                       renderInTitle,
-                       readOnly
-          )
-        )
-        .orEmpty
-    )
+// def finderChartsTile(
+//   programId:        Program.Id,
+//   oid:              Observation.Id,
+//   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
+//   authToken:        Option[NonEmptyString],
+//   obsAttachments:   View[ObsAttachmentList],
+//   selected:         View[Option[ObsAtt.Id]],
+//   parallacticAngle: Option[Angle],
+//   chartSelector:    View[ChartSelector],
+//   readOnly:         Boolean
+// ) =
+//   val control = authToken.map: a =>
+//     <.div(
+//       ExploreStyles.JustifiedEndTileControl,
+//       FinderChartsSelector(programId,
+//                            a,
+//                            obsAttachmentIds,
+//                            obsAttachments,
+//                            selected,
+//                            chartSelector,
+//                            readOnly
+//       )
+//     )
+//
+//   Tile(
+//     ObsTabTilesIds.FinderChartsId.id,
+//     s"Finder Charts",
+//     bodyClass = ExploreStyles.FinderChartsTile,
+//     canMinimize = true,
+//     control = state => control.filter(_ => state.isMinimized)
+//   )(renderInTitle =>
+//     authToken
+//       .map[VdomNode](t =>
+//         FinderCharts(programId,
+//                      oid,
+//                      t,
+//                      obsAttachmentIds,
+//                      obsAttachments,
+//                      selected,
+//                      chartSelector,
+//                      parallacticAngle,
+//                      renderInTitle,
+//                      readOnly
+//         )
+//       )
+//       .orEmpty
+//   )

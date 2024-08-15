@@ -29,42 +29,42 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 
 object ConfigurationTile {
-  def configurationTile(
-    userId:           Option[User.Id],
-    programId:        Program.Id,
-    obsId:            Observation.Id,
-    requirements:     UndoSetter[ScienceRequirements],
-    mode:             UndoSetter[Option[ObservingMode]],
-    posAngle:         View[PosAngleConstraint],
-    scienceTargetIds: AsterismIds,
-    baseCoordinates:  Option[CoordinatesAtVizTime],
-    obsConf:          ObsConfiguration,
-    selectedConfig:   View[Option[BasicConfigAndItc]],
-    modes:            SpectroscopyModesMatrix,
-    allTargets:       TargetList,
-    sequenceChanged:  Callback,
-    readonly:         Boolean
-  )(using Logger[IO]) =
-    Tile(
-      ObsTabTilesIds.ConfigurationId.id,
-      "Configuration",
-      bodyClass = ExploreStyles.ConfigurationTileBody,
-      canMinimize = true
-    )(_ =>
-      ConfigurationPanel(
-        userId,
-        programId,
-        obsId,
-        requirements,
-        mode,
-        posAngle,
-        obsConf,
-        scienceTargetIds.itcTargets(allTargets),
-        baseCoordinates,
-        selectedConfig,
-        modes,
-        sequenceChanged,
-        readonly
-      )
-    )
+  // def configurationTile(
+  //   userId:           Option[User.Id],
+  //   programId:        Program.Id,
+  //   obsId:            Observation.Id,
+  //   requirements:     UndoSetter[ScienceRequirements],
+  //   mode:             UndoSetter[Option[ObservingMode]],
+  //   posAngle:         View[PosAngleConstraint],
+  //   scienceTargetIds: AsterismIds,
+  //   baseCoordinates:  Option[CoordinatesAtVizTime],
+  //   obsConf:          ObsConfiguration,
+  //   selectedConfig:   View[Option[BasicConfigAndItc]],
+  //   modes:            SpectroscopyModesMatrix,
+  //   allTargets:       TargetList,
+  //   sequenceChanged:  Callback,
+  //   readonly:         Boolean
+  // )(using Logger[IO]) =
+  //   Tile(
+  //     ObsTabTilesIds.ConfigurationId.id,
+  //     "Configuration",
+  //     bodyClass = ExploreStyles.ConfigurationTileBody,
+  //     canMinimize = true
+  //   )(_ =>
+  //     ConfigurationPanel(
+  //       userId,
+  //       programId,
+  //       obsId,
+  //       requirements,
+  //       mode,
+  //       posAngle,
+  //       obsConf,
+  //       scienceTargetIds.itcTargets(allTargets),
+  //       baseCoordinates,
+  //       selectedConfig,
+  //       modes,
+  //       sequenceChanged,
+  //       readonly
+  //     )
+  //   )
 }

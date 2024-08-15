@@ -124,22 +124,22 @@ object ObsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    def observationTable(): VdomNode = Tile(
-      "observations".refined,
-      "Observations Summary",
-      backButton.some
-    )(renderInTitle =>
-      ObsSummaryTable(
-        props.vault.userId,
-        props.programId,
-        props.observations,
-        props.obsExecutions,
-        props.targets.get,
-        renderInTitle
-      )
-    // TODO: elevation view
-    )
-
+    // def observationTable(): VdomNode = Tile(
+    //   "observations".refined,
+    //   "Observations Summary",
+    //   backButton.some
+    // )(renderInTitle =>
+    //   ObsSummaryTable(
+    //     props.vault.userId,
+    //     props.programId,
+    //     props.observations,
+    //     props.obsExecutions,
+    //     props.targets.get,
+    //     renderInTitle
+    //   )
+    // // TODO: elevation view
+    // )
+    //
     def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
       val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
 
@@ -184,7 +184,7 @@ object ObsTabContents extends TwoPanels:
       (props.focusedObs, props.focusedGroup) match {
         case (Some(obsId), _)   => obsTiles(obsId, resize)
         case (_, Some(groupId)) => groupTiles(groupId, resize)
-        case _                  => observationTable()
+        case _                  => <.div("OT") // observationTable()
       }
 
     makeOneOrTwoPanels(

@@ -36,64 +36,64 @@ import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 
-object AsterismEditorTile:
+object AsterismEditorTile
 
-  def asterismEditorTile(
-    userId:            Option[User.Id],
-    programId:         Program.Id,
-    obsIds:            ObsIdSet,
-    obsAndTargets:     UndoSetter[ObservationsAndTargets],
-    configuration:     Option[BasicConfiguration],
-    vizTime:           View[Option[Instant]],
-    obsConf:           ObsConfiguration,
-    currentTarget:     Option[Target.Id],
-    setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-    onCloneTarget:     OnCloneParameters => Callback,
-    onAsterismUpdate:  OnAsterismUpdateParams => Callback,
-    obsInfo:           Target.Id => TargetEditObsInfo,
-    searching:         View[Set[Target.Id]],
-    title:             String,
-    globalPreferences: View[GlobalPreferences],
-    readonly:          Boolean,
-    sequenceChanged:   Callback = Callback.empty,
-    backButton:        Option[VdomNode] = none
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
-    // Save the time here. this works for the obs and target tabs
-    // It's OK to save the viz time for executed observations, I think.
-    val vizTimeView =
-      vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
-
-    val control: VdomNode =
-      <.div(ExploreStyles.JustifiedEndTileControl, ObsTimeEditor(vizTimeView))
-
-    Tile(
-      ObsTabTilesIds.TargetId.id,
-      title,
-      back = backButton,
-      canMinimize = true,
-      control = s => control.some.filter(_ => s === TileSizeState.Minimized),
-      bodyClass = ExploreStyles.TargetTileBody,
-      controllerClass = ExploreStyles.TargetTileController
-    )((renderInTitle: Tile.RenderInTitle) =>
-      userId.map(uid =>
-        AsterismEditor(
-          uid,
-          programId,
-          obsIds,
-          obsAndTargets,
-          vizTime,
-          obsConf,
-          currentTarget,
-          setTarget,
-          onCloneTarget,
-          onAsterismUpdate,
-          obsInfo,
-          searching,
-          renderInTitle,
-          globalPreferences,
-          readonly,
-          sequenceChanged
-        )
-      )
-    )
-  }
+// def asterismEditorTile(
+//   userId:            Option[User.Id],
+//   programId:         Program.Id,
+//   obsIds:            ObsIdSet,
+//   obsAndTargets:     UndoSetter[ObservationsAndTargets],
+//   configuration:     Option[BasicConfiguration],
+//   vizTime:           View[Option[Instant]],
+//   obsConf:           ObsConfiguration,
+//   currentTarget:     Option[Target.Id],
+//   setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
+//   onCloneTarget:     OnCloneParameters => Callback,
+//   onAsterismUpdate:  OnAsterismUpdateParams => Callback,
+//   obsInfo:           Target.Id => TargetEditObsInfo,
+//   searching:         View[Set[Target.Id]],
+//   title:             String,
+//   globalPreferences: View[GlobalPreferences],
+//   readonly:          Boolean,
+//   sequenceChanged:   Callback = Callback.empty,
+//   backButton:        Option[VdomNode] = none
+// )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
+//   // Save the time here. this works for the obs and target tabs
+//   // It's OK to save the viz time for executed observations, I think.
+//   val vizTimeView =
+//     vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
+//
+//   val control: VdomNode =
+//     <.div(ExploreStyles.JustifiedEndTileControl, ObsTimeEditor(vizTimeView))
+//
+//   Tile(
+//     ObsTabTilesIds.TargetId.id,
+//     title,
+//     back = backButton,
+//     canMinimize = true,
+//     control = s => control.some.filter(_ => s === TileSizeState.Minimized),
+//     bodyClass = ExploreStyles.TargetTileBody,
+//     controllerClass = ExploreStyles.TargetTileController
+//   )((renderInTitle: Tile.RenderInTitle) =>
+//     userId.map(uid =>
+//       AsterismEditor(
+//         uid,
+//         programId,
+//         obsIds,
+//         obsAndTargets,
+//         vizTime,
+//         obsConf,
+//         currentTarget,
+//         setTarget,
+//         onCloneTarget,
+//         onAsterismUpdate,
+//         obsInfo,
+//         searching,
+//         renderInTitle,
+//         globalPreferences,
+//         readonly,
+//         sequenceChanged
+//       )
+//     )
+//   )
+// }

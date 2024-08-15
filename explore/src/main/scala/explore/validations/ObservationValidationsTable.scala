@@ -3,6 +3,7 @@
 
 package explore.validations
 
+import crystal.react.View
 import cats.syntax.all.*
 import explore.Icons
 import explore.components.Tile
@@ -33,10 +34,14 @@ import lucuma.ui.table.*
 
 import scala.scalajs.js
 
+case class ObservationValidationsTableState(
+  programId:             Program.Id,
+  observations:          ObservationList,
+  toggleAllRowsExpanded: View[Option[Boolean => Callback]]
+)
+
 case class ObservationValidationsTable(
-  programId:     Program.Id,
-  observations:  ObservationList,
-  renderInTitle: Tile.RenderInTitle
+  state: ObservationValidationsTableState
 ) extends ReactFnProps(ObservationValidationsTable.component)
 
 object ObservationValidationsTable {
@@ -78,9 +83,9 @@ object ObservationValidationsTable {
     // columns
     .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
       def obsUrl(obsId: Observation.Id): String    =
-        ctx.pageUrl(AppTab.Observations, props.programId, Focused.singleObs(obsId))
+        ctx.pageUrl(AppTab.Observations, props.state.programId, Focused.singleObs(obsId))
       def goToObs(obsId: Observation.Id): Callback =
-        ctx.pushPage(AppTab.Observations, props.programId, Focused.singleObs(obsId))
+        ctx.pushPage(AppTab.Observations, props.state.programId, Focused.singleObs(obsId))
 
       def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing]): Callback =
         row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
@@ -123,7 +128,7 @@ object ObservationValidationsTable {
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => props.observations.toList)((_, _, _) =>
+    .useMemoBy((props, _, _) => props.state.observations.toList)((_, _, _) =>
       _.filterNot(_.validations.isEmpty)
         .map(obs =>
           Expandable(
@@ -152,35 +157,20 @@ object ObservationValidationsTable {
         getRowId = (row, _, _) => RowId(row.value.rowId)
       )
     )
+    .useEffectOnMountBy((p, _, _, _, table) =>
+      val cb = (a: Boolean) => table.toggleAllRowsExpanded(a)
+      p.state.toggleAllRowsExpanded.set(cb.some)
+    )
     .useResizeDetector()
     .render((props, _, rows, _, table, resizer) =>
-      React.Fragment(
-        props.renderInTitle(
-          <.div(
-            ExploreStyles.TableSelectionToolbar,
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.SquarePlus,
-              tooltip = "Expand All",
-              onClick = table.toggleAllRowsExpanded(true)
-            ).compact,
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.SquareMinus,
-              tooltip = "Collapse All",
-              onClick = table.toggleAllRowsExpanded(false)
-            ).compact
-          )
-        ),
-        PrimeAutoHeightVirtualizedTable(
-          table,
-          _ => 32.toPx,
-          striped = true,
-          compact = Compact.Very,
-          containerRef = resizer.ref,
-          hoverableRows = rows.nonEmpty,
-          emptyMessage = <.div("There are no Observation Errors.")
-        )
+      PrimeAutoHeightVirtualizedTable(
+        table,
+        _ => 32.toPx,
+        striped = true,
+        compact = Compact.Very,
+        containerRef = resizer.ref,
+        hoverableRows = rows.nonEmpty,
+        emptyMessage = <.div("There are no Observation Errors.")
       )
     )
 
@@ -245,3 +235,27 @@ object ObservationValidationsTable {
       )
   }
 }
+
+case class ObservationValidationsTableControls(
+  state: ObservationValidationsTableState
+) extends ReactFnProps(ObservationValidationsTableControls.component) {}
+
+object ObservationValidationsTableControls:
+  private type Props = ObservationValidationsTableControls
+
+  private val component = ScalaFnComponent[Props]: p =>
+    <.div(
+      ExploreStyles.TableSelectionToolbar,
+      Button(
+        size = Button.Size.Small,
+        icon = Icons.SquarePlus,
+        tooltip = "Expand All",
+        onClick = p.state.toggleAllRowsExpanded.get.map(_(true)).getOrEmpty
+      ).compact,
+      Button(
+        size = Button.Size.Small,
+        icon = Icons.SquareMinus,
+        tooltip = "Collapse All",
+        onClick = p.state.toggleAllRowsExpanded.get.map(_(false)).getOrEmpty
+      ).compact
+    )

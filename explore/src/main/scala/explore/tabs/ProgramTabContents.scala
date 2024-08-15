@@ -46,44 +46,45 @@ object ProgramTabContents:
     .useContext(AppContext.ctx)
     .useResizeDetector()
     .render: (props, _, resize) =>
-      val defaultLayouts: LayoutsMap =
-        ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
-
-      val layouts: LayoutsMap =
-        props.userPreferences.programsTabLayout
-
-      val detailsTile: Tile =
-        Tile(
-          ProgramTabTileIds.DetailsId.id,
-          "Program Details",
-          canMinimize = true
-        )(_ => ProgramDetailsTile(props.allocations, props.programTimes))
-
-      val notesTile: Tile =
-        Tile(
-          ProgramTabTileIds.NotesId.id,
-          "Notes",
-          canMinimize = true
-        )(_ => ProgramNotesTile())
-
-      val changeRequestsTile: Tile =
-        Tile(
-          ProgramTabTileIds.ChangeRequestsId.id,
-          "Change Requests",
-          canMinimize = true
-        )(_ => ProgramChangeRequestsTile())
-
-      <.div(ExploreStyles.MultiPanelTile)(
-        TileController(
-          props.userVault.map(_.user.id),
-          resize.width.getOrElse(1),
-          defaultLayouts,
-          layouts,
-          List(
-            detailsTile,
-            notesTile,
-            changeRequestsTile
-          ),
-          GridLayoutSection.ProgramsLayout
-        )
-      ).withRef(resize.ref)
+      // val defaultLayouts: LayoutsMap =
+      //   ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
+      //
+      // val layouts: LayoutsMap =
+      //   props.userPreferences.programsTabLayout
+      //
+      // val detailsTile: Tile =
+      //   Tile(
+      //     ProgramTabTileIds.DetailsId.id,
+      //     "Program Details",
+      //     canMinimize = true
+      //   )(_ => ProgramDetailsTile(props.allocations, props.programTimes))
+      //
+      // val notesTile: Tile =
+      //   Tile(
+      //     ProgramTabTileIds.NotesId.id,
+      //     "Notes",
+      //     canMinimize = true
+      //   )(_ => ProgramNotesTile())
+      //
+      // val changeRequestsTile: Tile =
+      //   Tile(
+      //     ProgramTabTileIds.ChangeRequestsId.id,
+      //     "Change Requests",
+      //     canMinimize = true
+      //   )(_ => ProgramChangeRequestsTile())
+      //
+      // <.div(ExploreStyles.MultiPanelTile)(
+      //   TileController(
+      //     props.userVault.map(_.user.id),
+      //     resize.width.getOrElse(1),
+      //     defaultLayouts,
+      //     layouts,
+      //     List(
+      //       detailsTile,
+      //       notesTile,
+      //       changeRequestsTile
+      //     ),
+      //     GridLayoutSection.ProgramsLayout
+      //   )
+      // ).withRef(resize.ref)
+      <.div("Program Tab Contents")

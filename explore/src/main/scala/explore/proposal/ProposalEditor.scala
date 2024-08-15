@@ -514,54 +514,55 @@ object ProposalEditor:
 
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
-    val detailsTile =
-      Tile(ProposalTabTileIds.DetailsId.id, "Details", canMinimize = true)(
-        renderDetails(
-          aligner,
-          undoCtx,
-          totalHours,
-          // minPct2,
-          showDialog,
-          splitsList,
-          timeEstimateRange,
-          cfps,
-          readonly,
-          _
-        )
-      )
-
-    val usersTile =
-      ProgramUsers.programUsersTile(programId, users, invitations, createInvite, readonly, ref)
-
-    val abstractTile =
-      Tile(ProposalTabTileIds.AbstractId.id,
-           "Abstract",
-           canMinimize = true,
-           bodyClass = ExploreStyles.ProposalAbstract
-      )(_ =>
-        FormInputTextAreaView(
-          id = "abstract".refined,
-          value = abstractView.as(OptionNonEmptyStringIso)
-        )(^.disabled := readonly)
-      )
-
-    val attachmentsTile =
-      Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments", canMinimize = true)(_ =>
-        authToken.map(token => ProposalAttachmentsTable(programId, token, attachments, readonly))
-      )
-
-    <.div(
-      ExploreStyles.MultiPanelTile,
-      TileController(
-        optUserId,
-        resize.width.getOrElse(1),
-        defaultLayouts,
-        layout,
-        List(detailsTile, usersTile, abstractTile, attachmentsTile),
-        GridLayoutSection.ProposalLayout,
-        storeLayout = true
-      )
-    ).withRef(resize.ref)
+    // val detailsTile =
+    //   Tile(ProposalTabTileIds.DetailsId.id, "Details", canMinimize = true)(
+    //     renderDetails(
+    //       aligner,
+    //       undoCtx,
+    //       totalHours,
+    //       // minPct2,
+    //       showDialog,
+    //       splitsList,
+    //       timeEstimateRange,
+    //       cfps,
+    //       readonly,
+    //       _
+    //     )
+    //   )
+    //
+    // val usersTile =
+    //   ProgramUsers.programUsersTile(programId, users, invitations, createInvite, readonly, ref)
+    //
+    // val abstractTile =
+    //   Tile(ProposalTabTileIds.AbstractId.id,
+    //        "Abstract",
+    //        canMinimize = true,
+    //        bodyClass = ExploreStyles.ProposalAbstract
+    //   )(_ =>
+    //     FormInputTextAreaView(
+    //       id = "abstract".refined,
+    //       value = abstractView.as(OptionNonEmptyStringIso)
+    //     )(^.disabled := readonly)
+    //   )
+    //
+    // val attachmentsTile =
+    //   Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments", canMinimize = true)(_ =>
+    //     authToken.map(token => ProposalAttachmentsTable(programId, token, attachments, readonly))
+    //   )
+    //
+    // <.div(
+    //   ExploreStyles.MultiPanelTile,
+    //   TileController(
+    //     optUserId,
+    //     resize.width.getOrElse(1),
+    //     defaultLayouts,
+    //     layout,
+    //     List(detailsTile, usersTile, abstractTile, attachmentsTile),
+    //     GridLayoutSection.ProposalLayout,
+    //     storeLayout = true
+    //   )
+    // ).withRef(resize.ref)
+    <.div("Proposal Editor")
   }
   summon[Reusability[CallForProposals.Id]]
 

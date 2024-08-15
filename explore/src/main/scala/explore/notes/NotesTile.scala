@@ -45,13 +45,13 @@ object NotesTile:
     inline def InEdition  = Editing(true)
     inline def flip(e: Editing) = Editing(!e.value)
 
-  def notesTile(obsId: Observation.Id, notes: View[Option[NonEmptyString]]) =
-    Tile(
-      ObsTabTilesIds.NotesId.id,
-      s"Note for Observer",
-      canMinimize = true,
-      bodyClass = ExploreStyles.NotesTile
-    )(NotesTile(obsId, notes, _))
+  // def notesTile(obsId: Observation.Id, notes: View[Option[NonEmptyString]]) =
+  //   Tile(
+  //     ObsTabTilesIds.NotesId.id,
+  //     s"Note for Observer",
+  //     canMinimize = true,
+  //     bodyClass = ExploreStyles.NotesTile
+  //   )(NotesTile(obsId, notes, _))
 
   private val component =
     ScalaFnComponent

@@ -22,40 +22,40 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
 
-object ItcTile:
+object ItcTile
 
-  def itcTile(
-    uid:               Option[User.Id],
-    oid:               Observation.Id,
-    selectedTarget:    View[Option[ItcTarget]],
-    allTargets:        TargetList,
-    itcProps:          ItcProps,
-    itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
-    itcLoading:        LoadingState,
-    globalPreferences: View[GlobalPreferences]
-  ) =
-    Tile(
-      ObsTabTilesIds.ItcId.id,
-      s"ITC",
-      canMinimize = true,
-      control = _ =>
-        (ItcPanelTitle(
-          selectedTarget,
-          itcProps,
-          itcChartResults,
-          itcLoading
-        ): VdomNode).some,
-      bodyClass = ExploreStyles.ItcTileBody
-    )(_ =>
-      uid.map(
-        ItcGraphPanel(
-          _,
-          oid,
-          selectedTarget,
-          itcProps,
-          itcChartResults,
-          itcLoading,
-          globalPreferences
-        )
-      )
-    )
+// def itcTile(
+//   uid:               Option[User.Id],
+//   oid:               Observation.Id,
+//   selectedTarget:    View[Option[ItcTarget]],
+//   allTargets:        TargetList,
+//   itcProps:          ItcProps,
+//   itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
+//   itcLoading:        LoadingState,
+//   globalPreferences: View[GlobalPreferences]
+// ) =
+//   Tile(
+//     ObsTabTilesIds.ItcId.id,
+//     s"ITC",
+//     canMinimize = true,
+//     control = _ =>
+//       (ItcPanelTitle(
+//         selectedTarget,
+//         itcProps,
+//         itcChartResults,
+//         itcLoading
+//       ): VdomNode).some,
+//     bodyClass = ExploreStyles.ItcTileBody
+//   )(_ =>
+//     uid.map(
+//       ItcGraphPanel(
+//         _,
+//         oid,
+//         selectedTarget,
+//         itcProps,
+//         itcChartResults,
+//         itcLoading,
+//         globalPreferences
+//       )
+//     )
+//   )
