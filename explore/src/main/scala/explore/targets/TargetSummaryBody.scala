@@ -7,12 +7,10 @@ import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
@@ -50,10 +48,24 @@ import lucuma.ui.table.hooks.*
 import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
+import monocle.Focus
+import explore.components.ColumnSelectorState
 
-case class TargetSummaryTileState()
+case class TargetSummaryTileState(
+  filesToImport:   List[DOMFile],
+  table:           ColumnSelectorState[TargetWithId, Nothing],
+  deletingTargets: DeletingTargets
+)
 
-case class TargetSummaryTable(
+object DeletingTargets extends NewType[Boolean]
+type DeletingTargets = DeletingTargets.Type
+
+object TargetSummaryTileState:
+  val filesToImport   = Focus[TargetSummaryTileState](_.filesToImport)
+  val table           = Focus[TargetSummaryTileState](_.table)
+  val deletingTargets = Focus[TargetSummaryTileState](_.deletingTargets)
+
+case class TargetSummaryBody(
   userId:                  Option[User.Id],
   programId:               Program.Id,
   targets:                 View[TargetList],
@@ -64,10 +76,14 @@ case class TargetSummaryTable(
   selectedTargetIds:       View[List[Target.Id]],
   undoCtx:                 UndoContext[ProgramSummaries],
   readonly:                Boolean
-) extends ReactFnProps(TargetSummaryTable.component)
+)(val state: View[TargetSummaryTileState])
+    extends ReactFnProps(TargetSummaryBody.component):
+  val filesToImport   = state.zoom(TargetSummaryTileState.filesToImport)
+  val table           = state.zoom(TargetSummaryTileState.table)
+  val deletingTargets = state.zoom(TargetSummaryTileState.deletingTargets)
 
-object TargetSummaryTable:
-  private type Props = TargetSummaryTable
+object TargetSummaryBody:
+  private type Props = TargetSummaryBody
 
   private val ColDef = ColumnDef[TargetWithId]
 
@@ -77,15 +93,13 @@ object TargetSummaryTable:
 
   private object IsImportOpen extends NewType[Boolean]
 
-  private object DeletingTargets extends NewType[Boolean]
-
   private val columnClasses: Map[ColumnId, Css] = Map(
     IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
     TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType),
     TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName)
   )
 
-  private val ColNames: Map[ColumnId, String] =
+  val ColNames: Map[ColumnId, String] =
     TargetColumns.AllColNames ++ Map(
       IdColumnId           -> "Id",
       CountColumnId        -> "Count",
@@ -202,13 +216,11 @@ object TargetSummaryTable:
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
-      // Files to be imported
-      .useStateView(List.empty[DOMFile])
-      .useStateView(DeletingTargets(false))
+      .useEffectOnMountBy((p, _, _, _, table) => p.table.set(ColumnSelectorState(table.some)))
       // Copy the selection upstream
-      .useEffectWithDepsBy((_, _, _, _, table, _, _) =>
+      .useEffectWithDepsBy((_, _, _, _, table) =>
         table.getSelectedRowModel().rows.toList.map(_.original.id)
-      ): (props, ctx, _, _, _, _, _) =>
+      ): (props, ctx, _, _, _) =>
         ids =>
           props.selectedTargetIds.set(ids) >>
             ids.headOption
@@ -219,9 +231,9 @@ object TargetSummaryTable:
               .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
       .useRef(none[HTMLTableVirtualizer])
       .useResizeDetector()
-      .useEffectWithDepsBy((props, _, _, _, _, _, _, _, resizer) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _, resizer) =>
         (props.selectedTargetIds.get.headOption, resizer)
-      ): (_, _, _, _, table, _, _, virtualizerRef, _) =>
+      ): (_, _, _, _, table, virtualizerRef, _) =>
         (selectedTargetIds, _) =>
           selectedTargetIds.foldMap(selectedHead =>
             virtualizerRef.get.flatMap(refOpt =>
@@ -239,146 +251,171 @@ object TargetSummaryTable:
               )
             )
           )
-      .render: (props, ctx, _, _, table, filesToImport, deletingTargets, virtualizerRef, resizer) =>
+      .render: (props, _, _, _, table, virtualizerRef, resizer) =>
+
+        val selectedRows = table.getSelectedRowModel().rows.toList
+
+        PrimeAutoHeightVirtualizedTable(
+          table,
+          _ => 32.toPx,
+          striped = true,
+          compact = Compact.Very,
+          innerContainerMod = ^.width := "100%",
+          containerRef = resizer.ref,
+          tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
+          headerCellMod = headerCell =>
+            columnClasses
+              .get(headerCell.column.id)
+              .orEmpty |+| ExploreStyles.StickyHeader,
+          rowMod = row =>
+            TagMod(
+              ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
+              ^.onClick ==> { (e: ReactMouseEvent) =>
+                val isShiftPressed   = e.shiftKey
+                val isCmdCtrlPressed = e.metaKey || e.ctrlKey
+
+                // If cmd is pressed add to the selection
+                table.toggleAllRowsSelected(false).unless(isCmdCtrlPressed) *> {
+                  if (isShiftPressed && selectedRows.nonEmpty) {
+                    // If shift is pressed extend
+                    val allRows        =
+                      table.getRowModel().rows.toList.zipWithIndex
+                    val currentId      = row.id
+                    // selectedRow is not empty, these won't fail
+                    val firstId        = selectedRows.head.id
+                    val lastId         = selectedRows.last.id
+                    val indexOfCurrent = allRows.indexWhere(_._1.id == currentId)
+                    val indexOfFirst   = allRows.indexWhere(_._1.id == firstId)
+                    val indexOfLast    = allRows.indexWhere(_._1.id == lastId)
+                    if (indexOfCurrent =!= -1 && indexOfFirst =!= -1 && indexOfLast =!= -1) {
+                      if (indexOfCurrent < indexOfFirst) {
+                        table.setRowSelection(
+                          RowSelection(
+                            (firstId -> true) :: allRows
+                              .slice(indexOfCurrent, indexOfFirst)
+                              .map { case (row, _) => row.id -> true }*
+                          )
+                        )
+                      } else {
+                        table.setRowSelection(
+                          RowSelection(
+                            (currentId -> true) :: allRows
+                              .slice(indexOfLast, indexOfCurrent)
+                              .map { case (row, _) => row.id -> true }*
+                          )
+                        )
+                      }
+                    } else Callback.empty
+                  } else row.toggleSelected()
+                }
+              }
+            ),
+          cellMod = cell => columnClasses.get(cell.column.id).orEmpty,
+          virtualizerRef = virtualizerRef,
+          emptyMessage = <.div("No targets present")
+          // workaround to redraw when files are imported
+        ).withKey(s"summary-table-${props.filesToImport.get.size}")
+
+case class TargetSummaryTitle(
+  programId:             Program.Id,
+  targets:               View[TargetList],
+  selectTargetOrSummary: Option[Target.Id] => Callback,
+  selectedTargetIds:     View[List[Target.Id]],
+  undoCtx:               UndoContext[ProgramSummaries],
+  readonly:              Boolean
+)(val state: View[TargetSummaryTileState])
+    extends ReactFnProps(TargetSummaryTitle.component) {
+  val filesToImport   = state.zoom(TargetSummaryTileState.filesToImport)
+  val table           = state.zoom(TargetSummaryTileState.table)
+  val deletingTargets = state.zoom(TargetSummaryTileState.deletingTargets)
+}
+
+object TargetSummaryTitle:
+  private type Props = TargetSummaryTitle
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .render: (props, ctx) =>
         import ctx.given
 
-        val selectedRows    = table.getSelectedRowModel().rows.toList
-        val selectedRowsIds = selectedRows.map(_.original.id)
+        props.table.get.table.map { table =>
+          val selectedRows    = table.getSelectedRowModel().rows.toList
+          val selectedRowsIds = selectedRows.map(_.original.id)
 
-        def deleteSelected: Callback =
-          ConfirmDialog.confirmDialog(
-            message = <.div(s"This action will delete ${selectedRows.length} targets."),
-            header = "Targets delete",
-            acceptLabel = "Yes, delete",
-            position = DialogPosition.Top,
-            accept = props.targets
-              .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
-              table.toggleAllRowsSelected(false) *>
-              TargetAddDeleteActions
-                .deleteTargets(
-                  selectedRowsIds,
-                  props.programId,
-                  props.selectTargetOrSummary(none).toAsync,
-                  ToastCtx[IO].showToast(_)
-                )
-                .set(props.undoCtx)(selectedRowsIds.map(_ => none))
-                .toAsync
-                .switching(deletingTargets.async, DeletingTargets(_))
-                .runAsyncAndForget,
-            acceptClass = PrimeStyles.ButtonSmall,
-            rejectClass = PrimeStyles.ButtonSmall,
-            icon = Icons.SkullCrossBones(^.color.red)
-          )
+          def onTextChange(e: ReactEventFromInput): Callback =
+            val files = e.target.files.toList
+            // set value to null so we can reuse the import button
+            (Callback(e.target.value = null) *> props.filesToImport.set(files))
+              .when_(files.nonEmpty)
 
-        def onTextChange(e: ReactEventFromInput): Callback =
-          val files = e.target.files.toList
-          // set value to null so we can reuse the import button
-          (Callback(e.target.value = null) *> filesToImport.set(files)).when_(files.nonEmpty)
+          def deleteSelected: Callback =
+            ConfirmDialog.confirmDialog(
+              message = <.div(s"This action will delete ${selectedRows.length} targets."),
+              header = "Targets delete",
+              acceptLabel = "Yes, delete",
+              position = DialogPosition.Top,
+              accept = props.targets
+                .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
+                props.table.get.table.map(_.toggleAllRowsSelected(false)).getOrEmpty *>
+                TargetAddDeleteActions
+                  .deleteTargets(
+                    selectedRowsIds,
+                    props.programId,
+                    props.selectTargetOrSummary(none).toAsync,
+                    ToastCtx[IO].showToast(_)
+                  )
+                  .set(props.undoCtx)(selectedRowsIds.map(_ => none))
+                  .toAsync
+                  .switching(props.deletingTargets.async, DeletingTargets(_))
+                  .runAsyncAndForget,
+              acceptClass = PrimeStyles.ButtonSmall,
+              rejectClass = PrimeStyles.ButtonSmall,
+              icon = Icons.SkullCrossBones(^.color.red)
+            )
 
-        React.Fragment(
-          // props.renderInTitle(
-          //   React.Fragment(
-          //     if (props.readonly) EmptyVdom
-          //     else
-          //       <.div(
-          //         ExploreStyles.TableSelectionToolbar,
-          //         HelpIcon("target/main/target-import.md".refined),
-          //         <.label(
-          //           PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
-          //           ^.htmlFor := "target-import",
-          //           Icons.FileArrowUp
-          //         ),
-          //         <.input(
-          //           ^.tpe     := "file",
-          //           ^.onChange ==> onTextChange,
-          //           ^.id      := "target-import",
-          //           ^.name    := "file",
-          //           ^.accept  := ".csv"
-          //         ),
-          //         TargetImportPopup(props.programId, filesToImport),
-          //         Button(
-          //           size = Button.Size.Small,
-          //           icon = Icons.CheckDouble,
-          //           label = "All",
-          //           onClick = table.toggleAllRowsSelected(true)
-          //         ).compact,
-          //         Button(
-          //           size = Button.Size.Small,
-          //           icon = Icons.SquareXMark,
-          //           label = "None",
-          //           onClick = table.toggleAllRowsSelected(false)
-          //         ).compact,
-          //         Button(
-          //           size = Button.Size.Small,
-          //           icon = Icons.Trash,
-          //           disabled = deletingTargets.get.value,
-          //           loading = deletingTargets.get.value,
-          //           onClick = deleteSelected
-          //         ).compact.when(selectedRows.nonEmpty)
-          //       ),
-          //     <.span(ExploreStyles.TitleSelectColumns)(
-          //       ColumnSelector(table, ColNames, ExploreStyles.SelectColumns)
-          //     )
-          //   )
-          // ),
-          PrimeAutoHeightVirtualizedTable(
-            table,
-            _ => 32.toPx,
-            striped = true,
-            compact = Compact.Very,
-            innerContainerMod = ^.width := "100%",
-            containerRef = resizer.ref,
-            tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ExploreSelectableTable,
-            headerCellMod = headerCell =>
-              columnClasses
-                .get(headerCell.column.id)
-                .orEmpty |+| ExploreStyles.StickyHeader,
-            rowMod = row =>
-              TagMod(
-                ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
-                ^.onClick ==> { (e: ReactMouseEvent) =>
-                  val isShiftPressed   = e.shiftKey
-                  val isCmdCtrlPressed = e.metaKey || e.ctrlKey
-
-                  // If cmd is pressed add to the selection
-                  table.toggleAllRowsSelected(false).unless(isCmdCtrlPressed) *> {
-                    if (isShiftPressed && selectedRows.nonEmpty) {
-                      // If shift is pressed extend
-                      val allRows        =
-                        table.getRowModel().rows.toList.zipWithIndex
-                      val currentId      = row.id
-                      // selectedRow is not empty, these won't fail
-                      val firstId        = selectedRows.head.id
-                      val lastId         = selectedRows.last.id
-                      val indexOfCurrent = allRows.indexWhere(_._1.id == currentId)
-                      val indexOfFirst   = allRows.indexWhere(_._1.id == firstId)
-                      val indexOfLast    = allRows.indexWhere(_._1.id == lastId)
-                      if (indexOfCurrent =!= -1 && indexOfFirst =!= -1 && indexOfLast =!= -1) {
-                        if (indexOfCurrent < indexOfFirst) {
-                          table.setRowSelection(
-                            RowSelection(
-                              (firstId -> true) :: allRows
-                                .slice(indexOfCurrent, indexOfFirst)
-                                .map { case (row, _) => row.id -> true }*
-                            )
-                          )
-                        } else {
-                          table.setRowSelection(
-                            RowSelection(
-                              (currentId -> true) :: allRows
-                                .slice(indexOfLast, indexOfCurrent)
-                                .map { case (row, _) => row.id -> true }*
-                            )
-                          )
-                        }
-                      } else Callback.empty
-                    } else row.toggleSelected()
-                  }
-                }
+          React.Fragment(
+            if (props.readonly) EmptyVdom
+            else
+              <.div(
+                ExploreStyles.TableSelectionToolbar,
+                HelpIcon("target/main/target-import.md".refined),
+                <.label(
+                  PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
+                  ^.htmlFor := "target-import",
+                  Icons.FileArrowUp
+                ),
+                <.input(
+                  ^.tpe     := "file",
+                  ^.onChange ==> onTextChange,
+                  ^.id      := "target-import",
+                  ^.name    := "file",
+                  ^.accept  := ".csv"
+                ),
+                TargetImportPopup(props.programId, props.filesToImport),
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.CheckDouble,
+                  label = "All",
+                  onClick = table.toggleAllRowsSelected(true)
+                ).compact,
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.SquareXMark,
+                  label = "None",
+                  onClick = table.toggleAllRowsSelected(false)
+                ).compact,
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.Trash,
+                  disabled = props.deletingTargets.get.value,
+                  loading = props.deletingTargets.get.value,
+                  onClick = deleteSelected
+                ).compact.when(selectedRows.nonEmpty)
               ),
-            cellMod = cell => columnClasses.get(cell.column.id).orEmpty,
-            virtualizerRef = virtualizerRef,
-            emptyMessage = <.div("No targets present")
-            // workaround to redraw when files are imported
-          ).withKey(s"summary-table-${filesToImport.get.size}")
-        )
+            <.span(ExploreStyles.TitleSelectColumns)(
+              ColumnSelector(table, TargetSummaryBody.ColNames, ExploreStyles.SelectColumns)
+            )
+          )
+        }

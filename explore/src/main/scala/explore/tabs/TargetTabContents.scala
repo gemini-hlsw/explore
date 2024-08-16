@@ -29,8 +29,10 @@ import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.targets.ObservationPasteAction
+import explore.targets.DeletingTargets
 import explore.targets.TargetPasteAction
-import explore.targets.TargetSummaryTable
+import explore.targets.TargetSummaryBody
+import explore.targets.TargetSummaryTitle
 import explore.targets.TargetSummaryTileState
 import explore.undo.*
 import explore.utils.*
@@ -60,6 +62,7 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
+import explore.components.ColumnSelectorState
 
 case class TargetTabContents(
   userId:           Option[User.Id],
@@ -136,11 +139,11 @@ object TargetTabContents extends TwoPanels:
      */
     val renderSummary: Tile[TargetSummaryTileState] = Tile(
       ObsTabTilesIds.TargetSummaryId.id,
-      TargetSummaryTileState(),
+      TargetSummaryTileState(Nil, ColumnSelectorState(), DeletingTargets(false)),
       "Target Summary",
       backButton.some
-    )(renderInTitle =>
-      TargetSummaryTable(
+    )(
+      TargetSummaryBody(
         props.userId,
         props.programId,
         props.targets.model,
@@ -151,7 +154,16 @@ object TargetTabContents extends TwoPanels:
         selectedTargetIds,
         props.programSummaries,
         props.readonly
-      )
+      ),
+      (s, _) =>
+        TargetSummaryTitle(
+          props.programId,
+          props.targets.model,
+          selectTargetOrSummary,
+          selectedTargetIds,
+          props.programSummaries,
+          props.readonly
+        )(s)
     )
 
     /**
