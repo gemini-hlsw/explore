@@ -40,8 +40,7 @@ case class ConstraintsPanel(
   obsIds:   ObsIdSet,
   undoCtx:  UndoSetter[ConstraintSet],
   readonly: Boolean
-)(state: View[Unit])
-    extends ReactFnProps(ConstraintsPanel.component):
+) extends ReactFnProps(ConstraintsPanel.component):
   val constraintSet: ConstraintSet = undoCtx.get
 
 object ConstraintsPanel:

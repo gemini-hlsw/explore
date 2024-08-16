@@ -64,16 +64,13 @@ import org.typelevel.log4cats.Logger
 import spire.std.any.*
 import explore.model.enums.TileSizeState
 
-case class ProposalDetailsTileState()
-
 case class ProposalDetailsBody(
   proposal:          View[Proposal],
   aligner:           Aligner[Proposal, ProposalPropertiesInput],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   cfps:              List[CallForProposal],
   readonly:          Boolean
-)(val state: View[ProposalDetailsTileState])
-    extends ReactFnProps(ProposalDetailsBody.component)
+) extends ReactFnProps(ProposalDetailsBody.component)
 
 object ProposalDetailsBody:
   private type Props = ProposalDetailsBody
@@ -520,7 +517,6 @@ object ProposalDetailsBody:
           )(using ctx.logger)
 
 case class ProposalDetailsTitle(undoCtx: UndoContext[Proposal])(
-  state:        View[ProposalDetailsTileState],
   val tileSize: TileSizeState
 ) extends ReactFnProps(ProposalDetailsTitle.component)
 

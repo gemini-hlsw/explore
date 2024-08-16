@@ -126,7 +126,7 @@ object ConstraintsTabContents extends TwoPanels:
                   props.programSummaries.get.constraintGroups,
                   props.expandedIds
                 ),
-                ConstraintsSummaryTableTitle.apply
+                (s, _) => ConstraintsSummaryTableTitle(s)
               )
             } { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
@@ -149,7 +149,7 @@ object ConstraintsTabContents extends TwoPanels:
                 constraintsTitle,
                 backButton.some,
                 canMinimize = true
-              )(
+              )(_ =>
                 ConstraintsPanel(
                   idsToEdit,
                   constraintSet,

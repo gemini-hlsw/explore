@@ -77,11 +77,12 @@ object OverviewTabContents {
                                       props.obsAttachments,
                                       props.readonly
               ),
-              ObsAttachmentsTableTitle(props.programId,
-                                       vault.token,
-                                       props.obsAttachments,
-                                       props.readonly
-              )
+              (s, _) =>
+                ObsAttachmentsTableTitle(props.programId,
+                                         vault.token,
+                                         props.obsAttachments,
+                                         props.readonly
+                )(s)
             )
           )
           .filterNot(_ => props.userVault.isGuest)

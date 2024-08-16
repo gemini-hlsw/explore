@@ -256,8 +256,7 @@ object ConstraintsSummaryTableBody:
       }
 
 case class ConstraintsSummaryTableTitle(
-  state:    View[ConstraintsSummaryTileState],
-  tileSize: TileSizeState
+  state: View[ConstraintsSummaryTileState]
 ) extends ReactFnProps(ConstraintsSummaryTableTitle.component)
 
 object ConstraintsSummaryTableTitle:

@@ -92,14 +92,15 @@ object ProposalEditor:
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
     val detailsTile =
-      Tile(ProposalTabTileIds.DetailsId.id, ProposalDetailsTileState(), "Details")(
-        ProposalDetailsBody(props.proposal,
-                            aligner,
-                            props.timeEstimateRange,
-                            props.cfps,
-                            props.readonly
-        ),
-        ProposalDetailsTitle(undoCtx)
+      Tile(ProposalTabTileIds.DetailsId.id, (), "Details")(
+        _ =>
+          ProposalDetailsBody(props.proposal,
+                              aligner,
+                              props.timeEstimateRange,
+                              props.cfps,
+                              props.readonly
+          ),
+        (_, s) => ProposalDetailsTitle(undoCtx)(s)
       )
 
     val usersTile =

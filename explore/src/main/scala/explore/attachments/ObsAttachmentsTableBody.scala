@@ -59,7 +59,6 @@ import org.typelevel.log4cats.Logger
 
 import scala.collection.immutable.SortedSet
 import lucuma.core.util.NewType
-import explore.model.enums.TileSizeState
 
 object ObsAttachmentsTableTileState extends NewType[Action]:
   def apply(): ObsAttachmentsTableTileState = ObsAttachmentsTableTileState(Action.None)
@@ -369,8 +368,7 @@ case class ObsAttachmentsTableTitle(
   obsAttachments: View[ObsAttachmentList],
   readOnly:       Boolean
 )(
-  val state:      View[ObsAttachmentsTableTileState],
-  tileSize:       TileSizeState
+  val state:      View[ObsAttachmentsTableTileState]
 ) extends ReactFnProps(ObsAttachmentsTableTitle.component)
 
 object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
