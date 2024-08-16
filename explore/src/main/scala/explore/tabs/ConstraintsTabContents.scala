@@ -11,10 +11,11 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.common.TimingWindowsQueries
+import explore.components.ColumnSelectorInTitle
+import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
-import explore.components.ColumnSelectorState
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTableBody
 import explore.data.KeyedIndexedList
@@ -53,7 +54,6 @@ import monocle.Iso
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.components.ColumnSelectorInTitle
 
 case class ConstraintsTabContents(
   userId:           Option[User.Id],
@@ -124,7 +124,8 @@ object ConstraintsTabContents extends TwoPanels:
                   props.userId,
                   props.programId,
                   props.programSummaries.get.constraintGroups,
-                  props.expandedIds
+                  props.expandedIds,
+                  _
                 ),
                 (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames, s)
               )

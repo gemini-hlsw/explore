@@ -100,7 +100,7 @@ object ProposalEditor:
                               props.cfps,
                               props.readonly
           ),
-        (_, s) => ProposalDetailsTitle(undoCtx)(s)
+        (_, s) => ProposalDetailsTitle(undoCtx, s)
       )
 
     val usersTile =

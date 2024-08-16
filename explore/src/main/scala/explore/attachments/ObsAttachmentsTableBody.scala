@@ -36,6 +36,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
@@ -58,7 +59,6 @@ import org.scalajs.dom.File as DomFile
 import org.typelevel.log4cats.Logger
 
 import scala.collection.immutable.SortedSet
-import lucuma.core.util.NewType
 
 object ObsAttachmentsTableTileState extends NewType[Action]:
   def apply(): ObsAttachmentsTableTileState = ObsAttachmentsTableTileState(Action.None)
@@ -69,10 +69,10 @@ case class ObsAttachmentsTableBody(
   authToken:                NonEmptyString,
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
   obsAttachments:           View[ObsAttachmentList],
-  readOnly:                 Boolean
-)(
-  val state:                View[ObsAttachmentsTableTileState]
-) extends ReactFnProps(ObsAttachmentsTableBody.component)
+  readOnly:                 Boolean,
+  tileState:                View[ObsAttachmentsTableTileState]
+) extends ReactFnProps(ObsAttachmentsTableBody.component):
+  val action = tileState.zoom(ObsAttachmentsTableTileState.value.asLens)
 
 object ObsAttachmentsTableBody extends ObsAttachmentUtils:
   private type Props = ObsAttachmentsTableBody
@@ -183,7 +183,6 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
       .useMemoBy((_, _, _, _) => ()): (props, ctx, _, _) =>
         _ =>
           import ctx.given
-          val action = props.state.zoom(ObsAttachmentsTableTileState.value.asLens)
 
           def column[V](id: ColumnId, accessor: ObsAttachment => V)
             : ColumnDef.Single.WithTableMeta[View[ObsAttachment], V, TableMeta] =
@@ -206,7 +205,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
                     val files = e.target.files.toList
                     (Callback(e.target.value = null) *>
                       updateAttachment(props, meta.client, thisOa, files)
-                        .switching(action.async, Action.Replace, Action.None)
+                        .switching(props.action.async, Action.Replace, Action.None)
                         .runAsync)
                       .when_(files.nonEmpty)
 
@@ -337,9 +336,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
           getRowId = (row, _, _) => RowId(row.get.id.toString),
           meta = TableMeta(client, props.obsAttachmentAssignments, urlMap.get, props.readOnly)
         )
-      .render: (props, ctx, client, _, _, _, table) =>
-        val action = props.state.zoom(ObsAttachmentsTableTileState.value.asLens)
-
+      .render: (props, _, _, _, _, _, table) =>
         React.Fragment(
           PrimeTable(
             table,
@@ -351,8 +348,8 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
           ConfirmPopup(),
           Dialog(
             onHide = Callback.empty,
-            visible = action.get != Action.None,
-            header = action.get.msg,
+            visible = props.action.get != Action.None,
+            header = props.action.get.msg,
             blockScroll = true,
             modal = true,
             dismissableMask = false,
@@ -366,10 +363,10 @@ case class ObsAttachmentsTableTitle(
   pid:            Program.Id,
   authToken:      NonEmptyString,
   obsAttachments: View[ObsAttachmentList],
-  readOnly:       Boolean
-)(
-  val state:      View[ObsAttachmentsTableTileState]
-) extends ReactFnProps(ObsAttachmentsTableTitle.component)
+  readOnly:       Boolean,
+  tileState:      View[ObsAttachmentsTableTileState]
+) extends ReactFnProps(ObsAttachmentsTableTitle.component):
+  val action = tileState.zoom(ObsAttachmentsTableTileState.value.asLens)
 
 object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
   private type Props = ObsAttachmentsTableTitle
@@ -409,7 +406,7 @@ object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
                 props.obsAttachments,
                 newAttType.get,
                 client,
-                props.state.zoom(ObsAttachmentsTableTileState.value.asLens)
+                props.action
               ),
               ^.id     := "attachment-upload",
               ^.name   := "file",

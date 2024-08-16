@@ -3,15 +3,15 @@
 
 package explore.components
 
-import crystal.react.View
 import cats.syntax.all.*
+import crystal.react.View
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
+import lucuma.react.table.ColumnId
 import lucuma.react.table.Table
 import lucuma.ui.table.ColumnSelector
-import lucuma.react.table.ColumnId
 
 case class ColumnSelectorState[A, B](
   table: Option[Table[A, B]] = None

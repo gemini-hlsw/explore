@@ -14,6 +14,7 @@ import crystal.react.syntax.pot.given
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
@@ -58,16 +59,15 @@ import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
 import java.util.UUID
-import explore.components.ColumnSelectorState
 
 final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  UndoSetter[ObservationList],
   obsExecutions: ObservationExecutionMap,
-  allTargets:    TargetList
-)(val state: View[ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]])
-    extends ReactFnProps(ObsSummaryTable.component)
+  allTargets:    TargetList,
+  tileState:     View[ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]]
+) extends ReactFnProps(ObsSummaryTable.component)
 
 object ObsSummaryTable:
   import ObsSummaryRow.*
@@ -317,7 +317,7 @@ object ObsSummaryTable:
         ),
         TableStore(props.userId, TableId.ObservationsSummary, cols)
       )
-    .useEffectOnMountBy((p, _, _, _, table) => p.state.set(ColumnSelectorState(table.some)))
+    .useEffectOnMountBy((p, _, _, _, table) => p.tileState.set(ColumnSelectorState(table.some)))
     .useResizeDetector()
     // adding new observation
     .useStateView(AddingObservation(false))

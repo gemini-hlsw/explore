@@ -6,6 +6,8 @@ package explore.targeteditor
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
+import explore.components.ColumnSelectorInTitle
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
@@ -30,16 +32,14 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
+import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import monocle.Focus
 import monocle.Iso
+import monocle.Lens
 
 import java.time.Instant
-import monocle.Lens
-import monocle.Focus
-import explore.components.ColumnSelectorInTitle
-import explore.components.ColumnSelectorState
-import lucuma.schemas.model.SiderealTargetWithId
 
 case class AsterismTileState(
   table:       ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta] =
@@ -73,9 +73,9 @@ case class AsterismEditorBody(
   searching:         View[Set[Target.Id]],
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean,
-  sequenceChanged:   Callback
-)(val state: View[AsterismTileState])
-    extends ReactFnProps(AsterismEditorBody.component):
+  sequenceChanged:   Callback,
+  tileState:         View[AsterismTileState]
+) extends ReactFnProps(AsterismEditorBody.component):
   val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
 object AreAdding extends NewType[Boolean]
@@ -91,7 +91,7 @@ object AsterismEditorBody extends AsterismModifier:
         ObsIdSetEditInfo.fromObservationList
       }
       .useLayoutEffectWithDepsBy((_, obsEditInfo) => obsEditInfo) { (p, _) => obsEditInfo =>
-        p.state.zoom(AsterismTileState.obsEditInfo).set(obsEditInfo.value.some)
+        p.tileState.zoom(AsterismTileState.obsEditInfo).set(obsEditInfo.value.some)
       }
       .useLayoutEffectWithDepsBy((props, obsEditInfo) =>
         (obsEditInfo.asterismIds, props.focusedTargetId)
@@ -129,7 +129,7 @@ object AsterismEditorBody extends AsterismModifier:
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
           editWarningMsg.map(msg => <.div(ExploreStyles.SharedEditWarning, msg)),
-          props.state.get
+          props.tileState.get
             .unexecutedObs(props.obsIds)
             .map(unexecutedObs =>
               TargetTable(
@@ -143,7 +143,7 @@ object AsterismEditorBody extends AsterismModifier:
                 vizTime,
                 fullScreen.get,
                 props.readonly || obsEditInfo.allAreExecuted
-              )(props.state.zoom(AsterismTileState.table))
+              )(props.tileState.zoom(AsterismTileState.table))
             ),
           // it's possible for us to get here without an asterism but with a focused target id. This will get
           // corrected, but we need to not render the target editor before it is corrected.
@@ -192,7 +192,7 @@ case class AsterismEditorTitle(
   onAsterismUpdate: OnAsterismUpdateParams => Callback,
   readonly:         Boolean,
   vizTimeView:      View[Option[Instant]],
-  state:            View[AsterismTileState]
+  tileState:        View[AsterismTileState]
 ) extends ReactFnProps(AsterismEditorTitle.component)
 
 object AsterismEditorTitle extends AsterismModifier:
@@ -208,8 +208,8 @@ object AsterismEditorTitle extends AsterismModifier:
 
         React.Fragment(
           // only pass in the unexecuted observations. Will be readonly if there aren't any
-          (props.state.get.obsEditInfo,
-           props.state.get
+          (props.tileState.get.obsEditInfo,
+           props.tileState.get
              .unexecutedObs(props.obsIds)
           ).mapN((obsEditInfo, unexecutedObs) =>
             targetSelectionPopup(
@@ -224,5 +224,7 @@ object AsterismEditorTitle extends AsterismModifier:
             )
           ),
           ObsTimeEditor(props.vizTimeView),
-          ColumnSelectorInTitle(TargetTable.columnNames, props.state.zoom(AsterismTileState.table))
+          ColumnSelectorInTitle(TargetTable.columnNames,
+                                props.tileState.zoom(AsterismTileState.table)
+          )
         )

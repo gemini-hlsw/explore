@@ -10,6 +10,7 @@ import crystal.react.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
+import explore.components.ColumnSelectorState
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -45,11 +46,10 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
+import monocle.Focus
 import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
-import monocle.Focus
-import explore.components.ColumnSelectorState
 
 case class TargetSummaryTileState(
   filesToImport:   List[DOMFile],
@@ -75,12 +75,12 @@ case class TargetSummaryBody(
   selectTargetOrSummary:   Option[Target.Id] => Callback,
   selectedTargetIds:       View[List[Target.Id]],
   undoCtx:                 UndoContext[ProgramSummaries],
-  readonly:                Boolean
-)(val state: View[TargetSummaryTileState])
-    extends ReactFnProps(TargetSummaryBody.component):
-  val filesToImport   = state.zoom(TargetSummaryTileState.filesToImport)
-  val table           = state.zoom(TargetSummaryTileState.table)
-  val deletingTargets = state.zoom(TargetSummaryTileState.deletingTargets)
+  readonly:                Boolean,
+  tileState:               View[TargetSummaryTileState]
+) extends ReactFnProps(TargetSummaryBody.component):
+  val filesToImport   = tileState.zoom(TargetSummaryTileState.filesToImport)
+  val table           = tileState.zoom(TargetSummaryTileState.table)
+  val deletingTargets = tileState.zoom(TargetSummaryTileState.deletingTargets)
 
 object TargetSummaryBody:
   private type Props = TargetSummaryBody
@@ -322,12 +322,12 @@ case class TargetSummaryTitle(
   selectTargetOrSummary: Option[Target.Id] => Callback,
   selectedTargetIds:     View[List[Target.Id]],
   undoCtx:               UndoContext[ProgramSummaries],
-  readonly:              Boolean
-)(val state: View[TargetSummaryTileState])
-    extends ReactFnProps(TargetSummaryTitle.component) {
-  val filesToImport   = state.zoom(TargetSummaryTileState.filesToImport)
-  val table           = state.zoom(TargetSummaryTileState.table)
-  val deletingTargets = state.zoom(TargetSummaryTileState.deletingTargets)
+  readonly:              Boolean,
+  tileState:             View[TargetSummaryTileState]
+) extends ReactFnProps(TargetSummaryTitle.component) {
+  val filesToImport   = tileState.zoom(TargetSummaryTileState.filesToImport)
+  val table           = tileState.zoom(TargetSummaryTileState.table)
+  val deletingTargets = tileState.zoom(TargetSummaryTileState.deletingTargets)
 }
 
 object TargetSummaryTitle:

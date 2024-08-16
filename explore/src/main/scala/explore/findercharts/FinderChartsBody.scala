@@ -31,9 +31,9 @@ import lucuma.ui.components.SolarProgress
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
+import monocle.Focus
 
 import scala.collection.immutable.SortedSet
-import monocle.Focus
 
 case class FinderChartsTileState(chartSelector: ChartSelector, selected: Option[ObsAtt.Id])
 

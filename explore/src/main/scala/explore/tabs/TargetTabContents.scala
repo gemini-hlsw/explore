@@ -11,6 +11,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
+import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
@@ -28,12 +29,12 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.targets.ObservationPasteAction
 import explore.targets.DeletingTargets
+import explore.targets.ObservationPasteAction
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
-import explore.targets.TargetSummaryTitle
 import explore.targets.TargetSummaryTileState
+import explore.targets.TargetSummaryTitle
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -62,7 +63,6 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.components.ColumnSelectorState
 
 case class TargetTabContents(
   userId:           Option[User.Id],
@@ -153,17 +153,18 @@ object TargetTabContents extends TwoPanels:
         selectTargetOrSummary,
         selectedTargetIds,
         props.programSummaries,
-        props.readonly
+        props.readonly,
+        _
       ),
       (s, _) =>
-        TargetSummaryTitle(
-          props.programId,
-          props.targets.model,
-          selectTargetOrSummary,
-          selectedTargetIds,
-          props.programSummaries,
-          props.readonly
-        )(s)
+        TargetSummaryTitle(props.programId,
+                           props.targets.model,
+                           selectTargetOrSummary,
+                           selectedTargetIds,
+                           props.programSummaries,
+                           props.readonly,
+                           s
+        )
     )
 
     /**

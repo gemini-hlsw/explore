@@ -12,6 +12,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.ObsTabTilesIds
 import explore.model.Observation
+import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
@@ -27,7 +28,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import monocle.Focus
 import monocle.Lens
-import explore.model.enums.TileSizeState
 
 object NotesTile:
 
@@ -38,7 +38,7 @@ object NotesTile:
       s"Note for Observer",
       canMinimize = true,
       bodyClass = ExploreStyles.NotesTile
-    )(NotesTileBody(obsId, notes), NotesTileTitle(obsId, notes))
+    )(NotesTileBody(obsId, notes, _), NotesTileTitle(obsId, notes, _, _))
 
 case class NotesTileState(notes: String, editing: Editing)
 
@@ -48,9 +48,9 @@ object NotesTileState:
 
 case class NotesTileBody(
   obsId: Observation.Id,
-  notes: View[Option[NonEmptyString]]
-)(val state: View[NotesTileState])
-    extends ReactFnProps(NotesTileBody.component)
+  notes: View[Option[NonEmptyString]],
+  state: View[NotesTileState]
+) extends ReactFnProps(NotesTileBody.component)
 
 type Editing = Editing.Type
 object Editing extends NewType[Boolean]:
@@ -96,10 +96,11 @@ object NotesTileBody:
     }
 
 case class NotesTileTitle(
-  obsId: Observation.Id,
-  notes: View[Option[NonEmptyString]]
-)(val state: View[NotesTileState], val tileSize: TileSizeState)
-    extends ReactFnProps(NotesTileTitle.component)
+  obsId:    Observation.Id,
+  notes:    View[Option[NonEmptyString]],
+  state:    View[NotesTileState],
+  tileSize: TileSizeState
+) extends ReactFnProps(NotesTileTitle.component)
 
 object NotesTileTitle:
   private type Props = NotesTileTitle

@@ -10,8 +10,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.findercharts.ChartSelector
 import explore.findercharts.FinderChartsBody
-import explore.findercharts.FinderChartsTitle
 import explore.findercharts.FinderChartsTileState
+import explore.findercharts.FinderChartsTitle
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTilesIds
 import explore.model.Observation

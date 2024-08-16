@@ -3,8 +3,8 @@
 
 package explore.validations
 
-import crystal.react.View
 import cats.syntax.all.*
+import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -12,6 +12,7 @@ import explore.model.Focused
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.ScalaFnComponent
@@ -20,6 +21,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.Program
+import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.primereact.tooltip.*
@@ -32,14 +34,14 @@ import lucuma.ui.primereact.*
 import lucuma.ui.table.*
 
 import scala.scalajs.js
-import lucuma.core.util.NewType
-import explore.model.enums.TileSizeState
 
 object ObservationValidationsTableTileState extends NewType[Boolean => Callback]
 type ObservationValidationsTableTileState = ObservationValidationsTableTileState.Type
 
-case class ObservationValidationsTableBody(programId: Program.Id, observations: ObservationList)(
-  val state: View[ObservationValidationsTableTileState]
+case class ObservationValidationsTableBody(
+  programId:    Program.Id,
+  observations: ObservationList,
+  tileState:    View[ObservationValidationsTableTileState]
 ) extends ReactFnProps(ObservationValidationsTableBody.component)
 
 object ObservationValidationsTableBody {
@@ -157,7 +159,7 @@ object ObservationValidationsTableBody {
     )
     .useEffectOnMountBy((p, _, _, _, table) =>
       val cb = (a: Boolean) => table.toggleAllRowsExpanded(a)
-      p.state.set(ObservationValidationsTableTileState(cb))
+      p.tileState.set(ObservationValidationsTableTileState(cb))
     )
     .useResizeDetector()
     .render((props, _, rows, _, table, resizer) =>
@@ -235,8 +237,8 @@ object ObservationValidationsTableBody {
 }
 
 case class ObservationValidationsTableTitle(
-  state:    View[ObservationValidationsTableTileState],
-  tileSize: TileSizeState
+  tileState: View[ObservationValidationsTableTileState],
+  tileSize:  TileSizeState
 ) extends ReactFnProps(ObservationValidationsTableTitle.component)
 
 object ObservationValidationsTableTitle:
@@ -252,12 +254,12 @@ object ObservationValidationsTableTitle:
           size = Button.Size.Small,
           icon = Icons.SquarePlus,
           tooltip = "Expand All",
-          onClick = p.state.get.value(true)
+          onClick = p.tileState.get.value(true)
         ).compact,
         Button(
           size = Button.Size.Small,
           icon = Icons.SquareMinus,
           tooltip = "Collapse All",
-          onClick = p.state.get.value(false)
+          onClick = p.tileState.get.value(false)
         ).compact
       )

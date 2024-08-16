@@ -7,8 +7,8 @@ import crystal.Pot
 import crystal.react.View
 import explore.components.Tile
 import explore.itc.ItcPanelBody
-import explore.itc.ItcPanelTitle
 import explore.itc.ItcPanelTileState
+import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
 import explore.model.GlobalPreferences
 import explore.model.LoadingState

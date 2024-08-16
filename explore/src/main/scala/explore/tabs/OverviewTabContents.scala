@@ -7,8 +7,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import explore.attachments.ObsAttachmentsTableBody
-import explore.attachments.ObsAttachmentsTableTitle
 import explore.attachments.ObsAttachmentsTableTileState
+import explore.attachments.ObsAttachmentsTableTitle
 import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
@@ -58,7 +58,7 @@ object OverviewTabContents {
           "Warnings And Errors",
           none,
           canMinimize = true
-        )(ObservationValidationsTableBody(props.programId, props.observations)(_),
+        )(ObservationValidationsTableBody(props.programId, props.observations, _),
           ObservationValidationsTableTitle.apply
         )
 
@@ -75,14 +75,16 @@ object OverviewTabContents {
                                       vault.token,
                                       props.obsAttachmentAssignments,
                                       props.obsAttachments,
-                                      props.readonly
+                                      props.readonly,
+                                      _
               ),
               (s, _) =>
                 ObsAttachmentsTableTitle(props.programId,
                                          vault.token,
                                          props.obsAttachments,
-                                         props.readonly
-                )(s)
+                                         props.readonly,
+                                         s
+                )
             )
           )
           .filterNot(_ => props.userVault.isGuest)

@@ -14,6 +14,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
 import explore.model.ObsTabTilesIds
+import explore.model.enums.TileSizeState
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
@@ -26,6 +27,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
 import lucuma.core.model.TimingWindowRepeat
 import lucuma.core.syntax.display.given
+import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.core.validation.InputValidSplitEpi
@@ -53,17 +55,16 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import explore.model.enums.TileSizeState
 
-case class TimingWindowsTileState(
-  setRowSelection: RowSelection => Callback = _ => Callback.empty
-)
+object TimingWindowsTileState extends NewType[RowSelection => Callback]:
+  def apply(): TimingWindowsTileState = TimingWindowsTileState(_ => Callback.empty)
+type TimingWindowsTileState = TimingWindowsTileState.Type
 
 case class TimingWindowsBody(
-  windows:  View[List[TimingWindow]],
-  readOnly: Boolean
-)(val state: View[TimingWindowsTileState])
-    extends ReactFnProps(TimingWindowsBody.component)
+  windows:   View[List[TimingWindow]],
+  readOnly:  Boolean,
+  tileState: View[TimingWindowsTileState]
+) extends ReactFnProps(TimingWindowsBody.component)
 
 object TimingWindowsTile:
   def timingWindowsPanel(
@@ -74,8 +75,8 @@ object TimingWindowsTile:
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
     Tile(ObsTabTilesIds.TimingWindowsId.id, TimingWindowsTileState(), title)(
-      TimingWindowsBody(timingWindows, readOnly),
-      TimingWindowsTitle(timingWindows, readOnly)
+      TimingWindowsBody(timingWindows, readOnly, _),
+      TimingWindowsTitle(timingWindows, readOnly, _, _)
     )
 
 object TimingWindowsBody:
@@ -157,7 +158,7 @@ object TimingWindowsBody:
         )
       .useEffectOnMountBy((p, _, _, _, table) =>
         val cb = (a: RowSelection) => table.setRowSelection(a)
-        p.state.set(TimingWindowsTileState(cb))
+        p.tileState.set(TimingWindowsTileState(cb))
       )
       .render: (props, resize, dbActive, rows, table) =>
         val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
@@ -424,10 +425,11 @@ object TimingWindowsBody:
         )
 
 case class TimingWindowsTitle(
-  windows:  View[List[TimingWindow]],
-  readOnly: Boolean
-)(val state: View[TimingWindowsTileState], val tileSize: TileSizeState)
-    extends ReactFnProps(TimingWindowsTitle.component)
+  windows:   View[List[TimingWindow]],
+  readOnly:  Boolean,
+  tileState: View[TimingWindowsTileState],
+  tileSize:  TileSizeState
+) extends ReactFnProps(TimingWindowsTitle.component)
 
 object TimingWindowsTitle:
   private type Props = TimingWindowsTitle
@@ -446,7 +448,7 @@ object TimingWindowsTitle:
               start = Timestamp.unsafeFromInstantTruncated(Instant.now),
               end = none
             )
-          ) >> props.state.get.setRowSelection(
+          ) >> props.tileState.get.value(
             RowSelection(RowId(props.windows.get.size.toString) -> true)
           )
         ).tiny.compact

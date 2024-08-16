@@ -19,18 +19,14 @@ import explore.model.itc.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
-import monocle.Lens
-import monocle.Focus
 
-case class ItcPanelTileState(
-  selectedTarget: Option[ItcTarget] = None
-)
+object ItcPanelTileState extends NewType[Option[ItcTarget]]:
+  def apply(): ItcPanelTileState = ItcPanelTileState(None)
 
-object ItcPanelTileState:
-  val selectedTarget: Lens[ItcPanelTileState, Option[ItcTarget]] =
-    Focus[ItcPanelTileState](_.selectedTarget)
+type ItcPanelTileState = ItcPanelTileState.Type
 
 case class ItcPanelBody(
   uid:               User.Id,
@@ -39,9 +35,9 @@ case class ItcPanelBody(
   itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:        LoadingState,
   globalPreferences: View[GlobalPreferences],
-  state:             View[ItcPanelTileState]
+  tileState:         View[ItcPanelTileState]
 ) extends ReactFnProps(ItcPanelBody.component) {
-  val selectedTarget = state.zoom(ItcPanelTileState.selectedTarget)
+  val selectedTarget = tileState.zoom(ItcPanelTileState.value.asLens)
 }
 
 object ItcPanelBody:
@@ -69,7 +65,7 @@ object ItcPanelBody:
         val detailsView =
           globalPreferences.zoom(GlobalPreferences.itcDetailsOpen)
 
-        val selectedTarget = props.state.get.selectedTarget
+        val selectedTarget = props.selectedTarget.get
 
         val isModeSelected = props.itcProps.finalConfig.isDefined
         val selectMode     = "Select a mode to plot".some.filterNot(_ => isModeSelected)
@@ -108,7 +104,7 @@ object ItcPanelBody:
             selectedResult.map(_.charts),
             error,
             chartTypeView.get,
-            props.state.get.selectedTarget.map(_.name.value),
+            selectedTarget.map(_.name.value),
             props.itcProps.signalToNoiseAt,
             props.itcLoading,
             detailsView.get

@@ -27,9 +27,9 @@ case class ItcPanelTitle(
   itcPanelProps:   ItcProps,
   itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:      LoadingState,
-  state:           View[ItcPanelTileState]
+  tileState:       View[ItcPanelTileState]
 ) extends ReactFnProps(ItcPanelTitle.component) {
-  val selectedTarget = state.zoom(ItcPanelTileState.selectedTarget)
+  val selectedTarget = tileState.zoom(ItcPanelTileState.value.asLens)
 }
 
 object ItcPanelTitle:

@@ -33,8 +33,9 @@ import explore.model.Proposal
 import explore.model.ProposalType
 import explore.model.ProposalType.*
 import explore.model.display.given
-import explore.model.reusability.given
+import explore.model.enums.TileSizeState
 import explore.model.enums.Visible
+import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -62,7 +63,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import org.typelevel.log4cats.Logger
 import spire.std.any.*
-import explore.model.enums.TileSizeState
 
 case class ProposalDetailsBody(
   proposal:          View[Proposal],
@@ -516,9 +516,8 @@ object ProposalDetailsBody:
             splitsList
           )(using ctx.logger)
 
-case class ProposalDetailsTitle(undoCtx: UndoContext[Proposal])(
-  val tileSize: TileSizeState
-) extends ReactFnProps(ProposalDetailsTitle.component)
+case class ProposalDetailsTitle(undoCtx: UndoContext[Proposal], tileSize: TileSizeState)
+    extends ReactFnProps(ProposalDetailsTitle.component)
 
 object ProposalDetailsTitle:
   private type Props = ProposalDetailsTitle

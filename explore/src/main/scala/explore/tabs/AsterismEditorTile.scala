@@ -90,8 +90,9 @@ object AsterismEditorTile:
             searching,
             globalPreferences,
             readonly,
-            sequenceChanged
-          )(a)
+            sequenceChanged,
+            a
+          )
         ),
       (s, _) =>
         AsterismEditorTitle(programId,
