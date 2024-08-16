@@ -51,6 +51,8 @@ import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
 
+case class TargetSummaryTileState()
+
 case class TargetSummaryTable(
   userId:                  Option[User.Id],
   programId:               Program.Id,
@@ -59,7 +61,6 @@ case class TargetSummaryTable(
   calibrationObservations: Set[Observation.Id],
   selectObservation:       (Observation.Id, Target.Id) => Callback,
   selectTargetOrSummary:   Option[Target.Id] => Callback,
-  renderInTitle:           Tile.RenderInTitle,
   selectedTargetIds:       View[List[Target.Id]],
   undoCtx:                 UndoContext[ProgramSummaries],
   readonly:                Boolean
@@ -275,51 +276,51 @@ object TargetSummaryTable:
           (Callback(e.target.value = null) *> filesToImport.set(files)).when_(files.nonEmpty)
 
         React.Fragment(
-          props.renderInTitle(
-            React.Fragment(
-              if (props.readonly) EmptyVdom
-              else
-                <.div(
-                  ExploreStyles.TableSelectionToolbar,
-                  HelpIcon("target/main/target-import.md".refined),
-                  <.label(
-                    PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
-                    ^.htmlFor := "target-import",
-                    Icons.FileArrowUp
-                  ),
-                  <.input(
-                    ^.tpe     := "file",
-                    ^.onChange ==> onTextChange,
-                    ^.id      := "target-import",
-                    ^.name    := "file",
-                    ^.accept  := ".csv"
-                  ),
-                  TargetImportPopup(props.programId, filesToImport),
-                  Button(
-                    size = Button.Size.Small,
-                    icon = Icons.CheckDouble,
-                    label = "All",
-                    onClick = table.toggleAllRowsSelected(true)
-                  ).compact,
-                  Button(
-                    size = Button.Size.Small,
-                    icon = Icons.SquareXMark,
-                    label = "None",
-                    onClick = table.toggleAllRowsSelected(false)
-                  ).compact,
-                  Button(
-                    size = Button.Size.Small,
-                    icon = Icons.Trash,
-                    disabled = deletingTargets.get.value,
-                    loading = deletingTargets.get.value,
-                    onClick = deleteSelected
-                  ).compact.when(selectedRows.nonEmpty)
-                ),
-              <.span(ExploreStyles.TitleSelectColumns)(
-                ColumnSelector(table, ColNames, ExploreStyles.SelectColumns)
-              )
-            )
-          ),
+          // props.renderInTitle(
+          //   React.Fragment(
+          //     if (props.readonly) EmptyVdom
+          //     else
+          //       <.div(
+          //         ExploreStyles.TableSelectionToolbar,
+          //         HelpIcon("target/main/target-import.md".refined),
+          //         <.label(
+          //           PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
+          //           ^.htmlFor := "target-import",
+          //           Icons.FileArrowUp
+          //         ),
+          //         <.input(
+          //           ^.tpe     := "file",
+          //           ^.onChange ==> onTextChange,
+          //           ^.id      := "target-import",
+          //           ^.name    := "file",
+          //           ^.accept  := ".csv"
+          //         ),
+          //         TargetImportPopup(props.programId, filesToImport),
+          //         Button(
+          //           size = Button.Size.Small,
+          //           icon = Icons.CheckDouble,
+          //           label = "All",
+          //           onClick = table.toggleAllRowsSelected(true)
+          //         ).compact,
+          //         Button(
+          //           size = Button.Size.Small,
+          //           icon = Icons.SquareXMark,
+          //           label = "None",
+          //           onClick = table.toggleAllRowsSelected(false)
+          //         ).compact,
+          //         Button(
+          //           size = Button.Size.Small,
+          //           icon = Icons.Trash,
+          //           disabled = deletingTargets.get.value,
+          //           loading = deletingTargets.get.value,
+          //           onClick = deleteSelected
+          //         ).compact.when(selectedRows.nonEmpty)
+          //       ),
+          //     <.span(ExploreStyles.TitleSelectColumns)(
+          //       ColumnSelector(table, ColNames, ExploreStyles.SelectColumns)
+          //     )
+          //   )
+          // ),
           PrimeAutoHeightVirtualizedTable(
             table,
             _ => 32.toPx,

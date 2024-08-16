@@ -71,7 +71,6 @@ case class SiderealTargetEditor(
   searching:          View[Set[Target.Id]],
   obsInfo:            TargetEditObsInfo,
   onClone:            OnCloneParameters => Callback,
-  renderInTitle:      Option[Tile.RenderInTitle] = None,
   fullScreen:         View[AladinFullScreen],
   globalPreferences:  View[GlobalPreferences],
   readonly:           Boolean,

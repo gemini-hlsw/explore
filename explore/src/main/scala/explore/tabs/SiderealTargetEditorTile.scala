@@ -24,53 +24,52 @@ import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
 
-object SiderealTargetEditorTile {
-  //
-  // def noObsSiderealTargetEditorTile(
-  //   programId:         Program.Id,
-  //   userId:            Option[User.Id],
-  //   targetId:          Target.Id,
-  //   target:            UndoSetter[Target.Sidereal],
-  //   obsAndTargets:     UndoSetter[ObservationsAndTargets],
-  //   searching:         View[Set[Target.Id]],
-  //   title:             String,
-  //   fullScreen:        View[AladinFullScreen],
-  //   globalPreferences: View[GlobalPreferences],
-  //   readonly:          Boolean,
-  //   obsInfo:           TargetEditObsInfo,
-  //   onClone:           OnCloneParameters => Callback,
-  //   backButton:        Option[VdomNode] = none
-  // ) =
-  //   Tile(
-  //     ObsTabTilesIds.TargetId.id,
-  //     title,
-  //     back = backButton,
-  //     canMinimize = true,
-  //     bodyClass = ExploreStyles.TargetTileBody
-  //   ) { (renderInTitle: Tile.RenderInTitle) =>
-  //     <.div(
-  //       ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
-  //       <.div(
-  //         ExploreStyles.TargetTileEditor,
-  //         userId.map(uid =>
-  //           SiderealTargetEditor(
-  //             programId,
-  //             uid,
-  //             target,
-  //             obsAndTargets,
-  //             Asterism.one(TargetWithId(targetId, target.get)),
-  //             vizTime = none,
-  //             obsConf = none,
-  //             searching = searching,
-  //             obsInfo = obsInfo,
-  //             onClone = onClone,
-  //             renderInTitle = renderInTitle.some,
-  //             fullScreen = fullScreen,
-  //             globalPreferences = globalPreferences,
-  //             readonly = readonly
-  //           )
-  //         )
-  //       )
-  //     )
-  //   }
-}
+object SiderealTargetEditorTile:
+
+  def noObsSiderealTargetEditorTile(
+    programId:         Program.Id,
+    userId:            Option[User.Id],
+    targetId:          Target.Id,
+    target:            UndoSetter[Target.Sidereal],
+    obsAndTargets:     UndoSetter[ObservationsAndTargets],
+    searching:         View[Set[Target.Id]],
+    title:             String,
+    fullScreen:        View[AladinFullScreen],
+    globalPreferences: View[GlobalPreferences],
+    readonly:          Boolean,
+    obsInfo:           TargetEditObsInfo,
+    onClone:           OnCloneParameters => Callback,
+    backButton:        Option[VdomNode] = none
+  ) =
+    Tile(
+      ObsTabTilesIds.TargetId.id,
+      (),
+      title,
+      back = backButton,
+      canMinimize = true,
+      bodyClass = ExploreStyles.TargetTileBody
+    ) { _ =>
+      <.div(
+        ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
+        <.div(
+          ExploreStyles.TargetTileEditor,
+          userId.map(uid =>
+            SiderealTargetEditor(
+              programId,
+              uid,
+              target,
+              obsAndTargets,
+              Asterism.one(TargetWithId(targetId, target.get)),
+              vizTime = none,
+              obsConf = none,
+              searching = searching,
+              obsInfo = obsInfo,
+              onClone = onClone,
+              fullScreen = fullScreen,
+              globalPreferences = globalPreferences,
+              readonly = readonly
+            )
+          )
+        )
+      )
+    }

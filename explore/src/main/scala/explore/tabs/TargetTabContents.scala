@@ -31,6 +31,7 @@ import explore.shortcuts.given
 import explore.targets.ObservationPasteAction
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryTable
+import explore.targets.TargetSummaryTileState
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -133,26 +134,25 @@ object TargetTabContents extends TwoPanels:
     /**
      * Render the summary table.
      */
-    // val renderSummary: Tile = ???
-    // Tile(
-    //   ObsTabTilesIds.TargetSummaryId.id,
-    //   "Target Summary",
-    //   backButton.some
-    // )(renderInTitle =>
-    //   TargetSummaryTable(
-    //     props.userId,
-    //     props.programId,
-    //     props.targets.model,
-    //     props.programSummaries.get.targetObservations,
-    //     props.programSummaries.get.calibrationObservations,
-    //     selectObservationAndTarget(props.expandedIds),
-    //     selectTargetOrSummary,
-    //     renderInTitle,
-    //     selectedTargetIds,
-    //     props.programSummaries,
-    //     props.readonly
-    //   )
-    // )
+    val renderSummary: Tile[TargetSummaryTileState] = Tile(
+      ObsTabTilesIds.TargetSummaryId.id,
+      TargetSummaryTileState(),
+      "Target Summary",
+      backButton.some
+    )(renderInTitle =>
+      TargetSummaryTable(
+        props.userId,
+        props.programId,
+        props.targets.model,
+        props.programSummaries.get.targetObservations,
+        props.programSummaries.get.calibrationObservations,
+        selectObservationAndTarget(props.expandedIds),
+        selectTargetOrSummary,
+        selectedTargetIds,
+        props.programSummaries,
+        props.readonly
+      )
+    )
 
     /**
      * Render the asterism editor
@@ -298,26 +298,26 @@ object TargetTabContents extends TwoPanels:
             setExpanded >> setPage
           )
 
-      // val asterismEditorTile =
-      //   AsterismEditorTile.asterismEditorTile(
-      //     props.userId,
-      //     props.programId,
-      //     idsToEdit,
-      //     props.obsAndTargets,
-      //     configuration,
-      //     vizTimeView,
-      //     ObsConfiguration(configuration, none, constraints, wavelength, none, none, none, none),
-      //     props.focused.target,
-      //     setCurrentTarget(idsToEdit.some),
-      //     onCloneTarget4Asterism,
-      //     onAsterismUpdate,
-      //     getObsInfo(idsToEdit.some),
-      //     props.searching,
-      //     title,
-      //     props.globalPreferences,
-      //     props.readonly,
-      //     backButton = backButton.some
-      //   )
+      val asterismEditorTile =
+        AsterismEditorTile.asterismEditorTile(
+          props.userId,
+          props.programId,
+          idsToEdit,
+          props.obsAndTargets,
+          configuration,
+          vizTimeView,
+          ObsConfiguration(configuration, none, constraints, wavelength, none, none, none, none),
+          props.focused.target,
+          setCurrentTarget(idsToEdit.some),
+          onCloneTarget4Asterism,
+          onAsterismUpdate,
+          getObsInfo(idsToEdit.some),
+          props.searching,
+          title,
+          props.globalPreferences,
+          props.readonly,
+          backButton = backButton.some
+        )
 
       val selectedCoordinates: Option[Coordinates] =
         props.focused.target.flatMap: id =>
@@ -328,71 +328,70 @@ object TargetTabContents extends TwoPanels:
                 Target.Sidereal.baseCoordinates.get(t).some
               case _                               => none
 
-      // val skyPlotTile =
-      //   ElevationPlotTile.elevationPlotTile(
-      //     props.userId,
-      //     props.focused.target,
-      //     configuration.map(_.siteFor),
-      //     selectedCoordinates.map(CoordinatesAtVizTime(_)),
-      //     vizTimeView.get,
-      //     none,
-      //     Nil,
-      //     props.globalPreferences.get
-      //   )
+      val skyPlotTile =
+        ElevationPlotTile.elevationPlotTile(
+          props.userId,
+          props.focused.target,
+          configuration.map(_.siteFor),
+          selectedCoordinates.map(CoordinatesAtVizTime(_)),
+          vizTimeView.get,
+          none,
+          Nil,
+          props.globalPreferences.get
+        )
 
-      // List(asterismEditorTile, skyPlotTile)
-      Nil
+      List(asterismEditorTile, skyPlotTile)
     }
 
-    // def renderSiderealTargetEditor(
-    //   resize:   UseResizeDetectorReturn,
-    //   targetId: Target.Id
-    // ): List[Tile] = {
-    //
-    //   def onCloneTarget4Target(params: OnCloneParameters): Callback =
-    //     // It's not perfect, but we'll go to whatever url has the "new" id. This means
-    //     // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
-    //     selectedTargetIds.set(List(params.idToAdd)) >>
-    //       ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
-    //
-    //   val targetTiles: List[Tile] =
-    //     props.targets
-    //       .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
-    //       .map { target =>
-    //         val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
-    //           props.programId,
-    //           props.userId,
-    //           targetId,
-    //           target,
-    //           props.obsAndTargets,
-    //           props.searching,
-    //           s"Editing Target ${target.get.name.value} [$targetId]",
-    //           fullScreen,
-    //           props.globalPreferences,
-    //           props.readonly,
-    //           getObsInfo(none)(targetId),
-    //           onCloneTarget4Target
-    //         )
-    //
-    //         val skyPlotTile: Tile =
-    //           ElevationPlotTile.elevationPlotTile(
-    //             props.userId,
-    //             targetId.some,
-    //             none,
-    //             // TODO PM correct the coordinates
-    //             CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target.get)).some,
-    //             none,
-    //             none,
-    //             Nil,
-    //             props.globalPreferences.get
-    //           )
-    //
-    //         List(targetTile, skyPlotTile)
-    //       }
-    //       .orEmpty
-    //
-    //   renderSummary +: targetTiles
-    // }
+    def renderSiderealTargetEditor(
+      resize:   UseResizeDetectorReturn,
+      targetId: Target.Id
+    ): List[Tile[?]] = {
+
+      def onCloneTarget4Target(params: OnCloneParameters): Callback =
+        // It's not perfect, but we'll go to whatever url has the "new" id. This means
+        // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
+        selectedTargetIds.set(List(params.idToAdd)) >>
+          ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
+
+      val targetTiles: List[Tile[?]] =
+        props.targets
+          .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
+          .map { target =>
+            val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+              props.programId,
+              props.userId,
+              targetId,
+              target,
+              props.obsAndTargets,
+              props.searching,
+              s"Editing Target ${target.get.name.value} [$targetId]",
+              fullScreen,
+              props.globalPreferences,
+              props.readonly,
+              getObsInfo(none)(targetId),
+              onCloneTarget4Target
+            )
+
+            val skyPlotTile =
+              ElevationPlotTile.elevationPlotTile(
+                props.userId,
+                targetId.some,
+                none,
+                // TODO PM correct the coordinates
+                CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target.get)).some,
+                none,
+                none,
+                Nil,
+                props.globalPreferences.get
+              )
+
+            List(targetTile, skyPlotTile)
+          }
+          .orEmpty
+
+      renderSummary +: targetTiles
+    }
 
     val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
       case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
@@ -400,79 +399,79 @@ object TargetTabContents extends TwoPanels:
       case _                                => none
 
     // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
-    // val dummyTargetTile: Tile[Unit]    = Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
-    // val dummyElevationTile: Tile[Unit] = Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
-    //
-    // val renderNonSiderealTargetEditor: List[Tile] =
-    //   List(
-    //     renderSummary,
-    //     Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
-    //       <.div("Editing of Non-Sidereal targets not supported")
-    //     ),
-    //     dummyElevationTile
-    //   )
-    //
-    // val rightSide = { (resize: UseResizeDetectorReturn) =>
-    //   val tileListKeyOpt: Option[(List[Tile], NonEmptyString)] =
-    //     optSelected
-    //       .flatMap:
-    //         _ match
-    //           case Left(targetId) =>
-    //             props.targets.get
-    //               .get(targetId)
-    //               .map:
-    //                 case Nonsidereal(_, _, _) =>
-    //                   (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
-    //                 case Sidereal(_, _, _, _) =>
-    //                   (renderSiderealTargetEditor(resize, targetId),
-    //                    TargetTabControllerIds.Summary.id
-    //                   )
-    //           case Right(obsIds)  =>
-    //             findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
-    //               .map: asterismGroup =>
-    //                 (renderAsterismEditor(resize, obsIds, asterismGroup),
-    //                  TargetTabControllerIds.AsterismEditor.id
-    //                 )
-    //
-    //   val justSummaryTiles: List[Tile] = List(
-    //     renderSummary,
-    //     dummyTargetTile,
-    //     dummyElevationTile
-    //   )
-    //
-    //   val (tiles, key): (List[Tile], NonEmptyString) =
-    //     tileListKeyOpt.fold(
-    //       (justSummaryTiles, TargetTabControllerIds.Summary.id)
-    //     )((tiles, key) => (tiles, key))
-    //
-    // TileController(
-    //   props.userId,
-    //   resize.width.getOrElse(1),
-    //   ExploreGridLayouts.targets.defaultTargetLayouts,
-    //   props.userPreferences.get.targetTabLayout,
-    //   Nil, //tiles,
-    //   GridLayoutSection.TargetLayout,
-    //   backButton.some,
-    //   Option.when(tileListKeyOpt.isEmpty)(ExploreStyles.SingleTileMaximized),
-    //   storeLayout = tileListKeyOpt.nonEmpty
-    // ).withKey(key.value): VdomNode
-    <.div("Hello")
-    // withKey is required for the controller to clear it's state between the different
-    // layouts or it can get into an invalid state.
-    // }
+    val dummyTargetTile: Tile[Unit]    =
+      Tile(ObsTabTilesIds.TargetId.id, (), "", hidden = true)(_ => EmptyVdom)
+    val dummyElevationTile: Tile[Unit] =
+      Tile(ObsTabTilesIds.PlotId.id, (), "", hidden = true)(_ => EmptyVdom)
 
-    <.div("Hello")
-    // React.Fragment(
-    //   if (LinkingInfo.developmentMode) FocusedStatus(AppTab.Targets, props.programId, props.focused)
-    //   else EmptyVdom,
-    //   makeOneOrTwoPanels(
-    //     selectedView,
-    //     targetTree(props.programSummaries),
-    //     rightSide,
-    //     RightSideCardinality.Multi,
-    //     resize
-    //   )
-    // )
+    val renderNonSiderealTargetEditor: List[Tile[?]] =
+      List(
+        renderSummary,
+        Tile("nonSiderealTarget".refined, (), "Non-sidereal target")(_ =>
+          <.div("Editing of Non-Sidereal targets not supported")
+        ),
+        dummyElevationTile
+      )
+
+    val rightSide = { (resize: UseResizeDetectorReturn) =>
+      val tileListKeyOpt: Option[(List[Tile[?]], NonEmptyString)] =
+        optSelected
+          .flatMap:
+            _ match
+              case Left(targetId) =>
+                props.targets.get
+                  .get(targetId)
+                  .map:
+                    case Nonsidereal(_, _, _) =>
+                      (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
+                    case Sidereal(_, _, _, _) =>
+                      (renderSiderealTargetEditor(resize, targetId),
+                       TargetTabControllerIds.Summary.id
+                      )
+              case Right(obsIds)  =>
+                findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
+                  .map: asterismGroup =>
+                    (renderAsterismEditor(resize, obsIds, asterismGroup),
+                     TargetTabControllerIds.AsterismEditor.id
+                    )
+
+      val justSummaryTiles = List(
+        renderSummary,
+        dummyTargetTile,
+        dummyElevationTile
+      )
+
+      val (tiles, key) =
+        tileListKeyOpt.fold(
+          (justSummaryTiles, TargetTabControllerIds.Summary.id)
+        )((tiles, key) => (tiles, key))
+
+      TileController(
+        props.userId,
+        resize.width.getOrElse(1),
+        ExploreGridLayouts.targets.defaultTargetLayouts,
+        props.userPreferences.get.targetTabLayout,
+        tiles,
+        GridLayoutSection.TargetLayout,
+        backButton.some,
+        Option.when(tileListKeyOpt.isEmpty)(ExploreStyles.SingleTileMaximized),
+        storeLayout = tileListKeyOpt.nonEmpty
+      ).withKey(key.value): VdomNode
+      // withKey is required for the controller to clear it's state between the different
+      // layouts or it can get into an invalid state.
+    }
+
+    React.Fragment(
+      if (LinkingInfo.developmentMode) FocusedStatus(AppTab.Targets, props.programId, props.focused)
+      else EmptyVdom,
+      makeOneOrTwoPanels(
+        selectedView,
+        targetTree(props.programSummaries),
+        rightSide,
+        RightSideCardinality.Multi,
+        resize
+      )
+    )
   }
 
   private def applyObs(

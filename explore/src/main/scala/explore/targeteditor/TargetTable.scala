@@ -47,6 +47,10 @@ import lucuma.ui.table.hooks.*
 
 import java.time.Instant
 
+case class TargetTableState(
+  table: Option[Table[SiderealTargetWithId, TargetTable.TableMeta]] = None
+)
+
 case class TargetTable(
   userId:           Option[User.Id],
   programId:        Program.Id,
@@ -57,15 +61,15 @@ case class TargetTable(
   selectedTarget:   View[Option[Target.Id]],
   onAsterismUpdate: OnAsterismUpdateParams => Callback,
   vizTime:          Option[Instant],
-  renderInTitle:    Tile.RenderInTitle,
   fullScreen:       AladinFullScreen,
   readOnly:         Boolean
-) extends ReactFnProps(TargetTable.component)
+)(val state: View[TargetTableState])
+    extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
   private type Props = TargetTable
 
-  private case class TableMeta(
+  case class TableMeta(
     obsIds:           ObsIdSet,
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     onAsterismUpdate: OnAsterismUpdateParams => Callback
@@ -75,7 +79,7 @@ object TargetTable extends AsterismModifier:
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
-  private val columnNames: Map[ColumnId, String] = Map(
+  val columnNames: Map[ColumnId, String] = Map(
     DeleteColumnId -> " "
   ) ++ TargetColumns.AllColNames
 
@@ -166,17 +170,18 @@ object TargetTable extends AsterismModifier:
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
+      .useEffectOnMountBy((p, _, _, _, _, table) => p.state.set(TargetTableState(table.some)))
       .useStateView(AreAdding(false))
       .render: (props, ctx, _, _, rows, table, adding) =>
         import ctx.given
 
         React.Fragment(
-          props.renderInTitle(
-            <.span(ExploreStyles.TitleSelectColumns)(
-              ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
-                .unless(props.fullScreen.value)
-            )
-          ),
+          // props.renderInTitle(
+          //   <.span(ExploreStyles.TitleSelectColumns)(
+          //     ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
+          //       .unless(props.fullScreen.value)
+          //   )
+          // ),
           if (rows.isEmpty) {
             <.div(ExploreStyles.HVCenter)(
               targetSelectionPopup(
@@ -211,3 +216,21 @@ object TargetTable extends AsterismModifier:
             )
           }
         )
+
+case class TargetTableTitle(
+  state: View[TargetTableState]
+) extends ReactFnProps(TargetTableTitle.component)
+
+object TargetTableTitle:
+  private type Props = TargetTableTitle
+
+  private val component =
+    ScalaFnComponent[Props]: props =>
+      React.Fragment(
+        <.span, // Push column selector to right
+        <.span(ExploreStyles.TitleSelectColumns)(
+          props.state.get.table.map(
+            ColumnSelector(_, TargetTable.columnNames, ExploreStyles.SelectColumns)
+          )
+        )
+      )
