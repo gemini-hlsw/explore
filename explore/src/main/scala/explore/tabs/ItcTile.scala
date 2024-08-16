@@ -8,8 +8,9 @@ import crystal.Pot
 import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.itc.ItcGraphPanel
+import explore.itc.ItcPanelBody
 import explore.itc.ItcPanelTitle
+import explore.itc.ItcPanelTileState
 import explore.itc.ItcProps
 import explore.model.GlobalPreferences
 import explore.model.LoadingState
@@ -22,40 +23,39 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
 
-object ItcTile
+object ItcTile:
 
-// def itcTile(
-//   uid:               Option[User.Id],
-//   oid:               Observation.Id,
-//   selectedTarget:    View[Option[ItcTarget]],
-//   allTargets:        TargetList,
-//   itcProps:          ItcProps,
-//   itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
-//   itcLoading:        LoadingState,
-//   globalPreferences: View[GlobalPreferences]
-// ) =
-//   Tile(
-//     ObsTabTilesIds.ItcId.id,
-//     s"ITC",
-//     canMinimize = true,
-//     control = _ =>
-//       (ItcPanelTitle(
-//         selectedTarget,
-//         itcProps,
-//         itcChartResults,
-//         itcLoading
-//       ): VdomNode).some,
-//     bodyClass = ExploreStyles.ItcTileBody
-//   )(_ =>
-//     uid.map(
-//       ItcGraphPanel(
-//         _,
-//         oid,
-//         selectedTarget,
-//         itcProps,
-//         itcChartResults,
-//         itcLoading,
-//         globalPreferences
-//       )
-//     )
-//   )
+  def itcTile(
+    uid:               Option[User.Id],
+    oid:               Observation.Id,
+    allTargets:        TargetList,
+    itcProps:          ItcProps,
+    itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
+    itcLoading:        LoadingState,
+    globalPreferences: View[GlobalPreferences]
+  ) =
+    Tile(
+      ObsTabTilesIds.ItcId.id,
+      ItcPanelTileState(),
+      s"ITC"
+    )(
+      s =>
+        uid.map(
+          ItcPanelBody(
+            _,
+            oid,
+            itcProps,
+            itcChartResults,
+            itcLoading,
+            globalPreferences,
+            s
+          )
+        ),
+      (s, _) =>
+        ItcPanelTitle(
+          itcProps,
+          itcChartResults,
+          itcLoading,
+          s
+        )
+    )

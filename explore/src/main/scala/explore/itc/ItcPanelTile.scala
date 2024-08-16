@@ -21,24 +21,39 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
+import monocle.Lens
+import monocle.Focus
 
-case class ItcGraphPanel(
+case class ItcPanelTileState(
+  selectedTarget: Option[ItcTarget] = None
+)
+
+object ItcPanelTileState:
+  val selectedTarget: Lens[ItcPanelTileState, Option[ItcTarget]] =
+    Focus[ItcPanelTileState](_.selectedTarget)
+
+case class ItcPanelBody(
   uid:               User.Id,
   oid:               Observation.Id,
-  selectedTarget:    View[Option[ItcTarget]],
   itcProps:          ItcProps,
   itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:        LoadingState,
-  globalPreferences: View[GlobalPreferences]
-) extends ReactFnProps(ItcGraphPanel.component)
+  globalPreferences: View[GlobalPreferences],
+  state:             View[ItcPanelTileState]
+) extends ReactFnProps(ItcPanelBody.component) {
+  val selectedTarget = state.zoom(ItcPanelTileState.selectedTarget)
+}
 
-object ItcGraphPanel:
-  private type Props = ItcGraphPanel
+object ItcPanelBody:
+  private type Props = ItcPanelBody
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
+      // Reset the selected target if itcProps changes
+      .useEffectWithDepsBy((p, _) => p.itcProps): (p, _) =>
+        itcProps => p.selectedTarget.set(itcProps.defaultSelectedTarget)
       .render: (props, ctx) =>
         import ctx.given
 
@@ -54,7 +69,7 @@ object ItcGraphPanel:
         val detailsView =
           globalPreferences.zoom(GlobalPreferences.itcDetailsOpen)
 
-        val selectedTarget = props.selectedTarget.get
+        val selectedTarget = props.state.get.selectedTarget
 
         val isModeSelected = props.itcProps.finalConfig.isDefined
         val selectMode     = "Select a mode to plot".some.filterNot(_ => isModeSelected)
@@ -93,7 +108,7 @@ object ItcGraphPanel:
             selectedResult.map(_.charts),
             error,
             chartTypeView.get,
-            props.selectedTarget.get.map(_.name.value),
+            props.state.get.selectedTarget.map(_.name.value),
             props.itcProps.signalToNoiseAt,
             props.itcLoading,
             detailsView.get

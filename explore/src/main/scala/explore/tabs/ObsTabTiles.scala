@@ -263,20 +263,14 @@ object ObsTabTiles:
             .whenA(itcProps.isExecutable)
             .runAsyncAndForget
       }
-      // ITC selected target. Here to be shared by the ITC tile body and title
-      .useStateView(none[ItcTarget])
-      // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value):
-        (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
-          itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
       // selected attachment
       .useStateView(none[ObsAtt.Id])
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useStateView(ChartSelector.Closed)
-      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
-      ): (_, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       .render:
         (
@@ -290,7 +284,6 @@ object ObsTabTiles:
           itcProps,
           itcChartResults,
           itcLoading,
-          selectedItcTarget,
           selectedAttachment,
           sequenceChanged,
           chartSelector,
@@ -389,7 +382,7 @@ object ObsTabTiles:
                     .updateNotes[IO](List(props.obsId), notes)
                     .runAsync
 
-            val notesTile                               = NotesTile.notesTile(props.obsId, notesView)
+            val notesTile = NotesTile.notesTile(props.obsId, notesView)
             //
             //   val sequenceTile =
             //     SequenceEditorTile.sequenceTile(
@@ -401,18 +394,17 @@ object ObsTabTiles:
             //       sequenceChanged
             //     )
             //
-            //   val itcTile: Tile =
-            //     ItcTile.itcTile(
-            //       props.vault.userId,
-            //       props.obsId,
-            //       selectedItcTarget,
-            //       props.allTargets,
-            //       itcProps.value,
-            //       itcChartResults.value,
-            //       itcLoading.value,
-            //       props.globalPreferences
-            //     )
-            //
+            val itcTile   =
+              ItcTile.itcTile(
+                props.vault.userId,
+                props.obsId,
+                props.allTargets,
+                itcProps.value,
+                itcChartResults.value,
+                itcLoading.value,
+                props.globalPreferences
+              )
+
             //   val constraints: View[ConstraintSet] =
             //     props.observation.model.zoom(Observation.constraints)
             //
@@ -560,10 +552,10 @@ object ObsTabTiles:
                 // if (!props.vault.isGuest) finderChartsTile.some else none,
                 // skyPlotTile.some,
                 // constraintsTile.some,
-                timingWindowsTile.some
+                timingWindowsTile.some,
                 // configurationTile.some,
                 // sequenceTile.some,
-                // itcTile.some
+                itcTile.some
               ).flattenOption,
               GridLayoutSection.ObservationsLayout,
               props.backButton.some
