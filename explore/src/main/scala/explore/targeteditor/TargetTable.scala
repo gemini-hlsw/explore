@@ -14,6 +14,7 @@ import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.Tile
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
@@ -47,10 +48,6 @@ import lucuma.ui.table.hooks.*
 
 import java.time.Instant
 
-case class TargetTableState(
-  table: Option[Table[SiderealTargetWithId, TargetTable.TableMeta]] = None
-)
-
 case class TargetTable(
   userId:           Option[User.Id],
   programId:        Program.Id,
@@ -63,7 +60,7 @@ case class TargetTable(
   vizTime:          Option[Instant],
   fullScreen:       AladinFullScreen,
   readOnly:         Boolean
-)(val state: View[TargetTableState])
+)(val state: View[ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta]])
     extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
@@ -170,18 +167,12 @@ object TargetTable extends AsterismModifier:
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
-      .useEffectOnMountBy((p, _, _, _, _, table) => p.state.set(TargetTableState(table.some)))
+      .useEffectOnMountBy((p, _, _, _, _, table) => p.state.set(ColumnSelectorState(table.some)))
       .useStateView(AreAdding(false))
       .render: (props, ctx, _, _, rows, table, adding) =>
         import ctx.given
 
         React.Fragment(
-          // props.renderInTitle(
-          //   <.span(ExploreStyles.TitleSelectColumns)(
-          //     ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
-          //       .unless(props.fullScreen.value)
-          //   )
-          // ),
           if (rows.isEmpty) {
             <.div(ExploreStyles.HVCenter)(
               targetSelectionPopup(
@@ -216,21 +207,3 @@ object TargetTable extends AsterismModifier:
             )
           }
         )
-
-case class TargetTableTitle(
-  state: View[TargetTableState]
-) extends ReactFnProps(TargetTableTitle.component)
-
-object TargetTableTitle:
-  private type Props = TargetTableTitle
-
-  private val component =
-    ScalaFnComponent[Props]: props =>
-      React.Fragment(
-        <.span, // Push column selector to right
-        <.span(ExploreStyles.TitleSelectColumns)(
-          props.state.get.table.map(
-            ColumnSelector(_, TargetTable.columnNames, ExploreStyles.SelectColumns)
-          )
-        )
-      )

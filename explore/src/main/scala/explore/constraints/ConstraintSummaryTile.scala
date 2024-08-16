@@ -10,6 +10,7 @@ import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ui.ExploreStyles
+import explore.components.ColumnSelectorState
 import explore.model.AppContext
 import explore.model.ConstraintGroup
 import explore.model.ConstraintGroupList
@@ -36,16 +37,12 @@ import lucuma.ui.table.hooks.*
 import scala.collection.immutable.SortedSet
 import explore.model.enums.TileSizeState
 
-case class ConstraintsSummaryTileState(
-  table: Option[Table[ConstraintGroup, Nothing]] = None
-)
-
 case class ConstraintsSummaryTableBody(
   userId:         Option[User.Id],
   programId:      Program.Id,
   constraintList: ConstraintGroupList,
   expandedIds:    View[SortedSet[ObsIdSet]]
-)(val state: View[ConstraintsSummaryTileState])
+)(val state: View[ColumnSelectorState[ConstraintGroup, Nothing]])
     extends ReactFnProps(ConstraintsSummaryTableBody.component)
 
 object ConstraintsSummaryTableBody:
@@ -235,9 +232,7 @@ object ConstraintsSummaryTableBody:
           TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
       )
-      .useEffectOnMountBy((p, _, _, _, table) =>
-        p.state.set(ConstraintsSummaryTileState(table.some))
-      )
+      .useEffectOnMountBy((p, _, _, _, table) => p.state.set(ColumnSelectorState(table.some)))
       .render { (props, _, _, _, table) =>
         <.div(
           PrimeTable(
@@ -254,21 +249,3 @@ object ConstraintsSummaryTableBody:
           )
         )
       }
-
-case class ConstraintsSummaryTableTitle(
-  state: View[ConstraintsSummaryTileState]
-) extends ReactFnProps(ConstraintsSummaryTableTitle.component)
-
-object ConstraintsSummaryTableTitle:
-  private type Props = ConstraintsSummaryTableTitle
-
-  private val component =
-    ScalaFnComponent[Props]: props =>
-      React.Fragment(
-        <.span, // Push column selector to right
-        <.span(ExploreStyles.TitleSelectColumns)(
-          props.state.get.table.map(
-            ColumnSelector(_, ConstraintsSummaryTableBody.columnNames, ExploreStyles.SelectColumns)
-          )
-        )
-      )

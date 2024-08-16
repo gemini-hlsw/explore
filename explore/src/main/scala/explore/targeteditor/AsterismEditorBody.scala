@@ -40,9 +40,13 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import monocle.Lens
 import monocle.Focus
+import explore.components.ColumnSelectorInTitle
+import explore.components.ColumnSelectorState
+import lucuma.schemas.model.SiderealTargetWithId
 
 case class AsterismTileState(
-  table:       TargetTableState = TargetTableState(),
+  table:       ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta] =
+    ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta](),
   obsEditInfo: Option[ObsIdSetEditInfo] = None
 ) {
   // the 'getOrElse doesn't matter. Controls will be readonly if all are executed
@@ -51,7 +55,8 @@ case class AsterismTileState(
 }
 
 object AsterismTileState:
-  val table: Lens[AsterismTileState, TargetTableState]               =
+  val table
+    : Lens[AsterismTileState, ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta]] =
     Focus[AsterismTileState](_.table)
   val obsEditInfo: Lens[AsterismTileState, Option[ObsIdSetEditInfo]] =
     Focus[AsterismTileState](_.obsEditInfo)
@@ -231,5 +236,5 @@ object AsterismEditorTitle extends AsterismModifier:
             )
           ),
           ObsTimeEditor(props.vizTimeView),
-          TargetTableTitle(props.state.zoom(AsterismTileState.table))
+          ColumnSelectorInTitle(TargetTable.columnNames, props.state.zoom(AsterismTileState.table))
         )

@@ -48,8 +48,7 @@ case class GroupEditTile(
   group:             UndoSetter[GroupTree.Group],
   elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  readonly:          Boolean,
-  renderInTitle:     Tile.RenderInTitle
+  readonly:          Boolean
 ) extends ReactFnProps(GroupEditTile.component)
 
 object GroupEditTile:
@@ -233,7 +232,7 @@ object GroupEditTile:
         else <.div(ExploreStyles.GroupForm)(nameForm, minRequiredForm, plannedTime)
 
       React.Fragment(
-        props.renderInTitle(makeTitle(group, props.timeEstimateRange, props.elementsLength)),
+        // props.renderInTitle(makeTitle(group, props.timeEstimateRange, props.elementsLength)),
         <.div(ExploreStyles.GroupEditTile)(
           selectGroupForm,
           groupTypeSpecificForms

@@ -50,6 +50,9 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import lucuma.react.table.Expandable
+import explore.components.ColumnSelectorState
+import explore.components.ColumnSelectorInTitle
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -124,22 +127,23 @@ object ObsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    // def observationTable(): VdomNode = Tile(
-    //   "observations".refined,
-    //   "Observations Summary",
-    //   backButton.some
-    // )(renderInTitle =>
-    //   ObsSummaryTable(
-    //     props.vault.userId,
-    //     props.programId,
-    //     props.observations,
-    //     props.obsExecutions,
-    //     props.targets.get,
-    //     renderInTitle
-    //   )
-    // // TODO: elevation view
-    // )
-    //
+    val observationTable = Tile(
+      "observations".refined,
+      ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
+      "Observations Summary",
+      backButton.some
+    )(
+      ObsSummaryTable(
+        props.vault.userId,
+        props.programId,
+        props.observations,
+        props.obsExecutions,
+        props.targets.get
+      ),
+      (s, _) => ColumnSelectorInTitle(ObsSummaryTable.columnNames, s)
+      // TODO: elevation view
+    )
+
     def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
       val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
 
@@ -184,7 +188,7 @@ object ObsTabContents extends TwoPanels:
       (props.focusedObs, props.focusedGroup) match {
         case (Some(obsId), _)   => obsTiles(obsId, resize)
         case (_, Some(groupId)) => groupTiles(groupId, resize)
-        case _                  => <.div("OT") // observationTable()
+        case _                  => observationTable
       }
 
     makeOneOrTwoPanels(

@@ -14,8 +14,8 @@ import explore.common.TimingWindowsQueries
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
+import explore.components.ColumnSelectorState
 import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsSummaryTileState
 import explore.constraints.ConstraintsSummaryTableBody
 import explore.data.KeyedIndexedList
 import explore.model.*
@@ -53,7 +53,7 @@ import monocle.Iso
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.constraints.ConstraintsSummaryTableTitle
+import explore.components.ColumnSelectorInTitle
 
 case class ConstraintsTabContents(
   userId:           Option[User.Id],
@@ -114,7 +114,7 @@ object ConstraintsTabContents extends TwoPanels:
             .fold[VdomNode] {
               Tile(
                 "constraints".refined,
-                ConstraintsSummaryTileState(),
+                ColumnSelectorState[ConstraintGroup, Nothing](),
                 "Constraints Summary",
                 backButton.some,
                 canMinimize = false,
@@ -126,7 +126,7 @@ object ConstraintsTabContents extends TwoPanels:
                   props.programSummaries.get.constraintGroups,
                   props.expandedIds
                 ),
-                (s, _) => ConstraintsSummaryTableTitle(s)
+                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames, s)
               )
             } { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
@@ -147,7 +147,7 @@ object ConstraintsTabContents extends TwoPanels:
                 ObsTabTilesIds.ConstraintsId.id,
                 (),
                 constraintsTitle,
-                backButton.some,
+                backButton.some
               )(_ =>
                 ConstraintsPanel(
                   idsToEdit,
