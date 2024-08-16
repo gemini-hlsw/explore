@@ -292,63 +292,64 @@ object ObsTabTiles:
           import ctx.given
 
           vizTimeOrNowPot.renderPot: vizTimeOrNow =>
-            //   // This view is shared between AGS and the configuration editor
-            //   // when PA changes it gets saved to the db
-            //   val posAngleConstraintView: View[PosAngleConstraint] =
-            //     props.observation.model
-            //       .zoom(Observation.posAngleConstraint)
-            //       .withOnMod(pa =>
-            //         ObsQueries
-            //           .updatePosAngle[IO](List(props.obsId), pa)
-            //           .switching(agsState.async, AgsState.Saving, AgsState.Idle)
-            //           .runAsync
-            //       )
-            //
-            val asterismIds: View[AsterismIds]          =
+            // This view is shared between AGS and the configuration editor
+            // when PA changes it gets saved to the db
+            val posAngleConstraintView: View[PosAngleConstraint] =
+              props.observation.model
+                .zoom(Observation.posAngleConstraint)
+                .withOnMod(pa =>
+                  ObsQueries
+                    .updatePosAngle[IO](List(props.obsId), pa)
+                    .switching(agsState.async, AgsState.Saving, AgsState.Idle)
+                    .runAsync
+                )
+
+            val asterismIds: View[AsterismIds] =
               props.observation.model.zoom(Observation.scienceTargetIds)
-            //
-            //   val basicConfiguration: Option[BasicConfiguration] =
-            //     props.observation.get.observingMode.map(_.toBasicConfiguration)
-            //
-            //   val vizTimeView: View[Option[Instant]] =
-            //     props.observation.model.zoom(Observation.observationTime)
-            //
-            //   val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
-            //     NonEmptyList.fromList:
-            //       props.observation.get.scienceTargetIds.toList
-            //         .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
-            //         .flattenOption
-            //
-            //   // asterism base coordinates at viz time or current time
-            //   val targetCoords: Option[CoordinatesAtVizTime] =
-            //     asterismAsNel
-            //       .flatMap(asterismNel => asterismNel.baseTracking.at(vizTimeOrNow))
-            //
-            //   val attachmentsView =
-            //     props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
+
+            val basicConfiguration: Option[BasicConfiguration] =
+              props.observation.get.observingMode.map(_.toBasicConfiguration)
+
+            val vizTimeView: View[Option[Instant]] =
+              props.observation.model.zoom(Observation.observationTime)
+
+            val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
+              NonEmptyList.fromList:
+                props.observation.get.scienceTargetIds.toList
+                  .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
+                  .flattenOption
+
+            // asterism base coordinates at viz time or current time
+            val targetCoords: Option[CoordinatesAtVizTime] =
+              asterismAsNel
+                .flatMap(asterismNel => asterismNel.baseTracking.at(vizTimeOrNow))
+
+              // val attachmentsView =
+              //   props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
             //       obsEditAttachments(props.obsId, ids).runAsync
             //     }
             //
-            //   val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
-            //
-            //   val paProps: PAProperties =
-            //     PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
-            //
-            //   val averagePA: Option[AveragePABasis] =
-            //     (basicConfiguration.map(_.siteFor), asterismAsNel, pendingTime)
-            //       .mapN: (site, asterism, pendingTime) =>
-            //         posAngleConstraintView.get match
-            //           case PosAngleConstraint.AverageParallactic =>
-            //             // See also `anglesToTestAt` in AladinCell.scala.
-            //             averageParallacticAngle(
-            //               site,
-            //               asterism.baseTracking,
-            //               vizTimeOrNow,
-            //               pendingTime.toDuration
-            //             ).map(AveragePABasis(vizTimeOrNow, pendingTime, _))
-            //           case _                                     => none
-            //       .flatten
-            //
+
+            val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+
+            val paProps: PAProperties =
+              PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
+
+            val averagePA: Option[AveragePABasis] =
+              (basicConfiguration.map(_.siteFor), asterismAsNel, pendingTime)
+                .mapN: (site, asterism, pendingTime) =>
+                  posAngleConstraintView.get match
+                    case PosAngleConstraint.AverageParallactic =>
+                      // See also `anglesToTestAt` in AladinCell.scala.
+                      averageParallacticAngle(
+                        site,
+                        asterism.baseTracking,
+                        vizTimeOrNow,
+                        pendingTime.toDuration
+                      ).map(AveragePABasis(vizTimeOrNow, pendingTime, _))
+                    case _                                     => none
+                .flatten
+
             //   // The angle used for `Align to PA` in the finder charts tile.
             //   // For Unbounded, use the PA of the currently selected guide star (if any)
             //   // For AverageParllactic constraint, use the average PA (if any), otherwise
@@ -405,9 +406,9 @@ object ObsTabTiles:
                 props.globalPreferences
               )
 
-            //   val constraints: View[ConstraintSet] =
-            //     props.observation.model.zoom(Observation.constraints)
-            //
+            val constraints: View[ConstraintSet] =
+              props.observation.model.zoom(Observation.constraints)
+
             //   val constraintsSelector: VdomNode =
             //     makeConstraintsSelector(
             //       props.obsId,
@@ -434,20 +435,20 @@ object ObsTabTiles:
             //       props.globalPreferences.get
             //     )
             //
-            //   val obsConf =
-            //     ObsConfiguration(
-            //       basicConfiguration,
-            //       paProps.some,
-            //       constraints.get.some,
-            //       ScienceRequirements.spectroscopy
-            //         .getOption(props.observation.get.scienceRequirements)
-            //         .flatMap(_.wavelength),
-            //       sequenceOffsets.toOption.flatMap(_.science),
-            //       sequenceOffsets.toOption.flatMap(_.acquisition),
-            //       averagePA,
-            //       pendingTime.map(_.toDuration)
-            //     )
-            //
+            val obsConf =
+              ObsConfiguration(
+                basicConfiguration,
+                paProps.some,
+                constraints.get.some,
+                ScienceRequirements.spectroscopy
+                  .getOption(props.observation.get.scienceRequirements)
+                  .flatMap(_.wavelength),
+                sequenceOffsets.toOption.flatMap(_.science),
+                sequenceOffsets.toOption.flatMap(_.acquisition),
+                averagePA,
+                pendingTime.map(_.toDuration)
+              )
+
             //   def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
             //     TargetEditObsInfo.fromProgramSummaries(
             //       targetId,
@@ -519,27 +520,26 @@ object ObsTabTiles:
             val timingWindowsTile =
               TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled)
 
-            //   val configurationTile =
-            //     ConfigurationTile.configurationTile(
-            //       props.vault.userId,
-            //       props.programId,
-            //       props.obsId,
-            //       props.observation.zoom(Observation.scienceRequirements),
-            //       props.observation.zoom(Observation.observingMode),
-            //       posAngleConstraintView,
-            //       props.observation.get.scienceTargetIds,
-            //       targetCoords,
-            //       obsConf,
-            //       selectedConfig,
-            //       props.modes,
-            //       props.allTargets,
-            //       sequenceChanged.mod {
-            //         case Ready(x) => Pot.pending
-            //         case x        => x
-            //       },
-            //       props.isDisabled
-            //     )
-            //
+            val configurationTile =
+              ConfigurationTile.configurationTile(
+                props.vault.userId,
+                props.programId,
+                props.obsId,
+                props.observation.zoom(Observation.scienceRequirements),
+                props.observation.zoom(Observation.observingMode),
+                posAngleConstraintView,
+                props.observation.get.scienceTargetIds,
+                targetCoords,
+                obsConf,
+                selectedConfig,
+                props.modes,
+                props.allTargets,
+                sequenceChanged.mod {
+                  case Ready(x) => Pot.pending
+                  case x        => x
+                },
+                props.isDisabled
+              )
 
             TileController(
               props.vault.userId,
@@ -553,7 +553,7 @@ object ObsTabTiles:
                 // skyPlotTile.some,
                 // constraintsTile.some,
                 timingWindowsTile.some,
-                // configurationTile.some,
+                configurationTile.some,
                 sequenceTile.some,
                 itcTile.some
               ).flattenOption,
