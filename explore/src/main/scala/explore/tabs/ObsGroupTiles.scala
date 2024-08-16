@@ -72,15 +72,17 @@ object ObsGroupTiles:
             s"${if group.get.isAnd then "AND" else "OR"} Group",
             props.backButton.some,
             tileTitleClass = ExploreStyles.GroupEditTitle
-          )(_ =>
-            GroupEditTile(
-              group,
-              node.get._1.children.length,
-              props.timeEstimateRange,
-              group.get.system
-            )
-              .withKey(props.groupId.toString)
-              .toUnmounted
+          )(
+            _ =>
+              GroupEditBody(
+                group,
+                node.get._1.children.length,
+                props.timeEstimateRange,
+                group.get.system
+              )
+                .withKey(props.groupId.toString)
+                .toUnmounted,
+            (_, _) => GroupEditTitle(group, node.get._1.children.length, props.timeEstimateRange)
           )
 
           val notesTile = Tile(
