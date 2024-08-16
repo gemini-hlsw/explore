@@ -15,7 +15,6 @@ import eu.timepit.refined.types.string.*
 import explore.DefaultErrorPolicy
 import explore.common.*
 import explore.components.HelpIcon
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext

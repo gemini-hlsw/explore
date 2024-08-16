@@ -10,7 +10,6 @@ import crystal.*
 import crystal.react.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.config.ObsTimeEditor
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet

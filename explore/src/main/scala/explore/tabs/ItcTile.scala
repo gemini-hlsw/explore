@@ -3,11 +3,9 @@
 
 package explore.tabs
 
-import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import explore.components.Tile
-import explore.components.ui.ExploreStyles
 import explore.itc.ItcPanelBody
 import explore.itc.ItcPanelTitle
 import explore.itc.ItcPanelTileState

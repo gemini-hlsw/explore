@@ -20,7 +20,6 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
-import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
 import explore.model.*
 import explore.model.AppContext
@@ -55,7 +54,6 @@ import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target

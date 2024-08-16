@@ -128,17 +128,10 @@ object GeneratedSequenceBody:
 
 case class GeneratedSequenceTitle(
   obsExecution: Pot[Execution]
-  // programId:       Program.Id,
-  // obsId:           Observation.Id,
-  // targetIds:       List[Target.Id],
-  // snPerClass:      Map[ObserveClass, SignalToNoise],
-  // sequenceChanged: View[Pot[Unit]]
 ) extends ReactFnProps(GeneratedSequenceTitle.component)
 
 object GeneratedSequenceTitle:
   private type Props = GeneratedSequenceTitle
-
-  private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
 
   private val component =
     ScalaFnComponent

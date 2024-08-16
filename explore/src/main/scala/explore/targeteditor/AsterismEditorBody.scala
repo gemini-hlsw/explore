@@ -3,11 +3,9 @@
 
 package explore.targeteditor
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
@@ -35,7 +33,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import monocle.Lens
@@ -90,16 +87,15 @@ object AsterismEditorBody extends AsterismModifier:
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useMemoBy((props, _) => (props.obsIds, props.obsAndTargets.get._1)) { (_, _) =>
+      .useMemoBy(props => (props.obsIds, props.obsAndTargets.get._1)) { _ =>
         ObsIdSetEditInfo.fromObservationList
       }
-      .useLayoutEffectWithDepsBy((_, _, obsEditInfo) => obsEditInfo) { (p, _, _) => obsEditInfo =>
+      .useLayoutEffectWithDepsBy((_, obsEditInfo) => obsEditInfo) { (p, _) => obsEditInfo =>
         p.state.zoom(AsterismTileState.obsEditInfo).set(obsEditInfo.value.some)
       }
-      .useLayoutEffectWithDepsBy((props, _, obsEditInfo) =>
+      .useLayoutEffectWithDepsBy((props, obsEditInfo) =>
         (obsEditInfo.asterismIds, props.focusedTargetId)
-      ) { (props, _, _) => (asterismIds, focusedTargetId) =>
+      ) { (props, _) => (asterismIds, focusedTargetId) =>
         // If the selected targetId is None, or not in the asterism, select the first target (if any).
         // Need to replace history here.
         focusedTargetId.filter(asterismIds.contains_) match
@@ -108,15 +104,7 @@ object AsterismEditorBody extends AsterismModifier:
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
-      .render { (props, ctx, obsEditInfo, fullScreen) =>
-        import ctx.given
-        // Save the time here. this works for the obs and target tabs
-        // It's OK to set the viz time for executed observations, I think.
-        val vizTimeView = props.vizTime.withOnMod(t =>
-          ObsQueries
-            .updateVisualizationTime[IO](props.obsIds.toList, t)
-            .runAsync
-        )
+      .render { (props, obsEditInfo, fullScreen) =>
 
         val vizTime = props.vizTime.get
 

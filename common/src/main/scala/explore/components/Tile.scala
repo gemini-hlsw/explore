@@ -58,8 +58,7 @@ case class Tile[A](
 }
 
 object Tile:
-  type TileId        = NonEmptyString
-  type RenderInTitle = VdomNode => VdomNode
+  type TileId = NonEmptyString
 
   private type Props[A] = Tile[A]
 

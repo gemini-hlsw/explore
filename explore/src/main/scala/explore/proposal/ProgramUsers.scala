@@ -8,11 +8,8 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
-import crystal.react.hooks.*
 import explore.Icons
 import explore.components.Tile
-import explore.components.Tile.RenderInTitle
-import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.CoIInvitation
 import explore.model.ProgramUserWithRole

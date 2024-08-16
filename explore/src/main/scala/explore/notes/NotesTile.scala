@@ -5,12 +5,10 @@ package explore.tabs
 
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.Tile
-import explore.components.Tile.RenderInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.ObsTabTilesIds
 import explore.model.Observation

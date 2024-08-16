@@ -11,7 +11,6 @@ import explore.model.Execution
 import explore.model.ObsTabTilesIds
 import explore.model.Observation
 import explore.model.OdbItcResult
-import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 
 object SequenceEditorTile:

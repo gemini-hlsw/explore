@@ -35,7 +35,6 @@ import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 
 import scala.collection.immutable.SortedSet
-import explore.model.enums.TileSizeState
 
 case class ConstraintsSummaryTableBody(
   userId:         Option[User.Id],
