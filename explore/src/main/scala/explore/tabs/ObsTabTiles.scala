@@ -263,14 +263,11 @@ object ObsTabTiles:
             .whenA(itcProps.isExecutable)
             .runAsyncAndForget
       }
-      // selected attachment
-      .useStateView(none[ObsAtt.Id])
       // Signal that the sequence has changed
       .useStateView(().ready)
-      .useStateView(ChartSelector.Closed)
-      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
-      ): (_, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       .render:
         (
@@ -284,9 +281,7 @@ object ObsTabTiles:
           itcProps,
           itcChartResults,
           itcLoading,
-          selectedAttachment,
           sequenceChanged,
-          chartSelector,
           vizTimeOrNowPot
         ) =>
           import ctx.given
@@ -324,11 +319,10 @@ object ObsTabTiles:
               asterismAsNel
                 .flatMap(asterismNel => asterismNel.baseTracking.at(vizTimeOrNow))
 
-              // val attachmentsView =
-              //   props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
-            //       obsEditAttachments(props.obsId, ids).runAsync
-            //     }
-            //
+            val attachmentsView =
+              props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
+                obsEditAttachments(props.obsId, ids).runAsync
+              }
 
             val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
 
@@ -350,31 +344,29 @@ object ObsTabTiles:
                     case _                                     => none
                 .flatten
 
-            //   // The angle used for `Align to PA` in the finder charts tile.
-            //   // For Unbounded, use the PA of the currently selected guide star (if any)
-            //   // For AverageParllactic constraint, use the average PA (if any), otherwise
-            //   // use the angle specified in the constraint
-            //   val pa: Option[Angle] =
-            //     posAngleConstraintView.get match
-            //       case PosAngleConstraint.Unbounded                  => paProps.selectedPA
-            //       case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
-            //       case PosAngleConstraint.Fixed(angle)               => angle.some
-            //       case PosAngleConstraint.AllowFlip(angle)           => angle.some
-            //       case PosAngleConstraint.ParallacticOverride(angle) => angle.some
-            //
-            //   val finderChartsTile =
-            //     FinderChartsTile.finderChartsTile(
-            //       props.programId,
-            //       props.obsId,
-            //       attachmentsView,
-            //       props.vault.map(_.token),
-            //       props.obsAttachments,
-            //       selectedAttachment,
-            //       pa,
-            //       chartSelector,
-            //       props.isDisabled
-            //     )
-            //
+            // The angle used for `Align to PA` in the finder charts tile.
+            // For Unbounded, use the PA of the currently selected guide star (if any)
+            // For AverageParllactic constraint, use the average PA (if any), otherwise
+            // use the angle specified in the constraint
+            val pa: Option[Angle] =
+              posAngleConstraintView.get match
+                case PosAngleConstraint.Unbounded                  => paProps.selectedPA
+                case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
+                case PosAngleConstraint.Fixed(angle)               => angle.some
+                case PosAngleConstraint.AllowFlip(angle)           => angle.some
+                case PosAngleConstraint.ParallacticOverride(angle) => angle.some
+
+            val finderChartsTile =
+              FinderChartsTile.finderChartsTile(
+                props.programId,
+                props.obsId,
+                attachmentsView,
+                props.vault.map(_.token),
+                props.obsAttachments,
+                pa,
+                props.isDisabled
+              )
+
             val notesView: View[Option[NonEmptyString]] =
               props.observation.model
                 .zoom(Observation.observerNotes)
@@ -415,18 +407,18 @@ object ObsTabTiles:
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
               )
 
-            //   val skyPlotTile: Tile =
-            //     ElevationPlotTile.elevationPlotTile(
-            //       props.vault.userId,
-            //       props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
-            //       props.observation.get.observingMode.map(_.siteFor),
-            //       targetCoords,
-            //       vizTimeView.get,
-            //       pendingTime.map(_.toDuration),
-            //       timingWindows.get,
-            //       props.globalPreferences.get
-            //     )
-            //
+            val skyPlotTile =
+              ElevationPlotTile.elevationPlotTile(
+                props.vault.userId,
+                props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
+                props.observation.get.observingMode.map(_.siteFor),
+                targetCoords,
+                vizTimeView.get,
+                pendingTime.map(_.toDuration),
+                timingWindows.get,
+                props.globalPreferences.get
+              )
+
             val obsConf =
               ObsConfiguration(
                 basicConfiguration,
@@ -506,7 +498,7 @@ object ObsTabTiles:
               Tile(
                 ObsTabTilesIds.ConstraintsId.id,
                 (),
-                "Constraints",
+                "Constraints"
               )(
                 renderInTitle =>
                   ConstraintsPanel(
@@ -549,8 +541,8 @@ object ObsTabTiles:
               List(
                 notesTile.some,
                 // targetTile.some,
-                // if (!props.vault.isGuest) finderChartsTile.some else none,
-                // skyPlotTile.some,
+                if (!props.vault.isGuest) finderChartsTile.some else none,
+                skyPlotTile.some,
                 constraintsTile.some,
                 timingWindowsTile.some,
                 configurationTile.some,

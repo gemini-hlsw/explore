@@ -13,7 +13,6 @@ import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsAttachment
@@ -34,22 +33,30 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 
 import scala.collection.immutable.SortedSet
+import monocle.Focus
 
-case class FinderCharts(
+case class FinderChartsTileState(chartSelector: ChartSelector, selected: Option[ObsAtt.Id])
+
+object FinderChartsTileState:
+  val chartSelector = Focus[FinderChartsTileState](_.chartSelector)
+  val selected      = Focus[FinderChartsTileState](_.selected)
+
+case class FinderChartsBody(
   programId:        Program.Id,
   oid:              Observation.Id,
   authToken:        NonEmptyString,
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
-  selected:         View[Option[ObsAtt.Id]],
-  chartSelector:    View[ChartSelector],
   parallacticAngle: Option[Angle],
-  renderInTitle:    Tile.RenderInTitle,
-  readOnly:         Boolean
-) extends ReactFnProps(FinderCharts.component)
+  readOnly:         Boolean,
+  state:            View[FinderChartsTileState]
+) extends ReactFnProps(FinderChartsBody.component) {
+  val chartSelector = state.zoom(FinderChartsTileState.chartSelector)
+  val selected      = state.zoom(FinderChartsTileState.selected)
+}
 
-object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
-  private type Props = FinderCharts
+object FinderChartsBody extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
+  private type Props = FinderChartsBody
 
   private val component =
     ScalaFnComponent
@@ -138,19 +145,6 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
           ^.onClick ==> { e =>
             props.chartSelector.set(ChartSelector.Closed).when_(props.chartSelector.get.value)
           },
-          props.renderInTitle(
-            attachmentSelector(props.programId,
-                               props.obsAttachmentIds,
-                               props.obsAttachments,
-                               ctx,
-                               client,
-                               props.selected,
-                               action,
-                               added,
-                               props.chartSelector,
-                               props.readOnly
-            )
-          ),
           <.div(
             SolarProgress(ExploreStyles.FinderChartsLoadProgress)
               .unless(action.get === Action.None)
@@ -182,18 +176,19 @@ object FinderCharts extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
         )
       }
 
-case class FinderChartsSelector(
+case class FinderChartsTitle(
   programId:        Program.Id,
   authToken:        NonEmptyString,
   obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
   obsAttachments:   View[ObsAttachmentList],
-  selected:         View[Option[ObsAtt.Id]],
-  chartSelector:    View[ChartSelector],
   readOnly:         Boolean
-) extends ReactFnProps(FinderChartsSelector.component)
+)(val state: View[FinderChartsTileState])
+    extends ReactFnProps(FinderChartsTitle.component):
+  val chartSelector = state.zoom(FinderChartsTileState.chartSelector)
+  val selected      = state.zoom(FinderChartsTileState.selected)
 
-object FinderChartsSelector:
-  private type Props = FinderChartsSelector
+object FinderChartsTitle:
+  private type Props = FinderChartsTitle
 
   private val component =
     ScalaFnComponent
