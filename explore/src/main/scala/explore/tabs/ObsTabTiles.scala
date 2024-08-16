@@ -433,55 +433,55 @@ object ObsTabTiles:
                 pendingTime.map(_.toDuration)
               )
 
-            //   def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
-            //     TargetEditObsInfo.fromProgramSummaries(
-            //       targetId,
-            //       ObsIdSet.one(obsId).some,
-            //       props.programSummaries
-            //     )
-            //
-            //   def setCurrentTarget(
-            //     tid: Option[Target.Id],
-            //     via: SetRouteVia
-            //   ): Callback =
-            //     // Set the route base on the selected target
-            //     ctx.setPageVia(
-            //       AppTab.Observations,
-            //       props.programId,
-            //       Focused(ObsIdSet.one(props.obsId).some, tid),
-            //       via
-            //     )
-            //
-            //   def onCloneTarget(params: OnCloneParameters): Callback =
-            //     setCurrentTarget(params.idToAdd.some, SetRouteVia.HistoryReplace)
-            //
-            //   def onAsterismUpdate(params: OnAsterismUpdateParams): Callback =
-            //     val targetForPage: Option[Target.Id] =
-            //       if (params.areAddingTarget) params.targetId.some else none
-            //     setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
-            //
-            //   val targetTile: Tile =
-            //     AsterismEditorTile.asterismEditorTile(
-            //       props.vault.userId,
-            //       props.programId,
-            //       ObsIdSet.one(props.obsId),
-            //       props.obsAndTargets,
-            //       basicConfiguration,
-            //       vizTimeView,
-            //       obsConf,
-            //       props.focusedTarget,
-            //       setCurrentTarget,
-            //       onCloneTarget,
-            //       onAsterismUpdate,
-            //       getObsInfo(props.obsId),
-            //       props.searching,
-            //       "Targets",
-            //       props.globalPreferences,
-            //       props.isDisabled,
-            //       // Any target changes invalidate the sequence
-            //       sequenceChanged.set(Pot.pending)
-            //     )
-            //
+            def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
+              TargetEditObsInfo.fromProgramSummaries(
+                targetId,
+                ObsIdSet.one(obsId).some,
+                props.programSummaries
+              )
+
+            def setCurrentTarget(
+              tid: Option[Target.Id],
+              via: SetRouteVia
+            ): Callback =
+              // Set the route base on the selected target
+              ctx.setPageVia(
+                AppTab.Observations,
+                props.programId,
+                Focused(ObsIdSet.one(props.obsId).some, tid),
+                via
+              )
+
+            def onCloneTarget(params: OnCloneParameters): Callback =
+              setCurrentTarget(params.idToAdd.some, SetRouteVia.HistoryReplace)
+
+            def onAsterismUpdate(params: OnAsterismUpdateParams): Callback =
+              val targetForPage: Option[Target.Id] =
+                if (params.areAddingTarget) params.targetId.some else none
+              setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
+
+            val targetTile =
+              AsterismEditorTile.asterismEditorTile(
+                props.vault.userId,
+                props.programId,
+                ObsIdSet.one(props.obsId),
+                props.obsAndTargets,
+                basicConfiguration,
+                vizTimeView,
+                obsConf,
+                props.focusedTarget,
+                setCurrentTarget,
+                onCloneTarget,
+                onAsterismUpdate,
+                getObsInfo(props.obsId),
+                props.searching,
+                "Targets",
+                props.globalPreferences,
+                props.isDisabled,
+                // Any target changes invalidate the sequence
+                sequenceChanged.set(Pot.pending)
+              )
+
             val constraintsSelector: VdomNode =
               makeConstraintsSelector(
                 props.obsId,
@@ -540,7 +540,7 @@ object ObsTabTiles:
               props.layouts,
               List(
                 notesTile.some,
-                // targetTile.some,
+                targetTile.some,
                 if (!props.vault.isGuest) finderChartsTile.some else none,
                 skyPlotTile.some,
                 constraintsTile.some,
