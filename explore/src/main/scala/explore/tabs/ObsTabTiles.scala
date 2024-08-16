@@ -304,8 +304,8 @@ object ObsTabTiles:
             //           .runAsync
             //       )
             //
-            //   val asterismIds: View[AsterismIds] =
-            //     props.observation.model.zoom(Observation.scienceTargetIds)
+            val asterismIds: View[AsterismIds]          =
+              props.observation.model.zoom(Observation.scienceTargetIds)
             //
             //   val basicConfiguration: Option[BasicConfiguration] =
             //     props.observation.get.observingMode.map(_.toBasicConfiguration)
@@ -383,18 +383,18 @@ object ObsTabTiles:
                     .runAsync
 
             val notesTile = NotesTile.notesTile(props.obsId, notesView)
-            //
-            //   val sequenceTile =
-            //     SequenceEditorTile.sequenceTile(
-            //       props.programId,
-            //       props.obsId,
-            //       props.obsExecution,
-            //       asterismIds.get,
-            //       itc.toOption.flatten,
-            //       sequenceChanged
-            //     )
-            //
-            val itcTile   =
+
+            val sequenceTile =
+              SequenceEditorTile.sequenceTile(
+                props.programId,
+                props.obsId,
+                props.obsExecution,
+                asterismIds.get,
+                itc.toOption.flatten,
+                sequenceChanged
+              )
+
+            val itcTile =
               ItcTile.itcTile(
                 props.vault.userId,
                 props.obsId,
@@ -554,7 +554,7 @@ object ObsTabTiles:
                 // constraintsTile.some,
                 timingWindowsTile.some,
                 // configurationTile.some,
-                // sequenceTile.some,
+                sequenceTile.some,
                 itcTile.some
               ).flattenOption,
               GridLayoutSection.ObservationsLayout,

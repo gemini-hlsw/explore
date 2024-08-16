@@ -32,17 +32,24 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL.*
+import explore.model.Execution
+import explore.syntax.ui.*
+import lucuma.core.util.TimeSpan
 
-case class GeneratedSequenceViewer(
+import explore.components.HelpIcon
+import lucuma.ui.components.TimeSpanView
+import lucuma.refined.*
+
+case class GeneratedSequenceBody(
   programId:       Program.Id,
   obsId:           Observation.Id,
   targetIds:       List[Target.Id],
   snPerClass:      Map[ObserveClass, SignalToNoise],
   sequenceChanged: View[Pot[Unit]]
-) extends ReactFnProps(GeneratedSequenceViewer.component)
+) extends ReactFnProps(GeneratedSequenceBody.component)
 
-object GeneratedSequenceViewer:
-  private type Props = GeneratedSequenceViewer
+object GeneratedSequenceBody:
+  private type Props = GeneratedSequenceBody
 
   private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
 
@@ -118,3 +125,44 @@ object GeneratedSequenceViewer:
                 )
               )
           )
+
+case class GeneratedSequenceTitle(
+  obsExecution: Pot[Execution]
+  // programId:       Program.Id,
+  // obsId:           Observation.Id,
+  // targetIds:       List[Target.Id],
+  // snPerClass:      Map[ObserveClass, SignalToNoise],
+  // sequenceChanged: View[Pot[Unit]]
+) extends ReactFnProps(GeneratedSequenceTitle.component)
+
+object GeneratedSequenceTitle:
+  private type Props = GeneratedSequenceTitle
+
+  private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .render: props =>
+        props.obsExecution.orSpinner { execution =>
+          val programTimeCharge = execution.programTimeCharge.value
+
+          def timeDisplay(name: String, time: TimeSpan) =
+            <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
+
+          val executed = timeDisplay("Executed", programTimeCharge)
+
+          execution.programTimeEstimate
+            .map { plannedTime =>
+              val total   = programTimeCharge +| plannedTime
+              val pending = timeDisplay("Pending", plannedTime)
+              val planned = timeDisplay("Planned", total)
+              <.span(ExploreStyles.SequenceTileTitle)(
+                HelpIcon("target/main/sequence-times.md".refined),
+                planned,
+                executed,
+                pending
+              )
+            }
+            .getOrElse(executed)
+        }
