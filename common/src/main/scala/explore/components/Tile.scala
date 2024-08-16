@@ -37,6 +37,8 @@ case class Tile[A](
   val tileBody:      View[A] => VdomNode,
   val tileTitle:     (View[A], TileSizeState) => VdomNode = (_: View[A], _: TileSizeState) => EmptyVdom
 ) extends ReactFnProps(Tile.component) {
+  val fullSize: Boolean = !canMinimize && !canMaximize
+
   def showMaximize: Boolean =
     sizeState === TileSizeState.Minimized || (canMaximize && sizeState === TileSizeState.Minimized)
 
@@ -118,8 +120,8 @@ object Tile:
                 )
               ),
               <.div(ExploreStyles.TileControlButtons,
-                    minimizeButton.when(p.showMinimize),
-                    maximizeButton.when(p.showMaximize)
+                    minimizeButton.when(p.showMinimize && !p.fullSize),
+                    maximizeButton.when(p.showMaximize && !p.fullSize)
               )
             ),
             // Tile body

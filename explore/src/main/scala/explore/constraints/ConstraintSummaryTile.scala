@@ -9,7 +9,6 @@ import crystal.react.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConstraintGroup
@@ -35,17 +34,22 @@ import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 
 import scala.collection.immutable.SortedSet
+import explore.model.enums.TileSizeState
 
-case class ConstraintsSummaryTable(
+case class ConstraintsSummaryTileState(
+  table: Option[Table[ConstraintGroup, Nothing]] = None
+)
+
+case class ConstraintsSummaryTableBody(
   userId:         Option[User.Id],
   programId:      Program.Id,
   constraintList: ConstraintGroupList,
-  expandedIds:    View[SortedSet[ObsIdSet]],
-  renderInTitle:  Tile.RenderInTitle
-) extends ReactFnProps(ConstraintsSummaryTable.component)
+  expandedIds:    View[SortedSet[ObsIdSet]]
+)(val state: View[ConstraintsSummaryTileState])
+    extends ReactFnProps(ConstraintsSummaryTableBody.component)
 
-object ConstraintsSummaryTable:
-  private type Props = ConstraintsSummaryTable
+object ConstraintsSummaryTableBody:
+  private type Props = ConstraintsSummaryTableBody
 
   private val ColDef = ColumnDef[ConstraintGroup]
 
@@ -61,7 +65,7 @@ object ConstraintsSummaryTable:
   private val CountColumnId: ColumnId        = ColumnId("count")
   private val ObservationsColumnId: ColumnId = ColumnId("observations")
 
-  private val columnNames: Map[ColumnId, String] = Map(
+  val columnNames: Map[ColumnId, String] = Map(
     EditColumnId         -> " ",
     IQColumnId           -> "IQ",
     CCColumnId           -> "CC",
@@ -231,16 +235,11 @@ object ConstraintsSummaryTable:
           TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
       )
+      .useEffectOnMountBy((p, _, _, _, table) =>
+        p.state.set(ConstraintsSummaryTileState(table.some))
+      )
       .render { (props, _, _, _, table) =>
         <.div(
-          props.renderInTitle(
-            React.Fragment(
-              <.span, // Push column selector to right
-              <.span(ExploreStyles.TitleSelectColumns)(
-                ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
-              )
-            )
-          ),
           PrimeTable(
             table,
             striped = true,
@@ -255,3 +254,22 @@ object ConstraintsSummaryTable:
           )
         )
       }
+
+case class ConstraintsSummaryTableTitle(
+  state:    View[ConstraintsSummaryTileState],
+  tileSize: TileSizeState
+) extends ReactFnProps(ConstraintsSummaryTableTitle.component)
+
+object ConstraintsSummaryTableTitle:
+  private type Props = ConstraintsSummaryTableTitle
+
+  private val component =
+    ScalaFnComponent[Props]: props =>
+      React.Fragment(
+        <.span, // Push column selector to right
+        <.span(ExploreStyles.TitleSelectColumns)(
+          props.state.get.table.map(
+            ColumnSelector(_, ConstraintsSummaryTableBody.columnNames, ExploreStyles.SelectColumns)
+          )
+        )
+      )
