@@ -148,7 +148,6 @@ object ConstraintsTabContents extends TwoPanels:
                 (),
                 constraintsTitle,
                 backButton.some,
-                canMinimize = true
               )(_ =>
                 ConstraintsPanel(
                   idsToEdit,

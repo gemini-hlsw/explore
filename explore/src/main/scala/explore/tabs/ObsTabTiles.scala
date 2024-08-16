@@ -409,14 +409,6 @@ object ObsTabTiles:
             val constraints: View[ConstraintSet] =
               props.observation.model.zoom(Observation.constraints)
 
-            //   val constraintsSelector: VdomNode =
-            //     makeConstraintsSelector(
-            //       props.obsId,
-            //       props.observation.model.zoom(Observation.constraints),
-            //       props.allConstraintSets,
-            //       props.isDisabled
-            //     )
-            //
             val timingWindows: View[List[TimingWindow]] =
               TimingWindowsQueries.viewWithRemoteMod(
                 ObsIdSet.one(props.obsId),
@@ -498,25 +490,33 @@ object ObsTabTiles:
             //       sequenceChanged.set(Pot.pending)
             //     )
             //
-            //   // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
-            //   // so that the constraints selector dropdown always appears in front of any other tiles. If more
-            //   // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
-            //   // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-            //   val constraintsTile =
-            //     Tile(
-            //       ObsTabTilesIds.ConstraintsId.id,
-            //       "Constraints",
-            //       canMinimize = true,
-            //       control = _ => constraintsSelector.some
-            //     )(renderInTitle =>
-            //       <.div
-            //       ConstraintsPanel(
-            //         ObsIdSet.one(props.obsId),
-            //         props.observation.zoom(Observation.constraints),
-            //         props.isDisabled
-            //       )
-            //     )
-            //
+            val constraintsSelector: VdomNode =
+              makeConstraintsSelector(
+                props.obsId,
+                props.observation.model.zoom(Observation.constraints),
+                props.allConstraintSets,
+                props.isDisabled
+              )
+
+            // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
+            // so that the constraints selector dropdown always appears in front of any other tiles. If more
+            // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
+            // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
+            val constraintsTile =
+              Tile(
+                ObsTabTilesIds.ConstraintsId.id,
+                (),
+                "Constraints",
+              )(
+                renderInTitle =>
+                  ConstraintsPanel(
+                    ObsIdSet.one(props.obsId),
+                    props.observation.zoom(Observation.constraints),
+                    props.isDisabled
+                  ),
+                (_, _) => constraintsSelector
+              )
+
             val timingWindowsTile =
               TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled)
 
@@ -551,7 +551,7 @@ object ObsTabTiles:
                 // targetTile.some,
                 // if (!props.vault.isGuest) finderChartsTile.some else none,
                 // skyPlotTile.some,
-                // constraintsTile.some,
+                constraintsTile.some,
                 timingWindowsTile.some,
                 configurationTile.some,
                 sequenceTile.some,
