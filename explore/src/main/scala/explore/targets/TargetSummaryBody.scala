@@ -51,14 +51,14 @@ import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
 
+object DeletingTargets extends NewType[Boolean]
+type DeletingTargets = DeletingTargets.Type
+
 case class TargetSummaryTileState(
   filesToImport:   List[DOMFile],
   table:           ColumnSelectorState[TargetWithId, Nothing],
   deletingTargets: DeletingTargets
 )
-
-object DeletingTargets extends NewType[Boolean]
-type DeletingTargets = DeletingTargets.Type
 
 object TargetSummaryTileState:
   val filesToImport   = Focus[TargetSummaryTileState](_.filesToImport)

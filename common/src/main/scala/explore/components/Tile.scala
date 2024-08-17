@@ -17,12 +17,51 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.*
 import lucuma.react.primereact.Button
 import lucuma.ui.syntax.all.given
-import org.scalajs.dom
 
+/**
+ * In explore we have a concept of a Tile which is a draggable and resizable window that can contain
+ * any content. Tiles can be minimized, maximized and resized and dragged from the title Often we
+ * want to render content in the body and on the title of the tile, thus you can pass a tileBody and
+ * tileTitle function to the Tile constructor returning a VdomNode. The body and title may need to
+ * share some state of type A, you can pass an initial value and the body and title will get a
+ * View[A] to access the state and modify it.
+ *
+ * @param id
+ *   a unique identifier for the tile
+ * @param initialState
+ *   the initial state of the tile
+ * @param title
+ *   the title of the tile to be rendered in the title bar
+ * @param back
+ *   an optional back button to be rendered in the title bar
+ * @param canMinimize
+ *   whether the tile can be minimized
+ * @param canMaximize
+ *   whether the tile can be maximized
+ * @param hidden
+ *   whether the tile is hidden
+ * @param sizeState
+ *   the initial size state of the tile
+ * @param sizeStateCallback
+ *   a callback to be called when the size state changes
+ * @param controllerClass
+ *   a css class to be applied to the wrapping div when in a TileController
+ * @param bodyClass
+ *   a css class to be applied to the tile body
+ * @param tileClass
+ *   a css class to be applied to the tile
+ * @param tileTitleClass
+ *   a css class to be applied to the title
+ *
+ * @param tileBody
+ *   a function to render the body of the tile, it receives a View[A] to access the state
+ * @param tileTitle
+ *   a function to render the title of the tile, it receives a View[A] and the current size state
+ */
 case class Tile[A](
   id:                Tile.TileId,
-  initialState:      A,
   title:             String,
+  initialState:      A = (),
   back:              Option[VdomNode] = None,
   canMinimize:       Boolean = true,
   canMaximize:       Boolean = true,
@@ -37,12 +76,12 @@ case class Tile[A](
   val tileBody:      View[A] => VdomNode,
   val tileTitle:     (View[A], TileSizeState) => VdomNode = (_: View[A], _: TileSizeState) => EmptyVdom
 ) extends ReactFnProps(Tile.component) {
-  val fullSize: Boolean = !canMinimize && !canMaximize
+  protected val fullSize: Boolean = !canMinimize && !canMaximize
 
-  def showMaximize: Boolean =
+  protected def showMaximize: Boolean =
     sizeState === TileSizeState.Minimized || (canMaximize && sizeState === TileSizeState.Minimized)
 
-  def showMinimize: Boolean =
+  protected def showMinimize: Boolean =
     sizeState === TileSizeState.Maximized || (canMinimize && sizeState === TileSizeState.Maximized)
 
   def withState(
@@ -66,9 +105,7 @@ object Tile:
     ScalaFnComponent
       .withHooks[Props[A]]
       .useStateViewBy(_.initialState)
-      // infoRef - We use state instead of a regular Ref in order to force a rerender when it's set.
-      .useState(none[dom.html.Element])
-      .render: (p, sharedState, infoRef) =>
+      .render: (p, sharedState) =>
         val maximizeButton =
           Button(
             text = true,
@@ -89,11 +126,7 @@ object Tile:
               .when_(p.sizeState === TileSizeState.Maximized)
           )
 
-        def setInfoRef(node: dom.Node | Null): Unit =
-          infoRef
-            .modState(_.fold(Option(node.asInstanceOf[dom.html.Element]))(_.some))
-            .runNow()
-
+        // Tile wrapper
         if (!p.hidden) {
           <.div(
             ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass,
@@ -101,35 +134,32 @@ object Tile:
           )(
             // Tile title
             <.div(ExploreStyles.TileTitle)(
+              // Title and optional back button
               <.div(
                 ExploreStyles.TileTitleMenu |+| p.tileTitleClass,
                 p.back.map(b => <.div(ExploreStyles.TileButton, b)),
                 <.div(ExploreStyles.TileTitleText |+| ExploreStyles.TileDraggable, p.title)
               ),
+              // Title controls
               <.div(
+                ^.key := s"tileTitle-${p.id.value}",
                 ExploreStyles.TileTitleControlArea,
                 <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
                       p.tileTitle(sharedState, p.sizeState)
-                ),
-                <.div(^.key := s"tileTitle-${p.id.value}",
-                      ^.untypedRef(setInfoRef).when(infoRef.value.isEmpty)
-                )(
-                  ExploreStyles.TileTitleStrip,
-                  ExploreStyles.FixedSizeTileTitle.when(!p.canMinimize && !p.canMaximize)
                 )
               ),
+              // Size control buttons
               <.div(ExploreStyles.TileControlButtons,
-                    minimizeButton.when(p.showMinimize && !p.fullSize),
-                    maximizeButton.when(p.showMaximize && !p.fullSize)
-              )
+                    minimizeButton.when(p.showMinimize),
+                    maximizeButton.when(p.showMaximize)
+              ).unless(p.fullSize)
             ),
             // Tile body
-            infoRef.value
-              .map(node =>
-                <.div(ExploreStyles.TileBody |+| p.bodyClass, p.tileBody(sharedState))
-                  .when(p.sizeState =!= TileSizeState.Minimized)
-              )
-              .whenDefined
+            <.div(^.key := s"tileBody${p.id.value}",
+                  ExploreStyles.TileBody |+| p.bodyClass,
+                  p.tileBody(sharedState)
+            )
+              .unless(p.sizeState === TileSizeState.Minimized)
           )
         } else EmptyVdom
 

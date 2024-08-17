@@ -47,7 +47,6 @@ object ConfigurationTile:
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
-      (),
       "Configuration",
       bodyClass = ExploreStyles.ConfigurationTileBody
     )(_ =>

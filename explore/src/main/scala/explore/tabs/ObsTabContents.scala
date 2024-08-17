@@ -129,8 +129,8 @@ object ObsTabContents extends TwoPanels:
 
     val observationTable = Tile(
       "observations".refined,
-      ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
       "Observations Summary",
+      ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
       backButton.some
     )(
       ObsSummaryTable(

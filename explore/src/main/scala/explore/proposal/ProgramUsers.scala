@@ -66,8 +66,8 @@ object ProgramUsers:
   )(using AppContext[IO], Logger[IO]) =
     Tile(
       ProposalTabTileIds.UsersId.id,
-      ProgramUsersState(CreateInviteProcess.Idle),
-      "Investigators"
+      "Investigators",
+      ProgramUsersState(CreateInviteProcess.Idle)
     )(ProgramUsers(pid, readOnly, users, invitations, _), (s, _) => inviteControl(readOnly, ref, s))
 
   private type Props = ProgramUsers

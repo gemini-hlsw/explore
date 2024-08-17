@@ -34,9 +34,8 @@ object NotesTile:
   def notesTile(obsId: Observation.Id, notes: View[Option[NonEmptyString]]) =
     Tile(
       ObsTabTilesIds.NotesId.id,
-      NotesTileState(notes.get.foldMap(_.value), Editing.NotEditing),
       s"Note for Observer",
-      canMinimize = true,
+      NotesTileState(notes.get.foldMap(_.value), Editing.NotEditing),
       bodyClass = ExploreStyles.NotesTile
     )(NotesTileBody(obsId, notes, _), NotesTileTitle(obsId, notes, _, _))
 
@@ -74,7 +73,7 @@ object NotesTileBody:
 
       props.notes.get
         .map(_.value)
-        .map { noteMd =>
+        .map(noteMd =>
           <.div(
             ExploreStyles.ObserverNotes,
             themeAttr := "dark",
@@ -87,7 +86,7 @@ object NotesTileBody:
                 rehypePlugins = List(RehypePlugin.RehypeExternalLinks, RehypePlugin.RehypeKatex)
               )
           )
-        }
+        )
         .getOrElse(
           <.div(ExploreStyles.NoNotes,
                 if (editing.get.value) editor else <.div("No notes available")

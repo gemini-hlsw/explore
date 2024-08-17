@@ -92,7 +92,7 @@ object ProposalEditor:
     val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
     val detailsTile =
-      Tile(ProposalTabTileIds.DetailsId.id, (), "Details")(
+      Tile(ProposalTabTileIds.DetailsId.id, "Details")(
         _ =>
           ProposalDetailsBody(props.proposal,
                               aligner,
@@ -113,9 +113,7 @@ object ProposalEditor:
 
     val abstractTile =
       Tile(ProposalTabTileIds.AbstractId.id,
-           (),
            "Abstract",
-           canMinimize = true,
            bodyClass = ExploreStyles.ProposalAbstract
       )(_ =>
         FormInputTextAreaView(
@@ -125,7 +123,7 @@ object ProposalEditor:
       )
 
     val attachmentsTile =
-      Tile(ProposalTabTileIds.AttachmentsId.id, (), "Attachments", canMinimize = true)(_ =>
+      Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments")(_ =>
         props.authToken.map(token =>
           ProposalAttachmentsTable(props.programId, token, props.attachments, props.readonly)
         )

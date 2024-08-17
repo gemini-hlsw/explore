@@ -114,8 +114,8 @@ object ConstraintsTabContents extends TwoPanels:
             .fold[VdomNode] {
               Tile(
                 "constraints".refined,
-                ColumnSelectorState[ConstraintGroup, Nothing](),
                 "Constraints Summary",
+                ColumnSelectorState[ConstraintGroup, Nothing](),
                 backButton.some,
                 canMinimize = false,
                 canMaximize = false
@@ -146,7 +146,6 @@ object ConstraintsTabContents extends TwoPanels:
 
               val constraintsTile = Tile(
                 ObsTabTilesIds.ConstraintsId.id,
-                (),
                 constraintsTitle,
                 backButton.some
               )(_ =>

@@ -43,10 +43,8 @@ object SiderealTargetEditorTile:
   ) =
     Tile(
       ObsTabTilesIds.TargetId.id,
-      (),
       title,
       back = backButton,
-      canMinimize = true,
       bodyClass = ExploreStyles.TargetTileBody
     ) { _ =>
       <.div(

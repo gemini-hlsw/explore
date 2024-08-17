@@ -54,10 +54,8 @@ object OverviewTabContents {
 
         val warningsAndErrorsTile = Tile(
           ObsTabTilesIds.WarningsAndErrorsId.id,
-          ObservationValidationsTableTileState(_ => Callback.empty),
           "Warnings And Errors",
-          none,
-          canMinimize = true
+          ObservationValidationsTableTileState(_ => Callback.empty)
         )(ObservationValidationsTableBody(props.programId, props.observations, _),
           ObservationValidationsTableTitle.apply
         )
@@ -66,10 +64,8 @@ object OverviewTabContents {
           .map(vault =>
             Tile(
               ObsTabTilesIds.ObsAttachmentsId.id,
-              ObsAttachmentsTableTileState(),
               "Observation Attachments",
-              none,
-              canMinimize = true
+              ObsAttachmentsTableTileState()
             )(
               ObsAttachmentsTableBody(props.programId,
                                       vault.token,

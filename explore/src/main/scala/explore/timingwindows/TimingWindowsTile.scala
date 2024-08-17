@@ -74,7 +74,7 @@ object TimingWindowsTile:
     val base  = "Scheduling Windows"
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
-    Tile(ObsTabTilesIds.TimingWindowsId.id, TimingWindowsTileState(), title)(
+    Tile(ObsTabTilesIds.TimingWindowsId.id, title, TimingWindowsTileState())(
       TimingWindowsBody(timingWindows, readOnly, _),
       TimingWindowsTitle(timingWindows, readOnly, _, _)
     )

@@ -36,8 +36,8 @@ object FinderChartsTile:
   ) =
     Tile(
       ObsTabTilesIds.FinderChartsId.id,
-      FinderChartsTileState(ChartSelector.Closed, None),
       s"Finder Charts",
+      FinderChartsTileState(ChartSelector.Closed, None),
       bodyClass = ExploreStyles.FinderChartsTile
     )(
       s =>

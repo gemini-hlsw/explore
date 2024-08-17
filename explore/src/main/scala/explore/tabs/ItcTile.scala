@@ -34,8 +34,8 @@ object ItcTile:
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
-      ItcPanelTileState(),
-      s"ITC"
+      s"ITC",
+      ItcPanelTileState()
     )(
       s =>
         uid.map(

@@ -25,7 +25,6 @@ object SequenceEditorTile:
   ) =
     Tile(
       ObsTabTilesIds.SequenceId.id,
-      (),
       s"Sequence"
     )(
       _ =>

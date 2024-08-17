@@ -139,8 +139,8 @@ object TargetTabContents extends TwoPanels:
      */
     val renderSummary: Tile[TargetSummaryTileState] = Tile(
       ObsTabTilesIds.TargetSummaryId.id,
-      TargetSummaryTileState(Nil, ColumnSelectorState(), DeletingTargets(false)),
       "Target Summary",
+      TargetSummaryTileState(Nil, ColumnSelectorState(), DeletingTargets(false)),
       backButton.some
     )(
       TargetSummaryBody(
@@ -413,14 +413,14 @@ object TargetTabContents extends TwoPanels:
 
     // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
     val dummyTargetTile: Tile[Unit]    =
-      Tile(ObsTabTilesIds.TargetId.id, (), "", hidden = true)(_ => EmptyVdom)
+      Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
     val dummyElevationTile: Tile[Unit] =
-      Tile(ObsTabTilesIds.PlotId.id, (), "", hidden = true)(_ => EmptyVdom)
+      Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
 
     val renderNonSiderealTargetEditor: List[Tile[?]] =
       List(
         renderSummary,
-        Tile("nonSiderealTarget".refined, (), "Non-sidereal target")(_ =>
+        Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
           <.div("Editing of Non-Sidereal targets not supported")
         ),
         dummyElevationTile

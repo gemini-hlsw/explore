@@ -68,7 +68,6 @@ object ObsGroupTiles:
 
           val editTile = Tile(
             GroupEditIds.GroupEditId.id,
-            (),
             s"${if group.get.isAnd then "AND" else "OR"} Group",
             props.backButton.some,
             tileTitleClass = ExploreStyles.GroupEditTitle
@@ -87,9 +86,7 @@ object ObsGroupTiles:
 
           val notesTile = Tile(
             GroupEditIds.GroupNotesId.id,
-            (),
-            s"Note for Observer",
-            canMinimize = true
+            s"Note for Observer"
           )(_ =>
             <.div(
               ExploreStyles.NotesTile,

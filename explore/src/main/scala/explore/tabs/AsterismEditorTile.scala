@@ -66,10 +66,9 @@ object AsterismEditorTile:
 
     Tile(
       ObsTabTilesIds.TargetId.id,
-      AsterismTileState(),
       title,
+      AsterismTileState(),
       back = backButton,
-      canMinimize = true,
       bodyClass = ExploreStyles.TargetTileBody,
       controllerClass = ExploreStyles.TargetTileController
     )(

@@ -495,7 +495,6 @@ object ObsTabTiles:
             val constraintsTile =
               Tile(
                 ObsTabTilesIds.ConstraintsId.id,
-                (),
                 "Constraints"
               )(
                 renderInTitle =>
