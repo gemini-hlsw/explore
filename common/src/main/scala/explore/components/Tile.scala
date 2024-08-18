@@ -130,10 +130,11 @@ object Tile:
         if (!p.hidden) {
           <.div(
             ExploreStyles.Tile |+| ExploreStyles.FadeIn |+| p.tileClass,
-            ^.key := p.id.value
+            ^.key := "tile-${p.id.value}"
           )(
             // Tile title
             <.div(ExploreStyles.TileTitle)(
+              ^.key := s"tileTitle-${p.id.value}",
               // Title and optional back button
               <.div(
                 ExploreStyles.TileTitleMenu |+| p.tileTitleClass,
@@ -142,7 +143,6 @@ object Tile:
               ),
               // Title controls
               <.div(
-                ^.key := s"tileTitle-${p.id.value}",
                 ExploreStyles.TileTitleControlArea,
                 <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
                       p.tileTitle(sharedState, p.sizeState)
@@ -155,7 +155,7 @@ object Tile:
               ).unless(p.fullSize)
             ),
             // Tile body
-            <.div(^.key := s"tileBody${p.id.value}",
+            <.div(^.key := s"tileBody-${p.id.value}",
                   ExploreStyles.TileBody |+| p.bodyClass,
                   p.tileBody(sharedState)
             )
