@@ -6,6 +6,7 @@ package explore.tabs
 import crystal.Pot
 import crystal.react.View
 import explore.components.Tile
+import explore.components.ui.ExploreStyles
 import explore.itc.ItcPanelBody
 import explore.itc.ItcPanelTileState
 import explore.itc.ItcPanelTitle
@@ -35,7 +36,8 @@ object ItcTile:
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
-      ItcPanelTileState()
+      ItcPanelTileState(),
+      bodyClass = ExploreStyles.ItcTileBody
     )(
       s =>
         uid.map(
