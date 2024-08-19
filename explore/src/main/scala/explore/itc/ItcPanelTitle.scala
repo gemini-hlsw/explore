@@ -24,11 +24,13 @@ import lucuma.ui.syntax.pot.*
 import lucuma.ui.utils.*
 
 case class ItcPanelTitle(
-  selectedTarget:  View[Option[ItcTarget]],
   itcPanelProps:   ItcProps,
   itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
-  itcLoading:      LoadingState
-) extends ReactFnProps(ItcPanelTitle.component)
+  itcLoading:      LoadingState,
+  tileState:       View[ItcPanelTileState]
+) extends ReactFnProps(ItcPanelTitle.component) {
+  val selectedTarget = tileState.zoom(ItcPanelTileState.value.asLens)
+}
 
 object ItcPanelTitle:
   private type Props = ItcPanelTitle
@@ -47,8 +49,8 @@ object ItcPanelTitle:
           .filterNot(_ => props.itcLoading.value)
           .flatMap(t => props.itcChartResults.getOrElse(t, pendingChart))
 
-      val selectedTarget = props.selectedTarget.get
-      val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.isDefined
+      val selectedTarget = props.selectedTarget
+      val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.get.isDefined
 
       val itcTargets          = props.itcPanelProps.itcTargets.foldMap(_.toList)
       val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)

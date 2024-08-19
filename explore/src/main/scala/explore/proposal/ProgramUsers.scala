@@ -8,21 +8,18 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
-import crystal.react.hooks.*
 import explore.Icons
 import explore.components.Tile
-import explore.components.Tile.RenderInTitle
-import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.CoIInvitation
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalTabTileIds
-import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.InvitationStatus
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
@@ -36,71 +33,56 @@ enum CreateInviteProcess(private val tag: String) derives Enumerated:
   case Error   extends CreateInviteProcess("error")
   case Done    extends CreateInviteProcess("done")
 
+object ProgramUsersState extends NewType[CreateInviteProcess]
+type ProgramUsersState = ProgramUsersState.Type
+
 case class ProgramUsers(
   pid:         Program.Id,
+  readOnly:    Boolean,
   users:       View[List[ProgramUserWithRole]],
   invitations: View[List[CoIInvitation]],
-  readOnly:    Boolean,
-  inTitle:     RenderInTitle,
-  ref:         OverlayPanelRef
+  state:       View[ProgramUsersState]
 ) extends ReactFnProps(ProgramUsers.component)
 
 object ProgramUsers:
 
-  def inviteControl(
-    createInvite: View[CreateInviteProcess],
-    readOnly:     Boolean,
-    ref:          OverlayPanelRef
-  ) =
+  def inviteControl(readOnly: Boolean, ref: OverlayPanelRef, state: View[ProgramUsersState]) =
     Button(
       severity = Button.Severity.Secondary,
       size = Button.Size.Small,
       disabled = readOnly,
-      loading = createInvite.get == CreateInviteProcess.Running,
+      loading = state.get.value == CreateInviteProcess.Running,
       icon = Icons.UserPlus,
       tooltip = "Create CoI invitation",
       onClickE = ref.toggle
     ).tiny.compact
 
   def programUsersTile(
-    pid:          Program.Id,
-    users:        View[List[ProgramUserWithRole]],
-    invitations:  View[List[CoIInvitation]],
-    createInvite: View[CreateInviteProcess],
-    readOnly:     Boolean,
-    ref:          OverlayPanelRef
-  )(using AppContext[IO], Logger[IO]) = {
-
-    val control =
-      <.div(
-        ExploreStyles.JustifiedEndTileControl,
-        InviteUserPopup(pid, invitations, ref),
-        inviteControl(createInvite, readOnly, ref)
-      )
-
+    pid:         Program.Id,
+    readOnly:    Boolean,
+    users:       View[List[ProgramUserWithRole]],
+    invitations: View[List[CoIInvitation]],
+    ref:         OverlayPanelRef
+  )(using AppContext[IO], Logger[IO]) =
     Tile(
       ProposalTabTileIds.UsersId.id,
       "Investigators",
-      canMinimize = true,
-      control = s => control.some.filter(_ => s === TileSizeState.Minimized)
-    )(r => ProgramUsers(pid, users, invitations, readOnly, r, ref))
-  }
+      ProgramUsersState(CreateInviteProcess.Idle)
+    )(ProgramUsers(pid, readOnly, users, invitations, _), (s, _) => inviteControl(readOnly, ref, s))
 
   private type Props = ProgramUsers
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useStateView(CreateInviteProcess.Idle)
-      .render: (props, create) =>
-        <.div(
-          InviteUserPopup(props.pid, props.invitations, props.ref),
-          props.inTitle(inviteControl(create, props.readOnly, props.ref)),
-          ProgramUsersTable(props.pid, props.users, props.readOnly),
-          React
-            .Fragment(
-              "Pending invitations",
-              ProgramUserInvitations(props.invitations, props.readOnly)
-            )
-            .when(props.invitations.when(_.filter(_.status === InvitationStatus.Pending).nonEmpty))
-        )
+    ScalaFnComponent[Props]: props =>
+      <.div(
+        ProgramUsersTable(props.pid, props.users, props.readOnly),
+        React
+          .Fragment(
+            "Pending invitations",
+            ProgramUserInvitations(props.invitations, props.readOnly)
+          )
+          .when(
+            props.invitations
+              .when(_.filter(_.status === InvitationStatus.Pending).nonEmpty)
+          )
+      )

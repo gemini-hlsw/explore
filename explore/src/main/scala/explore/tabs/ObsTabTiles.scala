@@ -20,7 +20,6 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
-import explore.findercharts.ChartSelector
 import explore.itc.ItcProps
 import explore.model.*
 import explore.model.AppContext
@@ -44,7 +43,7 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
-import explore.timingwindows.TimingWindowsPanel
+import explore.timingwindows.TimingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -55,7 +54,6 @@ import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -263,20 +261,11 @@ object ObsTabTiles:
             .whenA(itcProps.isExecutable)
             .runAsyncAndForget
       }
-      // ITC selected target. Here to be shared by the ITC tile body and title
-      .useStateView(none[ItcTarget])
-      // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((_, _, _, _, _, _, _, itcProps, _, _, _) => itcProps.value):
-        (_, _, _, _, _, _, _, _, _, _, selectedTarget) =>
-          itcProps => selectedTarget.set(itcProps.defaultSelectedTarget)
-      // selected attachment
-      .useStateView(none[ObsAtt.Id])
       // Signal that the sequence has changed
       .useStateView(().ready)
-      .useStateView(ChartSelector.Closed)
-      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
-      ): (_, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       .render:
         (
@@ -290,10 +279,7 @@ object ObsTabTiles:
           itcProps,
           itcChartResults,
           itcLoading,
-          selectedItcTarget,
-          selectedAttachment,
           sequenceChanged,
-          chartSelector,
           vizTimeOrNowPot
         ) =>
           import ctx.given
@@ -375,9 +361,7 @@ object ObsTabTiles:
                 attachmentsView,
                 props.vault.map(_.token),
                 props.obsAttachments,
-                selectedAttachment,
                 pa,
-                chartSelector,
                 props.isDisabled
               )
 
@@ -401,11 +385,10 @@ object ObsTabTiles:
                 sequenceChanged
               )
 
-            val itcTile: Tile =
+            val itcTile =
               ItcTile.itcTile(
                 props.vault.userId,
                 props.obsId,
-                selectedItcTarget,
                 props.allTargets,
                 itcProps.value,
                 itcChartResults.value,
@@ -416,21 +399,13 @@ object ObsTabTiles:
             val constraints: View[ConstraintSet] =
               props.observation.model.zoom(Observation.constraints)
 
-            val constraintsSelector: VdomNode =
-              makeConstraintsSelector(
-                props.obsId,
-                props.observation.model.zoom(Observation.constraints),
-                props.allConstraintSets,
-                props.isDisabled
-              )
-
             val timingWindows: View[List[TimingWindow]] =
               TimingWindowsQueries.viewWithRemoteMod(
                 ObsIdSet.one(props.obsId),
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
               )
 
-            val skyPlotTile: Tile =
+            val skyPlotTile =
               ElevationPlotTile.elevationPlotTile(
                 props.vault.userId,
                 props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
@@ -483,7 +458,7 @@ object ObsTabTiles:
                 if (params.areAddingTarget) params.targetId.some else none
               setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
 
-            val targetTile: Tile =
+            val targetTile =
               AsterismEditorTile.asterismEditorTile(
                 props.vault.userId,
                 props.programId,
@@ -505,6 +480,14 @@ object ObsTabTiles:
                 sequenceChanged.set(Pot.pending)
               )
 
+            val constraintsSelector: VdomNode =
+              makeConstraintsSelector(
+                props.obsId,
+                props.observation.model.zoom(Observation.constraints),
+                props.allConstraintSets,
+                props.isDisabled
+              )
+
             // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
             // so that the constraints selector dropdown always appears in front of any other tiles. If more
             // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
@@ -512,20 +495,19 @@ object ObsTabTiles:
             val constraintsTile =
               Tile(
                 ObsTabTilesIds.ConstraintsId.id,
-                "Constraints",
-                canMinimize = true,
-                control = _ => constraintsSelector.some
-              )(renderInTitle =>
-                <.div
-                ConstraintsPanel(
-                  ObsIdSet.one(props.obsId),
-                  props.observation.zoom(Observation.constraints),
-                  props.isDisabled
-                )
+                "Constraints"
+              )(
+                renderInTitle =>
+                  ConstraintsPanel(
+                    ObsIdSet.one(props.obsId),
+                    props.observation.zoom(Observation.constraints),
+                    props.isDisabled
+                  ),
+                (_, _) => constraintsSelector
               )
 
             val timingWindowsTile =
-              TimingWindowsPanel.timingWindowsPanel(timingWindows, props.isDisabled)
+              TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled)
 
             val configurationTile =
               ConfigurationTile.configurationTile(

@@ -4,14 +4,15 @@
 package explore.validations
 
 import cats.syntax.all.*
+import crystal.react.View
 import explore.Icons
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.ScalaFnComponent
@@ -20,6 +21,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.Program
+import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.primereact.tooltip.*
@@ -33,16 +35,19 @@ import lucuma.ui.table.*
 
 import scala.scalajs.js
 
-case class ObservationValidationsTable(
-  programId:     Program.Id,
-  observations:  ObservationList,
-  renderInTitle: Tile.RenderInTitle
-) extends ReactFnProps(ObservationValidationsTable.component)
+object ObservationValidationsTableTileState extends NewType[Boolean => Callback]
+type ObservationValidationsTableTileState = ObservationValidationsTableTileState.Type
 
-object ObservationValidationsTable {
+case class ObservationValidationsTableBody(
+  programId:    Program.Id,
+  observations: ObservationList,
+  tileState:    View[ObservationValidationsTableTileState]
+) extends ReactFnProps(ObservationValidationsTableBody.component)
+
+object ObservationValidationsTableBody {
   import ValidationsTableRow.*
 
-  private type Props = ObservationValidationsTable
+  private type Props = ObservationValidationsTableBody
 
   private val ColDef = ColumnDef[Expandable[ValidationsTableRow]]
 
@@ -152,35 +157,20 @@ object ObservationValidationsTable {
         getRowId = (row, _, _) => RowId(row.value.rowId)
       )
     )
+    .useEffectOnMountBy((p, _, _, _, table) =>
+      val cb = (a: Boolean) => table.toggleAllRowsExpanded(a)
+      p.tileState.set(ObservationValidationsTableTileState(cb))
+    )
     .useResizeDetector()
     .render((props, _, rows, _, table, resizer) =>
-      React.Fragment(
-        props.renderInTitle(
-          <.div(
-            ExploreStyles.TableSelectionToolbar,
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.SquarePlus,
-              tooltip = "Expand All",
-              onClick = table.toggleAllRowsExpanded(true)
-            ).compact,
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.SquareMinus,
-              tooltip = "Collapse All",
-              onClick = table.toggleAllRowsExpanded(false)
-            ).compact
-          )
-        ),
-        PrimeAutoHeightVirtualizedTable(
-          table,
-          _ => 32.toPx,
-          striped = true,
-          compact = Compact.Very,
-          containerRef = resizer.ref,
-          hoverableRows = rows.nonEmpty,
-          emptyMessage = <.div("There are no Observation Errors.")
-        )
+      PrimeAutoHeightVirtualizedTable(
+        table,
+        _ => 32.toPx,
+        striped = true,
+        compact = Compact.Very,
+        containerRef = resizer.ref,
+        hoverableRows = rows.nonEmpty,
+        emptyMessage = <.div("There are no Observation Errors.")
       )
     )
 
@@ -245,3 +235,31 @@ object ObservationValidationsTable {
       )
   }
 }
+
+case class ObservationValidationsTableTitle(
+  tileState: View[ObservationValidationsTableTileState],
+  tileSize:  TileSizeState
+) extends ReactFnProps(ObservationValidationsTableTitle.component)
+
+object ObservationValidationsTableTitle:
+  private type Props = ObservationValidationsTableTitle
+
+  private val component = ScalaFnComponent[Props]: p =>
+    if (p.tileSize === TileSizeState.Minimized)
+      EmptyVdom
+    else
+      <.div(
+        ExploreStyles.TableSelectionToolbar,
+        Button(
+          size = Button.Size.Small,
+          icon = Icons.SquarePlus,
+          tooltip = "Expand All",
+          onClick = p.tileState.get.value(true)
+        ).compact,
+        Button(
+          size = Button.Size.Small,
+          icon = Icons.SquareMinus,
+          tooltip = "Collapse All",
+          onClick = p.tileState.get.value(false)
+        ).compact
+      )

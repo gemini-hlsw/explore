@@ -125,8 +125,8 @@ object Routing:
     withProgramSummaries(model)(programSummaries =>
       val routingInfo = RoutingInfo.from(page)
       SchedulingTabContents(
-        model.zoom(RootModel.userId).get,
         routingInfo.programId,
+        model.zoom(RootModel.userId).get,
         programSummaries,
         userPreferences(model),
         routingInfo.focused.obsSet,

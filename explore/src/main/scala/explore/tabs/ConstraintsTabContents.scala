@@ -11,11 +11,13 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.common.TimingWindowsQueries
+import explore.components.ColumnSelectorInTitle
+import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsSummaryTable
+import explore.constraints.ConstraintsSummaryTableBody
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
@@ -30,7 +32,7 @@ import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.timingwindows.TimingWindowsPanel
+import explore.timingwindows.TimingWindowsTile
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -113,15 +115,19 @@ object ConstraintsTabContents extends TwoPanels:
               Tile(
                 "constraints".refined,
                 "Constraints Summary",
-                backButton.some
-              )(renderInTitle =>
-                ConstraintsSummaryTable(
+                ColumnSelectorState[ConstraintGroup, Nothing](),
+                backButton.some,
+                canMinimize = false,
+                canMaximize = false
+              )(
+                ConstraintsSummaryTableBody(
                   props.userId,
                   props.programId,
                   props.programSummaries.get.constraintGroups,
                   props.expandedIds,
-                  renderInTitle
-                )
+                  _
+                ),
+                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames, s)
               )
             } { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
@@ -141,9 +147,8 @@ object ConstraintsTabContents extends TwoPanels:
               val constraintsTile = Tile(
                 ObsTabTilesIds.ConstraintsId.id,
                 constraintsTitle,
-                backButton.some,
-                canMinimize = true
-              )(renderInTitle =>
+                backButton.some
+              )(_ =>
                 ConstraintsPanel(
                   idsToEdit,
                   constraintSet,
@@ -164,7 +169,7 @@ object ConstraintsTabContents extends TwoPanels:
                 )
 
               val timingWindowsTile =
-                TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
+                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly)
 
               TileController(
                 props.userId,

@@ -11,6 +11,8 @@ import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
 import explore.Icons
+import explore.components.ColumnSelectorInTitle
+import explore.components.ColumnSelectorState
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
@@ -43,6 +45,7 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
+import lucuma.react.table.Expandable
 import lucuma.refined.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
@@ -124,20 +127,22 @@ object ObsTabContents extends TwoPanels:
     val backButton: VdomNode =
       makeBackButton(props.programId, AppTab.Observations, selectedView, ctx)
 
-    def observationTable(): VdomNode = Tile(
+    val observationTable = Tile(
       "observations".refined,
       "Observations Summary",
+      ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
       backButton.some
-    )(renderInTitle =>
+    )(
       ObsSummaryTable(
         props.vault.userId,
         props.programId,
         props.observations,
         props.obsExecutions,
         props.targets.get,
-        renderInTitle
-      )
-    // TODO: elevation view
+        _
+      ),
+      (s, _) => ColumnSelectorInTitle(ObsSummaryTable.columnNames, s)
+      // TODO: elevation view
     )
 
     def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
@@ -184,7 +189,7 @@ object ObsTabContents extends TwoPanels:
       (props.focusedObs, props.focusedGroup) match {
         case (Some(obsId), _)   => obsTiles(obsId, resize)
         case (_, Some(groupId)) => groupTiles(groupId, resize)
-        case _                  => observationTable()
+        case _                  => observationTable
       }
 
     makeOneOrTwoPanels(

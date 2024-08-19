@@ -16,7 +16,6 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.GroupQueries
-import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.GroupTree
@@ -44,16 +43,15 @@ import monocle.Lens
 
 import scala.scalajs.js
 
-case class GroupEditTile(
+case class GroupEditBody(
   group:             UndoSetter[GroupTree.Group],
   elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  readonly:          Boolean,
-  renderInTitle:     Tile.RenderInTitle
-) extends ReactFnProps(GroupEditTile.component)
+  readonly:          Boolean
+) extends ReactFnProps(GroupEditBody.component)
 
-object GroupEditTile:
-  private type Props = GroupEditTile
+object GroupEditBody:
+  private type Props = GroupEditBody
 
   private enum GroupEditType(val tag: String) derives Enumerated, Eq:
     case And extends GroupEditType("And")
@@ -233,12 +231,20 @@ object GroupEditTile:
         else <.div(ExploreStyles.GroupForm)(nameForm, minRequiredForm, plannedTime)
 
       React.Fragment(
-        props.renderInTitle(makeTitle(group, props.timeEstimateRange, props.elementsLength)),
         <.div(ExploreStyles.GroupEditTile)(
           selectGroupForm,
           groupTypeSpecificForms
         )
       )
+
+case class GroupEditTitle(
+  group:             UndoSetter[GroupTree.Group],
+  elementsLength:    Int,
+  timeEstimateRange: Pot[Option[ProgramTimeRange]]
+) extends ReactFnProps(GroupEditTitle.component)
+
+object GroupEditTitle:
+  private type Props = GroupEditTitle
 
   private def makeTitle(
     group:             GroupTree.Group,
@@ -257,3 +263,9 @@ object GroupEditTile:
       else s"Choose ${group.minimumRequired.getOrElse(1.refined[NonNegative])} of ${elementsLength}"
 
     <.span("(", andOrStr, timeStr, ")")
+
+  val component = ScalaFnComponent
+    .withHooks[Props]
+    .useContext(AppContext.ctx)
+    .render: (props, _) =>
+      makeTitle(props.group.get, props.timeEstimateRange, props.elementsLength)

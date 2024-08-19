@@ -24,7 +24,7 @@ import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
 
-object SiderealTargetEditorTile {
+object SiderealTargetEditorTile:
 
   def noObsSiderealTargetEditorTile(
     programId:         Program.Id,
@@ -45,9 +45,8 @@ object SiderealTargetEditorTile {
       ObsTabTilesIds.TargetId.id,
       title,
       back = backButton,
-      canMinimize = true,
       bodyClass = ExploreStyles.TargetTileBody
-    ) { (renderInTitle: Tile.RenderInTitle) =>
+    ) { _ =>
       <.div(
         ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
         <.div(
@@ -64,7 +63,6 @@ object SiderealTargetEditorTile {
               searching = searching,
               obsInfo = obsInfo,
               onClone = onClone,
-              renderInTitle = renderInTitle.some,
               fullScreen = fullScreen,
               globalPreferences = globalPreferences,
               readonly = readonly
@@ -73,4 +71,3 @@ object SiderealTargetEditorTile {
         )
       )
     }
-}

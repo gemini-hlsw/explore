@@ -6,7 +6,9 @@ package explore.tabs
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import explore.attachments.ObsAttachmentsTable
+import explore.attachments.ObsAttachmentsTableBody
+import explore.attachments.ObsAttachmentsTableTileState
+import explore.attachments.ObsAttachmentsTableTitle
 import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
@@ -18,7 +20,9 @@ import explore.model.ObservationList
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
-import explore.validations.ObservationValidationsTable
+import explore.validations.ObservationValidationsTableBody
+import explore.validations.ObservationValidationsTableTileState
+import explore.validations.ObservationValidationsTableTitle
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -51,28 +55,35 @@ object OverviewTabContents {
         val warningsAndErrorsTile = Tile(
           ObsTabTilesIds.WarningsAndErrorsId.id,
           "Warnings And Errors",
-          none,
-          canMinimize = true
-        )(renderInTitle =>
-          ObservationValidationsTable(props.programId, props.observations, renderInTitle)
+          ObservationValidationsTableTileState(_ => Callback.empty)
+        )(ObservationValidationsTableBody(props.programId, props.observations, _),
+          ObservationValidationsTableTitle.apply
         )
 
-        val obsAttachmentsTile = Tile(
-          ObsTabTilesIds.ObsAttachmentsId.id,
-          "Observation Attachments",
-          none,
-          canMinimize = true
-        )(renderInTitle =>
-          props.userVault.map(vault =>
-            ObsAttachmentsTable(props.programId,
-                                vault.token,
-                                props.obsAttachments,
-                                props.obsAttachmentAssignments,
-                                props.readonly,
-                                renderInTitle
+        val obsAttachmentsTile = props.userVault
+          .map(vault =>
+            Tile(
+              ObsTabTilesIds.ObsAttachmentsId.id,
+              "Observation Attachments",
+              ObsAttachmentsTableTileState()
+            )(
+              ObsAttachmentsTableBody(props.programId,
+                                      vault.token,
+                                      props.obsAttachmentAssignments,
+                                      props.obsAttachments,
+                                      props.readonly,
+                                      _
+              ),
+              (s, _) =>
+                ObsAttachmentsTableTitle(props.programId,
+                                         vault.token,
+                                         props.obsAttachments,
+                                         props.readonly,
+                                         s
+                )
             )
           )
-        )
+          .filterNot(_ => props.userVault.isGuest)
 
         <.div(
           TileController(
@@ -80,8 +91,9 @@ object OverviewTabContents {
             resize.width.getOrElse(1),
             defaultLayouts,
             props.layout,
-            List(warningsAndErrorsTile.some,
-                 if (!props.userVault.isGuest) obsAttachmentsTile.some else none
+            List(
+              warningsAndErrorsTile.some,
+              obsAttachmentsTile
             ).flattenOption,
             GridLayoutSection.OverviewLayout
           )

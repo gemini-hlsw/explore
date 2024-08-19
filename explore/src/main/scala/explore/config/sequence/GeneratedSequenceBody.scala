@@ -11,10 +11,13 @@ import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import explore.*
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Execution
 import explore.model.Observation
 import explore.model.reusability.given
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObserveClass
@@ -22,27 +25,30 @@ import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
+import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL.*
 
-case class GeneratedSequenceViewer(
+case class GeneratedSequenceBody(
   programId:       Program.Id,
   obsId:           Observation.Id,
   targetIds:       List[Target.Id],
   snPerClass:      Map[ObserveClass, SignalToNoise],
   sequenceChanged: View[Pot[Unit]]
-) extends ReactFnProps(GeneratedSequenceViewer.component)
+) extends ReactFnProps(GeneratedSequenceBody.component)
 
-object GeneratedSequenceViewer:
-  private type Props = GeneratedSequenceViewer
+object GeneratedSequenceBody:
+  private type Props = GeneratedSequenceBody
 
   private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
 
@@ -118,3 +124,37 @@ object GeneratedSequenceViewer:
                 )
               )
           )
+
+case class GeneratedSequenceTitle(
+  obsExecution: Pot[Execution]
+) extends ReactFnProps(GeneratedSequenceTitle.component)
+
+object GeneratedSequenceTitle:
+  private type Props = GeneratedSequenceTitle
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .render: props =>
+        props.obsExecution.orSpinner { execution =>
+          val programTimeCharge = execution.programTimeCharge.value
+
+          def timeDisplay(name: String, time: TimeSpan) =
+            <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
+
+          val executed = timeDisplay("Executed", programTimeCharge)
+
+          execution.programTimeEstimate
+            .map { plannedTime =>
+              val total   = programTimeCharge +| plannedTime
+              val pending = timeDisplay("Pending", plannedTime)
+              val planned = timeDisplay("Planned", total)
+              <.span(ExploreStyles.SequenceTileTitle)(
+                HelpIcon("target/main/sequence-times.md".refined),
+                planned,
+                executed,
+                pending
+              )
+            }
+            .getOrElse(executed)
+        }

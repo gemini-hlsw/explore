@@ -5,15 +5,14 @@ package explore.tabs
 
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.Tile
-import explore.components.Tile.RenderInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.ObsTabTilesIds
 import explore.model.Observation
+import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
@@ -27,90 +26,110 @@ import lucuma.react.primereact.Button
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-
-case class NotesTile(
-  obsId:         Observation.Id,
-  notes:         View[Option[NonEmptyString]],
-  renderInTitle: RenderInTitle
-) extends ReactFnProps(NotesTile.component)
+import monocle.Focus
+import monocle.Lens
 
 object NotesTile:
-  private type Props = NotesTile
-
-  val themeAttr = VdomAttr("data-theme")
-
-  type Editing = Editing.Type
-  object Editing extends NewType[Boolean]:
-    inline def NotEditing = Editing(false)
-    inline def InEdition  = Editing(true)
-    inline def flip(e: Editing) = Editing(!e.value)
 
   def notesTile(obsId: Observation.Id, notes: View[Option[NonEmptyString]]) =
     Tile(
       ObsTabTilesIds.NotesId.id,
       s"Note for Observer",
-      canMinimize = true,
+      NotesTileState(notes.get.foldMap(_.value), Editing.NotEditing),
       bodyClass = ExploreStyles.NotesTile
-    )(NotesTile(obsId, notes, _))
+    )(NotesTileBody(obsId, notes, _), NotesTileTitle(obsId, notes, _, _))
+
+case class NotesTileState(notes: String, editing: Editing)
+
+object NotesTileState:
+  val notes: Lens[NotesTileState, String]    = Focus[NotesTileState](_.notes)
+  val editing: Lens[NotesTileState, Editing] = Focus[NotesTileState](_.editing)
+
+case class NotesTileBody(
+  obsId: Observation.Id,
+  notes: View[Option[NonEmptyString]],
+  state: View[NotesTileState]
+) extends ReactFnProps(NotesTileBody.component)
+
+type Editing = Editing.Type
+object Editing extends NewType[Boolean]:
+  inline def NotEditing = Editing(false)
+  inline def InEdition  = Editing(true)
+  inline def flip(e: Editing) = Editing(!e.value)
+
+object NotesTileBody:
+  private type Props = NotesTileBody
+
+  val themeAttr = VdomAttr("data-theme")
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useState(Editing.NotEditing)
-      .useStateView("")
-      .useEffectWithDepsBy((p, _, _) => p.notes.get.map(_.value).orEmpty) {
-        (_, _, notesView) => r =>
-          notesView.set(r)
-      }
-      .render { (props, editing, notesView) =>
+    ScalaFnComponent[Props] { props =>
+      val notesView = props.state.zoom(NotesTileState.notes)
+      val editing   = props.state.zoom(NotesTileState.editing)
 
-        val editButton = Button("Edit",
-                                severity = Button.Severity.Success,
-                                disabled = editing.value.value,
-                                icon = Icons.Edit,
-                                onClick = editing.modState(Editing.flip)
-        ).tiny.compact
+      val editor = FormInputTextAreaView("notes".refined, notesView)(
+        ExploreStyles.NotesEditor
+      )
 
-        val save = editing.modState(Editing.flip) *>
-          props.notes.set(NonEmptyString.from(notesView.get).toOption)
-
-        val saveButton = Button(
-          "Save",
-          severity = Button.Severity.Success,
-          icon = Icons.CloudArrowUp,
-          onClick = save
-        ).tiny.compact
-
-        val editControls = <.div(ExploreStyles.NotesControls,
-                                 HelpIcon("observer-notes.md".refined),
-                                 if (editing.value.value) saveButton else editButton
-        )
-
-        val editor = FormInputTextAreaView("notes".refined, notesView)(
-          ExploreStyles.NotesEditor
-        )
-
-        props.notes.get
-          .map(_.value)
-          .map { noteMd =>
-            <.div(
-              props.renderInTitle(editControls),
-              ExploreStyles.ObserverNotes,
-              themeAttr := "dark",
-              if (editing.value.value) editor
-              else
-                ReactMarkdown(
-                  content = noteMd,
-                  clazz = ExploreStyles.HelpMarkdownBody,
-                  remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
-                  rehypePlugins = List(RehypePlugin.RehypeExternalLinks, RehypePlugin.RehypeKatex)
-                )
-            )
-          }
-          .getOrElse(
-            <.div(ExploreStyles.NoNotes,
-                  props.renderInTitle(editControls),
-                  if (editing.value.value) editor else <.div("No notes available")
-            )
+      props.notes.get
+        .map(_.value)
+        .map(noteMd =>
+          <.div(
+            ExploreStyles.ObserverNotes,
+            themeAttr := "dark",
+            if (editing.get.value) editor
+            else
+              ReactMarkdown(
+                content = noteMd,
+                clazz = ExploreStyles.HelpMarkdownBody,
+                remarkPlugins = List(RemarkPlugin.RemarkMath, RemarkPlugin.RemarkGFM),
+                rehypePlugins = List(RehypePlugin.RehypeExternalLinks, RehypePlugin.RehypeKatex)
+              )
           )
-      }
+        )
+        .getOrElse(
+          <.div(ExploreStyles.NoNotes,
+                if (editing.get.value) editor else <.div("No notes available")
+          )
+        )
+    }
+
+case class NotesTileTitle(
+  obsId:    Observation.Id,
+  notes:    View[Option[NonEmptyString]],
+  state:    View[NotesTileState],
+  tileSize: TileSizeState
+) extends ReactFnProps(NotesTileTitle.component)
+
+object NotesTileTitle:
+  private type Props = NotesTileTitle
+
+  private val component =
+    ScalaFnComponent[Props]: props =>
+      val editing = props.state.zoom(NotesTileState.editing)
+
+      val notesView = props.state.zoom(NotesTileState.notes)
+
+      val editButton = Button("Edit",
+                              severity = Button.Severity.Success,
+                              disabled = editing.get.value,
+                              icon = Icons.Edit,
+                              onClick = editing.mod(Editing.flip)
+      ).tiny.compact
+
+      val save = editing.mod(Editing.flip) *>
+        props.notes.set(NonEmptyString.from(notesView.get).toOption)
+
+      val saveButton = Button(
+        "Save",
+        severity = Button.Severity.Success,
+        icon = Icons.CloudArrowUp,
+        onClick = save
+      ).tiny.compact
+
+      if (props.tileSize === TileSizeState.Minimized) <.div(ExploreStyles.NotesControls)
+      else
+        <.div(ExploreStyles.NotesControls,
+              HelpIcon("observer-notes.md".refined),
+              if (editing.get.value) saveButton else editButton
+        )

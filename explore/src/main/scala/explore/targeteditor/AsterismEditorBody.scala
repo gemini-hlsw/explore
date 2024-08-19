@@ -3,11 +3,11 @@
 
 package explore.targeteditor
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.components.Tile
+import explore.components.ColumnSelectorInTitle
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
@@ -32,16 +32,35 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
+import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import monocle.Focus
 import monocle.Iso
-import queries.schemas.odb.ObsQueries
+import monocle.Lens
 
 import java.time.Instant
 
-case class AsterismEditor(
-  userId:            User.Id,
+case class AsterismTileState(
+  table:       ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta] =
+    ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta](),
+  obsEditInfo: Option[ObsIdSetEditInfo] = None
+) {
+  // the 'getOrElse doesn't matter. Controls will be readonly if all are executed
+  def unexecutedObs(obsIds: ObsIdSet): Option[ObsIdSet] =
+    obsEditInfo.map(_.unExecuted.getOrElse(obsIds))
+}
+
+object AsterismTileState:
+  val table
+    : Lens[AsterismTileState, ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta]] =
+    Focus[AsterismTileState](_.table)
+  val obsEditInfo: Lens[AsterismTileState, Option[ObsIdSetEditInfo]] =
+    Focus[AsterismTileState](_.obsEditInfo)
+
+case class AsterismEditorBody(
   programId:         Program.Id,
+  userId:            User.Id,
   obsIds:            ObsIdSet,
   obsAndTargets:     UndoSetter[ObservationsAndTargets],
   vizTime:           View[Option[Instant]],
@@ -52,30 +71,31 @@ case class AsterismEditor(
   onAsterismUpdate:  OnAsterismUpdateParams => Callback,
   obsInfo:           Target.Id => TargetEditObsInfo,
   searching:         View[Set[Target.Id]],
-  renderInTitle:     Tile.RenderInTitle,
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean,
-  sequenceChanged:   Callback
-) extends ReactFnProps(AsterismEditor.component):
+  sequenceChanged:   Callback,
+  tileState:         View[AsterismTileState]
+) extends ReactFnProps(AsterismEditorBody.component):
   val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
 object AreAdding extends NewType[Boolean]
 type AreAdding = AreAdding.Type
 
-object AsterismEditor extends AsterismModifier:
-  private type Props = AsterismEditor
+object AsterismEditorBody extends AsterismModifier:
+  private type Props = AsterismEditorBody
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStateView(AreAdding(false))
-      .useMemoBy((props, _, _) => (props.obsIds, props.obsAndTargets.get._1)) { (_, _, _) =>
+      .useMemoBy(props => (props.obsIds, props.obsAndTargets.get._1)) { _ =>
         ObsIdSetEditInfo.fromObservationList
       }
-      .useLayoutEffectWithDepsBy((props, _, _, obsEditInfo) =>
+      .useLayoutEffectWithDepsBy((_, obsEditInfo) => obsEditInfo) { (p, _) => obsEditInfo =>
+        p.tileState.zoom(AsterismTileState.obsEditInfo).set(obsEditInfo.value.some)
+      }
+      .useLayoutEffectWithDepsBy((props, obsEditInfo) =>
         (obsEditInfo.asterismIds, props.focusedTargetId)
-      ) { (props, _, _, _) => (asterismIds, focusedTargetId) =>
+      ) { (props, _) => (asterismIds, focusedTargetId) =>
         // If the selected targetId is None, or not in the asterism, select the first target (if any).
         // Need to replace history here.
         focusedTargetId.filter(asterismIds.contains_) match
@@ -84,15 +104,7 @@ object AsterismEditor extends AsterismModifier:
       }
       // full screen aladin
       .useStateView(AladinFullScreen.Normal)
-      .render { (props, ctx, adding, obsEditInfo, fullScreen) =>
-        import ctx.given
-        // Save the time here. this works for the obs and target tabs
-        // It's OK to set the viz time for executed observations, I think.
-        val vizTimeView = props.vizTime.withOnMod(t =>
-          ObsQueries
-            .updateVisualizationTime[IO](props.obsIds.toList, t)
-            .runAsync
-        )
+      .render { (props, obsEditInfo, fullScreen) =>
 
         val vizTime = props.vizTime.get
 
@@ -105,9 +117,6 @@ object AsterismEditor extends AsterismModifier:
               props.setTarget(newValue, SetRouteVia.HistoryPush) >> cb(oldValue, newValue)
           )
 
-        // the 'getOrElse doesn't matter. Controls will be readonly if all are executed
-        val unexecutedObs = obsEditInfo.unExecuted.getOrElse(props.obsIds)
-
         val editWarningMsg: Option[String] =
           if (obsEditInfo.allAreExecuted)
             if (obsEditInfo.editing.length > 1)
@@ -119,34 +128,23 @@ object AsterismEditor extends AsterismModifier:
 
         <.div(
           ExploreStyles.AladinFullScreen.when(fullScreen.get.value),
-          // only pass in the unexecuted observations. Will be readonly if there aren't any
-          props.renderInTitle(
-            targetSelectionPopup(
-              "Add",
-              props.programId,
-              unexecutedObs,
-              props.obsAndTargets,
-              adding,
-              props.onAsterismUpdate,
-              props.readonly || obsEditInfo.allAreExecuted,
-              ExploreStyles.AddTargetButton
-            )
-          ),
-          props.renderInTitle(ObsTimeEditor(vizTimeView)),
           editWarningMsg.map(msg => <.div(ExploreStyles.SharedEditWarning, msg)),
-          TargetTable(
-            props.userId.some,
-            props.programId,
-            unexecutedObs,
-            obsEditInfo.asterismIds,
-            props.obsAndTargets,
-            selectedTargetView,
-            props.onAsterismUpdate,
-            vizTime,
-            props.renderInTitle,
-            fullScreen.get,
-            props.readonly || obsEditInfo.allAreExecuted
-          ),
+          props.tileState.get
+            .unexecutedObs(props.obsIds)
+            .map(unexecutedObs =>
+              TargetTable(
+                props.userId.some,
+                props.programId,
+                unexecutedObs,
+                obsEditInfo.asterismIds,
+                props.obsAndTargets,
+                selectedTargetView,
+                props.onAsterismUpdate,
+                vizTime,
+                fullScreen.get,
+                props.readonly || obsEditInfo.allAreExecuted
+              )(props.tileState.zoom(AsterismTileState.table))
+            ),
           // it's possible for us to get here without an asterism but with a focused target id. This will get
           // corrected, but we need to not render the target editor before it is corrected.
           (Asterism.fromIdsAndTargets(obsEditInfo.asterismIds, props.allTargets.get),
@@ -186,3 +184,47 @@ object AsterismEditor extends AsterismModifier:
           }
         )
       }
+
+case class AsterismEditorTitle(
+  programId:        Program.Id,
+  obsIds:           ObsIdSet,
+  obsAndTargets:    UndoSetter[ObservationsAndTargets],
+  onAsterismUpdate: OnAsterismUpdateParams => Callback,
+  readonly:         Boolean,
+  vizTimeView:      View[Option[Instant]],
+  tileState:        View[AsterismTileState]
+) extends ReactFnProps(AsterismEditorTitle.component)
+
+object AsterismEditorTitle extends AsterismModifier:
+  private type Props = AsterismEditorTitle
+
+  private val component =
+    ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useStateView(AreAdding(false))
+      .render: (props, ctx, adding) =>
+        import ctx.given
+
+        React.Fragment(
+          // only pass in the unexecuted observations. Will be readonly if there aren't any
+          (props.tileState.get.obsEditInfo,
+           props.tileState.get
+             .unexecutedObs(props.obsIds)
+          ).mapN((obsEditInfo, unexecutedObs) =>
+            targetSelectionPopup(
+              "Add",
+              props.programId,
+              unexecutedObs,
+              props.obsAndTargets,
+              adding,
+              props.onAsterismUpdate,
+              props.readonly || obsEditInfo.allAreExecuted,
+              ExploreStyles.AddTargetButton
+            )
+          ),
+          ObsTimeEditor(props.vizTimeView),
+          ColumnSelectorInTitle(TargetTable.columnNames,
+                                props.tileState.zoom(AsterismTileState.table)
+          )
+        )

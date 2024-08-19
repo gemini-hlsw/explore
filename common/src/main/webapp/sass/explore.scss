@@ -606,12 +606,6 @@ thead tr th.sticky-header {
 
     flex-shrink: 1;
   }
-
-  .explore-tile-title-control-area {
-    flex: 1;
-    display: flex;
-    justify-items: center;
-  }
 }
 
 .explore-tile-title-menu {
@@ -646,16 +640,6 @@ thead tr th.sticky-header {
   flex-grow: 1;
   display: flex;
   justify-content: end;
-}
-
-.justified-center-tile-control {
-  flex-grow: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.explore-fixed-size-tile-title {
-  margin-right: 1em;
 }
 
 .p-button.p-button-text.explore-tile-state-button {

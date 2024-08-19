@@ -11,6 +11,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
+import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
@@ -28,9 +29,12 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.targets.DeletingTargets
 import explore.targets.ObservationPasteAction
 import explore.targets.TargetPasteAction
-import explore.targets.TargetSummaryTable
+import explore.targets.TargetSummaryBody
+import explore.targets.TargetSummaryTileState
+import explore.targets.TargetSummaryTitle
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -133,26 +137,35 @@ object TargetTabContents extends TwoPanels:
     /**
      * Render the summary table.
      */
-    val renderSummary: Tile =
-      Tile(
-        ObsTabTilesIds.TargetSummaryId.id,
-        "Target Summary",
-        backButton.some
-      )(renderInTitle =>
-        TargetSummaryTable(
-          props.userId,
-          props.programId,
-          props.targets.model,
-          props.programSummaries.get.targetObservations,
-          props.programSummaries.get.calibrationObservations,
-          selectObservationAndTarget(props.expandedIds),
-          selectTargetOrSummary,
-          renderInTitle,
-          selectedTargetIds,
-          props.programSummaries,
-          props.readonly
+    val renderSummary: Tile[TargetSummaryTileState] = Tile(
+      ObsTabTilesIds.TargetSummaryId.id,
+      "Target Summary",
+      TargetSummaryTileState(Nil, ColumnSelectorState(), DeletingTargets(false)),
+      backButton.some
+    )(
+      TargetSummaryBody(
+        props.userId,
+        props.programId,
+        props.targets.model,
+        props.programSummaries.get.targetObservations,
+        props.programSummaries.get.calibrationObservations,
+        selectObservationAndTarget(props.expandedIds),
+        selectTargetOrSummary,
+        selectedTargetIds,
+        props.programSummaries,
+        props.readonly,
+        _
+      ),
+      (s, _) =>
+        TargetSummaryTitle(props.programId,
+                           props.targets.model,
+                           selectTargetOrSummary,
+                           selectedTargetIds,
+                           props.programSummaries,
+                           props.readonly,
+                           s
         )
-      )
+    )
 
     /**
      * Render the asterism editor
@@ -168,7 +181,7 @@ object TargetTabContents extends TwoPanels:
       resize:        UseResizeDetectorReturn,
       idsToEdit:     ObsIdSet,
       asterismGroup: AsterismGroup
-    ): List[Tile] = {
+    ): List[Tile[?]] = {
       val getVizTime: ProgramSummaries => Option[Instant] = a =>
         for
           id <- idsToEdit.single
@@ -346,7 +359,7 @@ object TargetTabContents extends TwoPanels:
     def renderSiderealTargetEditor(
       resize:   UseResizeDetectorReturn,
       targetId: Target.Id
-    ): List[Tile] = {
+    ): List[Tile[?]] = {
 
       def onCloneTarget4Target(params: OnCloneParameters): Callback =
         // It's not perfect, but we'll go to whatever url has the "new" id. This means
@@ -354,7 +367,7 @@ object TargetTabContents extends TwoPanels:
         selectedTargetIds.set(List(params.idToAdd)) >>
           ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
 
-      val targetTiles: List[Tile] =
+      val targetTiles: List[Tile[?]] =
         props.targets
           .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
           .map { target =>
@@ -373,7 +386,7 @@ object TargetTabContents extends TwoPanels:
               onCloneTarget4Target
             )
 
-            val skyPlotTile: Tile =
+            val skyPlotTile =
               ElevationPlotTile.elevationPlotTile(
                 props.userId,
                 targetId.some,
@@ -399,10 +412,12 @@ object TargetTabContents extends TwoPanels:
       case _                                => none
 
     // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
-    val dummyTargetTile: Tile    = Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
-    val dummyElevationTile: Tile = Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
+    val dummyTargetTile: Tile[Unit]    =
+      Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
+    val dummyElevationTile: Tile[Unit] =
+      Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
 
-    val renderNonSiderealTargetEditor: List[Tile] =
+    val renderNonSiderealTargetEditor: List[Tile[?]] =
       List(
         renderSummary,
         Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
@@ -412,7 +427,7 @@ object TargetTabContents extends TwoPanels:
       )
 
     val rightSide = { (resize: UseResizeDetectorReturn) =>
-      val tileListKeyOpt: Option[(List[Tile], NonEmptyString)] =
+      val tileListKeyOpt: Option[(List[Tile[?]], NonEmptyString)] =
         optSelected
           .flatMap:
             _ match
@@ -433,13 +448,13 @@ object TargetTabContents extends TwoPanels:
                      TargetTabControllerIds.AsterismEditor.id
                     )
 
-      val justSummaryTiles: List[Tile] = List(
+      val justSummaryTiles = List(
         renderSummary,
         dummyTargetTile,
         dummyElevationTile
       )
 
-      val (tiles, key): (List[Tile], NonEmptyString) =
+      val (tiles, key) =
         tileListKeyOpt.fold(
           (justSummaryTiles, TargetTabControllerIds.Summary.id)
         )((tiles, key) => (tiles, key))

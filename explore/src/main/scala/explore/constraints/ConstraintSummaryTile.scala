@@ -9,7 +9,7 @@ import crystal.react.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.Tile
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConstraintGroup
@@ -36,16 +36,16 @@ import lucuma.ui.table.hooks.*
 
 import scala.collection.immutable.SortedSet
 
-case class ConstraintsSummaryTable(
+case class ConstraintsSummaryTableBody(
   userId:         Option[User.Id],
   programId:      Program.Id,
   constraintList: ConstraintGroupList,
   expandedIds:    View[SortedSet[ObsIdSet]],
-  renderInTitle:  Tile.RenderInTitle
-) extends ReactFnProps(ConstraintsSummaryTable.component)
+  tileState:      View[ColumnSelectorState[ConstraintGroup, Nothing]]
+) extends ReactFnProps(ConstraintsSummaryTableBody.component)
 
-object ConstraintsSummaryTable:
-  private type Props = ConstraintsSummaryTable
+object ConstraintsSummaryTableBody:
+  private type Props = ConstraintsSummaryTableBody
 
   private val ColDef = ColumnDef[ConstraintGroup]
 
@@ -61,7 +61,7 @@ object ConstraintsSummaryTable:
   private val CountColumnId: ColumnId        = ColumnId("count")
   private val ObservationsColumnId: ColumnId = ColumnId("observations")
 
-  private val columnNames: Map[ColumnId, String] = Map(
+  val columnNames: Map[ColumnId, String] = Map(
     EditColumnId         -> " ",
     IQColumnId           -> "IQ",
     CCColumnId           -> "CC",
@@ -231,16 +231,9 @@ object ConstraintsSummaryTable:
           TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
       )
+      .useEffectOnMountBy((p, _, _, _, table) => p.tileState.set(ColumnSelectorState(table.some)))
       .render { (props, _, _, _, table) =>
         <.div(
-          props.renderInTitle(
-            React.Fragment(
-              <.span, // Push column selector to right
-              <.span(ExploreStyles.TitleSelectColumns)(
-                ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
-              )
-            )
-          ),
           PrimeTable(
             table,
             striped = true,

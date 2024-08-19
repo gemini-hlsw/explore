@@ -38,7 +38,7 @@ object ObsGroupTiles:
 
   val component = ScalaFnComponent
     .withHooks[Props]
-    .render { props =>
+    .render: props =>
 
       val tiles =
         if !props.groups.get.contains(props.groupId.asRight) then List.empty
@@ -72,21 +72,21 @@ object ObsGroupTiles:
             props.backButton.some,
             tileTitleClass = ExploreStyles.GroupEditTitle
           )(
-            GroupEditTile(
-              group,
-              node.get._1.children.length,
-              props.timeEstimateRange,
-              group.get.system,
-              _
-            )
-              .withKey(props.groupId.toString)
-              .toUnmounted
+            _ =>
+              GroupEditBody(
+                group,
+                node.get._1.children.length,
+                props.timeEstimateRange,
+                group.get.system
+              )
+                .withKey(props.groupId.toString)
+                .toUnmounted,
+            (_, _) => GroupEditTitle(group, node.get._1.children.length, props.timeEstimateRange)
           )
 
           val notesTile = Tile(
             GroupEditIds.GroupNotesId.id,
-            s"Note for Observer",
-            canMinimize = true
+            s"Note for Observer"
           )(_ =>
             <.div(
               ExploreStyles.NotesTile,
@@ -108,5 +108,3 @@ object ObsGroupTiles:
         GridLayoutSection.GroupEditLayout,
         props.backButton.some
       )
-
-    }

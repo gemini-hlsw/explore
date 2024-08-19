@@ -38,7 +38,7 @@ case class TileController(
   gridWidth:     Int,
   defaultLayout: LayoutsMap,
   layoutMap:     LayoutsMap,
-  tiles:         List[Tile],
+  tiles:         List[Tile[?]],
   section:       GridLayoutSection,
   backButton:    Option[VdomNode] = None,
   clazz:         Option[Css] = None,
@@ -77,7 +77,7 @@ object TileController:
       .filter(_.i === id.value)
       .andThen(layoutItemHeight)
 
-  private def updateResizableState(tiles: List[Tile], p: LayoutsMap): LayoutsMap =
+  private def updateResizableState(tiles: List[Tile[?]], p: LayoutsMap): LayoutsMap =
     allLayouts
       .andThen(layoutItems)
       .modify {
@@ -119,7 +119,7 @@ object TileController:
                 else l
               case l                     => l
 
-        val tilesWithBackButton: List[Tile] = {
+        val tilesWithBackButton: List[Tile[?]] = {
           val topTile =
             currentLayout.get.get(breakpoint.value).flatMap(_._3.asList.sortBy(_.y).headOption)
           (topTile, p.backButton)
@@ -127,7 +127,7 @@ object TileController:
               p.tiles
                 .map {
                   case ti if t.i === ti.id.value =>
-                    ti.copy(back = p.backButton)(ti.render)
+                    ti.withBackButton(p.backButton)
                   case ti                        => ti
                 }
             )

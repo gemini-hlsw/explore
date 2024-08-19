@@ -14,7 +14,7 @@ import crystal.react.syntax.pot.given
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.Tile
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
@@ -66,7 +66,7 @@ final case class ObsSummaryTable(
   observations:  UndoSetter[ObservationList],
   obsExecutions: ObservationExecutionMap,
   allTargets:    TargetList,
-  renderInTitle: Tile.RenderInTitle
+  tileState:     View[ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]]
 ) extends ReactFnProps(ObsSummaryTable.component)
 
 object ObsSummaryTable:
@@ -99,7 +99,7 @@ object ObsSummaryTable:
   private val SEDColumnId           = ColumnId("sed")
   private val ChargedTimeColumnId   = ColumnId("charged_time")
 
-  private val columnNames: Map[ColumnId, String] = Map(
+  val columnNames: Map[ColumnId, String] = Map(
     // Default columns
     GroupsColumnId          -> "Groups",
     ObservationIdColumnId   -> "Observation Id",
@@ -317,63 +317,54 @@ object ObsSummaryTable:
         ),
         TableStore(props.userId, TableId.ObservationsSummary, cols)
       )
+    .useEffectOnMountBy((p, _, _, _, table) => p.tileState.set(ColumnSelectorState(table.some)))
     .useResizeDetector()
     // adding new observation
     .useStateView(AddingObservation(false))
     .render: (props, ctx, _, rows, table, resizer, adding) =>
-      React.Fragment(
-        props.renderInTitle(
-          React.Fragment(
-            <.span(), // Push column selector to right
-            <.span(ExploreStyles.TitleSelectColumns)(
-              ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
-            )
-          )
-        ),
-        PrimeAutoHeightVirtualizedTable(
-          table,
-          _ => 32.toPx,
-          striped = true,
-          compact = Compact.Very,
-          innerContainerMod = ^.width := "100%",
-          containerRef = resizer.ref,
-          hoverableRows = rows.nonEmpty,
-          tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable,
-          headerCellMod = _ => ExploreStyles.StickyHeader,
-          rowMod = row =>
-            TagMod(
-              ExploreStyles.CursorPointer,
-              ExploreStyles.TableRowSelected.when(row.getIsSelected()),
-              ^.role := "link",
-              ^.onClick ==> { (e: ReactMouseEvent) =>
-                val (obsId, targetId) = row.original.value
-                  .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
-                e.preventDefaultCB *> ctx.pushPage(
-                  AppTab.Observations,
-                  props.programId,
-                  Focused.singleObs(obsId, targetId)
-                )
-              }
-            ),
-          emptyMessage = <.span(
-            ExploreStyles.HVCenter,
-            Button(
-              severity = Button.Severity.Success,
-              icon = Icons.New,
-              disabled = adding.get.value,
-              loading = adding.get.value,
-              label = "Add an observation",
-              clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick = insertObs(
+      PrimeAutoHeightVirtualizedTable(
+        table,
+        _ => 32.toPx,
+        striped = true,
+        compact = Compact.Very,
+        innerContainerMod = ^.width := "100%",
+        containerRef = resizer.ref,
+        hoverableRows = rows.nonEmpty,
+        tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable,
+        headerCellMod = _ => ExploreStyles.StickyHeader,
+        rowMod = row =>
+          TagMod(
+            ExploreStyles.CursorPointer,
+            ExploreStyles.TableRowSelected.when(row.getIsSelected()),
+            ^.role := "link",
+            ^.onClick ==> { (e: ReactMouseEvent) =>
+              val (obsId, targetId) = row.original.value
+                .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
+              e.preventDefaultCB *> ctx.pushPage(
+                AppTab.Observations,
                 props.programId,
-                none,
-                0.refined,
-                props.observations,
-                adding,
-                ctx
-              ).runAsyncAndForget
-            ).tiny.compact
-          )
+                Focused.singleObs(obsId, targetId)
+              )
+            }
+          ),
+        emptyMessage = <.span(
+          ExploreStyles.HVCenter,
+          Button(
+            severity = Button.Severity.Success,
+            icon = Icons.New,
+            disabled = adding.get.value,
+            loading = adding.get.value,
+            label = "Add an observation",
+            clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
+            onClick = insertObs(
+              props.programId,
+              none,
+              0.refined,
+              props.observations,
+              adding,
+              ctx
+            ).runAsyncAndForget
+          ).tiny.compact
         )
       )
 

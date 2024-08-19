@@ -26,7 +26,7 @@ import explore.model.reusability.given
 import explore.observationtree.SchedulingGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.timingwindows.TimingWindowsPanel
+import explore.timingwindows.TimingWindowsTile
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
@@ -48,8 +48,8 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 
 case class SchedulingTabContents(
-  userId:           Option[User.Id],
   programId:        Program.Id,
+  userId:           Option[User.Id],
   programSummaries: UndoContext[ProgramSummaries],
   userPreferences:  UserPreferences,
   focusedObsSet:    Option[ObsIdSet],
@@ -83,7 +83,7 @@ object SchedulingTabContents extends TwoPanels:
       }
       // Measure its size
       .useResizeDetector()
-      .render { (props, ctx, state, resize) =>
+      .render: (props, ctx, state, resize) =>
         import ctx.given
 
         def findSchedulingGroup(
@@ -122,7 +122,7 @@ object SchedulingTabContents extends TwoPanels:
                 )
 
               val timingWindowsTile =
-                TimingWindowsPanel.timingWindowsPanel(timingWindows, props.readonly)
+                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly)
 
               TileController(
                 props.userId,
@@ -155,4 +155,3 @@ object SchedulingTabContents extends TwoPanels:
           else EmptyVdom,
           makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
         )
-      }

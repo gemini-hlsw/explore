@@ -52,25 +52,22 @@ object ProgramTabContents:
       val layouts: LayoutsMap =
         props.userPreferences.programsTabLayout
 
-      val detailsTile: Tile =
+      val detailsTile =
         Tile(
           ProgramTabTileIds.DetailsId.id,
-          "Program Details",
-          canMinimize = true
+          "Program Details"
         )(_ => ProgramDetailsTile(props.allocations, props.programTimes))
 
-      val notesTile: Tile =
+      val notesTile =
         Tile(
           ProgramTabTileIds.NotesId.id,
-          "Notes",
-          canMinimize = true
+          "Notes"
         )(_ => ProgramNotesTile())
 
-      val changeRequestsTile: Tile =
+      val changeRequestsTile =
         Tile(
           ProgramTabTileIds.ChangeRequestsId.id,
-          "Change Requests",
-          canMinimize = true
+          "Change Requests"
         )(_ => ProgramChangeRequestsTile())
 
       <.div(ExploreStyles.MultiPanelTile)(

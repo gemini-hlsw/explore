@@ -28,7 +28,7 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 
-object ConfigurationTile {
+object ConfigurationTile:
   def configurationTile(
     userId:           Option[User.Id],
     programId:        Program.Id,
@@ -48,8 +48,7 @@ object ConfigurationTile {
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
       "Configuration",
-      bodyClass = ExploreStyles.ConfigurationTileBody,
-      canMinimize = true
+      bodyClass = ExploreStyles.ConfigurationTileBody
     )(_ =>
       ConfigurationPanel(
         userId,
@@ -67,4 +66,3 @@ object ConfigurationTile {
         readonly
       )
     )
-}

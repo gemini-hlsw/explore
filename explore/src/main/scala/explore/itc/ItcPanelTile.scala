@@ -19,26 +19,37 @@ import explore.model.itc.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
+import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
 
-case class ItcGraphPanel(
+object ItcPanelTileState extends NewType[Option[ItcTarget]]:
+  def apply(): ItcPanelTileState = ItcPanelTileState(None)
+
+type ItcPanelTileState = ItcPanelTileState.Type
+
+case class ItcPanelBody(
   uid:               User.Id,
   oid:               Observation.Id,
-  selectedTarget:    View[Option[ItcTarget]],
   itcProps:          ItcProps,
   itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
   itcLoading:        LoadingState,
-  globalPreferences: View[GlobalPreferences]
-) extends ReactFnProps(ItcGraphPanel.component)
+  globalPreferences: View[GlobalPreferences],
+  tileState:         View[ItcPanelTileState]
+) extends ReactFnProps(ItcPanelBody.component) {
+  val selectedTarget = tileState.zoom(ItcPanelTileState.value.asLens)
+}
 
-object ItcGraphPanel:
-  private type Props = ItcGraphPanel
+object ItcPanelBody:
+  private type Props = ItcPanelBody
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
+      // Reset the selected target if itcProps changes
+      .useEffectWithDepsBy((p, _) => p.itcProps): (p, _) =>
+        itcProps => p.selectedTarget.set(itcProps.defaultSelectedTarget)
       .render: (props, ctx) =>
         import ctx.given
 
@@ -93,7 +104,7 @@ object ItcGraphPanel:
             selectedResult.map(_.charts),
             error,
             chartTypeView.get,
-            props.selectedTarget.get.map(_.name.value),
+            selectedTarget.map(_.name.value),
             props.itcProps.signalToNoiseAt,
             props.itcLoading,
             detailsView.get

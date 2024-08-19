@@ -10,7 +10,6 @@ import crystal.*
 import crystal.react.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.config.ObsTimeEditor
 import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -20,7 +19,9 @@ import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.enums.TileSizeState
-import explore.targeteditor.AsterismEditor
+import explore.targeteditor.AsterismEditorBody
+import explore.targeteditor.AsterismEditorTitle
+import explore.targeteditor.AsterismTileState
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -57,43 +58,49 @@ object AsterismEditorTile:
     readonly:          Boolean,
     sequenceChanged:   Callback = Callback.empty,
     backButton:        Option[VdomNode] = none
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile = {
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[AsterismTileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
     val vizTimeView =
       vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
 
-    val control: VdomNode =
-      <.div(ExploreStyles.JustifiedEndTileControl, ObsTimeEditor(vizTimeView))
-
     Tile(
       ObsTabTilesIds.TargetId.id,
       title,
+      AsterismTileState(),
       back = backButton,
-      canMinimize = true,
-      control = s => control.some.filter(_ => s === TileSizeState.Minimized),
       bodyClass = ExploreStyles.TargetTileBody,
       controllerClass = ExploreStyles.TargetTileController
-    )((renderInTitle: Tile.RenderInTitle) =>
-      userId.map(uid =>
-        AsterismEditor(
-          uid,
-          programId,
-          obsIds,
-          obsAndTargets,
-          vizTime,
-          obsConf,
-          currentTarget,
-          setTarget,
-          onCloneTarget,
-          onAsterismUpdate,
-          obsInfo,
-          searching,
-          renderInTitle,
-          globalPreferences,
-          readonly,
-          sequenceChanged
+    )(
+      a =>
+        userId.map(uid =>
+          AsterismEditorBody(
+            programId,
+            uid,
+            obsIds,
+            obsAndTargets,
+            vizTime,
+            obsConf,
+            currentTarget,
+            setTarget,
+            onCloneTarget,
+            onAsterismUpdate,
+            obsInfo,
+            searching,
+            globalPreferences,
+            readonly,
+            sequenceChanged,
+            a
+          )
+        ),
+      (s, _) =>
+        AsterismEditorTitle(programId,
+                            obsIds,
+                            obsAndTargets,
+                            onAsterismUpdate,
+                            readonly,
+                            vizTimeView,
+                            s
         )
-      )
     )
   }

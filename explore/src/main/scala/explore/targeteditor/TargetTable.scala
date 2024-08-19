@@ -13,7 +13,7 @@ import crystal.react.hooks.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.Tile
+import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
@@ -57,15 +57,15 @@ case class TargetTable(
   selectedTarget:   View[Option[Target.Id]],
   onAsterismUpdate: OnAsterismUpdateParams => Callback,
   vizTime:          Option[Instant],
-  renderInTitle:    Tile.RenderInTitle,
   fullScreen:       AladinFullScreen,
   readOnly:         Boolean
-) extends ReactFnProps(TargetTable.component)
+)(val state: View[ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta]])
+    extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
   private type Props = TargetTable
 
-  private case class TableMeta(
+  case class TableMeta(
     obsIds:           ObsIdSet,
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     onAsterismUpdate: OnAsterismUpdateParams => Callback
@@ -75,7 +75,7 @@ object TargetTable extends AsterismModifier:
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
-  private val columnNames: Map[ColumnId, String] = Map(
+  val columnNames: Map[ColumnId, String] = Map(
     DeleteColumnId -> " "
   ) ++ TargetColumns.AllColNames
 
@@ -166,17 +166,12 @@ object TargetTable extends AsterismModifier:
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
+      .useEffectOnMountBy((p, _, _, _, _, table) => p.state.set(ColumnSelectorState(table.some)))
       .useStateView(AreAdding(false))
       .render: (props, ctx, _, _, rows, table, adding) =>
         import ctx.given
 
         React.Fragment(
-          props.renderInTitle(
-            <.span(ExploreStyles.TitleSelectColumns)(
-              ColumnSelector(table, columnNames, ExploreStyles.SelectColumns)
-                .unless(props.fullScreen.value)
-            )
-          ),
           if (rows.isEmpty) {
             <.div(ExploreStyles.HVCenter)(
               targetSelectionPopup(
