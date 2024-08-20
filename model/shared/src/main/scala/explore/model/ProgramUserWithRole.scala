@@ -7,8 +7,8 @@ import cats.Eq
 import cats.derived.*
 import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
-import lucuma.odb.data.PartnerLink
 import lucuma.odb.json.partnerlink.given
+import lucuma.core.model.PartnerLink
 
 // an empty role implies PI
 case class ProgramUserWithRole(

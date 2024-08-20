@@ -18,7 +18,7 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.odb.data.PartnerLink
+import lucuma.core.model.PartnerLink
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button

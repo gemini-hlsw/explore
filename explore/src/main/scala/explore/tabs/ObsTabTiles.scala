@@ -334,10 +334,10 @@ object ObsTabTiles:
                     case PosAngleConstraint.AverageParallactic =>
                       // See also `anglesToTestAt` in AladinCell.scala.
                       averageParallacticAngle(
-                        site,
+                        site.place,
                         asterism.baseTracking,
                         vizTimeOrNow,
-                        pendingTime.toDuration
+                        pendingTime
                       ).map(AveragePABasis(vizTimeOrNow, pendingTime, _))
                     case _                                     => none
                 .flatten
