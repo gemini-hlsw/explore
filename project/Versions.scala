@@ -32,7 +32,7 @@ object Versions {
   val lucumaITC              = "0.21.17"
   val monocle                = "3.3.0"
   val mouse                  = "1.3.2"
-  val mUnit                  = "1.0.0"
+  val mUnit                  = "1.0.1"
   val mUnitCatsEffect        = "2.0.0"
   val reactAladin            = "0.32.2"
   val refinedAlgebra         = "0.1.1"
