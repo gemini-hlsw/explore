@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
+import explore.common.ProgramQueries.updateProgramUsers
 import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
@@ -17,24 +18,23 @@ import explore.model.ProgramUserWithRole
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Program
+import lucuma.core.enums.Partner
 import lucuma.core.model.PartnerLink
+import lucuma.core.model.Program
+import lucuma.core.model.User
+import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.SelectItem
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.UnlinkUserInput
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import queries.common.ProposalQueriesGQL.UnlinkUser
-import explore.common.ProgramQueries.updateProgramUsers
-import lucuma.refined.*
-import lucuma.core.enums.Partner
-import lucuma.core.util.Enumerated
 import monocle.function.Each.*
-import lucuma.react.primereact.SelectItem
-import lucuma.core.model.User
+import queries.common.ProposalQueriesGQL.UnlinkUser
 
 case class ProgramUsersTable(
   programId: Program.Id,
@@ -55,7 +55,7 @@ object ProgramUsersTable:
   private val ColDef = ColumnDef.WithTableMeta[ProgramUserWithRole, TableMeta]
 
   private val NameColumnId: ColumnId    = ColumnId("name")
-  private val PartnerColumnId: ColumnId = ColumnId("partner")
+  private val PartnerColumnId: ColumnId = ColumnId("Partner")
   private val EmailColumnId: ColumnId   = ColumnId("email")
   private val OrcidIdColumnId: ColumnId = ColumnId("orcid-id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
@@ -106,6 +106,7 @@ object ProgramUsersTable:
       options = partnerLinkOptions.map { pl =>
         new SelectItem[PartnerLink](value = pl, label = pl.toString)
       },
+      clazz = ExploreStyles.PartnerSelector,
       showClear = true,
       itemTemplate = pl => partnerItem(pl.value),
       valueTemplate = pl => partnerItem(pl.value),
@@ -146,7 +147,7 @@ object ProgramUsersTable:
             case PartnerLink.HasUnspecifiedPartner => None
             case p                                 => Some(p)
           }
-          partnerSelector(pl, usersView.set)
+          <.div(partnerSelector(pl, usersView.set))
       ),
       column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
       column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),

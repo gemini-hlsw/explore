@@ -282,9 +282,14 @@ object Dependencies {
 
   val MUnit = Def.setting(
     deps(
-      "org.scalameta" %%% "munit",
-      "org.scalameta" %%% "munit-scalacheck"
+      "org.scalameta" %%% "munit"
     )(mUnit)
+  )
+
+  val MUnitScalaCheck = Def.setting(
+    deps(
+      "org.scalameta" %%% "munit-scalacheck"
+    )(mUnitScalacheck)
   )
 
   val MUnitCatsEffect = Def.setting(

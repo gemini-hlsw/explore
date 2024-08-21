@@ -11,14 +11,14 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
 import lucuma.core.model.ObsAttachment
+import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.ProgramQueriesGQL.*
-import lucuma.core.model.User
-import lucuma.core.model.PartnerLink
 
 object ProgramQueries:
   def createProgram[F[_]: Async](name: Option[NonEmptyString])(using

@@ -170,6 +170,7 @@ lazy val commonLibSettings = Seq(
       Boopickle.value ++
       In(Test)(
         MUnit.value ++
+          MUnitScalaCheck.value ++
           Discipline.value ++
           CatsTimeTestkit.value ++
           CatsEffectTestkit.value ++
