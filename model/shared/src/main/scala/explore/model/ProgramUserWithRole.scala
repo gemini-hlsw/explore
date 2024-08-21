@@ -9,6 +9,8 @@ import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
 import lucuma.odb.json.partnerlink.given
 import lucuma.core.model.PartnerLink
+import monocle.Focus
+import monocle.Lens
 
 // an empty role implies PI
 case class ProgramUserWithRole(
@@ -24,6 +26,11 @@ case class ProgramUserWithRole(
   val name: String = user.profile.fold("Guest User")(p => p.displayName)
 
 object ProgramUserWithRole:
+  val user: Lens[ProgramUserWithRole, ProgramUser] = Focus[ProgramUserWithRole](_.user)
+
+  val partnerLink: Lens[ProgramUserWithRole, Option[PartnerLink]] =
+    Focus[ProgramUserWithRole](_.partnerLink)
+
   given Decoder[ProgramUserWithRole] = c =>
     for {
       u    <- c.downField("user").as[ProgramUser]

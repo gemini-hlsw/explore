@@ -20,7 +20,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.PartnerLink
 import lucuma.react.common.ReactFnProps
-import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -29,6 +28,13 @@ import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
+import explore.common.ProgramQueries.updateProgramUsers
+import lucuma.refined.*
+import lucuma.core.enums.Partner
+import lucuma.core.util.Enumerated
+import monocle.function.Each.*
+import lucuma.react.primereact.SelectItem
+import lucuma.core.model.User
 
 case class ProgramUsersTable(
   programId: Program.Id,
@@ -70,29 +76,77 @@ object ProgramUsersTable:
   ): ColumnDef.Single.WithTableMeta[ProgramUserWithRole, V, TableMeta] =
     ColDef(id, accessor, columnNames(id))
 
+  val partnerLinkOptions: List[PartnerLink] =
+    PartnerLink.HasNonPartner :: Enumerated[Partner].all.map { p =>
+      PartnerLink.HasPartner(p)
+    }
+
+  def partnerItem(pl: PartnerLink): VdomNode = pl match {
+    case PartnerLink.HasPartner(p) =>
+      <.div(
+        ExploreStyles.PartnerFlagItem,
+        <.img(
+          ^.src := PartnerFlags.smallFlag(p),
+          ^.alt := s"${p.shortName} Flag",
+          ExploreStyles.PartnerSplitFlag
+        ),
+        p match {
+          case Partner.UH => "U of Hawaii"
+          case p          => p.shortName
+        }
+      )
+    case PartnerLink.HasNonPartner => <.div("No Partner")
+    case _                         => "Unspecified Partner"
+  }
+
+  def partnerSelector(value: Option[PartnerLink], set: Option[PartnerLink] => Callback): VdomNode =
+    FormDropdownOptional(
+      id = "user-partner-selector".refined,
+      placeholder = "Select a partner",
+      options = partnerLinkOptions.map { pl =>
+        new SelectItem[PartnerLink](value = pl, label = pl.toString)
+      },
+      showClear = true,
+      itemTemplate = pl => partnerItem(pl.value),
+      valueTemplate = pl => partnerItem(pl.value),
+      emptyMessageTemplate = "No Selection",
+      value = value,
+      onChange = set
+    )
+
+  def partnerLinkLens(userId: User.Id) =
+    each[List[ProgramUserWithRole], ProgramUserWithRole]
+      .filter(_.user.id === userId)
+      .andThen(ProgramUserWithRole.partnerLink)
+
   private def columns(
-    ctx: AppContext[IO]
+    pid:   Program.Id,
+    users: View[List[ProgramUserWithRole]],
+    ctx:   AppContext[IO]
   ): List[ColumnDef.WithTableMeta[ProgramUserWithRole, ?, TableMeta]] =
     List(
       column(NameColumnId, _.name),
       ColDef(
         PartnerColumnId,
-        _.partnerLink.flatMap {
-          case PartnerLink.HasPartner(partner)   => Some(partner)
-          case PartnerLink.HasNonPartner         => None
-          case PartnerLink.HasUnspecifiedPartner => None
-        },
-        "",
+        identity,
         enableSorting = true,
         enableResizing = true,
-        cell = _.value.map(partner =>
-          <.span(
-            <.img(^.src        := PartnerFlags.smallFlag(partner),
-                  ^.alt := s"${partner.shortName} Flag",
-                  ExploreStyles.PartnerSplitFlag
-            )
-          ).withTooltip(partner.longName)
-        )
+        cell = cell =>
+          import ctx.given
+
+          val userId    = cell.value.user.id
+          val view      = users.zoom(partnerLinkLens(userId))
+          val usersView = view.withOnMod(pl =>
+            pl.headOption.flatten
+              .map(pl => updateProgramUsers[IO](pid, userId, pl).runAsyncAndForget)
+              .getOrEmpty
+          )
+
+          val pl = cell.value.partnerLink.flatMap {
+            case PartnerLink.HasUnspecifiedPartner => None
+            case p                                 => Some(p)
+          }
+          partnerSelector(pl, usersView.set)
       ),
       column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
       column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
@@ -138,8 +192,8 @@ object ProgramUsersTable:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
-      .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
-        _ => columns(ctx)
+      .useMemoBy((_, _, _) => ()): (p, ctx, _) => // cols
+        _ => columns(p.programId, p.users, ctx)
       .useMemoBy((props, _, _, _) => props.users.get.toList): (_, _, _, _) => // rows
         identity
       .useReactTableBy: (props, _, isActive, cols, rows) =>
