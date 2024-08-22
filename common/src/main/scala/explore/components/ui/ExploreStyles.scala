@@ -232,6 +232,8 @@ object ExploreStyles:
   val PartnerSplitsGridTotal: Css      = Css("partner-splits-grid-total")
   val PartnerSplitData: Css            = Css("partner-split-data")
   val PartnerSplitFlag: Css            = Css("partner-split-flag")
+  val PartnerSelector: Css             = Css("partner-selector")
+  val PartnerFlagItem: Css             = Css("partner-flag-item")
 
   val PartnerSplitsEditorDialog: Css = Css("partner-splits-editor-dialog")
   val CompactOverlayPanel: Css       = Css("compact-overlay-panel")

@@ -104,3 +104,17 @@ object ProgramQueriesGQL:
         }
       }
     """
+
+  @GraphQL
+  trait ProgramUsersMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: UpdateProgramUsersInput!) {
+        updateProgramUsers(input: $$input) {
+          programUsers {
+            user {
+              id
+            }
+          }
+        }
+      }
+      """

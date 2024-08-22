@@ -11,7 +11,9 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
 import lucuma.core.model.ObsAttachment
+import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -87,6 +89,34 @@ object ProgramQueries:
         UpdateObsAttachmentsInput(
           WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
           SET = ObsAttachmentPropertiesInput(checked = checked.assign)
+        )
+      )
+      .void
+
+  // TODO: move to lucuma-schemas
+  extension (pl: PartnerLink)
+    def toInput: PartnerLinkInput =
+      pl match
+        case PartnerLink.HasPartner(p)         =>
+          PartnerLinkInput(PartnerLinkType.HasPartner.assign, p.assign)
+        case PartnerLink.HasNonPartner         =>
+          PartnerLinkInput(PartnerLinkType.HasNonPartner.assign, none.orUnassign)
+        case PartnerLink.HasUnspecifiedPartner =>
+          PartnerLinkInput(PartnerLinkType.HasUnspecifiedPartner.assign, none.orUnassign)
+
+  def updateProgramUsers[F[_]: Async](
+    pid: Program.Id,
+    uid: User.Id,
+    pl:  PartnerLink
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    ProgramUsersMutation[F]
+      .execute(
+        UpdateProgramUsersInput(
+          WHERE = WhereProgramUser(
+            program = WhereProgram(id = WhereOrderProgramId(EQ = pid.assign).assign).assign,
+            user = WhereUser(id = WhereOrderUserId(EQ = uid.assign).assign).assign
+          ).assign,
+          SET = ProgramUserPropertiesInput(partnerLink = pl.toInput.assign)
         )
       )
       .void
