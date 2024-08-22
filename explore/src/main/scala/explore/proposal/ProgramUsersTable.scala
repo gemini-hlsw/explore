@@ -121,33 +121,33 @@ object ProgramUsersTable:
       .andThen(ProgramUserWithRole.partnerLink)
 
   private def columns(
-    pid:   Program.Id,
-    users: View[List[ProgramUserWithRole]],
-    ctx:   AppContext[IO]
+    ctx: AppContext[IO]
   ): List[ColumnDef.WithTableMeta[ProgramUserWithRole, ?, TableMeta]] =
     List(
       column(NameColumnId, _.name),
       ColDef(
         PartnerColumnId,
-        identity,
+        _.partnerLink,
         enableSorting = true,
         enableResizing = true,
-        cell = cell =>
+        cell = c =>
           import ctx.given
 
-          val userId    = cell.value.user.id
-          val view      = users.zoom(partnerLinkLens(userId))
-          val usersView = view.withOnMod(pl =>
-            pl.headOption.flatten
-              .map(pl => updateProgramUsers[IO](pid, userId, pl).runAsyncAndForget)
-              .getOrEmpty
-          )
+          val cell   = c.row.original
+          val userId = cell.user.id
+          c.table.options.meta.map: meta =>
+            val view      = meta.users.zoom(partnerLinkLens(userId))
+            val usersView = view.withOnMod(pl =>
+              pl.headOption.flatten
+                .map(pl => updateProgramUsers[IO](meta.programId, userId, pl).runAsyncAndForget)
+                .getOrEmpty
+            )
 
-          val pl = cell.value.partnerLink.flatMap {
-            case PartnerLink.HasUnspecifiedPartner => None
-            case p                                 => Some(p)
-          }
-          <.div(partnerSelector(pl, usersView.set))
+            val pl = cell.partnerLink.flatMap {
+              case PartnerLink.HasUnspecifiedPartner => None
+              case p                                 => Some(p)
+            }
+            partnerSelector(pl, usersView.set)
       ),
       column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
       column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
@@ -194,7 +194,7 @@ object ProgramUsersTable:
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
       .useMemoBy((_, _, _) => ()): (p, ctx, _) => // cols
-        _ => columns(p.programId, p.users, ctx)
+        _ => columns(ctx)
       .useMemoBy((props, _, _, _) => props.users.get.toList): (_, _, _, _) => // rows
         identity
       .useReactTableBy: (props, _, isActive, cols, rows) =>
