@@ -28,7 +28,7 @@ object Versions {
   val lucumaSchemas          = "0.95.0"
   val lucumaOdbSchema        = "0.11.14"
   val lucumaSSO              = "0.6.21"
-  val lucumaUI               = "0.114.0"
+  val lucumaUI               = "0.115.0"
   val lucumaITC              = "0.21.17"
   val monocle                = "3.3.0"
   val mouse                  = "1.3.2"
