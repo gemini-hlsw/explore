@@ -65,8 +65,8 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 
 case class TargetTabContents(
-  userId:           Option[User.Id],
   programId:        Program.Id,
+  userId:           Option[User.Id],
   programSummaries: UndoContext[ProgramSummaries],
   userPreferences:  View[UserPreferences],
   focused:          Focused,
@@ -182,14 +182,14 @@ object TargetTabContents extends TwoPanels:
       idsToEdit:     ObsIdSet,
       asterismGroup: AsterismGroup
     ): List[Tile[?]] = {
-      val getVizTime: ProgramSummaries => Option[Instant] = a =>
+      val getObsTime: ProgramSummaries => Option[Instant] = a =>
         for
           id <- idsToEdit.single
           o  <- a.observations.getValue(id)
           t  <- o.observationTime
         yield t
 
-      def modVizTime(
+      def modObsTime(
         mod: Option[Instant] => Option[Instant]
       ): ProgramSummaries => ProgramSummaries = ps =>
         idsToEdit.single
@@ -202,8 +202,8 @@ object TargetTabContents extends TwoPanels:
           )
           .getOrElse(ps)
 
-      val vizTimeView: View[Option[Instant]] =
-        props.programSummaries.model.zoom(getVizTime)(modVizTime)
+      val obsTimeView: View[Option[Instant]] =
+        props.programSummaries.model.zoom(getObsTime)(modObsTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
@@ -318,7 +318,7 @@ object TargetTabContents extends TwoPanels:
           idsToEdit,
           props.obsAndTargets,
           configuration,
-          vizTimeView,
+          obsTimeView,
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none, none),
           props.focused.target,
           setCurrentTarget(idsToEdit.some),
@@ -337,8 +337,8 @@ object TargetTabContents extends TwoPanels:
           props.targets.get
             .get(id)
             .flatMap:
-              case t @ Target.Sidereal(_, _, _, _) => // TODO PM correction
-                Target.Sidereal.baseCoordinates.get(t).some
+              case t @ Target.Sidereal(_, _, _, _) =>
+                obsTimeView.get.flatMap(ot => Target.Sidereal.tracking.get(t).at(ot))
               case _                               => none
 
       val skyPlotTile =
@@ -347,7 +347,7 @@ object TargetTabContents extends TwoPanels:
           props.focused.target,
           configuration.map(_.siteFor),
           selectedCoordinates.map(CoordinatesAtVizTime(_)),
-          vizTimeView.get,
+          obsTimeView.get,
           none,
           Nil,
           props.globalPreferences.get
@@ -356,6 +356,9 @@ object TargetTabContents extends TwoPanels:
       List(asterismEditorTile, skyPlotTile)
     }
 
+    /**
+     * Renders a single sidereal target editor without an obs context
+     */
     def renderSiderealTargetEditor(
       resize:   UseResizeDetectorReturn,
       targetId: Target.Id
@@ -391,7 +394,6 @@ object TargetTabContents extends TwoPanels:
                 props.userId,
                 targetId.some,
                 none,
-                // TODO PM correct the coordinates
                 CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target.get)).some,
                 none,
                 none,

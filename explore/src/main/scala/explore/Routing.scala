@@ -75,8 +75,8 @@ object Routing:
         .zoom(RootModel.userPreferences)
         .mapValue(userPrefs =>
           TargetTabContents(
-            model.zoom(RootModel.userId).get,
             routingInfo.programId,
+            model.zoom(RootModel.userId).get,
             programSummaries,
             userPrefs,
             routingInfo.focused,
