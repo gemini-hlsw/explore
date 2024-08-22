@@ -167,13 +167,6 @@ object TargetTabContents extends TwoPanels:
         )
     )
 
-    def getObsTime(idsToEdit: ObsIdSet): ProgramSummaries => Option[Instant] = a =>
-      for
-        id <- idsToEdit.single
-        o  <- a.observations.getValue(id)
-        t  <- o.observationTime
-      yield t
-
     /**
      * Render the asterism editor
      *
@@ -189,6 +182,12 @@ object TargetTabContents extends TwoPanels:
       idsToEdit:     ObsIdSet,
       asterismGroup: AsterismGroup
     ): List[Tile[?]] = {
+      val getObsTime: ProgramSummaries => Option[Instant] = a =>
+        for
+          id <- idsToEdit.single
+          o  <- a.observations.getValue(id)
+          t  <- o.observationTime
+        yield t
 
       def modObsTime(
         mod: Option[Instant] => Option[Instant]
@@ -204,7 +203,7 @@ object TargetTabContents extends TwoPanels:
           .getOrElse(ps)
 
       val obsTimeView: View[Option[Instant]] =
-        props.programSummaries.model.zoom(getObsTime(idsToEdit))(modObsTime)
+        props.programSummaries.model.zoom(getObsTime)(modObsTime)
 
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
