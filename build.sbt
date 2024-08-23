@@ -88,8 +88,7 @@ lazy val workers = project
   .settings(
     libraryDependencies ++= LucumaCatalog.value ++
       Http4sDom.value ++
-      Log4Cats.value ++
-      ScalaWebAppUtil.value,
+      Log4Cats.value,
     Test / scalaJSLinkerConfig ~= {
       import org.scalajs.linker.interface.OutputPatterns
       _.withOutputPatterns(OutputPatterns.fromJSFile("%s.mjs"))
