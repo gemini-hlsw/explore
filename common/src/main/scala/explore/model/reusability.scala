@@ -3,7 +3,8 @@
 
 package explore.model
 
-import cats.kernel.Eq
+import cats.Eq
+import cats.data.NonEmptyChain
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.model.IsActive
@@ -29,7 +30,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.Atom
 import lucuma.itc.ItcCcd
-import lucuma.itc.client.OptimizedChartResult
+import lucuma.itc.client.GraphResult
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
@@ -82,49 +83,50 @@ object reusability:
 
   given modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]] = Reusability.byEq
 
-  given Reusability[AvailableFilter]                  = Reusability.byEq
-  given Reusability[ImagingConfigurationOptions]      = Reusability.byEq
-  given Reusability[Progress]                         = Reusability.byEq
-  given Reusability[AngularSize]                      = Reusability.byEq
-  given Reusability[CatalogTargetResult]              = Reusability.byEq
-  given Reusability[ObservingMode]                    = Reusability.byEq
-  given Reusability[BasicConfiguration]               = Reusability.byEq
-  given Reusability[BasicConfigAndItc]                = Reusability.byEq
-  given Reusability[GuideStarCandidate]               = Reusability.by(_.name.value)
-  given Reusability[AgsPosition]                      = Reusability.byEq
-  given Reusability[AgsParams]                        = Reusability.byEq
-  given Reusability[AgsState]                         = Reusability.byEq
-  given Reusability[AgsAnalysis]                      = Reusability.byEq
-  given Reusability[ObsConfiguration]                 = Reusability.byEq
-  given Reusability[Existence]                        = Reusability.byEq
-  given Reusability[ItcExposureTime]                  = Reusability.byEq
-  given Reusability[InstrumentRow]                    = Reusability.byEq
-  given Reusability[CentralWavelength]                = Reusability.byEq
-  given Reusability[ObjectTracking]                   = Reusability.byEq
-  given Reusability[Asterism]                         = Reusability.byEq[Asterism]
-  given Reusability[TargetWithOptId]                  = Reusability.byEq
-  given Reusability[GlobalPreferences]                = Reusability.byEq
-  given Reusability[SelectedPanel]                    = Reusability.byEq
-  given Reusability[TimingWindow]                     = Reusability.byEq
-  given [D: Eq]: Reusability[Visit[D]]                = Reusability.byEq
-  given [D: Eq]: Reusability[StepRecord[D]]           = Reusability.byEq
-  given Reusability[ApiKey]                           = Reusability.byEq
-  given Reusability[SignalToNoise]                    = Reusability.byEq
-  given Reusability[ScienceRequirements.Spectroscopy] = Reusability.byEq
-  given Reusability[ScienceRequirements]              = Reusability.byEq
-  given Reusability[OdbItcResult.Success]             = Reusability.byEq
-  given Reusability[Transformation]                   = Reusability.byEq
-  given [F[_]]: Reusability[OdbRestClient[F]]         = Reusability.by(_.authToken)
-  given [D: Eq]: Reusability[Atom[D]]                 = Reusability.byEq
-  given Reusability[ExecutionVisits]                  = Reusability.byEq
-  given Reusability[ProgramUserWithRole]              = Reusability.byEq
-  given Reusability[CoIInvitation]                    = Reusability.byEq
-  given Reusability[IsActive]                         = Reusability.byEq
-  given Reusability[PAProperties]                     = Reusability.byEq
-  given Reusability[OptimizedChartResult]             = Reusability.byEq
-  given Reusability[ItcCcd]                           = Reusability.byEq
-  given Reusability[ElevationPlotOptions]             = Reusability.byEq
-  given Reusability[PartnerSplit]                     = Reusability.byEq
-  given Reusability[CallForProposal]                  = Reusability.byEq
-  given Reusability[CategoryAllocationList]           = Reusability.byEq
-  given Reusability[InstrumentOverrides]              = Reusability.byEq
+  given Reusability[AvailableFilter]                    = Reusability.byEq
+  given Reusability[ImagingConfigurationOptions]        = Reusability.byEq
+  given Reusability[Progress]                           = Reusability.byEq
+  given Reusability[AngularSize]                        = Reusability.byEq
+  given Reusability[CatalogTargetResult]                = Reusability.byEq
+  given Reusability[ObservingMode]                      = Reusability.byEq
+  given Reusability[BasicConfiguration]                 = Reusability.byEq
+  given Reusability[BasicConfigAndItc]                  = Reusability.byEq
+  given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
+  given Reusability[AgsPosition]                        = Reusability.byEq
+  given Reusability[AgsParams]                          = Reusability.byEq
+  given Reusability[AgsState]                           = Reusability.byEq
+  given Reusability[AgsAnalysis]                        = Reusability.byEq
+  given Reusability[ObsConfiguration]                   = Reusability.byEq
+  given Reusability[Existence]                          = Reusability.byEq
+  given Reusability[ItcExposureTime]                    = Reusability.byEq
+  given Reusability[InstrumentRow]                      = Reusability.byEq
+  given Reusability[CentralWavelength]                  = Reusability.byEq
+  given Reusability[ObjectTracking]                     = Reusability.byEq
+  given Reusability[Asterism]                           = Reusability.byEq[Asterism]
+  given Reusability[TargetWithOptId]                    = Reusability.byEq
+  given Reusability[GlobalPreferences]                  = Reusability.byEq
+  given Reusability[SelectedPanel]                      = Reusability.byEq
+  given Reusability[TimingWindow]                       = Reusability.byEq
+  given [D: Eq]: Reusability[Visit[D]]                  = Reusability.byEq
+  given [D: Eq]: Reusability[StepRecord[D]]             = Reusability.byEq
+  given Reusability[ApiKey]                             = Reusability.byEq
+  given Reusability[SignalToNoise]                      = Reusability.byEq
+  given Reusability[ScienceRequirements.Spectroscopy]   = Reusability.byEq
+  given Reusability[ScienceRequirements]                = Reusability.byEq
+  // given Reusability[OdbItcResult.Success]               = Reusability.byEq
+  given Reusability[Transformation]                     = Reusability.byEq
+  given [F[_]]: Reusability[OdbRestClient[F]]           = Reusability.by(_.authToken)
+  given [D: Eq]: Reusability[Atom[D]]                   = Reusability.byEq
+  given Reusability[ExecutionVisits]                    = Reusability.byEq
+  given Reusability[ProgramUserWithRole]                = Reusability.byEq
+  given Reusability[CoIInvitation]                      = Reusability.byEq
+  given Reusability[IsActive]                           = Reusability.byEq
+  given Reusability[PAProperties]                       = Reusability.byEq
+  given Reusability[GraphResult]                        = Reusability.byEq
+  given Reusability[ItcCcd]                             = Reusability.byEq
+  given Reusability[ElevationPlotOptions]               = Reusability.byEq
+  given Reusability[PartnerSplit]                       = Reusability.byEq
+  given Reusability[CallForProposal]                    = Reusability.byEq
+  given Reusability[CategoryAllocationList]             = Reusability.byEq
+  given Reusability[InstrumentOverrides]                = Reusability.byEq
+  given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)

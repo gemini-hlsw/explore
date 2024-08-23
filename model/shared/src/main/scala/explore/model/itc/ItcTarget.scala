@@ -9,11 +9,11 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
-import lucuma.core.math.RadialVelocity
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.SpectralDefinition.BandNormalized
 import lucuma.core.model.SpectralDefinition.EmissionLines
+import lucuma.itc.client.TargetInput
 
 // From lucuma-odb, move to core
 private val gaiaBands: Set[Band] =
@@ -30,15 +30,17 @@ extension (self: SourceProfile)
       )
       .getOrElse(self)
 
-case class ItcTarget(name: NonEmptyString, rv: RadialVelocity, profile: SourceProfile) derives Eq:
+case class ItcTarget(name: NonEmptyString, input: TargetInput) derives Eq:
+  export input.*
+
   private def canQuerySD[A](sd: SpectralDefinition[A]): Boolean =
     sd match
       case BandNormalized(sed, _) => sed.isDefined
       case EmissionLines(_, _)    => false // No emission line support yet
 
-  def canQueryITC: Boolean = profile match
+  def canQueryITC: Boolean = input.sourceProfile match
     case SourceProfile.Point(sd)       => canQuerySD(sd)
     case SourceProfile.Uniform(sd)     => canQuerySD(sd)
     case SourceProfile.Gaussian(_, sd) => canQuerySD(sd)
 
-  def gaiaFree: ItcTarget = copy(profile = profile.gaiaFree)
+  def gaiaFree: ItcTarget = copy(input = input.copy(sourceProfile = input.sourceProfile.gaiaFree))

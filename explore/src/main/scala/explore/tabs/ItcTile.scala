@@ -16,7 +16,7 @@ import explore.model.LoadingState
 import explore.model.ObsTabTilesIds
 import explore.model.Observation
 import explore.model.TargetList
-import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcGraphResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
@@ -25,13 +25,14 @@ import lucuma.ui.syntax.all.given
 object ItcTile:
 
   def itcTile(
-    uid:               Option[User.Id],
-    oid:               Observation.Id,
-    allTargets:        TargetList,
-    itcProps:          ItcProps,
-    itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
-    itcLoading:        LoadingState,
-    globalPreferences: View[GlobalPreferences]
+    uid:                Option[User.Id],
+    oid:                Observation.Id,
+    allTargets:         TargetList,
+    itcProps:           ItcProps,
+    itcGraphResults:    Map[ItcTarget, Pot[ItcGraphResult]],
+    itcBrightestTarget: Option[ItcTarget],
+    itcLoading:         LoadingState,
+    globalPreferences:  View[GlobalPreferences]
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
@@ -45,7 +46,8 @@ object ItcTile:
             _,
             oid,
             itcProps,
-            itcChartResults,
+            itcGraphResults,
+            itcBrightestTarget,
             itcLoading,
             globalPreferences,
             s
@@ -54,7 +56,7 @@ object ItcTile:
       (s, _) =>
         ItcPanelTitle(
           itcProps,
-          itcChartResults,
+          itcGraphResults,
           itcLoading,
           s
         )

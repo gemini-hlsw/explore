@@ -3,7 +3,7 @@
 
 package explore.itc
 
-import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -22,7 +22,7 @@ def requiredForITC: TagMod =
   ).withTooltip("Required for ITC")
 
 def formatCcds(
-  ccds:      Option[NonEmptyList[ItcCcd]],
-  extractor: NonEmptyList[ItcCcd] => String
+  ccds:      Option[NonEmptyChain[ItcCcd]],
+  extractor: NonEmptyChain[ItcCcd] => String
 ): String =
   ccds.fold("-")(extractor)

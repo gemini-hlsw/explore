@@ -79,13 +79,7 @@ case class SpectroscopyModesTable(
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],
   matrix:                   SpectroscopyModesMatrix
-) extends ReactFnProps(SpectroscopyModesTable.component):
-  val brightestTarget: Option[ItcTarget] =
-    for
-      w <- spectroscopyRequirements.wavelength
-      t <- targets.flatMap(_.map(_.gaiaFree).brightestProfileAt(_.profile)(w))
-      if t.canQueryITC
-    yield t
+) extends ReactFnProps(SpectroscopyModesTable.component)
 
 private object SpectroscopyModesTable:
   private type Props = SpectroscopyModesTable
@@ -101,14 +95,14 @@ private object SpectroscopyModesTable:
 
   private case class SpectroscopyModeRowWithResult(
     entry:                SpectroscopyModeRow,
-    result:               EitherNec[ItcQueryProblems, ItcResult],
+    result:               EitherNec[ItcTargetProblem, ItcResult],
     wavelengthInterval:   Option[BoundedInterval[Wavelength]],
     configurationSummary: Option[String]
   ):
     lazy val rowId: RowId = RowId(entry.id.orEmpty.toString)
 
     lazy val totalItcTime: Option[TimeSpan] =
-      result.toOption.collect { case ItcResult.Result(e, t) => e *| t.value }
+      result.toOption.collect { case ItcResult.Result(e, t, _) => e *| t.value }
 
   private case class TableMeta(centralWavelength: Option[Wavelength], itcProgress: Option[Progress])
 
@@ -187,33 +181,43 @@ private object SpectroscopyModesTable:
     case FocalPlane.IFU          => "IFU"
 
   private def itcCell(
-    c: EitherNec[ItcQueryProblems, ItcResult],
+    c: EitherNec[ItcTargetProblem, ItcResult],
     w: Option[Wavelength]
   ): VdomElement = {
     val content: TagMod = c match
-      case Left(nel)                  =>
-        if (nel.exists(_ == ItcQueryProblems.UnsupportedMode))
+      case Left(errors)               =>
+        if (errors.exists(_.problem === ItcQueryProblem.UnsupportedMode))
           <.span(Icons.Ban(^.color.red))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
         else
-          val content = nel
-            .collect {
-              case ItcQueryProblems.MissingSignalToNoise             => <.span("Set S/N")
-              case ItcQueryProblems.MissingSignalToNoiseAt           =>
-                <.span("Set Wavelength to measure S/N at")
-              case ItcQueryProblems.MissingWavelength                => <.span("Set Wavelength")
-              case ItcQueryProblems.MissingTargetInfo if w.isDefined =>
-                <.span("Missing target info")
-              case ItcQueryProblems.MissingBrightness                => <.span("No brightness defined")
-              case s @ ItcQueryProblems.SourceTooBright(_)           =>
-                <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon),
-                       (s: ItcQueryProblems).shortName
-                )
-              case ItcQueryProblems.GenericError(e)                  =>
-                e.split("\n").map(u => <.span(u)).intersperse(<.br: VdomNode).mkTagMod(<.span)
-            }
-            .toList
-            .intersperse(<.br: VdomNode)
+          import ItcQueryProblem.*
+
+          def renderName(name: Option[NonEmptyString]): String =
+            name.fold("")(n => s"$n: ")
+
+          val content: List[TagMod] =
+            errors
+              .collect:
+                case ItcTargetProblem(name, MissingSignalToNoise)             =>
+                  <.span(s"${renderName(name)}Set S/N")
+                case ItcTargetProblem(name, MissingSignalToNoiseAt)           =>
+                  <.span(s"${renderName(name)}Set Wavelength to measure S/N at")
+                case ItcTargetProblem(name, MissingWavelength)                =>
+                  <.span(s"${renderName(name)}Set Wavelength")
+                case ItcTargetProblem(name, MissingTargetInfo) if w.isDefined =>
+                  <.span(s"${renderName(name)}Missing target info")
+                case ItcTargetProblem(name, MissingBrightness)                =>
+                  <.span(s"${renderName(name)}No brightness defined")
+                case ItcTargetProblem(name, s @ SourceTooBright(_))           =>
+                  <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon))(
+                    renderName(name) + (s: ItcQueryProblem).shortName
+                  )
+                case ItcTargetProblem(name, GenericError(e))                  =>
+                  e.split("\n")
+                    .map(u => <.span(u))
+                    .mkTagMod(<.span(renderName(name)), <.br, EmptyVdom)
+              .toList
+              .intersperse(<.br: VdomNode)
 
           <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
@@ -352,17 +356,17 @@ private object SpectroscopyModesTable:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useState:                       // itcResults
-        ItcResultsCache(Map.empty[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]])
+        ItcResultsCache(Map.empty[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]])
       .useMemoBy((props, _, itcResults) => // rows
         (props.matrix,
          props.spectroscopyRequirements,
          props.baseCoordinates.map(_.value.dec),
          itcResults.value,
-         props.brightestTarget,
+         props.targets,
          props.constraints
         )
       ): (_, _, _) =>
-        (matrix, s, dec, itc, target, constraints) =>
+        (matrix, s, dec, itc, asterism, constraints) =>
           val rows       =
             matrix
               .filtered(
@@ -383,7 +387,7 @@ private object SpectroscopyModesTable:
                 s.signalToNoise,
                 s.signalToNoiseAt,
                 constraints,
-                target,
+                asterism.flatMap(NonEmptyList.fromList),
                 row
               ),
               s.wavelength.flatMap: w =>
@@ -395,20 +399,19 @@ private object SpectroscopyModesTable:
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
          props.spectroscopyRequirements.signalToNoiseAt,
-         props.brightestTarget,
          props.constraints,
          rows,
          itcResults.value
         )
       ): (_, _, _, _, _) =>
-        (_, _, _, _, _, rows, _) =>
+        (_, _, _, _, rows, _) =>
           rows.value
             .map(_.result)
             .collect { case Left(p) =>
               p.toList.filter {
-                case ItcQueryProblems.MissingTargetInfo => true
-                case ItcQueryProblems.MissingBrightness => true
-                case _                                  => false
+                case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
+                case e if e.problem === ItcQueryProblem.MissingBrightness => true
+                case _                                                    => false
               }.distinct
             }
             .flatten
@@ -478,7 +481,7 @@ private object SpectroscopyModesTable:
           props.spectroscopyRequirements.signalToNoise,
           props.spectroscopyRequirements.signalToNoiseAt,
           props.constraints,
-          props.brightestTarget,
+          props.targets,
           rows.length
         )
       ):
@@ -502,13 +505,13 @@ private object SpectroscopyModesTable:
             signalToNoise,
             signalToNoiseAt,
             constraints,
-            brightestTarget,
+            asterism,
             _
           ) =>
             import ctx.given
 
-            (wavelength, signalToNoise, signalToNoiseAt, brightestTarget)
-              .mapN: (w, sn, snAt, t) =>
+            (wavelength, signalToNoise, signalToNoiseAt, asterism.flatMap(NonEmptyList.fromList))
+              .mapN: (w, sn, snAt, a) =>
                 val modes =
                   sortedRows
                     .filterNot: row => // Discard modes already in the cache
@@ -519,7 +522,7 @@ private object SpectroscopyModesTable:
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
                             cache.contains:
-                              ItcRequestParams(w, sn, snAt, constraints, t, row.entry.instrument)
+                              ItcRequestParams(w, sn, snAt, constraints, a, row.entry.instrument)
                           case _                                           => true
 
                 Option.when(modes.nonEmpty):
@@ -529,7 +532,7 @@ private object SpectroscopyModesTable:
                     request <-
                       ItcClient[IO]
                         .request:
-                          ItcMessage.Query(w, sn, constraints, t, modes.map(_.entry), snAt)
+                          ItcMessage.Query(w, sn, constraints, a, modes.map(_.entry), snAt)
                         .map:
                           // Avoid rerendering on every single result, it's slow.
                           _.groupWithin(100, 500.millis)
@@ -590,6 +593,7 @@ private object SpectroscopyModesTable:
           atTop,
           virtualizerRef
         ) =>
+          import ItcQueryProblem.*
 
           def toggleRow(
             row: SpectroscopyModeRowWithResult
@@ -607,28 +611,38 @@ private object SpectroscopyModesTable:
               ).withMods(content).compact.when(indexCondition(idx))
             )
 
-          val errLabel: List[VdomNode] = errs
-            .collect {
-              case ItcQueryProblems.MissingWavelength      =>
-                <.label(ExploreStyles.WarningLabel)("Set Wav..")
-              case ItcQueryProblems.MissingSignalToNoise   =>
-                <.label(ExploreStyles.WarningLabel)("Set S/N")
-              case ItcQueryProblems.MissingSignalToNoiseAt =>
-                <.label(ExploreStyles.WarningLabel)("Set S/N at")
-              case ItcQueryProblems.MissingTargetInfo
-                  if props.spectroscopyRequirements.wavelength.isDefined =>
-                <.label(ExploreStyles.WarningLabel)("Missing Target Info")
-              case ItcQueryProblems.MissingBrightness      =>
-                <.label(ExploreStyles.WarningLabel)("No Brightness Defined")
-            }
+          def renderName(name: Option[NonEmptyString]): String =
+            name.fold("")(n => s"$n: ")
 
-          val selectedTarget =
-            for
-              w <- props.spectroscopyRequirements.wavelength
-              t <- props.brightestTarget
-              if props.targets.exists(_.length > 1)
-              if errLabel.isEmpty
-            yield <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}").some
+          val errLabel: List[VdomNode] =
+            errs.collect:
+              case ItcTargetProblem(name, ItcQueryProblem.MissingWavelength)      =>
+                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set Wavelength")
+              case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoise)   =>
+                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N")
+              case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoiseAt) =>
+                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N at")
+              case ItcTargetProblem(name, ItcQueryProblem.MissingTargetInfo)
+                  if props.spectroscopyRequirements.wavelength.isDefined =>
+                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Missing Target Info")
+              case ItcTargetProblem(name, ItcQueryProblem.MissingBrightness)      =>
+                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}No Brightness Defined")
+
+          val selectedTarget: Option[VdomNode] =
+            rows.value
+              .collect:
+                case SpectroscopyModeRowWithResult(
+                      _,
+                      Right(result @ ItcResult.Result(_, _, _)),
+                      _,
+                      _
+                    ) =>
+                  result
+              // Very short exposure times may have ambiguity WRT the brightest target.
+              .maxByOption(result => (result.exposureTime, result.exposures))
+              .flatMap(_.brightestIndex)
+              .flatMap(brightestIndex => props.targets.flatMap(_.get(brightestIndex)))
+              .map(t => <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}"))
 
           React.Fragment(
             <.div(ExploreStyles.ModesTableTitle)(

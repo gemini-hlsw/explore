@@ -3,7 +3,7 @@
 
 package explore.itc
 
-import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
@@ -13,9 +13,9 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
-import lucuma.itc.ChartType
+import lucuma.itc.GraphType
 import lucuma.itc.ItcCcd
-import lucuma.itc.client.OptimizedChartResult
+import lucuma.itc.client.GraphResult
 import lucuma.itc.math.roundToSignificantFigures
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
@@ -27,10 +27,10 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
-  ccds:            Option[NonEmptyList[ItcCcd]],
-  charts:          Option[NonEmptyList[OptimizedChartResult]],
+  ccds:            Option[NonEmptyChain[ItcCcd]],
+  graphs:          Option[NonEmptyChain[GraphResult]],
   error:           Option[String],
-  chartType:       ChartType,
+  graphType:       GraphType,
   targetName:      Option[String],
   signalToNoiseAt: Option[Wavelength],
   loading:         LoadingState,
@@ -41,17 +41,17 @@ object ItcSpectroscopyPlot {
   private type Props = ItcSpectroscopyPlot
 
   private def chartOptions(
-    chart:           OptimizedChartResult,
+    graph:           GraphResult,
     targetName:      Option[String],
     loading:         LoadingState,
     signalToNoiseAt: Option[Wavelength],
     maxSNWavelength: Option[Wavelength]
   ) = {
-    val yAxis            = chart.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis.yAxis)
-    val title            = chart.chartType match
-      case ChartType.SignalChart      => "𝐞⁻ per exposure per spectral pixel"
-      case ChartType.S2NChart         => "S/N per spectral pixel"
-      case ChartType.SignalPixelChart => "S/N per pixel"
+    val yAxis            = graph.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis.yAxis)
+    val title            = graph.graphType match
+      case GraphType.SignalGraph      => "𝐞⁻ per exposure per spectral pixel"
+      case GraphType.S2NGraph         => "S/N per spectral pixel"
+      case GraphType.SignalPixelGraph => "S/N per pixel"
     val (min, max, tick) = yAxis.ticks(10)
 
     val yAxes = YAxisOptions()
@@ -64,7 +64,7 @@ object ItcSpectroscopyPlot {
       .setLineWidth(1)
       .setLabels(YAxisLabelsOptions().setFormat("{value}"))
 
-    val chartClassName = chart.chartType.toString.toLowerCase()
+    val graphClassName = graph.graphType.toString.toLowerCase()
 
     def rounded(x: js.UndefOr[Double | String]): String =
       x.toOption.fold("-") {
@@ -76,18 +76,18 @@ object ItcSpectroscopyPlot {
       (ctx: TooltipFormatterContextObject, t: Tooltip) =>
         val x        = rounded(ctx.x)
         val y        = rounded(ctx.y)
-        val measUnit = if (chart.chartType === ChartType.SignalChart) " 𝐞⁻" else ""
-        s"""<strong>$x nm</strong><br/><span class="$chartClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y$measUnit</strong>"""
+        val measUnit = if (graph.graphType === GraphType.SignalGraph) " 𝐞⁻" else ""
+        s"""<strong>$x nm</strong><br/><span class="$graphClassName highcharts-color-${ctx.colorIndex.toInt}">●</span> ${ctx.series.name}: <strong>$y$measUnit</strong>"""
 
-    val chartTitle = chart.chartType match
-      case ChartType.SignalChart      => "Signal in 1-pixel"
-      case ChartType.S2NChart         => "Signal / Noise"
-      case ChartType.SignalPixelChart => "Pixel"
+    val graphTitle = graph.graphType match
+      case GraphType.SignalGraph      => "Signal in 1-pixel"
+      case GraphType.S2NGraph         => "Signal / Noise"
+      case GraphType.SignalPixelGraph => "Pixel"
 
-    val plotLines = chart.chartType match
-      case ChartType.SignalChart      => js.Array()
-      case ChartType.SignalPixelChart => js.Array()
-      case ChartType.S2NChart         =>
+    val plotLines = graph.graphType match
+      case GraphType.SignalGraph      => js.Array()
+      case GraphType.SignalPixelGraph => js.Array()
+      case GraphType.S2NGraph         =>
         signalToNoiseAt
           .orElse(maxSNWavelength)
           .map(_.toNanometers.value.value.toDouble)
@@ -111,13 +111,13 @@ object ItcSpectroscopyPlot {
               ExploreStyles.ItcPlotLoading.when_(loading.value)
           )
       )
-      .setTitle(TitleOptions().setText(chartTitle))
+      .setTitle(TitleOptions().setText(graphTitle))
       .setSubtitle(
         targetName.fold(SubtitleOptions().setTextUndefined)(t => SubtitleOptions().setText(t))
       )
       .setCredits(CreditsOptions().setEnabled(false))
       .setLegend(LegendOptions().setMargin(0))
-      .setTooltip(TooltipOptions().setFormatter(tooltipFormatter).setClassName(chartClassName))
+      .setTooltip(TooltipOptions().setFormatter(tooltipFormatter).setClassName(graphClassName))
       .setXAxis(
         XAxisOptions()
           .setType(AxisTypeValue.linear)
@@ -138,7 +138,7 @@ object ItcSpectroscopyPlot {
           )
       )
       .setSeries(
-        chart.series
+        graph.series
           .map: series =>
             SeriesLineOptions((), ())
               .setName(series.title)
@@ -148,14 +148,14 @@ object ItcSpectroscopyPlot {
                   .map(p => (p(0), p(1)): Chart.Data)
                   .toJSArray
               )
-              .setClassName(chartClassName)
+              .setClassName(graphClassName)
               .setLineWidth(1)
           .map(_.asInstanceOf[SeriesOptionsType])
           .toJSArray
       )
   }
 
-  private val EmptyChartOptions: Reusable[Options] =
+  private val EmptyGraphOptions: Reusable[Options] =
     Reusable.always {
       val yAxis = YAxisOptions()
         .setAllowDecimals(false)
@@ -199,11 +199,11 @@ object ItcSpectroscopyPlot {
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useMemoBy(props =>
-      (props.charts, props.targetName, props.loading, props.signalToNoiseAt, props.ccds)
+      (props.graphs, props.targetName, props.loading, props.signalToNoiseAt, props.ccds)
     ): _ =>
-      (charts, targetName, loading, signalToNoiseAt, ccds) =>
-        val series: List[OptimizedChartResult] =
-          charts.filterNot(_ => loading.value).foldMap(_.toList)
+      (graphs, targetName, loading, signalToNoiseAt, ccds) =>
+        val series: List[GraphResult] =
+          graphs.filterNot(_ => loading.value).foldMap(_.toList)
 
         val maxSNWavelength: Option[Wavelength] =
           ccds
@@ -213,21 +213,21 @@ object ItcSpectroscopyPlot {
             .map(_._2)
 
         series
-          .map: chart =>
-            chart.chartType -> chartOptions(
-              chart,
+          .map: graph =>
+            graph.graphType -> chartOptions(
+              graph,
               targetName,
               loading,
               signalToNoiseAt,
               maxSNWavelength
             )
           .toMap
-    .useMemoBy((props, itcChartOptions) => (props.chartType, itcChartOptions)): (_, _) =>
-      (chartType, itcChartOptions) => itcChartOptions.get(chartType)
+    .useMemoBy((props, itcGraphOptions) => (props.graphType, itcGraphOptions)): (_, _) =>
+      (graphType, itcGraphOptions) => itcGraphOptions.get(graphType)
     .render: (props, _, options) =>
       val loading = props.loading.value
 
-      val chartOptions: Reusable[Options] = options.sequenceOption.getOrElse(EmptyChartOptions)
+      val chartOptions: Reusable[Options] = options.sequenceOption.getOrElse(EmptyGraphOptions)
 
       def formatErrorMessage(c: Chart_): Callback =
         c.showLoadingCB.when_(loading) *>

@@ -12,7 +12,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
-import lucuma.itc.ChartType
+import lucuma.itc.GraphType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.refined.*
@@ -23,34 +23,34 @@ import lucuma.ui.syntax.all.given
 import monocle.Prism
 
 case class ItcPlotControl(
-  chartType:   View[ChartType],
+  graphType:   View[GraphType],
   showDetails: View[PlotDetails]
 ) extends ReactFnProps[ItcPlotControl](ItcPlotControl.component)
 
-enum AllowedChartType(val tag: String) derives Enumerated:
-  case S2N    extends AllowedChartType("sn")
-  case Signal extends AllowedChartType("signal")
+enum AllowedGraphType(val tag: String) derives Enumerated:
+  case S2N    extends AllowedGraphType("sn")
+  case Signal extends AllowedGraphType("signal")
 
 object ItcPlotControl:
   private type Props = ItcPlotControl
 
-  private given Display[AllowedChartType] = Display.byShortName {
-    case AllowedChartType.S2N    => "S/N"
-    case AllowedChartType.Signal => "Signal"
+  private given Display[AllowedGraphType] = Display.byShortName {
+    case AllowedGraphType.S2N    => "S/N"
+    case AllowedGraphType.Signal => "Signal"
   }
 
-  private val typePrism: Prism[ChartType, AllowedChartType] = Prism[ChartType, AllowedChartType] {
-    case ChartType.S2NChart    => Some(AllowedChartType.S2N)
-    case ChartType.SignalChart => Some(AllowedChartType.Signal)
+  private val typePrism: Prism[GraphType, AllowedGraphType] = Prism[GraphType, AllowedGraphType] {
+    case GraphType.S2NGraph    => Some(AllowedGraphType.S2N)
+    case GraphType.SignalGraph => Some(AllowedGraphType.Signal)
     case _                     => None
   } {
-    case AllowedChartType.S2N    => ChartType.S2NChart
-    case AllowedChartType.Signal => ChartType.SignalChart
+    case AllowedGraphType.S2N    => GraphType.S2NGraph
+    case AllowedGraphType.Signal => GraphType.SignalGraph
   }
 
   private val component = ScalaFnComponent[Props] { props =>
     val descText     = if (props.showDetails.get.value) "Hide details" else "Show details"
-    val allowedChart = props.chartType.zoom(typePrism).asView
+    val allowedChart = props.graphType.zoom(typePrism).asView
 
     <.div(ExploreStyles.ItcPlotControls)(
       HelpIcon(

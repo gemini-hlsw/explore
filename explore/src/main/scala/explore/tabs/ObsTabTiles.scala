@@ -6,7 +6,6 @@ package explore.tabs
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.ErrorPolicy
 import clue.FetchClient
 import crystal.*
 import crystal.Pot.Ready
@@ -35,8 +34,7 @@ import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
-import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcExposureTime
+import explore.model.itc.ItcGraphResult
 import explore.model.itc.ItcTarget
 import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
@@ -130,57 +128,22 @@ object ObsTabTiles:
     )
 
   private def itcQueryProps(
-    obs:             Observation,
-    itcExposureTime: Option[ItcExposureTime],
-    selectedConfig:  Option[BasicConfigAndItc],
-    targetsList:     TargetList
+    obs:            Observation,
+    selectedConfig: Option[BasicConfigAndItc],
+    targetsList:    TargetList
   ): ItcProps =
-    ItcProps(
-      obs,
-      itcExposureTime,
-      selectedConfig,
-      targetsList,
-      obs.toModeOverride
-    )
+    ItcProps(obs, selectedConfig, targetsList, obs.toModeOverride)
 
   private case class Offsets(
     science:     Option[NonEmptyList[Offset]],
     acquisition: Option[NonEmptyList[Offset]]
   )
 
-  private def expTime(
-    selectedConfig: Option[BasicConfigAndItc],
-    odbItc:         Option[OdbItcResult.Success]
-  ): Option[ItcExposureTime] =
-    val tableItc = for {
-      conf <- selectedConfig
-      res  <- conf.itcResult.flatMap(_.toOption)
-      itc  <- res.toItcExposureTime
-    } yield itc
-    odbItc.map(_.toItcExposureTime).orElse(tableItc)
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStreamResourceOnMountBy: (props, ctx) =>
-        import ctx.given
-
-        ObsItcQuery[IO]
-          .query(props.obsId)(ErrorPolicy.RaiseOnNoData)
-          .map:
-            _.data.observation.map: o =>
-              OdbItcResult.Success(
-                o.itc.science.selected.exposureTime,
-                o.itc.science.selected.exposures,
-                o.itc.science.selected.signalToNoise,
-                o.itc.acquisition.selected.exposures,
-                o.itc.acquisition.selected.signalToNoise
-              )
-          // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals:
-            ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
-      .useStreamResourceOnMountBy: (props, ctx, _) =>
         import ctx.given
 
         SequenceOffsets[IO]
@@ -208,53 +171,44 @@ object ObsTabTiles:
       .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateWithReuseBy: (props, _, odbItc, _, _, _, selectedConfig) =>
-        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
-
-        itcQueryProps(
-          props.observation.get,
-          time,
-          selectedConfig.get,
-          props.allTargets
-        )
+      .useStateWithReuseBy: (props, _, _, _, _, selectedConfig) =>
+        itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
       // Chart results
-      .useState(Map.empty[ItcTarget, Pot[ItcChartResult]])
+      .useState(Map.empty[ItcTarget, Pot[ItcGraphResult]])
+      // Brightest target
+      .useState(none[ItcTarget])
       // itc loading
       .useStateWithReuse(LoadingState.Done)
-      .useEffectWithDepsBy { (props, _, odbItc, _, _, _, selectedConfig, _, _, _) =>
-        val time = expTime(selectedConfig.get, odbItc.toOption.flatten)
-
-        itcQueryProps(
-          props.observation.get,
-          time,
-          selectedConfig.get,
-          props.allTargets
-        )
-      } { (props, ctx, _, _, _, _, _, oldItcProps, charts, loading) => itcProps =>
+      .useEffectWithDepsBy((props, _, _, _, _, selectedConfig, _, _, _, _) =>
+        itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
+      ) { (props, ctx, _, _, _, _, oldItcProps, graphs, brightestTarget, loading) => itcProps =>
         import ctx.given
 
         oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
           itcProps
-            .requestChart(
-              m => {
-                val r = m.map {
-                  case (k, Left(e))  =>
-                    k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcChartResult])
-                  case (k, Right(e)) =>
-                    k -> (Pot.Ready(e): Pot[ItcChartResult])
-                }.toMap
-                charts
-                  .setStateAsync(r) *> loading.setState(LoadingState.Done).value.toAsync
+            .requestGraphs(
+              (asterismGraphs, brightestTargetResult) => {
+                val graphsResult =
+                  asterismGraphs
+                    .map:
+                      case (k, Left(e))  =>
+                        k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcGraphResult])
+                      case (k, Right(e)) =>
+                        k -> (Pot.Ready(e): Pot[ItcGraphResult])
+                    .toMap
+                graphs.setStateAsync(graphsResult) *>
+                  brightestTarget.setStateAsync(brightestTargetResult) *>
+                  loading.setState(LoadingState.Done).value.toAsync
               },
-              (charts.setState(
+              (graphs.setState(
                 itcProps.targets
-                  .map(t =>
-                    t -> Pot.error(
+                  .map: t =>
+                    t -> Pot.error:
                       new RuntimeException("Not enough information to calculate the ITC graph")
-                    )
-                  )
                   .toMap
-              ) *> loading.setState(LoadingState.Done)).toAsync,
+              ) *>
+                brightestTarget.setState(none) *>
+                loading.setState(LoadingState.Done)).toAsync,
               loading.setState(LoadingState.Loading).value.toAsync
             )
             .whenA(itcProps.isExecutable)
@@ -270,13 +224,13 @@ object ObsTabTiles:
         (
           props,
           ctx,
-          itc,
           sequenceOffsets,
           agsState,
           selectedPA,
           selectedConfig,
           itcProps,
-          itcChartResults,
+          itcGraphResults,
+          itcBrightestTarget,
           itcLoading,
           sequenceChanged,
           vizTimeOrNowPot
@@ -380,7 +334,6 @@ object ObsTabTiles:
                 props.obsId,
                 props.obsExecution,
                 asterismIds.get,
-                itc.toOption.flatten,
                 sequenceChanged
               )
 
@@ -390,7 +343,8 @@ object ObsTabTiles:
                 props.obsId,
                 props.allTargets,
                 itcProps.value,
-                itcChartResults.value,
+                itcGraphResults.value,
+                itcBrightestTarget.value,
                 itcLoading.value,
                 props.globalPreferences
               )

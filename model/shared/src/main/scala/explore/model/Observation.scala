@@ -64,8 +64,11 @@ case class Observation(
   observerNotes:       Option[NonEmptyString],
   calibrationRole:     Option[CalibrationRole]
 ) derives Eq:
+  lazy val basicConfiguration: Option[BasicConfiguration] =
+    observingMode.map(_.toBasicConfiguration)
+
   lazy val configurationSummary: Option[String] =
-    observingMode.map(_.toBasicConfiguration) match
+    basicConfiguration match
       case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
         s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
       case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>

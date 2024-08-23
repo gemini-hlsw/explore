@@ -8,8 +8,8 @@ import cats.*
 import cats.effect.*
 import cats.syntax.all.*
 import explore.model.boopickle.ItcPicklers.given
+import lucuma.itc.ItcVersions
 import lucuma.itc.client.ItcClient
-import lucuma.itc.client.ItcVersions
 import org.typelevel.log4cats.Logger
 import workers.*
 

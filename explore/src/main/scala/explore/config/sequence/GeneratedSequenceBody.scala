@@ -3,6 +3,8 @@
 
 package explore.config.sequence
 
+import cats.Eq
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.ErrorPolicy
@@ -43,14 +45,30 @@ case class GeneratedSequenceBody(
   programId:       Program.Id,
   obsId:           Observation.Id,
   targetIds:       List[Target.Id],
-  snPerClass:      Map[ObserveClass, SignalToNoise],
   sequenceChanged: View[Pot[Unit]]
 ) extends ReactFnProps(GeneratedSequenceBody.component)
 
 object GeneratedSequenceBody:
   private type Props = GeneratedSequenceBody
 
-  private given Reusability[InstrumentExecutionConfig] = Reusability.byEq
+  private case class SequenceData(
+    config:     InstrumentExecutionConfig,
+    snPerClass: Map[ObserveClass, SignalToNoise]
+  ) derives Eq
+
+  private object SequenceData:
+    def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
+      data.observation.flatMap: obs =>
+        obs.execution.config.map: config =>
+          SequenceData(
+            config,
+            Map(
+              ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
+              ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
+            )
+          )
+
+    given Reusability[SequenceData] = Reusability.byEq
 
   private val component =
     ScalaFnComponent
@@ -76,7 +94,7 @@ object GeneratedSequenceBody:
 
         SequenceQuery[IO]
           .query(props.obsId)
-          .map(_.observation.flatMap(_.execution.config))
+          .map(x => SequenceData.fromOdbResponse(x))
           .attemptPot
           .resetOnResourceSignals:
             for
@@ -84,30 +102,32 @@ object GeneratedSequenceBody:
                      .subscribe[IO](props.obsId.toObservationEditInput)
               t <- targetChanges
             yield o.merge(t.sequence)
-      .useEffectWithDepsBy((_, _, visits, config) =>
-        (visits.toPot.flatten, config.toPot.flatten).tupled
+      .useEffectWithDepsBy((_, _, visits, sequenceData) =>
+        (visits.toPot.flatten, sequenceData.toPot.flatten).tupled
       ): (props, _, _, _) =>
         dataPot => props.sequenceChanged.set(dataPot.void)
-      .render: (props, _, visits, config) =>
+      .render: (props, _, visits, sequenceData) =>
         props.sequenceChanged.get
-          .flatMap(_ => (visits.toPot.flatten, config.toPot.flatten).tupled) // tupled for Pot
+          .flatMap(_ => (visits.toPot.flatten, sequenceData.toPot.flatten).tupled) // tupled for Pot
           .renderPot(
             _.tupled // tupled for Option
               .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
                 case (
                       ExecutionVisits.GmosNorth(_, visits),
-                      InstrumentExecutionConfig.GmosNorth(config)
+                      SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass)
                     ) =>
-                  GmosNorthSequenceTable(visits, config, props.snPerClass)
+                  GmosNorthSequenceTable(visits, config, snPerClass)
                 case (
                       ExecutionVisits.GmosSouth(_, visits),
-                      InstrumentExecutionConfig.GmosSouth(config)
+                      SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass)
                     ) =>
-                  GmosSouthSequenceTable(visits, config, props.snPerClass)
+                  GmosSouthSequenceTable(visits, config, snPerClass)
                 case _ =>
                   <.div("MISMATCH!!!") // TODO Nice error message, which should never happen BTW
               },
             errorRender = m =>
+              m.printStackTrace()
+
               val msg = m match
                 case clue.ResponseException(errors, _)
                     if errors.exists(_.message.startsWith("ITC returned")) =>
@@ -115,8 +135,7 @@ object GeneratedSequenceBody:
                 case _ =>
                   "No sequence available, you may need to setup a configuration"
 
-              <.div(
-                ExploreStyles.SequencesPanelError,
+              <.div(ExploreStyles.SequencesPanelError)(
                 Message(
                   text = msg,
                   severity = Message.Severity.Warning,

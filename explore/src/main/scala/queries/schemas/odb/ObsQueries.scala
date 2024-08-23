@@ -10,16 +10,13 @@ import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.OdbItcResult
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
-import lucuma.core.model.ExposureTimeMode.FixedExposureMode
 import lucuma.core.model.Group
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -40,9 +37,9 @@ object ObsQueries:
 
   private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
 
-  extension (self: OdbItcResult.Success)
-    def asFixedExposureTime: FixedExposureMode =
-      FixedExposureMode(PosInt.unsafeFrom(self.sciExposures.value), self.sciExposureTime)
+  // extension (self: OdbItcResult.Success)
+  //   def asFixedExposureTime: FixedExposureMode =
+  //     FixedExposureMode(PosInt.unsafeFrom(self.sciExposures.value), self.sciExposureTime)
 
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],

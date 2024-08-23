@@ -11,7 +11,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.MissingInfoMsg
 import explore.model.LoadingState
-import explore.model.itc.ItcChartResult
+import explore.model.itc.ItcGraphResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -25,7 +25,7 @@ import lucuma.ui.utils.*
 
 case class ItcPanelTitle(
   itcPanelProps:   ItcProps,
-  itcChartResults: Map[ItcTarget, Pot[ItcChartResult]],
+  ItcGraphResults: Map[ItcTarget, Pot[ItcGraphResult]],
   itcLoading:      LoadingState,
   tileState:       View[ItcPanelTileState]
 ) extends ReactFnProps(ItcPanelTitle.component) {
@@ -36,18 +36,18 @@ object ItcPanelTitle:
   private type Props = ItcPanelTitle
 
   private val pendingChart =
-    Pot.pending[ItcChartResult]
+    Pot.pending[ItcGraphResult]
 
   private val component =
     ScalaFnComponent[Props] { props =>
       def newSelected(p: Int): Option[ItcTarget] =
         props.itcPanelProps.targets.lift(p)
 
-      val selectedResult: Pot[ItcChartResult] =
+      val selectedResult: Pot[ItcGraphResult] =
         Pot
           .fromOption(props.selectedTarget.get)
           .filterNot(_ => props.itcLoading.value)
-          .flatMap(t => props.itcChartResults.getOrElse(t, pendingChart))
+          .flatMap(t => props.ItcGraphResults.getOrElse(t, pendingChart))
 
       val selectedTarget = props.selectedTarget
       val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.get.isDefined
@@ -56,13 +56,13 @@ object ItcPanelTitle:
       val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)
       val itcTargetsWithIndex = itcTargets.zipWithIndex
 
-      def singleSN: ItcChartResult => VdomNode =
-        (r: ItcChartResult) => <.span(formatSN(r.singleSNRatio.value))
+      def singleSN: ItcGraphResult => VdomNode =
+        (r: ItcGraphResult) => <.span(formatSN(r.singleSNRatio.value))
 
-      def totalSN: ItcChartResult => VdomNode =
-        (r: ItcChartResult) => <.span(formatSN(r.finalSNRatio.value))
+      def totalSN: ItcGraphResult => VdomNode =
+        (r: ItcGraphResult) => <.span(formatSN(r.finalSNRatio.value))
 
-      def snSection(title: String, fn: ItcChartResult => VdomNode) =
+      def snSection(title: String, fn: ItcGraphResult => VdomNode) =
         React.Fragment(
           <.label(title),
           if (existTargets && props.itcPanelProps.isExecutable) {
