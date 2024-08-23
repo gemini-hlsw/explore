@@ -39,7 +39,6 @@ import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.scalajs.dom.Element
-import org.scalajs.dom.RequestCache
 import org.typelevel.log4cats.Logger
 
 import java.util.concurrent.TimeUnit

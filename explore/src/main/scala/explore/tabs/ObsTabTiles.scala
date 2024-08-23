@@ -25,7 +25,6 @@ import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
 import explore.model.Observation
-import explore.model.Observation.observingMode
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters

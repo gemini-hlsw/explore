@@ -14,7 +14,6 @@ import explore.data.tree.*
 import explore.data.tree.KeyedIndexedTree.Index
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
-import explore.undo.*
 import log4cats.loglevel.LogLevelLogger
 import lucuma.refined.*
 import monocle.Focus

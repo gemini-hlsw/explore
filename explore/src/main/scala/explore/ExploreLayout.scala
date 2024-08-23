@@ -15,7 +15,6 @@ import explore.cache.PreferencesCacheController
 import explore.cache.ProgramCacheController
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
-import explore.events.ExploreEvent.LogoutEventId
 import explore.model.*
 import explore.model.AppContext
 import explore.model.enums.AppTab

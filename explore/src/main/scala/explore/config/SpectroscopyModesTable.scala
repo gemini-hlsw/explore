@@ -4,7 +4,6 @@
 package explore.config
 
 import boopickle.DefaultBasic.*
-import cats.Eq
 import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder

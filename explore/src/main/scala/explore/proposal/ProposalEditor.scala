@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.Order.*
 import cats.effect.IO
 import clue.*
 import clue.data.Input
@@ -31,7 +30,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.User
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*

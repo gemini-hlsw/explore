@@ -12,8 +12,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
-import explore.data.tree.KeyedIndexedTree
-import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused

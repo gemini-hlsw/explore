@@ -6,7 +6,6 @@ package explore.optics
 import coulomb.*
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
-import coulomb.units.constants.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
 import lucuma.core.math.BrightnessValue

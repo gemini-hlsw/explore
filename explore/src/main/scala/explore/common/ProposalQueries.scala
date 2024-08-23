@@ -10,8 +10,6 @@ import explore.model.PartnerSplit
 import explore.model.Proposal
 import explore.model.ProposalType
 import lucuma.core.enums.CallForProposalsType
-import lucuma.core.enums.ToOActivation
-import lucuma.core.model.CallForProposals
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.ClassicalInput
 import lucuma.schemas.ObservationDB.Types.DemoScienceInput

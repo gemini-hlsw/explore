@@ -7,7 +7,6 @@ import cats.effect.IO
 import clue.FetchClient
 import crystal.react.*
 import explore.common.AsterismQueries
-import explore.common.AsterismQueries.*
 import explore.data.KeyedIndexedList
 import explore.model.ObsIdSet
 import explore.model.Observation

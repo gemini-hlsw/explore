@@ -21,7 +21,6 @@ import explore.programs.ProgramChangeRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps

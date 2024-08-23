@@ -6,7 +6,6 @@ package explore.proposal
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.*
 import crystal.react.*
 import explore.Icons
 import explore.components.Tile

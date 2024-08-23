@@ -3,7 +3,6 @@
 
 package explore.targeteditor
 
-import cats.Eq
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.hooks.*

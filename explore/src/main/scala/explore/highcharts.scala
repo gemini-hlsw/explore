@@ -5,7 +5,6 @@ package explore.highcharts
 
 import japgolly.scalajs.react.*
 import lucuma.react.common.style.Css
-import lucuma.typed.highcharts.highchartsStrings
 import lucuma.typed.highcharts.mod.*
 
 extension (c: Chart_)

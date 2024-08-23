@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.Eq
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
