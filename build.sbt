@@ -367,7 +367,9 @@ ThisBuild / githubWorkflowAddedJobs +=
       // firebaseDeployReview ::
       firebaseDeployDev ::
       Nil,
-    scalas = List(scalaVersion.value),
+    // Only 1 scalaVersion, so no need for matrix
+    sbtStepPreamble = Nil,
+    scalas = Nil,
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
   )
