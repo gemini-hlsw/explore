@@ -129,7 +129,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.5.0]
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
@@ -168,7 +167,7 @@ jobs:
         run: npm clean-install --verbose
 
       - name: Stage
-        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' stage
+        run: sbt -v -J-Xmx6g stage
 
       - name: Build application
         env:
