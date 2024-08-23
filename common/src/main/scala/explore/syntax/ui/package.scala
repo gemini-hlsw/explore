@@ -32,7 +32,6 @@ import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
 
 extension (self: Window)
   // Keep this as def to take the value window.innerWidth at the current time

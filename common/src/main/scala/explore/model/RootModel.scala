@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.RootModel.programReference
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.UndoStacks
 import lucuma.core.model.GuestUser

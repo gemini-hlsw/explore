@@ -3,7 +3,6 @@
 
 package explore.components
 
-import cats.syntax.all.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*

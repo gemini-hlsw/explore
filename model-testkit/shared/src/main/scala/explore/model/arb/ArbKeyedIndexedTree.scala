@@ -9,7 +9,6 @@ import explore.data.tree.Tree
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 import org.scalacheck.Cogen
-import org.scalacheck.Cogen.*
 
 trait ArbKeyedIndexedTree {
   implicit def keyedIndexedTreeArb[K, A](implicit

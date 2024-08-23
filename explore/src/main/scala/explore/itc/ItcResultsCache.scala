@@ -5,7 +5,6 @@ package explore.model.itc
 
 import cats.data.*
 import cats.syntax.all.*
-import explore.model.itc.*
 import explore.model.itc.math.*
 import explore.modes.*
 import lucuma.core.enums.*

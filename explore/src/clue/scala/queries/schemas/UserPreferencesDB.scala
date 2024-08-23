@@ -5,7 +5,6 @@ package queries.schemas
 
 import clue.annotation.GraphQLSchema
 import explore.model.Constants
-import explore.model.enums
 import io.circe.Decoder
 import io.circe.Encoder
 import lucuma.core.model.User

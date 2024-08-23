@@ -3,9 +3,7 @@
 
 package explore
 
-import cats.Eq
 import cats.Order
-import cats.syntax.all.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.numeric.*
 import lucuma.core.math.Angle

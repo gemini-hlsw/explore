@@ -3,7 +3,6 @@
 
 package explore.programs
 
-import cats.syntax.all.*
 import crystal.Pot
 import explore.components.ui.ExploreStyles
 import explore.model.CategoryAllocationList

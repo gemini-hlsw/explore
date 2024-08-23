@@ -19,7 +19,6 @@ import lucuma.itc.client.OptimizedChartResult
 import lucuma.itc.math.roundToSignificantFigures
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
-import lucuma.typed.highcharts.mod.DashStyleValue
 import lucuma.typed.highcharts.mod.{^ as _, *}
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given

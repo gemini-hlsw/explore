@@ -9,7 +9,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.components.ui.ExploreStyles.*
 import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

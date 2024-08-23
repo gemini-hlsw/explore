@@ -5,7 +5,6 @@ package explore.model.itc
 
 import cats.data.*
 import eu.timepit.refined.types.numeric.PosInt
-import explore.model.itc.*
 import explore.modes.InstrumentRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength

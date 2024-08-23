@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.Grouping
 import lucuma.core.model.Group

@@ -11,7 +11,6 @@ import clue.data.Input
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.DefaultErrorPolicy
 import explore.common.Aligner
