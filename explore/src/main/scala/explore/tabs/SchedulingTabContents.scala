@@ -122,7 +122,8 @@ object SchedulingTabContents extends TwoPanels:
                 )
 
               val timingWindowsTile =
-                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly)
+                TimingWindowsTile
+                  .timingWindowsPanel(timingWindows, props.readonly, true)
 
               TileController(
                 props.userId,
@@ -153,5 +154,5 @@ object SchedulingTabContents extends TwoPanels:
           if (LinkingInfo.developmentMode)
             FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
           else EmptyVdom,
-          makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Multi, resize)
+          makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Single, resize)
         )

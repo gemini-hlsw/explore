@@ -3285,3 +3285,7 @@ a.explore-upgrade-link {
 .explore-hidden {
   visibility: hidden;
 }
+
+.pl-react-table.pl-very-compact .p-datatable-tbody > tr > td.p-datatable-emptymessage {
+  padding: 0;
+}

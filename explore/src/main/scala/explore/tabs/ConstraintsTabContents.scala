@@ -169,7 +169,7 @@ object ConstraintsTabContents extends TwoPanels:
                 )
 
               val timingWindowsTile =
-                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly)
+                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly, false)
 
               TileController(
                 props.userId,
