@@ -69,12 +69,18 @@ case class TimingWindowsBody(
 object TimingWindowsTile:
   def timingWindowsPanel(
     timingWindows: View[List[TimingWindow]],
-    readOnly:      Boolean
+    readOnly:      Boolean,
+    fullSize:      Boolean
   ) =
     val base  = "Scheduling Windows"
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
-    Tile(ObsTabTilesIds.TimingWindowsId.id, title, TimingWindowsTileState())(
+    Tile(ObsTabTilesIds.TimingWindowsId.id,
+         title,
+         TimingWindowsTileState(),
+         canMaximize = !fullSize,
+         canMinimize = !fullSize
+    )(
       TimingWindowsBody(timingWindows, readOnly, _),
       TimingWindowsTitle(timingWindows, readOnly, _, _)
     )

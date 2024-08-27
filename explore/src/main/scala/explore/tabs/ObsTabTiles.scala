@@ -506,7 +506,7 @@ object ObsTabTiles:
               )
 
             val timingWindowsTile =
-              TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled)
+              TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled, false)
 
             val configurationTile =
               ConfigurationTile.configurationTile(
