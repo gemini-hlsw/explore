@@ -13,6 +13,7 @@ import io.circe.refined.given
 import lucuma.core.enums.CallForProposalsType
 import lucuma.core.enums.Partner
 import lucuma.core.model.CallForProposals
+import lucuma.core.model.PartnerLink
 import lucuma.core.model.Semester
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
@@ -27,22 +28,26 @@ case class CallPartner(
       Decoder
 
 case class CallForProposal(
-  id:                        CallForProposals.Id,
-  semester:                  Semester,
-  title:                     NonEmptyString,
-  cfpType:                   CallForProposalsType,
-  partners:                  List[CallPartner],
-  submissionDeadlineDefault: Option[Timestamp]
+  id:                 CallForProposals.Id,
+  semester:           Semester,
+  title:              NonEmptyString,
+  cfpType:            CallForProposalsType,
+  partners:           List[CallPartner],
+  nonPartnerDeadline: Option[Timestamp]
 ) derives Eq,
       Decoder:
 
-  def deadline(proposalPartners: List[Partner]): Option[Timestamp] =
-    val callPartners = partners
-    proposalPartners
-      .map(p => callPartners.find(_.partner === p).flatMap(_.submissionDeadline))
-      .minimumOption
-      .flatten
-      .orElse(submissionDeadlineDefault)
+  def deadline(piPartner: Option[PartnerLink]): Option[Timestamp] =
+    piPartner.flatMap {
+      _.fold(
+        None,
+        nonPartnerDeadline,
+        p =>
+          partners
+            .find(p => piPartner.flatMap(_.partnerOption).exists(_ === p.partner))
+            .flatMap(_.submissionDeadline)
+      )
+    }
 
 object CallForProposal:
   val id: Lens[CallForProposal, CallForProposals.Id] =

@@ -8,10 +8,12 @@ import cats.derived.*
 import cats.syntax.all.*
 import io.circe.Decoder
 import lucuma.core.enums.ProgramType
+import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
 import lucuma.schemas.enums.ProposalStatus
 import monocle.Focus
 import monocle.Lens
+import monocle.Optional
 
 case class ProgramDetails(
   programType:    ProgramType,
@@ -34,6 +36,9 @@ object ProgramDetails:
       b => b.copy(pi = a.headOption, users = a.tail)
     )
   val reference: Lens[ProgramDetails, Option[ProgramReference]] = Focus[ProgramDetails](_.reference)
+  val pi: Lens[ProgramDetails, Option[ProgramUserWithRole]]     = Focus[ProgramDetails](_.pi)
+  val piPartner: Optional[ProgramDetails, Option[PartnerLink]]  =
+    pi.some.andThen(ProgramUserWithRole.partnerLink)
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {

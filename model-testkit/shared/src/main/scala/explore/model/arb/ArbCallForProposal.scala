@@ -56,9 +56,7 @@ trait ArbCallForProposal {
        Option[Timestamp],
        List[CallPartner]
       )
-    ].contramap(p =>
-      (p.id, p.semester, p.title, p.cfpType, p.submissionDeadlineDefault, p.partners)
-    )
+    ].contramap(p => (p.id, p.semester, p.title, p.cfpType, p.nonPartnerDeadline, p.partners))
 }
 
 object ArbCallForProposal extends ArbCallForProposal

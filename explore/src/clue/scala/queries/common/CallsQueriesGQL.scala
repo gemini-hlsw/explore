@@ -18,7 +18,7 @@ object CallsQueriesGQL:
             semester
             title
             cfpType: type
-            submissionDeadlineDefault
+            nonPartnerDeadline
             partners {
               partner
               submissionDeadline

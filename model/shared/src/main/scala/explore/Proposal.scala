@@ -10,9 +10,9 @@ import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.refined.*
-import lucuma.core.enums.Partner
 import lucuma.core.enums.TacCategory
 import lucuma.core.model.CallForProposals
+import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProposalReference
 import lucuma.core.util.Timestamp
 import monocle.Focus
@@ -30,17 +30,9 @@ case class Proposal(
   abstrakt:     Option[NonEmptyString],
   proposalType: Option[ProposalType],
   reference:    Option[ProposalReference]
-) derives Eq {
-  val partners: List[Partner] =
-    proposalType
-      .flatMap(ProposalType.partnerSplits.getOption)
-      .orEmpty
-      .map(_.partner)
-
-  def deadline(cfps: List[CallForProposal]): Option[Timestamp] =
-    cfps.find(u => callId.exists(_ === u.id)).flatMap(_.deadline(partners))
-
-}
+) derives Eq:
+  def deadline(cfps: List[CallForProposal], piPartner: Option[PartnerLink]): Option[Timestamp] =
+    cfps.find(u => callId.exists(_ === u.id)).flatMap(_.deadline(piPartner))
 
 object Proposal:
   val callId: Lens[Proposal, Option[CallForProposals.Id]]  =
