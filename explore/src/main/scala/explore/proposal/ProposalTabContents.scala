@@ -163,8 +163,11 @@ object ProposalTabContents:
       programDetails
         .zoom(ProgramDetails.proposal)
         .mapValue((proposalView: View[Proposal]) =>
+          val piPartner =
+            programDetails.zoom(ProgramDetails.piPartner.some).get
+
           val deadline: Option[Timestamp] =
-            proposalView.get.deadline(cfps)
+            proposalView.get.deadline(cfps, piPartner)
 
           <.div(
             ExploreStyles.ProposalTab,

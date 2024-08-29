@@ -46,9 +46,10 @@ case class RootModel(
       .orElse(RootModel.proposalReference.getOption(this).map(_.label))
 
   val deadline: Option[Timestamp] =
-    (RootModel.proposal.getOption(this).flatten, RootModel.cfps.get(this))
-      .mapN(_.deadline(_))
-      .flatten
+    (RootModel.proposal.getOption(this).flatten, RootModel.cfps.get(this)).mapN { (p, c) =>
+      val piP = RootModel.piPartner.getOption(this)
+      p.deadline(c, piP)
+    }.flatten
 
 }
 
@@ -94,3 +95,8 @@ object RootModel:
 
   val proposal: Optional[RootModel, Option[Proposal]] =
     programSummaries.some.andThen(ProgramSummaries.proposal)
+
+  val piPartner = RootModel.programSummaries.some.andThen(
+    ProgramSummaries.optProgramDetails.some
+      .andThen(ProgramDetails.piPartner.some)
+  )

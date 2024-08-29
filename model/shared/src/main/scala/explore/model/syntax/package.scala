@@ -102,12 +102,12 @@ object all:
 
   extension (ts: Timestamp)
     def formatUtc: String =
-      s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
-        s"${Constants.GppTimeTZFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
+      val i = ts.toInstant.atOffset(ZoneOffset.UTC)
+      s"${Constants.GppDateFormatter.format(i)} @ ${Constants.GppTimeTZFormatter.format(i)}"
 
     def formatUtcWithZone: String =
-      s"${Constants.GppDateFormatter.format(ts.toInstant.atOffset(ZoneOffset.UTC))} @ " +
-        s"${Constants.GppTimeTZFormatterWithZone.format(ts.toInstant.atOffset(ZoneOffset.UTC))}"
+      val i = ts.toInstant.atOffset(ZoneOffset.UTC)
+      s"${Constants.GppDateFormatter.format(i)} @ ${Constants.GppTimeTZFormatterWithZone.format(i)}"
 
   extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)
 
