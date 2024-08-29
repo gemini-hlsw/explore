@@ -28,12 +28,12 @@ case class CallPartner(
       Decoder
 
 case class CallForProposal(
-  id:                        CallForProposals.Id,
-  semester:                  Semester,
-  title:                     NonEmptyString,
-  cfpType:                   CallForProposalsType,
-  partners:                  List[CallPartner],
-  submissionDeadlineDefault: Option[Timestamp]
+  id:                 CallForProposals.Id,
+  semester:           Semester,
+  title:              NonEmptyString,
+  cfpType:            CallForProposalsType,
+  partners:           List[CallPartner],
+  nonPartnerDeadline: Option[Timestamp]
 ) derives Eq,
       Decoder:
 
@@ -41,15 +41,11 @@ case class CallForProposal(
     piPartner.flatMap {
       _.fold(
         None,
-        partners
-          .find(_.partner === Partner.US)
-          .flatMap(_.submissionDeadline)
-          .orElse(submissionDeadlineDefault),
+        nonPartnerDeadline,
         p =>
           partners
             .find(p => piPartner.flatMap(_.partnerOption).exists(_ === p.partner))
             .flatMap(_.submissionDeadline)
-            .orElse(submissionDeadlineDefault)
             .filter(_ =>
               piPartner.forall(p => partners.exists(u => p.partnerOption.exists(_ === u.partner)))
             )
