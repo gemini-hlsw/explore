@@ -24,6 +24,7 @@ import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
 
 import java.text.DecimalFormat
+import lucuma.odb.data.EducationalStatus
 
 trait DisplayImplicits:
   given Display[Site] =
@@ -197,6 +198,12 @@ trait DisplayImplicits:
     case ScienceBand.Band2 => "Band-2"
     case ScienceBand.Band3 => "Band-3"
     case ScienceBand.Band4 => "Band-4"
+
+  given Display[EducationalStatus] = Display.byShortName:
+    case EducationalStatus.PhD              => "PhD"
+    case EducationalStatus.GradStudent      => "Grad Student"
+    case EducationalStatus.UndergradStudent => "Undergrad Student"
+    case EducationalStatus.Other            => "Other"
 
   extension (configuration: BasicConfiguration)
     def configurationSummary: String = configuration match

@@ -21,5 +21,7 @@ object ProgramUserWithRoleSubquery
         }
       }
       role
+      educationalStatus
+      thesis
     }
   """

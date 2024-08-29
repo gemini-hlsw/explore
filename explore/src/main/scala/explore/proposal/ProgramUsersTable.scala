@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
-import explore.common.ProgramQueries.updateProgramUsers
+import explore.common.ProgramQueries.*
 import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
@@ -16,6 +16,7 @@ import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.ProgramUserWithRole
 import explore.model.reusability.given
+import explore.model.display.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
@@ -35,6 +36,9 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
+import lucuma.odb.data.EducationalStatus
+import lucuma.schemas.ObservationDB.Types.ProgramUserPropertiesInput
+import lucuma.schemas.odb.input.*
 
 case class ProgramUsersTable(
   programId: Program.Id,
@@ -57,6 +61,7 @@ object ProgramUsersTable:
   private val NameColumnId: ColumnId    = ColumnId("name")
   private val PartnerColumnId: ColumnId = ColumnId("Partner")
   private val EmailColumnId: ColumnId   = ColumnId("email")
+  private val ESColumnId: ColumnId      = ColumnId("education")
   private val OrcidIdColumnId: ColumnId = ColumnId("orcid-id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
   private val UnlinkId: ColumnId        = ColumnId("unlink")
@@ -65,6 +70,7 @@ object ProgramUsersTable:
     NameColumnId    -> "Name",
     PartnerColumnId -> "Partner",
     EmailColumnId   -> "email",
+    ESColumnId      -> "education",
     OrcidIdColumnId -> "ORCID",
     RoleColumnId    -> "Role",
     UnlinkId        -> ""
@@ -115,10 +121,15 @@ object ProgramUsersTable:
       onChange = set
     )
 
-  def partnerLinkLens(userId: User.Id) =
+  private def partnerLinkLens(userId: User.Id) =
     each[List[ProgramUserWithRole], ProgramUserWithRole]
       .filter(_.user.id === userId)
       .andThen(ProgramUserWithRole.partnerLink)
+
+  private def esLens(userId: User.Id) =
+    each[List[ProgramUserWithRole], ProgramUserWithRole]
+      .filter(_.user.id === userId)
+      .andThen(ProgramUserWithRole.educationalStatus)
 
   private def columns(
     ctx: AppContext[IO]
@@ -139,7 +150,7 @@ object ProgramUsersTable:
             val view      = meta.users.zoom(partnerLinkLens(userId))
             val usersView = view.withOnMod(pl =>
               pl.headOption.flatten
-                .map(pl => updateProgramUsers[IO](meta.programId, userId, pl).runAsyncAndForget)
+                .map(pl => updateProgramPartner[IO](meta.programId, userId, pl).runAsyncAndForget)
                 .getOrEmpty
             )
 
@@ -150,6 +161,32 @@ object ProgramUsersTable:
             partnerSelector(pl, usersView.set)
       ),
       column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
+      ColDef(
+        ESColumnId,
+        _.educationalStatus,
+        enableSorting = true,
+        enableResizing = true,
+        cell = c =>
+          import ctx.given
+
+          val cell   = c.row.original
+          val userId = cell.user.id
+          c.table.options.meta.map: meta =>
+            val view = meta.users
+              .zoom(esLens(userId))
+              .withOnMod(es =>
+                Callback.log(s"Setting educational status to ${es.headOption.flatten}") >>
+                  updateUserES[IO](meta.programId, userId, es.headOption.flatten).runAsyncAndForget
+              )
+
+            EnumOptionalDropdown[EducationalStatus](
+              id = "es".refined,
+              value = view.get.headOption.flatten,
+              showClear = true,
+              clazz = ExploreStyles.PartnerSelector,
+              onChange = es => view.set(es)
+            )
+      ),
       column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
       column(RoleColumnId, _.roleName),
       ColDef(

@@ -107,7 +107,7 @@ object ProgramQueries:
   def updateProgramUsers[F[_]: Async](
     pid: Program.Id,
     uid: User.Id,
-    pl:  PartnerLink
+    set: ProgramUserPropertiesInput
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     ProgramUsersMutation[F]
       .execute(
@@ -116,7 +116,21 @@ object ProgramQueries:
             program = WhereProgram(id = WhereOrderProgramId(EQ = pid.assign).assign).assign,
             user = WhereUser(id = WhereOrderUserId(EQ = uid.assign).assign).assign
           ).assign,
-          SET = ProgramUserPropertiesInput(partnerLink = pl.toInput.assign)
+          SET = set
         )
       )
       .void
+
+  def updateProgramPartner[F[_]: Async](
+    pid: Program.Id,
+    uid: User.Id,
+    pl:  PartnerLink
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
+
+  def updateUserES[F[_]: Async](
+    pid: Program.Id,
+    uid: User.Id,
+    es:  Option[EducationalStatus]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
