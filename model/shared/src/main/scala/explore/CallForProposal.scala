@@ -46,9 +46,6 @@ case class CallForProposal(
           partners
             .find(p => piPartner.flatMap(_.partnerOption).exists(_ === p.partner))
             .flatMap(_.submissionDeadline)
-            .filter(_ =>
-              piPartner.forall(p => partners.exists(u => p.partnerOption.exists(_ === u.partner)))
-            )
       )
     }
 
