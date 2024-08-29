@@ -228,8 +228,9 @@ object ProgramCacheController
             ObsQueriesGQL.ProgramObservationsDelta.Data,
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
-            _.observationEdit.value.id,
-            data => updateObservationExecution(data.observationEdit.value.id) <* queryProgramTimes
+            _.observationEdit.observationId,
+            data =>
+              updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
           )
 
           val groupTimeRangeUpdate: Pipe[
