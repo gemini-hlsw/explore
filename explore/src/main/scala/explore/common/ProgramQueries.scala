@@ -94,14 +94,14 @@ object ProgramQueries:
       .void
 
   // TODO: move to lucuma-schemas
-  extension (pl: PartnerLink)
+  extension (pl: Option[PartnerLink])
     def toInput: PartnerLinkInput =
       pl match
-        case PartnerLink.HasPartner(p)         =>
+        case Some(PartnerLink.HasPartner(p)) =>
           PartnerLinkInput(PartnerLinkType.HasPartner.assign, p.assign)
-        case PartnerLink.HasNonPartner         =>
+        case Some(PartnerLink.HasNonPartner) =>
           PartnerLinkInput(PartnerLinkType.HasNonPartner.assign, none.orUnassign)
-        case PartnerLink.HasUnspecifiedPartner =>
+        case _                               =>
           PartnerLinkInput(PartnerLinkType.HasUnspecifiedPartner.assign, none.orUnassign)
 
   def updateProgramUsers[F[_]: Async](
@@ -124,7 +124,7 @@ object ProgramQueries:
   def updateProgramPartner[F[_]: Async](
     pid: Program.Id,
     uid: User.Id,
-    pl:  PartnerLink
+    pl:  Option[PartnerLink]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(pid, uid, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
 
@@ -134,3 +134,10 @@ object ProgramQueries:
     es:  Option[EducationalStatus]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(pid, uid, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
+
+  def updateUserThesis[F[_]: Async](
+    pid: Program.Id,
+    uid: User.Id,
+    th:  Option[Boolean]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(thesis = th.orUnassign))

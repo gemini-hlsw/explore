@@ -7,6 +7,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import explore.model.itc.ItcQueryProblem
 import lucuma.core.enums.*
+import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.RoleType
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
@@ -24,7 +25,6 @@ import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
 
 import java.text.DecimalFormat
-import lucuma.odb.data.EducationalStatus
 
 trait DisplayImplicits:
   given Display[Site] =

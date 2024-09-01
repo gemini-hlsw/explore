@@ -15,10 +15,11 @@ import explore.components.ui.PartnerFlags
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.ProgramUserWithRole
-import explore.model.reusability.given
 import explore.model.display.given
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Partner
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
@@ -26,6 +27,7 @@ import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.Checkbox
 import lucuma.react.primereact.SelectItem
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -36,9 +38,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
-import lucuma.odb.data.EducationalStatus
-import lucuma.schemas.ObservationDB.Types.ProgramUserPropertiesInput
-import lucuma.schemas.odb.input.*
 
 case class ProgramUsersTable(
   programId: Program.Id,
@@ -62,6 +61,7 @@ object ProgramUsersTable:
   private val PartnerColumnId: ColumnId = ColumnId("Partner")
   private val EmailColumnId: ColumnId   = ColumnId("email")
   private val ESColumnId: ColumnId      = ColumnId("education")
+  private val ThesisColumnId: ColumnId  = ColumnId("thesis")
   private val OrcidIdColumnId: ColumnId = ColumnId("orcid-id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
   private val UnlinkId: ColumnId        = ColumnId("unlink")
@@ -71,6 +71,7 @@ object ProgramUsersTable:
     PartnerColumnId -> "Partner",
     EmailColumnId   -> "email",
     ESColumnId      -> "education",
+    ThesisColumnId  -> "thesis",
     OrcidIdColumnId -> "ORCID",
     RoleColumnId    -> "Role",
     UnlinkId        -> ""
@@ -87,7 +88,7 @@ object ProgramUsersTable:
       PartnerLink.HasPartner(p)
     }
 
-  def partnerItem(pl: PartnerLink): VdomNode = pl match {
+  private def partnerItem(pl: PartnerLink): VdomNode = pl match {
     case PartnerLink.HasPartner(p) =>
       <.div(
         ExploreStyles.PartnerFlagItem,
@@ -105,7 +106,10 @@ object ProgramUsersTable:
     case _                         => "Unspecified Partner"
   }
 
-  def partnerSelector(value: Option[PartnerLink], set: Option[PartnerLink] => Callback): VdomNode =
+  private def partnerSelector(
+    value: Option[PartnerLink],
+    set:   Option[PartnerLink] => Callback
+  ): VdomNode =
     FormDropdownOptional(
       id = "user-partner-selector".refined,
       placeholder = "Select a partner",
@@ -121,19 +125,24 @@ object ProgramUsersTable:
       onChange = set
     )
 
-  private def partnerLinkLens(userId: User.Id) =
+  def userWithRole(userId: User.Id) =
     each[List[ProgramUserWithRole], ProgramUserWithRole]
       .filter(_.user.id === userId)
-      .andThen(ProgramUserWithRole.partnerLink)
+
+  private def partnerLinkLens(userId: User.Id) =
+    userWithRole(userId).andThen(ProgramUserWithRole.partnerLink)
 
   private def esLens(userId: User.Id) =
-    each[List[ProgramUserWithRole], ProgramUserWithRole]
-      .filter(_.user.id === userId)
-      .andThen(ProgramUserWithRole.educationalStatus)
+    userWithRole(userId).andThen(ProgramUserWithRole.educationalStatus)
+
+  private def thesisLens(userId: User.Id) =
+    userWithRole(userId).andThen(ProgramUserWithRole.thesis)
 
   private def columns(
     ctx: AppContext[IO]
   ): List[ColumnDef.WithTableMeta[ProgramUserWithRole, ?, TableMeta]] =
+    import ctx.given
+
     List(
       column(NameColumnId, _.name),
       ColDef(
@@ -142,16 +151,16 @@ object ProgramUsersTable:
         enableSorting = true,
         enableResizing = true,
         cell = c =>
-          import ctx.given
 
           val cell   = c.row.original
           val userId = cell.user.id
           c.table.options.meta.map: meta =>
             val view      = meta.users.zoom(partnerLinkLens(userId))
             val usersView = view.withOnMod(pl =>
-              pl.headOption.flatten
-                .map(pl => updateProgramPartner[IO](meta.programId, userId, pl).runAsyncAndForget)
-                .getOrEmpty
+              updateProgramPartner[IO](meta.programId,
+                                       userId,
+                                       pl.headOption.flatten
+              ).runAsyncAndForget
             )
 
             val pl = cell.partnerLink.flatMap {
@@ -167,7 +176,6 @@ object ProgramUsersTable:
         enableSorting = true,
         enableResizing = true,
         cell = c =>
-          import ctx.given
 
           val cell   = c.row.original
           val userId = cell.user.id
@@ -175,8 +183,7 @@ object ProgramUsersTable:
             val view = meta.users
               .zoom(esLens(userId))
               .withOnMod(es =>
-                Callback.log(s"Setting educational status to ${es.headOption.flatten}") >>
-                  updateUserES[IO](meta.programId, userId, es.headOption.flatten).runAsyncAndForget
+                updateUserES[IO](meta.programId, userId, es.headOption.flatten).runAsyncAndForget
               )
 
             EnumOptionalDropdown[EducationalStatus](
@@ -185,6 +192,28 @@ object ProgramUsersTable:
               showClear = true,
               clazz = ExploreStyles.PartnerSelector,
               onChange = es => view.set(es)
+            )
+      ),
+      ColDef(
+        ThesisColumnId,
+        _.thesis,
+        cell = c =>
+
+          val cell   = c.row.original
+          val userId = cell.user.id
+
+          c.table.options.meta.map: meta =>
+            val view = meta.users
+              .zoom(thesisLens(userId))
+              .withOnMod(th =>
+                updateUserThesis[IO](meta.programId,
+                                     userId,
+                                     th.headOption.flatten
+                ).runAsyncAndForget
+              )
+            Checkbox(id = "thesis",
+                     checked = view.get.headOption.flatten.getOrElse(false),
+                     onChange = r => view.set(r.some)
             )
       ),
       column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
@@ -197,7 +226,6 @@ object ProgramUsersTable:
         enableResizing = false,
         cell = cell =>
           cell.table.options.meta.map: meta =>
-            import ctx.given
 
             val userId = cell.value.user.id
             val action =

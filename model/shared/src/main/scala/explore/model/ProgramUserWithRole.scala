@@ -7,11 +7,11 @@ import cats.Eq
 import cats.derived.*
 import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
+import lucuma.core.enums.EducationalStatus
 import lucuma.core.model.PartnerLink
 import lucuma.odb.json.partnerlink.given
 import monocle.Focus
 import monocle.Lens
-import lucuma.odb.data.EducationalStatus
 
 // an empty role implies PI
 case class ProgramUserWithRole(
@@ -36,6 +36,9 @@ object ProgramUserWithRole:
 
   val educationalStatus: Lens[ProgramUserWithRole, Option[EducationalStatus]] =
     Focus[ProgramUserWithRole](_.educationalStatus)
+
+  val thesis: Lens[ProgramUserWithRole, Option[Boolean]] =
+    Focus[ProgramUserWithRole](_.thesis)
 
   given Decoder[ProgramUserWithRole] = c =>
     for {
