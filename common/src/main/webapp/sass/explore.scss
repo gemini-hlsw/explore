@@ -420,15 +420,6 @@ html {
   height: -webkit-fill-available;
 }
 
-.observer-notes-wrapper {
-  display: flex;
-  place-content: center center;
-}
-
-.observer-notes {
-  padding: 1em;
-}
-
 .crash-message {
   position: fixed;
   top: 50%;
@@ -844,6 +835,7 @@ thead tr th.sticky-header {
     display: none;
   }
 
+  /* stylelint-disable selector-class-pattern */
   .react-datepicker__input-container {
     input {
       font-size: small;
@@ -2547,7 +2539,6 @@ $help-title-height: 40px;
 .markdown-body {
   overflow: auto;
 
-  /* stylelint-disable-next-line selector-class-pattern */
   svg.svg-inline--fa {
     color: hsl(210deg 12.2% 16.1%);
   }
