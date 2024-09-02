@@ -407,13 +407,14 @@ private object SpectroscopyModesTable:
         (_, _, _, _, rows, _) =>
           rows.value
             .map(_.result)
-            .collect { case Left(p) =>
-              p.toList.filter {
-                case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
-                case e if e.problem === ItcQueryProblem.MissingBrightness => true
-                case _                                                    => false
-              }.distinct
-            }
+            .collect:
+              case Left(p) =>
+                p.toList
+                  .filter:
+                    case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
+                    case e if e.problem === ItcQueryProblem.MissingBrightness => true
+                    case _                                                    => false
+                  .distinct
             .flatten
             .toList
             .distinct

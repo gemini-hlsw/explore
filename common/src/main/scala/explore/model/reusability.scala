@@ -113,7 +113,6 @@ object reusability:
   given Reusability[SignalToNoise]                      = Reusability.byEq
   given Reusability[ScienceRequirements.Spectroscopy]   = Reusability.byEq
   given Reusability[ScienceRequirements]                = Reusability.byEq
-  // given Reusability[OdbItcResult.Success]               = Reusability.byEq
   given Reusability[Transformation]                     = Reusability.byEq
   given [F[_]]: Reusability[OdbRestClient[F]]           = Reusability.by(_.authToken)
   given [D: Eq]: Reusability[Atom[D]]                   = Reusability.byEq
