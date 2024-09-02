@@ -75,7 +75,7 @@ object ITCRequests:
       Logger[F]
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.asterism.length}"
-        ) *> // selectedBand(params.target.sourceProfile, params.wavelength.value),
+        ) *>
         params.mode
           .toItcClientMode(
             params.asterism.map(_.sourceProfile),

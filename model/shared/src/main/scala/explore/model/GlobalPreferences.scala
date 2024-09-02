@@ -32,9 +32,6 @@ object ElevationPlotScheduling extends NewType[Boolean]:
 
 type ElevationPlotScheduling = ElevationPlotScheduling.Type
 
-given Decoder[GraphType] = Decoder.decodeString.map:
-  case "S2N_CHART" => GraphType.S2NGraph
-
 case class GlobalPreferences(
   aladinMouseScroll:                    AladinMouseScroll,
   fullScreen:                           AladinFullScreen,
