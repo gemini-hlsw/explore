@@ -6,8 +6,10 @@ package explore.model
 import cats.*
 import cats.Order.*
 import cats.syntax.all.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import explore.model.enums.GridLayoutSection
 import lucuma.react.gridlayout.*
+import lucuma.refined.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
@@ -33,11 +35,17 @@ object layout {
   val SmallCutoff     = Constants.TwoPanelCutoff.toInt
   val XtraSmallCutoff = 300
 
+  lazy val DefaultWidth: NonNegInt      = 16.refined
+  lazy val DefaultLargeWidth: NonNegInt = 32.refined
+
+  // Restricted to GridRowHeight * 10 = 360px which is basically the min width for a mobile device
+  lazy val TileMinWidth: NonNegInt = 8.refined
+
   val breakpoints: Map[BreakpointName, (LayoutWidth, LayoutCols)] =
     Map(
-      (BreakpointName.lg, (LargeCutoff, 16)),
-      (BreakpointName.md, (MediumCutoff, 10)),
-      (BreakpointName.sm, (SmallCutoff, 8))
+      (BreakpointName.lg, (LargeCutoff, DefaultLargeWidth.value)),
+      (BreakpointName.md, (MediumCutoff, DefaultWidth.value)),
+      (BreakpointName.sm, (SmallCutoff, TileMinWidth.value))
     )
 
   val layoutPprint =
