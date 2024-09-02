@@ -25,7 +25,7 @@ import lucuma.ui.utils.*
 
 case class ItcPanelTitle(
   itcPanelProps:   ItcProps,
-  ItcGraphResults: Map[ItcTarget, Pot[ItcGraphResult]],
+  itcGraphResults: Map[ItcTarget, Pot[ItcGraphResult]],
   itcLoading:      LoadingState,
   tileState:       View[ItcPanelTileState]
 ) extends ReactFnProps(ItcPanelTitle.component) {
@@ -47,7 +47,7 @@ object ItcPanelTitle:
         Pot
           .fromOption(props.selectedTarget.get)
           .filterNot(_ => props.itcLoading.value)
-          .flatMap(t => props.ItcGraphResults.getOrElse(t, pendingChart))
+          .flatMap(t => props.itcGraphResults.getOrElse(t, pendingChart))
 
       val selectedTarget = props.selectedTarget
       val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.get.isDefined

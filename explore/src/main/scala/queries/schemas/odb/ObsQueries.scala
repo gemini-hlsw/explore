@@ -37,10 +37,6 @@ object ObsQueries:
 
   private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
 
-  // extension (self: OdbItcResult.Success)
-  //   def asFixedExposureTime: FixedExposureMode =
-  //     FixedExposureMode(PosInt.unsafeFrom(self.sciExposures.value), self.sciExposureTime)
-
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet

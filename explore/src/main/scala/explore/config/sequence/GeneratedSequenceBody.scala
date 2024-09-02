@@ -94,7 +94,7 @@ object GeneratedSequenceBody:
 
         SequenceQuery[IO]
           .query(props.obsId)
-          .map(x => SequenceData.fromOdbResponse(x))
+          .map(SequenceData.fromOdbResponse)
           .attemptPot
           .resetOnResourceSignals:
             for

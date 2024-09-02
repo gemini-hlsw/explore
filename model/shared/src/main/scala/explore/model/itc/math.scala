@@ -41,26 +41,3 @@ def niceNum(range: Double, round: Boolean): Double =
   niceFraction * pow(10, exponent)
 
 extension (w: Wavelength) inline def pm = w.toPicometers.value.value
-
-// Find the band closest to the requested wavelength
-// def selectedBand(
-//   sourceProfile: SourceProfile,
-//   wavelength:    Wavelength
-// ): Option[Band] =
-//   SourceProfile.integratedBandNormalizedSpectralDefinition
-//     .andThen(
-//       SpectralDefinition.BandNormalized.brightnesses[Integrated]
-//     )
-//     .getOption(sourceProfile)
-//     .orElse {
-//       SourceProfile.surfaceBandNormalizedSpectralDefinition
-//         .andThen(
-//           SpectralDefinition.BandNormalized.brightnesses[Surface]
-//         )
-//         .getOption(sourceProfile)
-//     }
-//     .map(_.keys)
-//     .traverse(
-//       _.minByOption((band: Band) => (band.center.pm - wavelength.pm).abs)
-//     )
-//     .collect { case Some(b) => b }
