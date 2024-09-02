@@ -5,8 +5,8 @@ package explore.model.itc
 
 import cats.data.*
 import cats.syntax.all.*
-import explore.model.itc.math.*
 import explore.modes.*
+import explore.optics.all.*
 import lucuma.core.enums.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
@@ -14,53 +14,53 @@ import lucuma.core.model.ConstraintSet
 import lucuma.schemas.model.CentralWavelength
 import monocle.Focus
 import mouse.boolean.*
+// import lucuma.core.model.SourceProfile
 
 // Simple cache of the remotely calculated values
 case class ItcResultsCache(
-  cache: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+  cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 ) {
   def wavelength(
     w: Option[Wavelength],
     r: SpectroscopyModeRow
-  ): EitherNec[ItcQueryProblems, CentralWavelength] =
+  ): EitherNec[ItcQueryProblem, CentralWavelength] =
     Either.fromOption(
       w.flatMap(r.intervalCenter),
-      NonEmptyChain.of(ItcQueryProblems.MissingWavelength)
+      NonEmptyChain.of(ItcQueryProblem.MissingWavelength)
     )
 
-  def signalToNoise(w: Option[SignalToNoise]): EitherNec[ItcQueryProblems, SignalToNoise] =
-    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoise))
+  def signalToNoise(w: Option[SignalToNoise]): EitherNec[ItcQueryProblem, SignalToNoise] =
+    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblem.MissingSignalToNoise))
 
-  def signalToNoiseAt(w: Option[Wavelength]): EitherNec[ItcQueryProblems, Wavelength] =
-    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblems.MissingSignalToNoiseAt))
+  def signalToNoiseAt(w: Option[Wavelength]): EitherNec[ItcQueryProblem, Wavelength] =
+    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblem.MissingSignalToNoiseAt))
 
-  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblems, InstrumentRow] =
+  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, InstrumentRow] =
     Either.fromOption(
       ItcResultsCache.enabledRow(r).option(r.instrument),
-      NonEmptyChain.of(ItcQueryProblems.UnsupportedMode)
+      NonEmptyChain.of(ItcQueryProblem.UnsupportedMode)
     )
 
   private def targets(
-    r: Option[ItcTarget],
-    w: Option[Wavelength]
-  ): EitherNec[ItcQueryProblems, ItcTarget] =
-    Either.fromOption(r, NonEmptyChain.of(ItcQueryProblems.MissingTargetInfo)).flatMap { t =>
-      // Can't make the brightness check without the wavelength.
-      w.fold(t.rightNec)(wv =>
+    r: Option[NonEmptyList[ItcTarget]]
+  ): EitherNec[ItcQueryProblem, NonEmptyList[ItcTarget]] =
+    Either
+      .fromOption(r, NonEmptyChain.of(ItcQueryProblem.MissingTargetInfo))
+      .flatMap: a =>
         Either.fromOption(
-          selectedBand(t.profile, wv).map(_ => t),
-          NonEmptyChain.of(ItcQueryProblems.MissingBrightness)
+          a.some.filter: // All targets must have brightness defined.
+            _.forall(t => SourceProfileBrightnesses.get(t.sourceProfile).exists(_.nonEmpty))
+          ,
+          NonEmptyChain.of(ItcQueryProblem.MissingBrightness)
         )
-      )
-    }
 
   def update(
-    newEntries: Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+    newEntries: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
   ): ItcResultsCache =
     copy(cache ++ newEntries)
 
   def updateN(
-    newEntries: List[Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]]
+    newEntries: List[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]
   ): ItcResultsCache =
     newEntries.foldLeft(this)(_.update(_))
 
@@ -70,15 +70,16 @@ case class ItcResultsCache(
     sn:   Option[SignalToNoise],
     snAt: Option[Wavelength],
     c:    ConstraintSet,
-    t:    Option[ItcTarget],
+    a:    Option[NonEmptyList[ItcTarget]],
     r:    SpectroscopyModeRow
-  ): EitherNec[ItcQueryProblems, ItcResult] =
-    (wavelength(w, r), signalToNoise(sn), signalToNoiseAt(snAt), mode(r), targets(t, w)).parMapN {
-      (w, sn, snAt, im, t) =>
+  ): EitherNec[ItcTargetProblem, ItcResult] =
+    (wavelength(w, r), signalToNoise(sn), signalToNoiseAt(snAt), mode(r), targets(a)).parTupled
+      .leftMap(_.map(ItcTargetProblem(none, _)))
+      .map: (w, sn, snAt, im, a) =>
         cache
-          .get(ItcRequestParams(w, sn, snAt, c, t, im))
-          .getOrElse(ItcResult.Pending.rightNec[ItcQueryProblems])
-    }.flatten
+          .get(ItcRequestParams(w, sn, snAt, c, a, im))
+          .getOrElse(ItcResult.Pending.rightNec[ItcTargetProblem])
+      .flatten
 
   def size: Int = cache.size
 

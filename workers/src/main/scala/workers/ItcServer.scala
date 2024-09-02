@@ -80,21 +80,20 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
               )
           )
 
-        case ItcMessage.GraphQuery(wavelength,
-                                   exposureTime,
-                                   exposures,
-                                   signalToNoiseAt,
-                                   constraint,
-                                   targets,
-                                   mode
+        case ItcMessage.GraphQuery(
+              wavelength,
+              signalToNoise,
+              signalToNoiseAt,
+              constraint,
+              targets,
+              mode
             ) =>
           Logger[IO].debug(s"ITC graph query ${mode}") >>
             itcClient.get >>= (implicit client =>
             ITCGraphRequests
               .queryItc[IO](
                 wavelength,
-                exposureTime,
-                exposures,
+                signalToNoise,
                 signalToNoiseAt,
                 constraint,
                 targets,

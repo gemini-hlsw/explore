@@ -43,14 +43,22 @@ trait ModelOptics {
     Target.sidereal.andThen(Target.Sidereal.radialVelocity.some)
 
   /**
-   * Getter for any kind of brightness measures of a `Target`, as long as it has a
+   * Getter for any kind of brightness measures of a `SourceProfile`, as long as it has a
    * `SpectralDefinition.BandNormalized`
    */
-  val TargetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
-    Getter { target =>
-      val sourceProfile = Target.sourceProfile.get(target)
+  val SourceProfileBrightnesses
+    : Getter[SourceProfile, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
+    Getter { sourceProfile =>
       SourceProfile.integratedBrightnesses
         .getOption(sourceProfile)
         .orElse(SourceProfile.surfaceBrightnesses.getOption(sourceProfile))
     }
+
+  /**
+   * Getter for any kind of brightness measures of a `Target`, as long as it has a
+   * `SpectralDefinition.BandNormalized`
+   */
+  val TargetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
+    Target.sourceProfile.asGetter.andThen(SourceProfileBrightnesses)
+
 }

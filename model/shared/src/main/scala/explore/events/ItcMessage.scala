@@ -5,19 +5,18 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import cats.data.*
-import eu.timepit.refined.types.numeric.PosInt
 import explore.model.boopickle.ItcPicklers
-import explore.model.itc.ItcChartResult
-import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcGraphResult
+import explore.model.itc.ItcQueryProblem
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
+import explore.model.itc.ItcTargetProblem
 import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 import workers.WorkerRequest
@@ -35,22 +34,26 @@ object ItcMessage extends ItcPicklers:
     wavelength:      Wavelength,
     signalToNoise:   SignalToNoise,
     constraints:     ConstraintSet,
-    targets:         ItcTarget,
+    asterism:        NonEmptyList[ItcTarget],
     modes:           List[SpectroscopyModeRow],
     signalToNoiseAt: Wavelength
   ) extends Request:
-    type ResponseType = Map[ItcRequestParams, EitherNec[ItcQueryProblems, ItcResult]]
+    type ResponseType = Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
+
+  case class GraphResponse(
+    asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
+    brightestTarget: Option[ItcTarget]
+  )
 
   case class GraphQuery(
     wavelength:      CentralWavelength,
-    exposureTime:    TimeSpan,
-    exposures:       PosInt,
+    signalToNoise:   SignalToNoise,
     signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
-    targets:         NonEmptyList[ItcTarget],
+    asterism:        NonEmptyList[ItcTarget],
     modes:           InstrumentRow
   ) extends Request:
-    type ResponseType = Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]
+    type ResponseType = GraphResponse
 
   private given Pickler[Query] = generatePickler
 

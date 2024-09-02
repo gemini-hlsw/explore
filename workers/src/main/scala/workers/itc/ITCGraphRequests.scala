@@ -3,24 +3,24 @@
 
 package explore.itc
 
-import boopickle.DefaultBasic.*
 import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
-import eu.timepit.refined.types.numeric.PosInt
+import explore.events.ItcMessage.GraphResponse
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
-import explore.model.itc.math.*
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.util.TimeSpan
 import lucuma.itc.client.ItcClient
-import lucuma.itc.client.OptimizedSpectroscopyGraphInput
 import lucuma.itc.client.SignificantFiguresInput
+import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsInput
+import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsParameters
+import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsResult
 import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
@@ -33,105 +33,101 @@ object ITCGraphRequests:
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     wavelength:      CentralWavelength,
-    exposureTime:    TimeSpan,
-    exposures:       PosInt,
+    signalToNoise:   SignalToNoise,
     signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
     mode:            InstrumentRow,
     cache:           Cache[F],
-    callback:        Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]] => F[Unit]
+    callback:        GraphResponse => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m: GmosNorthSpectroscopyRow =>
-        ItcGraphRequestParams(wavelength,
-                              exposureTime,
-                              exposures,
-                              signalToNoiseAt,
-                              constraints,
-                              targets,
-                              m
+        ItcGraphRequestParams(
+          wavelength,
+          signalToNoise,
+          signalToNoiseAt,
+          constraints,
+          targets,
+          m
         ).some
       case m: GmosSouthSpectroscopyRow =>
-        ItcGraphRequestParams(wavelength,
-                              exposureTime,
-                              exposures,
-                              signalToNoiseAt,
-                              constraints,
-                              targets,
-                              m
+        ItcGraphRequestParams(
+          wavelength,
+          signalToNoise,
+          signalToNoiseAt,
+          constraints,
+          targets,
+          m
         ).some
       case _                           =>
         none
 
-    def doRequest(
-      request: ItcGraphRequestParams
-    ): F[Map[ItcTarget, Either[ItcQueryProblems, ItcChartResult]]] =
-      request.target
-        .traverse(t =>
-          (selectedBand(t.profile, request.wavelength.value),
-           request.mode.toItcClientMode(t.profile, request.constraints.imageQuality)
-          )
-            .traverseN { (band, mode) =>
-              ItcClient[F]
-                .optimizedSpectroscopyGraph(
-                  OptimizedSpectroscopyGraphInput(
-                    wavelength = request.wavelength.value,
-                    signalToNoiseAt = request.signalToNoiseAt.some,
-                    exposureTime = request.exposureTime,
-                    exposures = request.exposures,
-                    sourceProfile = t.profile,
-                    band = band,
-                    radialVelocity = t.rv,
-                    constraints = request.constraints,
-                    mode = mode,
-                    significantFigures = significantFigures.some
-                  ),
-                  false
-                )
-                .map(chartResult =>
-                  t -> ItcChartResult(
-                    t,
-                    ItcExposureTime(OverridenExposureTime.FromItc,
-                                    request.exposureTime,
-                                    request.exposures
-                    ),
-                    chartResult.ccds,
-                    chartResult.charts,
-                    chartResult.peakFinalSNRatio,
-                    chartResult.atWavelengthFinalSNRatio,
-                    chartResult.peakSingleSNRatio,
-                    chartResult.atWavelengthSingleSNRatio
-                  ).asRight
-                )
-                .handleError { e =>
-                  t -> ITCRequests.processExtension(e).asLeft
-                }
-            }
-        )
-        .map(_.toList.flattenOption.toMap)
+    def doRequest(request: ItcGraphRequestParams): F[GraphResponse] =
+      request.mode
+        .toItcClientMode(request.asterism.map(_.sourceProfile), request.constraints.imageQuality)
+        .map: mode =>
+          ItcClient[F]
+            .spectroscopyIntegrationTimeAndGraphs(
+              SpectroscopyIntegrationTimeAndGraphsInput(
+                SpectroscopyIntegrationTimeAndGraphsParameters(
+                  wavelength = request.wavelength.value,
+                  signalToNoise = request.signalToNoise,
+                  signalToNoiseAt = request.signalToNoiseAt.some,
+                  constraints = request.constraints,
+                  mode = mode,
+                  significantFigures = significantFigures.some
+                ),
+                request.asterism.map(_.gaiaFree.input)
+              ),
+              useCache = false
+            )
+            .map: (graphsResult: SpectroscopyIntegrationTimeAndGraphsResult) =>
+              val asterismGraphs =
+                graphsResult.graphsOrTimes.value
+                  .fold[NonEmptyList[(ItcTarget, Either[ItcQueryProblem, ItcGraphResult])]](
+                    _ =>
+                      request.asterism
+                        .map(_ -> ItcQueryProblem.GenericError("Error computing ITC graph").asLeft),
+                    _.value.toNonEmptyList
+                      .zip(request.asterism)
+                      .map: (targetResult, itcTarget) =>
+                        itcTarget ->
+                          targetResult.value.bimap(
+                            ITCRequests.itcErrorToQueryProblems(_),
+                            timeAndGraphs => ItcGraphResult(itcTarget, timeAndGraphs)
+                          )
+                  )
+                  .toList
+                  .toMap
+
+              GraphResponse(
+                asterismGraphs,
+                graphsResult.brightestIndex.flatMap(request.asterism.get)
+              )
+        .getOrElse(GraphResponse(Map.empty, none).pure[F])
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest =
+    val cacheableRequest: Cacheable[F, ItcGraphRequestParams, GraphResponse] =
       Cacheable(
         CacheName("itcGraphQuery"),
         ITCRequests.cacheVersion,
         doRequest,
         (r, g) =>
-          r.target.forall(t =>
-            g.get(t).forall {
-              case Right(_)                               => true
-              case Left(ItcQueryProblems.GenericError(_)) => false
-              case Left(_)                                => true
-            }
-          )
+          r.asterism.forall: t =>
+            g.asterismGraphs
+              .get(t)
+              .forall:
+                case Right(_)                              => true
+                case Left(ItcQueryProblem.GenericError(_)) => false
+                case Left(_)                               => true
       )
 
     itcRowsParams
       .traverse { request =>
         Logger[F].debug(
-          s"ITC: Request for mode ${request.mode} and target count: ${request.target.length}"
+          s"ITC: Request for mode ${request.mode} and target count: ${request.asterism.length}"
         ) *>
           cache
             .eval(cacheableRequest)

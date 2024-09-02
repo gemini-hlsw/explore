@@ -5,7 +5,7 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcQueryProblem
 import lucuma.core.enums.*
 import lucuma.core.enums.RoleType
 import lucuma.core.math.BoundedInterval
@@ -20,7 +20,7 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
-import lucuma.itc.ChartType
+import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
 
 import java.text.DecimalFormat
@@ -176,21 +176,21 @@ trait DisplayImplicits:
     case RoleType.Staff => "Staff"
     case RoleType.Admin => "Administrator"
 
-  given Display[ChartType] = Display.byShortName:
-    case ChartType.SignalChart      => "Signal"
-    case ChartType.SignalPixelChart => "Pixel"
-    case ChartType.S2NChart         => "S/N"
+  given Display[GraphType] = Display.byShortName:
+    case GraphType.SignalGraph      => "Signal"
+    case GraphType.SignalPixelGraph => "Pixel"
+    case GraphType.S2NGraph         => "S/N"
 
-  given Display[ItcQueryProblems] = Display.byShortName:
-    case ItcQueryProblems.UnsupportedMode               => "Mode not supported"
-    case ItcQueryProblems.MissingWavelength             => "Provide a wavelength"
-    case ItcQueryProblems.MissingSignalToNoise          => "Provide a signal to noise"
-    case ItcQueryProblems.MissingSignalToNoiseAt        => "Provide the wavelength where to measure S/N"
-    case ItcQueryProblems.MissingTargetInfo             => "Target information is missing"
-    case ItcQueryProblems.MissingBrightness             => "Target brightness is missing"
-    case ItcQueryProblems.SourceTooBright(halfWellTime) =>
+  given Display[ItcQueryProblem] = Display.byShortName:
+    case ItcQueryProblem.UnsupportedMode               => "Mode not supported"
+    case ItcQueryProblem.MissingWavelength             => "Provide a wavelength"
+    case ItcQueryProblem.MissingSignalToNoise          => "Provide a signal to noise"
+    case ItcQueryProblem.MissingSignalToNoiseAt        => "Provide the wavelength where to measure S/N"
+    case ItcQueryProblem.MissingTargetInfo             => "Target information is missing"
+    case ItcQueryProblem.MissingBrightness             => "Target brightness is missing"
+    case ItcQueryProblem.SourceTooBright(halfWellTime) =>
       f"Source too bright, well half filled in $halfWellTime%.2f seconds"
-    case ItcQueryProblems.GenericError(e)               => e
+    case ItcQueryProblem.GenericError(e)               => e
 
   given Display[ScienceBand] = Display.byShortName:
     case ScienceBand.Band1 => "Band-1"

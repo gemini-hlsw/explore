@@ -3,7 +3,7 @@
 
 package explore.itc
 
-import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.math.*
@@ -23,7 +23,7 @@ import lucuma.ui.utils.*
 case class ItcSpectroscopyPlotDescription(
   brightness:   Option[(Band, BrightnessValue, Units)],
   exposureTime: Option[ItcExposureTime],
-  ccds:         Option[NonEmptyList[ItcCcd]],
+  ccds:         Option[NonEmptyChain[ItcCcd]],
   finalSN:      Option[FinalSN],
   singleSN:     Option[SingleSN]
 ) extends ReactFnProps[ItcSpectroscopyPlotDescription](ItcSpectroscopyPlotDescription.component)

@@ -10,7 +10,6 @@ import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTilesIds
 import explore.model.Observation
-import explore.model.OdbItcResult
 import lucuma.core.model.Program
 
 object SequenceEditorTile:
@@ -20,7 +19,6 @@ object SequenceEditorTile:
     obsId:           Observation.Id,
     obsExecution:    Pot[Execution],
     asterismIds:     AsterismIds,
-    itc:             Option[OdbItcResult.Success],
     sequenceChanged: View[Pot[Unit]]
   ) =
     Tile(
@@ -32,7 +30,6 @@ object SequenceEditorTile:
           programId,
           obsId,
           asterismIds.toList,
-          itc.map(_.snPerClass).getOrElse(Map.empty),
           sequenceChanged
         ),
       (_, _) => GeneratedSequenceTitle(obsExecution)

@@ -16,6 +16,7 @@ import explore.model.GlobalPreferences
 import explore.model.LoadingState
 import explore.model.Observation
 import explore.model.itc.*
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
@@ -25,17 +26,17 @@ import lucuma.ui.syntax.all.given
 
 object ItcPanelTileState extends NewType[Option[ItcTarget]]:
   def apply(): ItcPanelTileState = ItcPanelTileState(None)
-
 type ItcPanelTileState = ItcPanelTileState.Type
 
 case class ItcPanelBody(
-  uid:               User.Id,
-  oid:               Observation.Id,
-  itcProps:          ItcProps,
-  itcChartResults:   Map[ItcTarget, Pot[ItcChartResult]],
-  itcLoading:        LoadingState,
-  globalPreferences: View[GlobalPreferences],
-  tileState:         View[ItcPanelTileState]
+  uid:                User.Id,
+  oid:                Observation.Id,
+  itcProps:           ItcProps,
+  itcGraphResults:    Map[ItcTarget, Pot[ItcGraphResult]],
+  itcBrightestTarget: Option[ItcTarget],
+  itcLoading:         LoadingState,
+  globalPreferences:  View[GlobalPreferences],
+  tileState:          View[ItcPanelTileState]
 ) extends ReactFnProps(ItcPanelBody.component) {
   val selectedTarget = tileState.zoom(ItcPanelTileState.value.asLens)
 }
@@ -48,8 +49,8 @@ object ItcPanelBody:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // Reset the selected target if itcProps changes
-      .useEffectWithDepsBy((p, _) => p.itcProps): (p, _) =>
-        itcProps => p.selectedTarget.set(itcProps.defaultSelectedTarget)
+      .useEffectWithDepsBy((props, _) => props.itcBrightestTarget): (props, _) =>
+        itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
       .render: (props, ctx) =>
         import ctx.given
 
@@ -67,26 +68,24 @@ object ItcPanelBody:
 
         val selectedTarget = props.selectedTarget.get
 
-        val isModeSelected = props.itcProps.finalConfig.isDefined
+        val isModeSelected = props.itcProps.selectedConfig.isDefined
         val selectMode     = "Select a mode to plot".some.filterNot(_ => isModeSelected)
 
         val error: Option[String] =
           selectedTarget
-            .fold("No target available".some)(t =>
-              props.itcChartResults
+            .fold("No target itcGraphResults".some): t =>
+              props.itcGraphResults
                 .get(t)
-                .flatMap { r =>
+                .flatMap: r =>
                   r.fold(selectMode, _.getMessage.some, _ => none)
-                }
                 .orElse(selectMode)
-            )
 
-        val selectedResult: Option[ItcChartResult] =
-          for {
+        val selectedResult: Option[ItcGraphResult] =
+          for
             t <- selectedTarget
-            r <- props.itcChartResults.get(t)
+            r <- props.itcGraphResults.get(t)
             c <- r.toOption
-          } yield c
+          yield c
 
         <.div(
           ExploreStyles.ItcPlotSection,
@@ -101,7 +100,7 @@ object ItcPanelBody:
           ),
           ItcSpectroscopyPlot(
             selectedResult.map(_.ccds),
-            selectedResult.map(_.charts),
+            selectedResult.map(_.graphData),
             error,
             chartTypeView.get,
             selectedTarget.map(_.name.value),

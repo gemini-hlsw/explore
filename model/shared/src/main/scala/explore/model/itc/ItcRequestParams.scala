@@ -4,12 +4,10 @@
 package explore.model.itc
 
 import cats.data.*
-import eu.timepit.refined.types.numeric.PosInt
 import explore.modes.InstrumentRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.util.TimeSpan
 import lucuma.schemas.model.CentralWavelength
 
 case class ItcRequestParams(
@@ -17,16 +15,15 @@ case class ItcRequestParams(
   signalToNoise:   SignalToNoise,
   signalToNoiseAt: Wavelength,
   constraints:     ConstraintSet,
-  target:          ItcTarget,
+  asterism:        NonEmptyList[ItcTarget],
   mode:            InstrumentRow
 )
 
 case class ItcGraphRequestParams(
   wavelength:      CentralWavelength,
-  exposureTime:    TimeSpan,
-  exposures:       PosInt,
+  signalToNoise:   SignalToNoise,
   signalToNoiseAt: Wavelength,
   constraints:     ConstraintSet,
-  target:          NonEmptyList[ItcTarget],
+  asterism:        NonEmptyList[ItcTarget],
   mode:            InstrumentRow
 )

@@ -37,7 +37,7 @@ import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
-import lucuma.itc.ChartType
+import lucuma.itc.GraphType
 import lucuma.react.gridlayout.*
 import lucuma.react.table.*
 import lucuma.ui.table.hooks.*
@@ -374,7 +374,7 @@ object UserPreferencesQueries:
   object ItcPlotPreferences:
     def updatePlotPreferences[F[_]: ApplicativeThrow](
       userId:         User.Id,
-      itcChartType:   ChartType,
+      itcChartType:   GraphType,
       itcDetailsOpen: PlotDetails
     )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       UserPreferencesItcPlotUpdate[F]

@@ -11,7 +11,7 @@ import explore.model.enums.Visible
 import explore.model.itc.PlotDetails
 import io.circe.Decoder
 import lucuma.core.util.NewType
-import lucuma.itc.ChartType
+import lucuma.itc.GraphType
 import monocle.Focus
 
 object AladinMouseScroll extends NewType[Boolean]:
@@ -42,7 +42,7 @@ case class GlobalPreferences(
   elevationPlotRange:                   PlotRange,
   elevationPlotTime:                    TimeDisplay,
   elevationPlotScheduling:              ElevationPlotScheduling,
-  itcChartType:                         ChartType,
+  itcChartType:                         GraphType,
   itcDetailsOpen:                       PlotDetails,
   elevationPlotElevationVisible:        Visible,
   elevationPlotParallacticAngleVisible: Visible,
@@ -82,7 +82,7 @@ object GlobalPreferences:
       PlotRange.Night,
       TimeDisplay.Site,
       ElevationPlotScheduling.On,
-      ChartType.S2NChart,
+      GraphType.S2NGraph,
       PlotDetails.Hidden,
       Visible.Shown,
       Visible.Hidden,

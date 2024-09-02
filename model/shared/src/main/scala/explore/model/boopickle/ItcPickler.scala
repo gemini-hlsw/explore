@@ -10,13 +10,15 @@ import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.itc.ItcChartResult
+import explore.events.ItcMessage.GraphResponse
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcGraphRequestParams
-import explore.model.itc.ItcQueryProblems
+import explore.model.itc.ItcGraphResult
+import explore.model.itc.ItcQueryProblem
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
+import explore.model.itc.ItcTargetProblem
 import explore.model.itc.OverridenExposureTime
 import explore.modes.*
 import explore.modes.InstrumentRow
@@ -25,6 +27,7 @@ import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
+import lucuma.core.data.Zipper
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.BrightnessUnits
@@ -48,15 +51,26 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Of
 import lucuma.core.util.TimeSpan
+import lucuma.itc.Error
 import lucuma.itc.FinalSN
+import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
+import lucuma.itc.ItcGraph
+import lucuma.itc.ItcSeries
+import lucuma.itc.ItcVersions
 import lucuma.itc.ItcWarning
 import lucuma.itc.SingleSN
-import lucuma.itc.client.ItcVersions
-import lucuma.itc.client.OptimizedChartResult
-import lucuma.itc.client.OptimizedSeriesResult
-import lucuma.itc.client.OptimizedSpectroscopyGraphResult
+import lucuma.itc.TargetIntegrationTime
+import lucuma.itc.client.AsterismTargetGraphsResultOutcomes
+import lucuma.itc.client.GraphResult
+import lucuma.itc.client.SeriesResult
+import lucuma.itc.client.SpectroscopyGraphsResult
+import lucuma.itc.client.TargetGraphs
+import lucuma.itc.client.TargetGraphsResult
+import lucuma.itc.client.TargetGraphsResultOutcome
+import lucuma.itc.client.TargetInput
+import lucuma.itc.client.TargetTimeAndGraphsResult
 
 import scala.collection.immutable.SortedMap
 
@@ -187,6 +201,8 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[SourceProfile.Uniform]
       .addConcreteType[SourceProfile.Gaussian]
 
+  given Pickler[TargetInput] = generatePickler
+
   given Pickler[ItcTarget] = generatePickler
 
   given Pickler[ItcResult.Pending.type] = generatePickler
@@ -197,39 +213,58 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcResult.Pending.type]
       .addConcreteType[ItcResult.Result]
 
-  given Pickler[ItcQueryProblems.UnsupportedMode.type]        = generatePickler
-  given Pickler[ItcQueryProblems.MissingWavelength.type]      = generatePickler
-  given Pickler[ItcQueryProblems.MissingSignalToNoise.type]   = generatePickler
-  given Pickler[ItcQueryProblems.MissingSignalToNoiseAt.type] = generatePickler
-  given Pickler[ItcQueryProblems.MissingTargetInfo.type]      = generatePickler
-  given Pickler[ItcQueryProblems.MissingBrightness.type]      = generatePickler
-  given Pickler[ItcQueryProblems.SourceTooBright]             = generatePickler
-  given Pickler[ItcQueryProblems.GenericError]                = generatePickler
+  given Pickler[ItcQueryProblem.UnsupportedMode.type]        = generatePickler
+  given Pickler[ItcQueryProblem.MissingWavelength.type]      = generatePickler
+  given Pickler[ItcQueryProblem.MissingSignalToNoise.type]   = generatePickler
+  given Pickler[ItcQueryProblem.MissingSignalToNoiseAt.type] = generatePickler
+  given Pickler[ItcQueryProblem.MissingTargetInfo.type]      = generatePickler
+  given Pickler[ItcQueryProblem.MissingBrightness.type]      = generatePickler
+  given Pickler[ItcQueryProblem.SourceTooBright]             = generatePickler
+  given Pickler[ItcQueryProblem.GenericError]                = generatePickler
 
-  given Pickler[ItcQueryProblems] =
-    compositePickler[ItcQueryProblems]
-      .addConcreteType[ItcQueryProblems.UnsupportedMode.type]
-      .addConcreteType[ItcQueryProblems.MissingWavelength.type]
-      .addConcreteType[ItcQueryProblems.MissingSignalToNoise.type]
-      .addConcreteType[ItcQueryProblems.MissingSignalToNoiseAt.type]
-      .addConcreteType[ItcQueryProblems.MissingTargetInfo.type]
-      .addConcreteType[ItcQueryProblems.MissingBrightness.type]
-      .addConcreteType[ItcQueryProblems.SourceTooBright]
-      .addConcreteType[ItcQueryProblems.GenericError]
+  given Pickler[ItcTargetProblem] = generatePickler
+
+  given Pickler[ItcQueryProblem] =
+    compositePickler[ItcQueryProblem]
+      .addConcreteType[ItcQueryProblem.UnsupportedMode.type]
+      .addConcreteType[ItcQueryProblem.MissingWavelength.type]
+      .addConcreteType[ItcQueryProblem.MissingSignalToNoise.type]
+      .addConcreteType[ItcQueryProblem.MissingSignalToNoiseAt.type]
+      .addConcreteType[ItcQueryProblem.MissingTargetInfo.type]
+      .addConcreteType[ItcQueryProblem.MissingBrightness.type]
+      .addConcreteType[ItcQueryProblem.SourceTooBright]
+      .addConcreteType[ItcQueryProblem.GenericError]
 
   given Pickler[ItcRequestParams] = generatePickler
 
   given Pickler[ItcAxis] = generatePickler
 
-  given Pickler[OptimizedSeriesResult] = generatePickler
+  given Pickler[SeriesResult] = generatePickler
 
-  given Pickler[OptimizedChartResult] = generatePickler
+  given Pickler[GraphResult] = generatePickler
 
   given Pickler[OverridenExposureTime] = picklerNewType(OverridenExposureTime)
 
   given Pickler[ItcExposureTime] = generatePickler
 
-  given Pickler[ItcChartResult] = generatePickler
+  given [A: Pickler]: Pickler[Zipper[A]] =
+    transformPickler[Zipper[A], (List[A], A, List[A])]((lefts, focus, rights) =>
+      Zipper(lefts, focus, rights)
+    )(z => (z.lefts, z.focus, z.rights))
+
+  given Pickler[IntegrationTime] = generatePickler
+
+  given Pickler[TargetIntegrationTime] = generatePickler
+
+  given Pickler[ItcSeries] = generatePickler
+
+  given Pickler[ItcGraph] = generatePickler
+
+  given Pickler[TargetGraphs] = generatePickler
+
+  given Pickler[TargetTimeAndGraphsResult] = generatePickler
+
+  given Pickler[ItcGraphResult] = generatePickler
 
   given Pickler[ItcGraphRequestParams] = generatePickler
 
@@ -237,7 +272,24 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcCcd] = generatePickler
 
-  given Pickler[OptimizedSpectroscopyGraphResult] = generatePickler
+  given Pickler[TargetGraphsResult] = generatePickler
+
+  given errorSourceTooBright: Pickler[Error.SourceTooBright] = generatePickler
+  given errorGeneral: Pickler[Error.General]                 = generatePickler
+
+  given Pickler[Error] = compositePickler[Error]
+    .addConcreteType[Error.SourceTooBright]
+    .addConcreteType[Error.General]
+
+  given Pickler[TargetGraphsResultOutcome] = picklerNewType(TargetGraphsResultOutcome)
+
+  given Pickler[AsterismTargetGraphsResultOutcomes] = picklerNewType(
+    AsterismTargetGraphsResultOutcomes
+  )
+
+  given Pickler[SpectroscopyGraphsResult] = generatePickler
+
+  given Pickler[GraphResponse] = generatePickler
 
   given Pickler[ItcVersions] = generatePickler
 }

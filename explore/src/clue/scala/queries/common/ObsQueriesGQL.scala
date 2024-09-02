@@ -8,9 +8,6 @@ import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
-// gql: import io.circe.refined.*
-// gql: import lucuma.odb.json.time.decoder.given
-
 object ObsQueriesGQL:
   @GraphQL
   trait ProgramCreateObservation extends GraphQLOperation[ObservationDB]:
@@ -18,30 +15,6 @@ object ObsQueriesGQL:
       mutation($$createObservation: CreateObservationInput!) {
         createObservation(input: $$createObservation) {
           observation $ObservationSubquery
-        }
-      }
-    """
-
-  @GraphQL
-  trait ObsItcQuery extends GraphQLOperation[ObservationDB]:
-    val document = s"""
-      query($$obsId: ObservationId!) {
-        observation(observationId: $$obsId) {
-          itc {
-            science {
-              selected {
-                exposureTime $TimeSpanSubquery
-                exposures
-                signalToNoise
-              }
-            }
-            acquisition {
-              selected {
-                exposures
-                signalToNoise
-              }
-            }
-          }
         }
       }
     """
