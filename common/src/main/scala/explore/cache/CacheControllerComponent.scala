@@ -10,9 +10,10 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import fs2.Stream
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 
-trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]: Reusability]:
+trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   private type F[T] = DefaultA[T]
 
   // Initial model and a stream of delayed updates.
@@ -25,44 +26,41 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]: Reusab
   val component =
     ScalaFnComponent
       .withHooks[P]
-      .useEffectResultWithDepsBy(props => props): _ =>
-        props => // TODO Could we actually useEffectStreamResource?
-          for
-            latch                        <- Deferred[F, Queue[F, S => S]]
-            // Start the update fiber. We want subscriptions to start before initial query.
-            // This way we don't miss updates.
-            // The update fiber will only update the cache once it is initialized (via latch).
-            // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-            _                            <-
-              updateStream(props)
-                .evalTap:
-                  _.evalTap: mod =>
-                    latch.get.flatMap(_.offer(mod))
-                  .compile.drain
-                .useForever
-                .start
-            (initialValue, delayedInits) <- initial(props)
-            _                            <- props.modState((_: Option[S]) => initialValue.some)
-            queue                        <- Queue.unbounded[F, S => S]
-            _                            <- latch.complete(queue)
-            _                            <-
-              delayedInits
-                .evalMap: mod =>
-                  queue.offer(mod)
-                .compile
-                .drain
-                .start
-          yield queue
-      .useStreamBy((props, queue) => (props, queue.isReady)): (props, queue) =>
+      .useEffectResultOnMountBy: props => // TODO Could we actually useEffectStreamResource?
+        for
+          _                            <- props.modState(_ => none) // Initialize on mount.
+          latch                        <- Deferred[F, Queue[F, S => S]]
+          // Start the update fiber. We want subscriptions to start before initial query.
+          // This way we don't miss updates.
+          // The update fiber will only update the cache once it is initialized (via latch).
+          // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
+          _                            <-
+            updateStream(props)
+              .evalTap:
+                _.evalTap: mod =>
+                  latch.get.flatMap(_.offer(mod))
+                .compile.drain
+              .useForever
+              .start
+          (initialValue, delayedInits) <- initial(props)
+          _                            <- props.modState((_: Option[S]) => initialValue.some)
+          queue                        <- Queue.unbounded[F, S => S]
+          _                            <- latch.complete(queue)
+          _                            <-
+            delayedInits
+              .evalMap: mod =>
+                queue.offer(mod)
+              .compile
+              .drain
+              .start
+        yield queue
+      .useStreamBy((_, queue) => queue.isReady): (props, queue) =>
         _ =>
           queue.toOption
             .map(q => Stream.fromQueueUnterminated(q))
             .orEmpty
             .evalTap(f => props.modState(_.map(f)))
-      // .useEffectWithDepsBy((_, _, value) => value.toOption)((props, _, _) =>
-      //   value => props.setState(value)
-      // )
-      .render((_, _, _) => React.Fragment())
+      .render((_, _, _) => EmptyVdom)
 
 object CacheControllerComponent:
   trait Props[S]:

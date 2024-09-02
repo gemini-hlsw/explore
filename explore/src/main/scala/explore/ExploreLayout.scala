@@ -50,6 +50,7 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
+import lucuma.core.model.ProposalReference
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]
@@ -181,13 +182,14 @@ object ExploreLayout:
                   cb(oldRoute, newRoute)
             )
 
-          val helpView = helpCtx.displayedHelp
+          val helpView: View[Option[NonEmptyString]] = helpCtx.displayedHelp
 
           given Display[AppTab] = _.title
 
-          val (showProgsPopup, msg, isSubmitted, proposalReference) =
-            props.view.get.programSummaries.fold((false, none, false, none)) { pss =>
-              routingInfo.optProgramId.fold((true, none, false, none)) { id =>
+          val (showProgsPopup, msg, isSubmitted, proposalReference)
+            : (Boolean, Option[String], Boolean, Option[ProposalReference]) =
+            props.view.get.programSummaries.fold((false, none, false, none)): pss =>
+              routingInfo.optProgramId.fold((true, none, false, none)): id =>
                 if (pss.programs.get(id).exists(!_.deleted))
                   (false, none, pss.proposalIsSubmitted, pss.proposalId)
                 else
@@ -196,13 +198,16 @@ object ExploreLayout:
                    false,
                    none
                   )
-              }
-            }
 
-          val deadlineStr =
+          val deadlineStr: String =
             props.view.get.deadline
               .map(Proposal.deadlineString)
               .orEmpty
+
+          val cacheKey: String =
+            userVault.get
+              .map(_.user)
+              .foldMap(u => s"${routingInfo.programId}-${u.id}-${u.role.name}")
 
           React.Fragment(
             ConfirmDialog(),
@@ -225,20 +230,19 @@ object ExploreLayout:
               ModesCacheController(props.view.zoom(RootModel.spectroscopyModes).async.mod),
               CfpCacheController(props.view.zoom(RootModel.cfps).async.mod),
               // This might use the `RoutingInfo.dummyProgramId` if the URL had no
-              // no program id in it. But, that's OK, because the list of user
+              // program id in it. But, that's OK, because the list of user
               // programs will still load and they will be redirected to the program
               // selection popup.
               ProgramCacheController(
                 routingInfo.programId,
-                props.view.zoom(RootModel.user).get.map(_.role.name),
                 props.view.zoom(RootModel.programSummaries).async.mod
-              ),
+              ).withKey(cacheKey),
               userVault.mapValue: (vault: View[UserVault]) =>
                 React.Fragment(
                   PreferencesCacheController(
                     vault.get.user.id,
                     props.view.zoom(RootModel.userPreferences).async.mod
-                  ),
+                  ).withKey(cacheKey),
                   TopBar(
                     vault,
                     routingInfo.optProgramId,

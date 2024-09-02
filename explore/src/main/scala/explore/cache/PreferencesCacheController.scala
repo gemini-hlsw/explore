@@ -19,7 +19,6 @@ import explore.model.layout.LayoutsMap
 import japgolly.scalajs.react.*
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
-import lucuma.ui.reusability.given
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesUpdates
 import queries.schemas.UserPreferencesDB
@@ -35,7 +34,6 @@ case class PreferencesCacheController(
 
 object PreferencesCacheController
     extends CacheControllerComponent[UserPreferences, PreferencesCacheController]:
-  given Reusability[PreferencesCacheController] = Reusability.by(_.userId)
 
   override protected val initial: PreferencesCacheController => IO[
     (UserPreferences, fs2.Stream[IO, UserPreferences => UserPreferences])

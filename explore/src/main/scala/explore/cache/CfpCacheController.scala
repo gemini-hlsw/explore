@@ -32,8 +32,6 @@ object CfpCacheController
     ] =
     _ => Resource.pure(Stream.empty)
 
-  given Reusability[CfpCacheController] = Reusability.always
-
   override protected val initial: CfpCacheController => IO[
     (List[CallForProposal], fs2.Stream[IO, List[CallForProposal] => List[CallForProposal]])
   ] = props =>
