@@ -28,6 +28,7 @@ import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
+import lucuma.core.model.ProposalReference
 import lucuma.core.util.Display
 import lucuma.core.util.Timestamp
 import lucuma.react.common.*
@@ -50,7 +51,6 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
-import lucuma.core.model.ProposalReference
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, View[RootModel]]

@@ -10,8 +10,8 @@ import cats.syntax.all.*
 import crystal.react.hooks.*
 import fs2.Stream
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
+import japgolly.scalajs.react.vdom.html_<^.*
 
 trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   private type F[T] = DefaultA[T]
