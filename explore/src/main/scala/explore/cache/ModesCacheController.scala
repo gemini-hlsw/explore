@@ -32,8 +32,6 @@ object ModesCacheController
     ]] =
     _ => Resource.pure(Stream.empty)
 
-  given Reusability[ModesCacheController] = Reusability.always
-
   override protected val initial: ModesCacheController => IO[
     (SpectroscopyModesMatrix, fs2.Stream[IO, SpectroscopyModesMatrix => SpectroscopyModesMatrix])
   ] = props =>
