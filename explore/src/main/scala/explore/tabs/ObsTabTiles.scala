@@ -56,6 +56,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.syntax.all.*
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
@@ -259,6 +260,9 @@ object ObsTabTiles:
             val vizTimeView: View[Option[Instant]] =
               props.observation.model.zoom(Observation.observationTime)
 
+            val vizDurationView: View[Option[TimeSpan]] =
+              props.observation.model.zoom(Observation.observationDuration)
+
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
               NonEmptyList.fromList:
                 props.observation.get.scienceTargetIds.toList
@@ -276,13 +280,16 @@ object ObsTabTiles:
               }
 
             val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+            val obsDuration =
+              props.observation.get.observationDuration
+                .orElse(pendingTime)
 
             val paProps: PAProperties =
               PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
 
             val averagePA: Option[AveragePABasis] =
-              (basicConfiguration.map(_.siteFor), asterismAsNel, pendingTime)
-                .mapN: (site, asterism, pendingTime) =>
+              (basicConfiguration.map(_.siteFor), asterismAsNel, obsDuration)
+                .mapN: (site, asterism, duration) =>
                   posAngleConstraintView.get match
                     case PosAngleConstraint.AverageParallactic =>
                       // See also `anglesToTestAt` in AladinCell.scala.
@@ -290,8 +297,8 @@ object ObsTabTiles:
                         site.place,
                         asterism.baseTracking,
                         vizTimeOrNow,
-                        pendingTime
-                      ).map(AveragePABasis(vizTimeOrNow, pendingTime, _))
+                        duration
+                      ).map(AveragePABasis(vizTimeOrNow, duration, _))
                     case _                                     => none
                 .flatten
 
@@ -365,7 +372,7 @@ object ObsTabTiles:
                 props.observation.get.observingMode.map(_.siteFor),
                 targetCoords,
                 vizTimeView.get,
-                pendingTime.map(_.toDuration),
+                obsDuration.map(_.toDuration),
                 timingWindows.get,
                 props.globalPreferences.get
               )
@@ -381,7 +388,7 @@ object ObsTabTiles:
                 sequenceOffsets.toOption.flatMap(_.science),
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,
-                pendingTime.map(_.toDuration)
+                obsDuration.map(_.toDuration)
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
@@ -419,7 +426,9 @@ object ObsTabTiles:
                 props.obsAndTargets,
                 basicConfiguration,
                 vizTimeView,
+                vizDurationView,
                 obsConf,
+                pendingTime,
                 props.focusedTarget,
                 setCurrentTarget,
                 onCloneTarget,

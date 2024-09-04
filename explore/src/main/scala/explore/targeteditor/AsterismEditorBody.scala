@@ -31,6 +31,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.ui.reusability.given
@@ -63,7 +64,7 @@ case class AsterismEditorBody(
   userId:            User.Id,
   obsIds:            ObsIdSet,
   obsAndTargets:     UndoSetter[ObservationsAndTargets],
-  vizTime:           View[Option[Instant]],
+  obsTime:           View[Option[Instant]],
   configuration:     ObsConfiguration,
   focusedTargetId:   Option[Target.Id],
   setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
@@ -106,7 +107,7 @@ object AsterismEditorBody extends AsterismModifier:
       .useStateView(AladinFullScreen.Normal)
       .render { (props, obsEditInfo, fullScreen) =>
 
-        val vizTime = props.vizTime.get
+        val vizTime = props.obsTime.get
 
         val selectedTargetView: View[Option[Target.Id]] =
           View(
@@ -191,7 +192,9 @@ case class AsterismEditorTitle(
   obsAndTargets:    UndoSetter[ObservationsAndTargets],
   onAsterismUpdate: OnAsterismUpdateParams => Callback,
   readonly:         Boolean,
-  vizTimeView:      View[Option[Instant]],
+  obsTimeView:      View[Option[Instant]],
+  obsDurationView:  View[Option[TimeSpan]],
+  pendingTime:      Option[TimeSpan],
   tileState:        View[AsterismTileState]
 ) extends ReactFnProps(AsterismEditorTitle.component)
 
@@ -223,7 +226,7 @@ object AsterismEditorTitle extends AsterismModifier:
               ExploreStyles.AddTargetButton
             )
           ),
-          ObsTimeEditor(props.vizTimeView),
+          ObsTimeEditor(props.obsTimeView, props.obsDurationView, props.pendingTime),
           ColumnSelectorInTitle(TargetTable.columnNames,
                                 props.tileState.zoom(AsterismTileState.table)
           )

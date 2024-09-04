@@ -26,8 +26,10 @@ import lucuma.core.model.arb.ArbConstraintSet.given
 import lucuma.core.model.arb.ArbObservationValidation.given
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
 import lucuma.core.model.arb.ArbTimingWindow.given
+import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
+import lucuma.core.util.arb.ArbTimeSpan.given
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.arb.ArbObservingMode
 import org.scalacheck.Arbitrary
@@ -58,6 +60,7 @@ trait ArbObservation:
         scienceRequirements <- arbitrary[ScienceRequirements]
         observingMode       <- arbitrary[Option[ObservingMode]]
         vizTime             <- arbitrary[Option[Instant]]
+        vizDuration         <- arbitrary[Option[TimeSpan]]
         posAngleConstraint  <- arbitrary[PosAngleConstraint]
         wavelength          <- arbitrary[Option[Wavelength]]
         groupId             <- arbitrary[Option[Group.Id]]
@@ -78,6 +81,7 @@ trait ArbObservation:
         scienceRequirements,
         observingMode,
         vizTime,
+        vizDuration,
         posAngleConstraint,
         wavelength,
         groupId,
@@ -101,6 +105,7 @@ trait ArbObservation:
        ScienceRequirements,
        Option[ObservingMode],
        Option[Instant],
+       Option[TimeSpan],
        PosAngleConstraint,
        Option[Wavelength],
        Option[Group.Id],
@@ -122,6 +127,7 @@ trait ArbObservation:
          o.scienceRequirements,
          o.observingMode,
          o.observationTime,
+         o.observationDuration,
          o.posAngleConstraint,
          o.wavelength,
          o.groupId,

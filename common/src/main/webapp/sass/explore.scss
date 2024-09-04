@@ -841,12 +841,17 @@ thead tr th.sticky-header {
       font-size: small;
     }
   }
+
+  .target-tile-obs-duration {
+    display: none;
+  }
 }
 
 @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
   .explore-obs-instant-tile-title {
     label:first-child {
       max-width: unset;
+      display: unset;
     }
 
     label[data-abbrv]::after {
@@ -863,10 +868,11 @@ thead tr th.sticky-header {
   }
 }
 
-@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+@container tile (min-width: #{exploreCommon.$tile-medium-cutoff}) {
   .explore-obs-instant-tile-title {
-    label:first-child {
-      display: unset;
+    .target-tile-obs-duration {
+      display: flex;
+      gap: 0.5em;
     }
   }
 }
@@ -1034,6 +1040,14 @@ thead tr th.sticky-header {
   // In the observation tile, the target tile controller's z-index must be greater than
   // the z-index of the other tiles' controllers for the obs time picker to be visible over them.
   z-index: 20;
+
+  .explore-tile-title-control-area {
+    min-width: 60%;
+
+    .explore-tile-control {
+      justify-content: space-between;
+    }
+  }
 }
 
 .target-tile-body {
