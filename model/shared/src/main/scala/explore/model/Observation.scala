@@ -32,7 +32,9 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
+import lucuma.odb.json.time.decoder.given
 import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
@@ -56,6 +58,7 @@ case class Observation(
   scienceRequirements: ScienceRequirements,
   observingMode:       Option[ObservingMode],
   observationTime:     Option[Instant],
+  observationDuration: Option[TimeSpan],
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
   groupId:             Option[Group.Id],
@@ -190,6 +193,7 @@ object Observation:
   val scienceRequirements = Focus[Observation](_.scienceRequirements)
   val observingMode       = Focus[Observation](_.observingMode)
   val observationTime     = Focus[Observation](_.observationTime)
+  val observationDuration = Focus[Observation](_.observationDuration)
   val posAngleConstraint  = Focus[Observation](_.posAngleConstraint)
   val wavelength          = Focus[Observation](_.wavelength)
   val groupId             = Focus[Observation](_.groupId)
@@ -220,6 +224,7 @@ object Observation:
       scienceRequirements <- c.get[ScienceRequirements]("scienceRequirements")
       observingMode       <- c.get[Option[ObservingMode]]("observingMode")
       observationTime     <- c.get[Option[Timestamp]]("observationTime")
+      observationDur      <- c.get[Option[TimeSpan]]("observationDuration")
       posAngleConstraint  <- c.get[PosAngleConstraint]("posAngleConstraint")
       wavelength          <- c.downField("scienceRequirements")
                                .downField("spectroscopy")
@@ -242,6 +247,7 @@ object Observation:
       scienceRequirements,
       observingMode,
       observationTime.map(_.toInstant),
+      observationDur,
       posAngleConstraint,
       wavelength,
       groupId,

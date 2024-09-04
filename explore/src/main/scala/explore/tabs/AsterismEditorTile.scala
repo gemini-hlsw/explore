@@ -29,6 +29,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.ui.syntax.all.given
@@ -46,7 +47,9 @@ object AsterismEditorTile:
     obsAndTargets:     UndoSetter[ObservationsAndTargets],
     configuration:     Option[BasicConfiguration],
     vizTime:           View[Option[Instant]],
+    vizDuration:       View[Option[TimeSpan]],
     obsConf:           ObsConfiguration,
+    pendingTime:       Option[TimeSpan], // estimated remaining execution time.
     currentTarget:     Option[Target.Id],
     setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
     onCloneTarget:     OnCloneParameters => Callback,
@@ -63,6 +66,11 @@ object AsterismEditorTile:
     // It's OK to save the viz time for executed observations, I think.
     val vizTimeView =
       vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
+
+    val vizDurationView =
+      vizDuration.withOnMod(t =>
+        ObsQueries.updateVisualizationDuration[IO](obsIds.toList, t).runAsync
+      )
 
     Tile(
       ObsTabTilesIds.TargetId.id,
@@ -100,6 +108,8 @@ object AsterismEditorTile:
                             onAsterismUpdate,
                             readonly,
                             vizTimeView,
+                            vizDurationView,
+                            pendingTime,
                             s
         )
     )

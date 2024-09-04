@@ -47,6 +47,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
 import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
+import lucuma.core.util.TimeSpan
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
@@ -205,6 +206,29 @@ object TargetTabContents extends TwoPanels:
       val obsTimeView: View[Option[Instant]] =
         props.programSummaries.model.zoom(getObsTime)(modObsTime)
 
+      val getObsDuration: ProgramSummaries => Option[TimeSpan] = a =>
+        for
+          id <- idsToEdit.single
+          o  <- a.observations.getValue(id)
+          t  <- o.observationDuration
+        yield t
+
+      def modObsDuration(
+        mod: Option[TimeSpan] => Option[TimeSpan]
+      ): ProgramSummaries => ProgramSummaries = ps =>
+        idsToEdit.single
+          .map(i =>
+            ProgramSummaries.observations
+              .filterIndex((id: Observation.Id) => id === i)
+              .andThen(KeyedIndexedList.value)
+              .andThen(Observation.observationDuration)
+              .modify(mod)(ps)
+          )
+          .getOrElse(ps)
+
+      val obsDurationView: View[Option[TimeSpan]] =
+        props.programSummaries.model.zoom(getObsDuration)(modObsDuration)
+
       val title = idsToEdit.single match {
         case Some(id) => s"Observation $id"
         case None     => s"Editing ${idsToEdit.size} Asterisms"
@@ -225,6 +249,7 @@ object TargetTabContents extends TwoPanels:
                   _,
                   _,
                   Some(conf),
+                  _,
                   _,
                   posAngle,
                   Some(wavelength),
@@ -319,7 +344,9 @@ object TargetTabContents extends TwoPanels:
           props.obsAndTargets,
           configuration,
           obsTimeView,
+          obsDurationView,
           ObsConfiguration(configuration, none, constraints, wavelength, none, none, none, none),
+          none,
           props.focused.target,
           setCurrentTarget(idsToEdit.some),
           onCloneTarget4Asterism,

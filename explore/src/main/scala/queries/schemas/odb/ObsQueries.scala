@@ -21,6 +21,7 @@ import lucuma.core.model.Group
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
@@ -81,6 +82,25 @@ object ObsQueries:
 
     val editInput = ObservationTimesInput(observationTime =
       observationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
+    )
+
+    UpdateObservationTimesMutation[F]
+      .execute(
+        UpdateObservationsTimesInput(
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = editInput
+        )
+      )
+      .void
+  }
+
+  def updateVisualizationDuration[F[_]: Async](
+    obsIds:              List[Observation.Id],
+    observationDuration: Option[TimeSpan]
+  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+
+    val editInput = ObservationTimesInput(
+      observationDuration = observationDuration.map(_.toInput).orUnassign
     )
 
     UpdateObservationTimesMutation[F]

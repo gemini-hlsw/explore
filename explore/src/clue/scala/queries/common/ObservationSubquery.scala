@@ -20,6 +20,7 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           status
           activeStatus
           observationTime
+          observationDuration $TimeSpanSubquery
           posAngleConstraint $PosAngleConstraintSubquery
           targetEnvironment {
             asterism {
