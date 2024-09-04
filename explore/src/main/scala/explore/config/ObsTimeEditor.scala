@@ -31,7 +31,8 @@ import scalajs.js
 case class ObsTimeEditor(
   vizTimeView:     View[Option[Instant]],
   vizDurationView: View[Option[TimeSpan]],
-  pendingTime:     Option[TimeSpan]
+  pendingTime:     Option[TimeSpan],
+  forMultipleObs:  Boolean
 ) extends ReactFnProps(ObsTimeEditor.component)
 
 object ObsTimeEditor {
@@ -56,6 +57,7 @@ object ObsTimeEditor {
                 newValue.fromDatePickerToInstantOpt.foldMap: i =>
                   props.vizTimeView.set(i.some)
             )
+              .readOnly(props.forMultipleObs)
               .calendarClassName(ExploreStyles.DatePickerWithNowButton.htmlClass)
               .showTimeInput(true)
               .selected(props.vizTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
@@ -69,31 +71,33 @@ object ObsTimeEditor {
             <.label("UTC"),
             <.span(
               ExploreStyles.TargetTileObsDuration,
-              props.vizDurationView
-                .mapValue((v: View[TimeSpan]) =>
-                  <.span(
-                    ExploreStyles.TargetTileObsDuration,
-                    FormTimeSpanInput(id = "obsDuration".refined,
-                                      value = v,
-                                      units = NonEmptyList.of(TimeUnit.HOURS, TimeUnit.MINUTES)
-                    ),
+              if (props.forMultipleObs) TagMod.empty
+              else
+                props.vizDurationView
+                  .mapValue((v: View[TimeSpan]) =>
+                    <.span(
+                      ExploreStyles.TargetTileObsDuration,
+                      FormTimeSpanInput(id = "obsDuration".refined,
+                                        value = v,
+                                        units = NonEmptyList.of(TimeUnit.HOURS, TimeUnit.MINUTES)
+                      ),
+                      Button(
+                        text = true,
+                        clazz = ExploreStyles.DeleteButton,
+                        icon = Icons.Eraser,
+                        tooltip = "Clear explicit duration and use full remaining sequence",
+                        onClick = props.vizDurationView.set(none)
+                      ).tiny.compact
+                    )
+                  )
+                  .getOrElse(
                     Button(
-                      text = true,
-                      clazz = ExploreStyles.DeleteButton,
-                      icon = Icons.Eraser,
-                      tooltip = "Clear explicit duration and use full remaining sequence",
-                      onClick = props.vizDurationView.set(none)
+                      label = "Set duration",
+                      onClick = props.vizDurationView.set(defaultDuration.value.some),
+                      tooltip = "Set an explicit duration instead of using the remaining sequence",
+                      clazz = ExploreStyles.TargetTileObsDuration
                     ).tiny.compact
                   )
-                )
-                .getOrElse(
-                  Button(
-                    label = "Set duration",
-                    onClick = props.vizDurationView.set(defaultDuration.value.some),
-                    tooltip = "Set an explicit duration instead of using the remaining sequence",
-                    clazz = ExploreStyles.TargetTileObsDuration
-                  ).tiny.compact
-                )
             )
           )
         )

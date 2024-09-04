@@ -226,7 +226,11 @@ object AsterismEditorTitle extends AsterismModifier:
               ExploreStyles.AddTargetButton
             )
           ),
-          ObsTimeEditor(props.obsTimeView, props.obsDurationView, props.pendingTime),
+          ObsTimeEditor(props.obsTimeView,
+                        props.obsDurationView,
+                        props.pendingTime,
+                        props.obsIds.size > 1
+          ),
           ColumnSelectorInTitle(TargetTable.columnNames,
                                 props.tileState.zoom(AsterismTileState.table)
           )
