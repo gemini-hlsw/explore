@@ -36,6 +36,7 @@ import lucuma.schemas.ObservationDB.Types.UnlinkUserInput
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
+import lucuma.ui.utils.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
 
@@ -55,7 +56,7 @@ object ProgramUsersTable:
     isActive:  View[IsActive]
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[ProgramUserWithRole, TableMeta]
+  private val ColDef = ColumnDef.WithTableMeta[View[ProgramUserWithRole], TableMeta]
 
   private val NameColumnId: ColumnId    = ColumnId("name")
   private val PartnerColumnId: ColumnId = ColumnId("Partner")
@@ -79,8 +80,8 @@ object ProgramUsersTable:
 
   private def column[V](
     id:       ColumnId,
-    accessor: ProgramUserWithRole => V
-  ): ColumnDef.Single.WithTableMeta[ProgramUserWithRole, V, TableMeta] =
+    accessor: View[ProgramUserWithRole] => V
+  ): ColumnDef.Single.WithTableMeta[View[ProgramUserWithRole], V, TableMeta] =
     ColDef(id, accessor, columnNames(id))
 
   val partnerLinkOptions: List[PartnerLink] =
@@ -129,95 +130,71 @@ object ProgramUsersTable:
     each[List[ProgramUserWithRole], ProgramUserWithRole]
       .filter(_.user.id === userId)
 
-  private def partnerLinkLens(userId: User.Id) =
-    userWithRole(userId).andThen(ProgramUserWithRole.partnerLink)
-
-  private def esLens(userId: User.Id) =
-    userWithRole(userId).andThen(ProgramUserWithRole.educationalStatus)
-
-  private def thesisLens(userId: User.Id) =
-    userWithRole(userId).andThen(ProgramUserWithRole.thesis)
-
   private def columns(
-    ctx: AppContext[IO]
-  ): List[ColumnDef.WithTableMeta[ProgramUserWithRole, ?, TableMeta]] =
+    programId: Program.Id,
+    ctx:       AppContext[IO]
+  ): List[ColumnDef.WithTableMeta[View[ProgramUserWithRole], ?, TableMeta]] =
     import ctx.given
 
     List(
-      column(NameColumnId, _.name),
+      column(NameColumnId, _.get.name),
       ColDef(
         PartnerColumnId,
-        _.partnerLink,
+        _.zoom(ProgramUserWithRole.partnerLink),
         enableSorting = true,
         enableResizing = true,
         cell = c =>
 
-          val cell   = c.row.original
-          val userId = cell.user.id
-          c.table.options.meta.map: meta =>
-            val view      = meta.users.zoom(partnerLinkLens(userId))
-            val usersView = view.withOnMod(pl =>
-              updateProgramPartner[IO](meta.programId,
-                                       userId,
-                                       pl.headOption.flatten
-              ).runAsyncAndForget
-            )
+          val cell      = c.row.original
+          val userId    = cell.get.user.id
+          val usersView = c.value.withOnMod(pl =>
+            updateProgramPartner[IO](programId, userId, pl).runAsyncAndForget
+          )
 
-            val pl = cell.partnerLink.flatMap {
-              case PartnerLink.HasUnspecifiedPartner => None
-              case p                                 => Some(p)
-            }
-            partnerSelector(pl, usersView.set)
+          val pl = cell.get.partnerLink.flatMap {
+            case PartnerLink.HasUnspecifiedPartner => None
+            case p                                 => Some(p)
+          }
+          partnerSelector(pl, usersView.set)
       ),
-      column(EmailColumnId, _.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
+      column(EmailColumnId, _.get.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
       ColDef(
         ESColumnId,
-        _.educationalStatus,
+        _.zoom(ProgramUserWithRole.educationalStatus),
         enableSorting = true,
         enableResizing = true,
         cell = c =>
 
           val cell   = c.row.original
-          val userId = cell.user.id
-          c.table.options.meta.map: meta =>
-            val view = meta.users
-              .zoom(esLens(userId))
-              .withOnMod(es =>
-                updateUserES[IO](meta.programId, userId, es.headOption.flatten).runAsyncAndForget
-              )
+          val userId = cell.get.user.id
+          val view   = c.value
+            .withOnMod(es => updateUserES[IO](programId, userId, es).runAsyncAndForget)
 
-            EnumOptionalDropdown[EducationalStatus](
-              id = "es".refined,
-              value = view.get.headOption.flatten,
-              showClear = true,
-              clazz = ExploreStyles.PartnerSelector,
-              onChange = es => view.set(es)
-            )
+          EnumOptionalDropdown[EducationalStatus](
+            id = "es".refined,
+            value = view.get,
+            showClear = true,
+            clazz = ExploreStyles.PartnerSelector,
+            onChange = es => view.set(es)
+          )
       ),
       ColDef(
         ThesisColumnId,
-        _.thesis,
+        _.zoom(ProgramUserWithRole.thesis),
         cell = c =>
 
           val cell   = c.row.original
-          val userId = cell.user.id
+          val userId = cell.get.user.id
 
-          c.table.options.meta.map: meta =>
-            val view = meta.users
-              .zoom(thesisLens(userId))
-              .withOnMod(th =>
-                updateUserThesis[IO](meta.programId,
-                                     userId,
-                                     th.headOption.flatten
-                ).runAsyncAndForget
-              )
-            Checkbox(id = "thesis",
-                     checked = view.get.headOption.flatten.getOrElse(false),
-                     onChange = r => view.set(r.some)
-            )
+          val view = c.value
+            .withOnMod(th => updateUserThesis[IO](programId, userId, th).runAsyncAndForget)
+          Checkbox(id = "thesis",
+                   checked = view.get.getOrElse(false),
+                   onChange = r => view.set(r.some)
+          )
       ),
-      column(OrcidIdColumnId, _.user.profile.foldMap(_.orcidId.value)),
-      column(RoleColumnId, _.roleName),
+      column(OrcidIdColumnId, _.get.user.profile.foldMap(_.orcidId.value)),
+      column(RoleColumnId, _.get.roleName),
       ColDef(
         UnlinkId,
         identity,
@@ -227,7 +204,7 @@ object ProgramUsersTable:
         cell = cell =>
           cell.table.options.meta.map: meta =>
 
-            val userId = cell.value.user.id
+            val userId = cell.value.get.user.id
             val action =
               UnlinkUser[IO].execute(UnlinkUserInput(meta.programId, userId)) *>
                 meta.users.mod(_.filterNot(_.user.id === userId)).to[IO]
@@ -246,7 +223,7 @@ object ProgramUsersTable:
                 severity = Button.Severity.Secondary,
                 disabled = meta.readOnly || meta.isActive.get.value,
                 onClick = unlink
-              ).mini.compact.unless(cell.value.role.isEmpty) // don't allow removing the PI
+              ).mini.compact.unless(cell.value.get.role.isEmpty) // don't allow removing the PI
             )
         ,
         size = 35.toPx
@@ -259,14 +236,14 @@ object ProgramUsersTable:
       .useContext(AppContext.ctx)
       .useStateView(IsActive(false))
       .useMemoBy((_, _, _) => ()): (p, ctx, _) => // cols
-        _ => columns(ctx)
-      .useMemoBy((props, _, _, _) => props.users.get.toList): (_, _, _, _) => // rows
-        identity
+        _ => columns(p.programId, ctx)
+      .useMemoBy((props, _, _, _) => props.users.reuseByValue): (p, _, _, _) => // rows
+        _.toListOfViews
       .useReactTableBy: (props, _, isActive, cols, rows) =>
         TableOptions(
           cols,
           rows,
-          getRowId = (row, _, _) => RowId(row.user.id.toString),
+          getRowId = (row, _, _) => RowId(row.get.user.id.toString),
           meta = TableMeta(props.programId, props.users, props.readOnly, isActive)
         )
       .render: (props, _, _, _, _, table) =>
