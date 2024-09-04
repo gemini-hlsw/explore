@@ -33,19 +33,27 @@ case class UndoContext[M](
   private def push(stack: View[UndoStack[DefaultA, M]]): Restorer[DefaultA, M] => DefaultS[Unit] =
     restorer => stack.mod(s => restorer +: s)
 
-  private def undoStacks: DefaultS[Option[Restorer[DefaultA, M]]] =
-    stacks.get.undo match {
-      case head :: tail =>
-        stacks.set(UndoStacks(tail, head.onModel(model.get) +: stacks.get.redo, true)).as(head.some)
-      case Nil          => Applicative[DefaultS].pure(none)
-    }
+  // Move the top of the undo stack to the redo stack and return it.
+  private def popUndoStack: DefaultS[Option[Restorer[DefaultA, M]]] =
+    DefaultS
+      .delay(stacks.get.undo)
+      .flatMap:
+        case head :: tail =>
+          stacks
+            .set(UndoStacks(tail, head.onModel(model.get) +: stacks.get.redo, true))
+            .as(head.some)
+        case Nil          => Applicative[DefaultS].pure(none)
 
-  private def redoStacks: DefaultS[Option[Restorer[DefaultA, M]]] =
-    stacks.get.redo match {
-      case head :: tail =>
-        stacks.set(UndoStacks(head.onModel(model.get) +: stacks.get.undo, tail, true)).as(head.some)
-      case Nil          => Applicative[DefaultS].pure(none)
-    }
+  // Move the top of the redo stack to the undo stack and return it.
+  private def popRedoStack: DefaultS[Option[Restorer[DefaultA, M]]] =
+    DefaultS
+      .delay(stacks.get.redo)
+      .flatMap:
+        case head :: tail =>
+          stacks
+            .set(UndoStacks(head.onModel(model.get) +: stacks.get.undo, tail, true))
+            .as(head.some)
+        case Nil          => Applicative[DefaultS].pure(none)
 
   private def reset(stack: View[UndoStack[DefaultA, M]]): DefaultS[Unit] =
     stack.set(List.empty)
@@ -87,7 +95,7 @@ case class UndoContext[M](
           onSet(oldModel, getter(newModel)).runAsyncAndForget
     )
 
-  val undo: DefaultS[Unit] = undoStacks >>= restore
+  val undo: DefaultS[Unit] = popUndoStack >>= restore
 
-  val redo: DefaultS[Unit] = redoStacks >>= restore
+  val redo: DefaultS[Unit] = popRedoStack >>= restore
 }

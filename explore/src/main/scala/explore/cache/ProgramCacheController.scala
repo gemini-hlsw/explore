@@ -32,7 +32,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
-import lucuma.ui.reusability.given
 import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
@@ -42,7 +41,6 @@ import scala.concurrent.duration.*
 
 case class ProgramCacheController(
   programId:           Program.Id,
-  roleId:              Option[String], // Just to refresh if the role has changed
   modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
@@ -53,7 +51,6 @@ case class ProgramCacheController(
 object ProgramCacheController
     extends CacheControllerComponent[ProgramSummaries, ProgramCacheController]
     with CacheModifierUpdaters:
-  given Reusability[ProgramCacheController] = Reusability.by(p => (p.programId, p.roleId))
 
   private def drain[A, Id, R](
     fetch:      Option[Id] => IO[R],
