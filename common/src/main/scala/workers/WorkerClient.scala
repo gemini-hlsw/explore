@@ -25,14 +25,13 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
   initLatch: Deferred[F, Unit]
 ):
   private val waitForServer: F[Unit] =
-    worker.streamResource
-      .use(
-        _.map(decodeFromTransferableEither[FromServer]).rethrow
-          .collectFirst { case FromServer.ServerReady => initLatch.complete(()) }
-          .evalMap(identity) // Runs latch.complete
-          .compile
-          .drain
-      )
+    worker.stream
+      .map(decodeFromTransferableEither[FromServer])
+      .rethrow
+      .collectFirst { case FromServer.ServerReady => initLatch.complete(()) }
+      .evalMap(identity) // Runs latch.complete
+      .compile
+      .drain
       .start
       .void >>
       worker.postTransferable(asTypedArray[FromClient](FromClient.ClientReady))
@@ -44,31 +43,29 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
     Pickler[requestMessage.ResponseType]
   ): Resource[F, fs2.Stream[F, requestMessage.ResponseType]] =
     for {
-      _      <- Resource.eval(initLatch.get) // Ensure server is initialized
-      id     <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId(_))
-      _      <- Resource.make(
-                  Logger[F].debug(s">>> Starting request with id [$id]") >>
-                    worker.postTransferable(
-                      asTypedArray[FromClient](FromClient.Start(id, Pickled(asBytes[R](requestMessage))))
-                    )
-                )(_ =>
-                  Logger[F].debug(s">>> Ending request with id [$id]") >>
-                    worker.postTransferable(
-                      asTypedArray[FromClient](FromClient.End(id))
-                    )
+      _  <- Resource.eval(initLatch.get) // Ensure server is initialized
+      id <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId(_))
+      _  <- Resource.make(
+              Logger[F].debug(s">>> Starting request with id [$id]") >>
+                worker.postTransferable(
+                  asTypedArray[FromClient](FromClient.Start(id, Pickled(asBytes[R](requestMessage))))
                 )
-      stream <- worker.streamResource
-    } yield stream
+            )(_ =>
+              Logger[F].debug(s">>> Ending request with id [$id]") >>
+                worker.postTransferable(
+                  asTypedArray[FromClient](FromClient.End(id))
+                )
+            )
+    } yield worker.stream
       .map(decodeFromTransferableEither[FromServer])
       .rethrow
-      .collect {
+      .collect:
         case FromServer.Data(mid, pickled) if mid === id =>
           fromBytes[requestMessage.ResponseType](pickled.value).some
         case FromServer.Complete(mid) if mid === id      =>
           none
         case FromServer.Error(mid, error) if mid === id  =>
           error.asLeft.some
-      }
       .evalTap(msg => Logger[F].debug(s"<<< Received msg from server with id [$id]: [$msg]"))
       .unNoneTerminate
       .rethrow
