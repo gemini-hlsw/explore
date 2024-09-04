@@ -20,6 +20,7 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.EducationalStatus
+import lucuma.core.enums.Gender
 import lucuma.core.enums.Partner
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
@@ -63,6 +64,7 @@ object ProgramUsersTable:
   private val EmailColumnId: ColumnId   = ColumnId("email")
   private val ESColumnId: ColumnId      = ColumnId("education")
   private val ThesisColumnId: ColumnId  = ColumnId("thesis")
+  private val GenderColumnId: ColumnId  = ColumnId("gender")
   private val OrcidIdColumnId: ColumnId = ColumnId("orcid-id")
   private val RoleColumnId: ColumnId    = ColumnId("role")
   private val UnlinkId: ColumnId        = ColumnId("unlink")
@@ -73,6 +75,7 @@ object ProgramUsersTable:
     EmailColumnId   -> "email",
     ESColumnId      -> "education",
     ThesisColumnId  -> "thesis",
+    GenderColumnId  -> "gender",
     OrcidIdColumnId -> "ORCID",
     RoleColumnId    -> "Role",
     UnlinkId        -> ""
@@ -191,6 +194,24 @@ object ProgramUsersTable:
           Checkbox(id = "thesis",
                    checked = view.get.getOrElse(false),
                    onChange = r => view.set(r.some)
+          )
+      ),
+      ColDef(
+        GenderColumnId,
+        _.zoom(ProgramUserWithRole.gender),
+        cell = c =>
+
+          val cell   = c.row.original
+          val userId = cell.get.user.id
+
+          val view = c.value
+            .withOnMod(th => updateUserGender[IO](programId, userId, th).runAsyncAndForget)
+          EnumOptionalDropdown[Gender](
+            id = "gender".refined,
+            value = view.get,
+            showClear = true,
+            clazz = ExploreStyles.PartnerSelector,
+            onChange = es => view.set(es)
           )
       ),
       column(OrcidIdColumnId, _.get.user.profile.foldMap(_.orcidId.value)),
