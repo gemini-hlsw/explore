@@ -141,3 +141,10 @@ object ProgramQueries:
     th:  Option[Boolean]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(pid, uid, ProgramUserPropertiesInput(thesis = th.orUnassign))
+
+  def updateUserGender[F[_]: Async](
+    pid: Program.Id,
+    uid: User.Id,
+    g:   Option[Gender]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(gender = g.orUnassign))

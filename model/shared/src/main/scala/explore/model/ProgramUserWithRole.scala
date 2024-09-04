@@ -8,6 +8,7 @@ import cats.derived.*
 import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
 import lucuma.core.enums.EducationalStatus
+import lucuma.core.enums.Gender
 import lucuma.core.model.PartnerLink
 import lucuma.odb.json.partnerlink.given
 import monocle.Focus
@@ -19,7 +20,8 @@ case class ProgramUserWithRole(
   partnerLink:       Option[PartnerLink],
   role:              Option[ProgramUserRole],
   educationalStatus: Option[EducationalStatus],
-  thesis:            Option[Boolean]
+  thesis:            Option[Boolean],
+  gender:            Option[Gender]
 ) derives Eq:
   val roleName: String = role match {
     case None       => "Pi"
@@ -40,6 +42,9 @@ object ProgramUserWithRole:
   val thesis: Lens[ProgramUserWithRole, Option[Boolean]] =
     Focus[ProgramUserWithRole](_.thesis)
 
+  val gender: Lens[ProgramUserWithRole, Option[Gender]] =
+    Focus[ProgramUserWithRole](_.gender)
+
   given Decoder[ProgramUserWithRole] = c =>
     for {
       u    <- c.downField("user").as[ProgramUser]
@@ -47,4 +52,5 @@ object ProgramUserWithRole:
       role <- c.downField("role").as[Option[ProgramUserRole]]
       es   <- c.downField("educationalStatus").as[Option[EducationalStatus]]
       th   <- c.downField("thesis").as[Option[Boolean]]
-    } yield ProgramUserWithRole(u, pl, role, es, th)
+      g    <- c.downField("gender").as[Option[Gender]]
+    } yield ProgramUserWithRole(u, pl, role, es, th, g)

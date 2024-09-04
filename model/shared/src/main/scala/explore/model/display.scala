@@ -205,6 +205,12 @@ trait DisplayImplicits:
     case EducationalStatus.UndergradStudent => "Undergrad Student"
     case EducationalStatus.Other            => "Other"
 
+  given Display[Gender] = Display.byShortName:
+    case Gender.Male         => "Male"
+    case Gender.Female       => "Female"
+    case Gender.Other        => "Other"
+    case Gender.NotSpecified => "Not Specified"
+
   extension (configuration: BasicConfiguration)
     def configurationSummary: String = configuration match
       case BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _) =>

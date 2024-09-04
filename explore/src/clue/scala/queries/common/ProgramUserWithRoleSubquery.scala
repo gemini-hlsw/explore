@@ -23,5 +23,6 @@ object ProgramUserWithRoleSubquery
       role
       educationalStatus
       thesis
+      gender
     }
   """
