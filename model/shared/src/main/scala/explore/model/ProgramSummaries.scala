@@ -12,6 +12,8 @@ import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
+import lucuma.core.model.PartnerLink
+import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
 import lucuma.core.model.Target
 import lucuma.schemas.enums.ProposalStatus
@@ -35,8 +37,9 @@ case class ProgramSummaries(
   obsExecutionPots:    ObservationExecutionMap,
   groupTimeRangePots:  GroupTimeRangeMap
 ) derives Eq:
-  lazy val proposalIsSubmitted                   =
+  lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
+
   lazy val proposalId: Option[ProposalReference] =
     optProgramDetails.flatMap(_.proposal.flatMap(_.reference))
 
@@ -89,6 +92,12 @@ case class ProgramSummaries(
 
   lazy val calibrationObservations: Set[Observation.Id] =
     observations.toList.filter(_.isCalibration).map(_.id).toSet
+
+  lazy val programOrProposalReference: Option[String] =
+    ProgramSummaries.programReference
+      .getOption(this)
+      .map(_.label)
+      .orElse(ProgramSummaries.proposalReference.getOption(this).map(_.label))
 
   def cloneObsWithTargets(
     originalId: Observation.Id,
@@ -149,6 +158,17 @@ object ProgramSummaries:
     Focus[ProgramSummaries](_.obsExecutionPots)
   val groupTimeRangePots: Lens[ProgramSummaries, GroupTimeRangeMap]         =
     Focus[ProgramSummaries](_.groupTimeRangePots)
+
+  val programReference: Optional[ProgramSummaries, ProgramReference] =
+    optProgramDetails.some.andThen(ProgramDetails.reference.some)
+
+  val proposalReference: Optional[ProgramSummaries, ProposalReference] =
+    optProgramDetails.some.andThen:
+      ProgramDetails.proposal.some.andThen(Proposal.reference.some)
+
+  val piPartner: Optional[ProgramSummaries, PartnerLink] =
+    ProgramSummaries.optProgramDetails.some
+      .andThen(ProgramDetails.piPartner.some)
 
   def fromLists(
     optProgramDetails:   Option[ProgramDetails],

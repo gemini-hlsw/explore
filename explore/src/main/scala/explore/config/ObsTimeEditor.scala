@@ -44,7 +44,6 @@ object ObsTimeEditor {
       .useRef[Option[ReactDatePicker[Any, Any]]](none)
       .useMemoBy((props, _) => props.pendingTime)((_, _) => _.getOrElse(TimeSpan.fromHours(1).get))
       .render: (props, ref, defaultDuration) =>
-        println(s"Pending: ${props.pendingTime}")
         <.div(ExploreStyles.ObsInstantTileTitle)(
           React.Fragment(
             <.label(
