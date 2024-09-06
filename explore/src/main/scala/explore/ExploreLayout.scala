@@ -283,7 +283,7 @@ object ExploreLayout:
                 ): VdomElement
               else
                 <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
-                  props.resolution.renderP(props.view),
+                  React.StrictMode(props.resolution.renderP(props.view)),
                   if (isSubmitted)
                     Message(text =
                       s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted until the proposal deadline at ${deadlineStr}."
