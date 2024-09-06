@@ -13,7 +13,6 @@ case class RootModelViews(
   rootModel:        View[RootModel],
   programSummaries: ThrottlingView[Option[ProgramSummaries]]
 ):
-  // export rootModel.*
   lazy val programSummariesValue: Option[ProgramSummaries] = programSummaries.throttlerView.get
 
 object RootModelViews:
