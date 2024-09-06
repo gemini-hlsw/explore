@@ -4,8 +4,8 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all.*
 import cats.derived.*
+import cats.syntax.all.*
 import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
 import lucuma.core.enums.EducationalStatus

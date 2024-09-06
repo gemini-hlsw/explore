@@ -33,7 +33,6 @@ import lucuma.ui.syntax.all.given
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
-import queries.common.ProgramQueriesGQL.CreateProgramMutation.Data.CreateProgram.program
 
 object Routing:
 
