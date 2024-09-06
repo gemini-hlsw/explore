@@ -65,7 +65,7 @@ object ExploreMain {
       .withCache(dom.RequestCache.`no-store`)
       .create
 
-  def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences) =
+  def initialModel(vault: Option[UserVault], pref: ExploreLocalPreferences): RootModel =
     RootModel(vault = vault, localPreferences = pref)
 
   def setupDOM[F[_]: Sync]: F[Element] = Sync[F].delay(

@@ -36,15 +36,12 @@ import scala.util.Random
 
 object Routing:
 
-  private def withProgramSummaries(model: View[RootModel])(
+  private def withProgramSummaries(model: RootModelViews)(
     render: UndoContext[ProgramSummaries] => VdomNode
   ): VdomElement =
-    model
-      .zoom(RootModel.programSummaries)
-      .toOptionView
-      .map { (pss: View[ProgramSummaries]) =>
-        render(UndoContext(model.zoom(RootModel.undoStacks), pss))
-      }
+    model.programSummaries.throttlerView.toOptionView
+      .map: (pss: View[ProgramSummaries]) =>
+        render(UndoContext(model.rootModel.zoom(RootModel.undoStacks), pss))
       .toPot
       .renderPot(identity)
       .asInstanceOf[VdomElement]
@@ -54,88 +51,91 @@ object Routing:
   private def userPreferences(model: View[RootModel]): UserPreferences =
     model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
 
-  private def overviewTab(page: Page, model: View[RootModel]): VdomElement =
+  private def overviewTab(page: Page, model: RootModelViews): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(model)(programSummaries =>
       OverviewTabContents(
         routingInfo.programId,
-        model.zoom(RootModel.vault).get,
+        model.rootModel.zoom(RootModel.vault).get,
         programSummaries.model.zoom(ProgramSummaries.obsAttachments),
         programSummaries.model.get.obsAttachmentAssignments,
         programSummaries.get.observations,
-        userPreferences(model).overviewTabLayout,
+        userPreferences(model.rootModel).overviewTabLayout,
         programSummaries.get.proposalIsSubmitted
       )
     )
 
-  private def targetTab(page: Page, model: View[RootModel]): VdomElement =
+  private def targetTab(page: Page, model: RootModelViews): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(model)(programSummaries =>
-      model
+      model.rootModel
         .zoom(RootModel.userPreferences)
         .mapValue(userPrefs =>
           TargetTabContents(
             routingInfo.programId,
-            model.zoom(RootModel.userId).get,
+            model.rootModel.zoom(RootModel.userId).get,
             programSummaries,
             userPrefs,
             routingInfo.focused,
-            model.zoom(RootModel.searchingTarget),
-            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
+            model.rootModel.zoom(RootModel.searchingTarget),
+            model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
             programSummaries.get.proposalIsSubmitted
           )
         )
     )
 
-  private def obsTab(page: Page, model: View[RootModel]): VdomElement =
+  private def obsTab(page: Page, model: RootModelViews): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(model)(programSummaries =>
-      model
+      model.rootModel
         .zoom(RootModel.userPreferences)
         .mapValue(userPrefs =>
           ObsTabContents(
-            model.zoom(RootModel.vault).get,
+            model.rootModel.zoom(RootModel.vault).get,
             routingInfo.programId,
             programSummaries,
             userPrefs,
-            model.zoom(RootModel.spectroscopyModes).get.getOrElse(SpectroscopyModesMatrix.empty),
+            model.rootModel
+              .zoom(RootModel.spectroscopyModes)
+              .get
+              .getOrElse(SpectroscopyModesMatrix.empty),
             routingInfo.focused,
-            model.zoom(RootModel.searchingTarget),
-            model.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
+            model.rootModel.zoom(RootModel.searchingTarget),
+            model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
             programSummaries.get.proposalIsSubmitted
           )
         )
     )
 
-  private def constraintSetTab(page: Page, model: View[RootModel]): VdomElement =
+  private def constraintSetTab(page: Page, model: RootModelViews): VdomElement =
     val routingInfo = RoutingInfo.from(page)
     withProgramSummaries(model)(programSummaries =>
       ConstraintsTabContents(
-        model.zoom(RootModel.userId).get,
+        model.rootModel.zoom(RootModel.userId).get,
         routingInfo.programId,
         programSummaries,
-        userPreferences(model),
+        userPreferences(model.rootModel),
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
+        model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
         programSummaries.get.proposalIsSubmitted
       )
     )
 
-  private def schedulingTab(page: Page, model: View[RootModel]): VdomElement =
+  private def schedulingTab(page: Page, model: RootModelViews): VdomElement =
     withProgramSummaries(model)(programSummaries =>
       val routingInfo = RoutingInfo.from(page)
       SchedulingTabContents(
         routingInfo.programId,
-        model.zoom(RootModel.userId).get,
+        model.rootModel.zoom(RootModel.userId).get,
         programSummaries,
-        userPreferences(model),
+        userPreferences(model.rootModel),
         routingInfo.focused.obsSet,
-        model.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
+        model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
         programSummaries.get.proposalIsSubmitted
       )
     )
 
-  private def proposalTab(page: Page, model: View[RootModel]): VdomElement =
+  private def proposalTab(page: Page, model: RootModelViews): VdomElement =
     withProgramSummaries(model)(programSummaries =>
       val routingInfo = RoutingInfo.from(page)
       // if we got this far, we will have program details
@@ -145,34 +145,34 @@ object Routing:
         .map(detailsView =>
           ProposalTabContents(
             routingInfo.programId,
-            model.zoom(RootModel.vault).get,
+            model.rootModel.zoom(RootModel.vault).get,
             detailsView,
-            model.zoom(RootModel.cfps).get.orEmpty,
+            model.rootModel.zoom(RootModel.cfps).get.orEmpty,
             programSummaries.model.get.programTimesPot.map(_.timeEstimateRange),
             programSummaries.model.zoom(ProgramSummaries.proposalAttachments),
-            model.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
-            userPreferences(model).proposalTabLayout
+            model.rootModel.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
+            userPreferences(model.rootModel).proposalTabLayout
           )
         )
     )
 
-  private def programTab(page: Page, model: View[RootModel]): VdomElement =
+  private def programTab(page: Page, model: RootModelViews): VdomElement =
     withProgramSummaries(model) { programSummaries =>
       val routingInfo = RoutingInfo.from(page)
       ProgramTabContents(
         routingInfo.programId,
-        model.zoom(RootModel.vault).get,
+        model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
         programSummaries.get.optProgramDetails.map(_.allocations).orEmpty,
-        userPreferences(model)
+        userPreferences(model.rootModel)
       )
     }
 
   // The programs popup will be shown
   private def noProgram: VdomElement = React.Fragment()
 
-  def config: RouterWithPropsConfig[Page, View[RootModel]] =
-    RouterWithPropsConfigDsl[Page, View[RootModel]].buildConfig: dsl =>
+  def config: RouterWithPropsConfig[Page, RootModelViews] =
+    RouterWithPropsConfigDsl[Page, RootModelViews].buildConfig: dsl =>
       import dsl.*
 
       // We can't use gid.regexPattern because capture groups don't work here.
