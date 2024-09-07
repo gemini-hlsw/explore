@@ -10,8 +10,8 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.CategoryAllocationList
 import explore.model.ExploreGridLayouts
+import explore.model.ProgramDetails
 import explore.model.ProgramTabTileIds
 import explore.model.ProgramTimes
 import explore.model.UserPreferences
@@ -22,7 +22,7 @@ import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Program
+import lucuma.core.model.Semester
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
@@ -30,10 +30,10 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programId:       Program.Id,
+  programDetails:  ProgramDetails,
   userVault:       Option[UserVault],
   programTimes:    Pot[ProgramTimes],
-  allocations:     CategoryAllocationList,
+  semester:        Semester,
   userPreferences: UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 
@@ -55,7 +55,7 @@ object ProgramTabContents:
         Tile(
           ProgramTabTileIds.DetailsId.id,
           "Program Details"
-        )(_ => ProgramDetailsTile(props.allocations, props.programTimes))
+        )(_ => ProgramDetailsTile(props.programDetails, props.programTimes, props.semester))
 
       val notesTile =
         Tile(

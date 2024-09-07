@@ -39,14 +39,15 @@ object Routing:
   private def withProgramSummaries(model: RootModelViews)(
     render: UndoContext[ProgramSummaries] => VdomNode
   ): VdomElement =
-    model.programSummaries.throttlerView.toOptionView
-      .map: (pss: View[ProgramSummaries]) =>
-        render(UndoContext(model.rootModel.zoom(RootModel.undoStacks), pss))
-      .toPot
-      .renderPot(identity)
-      .asInstanceOf[VdomElement]
-    // Not sure why the router's renderer requires VdomElement instead of VdomNode
-    // In any case, in all of our uses here we are returning a valid VdomElement.
+    // Not sure why the router's renderer requires VdomElement instead of VdomNode.
+    // React.Fragment allows us to convert VdomNode into VdomElement.
+    React.Fragment(
+      model.programSummaries.throttlerView.toOptionView
+        .map: (pss: View[ProgramSummaries]) =>
+          render(UndoContext(model.rootModel.zoom(RootModel.undoStacks), pss))
+        .toPot
+        .renderPot(identity)
+    )
 
   private def userPreferences(model: View[RootModel]): UserPreferences =
     model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
@@ -156,17 +157,21 @@ object Routing:
         )
     )
 
-  private def programTab(page: Page, model: RootModelViews): VdomElement =
-    withProgramSummaries(model) { programSummaries =>
-      val routingInfo = RoutingInfo.from(page)
-      ProgramTabContents(
-        routingInfo.programId,
+  private def programTab(model: RootModelViews): VdomElement =
+    withProgramSummaries(model): programSummaries =>
+      for
+        programDetails <- programSummaries.model.get.optProgramDetails
+        proposal       <- programDetails.proposal
+        callId         <- proposal.callId
+        cfps           <- model.rootModel.get.cfps
+        cfp            <- cfps.find(_.id === callId)
+      yield ProgramTabContents(
+        programDetails,
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
-        programSummaries.get.optProgramDetails.map(_.allocations).orEmpty,
+        cfp.semester,
         userPreferences(model.rootModel)
       )
-    }
 
   // The programs popup will be shown
   private def noProgram: VdomElement = React.Fragment()
@@ -203,7 +208,7 @@ object Routing:
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "program").xmapL(ProgramPage.iso)
-          ) ~> dynRenderP { case (p, m) => programTab(p, m) }
+          ) ~> dynRenderP { case (_, m) => programTab(m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "proposal").xmapL(ProposalPage.iso)
