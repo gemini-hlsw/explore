@@ -3242,7 +3242,7 @@ a.explore-upgrade-link {
     row-gap: 0.25em;
     column-gap: 1em;
     grid-auto-rows: max-content;
-    flex-grow: 1;
+    flex: 1 1 0;
     padding: 1em;
 
     label {

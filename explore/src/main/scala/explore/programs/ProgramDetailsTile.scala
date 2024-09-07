@@ -3,16 +3,16 @@
 
 package explore.programs
 
-import cats.syntax.eq.*
+import cats.syntax.all.*
 import crystal.Pot
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.model.ProgramDetails
 import explore.model.ProgramTimes
 import explore.model.ProgramUserWithRole
+import explore.model.enums.ProgramUserRole
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Semester
 import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
@@ -31,7 +31,7 @@ object ProgramDetailsTile:
     val details: ProgramDetails            = props.programDetails
     val thesis: Boolean                    = details.allUsers.exists(_.thesis.exists(_ === true))
     val support: List[ProgramUserWithRole] =
-      details.allUsers.filter(_.role.contains(ProgramUserRole.Support))
+      details.allUsers.filter(_.role.contains_(ProgramUserRole.Support))
 
     <.div(ExploreStyles.ProgramDetailsTile)(
       <.div(ExploreStyles.ProgramDetailsInfoArea)(
