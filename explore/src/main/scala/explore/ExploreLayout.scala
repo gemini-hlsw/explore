@@ -159,8 +159,6 @@ object ExploreLayout:
         val userVault = view.zoom(RootModel.vault)
 
         React.Fragment(
-          ModesCacheController(view.zoom(RootModel.spectroscopyModes).async.mod),
-          CfpCacheController(view.zoom(RootModel.cfps).async.mod),
           IfLogged[ExploreEvent](
             "Explore".refined,
             ExploreStyles.LoginTitle,
@@ -243,6 +241,8 @@ object ExploreLayout:
                 )
               ),
               <.div(LayoutStyles.MainGrid)(
+                ModesCacheController(view.zoom(RootModel.spectroscopyModes).async.mod),
+                CfpCacheController(view.zoom(RootModel.cfps).async.mod),
                 // This might use the `RoutingInfo.dummyProgramId` if the URL had no
                 // program id in it. But, that's OK, because the list of user
                 // programs will still load and they will be redirected to the program

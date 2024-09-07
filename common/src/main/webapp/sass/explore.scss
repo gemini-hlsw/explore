@@ -3242,6 +3242,8 @@ a.explore-upgrade-link {
     row-gap: 0.25em;
     column-gap: 1em;
     grid-auto-rows: max-content;
+    flex-grow: 1;
+    padding: 1em;
 
     label {
       text-align: right;

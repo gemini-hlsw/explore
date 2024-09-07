@@ -24,7 +24,7 @@ case class ProgramUserWithRole(
   thesis:            Option[Boolean],
   gender:            Option[Gender]
 ) derives Eq:
-  lazy val name: String = user.profile.fold("Guest User")(p => p.displayName)
+  export user.{name, nameWithEmail}
 
   lazy val roleName: String = role match
     case None       => "Pi"

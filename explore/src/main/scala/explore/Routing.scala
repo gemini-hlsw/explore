@@ -39,14 +39,15 @@ object Routing:
   private def withProgramSummaries(model: RootModelViews)(
     render: UndoContext[ProgramSummaries] => VdomNode
   ): VdomElement =
-    model.programSummaries.throttlerView.toOptionView
-      .map: (pss: View[ProgramSummaries]) =>
-        render(UndoContext(model.rootModel.zoom(RootModel.undoStacks), pss))
-      .toPot
-      .renderPot(identity)
-      .asInstanceOf[VdomElement]
-    // Not sure why the router's renderer requires VdomElement instead of VdomNode
-    // In any case, in all of our uses here we are returning a valid VdomElement.
+    // Not sure why the router's renderer requires VdomElement instead of VdomNode.
+    // React.Fragment allows us to convert VdomNode into VdomElement.
+    React.Fragment(
+      model.programSummaries.throttlerView.toOptionView
+        .map: (pss: View[ProgramSummaries]) =>
+          render(UndoContext(model.rootModel.zoom(RootModel.undoStacks), pss))
+        .toPot
+        .renderPot(identity)
+    )
 
   private def userPreferences(model: View[RootModel]): UserPreferences =
     model.zoom(RootModel.userPreferences).get.getOrElse(UserPreferences.Default)
