@@ -4,6 +4,7 @@
 package explore.components.undo
 
 import explore.Icons
+import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
 import explore.undo.Undoer
 import japgolly.scalajs.react.*
@@ -25,30 +26,28 @@ object UndoButtons:
 
   private val component =
     ScalaFnComponent[Props](props =>
-      <.div(
-        ExploreStyles.ButtonsUndo,
-        <.span(
-          Css("p-button-group"),
-          Button(
-            severity = Button.Severity.Secondary,
-            outlined = true,
-            onClick = props.undoer.undo,
-            disabled = props.undoer.isUndoEmpty || props.disabled || props.undoer.working,
-            loading = props.undoer.working,
-            clazz = props.size.cls,
-            icon = Icons.Undo,
-            label = "Undo"
-          ).compact,
-          Button(
-            severity = Button.Severity.Secondary,
-            outlined = true,
-            onClick = props.undoer.redo,
-            disabled = props.undoer.isRedoEmpty || props.disabled || props.undoer.working,
-            loading = props.undoer.working,
-            clazz = props.size.cls,
-            icon = Icons.Redo,
-            label = "Redo"
-          ).compact
-        )
+      <.span(ExploreStyles.ButtonsUndo, Css("p-button-group"))(
+        Button(
+          severity = Button.Severity.Secondary,
+          outlined = true,
+          onClick = props.undoer.undo,
+          disabled = props.undoer.isUndoEmpty || props.disabled || props.undoer.working,
+          loading = props.undoer.working,
+          clazz = props.size.cls,
+          icon = Icons.Undo,
+          tooltip = "Undo",
+          tooltipOptions = ToolbarTooltipOptions.Default
+        ).compact,
+        Button(
+          severity = Button.Severity.Secondary,
+          outlined = true,
+          onClick = props.undoer.redo,
+          disabled = props.undoer.isRedoEmpty || props.disabled || props.undoer.working,
+          loading = props.undoer.working,
+          clazz = props.size.cls,
+          icon = Icons.Redo,
+          tooltip = "Redo",
+          tooltipOptions = ToolbarTooltipOptions.Default
+        ).compact
       )
     )

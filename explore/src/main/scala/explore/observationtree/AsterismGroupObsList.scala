@@ -3,7 +3,6 @@
 
 package explore.observationtree
 
-import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -11,16 +10,22 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
 import explore.common.TargetQueries
+import explore.components.ActionButtons
+import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.AsterismGroup
+import explore.model.AsterismGroupList
 import explore.model.EmptySiderealTarget
 import explore.model.Focused
+import explore.model.LocalClipboard
 import explore.model.ObsIdSet
 import explore.model.Observation
+import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
+import explore.model.TargetIdSet
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
@@ -49,22 +54,75 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class AsterismGroupObsList(
-  programId:              Program.Id,
-  focused:                Focused,
-  expandedIds:            View[SortedSet[ObsIdSet]],
-  undoCtx:                UndoContext[ProgramSummaries], // TODO Targets are not modified here
-  selectTargetOrSummary:  Option[Target.Id] => Callback,
-  selectedSummaryTargets: View[List[Target.Id]],
-  readonly:               Boolean
+  programId:             Program.Id,
+  focused:               Focused,
+  expandedIds:           View[SortedSet[ObsIdSet]],
+  undoCtx:               UndoContext[ProgramSummaries], // TODO Targets are not modified here
+  selectedIdsOpt:        Option[Either[TargetIdSet, ObsIdSet]],
+  clipboardContent:      LocalClipboard,
+  selectTargetOrSummary: Option[Target.Id] => Callback,
+  selectSummaryTargets:  List[Target.Id] => Callback,
+  copyCallback:          Callback,
+  pasteCallback:         Callback,
+  readonly:              Boolean
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
-  val programSummaries                             = undoCtx.model
-  val obsExecutions                                = programSummaries.get.obsExecutionPots
-  val observations: UndoSetter[ObservationList]    =
+  private val programSummaries: View[ProgramSummaries] = undoCtx.model
+
+  override val obsExecutions: ObservationExecutionMap = programSummaries.get.obsExecutionPots
+
+  private val observations: UndoSetter[ObservationList] =
     undoCtx.zoom(ProgramSummaries.observations)
-  val calibrationObservations: Set[Observation.Id] =
+
+  private val calibrationObservations: Set[Observation.Id] =
     undoCtx.get.calibrationObservations
-  override val focusedObsSet: Option[ObsIdSet]     = focused.obsSet
+
+  override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
+
+  private val asterismGroups: AsterismGroupList = programSummaries.get.asterismGroups
+
+  private val selectedAsterismGroup: Option[AsterismGroup] = props.focusedObsSet
+    .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
+    .map(AsterismGroup.fromTuple)
+
+  private def targetsText(targets: TargetIdSet): String =
+    targets.idSet.size match
+      case 1    => s"target ${targets.idSet.head}"
+      case more => s"$more targets"
+
+  private def observationsText(observations: ObsIdSet): String =
+    observations.idSet.size match
+      case 1    => s"observation ${observations.idSet.head}"
+      case more => s"$more observations"
+
+  private val selectedText: Option[String] =
+    selectedIdsOpt.map(_.fold(targetsText, observationsText))
+
+  private val clipboardText: Option[String] =
+    clipboardContent match
+      case LocalClipboard.Empty                            => none
+      case LocalClipboard.CopiedTargets(targets)           => targetsText(targets).some
+      case LocalClipboard.CopiedObservations(observations) => observationsText(observations).some
+
+  private val selectedDisabled: Boolean =
+    selectedIdsOpt.isEmpty
+
+  private val pasteDisabled: Boolean =
+    readonly ||
+      clipboardContent.isEmpty ||
+      clipboardContent.isTargets && selectedIdsOpt.forall(_.isLeft) ||
+      clipboardContent.isObservations && selectedIdsOpt.forall(_.isRight)
+
+  private val pasteText: Option[String] =
+    Option
+      .unless(pasteDisabled)((clipboardText, selectedText).mapN((c, s) => s"$c into $s"))
+      .flatten
+
+  private val deleteDisabled: Boolean =
+    // For now, we only allow deleting when just one obs is selected
+    !selectedIdsOpt.exists(_.exists(_.size === 1))
+
+end AsterismGroupObsList
 
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
@@ -95,13 +153,11 @@ object AsterismGroupObsList:
    * something that is NOT in the selection - in which case we just drag the individual item.
    */
   private def getDraggedIds(dragId: String, props: Props): Option[ObsIdSet] =
-    parseDragId(dragId).map { obsId =>
+    parseDragId(dragId).map: obsId =>
       props.focusedObsSet
-        .fold(ObsIdSet.one(obsId)) { selectedIds =>
+        .fold(ObsIdSet.one(obsId)): selectedIds =>
           if (selectedIds.contains(obsId)) selectedIds
           else ObsIdSet.one(obsId)
-        }
-    }
 
   private def onDragEnd(
     props: Props,
@@ -190,47 +246,44 @@ object AsterismGroupObsList:
     .useState(Dragging(false))
     .useStateView(AddingTargetOrObs(false))
     .useEffectOnMountBy: (props, ctx, _, _) =>
-      val programSummaries = props.programSummaries.get
-      val asterismGroups   = programSummaries.asterismGroups
-      val expandedIds      = props.expandedIds
-
-      val selectedAG = props.focusedObsSet
-        .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
-        .map(AsterismGroup.fromTuple)
-
       def replacePage(focused: Focused): Callback =
         ctx.replacePage(AppTab.Targets, props.programId, focused)
 
-      val obsMissing    = props.focused.obsSet.nonEmpty && selectedAG.isEmpty
-      val targetMissing =
+      val obsMissing: Boolean =
+        props.focused.obsSet.nonEmpty && props.selectedAsterismGroup.isEmpty
+
+      val targetMissing: Boolean =
         props.focused.target.fold(false)(tid =>
-          !programSummaries.targetsWithObs.keySet.contains(tid)
+          !props.programSummaries.get.targetsWithObs.keySet.contains(tid)
         )
 
-      val (newFocused, needNewPage) = (obsMissing, targetMissing) match {
-        case (true, _) => (Focused.None, true)
-        case (_, true) => (props.focused.withoutTarget, true)
-        case _         => (props.focused, false)
-      }
+      val (newFocused, needNewPage): (Focused, Boolean) =
+        (obsMissing, targetMissing) match
+          case (true, _) => (Focused.None, true)
+          case (_, true) => (props.focused.withoutTarget, true)
+          case _         => (props.focused, false)
 
-      val unfocus = if (needNewPage) replacePage(newFocused) else Callback.empty
+      val unfocus: Callback =
+        if (needNewPage) replacePage(newFocused) else Callback.empty
 
-      val expandSelected = selectedAG.foldMap(ag => expandedIds.mod(_ + ag.obsIds))
+      val expandSelected: Callback =
+        props.selectedAsterismGroup.foldMap(ag => props.expandedIds.mod(_ + ag.obsIds))
 
-      def cleanupExpandedIds =
-        expandedIds.mod(_.filter(asterismGroups.contains))
+      def cleanupExpandedIds: Callback =
+        props.expandedIds.mod(_.filter(props.asterismGroups.contains))
 
-      for {
+      for
         _ <- unfocus
         _ <- expandSelected
         _ <- cleanupExpandedIds
-      } yield ()
+      yield ()
     .render: (props, ctx, dragging, addingTargetOrObs) =>
       import ctx.given
 
-      val observations: ObservationList                         =
+      val observations: ObservationList =
         props.programSummaries.get.observations
-      val asterismGroups: List[AsterismGroup]                   =
+
+      val asterismGroups: List[AsterismGroup] =
         props.programSummaries.get.asterismGroups
           .map(AsterismGroup.fromTuple)
           .map: asterismGroup =>
@@ -238,14 +291,17 @@ object AsterismGroupObsList:
               AsterismGroup(filteredObsIds, asterismGroup.targetIds)
           .toList
           .flattenOption
+
       val targetWithObsMap: SortedMap[Target.Id, TargetWithObs] =
         props.programSummaries.get.targetsWithObs
 
       // first look to see if something is focused in the tree, else see if something is focused in the summary
       val selectedTargetIds: SortedSet[Target.Id] =
-        props.focused.obsSet
-          .flatMap(ids => props.programSummaries.get.asterismGroups.get(ids))
-          .getOrElse(SortedSet.from(props.selectedSummaryTargets.get))
+        props.selectedIdsOpt.foldMap:
+          _.fold(
+            _.idSet.toSortedSet,
+            obsIds => props.programSummaries.get.asterismGroups.get(obsIds).orEmpty
+          )
 
       def isObsSelected(obsId: Observation.Id): Boolean =
         props.focused.obsSet.exists(_.contains(obsId))
@@ -303,6 +359,21 @@ object AsterismGroupObsList:
       def makeAsterismGroupName(names: List[String]): String =
         if (names.isEmpty) "<No Targets>"
         else names.mkString("; ")
+
+      def deleteObs(asterismGroup: AsterismGroup): Observation.Id => Callback = obsId =>
+        props.undoableDeleteObs(
+          obsId,
+          props.observations,
+          o => setFocused(props.focused), {
+            // After deletion change focus and keep expanded target
+            val newObsIds = asterismGroup.obsIds - obsId
+            val newFocus  =
+              newObsIds.fold(Focused.None)(props.focused.withObsSet)
+            val expansion =
+              newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
+            expansion *> setFocused(newFocus)
+          }
+        )
 
       def renderAsterismGroup(asterismGroup: AsterismGroup, names: List[String]): VdomNode = {
         val obsIds        = asterismGroup.obsIds
@@ -364,20 +435,6 @@ object AsterismGroupObsList:
               TagMod.when(props.expandedIds.get.contains(obsIds))(
                 TagMod(
                   cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                    val delete = props.undoableDeleteObs(
-                      obs.id,
-                      props.observations,
-                      o => setFocused(props.focused), {
-                        // After deletion change focus and keep expanded target
-                        val newObsIds = obsIds - obs.id
-                        val newFocus  =
-                          newObsIds.fold(Focused.None)(props.focused.withObsSet)
-                        val expansion =
-                          newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
-                        expansion *> setFocused(newFocus)
-                      }
-                    )
-
                     props.renderObsBadgeItem(
                       ObsBadge.Layout.TargetsTab,
                       selectable = true,
@@ -390,7 +447,7 @@ object AsterismGroupObsList:
                             .withSingleObs(obsId)
                             .validateOrSetTarget(obs.scienceTargetIds)
                         ),
-                      onDelete = delete,
+                      onDelete = deleteObs(asterismGroup)(obs.id),
                       onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
                       ctx = ctx
                     )(obs, idx)
@@ -416,35 +473,60 @@ object AsterismGroupObsList:
 
         <.div(ExploreStyles.ObsTreeWrapper)(
           <.div(ExploreStyles.TreeToolbar)(
-            Button(
-              label = "Obs",
-              icon = Icons.New,
-              severity = Button.Severity.Success,
-              disabled = addingTargetOrObs.get.value,
-              loading = addingTargetOrObs.get.value,
-              onClick = insertObs(
-                props.programId,
-                selectedTargetIds,
-                props.undoCtx,
-                addingTargetOrObs,
-                props.expandedIds,
-                selectObsOrSummary
-              ).runAsync
-            ).compact.mini,
-            Button(
-              label = "Tgt",
-              icon = Icons.New,
-              severity = Button.Severity.Success,
-              disabled = addingTargetOrObs.get.value,
-              loading = addingTargetOrObs.get.value,
-              onClick = insertSiderealTarget(
-                props.programId,
-                props.undoCtx,
-                addingTargetOrObs,
-                props.selectTargetOrSummary
-              ).runAsync
-            ).compact.mini,
-            UndoButtons(props.undoCtx, size = PlSize.Mini)
+            <.span(
+              Button(
+                label = "Obs",
+                icon = Icons.New,
+                tooltip = "Add a new observation",
+                tooltipOptions = ToolbarTooltipOptions.Default,
+                severity = Button.Severity.Success,
+                disabled = addingTargetOrObs.get.value,
+                loading = addingTargetOrObs.get.value,
+                onClick = insertObs(
+                  props.programId,
+                  selectedTargetIds,
+                  props.undoCtx,
+                  addingTargetOrObs,
+                  props.expandedIds,
+                  selectObsOrSummary
+                ).runAsync
+              ).compact.mini,
+              Button(
+                label = "Tgt",
+                icon = Icons.New,
+                tooltip = "Add a new target",
+                tooltipOptions = ToolbarTooltipOptions.Default,
+                severity = Button.Severity.Success,
+                disabled = addingTargetOrObs.get.value,
+                loading = addingTargetOrObs.get.value,
+                onClick = insertSiderealTarget(
+                  props.programId,
+                  props.undoCtx,
+                  addingTargetOrObs,
+                  props.selectTargetOrSummary
+                ).runAsync
+              ).compact.mini
+            ),
+            UndoButtons(props.undoCtx, size = PlSize.Mini),
+            ActionButtons(
+              ActionButtons.ButtonProps(
+                props.copyCallback,
+                disabled = props.selectedDisabled,
+                tooltipExtra = props.selectedText
+              ),
+              ActionButtons.ButtonProps(
+                props.pasteCallback,
+                disabled = props.pasteDisabled,
+                tooltipExtra = props.pasteText
+              ),
+              ActionButtons.ButtonProps(
+                (props.selectedAsterismGroup,
+                 props.selectedIdsOpt.flatMap(_.toOption).map(_.head)
+                ).tupled.foldMap(deleteObs(_)(_)),
+                disabled = props.deleteDisabled,
+                tooltipExtra = props.selectedText
+              )
+            )
           ).unless(props.readonly),
           <.div(
             Button(
@@ -452,7 +534,7 @@ object AsterismGroupObsList:
               onClick =
                 ctx.pushPage(AppTab.Targets, props.programId, props.focused.withoutObsSet) *>
                   props.selectTargetOrSummary(None) *>
-                  props.selectedSummaryTargets.set(props.focused.target.toList),
+                  props.selectSummaryTargets(props.focused.target.toList),
               clazz = ExploreStyles.ButtonSummary
             )(
               Icons.ListIcon.withClass(ExploreStyles.PaddedRightIcon),

@@ -3,9 +3,7 @@
 
 package explore.model
 
-sealed trait LocalClipboard
-
-object LocalClipboard:
-  case object Empty                             extends LocalClipboard
-  case class CopiedObservations(oids: ObsIdSet) extends LocalClipboard
-  case class CopiedTargets(tids: TargetIdSet)   extends LocalClipboard
+enum LocalClipboard(val isEmpty: Boolean, val isObservations: Boolean, val isTargets: Boolean):
+  case Empty                              extends LocalClipboard(true, false, false)
+  case CopiedObservations(oids: ObsIdSet) extends LocalClipboard(false, true, false)
+  case CopiedTargets(tids: TargetIdSet)   extends LocalClipboard(false, false, true)
