@@ -54,6 +54,7 @@ trait ArbObservation:
         status              <- arbitrary[ObsStatus]
         activeStatus        <- arbitrary[ObsActiveStatus]
         scienceTargetIds    <- arbitrary[Set[Target.Id]]
+        selectedGSName      <- arbitrary[Option[NonEmptyString]]
         constraints         <- arbitrary[ConstraintSet]
         timingWindows       <- arbitrary[List[TimingWindow]]
         attachmentIds       <- arbitrary[Set[ObsAttachment.Id]]
@@ -75,6 +76,7 @@ trait ArbObservation:
         status,
         activeStatus,
         SortedSet.from(scienceTargetIds),
+        selectedGSName,
         constraints,
         timingWindows,
         SortedSet.from(attachmentIds),
@@ -100,6 +102,7 @@ trait ArbObservation:
        ObsStatus,
        ObsActiveStatus,
        List[Target.Id],
+       Option[String],
        ConstraintSet,
        List[TimingWindow],
        ScienceRequirements,
@@ -122,6 +125,7 @@ trait ArbObservation:
          o.status,
          o.activeStatus,
          o.scienceTargetIds.toList,
+         o.selectedGSName.map(_.value),
          o.constraints,
          o.timingWindows,
          o.scienceRequirements,

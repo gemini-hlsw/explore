@@ -9,10 +9,10 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 // gql: import lucuma.schemas.decoders.given
 
-object TargetQueriesGQL {
+object TargetQueriesGQL:
 
   @GraphQL
-  trait TargetNameQuery extends GraphQLOperation[ObservationDB] {
+  trait TargetNameQuery extends GraphQLOperation[ObservationDB]:
     // FIXME Change this to an actual name pattern query when it's available in the API
     val document = s"""
       query($$programId: ProgramId!) {
@@ -23,10 +23,9 @@ object TargetQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait CreateTargetMutation extends GraphQLOperation[ObservationDB] {
+  trait CreateTargetMutation extends GraphQLOperation[ObservationDB]:
     val document = """
       mutation($input: CreateTargetInput!) {
         createTarget(input: $input) {
@@ -36,10 +35,9 @@ object TargetQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait UpdateTargetsMutation extends GraphQLOperation[ObservationDB] {
+  trait UpdateTargetsMutation extends GraphQLOperation[ObservationDB]:
     val document = """
       mutation($input: UpdateTargetsInput!) {
         updateTargets(input: $input) {
@@ -49,10 +47,9 @@ object TargetQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait CloneTargetMutation extends GraphQLOperation[ObservationDB] {
+  trait CloneTargetMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation($$input: CloneTargetInput!) {
         cloneTarget(input: $$input) {
@@ -60,10 +57,21 @@ object TargetQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait TargetEditSubscription extends GraphQLOperation[ObservationDB] {
+  trait SetGuideTargetName extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: SetGuideTargetNameInput!) {
+        setGuideTargetName(input: $$input) {
+          observation {
+            id
+          }
+        }
+      }
+    """
+
+  @GraphQL
+  trait TargetEditSubscription extends GraphQLOperation[ObservationDB]:
     val document = """
       subscription($targetId: TargetId!) {
         targetEdit(input: {targetId: $targetId}) {
@@ -71,10 +79,9 @@ object TargetQueriesGQL {
         }
       }
     """
-  }
 
   @GraphQL
-  trait ProgramTargetsDelta extends GraphQLOperation[ObservationDB] {
+  trait ProgramTargetsDelta extends GraphQLOperation[ObservationDB]:
     val document = s"""
       subscription($$input: TargetEditInput!) {
         targetEdit(input: $$input) {
@@ -85,5 +92,3 @@ object TargetQueriesGQL {
         }
       }
     """
-  }
-}

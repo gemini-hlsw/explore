@@ -15,6 +15,8 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.aladin.AladinFullScreenControl
 import explore.common.UserPreferencesQueries
@@ -53,12 +55,15 @@ import lucuma.ui.syntax.all.given
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
+import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.concurrent.duration.*
+import monocle.Focus
 
 case class AladinCell(
   uid:               User.Id,
+  obsId:             Option[Observation.Id],
   asterism:          Asterism,
   vizTime:           Instant,
   obsConf:           Option[ObsConfiguration],
@@ -106,6 +111,9 @@ case class AladinCell(
   def modeSelected: Boolean =
     obsConf.exists(_.configuration.isDefined)
 
+  def selectedGSName: Option[NonEmptyString] =
+    obsConf.flatMap(_.selectedGSName)
+
   def sciencePositionsAt(vizTime: Instant): List[Coordinates] =
     asterism.asList
       .flatMap(_.toSidereal)
@@ -137,8 +145,9 @@ trait AladinCommon:
       .void
 
 object AladinCell extends ModelOptics with AladinCommon:
-  private object ManualAgsOverride extends NewType[Boolean]
-  private type ManualAgsOverride = ManualAgsOverride.Type
+  // private object ManualAgsOverride extends NewType[Boolean]
+  // private type ManualAgsOverride = ManualAgsOverride.Type
+  import GuideStarSelection.*
 
   private type Props = AladinCell
 
@@ -204,31 +213,28 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
-  private def flipAngle(
-    props:          Props,
-    manualOverride: View[ManualAgsOverride]
-  ): Option[AgsAnalysis] => Callback =
-    case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
-      val angle = pos.head._1
-      props.obsConf.flatMap(_.posAngleConstraint) match
-        case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-          props.obsConf
-            .flatMap(_.posAngleConstraintView)
-            .map(_.set(PosAngleConstraint.AllowFlip(a.flip)))
-            .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
-        case _                                                    => Callback.empty
-    case _                                         => Callback.empty
+  // private def flipAngle(
+  //   props:          Props,
+  //   manualOverride: View[ManualAgsOverride]
+  // ): Option[AgsAnalysis] => Callback =
+  //   case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
+  //     val angle = pos.head._1
+  //     props.obsConf.flatMap(_.posAngleConstraint) match
+  //       case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
+  //         props.obsConf
+  //           .flatMap(_.posAngleConstraintView)
+  //           .map(_.set(PosAngleConstraint.AllowFlip(a.flip)))
+  //           .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
+  //       case _                                                    => Callback.empty
+  //   case _                                         => Callback.empty
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // target options, will be read from the user preferences
-      .useStateView(Pot.pending[AsterismVisualOptions])
-      // to get faster reusability use a serial state, rather than check every candidate
-      // Request data again if vizTime changes more than a month
-      .useEffectKeepResultWithDepsBy((p, _, _) => (p.vizTime, p.asterism.baseTracking)) {
-        (props, ctx, _) => (vizTime, baseTracking) =>
+      // Request candidates if vizTime changes more than a month or the base moves
+      .useEffectKeepResultWithDepsBy((p, _) => (p.vizTime, p.asterism.baseTracking)) {
+        (props, ctx) => (vizTime, baseTracking) =>
           import ctx.given
 
           if (props.needsAGS)
@@ -250,44 +256,95 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useSerialState(List.empty[AgsAnalysis])
       // Reference to root
       .useMemo(())(_ => domRoot)
+      // target options, will be read from the user preferences
+      .useStateView(Pot.pending[AsterismVisualOptions])
       // Load target preferences
       .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.asterism.ids)) {
-        (props, ctx, options, _, _, root) => _ =>
+        (props, ctx, _, _, root, options) => _ =>
           import ctx.given
 
-          AsterismPreferences
-            .queryWithDefault[IO](props.uid, props.asterism.ids, Constants.InitialFov)
-            .flatMap { tp =>
-              (options.set(tp.ready) *>
-                setVariable(root, "saturation", tp.saturation) *>
-                setVariable(root, "brightness", tp.brightness)).toAsync
-            }
+          IO.println("Read prefs") *>
+            AsterismPreferences
+              .queryWithDefault[IO](props.uid, props.asterism.ids, Constants.InitialFov)
+              .flatMap { tp =>
+                (options.set(tp.ready) *>
+                  setVariable(root, "saturation", tp.saturation) *>
+                  setVariable(root, "brightness", tp.brightness)).toAsync
+              }
       }
-      // Selected GS index. Should be stored in the db
-      .useStateView(none[Int])
+      // Ags selection
+      .useStateViewBy((props, _, candidates, _, _, _) =>
+        props.selectedGSName
+          .fold[GuideStarSelection](AgsSelection(none))(RemoteGSSelection.apply)
+      )
+      .localValBy((props, ctx, _, _, _, _, selection) =>
+        import ctx.given
+
+        selection.withOnMod {
+          (_, _) match {
+            case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n        =>
+              Callback.log(s"new selected name to $n") *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId.get, n.some)
+                  .runAsyncAndForget
+            case (AgsOverride(_, _, _) | AgsSelection(_), AgsOverride(n, _, _)) =>
+              // From automatic to manual
+              Callback.log(s"new overriden name to $n") *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId.get, n.some)
+                  .runAsyncAndForget
+            case (AgsOverride(_, _, _), AgsSelection(_))                        =>
+              // From manual to automatic
+              Callback.log(s"Overridde to automatic") // *>
+            // ObsQueries
+            //   .setGuideTargetName[IO](props.obsId.get, none)
+            //   .runAsyncAndForget
+            case m                                                              =>
+              // All other combinations
+              Callback.log(m) // Callback.empty
+          }
+        }
+      )
       // mouse coordinates, starts on the base
-      .useStateBy((props, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
+      .useStateBy((props, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, options, _, _, _, gs, mouseCoords) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.asterism)(
+        (props, ctx, _, _, _, options, _, gs, mouseCoords) =>
           _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
             // if the coordinates change, reset ags, offset and mouse coordinates
             for {
-              _ <- gs.set(none)
+              // _ <- gs.set(AgsSelection(none)).when_(gs.get.isOverride) // TODO Reset remote
               _ <- offsetOnCenter.set(Offset.Zero)
               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
             } yield ()
       )
-      .useStateView(ManualAgsOverride(false))
+      // .useStateViewBy((props, _, _, _, _, _, _, _) =>
+      //   ManualAgsOverride(props.selectedGSName.isDefined)
+      // )
+      // .useEffectWithDepsBy((p, _, _, gsc, _, _, index, _) =>
+      //   (p.selectedGSName, gsc.toOption.flatten)
+      // )((p, _, _, gsc, _, _, index, _) =>
+      //   _ =>
+      //     val f =
+      //       gsc.toOption.flatten.map(_.indexWhere(a => p.selectedGSName.exists(_ === a.name)))
+      //     Callback.log(s"From odb ${p.selectedGSName} $f") *>
+      //       // Callback.log(gsc.value.value.foldMap(_.size)) *>
+      //       // Callback.log(p.selectedGSName.map(_.value).toString) *> Callback.log(
+      //       //   s"Found $f"
+      //       // gsc.value.value.foldMap(_.map(_.name.value).toString)
+      //       // gsc.value.map(_.map(_.map(_.name.value)).toString)
+      //       // ) *>
+      //       index.set(p.selectedGSName.map(AgsOverride(_, f, none)))
+      // )
       // Reset selection if pos angle changes except for manual selection changes
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
-        (_, _, _, _, _, _, selectedIndex, _, agsOverride) =>
-          _ => selectedIndex.set(none).unless_(agsOverride.get.value)
-      )
+      // .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
+      //   (_, _, _, _, _, _, selectedIndex, _, agsOverride) =>
+      //     _ => selectedIndex.set((none, none)).unless_(agsOverride.get.value)
+      // )
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
+      .useEffectWithDepsBy((p, _, candidates, _, _, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.asterism.focus.id,
          p.positions,
@@ -298,7 +355,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.flatMap(_.configuration),
          candidates.toOption.flatten
         )
-      ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
+      ) { (props, ctx, _, ags, _, _, _, selectedIndex, _) =>
         {
           case (tracking,
                 _,
@@ -334,22 +391,39 @@ object AladinCell extends ModelOptics with AladinCommon:
               def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
                 (for {
                   // Set the analysis
+                  _ <- Callback.log(s"Run AGS $ags ${props.selectedGSName} ")
                   _ <- r.map(ags.setState).getOrEmpty
                   // If we need to flip change the constraint
-                  _ <- r
-                         .map(_.headOption)
-                         .map(flipAngle(props, agsOverride))
-                         .orEmpty
-                         .unlessA(agsOverride.get.value)
+                  // _ <- r
+                  //        .map(_.headOption)
+                  //        .map(flipAngle(props, agsOverride))
+                  //        .orEmpty
+                  //        .unlessA(agsOverride.get.value)
                   // set the selected index to the first entry
                   _ <- {
                     val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
                     val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                    (selectedIndex.set(index) *>
-                      props.obsConf
-                        .flatMap(_.selectedGS)
-                        .map(_.set(selectedGS))
-                        .getOrEmpty).unlessA(agsOverride.get.value)
+                    val name       = selectedGS.map(_.target.name)
+                    Callback.log(
+                      s"Ags seleects $index ${selectedIndex.get} ${selectedIndex.get.isOverride}"
+                    ) *>
+                      selectedIndex
+                        .mod {
+                          case AgsSelection(_)               => AgsSelection(index) // replace automatic selection
+                          case rem @ RemoteGSSelection(name) =>
+                            // Recover the analysis for the remotely selected star
+                            r.map(_.pick(name)).getOrElse(rem)
+                          case a: AgsOverride                =>
+                            // If overriden ignore
+                            a
+                        }
+                        .unlessA(selectedIndex.get.isOverride)
+
+                    // .unlessA(agsOverride.get.value) // *>
+                    // props.obsConf
+                    //   .flatMap(_.selectedGS)
+                    //   .map(_.set(selectedGS))
+                    //   .getOrEmpty).unlessA(agsOverride.get.value)
                   }
                 } yield ()).toAsync
 
@@ -365,15 +439,21 @@ object AladinCell extends ModelOptics with AladinCommon:
                 } yield ()
 
               process.guarantee(
-                agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
+                // agsOverride.async
+                //   .set(ManualAgsOverride(false))
+                //   .unlessA(props.selectedGSName.isDefined) *>
+                agsState.async.set(
                   AgsState.Idle
                 )
               )
             }.orEmpty
 
-            (selectedIndex.set(none) *>
-              props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty).toAsync
-              .whenA(positions.isEmpty) *> runAgs
+            selectedIndex
+              .set(AgsSelection(none))
+              .toAsync                  // *>
+              // props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty).toAsync
+              .whenA(positions.isEmpty) // *>
+            runAgs.unlessA(selectedIndex.get.isOverride)
           case _ => IO.unit
         }
       }
@@ -382,29 +462,46 @@ object AladinCell extends ModelOptics with AladinCommon:
         (
           props,
           ctx,
-          options,
           candidates,
           agsResults,
           _,
+          options,
+          _,
           selectedGSIndexView,
           mouseCoords,
-          agsManualOverride,
           menuRef
         ) =>
           import ctx.given
 
           // If the selected GS changes do a flip when necessary
-          val selectedGSIndex = selectedGSIndexView.withOnMod(idx =>
-            idx
-              .map(agsResults.value.lift)
-              .map(a =>
-                flipAngle(props, agsManualOverride)(a) *> props.obsConf
-                  .flatMap(_.selectedGS)
-                  .map(_.set(a))
-                  .getOrEmpty
-              )
-              .getOrEmpty
-          )
+          val selectedGSIndex = selectedGSIndexView
+          //   .withOnMod { case idx =>
+          //   idx
+          //     .map(agsResults.value.lift)
+          //     .map(a =>
+          //       flipAngle(props, agsManualOverride)(a) *>
+          //         // props.obsConf
+          //         //   .flatMap(_.selectedGS)
+          //         //   .map(_.set(a))
+          //         //   .getOrEmpty *>
+          //         (props.obsId, a.map(_.target.name))
+          //           .mapN((id, n) =>
+          //             Callback.log(s"Setting $n $idx") *>
+          //               selectedGSIndexView
+          //                 .set((n.some, idx)) *> ObsQueries
+          //                 .setGuideTargetName[IO](id, n)
+          //                 .runAsyncAndForget
+          //           )
+          //           .getOrEmpty
+          //     )
+          //     .getOrEmpty
+          // }
+          pprint.pprintln(selectedGSIndexView.get match {
+            case a @ AgsSelection(_)      => a
+            case a @ RemoteGSSelection(_) => a
+            case a @ AgsOverride(n, _, _) => s"AgsOverride($n)"
+          })
+          // )
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(fovLens))
@@ -417,7 +514,8 @@ object AladinCell extends ModelOptics with AladinCommon:
               )
 
           val coordinatesSetter =
-            ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
+            ((c: Coordinates) => Callback.empty).reuseAlways
+              // ((c: Coordinates) => mouseCoords.setState(c)).reuseAlways
 
           val fovSetter = (newFov: Fov) => {
             val ignore = options.get.fold(
@@ -446,7 +544,17 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val (offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-          val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
+          // val (selectedGuideStar, selectedGuideStarIdagsx) = selectedGSIndex.get match {
+          //   case r @ Some(i: Int)     => (agsResults.value.lift(i), r)
+          //   case AgsOverride(_, i, a) => (a.some, i.some)
+          //   case _                    => (none, none)
+          // }
+
+          // println(selectedGSIndex.get)
+          // println(agsResults.value.length)
+
+          val guideStar = selectedGSIndex.get.guideStar(agsResults.value)
+          // val guideStarName = selectedGSIndex.get.targetName
 
           val renderCell: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>
@@ -459,7 +567,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 coordinatesSetter,
                 fovSetter,
                 offsetChangeInAladin.reuseAlways,
-                selectedGuideStar,
+                guideStar,
                 agsResults.value
               )
 
@@ -471,7 +579,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               AladinToolbar(Fov(t.fovRA, t.fovDec),
                             mouseCoords.value,
                             agsState,
-                            selectedGuideStar,
+                            guideStar,
                             props.globalPreferences.get.agsOverlay,
                             offsetOnCenter
               )
@@ -486,8 +594,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                       ExploreStyles.AgsOverlay,
                       AgsOverlay(
                         selectedGSIndex,
-                        agsResults.value.count(_.isUsable),
-                        selectedGuideStar,
+                        agsResults.value.filter(_.isUsable),
                         agsState.get,
                         props.modeSelected,
                         props.durationAvailable,

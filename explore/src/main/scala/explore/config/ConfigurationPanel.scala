@@ -32,6 +32,7 @@ import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.core.math.Angle
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -191,7 +192,7 @@ object ConfigurationPanel:
                   props.programId,
                   props.obsId,
                   props.posAngle,
-                  props.obsConf.selectedPA,
+                  Angle.Angle0.some, // props.obsConf.selectedPA,
                   props.obsConf.averagePA,
                   agsState,
                   props.readonly

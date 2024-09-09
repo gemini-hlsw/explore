@@ -54,6 +54,7 @@ case class Observation(
   status:              ObsStatus,
   activeStatus:        ObsActiveStatus,
   scienceTargetIds:    AsterismIds,
+  selectedGSName:      Option[NonEmptyString],
   constraints:         ConstraintSet,
   timingWindows:       List[TimingWindow],
   attachmentIds:       SortedSet[ObsAttachment.Id],
@@ -205,6 +206,7 @@ object Observation:
   val validations         = Focus[Observation](_.validations)
   val observerNotes       = Focus[Observation](_.observerNotes)
   val calibrationRole     = Focus[Observation](_.calibrationRole)
+  val selectedGSName      = Focus[Observation](_.selectedGSName)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -222,6 +224,9 @@ object Observation:
       status              <- c.get[ObsStatus]("status")
       activeStatus        <- c.get[ObsActiveStatus]("activeStatus")
       scienceTargetIds    <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
+      selectedGSName      <- c.downField("targetEnvironment")
+                               .downField("guideTargetName")
+                               .as[Option[NonEmptyString]]
       constraints         <- c.get[ConstraintSet]("constraintSet")
       timingWindows       <- c.get[List[TimingWindow]]("timingWindows")
       attachmentIds       <- c.get[List[AttachmentIdWrapper]]("obsAttachments")
@@ -245,6 +250,7 @@ object Observation:
       status,
       activeStatus,
       SortedSet.from(scienceTargetIds.map(_.id)),
+      selectedGSName,
       constraints,
       timingWindows,
       SortedSet.from(attachmentIds.map(_.id)),

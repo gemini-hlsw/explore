@@ -13,19 +13,21 @@ import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import eu.timepit.refined.cats.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.Band
 import lucuma.core.enums.GuideSpeed
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.IconSize
 import lucuma.ui.syntax.all.given
+import cats.Traverse
 
 import scala.math.BigDecimal.RoundingMode
+import eu.timepit.refined.types.string.NonEmptyString
 
 case class AgsOverlay(
-  selectedGSIndex:     View[Option[Int]],
-  maxIndex:            Int,
-  selectedGuideStar:   Option[AgsAnalysis],
+  selectedGS:          View[GuideStarSelection],
+  agsResults:          List[AgsAnalysis],
   agsState:            AgsState,
   modeAvailable:       Boolean,
   durationAvailable:   Boolean, // Duration implies sequence
@@ -33,7 +35,7 @@ case class AgsOverlay(
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
   val canCalculate: Boolean =
     candidatesAvailable && durationAvailable && modeAvailable
-  val noGuideStar: Boolean  = canCalculate && selectedGuideStar.isEmpty && !agsState.isCalculating
+  val noGuideStar: Boolean  = canCalculate && selectedGS.get.idx.isEmpty && !agsState.isCalculating
 }
 
 object AgsOverlay:
@@ -41,27 +43,41 @@ object AgsOverlay:
 
   val component =
     ScalaFnComponent[Props]: props =>
-      val selectedIndex = props.selectedGSIndex.get
+      val selectedIndex = props.selectedGS.get match {
+        case GuideStarSelection.AgsSelection(r @ Some(_)) => r
+        case GuideStarSelection.AgsOverride(_, r, _)      => r.some
+        case _                                            => None
+      }
 
+      val maxIndex = props.agsResults.filter(_.isUsable).size
+      println(s"maxIndex: $maxIndex $selectedIndex")
+
+      // println(s"selectedIndex: $selectedIndex, maxIndex: $maxIndex")
       val canGoPrev = props.agsState === AgsState.Idle && selectedIndex.exists(_ > 0)
+      val canGoNext = props.agsState === AgsState.Idle && selectedIndex.exists(_ < maxIndex - 1)
 
-      def goPrev(e: ReactEvent): Option[Callback] = Option {
-        props.selectedGSIndex.mod(_.map(_ - 1))
-      }.filter(_ => canGoPrev)
+      def goPrev: Option[Callback] =
+        selectedIndex
+          .map { i =>
+            Callback.log("goPrev") *>
+              props.selectedGS.set(props.agsResults.pick(i - 1))
+          }
+          .filter(_ => canGoPrev)
 
-      val canGoNext =
-        props.agsState === AgsState.Idle && selectedIndex.exists(_ < props.maxIndex - 1)
-
-      def goNext(e: ReactEvent): Option[Callback] = Option {
-        props.selectedGSIndex.mod(_.map(_ + 1))
-      }.filter(_ => canGoNext)
+      def goNext: Option[Callback] =
+        selectedIndex
+          .map { i =>
+            Callback.log("goNext") *>
+              props.selectedGS.set(props.agsResults.pick(i + 1))
+          }
+          .filter(_ => canGoNext)
 
       val errorIcon = Icons.TriangleSolid
         .addClass(ExploreStyles.ItcErrorIcon)
         .withSize(IconSize.LG)
 
-      props.selectedGuideStar
-        .filter(_.isUsable)
+      props.selectedGS.get
+        .guideStar(props.agsResults)
         .map { analysis =>
           ReactFragment(
             <.div(
@@ -72,13 +88,13 @@ object AgsOverlay:
                 ExploreStyles.AgsNavigation,
                 <.span(
                   ExploreStyles.Disabled.unless(canGoPrev),
-                  ^.onClick ==>? goPrev,
+                  ^.onClick -->? goPrev,
                   ExploreStyles.AgsNavigationButton,
                   Icons.ChevronLeft
                 ),
                 <.span(
                   ExploreStyles.Disabled.unless(canGoNext),
-                  ^.onClick ==>? goNext,
+                  ^.onClick -->? goNext,
                   ExploreStyles.AgsNavigationButton,
                   Icons.ChevronRight
                 )

@@ -314,12 +314,14 @@ object SiderealTargetEditor:
             _ === props.asterism.focus.id
           ) || cloning.get || props.readonly || props.obsInfo.isReadonly
 
+        val oid = props.obsInfo.current.map(_.head)
         React.Fragment(
           TargetCloneSelector(props.obsInfo, obsToCloneTo),
           <.div(ExploreStyles.TargetGrid)(
             vizTime.renderPot(vt =>
               AladinCell(
                 props.userId,
+                oid,
                 props.asterism,
                 vt,
                 props.obsConf,

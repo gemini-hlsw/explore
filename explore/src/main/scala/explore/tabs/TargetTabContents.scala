@@ -406,6 +406,7 @@ object TargetTabContents extends TwoPanels:
                           _,
                           _,
                           _,
+                          _,
                           const,
                           _,
                           _,
@@ -522,7 +523,8 @@ object TargetTabContents extends TwoPanels:
                   none,
                   none,
                   none,
-                  needsAGS
+                  needsAGS,
+                  none
                 ),
                 none,
                 props.focused.target,

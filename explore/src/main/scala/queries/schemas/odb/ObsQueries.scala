@@ -29,6 +29,7 @@ import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
+import queries.common.TargetQueriesGQL.SetGuideTargetName
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -274,3 +275,13 @@ object ObsQueries:
       )
     )
     UpdateObservationMutation[F].execute(input).void
+
+  def setGuideTargetName[F[_]: Async](
+    obsId:      Observation.Id,
+    targetName: Option[NonEmptyString]
+  )(using FetchClient[F, ObservationDB]) =
+    val input = SetGuideTargetNameInput(
+      observationId = obsId.assign,
+      targetName = targetName.orUnassign
+    )
+    SetGuideTargetName[F].execute(input).void

@@ -263,6 +263,9 @@ object ObsTabTiles:
             val vizDurationView: View[Option[TimeSpan]] =
               props.observation.model.zoom(Observation.observationDuration)
 
+            val selectedGSNameView: View[Option[NonEmptyString]] =
+              props.observation.model.zoom(Observation.selectedGSName)
+
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
               NonEmptyList.fromList:
                 props.observation.get.scienceTargetIds.toList
@@ -285,7 +288,7 @@ object ObsTabTiles:
                 .orElse(pendingTime)
 
             val paProps: PAProperties =
-              PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
+              PAProperties(props.obsId, /*selectedPA,*/ agsState, posAngleConstraintView)
 
             val averagePA: Option[AveragePABasis] =
               (basicConfiguration.map(_.siteFor), asterismAsNel, obsDuration)
@@ -308,7 +311,7 @@ object ObsTabTiles:
             // use the angle specified in the constraint
             val pa: Option[Angle] =
               posAngleConstraintView.get match
-                case PosAngleConstraint.Unbounded                  => paProps.selectedPA
+                case PosAngleConstraint.Unbounded                  => none // paProps.selectedPA
                 case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
                 case PosAngleConstraint.Fixed(angle)               => angle.some
                 case PosAngleConstraint.AllowFlip(angle)           => angle.some
@@ -389,7 +392,8 @@ object ObsTabTiles:
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,
                 obsDuration.map(_.toDuration),
-                props.observation.get.needsAGS
+                props.observation.get.needsAGS,
+                selectedGSNameView.get
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =

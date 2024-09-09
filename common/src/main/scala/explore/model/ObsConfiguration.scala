@@ -8,6 +8,8 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.View
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enums.AgsState
 import lucuma.ags.*
 import lucuma.core.math.Angle
@@ -29,7 +31,8 @@ case class ObsConfiguration(
   acquisitionOffsets: Option[NonEmptyList[Offset]],
   averagePA:          Option[AveragePABasis],
   obsDuration:        Option[Duration],
-  needGuideStar:      Boolean
+  needGuideStar:      Boolean,
+  selectedGSName:     Option[NonEmptyString]
 ) derives Eq:
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
@@ -52,8 +55,8 @@ case class ObsConfiguration(
     posAngleProperties.map(_.agsState)
 
   // Selected guide star via ags or manual
-  def selectedGS: Option[View[Option[AgsAnalysis]]] =
-    posAngleProperties.map(_.selectedGS)
-
-  def selectedPA: Option[Angle] =
-    posAngleProperties.flatMap(_.selectedPA)
+  // def selectedGS: Option[View[Option[AgsAnalysis]]] =
+  //   posAngleProperties.map(_.selectedGS)
+  //
+  // def selectedPA: Option[Angle] =
+  //   posAngleProperties.flatMap(_.selectedPA)
