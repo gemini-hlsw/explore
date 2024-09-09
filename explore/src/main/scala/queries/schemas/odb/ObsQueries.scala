@@ -200,8 +200,9 @@ object ObsQueries:
       .execute(
         CloneObservationInput(
           observationId = obsId.assign,
-          SET = ObservationPropertiesInput(targetEnvironment =
-            TargetEnvironmentInput(asterism = targetIds.assign).assign
+          SET = ObservationPropertiesInput(
+            targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign,
+            obsAttachments = List.empty.assign
           ).assign
         )
       )
