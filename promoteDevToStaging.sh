@@ -6,5 +6,6 @@ cd hasura/user-prefs
 unset NODE_OPTIONS
 hasura migrate apply --endpoint https://user-prefs-staging.herokuapp.com --database-name default
 hasura metadata apply --endpoint https://user-prefs-staging.herokuapp.com
+hasura metadata reload --endpoint https://user-prefs-staging.herokuapp.com
 cd ../..
 firebase hosting:clone explore-gemini-dev:live explore-gemini-stage:live
