@@ -104,6 +104,9 @@ case class ItcProps(
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
+  // In the common case of a single target this is useful
+  val defaultTarget: Option[ItcTarget] = itcTargets.map(_.head)
+
   private val queryProps: List[Option[?]] =
     List(itcTargets, finalConfig, wavelength, instrumentRow, signalToNoise)
 

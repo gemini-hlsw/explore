@@ -24,9 +24,9 @@ import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
 
-object ItcPanelTileState extends NewType[Option[ItcTarget]]:
-  def apply(): ItcPanelTileState = ItcPanelTileState(None)
-type ItcPanelTileState = ItcPanelTileState.Type
+object SelectedItcTarget extends NewType[Option[ItcTarget]]:
+  def apply(): SelectedItcTarget = SelectedItcTarget(None)
+type SelectedItcTarget = SelectedItcTarget.Type
 
 case class ItcPanelBody(
   uid:                User.Id,
@@ -36,9 +36,9 @@ case class ItcPanelBody(
   itcBrightestTarget: Option[ItcTarget],
   itcLoading:         LoadingState,
   globalPreferences:  View[GlobalPreferences],
-  tileState:          View[ItcPanelTileState]
+  tileState:          View[SelectedItcTarget]
 ) extends ReactFnProps(ItcPanelBody.component) {
-  val selectedTarget = tileState.zoom(ItcPanelTileState.value.asLens)
+  val selectedTarget = tileState.zoom(SelectedItcTarget.value.asLens)
 }
 
 object ItcPanelBody:
@@ -73,7 +73,7 @@ object ItcPanelBody:
 
         val error: Option[String] =
           selectedTarget
-            .fold("No target itcGraphResults".some): t =>
+            .fold("No target available".some): t =>
               props.itcGraphResults
                 .get(t)
                 .flatMap: r =>
