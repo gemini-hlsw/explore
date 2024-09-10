@@ -59,7 +59,7 @@ object AladinToolbar {
             .withTooltip(
               tooltip = "Calculating guide star.."
             )
-            .when(props.agsState === AgsState.Calculating),
+            .when(props.agsState.isCalculating),
           <.span(Icons.CircleSmall.withClass(ExploreStyles.ErrorIcon))
             .withTooltip(
               tooltip = "The Catalog isn't responding at the moment - please try again later.."
@@ -72,7 +72,7 @@ object AladinToolbar {
             .map { case g => s"GS: ${g.target.name.value}" }
             .unless(props.agsOverlay.isVisible || !usableGuideStar),
           Constants.NoGuideStarMessage.when(!usableGuideStar && props.agsState === AgsState.Idle),
-          "Calculating...".when(props.agsState === AgsState.Calculating)
+          Constants.Calculating.when(props.agsState.isCalculating)
         ),
         <.label(
           Icons.MousePointer.withClass(ExploreStyles.Accented),

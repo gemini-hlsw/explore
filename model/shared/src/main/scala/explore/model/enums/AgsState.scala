@@ -8,6 +8,18 @@ import cats.Eq
 enum AgsState:
   case Idle, LoadingCandidates, Calculating, Saving, Error
 
+  def fold[A](idle: => A, loading: => A, calculating: => A, saving: => A, error: => A): A =
+    this match
+      case Idle              => idle
+      case LoadingCandidates => loading
+      case Calculating       => calculating
+      case Saving            => saving
+      case Error             => error
+
+  def isCalculating: Boolean = fold(false, true, true, false, false)
+
+  def isIdle: Boolean = fold(true, false, false, false, false)
+
   def canRecalculate: Boolean = this match
     case Idle | Error => true
     case _            => false

@@ -28,17 +28,20 @@ case class AgsOverlay(
   selectedGuideStar:   Option[AgsAnalysis],
   agsState:            AgsState,
   modeAvailable:       Boolean,
-  itcAvailable:        Boolean,
+  sequenceAvailable:   Boolean,
+  durationAvailable:   Boolean,
   candidatesAvailable: Boolean
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
-  val canCalculate: Boolean = itcAvailable && candidatesAvailable
+  val canCalculate: Boolean =
+    sequenceAvailable && candidatesAvailable && durationAvailable && modeAvailable
+  val noGuideStar: Boolean  = canCalculate && selectedGuideStar.isEmpty && !agsState.isCalculating
 }
 
-object AgsOverlay {
+object AgsOverlay:
   type Props = AgsOverlay
 
   val component =
-    ScalaFnComponent[Props] { props =>
+    ScalaFnComponent[Props]: props =>
       val selectedIndex = props.selectedGSIndex.get
 
       val canGoPrev = props.agsState === AgsState.Idle && selectedIndex.exists(_ > 0)
@@ -56,7 +59,7 @@ object AgsOverlay {
 
       props.selectedGuideStar
         .filter(_.isUsable)
-        .map { case analysis =>
+        .map { analysis =>
           ReactFragment(
             <.div(
               ExploreStyles.AgsDescription,
@@ -112,21 +115,32 @@ object AgsOverlay {
           )
         }
         .getOrElse {
+
+          val errorIcon = Icons.TriangleSolid
+            .addClass(ExploreStyles.ItcErrorIcon)
+            .withSize(IconSize.LG)
           <.div(
             ExploreStyles.AgsDescription,
-            Icons.SquareXMarkLarge
-              .withClass(ExploreStyles.AgsNotFound)
-              .withSize(IconSize.LG)
-              .when(props.canCalculate),
-            Icons.TriangleSolid
-              .addClass(ExploreStyles.ItcErrorIcon)
-              .withSize(IconSize.LG)
-              .unless(props.canCalculate),
-            <.span(Constants.NoGuideStarMessage).when(props.canCalculate),
-            <.span(Constants.MissingITC).when(!props.itcAvailable && props.modeAvailable),
-            <.span(Constants.MissingMode).when(!props.modeAvailable),
-            <.span(Constants.MissingCandidates).unless(props.candidatesAvailable)
+            <.span(
+              Icons.SquareXMarkLarge
+                .withClass(ExploreStyles.AgsNotFound)
+                .withSize(IconSize.LG),
+              Constants.NoGuideStarMessage
+            ).when(props.noGuideStar),
+            (props.modeAvailable,
+             props.durationAvailable,
+             props.sequenceAvailable,
+             props.candidatesAvailable
+            ) match {
+              case (false, _, _, _) =>
+                <.span(errorIcon, Constants.MissingMode)
+              case (_, false, _, _) =>
+                <.span(errorIcon, Constants.NoDuration)
+              case (_, _, false, _) =>
+                <.span(errorIcon, Constants.NoSequence)
+              case (_, _, _, false) =>
+                <.span(errorIcon, Constants.MissingCandidates)
+              case _                => EmptyVdom
+            }
           )
         }
-    }
-}
