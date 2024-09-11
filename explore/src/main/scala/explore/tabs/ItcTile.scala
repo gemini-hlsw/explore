@@ -8,9 +8,9 @@ import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.itc.ItcPanelBody
-import explore.itc.SelectedItcTarget
 import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
+import explore.itc.SelectedItcTarget
 import explore.model.GlobalPreferences
 import explore.model.LoadingState
 import explore.model.ObsTabTilesIds

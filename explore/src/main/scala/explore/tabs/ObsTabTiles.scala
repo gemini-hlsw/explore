@@ -177,9 +177,7 @@ object ObsTabTiles:
       // Chart results
       .useState(Map.empty[ItcTarget, Pot[ItcGraphResult]])
       // Brightest target
-      .useStateBy { (_, _, _, _, _, _, itcProps, _) =>
-        itcProps.value.defaultTarget
-      }
+      .useStateBy((_, _, _, _, _, _, itcProps, _) => itcProps.value.defaultTarget)
       // itc loading
       .useStateWithReuse(LoadingState.Done)
       .useEffectWithDepsBy((props, _, _, _, _, selectedConfig, _, _, _, _) =>

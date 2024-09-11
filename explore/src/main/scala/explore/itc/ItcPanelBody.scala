@@ -68,7 +68,14 @@ object ItcPanelBody:
 
         val selectedTarget = props.selectedTarget.get
 
-        val isModeSelected = props.itcProps.selectedConfig.isDefined
+        val selectedResult: Option[ItcGraphResult] =
+          for
+            t <- selectedTarget
+            r <- props.itcGraphResults.get(t)
+            c <- r.toOption
+          yield c
+
+        val isModeSelected = props.itcProps.selectedConfig.isDefined || selectedResult.isDefined
         val selectMode     = "Select a mode to plot".some.filterNot(_ => isModeSelected)
 
         val error: Option[String] =
@@ -78,14 +85,7 @@ object ItcPanelBody:
                 .get(t)
                 .flatMap: r =>
                   r.fold(selectMode, _.getMessage.some, _ => none)
-                .orElse(selectMode)
-
-        val selectedResult: Option[ItcGraphResult] =
-          for
-            t <- selectedTarget
-            r <- props.itcGraphResults.get(t)
-            c <- r.toOption
-          yield c
+            .orElse(selectMode)
 
         <.div(
           ExploreStyles.ItcPlotSection,
