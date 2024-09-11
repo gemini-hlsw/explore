@@ -102,4 +102,17 @@ trait syntax:
         .flatten
         .hashDistinct
 
+  extension (allTargets: TargetList)
+    // From the list of targets selects the ones relevant for ITC
+    def itcTargets: List[ItcTarget] =
+      allTargets.values
+        .map(target =>
+          TargetRV
+            .getOption(target)
+            .map(r => ItcTarget(target.name, TargetInput(Target.sourceProfile.get(target), r)))
+        )
+        .toList
+        .flattenOption
+        .hashDistinct
+
 object syntax extends syntax

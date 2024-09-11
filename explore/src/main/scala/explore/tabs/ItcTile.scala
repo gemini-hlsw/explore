@@ -8,9 +8,9 @@ import crystal.react.View
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.itc.ItcPanelBody
-import explore.itc.ItcPanelTileState
 import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
+import explore.itc.SelectedItcTarget
 import explore.model.GlobalPreferences
 import explore.model.LoadingState
 import explore.model.ObsTabTilesIds
@@ -37,7 +37,7 @@ object ItcTile:
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
-      ItcPanelTileState(),
+      SelectedItcTarget(itcBrightestTarget),
       bodyClass = ExploreStyles.ItcTileBody
     )(
       s =>
