@@ -14,6 +14,7 @@ import explore.Icons
 import explore.components.ColumnSelectorInTitle
 import explore.components.ColumnSelectorState
 import explore.components.Tile
+import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
@@ -53,7 +54,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import explore.components.ToolbarTooltipOptions
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
