@@ -97,11 +97,6 @@ case class AladinCell(
         off <- offsets
       } yield AgsPosition(pa, off)
 
-  def canCalculateSequence: Boolean =
-    obsConf.exists { o =>
-      o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined
-    }
-
   def durationAvailable: Boolean =
     obsConf.flatMap(_.obsDuration).isDefined
 
@@ -495,7 +490,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                         selectedGuideStar,
                         agsState.get,
                         props.modeSelected,
-                        props.canCalculateSequence,
                         props.durationAvailable,
                         candidates.value.isDefined
                       )

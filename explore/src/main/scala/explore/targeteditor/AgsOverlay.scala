@@ -28,12 +28,11 @@ case class AgsOverlay(
   selectedGuideStar:   Option[AgsAnalysis],
   agsState:            AgsState,
   modeAvailable:       Boolean,
-  sequenceAvailable:   Boolean,
-  durationAvailable:   Boolean,
+  durationAvailable:   Boolean, // Duration implies sequence
   candidatesAvailable: Boolean
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
   val canCalculate: Boolean =
-    sequenceAvailable && candidatesAvailable && durationAvailable && modeAvailable
+    candidatesAvailable && durationAvailable && modeAvailable
   val noGuideStar: Boolean  = canCalculate && selectedGuideStar.isEmpty && !agsState.isCalculating
 }
 
@@ -56,6 +55,10 @@ object AgsOverlay:
       def goNext(e: ReactEvent): Option[Callback] = Option {
         props.selectedGSIndex.mod(_.map(_ + 1))
       }.filter(_ => canGoNext)
+
+      val errorIcon = Icons.TriangleSolid
+        .addClass(ExploreStyles.ItcErrorIcon)
+        .withSize(IconSize.LG)
 
       props.selectedGuideStar
         .filter(_.isUsable)
@@ -115,32 +118,22 @@ object AgsOverlay:
           )
         }
         .getOrElse {
-
-          val errorIcon = Icons.TriangleSolid
-            .addClass(ExploreStyles.ItcErrorIcon)
-            .withSize(IconSize.LG)
           <.div(
             ExploreStyles.AgsDescription,
-            <.span(
-              Icons.SquareXMarkLarge
-                .withClass(ExploreStyles.AgsNotFound)
-                .withSize(IconSize.LG),
-              Constants.NoGuideStarMessage
-            ).when(props.noGuideStar),
-            (props.modeAvailable,
-             props.durationAvailable,
-             props.sequenceAvailable,
-             props.candidatesAvailable
-            ) match {
-              case (false, _, _, _) =>
+            (props.modeAvailable, props.durationAvailable, props.candidatesAvailable) match {
+              case (false, _, _) =>
                 <.span(errorIcon, Constants.MissingMode)
-              case (_, false, _, _) =>
+              case (_, false, _) =>
                 <.span(errorIcon, Constants.NoDuration)
-              case (_, _, false, _) =>
-                <.span(errorIcon, Constants.NoSequence)
-              case (_, _, _, false) =>
+              case (_, _, false) =>
                 <.span(errorIcon, Constants.MissingCandidates)
-              case _                => EmptyVdom
+              case u             =>
+                <.span(
+                  Icons.SquareXMarkLarge
+                    .withClass(ExploreStyles.AgsNotFound)
+                    .withSize(IconSize.LG),
+                  Constants.NoGuideStarMessage
+                ).when(props.noGuideStar)
             }
           )
         }
