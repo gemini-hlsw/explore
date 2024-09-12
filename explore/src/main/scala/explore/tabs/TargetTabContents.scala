@@ -456,10 +456,7 @@ object TargetTabContents extends TwoPanels:
                        // otherwise, close the original and open the subsets
                        ObsIdSet
                          .fromSortedSet(intersect)
-                         .foldMap(i =>
-                           Callback.log(s"Setting expanded ids for $ids subset $i") >>
-                             props.expandedIds.mod(_ - ids + i + ids.removeUnsafe(i))
-                         )
+                         .foldMap(i => props.expandedIds.mod(_ - ids + i + ids.removeUnsafe(i)))
                    }.void >>
                      setCurrentTarget(obsIds4Url)(params.cloneId.some, SetRouteVia.HistoryReplace)
                  } else {
@@ -536,13 +533,17 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            val selectedCoordinates: Option[Coordinates] =
+            // coordinates for the elevation plot, if no obs time default to base
+            val skyPlotCoordinates: Option[Coordinates] =
               props.focused.target.flatMap: id =>
                 props.targets.get
                   .get(id)
                   .flatMap:
                     case t @ Target.Sidereal(_, _, _, _) =>
-                      obsTimeView.get.flatMap(ot => Target.Sidereal.tracking.get(t).at(ot))
+                      obsTimeView.get
+                        .flatMap(ot => Target.Sidereal.tracking.get(t).at(ot))
+                        // If no obs time default to base coords
+                        .orElse(t.tracking.baseCoordinates.some)
                     case _                               => none
 
             val skyPlotTile =
@@ -550,7 +551,7 @@ object TargetTabContents extends TwoPanels:
                 props.userId,
                 props.focused.target,
                 configuration.map(_.siteFor),
-                selectedCoordinates.map(CoordinatesAtVizTime(_)),
+                skyPlotCoordinates.map(CoordinatesAtVizTime(_)),
                 obsTimeView.get,
                 none,
                 Nil,
