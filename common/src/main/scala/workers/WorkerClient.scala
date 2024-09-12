@@ -25,13 +25,14 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
   initLatch: Deferred[F, Unit]
 ):
   private val waitForServer: F[Unit] =
-    worker.stream
-      .map(decodeFromTransferableEither[FromServer])
-      .rethrow
-      .collectFirst { case FromServer.ServerReady => initLatch.complete(()) }
-      .evalMap(identity) // Runs latch.complete
-      .compile
-      .drain
+    worker.subscribe
+      .use:
+        _.map(decodeFromTransferableEither[FromServer]).rethrow
+          .evalTap(msg => Logger[F].debug(s"<<< Received msg from server: [$msg]"))
+          .collectFirst { case FromServer.ServerReady => initLatch.complete(()) }
+          .evalMap(identity) // Runs latch.complete
+          .compile
+          .drain
       .start
       .void >>
       worker.postTransferable(asTypedArray[FromClient](FromClient.ClientReady))
@@ -43,20 +44,21 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
     Pickler[requestMessage.ResponseType]
   ): Resource[F, fs2.Stream[F, requestMessage.ResponseType]] =
     for {
-      _  <- Resource.eval(initLatch.get) // Ensure server is initialized
-      id <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId(_))
-      _  <- Resource.make(
-              Logger[F].debug(s">>> Starting request with id [$id]") >>
-                worker.postTransferable(
-                  asTypedArray[FromClient](FromClient.Start(id, Pickled(asBytes[R](requestMessage))))
-                )
-            )(_ =>
-              Logger[F].debug(s">>> Ending request with id [$id]") >>
-                worker.postTransferable(
-                  asTypedArray[FromClient](FromClient.End(id))
-                )
-            )
-    } yield worker.stream
+      _            <- Resource.eval(initLatch.get) // Ensure server is initialized
+      id           <- Resource.eval(UUIDGen.randomUUID).map(WorkerProcessId(_))
+      _            <- Resource.make(
+                        Logger[F].debug(s">>> Starting request with id [$id]. Request: [$requestMessage]") >>
+                          worker.postTransferable(
+                            asTypedArray[FromClient](FromClient.Start(id, Pickled(asBytes[R](requestMessage))))
+                          )
+                      )(_ =>
+                        Logger[F].debug(s">>> Ending request with id [$id]. Request: [$requestMessage]") >>
+                          worker.postTransferable(
+                            asTypedArray[FromClient](FromClient.End(id))
+                          )
+                      )
+      workerStream <- worker.subscribe
+    } yield workerStream
       .map(decodeFromTransferableEither[FromServer])
       .rethrow
       .collect:
@@ -70,10 +72,10 @@ class WorkerClient[F[_]: Concurrent: UUIDGen: Logger, R: Pickler] private (
       .unNoneTerminate
       .rethrow
 
-    /**
-     * Make a request to the underlying worker and receive a single response (if any) as the effect
-     * result.
-     */
+  /**
+   * Make a request to the underlying worker and receive a single response (if any) as the effect
+   * result.
+   */
   def requestSingle[T <: R & WorkerRequest](requestMessage: T)(using
     Pickler[requestMessage.ResponseType]
   ): F[Option[requestMessage.ResponseType]] = // TODO Should we implement a timeout here? Retry?
