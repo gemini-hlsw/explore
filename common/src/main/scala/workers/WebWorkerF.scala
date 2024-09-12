@@ -47,7 +47,7 @@ trait WebWorkerF[F[_]] {
   /**
    * Stream of events from the worker
    */
-  def stream: Stream[F, dom.MessageEvent]
+  def subscribe: Resource[F, Stream[F, dom.MessageEvent]]
 }
 
 object WebWorkerF {
@@ -57,16 +57,15 @@ object WebWorkerF {
     dispatcher: Dispatcher[F]
   ): Resource[F, WebWorkerF[F]] =
     for {
-      topic       <- Resource.make(Topic[F, dom.MessageEvent])(_.close.void)
-      _           <-
+      topic   <- Resource.make(Topic[F, dom.MessageEvent])(_.close.void)
+      _       <-
         Resource.eval(
           Sync[F].delay(
             worker.onmessage =
               (e: dom.MessageEvent) => dispatcher.unsafeRunAndForget(topic.publish1(e))
           )
         )
-      topicStream <- topic.subscribeAwait(10)
-      workerF     <-
+      workerF <-
         Resource.make(Sync[F].delay(new WebWorkerF[F] {
           override def postMessage(message: js.Any): F[Unit] =
             Sync[F].delay(worker.postMessage(message))
@@ -81,8 +80,8 @@ object WebWorkerF {
           // been initialized, so that the response is not lost.
           // `subscribe` performs the initialization within the `Stream` execution, so it provides no way to
           // synchronize at a point where we have a guarantee that it is actually reading new `Topic` messages.
-          override val stream: Stream[F, dom.MessageEvent] =
-            topicStream
+          override val subscribe: Resource[F, Stream[F, dom.MessageEvent]] =
+            topic.subscribeAwait(10)
         }))(w => w.terminate)
     } yield workerF
 
