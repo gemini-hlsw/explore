@@ -12,6 +12,8 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.GroupQueries
+import explore.components.ActionButtons
+import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.data.tree.KeyedIndexedTree
@@ -20,6 +22,7 @@ import explore.data.tree.Tree as ExploreTree
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
+import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.enums.AppTab
@@ -36,6 +39,7 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.syntax.display.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -56,19 +60,37 @@ import scala.scalajs.js
 import ObsQueries.*
 
 case class ObsList(
-  observations:      UndoSetter[ObservationList],
-  obsExecutionTimes: ObservationExecutionMap,
-  undoer:            Undoer,
-  programId:         Program.Id,
-  focusedObs:        Option[Observation.Id],
-  focusedTarget:     Option[Target.Id],
-  focusedGroup:      Option[Group.Id],
-  setSummaryPanel:   Callback,
-  groups:            UndoSetter[GroupTree],
-  expandedGroups:    View[Set[Group.Id]],
-  deckShown:         View[DeckShown],
-  readonly:          Boolean
-) extends ReactFnProps(ObsList.component)
+  observations:         UndoSetter[ObservationList],
+  obsExecutionTimes:    ObservationExecutionMap,
+  undoer:               Undoer,
+  programId:            Program.Id,
+  focusedObs:           Option[Observation.Id],
+  focusedTarget:        Option[Target.Id],
+  focusedGroup:         Option[Group.Id],
+  setSummaryPanel:      Callback,
+  groups:               UndoSetter[GroupTree],
+  expandedGroups:       View[Set[Group.Id]],
+  deckShown:            View[DeckShown],
+  copyCallback:         Callback,
+  pasteCallback:        Callback,
+  clipboardObsContents: Option[ObsIdSet],
+  readonly:             Boolean
+) extends ReactFnProps(ObsList.component):
+  private val copyDisabled: Boolean   = focusedObs.isEmpty
+  private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
+  private val deleteDisabled: Boolean = focusedObs.isEmpty && focusedGroup.isEmpty
+
+  private def observationText(obsId: Observation.Id): String = s"observation $obsId"
+  private def groupText(groupId:     Group.Id): String       = s"group $groupId"
+
+  private val copyText: Option[String]   = focusedObs.map(observationText)
+  private val pasteText: Option[String]  =
+    clipboardObsContents.map: obdIdSet =>
+      obdIdSet.idSet.size match
+        case 1    => s"observation ${obdIdSet.idSet.head}"
+        case more => s"$more observations"
+  private val deleteText: Option[String] =
+    focusedObs.map(observationText).orElse(focusedGroup.map(groupText))
 
 object ObsList:
   private type Props = ObsList
@@ -223,6 +245,22 @@ object ObsList:
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
 
+        val deleteObs: Observation.Id => Callback = oid =>
+          obsExistence(
+            oid,
+            o => setObs(props.programId, o.some, ctx)
+          )
+            .mod(props.observations)(obsListMod.delete)
+            .showToastCB(s"Deleted obs ${oid.shortName}")
+
+        val deleteGroup: Group.Id => Callback = gid =>
+          groupExistence(
+            gid,
+            g => setGroup(props.programId, g.some, ctx)
+          )
+            .mod(props.groups)(groupTreeMod.delete)
+            .showToastCB(s"Deleted group ${gid.shortName}")
+
         def renderItem(node: GroupTree.Value, options: TreeNodeTemplateOptions): VdomNode =
           node match
             case Left(GroupTree.Obs(id)) =>
@@ -262,12 +300,7 @@ object ObsList:
                         .set(props.observations)
                         .compose((_: Option[NonEmptyString]).some)
                         .some,
-                      deleteCB = obsExistence(
-                        id,
-                        o => setObs(props.programId, o.some, ctx)
-                      )
-                        .mod(props.observations)(obsListMod.delete)
-                        .showToastCB(s"Deleted obs ${id.show}"),
+                      deleteCB = deleteObs(id),
                       cloneCB = cloneObs(
                         props.programId,
                         id,
@@ -298,78 +331,95 @@ object ObsList:
                   props.programId,
                   Focused.group(group.id)
                 ),
-                deleteCB = groupExistence(
-                  group.id,
-                  g => setGroup(props.programId, g.some, ctx)
-                )
-                  .mod(props.groups)(groupTreeMod.delete)
-                  .showToastCB(s"Deleted group ${group.id.show}"),
+                deleteCB = deleteGroup(group.id),
                 isEmpty = isEmpty,
                 readonly = props.readonly || group.system
               )
 
         val expandFocusedGroup: Callback = props.expandedGroups.mod(_ ++ props.focusedGroup)
 
-        val tree =
+        val isSystemGroupFocused: Boolean =
+          props.focusedGroup
+            .flatMap: groupId =>
+              props.groups.get.getNodeAndIndexByKey(groupId.asRight)
+            .exists(_._1.value.toOption.exists(_.system))
+
+        val tree: VdomNode =
           if (props.deckShown.get === DeckShown.Shown) {
             React.Fragment(
               <.div(ExploreStyles.TreeToolbar)(
-                if (props.readonly) EmptyVdom
-                else
-                  val isSystemGroupFocused: Boolean =
-                    props.focusedGroup
-                      .flatMap: groupId =>
-                        props.groups.get.getNodeAndIndexByKey(groupId.asRight)
-                      .exists(_._1.value.toOption.exists(_.system))
-
-                  React.Fragment(
-                    Button(
-                      severity = Button.Severity.Success,
-                      icon = Icons.New,
-                      label = "Obs",
-                      disabled = adding.get.value || isSystemGroupFocused,
-                      loading = adding.get.value,
-                      onClick = insertObs(
-                        props.programId,
-                        // Set the focused group as the new obs parent if it is selected
-                        props.focusedGroup,
-                        props.observations.get.length,
-                        props.observations,
-                        adding,
-                        ctx
-                      ).runAsync *> expandFocusedGroup
-                    ).mini.compact,
-                    Button(
-                      severity = Button.Severity.Success,
-                      icon = Icons.New,
-                      label = "Group",
-                      disabled = adding.get.value || isSystemGroupFocused,
-                      loading = adding.get.value,
-                      onClick = insertGroup(
-                        props.programId,
-                        // Set the focused group as the new group parent if it is selected
-                        props.focusedGroup,
-                        props.groups,
-                        adding,
-                        ctx
-                      ).runAsync *> expandFocusedGroup
-                    ).mini.compact
+                React
+                  .Fragment(
+                    <.span(
+                      Button(
+                        severity = Button.Severity.Success,
+                        icon = Icons.New,
+                        label = "Obs",
+                        disabled = adding.get.value || isSystemGroupFocused,
+                        loading = adding.get.value,
+                        tooltip = "Add a new Observation",
+                        tooltipOptions = ToolbarTooltipOptions.Default,
+                        onClick = insertObs(
+                          props.programId,
+                          // Set the focused group as the new obs parent if it is selected
+                          props.focusedGroup,
+                          props.observations.get.length,
+                          props.observations,
+                          adding,
+                          ctx
+                        ).runAsync *> expandFocusedGroup
+                      ).mini.compact,
+                      Button(
+                        severity = Button.Severity.Success,
+                        icon = Icons.New,
+                        label = "Group",
+                        disabled = adding.get.value || isSystemGroupFocused,
+                        loading = adding.get.value,
+                        tooltip = "Add a new Group",
+                        tooltipOptions = ToolbarTooltipOptions.Default,
+                        onClick = insertGroup(
+                          props.programId,
+                          // Set the focused group as the new group parent if it is selected
+                          props.focusedGroup,
+                          props.groups,
+                          adding,
+                          ctx
+                        ).runAsync *> expandFocusedGroup
+                      ).mini.compact
+                    ),
+                    UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value),
+                    ActionButtons(
+                      ActionButtons.ButtonProps(
+                        props.copyCallback,
+                        disabled = props.copyDisabled,
+                        tooltipExtra = props.copyText
+                      ),
+                      ActionButtons.ButtonProps(
+                        props.pasteCallback,
+                        disabled = props.pasteDisabled,
+                        tooltipExtra = props.pasteText
+                      ),
+                      ActionButtons.ButtonProps(
+                        props.focusedObs
+                          .map(deleteObs)
+                          .orElse(props.focusedGroup.map(deleteGroup))
+                          .orEmpty,
+                        disabled = props.deleteDisabled,
+                        tooltipExtra = props.deleteText
+                      )
+                    )
                   )
-                ,
-                <.div(
-                  ExploreStyles.ObsTreeButtons,
-                  Button(
-                    severity = Button.Severity.Secondary,
-                    outlined = true,
-                    disabled = false,
-                    icon = Icons.ArrowLeftFromLine,
-                    clazz = ExploreStyles.ObsTreeHideShow,
-                    onClick = props.deckShown.mod(_.flip)
-                  ).mini.compact,
-                  if (props.readonly) EmptyVdom
-                  else
-                    UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value)
-                )
+                  .unless(props.readonly),
+                Button(
+                  severity = Button.Severity.Secondary,
+                  outlined = true,
+                  disabled = false,
+                  tooltip = "Hide Observation Tree",
+                  tooltipOptions = ToolbarTooltipOptions.Default,
+                  icon = Icons.ArrowLeftFromLine,
+                  clazz = ExploreStyles.ObsTreeHideShow,
+                  onClick = props.deckShown.mod(_.flip)
+                ).mini.compact
               ),
               <.div(
                 Button(
@@ -380,8 +430,7 @@ object ObsList:
                   clazz = ExploreStyles.ButtonSummary
                 )
               ),
-              <.div(
-                ^.overflow := "auto",
+              <.div(^.overflow := "auto")(
                 Tree(
                   treeNodes.get,
                   renderItem,

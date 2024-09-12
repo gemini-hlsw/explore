@@ -477,7 +477,7 @@ object AsterismGroupObsList:
               Button(
                 label = "Obs",
                 icon = Icons.New,
-                tooltip = "Add a new observation",
+                tooltip = "Add a new Observation",
                 tooltipOptions = ToolbarTooltipOptions.Default,
                 severity = Button.Severity.Success,
                 disabled = addingTargetOrObs.get.value,
@@ -494,7 +494,7 @@ object AsterismGroupObsList:
               Button(
                 label = "Tgt",
                 icon = Icons.New,
-                tooltip = "Add a new target",
+                tooltip = "Add a new Target",
                 tooltipOptions = ToolbarTooltipOptions.Default,
                 severity = Button.Severity.Success,
                 disabled = addingTargetOrObs.get.value,

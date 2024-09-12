@@ -226,14 +226,14 @@ object TargetTabContents extends TwoPanels:
             .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((_, _, _, _, _, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback)
-      ) { (props, ctx, _, _, _, _, _, _) => (copyCallback, pasteCallback) =>
-        val callbacks: ShortcutCallbacks =
-          case CopyAlt1 | CopyAlt2   => copyCallback
-          case PasteAlt1 | PasteAlt2 => pasteCallback
-          case GoToSummary           => ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
+      ): (props, ctx, _, _, _, _, _, _) =>
+        (copyCallback, pasteCallback) =>
+          val callbacks: ShortcutCallbacks =
+            case CopyAlt1 | CopyAlt2   => copyCallback
+            case PasteAlt1 | PasteAlt2 => pasteCallback
+            case GoToSummary           => ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
 
-        UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
-      }
+          UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       .useStateView(AladinFullScreen.Normal) // full screen aladin
       .useResizeDetector() // Measure its size
       .render:
@@ -253,21 +253,6 @@ object TargetTabContents extends TwoPanels:
 
           def getObsInfo(editing: Option[ObsIdSet])(targetId: Target.Id): TargetEditObsInfo =
             TargetEditObsInfo.fromProgramSummaries(targetId, editing, props.programSummaries.get)
-
-          def targetTree(programSummaries: UndoContext[ProgramSummaries]) =
-            AsterismGroupObsList(
-              props.programId,
-              props.focused,
-              props.expandedIds,
-              programSummaries,
-              selectedIdsOpt,
-              shadowClipboard.value,
-              selectTargetOrSummary,
-              selectedTargetIds.set,
-              copyCallback,
-              pasteCallback,
-              props.readonly
-            )
 
           def findAsterismGroup(obsIds: ObsIdSet, agl: AsterismGroupList): Option[AsterismGroup] =
             agl.find((agObsIds, _) => obsIds.subsetOf(agObsIds)).map(AsterismGroup.fromTuple)
@@ -291,6 +276,21 @@ object TargetTabContents extends TwoPanels:
                 setPage(Focused.None)
             ): targetId =>
               setPage(Focused.target(targetId))
+
+          val targetTree: VdomNode =
+            AsterismGroupObsList(
+              props.programId,
+              props.focused,
+              props.expandedIds,
+              props.programSummaries,
+              selectedIdsOpt,
+              shadowClipboard.value,
+              selectTargetOrSummary,
+              selectedTargetIds.set,
+              copyCallback,
+              pasteCallback,
+              props.readonly
+            )
 
           val backButton: VdomNode =
             makeBackButton(props.programId, AppTab.Targets, selectedView, ctx)
@@ -685,7 +685,7 @@ object TargetTabContents extends TwoPanels:
             else EmptyVdom,
             makeOneOrTwoPanels(
               selectedView,
-              targetTree(props.programSummaries),
+              targetTree,
               rightSide,
               RightSideCardinality.Multi,
               resize

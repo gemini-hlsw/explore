@@ -60,7 +60,7 @@ trait TwoPanels {
     resize:       UseResizeDetectorReturn,
     bodyExtraCss: Css = Css.Empty
   ): VdomNode =
-    if (window.canFitTwoPanels) {
+    if (window.canFitTwoPanels)
       <.div(
         ExploreStyles.TreeRGL,
         tree(leftPanel, bodyExtraCss),
@@ -71,9 +71,8 @@ trait TwoPanels {
           rightSide(resize)
         ).withRef(resize.ref) // we want to measure the grid layout
       )
-    } else {
-      <.div(
-        ExploreStyles.TreeRGL,
+    else
+      <.div(ExploreStyles.TreeRGL)(
         <.div(ExploreStyles.Tree, treeInner(leftPanel, bodyExtraCss))
           .when(pv.get.leftPanelVisible),
         <.div(
@@ -83,5 +82,4 @@ trait TwoPanels {
           rightSide(resize)
         ).when(pv.get.rightPanelVisible)
       ).withRef(resize.ref)
-    }
 }
