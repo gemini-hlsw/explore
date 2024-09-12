@@ -53,6 +53,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import explore.components.ToolbarTooltipOptions
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -102,8 +103,20 @@ object ObsTabContents extends TwoPanels:
           }
       // Measure its size
       .useResizeDetector()
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _) =>
-        (props.focusedObs,
+      .useCallbackWithDepsBy((props, _, _, _) => props.focusedObs): (_, ctx, _, _) =>
+        obs =>
+          import ctx.given
+
+          obs
+            .map: id =>
+              ExploreClipboard
+                .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
+                .withToast(s"Copied obs $id")
+            .orUnit
+            .runAsync
+      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, copyCallback) =>
+        (copyCallback,
+         props.focusedObs,
          props.programSummaries.get.observations.values
            .map(_.id)
            .zipWithIndex
@@ -111,21 +124,14 @@ object ObsTabContents extends TwoPanels:
            .map((id, idx) => id -> NonNegInt.unsafeFrom(idx)),
          props.readonly
         )
-      ): (props, ctx, _, _) =>
-        (obs, observationIds, readonly) =>
+      ): (props, ctx, _, _, _) =>
+        (copyCallback, obs, observationIds, readonly) =>
           import ctx.given
 
           val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
 
           def callbacks: ShortcutCallbacks = {
-            case CopyAlt1 | CopyAlt2 =>
-              obs
-                .map: id =>
-                  ExploreClipboard
-                    .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
-                    .withToast(s"Copied obs $id")
-                .orUnit
-                .runAsync
+            case CopyAlt1 | CopyAlt2 => copyCallback
 
             case PasteAlt1 | PasteAlt2 =>
               ExploreClipboard.get
@@ -190,7 +196,7 @@ object ObsTabContents extends TwoPanels:
             callbacks
           )
       .useStateView(DeckShown.Shown)
-      .render: (props, ctx, twoPanelState, resize, deckShown) =>
+      .render: (props, ctx, twoPanelState, resize, copyCallback, deckShown) =>
 
         val observationsTree: VdomNode =
           if (deckShown.get === DeckShown.Shown) {
@@ -206,6 +212,7 @@ object ObsTabContents extends TwoPanels:
               props.groups,
               props.expandedGroups,
               deckShown,
+              copyCallback,
               props.readonly
             )
           } else
@@ -214,6 +221,8 @@ object ObsTabContents extends TwoPanels:
                 severity = Button.Severity.Secondary,
                 outlined = true,
                 disabled = false,
+                tooltip = "Show Observation Tree",
+                tooltipOptions = ToolbarTooltipOptions.Default,
                 icon = Icons.ArrowRightFromLine,
                 clazz = ExploreStyles.ObsTreeHideShow,
                 onClick = deckShown.mod(_.flip)
