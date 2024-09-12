@@ -821,7 +821,7 @@ thead tr th.sticky-header {
     max-width: 5ch;
   }
 
-  label:last-child {
+  label:nth-last-child(2) {
     display: none;
   }
 
@@ -837,11 +837,18 @@ thead tr th.sticky-header {
   .react-datepicker__input-container {
     input {
       font-size: small;
+      width: 16ch; // the date/time format is 15 ch
     }
   }
 
   .target-tile-obs-duration {
     display: none;
+    justify-content: baseline;
+  }
+
+  .target-tile-obs-duration {
+    display: flex;
+    align-items: center;
   }
 }
 
@@ -860,17 +867,14 @@ thead tr th.sticky-header {
       display: unset;
     }
 
-    label:last-child {
+    label:nth-last-child(2) {
       display: inline;
     }
   }
-}
 
-@container tile (min-width: #{exploreCommon.$tile-medium-cutoff}) {
   .explore-obs-instant-tile-title {
     .target-tile-obs-duration {
       display: flex;
-      gap: 0.5em;
     }
   }
 }
@@ -1041,9 +1045,25 @@ thead tr th.sticky-header {
 
   .explore-tile-title-control-area {
     min-width: 60%;
+    flex-grow: 1;
 
     .explore-tile-control {
       justify-content: space-between;
+    }
+
+    .explore-title-select-columns {
+      display: none;
+    }
+  }
+}
+
+@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+  .target-tile-controller {
+    .explore-tile-title-control-area {
+      .explore-title-select-columns {
+        display: flex;
+        color: red;
+      }
     }
   }
 }

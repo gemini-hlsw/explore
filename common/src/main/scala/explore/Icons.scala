@@ -63,6 +63,10 @@ object Icons {
   val faBarCodeRead: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faClockRotateLeft")
+  val faClockRotateLeft: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faStarExclamation")
   val faStarExclamation: FAIcon = js.native
 
@@ -358,6 +362,7 @@ object Icons {
     faGears,
     faBars,
     faBarCodeRead,
+    faClockRotateLeft,
     faStarExclamation,
     faUndo,
     faRedo,
@@ -442,6 +447,7 @@ object Icons {
   val ArrowsRepeat         = FontAwesomeIcon(faArrowsRepeat)
   val Bars                 = FontAwesomeIcon(faBars)
   val BarCodeRead          = FontAwesomeIcon(faBarCodeRead)
+  val ClockRotateLeft      = FontAwesomeIcon(faClockRotateLeft)
   val StarExclamation      = FontAwesomeIcon(faStarExclamation)
   val Gears                = FontAwesomeIcon(faGears)
   val Undo                 = FontAwesomeIcon(faUndo)

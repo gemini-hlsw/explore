@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit
 import scalajs.js
 
 case class ObsTimeEditor(
-  vizTimeView:     View[Option[Instant]],
-  vizDurationView: View[Option[TimeSpan]],
+  obsTimeView:     View[Option[Instant]],
+  obsDurationView: View[Option[TimeSpan]],
   pendingTime:     Option[TimeSpan],
   forMultipleObs:  Boolean
 ) extends ReactFnProps(ObsTimeEditor.component)
@@ -44,35 +44,36 @@ object ObsTimeEditor {
       .useRef[Option[ReactDatePicker[Any, Any]]](none)
       .useMemoBy((props, _) => props.pendingTime)((_, _) => _.getOrElse(TimeSpan.fromHours(1).get))
       .render: (props, ref, defaultDuration) =>
+        println(defaultDuration)
         <.div(ExploreStyles.ObsInstantTileTitle)(
           React.Fragment(
             <.label(
               dataAbbrv := "Time",
-              <.span("Observation time"),
+              <.span("Time/Duration"),
               HelpIcon("configuration/obstime.md".refined)
             ),
             Datepicker(onChange =
               (newValue, _) =>
                 newValue.fromDatePickerToInstantOpt.foldMap: i =>
-                  props.vizTimeView.set(i.some)
+                  props.obsTimeView.set(i.some)
             )
               .readOnly(props.forMultipleObs)
               .calendarClassName(ExploreStyles.DatePickerWithNowButton.htmlClass)
               .showTimeInput(true)
-              .selected(props.vizTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
+              .selected(props.obsTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
               .dateFormat("yyyy-MM-dd HH:mm")(
                 Button(onClick =
-                  props.vizTimeView.set(Instant.now.some) >>
+                  props.obsTimeView.set(Instant.now.some) >>
                     ref.value.map(r => Callback(r.setOpen(false))).orEmpty
                 )("Now")
               )
               .withRef(r => ref.set(r.some).runNow()),
-            <.label("UTC"),
+            <.label(ExploreStyles.TargetTileObsUTC, "UTC"),
             <.span(
               ExploreStyles.TargetTileObsDuration,
               if (props.forMultipleObs) TagMod.empty
               else
-                props.vizDurationView
+                props.obsDurationView
                   .mapValue((v: View[TimeSpan]) =>
                     <.span(
                       ExploreStyles.TargetTileObsDuration,
@@ -85,17 +86,23 @@ object ObsTimeEditor {
                         clazz = ExploreStyles.DeleteButton,
                         icon = Icons.Eraser,
                         tooltip = "Clear explicit duration and use full remaining sequence",
-                        onClick = props.vizDurationView.set(none)
+                        onClick = props.obsDurationView.set(none)
                       ).tiny.compact
                     )
                   )
                   .getOrElse(
-                    Button(
-                      label = "Set duration",
-                      onClick = props.vizDurationView.set(defaultDuration.value.some),
-                      tooltip = "Set an explicit duration instead of using the remaining sequence",
-                      clazz = ExploreStyles.TargetTileObsDuration
-                    ).tiny.compact
+                    React.Fragment(
+                      Button(
+                        icon = Icons.ClockRotateLeft,
+                        onClick = props.obsDurationView.set(defaultDuration.value.some),
+                        tooltip =
+                          "Set an explicit duration instead of using the remaining sequence",
+                        clazz = ExploreStyles.TargetTileObsDuration
+                      ).tiny.compact,
+                      props.pendingTime.map(pt =>
+                        <.div(ExploreStyles.TargetObsDefaultDuration, timeDisplay("", pt, ""))
+                      )
+                    )
                   )
             )
           )

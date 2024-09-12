@@ -161,6 +161,8 @@ object ExploreStyles:
   val TargetTileBody: Css            = Css("target-tile-body")
   val TargetTileEditor: Css          = Css("target-tile-editor")
   val TargetTileObsDuration: Css     = Css("target-tile-obs-duration")
+  val TargetObsDefaultDuration: Css  = Css("target-tile-obs-default-duration")
+  val TargetTileObsUTC: Css          = Css("target-tile-obs-utc")
   val AddTargetButton: Css           = Css("add-target-button")
   val TargetSourceProfileEditor: Css = Css("target-source-profile-editor")
   val WithGaussian: Css              = Css("with-gaussian")

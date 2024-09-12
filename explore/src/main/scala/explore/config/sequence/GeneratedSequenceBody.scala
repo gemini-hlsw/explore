@@ -20,6 +20,7 @@ import explore.model.Execution
 import explore.model.Observation
 import explore.model.reusability.given
 import explore.syntax.ui.*
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObserveClass
@@ -34,7 +35,6 @@ import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
-import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
@@ -157,9 +157,6 @@ object GeneratedSequenceTitle:
       .render: props =>
         props.obsExecution.orSpinner { execution =>
           val programTimeCharge = execution.programTimeCharge.value
-
-          def timeDisplay(name: String, time: TimeSpan) =
-            <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, ": "), TimeSpanView(time))
 
           val executed = timeDisplay("Executed", programTimeCharge)
 
