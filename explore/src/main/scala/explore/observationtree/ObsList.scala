@@ -56,22 +56,36 @@ import scala.scalajs.js
 import ObsQueries.*
 import explore.components.ActionButtons
 import explore.components.ToolbarTooltipOptions
+import explore.model.ObsIdSet
 
 case class ObsList(
-  observations:      UndoSetter[ObservationList],
-  obsExecutionTimes: ObservationExecutionMap,
-  undoer:            Undoer,
-  programId:         Program.Id,
-  focusedObs:        Option[Observation.Id],
-  focusedTarget:     Option[Target.Id],
-  focusedGroup:      Option[Group.Id],
-  setSummaryPanel:   Callback,
-  groups:            UndoSetter[GroupTree],
-  expandedGroups:    View[Set[Group.Id]],
-  deckShown:         View[DeckShown],
-  copyCallback:      Callback,
-  readonly:          Boolean
-) extends ReactFnProps(ObsList.component)
+  observations:         UndoSetter[ObservationList],
+  obsExecutionTimes:    ObservationExecutionMap,
+  undoer:               Undoer,
+  programId:            Program.Id,
+  focusedObs:           Option[Observation.Id],
+  focusedTarget:        Option[Target.Id],
+  focusedGroup:         Option[Group.Id],
+  setSummaryPanel:      Callback,
+  groups:               UndoSetter[GroupTree],
+  expandedGroups:       View[Set[Group.Id]],
+  deckShown:            View[DeckShown],
+  copyCallback:         Callback,
+  pasteCallback:        Callback,
+  clipboardObsContents: Option[ObsIdSet],
+  readonly:             Boolean
+) extends ReactFnProps(ObsList.component):
+  private val copyDisabled: Boolean = focusedObs.isEmpty
+
+  private val pasteDisabled: Boolean = clipboardObsContents.isEmpty
+
+  private val selectedText: Option[String] = focusedObs.map(obsId => s"observation $obsId")
+
+  private val clipboardText: Option[String] =
+    clipboardObsContents.map: obdIdSet =>
+      obdIdSet.idSet.size match
+        case 1    => s"observation ${obdIdSet.idSet.head}"
+        case more => s"$more observations"
 
 object ObsList:
   private type Props = ObsList
@@ -366,10 +380,14 @@ object ObsList:
                     ActionButtons(
                       ActionButtons.ButtonProps(
                         props.copyCallback,
-                        disabled = props.focusedObs.isEmpty,
-                        tooltipExtra = props.focusedObs.map(obsId => s"observation $obsId")
+                        disabled = props.copyDisabled,
+                        tooltipExtra = props.selectedText
                       ),
-                      ActionButtons.ButtonProps(Callback.log("Paste")),
+                      ActionButtons.ButtonProps(
+                        props.pasteCallback,
+                        disabled = props.pasteDisabled,
+                        tooltipExtra = props.clipboardText
+                      ),
                       ActionButtons.ButtonProps(Callback.log("Delete"))
                     )
                   )

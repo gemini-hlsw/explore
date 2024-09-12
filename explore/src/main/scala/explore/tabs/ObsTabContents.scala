@@ -76,15 +76,18 @@ case class ObsTabContents(
   expandedGroups:   View[Set[Group.Id]],
   readonly:         Boolean
 ) extends ReactFnProps(ObsTabContents.component):
-  private val focusedObs: Option[Observation.Id]        = focused.obsSet.map(_.head)
-  private val focusedTarget: Option[Target.Id]          = focused.target
-  private val focusedGroup: Option[Group.Id]            = focused.group
-  private val observations: UndoSetter[ObservationList] =
+  private val focusedObs: Option[Observation.Id]                           = focused.obsSet.map(_.head)
+  private val focusedTarget: Option[Target.Id]                             = focused.target
+  private val focusedGroup: Option[Group.Id]                               = focused.group
+  private val observations: UndoSetter[ObservationList]                    =
     programSummaries.zoom(ProgramSummaries.observations)
-  private val obsExecutions: ObservationExecutionMap    = programSummaries.get.obsExecutionPots
-  private val groupTimeRanges: GroupTimeRangeMap        = programSummaries.get.groupTimeRangePots
-  private val groups: UndoSetter[GroupTree]             = programSummaries.zoom(ProgramSummaries.groups)
-  private val targets: UndoSetter[TargetList]           = programSummaries.zoom(ProgramSummaries.targets)
+  private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
+  private val groupTimeRanges: GroupTimeRangeMap                           = programSummaries.get.groupTimeRangePots
+  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
+  private val targets: UndoSetter[TargetList]                              = programSummaries.zoom(ProgramSummaries.targets)
+  private val observationIds: List[Observation.Id]                         = observations.get.values.map(_.id).toList
+  private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
+    observationIds.zipWithIndex.map((id, idx) => id -> NonNegInt.unsafeFrom(idx))
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -103,76 +106,83 @@ object ObsTabContents extends TwoPanels:
           }
       // Measure its size
       .useResizeDetector()
-      .useCallbackWithDepsBy((props, _, _, _) => props.focusedObs): (_, ctx, _, _) =>
-        obs =>
-          import ctx.given
+      .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
+      .useEffectOnMountBy: (_, ctx, _, _, shadowClipboardObs) => // initialize shadowClipboard
+        import ctx.given
+        ExploreClipboard.get.flatMap:
+          _ match
+            case LocalClipboard.CopiedObservations(idSet) =>
+              shadowClipboardObs.setStateAsync(idSet.some)
+            case _                                        => IO.unit
+      .useCallbackWithDepsBy((props, _, _, _, _) => props.focusedObs): // COPY Action Callback
+        (_, ctx, _, _, shadowClipboardObs) =>
+          obs =>
+            import ctx.given
 
-          obs
-            .map: id =>
-              ExploreClipboard
-                .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id)))
-                .withToast(s"Copied obs $id")
-            .orUnit
-            .runAsync
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, _, copyCallback) =>
-        (copyCallback,
-         props.focusedObs,
-         props.programSummaries.get.observations.values
-           .map(_.id)
-           .zipWithIndex
-           .toList
-           .map((id, idx) => id -> NonNegInt.unsafeFrom(idx)),
-         props.readonly
-        )
-      ): (props, ctx, _, _, _) =>
-        (copyCallback, obs, observationIds, readonly) =>
-          import ctx.given
+            obs
+              .map: id =>
+                (ExploreClipboard
+                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id))) >>
+                  shadowClipboardObs.setStateAsync(ObsIdSet.one(id).some))
+                  .withToast(s"Copied obs $id")
+              .orUnit
+              .runAsync
+      .useCallbackWithDepsBy((props, _, _, _, _, _) => (props.observationIds, props.readonly)): // PASTE Action Callback
+        (props, ctx, _, _, _, _) =>
+          (observationIds, readonly) =>
+            import ctx.given
 
-          val obsPos = observationIds.find(a => obs.forall(_ === a._1)).map(_._2)
+            ExploreClipboard.get
+              .flatMap:
+                case LocalClipboard.CopiedObservations(idSet) =>
+                  idSet.idSet.toList
+                    .traverse(oid =>
+                      cloneObs(
+                        props.programId,
+                        oid,
+                        NonNegInt.unsafeFrom(observationIds.length),
+                        props.observations,
+                        ctx
+                      )
+                    )
+                    .void
+                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
+                case _                                        => IO.unit
+              .runAsync
+              .unless_(readonly)
+      .useGlobalHotkeysWithDepsBy((props, _, _, _, _, copyCallback, pasteCallback) =>
+        (copyCallback, pasteCallback, props.focusedObs, props.observationIdsWithIndices)
+      ): (props, ctx, _, _, _, _, _) =>
+        (copyCallback, pasteCallback, obs, obsIdsWithIndices) =>
+          val obsPos: Option[NonNegInt] =
+            obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
 
           def callbacks: ShortcutCallbacks = {
             case CopyAlt1 | CopyAlt2 => copyCallback
 
-            case PasteAlt1 | PasteAlt2 =>
-              ExploreClipboard.get
-                .flatMap:
-                  case LocalClipboard.CopiedObservations(idSet) =>
-                    idSet.idSet.toList
-                      .traverse(oid =>
-                        cloneObs(
-                          props.programId,
-                          oid,
-                          NonNegInt.unsafeFrom(observationIds.length),
-                          props.observations,
-                          ctx
-                        )
-                      )
-                      .void
-                      .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-                  case _                                        => IO.unit
-                .runAsync
-                .unless_(readonly)
+            case PasteAlt1 | PasteAlt2 => pasteCallback
 
             case Down =>
               obsPos
-                .filter(_.value < observationIds.length)
+                .filter(_.value < obsIdsWithIndices.length)
                 .flatMap: p =>
                   val next = if (props.focusedObs.isEmpty) 0 else p.value + 1
-                  observationIds.lift(next).map { (obsId, _) =>
-                    ctx.setPageVia(
-                      AppTab.Observations,
-                      props.programId,
-                      Focused.singleObs(obsId),
-                      SetRouteVia.HistoryPush
-                    )
-                  }
+                  obsIdsWithIndices
+                    .lift(next)
+                    .map: (obsId, _) =>
+                      ctx.setPageVia(
+                        AppTab.Observations,
+                        props.programId,
+                        Focused.singleObs(obsId),
+                        SetRouteVia.HistoryPush
+                      )
                 .getOrEmpty
 
             case Up =>
               obsPos
                 .filter(_.value > 0)
                 .flatMap: p =>
-                  observationIds
+                  obsIdsWithIndices
                     .lift(p.value - 1)
                     .map: (obsId, _) =>
                       ctx.setPageVia(
@@ -196,112 +206,124 @@ object ObsTabContents extends TwoPanels:
             callbacks
           )
       .useStateView(DeckShown.Shown)
-      .render: (props, ctx, twoPanelState, resize, copyCallback, deckShown) =>
-
-        val observationsTree: VdomNode =
-          if (deckShown.get === DeckShown.Shown) {
-            ObsList(
-              props.observations,
-              props.obsExecutions,
-              props.programSummaries,
-              props.programId,
-              props.focusedObs,
-              props.focusedTarget,
-              props.focusedGroup,
-              twoPanelState.set(SelectedPanel.Summary),
-              props.groups,
-              props.expandedGroups,
-              deckShown,
-              copyCallback,
-              props.readonly
-            )
-          } else
-            <.div(ExploreStyles.TreeToolbar)(
-              Button(
-                severity = Button.Severity.Secondary,
-                outlined = true,
-                disabled = false,
-                tooltip = "Show Observation Tree",
-                tooltipOptions = ToolbarTooltipOptions.Default,
-                icon = Icons.ArrowRightFromLine,
-                clazz = ExploreStyles.ObsTreeHideShow,
-                onClick = deckShown.mod(_.flip)
-              ).mini.compact
-            )
-
-        val backButton: VdomNode =
-          makeBackButton(props.programId, AppTab.Observations, twoPanelState, ctx)
-
-        val observationTable: VdomNode =
-          Tile(
-            "observations".refined,
-            "Observations Summary",
-            ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
-            backButton.some
-          )(
-            ObsSummaryTable(
-              props.vault.userId,
-              props.programId,
-              props.observations,
-              props.obsExecutions,
-              props.targets.get,
-              _
-            ),
-            (s, _) => ColumnSelectorInTitle(ObsSummaryTable.columnNames, s)
-            // TODO: asterism elevation view
-          )
-
-        def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
-          val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
-
-          props.observations.model
-            .zoom(indexValue)
-            .mapValue(obsView =>
-              ObsTabTiles(
-                props.vault,
-                props.programId,
-                props.modes,
-                backButton,
-                // FIXME Find a better mechanism for this.
-                // Something like .mapValue but for UndoContext
-                props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
-                props.programSummaries
-                  .zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip),
-                props.programSummaries.model.zoom(ProgramSummaries.obsAttachments),
-                props.programSummaries.get,
-                props.focusedTarget,
-                props.searching,
-                ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
-                props.userPreferences.get.observationsTabLayout,
-                resize,
-                props.userPreferences.zoom(UserPreferences.globalPreferences),
-                props.readonly
-              ).withKey(s"${obsId.show}")
-            )
-
-        def groupTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
-          ObsGroupTiles(
-            props.vault.userId,
-            groupId,
-            props.groups,
-            props.groupTimeRanges.getPot(groupId),
-            resize,
-            ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
-            props.userPreferences.get.groupEditLayout,
-            backButton
-          )
-
-        def rightSide(resize: UseResizeDetectorReturn): VdomNode =
-          (props.focusedObs, props.focusedGroup) match
-            case (Some(obsId), _)   => obsTiles(obsId, resize)
-            case (_, Some(groupId)) => groupTiles(groupId, resize)
-            case _                  => observationTable
-
-        makeOneOrTwoPanels(
+      .render:
+        (
+          props,
+          ctx,
           twoPanelState,
-          observationsTree,
-          rightSide,
-          RightSideCardinality.Multi,
           resize,
-          ExploreStyles.ObsHiddenToolbar.when_(deckShown.get === DeckShown.Hidden)
-        )
+          shadowClipboardObs,
+          copyCallback,
+          pasteCallback,
+          deckShown
+        ) =>
+
+          val observationsTree: VdomNode =
+            if (deckShown.get === DeckShown.Shown) {
+              ObsList(
+                props.observations,
+                props.obsExecutions,
+                props.programSummaries,
+                props.programId,
+                props.focusedObs,
+                props.focusedTarget,
+                props.focusedGroup,
+                twoPanelState.set(SelectedPanel.Summary),
+                props.groups,
+                props.expandedGroups,
+                deckShown,
+                copyCallback,
+                pasteCallback,
+                shadowClipboardObs.value,
+                props.readonly
+              )
+            } else
+              <.div(ExploreStyles.TreeToolbar)(
+                Button(
+                  severity = Button.Severity.Secondary,
+                  outlined = true,
+                  disabled = false,
+                  tooltip = "Show Observation Tree",
+                  tooltipOptions = ToolbarTooltipOptions.Default,
+                  icon = Icons.ArrowRightFromLine,
+                  clazz = ExploreStyles.ObsTreeHideShow,
+                  onClick = deckShown.mod(_.flip)
+                ).mini.compact
+              )
+
+          val backButton: VdomNode =
+            makeBackButton(props.programId, AppTab.Observations, twoPanelState, ctx)
+
+          val observationTable: VdomNode =
+            Tile(
+              "observations".refined,
+              "Observations Summary",
+              ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
+              backButton.some
+            )(
+              ObsSummaryTable(
+                props.vault.userId,
+                props.programId,
+                props.observations,
+                props.obsExecutions,
+                props.targets.get,
+                _
+              ),
+              (s, _) => ColumnSelectorInTitle(ObsSummaryTable.columnNames, s)
+              // TODO: asterism elevation view
+            )
+
+          def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
+            val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
+
+            props.observations.model
+              .zoom(indexValue)
+              .mapValue(obsView =>
+                ObsTabTiles(
+                  props.vault,
+                  props.programId,
+                  props.modes,
+                  backButton,
+                  // FIXME Find a better mechanism for this.
+                  // Something like .mapValue but for UndoContext
+                  props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+                  props.programSummaries
+                    .zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip),
+                  props.programSummaries.model.zoom(ProgramSummaries.obsAttachments),
+                  props.programSummaries.get,
+                  props.focusedTarget,
+                  props.searching,
+                  ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
+                  props.userPreferences.get.observationsTabLayout,
+                  resize,
+                  props.userPreferences.zoom(UserPreferences.globalPreferences),
+                  props.readonly
+                ).withKey(s"${obsId.show}")
+              )
+
+          def groupTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
+            ObsGroupTiles(
+              props.vault.userId,
+              groupId,
+              props.groups,
+              props.groupTimeRanges.getPot(groupId),
+              resize,
+              ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
+              props.userPreferences.get.groupEditLayout,
+              backButton
+            )
+
+          def rightSide(resize: UseResizeDetectorReturn): VdomNode =
+            (props.focusedObs, props.focusedGroup) match
+              case (Some(obsId), _)   => obsTiles(obsId, resize)
+              case (_, Some(groupId)) => groupTiles(groupId, resize)
+              case _                  => observationTable
+
+          makeOneOrTwoPanels(
+            twoPanelState,
+            observationsTree,
+            rightSide,
+            RightSideCardinality.Multi,
+            resize,
+            ExploreStyles.ObsHiddenToolbar.when_(deckShown.get === DeckShown.Hidden)
+          )
