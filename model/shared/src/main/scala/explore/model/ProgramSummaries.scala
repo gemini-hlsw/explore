@@ -24,6 +24,8 @@ import monocle.Optional
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.TimingWindow
 
 case class ProgramSummaries(
   optProgramDetails:   Option[ProgramDetails],
@@ -99,14 +101,28 @@ case class ProgramSummaries(
       .map(_.label)
       .orElse(ProgramSummaries.proposalReference.getOption(this).map(_.label))
 
-  def cloneObsWithTargets(
-    originalId: Observation.Id,
-    clonedId:   Observation.Id,
-    targetIds:  List[Target.Id]
+  import cats.instances.all.given
+
+  def getObsClone(
+    originalId:        Observation.Id,
+    clonedId:          Observation.Id,
+    withTargets:       Option[List[Target.Id]] = none,
+    withConstraintSet: Option[ConstraintSet] = none,
+    withTimingWindows: Option[List[TimingWindow]] = none
   ): Option[Observation] =
     observations
       .getValue(originalId)
-      .map(_.copy(id = clonedId, scienceTargetIds = SortedSet.from(targetIds)))
+      .map:
+        Observation.id.replace(clonedId) >>>
+          withTargets
+            .map(tids => Observation.scienceTargetIds.replace(SortedSet.from(tids)))
+            .getOrElse(identity) >>>
+          withConstraintSet
+            .map(cs => Observation.constraints.replace(cs))
+            .getOrElse(identity) >>>
+          withTimingWindows
+            .map(tws => Observation.timingWindows.replace(tws))
+            .getOrElse(identity)
 
   def insertObs(observation: Observation): ProgramSummaries =
     ProgramSummaries.observations.modify(

@@ -31,6 +31,7 @@ import queries.common.ObsQueriesGQL.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.TimingWindow
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, Observation]
@@ -191,21 +192,25 @@ object ObsQueries:
       .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
-    obsId:     Observation.Id,
-    targetIds: List[Target.Id]
+    obsId:           Observation.Id,
+    onTargets:       Option[List[Target.Id]] = none,
+    onConstraintSet: Option[ConstraintSet] = none,
+    onTimingWindows: Option[List[TimingWindow]] = none
   )(using
     FetchClient[F, ObservationDB]
   ): F[Observation] =
     CloneObservationMutation[F]
-      .execute(
+      .execute:
         CloneObservationInput(
           observationId = obsId.assign,
           SET = ObservationPropertiesInput(
-            targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign,
-            obsAttachments = List.empty.assign
+            targetEnvironment =
+              onTargets.map(tids => TargetEnvironmentInput(asterism = tids.assign)).orIgnore,
+            constraintSet = onConstraintSet.map(_.toInput).orIgnore,
+            timingWindows = onTimingWindows.map(_.map(_.toInput)).orIgnore,
+            obsAttachments = List.empty.assign // Always clean observation attachments
           ).assign
         )
-      )
       .map(_.cloneObservation.newObservation)
 
   def deleteObservation[F[_]: Async](

@@ -79,6 +79,9 @@ object all:
     def findContainingObsIds(obsIds: ObsIdSet): Option[ConstraintGroup] =
       self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(ConstraintGroup.fromTuple)
 
+    def findWithConstraintSet(constraintSet: ConstraintSet): Option[ConstraintGroup] =
+      self.find { case (_, cs) => cs === constraintSet }.map(ConstraintGroup.fromTuple)
+
   extension (self: SchedulingGroupList)
     @targetName("findContainingObsIdsScheduling")
     def findContainingObsIds(obsIds: ObsIdSet): Option[SchedulingGroup] =
