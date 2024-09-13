@@ -15,6 +15,7 @@ import lucuma.core.math.Declination
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.util.Timestamp
 
 import java.time.Instant
@@ -86,6 +87,9 @@ object all:
     @targetName("findContainingObsIdsScheduling")
     def findContainingObsIds(obsIds: ObsIdSet): Option[SchedulingGroup] =
       self.find { case (ids, _) => obsIds.subsetOf(ids) }.map(SchedulingGroup.fromTuple)
+
+    def findWithSchedulingGroup(schedulingGroup: List[TimingWindow]): Option[SchedulingGroup] =
+      self.find { case (_, sg) => sg === schedulingGroup }.map(SchedulingGroup.fromTuple)
 
   extension [A](list: Iterable[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =

@@ -127,39 +127,38 @@ object ConstraintsTabContents extends TwoPanels:
                   .withToast(s"Copied observation(s) ${obsIdSet.idSet.toList.mkString(", ")}")
               .orUnit
               .runAsync
-      .useCallbackWithDepsBy((props, _, _, _) =>
+      .useCallbackWithDepsBy((props, _, _, _) => // PASTE Action Callback
         (props.observations, props.focusedObsSet, props.readonly)
-      ): // PASTE Action Callback
-        (props, ctx, _, _) =>
-          (observations, selObsSet, readonly) =>
-            import ctx.given
+      ): (props, ctx, _, _) =>
+        (observations, selObsSet, readonly) =>
+          import ctx.given
 
-            ExploreClipboard.get
-              .flatMap:
-                case LocalClipboard.CopiedObservations(copiedObsIdSet) =>
-                  val selectedConstraints: Option[ConstraintSet] =
-                    selObsSet
-                      .flatMap: focusedObsIdSet =>
-                        observations // All focused obs have the same constraints, so we can use head
-                          .getValue(focusedObsIdSet.idSet.head)
-                          .map(_.constraints)
+          ExploreClipboard.get
+            .flatMap:
+              case LocalClipboard.CopiedObservations(copiedObsIdSet) =>
+                val selectedConstraints: Option[ConstraintSet] =
+                  selObsSet
+                    .flatMap: focusedObsIdSet =>
+                      observations // All focused obs have the same constraints, so we can use head
+                        .getValue(focusedObsIdSet.idSet.head)
+                        .map(_.constraints)
 
-                  val obsAndConstraints: List[(Observation.Id, ConstraintSet)] =
-                    selectedConstraints
-                      .map: cs =>
-                        copiedObsIdSet.idSet.toList.map: obsId =>
-                          (obsId, cs)
-                      .orEmpty
+                val obsAndConstraints: List[(Observation.Id, ConstraintSet)] =
+                  selectedConstraints
+                    .map: cs =>
+                      copiedObsIdSet.idSet.toList.map: obsId =>
+                        (obsId, cs)
+                    .orEmpty
 
-                  IO.whenA(obsAndConstraints.nonEmpty):
-                    applyObs(
-                      obsAndConstraints,
-                      props.programSummaries,
-                      props.expandedIds
-                    ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
-                case _                                                 => IO.unit
-              .runAsync
-              .unless_(readonly)
+                IO.whenA(obsAndConstraints.nonEmpty):
+                  applyObs(
+                    obsAndConstraints,
+                    props.programSummaries,
+                    props.expandedIds
+                  ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
+              case _                                                 => IO.unit
+            .runAsync
+            .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, ctx, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback)
       ): (props, ctx, _, _, _) =>
