@@ -845,11 +845,6 @@ thead tr th.sticky-header {
     display: none;
     justify-content: baseline;
   }
-
-  .target-tile-obs-duration {
-    display: flex;
-    align-items: center;
-  }
 }
 
 @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
@@ -870,11 +865,10 @@ thead tr th.sticky-header {
     label:nth-last-child(2) {
       display: inline;
     }
-  }
 
-  .explore-obs-instant-tile-title {
     .target-tile-obs-duration {
       display: flex;
+      align-items: baseline;
     }
   }
 }
