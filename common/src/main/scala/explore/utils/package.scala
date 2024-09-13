@@ -26,6 +26,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.util.NewType
+import lucuma.core.util.TimeSpan
 import lucuma.react.datepicker.*
 import lucuma.react.fa.IconSize
 import lucuma.react.primereact.Button
@@ -34,6 +35,7 @@ import lucuma.react.primereact.MessageItem
 import lucuma.react.primereact.ToastRef
 import lucuma.ui.LucumaIcons
 import lucuma.ui.LucumaStyles
+import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
@@ -304,3 +306,6 @@ def keyedSwitchEvalMap[F[_]: Concurrent, I, O, K](
         go(in.noneTerminate.either(out.stream), Map.empty, false, out.send(_).void).stream
           .onFinalize(out.close.void)
 }
+
+def timeDisplay(name: String, time: TimeSpan, sep: String = ": ") =
+  <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep), TimeSpanView(time))
