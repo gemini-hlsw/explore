@@ -12,11 +12,11 @@ import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import explore.undo.*
+import lucuma.core.model.ConstraintSet
 import lucuma.schemas.ObservationDB
 import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
-import lucuma.core.model.ConstraintSet
 
 object ObservationPasteIntoConstraintSetAction:
   private def obsListGetter(

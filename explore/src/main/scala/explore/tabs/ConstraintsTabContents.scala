@@ -5,11 +5,13 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
+import explore.actions.ObservationPasteIntoConstraintSetAction
 import explore.common.TimingWindowsQueries
 import explore.components.ColumnSelectorInTitle
 import explore.components.ColumnSelectorState
@@ -33,7 +35,9 @@ import explore.observationtree.ConstraintGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.timingwindows.TimingWindowsTile
+import explore.timingwindows.TimingWindowsTileState
 import explore.undo.*
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -48,20 +52,14 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
-import lucuma.ui.reusability.given
+import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import explore.utils.*
+import org.typelevel.log4cats.Logger
+import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import lucuma.schemas.ObservationDB
-import clue.FetchClient
-import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries
-import explore.actions.ObservationPasteIntoConstraintSetAction
-import eu.timepit.refined.types.numeric.NonNegInt
-import explore.timingwindows.TimingWindowsTileState
 
 case class ConstraintsTabContents(
   userId:           Option[User.Id],
@@ -72,11 +70,8 @@ case class ConstraintsTabContents(
   expandedIds:      View[SortedSet[ObsIdSet]],
   readonly:         Boolean
 ) extends ReactFnProps(ConstraintsTabContents.component):
-  private val observations: UndoSetter[ObservationList] =
-    programSummaries.zoom(ProgramSummaries.observations)
-
-  private val observationIds: List[Observation.Id] =
-    observations.get.values.map(_.id).toList
+  private val observations: ObservationList =
+    programSummaries.zoom(ProgramSummaries.observations).get
 
 object ConstraintsTabContents extends TwoPanels:
   private type Props = ConstraintsTabContents
@@ -133,51 +128,54 @@ object ConstraintsTabContents extends TwoPanels:
               .orUnit
               .runAsync
       .useCallbackWithDepsBy((props, _, _, _) =>
-        (props.programSummaries.get.constraintGroups, props.focusedObsSet, props.readonly)
+        (props.observations, props.focusedObsSet, props.readonly)
       ): // PASTE Action Callback
         (props, ctx, _, _) =>
-          (constraintGroups, selObsSet, readonly) =>
+          (observations, selObsSet, readonly) =>
             import ctx.given
 
             ExploreClipboard.get
               .flatMap:
-                // case LocalClipboard.CopiedObservations(idSet) =>
-                //   val obsAndConstraints: List[(Observation.Id, ConstraintSet)] =
-                //     props.focusedObsSet
-                //       // This with some targets on the tree selected
-                //       .map(i => idSet.idSet.toList.map((_, constraintGroups.get(i))))
-                //       // These are targets on the table
-                //       .getOrElse:
-                //         for
-                //           tid <- selTargetIds
-                //           oid <- id.idSet.toList
-                //         yield (oid, List(tid))
+                case LocalClipboard.CopiedObservations(copiedObsIdSet) =>
+                  val selectedConstraints: Option[ConstraintSet] =
+                    selObsSet
+                      .flatMap: focusedObsIdSet =>
+                        observations // All focused obs have the same constraints, so we can use head
+                          .getValue(focusedObsIdSet.idSet.head)
+                          .map(_.constraints)
 
-                //   if (obsAndTargets.nonEmpty)
-                //     // Apply the obs to selected targets on the tree
-                //     applyObs(
-                //       obsAndTargets,
-                //       props.programSummaries,
-                //       props.expandedIds
-                //     ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
-                //   else IO.unit
-                case _ => IO.unit
+                  val obsAndConstraints: List[(Observation.Id, ConstraintSet)] =
+                    selectedConstraints
+                      .map: cs =>
+                        copiedObsIdSet.idSet.toList.map: obsId =>
+                          (obsId, cs)
+                      .orEmpty
+
+                  IO.whenA(obsAndConstraints.nonEmpty):
+                    applyObs(
+                      obsAndConstraints,
+                      props.programSummaries,
+                      props.expandedIds
+                    ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
+                case _                                                 => IO.unit
               .runAsync
               .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, ctx, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback)
       ): (props, ctx, _, _, _) =>
         (copyCallback, pasteCallback) =>
-          def callbacks: ShortcutCallbacks = { case GoToSummary =>
-            ctx.setPageVia(
-              AppTab.Constraints,
-              props.programId,
-              Focused.None,
-              SetRouteVia.HistoryPush
-            )
-          }
+          def callbacks: ShortcutCallbacks =
+            case CopyAlt1 | CopyAlt2   => copyCallback
+            case PasteAlt1 | PasteAlt2 => pasteCallback
+            case GoToSummary           =>
+              ctx.setPageVia(
+                AppTab.Constraints,
+                props.programId,
+                Focused.None,
+                SetRouteVia.HistoryPush
+              )
 
-          UseHotkeysProps(List(GoToSummary).toHotKeys, callbacks)
+          UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
       .useEffectWithDepsBy((props, _, _, _, _, state) => (props.focusedObsSet, state.reuseByValue)):
         (_, _, _, _, _, _) =>
@@ -187,7 +185,7 @@ object ConstraintsTabContents extends TwoPanels:
               case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
               case _                            => Callback.empty
       .useResizeDetector() // Measure its size
-      .render: (props, ctx, _, _, _, state, resize) =>
+      .render: (props, ctx, shadowClipboardObs, copyCallback, pasteCallback, state, resize) =>
         import ctx.given
 
         def findConstraintGroup(
@@ -290,6 +288,9 @@ object ConstraintsTabContents extends TwoPanels:
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
             props.expandedIds,
+            copyCallback,
+            pasteCallback,
+            shadowClipboardObs.value,
             props.readonly
           )
 

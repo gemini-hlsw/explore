@@ -6,11 +6,13 @@ package explore.tabs
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
+import explore.actions.ObservationPasteIntoAsterismAction
 import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
@@ -30,7 +32,6 @@ import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.targets.DeletingTargets
-import explore.actions.ObservationPasteIntoAsterismAction
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -54,19 +55,18 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
+import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.*
 import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import clue.FetchClient
-import lucuma.schemas.ObservationDB
-import org.typelevel.log4cats.Logger
 
 case class TargetTabContents(
   programId:        Program.Id,

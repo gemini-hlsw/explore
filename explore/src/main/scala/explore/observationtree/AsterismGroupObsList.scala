@@ -3,13 +3,13 @@
 
 package explore.observationtree
 
-import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
+import explore.actions.ObservationInsertAction
 import explore.common.TargetQueries
 import explore.components.ActionButtons
 import explore.components.ToolbarTooltipOptions
@@ -31,7 +31,6 @@ import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
-import explore.actions.ObservationInsertAction
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
 import explore.utils.*
@@ -89,7 +88,7 @@ case class AsterismGroupObsList(
   private def targetsText(targets: SortedSet[Target.Id]): String =
     targets.size match
       case 1    => s"target ${targets.head}"
-      case more => s"$more targets"
+      case more => s"asterism with $more targets"
 
   private def observationsText(observations: ObsIdSet): String =
     observations.idSet.size match
@@ -105,15 +104,13 @@ case class AsterismGroupObsList(
       case LocalClipboard.CopiedTargets(targets)           => targetsText(targets.idSet.toSortedSet).some
       case LocalClipboard.CopiedObservations(observations) => observationsText(observations).some
 
-  private val selectedDisabled: Boolean =
+  private val copyDisabled: Boolean =
     selectedIdsOpt.isEmpty
 
   private val pasteDisabled: Boolean =
     readonly ||
       clipboardContent.isEmpty ||
       clipboardContent.isTargets && selectedIdsOpt.forall(_.isLeft)
-    // ||
-    // clipboardContent.isObservations && selectedIdsOpt.forall(_.isRight)
 
   private val pasteIntoText: Option[String] =
     selectedIdsOpt.flatMap:
@@ -520,7 +517,7 @@ object AsterismGroupObsList:
             ActionButtons(
               ActionButtons.ButtonProps(
                 props.copyCallback,
-                disabled = props.selectedDisabled,
+                disabled = props.copyDisabled,
                 tooltipExtra = props.selectedText
               ),
               ActionButtons.ButtonProps(

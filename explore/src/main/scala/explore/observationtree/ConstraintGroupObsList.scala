@@ -9,6 +9,7 @@ import clue.FetchClient
 import crystal.react.View
 import explore.Icons
 import explore.common.ConstraintsQueries
+import explore.components.ActionButtons
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
 import explore.data.KeyedIndexedList
@@ -54,9 +55,35 @@ case class ConstraintGroupObsList(
   focusedObsSet:           Option[ObsIdSet],
   setSummaryPanel:         Callback,
   expandedIds:             View[SortedSet[ObsIdSet]],
+  copyCallback:            Callback,
+  pasteCallback:           Callback,
+  clipboardObsContents:    Option[ObsIdSet],
   readonly:                Boolean
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
-    with ViewCommon
+    with ViewCommon:
+  private val copyDisabled: Boolean  = focusedObsSet.isEmpty
+  private val pasteDisabled: Boolean = clipboardObsContents.isEmpty
+  private val deleteDisabled: Boolean =
+    // For now, we only allow deleting when just one obs is selected
+    !focusedObsSet.exists(_.size === 1)
+
+  private def observationsText(observations: ObsIdSet): String =
+    observations.idSet.size match
+      case 1    => s"observation ${observations.idSet.head}"
+      case more => s"$more observations"
+  private def constraintSetText(cs: ConstraintSet): String = s"constraints '${cs.shortName}'"
+
+  private val selectedText: Option[String]  = focusedObsSet.map(observationsText)
+  private val clipboardText: Option[String] = clipboardObsContents.map(observationsText)
+  private val pasteIntoText: Option[String] =
+    focusedObsSet.flatMap: obsIdSet =>
+      observations.get
+        .getValue(obsIdSet.head) // All focused obs have the same constraints, so we can use head
+        .map(obs => constraintSetText(obs.constraints))
+  private val pasteText: Option[String]     =
+    Option
+      .unless(pasteDisabled)((clipboardText, pasteIntoText).mapN((c, s) => s"$c into $s"))
+      .flatten
 
 object ConstraintGroupObsList:
   private type Props = ConstraintGroupObsList
@@ -211,6 +238,22 @@ object ConstraintGroupObsList:
           } else Callback.empty // Not in the same group
         }
 
+      val deleteObs: Observation.Id => Callback = obsId =>
+        props.constraintGroups.keys
+          .find(_.contains(obsId))
+          .foldMap: obsIds =>
+            props.undoableDeleteObs(
+              obsId,
+              props.observations,
+              o => setObsSet(obsIds.add(o).some), {
+                // After deletion keep expanded group
+                val newObsIds = obsIds - obsId
+                val expansion =
+                  newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
+                expansion *> setObsSet(newObsIds)
+              }
+            )
+
       def renderGroup(obsIds: ObsIdSet, constraintSet: ConstraintSet): VdomNode = {
         val cgObs         = obsIds.toList.map(id => props.observations.get.getValue(id)).flatten
         // if this group or something in it is selected
@@ -227,9 +270,10 @@ object ConstraintGroupObsList:
           )
           .withFixedWidth()
 
-        Droppable(ObsIdSet.fromString.reverseGet(obsIds),
-                  renderClone = renderClone,
-                  isDropDisabled = props.readonly
+        Droppable(
+          ObsIdSet.fromString.reverseGet(obsIds),
+          renderClone = renderClone,
+          isDropDisabled = props.readonly
         ) { case (provided, snapshot) =>
           val csHeader = <.span(ExploreStyles.ObsTreeGroupHeader)(
             icon,
@@ -255,19 +299,6 @@ object ConstraintGroupObsList:
               csHeader,
               TagMod.when(props.expandedIds.get.contains(obsIds))(
                 cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                  val delete =
-                    props.undoableDeleteObs(
-                      obs.id,
-                      props.observations,
-                      o => setObsSet(obsIds.add(o).some), {
-                        // After deletion keep expanded group
-                        val newObsIds = obsIds - obs.id
-                        val expansion =
-                          newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
-                        expansion *> setObsSet(newObsIds)
-                      }
-                    )
-
                   props.renderObsBadgeItem(
                     ObsBadge.Layout.ConstraintsTab,
                     selectable = true,
@@ -275,7 +306,7 @@ object ConstraintGroupObsList:
                     forceHighlight = isObsSelected(obs.id),
                     linkToObsTab = false,
                     onSelect = setObs,
-                    onDelete = delete,
+                    onDelete = deleteObs(obs.id),
                     onCtrlClick = id => handleCtrlClick(id, obsIds),
                     ctx = ctx
                   )(obs, idx)
@@ -294,7 +325,26 @@ object ConstraintGroupObsList:
           (dragging.setState(false) >> handleDragEnd(result, provided)).unless_(props.readonly)
       )(
         <.div(ExploreStyles.ObsTreeWrapper)(
-          <.div(ExploreStyles.TreeToolbar)(UndoButtons(props.undoer, size = PlSize.Mini))
+          <.div(ExploreStyles.TreeToolbar)(
+            UndoButtons(props.undoer, size = PlSize.Mini),
+            ActionButtons(
+              ActionButtons.ButtonProps(
+                props.copyCallback,
+                disabled = props.copyDisabled,
+                tooltipExtra = props.selectedText
+              ),
+              ActionButtons.ButtonProps(
+                props.pasteCallback,
+                disabled = props.pasteDisabled,
+                tooltipExtra = props.pasteText
+              ),
+              ActionButtons.ButtonProps(
+                props.focusedObsSet.foldMap(obsIdSet => deleteObs(obsIdSet.head)),
+                disabled = props.deleteDisabled,
+                tooltipExtra = props.selectedText
+              )
+            )
+          )
             .unless(props.readonly),
           <.div(
             Button(

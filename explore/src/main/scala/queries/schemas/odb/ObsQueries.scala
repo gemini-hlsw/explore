@@ -21,6 +21,7 @@ import lucuma.core.model.Group
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
@@ -31,7 +32,6 @@ import queries.common.ObsQueriesGQL.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.TimingWindow
 
 object ObsQueries:
   type ObservationList = KeyedIndexedList[Observation.Id, Observation]

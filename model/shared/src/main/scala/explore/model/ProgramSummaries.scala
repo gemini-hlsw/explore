@@ -10,12 +10,14 @@ import cats.implicits.*
 import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
 import lucuma.core.model.Target
+import lucuma.core.model.TimingWindow
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
 import monocle.Focus
@@ -24,8 +26,6 @@ import monocle.Optional
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import lucuma.core.model.ConstraintSet
-import lucuma.core.model.TimingWindow
 
 case class ProgramSummaries(
   optProgramDetails:   Option[ProgramDetails],
