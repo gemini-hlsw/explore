@@ -6,11 +6,13 @@ package explore.tabs
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
+import explore.actions.ObservationPasteIntoAsterismAction
 import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
@@ -30,7 +32,6 @@ import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.targets.DeletingTargets
-import explore.targets.ObservationPasteAction
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -54,11 +55,13 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
+import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.*
 import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
@@ -75,9 +78,12 @@ case class TargetTabContents(
   expandedIds:      View[SortedSet[ObsIdSet]],
   readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
-  val targets: UndoSetter[TargetList]                   = programSummaries.zoom(ProgramSummaries.targets)
+  val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
+
   val obsAndTargets: UndoSetter[ObservationsAndTargets] =
     programSummaries.zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip)
+
+  val observations: ObservationList = obsAndTargets.get._1
 
   val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
@@ -88,45 +94,42 @@ object TargetTabContents extends TwoPanels:
   private def applyObs(
     obsIds:           List[(Observation.Id, List[Target.Id])],
     programSummaries: UndoSetter[ProgramSummaries],
-    ctx:              AppContext[IO],
     expandedIds:      View[SortedSet[ObsIdSet]]
-  ): IO[Unit] =
-    import ctx.given
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
     obsIds
-      .traverse { case (obsId, targetIds) =>
+      .traverse: (obsId, targetIds) =>
         ObsQueries
-          .applyObservation[IO](obsId, targetIds)
-          .map(o => programSummaries.get.cloneObsWithTargets(obsId, o.id, targetIds))
-          .map(_.map(summ => (summ, targetIds)))
-      }
-      .flatMap(olist =>
+          .applyObservation[IO](obsId, onTargets = targetIds.some)
+          .map(o => programSummaries.get.getObsClone(obsId, o.id, withTargets = targetIds.some))
+          .map(_.map(obs => (obs, targetIds)))
+      .flatMap: olist =>
         olist.sequence
-          .foldMap(summList =>
-            val newIds    = summList.map((summ, tid) => (summ.id, tid))
-            val summaries = summList.map(_._1)
-            ObservationPasteAction
-              .paste(newIds, expandedIds)
-              .set(programSummaries)(summaries.some)
+          .foldMap: obsWithTargetList =>
+            val newIds: List[(Observation.Id, List[Target.Id])] =
+              obsWithTargetList.map((obs, tids) => (obs.id, tids))
+
+            val observations: List[Observation] =
+              obsWithTargetList.map(_._1)
+
+            ObservationPasteIntoAsterismAction(newIds, expandedIds.async.mod)
+              .set(programSummaries)(observations.some)
               .toAsync
-          )
-      )
       .void
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // Two panel state
-      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, _) => props.focused) { (_, _, selected) => focused =>
-        (focused, selected.get) match
-          case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
-          case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
-          case (Focused(None, None, _), SelectedPanel.Editor) =>
-            selected.set(SelectedPanel.Summary)
-          case _                                              => Callback.empty
-      }
-      .useStateViewBy((props, _, _) => props.focused.target.toList)
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)     // Two panel state
+      .useEffectWithDepsBy((props, _, _) => props.focused): (_, _, selected) =>
+        focused =>
+          (focused, selected.get) match
+            case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
+            case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
+            case (Focused(None, None, _), SelectedPanel.Editor) =>
+              selected.set(SelectedPanel.Summary)
+            case _                                              => Callback.empty
+      .useStateViewBy((props, _, _) => props.focused.target.toList) // Selected targets on table
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target):
         (_, _, _, selTargetIds) => _.foldMap(focusedTarget => selTargetIds.set(List(focusedTarget)))
       .useMemoBy((props, _, _, selTargetIds) => (props.focused, selTargetIds.get)): // Selected observations (right) or targets (left)
@@ -164,9 +167,9 @@ object TargetTabContents extends TwoPanels:
               .orEmpty
               .runAsync
       .useCallbackWithDepsBy((props, _, _, selTargetIds, _, _, _) => // PASTE Action Callback
-        (props.programSummaries.get.asterismGroups, props.readonly, selTargetIds.get)
+        (selTargetIds.get, props.readonly)
       ): (props, ctx, _, _, _, _, _) =>
-        (asterismGroups, readonly, selTargetIds) =>
+        (selTargetIds, readonly) =>
           import ctx.given
 
           val selectObsIds: ObsIdSet => IO[Unit] =
@@ -174,32 +177,35 @@ object TargetTabContents extends TwoPanels:
 
           ExploreClipboard.get
             .flatMap {
-              case LocalClipboard.CopiedObservations(id) =>
-                val obsAndTargets =
+              case LocalClipboard.CopiedObservations(copiedObsIdSet) =>
+                val obsAndTargets: List[(Observation.Id, List[Target.Id])] =
                   props.focused.obsSet
-                    // This with some targets on the tree selected
-                    .map(i => id.idSet.toList.map((_, asterismGroups.get(i).foldMap(_.toList))))
-                    // These are targets on the table
-                    .getOrElse {
+                    .map: focusedObsIdSet => // This with some targets on the tree selected
+                      copiedObsIdSet.idSet.toList.map: obsId =>
+                        (obsId,
+                         props.observations // All focused obs have the same asterism, so we can use head
+                           .getValue(focusedObsIdSet.idSet.head)
+                           .foldMap(_.scienceTargetIds)
+                           .toList
+                        )
+                    .getOrElse: // These are targets on the table
                       for
                         tid <- selTargetIds
-                        oid <- id.idSet.toList
+                        oid <- copiedObsIdSet.idSet.toList
                       yield (oid, List(tid))
-                    }
 
                 if (obsAndTargets.nonEmpty)
                   // Apply the obs to selected targets on the tree
                   applyObs(
                     obsAndTargets,
                     props.programSummaries,
-                    ctx,
                     props.expandedIds
-                  ).withToast(s"Pasting obs ${id.idSet.toList.mkString(", ")}")
+                  ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
                 else IO.unit
 
               case LocalClipboard.CopiedTargets(tids) =>
                 props.focused.obsSet
-                  .foldMap(obsIds =>
+                  .foldMap: obsIds =>
                     // Only want to paste targets that aren't already in the target asterism or
                     // undo is messed up.
                     // If all the targets are already there, do nothing.
@@ -207,7 +213,7 @@ object TargetTabContents extends TwoPanels:
                       props.programSummaries.get.asterismGroups.findContainingObsIds(obsIds)
                     targetAsterism
                       .flatMap(ag => tids.removeSet(ag.targetIds))
-                      .foldMap(uniqueTids =>
+                      .foldMap: uniqueTids =>
                         TargetPasteAction
                           .pasteTargets(
                             obsIds,
@@ -217,8 +223,6 @@ object TargetTabContents extends TwoPanels:
                           )
                           .set(props.programSummaries)(())
                           .toAsync
-                      )
-                  )
 
               case _ => IO.unit
             }

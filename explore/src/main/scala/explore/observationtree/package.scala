@@ -69,11 +69,10 @@ def cloneObs(
 
   before >>
     cloneObservation[IO](obsId)
-      .flatMap { obs =>
+      .flatMap: obs =>
         obsExistence(obs.id, o => setObs(programId, o.some, ctx))
           .mod(observations)(obsListMod.upsert(obs, pos))
           .toAsync
-      }
       .guarantee(after)
 
 private def obsWithId(

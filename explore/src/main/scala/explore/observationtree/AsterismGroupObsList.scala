@@ -9,6 +9,7 @@ import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
+import explore.actions.ObservationInsertAction
 import explore.common.TargetQueries
 import explore.components.ActionButtons
 import explore.components.ToolbarTooltipOptions
@@ -30,7 +31,6 @@ import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
-import explore.targets.ObservationInsertAction
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
 import explore.utils.*
@@ -85,10 +85,10 @@ case class AsterismGroupObsList(
     .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
     .map(AsterismGroup.fromTuple)
 
-  private def targetsText(targets: TargetIdSet): String =
-    targets.idSet.size match
-      case 1    => s"target ${targets.idSet.head}"
-      case more => s"$more targets"
+  private def targetsText(targets: SortedSet[Target.Id]): String =
+    targets.size match
+      case 1    => s"target ${targets.head}"
+      case more => s"asterism with $more targets"
 
   private def observationsText(observations: ObsIdSet): String =
     observations.idSet.size match
@@ -96,26 +96,35 @@ case class AsterismGroupObsList(
       case more => s"$more observations"
 
   private val selectedText: Option[String] =
-    selectedIdsOpt.map(_.fold(targetsText, observationsText))
+    selectedIdsOpt.map(_.fold(tidSet => targetsText(tidSet.idSet.toSortedSet), observationsText))
 
   private val clipboardText: Option[String] =
     clipboardContent match
       case LocalClipboard.Empty                            => none
-      case LocalClipboard.CopiedTargets(targets)           => targetsText(targets).some
+      case LocalClipboard.CopiedTargets(targets)           => targetsText(targets.idSet.toSortedSet).some
       case LocalClipboard.CopiedObservations(observations) => observationsText(observations).some
 
-  private val selectedDisabled: Boolean =
+  private val copyDisabled: Boolean =
     selectedIdsOpt.isEmpty
 
   private val pasteDisabled: Boolean =
     readonly ||
       clipboardContent.isEmpty ||
-      clipboardContent.isTargets && selectedIdsOpt.forall(_.isLeft) ||
-      clipboardContent.isObservations && selectedIdsOpt.forall(_.isRight)
+      clipboardContent.isTargets && selectedIdsOpt.forall(_.isLeft)
+
+  private val pasteIntoText: Option[String] =
+    selectedIdsOpt.flatMap:
+      _.fold(
+        targets => targetsText(targets.idSet.toSortedSet).some,
+        observations =>
+          props.observations.get // All focused obs have the same asterism, so we can use head
+            .getValue(observations.idSet.head)
+            .map(obs => targetsText(obs.scienceTargetIds))
+      )
 
   private val pasteText: Option[String] =
     Option
-      .unless(pasteDisabled)((clipboardText, selectedText).mapN((c, s) => s"$c into $s"))
+      .unless(pasteDisabled)((clipboardText, pasteIntoText).mapN((c, s) => s"$c into $s"))
       .flatten
 
   private val deleteDisabled: Boolean =
@@ -165,22 +174,22 @@ object AsterismGroupObsList:
   ): (DropResult, ResponderProvided) => Callback = { (result, _) =>
     import ctx.given
 
-    val oData = for {
-      destination <- result.destination.toOption
-      destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
-      draggedIds  <- getDraggedIds(result.draggableId, props)
-      destAstIds  <-
-        props.programSummaries.get.asterismGroups.get(destIds)
-      srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
-    } yield (destIds, destAstIds, draggedIds, srcAg.obsIds)
+    val oData: Option[(ObsIdSet, SortedSet[Target.Id], ObsIdSet, ObsIdSet)] =
+      for
+        destination <- result.destination.toOption
+        destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
+        draggedIds  <- getDraggedIds(result.draggableId, props)
+        destAstIds  <- props.programSummaries.get.asterismGroups.get(destIds)
+        srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
+      yield (destIds, destAstIds, draggedIds, srcAg.obsIds)
 
-    def setObsSet(obsIds: ObsIdSet) =
+    def setObsSet(obsIds: ObsIdSet): Callback =
       // if focused is empty, we're looking at the target summary table and don't want to
       // switch to editing because of drag and drop
       if (props.focused.isEmpty) Callback.empty
       else ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
 
-    oData.foldMap { (destIds, destAstIds, draggedIds, srcIds) =>
+    oData.foldMap: (destIds, destAstIds, draggedIds, srcIds) =>
       if (destIds.intersects(draggedIds)) Callback.empty
       else
         AsterismGroupObsListActions
@@ -193,7 +202,6 @@ object AsterismGroupObsList:
             props.programSummaries.get.targets
           )
           .set(props.undoCtx.zoom(ProgramSummaries.observations))(destAstIds)
-    }
   }
 
   private def insertSiderealTarget(
@@ -204,7 +212,7 @@ object AsterismGroupObsList:
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     TargetQueries
       .insertTarget[IO](programId, EmptySiderealTarget)
-      .flatMap { targetId =>
+      .flatMap: targetId =>
         TargetAddDeleteActions
           .insertTarget(
             targetId,
@@ -214,7 +222,6 @@ object AsterismGroupObsList:
           )
           .set(undoCtx)(EmptySiderealTarget.some)
           .toAsync
-      }
       .switching(adding.async, AddingTargetOrObs(_))
 
   private def insertObs(
@@ -227,7 +234,7 @@ object AsterismGroupObsList:
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     ObsQueries
       .createObservationWithTargets[IO](programId, targetIds)
-      .flatMap { obs =>
+      .flatMap: obs =>
         ObservationInsertAction
           .insert(
             obs.id,
@@ -237,7 +244,6 @@ object AsterismGroupObsList:
           )
           .set(undoCtx)(Observation.scienceTargetIds.replace(targetIds)(obs).some)
           .toAsync
-      }
       .switching(adding.async, AddingTargetOrObs(_))
 
   private val component = ScalaFnComponent
@@ -511,7 +517,7 @@ object AsterismGroupObsList:
             ActionButtons(
               ActionButtons.ButtonProps(
                 props.copyCallback,
-                disabled = props.selectedDisabled,
+                disabled = props.copyDisabled,
                 tooltipExtra = props.selectedText
               ),
               ActionButtons.ButtonProps(
