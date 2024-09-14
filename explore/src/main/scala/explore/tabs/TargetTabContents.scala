@@ -194,14 +194,12 @@ object TargetTabContents extends TwoPanels:
                         oid <- copiedObsIdSet.idSet.toList
                       yield (oid, List(tid))
 
-                if (obsAndTargets.nonEmpty)
-                  // Apply the obs to selected targets on the tree
+                IO.whenA(obsAndTargets.nonEmpty): // Apply the obs to selected targets on the tree
                   applyObs(
                     obsAndTargets,
                     props.programSummaries,
                     props.expandedIds
                   ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
-                else IO.unit
 
               case LocalClipboard.CopiedTargets(tids) =>
                 props.focused.obsSet
