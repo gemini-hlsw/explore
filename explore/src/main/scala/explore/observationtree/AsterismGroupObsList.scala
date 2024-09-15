@@ -88,7 +88,7 @@ case class AsterismGroupObsList(
   private def targetsText(targets: SortedSet[Target.Id]): String =
     targets.size match
       case 1    => s"target ${targets.head}"
-      case more => s"asterism with $more targets"
+      case more => s"$more targets"
 
   private def observationsText(observations: ObsIdSet): String =
     observations.idSet.size match
