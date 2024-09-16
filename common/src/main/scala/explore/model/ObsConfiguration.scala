@@ -28,7 +28,8 @@ case class ObsConfiguration(
   scienceOffsets:     Option[NonEmptyList[Offset]],
   acquisitionOffsets: Option[NonEmptyList[Offset]],
   averagePA:          Option[AveragePABasis],
-  obsDuration:        Option[Duration]
+  obsDuration:        Option[Duration],
+  needGuideStar:      Boolean
 ) derives Eq:
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization
