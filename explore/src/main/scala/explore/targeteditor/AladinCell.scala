@@ -97,10 +97,8 @@ case class AladinCell(
         off <- offsets
       } yield AgsPosition(pa, off)
 
-  def canRunITC: Boolean =
-    obsConf.exists { o =>
-      o.constraints.isDefined && o.configuration.isDefined && o.wavelength.isDefined && positions.isDefined
-    }
+  def durationAvailable: Boolean =
+    obsConf.flatMap(_.obsDuration).isDefined
 
   def modeSelected: Boolean =
     obsConf.exists(_.configuration.isDefined)
@@ -492,7 +490,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                         selectedGuideStar,
                         agsState.get,
                         props.modeSelected,
-                        props.canRunITC,
+                        props.durationAvailable,
                         candidates.value.isDefined
                       )
                     )

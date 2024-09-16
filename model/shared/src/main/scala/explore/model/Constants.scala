@@ -60,9 +60,10 @@ trait Constants:
       .flattenOption
       .mkString(", ") + s", ${seconds}s"
 
+  val Calculating        = "Calculating..."
   val NoGuideStarMessage = "No guidestar available"
+  val NoDuration         = "Not enough parameters to calculate"
   val MissingMode        = "Mode not selected"
-  val MissingITC         = "ITC results not available"
   val MissingCandidates  = "No catalog stars available"
   val BadTimingWindow    = "Review the dates on this timing window."
   val MissingInfoMsg     = "Not enough information to call ITC"
