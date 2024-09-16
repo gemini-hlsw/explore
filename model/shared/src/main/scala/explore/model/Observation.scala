@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.syntax.all.*
 import explore.modes.GmosSpectroscopyOverrides
 import explore.modes.InstrumentOverrides
 import io.circe.Decoder
@@ -78,6 +79,8 @@ case class Observation(
         s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
       case _                                                              =>
         none
+
+  val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
   val toModeOverride: Option[InstrumentOverrides] = observingMode.map {
     case ObservingMode.GmosNorthLongSlit(

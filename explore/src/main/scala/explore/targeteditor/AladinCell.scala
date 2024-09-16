@@ -65,6 +65,9 @@ case class AladinCell(
   fullScreen:        View[AladinFullScreen],
   globalPreferences: View[GlobalPreferences]
 ) extends ReactFnProps(AladinCell.component):
+  val needsAGS: Boolean =
+    obsConf.exists(_.needGuideStar)
+
   val anglesToTest: Option[NonEmptyList[Angle]] =
     for {
       conf          <- obsConf
@@ -244,9 +247,11 @@ object AladinCell extends ModelOptics with AladinCommon:
                               CatalogMessage.GSRequest(baseTracking, vizTime)
                             )
             _          <- gs.setStateAsync(candidates)
-          } yield ()).guarantee(
-            props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
-          )
+          } yield ())
+            .guarantee(
+              props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
+            )
+            .whenA(props.needsAGS)
       }
       // Reference to root
       .useMemo(())(_ => domRoot)
@@ -309,7 +314,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 vizTime,
                 observingMode,
                 candidates
-              ) =>
+              ) if props.needsAGS =>
             import ctx.given
 
             val runAgs = (positions,
@@ -478,7 +483,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val renderAgsOverlay: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>
-              if (props.globalPreferences.get.agsOverlay.isVisible) {
+              if (props.needsAGS && props.globalPreferences.get.agsOverlay.isVisible) {
                 props.obsConf
                   .flatMap(_.agsState)
                   .map(agsState =>

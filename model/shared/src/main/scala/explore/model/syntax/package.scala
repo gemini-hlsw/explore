@@ -9,6 +9,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.*
 import explore.model.enums.PosAngleOptions
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Declination
@@ -125,3 +126,9 @@ object all:
   extension (e: GroupTree.Value) def id: GroupTree.Key = e.bimap(_.id, _.id)
 
   extension (e: NonNegShort) def toNonNegInt: NonNegInt = NonNegInt.unsafeFrom(e.value)
+
+  extension (cr: CalibrationRole)
+    def needsAGS: Boolean = cr match
+      case CalibrationRole.SpectroPhotometric => true
+      case CalibrationRole.Twilight           => false
+      case _                                  => true

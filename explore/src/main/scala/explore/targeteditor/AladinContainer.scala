@@ -287,7 +287,7 @@ object AladinContainer extends AladinCommon {
 
         def includeSvg(v: JsAladin): Callback =
           v.onZoom(onZoom) *> // re render on zoom
-            v.onPositionChanged(u => onPositionChanged(u)) *>
+            v.onPositionChanged(onPositionChanged) *>
             v.onMouseMove(s =>
               props
                 .updateMouseCoordinates(Coordinates(s.ra, s.dec))
