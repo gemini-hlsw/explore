@@ -36,6 +36,7 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.UnlinkUserInput
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
@@ -150,17 +151,16 @@ object ProgramUsersTable:
         enableResizing = true,
         cell = c =>
           c.table.options.meta.map: meta =>
+            val cell: View[ProgramUserWithRole]      = c.row.original
+            val userId: User.Id                      = cell.get.user.id
+            val usersView: View[Option[PartnerLink]] =
+              c.value.withOnMod: pl =>
+                updateProgramPartner[IO](meta.programId, userId, pl).runAsyncAndForget
+            val pl: Option[PartnerLink]              =
+              cell.get.partnerLink.flatMap:
+                case PartnerLink.HasUnspecifiedPartner => None
+                case p                                 => Some(p)
 
-            val cell      = c.row.original
-            val userId    = cell.get.user.id
-            val usersView = c.value.withOnMod(pl =>
-              updateProgramPartner[IO](meta.programId, userId, pl).runAsyncAndForget
-            )
-
-            val pl = cell.get.partnerLink.flatMap {
-              case PartnerLink.HasUnspecifiedPartner => None
-              case p                                 => Some(p)
-            }
             partnerSelector(pl, usersView.set, meta.readOnly || meta.isActive.get.value)
       ),
       column(EmailColumnId, _.get.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
@@ -174,19 +174,19 @@ object ProgramUsersTable:
           val cell   = c.row.original
           val userId = cell.get.user.id
           c.table.options.meta.map: meta =>
-            val view = c.value
-              .withOnMod(es => updateUserES[IO](meta.programId, userId, es).runAsyncAndForget)
+            val view: View[Option[EducationalStatus]] =
+              c.value.withOnMod: es =>
+                updateUserES[IO](meta.programId, userId, es).runAsyncAndForget
 
-            EnumOptionalDropdown[EducationalStatus](
+            EnumDropdownOptionalView(
               id = "es".refined,
-              value = view.get,
+              value = view,
               showClear = true,
               itemTemplate = _.value.shortName,
               valueTemplate = _.value.shortName,
               emptyMessageTemplate = "No Selection",
               disabled = meta.readOnly || meta.isActive.get.value,
-              clazz = ExploreStyles.PartnerSelector,
-              onChange = view.set
+              clazz = ExploreStyles.PartnerSelector
             )
       ),
       ColDef(
