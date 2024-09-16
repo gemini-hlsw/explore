@@ -356,16 +356,16 @@ object ElevationPlotNight:
                             .setTextAlign(AlignValue.center)
                             .setVerticalAlign(VerticalAlignValue.middle)
                         ),
-                      XAxisPlotBandsOptions() // Empty band, just to draw the label
+                      XAxisPlotBandsOptions() // Empty bands don't work on highcharts 11.4.8. Instead we create the same band in revese and no fill
                         .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
-                        .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
+                        .setTo(tbNauticalNight.start.toEpochMilli.toDouble)
                         .setClassName("plot-band-twilight-nautical-end")
                         .setZIndex(1)
                         .setLabel(
                           XAxisPlotBandsLabelOptions()
                             .setText(s"  Morning 12° - Twilight: $dawn")
                             .setRotation(270)
-                            .setAlign(AlignValue.left)
+                            .setAlign(AlignValue.right)
                             .setTextAlign(AlignValue.center)
                             .setVerticalAlign(VerticalAlignValue.middle)
                         )
