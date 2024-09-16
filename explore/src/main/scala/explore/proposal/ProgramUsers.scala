@@ -4,12 +4,10 @@
 package explore.proposal
 
 import cats.data.NonEmptyList
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
 import explore.components.Tile
-import explore.model.AppContext
 import explore.model.CoIInvitation
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalTabTileIds
@@ -79,8 +77,5 @@ object ProgramUsers:
             "Pending invitations",
             ProgramUserInvitations(props.invitations, props.readOnly)
           )
-          .when(
-            props.invitations
-              .when(_.filter(_.status === InvitationStatus.Pending).nonEmpty)
-          )
+          .when(props.invitations.get.filter(_.status === InvitationStatus.Pending).nonEmpty)
       )
