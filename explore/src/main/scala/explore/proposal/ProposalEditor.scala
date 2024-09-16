@@ -31,9 +31,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
-import lucuma.react.resizeDetector.UseResizeDetectorReturn
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
@@ -62,85 +60,6 @@ case class ProposalEditor(
 
 object ProposalEditor:
   private type Props = ProposalEditor
-
-  private def renderFn(
-    props:  Props,
-    resize: UseResizeDetectorReturn,
-    ref:    OverlayPanelRef
-  )(using ctx: AppContext[IO]) = {
-    import ctx.given
-
-    val undoCtx: UndoContext[Proposal] = UndoContext(props.undoStacks, props.proposal)
-
-    val aligner: Aligner[Proposal, ProposalPropertiesInput] =
-      Aligner(
-        undoCtx,
-        UpdateProposalInput(
-          programId = props.programId.assign,
-          SET = ProposalPropertiesInput()
-        ),
-        (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
-      ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
-
-    val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
-
-    val abstractView = abstractAligner.view(_.orUnassign)
-
-    val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
-
-    val detailsTile =
-      Tile(ProposalTabTileIds.DetailsId.id, "Details")(
-        _ =>
-          ProposalDetailsBody(props.proposal,
-                              aligner,
-                              props.timeEstimateRange,
-                              props.cfps,
-                              props.readonly
-          ),
-        (_, s) => ProposalDetailsTitle(undoCtx, s)
-      )
-
-    val usersTile =
-      ProgramUsers.programUsersTile(props.programId,
-                                    props.readonly,
-                                    props.users,
-                                    props.invitations,
-                                    ref
-      )
-
-    val abstractTile =
-      Tile(ProposalTabTileIds.AbstractId.id,
-           "Abstract",
-           bodyClass = ExploreStyles.ProposalAbstract
-      )(_ =>
-        FormInputTextAreaView(
-          id = "abstract".refined,
-          value = abstractView.as(OptionNonEmptyStringIso)
-        )(^.disabled := props.readonly)
-      )
-
-    val attachmentsTile =
-      Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments")(_ =>
-        props.authToken.map(token =>
-          ProposalAttachmentsTable(props.programId, token, props.attachments, props.readonly)
-        )
-      )
-
-    <.div(
-      ExploreStyles.MultiPanelTile,
-      InviteUserPopup(props.programId, props.invitations, ref),
-      TileController(
-        props.optUserId,
-        resize.width.getOrElse(1),
-        defaultLayouts,
-        props.layout,
-        List(detailsTile, usersTile, abstractTile, attachmentsTile),
-        GridLayoutSection.ProposalLayout,
-        storeLayout = true
-      )
-    ).withRef(resize.ref)
-  }
 
   private val component =
     ScalaFnComponent
@@ -175,4 +94,77 @@ object ProposalEditor:
       .useResizeDetector()
       .useOverlayPanelRef
       .render: (props, ctx, resize, overlayRef) =>
-        renderFn(props, resize, overlayRef)(using ctx)
+        import ctx.given
+
+        val undoCtx: UndoContext[Proposal] = UndoContext(props.undoStacks, props.proposal)
+
+        val aligner: Aligner[Proposal, ProposalPropertiesInput] =
+          Aligner(
+            undoCtx,
+            UpdateProposalInput(
+              programId = props.programId.assign,
+              SET = ProposalPropertiesInput()
+            ),
+            (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
+          ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
+
+        val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
+          aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
+
+        val abstractView: View[Option[NonEmptyString]] = abstractAligner.view(_.orUnassign)
+
+        val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
+
+        val detailsTile =
+          Tile(ProposalTabTileIds.DetailsId.id, "Details")(
+            _ =>
+              ProposalDetailsBody(
+                props.proposal,
+                aligner,
+                props.timeEstimateRange,
+                props.cfps,
+                props.readonly
+              ),
+            (_, s) => ProposalDetailsTitle(undoCtx, s)
+          )
+
+        val usersTile =
+          ProgramUsers.programUsersTile(
+            props.programId,
+            props.readonly,
+            props.users,
+            props.invitations,
+            overlayRef
+          )
+
+        val abstractTile =
+          Tile(
+            ProposalTabTileIds.AbstractId.id,
+            "Abstract",
+            bodyClass = ExploreStyles.ProposalAbstract
+          )(_ =>
+            FormInputTextAreaView(
+              id = "abstract".refined,
+              value = abstractView.as(OptionNonEmptyStringIso)
+            )(^.disabled := props.readonly)
+          )
+
+        val attachmentsTile =
+          Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments")(_ =>
+            props.authToken.map(token =>
+              ProposalAttachmentsTable(props.programId, token, props.attachments, props.readonly)
+            )
+          )
+
+        <.div(ExploreStyles.MultiPanelTile)(
+          InviteUserPopup(props.programId, props.invitations, overlayRef),
+          TileController(
+            props.optUserId,
+            resize.width.getOrElse(1),
+            defaultLayouts,
+            props.layout,
+            List(detailsTile, usersTile, abstractTile, attachmentsTile),
+            GridLayoutSection.ProposalLayout,
+            storeLayout = true
+          )
+        ).withRef(resize.ref)

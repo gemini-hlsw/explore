@@ -24,7 +24,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import org.typelevel.log4cats.Logger
 
 enum CreateInviteProcess(private val tag: String) derives Enumerated:
   case Idle    extends CreateInviteProcess("idle")
@@ -62,7 +61,7 @@ object ProgramUsers:
     users:       View[List[ProgramUserWithRole]],
     invitations: View[List[CoIInvitation]],
     ref:         OverlayPanelRef
-  )(using AppContext[IO], Logger[IO]) =
+  ) =
     Tile(
       ProposalTabTileIds.UsersId.id,
       "Investigators",
