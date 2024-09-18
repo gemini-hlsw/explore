@@ -3,13 +3,15 @@
 
 package explore.programs
 
-import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.react.common.ReactFnProps
+import cats.data.NonEmptySet
 import crystal.react.View
 import explore.model.ProgramUserWithRole
+import explore.users.ProgramUsersTable
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import explore.proposal.ProgramUsersTable
+import lucuma.react.common.ReactFnProps
+import lucuma.core.enums.ProgramUserRole
 
 case class SupportUsers(
   programId: Program.Id,
@@ -21,4 +23,9 @@ object SupportUsers:
   private type Props = SupportUsers
 
   private val component = ScalaFnComponent[Props]: props =>
-    ProgramUsersTable(props.programId, props.users, props.readonly)
+    ProgramUsersTable(
+      props.programId,
+      props.users,
+      NonEmptySet.of(ProgramUserRole.SupportPrimary, ProgramUserRole.SupportSecondary),
+      props.readonly
+    )

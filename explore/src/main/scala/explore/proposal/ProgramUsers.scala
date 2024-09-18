@@ -3,14 +3,17 @@
 
 package explore.proposal
 
+import cats.data.NonEmptySet
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
 import explore.components.Tile
-import explore.model.CoIInvitation
 import explore.model.ProgramUserWithRole
 import explore.model.ProposalTabTileIds
+import explore.model.UserInvitation
+import explore.users.ProgramUserInvitations
+import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.InvitationStatus
@@ -22,6 +25,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
+import lucuma.core.enums.ProgramUserRole
 
 enum CreateInviteProcess(private val tag: String) derives Enumerated:
   case Idle    extends CreateInviteProcess("idle")
@@ -36,13 +40,18 @@ case class ProgramUsers(
   pid:         Program.Id,
   readOnly:    Boolean,
   users:       View[List[ProgramUserWithRole]],
-  invitations: View[List[CoIInvitation]],
+  invitations: View[List[UserInvitation]],
   state:       View[ProgramUsersState]
 ) extends ReactFnProps(ProgramUsers.component)
 
 object ProgramUsers:
+  private type Props = ProgramUsers
 
-  def inviteControl(readOnly: Boolean, ref: OverlayPanelRef, state: View[ProgramUsersState]) =
+  private def inviteControl(
+    readOnly: Boolean,
+    ref:      OverlayPanelRef,
+    state:    View[ProgramUsersState]
+  ) =
     Button(
       severity = Button.Severity.Secondary,
       size = Button.Size.Small,
@@ -57,7 +66,7 @@ object ProgramUsers:
     pid:         Program.Id,
     readOnly:    Boolean,
     users:       View[List[ProgramUserWithRole]],
-    invitations: View[List[CoIInvitation]],
+    invitations: View[List[UserInvitation]],
     ref:         OverlayPanelRef
   ) =
     Tile(
@@ -66,12 +75,15 @@ object ProgramUsers:
       ProgramUsersState(CreateInviteProcess.Idle)
     )(ProgramUsers(pid, readOnly, users, invitations, _), (s, _) => inviteControl(readOnly, ref, s))
 
-  private type Props = ProgramUsers
-
   private val component =
     ScalaFnComponent[Props]: props =>
       <.div(
-        ProgramUsersTable(props.pid, props.users, props.readOnly),
+        ProgramUsersTable(
+          props.pid,
+          props.users,
+          NonEmptySet.of(ProgramUserRole.Pi, ProgramUserRole.Coi, ProgramUserRole.CoiRO),
+          props.readOnly
+        ),
         React
           .Fragment(
             "Pending invitations",

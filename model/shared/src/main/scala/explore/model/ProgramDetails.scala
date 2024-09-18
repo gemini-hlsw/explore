@@ -21,7 +21,7 @@ case class ProgramDetails(
   proposalStatus: ProposalStatus,
   pi:             Option[ProgramUserWithRole],
   users:          List[ProgramUserWithRole],
-  invitations:    List[CoIInvitation],
+  invitations:    List[UserInvitation],
   reference:      Option[ProgramReference],
   allocations:    CategoryAllocationList
 ) derives Eq:
@@ -30,7 +30,7 @@ case class ProgramDetails(
 object ProgramDetails:
   val proposal: Lens[ProgramDetails, Option[Proposal]]          = Focus[ProgramDetails](_.proposal)
   val proposalStatus: Lens[ProgramDetails, ProposalStatus]      = Focus[ProgramDetails](_.proposalStatus)
-  val invitations: Lens[ProgramDetails, List[CoIInvitation]]    = Focus[ProgramDetails](_.invitations)
+  val invitations: Lens[ProgramDetails, List[UserInvitation]]   = Focus[ProgramDetails](_.invitations)
   val allUsers: Lens[ProgramDetails, List[ProgramUserWithRole]] =
     Lens[ProgramDetails, List[ProgramUserWithRole]](_.allUsers)(a =>
       b => b.copy(pi = a.headOption, users = a.tail)
@@ -47,7 +47,7 @@ object ProgramDetails:
       ps <- c.get[ProposalStatus]("proposalStatus")
       pi <- c.downField("pi").as[Option[ProgramUserWithRole]]
       us <- c.get[List[ProgramUserWithRole]]("users")
-      in <- c.get[List[CoIInvitation]]("userInvitations")
+      in <- c.get[List[UserInvitation]]("userInvitations")
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]

@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.proposal
+package explore.users
 
 import cats.effect.IO
 import cats.syntax.all.*
@@ -12,8 +12,8 @@ import explore.Icons
 import explore.components.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.CoIInvitation
 import explore.model.IsActive
+import explore.model.UserInvitation
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -29,7 +29,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
 
-case class ProgramUserInvitations(invitations: View[List[CoIInvitation]], readOnly: Boolean)
+case class ProgramUserInvitations(invitations: View[List[UserInvitation]], readOnly: Boolean)
     extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
@@ -37,11 +37,11 @@ object ProgramUserInvitations:
 
   private case class TableMeta(
     isActive:    View[IsActive],
-    invitations: View[List[CoIInvitation]],
+    invitations: View[List[UserInvitation]],
     readOnly:    Boolean
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[CoIInvitation, TableMeta]
+  private val ColDef = ColumnDef.WithTableMeta[UserInvitation, TableMeta]
 
   private val KeyId: ColumnId         = ColumnId("id")
   private val EmailId: ColumnId       = ColumnId("email")
@@ -57,13 +57,13 @@ object ProgramUserInvitations:
 
   private def column[V](
     id:       ColumnId,
-    accessor: CoIInvitation => V
-  ): ColumnDef.Single.WithTableMeta[CoIInvitation, V, TableMeta] =
+    accessor: UserInvitation => V
+  ): ColumnDef.Single.WithTableMeta[UserInvitation, V, TableMeta] =
     ColDef(id, accessor, columnNames(id))
 
   private def columns(
     ctx: AppContext[IO]
-  ): List[ColumnDef.WithTableMeta[CoIInvitation, ?, TableMeta]] =
+  ): List[ColumnDef.WithTableMeta[UserInvitation, ?, TableMeta]] =
     import ctx.given
 
     List(
@@ -73,11 +73,9 @@ object ProgramUserInvitations:
         EmailStatusId,
         _.emailStatus,
         "Email Status",
-        cell = { cell =>
-          cell.value
-            .map(es => <.span(es.tag.toUpperCase).withTooltip(es.description))
-            .getOrElse(<.span())
-        }
+        cell = _.value
+          .map(es => <.span(es.tag.toUpperCase).withTooltip(es.description))
+          .getOrElse(<.span())
       ),
       ColDef(
         RevokeId,

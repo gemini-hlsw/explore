@@ -6,24 +6,25 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
-import explore.model.CoIInvitation
+import explore.model.UserInvitation
 import explore.model.ProgramInvitation
 
 object InvitationQueriesGQL:
   @GraphQL
   trait CreateInviteMutation extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
-      mutation($$programId: ProgramId!, $$recipientEmail: String!) {
+      mutation($$programId: ProgramId!, $$recipientEmail: String!, $$role: ProgramUserRole!) {
         createUserInvitation(input: {
           programId: $$programId,
           recipientEmail: $$recipientEmail,
-          role: COI
+          role: $$role
         }) {
           key
           invitation {
             id
             status
             recipientEmail
+            role
             email {
               status
             }
@@ -34,7 +35,7 @@ object InvitationQueriesGQL:
 
     object Data:
       object CreateUserInvitation:
-        type Invitation = CoIInvitation
+        type Invitation = UserInvitation
 
   @GraphQL
   trait RevokeInvitationMutation extends GraphQLOperation[ObservationDB]:

@@ -5,16 +5,17 @@ package queries.common
 
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
-import explore.model.CoIInvitation
+import explore.model.UserInvitation
 import lucuma.schemas.ObservationDB
 
 @GraphQL
 object ProgramInvitationsSubquery
-    extends GraphQLSubquery.Typed[ObservationDB, CoIInvitation]("CoIInvitation"):
+    extends GraphQLSubquery.Typed[ObservationDB, UserInvitation]("CoIInvitation"):
   override val subquery: String = """
     {
       id
       recipientEmail
+      role
       status
       email {
         status

@@ -118,7 +118,7 @@ object reusability:
   given [D: Eq]: Reusability[Atom[D]]                   = Reusability.byEq
   given Reusability[ExecutionVisits]                    = Reusability.byEq
   given Reusability[ProgramUserWithRole]                = Reusability.byEq
-  given Reusability[CoIInvitation]                      = Reusability.byEq
+  given Reusability[UserInvitation]                     = Reusability.byEq
   given Reusability[IsActive]                           = Reusability.byEq
   given Reusability[PAProperties]                       = Reusability.byEq
   given Reusability[GraphResult]                        = Reusability.byEq

@@ -1,8 +1,9 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.proposal
+package explore.users
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
@@ -42,11 +43,13 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
+import lucuma.core.enums.ProgramUserRole
 
 case class ProgramUsersTable(
-  programId: Program.Id,
-  users:     View[List[ProgramUserWithRole]],
-  readOnly:  Boolean
+  programId:   Program.Id,
+  users:       View[List[ProgramUserWithRole]],
+  filterRoles: NonEmptySet[ProgramUserRole],
+  readOnly:    Boolean
 ) extends ReactFnProps(ProgramUsersTable.component)
 
 object ProgramUsersTable:
@@ -260,7 +263,8 @@ object ProgramUsersTable:
                 severity = Button.Severity.Secondary,
                 disabled = meta.readOnly || meta.isActive.get.value,
                 onClick = unlink
-              ).mini.compact.unless(cell.value.get.role.isEmpty) // don't allow removing the PI
+              ).mini.compact
+                .unless(cell.value.get.role === ProgramUserRole.Pi) // don't allow removing the PI
             )
         ,
         size = 35.toPx
@@ -274,8 +278,8 @@ object ProgramUsersTable:
       .useStateView(IsActive(false))
       .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
         _ => columns(ctx)
-      .useMemoBy((props, _, _, _) => props.users.reuseByValue): (p, _, _, _) => // rows
-        _.toListOfViews
+      .useMemoBy((props, _, _, _) => props.users.reuseByValue): (props, _, _, _) => // rows
+        _.toListOfViews.filter(row => props.filterRoles.contains_(row.get.role))
       .useReactTableBy: (props, _, isActive, cols, rows) =>
         TableOptions(
           cols,

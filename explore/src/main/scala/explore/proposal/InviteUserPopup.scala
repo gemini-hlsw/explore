@@ -15,11 +15,12 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.CoIInvitation
+import explore.model.UserInvitation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.EmailAddress
 import lucuma.core.data.EmailPred
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
@@ -40,12 +41,13 @@ import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
 
 case class InviteUserPopup(
   pid:         Program.Id,
-  invitations: View[List[CoIInvitation]],
+  role:        ProgramUserRole,
+  invitations: View[List[UserInvitation]],
   ref:         OverlayPanelRef
 ) extends ReactFnProps(InviteUserPopup.component)
 
 object InviteUserPopup:
-  val MailValidator: InputValidSplitEpi[EmailAddress] =
+  private val MailValidator: InputValidSplitEpi[EmailAddress] =
     // Scala doesn't like type aliases with refined types?
     InputValidSplitEpi.refinedString[EmailPred].asInstanceOf[InputValidSplitEpi[EmailAddress]]
 
@@ -69,8 +71,8 @@ object InviteUserPopup:
           viewKey:      View[Option[String]]
         ): IO[Unit] =
           (createInvite.set(CreateInviteProcess.Running).to[IO] *>
-            CreateInviteMutation[IO].execute(pid, email.value.value)).attempt
-            .flatMap {
+            CreateInviteMutation[IO].execute(pid, email.value.value, props.role)).attempt
+            .flatMap:
               case Left(e)  =>
                 Logger[IO].error(e)("Error creating invitation") *>
                   createInvite.set(CreateInviteProcess.Error).to[IO]
@@ -78,14 +80,12 @@ object InviteUserPopup:
                 props.invitations.mod(r.createUserInvitation.invitation :: _).to[IO] *>
                   viewKey.set(r.createUserInvitation.key.some).to[IO] *>
                   createInvite.set(CreateInviteProcess.Done).to[IO]
-            }
 
         OverlayPanel(
           closeOnEscape = true,
           onHide = key.set(None) >> emailView.set(None).runAsyncAndForget
         )(
-          <.div(
-            PrimeStyles.Dialog,
+          <.div(PrimeStyles.Dialog)(
             <.div(PrimeStyles.DialogHeader, "Create CoI invitation"),
             <.div(PrimeStyles.DialogContent)(
               <.div(LucumaPrimeStyles.FormColumnCompact)(
@@ -110,8 +110,9 @@ object InviteUserPopup:
               )
             ),
             <.div(PrimeStyles.DialogFooter)(
-              Message(text = "Error submitting user invite, try later",
-                      severity = Message.Severity.Error
+              Message(
+                text = "Error submitting user invite, try later",
+                severity = Message.Severity.Error
               ).when(inviteState.get === CreateInviteProcess.Error),
               Button(
                 icon = Icons.Close,

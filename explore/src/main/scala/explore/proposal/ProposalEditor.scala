@@ -16,18 +16,19 @@ import explore.components.TileController
 import explore.components.ui.*
 import explore.model.AppContext
 import explore.model.CallForProposal
-import explore.model.CoIInvitation
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.Proposal
 import explore.model.ProposalAttachment
 import explore.model.ProposalTabTileIds
+import explore.model.UserInvitation
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
@@ -50,7 +51,7 @@ case class ProposalEditor(
   undoStacks:        View[UndoStacks[IO, Proposal]],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   users:             View[List[ProgramUserWithRole]],
-  invitations:       View[List[CoIInvitation]],
+  invitations:       View[List[UserInvitation]],
   attachments:       View[List[ProposalAttachment]],
   authToken:         Option[NonEmptyString],
   cfps:              List[CallForProposal],
@@ -157,7 +158,7 @@ object ProposalEditor:
           )
 
         <.div(ExploreStyles.MultiPanelTile)(
-          InviteUserPopup(props.programId, props.invitations, overlayRef),
+          InviteUserPopup(props.programId, ProgramUserRole.Coi, props.invitations, overlayRef),
           TileController(
             props.optUserId,
             resize.width.getOrElse(1),
