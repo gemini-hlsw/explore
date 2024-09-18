@@ -211,6 +211,13 @@ trait DisplayImplicits:
     case Gender.Other        => "Other"
     case Gender.NotSpecified => "Not Specified"
 
+  given Display[ProgramUserRole] = Display.byShortName:
+    case ProgramUserRole.Pi               => "PI"
+    case ProgramUserRole.Coi              => "CoI"
+    case ProgramUserRole.CoiRO            => "Observer"
+    case ProgramUserRole.SupportPrimary   => "Principal Support"
+    case ProgramUserRole.SupportSecondary => "Additional Support"
+
   extension (configuration: BasicConfiguration)
     def configurationSummary: String = configuration match
       case BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _) =>

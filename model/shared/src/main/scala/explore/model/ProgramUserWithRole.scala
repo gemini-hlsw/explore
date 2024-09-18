@@ -25,8 +25,6 @@ case class ProgramUserWithRole(
 ) derives Eq:
   export user.{name, nameWithEmail}
 
-  lazy val roleName: String = role.tag
-
 object ProgramUserWithRole:
   val user: Lens[ProgramUserWithRole, ProgramUser] = Focus[ProgramUserWithRole](_.user)
 

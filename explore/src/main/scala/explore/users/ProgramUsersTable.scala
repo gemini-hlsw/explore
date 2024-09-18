@@ -46,10 +46,11 @@ import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
 
 case class ProgramUsersTable(
-  programId:   Program.Id,
-  users:       View[List[ProgramUserWithRole]],
-  filterRoles: NonEmptySet[ProgramUserRole],
-  readOnly:    Boolean
+  programId:     Program.Id,
+  users:         View[List[ProgramUserWithRole]],
+  filterRoles:   NonEmptySet[ProgramUserRole],
+  readonly:      Boolean,
+  hiddenColumns: Set[ProgramUsersTable.Column] = Set.empty
 ) extends ReactFnProps(ProgramUsersTable.component)
 
 object ProgramUsersTable:
@@ -64,33 +65,27 @@ object ProgramUsersTable:
 
   private val ColDef = ColumnDef.WithTableMeta[View[ProgramUserWithRole], TableMeta]
 
-  private val NameColumnId: ColumnId    = ColumnId("name")
-  private val PartnerColumnId: ColumnId = ColumnId("Partner")
-  private val EmailColumnId: ColumnId   = ColumnId("email")
-  private val ESColumnId: ColumnId      = ColumnId("education")
-  private val ThesisColumnId: ColumnId  = ColumnId("thesis")
-  private val GenderColumnId: ColumnId  = ColumnId("gender")
-  private val OrcidIdColumnId: ColumnId = ColumnId("orcid-id")
-  private val RoleColumnId: ColumnId    = ColumnId("role")
-  private val UnlinkId: ColumnId        = ColumnId("unlink")
+  enum Column(
+    protected[ProgramUsersTable] val tag:    String,
+    protected[ProgramUsersTable] val header: String
+  ) derives Enumerated:
+    val id: ColumnId = ColumnId(tag)
 
-  private val columnNames: Map[ColumnId, String] = Map(
-    NameColumnId    -> "Name",
-    PartnerColumnId -> "Partner",
-    EmailColumnId   -> "email",
-    ESColumnId      -> "education",
-    ThesisColumnId  -> "thesis",
-    GenderColumnId  -> "gender",
-    OrcidIdColumnId -> "ORCID",
-    RoleColumnId    -> "Role",
-    UnlinkId        -> ""
-  )
+    case Name              extends Column("name", "Name")
+    case Partner           extends Column("partner", "Partner")
+    case Email             extends Column("email", "Email")
+    case EducationalStatus extends Column("education", "Education")
+    case Thesis            extends Column("thesis", "Thesis")
+    case Gender            extends Column("gender", "Gender")
+    case OrcidId           extends Column("orcid-id", "ORCID")
+    case Role              extends Column("role", "Role")
+    case Unlink            extends Column("unlink", "")
 
   private def column[V](
-    id:       ColumnId,
+    column:   Column,
     accessor: View[ProgramUserWithRole] => V
   ): ColumnDef.Single.WithTableMeta[View[ProgramUserWithRole], V, TableMeta] =
-    ColDef(id, accessor, columnNames(id))
+    ColDef(column.id, accessor, column.header)
 
   val partnerLinkOptions: List[PartnerLink] =
     PartnerLink.HasNonPartner :: Enumerated[Partner].all.map { p =>
@@ -146,9 +141,9 @@ object ProgramUsersTable:
     import ctx.given
 
     List(
-      column(NameColumnId, _.get.name),
+      column(Column.Name, _.get.name),
       ColDef(
-        PartnerColumnId,
+        Column.Partner.id,
         _.zoom(ProgramUserWithRole.partnerLink),
         enableSorting = true,
         enableResizing = true,
@@ -166,14 +161,13 @@ object ProgramUsersTable:
 
             partnerSelector(pl, usersView.set, meta.readOnly || meta.isActive.get.value)
       ),
-      column(EmailColumnId, _.get.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
+      column(Column.Email, _.get.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
       ColDef(
-        ESColumnId,
+        Column.EducationalStatus.id,
         _.zoom(ProgramUserWithRole.educationalStatus),
         enableSorting = true,
         enableResizing = true,
         cell = c =>
-
           val cell   = c.row.original
           val userId = cell.get.user.id
           c.table.options.meta.map: meta =>
@@ -193,10 +187,9 @@ object ProgramUsersTable:
             )
       ),
       ColDef(
-        ThesisColumnId,
+        Column.Thesis.id,
         _.zoom(ProgramUserWithRole.thesis),
         cell = c =>
-
           val cell   = c.row.original
           val userId = cell.get.user.id
 
@@ -210,15 +203,13 @@ object ProgramUsersTable:
             )
       ),
       ColDef(
-        GenderColumnId,
+        Column.Gender.id,
         _.zoom(ProgramUserWithRole.gender),
         cell = c =>
-
           val cell   = c.row.original
           val userId = cell.get.user.id
 
           c.table.options.meta.map: meta =>
-
             val view = c.value
               .withOnMod(th => updateUserGender[IO](meta.programId, userId, th).runAsyncAndForget)
             EnumOptionalDropdown[Gender](
@@ -233,18 +224,17 @@ object ProgramUsersTable:
               onChange = view.set
             )
       ),
-      column(OrcidIdColumnId, _.get.user.profile.foldMap(_.orcidId.value)),
-      column(RoleColumnId, _.get.roleName),
+      column(Column.OrcidId, _.get.user.profile.foldMap(_.orcidId.value)),
+      column(Column.Role, _.get.role.shortName),
       ColDef(
-        UnlinkId,
-        identity,
+        Column.Unlink.id,
+        _.get,
         "",
         enableSorting = false,
         enableResizing = false,
         cell = cell =>
           cell.table.options.meta.map: meta =>
-
-            val userId = cell.value.get.user.id
+            val userId = cell.value.user.id
             val action =
               UnlinkUser[IO].execute(UnlinkUserInput(meta.programId, userId)) *>
                 meta.users.mod(_.filterNot(_.user.id === userId)).to[IO]
@@ -264,7 +254,7 @@ object ProgramUsersTable:
                 disabled = meta.readOnly || meta.isActive.get.value,
                 onClick = unlink
               ).mini.compact
-                .unless(cell.value.get.role === ProgramUserRole.Pi) // don't allow removing the PI
+                .unless(cell.value.role === ProgramUserRole.Pi) // don't allow removing the PI
             )
         ,
         size = 35.toPx
@@ -285,11 +275,18 @@ object ProgramUsersTable:
           cols,
           rows,
           getRowId = (row, _, _) => RowId(row.get.user.id.toString),
-          meta = TableMeta(props.programId, props.users, props.readOnly, isActive)
+          meta = TableMeta(props.programId, props.users, props.readonly, isActive),
+          state = PartialTableState(
+            columnVisibility = ColumnVisibility(
+              (props.hiddenColumns.map(_.id -> Visibility.Hidden) +
+                (Column.Unlink.id -> Visibility.fromVisible(!props.readonly))).toMap
+            )
+          )
         )
       .render: (props, _, _, _, _, table) =>
         PrimeTable(
           table,
           striped = true,
-          compact = Compact.Very
+          compact = Compact.Very,
+          emptyMessage = "No users defined"
         )
