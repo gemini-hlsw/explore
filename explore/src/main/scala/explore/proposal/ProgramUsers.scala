@@ -3,8 +3,8 @@
 
 package explore.proposal
 
-import cats.data.NonEmptySet
 import cats.data.NonEmptyList
+import cats.data.NonEmptySet
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
@@ -17,6 +17,7 @@ import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.InvitationStatus
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
@@ -25,7 +26,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.OverlayPanelRef
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import lucuma.core.enums.ProgramUserRole
 
 enum CreateInviteProcess(private val tag: String) derives Enumerated:
   case Idle    extends CreateInviteProcess("idle")

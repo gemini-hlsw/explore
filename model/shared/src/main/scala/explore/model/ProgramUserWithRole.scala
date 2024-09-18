@@ -6,20 +6,18 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
-import lucuma.core.enums.ProgramUserRole
 import io.circe.Decoder
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Gender
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.PartnerLink
 import lucuma.odb.json.partnerlink.given
 import monocle.Focus
 import monocle.Lens
 
-// an empty role implies PI
 case class ProgramUserWithRole(
   user:              ProgramUser,
   partnerLink:       Option[PartnerLink],
-  // role:              Option[ProgramUserRole],
   role:              ProgramUserRole,
   educationalStatus: Option[EducationalStatus],
   thesis:            Option[Boolean],
@@ -28,9 +26,6 @@ case class ProgramUserWithRole(
   export user.{name, nameWithEmail}
 
   lazy val roleName: String = role.tag
-  // role match
-  //   case None       => "Pi"
-  //   case Some(role) => role.tag
 
 object ProgramUserWithRole:
   val user: Lens[ProgramUserWithRole, ProgramUser] = Focus[ProgramUserWithRole](_.user)

@@ -23,6 +23,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Gender
 import lucuma.core.enums.Partner
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
 import lucuma.core.model.User
@@ -43,7 +44,6 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
-import lucuma.core.enums.ProgramUserRole
 
 case class ProgramUsersTable(
   programId:   Program.Id,

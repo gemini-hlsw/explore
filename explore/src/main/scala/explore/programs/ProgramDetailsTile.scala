@@ -10,9 +10,9 @@ import explore.model.Constants
 import explore.model.ProgramDetails
 import explore.model.ProgramTimes
 import explore.model.ProgramUserWithRole
-import lucuma.core.enums.ProgramUserRole
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Semester
 import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps

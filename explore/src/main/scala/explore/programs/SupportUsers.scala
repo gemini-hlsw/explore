@@ -9,9 +9,9 @@ import explore.model.ProgramUserWithRole
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
-import lucuma.core.enums.ProgramUserRole
 
 case class SupportUsers(
   programId: Program.Id,
