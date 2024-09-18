@@ -26,6 +26,7 @@ import explore.model.UserInvitation
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
+import explore.users.InviteUserPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
@@ -130,7 +131,7 @@ object ProposalEditor:
           )
 
         val usersTile =
-          ProgramUsers.programUsersTile(
+          InvestigatorUsers.programUsersTile(
             props.programId,
             props.readonly,
             props.users,

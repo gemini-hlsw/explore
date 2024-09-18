@@ -29,7 +29,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
 
-case class ProgramUserInvitations(invitations: View[List[UserInvitation]], readOnly: Boolean)
+case class ProgramUserInvitations(invitations: View[List[UserInvitation]], readonly: Boolean)
     extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
@@ -132,7 +132,7 @@ object ProgramUserInvitations:
           meta = TableMeta(
             isActive = isActive,
             invitations = props.invitations,
-            readOnly = props.readOnly
+            readOnly = props.readonly
           )
         )
       .render: (props, _, _, _, _, table) =>
