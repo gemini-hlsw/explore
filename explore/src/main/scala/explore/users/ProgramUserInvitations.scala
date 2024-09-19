@@ -48,23 +48,19 @@ object ProgramUserInvitations:
 
   private val ColDef = ColumnDef.WithTableMeta[UserInvitation, TableMeta]
 
-  private val KeyId: ColumnId         = ColumnId("id")
-  private val EmailId: ColumnId       = ColumnId("email")
-  private val EmailStatusId: ColumnId = ColumnId("emailStatus")
-  private val RevokeId: ColumnId      = ColumnId("revoke")
+  private enum Column(val tag: String, val header: String):
+    val id: ColumnId = ColumnId(tag)
 
-  private val columnNames: Map[ColumnId, String] = Map(
-    KeyId         -> "ID",
-    EmailId       -> "email",
-    EmailStatusId -> "",
-    RevokeId      -> ""
-  )
+    case Key         extends Column("id", "Id")
+    case Email       extends Column("email", "Email")
+    case EmailStatus extends Column("emailStatus", "")
+    case Revoke      extends Column("revoke", "")
 
   private def column[V](
-    id:       ColumnId,
+    column:   Column,
     accessor: UserInvitation => V
   ): ColumnDef.Single.WithTableMeta[UserInvitation, V, TableMeta] =
-    ColDef(id, accessor, columnNames(id))
+    ColDef(column.id, accessor, column.header)
 
   private def columns(
     ctx: AppContext[IO]
@@ -72,10 +68,10 @@ object ProgramUserInvitations:
     import ctx.given
 
     List(
-      column(KeyId, _.id),
-      column(EmailId, _.email),
+      column(Column.Key, _.id),
+      column(Column.Email, _.email),
       ColDef(
-        EmailStatusId,
+        Column.EmailStatus.id,
         _.emailStatus,
         "Email Status",
         cell = _.value
@@ -83,7 +79,7 @@ object ProgramUserInvitations:
           .getOrElse(<.span())
       ),
       ColDef(
-        RevokeId,
+        Column.Revoke.id,
         identity,
         "Revoke",
         cell = cell =>
@@ -141,7 +137,7 @@ object ProgramUserInvitations:
             readOnly = props.readonly
           ),
           state = PartialTableState(columnVisibility =
-            ColumnVisibility(RevokeId -> Visibility.fromVisible(!props.readonly))
+            ColumnVisibility(Column.Revoke.id -> Visibility.fromVisible(!props.readonly))
           )
         )
       .render: (props, _, _, _, _, table) =>

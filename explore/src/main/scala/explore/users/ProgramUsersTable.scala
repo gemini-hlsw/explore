@@ -72,7 +72,7 @@ object ProgramUsersTable:
   enum Column(
     protected[ProgramUsersTable] val tag:    String,
     protected[ProgramUsersTable] val header: String
-  ) derives Enumerated:
+  ):
     val id: ColumnId = ColumnId(tag)
 
     case Name              extends Column("name", "Name")

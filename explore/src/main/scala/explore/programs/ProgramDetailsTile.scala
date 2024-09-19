@@ -43,7 +43,7 @@ object ProgramDetailsTile:
     val readonly: Boolean                       = !EditSupportAccesses.contains_(props.currentUserAccess)
 
     <.div(ExploreStyles.ProgramDetailsTile)(
-      <.div(ExploreStyles.ProgramDetailsInfoArea)(
+      <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(
         FormInfo(details.reference.map(_.label).getOrElse("---"), "Reference"),
         FormInfo(Constants.GppDateFormatter.format(props.semester.start.localDate), "Start"),
         FormInfo(Constants.GppDateFormatter.format(props.semester.end.localDate), "End"),

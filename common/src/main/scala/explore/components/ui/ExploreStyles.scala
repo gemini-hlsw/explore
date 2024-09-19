@@ -491,7 +491,9 @@ object ExploreStyles:
   // Program Tab
   val ProgramDetailsTile: Css     = Css("program-details-tile")
   val ProgramDetailsInfoArea: Css = Css("program-details-info-area")
+  val ProgramDetailsLeft: Css     = Css("program-details-left")
   val ProgramTabTable: Css        = Css("program-tab-table")
+  val ProgramDetailsUsers: Css    = Css("program-details-users")
 
   val FocusedInfo: Css = Css("explore-focused-info")
 

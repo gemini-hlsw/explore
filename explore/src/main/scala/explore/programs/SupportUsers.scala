@@ -5,6 +5,7 @@ package explore.programs
 
 import cats.data.NonEmptySet
 import crystal.react.View
+import explore.components.ui.ExploreStyles
 import explore.model.ProgramUserWithRole
 import explore.model.UserInvitation
 import explore.users.InviteUserButton
@@ -32,7 +33,7 @@ object SupportUsers:
     case Secondary extends SupportRole(ProgramUserRole.SupportSecondary)
 
   private val component = ScalaFnComponent[Props]: props =>
-    <.div(
+    <.div(ExploreStyles.ProgramDetailsUsers)(
       <.label(
         props.title,
         InviteUserButton(props.programId, props.supportRole.role, props.invitations)
