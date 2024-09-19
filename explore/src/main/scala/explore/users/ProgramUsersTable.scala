@@ -16,12 +16,14 @@ import explore.components.ui.PartnerFlags
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.ProgramUserWithRole
+import explore.model.UserInvitation
 import explore.model.display.given
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Gender
+import lucuma.core.enums.InvitationStatus
 import lucuma.core.enums.Partner
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.PartnerLink
@@ -39,14 +41,12 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.UnlinkUserInput
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.react.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
-import explore.model.UserInvitation
-import lucuma.core.enums.InvitationStatus
-import lucuma.ui.react.given
 
 case class ProgramUsersTable(
   programId:     Program.Id,

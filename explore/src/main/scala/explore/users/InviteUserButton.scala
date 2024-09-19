@@ -4,20 +4,20 @@
 package explore.users
 
 import crystal.react.View
+import crystal.react.hooks.*
+import explore.Icons
+import explore.model.UserInvitation
+import explore.model.display.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramUserRole
+import lucuma.core.model.Program
+import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.hooks.all.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import explore.Icons
-import lucuma.react.primereact.hooks.all.*
-import lucuma.core.enums.ProgramUserRole
-import explore.model.display.given
-import lucuma.core.syntax.display.*
-import lucuma.core.model.Program
-import explore.model.UserInvitation
-import crystal.react.hooks.*
 
 case class InviteUserButton(
   programId:   Program.Id,
@@ -37,7 +37,7 @@ object InviteUserButton:
         React.Fragment(
           InviteUserPopup(
             props.programId,
-            ProgramUserRole.Coi,
+            props.role,
             props.invitations,
             createInviteStatus,
             overlayRef

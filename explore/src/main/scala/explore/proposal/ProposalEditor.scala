@@ -3,8 +3,9 @@
 
 package explore.proposal
 
-import cats.syntax.option.*
+import cats.data.NonEmptySet
 import cats.effect.IO
+import cats.syntax.option.*
 import clue.*
 import clue.data.Input
 import clue.data.syntax.*
@@ -27,6 +28,8 @@ import explore.model.UserInvitation
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
+import explore.users.InviteUserButton
+import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
@@ -40,13 +43,10 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.react.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.common.ProposalQueriesGQL
-import explore.users.InviteUserButton
-import lucuma.ui.react.given
-import explore.users.ProgramUsersTable
-import cats.data.NonEmptySet
 
 case class ProposalEditor(
   programId:         Program.Id,

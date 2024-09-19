@@ -16,12 +16,14 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.UserInvitation
+import explore.model.display.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.EmailAddress
 import lucuma.core.data.EmailPred
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
+import lucuma.core.syntax.display.*
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -38,8 +40,6 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.*
 import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
-import lucuma.core.syntax.display.*
-import explore.model.display.given
 
 case class InviteUserPopup(
   programId:          Program.Id,
@@ -92,7 +92,7 @@ object InviteUserPopup:
           onHide = key.set(None) >> emailView.set(None).runAsyncAndForget
         )(
           <.div(PrimeStyles.Dialog)(
-            <.div(PrimeStyles.DialogHeader, s"Create ${props.role.shortName} invitation"),
+            <.div(PrimeStyles.DialogHeader)(s"Create ${props.role.shortName} invitation"),
             <.div(PrimeStyles.DialogContent)(
               <.div(LucumaPrimeStyles.FormColumnCompact)(
                 FormInputTextView(

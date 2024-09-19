@@ -3,6 +3,7 @@
 
 package explore.users
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -18,6 +19,7 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.InvitationStatus
+import lucuma.core.enums.ProgramUserRole
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.*
@@ -28,8 +30,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
-import cats.data.NonEmptySet
-import lucuma.core.enums.ProgramUserRole
 
 case class ProgramUserInvitations(
   invitations: View[List[UserInvitation]],
@@ -139,6 +139,9 @@ object ProgramUserInvitations:
             isActive = isActive,
             invitations = props.invitations,
             readOnly = props.readonly
+          ),
+          state = PartialTableState(columnVisibility =
+            ColumnVisibility(RevokeId -> Visibility.fromVisible(!props.readonly))
           )
         )
       .render: (props, _, _, _, _, table) =>
