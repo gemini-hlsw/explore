@@ -13,6 +13,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
+import explore.users.InviteUserButton
 
 case class SupportUsers(
   programId:   Program.Id,
@@ -32,10 +33,14 @@ object SupportUsers:
 
   private val component = ScalaFnComponent[Props]: props =>
     <.div(
-      <.label(props.title, "+ Add"),
+      <.label(
+        props.title,
+        InviteUserButton(props.programId, props.supportRole.role, props.invitations)
+      ),
       ProgramUsersTable(
         props.programId,
         props.users,
+        props.invitations,
         NonEmptySet.one(props.supportRole.role),
         props.readonly,
         hiddenColumns = Set(

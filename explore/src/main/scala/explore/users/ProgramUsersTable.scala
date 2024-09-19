@@ -44,10 +44,14 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.function.Each.*
 import queries.common.ProposalQueriesGQL.UnlinkUser
+import explore.model.UserInvitation
+import lucuma.core.enums.InvitationStatus
+import lucuma.ui.react.given
 
 case class ProgramUsersTable(
   programId:     Program.Id,
   users:         View[List[ProgramUserWithRole]],
+  invitations:   View[List[UserInvitation]],
   filterRoles:   NonEmptySet[ProgramUserRole],
   readonly:      Boolean,
   hiddenColumns: Set[ProgramUsersTable.Column] = Set.empty
@@ -284,9 +288,24 @@ object ProgramUsersTable:
           )
         )
       .render: (props, _, _, _, _, table) =>
-        PrimeTable(
-          table,
-          striped = true,
-          compact = Compact.Very,
-          emptyMessage = "No users defined"
+        val arePendingInvitations: Boolean = props.invitations.get
+          .filter: i =>
+            i.status === InvitationStatus.Pending && props.filterRoles.contains_(i.role)
+          .nonEmpty
+
+        React.Fragment(
+          PrimeTable(
+            table,
+            striped = true,
+            compact = Compact.Very,
+            emptyMessage = "No users defined"
+          ),
+          Option
+            .when[VdomNode](arePendingInvitations)(
+              React.Fragment(
+                <.label("Pending invitations"),
+                ProgramUserInvitations(props.invitations, props.filterRoles, props.readonly)
+              )
+            )
+            .orEmpty
         )

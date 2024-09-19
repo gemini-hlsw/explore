@@ -3,6 +3,7 @@
 
 package explore.proposal
 
+import cats.syntax.option.*
 import cats.effect.IO
 import clue.*
 import clue.data.Input
@@ -26,14 +27,12 @@ import explore.model.UserInvitation
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
-import explore.users.InviteUserPopup
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.hooks.UseOverlayPanelRef.implicits.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
@@ -44,6 +43,10 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.common.ProposalQueriesGQL
+import explore.users.InviteUserButton
+import lucuma.ui.react.given
+import explore.users.ProgramUsersTable
+import cats.data.NonEmptySet
 
 case class ProposalEditor(
   programId:         Program.Id,
@@ -94,8 +97,7 @@ object ProposalEditor:
       //     }
       // )
       .useResizeDetector()
-      .useOverlayPanelRef
-      .render: (props, ctx, resize, overlayRef) =>
+      .render: (props, ctx, resize) =>
         import ctx.given
 
         val undoCtx: UndoContext[Proposal] = UndoContext(props.undoStacks, props.proposal)
@@ -131,12 +133,27 @@ object ProposalEditor:
           )
 
         val usersTile =
-          InvestigatorUsers.programUsersTile(
-            props.programId,
-            props.readonly,
-            props.users,
-            props.invitations,
-            overlayRef
+          Tile(
+            ProposalTabTileIds.UsersId.id,
+            "Investigators"
+          )(
+            _ =>
+              ProgramUsersTable(
+                props.programId,
+                props.users,
+                props.invitations,
+                NonEmptySet.of(ProgramUserRole.Pi, ProgramUserRole.Coi, ProgramUserRole.CoiRO),
+                props.readonly
+              ),
+            (_, _) =>
+              Option
+                .unless[VdomNode](props.readonly):
+                  InviteUserButton(
+                    props.programId,
+                    ProgramUserRole.Coi,
+                    props.invitations
+                  )
+                .orEmpty
           )
 
         val abstractTile =
@@ -159,7 +176,6 @@ object ProposalEditor:
           )
 
         <.div(ExploreStyles.MultiPanelTile)(
-          InviteUserPopup(props.programId, ProgramUserRole.Coi, props.invitations, overlayRef),
           TileController(
             props.optUserId,
             resize.width.getOrElse(1),

@@ -28,9 +28,14 @@ import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
+import cats.data.NonEmptySet
+import lucuma.core.enums.ProgramUserRole
 
-case class ProgramUserInvitations(invitations: View[List[UserInvitation]], readonly: Boolean)
-    extends ReactFnProps(ProgramUserInvitations.component)
+case class ProgramUserInvitations(
+  invitations: View[List[UserInvitation]],
+  filterRoles: NonEmptySet[ProgramUserRole],
+  readonly:    Boolean
+) extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
   private type Props = ProgramUserInvitations
@@ -122,7 +127,8 @@ object ProgramUserInvitations:
       .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
         _ => columns(ctx)
       .useMemoBy((props, _, _, _) => // rows
-        props.invitations.get.filter(_.status === InvitationStatus.Pending)
+        props.invitations.get.filter: i =>
+          i.status === InvitationStatus.Pending && props.filterRoles.contains_(i.role)
       )((_, _, _, _) => identity)
       .useReactTableBy: (props, _, isActive, cols, rows) =>
         TableOptions(
@@ -136,11 +142,9 @@ object ProgramUserInvitations:
           )
         )
       .render: (props, _, _, _, _, table) =>
-        React.Fragment(
-          PrimeTable(
-            table,
-            striped = true,
-            compact = Compact.Very,
-            tableMod = ExploreStyles.ExploreTable
-          )
+        PrimeTable(
+          table,
+          striped = true,
+          compact = Compact.Very,
+          tableMod = ExploreStyles.ExploreTable
         )
