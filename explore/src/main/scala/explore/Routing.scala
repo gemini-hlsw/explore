@@ -157,15 +157,18 @@ object Routing:
         )
     )
 
-  private def programTab(model: RootModelViews): VdomElement =
+  private def programTab(page: Page, model: RootModelViews): VdomElement =
     withProgramSummaries(model): programSummaries =>
+      val routingInfo = RoutingInfo.from(page)
       for
-        programDetails <- programSummaries.model.get.optProgramDetails
-        proposal       <- programDetails.proposal
+        programDetails <-
+          programSummaries.model.zoom(ProgramSummaries.optProgramDetails).toOptionView
+        proposal       <- programDetails.get.proposal
         callId         <- proposal.callId
         cfps           <- model.rootModel.get.cfps
         cfp            <- cfps.find(_.id === callId)
       yield ProgramTabContents(
+        routingInfo.programId,
         programDetails,
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
@@ -208,7 +211,7 @@ object Routing:
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "program").xmapL(ProgramPage.iso)
-          ) ~> dynRenderP { case (_, m) => programTab(m) }
+          ) ~> dynRenderP { case (p, m) => programTab(p, m) }
 
           | dynamicRouteCT(
             (root / id[Program.Id] / "proposal").xmapL(ProposalPage.iso)

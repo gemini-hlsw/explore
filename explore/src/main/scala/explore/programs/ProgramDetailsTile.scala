@@ -5,36 +5,45 @@ package explore.programs
 
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.model.ProgramDetails
 import explore.model.ProgramTimes
 import explore.model.ProgramUserWithRole
-import explore.model.enums.ProgramUserRole
+import explore.model.UserInvitation
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Access
+import lucuma.core.model.Program
 import lucuma.core.model.Semester
 import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.primereact.FormInfo
 
 case class ProgramDetailsTile(
-  programDetails: ProgramDetails,
-  programTimes:   Pot[ProgramTimes],
-  semester:       Semester
+  programId:         Program.Id,
+  programDetails:    View[ProgramDetails],
+  programTimes:      Pot[ProgramTimes],
+  semester:          Semester,
+  currentUserAccess: Access
 ) extends ReactFnProps(ProgramDetailsTile.component)
 
 object ProgramDetailsTile:
   private type Props = ProgramDetailsTile
 
-  val component = ScalaFnComponent[Props]: props =>
-    val details: ProgramDetails            = props.programDetails
-    val thesis: Boolean                    = details.allUsers.exists(_.thesis.exists(_ === true))
-    val support: List[ProgramUserWithRole] =
-      details.allUsers.filter(_.role.contains_(ProgramUserRole.Support))
+  private val EditSupportAccesses: Set[Access] = Set(Access.Admin, Access.Staff)
+
+  private val component = ScalaFnComponent[Props]: props =>
+    val details: ProgramDetails                 = props.programDetails.get
+    val thesis: Boolean                         = details.allUsers.exists(_.thesis.exists(_ === true))
+    val users: View[List[ProgramUserWithRole]]  = props.programDetails.zoom(ProgramDetails.allUsers)
+    val invitations: View[List[UserInvitation]] =
+      props.programDetails.zoom(ProgramDetails.invitations)
+    val readonly: Boolean                       = !EditSupportAccesses.contains_(props.currentUserAccess)
 
     <.div(ExploreStyles.ProgramDetailsTile)(
-      <.div(ExploreStyles.ProgramDetailsInfoArea)(
+      <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(
         FormInfo(details.reference.map(_.label).getOrElse("---"), "Reference"),
         FormInfo(Constants.GppDateFormatter.format(props.semester.start.localDate), "Start"),
         FormInfo(Constants.GppDateFormatter.format(props.semester.end.localDate), "End"),
@@ -48,14 +57,25 @@ object ProgramDetailsTile:
         TimeAccountingTable(props.programTimes)
       ),
       <.div(ExploreStyles.ProgramDetailsInfoArea)(
-        // The Contact scientists are the program SUPPORT role which has been requested to be split into two (3278): "Principal Support" and "Additional Support".
-        FormInfo(support.map(_.nameWithEmail).mkString(", "), "Contact Scientists")
-          .when(support.nonEmpty)
-          // FormInfo("", "Principal Support"),
-          // FormInfo("", "Additional Support"),
-          // The two Notifications flags are user-settable and determine whether the archive sends email notifications for new data and whether the ODB sends notifications for expired timing windows (3388, 3389)
-          // FormInfo("", "Notifications")
-          // The Eavesdropping` UI will allow PIs of accepted programs to select dates when they are available for eavesdropping. This is not needed for XT. (NEED TICKET)
-          // FormInfo("", "Eavesdropping")
+        SupportUsers(
+          props.programId,
+          users,
+          invitations,
+          "Principal Support",
+          SupportUsers.SupportRole.Primary,
+          readonly
+        ),
+        SupportUsers(
+          props.programId,
+          users,
+          invitations,
+          "Additional Support",
+          SupportUsers.SupportRole.Secondary,
+          readonly
+        )
+        // The two Notifications flags are user-settable and determine whether the archive sends email notifications for new data and whether the ODB sends notifications for expired timing windows (3388, 3389)
+        // FormInfo("", "Notifications")
+        // The Eavesdropping` UI will allow PIs of accepted programs to select dates when they are available for eavesdropping. This is not needed for XT. (NEED TICKET)
+        // FormInfo("", "Eavesdropping")
       )
     )

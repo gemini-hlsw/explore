@@ -1,8 +1,9 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.proposal
+package explore.users
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -12,12 +13,13 @@ import explore.Icons
 import explore.components.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.CoIInvitation
 import explore.model.IsActive
+import explore.model.UserInvitation
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.InvitationStatus
+import lucuma.core.enums.ProgramUserRole
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.*
@@ -29,58 +31,55 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import queries.common.InvitationQueriesGQL.*
 
-case class ProgramUserInvitations(invitations: View[List[CoIInvitation]], readOnly: Boolean)
-    extends ReactFnProps(ProgramUserInvitations.component)
+case class ProgramUserInvitations(
+  invitations: View[List[UserInvitation]],
+  filterRoles: NonEmptySet[ProgramUserRole],
+  readonly:    Boolean
+) extends ReactFnProps(ProgramUserInvitations.component)
 
 object ProgramUserInvitations:
   private type Props = ProgramUserInvitations
 
   private case class TableMeta(
     isActive:    View[IsActive],
-    invitations: View[List[CoIInvitation]],
+    invitations: View[List[UserInvitation]],
     readOnly:    Boolean
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[CoIInvitation, TableMeta]
+  private val ColDef = ColumnDef.WithTableMeta[UserInvitation, TableMeta]
 
-  private val KeyId: ColumnId         = ColumnId("id")
-  private val EmailId: ColumnId       = ColumnId("email")
-  private val EmailStatusId: ColumnId = ColumnId("emailStatus")
-  private val RevokeId: ColumnId      = ColumnId("revoke")
+  private enum Column(val tag: String, val header: String):
+    val id: ColumnId = ColumnId(tag)
 
-  private val columnNames: Map[ColumnId, String] = Map(
-    KeyId         -> "ID",
-    EmailId       -> "email",
-    EmailStatusId -> "",
-    RevokeId      -> ""
-  )
+    case Key         extends Column("id", "Id")
+    case Email       extends Column("email", "Email")
+    case EmailStatus extends Column("emailStatus", "")
+    case Revoke      extends Column("revoke", "")
 
   private def column[V](
-    id:       ColumnId,
-    accessor: CoIInvitation => V
-  ): ColumnDef.Single.WithTableMeta[CoIInvitation, V, TableMeta] =
-    ColDef(id, accessor, columnNames(id))
+    column:   Column,
+    accessor: UserInvitation => V
+  ): ColumnDef.Single.WithTableMeta[UserInvitation, V, TableMeta] =
+    ColDef(column.id, accessor, column.header)
 
   private def columns(
     ctx: AppContext[IO]
-  ): List[ColumnDef.WithTableMeta[CoIInvitation, ?, TableMeta]] =
+  ): List[ColumnDef.WithTableMeta[UserInvitation, ?, TableMeta]] =
     import ctx.given
 
     List(
-      column(KeyId, _.id),
-      column(EmailId, _.email),
+      column(Column.Key, _.id),
+      column(Column.Email, _.email),
       ColDef(
-        EmailStatusId,
+        Column.EmailStatus.id,
         _.emailStatus,
         "Email Status",
-        cell = { cell =>
-          cell.value
-            .map(es => <.span(es.tag.toUpperCase).withTooltip(es.description))
-            .getOrElse(<.span())
-        }
+        cell = _.value
+          .map(es => <.span(es.tag.toUpperCase).withTooltip(es.description))
+          .getOrElse(<.span())
       ),
       ColDef(
-        RevokeId,
+        Column.Revoke.id,
         identity,
         "Revoke",
         cell = cell =>
@@ -124,7 +123,8 @@ object ProgramUserInvitations:
       .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
         _ => columns(ctx)
       .useMemoBy((props, _, _, _) => // rows
-        props.invitations.get.filter(_.status === InvitationStatus.Pending)
+        props.invitations.get.filter: i =>
+          i.status === InvitationStatus.Pending && props.filterRoles.contains_(i.role)
       )((_, _, _, _) => identity)
       .useReactTableBy: (props, _, isActive, cols, rows) =>
         TableOptions(
@@ -134,15 +134,16 @@ object ProgramUserInvitations:
           meta = TableMeta(
             isActive = isActive,
             invitations = props.invitations,
-            readOnly = props.readOnly
+            readOnly = props.readonly
+          ),
+          state = PartialTableState(columnVisibility =
+            ColumnVisibility(Column.Revoke.id -> Visibility.fromVisible(!props.readonly))
           )
         )
       .render: (props, _, _, _, _, table) =>
-        React.Fragment(
-          PrimeTable(
-            table,
-            striped = true,
-            compact = Compact.Very,
-            tableMod = ExploreStyles.ExploreTable
-          )
+        PrimeTable(
+          table,
+          striped = true,
+          compact = Compact.Very,
+          tableMod = ExploreStyles.ExploreTable
         )

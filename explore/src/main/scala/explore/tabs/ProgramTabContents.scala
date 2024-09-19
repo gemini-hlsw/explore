@@ -4,7 +4,9 @@
 package explore.tabs
 
 import cats.effect.IO
+import cats.syntax.option.*
 import crystal.Pot
+import crystal.react.View
 import explore.*
 import explore.components.Tile
 import explore.components.TileController
@@ -22,6 +24,7 @@ import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Program
 import lucuma.core.model.Semester
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
@@ -30,7 +33,8 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programDetails:  ProgramDetails,
+  programId:       Program.Id,
+  programDetails:  View[ProgramDetails],
   userVault:       Option[UserVault],
   programTimes:    Pot[ProgramTimes],
   semester:        Semester,
@@ -45,41 +49,50 @@ object ProgramTabContents:
     .useContext(AppContext.ctx)
     .useResizeDetector()
     .render: (props, _, resize) =>
-      val defaultLayouts: LayoutsMap =
-        ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
+      props.userVault.map: userVault =>
+        val defaultLayouts: LayoutsMap =
+          ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
 
-      val layouts: LayoutsMap =
-        props.userPreferences.programsTabLayout
+        val layouts: LayoutsMap =
+          props.userPreferences.programsTabLayout
 
-      val detailsTile =
-        Tile(
-          ProgramTabTileIds.DetailsId.id,
-          "Program Details"
-        )(_ => ProgramDetailsTile(props.programDetails, props.programTimes, props.semester))
+        val detailsTile =
+          Tile(
+            ProgramTabTileIds.DetailsId.id,
+            "Program Details"
+          )(_ =>
+            ProgramDetailsTile(
+              props.programId,
+              props.programDetails,
+              props.programTimes,
+              props.semester,
+              userVault.user.role.access
+            )
+          )
 
-      val notesTile =
-        Tile(
-          ProgramTabTileIds.NotesId.id,
-          "Notes"
-        )(_ => ProgramNotesTile())
+        val notesTile =
+          Tile(
+            ProgramTabTileIds.NotesId.id,
+            "Notes"
+          )(_ => ProgramNotesTile())
 
-      val changeRequestsTile =
-        Tile(
-          ProgramTabTileIds.ChangeRequestsId.id,
-          "Change Requests"
-        )(_ => ProgramChangeRequestsTile())
+        val changeRequestsTile =
+          Tile(
+            ProgramTabTileIds.ChangeRequestsId.id,
+            "Change Requests"
+          )(_ => ProgramChangeRequestsTile())
 
-      <.div(ExploreStyles.MultiPanelTile)(
-        TileController(
-          props.userVault.map(_.user.id),
-          resize.width.getOrElse(1),
-          defaultLayouts,
-          layouts,
-          List(
-            detailsTile,
-            notesTile,
-            changeRequestsTile
-          ),
-          GridLayoutSection.ProgramsLayout
-        )
-      ).withRef(resize.ref)
+        <.div(ExploreStyles.MultiPanelTile)(
+          TileController(
+            userVault.user.id.some,
+            resize.width.getOrElse(1),
+            defaultLayouts,
+            layouts,
+            List(
+              detailsTile,
+              notesTile,
+              changeRequestsTile
+            ),
+            GridLayoutSection.ProgramsLayout
+          )
+        ).withRef(resize.ref)

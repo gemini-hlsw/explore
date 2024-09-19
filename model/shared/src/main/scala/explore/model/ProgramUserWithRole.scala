@@ -6,29 +6,24 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
-import explore.model.enums.ProgramUserRole
 import io.circe.Decoder
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Gender
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.PartnerLink
 import lucuma.odb.json.partnerlink.given
 import monocle.Focus
 import monocle.Lens
 
-// an empty role implies PI
 case class ProgramUserWithRole(
   user:              ProgramUser,
   partnerLink:       Option[PartnerLink],
-  role:              Option[ProgramUserRole],
+  role:              ProgramUserRole,
   educationalStatus: Option[EducationalStatus],
   thesis:            Option[Boolean],
   gender:            Option[Gender]
 ) derives Eq:
   export user.{name, nameWithEmail}
-
-  lazy val roleName: String = role match
-    case None       => "Pi"
-    case Some(role) => role.tag
 
 object ProgramUserWithRole:
   val user: Lens[ProgramUserWithRole, ProgramUser] = Focus[ProgramUserWithRole](_.user)
@@ -49,7 +44,7 @@ object ProgramUserWithRole:
     for {
       u    <- c.downField("user").as[ProgramUser]
       pl   <- c.downField("partnerLink").as[Option[PartnerLink]]
-      role <- c.downField("role").as[Option[ProgramUserRole]]
+      role <- c.downField("role").as[ProgramUserRole]
       es   <- c.downField("educationalStatus").as[Option[EducationalStatus]]
       th   <- c.downField("thesis").as[Option[Boolean]]
       g    <- c.downField("gender").as[Option[Gender]]

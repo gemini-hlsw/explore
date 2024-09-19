@@ -3245,16 +3245,29 @@ a.explore-upgrade-link {
   justify-content: space-between;
 
   .program-details-info-area {
-    display: grid;
-    grid-template-columns: [label] auto [value] 1fr;
-    gap: 0.25em 1em;
-    grid-auto-rows: max-content;
     flex: 1 1 0;
     padding: 1em;
+
+    &.program-details-left {
+      display: grid;
+      grid-template-columns: [label] auto [value] 1fr;
+      gap: 0.25em 1em;
+      grid-auto-rows: max-content;
+    }
 
     label {
       text-align: right;
       font-weight: bold;
+    }
+
+    .program-details-users {
+      margin-bottom: 1em;
+
+      label {
+        display: flex;
+        gap: 1em;
+        align-items: center;
+      }
     }
   }
 }
