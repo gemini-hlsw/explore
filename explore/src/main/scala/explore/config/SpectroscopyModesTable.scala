@@ -79,7 +79,8 @@ case class SpectroscopyModesTable(
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],
   matrix:                   SpectroscopyModesMatrix
-) extends ReactFnProps(SpectroscopyModesTable.component)
+) extends ReactFnProps(SpectroscopyModesTable.component):
+  val validTargets = targets.map(_.filter(_.canQueryITC)).flatMap(NonEmptyList.fromList)
 
 private object SpectroscopyModesTable:
   private type Props = SpectroscopyModesTable
@@ -362,7 +363,7 @@ private object SpectroscopyModesTable:
          props.spectroscopyRequirements,
          props.baseCoordinates.map(_.value.dec),
          itcResults.value,
-         props.targets,
+         props.validTargets,
          props.constraints
         )
       ): (_, _, _) =>
@@ -387,7 +388,7 @@ private object SpectroscopyModesTable:
                 s.signalToNoise,
                 s.signalToNoiseAt,
                 constraints,
-                asterism.flatMap(NonEmptyList.fromList),
+                asterism,
                 row
               ),
               s.wavelength.flatMap: w =>
@@ -482,7 +483,7 @@ private object SpectroscopyModesTable:
           props.spectroscopyRequirements.signalToNoise,
           props.spectroscopyRequirements.signalToNoiseAt,
           props.constraints,
-          props.targets,
+          props.validTargets,
           rows.length
         )
       ):
@@ -511,8 +512,8 @@ private object SpectroscopyModesTable:
           ) =>
             import ctx.given
 
-            (wavelength, signalToNoise, signalToNoiseAt, asterism.flatMap(NonEmptyList.fromList))
-              .mapN: (w, sn, snAt, a) =>
+            (wavelength, signalToNoise, signalToNoiseAt, asterism)
+              .mapN: (w, sn, snAt, asterism) =>
                 val modes =
                   sortedRows
                     .filterNot: row => // Discard modes already in the cache
@@ -523,7 +524,13 @@ private object SpectroscopyModesTable:
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
                             cache.contains:
-                              ItcRequestParams(w, sn, snAt, constraints, a, row.entry.instrument)
+                              ItcRequestParams(w,
+                                               sn,
+                                               snAt,
+                                               constraints,
+                                               asterism,
+                                               row.entry.instrument
+                              )
                           case _                                           => true
 
                 Option.when(modes.nonEmpty):
@@ -533,7 +540,7 @@ private object SpectroscopyModesTable:
                     request <-
                       ItcClient[IO]
                         .request:
-                          ItcMessage.Query(w, sn, constraints, a, modes.map(_.entry), snAt)
+                          ItcMessage.Query(w, sn, constraints, asterism, modes.map(_.entry), snAt)
                         .map:
                           // Avoid rerendering on every single result, it's slow.
                           _.groupWithin(100, 500.millis)
@@ -642,7 +649,7 @@ private object SpectroscopyModesTable:
               // Very short exposure times may have ambiguity WRT the brightest target.
               .maxByOption(result => (result.exposureTime, result.exposures))
               .flatMap(_.brightestIndex)
-              .flatMap(brightestIndex => props.targets.flatMap(_.get(brightestIndex)))
+              .flatMap(brightestIndex => props.validTargets.flatMap(_.get(brightestIndex)))
               .map(t => <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}"))
 
           React.Fragment(
