@@ -35,6 +35,9 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
 
+import java.time.Duration
+import java.time.Instant
+
 /**
  * Reusability instances for model classes
  */
@@ -129,3 +132,12 @@ object reusability:
   given Reusability[CategoryAllocationList]             = Reusability.byEq
   given Reusability[InstrumentOverrides]                = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
+
+  // We want to re render only when the vizTime changes at least a month
+  // We keep the candidates data pm corrected for the viz time
+  // If it changes over a month we'll request the data again and recalculate
+  // This way we avoid recalculating pm for example if only pos angle or
+  // conditions change
+  val siderealTargetReusability: Reusability[Instant] = Reusability[Instant] {
+    Duration.between(_, _).toDays().abs < 30L
+  }

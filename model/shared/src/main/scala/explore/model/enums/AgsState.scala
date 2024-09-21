@@ -16,7 +16,7 @@ enum AgsState:
       case Saving            => saving
       case Error             => error
 
-  def isCalculating: Boolean = fold(false, true, true, false, false)
+  def isCalculating: Boolean = fold(false, false, true, false, false)
 
   def isIdle: Boolean = fold(true, false, false, false, false)
 

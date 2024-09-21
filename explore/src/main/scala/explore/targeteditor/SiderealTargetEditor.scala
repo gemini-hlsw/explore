@@ -27,6 +27,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
+import explore.model.reusability.siderealTargetReusability
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -78,6 +79,8 @@ case class SiderealTargetEditor(
 
 object SiderealTargetEditor:
   private type Props = SiderealTargetEditor
+
+  private given Reusability[Instant] = siderealTargetReusability
 
   private def cloneTarget(
     programId:     Program.Id,
@@ -167,7 +170,7 @@ object SiderealTargetEditor:
       .useStateView(false)          // cloning
       .useStateView(none[ObsIdSet]) // obs ids to clone to.
       // If vizTime is not set, change it to now
-      .useEffectResultWithDepsBy((p, _, _, _) => p.vizTime) { (_, _, _, _) => vizTime =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _) => p.vizTime) { (_, _, _, _) => vizTime =>
         IO(vizTime.getOrElse(Instant.now()))
       }
       // select the aligner to use based on whether a clone will be created or not.
