@@ -59,7 +59,7 @@ def setGroup[F[_]](
 def cloneObs(
   programId:    Program.Id,
   obsId:        Observation.Id,
-  pos:          NonNegInt,
+  newGroupId:   Option[Group.Id],
   observations: UndoSetter[ObservationList],
   ctx:          AppContext[IO],
   before:       IO[Unit] = IO.unit,
@@ -68,10 +68,11 @@ def cloneObs(
   import ctx.given
 
   before >>
-    cloneObservation[IO](obsId)
-      .flatMap: obs =>
-        obsExistence(obs.id, o => setObs(programId, o.some, ctx))
-          .mod(observations)(obsListMod.upsert(obs, pos))
+    cloneObservation[IO](obsId, newGroupId)
+      .flatMap: newObs =>
+        obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
+          .mod(observations): // Convert NonNegShort => NonNegInt
+            obsListMod.upsert(newObs, NonNegInt.unsafeFrom(newObs.groupIndex.value))
           .toAsync
       .guarantee(after)
 

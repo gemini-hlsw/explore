@@ -183,12 +183,17 @@ object ObsQueries:
       .map(_.createObservation.observation)
 
   def cloneObservation[F[_]: Async](
-    obsId: Observation.Id
+    obsId:      Observation.Id,
+    newGroupId: Option[Group.Id]
   )(using
     FetchClient[F, ObservationDB]
   ): F[Observation] =
     CloneObservationMutation[F]
-      .execute(CloneObservationInput(observationId = obsId.assign))
+      .execute:
+        CloneObservationInput(
+          observationId = obsId.assign,
+          SET = ObservationPropertiesInput(groupId = newGroupId.orUnassign).assign
+        )
       .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
