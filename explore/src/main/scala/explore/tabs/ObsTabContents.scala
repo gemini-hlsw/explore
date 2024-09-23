@@ -25,6 +25,7 @@ import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
+import explore.model.reusability.given
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.*
 import explore.shortcuts.*
@@ -79,8 +80,8 @@ case class ObsTabContents(
   private val focusedObs: Option[Observation.Id]                           = focused.obsSet.map(_.head)
   private val focusedTarget: Option[Target.Id]                             = focused.target
   private val focusedGroup: Option[Group.Id]                               = focused.group
-  private val observations: UndoSetter[ObservationList]                    =
-    programSummaries.zoom(ProgramSummaries.observations)
+  private val observations: UndoSetter[ObservationList]                    = programSummaries.zoom(ProgramSummaries.observations)
+  private val activeGroup: Option[Group.Id] = focusedGroup.orElse(focusedObs.flatMap(obsId => observations.get.getValue(obsId).flatMap(_.groupId)))
   private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
   private val groupTimeRanges: GroupTimeRangeMap                           = programSummaries.get.groupTimeRangePots
   private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
@@ -127,27 +128,22 @@ object ObsTabContents extends TwoPanels:
                   .withToast(s"Copied obs $id")
               .orUnit
               .runAsync
-      .useCallbackWithDepsBy((props, _, _, _, _, _) => (props.observationIds, props.readonly)): // PASTE Action Callback
+      .useCallbackWithDepsBy((props, _, _, _, _, _) => // PASTE Action Callback
+        (Reusable.explicitly(props.observations)(Reusability.by(_.get)), props.activeGroup, props.readonly)
+      ): 
         (props, ctx, _, _, _, _) =>
-          (observationIds, readonly) =>
+          (observations, activeGroup, readonly) =>
             import ctx.given
 
             ExploreClipboard.get
               .flatMap:
-                case LocalClipboard.CopiedObservations(idSet) =>
-                  idSet.idSet.toList
-                    .traverse(oid =>
-                      cloneObs(
-                        props.programId,
-                        oid,
-                        NonNegInt.unsafeFrom(observationIds.length),
-                        props.observations,
-                        ctx
-                      )
-                    )
+                case LocalClipboard.CopiedObservations(obsIdSet) =>
+                  obsIdSet.idSet.toList
+                    .traverse: oid =>
+                      cloneObs(props.programId, oid, activeGroup, observations, ctx)
                     .void
-                    .withToast(s"Duplicating obs ${idSet.idSet.mkString_(", ")}")
-                case _                                        => IO.unit
+                    .withToast(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
+                case _                                           => IO.unit
               .runAsync
               .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, _, _, _, _, copyCallback, pasteCallback) =>

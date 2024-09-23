@@ -76,6 +76,8 @@ case class ObsList(
   clipboardObsContents: Option[ObsIdSet],
   readonly:             Boolean
 ) extends ReactFnProps(ObsList.component):
+  private val activeGroup: Option[Group.Id] = focusedGroup.orElse(focusedObs.flatMap(obsId => observations.get.getValue(obsId).flatMap(_.groupId)))
+
   private val copyDisabled: Boolean   = focusedObs.isEmpty
   private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
   private val deleteDisabled: Boolean = focusedObs.isEmpty && focusedGroup.isEmpty
@@ -84,11 +86,12 @@ case class ObsList(
   private def groupText(groupId:     Group.Id): String       = s"group $groupId"
 
   private val copyText: Option[String]   = focusedObs.map(observationText)
-  private val pasteText: Option[String]  =
+  private val selectedText: Option[String]  =
     clipboardObsContents.map: obdIdSet =>
       obdIdSet.idSet.size match
         case 1    => s"observation ${obdIdSet.idSet.head}"
         case more => s"$more observations"
+  private val pasteText: Option[String]  = selectedText.map(_ + activeGroup.map(gid => s" into ${groupText(gid)}").orEmpty)
   private val deleteText: Option[String] =
     focusedObs.map(observationText).orElse(focusedGroup.map(groupText))
 
@@ -304,7 +307,7 @@ object ObsList:
                       cloneCB = cloneObs(
                         props.programId,
                         id,
-                        props.observations.get.length,
+                        obs.groupId, // Clone to the same group
                         props.observations,
                         ctx,
                         adding.async.set(AddingObservation(true)),
