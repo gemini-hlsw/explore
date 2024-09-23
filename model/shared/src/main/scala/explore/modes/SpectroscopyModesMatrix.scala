@@ -75,7 +75,6 @@ case class GmosNorthSpectroscopyRow(
   val instrument = Instrument.GmosNorth
   val site       = Site.GN
   val hasFilter  = filter.isDefined
-
 }
 
 case class GmosSouthSpectroscopyRow(

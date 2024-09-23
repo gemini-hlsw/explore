@@ -131,9 +131,9 @@ object ObsTabTiles:
   private def itcQueryProps(
     obs:            Observation,
     selectedConfig: Option[BasicConfigAndItc],
-    targetsList:    TargetList
+    targetList:     TargetList
   ): ItcProps =
-    ItcProps(obs, selectedConfig, targetsList, obs.toModeOverride)
+    ItcProps(obs, selectedConfig, targetList, obs.toModeOverride(targetList))
 
   private case class Offsets(
     science:     Option[NonEmptyList[Offset]],
@@ -182,39 +182,39 @@ object ObsTabTiles:
       .useStateWithReuse(LoadingState.Done)
       .useEffectWithDepsBy((props, _, _, _, _, selectedConfig, _, _, _, _) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
-      ) { (props, ctx, _, _, _, _, oldItcProps, graphs, brightestTarget, loading) => itcProps =>
-        import ctx.given
+      ): (props, ctx, _, _, _, _, oldItcProps, graphs, brightestTarget, loading) =>
+        itcProps =>
+          import ctx.given
 
-        oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
-          itcProps
-            .requestGraphs(
-              (asterismGraphs, brightestTargetResult) => {
-                val graphsResult =
-                  asterismGraphs
-                    .map:
-                      case (k, Left(e))  =>
-                        k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcGraphResult])
-                      case (k, Right(e)) =>
-                        k -> (Pot.Ready(e): Pot[ItcGraphResult])
+          oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
+            itcProps
+              .requestGraphs(
+                (asterismGraphs, brightestTargetResult) => {
+                  val graphsResult =
+                    asterismGraphs
+                      .map:
+                        case (k, Left(e))  =>
+                          k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcGraphResult])
+                        case (k, Right(e)) =>
+                          k -> (Pot.Ready(e): Pot[ItcGraphResult])
+                      .toMap
+                  graphs.setStateAsync(graphsResult) *>
+                    brightestTarget.setStateAsync(brightestTargetResult) *>
+                    loading.setState(LoadingState.Done).value.toAsync
+                },
+                (graphs.setState(
+                  itcProps.targets
+                    .map: t =>
+                      t -> Pot.error:
+                        new RuntimeException("Not enough information to calculate the ITC graph")
                     .toMap
-                graphs.setStateAsync(graphsResult) *>
-                  brightestTarget.setStateAsync(brightestTargetResult) *>
-                  loading.setState(LoadingState.Done).value.toAsync
-              },
-              (graphs.setState(
-                itcProps.targets
-                  .map: t =>
-                    t -> Pot.error:
-                      new RuntimeException("Not enough information to calculate the ITC graph")
-                  .toMap
-              ) *>
-                brightestTarget.setState(none) *>
-                loading.setState(LoadingState.Done)).toAsync,
-              loading.setState(LoadingState.Loading).value.toAsync
-            )
-            .whenA(itcProps.isExecutable)
-            .runAsyncAndForget
-      }
+                ) *>
+                  brightestTarget.setState(none) *>
+                  loading.setState(LoadingState.Done)).toAsync,
+                loading.setState(LoadingState.Loading).value.toAsync
+              )
+              .whenA(itcProps.isExecutable)
+              .runAsyncAndForget
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _) =>

@@ -43,7 +43,7 @@ object ITCGraphRequests:
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
-      case m: GmosNorthSpectroscopyRow =>
+      case m @ GmosNorthSpectroscopyRow(_, _, _, _) =>
         ItcGraphRequestParams(
           wavelength,
           signalToNoise,
@@ -52,7 +52,7 @@ object ITCGraphRequests:
           targets,
           m
         ).some
-      case m: GmosSouthSpectroscopyRow =>
+      case m @ GmosSouthSpectroscopyRow(_, _, _, _) =>
         ItcGraphRequestParams(
           wavelength,
           signalToNoise,
@@ -61,7 +61,7 @@ object ITCGraphRequests:
           targets,
           m
         ).some
-      case _                           =>
+      case _                                        =>
         none
 
     def doRequest(request: ItcGraphRequestParams): F[GraphResponse] =

@@ -152,14 +152,13 @@ case class ItcProps(
     action.getOrElse(orElse)
 
 object ItcProps:
-  given Reusability[ItcProps] = Reusability.by(p =>
-    (p.observation.scienceTargetIds.toList,
-     p.observation.constraints,
-     p.observation.scienceRequirements,
-     p.observation.observingMode,
-     p.observation.wavelength,
-     p.selectedConfig,
-     p.at,
-     p.modeOverrides
-    )
-  )
+  given Reusability[ItcProps] =
+    Reusability.by: p =>
+      (p.observation.scienceTargetIds.toList.sorted,
+       p.observation.constraints,
+       p.observation.scienceRequirements,
+       p.observation.wavelength,
+       p.selectedConfig,
+       p.at,
+       p.modeOverrides
+      )

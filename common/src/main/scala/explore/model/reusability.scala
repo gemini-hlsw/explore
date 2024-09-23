@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.data.NonEmptyChain
+import cats.syntax.all.*
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
 import explore.model.IsActive
@@ -24,7 +25,15 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
+import lucuma.core.enums.GmosNorthFilter
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosNorthGrating
+import lucuma.core.enums.GmosSouthFilter
+import lucuma.core.enums.GmosSouthFpu
+import lucuma.core.enums.GmosSouthGrating
+import lucuma.core.math.Offset
 import lucuma.core.math.SignalToNoise
+import lucuma.core.math.WavelengthDither
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.TimingWindow
@@ -91,7 +100,6 @@ object reusability:
   given Reusability[Progress]                           = Reusability.byEq
   given Reusability[AngularSize]                        = Reusability.byEq
   given Reusability[CatalogTargetResult]                = Reusability.byEq
-  given Reusability[ObservingMode]                      = Reusability.byEq
   given Reusability[BasicConfiguration]                 = Reusability.byEq
   given Reusability[BasicConfigAndItc]                  = Reusability.byEq
   given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
@@ -132,6 +140,133 @@ object reusability:
   given Reusability[CategoryAllocationList]             = Reusability.byEq
   given Reusability[InstrumentOverrides]                = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
+  given Reusability[WavelengthDither]                   = Reusability.byEq
+  given [A]: Reusability[Offset.Component[A]]           = Reusability.byEq
+  // We explicitly leave default binning out of ObservingMode Reusability since we compute it each time, ignoring the server value.
+  given Reusability[ObservingMode.GmosNorthLongSlit]    =
+    Reusability.by: x =>
+      (x.grating,
+       x.filter,
+       x.fpu,
+       x.centralWavelength,
+       (x.explicitXBin, x.explicitYBin).tupled,
+       x.explicitAmpReadMode.getOrElse(x.defaultAmpReadMode),
+       x.explicitAmpGain.getOrElse(x.defaultAmpGain),
+       x.explicitRoi.getOrElse(x.defaultRoi),
+       x.explicitWavelengthDithers.getOrElse(x.defaultWavelengthDithers),
+       x.explicitSpatialOffsets.getOrElse(x.defaultSpatialOffsets)
+      )
+  given Reusability[ObservingMode.GmosSouthLongSlit]    =
+    Reusability.by: x =>
+      (x.grating,
+       x.filter,
+       x.fpu,
+       x.centralWavelength,
+       (x.explicitXBin, x.explicitYBin).tupled,
+       x.explicitAmpReadMode.getOrElse(x.defaultAmpReadMode),
+       x.explicitAmpGain.getOrElse(x.defaultAmpGain),
+       x.explicitRoi.getOrElse(x.defaultRoi),
+       x.explicitWavelengthDithers.getOrElse(x.defaultWavelengthDithers),
+       x.explicitSpatialOffsets.getOrElse(x.defaultSpatialOffsets)
+      )
+  given Reusability[ObservingMode]                      = Reusability:
+    case (x @ ObservingMode.GmosNorthLongSlit(_,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _
+          ),
+          y @ ObservingMode.GmosNorthLongSlit(_,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _
+          )
+        ) =>
+      summon[Reusability[ObservingMode.GmosNorthLongSlit]].test(x, y)
+    case (x @ ObservingMode.GmosSouthLongSlit(_,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _
+          ),
+          y @ ObservingMode.GmosSouthLongSlit(_,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _,
+                                              _
+          )
+        ) =>
+      summon[Reusability[ObservingMode.GmosSouthLongSlit]].test(x, y)
+    case _ => false
 
   // We want to re render only when the vizTime changes at least a month
   // We keep the candidates data pm corrected for the viz time

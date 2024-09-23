@@ -13,10 +13,7 @@ import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.all.*
-import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosSouthFpu
-import lucuma.core.enums.GmosXBinning
-import lucuma.core.enums.GmosYBinning
+import lucuma.core.enums.GmosRoi
 import lucuma.core.enums.ImageQuality
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
@@ -28,56 +25,22 @@ import lucuma.itc.client.TargetInput
 
 trait syntax:
 
-  // For multiple targets, we take the smallest binning for each axis.
-  // https://docs.google.com/document/d/1P8_pXLRVomUSvofyVkAniOyGROcAtiJ7EMYt9wWXB0o/edit?disco=AAAA32SmtD4
-  private def asterismBinning(
-    bs: NonEmptyList[(GmosXBinning, GmosYBinning)]
-  ): (GmosXBinning, GmosYBinning) =
-    (bs.map(_._1).minimumBy(_.count), bs.map(_._2).minimumBy(_.count))
-
   extension (row: InstrumentRow)
     def toItcClientMode(ps: NonEmptyList[SourceProfile], iq: ImageQuality): Option[InstrumentMode] =
-      row match {
+      row match
         case GmosNorthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
-          val (xbin, ybin) =
-            if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
-            else asterismBinning(ps.map(northBinning(fpu, _, iq, grating)))
-          val roi          = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-          val ccd          = modeOverrides
-            .flatMap(_.ccdMode)
-            .orElse(
-              GmosCcdMode(
-                xbin,
-                ybin,
-                DefaultAmpCount,
-                DefaultAmpGain,
-                DefaultAmpReadMode
-              ).some
-            )
+          val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
+          val ccd: Option[GmosCcdMode] = modeOverrides.flatMap(_.ccdMode)
           InstrumentMode
             .GmosNorthSpectroscopy(grating, filter, GmosFpu.North(fpu.asRight), ccd, roi)
             .some
         case GmosSouthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
-          val (xbin, ybin) =
-            if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
-            else asterismBinning(ps.map(southBinning(fpu, _, iq, grating)))
-          val roi          = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-          val ccd          = modeOverrides
-            .flatMap(_.ccdMode)
-            .orElse(
-              GmosCcdMode(
-                xbin,
-                ybin,
-                DefaultAmpCount,
-                DefaultAmpGain,
-                DefaultAmpReadMode
-              ).some
-            )
+          val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
+          val ccd: Option[GmosCcdMode] = modeOverrides.flatMap(_.ccdMode)
           InstrumentMode
             .GmosSouthSpectroscopy(grating, filter, GmosFpu.South(fpu.asRight), ccd, roi)
             .some
         case _                                                             => None
-      }
 
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations
