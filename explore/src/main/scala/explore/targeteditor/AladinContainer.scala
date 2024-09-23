@@ -19,6 +19,7 @@ import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.enums.Visible
 import explore.model.reusability.given
+import explore.model.reusability.siderealTargetReusability
 import explore.visualization.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability.*
@@ -73,7 +74,10 @@ object AladinContainer extends AladinCommon {
       (t.target.id, NonEmptyList.of((Angle.Angle0, Area.MaxArea))).some
     case _                                            => None
   })
-  private given Reusability[List[AgsAnalysis]]   = Reusability.by(_.length)
+
+  private given Reusability[List[AgsAnalysis]] = Reusability.by(_.length)
+
+  private given Reusability[Instant] = siderealTargetReusability
 
   private val AladinComp = Aladin.component
 
@@ -311,7 +315,7 @@ object AladinContainer extends AladinCommon {
             )
           )
 
-        val sciencePositions        =
+        val sciencePositions =
           if (scienceTargets.length > 1)
             scienceTargets.flatMap { (selected, name, pm, base) =>
               pm.foldMap { pm =>
@@ -345,6 +349,7 @@ object AladinContainer extends AladinCommon {
               if visible.isVisible
             } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
           }
+
         val scienceOffsetIndicators =
           offsetIndicators(
             _.scienceOffsets,

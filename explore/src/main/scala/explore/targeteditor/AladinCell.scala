@@ -30,6 +30,7 @@ import explore.model.boopickle.CatalogPicklers.given
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.given
+import explore.model.reusability.siderealTargetReusability
 import explore.optics.ModelOptics
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -53,7 +54,6 @@ import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
 
-import java.time.Duration
 import java.time.Instant
 import scala.concurrent.duration.*
 
@@ -142,14 +142,10 @@ object AladinCell extends ModelOptics with AladinCommon:
 
   private type Props = AladinCell
 
-  // We want to re render only when the vizTime changes at least a month
-  // We keep the candidates data pm corrected for the viz time
-  // If it changes over a month we'll request the data again and recalculate
-  // This way we avoid recalculating pm for example if only pos angle or
-  // conditions change
-  private given Reusability[Instant] = Reusability[Instant] {
-    Duration.between(_, _).toDays().abs < 30L
-  }
+  private given Reusability[Instant] = siderealTargetReusability
+
+  // only compare candidates by id
+  private given Reusability[GuideStarCandidate] = Reusability.by(_.id)
 
   private val fovLens: Lens[AsterismVisualOptions, Fov] =
     Lens[AsterismVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec))(f =>
@@ -230,29 +226,28 @@ object AladinCell extends ModelOptics with AladinCommon:
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[AsterismVisualOptions])
       // to get faster reusability use a serial state, rather than check every candidate
-      .useSerialState(none[List[GuideStarCandidate]])
-      // Analysis results
-      .useSerialState(List.empty[AgsAnalysis])
       // Request data again if vizTime changes more than a month
-      .useEffectWithDepsBy((p, _, _, _, _) => (p.vizTime, p.asterism.baseTracking)) {
-        (props, ctx, _, gs, _) => (vizTime, baseTracking) =>
+      .useEffectKeepResultWithDepsBy((p, _, _) => (p.vizTime, p.asterism.baseTracking)) {
+        (props, ctx, _) => (vizTime, baseTracking) =>
           import ctx.given
 
-          (for {
-            _          <- props.obsConf
-                            .flatMap(_.agsState)
-                            .foldMap(_.async.set(AgsState.LoadingCandidates))
-            candidates <- CatalogClient[IO]
-                            .requestSingle(
-                              CatalogMessage.GSRequest(baseTracking, vizTime)
-                            )
-            _          <- gs.setStateAsync(candidates)
-          } yield ())
-            .guarantee(
-              props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
-            )
-            .whenA(props.needsAGS)
+          if (props.needsAGS)
+            (for {
+              _          <- props.obsConf
+                              .flatMap(_.agsState)
+                              .foldMap(_.async.set(AgsState.LoadingCandidates))
+              candidates <- CatalogClient[IO]
+                              .requestSingle(
+                                CatalogMessage.GSRequest(baseTracking, vizTime)
+                              )
+            } yield candidates)
+              .guarantee(
+                props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
+              )
+          else none.pure
       }
+      // Analysis results
+      .useSerialState(List.empty[AgsAnalysis])
       // Reference to root
       .useMemo(())(_ => domRoot)
       // Load target preferences
@@ -301,7 +296,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.flatMap(_.wavelength),
          p.vizTime,
          p.obsConf.flatMap(_.configuration),
-         candidates.value
+         candidates.toOption.flatten
         )
       ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
         {
@@ -314,13 +309,13 @@ object AladinCell extends ModelOptics with AladinCommon:
                 vizTime,
                 observingMode,
                 candidates
-              ) if props.needsAGS =>
+              ) if props.needsAGS && candidates.nonEmpty =>
             import ctx.given
 
             val runAgs = (positions,
                           tracking.at(vizTime),
                           props.obsConf.flatMap(_.agsState),
-                          candidates.value
+                          candidates
             ).mapN { (positions, base, agsState, candidates) =>
 
               val fpu    = observingMode.flatMap(_.fpuAlternative)
@@ -496,7 +491,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                         agsState.get,
                         props.modeSelected,
                         props.durationAvailable,
-                        candidates.value.isDefined
+                        candidates.nonEmpty
                       )
                     )
                   )
