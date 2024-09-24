@@ -20,9 +20,7 @@ import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
-import explore.syntax.ui.*
 import explore.undo.UndoContext
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -32,8 +30,6 @@ import lucuma.core.util.NewType
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.ConfirmDialog
-import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
@@ -51,19 +47,14 @@ import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
 
-object DeletingTargets extends NewType[Boolean]
-type DeletingTargets = DeletingTargets.Type
-
 case class TargetSummaryTileState(
-  filesToImport:   List[DOMFile],
-  table:           ColumnSelectorState[TargetWithId, Nothing],
-  deletingTargets: DeletingTargets
+  filesToImport: List[DOMFile],
+  table:         ColumnSelectorState[TargetWithId, Nothing]
 )
 
 object TargetSummaryTileState:
-  val filesToImport   = Focus[TargetSummaryTileState](_.filesToImport)
-  val table           = Focus[TargetSummaryTileState](_.table)
-  val deletingTargets = Focus[TargetSummaryTileState](_.deletingTargets)
+  val filesToImport = Focus[TargetSummaryTileState](_.filesToImport)
+  val table         = Focus[TargetSummaryTileState](_.table)
 
 case class TargetSummaryBody(
   userId:                  Option[User.Id],
@@ -78,9 +69,8 @@ case class TargetSummaryBody(
   readonly:                Boolean,
   tileState:               View[TargetSummaryTileState]
 ) extends ReactFnProps(TargetSummaryBody.component):
-  val filesToImport   = tileState.zoom(TargetSummaryTileState.filesToImport)
-  val table           = tileState.zoom(TargetSummaryTileState.table)
-  val deletingTargets = tileState.zoom(TargetSummaryTileState.deletingTargets)
+  val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
+  val table         = tileState.zoom(TargetSummaryTileState.table)
 
 object TargetSummaryBody:
   private type Props = TargetSummaryBody
@@ -252,7 +242,6 @@ object TargetSummaryBody:
             )
           )
       .render: (props, _, _, _, table, virtualizerRef, resizer) =>
-
         val selectedRows = table.getSelectedRowModel().rows.toList
 
         PrimeAutoHeightVirtualizedTable(
@@ -324,11 +313,9 @@ case class TargetSummaryTitle(
   undoCtx:               UndoContext[ProgramSummaries],
   readonly:              Boolean,
   tileState:             View[TargetSummaryTileState]
-) extends ReactFnProps(TargetSummaryTitle.component) {
-  val filesToImport   = tileState.zoom(TargetSummaryTileState.filesToImport)
-  val table           = tileState.zoom(TargetSummaryTileState.table)
-  val deletingTargets = tileState.zoom(TargetSummaryTileState.deletingTargets)
-}
+) extends ReactFnProps(TargetSummaryTitle.component):
+  val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
+  val table         = tileState.zoom(TargetSummaryTileState.table)
 
 object TargetSummaryTitle:
   private type Props = TargetSummaryTitle
@@ -338,42 +325,12 @@ object TargetSummaryTitle:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .render: (props, ctx) =>
-        import ctx.given
-
-        props.table.get.table.map { table =>
-          val selectedRows    = table.getSelectedRowModel().rows.toList
-          val selectedRowsIds = selectedRows.map(_.original.id)
-
+        props.table.get.table.map: table =>
           def onTextChange(e: ReactEventFromInput): Callback =
             val files = e.target.files.toList
             // set value to null so we can reuse the import button
             (Callback(e.target.value = null) *> props.filesToImport.set(files))
               .when_(files.nonEmpty)
-
-          def deleteSelected: Callback =
-            ConfirmDialog.confirmDialog(
-              message = <.div(s"This action will delete ${selectedRows.length} targets."),
-              header = "Targets delete",
-              acceptLabel = "Yes, delete",
-              position = DialogPosition.Top,
-              accept = props.targets
-                .mod(_.filter((id, _) => !selectedRowsIds.contains(id))) *>
-                props.table.get.table.map(_.toggleAllRowsSelected(false)).getOrEmpty *>
-                TargetAddDeleteActions
-                  .deleteTargets(
-                    selectedRowsIds,
-                    props.programId,
-                    props.selectTargetOrSummary(none).toAsync,
-                    ToastCtx[IO].showToast(_)
-                  )
-                  .set(props.undoCtx)(selectedRowsIds.map(_ => none))
-                  .toAsync
-                  .switching(props.deletingTargets.async, DeletingTargets(_))
-                  .runAsyncAndForget,
-              acceptClass = PrimeStyles.ButtonSmall,
-              rejectClass = PrimeStyles.ButtonSmall,
-              icon = Icons.SkullCrossBones(^.color.red)
-            )
 
           React.Fragment(
             if (props.readonly) EmptyVdom
@@ -405,17 +362,9 @@ object TargetSummaryTitle:
                   icon = Icons.SquareXMark,
                   label = "None",
                   onClick = table.toggleAllRowsSelected(false)
-                ).compact,
-                Button(
-                  size = Button.Size.Small,
-                  icon = Icons.Trash,
-                  disabled = props.deletingTargets.get.value,
-                  loading = props.deletingTargets.get.value,
-                  onClick = deleteSelected
-                ).compact.when(selectedRows.nonEmpty)
+                ).compact
               ),
             <.span(ExploreStyles.TitleSelectColumns)(
               ColumnSelector(table, TargetSummaryBody.ColNames, ExploreStyles.SelectColumns)
             )
           )
-        }

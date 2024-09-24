@@ -31,7 +31,6 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.targets.DeletingTargets
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -289,6 +288,7 @@ object TargetTabContents extends TwoPanels:
               shadowClipboard.value,
               selectTargetOrSummary,
               selectedTargetIds.set,
+              props.programSummaries.undoableView(ProgramSummaries.targets).mod,
               copyCallback,
               pasteCallback,
               props.readonly
@@ -303,7 +303,7 @@ object TargetTabContents extends TwoPanels:
           val renderSummary: Tile[TargetSummaryTileState] = Tile(
             ObsTabTilesIds.TargetSummaryId.id,
             "Target Summary",
-            TargetSummaryTileState(Nil, ColumnSelectorState(), DeletingTargets(false)),
+            TargetSummaryTileState(Nil, ColumnSelectorState()),
             backButton.some
           )(
             TargetSummaryBody(
