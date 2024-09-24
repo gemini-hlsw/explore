@@ -41,11 +41,12 @@ trait CacheModifierUpdaters {
   ): ProgramSummaries => ProgramSummaries =
     observationEdit.value
       .map { value =>
-        val obsId = value.id
+        val obsId  = value.id
+        val exists = observationEdit.meta.forall(_.existence === Existence.Present)
 
         val obsUpdate    = ProgramSummaries.observations
           .modify(observations =>
-            if (observationEdit.meta.forall(_.existence === Existence.Present))
+            if (exists)
               observations.inserted(
                 obsId,
                 value,
@@ -58,7 +59,10 @@ trait CacheModifierUpdaters {
         val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
 
         val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
-        val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(_.withUpdatePending(obsId))
+        val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(oem =>
+          if (exists) oem.withUpdatePending(obsId)
+          else oem.removed(obsId)
+        )
 
         obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
       }
