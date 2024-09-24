@@ -27,6 +27,7 @@ import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
+import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
@@ -43,6 +44,9 @@ import lucuma.react.beautifuldnd.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.ConfirmDialog
+import lucuma.react.primereact.DialogPosition
+import lucuma.react.primereact.PrimeStyles
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
@@ -62,6 +66,7 @@ case class AsterismGroupObsList(
   clipboardContent:      LocalClipboard,
   selectTargetOrSummary: Option[Target.Id] => Callback,
   selectSummaryTargets:  List[Target.Id] => Callback,
+  modTargets:            (TargetList => TargetList) => Callback,
   copyCallback:          Callback,
   pasteCallback:         Callback,
   readonly:              Boolean
@@ -104,7 +109,7 @@ case class AsterismGroupObsList(
       case LocalClipboard.CopiedTargets(targets)           => targetsText(targets.idSet.toSortedSet).some
       case LocalClipboard.CopiedObservations(observations) => observationsText(observations).some
 
-  private val copyDisabled: Boolean =
+  private val selectedDisabled: Boolean =
     selectedIdsOpt.isEmpty
 
   private val pasteDisabled: Boolean =
@@ -126,10 +131,6 @@ case class AsterismGroupObsList(
     Option
       .unless(pasteDisabled)((clipboardText, pasteIntoText).mapN((c, s) => s"$c into $s"))
       .flatten
-
-  private val deleteDisabled: Boolean =
-    // For now, we only allow deleting when just one obs is selected
-    !selectedIdsOpt.exists(_.exists(_.size === 1))
 
 end AsterismGroupObsList
 
@@ -381,6 +382,38 @@ object AsterismGroupObsList:
           }
         )
 
+      val deleteTargets: List[Target.Id] => Callback =
+        selectedTargetsIds =>
+          ConfirmDialog.confirmDialog(
+            message = <.div(s"This action will delete ${props.selectedText.orEmpty}."),
+            header = "Targets delete",
+            acceptLabel = "Yes, delete",
+            position = DialogPosition.Top,
+            accept = props.modTargets(_.filter((id, _) => !selectedTargetsIds.contains(id))) >>
+              TargetAddDeleteActions
+                .deleteTargets(
+                  selectedTargetsIds,
+                  props.programId,
+                  props.selectTargetOrSummary(none).toAsync,
+                  ToastCtx[IO].showToast(_)
+                )
+                .set(props.undoCtx)(selectedTargetsIds.map(_ => none))
+                .toAsync
+                .runAsyncAndForget,
+            acceptClass = PrimeStyles.ButtonSmall,
+            rejectClass = PrimeStyles.ButtonSmall,
+            icon = Icons.SkullCrossBones(^.color.red)
+          )
+
+      val deleteCallback: Callback =
+        props.selectedIdsOpt
+          .map:
+            _.fold(
+              targetIdSet => deleteTargets(targetIdSet.toList),
+              obsIdSet => props.selectedAsterismGroup.map(deleteObs(_)(obsIdSet.head)).orEmpty
+            )
+          .orEmpty
+
       def renderAsterismGroup(asterismGroup: AsterismGroup, names: List[String]): VdomNode = {
         val obsIds        = asterismGroup.obsIds
         val cgObs         = obsIds.toList.map(id => observations.getValue(id)).flatten
@@ -517,7 +550,7 @@ object AsterismGroupObsList:
             ActionButtons(
               ActionButtons.ButtonProps(
                 props.copyCallback,
-                disabled = props.copyDisabled,
+                disabled = props.selectedDisabled,
                 tooltipExtra = props.selectedText
               ),
               ActionButtons.ButtonProps(
@@ -526,10 +559,8 @@ object AsterismGroupObsList:
                 tooltipExtra = props.pasteText
               ),
               ActionButtons.ButtonProps(
-                (props.selectedAsterismGroup,
-                 props.selectedIdsOpt.flatMap(_.toOption).map(_.head)
-                ).tupled.foldMap(deleteObs(_)(_)),
-                disabled = props.deleteDisabled,
+                deleteCallback,
+                disabled = props.selectedDisabled,
                 tooltipExtra = props.selectedText
               )
             )
