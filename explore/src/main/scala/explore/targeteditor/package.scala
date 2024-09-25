@@ -11,9 +11,6 @@ import lucuma.core.util.NewType
 import lucuma.react.aladin.Fov
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
-import lucuma.ags.AgsAnalysis
-import eu.timepit.refined.types.string.NonEmptyString
-import eu.timepit.refined.cats.*
 
 extension (options: AsterismVisualOptions) inline def fov: Fov = Fov(options.fovRA, options.fovDec)
 

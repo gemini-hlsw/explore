@@ -232,27 +232,32 @@ object ObsTabTiles:
       .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
         import ctx.given
 
+        // We tell the backend and the local cache of changes to the selected guidestar
+        // In some cases
         guideStarSelection.withOnMod {
           (_, _) match {
+            // Change of override
             case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
               Callback.log(s"new selected name from $m to $n") *>
                 props.selectedGSName.set(n.some) *>
                 ObsQueries
                   .setGuideTargetName[IO](props.obsId, n.some)
                   .runAsyncAndForget
+            // Going from automatic to manual selection
             case (AgsSelection(_), AgsOverride(n, _, _))                 =>
-              // From automatic to manual
               Callback.log(s"new overriden name to $n") *>
                 props.selectedGSName.set(n.some) *>
                 ObsQueries
                   .setGuideTargetName[IO](props.obsId, n.some)
                   .runAsyncAndForget
-            case (AgsOverride(_, _, _), AgsSelection(_))                 =>
+            // Going from manual to automated selection
+            case (AgsOverride(n, _, _), AgsSelection(_))                 =>
               // From manual to automatic
-              Callback.log(s"Overridde to automatic") // *>
-            // ObsQueries
-            //   .setGuideTargetName[IO](props.obsId.get, none)
-            //   .runAsyncAndForget
+              Callback.log(s"Overridde to automatic from $n") *>
+                props.selectedGSName.set(none) *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId, none)
+                  .runAsyncAndForget
             case m                                                       =>
               // All other combinations
               Callback.log(s"/dev/null $m") // Callback.empty

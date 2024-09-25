@@ -44,9 +44,7 @@ object AgsOverlay:
       val selectedIndex = props.selectedGS.get.idx
 
       val maxIndex = props.agsResults.size
-      // println(s"maxIndex: $maxIndex $selectedIndex")
 
-      // println(s"selectedIndex: $selectedIndex, maxIndex: $maxIndex")
       val canGoPrev = props.agsState === AgsState.Idle && selectedIndex.exists(_ > 0)
       val canGoNext = props.agsState === AgsState.Idle && selectedIndex.exists(_ < maxIndex - 1)
 
@@ -67,6 +65,11 @@ object AgsOverlay:
       val errorIcon = Icons.TriangleSolid
         .addClass(ExploreStyles.ItcErrorIcon)
         .withSize(IconSize.LG)
+
+      val devOnly =
+        <.div(^.cls := "ags-selection-dev",
+              TagMod.devOnly(s"${props.agsState} ${props.selectedGS.get}")
+        )
 
       props.selectedGS.get.analysis
         .map { case analysis =>
@@ -93,6 +96,7 @@ object AgsOverlay:
             ),
             <.div(
               ExploreStyles.AgsDescription,
+              devOnly,
               analysis.match {
                 case AgsAnalysis.Usable(_, _, GuideSpeed.Fast, _, _)   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
@@ -111,10 +115,7 @@ object AgsOverlay:
                       analysis.target.gBrightness.map { case (b, v) =>
                         React.Fragment(
                           if (b === Band.GaiaRP) React.Fragment(s"G", <.sub("RP")) else b.shortName,
-                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}",
-                          <.div(^.cls := "ags-selection-dev",
-                                TagMod.devOnly(props.selectedGS.get.toString)
-                          )
+                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}"
                         )
                       }
                     ),
@@ -130,14 +131,19 @@ object AgsOverlay:
         .getOrElse {
           <.div(
             ExploreStyles.AgsDescription,
+            devOnly,
             (props.modeAvailable, props.durationAvailable, props.candidatesAvailable) match {
-              case (false, _, _) =>
+              case (false, _, _)                     =>
                 <.span(errorIcon, Constants.MissingMode)
-              case (_, false, _) =>
+              case (_, false, _)                     =>
                 <.span(errorIcon, Constants.NoDuration)
-              case (_, _, false) =>
+              case (_, _, false)                     =>
                 <.span(errorIcon, Constants.MissingCandidates)
-              case u             =>
+              case _ if props.agsState.isCalculating =>
+                <.span(Icons.CircleSmall.withBeat().withClass(ExploreStyles.WarningIcon),
+                       Constants.Calculating
+                )
+              case _                                 =>
                 <.span(
                   Icons.SquareXMarkLarge
                     .withClass(ExploreStyles.AgsNotFound)
