@@ -22,7 +22,6 @@ import monocle.Lens
 type GroupTree = KeyedIndexedTree[GroupTree.Key, GroupTree.Value]
 
 object GroupTree:
-
   type Key   = Either[Observation.Id, GroupId]
   type Index = KeyedIndexedTree.Index[Key]
   type Value = Either[Obs, Group]

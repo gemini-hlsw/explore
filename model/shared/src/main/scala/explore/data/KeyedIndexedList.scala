@@ -29,9 +29,9 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, N
   def getValue(key:         K): Option[A]              = list.get(key).map(_._1)
   def getIndex(key:         K): Option[NonNegInt]      = list.get(key).map(_._2)
 
-  def values: Iterable[A] = list.values.map(_._1)
+  def toIndexedList: List[(A, NonNegInt)] = list.values.toList
 
-  def toList: List[A] = values.toList
+  def toList: List[A] = toIndexedList.map(_._1)
 
   def toMap: Map[K, A] = list.map { case (k, (v, _)) => k -> v }
 
@@ -46,46 +46,43 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, N
 
   def removed(key: K): KeyedIndexedList[K, A] =
     getIndex(key)
-      .fold(this)(idx =>
-        KeyedIndexedList.unsafeFromTreeSeqMap(
+      .fold(this): idx =>
+        KeyedIndexedList.unsafeFromTreeSeqMap:
           list
             .removed(key)
-            .map(_ match {
+            .map:
               case (key, (a, i)) if i < idx     => (key, (a, i))
               case (key, (a, i)) /*if i > idx*/ => (key, (a, NonNegInt.unsafeFrom(i.value - 1)))
-            })
-        )
-      )
 
   def contains(key: K): Boolean = list.contains(key)
 
-  def exists(p: A => Boolean): Boolean = values.exists(p)
+  def exists(p: A => Boolean): Boolean = list.values.exists { case (a, _) => p(a) }
 
   def take(n: NonNegInt): KeyedIndexedList[K, A] =
     KeyedIndexedList.unsafeFromTreeSeqMap(list.take(n.value))
 
   def drop(n: NonNegInt): KeyedIndexedList[K, A] =
-    KeyedIndexedList.unsafeFromTreeSeqMap(
+    KeyedIndexedList.unsafeFromTreeSeqMap:
       list
-        .collect {
+        .collect:
           case (id, (a, i)) if i >= n => (id, (a, NonNegInt.unsafeFrom(i.value - n.value)))
-        }
-    )
 
   def inserted(key: K, elem: A, idx: NonNegInt): KeyedIndexedList[K, A] = {
-    val fixedIdx: NonNegInt = idx match {
+    val fixedIdx: NonNegInt = idx match
       case i if i > length    => length
       case i if i < 0.refined => 0.refined
       case i                  => i
-    }
-    val baseList            = removed(key).list
 
-    val (front, back) = baseList.splitAt(fixedIdx.value)
-    KeyedIndexedList.unsafeFromTreeSeqMap(
-      (front + ((key, (elem, fixedIdx)))) ++ back.map { case (k, (e, i)) =>
-        (k, (e, NonNegInt.unsafeFrom(i.value + 1)))
-      }
-    )
+    val baseList: TreeSeqMap[K, (A, NonNegInt)] = removed(key).list
+
+    val (front, back): (TreeSeqMap[K, (A, NonNegInt)], TreeSeqMap[K, (A, NonNegInt)]) =
+      baseList.splitAt(fixedIdx.value)
+
+    KeyedIndexedList.unsafeFromTreeSeqMap:
+      (front + ((key, (elem, fixedIdx)))) ++
+        back.map { case (k, (e, i)) =>
+          (k, (e, NonNegInt.unsafeFrom(i.value + 1)))
+        }
   }
 
   def updated(key: K, value: A, idx: NonNegInt): KeyedIndexedList[K, A] =
@@ -95,10 +92,9 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, N
       this
 
   def updatedWith(key: K, f: (A, NonNegInt) => (A, NonNegInt)): KeyedIndexedList[K, A] =
-    getValueAndIndex(key).fold(this)((oldV, oldI) =>
+    getValueAndIndex(key).fold(this): (oldV, oldI) =>
       val (v, i) = f(oldV, oldI)
       inserted(key, v, i)
-    )
 
   def updatedValueWith(key: K, f: A => A): KeyedIndexedList[K, A] =
     updatedWith(key, (v, i) => (f(v), i))
@@ -107,9 +103,13 @@ object KeyedIndexedList:
   def empty[K, A]: KeyedIndexedList[K, A] = KeyedIndexedList[K, A](TreeSeqMap.empty)
 
   def fromList[K, A](list: List[A], getKey: A => K): KeyedIndexedList[K, A] =
-    KeyedIndexedList(TreeSeqMap.from(list.distinctBy(getKey).zipWithIndex.map { case (a, idx) =>
-      (getKey(a), (a, NonNegInt.unsafeFrom(idx)))
-    }))
+    KeyedIndexedList:
+      TreeSeqMap.from:
+        list
+          .distinctBy(getKey)
+          .zipWithIndex
+          .map: (a, idx) =>
+            (getKey(a), (a, NonNegInt.unsafeFrom(idx)))
 
   def unsafeFromTreeSeqMap[K, A](list: TreeSeqMap[K, (A, NonNegInt)]): KeyedIndexedList[K, A] =
     KeyedIndexedList(list)

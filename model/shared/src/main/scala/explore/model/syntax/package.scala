@@ -68,7 +68,7 @@ object all:
         list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - targetId))
       )
     def allWithTarget(targetId: Target.Id): Set[Observation.Id]                              =
-      observations.values
+      observations.toList
         .filter(_.scienceTargetIds.contains(targetId))
         .map(_.id)
         .toSet

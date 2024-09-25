@@ -114,7 +114,7 @@ object ObsList:
   private def groupTreeNodeIsoBuilder(
     allObservations: ObservationList
   ): Iso[GroupTree, List[Node[GroupTree.Value]]] =
-    Iso[GroupTree, List[Node[GroupTree.Value]]](groups =>
+    Iso[GroupTree, List[Node[GroupTree.Value]]](groupTree =>
       def createNode(node: GroupTree.Node): Node[GroupTree.Value] =
         val isSystemGroup: Boolean    = node.value.toOption.exists(_.system)
         val isCalibrationObs: Boolean = node.value.left.toOption
@@ -132,7 +132,7 @@ object ObsList:
           children = node.children.map(createNode)
         )
 
-      groups.toTree.children.map(createNode)
+      groupTree.toTree.children.map(createNode)
     )(nodes =>
       def nodeToTree(node: Node[GroupTree.Value]): GroupTree.Node =
         ExploreNode(node.data, children = node.children.map(nodeToTree).toList)

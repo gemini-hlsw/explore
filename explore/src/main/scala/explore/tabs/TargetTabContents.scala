@@ -401,7 +401,7 @@ object TargetTabContents extends TwoPanels:
 
             val obsConf = idsToEdit.single match {
               case Some(id) =>
-                props.programSummaries.get.observations.values
+                props.programSummaries.get.observations.toList
                   .collect:
                     case o @ Observation(
                           obsId,

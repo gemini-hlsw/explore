@@ -29,46 +29,46 @@ trait CacheModifierUpdaters {
 
   protected def modifyTargets(targetEdit: TargetEdit): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.targets
-      .modify(targets =>
+      .modify: targets =>
         if (targetEdit.meta.existence === Existence.Present)
           targets.updated(targetEdit.value.id, targetEdit.value.target)
         else
           targets.removed(targetEdit.value.id)
-      )
 
   protected def modifyObservations(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
     observationEdit.value
-      .map { value =>
-        val obsId  = value.id
-        val exists = observationEdit.meta.forall(_.existence === Existence.Present)
+      .map: value =>
+        val obsId: Observation.Id = value.id
+        val exists: Boolean       = observationEdit.meta.forall(_.existence === Existence.Present)
 
-        val obsUpdate    = ProgramSummaries.observations
-          .modify(observations =>
-            if (exists)
-              observations.inserted(
-                obsId,
-                value,
-                observations.getIndex(obsId).getOrElse(observations.length)
-              )
-            else
-              observations.removed(obsId)
-          )
+        val obsUpdate: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.observations
+            .modify: observations =>
+              if (exists)
+                observations.inserted(
+                  obsId,
+                  value,
+                  observations.getIndex(obsId).getOrElse(observations.length)
+                )
+              else observations.removed(obsId)
+
         // TODO: this won't be needed anymore when groups are also updated through events of observation updates
-        val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
+        val groupsUpdate: ProgramSummaries => ProgramSummaries =
+          updateGroupsMappingForObsEdit(observationEdit)
 
-        val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
-        val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(oem =>
-          if (exists) oem.withUpdatePending(obsId)
-          else oem.removed(obsId)
-        )
+        val programTimesReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.programTimesPot.replace(Pot.pending)
 
-        obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
-      }
-      .getOrElse(
+        val obsExecutionReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.obsExecutionPots.modify: oem =>
+            if (exists) oem.withUpdatePending(obsId)
+            else oem.removed(obsId)
+
+        obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+      .getOrElse:
         updateGroupsMappingForObsEdit(observationEdit)
-      )
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     (groupEdit.value, groupEdit.meta).tupled
@@ -77,34 +77,35 @@ trait CacheModifierUpdaters {
         val editType  = groupEdit.editType
         val existence = meta.existence
 
-        val groupUpdate = ProgramSummaries.groups.modify:
-          if (existence === Existence.Deleted)
-            _.removed(groupId.asRight)
-          else
-            editType match
-              case DeletedCal       =>
-                _.removed(groupId.asRight)
-              case Created          =>
-                _.inserted(
-                  groupId.asRight,
-                  Node(newGrouping.toGroupTreeGroup.asRight),
-                  newGrouping.toIndex
-                )
-              case EditType.Updated =>
-                _.updated(
-                  groupId.asRight,
-                  newGrouping.toGroupTreeGroup.asRight,
-                  newGrouping.toIndex
-                )
+        val groupUpdate: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groups.modify:
+            if (existence === Existence.Deleted)
+              _.removed(groupId.asRight)
+            else
+              editType match
+                case DeletedCal       =>
+                  _.removed(groupId.asRight)
+                case Created          =>
+                  _.inserted(
+                    groupId.asRight,
+                    Node(newGrouping.toGroupTreeGroup.asRight),
+                    newGrouping.toIndex
+                  )
+                case EditType.Updated =>
+                  _.updated(
+                    groupId.asRight,
+                    newGrouping.toGroupTreeGroup.asRight,
+                    newGrouping.toIndex
+                  )
 
-        val groupTimeRangePotsReset = ProgramSummaries.groupTimeRangePots
-          .modify(
-            if existence === Existence.Present then _.withUpdatePending(groupId)
-            else _.removed(groupId)
-          )
-          .andThen(parentGroupTimeRangeReset(groupId.asRight))
+        val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groupTimeRangePots
+            .modify:
+              if existence === Existence.Present then _.withUpdatePending(groupId)
+              else _.removed(groupId)
+            .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
-        groupUpdate.andThen(groupTimeRangePotsReset)
+        groupUpdate >>> groupTimeRangePotsReset
       .getOrElse(identity)
 
   protected def modifyAttachments(
@@ -131,45 +132,45 @@ trait CacheModifierUpdaters {
     val obsId = observationEdit.observationId
     observationEdit.value
       .map { value =>
+        val groupEdit: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groups
+            .modify: groupElements =>
+              println(s"groupindex: ${value.groupIndex}")
 
-        val groupEdit = ProgramSummaries.groups
-          .modify { groupElements =>
-            val groupId     = value.groupId
-            val newGroupObs = GroupTree.Obs(obsId)
-            val newIndex    =
-              Index(groupId.map(_.asRight[Observation.Id]), value.groupIndex)
+              val groupId: Option[Group.Id]                         = value.groupId
+              val newGroupObs: GroupTree.Obs                        = GroupTree.Obs(obsId)
+              val newIndex: Index[Either[Observation.Id, Group.Id]] =
+                Index(groupId.map(_.asRight[Observation.Id]), value.groupIndex)
 
-            if (observationEdit.editType === EditType.Created)
-              groupElements.inserted(
-                obsId.asLeft,
-                Node(newGroupObs.asLeft),
-                newIndex
-              )
-            else if (observationEdit.meta.forall(_.existence === Existence.Deleted))
-              groupElements.removed(obsId.asLeft)
-            else if (observationEdit.editType === EditType.Updated)
-              groupElements.updated(
-                obsId.asLeft,
-                newGroupObs.asLeft,
-                newIndex
-              )
-            else groupElements
-          }
+              if (observationEdit.editType === EditType.Created)
+                groupElements.inserted(
+                  obsId.asLeft,
+                  Node(newGroupObs.asLeft),
+                  newIndex
+                )
+              else if (observationEdit.meta.forall(_.existence === Existence.Deleted))
+                groupElements.removed(obsId.asLeft)
+              else if (observationEdit.editType === EditType.Updated)
+                groupElements.updated(
+                  obsId.asLeft,
+                  newGroupObs.asLeft,
+                  newIndex
+                )
+              else groupElements
 
-        val parentTimeRangePotsReset = value.groupId
-          .map(gid => parentGroupTimeRangeReset(gid.asRight))
-          .getOrElse(identity[ProgramSummaries])
+        val parentTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
+          value.groupId
+            .map(gid => parentGroupTimeRangeReset(gid.asRight))
+            .getOrElse(identity)
 
-        groupEdit.andThen(parentTimeRangePotsReset)
+        groupEdit >>> parentTimeRangePotsReset
       }
-      .getOrElse {
+      .getOrElse:
         ProgramSummaries.groups
-          .modify { groupElements =>
+          .modify: groupElements =>
             if (observationEdit.editType === EditType.DeletedCal)
               groupElements.removed(obsId.asLeft)
             else groupElements
-          }
-      }
 
   /**
    * Reset the time range pots for all parent groups of the given id

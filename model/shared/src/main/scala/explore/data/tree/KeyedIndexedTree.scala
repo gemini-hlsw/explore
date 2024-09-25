@@ -21,15 +21,17 @@ case class KeyedIndexedTree[K: Eq, A] private (
 )(
   private val getKey: A => K // Having in another param set keeps this out of equality
 ) {
+  def toTree: Tree[A] =
+    tree.map(_.elem)
 
-  def toTree: Tree[A] = tree.map(_.elem)
-
-  def toKeyedTree: Tree[(K, A)] = tree.map(value => (getKey(value.elem), value.elem))
+  def toKeyedTree: Tree[(K, A)] =
+    tree.map(value => (getKey(value.elem), value.elem))
 
   def getNodeAndIndexByKey(key: K): Option[(Node[A], Index[K])] =
-    byKey.get(key).map { node =>
-      (node.map(_.elem), node.value.index)
-    }
+    byKey
+      .get(key)
+      .map: node =>
+        (node.map(_.elem), node.value.index)
 
   def contains(key: K): Boolean =
     byKey.contains(key)
@@ -37,9 +39,8 @@ case class KeyedIndexedTree[K: Eq, A] private (
   def getKeyedNodeByIdx(index: Index[K]): Option[(K, Node[A])] =
     index.parentKey
       .fold(tree.children.some)(pkey => byKey.get(pkey).map(_.children))
-      .flatMap(
+      .flatMap:
         _.get(index.childPos.value.toLong).map(node => (getKey(node.value.elem), node.map(_.elem)))
-      )
 
   private def removeInTree(key: K): Tree[IndexedElem[K, A]] = {
     def removeInChildren(
@@ -49,50 +50,51 @@ case class KeyedIndexedTree[K: Eq, A] private (
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
       if (parentKey === idx.parentKey)
-        children.take(idx.childPos.value) ++ children.drop(idx.childPos.value + 1).map {
-          case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-            Node(IndexedElem(e, Index(pkey, NonNegInt.unsafeFrom(pos.value - 1))), ch)
-        }
+        children.take(idx.childPos.value) ++ children
+          .drop(idx.childPos.value + 1)
+          .map:
+            case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
+              Node(IndexedElem(e, Index(pkey, NonNegInt.unsafeFrom(pos.value - 1))), ch)
       else
-        children.map(node =>
+        children.map: node =>
           Node(node.value, removeInChildren(idx)(node.children, getKey(node.value.elem).some))
-        )
 
-    byKey.get(key).fold(tree) { keyElemIndex =>
-      val idx: Index[K] = keyElemIndex.value.index
-      Tree(removeInChildren(idx)(tree.children))
-    }
+    byKey
+      .get(key)
+      .fold(tree): keyElemIndex =>
+        val idx: Index[K] = keyElemIndex.value.index
+        Tree(removeInChildren(idx)(tree.children))
   }
 
   def removed(key: K): KeyedIndexedTree[K, A] =
-    if (byKey.contains(key)) {
+    if (byKey.contains(key))
       val newTree: Tree[IndexedElem[K, A]] = removeInTree(key)
       KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
-    } else this
+    else this
 
   def inserted(key: K, node: Node[A], idx: Index[K]): KeyedIndexedTree[K, A] = {
     def insertInChildren(
       children:  List[Node[IndexedElem[K, A]]],
       parentKey: Option[K] = None
     ): List[Node[IndexedElem[K, A]]] =
-      if (parentKey === idx.parentKey) {
-        val fixedPos: NonNegInt = idx.childPos.value match {
+      if (parentKey === idx.parentKey)
+        val fixedPos: NonNegInt = idx.childPos.value match
           case i if i > children.length => NonNegInt.unsafeFrom(children.length)
           case i                        => idx.childPos
-        }
+
         (children.take(fixedPos.value) :+
-          Node(IndexedElem(node.value, Index(parentKey, fixedPos)),
-               indexedUniqueKeyChildren(node.children, getKey, key.some, byKey.keySet + key)
+          Node(
+            IndexedElem(node.value, Index(parentKey, fixedPos)),
+            indexedUniqueKeyChildren(node.children, getKey, key.some, byKey.keySet + key)
           )) ++
           children
             .drop(fixedPos.value)
-            .map { case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
-              Node(IndexedElem(e, Index(pkey, NonNegInt.unsafeFrom(pos.value + 1))), ch)
-            }
-      } else
-        children.map(node =>
+            .map:
+              case Node(IndexedElem(e, Index(pkey, pos)), ch) =>
+                Node(IndexedElem(e, Index(pkey, NonNegInt.unsafeFrom(pos.value + 1))), ch)
+      else
+        children.map: node =>
           Node(node.value, insertInChildren(node.children, getKey(node.value.elem).some))
-        )
 
     val cleanTree: Tree[IndexedElem[K, A]] = removeInTree(key)
     val newTree: Tree[IndexedElem[K, A]]   = Tree(insertInChildren(cleanTree.children))
@@ -100,7 +102,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
   }
 
   def updated(key: K, newNode: A, newIndex: Index[K]): KeyedIndexedTree[K, A] = {
-    val current = getNodeAndIndexByKey(key)
+    val current: Option[(Node[A], Index[K])] = getNodeAndIndexByKey(key)
     current match
       case None             => inserted(key, Node(newNode, Nil), newIndex)
       case Some((value, _)) =>
