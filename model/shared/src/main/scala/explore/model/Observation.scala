@@ -106,9 +106,9 @@ case class Observation(
             _,
             _,
             _,
-            explicitXBin,
+            explicitXBinning,
             _,
-            explicitYBin,
+            explicitYBinning,
             defaultAmpReadMode,
             explicitAmpReadMode,
             defaultAmpGain,
@@ -121,14 +121,14 @@ case class Observation(
             _
           ) =>
         profiles(targets).map: ps =>
-          val (xBinning, yBinning): (GmosXBinning, GmosYBinning) =
-            (explicitXBin, explicitYBin).tupled.getOrElse:
-              if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
-              else asterismBinning(ps.map(northBinning(fpu, _, constraints.imageQuality, grating)))
+          val (defaultXBinning, defaultYBinning) =
+            if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
+            else asterismBinning(ps.map(northBinning(fpu, _, constraints.imageQuality, grating)))
+
           GmosSpectroscopyOverrides(
             GmosCcdMode(
-              xBinning,
-              yBinning,
+              explicitXBinning.getOrElse(defaultXBinning),
+              explicitYBinning.getOrElse(defaultYBinning),
               GmosAmpCount.Twelve,
               explicitAmpGain.getOrElse(defaultAmpGain),
               explicitAmpReadMode.getOrElse(defaultAmpReadMode)
@@ -145,9 +145,9 @@ case class Observation(
             _,
             _,
             _,
-            explicitXBin,
+            explicitXBinning,
             _,
-            explicitYBin,
+            explicitYBinning,
             defaultAmpReadMode,
             explicitAmpReadMode,
             defaultAmpGain,
@@ -160,14 +160,14 @@ case class Observation(
             _
           ) =>
         profiles(targets).map: ps =>
-          val (xBinning, yBinning): (GmosXBinning, GmosYBinning) =
-            (explicitXBin, explicitYBin).tupled.getOrElse:
-              if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
-              else asterismBinning(ps.map(southBinning(fpu, _, constraints.imageQuality, grating)))
+          val (defaultXBinning, defaultYBinning) =
+            if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
+            else asterismBinning(ps.map(southBinning(fpu, _, constraints.imageQuality, grating)))
+
           GmosSpectroscopyOverrides(
             GmosCcdMode(
-              xBinning,
-              yBinning,
+              explicitXBinning.getOrElse(defaultXBinning),
+              explicitYBinning.getOrElse(defaultYBinning),
               GmosAmpCount.Twelve,
               explicitAmpGain.getOrElse(defaultAmpGain),
               explicitAmpReadMode.getOrElse(defaultAmpReadMode)
