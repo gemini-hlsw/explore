@@ -263,19 +263,29 @@ object AladinCell extends ModelOptics with AladinCommon:
         (props, ctx, _, _, root, options) => _ =>
           import ctx.given
 
-          IO.println("Read prefs") *>
-            AsterismPreferences
-              .queryWithDefault[IO](props.uid, props.asterism.ids, Constants.InitialFov)
-              .flatMap { tp =>
-                (options.set(tp.ready) *>
-                  setVariable(root, "saturation", tp.saturation) *>
-                  setVariable(root, "brightness", tp.brightness)).toAsync
-              }
+          AsterismPreferences
+            .queryWithDefault[IO](props.uid, props.asterism.ids, Constants.InitialFov)
+            .flatMap { tp =>
+              (options.set(tp.ready) *>
+                setVariable(root, "saturation", tp.saturation) *>
+                setVariable(root, "brightness", tp.brightness)).toAsync
+            }
       }
-      // Ags selection
+      // Store Ags selection in a view for fast local updates
       .useStateViewBy((props, _, candidates, _, _, _) =>
         props.selectedGSName
           .fold[GuideStarSelection](AgsSelection(none))(RemoteGSSelection.apply)
+      )
+      // In case the selected namee changges remotely
+      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.selectedGSName)(
+        (_, _, _, analysis, _, _, gsSelection) =>
+          n =>
+            gsSelection.set(
+              // Go to the first analysis if present or pick the name from the selection
+              n.fold(AgsSelection(0.some.filter(_ => analysis.value.value.nonEmpty)))(
+                analysis.value.value.pick
+              )
+            )
       )
       .localValBy((props, ctx, _, _, _, _, selection) =>
         import ctx.given
@@ -301,7 +311,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             //   .runAsyncAndForget
             case m                                                              =>
               // All other combinations
-              Callback.log(m) // Callback.empty
+              Callback.log(s"/dev/null $m") // Callback.empty
           }
         }
       )
@@ -496,11 +506,12 @@ object AladinCell extends ModelOptics with AladinCommon:
           //     )
           //     .getOrEmpty
           // }
-          pprint.pprintln(selectedGSIndexView.get match {
-            case a @ AgsSelection(_)      => a
-            case a @ RemoteGSSelection(_) => a
-            case a @ AgsOverride(n, _, _) => s"AgsOverride($n)"
-          })
+          // pprint.pprintln(s"nam ${props.selectedGSName}")
+          // pprint.pprintln(selectedGSIndexView.get match {
+          //   case a @ AgsSelection(_)      => a
+          //   case a @ RemoteGSSelection(_) => a
+          //   case a @ AgsOverride(n, _, _) => s"AgsOverride($n)"
+          // })
           // )
 
           val fovView =
@@ -544,17 +555,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val (offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-          // val (selectedGuideStar, selectedGuideStarIdagsx) = selectedGSIndex.get match {
-          //   case r @ Some(i: Int)     => (agsResults.value.lift(i), r)
-          //   case AgsOverride(_, i, a) => (a.some, i.some)
-          //   case _                    => (none, none)
-          // }
-
-          // println(selectedGSIndex.get)
-          // println(agsResults.value.length)
-
           val guideStar = selectedGSIndex.get.guideStar(agsResults.value)
-          // val guideStarName = selectedGSIndex.get.targetName
 
           val renderCell: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>

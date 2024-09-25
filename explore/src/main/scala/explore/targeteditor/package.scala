@@ -46,7 +46,7 @@ extension (r: List[AgsAnalysis])
   def pick(s: NonEmptyString): GuideStarSelection =
     r.zipWithIndex
       .collectFirst { case (a, i) if a.target.name === s => i }
-      .fold[GuideStarSelection](GuideStarSelection.AgsSelection(none))(i =>
+      .fold[GuideStarSelection](GuideStarSelection.RemoteGSSelection(s))(i =>
         GuideStarSelection.AgsOverride(s, i, r(i))
       )
 

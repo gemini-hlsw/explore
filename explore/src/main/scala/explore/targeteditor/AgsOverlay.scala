@@ -13,17 +13,14 @@ import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
-import eu.timepit.refined.cats.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.Band
 import lucuma.core.enums.GuideSpeed
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.IconSize
 import lucuma.ui.syntax.all.given
-import cats.Traverse
 
 import scala.math.BigDecimal.RoundingMode
-import eu.timepit.refined.types.string.NonEmptyString
 
 case class AgsOverlay(
   selectedGS:          View[GuideStarSelection],
@@ -43,14 +40,10 @@ object AgsOverlay:
 
   val component =
     ScalaFnComponent[Props]: props =>
-      val selectedIndex = props.selectedGS.get match {
-        case GuideStarSelection.AgsSelection(r @ Some(_)) => r
-        case GuideStarSelection.AgsOverride(_, r, _)      => r.some
-        case _                                            => None
-      }
+      val selectedIndex = props.selectedGS.get.idx
 
-      val maxIndex = props.agsResults.filter(_.isUsable).size
-      println(s"maxIndex: $maxIndex $selectedIndex")
+      val maxIndex = props.agsResults.size
+      // println(s"maxIndex: $maxIndex $selectedIndex")
 
       // println(s"selectedIndex: $selectedIndex, maxIndex: $maxIndex")
       val canGoPrev = props.agsState === AgsState.Idle && selectedIndex.exists(_ > 0)
