@@ -73,6 +73,7 @@ case class SiderealTargetEditor(
   onClone:            OnCloneParameters => Callback,
   fullScreen:         View[AladinFullScreen],
   globalPreferences:  View[GlobalPreferences],
+  guideStarSelection: View[GuideStarSelection],
   readonly:           Boolean,
   invalidateSequence: Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
@@ -327,7 +328,8 @@ object SiderealTargetEditor:
                 vt,
                 props.obsConf,
                 props.fullScreen,
-                props.globalPreferences
+                props.globalPreferences,
+                props.guideStarSelection
               )
             ),
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(

@@ -17,6 +17,7 @@ import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.modes.SpectroscopyModesMatrix
+import lucuma.core.math.Angle
 import explore.undo.*
 import japgolly.scalajs.react.Callback
 import lucuma.core.model.CoordinatesAtVizTime
@@ -30,20 +31,21 @@ import queries.schemas.itc.syntax.*
 
 object ConfigurationTile:
   def configurationTile(
-    userId:           Option[User.Id],
-    programId:        Program.Id,
-    obsId:            Observation.Id,
-    requirements:     UndoSetter[ScienceRequirements],
-    mode:             UndoSetter[Option[ObservingMode]],
-    posAngle:         View[PosAngleConstraint],
-    scienceTargetIds: AsterismIds,
-    baseCoordinates:  Option[CoordinatesAtVizTime],
-    obsConf:          ObsConfiguration,
-    selectedConfig:   View[Option[BasicConfigAndItc]],
-    modes:            SpectroscopyModesMatrix,
-    allTargets:       TargetList,
-    sequenceChanged:  Callback,
-    readonly:         Boolean
+    userId:             Option[User.Id],
+    programId:          Program.Id,
+    obsId:              Observation.Id,
+    requirements:       UndoSetter[ScienceRequirements],
+    mode:               UndoSetter[Option[ObservingMode]],
+    posAngleConstraint: View[PosAngleConstraint],
+    scienceTargetIds:   AsterismIds,
+    baseCoordinates:    Option[CoordinatesAtVizTime],
+    obsConf:            ObsConfiguration,
+    selectedConfig:     View[Option[BasicConfigAndItc]],
+    selectedPA:         Option[Angle],
+    modes:              SpectroscopyModesMatrix,
+    allTargets:         TargetList,
+    sequenceChanged:    Callback,
+    readonly:           Boolean
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -56,11 +58,12 @@ object ConfigurationTile:
         obsId,
         requirements,
         mode,
-        posAngle,
+        posAngleConstraint,
         obsConf,
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
         selectedConfig,
+        selectedPA,
         modes,
         sequenceChanged,
         readonly

@@ -62,13 +62,14 @@ import scala.concurrent.duration.*
 import monocle.Focus
 
 case class AladinCell(
-  uid:               User.Id,
-  obsId:             Option[Observation.Id],
-  asterism:          Asterism,
-  vizTime:           Instant,
-  obsConf:           Option[ObsConfiguration],
-  fullScreen:        View[AladinFullScreen],
-  globalPreferences: View[GlobalPreferences]
+  uid:                User.Id,
+  obsId:              Option[Observation.Id],
+  asterism:           Asterism,
+  vizTime:            Instant,
+  obsConf:            Option[ObsConfiguration],
+  fullScreen:         View[AladinFullScreen],
+  globalPreferences:  View[GlobalPreferences],
+  guideStarSelection: View[GuideStarSelection]
 ) extends ReactFnProps(AladinCell.component):
   val needsAGS: Boolean =
     obsConf.exists(_.needGuideStar)
@@ -271,55 +272,22 @@ object AladinCell extends ModelOptics with AladinCommon:
                 setVariable(root, "brightness", tp.brightness)).toAsync
             }
       }
-      // Store Ags selection in a view for fast local updates
-      .useStateViewBy((props, _, candidates, _, _, _) =>
-        props.selectedGSName
-          .fold[GuideStarSelection](AgsSelection(none))(RemoteGSSelection.apply)
-      )
       // In case the selected namee changges remotely
-      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.selectedGSName)(
-        (_, _, _, analysis, _, _, gsSelection) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _) => props.selectedGSName)(
+        (props, _, _, analysis, _, _) =>
           n =>
-            gsSelection.set(
+            props.guideStarSelection.set(
               // Go to the first analysis if present or pick the name from the selection
-              n.fold(AgsSelection(0.some.filter(_ => analysis.value.value.nonEmpty)))(
+              n.fold(AgsSelection(analysis.value.value.headOption.tupleLeft(0)))(
                 analysis.value.value.pick
               )
             )
       )
-      .localValBy((props, ctx, _, _, _, _, selection) =>
-        import ctx.given
-
-        selection.withOnMod {
-          (_, _) match {
-            case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n        =>
-              Callback.log(s"new selected name to $n") *>
-                ObsQueries
-                  .setGuideTargetName[IO](props.obsId.get, n.some)
-                  .runAsyncAndForget
-            case (AgsOverride(_, _, _) | AgsSelection(_), AgsOverride(n, _, _)) =>
-              // From automatic to manual
-              Callback.log(s"new overriden name to $n") *>
-                ObsQueries
-                  .setGuideTargetName[IO](props.obsId.get, n.some)
-                  .runAsyncAndForget
-            case (AgsOverride(_, _, _), AgsSelection(_))                        =>
-              // From manual to automatic
-              Callback.log(s"Overridde to automatic") // *>
-            // ObsQueries
-            //   .setGuideTargetName[IO](props.obsId.get, none)
-            //   .runAsyncAndForget
-            case m                                                              =>
-              // All other combinations
-              Callback.log(s"/dev/null $m") // Callback.empty
-          }
-        }
-      )
       // mouse coordinates, starts on the base
-      .useStateBy((props, _, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
+      .useStateBy((props, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, _, _, _, options, _, gs, mouseCoords) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.asterism)(
+        (props, ctx, _, _, _, options, mouseCoords) =>
           _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
@@ -354,7 +322,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       //     _ => selectedIndex.set((none, none)).unless_(agsOverride.get.value)
       // )
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, candidates, _, _, _, _, _, _) =>
+      .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.asterism.focus.id,
          p.positions,
@@ -365,7 +333,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.flatMap(_.configuration),
          candidates.toOption.flatten
         )
-      ) { (props, ctx, _, ags, _, _, _, selectedIndex, _) =>
+      ) { (props, ctx, _, ags, _, _, _) =>
         {
           case (tracking,
                 _,
@@ -401,7 +369,10 @@ object AladinCell extends ModelOptics with AladinCommon:
               def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
                 (for {
                   // Set the analysis
-                  _ <- Callback.log(s"Run AGS $ags ${props.selectedGSName} ")
+                  _ <-
+                    Callback.log(
+                      s"Run AGS ${r.foldMap(_.length)} ${candidates.length} ${props.selectedGSName} "
+                    )
                   _ <- r.map(ags.setState).getOrEmpty
                   // If we need to flip change the constraint
                   // _ <- r
@@ -415,11 +386,13 @@ object AladinCell extends ModelOptics with AladinCommon:
                     val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
                     val name       = selectedGS.map(_.target.name)
                     Callback.log(
-                      s"Ags seleects $index ${selectedIndex.get} ${selectedIndex.get.isOverride}"
+                      s"Ags seleects $index "
                     ) *>
-                      selectedIndex
+                      props.guideStarSelection
                         .mod {
-                          case AgsSelection(_)               => AgsSelection(index) // replace automatic selection
+                          case AgsSelection(_)               =>
+                            println(s"Set to ${selectedGS.tupleLeft(0)}")
+                            AgsSelection(selectedGS.tupleLeft(0)) // replace automatic selection
                           case rem @ RemoteGSSelection(name) =>
                             // Recover the analysis for the remotely selected star
                             r.map(_.pick(name)).getOrElse(rem)
@@ -427,7 +400,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                             // If overriden ignore
                             a
                         }
-                        .unlessA(selectedIndex.get.isOverride)
+                        .unlessA(props.guideStarSelection.get.isOverride)
 
                     // .unlessA(agsOverride.get.value) // *>
                     // props.obsConf
@@ -458,12 +431,12 @@ object AladinCell extends ModelOptics with AladinCommon:
               )
             }.orEmpty
 
-            selectedIndex
+            props.guideStarSelection
               .set(AgsSelection(none))
               .toAsync                  // *>
               // props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty).toAsync
               .whenA(positions.isEmpty) // *>
-            runAgs.unlessA(selectedIndex.get.isOverride)
+            runAgs.unlessA(props.guideStarSelection.get.isOverride)
           case _ => IO.unit
         }
       }
@@ -476,15 +449,13 @@ object AladinCell extends ModelOptics with AladinCommon:
           agsResults,
           _,
           options,
-          _,
-          selectedGSIndexView,
           mouseCoords,
           menuRef
         ) =>
           import ctx.given
 
           // If the selected GS changes do a flip when necessary
-          val selectedGSIndex = selectedGSIndexView
+          val selectedGSIndex = props.guideStarSelection
           //   .withOnMod { case idx =>
           //   idx
           //     .map(agsResults.value.lift)
@@ -555,7 +526,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val (offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-          val guideStar = selectedGSIndex.get.guideStar(agsResults.value)
+          val guideStar = selectedGSIndex.get.analysis
 
           val renderCell: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>

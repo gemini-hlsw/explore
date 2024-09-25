@@ -52,16 +52,14 @@ object AgsOverlay:
       def goPrev: Option[Callback] =
         selectedIndex
           .map { i =>
-            Callback.log("goPrev") *>
-              props.selectedGS.set(props.agsResults.pick(i - 1))
+            props.selectedGS.set(props.agsResults.pick(i - 1))
           }
           .filter(_ => canGoPrev)
 
       def goNext: Option[Callback] =
         selectedIndex
           .map { i =>
-            Callback.log("goNext") *>
-              props.selectedGS.set(props.agsResults.pick(i + 1))
+            props.selectedGS.set(props.agsResults.pick(i + 1))
           }
           .filter(_ => canGoNext)
 
@@ -69,9 +67,8 @@ object AgsOverlay:
         .addClass(ExploreStyles.ItcErrorIcon)
         .withSize(IconSize.LG)
 
-      props.selectedGS.get
-        .guideStar(props.agsResults)
-        .map { analysis =>
+      props.selectedGS.get.analysis
+        .map { case analysis =>
           ReactFragment(
             <.div(
               ExploreStyles.AgsDescription,

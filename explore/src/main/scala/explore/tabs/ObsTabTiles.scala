@@ -20,6 +20,8 @@ import explore.components.ui.ExploreStyles
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
+import explore.targeteditor.GuideStarSelection
+import explore.targeteditor.GuideStarSelection.*
 import explore.model.*
 import explore.model.AppContext
 import explore.model.LoadingState
@@ -75,6 +77,7 @@ import queries.schemas.odb.ObsQueries.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import eu.timepit.refined.cats.*
 
 case class ObsTabTiles(
   vault:             Option[UserVault],
@@ -102,6 +105,8 @@ case class ObsTabTiles(
   val allTargets: TargetList                                        = programSummaries.targets
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
+  val selectedGSNameView: View[Option[NonEmptyString]]              =
+    observation.model.zoom(Observation.selectedGSName)
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -221,6 +226,39 @@ object ObsTabTiles:
         p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
+      // Store Ags selection in a view for fast local updates
+      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) =>
+        props.selectedGSNameView.get
+          .fold[GuideStarSelection](AgsSelection(none))(RemoteGSSelection.apply)
+      )
+      .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
+        import ctx.given
+
+        guideStarSelection.withOnMod {
+          (_, _) match {
+            case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n        =>
+              Callback.log(s"new selected name to $n") *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId, n.some)
+                  .runAsyncAndForget
+            case (AgsOverride(_, _, _) | AgsSelection(_), AgsOverride(n, _, _)) =>
+              // From automatic to manual
+              Callback.log(s"new overriden name to $n") *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId, n.some)
+                  .runAsyncAndForget
+            case (AgsOverride(_, _, _), AgsSelection(_))                        =>
+              // From manual to automatic
+              Callback.log(s"Overridde to automatic") // *>
+            // ObsQueries
+            //   .setGuideTargetName[IO](props.obsId.get, none)
+            //   .runAsyncAndForget
+            case m                                                              =>
+              // All other combinations
+              Callback.log(s"/dev/null $m") // Callback.empty
+          }
+        }
+      )
       .render:
         (
           props,
@@ -234,7 +272,9 @@ object ObsTabTiles:
           itcBrightestTarget,
           itcLoading,
           sequenceChanged,
-          vizTimeOrNowPot
+          vizTimeOrNowPot,
+          _,
+          guideStarSelection
         ) =>
           import ctx.given
 
@@ -262,9 +302,6 @@ object ObsTabTiles:
 
             val vizDurationView: View[Option[TimeSpan]] =
               props.observation.model.zoom(Observation.observationDuration)
-
-            val selectedGSNameView: View[Option[NonEmptyString]] =
-              props.observation.model.zoom(Observation.selectedGSName)
 
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
               NonEmptyList.fromList:
@@ -311,11 +348,15 @@ object ObsTabTiles:
             // use the angle specified in the constraint
             val pa: Option[Angle] =
               posAngleConstraintView.get match
-                case PosAngleConstraint.Unbounded                  => none // paProps.selectedPA
+                case PosAngleConstraint.Unbounded                  => guideStarSelection.get.analysis.posAngle
                 case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
                 case PosAngleConstraint.Fixed(angle)               => angle.some
                 case PosAngleConstraint.AllowFlip(angle)           => angle.some
                 case PosAngleConstraint.ParallacticOverride(angle) => angle.some
+
+            println(
+              "PA OTT: " + pa + " " + posAngleConstraintView.get + " " + guideStarSelection.get
+            )
 
             val finderChartsTile =
               FinderChartsTile.finderChartsTile(
@@ -393,7 +434,7 @@ object ObsTabTiles:
                 averagePA,
                 obsDuration.map(_.toDuration),
                 props.observation.get.needsAGS,
-                selectedGSNameView.get
+                props.selectedGSNameView.get
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
@@ -442,6 +483,7 @@ object ObsTabTiles:
                 props.searching,
                 "Targets",
                 props.globalPreferences,
+                guideStarSelection,
                 props.isDisabled,
                 // Any target changes invalidate the sequence
                 sequenceChanged.set(Pot.pending)
@@ -476,6 +518,8 @@ object ObsTabTiles:
             val timingWindowsTile =
               TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled, false)
 
+            println(s"PA: ${guideStarSelection.get.analysis.flatMap(_.posAngle)}")
+
             val configurationTile =
               ConfigurationTile.configurationTile(
                 props.vault.userId,
@@ -488,6 +532,7 @@ object ObsTabTiles:
                 targetCoords,
                 obsConf,
                 selectedConfig,
+                guideStarSelection.get.analysis.flatMap(_.posAngle),
                 props.modes,
                 props.allTargets,
                 sequenceChanged.mod {

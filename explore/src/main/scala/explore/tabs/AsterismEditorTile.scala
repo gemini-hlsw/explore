@@ -37,30 +37,32 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
+import explore.targeteditor.GuideStarSelection
 
 object AsterismEditorTile:
 
   def asterismEditorTile(
-    userId:            Option[User.Id],
-    programId:         Program.Id,
-    obsIds:            ObsIdSet,
-    obsAndTargets:     UndoSetter[ObservationsAndTargets],
-    configuration:     Option[BasicConfiguration],
-    vizTime:           View[Option[Instant]],
-    vizDuration:       View[Option[TimeSpan]],
-    obsConf:           ObsConfiguration,
-    pendingTime:       Option[TimeSpan], // estimated remaining execution time.
-    currentTarget:     Option[Target.Id],
-    setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-    onCloneTarget:     OnCloneParameters => Callback,
-    onAsterismUpdate:  OnAsterismUpdateParams => Callback,
-    obsInfo:           Target.Id => TargetEditObsInfo,
-    searching:         View[Set[Target.Id]],
-    title:             String,
-    globalPreferences: View[GlobalPreferences],
-    readonly:          Boolean,
-    sequenceChanged:   Callback = Callback.empty,
-    backButton:        Option[VdomNode] = none
+    userId:             Option[User.Id],
+    programId:          Program.Id,
+    obsIds:             ObsIdSet,
+    obsAndTargets:      UndoSetter[ObservationsAndTargets],
+    configuration:      Option[BasicConfiguration],
+    vizTime:            View[Option[Instant]],
+    vizDuration:        View[Option[TimeSpan]],
+    obsConf:            ObsConfiguration,
+    pendingTime:        Option[TimeSpan], // estimated remaining execution time.
+    currentTarget:      Option[Target.Id],
+    setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
+    onCloneTarget:      OnCloneParameters => Callback,
+    onAsterismUpdate:   OnAsterismUpdateParams => Callback,
+    obsInfo:            Target.Id => TargetEditObsInfo,
+    searching:          View[Set[Target.Id]],
+    title:              String,
+    globalPreferences:  View[GlobalPreferences],
+    guideStarSelection: View[GuideStarSelection],
+    readonly:           Boolean,
+    sequenceChanged:    Callback = Callback.empty,
+    backButton:         Option[VdomNode] = none
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[AsterismTileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
@@ -96,6 +98,7 @@ object AsterismEditorTile:
             obsInfo,
             searching,
             globalPreferences,
+            guideStarSelection,
             readonly,
             sequenceChanged,
             a

@@ -23,23 +23,25 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
+import explore.targeteditor.GuideStarSelection
 
 object SiderealTargetEditorTile:
 
   def noObsSiderealTargetEditorTile(
-    programId:         Program.Id,
-    userId:            Option[User.Id],
-    targetId:          Target.Id,
-    target:            UndoSetter[Target.Sidereal],
-    obsAndTargets:     UndoSetter[ObservationsAndTargets],
-    searching:         View[Set[Target.Id]],
-    title:             String,
-    fullScreen:        View[AladinFullScreen],
-    globalPreferences: View[GlobalPreferences],
-    readonly:          Boolean,
-    obsInfo:           TargetEditObsInfo,
-    onClone:           OnCloneParameters => Callback,
-    backButton:        Option[VdomNode] = none
+    programId:          Program.Id,
+    userId:             Option[User.Id],
+    targetId:           Target.Id,
+    target:             UndoSetter[Target.Sidereal],
+    obsAndTargets:      UndoSetter[ObservationsAndTargets],
+    searching:          View[Set[Target.Id]],
+    title:              String,
+    fullScreen:         View[AladinFullScreen],
+    globalPreferences:  View[GlobalPreferences],
+    guideStarSelection: View[GuideStarSelection],
+    readonly:           Boolean,
+    obsInfo:            TargetEditObsInfo,
+    onClone:            OnCloneParameters => Callback,
+    backButton:         Option[VdomNode] = none
   ) =
     Tile(
       ObsTabTilesIds.TargetId.id,
@@ -65,6 +67,7 @@ object SiderealTargetEditorTile:
               onClone = onClone,
               fullScreen = fullScreen,
               globalPreferences = globalPreferences,
+              guideStarSelection = guideStarSelection,
               readonly = readonly
             )
           )

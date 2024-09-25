@@ -54,7 +54,7 @@ sealed trait GuideStarSelection
 
 object GuideStarSelection:
   // Automatic selection, store the index
-  case class AgsSelection(index: Option[Int]) extends GuideStarSelection
+  case class AgsSelection(index: Option[(Int, AgsAnalysis)]) extends GuideStarSelection
 
   // Remote selection based on the name
   case class RemoteGSSelection(name: NonEmptyString) extends GuideStarSelection
@@ -73,16 +73,11 @@ object GuideStarSelection:
         case a: RemoteGSSelection => g(a)
         case a: AgsOverride       => h(a)
 
-    def targetName = gs match
-      case AgsSelection(_)         => none
-      case RemoteGSSelection(name) => name.some
-      case AgsOverride(name, _, _) => name.some
-
     def isOverride: Boolean = fold(_ => false, _ => false, _ => true)
 
-    def idx: Option[Int] = fold(_.index, _ => none, _.selectedGSIndex.some)
+    def idx: Option[Int] = fold(_.index.map(_._1), _ => none, _.selectedGSIndex.some)
 
-    def guideStar(results: List[AgsAnalysis]) = gs match
-      case AgsSelection(Some(i)) => results.lift(i)
-      case AgsOverride(_, _, a)  => a.some
-      case _                     => none
+    def analysis: Option[AgsAnalysis] = gs match
+      case AgsSelection(Some((_, a))) => a.some
+      case AgsOverride(_, _, a)       => a.some
+      case _                          => none
