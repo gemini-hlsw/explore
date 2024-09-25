@@ -111,8 +111,7 @@ object ProposalTabContents:
             val deadline: Option[Timestamp] =
               proposalView.get.deadline(props.cfps, piPartner)
 
-            <.div(
-              ExploreStyles.ProposalTab,
+            <.div(ExploreStyles.ProposalTab)(
               ProposalEditor(
                 props.programId,
                 props.userVault.map(_.user.id),
