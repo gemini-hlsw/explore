@@ -19,8 +19,8 @@ import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 
-import java.time.LocalDateTime
 import java.time.Duration
+import java.time.LocalDateTime
 
 case class Proposal(
   callId:       Option[CallForProposals.Id],
