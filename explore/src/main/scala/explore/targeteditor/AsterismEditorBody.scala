@@ -41,6 +41,7 @@ import monocle.Iso
 import monocle.Lens
 
 import java.time.Instant
+import explore.model.GuideStarSelection
 
 case class AsterismTileState(
   table:       ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta] =

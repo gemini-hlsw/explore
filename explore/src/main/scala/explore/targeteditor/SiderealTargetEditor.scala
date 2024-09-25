@@ -59,6 +59,7 @@ import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
 import java.time.Instant
+import explore.model.GuideStarSelection
 
 case class SiderealTargetEditor(
   programId:          Program.Id,

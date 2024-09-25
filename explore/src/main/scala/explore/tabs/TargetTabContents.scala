@@ -66,8 +66,8 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.targeteditor.GuideStarSelection
-import explore.targeteditor.GuideStarSelection.AgsSelection
+import explore.model.GuideStarSelection
+import explore.model.GuideStarSelection.AgsSelection
 
 case class TargetTabContents(
   programId:        Program.Id,

@@ -23,7 +23,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
-import explore.targeteditor.GuideStarSelection
+import explore.model.GuideStarSelection
 
 object SiderealTargetEditorTile:
 

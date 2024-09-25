@@ -10,11 +10,14 @@ import japgolly.scalajs.react.ReactCats.*
 import lucuma.core.model.PosAngleConstraint
 
 case class PAProperties(
-  oid:        Observation.Id,
-  agsState:   View[AgsState],
-  constraint: View[PosAngleConstraint]
-)
+  oid:                Observation.Id,
+  guideStarSelection: View[GuideStarSelection],
+  agsState:           View[AgsState],
+  constraint:         View[PosAngleConstraint]
+) {
+  val selectedPA = guideStarSelection.get.selectedAngle
+}
 
 object PAProperties:
   given Eq[PAProperties] =
-    Eq.by(x => (x.oid, x.agsState.get, x.constraint.get))
+    Eq.by(x => (x.oid, x.guideStarSelection.get, x.agsState.get, x.constraint.get))

@@ -317,9 +317,10 @@ object AladinCell extends ModelOptics with AladinCommon:
       //       index.set(p.selectedGSName.map(AgsOverride(_, f, none)))
       // )
       // Reset selection if pos angle changes except for manual selection changes
-      // .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
-      //   (_, _, _, _, _, _, selectedIndex, _, agsOverride) =>
-      //     _ => selectedIndex.set((none, none)).unless_(agsOverride.get.value)
+      // .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
+      //   (p, _, _, _, _, _, _) =>
+      //     _ =>
+      //       p.guideStarSelection.set(GuideStarSelection.Default) // .unless_(agsOverride.get.value)
       // )
       // Request ags calculation
       .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
@@ -391,7 +392,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                       props.guideStarSelection
                         .mod {
                           case AgsSelection(_)               =>
-                            println(s"Set to ${selectedGS.tupleLeft(0)}")
                             AgsSelection(selectedGS.tupleLeft(0)) // replace automatic selection
                           case rem @ RemoteGSSelection(name) =>
                             // Recover the analysis for the remotely selected star
@@ -478,12 +478,12 @@ object AladinCell extends ModelOptics with AladinCommon:
           //     .getOrEmpty
           // }
           // pprint.pprintln(s"nam ${props.selectedGSName}")
-          // pprint.pprintln(selectedGSIndexView.get match {
-          //   case a @ AgsSelection(_)      => a
+          // pprint.pprintln(selectedGSIndex.get match {
+          //   case AgsSelection(a)          =>
+          //     s"AgsSelection(${a.map(_._1)}, ${a.flatMap(_._2.posAngle.map(_.toDoubleDegrees))}"
           //   case a @ RemoteGSSelection(_) => a
           //   case a @ AgsOverride(n, _, _) => s"AgsOverride($n)"
           // })
-          // )
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(fovLens))

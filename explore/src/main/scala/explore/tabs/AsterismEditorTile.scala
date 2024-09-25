@@ -37,7 +37,7 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
-import explore.targeteditor.GuideStarSelection
+import explore.model.GuideStarSelection
 
 object AsterismEditorTile:
 

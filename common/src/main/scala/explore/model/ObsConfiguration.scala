@@ -52,3 +52,9 @@ case class ObsConfiguration(
 
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)
+
+  def guideStarSelection: Option[View[GuideStarSelection]] =
+    posAngleProperties.map(_.guideStarSelection)
+
+  def selectedPA: Option[Angle] =
+    posAngleProperties.flatMap(_.selectedPA)

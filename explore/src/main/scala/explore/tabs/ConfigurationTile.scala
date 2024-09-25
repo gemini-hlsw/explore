@@ -41,7 +41,6 @@ object ConfigurationTile:
     baseCoordinates:    Option[CoordinatesAtVizTime],
     obsConf:            ObsConfiguration,
     selectedConfig:     View[Option[BasicConfigAndItc]],
-    selectedPA:         Option[Angle],
     modes:              SpectroscopyModesMatrix,
     allTargets:         TargetList,
     sequenceChanged:    Callback,
@@ -63,7 +62,6 @@ object ConfigurationTile:
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
         selectedConfig,
-        selectedPA,
         modes,
         sequenceChanged,
         readonly

@@ -54,7 +54,6 @@ case class ConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   selectedConfig:  View[Option[BasicConfigAndItc]],
-  selectedPA:      Option[Angle],
   modes:           SpectroscopyModesMatrix,
   sequenceChanged: Callback,
   readonly:        Boolean
@@ -193,7 +192,7 @@ object ConfigurationPanel:
                   props.programId,
                   props.obsId,
                   props.posAngle,
-                  props.selectedPA,
+                  props.obsConf.selectedPA,
                   props.obsConf.averagePA,
                   agsState,
                   props.readonly
