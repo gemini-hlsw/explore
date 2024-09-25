@@ -90,6 +90,7 @@ case class ObsTabTiles(
   programSummaries:  ProgramSummaries,
   focusedTarget:     Option[Target.Id],
   searching:         View[Set[Target.Id]],
+  selectedGSName:    View[Option[NonEmptyString]],
   defaultLayouts:    LayoutsMap,
   layouts:           LayoutsMap,
   resize:            UseResizeDetectorReturn,
@@ -105,8 +106,6 @@ case class ObsTabTiles(
   val allTargets: TargetList                                        = programSummaries.targets
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
-  val selectedGSNameView: View[Option[NonEmptyString]]              =
-    observation.model.zoom(Observation.selectedGSName)
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -228,7 +227,7 @@ object ObsTabTiles:
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       // Store Ags selection in a view for fast local updates
       .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) =>
-        props.selectedGSNameView.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
+        props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
       )
       .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
         import ctx.given
@@ -237,12 +236,14 @@ object ObsTabTiles:
           (_, _) match {
             case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
               Callback.log(s"new selected name from $m to $n") *>
+                props.selectedGSName.set(n.some) *>
                 ObsQueries
                   .setGuideTargetName[IO](props.obsId, n.some)
                   .runAsyncAndForget
             case (AgsSelection(_), AgsOverride(n, _, _))                 =>
               // From automatic to manual
               Callback.log(s"new overriden name to $n") *>
+                props.selectedGSName.set(n.some) *>
                 ObsQueries
                   .setGuideTargetName[IO](props.obsId, n.some)
                   .runAsyncAndForget
@@ -433,7 +434,7 @@ object ObsTabTiles:
                 averagePA,
                 obsDuration.map(_.toDuration),
                 props.observation.get.needsAGS,
-                props.selectedGSNameView.get
+                props.selectedGSName.get
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =

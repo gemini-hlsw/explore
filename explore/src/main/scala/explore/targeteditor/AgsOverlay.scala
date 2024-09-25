@@ -111,7 +111,10 @@ object AgsOverlay:
                       analysis.target.gBrightness.map { case (b, v) =>
                         React.Fragment(
                           if (b === Band.GaiaRP) React.Fragment(s"G", <.sub("RP")) else b.shortName,
-                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}"
+                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}",
+                          <.div(^.cls := "ags-selection-dev",
+                                TagMod.devOnly(props.selectedGS.get.toString)
+                          )
                         )
                       }
                     ),

@@ -74,8 +74,7 @@ case class ObsTabContents(
   modes:            SpectroscopyModesMatrix,
   focused:          Focused,
   searching:        View[Set[Target.Id]],
-  expandedGroups:   View[Set[Group.Id]],
-  readonly:         Boolean
+  expandedGroups:   View[Set[Group.Id]]
 ) extends ReactFnProps(ObsTabContents.component):
   private val focusedObs: Option[Observation.Id]                           = focused.obsSet.map(_.head)
   private val focusedTarget: Option[Target.Id]                             = focused.target
@@ -91,6 +90,7 @@ case class ObsTabContents(
   private val observationIds: List[Observation.Id]                         = observations.get.values.map(_.id).toList
   private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
     observationIds.zipWithIndex.map((id, idx) => id -> NonNegInt.unsafeFrom(idx))
+  val readonly: Boolean                                                    = programSummaries.get.proposalIsSubmitted
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -112,6 +112,7 @@ object ObsTabContents extends TwoPanels:
       .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
       .useEffectOnMountBy: (_, ctx, _, _, shadowClipboardObs) => // initialize shadowClipboard
         import ctx.given
+
         ExploreClipboard.get.flatMap:
           _ match
             case LocalClipboard.CopiedObservations(idSet) =>
@@ -293,6 +294,8 @@ object ObsTabContents extends TwoPanels:
                   props.programSummaries.get,
                   props.focusedTarget,
                   props.searching,
+                  // We need this as a separat view so it doesn't get in the way of undo and can be easily updated by AGS
+                  obsView.zoom(Observation.selectedGSName),
                   ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
                   props.userPreferences.get.observationsTabLayout,
                   resize,
