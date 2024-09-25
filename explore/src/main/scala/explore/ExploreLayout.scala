@@ -215,7 +215,7 @@ object ExploreLayout:
 
             val deadlineStr: String =
               deadline
-                .map(Proposal.deadlineString)
+                .map(d => s" until the proposal deadline at ${Proposal.deadlineString(d)}")
                 .orEmpty
 
             val cacheKey: String =
@@ -300,7 +300,7 @@ object ExploreLayout:
                     props.resolution.renderP(props.model),
                     if (isSubmitted)
                       Message(text =
-                        s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted until the proposal deadline at ${deadlineStr}."
+                        s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted${deadlineStr}."
                       )
                     else EmptyVdom
                   )

@@ -19,9 +19,8 @@ import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.Duration
 
 case class Proposal(
   callId:       Option[CallForProposals.Id],
@@ -67,11 +66,11 @@ object Proposal:
 
   val Default = Proposal(None, None, None, None, None, None)
 
-  def deadlineAndTimeLeft(n: Instant, deadline: Timestamp): (String, Option[String]) = {
-    val deadlineLDT         = deadline.toLocalDateTime
-    val now                 = LocalDateTime.ofInstant(n, ZoneOffset.UTC)
-    val diff                = java.time.Duration.between(now, deadlineLDT)
-    val deadlineStr: String = deadlineString(deadline)
+  def deadlineAndTimeLeft(now: Timestamp, deadline: Timestamp): (String, Option[String]) = {
+    val deadlineLDT: LocalDateTime = deadline.toLocalDateTime
+    val nowLDT: LocalDateTime      = now.toLocalDateTime
+    val diff: Duration             = Duration.between(nowLDT, deadlineLDT)
+    val deadlineStr: String        = deadlineString(deadline)
     if (diff.isNegative) (deadlineStr, None)
     else
       val left = Constants.DurationLongWithSecondsFormatter(diff)

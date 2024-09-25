@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.ResponseException
 import clue.data.syntax.*
-import crystal.Pot
+import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.*
@@ -48,9 +48,13 @@ import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
-import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.all.*
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
+import fs2.Stream
+import scala.concurrent.duration.*
+import explore.model.UserInvitation
+import explore.model.ProgramUserWithRole
 
 case class ProposalTabContents(
   programId:         Program.Id,
@@ -95,122 +99,137 @@ object ProposalTabContents:
     .useLayoutEffectWithDepsBy((props, _, _, _, _) =>
       props.programDetails.get.proposal.flatMap(_.callId)
     )((_, _, _, _, e) => _ => e.setState(none))
-    .render: (props, ctx, isUpdatingStatus, readonly, errorMessage) =>
-
+    .useStreamOnMount:
+      Stream
+        .fixedRateStartImmediately[IO](1.second)
+        .evalMap: _ =>
+          IO.monotonic.map(finiteDuration => Timestamp.ofEpochMilli(finiteDuration.toMillis).toPot)
+    .render: (props, ctx, isUpdatingStatus, readonly, errorMessage, nowPot) =>
       import ctx.given
 
-      val invitations = props.programDetails.zoom(ProgramDetails.invitations)
-      val users       = props.programDetails.zoom(ProgramDetails.allUsers)
+      nowPot.toPot.flatten.renderPot: now =>
+        val invitations: View[List[UserInvitation]] =
+          props.programDetails.zoom(ProgramDetails.invitations)
+        val users: View[List[ProgramUserWithRole]]  =
+          props.programDetails.zoom(ProgramDetails.allUsers)
 
-      val isStdUser      = props.userVault.map(_.user).collect { case _: StandardUser => () }.isDefined
-      val proposalStatus = props.programDetails.get.proposalStatus
+        val isStdUser: Boolean             =
+          props.userVault.map(_.user).collect { case StandardUser(_, _, _, _) => () }.isDefined
+        val proposalStatus: ProposalStatus =
+          props.programDetails.get.proposalStatus
 
-      def updateStatus(newStatus: ProposalStatus): Callback =
-        (for {
-          _ <- SetProposalStatus[IO]
-                 .execute:
-                   SetProposalStatusInput(programId = props.programId.assign, status = newStatus)
-                 .onError:
-                   case ResponseException(errors, _) =>
-                     errorMessage.setState(errors.head.message.some).to[IO]
-                   case e                            =>
-                     errorMessage.setState(Some(e.getMessage.toString)).to[IO]
-                 .void
-          _ <- props.programDetails.zoom(ProgramDetails.proposalStatus).set(newStatus).toAsync
-        } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
+        def updateStatus(newStatus: ProposalStatus): Callback =
+          (for {
+            _ <- SetProposalStatus[IO]
+                   .execute:
+                     SetProposalStatusInput(programId = props.programId.assign, status = newStatus)
+                   .onError:
+                     case ResponseException(errors, _) =>
+                       errorMessage.setState(errors.head.message.some).to[IO]
+                     case e                            =>
+                       errorMessage.setState(Some(e.getMessage.toString)).to[IO]
+                   .void
+            _ <- props.programDetails.zoom(ProgramDetails.proposalStatus).set(newStatus).toAsync
+          } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
 
-      if (props.programDetails.get.programType =!= ProgramType.Science)
-        <.div(ExploreStyles.HVCenter)(
-          Message(
-            text = "Only Science Program Types can have proposals.",
-            severity = Message.Severity.Info
+        if (props.programDetails.get.programType =!= ProgramType.Science)
+          <.div(ExploreStyles.HVCenter)(
+            Message(
+              text = "Only Science Program Types can have proposals.",
+              severity = Message.Severity.Info
+            )
           )
-        )
-      else
-        props.programDetails
-          .zoom(ProgramDetails.proposal)
-          .mapValue((proposalView: View[Proposal]) =>
-            val piPartner =
-              props.programDetails.zoom(ProgramDetails.piPartner.some).get
+        else
+          props.programDetails
+            .zoom(ProgramDetails.proposal)
+            .mapValue((proposalView: View[Proposal]) =>
+              val piPartner =
+                props.programDetails.zoom(ProgramDetails.piPartner.some).get
 
-            val deadline: Option[Timestamp] =
-              proposalView.get.deadline(props.cfps, piPartner)
+              val deadline: Option[Timestamp] =
+                // proposalView.get.deadline(props.cfps, piPartner)
+                Timestamp.Epoch.some
 
-            <.div(
-              ExploreStyles.ProposalTab,
-              ProposalEditor(
-                props.programId,
-                props.userVault.map(_.user.id),
-                proposalView,
-                props.undoStacks,
-                props.timeEstimateRange,
-                users,
-                invitations,
-                props.attachments,
-                props.userVault.map(_.token),
-                props.cfps,
-                props.layout,
-                readonly
-              ),
-              Toolbar(left =
-                <.div(
-                  ExploreStyles.ProposalSubmissionBar,
-                  Tag(
-                    value = props.programDetails.get.proposalStatus.name,
-                    severity =
-                      if (proposalStatus === ProposalStatus.Accepted) Tag.Severity.Success
-                      else Tag.Severity.Danger
-                  )
-                    .when(proposalStatus > ProposalStatus.Submitted),
-                  // TODO: Validate proposal before allowing submission
-                  React
-                    .Fragment(
-                      Button(
-                        label = "Submit Proposal",
-                        onClick = updateStatus(ProposalStatus.Submitted),
-                        disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
-                      ).compact.tiny,
-                      deadline.map(CallDeadline.apply)
+              val isDueDeadline: Boolean =
+                deadline.exists(_ < now)
+
+              <.div(
+                ExploreStyles.ProposalTab,
+                ProposalEditor(
+                  props.programId,
+                  props.userVault.map(_.user.id),
+                  proposalView,
+                  props.undoStacks,
+                  props.timeEstimateRange,
+                  users,
+                  invitations,
+                  props.attachments,
+                  props.userVault.map(_.token),
+                  props.cfps,
+                  props.layout,
+                  readonly
+                ),
+                Toolbar(left =
+                  <.div(
+                    ExploreStyles.ProposalSubmissionBar,
+                    Tag(
+                      value = props.programDetails.get.proposalStatus.name,
+                      severity =
+                        if (proposalStatus === ProposalStatus.Accepted) Tag.Severity.Success
+                        else Tag.Severity.Danger
                     )
-                    .when:
-                      isStdUser && proposalStatus === ProposalStatus.NotSubmitted
-                  ,
-                  Button(
-                    "Retract Proposal",
-                    severity = Button.Severity.Warning,
-                    onClick = updateStatus(ProposalStatus.NotSubmitted),
-                    disabled = isUpdatingStatus.get.value
-                  ).compact.tiny
-                    .when:
-                      isStdUser && proposalStatus === ProposalStatus.Submitted
-                  ,
-                  errorMessage.value.map(r => Message(text = r, severity = Message.Severity.Error))
+                      .when(proposalStatus > ProposalStatus.Submitted),
+                    // TODO: Validate proposal before allowing submission
+                    React
+                      .Fragment(
+                        Button(
+                          label = "Submit Proposal",
+                          onClick = updateStatus(ProposalStatus.Submitted),
+                          disabled =
+                            isUpdatingStatus.get.value || proposalView.get.callId.isEmpty || isDueDeadline
+                        ).compact.tiny,
+                        deadline.map(CallDeadline(now, _))
+                      )
+                      .when:
+                        isStdUser && proposalStatus === ProposalStatus.NotSubmitted
+                    ,
+                    Button(
+                      "Retract Proposal",
+                      severity = Button.Severity.Warning,
+                      onClick = updateStatus(ProposalStatus.NotSubmitted),
+                      disabled = isUpdatingStatus.get.value || isDueDeadline
+                    ).compact.tiny
+                      .when:
+                        isStdUser && proposalStatus === ProposalStatus.Submitted && !isDueDeadline
+                    ,
+                    errorMessage.value
+                      .map(r => Message(text = r, severity = Message.Severity.Error))
+                  )
                 )
               )
             )
-          )
-          .getOrElse(
-            if (isStdUser)
-              <.div(ExploreStyles.HVCenter)(
-                Button(
-                  label = "Create a Proposal",
-                  icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
-                  clazz = LoginStyles.LoginBoxButton,
-                  severity = Button.Severity.Secondary,
-                  onClick = createProposal(
-                    props.programId,
-                    props.programDetails
-                  )
-                ).big
-              )
-            else
-              <.div(ExploreStyles.HVCenter)(
-                Button(
-                  label = "Login with ORCID to create a Proposal",
-                  icon = Image(src = Resources.OrcidLogo, clazz = LoginStyles.LoginOrcidIcon),
-                  clazz = LoginStyles.LoginBoxButton,
-                  severity = Button.Severity.Secondary,
-                  onClick = ctx.sso.switchToORCID.runAsync
-                ).big
-              )
-          )
+            .getOrElse(
+              if (isStdUser)
+                <.div(ExploreStyles.HVCenter)(
+                  Button(
+                    label = "Create a Proposal",
+                    icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
+                    clazz = LoginStyles.LoginBoxButton,
+                    severity = Button.Severity.Secondary,
+                    onClick = createProposal(
+                      props.programId,
+                      props.programDetails
+                    )
+                  ).big
+                )
+              else
+                <.div(ExploreStyles.HVCenter)(
+                  Button(
+                    label = "Login with ORCID to create a Proposal",
+                    icon = Image(src = Resources.OrcidLogo, clazz = LoginStyles.LoginOrcidIcon),
+                    clazz = LoginStyles.LoginBoxButton,
+                    severity = Button.Severity.Secondary,
+                    onClick = ctx.sso.switchToORCID.runAsync
+                  ).big
+                )
+            )
