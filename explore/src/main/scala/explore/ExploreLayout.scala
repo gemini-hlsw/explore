@@ -23,7 +23,6 @@ import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.utils.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.React
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -35,7 +34,6 @@ import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.primereact.ConfirmDialog
-import lucuma.react.primereact.Message
 import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
@@ -213,11 +211,6 @@ object ExploreLayout:
                     p.deadline(c, piP)
                   .flatten
 
-            val deadlineStr: String =
-              deadline
-                .map(Proposal.deadlineString)
-                .orEmpty
-
             val cacheKey: String =
               userVault.get
                 .map(_.user)
@@ -298,11 +291,7 @@ object ExploreLayout:
                 else
                   <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
                     props.resolution.renderP(props.model),
-                    if (isSubmitted)
-                      Message(text =
-                        s"The proposal has been submitted as ${proposalReference.foldMap(_.label)} and may be retracted until the proposal deadline at ${deadlineStr}."
-                      )
-                    else EmptyVdom
+                    TagMod.when(isSubmitted)(SubmittedProposalMessage(proposalReference, deadline))
                   )
               )
             )

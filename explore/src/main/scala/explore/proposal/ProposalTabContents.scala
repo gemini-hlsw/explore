@@ -6,11 +6,8 @@ package explore.proposal
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import clue.ResponseException
-import clue.data.syntax.*
-import crystal.Pot
+import crystal.*
 import crystal.react.*
-import crystal.react.hooks.*
 import explore.*
 import explore.DefaultErrorPolicy
 import explore.Icons
@@ -20,8 +17,10 @@ import explore.model.AppContext
 import explore.model.CallForProposal
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
+import explore.model.ProgramUserWithRole
 import explore.model.Proposal
 import explore.model.ProposalAttachment
+import explore.model.UserInvitation
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
 import explore.undo.*
@@ -32,14 +31,11 @@ import lucuma.core.enums.ProgramType
 import lucuma.core.model.Program
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
-import lucuma.core.util.NewType
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Image
 import lucuma.react.primereact.Message
-import lucuma.react.primereact.Tag
-import lucuma.react.primereact.Toolbar
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.enums.ProposalStatus
@@ -48,7 +44,6 @@ import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
-import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
 
@@ -65,8 +60,6 @@ case class ProposalTabContents(
 
 object ProposalTabContents:
   private type Props = ProposalTabContents
-
-  private object IsUpdatingStatus extends NewType[Boolean]
 
   private def createProposal(
     programId:      Program.Id,
@@ -88,36 +81,18 @@ object ProposalTabContents:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useStateView(IsUpdatingStatus(false))
-    .useMemoBy((props, _, _) => props.programDetails.get.proposalStatus): (_, _, _) =>
+    .useMemoBy((props, _) => props.programDetails.get.proposalStatus): (_, _) =>
       p => p === ProposalStatus.Submitted || p === ProposalStatus.Accepted
-    .useState(none[String]) // Submission error message
-    .useLayoutEffectWithDepsBy((props, _, _, _, _) =>
-      props.programDetails.get.proposal.flatMap(_.callId)
-    )((_, _, _, _, e) => _ => e.setState(none))
-    .render: (props, ctx, isUpdatingStatus, readonly, errorMessage) =>
-
+    .render: (props, ctx, readonly) =>
       import ctx.given
 
-      val invitations = props.programDetails.zoom(ProgramDetails.invitations)
-      val users       = props.programDetails.zoom(ProgramDetails.allUsers)
+      val invitations: View[List[UserInvitation]] =
+        props.programDetails.zoom(ProgramDetails.invitations)
+      val users: View[List[ProgramUserWithRole]]  =
+        props.programDetails.zoom(ProgramDetails.allUsers)
 
-      val isStdUser      = props.userVault.map(_.user).collect { case _: StandardUser => () }.isDefined
-      val proposalStatus = props.programDetails.get.proposalStatus
-
-      def updateStatus(newStatus: ProposalStatus): Callback =
-        (for {
-          _ <- SetProposalStatus[IO]
-                 .execute:
-                   SetProposalStatusInput(programId = props.programId.assign, status = newStatus)
-                 .onError:
-                   case ResponseException(errors, _) =>
-                     errorMessage.setState(errors.head.message.some).to[IO]
-                   case e                            =>
-                     errorMessage.setState(Some(e.getMessage.toString)).to[IO]
-                 .void
-          _ <- props.programDetails.zoom(ProgramDetails.proposalStatus).set(newStatus).toAsync
-        } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
+      val isStdUser: Boolean =
+        props.userVault.map(_.user).collect { case StandardUser(_, _, _, _) => () }.isDefined
 
       if (props.programDetails.get.programType =!= ProgramType.Science)
         <.div(ExploreStyles.HVCenter)(
@@ -136,8 +111,7 @@ object ProposalTabContents:
             val deadline: Option[Timestamp] =
               proposalView.get.deadline(props.cfps, piPartner)
 
-            <.div(
-              ExploreStyles.ProposalTab,
+            <.div(ExploreStyles.ProposalTab)(
               ProposalEditor(
                 props.programId,
                 props.userVault.map(_.user.id),
@@ -152,40 +126,12 @@ object ProposalTabContents:
                 props.layout,
                 readonly
               ),
-              Toolbar(left =
-                <.div(
-                  ExploreStyles.ProposalSubmissionBar,
-                  Tag(
-                    value = props.programDetails.get.proposalStatus.name,
-                    severity =
-                      if (proposalStatus === ProposalStatus.Accepted) Tag.Severity.Success
-                      else Tag.Severity.Danger
-                  )
-                    .when(proposalStatus > ProposalStatus.Submitted),
-                  // TODO: Validate proposal before allowing submission
-                  React
-                    .Fragment(
-                      Button(
-                        label = "Submit Proposal",
-                        onClick = updateStatus(ProposalStatus.Submitted),
-                        disabled = isUpdatingStatus.get.value || proposalView.get.callId.isEmpty
-                      ).compact.tiny,
-                      deadline.map(CallDeadline.apply)
-                    )
-                    .when:
-                      isStdUser && proposalStatus === ProposalStatus.NotSubmitted
-                  ,
-                  Button(
-                    "Retract Proposal",
-                    severity = Button.Severity.Warning,
-                    onClick = updateStatus(ProposalStatus.NotSubmitted),
-                    disabled = isUpdatingStatus.get.value
-                  ).compact.tiny
-                    .when:
-                      isStdUser && proposalStatus === ProposalStatus.Submitted
-                  ,
-                  errorMessage.value.map(r => Message(text = r, severity = Message.Severity.Error))
-                )
+              ProposalSubmissionBar(
+                props.programId,
+                props.programDetails.zoom(ProgramDetails.proposalStatus),
+                deadline,
+                proposalView.get.callId,
+                isStdUser
               )
             )
           )
