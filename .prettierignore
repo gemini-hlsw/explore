@@ -8,6 +8,7 @@ hasura/user-prefs/
 .direnv/
 .bloop/
 .bsp/
+flake.lock
 node_modules
 target
 heroku/static
