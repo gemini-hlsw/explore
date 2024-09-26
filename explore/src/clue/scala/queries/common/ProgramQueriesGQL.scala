@@ -46,7 +46,7 @@ object ProgramQueriesGQL:
 
   @GraphQL
   trait ProgramGroupsQuery extends GraphQLOperation[ObservationDB]:
-    val document: String = s"""#graphql
+    val document: String = s"""
       query ($$programId: ProgramId!) {
         program(programId: $$programId) {
           allGroupElements $GroupElementsSubQuery

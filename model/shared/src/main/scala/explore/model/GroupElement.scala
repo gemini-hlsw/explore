@@ -16,52 +16,47 @@ import lucuma.core.model.Group
 import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
 
-import GroupElement.given
+import io.circe.JsonObject
+import lucuma.typed.react.reactStrings.group
 
-// These case classes are only used for decoding the graphql response. Used case classes are in GroupTree.scala
-case class GroupElement(value: Either[GroupObs, Grouping], parentGroupId: Option[Group.Id])
-    derives Eq
+// type GroupElement = ServerIndexed[Either[Observation.Id, Grouping]]
+
+// These case classes are only used for decoding the graphql response.
+case class GroupElement(
+  value:         ServerIndexed[Either[Observation.Id, Grouping]],
+  parentGroupId: Option[Group.Id]
+) derives Eq
 
 object GroupElement:
+  given Decoder[GroupElement] = Decoder.instance: c =>
+    given Decoder[Either[Observation.Id, Grouping]] =
+      Decoder
+        .instance(_.get[Grouping]("group").map(_.asRight))
+        .orElse:
+          Decoder.instance(_.downField("observation").get[Observation.Id]("id").map(_.asLeft))
 
-  given Decoder[GroupElement] = Decoder.instance(c =>
-    for {
-      value         <- c.get[Grouping]("group")
-                         .map(_.asRight)
-                         .orElse(c.get[GroupObs]("observation").map(_.asLeft))
+    for
+      value         <- c.as[Either[Observation.Id, Grouping]]
+      parentIndex   <- c.get[NonNegShort]("parentIndex")
       parentGroupId <- c.get[Option[Group.Id]]("parentGroupId")
-    } yield GroupElement(
-      value,
-      parentGroupId
-    )
-  )
+    yield GroupElement(ServerIndexed(value, parentIndex), parentGroupId)
 
-  given Decoder[Either[ObsElement, GroupingElement]] =
-    Decoder.instance(c =>
-      c.get[GroupingElement]("group")
-        .map(_.asRight)
-        .orElse(c.get[ObsElement]("observation").map(_.asLeft))
-    )
-
-case class GroupObs(id: Observation.Id, groupIndex: NonNegShort) derives Eq, Decoder
+    // for
+    //   value       <- c.get[Grouping]("group")
+    //                    .map(_.asRight)
+    //                    .orElse(c.downField("observation").get[Observation.Id]("id").map(_.asLeft))
+    //   parentIndex <- c.get[NonNegShort]("parentIndex")
+    // yield GroupElement(value, parentIndex)
 
 case class Grouping(
-  id:              Group.Id,
-  name:            Option[NonEmptyString],
-  minimumRequired: Option[NonNegShort],
-  elements:        List[Either[ObsElement, GroupingElement]],
-  parentId:        Option[Group.Id],
-  parentIndex:     NonNegShort,
-  minimumInterval: Option[TimeSpan],
-  maximumInterval: Option[TimeSpan],
-  ordered:         Boolean,
-  system:          Boolean
+  group:    Group,
+  elements: List[Either[Observation.Id, Group.Id]]
 ) derives Eq,
-      Decoder:
-  def toGroupTreeGroup: GroupTree.Group =
-    GroupTree.Group(id, name, minimumRequired, minimumInterval, maximumInterval, ordered, system)
+      Decoder
 
-  def toIndex: GroupTree.Index = Index(parentId.map(_.asRight), parentIndex)
-
-case class ObsElement(id: Observation.Id) derives Eq, Decoder
-case class GroupingElement(id: Group.Id) derives Eq, Decoder
+object Grouping:
+  private given Decoder[Either[Observation.Id, Group.Id]] =
+    Decoder
+      .instance(_.downField("group").get[Group.Id]("id").map(_.asRight))
+      .orElse:
+        Decoder.instance(_.downField("observation").get[Observation.Id]("id").map(_.asLeft))

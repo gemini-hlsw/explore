@@ -36,6 +36,7 @@ import lucuma.schemas.odb.input.*
 import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
+import explore.model.syntax.all.toNonNegInt
 
 val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 
@@ -71,8 +72,8 @@ def cloneObs(
     cloneObservation[IO](obsId, newGroupId)
       .flatMap: newObs =>
         obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
-          .mod(observations): // Convert NonNegShort => NonNegInt
-            obsListMod.upsert(newObs, NonNegInt.unsafeFrom(newObs.groupIndex.value))
+          .mod(observations): // TODO groupIndex IS NOT OUR INDEX!!!!
+            obsListMod.upsert(newObs, newObs.groupIndex.toNonNegInt)
           .toAsync
       .guarantee(after)
 

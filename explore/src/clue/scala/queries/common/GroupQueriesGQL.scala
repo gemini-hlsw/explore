@@ -19,10 +19,8 @@ object GroupQueriesGQL:
     override val subquery: String = s"""
       {
         parentGroupId
-        observation {
-          id
-          groupIndex
-        }
+        parentIndex
+        observation { id }
         group $GroupSubQuery
       }
     """
@@ -41,12 +39,8 @@ object GroupQueriesGQL:
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
         elements {
-          observation {
-            id
-          }
-          group {
-            id
-          }
+          observation { id }
+          group { id }
         }
       }
     """
@@ -56,9 +50,7 @@ object GroupQueriesGQL:
     override val document = """
       mutation($input: UpdateGroupsInput!) {
         updateGroups(input: $input) {
-          groups {
-            id
-          }
+          groups { id }
         }
       }
     """

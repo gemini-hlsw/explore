@@ -228,19 +228,22 @@ object ObsList:
             val obsEdit: Callback = dragNode.left.toOption
               .map: obs =>
                 props.observations.model
-                  .mod(
+                  .mod:
                     _.updatedValueWith(
                       obs.id,
-                      Observation.groupId
-                        .replace(dropNodeId)
-                        .andThen(Observation.groupIndex.replace(dropIndex))
+                      ???
+                      // Observation.groupId
+                      //   .replace(dropNodeId)
+                      //   .andThen: // TODO groupIndex IS NOT OUR INDEX!!!!
+                      //     Observation.groupIndex.replace(dropIndex)
                     )
-                  )
               .getOrEmpty
 
             dragNode.id
               .fold(
+                // TODO groupIndex IS NOT OUR INDEX!!!!
                 obsId => ObsQueries.moveObservation[IO](obsId, dropNodeId, dropIndex.some),
+                // TODO groupIndex IS NOT OUR INDEX!!!!
                 groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
               )
               .runAsync *>
@@ -309,7 +312,8 @@ object ObsList:
                       cloneCB = cloneObs(
                         props.programId,
                         id,
-                        obs.groupId, // Clone to the same group
+                        ???,
+                        // obs.groupId, // Clone to the same group
                         props.observations,
                         ctx,
                         adding.async.set(AddingObservation(true)),

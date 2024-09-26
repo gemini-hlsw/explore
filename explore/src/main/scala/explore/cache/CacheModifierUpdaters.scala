@@ -6,7 +6,6 @@ package explore.cache
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
-import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree.Node
 import explore.model.GroupTree
 import explore.model.Observation
@@ -21,6 +20,7 @@ import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
+import eu.timepit.refined.auto.autoUnwrap
 
 /**
  * Functions to modify cache through subscription updates
@@ -131,32 +131,47 @@ trait CacheModifierUpdaters {
   ): ProgramSummaries => ProgramSummaries =
     val obsId = observationEdit.observationId
     observationEdit.value
-      .map { value =>
+      .map { newObservation =>
         val groupEdit: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.groups
-            .modify: groupElements =>
-              println(s"groupindex: ${value.groupIndex}")
+          programSummaries =>
+            ProgramSummaries.groups
+              .modify { groupElements =>
+                // TODO groupIndex IS NOT OUR INDEX!!!!
 
-              val groupId: Option[Group.Id]                         = value.groupId
-              val newGroupObs: GroupTree.Obs                        = GroupTree.Obs(obsId)
-              val newIndex: Index[Either[Observation.Id, Group.Id]] =
-                Index(groupId.map(_.asRight[Observation.Id]), value.groupIndex)
+                val groupId: Option[Group.Id]            = value.groupId
+                val newGroupObs: GroupTree.Obs           = GroupTree.Obs(obsId)
+                val newParent: Option[groupElements.Key] = groupId.map(_.asRight[Observation.Id])
+                // val newIndex: Index[Either[Observation.Id, Group.Id]] =
+                //   Index(groupId.map(_.asRight[Observation.Id]), value.groupIndex)
 
-              if (observationEdit.editType === EditType.Created)
-                groupElements.inserted(
-                  obsId.asLeft,
-                  Node(newGroupObs.asLeft),
-                  newIndex
-                )
-              else if (observationEdit.meta.forall(_.existence === Existence.Deleted))
-                groupElements.removed(obsId.asLeft)
-              else if (observationEdit.editType === EditType.Updated)
-                groupElements.updated(
-                  obsId.asLeft,
-                  newGroupObs.asLeft,
-                  newIndex
-                )
-              else groupElements
+                val findIndexFn: GroupTree.Node => Boolean =
+                  _.value match
+                    case Left(obs)    =>
+                      programSummaries.observations
+                        .getValue(obs.id)
+                        .forall(_.groupIndex >= value.groupIndex)
+                    case Right(group) => true // Groups always go first.
+
+                // if (observationEdit.editType === EditType.Created)
+                //   groupElements.updated(
+                //     obsId.asLeft,
+                //     newGroupObs.asLeft,
+                //     newParent,
+                //     findIndexFn
+                //   )
+                // else
+                if (observationEdit.meta.forall(_.existence === Existence.Deleted))
+                  groupElements.removed(obsId.asLeft)
+                // else if (observationEdit.editType === EditType.Updated)
+                else // Created or Updated
+                  groupElements.updated(
+                    obsId.asLeft,
+                    newGroupObs.asLeft,
+                    newParent,
+                    findIndexFn
+                  )
+                // else groupElements
+              }(programSummaries)
 
         val parentTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
           value.groupId

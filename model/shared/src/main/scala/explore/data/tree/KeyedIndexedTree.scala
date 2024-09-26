@@ -21,6 +21,8 @@ case class KeyedIndexedTree[K: Eq, A] private (
 )(
   private val getKey: A => K // Having in another param set keeps this out of equality
 ) {
+  type Key = K
+
   def toTree: Tree[A] =
     tree.map(_.elem)
 
@@ -67,7 +69,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
   }
 
   def removed(key: K): KeyedIndexedTree[K, A] =
-    if (byKey.contains(key))
+    if (contains(key))
       val newTree: Tree[IndexedElem[K, A]] = removeInTree(key)
       KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
     else this
@@ -101,13 +103,32 @@ case class KeyedIndexedTree[K: Eq, A] private (
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
 
-  def updated(key: K, newNode: A, newIndex: Index[K]): KeyedIndexedTree[K, A] = {
-    val current: Option[(Node[A], Index[K])] = getNodeAndIndexByKey(key)
-    current match
-      case None             => inserted(key, Node(newNode, Nil), newIndex)
-      case Some((value, _)) =>
-        removed(key).inserted(key, Node(newNode, value.children), newIndex)
-  }
+  def updated(key: K, newNode: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
+    val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
+    removed(key).inserted(key, Node(newNode, existingChildren), newIndex)
+
+  def updated( // TODO TEST!!!
+    key:             K,
+    newNode:         A,
+    parentKey:       Option[K],
+    beforeNodeWhere: Node[A] => Boolean
+  ): KeyedIndexedTree[K, A] =
+    val newSiblings: Option[List[Node[A]]] =
+      parentKey match
+        case None       => tree.children.map(_.map(_.elem)).some
+        case Some(pkey) => getNodeAndIndexByKey(pkey).map(_._1.children)
+    // If newSiblings is None, then parentKey doesn't exist. We don't alter the tree.
+    newSiblings.fold(this): siblings =>
+      val newIndex: Int                           = Option(siblings.indexWhere(beforeNodeWhere))
+        .filter(_ =!= -1)
+        .getOrElse(siblings.length)
+      val existingChildren: List[Node[A]]         = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
+      val withRemovedNode: KeyedIndexedTree[K, A] = removed(key)
+      withRemovedNode.inserted(
+        key,
+        Node(newNode, existingChildren),
+        Index(parentKey, NonNegInt.unsafeFrom(newIndex))
+      )
 
   def collect[B](pf: PartialFunction[(K, Node[A], Index[K]), B]): List[B] =
     byKey

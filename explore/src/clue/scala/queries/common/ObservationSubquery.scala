@@ -46,8 +46,6 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
             }
           }
           observingMode $ObservingModeSubquery
-          groupId
-          groupIndex
           validations {
             code
             messages
