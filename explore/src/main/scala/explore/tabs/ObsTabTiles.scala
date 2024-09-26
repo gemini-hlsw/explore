@@ -11,6 +11,7 @@ import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.TimingWindowsQueries
@@ -22,6 +23,7 @@ import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
 import explore.model.*
 import explore.model.AppContext
+import explore.model.GuideStarSelection.*
 import explore.model.LoadingState
 import explore.model.Observation
 import explore.model.ObservationsAndTargets
@@ -87,6 +89,7 @@ case class ObsTabTiles(
   programSummaries:  ProgramSummaries,
   focusedTarget:     Option[Target.Id],
   searching:         View[Set[Target.Id]],
+  selectedGSName:    View[Option[NonEmptyString]],
   defaultLayouts:    LayoutsMap,
   layouts:           LayoutsMap,
   resize:            UseResizeDetectorReturn,
@@ -221,6 +224,42 @@ object ObsTabTiles:
         p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
+      // Store guide star selection in a view for fast local updates
+      // This is not the ideal place for this but we need to share the selected guide star
+      // across the configuration and target tile
+      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) =>
+        props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
+      )
+      .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
+        import ctx.given
+
+        // We tell the backend and the local cache of changes to the selected guidestar
+        // In some cases when we do a real override
+        guideStarSelection.withOnMod {
+          (_, _) match {
+            // Change of override
+            case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
+              props.selectedGSName.set(n.some) *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId, n.some)
+                  .runAsyncAndForget
+            // Going from automatic to manual selection
+            case (AgsSelection(_), AgsOverride(n, _, _))                 =>
+              ObsQueries
+                .setGuideTargetName[IO](props.obsId, n.some)
+                .runAsyncAndForget
+            // Going from manual to automated selection
+            case (AgsOverride(n, _, _), AgsSelection(_))                 =>
+              props.selectedGSName.set(none) *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId, none)
+                  .runAsyncAndForget
+            case _                                                       =>
+              // All other combinations
+              Callback.empty
+          }
+        }
+      )
       .render:
         (
           props,
@@ -234,7 +273,9 @@ object ObsTabTiles:
           itcBrightestTarget,
           itcLoading,
           sequenceChanged,
-          vizTimeOrNowPot
+          vizTimeOrNowPot,
+          _,
+          guideStarSelection
         ) =>
           import ctx.given
 
@@ -285,7 +326,7 @@ object ObsTabTiles:
                 .orElse(pendingTime)
 
             val paProps: PAProperties =
-              PAProperties(props.obsId, selectedPA, agsState, posAngleConstraintView)
+              PAProperties(props.obsId, guideStarSelection, agsState, posAngleConstraintView)
 
             val averagePA: Option[AveragePABasis] =
               (basicConfiguration.map(_.siteFor), asterismAsNel, obsDuration)
@@ -438,6 +479,7 @@ object ObsTabTiles:
                 props.searching,
                 "Targets",
                 props.globalPreferences,
+                guideStarSelection,
                 props.isDisabled,
                 // Any target changes invalidate the sequence
                 sequenceChanged.set(Pot.pending)

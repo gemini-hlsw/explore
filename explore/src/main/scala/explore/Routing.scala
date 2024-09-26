@@ -102,8 +102,7 @@ object Routing:
               .getOrElse(SpectroscopyModesMatrix.empty),
             routingInfo.focused,
             model.rootModel.zoom(RootModel.searchingTarget),
-            model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
-            programSummaries.get.proposalIsSubmitted
+            model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds))
           )
         )
     )

@@ -14,6 +14,7 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.GlobalPreferences
+import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsIdSetEditInfo
@@ -60,22 +61,23 @@ object AsterismTileState:
     Focus[AsterismTileState](_.obsEditInfo)
 
 case class AsterismEditorBody(
-  programId:         Program.Id,
-  userId:            User.Id,
-  obsIds:            ObsIdSet,
-  obsAndTargets:     UndoSetter[ObservationsAndTargets],
-  obsTime:           View[Option[Instant]],
-  configuration:     ObsConfiguration,
-  focusedTargetId:   Option[Target.Id],
-  setTarget:         (Option[Target.Id], SetRouteVia) => Callback,
-  onCloneTarget:     OnCloneParameters => Callback,
-  onAsterismUpdate:  OnAsterismUpdateParams => Callback,
-  obsInfo:           Target.Id => TargetEditObsInfo,
-  searching:         View[Set[Target.Id]],
-  globalPreferences: View[GlobalPreferences],
-  readonly:          Boolean,
-  sequenceChanged:   Callback,
-  tileState:         View[AsterismTileState]
+  programId:          Program.Id,
+  userId:             User.Id,
+  obsIds:             ObsIdSet,
+  obsAndTargets:      UndoSetter[ObservationsAndTargets],
+  obsTime:            View[Option[Instant]],
+  configuration:      ObsConfiguration,
+  focusedTargetId:    Option[Target.Id],
+  setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
+  onCloneTarget:      OnCloneParameters => Callback,
+  onAsterismUpdate:   OnAsterismUpdateParams => Callback,
+  obsInfo:            Target.Id => TargetEditObsInfo,
+  searching:          View[Set[Target.Id]],
+  globalPreferences:  View[GlobalPreferences],
+  guideStarSelection: View[GuideStarSelection],
+  readonly:           Boolean,
+  sequenceChanged:    Callback,
+  tileState:          View[AsterismTileState]
 ) extends ReactFnProps(AsterismEditorBody.component):
   val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
@@ -174,6 +176,7 @@ object AsterismEditorBody extends AsterismModifier:
                     obsInfo = obsInfo,
                     fullScreen = fullScreen,
                     globalPreferences = props.globalPreferences,
+                    guideStarSelection = props.guideStarSelection,
                     readonly = props.readonly,
                     invalidateSequence = props.sequenceChanged
                   )

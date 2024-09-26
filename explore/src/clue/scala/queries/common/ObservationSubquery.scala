@@ -26,6 +26,7 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
             asterism {
               id
             }
+            guideTargetName
           }
           constraintSet $ConstraintSetSubquery
           timingWindows $TimingWindowSubquery

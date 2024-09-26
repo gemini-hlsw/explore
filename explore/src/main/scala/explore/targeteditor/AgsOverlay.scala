@@ -7,7 +7,8 @@ import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
-import explore.model.Constants
+import explore.model.*
+import explore.model.GuideStarSelection
 import explore.model.enums.AgsState
 import explore.model.formats.*
 import japgolly.scalajs.react.*
@@ -23,9 +24,8 @@ import lucuma.ui.syntax.all.given
 import scala.math.BigDecimal.RoundingMode
 
 case class AgsOverlay(
-  selectedGSIndex:     View[Option[Int]],
-  maxIndex:            Int,
-  selectedGuideStar:   Option[AgsAnalysis],
+  selectedGS:          View[GuideStarSelection],
+  agsResults:          List[AgsAnalysis],
   agsState:            AgsState,
   modeAvailable:       Boolean,
   durationAvailable:   Boolean, // Duration implies sequence
@@ -33,7 +33,7 @@ case class AgsOverlay(
 ) extends ReactFnProps[AgsOverlay](AgsOverlay.component) {
   val canCalculate: Boolean =
     candidatesAvailable && durationAvailable && modeAvailable
-  val noGuideStar: Boolean  = canCalculate && selectedGuideStar.isEmpty && !agsState.isCalculating
+  val noGuideStar: Boolean  = canCalculate && selectedGS.get.idx.isEmpty && !agsState.isCalculating
 }
 
 object AgsOverlay:
@@ -41,28 +41,38 @@ object AgsOverlay:
 
   val component =
     ScalaFnComponent[Props]: props =>
-      val selectedIndex = props.selectedGSIndex.get
+      val selectedIndex = props.selectedGS.get.idx
+
+      val maxIndex = props.agsResults.size
 
       val canGoPrev = props.agsState === AgsState.Idle && selectedIndex.exists(_ > 0)
+      val canGoNext = props.agsState === AgsState.Idle && selectedIndex.exists(_ < maxIndex - 1)
 
-      def goPrev(e: ReactEvent): Option[Callback] = Option {
-        props.selectedGSIndex.mod(_.map(_ - 1))
-      }.filter(_ => canGoPrev)
+      def goPrev: Option[Callback] =
+        selectedIndex
+          .map { i =>
+            props.selectedGS.set(props.agsResults.pick(i - 1))
+          }
+          .filter(_ => canGoPrev)
 
-      val canGoNext =
-        props.agsState === AgsState.Idle && selectedIndex.exists(_ < props.maxIndex - 1)
-
-      def goNext(e: ReactEvent): Option[Callback] = Option {
-        props.selectedGSIndex.mod(_.map(_ + 1))
-      }.filter(_ => canGoNext)
+      def goNext: Option[Callback] =
+        selectedIndex
+          .map { i =>
+            props.selectedGS.set(props.agsResults.pick(i + 1))
+          }
+          .filter(_ => canGoNext)
 
       val errorIcon = Icons.TriangleSolid
         .addClass(ExploreStyles.ItcErrorIcon)
         .withSize(IconSize.LG)
 
-      props.selectedGuideStar
-        .filter(_.isUsable)
-        .map { analysis =>
+      val devOnly =
+        <.div(^.cls := "ags-selection-dev",
+              TagMod.devOnly(s"${props.agsState} ${props.selectedGS.get}")
+        )
+
+      props.selectedGS.get.analysis
+        .map { case analysis =>
           ReactFragment(
             <.div(
               ExploreStyles.AgsDescription,
@@ -72,13 +82,13 @@ object AgsOverlay:
                 ExploreStyles.AgsNavigation,
                 <.span(
                   ExploreStyles.Disabled.unless(canGoPrev),
-                  ^.onClick ==>? goPrev,
+                  ^.onClick -->? goPrev,
                   ExploreStyles.AgsNavigationButton,
                   Icons.ChevronLeft
                 ),
                 <.span(
                   ExploreStyles.Disabled.unless(canGoNext),
-                  ^.onClick ==>? goNext,
+                  ^.onClick -->? goNext,
                   ExploreStyles.AgsNavigationButton,
                   Icons.ChevronRight
                 )
@@ -86,6 +96,7 @@ object AgsOverlay:
             ),
             <.div(
               ExploreStyles.AgsDescription,
+              devOnly,
               analysis.match {
                 case AgsAnalysis.Usable(_, _, GuideSpeed.Fast, _, _)   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
@@ -120,14 +131,19 @@ object AgsOverlay:
         .getOrElse {
           <.div(
             ExploreStyles.AgsDescription,
+            devOnly,
             (props.modeAvailable, props.durationAvailable, props.candidatesAvailable) match {
-              case (false, _, _) =>
+              case (false, _, _)                     =>
                 <.span(errorIcon, Constants.MissingMode)
-              case (_, false, _) =>
+              case (_, false, _)                     =>
                 <.span(errorIcon, Constants.NoDuration)
-              case (_, _, false) =>
+              case (_, _, false)                     =>
                 <.span(errorIcon, Constants.MissingCandidates)
-              case u             =>
+              case _ if props.agsState.isCalculating =>
+                <.span(Icons.CircleSmall.withBeat().withClass(ExploreStyles.WarningIcon),
+                       Constants.Calculating
+                )
+              case _                                 =>
                 <.span(
                   Icons.SquareXMarkLarge
                     .withClass(ExploreStyles.AgsNotFound)

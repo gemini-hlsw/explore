@@ -9,7 +9,6 @@ import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.View
 import explore.model.enums.AgsState
-import lucuma.ags.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
@@ -51,9 +50,8 @@ case class ObsConfiguration(
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)
 
-  // Selected guide star via ags or manual
-  def selectedGS: Option[View[Option[AgsAnalysis]]] =
-    posAngleProperties.map(_.selectedGS)
+  def guideStarSelection: Option[View[GuideStarSelection]] =
+    posAngleProperties.map(_.guideStarSelection)
 
   def selectedPA: Option[Angle] =
     posAngleProperties.flatMap(_.selectedPA)

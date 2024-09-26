@@ -15,6 +15,7 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.aladin.AladinFullScreenControl
 import explore.common.UserPreferencesQueries
@@ -42,7 +43,6 @@ import lucuma.core.math.Offset
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.util.NewType
 import lucuma.react.aladin.Fov
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
@@ -55,15 +55,18 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
 
 import java.time.Instant
+import scala.annotation.unused
 import scala.concurrent.duration.*
 
 case class AladinCell(
-  uid:               User.Id,
-  asterism:          Asterism,
-  vizTime:           Instant,
-  obsConf:           Option[ObsConfiguration],
-  fullScreen:        View[AladinFullScreen],
-  globalPreferences: View[GlobalPreferences]
+  uid:                User.Id,
+  obsId:              Option[Observation.Id],
+  asterism:           Asterism,
+  vizTime:            Instant,
+  obsConf:            Option[ObsConfiguration],
+  fullScreen:         View[AladinFullScreen],
+  globalPreferences:  View[GlobalPreferences],
+  guideStarSelection: View[GuideStarSelection]
 ) extends ReactFnProps(AladinCell.component):
   val needsAGS: Boolean =
     obsConf.exists(_.needGuideStar)
@@ -106,6 +109,9 @@ case class AladinCell(
   def modeSelected: Boolean =
     obsConf.exists(_.configuration.isDefined)
 
+  def selectedGSName: Option[NonEmptyString] =
+    guideStarSelection.get.targetName
+
   def sciencePositionsAt(vizTime: Instant): List[Coordinates] =
     asterism.asList
       .flatMap(_.toSidereal)
@@ -137,8 +143,7 @@ trait AladinCommon:
       .void
 
 object AladinCell extends ModelOptics with AladinCommon:
-  private object ManualAgsOverride extends NewType[Boolean]
-  private type ManualAgsOverride = ManualAgsOverride.Type
+  import GuideStarSelection.*
 
   private type Props = AladinCell
 
@@ -204,9 +209,9 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
+  @unused // TODO Restore support for flips
   private def flipAngle(
-    props:          Props,
-    manualOverride: View[ManualAgsOverride]
+    props: Props
   ): Option[AgsAnalysis] => Callback =
     case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
       val angle = pos.head._1
@@ -215,7 +220,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           props.obsConf
             .flatMap(_.posAngleConstraintView)
             .map(_.set(PosAngleConstraint.AllowFlip(a.flip)))
-            .getOrEmpty *> manualOverride.set(ManualAgsOverride(true))
+            .getOrEmpty
         case _                                                    => Callback.empty
     case _                                         => Callback.empty
 
@@ -223,12 +228,9 @@ object AladinCell extends ModelOptics with AladinCommon:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // target options, will be read from the user preferences
-      .useStateView(Pot.pending[AsterismVisualOptions])
-      // to get faster reusability use a serial state, rather than check every candidate
-      // Request data again if vizTime changes more than a month
-      .useEffectKeepResultWithDepsBy((p, _, _) => (p.vizTime, p.asterism.baseTracking)) {
-        (props, ctx, _) => (vizTime, baseTracking) =>
+      // Request candidates if vizTime changes more than a month or the base moves
+      .useEffectKeepResultWithDepsBy((p, _) => (p.vizTime, p.asterism.baseTracking)) {
+        (props, ctx) => (vizTime, baseTracking) =>
           import ctx.given
 
           if (props.needsAGS)
@@ -250,9 +252,11 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useSerialState(List.empty[AgsAnalysis])
       // Reference to root
       .useMemo(())(_ => domRoot)
+      // target options, will be read from the user preferences
+      .useStateView(Pot.pending[AsterismVisualOptions])
       // Load target preferences
       .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.asterism.ids)) {
-        (props, ctx, options, _, _, root) => _ =>
+        (props, ctx, _, _, root, options) => _ =>
           import ctx.given
 
           AsterismPreferences
@@ -263,31 +267,49 @@ object AladinCell extends ModelOptics with AladinCommon:
                 setVariable(root, "brightness", tp.brightness)).toAsync
             }
       }
-      // Selected GS index. Should be stored in the db
-      .useStateView(none[Int])
+      // In case the selected name changes remotely
+      .useEffectWithDepsBy((props, _, _, _, _, _) => props.selectedGSName)(
+        (props, _, _, analysis, _, _) =>
+          n =>
+            props.guideStarSelection.set(
+              // Go to the first analysis if present or pick the name from the selection
+              n.fold(AgsSelection(analysis.value.value.headOption.tupleLeft(0)))(
+                analysis.value.value.pick
+              )
+            )
+      )
       // mouse coordinates, starts on the base
-      .useStateBy((props, _, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
+      .useStateBy((props, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, options, _, _, _, gs, mouseCoords) =>
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.asterism)(
+        (props, ctx, _, _, _, options, mouseCoords) =>
           _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
             // if the coordinates change, reset ags, offset and mouse coordinates
             for {
-              _ <- gs.set(none)
+              // FIXME, this is getting into a weird loop
+              // _ <- gs.set(AgsSelection(none)).when_(gs.get.isOverride)
               _ <- offsetOnCenter.set(Offset.Zero)
               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
             } yield ()
       )
-      .useStateView(ManualAgsOverride(false))
       // Reset selection if pos angle changes except for manual selection changes
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
-        (_, _, _, _, _, _, selectedIndex, _, agsOverride) =>
-          _ => selectedIndex.set(none).unless_(agsOverride.get.value)
+      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
+        (p, ctx, candidates, _, _, _, _) =>
+          _ =>
+            p.obsConf
+              .flatMap(_.agsState)
+              .foldMap(
+                _.set(AgsState.Calculating)
+                  .whenA(p.needsAGS && candidates.toOption.flatten.nonEmpty)
+              ) *>
+              p.guideStarSelection.set(
+                GuideStarSelection.Default
+              )
       )
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, _, candidates, _, _, _, _, _) =>
+      .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,
          p.asterism.focus.id,
          p.positions,
@@ -298,7 +320,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          p.obsConf.flatMap(_.configuration),
          candidates.toOption.flatten
         )
-      ) { (props, ctx, _, _, ags, _, selectedIndex, _, agsOverride) =>
+      ) { (props, ctx, _, ags, _, _, _) =>
         {
           case (tracking,
                 _,
@@ -333,23 +355,32 @@ object AladinCell extends ModelOptics with AladinCommon:
 
               def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
                 (for {
-                  // Set the analysis
+                  // Store the analysis
                   _ <- r.map(ags.setState).getOrEmpty
+                  // TODO Restore support for flips
                   // If we need to flip change the constraint
-                  _ <- r
-                         .map(_.headOption)
-                         .map(flipAngle(props, agsOverride))
-                         .orEmpty
-                         .unlessA(agsOverride.get.value)
+                  // _ <- r
+                  //        .map(_.headOption)
+                  //        .map(flipAngle(props))
+                  //        .orEmpty
+                  //        .unlessA(props.guideStarSelection.get.isOverride)
                   // set the selected index to the first entry
                   _ <- {
                     val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
                     val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                    (selectedIndex.set(index) *>
-                      props.obsConf
-                        .flatMap(_.selectedGS)
-                        .map(_.set(selectedGS))
-                        .getOrEmpty).unlessA(agsOverride.get.value)
+                    props.guideStarSelection
+                      .mod {
+                        case AgsSelection(_)               =>
+                          AgsSelection(selectedGS.tupleLeft(0)) // replace automatic selection
+                        case rem @ RemoteGSSelection(name) =>
+                          // Recover the analysis for the remotely selected star
+                          // It is hydrating the name with the selection results
+                          r.map(_.pick(name)).getOrElse(rem)
+                        case a: AgsOverride                =>
+                          // If overriden ignore
+                          a
+                      }
+                      .unlessA(props.guideStarSelection.get.isOverride)
                   }
                 } yield ()).toAsync
 
@@ -364,16 +395,14 @@ object AladinCell extends ModelOptics with AladinCommon:
                       .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
                 } yield ()
 
-              process.guarantee(
-                agsOverride.async.set(ManualAgsOverride(false)) *> agsState.async.set(
-                  AgsState.Idle
-                )
-              )
+              process.guarantee(agsState.async.set(AgsState.Idle))
             }.orEmpty
 
-            (selectedIndex.set(none) *>
-              props.obsConf.flatMap(_.selectedGS).map(_.set(none)).orEmpty).toAsync
-              .whenA(positions.isEmpty) *> runAgs
+            props.guideStarSelection
+              .set(AgsSelection(none))
+              .toAsync
+              .whenA(positions.isEmpty) *>
+              runAgs.unlessA(props.guideStarSelection.get.isOverride)
           case _ => IO.unit
         }
       }
@@ -382,29 +411,17 @@ object AladinCell extends ModelOptics with AladinCommon:
         (
           props,
           ctx,
-          options,
           candidates,
           agsResults,
           _,
-          selectedGSIndexView,
+          options,
           mouseCoords,
-          agsManualOverride,
           menuRef
         ) =>
           import ctx.given
 
           // If the selected GS changes do a flip when necessary
-          val selectedGSIndex = selectedGSIndexView.withOnMod(idx =>
-            idx
-              .map(agsResults.value.lift)
-              .map(a =>
-                flipAngle(props, agsManualOverride)(a) *> props.obsConf
-                  .flatMap(_.selectedGS)
-                  .map(_.set(a))
-                  .getOrEmpty
-              )
-              .getOrEmpty
-          )
+          val selectedGSIndex = props.guideStarSelection
 
           val fovView =
             options.zoom(Pot.readyPrism.andThen(fovLens))
@@ -446,7 +463,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val (offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-          val selectedGuideStar = selectedGSIndex.get.flatMap(agsResults.value.lift)
+          val guideStar = selectedGSIndex.get.analysis
 
           val renderCell: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>
@@ -459,7 +476,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 coordinatesSetter,
                 fovSetter,
                 offsetChangeInAladin.reuseAlways,
-                selectedGuideStar,
+                guideStar,
                 agsResults.value
               )
 
@@ -471,7 +488,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               AladinToolbar(Fov(t.fovRA, t.fovDec),
                             mouseCoords.value,
                             agsState,
-                            selectedGuideStar,
+                            guideStar,
                             props.globalPreferences.get.agsOverlay,
                             offsetOnCenter
               )
@@ -486,8 +503,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                       ExploreStyles.AgsOverlay,
                       AgsOverlay(
                         selectedGSIndex,
-                        agsResults.value.count(_.isUsable),
-                        selectedGuideStar,
+                        agsResults.value.filter(_.isUsable),
                         agsState.get,
                         props.modeSelected,
                         props.durationAvailable,

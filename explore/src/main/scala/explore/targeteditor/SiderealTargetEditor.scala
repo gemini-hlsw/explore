@@ -21,6 +21,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
+import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
@@ -73,6 +74,7 @@ case class SiderealTargetEditor(
   onClone:            OnCloneParameters => Callback,
   fullScreen:         View[AladinFullScreen],
   globalPreferences:  View[GlobalPreferences],
+  guideStarSelection: View[GuideStarSelection],
   readonly:           Boolean,
   invalidateSequence: Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
@@ -314,17 +316,21 @@ object SiderealTargetEditor:
             _ === props.asterism.focus.id
           ) || cloning.get || props.readonly || props.obsInfo.isReadonly
 
+        val oid = props.obsInfo.current.map(_.head)
+
         React.Fragment(
           TargetCloneSelector(props.obsInfo, obsToCloneTo),
           <.div(ExploreStyles.TargetGrid)(
             vizTime.renderPot(vt =>
               AladinCell(
                 props.userId,
+                oid,
                 props.asterism,
                 vt,
                 props.obsConf,
                 props.fullScreen,
-                props.globalPreferences
+                props.globalPreferences,
+                props.guideStarSelection
               )
             ),
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(

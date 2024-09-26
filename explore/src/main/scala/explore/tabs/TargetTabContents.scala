@@ -21,6 +21,8 @@ import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
+import explore.model.GuideStarSelection
+import explore.model.GuideStarSelection.AgsSelection
 import explore.model.Observation
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
@@ -235,8 +237,9 @@ object TargetTabContents extends TwoPanels:
             case GoToSummary           => ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
 
           UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
-      .useStateView(AladinFullScreen.Normal) // full screen aladin
-      .useResizeDetector() // Measure its size
+      .useStateView(AladinFullScreen.Normal)          // full screen aladin
+      .useResizeDetector()                            // Measure its size
+      .useStateView[GuideStarSelection](AgsSelection(none)) // required for aladin but not in use
       .render:
         (
           props,
@@ -248,7 +251,8 @@ object TargetTabContents extends TwoPanels:
           copyCallback,
           pasteCallback,
           fullScreen,
-          resize
+          resize,
+          guideStarSelection
         ) =>
           import ctx.given
 
@@ -406,6 +410,7 @@ object TargetTabContents extends TwoPanels:
                           _,
                           _,
                           _,
+                          _,
                           const,
                           _,
                           _,
@@ -533,6 +538,7 @@ object TargetTabContents extends TwoPanels:
                 props.searching,
                 title,
                 props.globalPreferences,
+                guideStarSelection,
                 props.readonly,
                 backButton = backButton.some
               )
@@ -569,8 +575,9 @@ object TargetTabContents extends TwoPanels:
            * Renders a single sidereal target editor without an obs context
            */
           def renderSiderealTargetEditor(
-            resize:   UseResizeDetectorReturn,
-            targetId: Target.Id
+            resize:             UseResizeDetectorReturn,
+            targetId:           Target.Id,
+            guideStarSelection: View[GuideStarSelection]
           ): List[Tile[?]] = {
             def onCloneTarget4Target(params: OnCloneParameters): Callback =
               // It's not perfect, but we'll go to whatever url has the "new" id. This means
@@ -592,6 +599,7 @@ object TargetTabContents extends TwoPanels:
                     s"Editing Target ${target.get.name.value} [$targetId]",
                     fullScreen,
                     props.globalPreferences,
+                    guideStarSelection,
                     props.readonly,
                     getObsInfo(none)(targetId),
                     onCloneTarget4Target
@@ -648,7 +656,7 @@ object TargetTabContents extends TwoPanels:
                           case Nonsidereal(_, _, _) =>
                             (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
                           case Sidereal(_, _, _, _) =>
-                            (renderSiderealTargetEditor(resize, targetId),
+                            (renderSiderealTargetEditor(resize, targetId, guideStarSelection),
                              TargetTabControllerIds.Summary.id
                             )
                     case Right(obsIds)  =>

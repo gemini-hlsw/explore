@@ -420,6 +420,7 @@ $brightness: var(--aladin-image-brightness);
 
     bottom: 30px;
     font-size: smaller;
+    user-select: none;
 
     .fa-bahai {
       color: var(--ags-icon-color);
