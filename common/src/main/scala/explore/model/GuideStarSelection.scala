@@ -34,9 +34,9 @@ object GuideStarSelection:
   extension (gs: GuideStarSelection)
     def fold[A](f: AgsSelection => A, g: RemoteGSSelection => A, h: AgsOverride => A): A =
       gs match
-        case a @ AgsSelection(_)  => f(a)
-        case a: RemoteGSSelection => g(a)
-        case a: AgsOverride       => h(a)
+        case a @ AgsSelection(_)      => f(a)
+        case a @ RemoteGSSelection(_) => g(a)
+        case a @ AgsOverride(_, _, _) => h(a)
 
     def isOverride: Boolean = fold(_ => false, _ => false, _ => true)
 

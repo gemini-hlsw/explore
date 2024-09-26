@@ -368,22 +368,19 @@ object AladinCell extends ModelOptics with AladinCommon:
                   _ <- {
                     val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
                     val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
-                    Callback.log(
-                      s"Ags seleects $index "
-                    ) *>
-                      props.guideStarSelection
-                        .mod {
-                          case AgsSelection(_)               =>
-                            AgsSelection(selectedGS.tupleLeft(0)) // replace automatic selection
-                          case rem @ RemoteGSSelection(name) =>
-                            // Recover the analysis for the remotely selected star
-                            // It is hydrating the name with the selection results
-                            r.map(_.pick(name)).getOrElse(rem)
-                          case a: AgsOverride                =>
-                            // If overriden ignore
-                            a
-                        }
-                        .unlessA(props.guideStarSelection.get.isOverride)
+                    props.guideStarSelection
+                      .mod {
+                        case AgsSelection(_)               =>
+                          AgsSelection(selectedGS.tupleLeft(0)) // replace automatic selection
+                        case rem @ RemoteGSSelection(name) =>
+                          // Recover the analysis for the remotely selected star
+                          // It is hydrating the name with the selection results
+                          r.map(_.pick(name)).getOrElse(rem)
+                        case a: AgsOverride                =>
+                          // If overriden ignore
+                          a
+                      }
+                      .unlessA(props.guideStarSelection.get.isOverride)
                   }
                 } yield ()).toAsync
 
