@@ -430,8 +430,7 @@ object ObsTabTiles:
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,
                 obsDuration.map(_.toDuration),
-                props.observation.get.needsAGS,
-                props.selectedGSName.get
+                props.observation.get.needsAGS
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =

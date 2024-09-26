@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.effect.IO
-import cats.syntax.all.*
 import clue.FetchClient
 import crystal.*
 import crystal.react.*
@@ -62,7 +61,7 @@ object AsterismEditorTile:
     guideStarSelection: View[GuideStarSelection],
     readonly:           Boolean,
     sequenceChanged:    Callback = Callback.empty,
-    backButton:         Option[VdomNode] = none
+    backButton:         Option[VdomNode] = None
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[AsterismTileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
