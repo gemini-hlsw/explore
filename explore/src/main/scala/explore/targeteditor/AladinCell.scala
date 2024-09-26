@@ -110,7 +110,7 @@ case class AladinCell(
     obsConf.exists(_.configuration.isDefined)
 
   def selectedGSName: Option[NonEmptyString] =
-    guideStarSelection.get.name
+    guideStarSelection.get.targetName
 
   def sciencePositionsAt(vizTime: Instant): List[Coordinates] =
     asterism.asList

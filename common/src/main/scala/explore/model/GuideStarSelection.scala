@@ -42,7 +42,8 @@ object GuideStarSelection:
 
     def idx: Option[Int] = fold(_.index.map(_._1), _ => none, _.selectedGSIndex.some)
 
-    def name: Option[NonEmptyString] = fold(_.index.map(_._2.target.name), _.name.some, _.name)
+    def targetName: Option[NonEmptyString] =
+      fold(_.index.map(_._2.target.name), _.name.some, _.selectedGSName.some)
 
     def analysis: Option[AgsAnalysis] = gs match
       case AgsSelection(Some((_, a))) => a.some
