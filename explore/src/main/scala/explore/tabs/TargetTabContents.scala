@@ -629,7 +629,7 @@ object TargetTabContents extends TwoPanels:
 
           val renderNonSiderealTargetEditor: List[Tile[?]] =
             List(
-              renderSummary,
+              renderSummary.withFullSize,
               Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
                 <.div("Editing of Non-Sidereal targets not supported")
               ),
@@ -659,7 +659,7 @@ object TargetTabContents extends TwoPanels:
                           )
 
             val justSummaryTiles = List(
-              renderSummary,
+              renderSummary.withFullSize,
               dummyTargetTile,
               dummyElevationTile
             )

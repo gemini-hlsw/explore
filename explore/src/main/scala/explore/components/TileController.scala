@@ -83,7 +83,7 @@ object TileController:
       .modify {
         case r if tiles.exists(t => t.id.value === r.i && t.hidden) =>
           // height to 0 for hidden tiles
-          r.copy(minH = 0, h = 0)
+          r.copy(minH = 0, h = 0, isResizable = false)
         case r if r.h === 1                                         => r.copy(minH = 1)
         case r                                                      => r
       }(p)

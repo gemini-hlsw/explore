@@ -75,7 +75,7 @@ case class Tile[A](
   val tileBody:      View[A] => VdomNode,
   val tileTitle:     (View[A], TileSizeState) => VdomNode = (_: View[A], _: TileSizeState) => EmptyVdom
 ) extends ReactFnProps(Tile.component) {
-  protected val fullSize: Boolean = !canMinimize && !canMaximize
+  val fullSize: Boolean = !canMinimize && !canMaximize
 
   protected def showMaximize: Boolean =
     sizeState === TileSizeState.Minimized || (canMaximize && sizeState === TileSizeState.Minimized)
@@ -88,6 +88,9 @@ case class Tile[A](
     sizeStateCallback: TileSizeState => Callback
   ): Tile[A] =
     copy(sizeState = state, sizeStateCallback = sizeStateCallback)(tileBody, tileTitle)
+
+  def withFullSize: Tile[A] =
+    copy(canMinimize = false, canMaximize = false)(tileBody, tileTitle)
 
   def withBackButton(
     back: Option[VdomNode]
@@ -149,9 +152,9 @@ object Tile:
               ),
               // Size control buttons
               <.div(ExploreStyles.TileControlButtons,
-                    minimizeButton.when(p.showMinimize),
-                    maximizeButton.when(p.showMaximize)
-              ).unless(p.fullSize)
+                    minimizeButton.when(p.showMinimize).unless(p.fullSize),
+                    maximizeButton.when(p.showMaximize).unless(p.fullSize)
+              )
             ),
             // Tile body
             <.div(^.key := s"tileBody-${p.id.value}",
