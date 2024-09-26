@@ -17,7 +17,6 @@ import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.modes.SpectroscopyModesMatrix
-import lucuma.core.math.Angle
 import explore.undo.*
 import japgolly.scalajs.react.Callback
 import lucuma.core.model.CoordinatesAtVizTime

@@ -4,13 +4,13 @@
 package explore.model
 
 import cats.Eq
-import cats.syntax.all.*
 import cats.derived.*
-import japgolly.scalajs.react.ReactCats.*
-import lucuma.core.math.Angle
-import lucuma.ags.AgsAnalysis
-import eu.timepit.refined.types.string.NonEmptyString
+import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.string.NonEmptyString
+import japgolly.scalajs.react.ReactCats.*
+import lucuma.ags.AgsAnalysis
+import lucuma.core.math.Angle
 
 sealed trait GuideStarSelection derives Eq
 

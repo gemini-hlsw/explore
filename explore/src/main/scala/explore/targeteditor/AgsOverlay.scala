@@ -8,6 +8,7 @@ import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.*
+import explore.model.GuideStarSelection
 import explore.model.enums.AgsState
 import explore.model.formats.*
 import japgolly.scalajs.react.*
@@ -21,7 +22,6 @@ import lucuma.react.fa.IconSize
 import lucuma.ui.syntax.all.given
 
 import scala.math.BigDecimal.RoundingMode
-import explore.model.GuideStarSelection
 
 case class AgsOverlay(
   selectedGS:          View[GuideStarSelection],

@@ -10,6 +10,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.GlobalPreferences
+import explore.model.GuideStarSelection
 import explore.model.ObsTabTilesIds
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
@@ -23,7 +24,6 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.syntax.all.given
-import explore.model.GuideStarSelection
 
 object SiderealTargetEditorTile:
 

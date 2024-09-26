@@ -4,7 +4,6 @@
 package explore.targeteditor
 
 import cats.syntax.option.*
-import cats.syntax.eq.*
 import explore.model.AsterismVisualOptions
 import japgolly.scalajs.react.*
 import lucuma.core.util.NewType

@@ -21,6 +21,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
+import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
@@ -59,7 +60,6 @@ import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
 import java.time.Instant
-import explore.model.GuideStarSelection
 
 case class SiderealTargetEditor(
   programId:          Program.Id,

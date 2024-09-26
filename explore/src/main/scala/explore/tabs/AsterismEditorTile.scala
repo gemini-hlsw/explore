@@ -11,6 +11,7 @@ import crystal.react.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.GlobalPreferences
+import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsTabTilesIds
@@ -37,7 +38,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
-import explore.model.GuideStarSelection
 
 object AsterismEditorTile:
 

@@ -21,6 +21,8 @@ import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
+import explore.model.GuideStarSelection
+import explore.model.GuideStarSelection.AgsSelection
 import explore.model.Observation
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
@@ -66,8 +68,6 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.model.GuideStarSelection
-import explore.model.GuideStarSelection.AgsSelection
 
 case class TargetTabContents(
   programId:        Program.Id,

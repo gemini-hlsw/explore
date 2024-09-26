@@ -55,8 +55,8 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
 
 import java.time.Instant
-import scala.concurrent.duration.*
 import scala.annotation.unused
+import scala.concurrent.duration.*
 
 case class AladinCell(
   uid:                User.Id,
@@ -271,7 +271,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useEffectWithDepsBy((props, _, _, _, _, _) => props.selectedGSName)(
         (props, _, _, analysis, _, _) =>
           n =>
-            Callback.log(s"Remote change to $n") *> props.guideStarSelection.set(
+            props.guideStarSelection.set(
               // Go to the first analysis if present or pick the name from the selection
               n.fold(AgsSelection(analysis.value.value.headOption.tupleLeft(0)))(
                 analysis.value.value.pick
@@ -288,7 +288,8 @@ object AladinCell extends ModelOptics with AladinCommon:
 
             // if the coordinates change, reset ags, offset and mouse coordinates
             for {
-              // _ <- gs.set(AgsSelection(none)).when_(gs.get.isOverride) // TODO Reset remote
+              // FIXME, this is getting into a weird loop
+              // _ <- gs.set(AgsSelection(none)).when_(gs.get.isOverride)
               _ <- offsetOnCenter.set(Offset.Zero)
               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
             } yield ()
@@ -297,16 +298,15 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
         (p, ctx, candidates, _, _, _, _) =>
           _ =>
-            Callback.log("reset pa") *>
-              p.obsConf
-                .flatMap(_.agsState)
-                .foldMap(
-                  _.set(AgsState.Calculating)
-                    .whenA(p.needsAGS && candidates.toOption.flatten.nonEmpty)
-                ) *>
+            p.obsConf
+              .flatMap(_.agsState)
+              .foldMap(
+                _.set(AgsState.Calculating)
+                  .whenA(p.needsAGS && candidates.toOption.flatten.nonEmpty)
+              ) *>
               p.guideStarSelection.set(
                 GuideStarSelection.Default
-              ) // .unless_(agsOverride.get.value)
+              )
       )
       // Request ags calculation
       .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
@@ -398,11 +398,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                       .handleErrorWith(t => Logger[IO].error(t)("ERROR IN AGS REQUEST"))
                 } yield ()
 
-              process.guarantee(
-                agsState.async.set(
-                  AgsState.Idle
-                )
-              )
+              process.guarantee(agsState.async.set(AgsState.Idle))
             }.orEmpty
 
             props.guideStarSelection

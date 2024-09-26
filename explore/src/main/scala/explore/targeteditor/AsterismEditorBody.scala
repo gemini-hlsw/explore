@@ -14,6 +14,7 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.GlobalPreferences
+import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObsIdSetEditInfo
@@ -41,7 +42,6 @@ import monocle.Iso
 import monocle.Lens
 
 import java.time.Instant
-import explore.model.GuideStarSelection
 
 case class AsterismTileState(
   table:       ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta] =

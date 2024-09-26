@@ -11,6 +11,7 @@ import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.TimingWindowsQueries
@@ -20,10 +21,9 @@ import explore.components.ui.ExploreStyles
 import explore.config.sequence.SequenceEditorTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
-import explore.model.GuideStarSelection
-import explore.model.GuideStarSelection.*
 import explore.model.*
 import explore.model.AppContext
+import explore.model.GuideStarSelection.*
 import explore.model.LoadingState
 import explore.model.Observation
 import explore.model.ObservationsAndTargets
@@ -77,7 +77,6 @@ import queries.schemas.odb.ObsQueries.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import eu.timepit.refined.cats.*
 
 case class ObsTabTiles(
   vault:             Option[UserVault],
@@ -225,7 +224,9 @@ object ObsTabTiles:
         p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
-      // Store Ags selection in a view for fast local updates
+      // Store guide star selection in a view for fast local updates
+      // This is not the ideal place for this but we need to share the selected guide star
+      // across the configuration and target tile
       .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) =>
         props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
       )
@@ -233,34 +234,29 @@ object ObsTabTiles:
         import ctx.given
 
         // We tell the backend and the local cache of changes to the selected guidestar
-        // In some cases
+        // In some cases when we do a real override
         guideStarSelection.withOnMod {
           (_, _) match {
             // Change of override
             case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
-              Callback.log(s"new selected name from $m to $n") *>
-                props.selectedGSName.set(n.some) *>
+              props.selectedGSName.set(n.some) *>
                 ObsQueries
                   .setGuideTargetName[IO](props.obsId, n.some)
                   .runAsyncAndForget
             // Going from automatic to manual selection
             case (AgsSelection(_), AgsOverride(n, _, _))                 =>
-              Callback.log(s"new overriden name to $n") *>
-                props.selectedGSName.set(n.some) *>
-                ObsQueries
-                  .setGuideTargetName[IO](props.obsId, n.some)
-                  .runAsyncAndForget
+              ObsQueries
+                .setGuideTargetName[IO](props.obsId, n.some)
+                .runAsyncAndForget
             // Going from manual to automated selection
             case (AgsOverride(n, _, _), AgsSelection(_))                 =>
-              // From manual to automatic
-              Callback.log(s"Overridde to automatic from $n") *>
-                props.selectedGSName.set(none) *>
+              props.selectedGSName.set(none) *>
                 ObsQueries
                   .setGuideTargetName[IO](props.obsId, none)
                   .runAsyncAndForget
-            case m                                                       =>
+            case _                                                       =>
               // All other combinations
-              Callback.log(s"/dev/null $m") // Callback.empty
+              Callback.empty
           }
         }
       )
@@ -358,10 +354,6 @@ object ObsTabTiles:
                 case PosAngleConstraint.Fixed(angle)               => angle.some
                 case PosAngleConstraint.AllowFlip(angle)           => angle.some
                 case PosAngleConstraint.ParallacticOverride(angle) => angle.some
-
-            // println(
-            //   "PA OTT: " + pa + " " + posAngleConstraintView.get + " " + guideStarSelection.get
-            // )
 
             val finderChartsTile =
               FinderChartsTile.finderChartsTile(
@@ -522,10 +514,6 @@ object ObsTabTiles:
 
             val timingWindowsTile =
               TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled, false)
-
-            // println(
-            //   s"PA: ${guideStarSelection.get.analysis.flatMap(_.posAngle.map(_.toDoubleDegrees))}"
-            // )
 
             val configurationTile =
               ConfigurationTile.configurationTile(
