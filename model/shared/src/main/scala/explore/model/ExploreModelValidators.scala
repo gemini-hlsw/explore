@@ -64,16 +64,12 @@ object ExploreModelValidators:
   private def ditherInRange(
     λcentral: Wavelength,
     λmin:     Wavelength,
-    λmax:     Wavelength,
-    λr:       WavelengthDelta
+    λmax:     Wavelength
   ): ValidFilterNEC[WavelengthDither] =
-    // min + delta/2 ≤ CentralWavelength + WavelengthDither ≤ max - delta/2
-    val minValidPm = λmin.pm.value.value + λr.pm.value.value / 2
-    val maxValidPm = λmax.pm.value.value - λr.pm.value.value / 2
     ValidFilter(
       λdither =>
         val adjusted = λcentral.unsafeOffset(λdither).pm.value.value
-        minValidPm < adjusted && adjusted < maxValidPm
+        λmin.pm.value.value < adjusted && adjusted < λmax.pm.value.value
       ,
       _ => NonEmptyChain("Dither value is outside of valid range".refined)
     )
@@ -89,10 +85,9 @@ object ExploreModelValidators:
   def dithersValidWedge(
     λcentral: Wavelength,
     λmin:     Wavelength,
-    λmax:     Wavelength,
-    λr:       WavelengthDelta
+    λmax:     Wavelength
   ): InputValidWedge[WavelengthDither] =
-    ditherValidWedge.andThen(ditherInRange(λcentral, λmin, λmax, λr).asValidWedge)
+    ditherValidWedge.andThen(ditherInRange(λcentral, λmin, λmax).asValidWedge)
 
   val offsetQNELValidWedge: InputValidWedge[Option[NonEmptyList[Offset.Q]]] =
     MathValidators.truncatedAngleSignedArcSec

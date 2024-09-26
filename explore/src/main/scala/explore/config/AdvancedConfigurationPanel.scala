@@ -458,11 +458,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         val validDithers = modeData.value
           .map(mode =>
-            ExploreModelValidators.dithersValidWedge(centralWavelengthView.get,
-                                                     mode.λmin.value,
-                                                     mode.λmax.value,
-                                                     mode.λdelta
-            )
+            ExploreModelValidators
+              .dithersValidWedge(centralWavelengthView.get, mode.λmin.value, mode.λmax.value)
           )
           .getOrElse(
             ExploreModelValidators.ditherValidWedge
@@ -716,7 +713,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
             <.label(^.id := "lambdaInterval",
                     ExploreStyles.FormValue,
-                    s"${adjustedInterval.fold("Unknown")(_.shortName)} nm"
+                    s"${adjustedInterval.fold("Unknown")(_.shortName)} μm"
             )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
