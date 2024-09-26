@@ -259,7 +259,9 @@ object ObsTabContents extends TwoPanels:
               "observations".refined,
               "Observations Summary",
               ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
-              backButton.some
+              backButton.some,
+              canMinimize = false,
+              canMaximize = false
             )(
               ObsSummaryTable(
                 props.vault.userId,
