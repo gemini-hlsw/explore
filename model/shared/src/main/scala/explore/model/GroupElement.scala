@@ -12,29 +12,48 @@ import io.circe.refined.given
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Enums.EditType
+import scala.annotation.targetName
+import eu.timepit.refined.cats.given
 
 // These case classes are only used for decoding the graphql response.
 case class Grouping(
   group:    Group,
-  elements: List[Either[Observation.Id, Group.Id]]
+  elements: List[ServerIndexed[Either[Observation.Id, Group.Id]]]
 ) derives Eq
 
 object Grouping:
-  private given Decoder[Either[Observation.Id, Group.Id]] =
-    Decoder
-      .instance(_.downField("group").get[Group.Id]("id").map(_.asRight))
-      .orElse:
-        Decoder.instance(_.downField("observation").get[Observation.Id]("id").map(_.asLeft))
+  @targetName("obsIdDecoder")
+  private given Decoder[ServerIndexed[Observation.Id]] =
+    Decoder.instance: c =>
+      for
+        obsId       <- c.get[Observation.Id]("id")
+        parentIndex <- c.get[NonNegShort]("groupIndex")
+      yield ServerIndexed(obsId, parentIndex)
+
+  @targetName("groupIdDecoder")
+  private given Decoder[ServerIndexed[Group.Id]] =
+    Decoder.instance: c =>
+      for
+        groupId     <- c.get[Group.Id]("id")
+        parentIndex <- c.get[NonNegShort]("parentIndex")
+      yield ServerIndexed(groupId, parentIndex)
+
+  private given Decoder[ServerIndexed[Either[Observation.Id, Group.Id]]] =
+    Decoder.instance: c =>
+      c.downField("observation")
+        .as[ServerIndexed[Observation.Id]]
+        .map(_.map(_.asLeft))
+        .orElse(c.downField("group").as[ServerIndexed[Group.Id]].map(_.map(_.asRight)))
 
   given Decoder[Grouping] = Decoder.instance: c =>
     for
       group    <- c.as[Group]
-      elements <- c.get[List[Either[Observation.Id, Group.Id]]]("elements")
+      elements <- c.get[List[ServerIndexed[Either[Observation.Id, Group.Id]]]]("elements")
     yield Grouping(group, elements)
 
 case class GroupElement(
-  value:         ServerIndexed[Either[Observation.Id, Grouping]],
-  parentGroupId: Option[Group.Id]
+  value:            Either[Observation.Id, Grouping],
+  indexInRootGroup: Option[NonNegShort] // Only defined if element is in root group
 ) derives Eq
 
 object GroupElement:
@@ -49,7 +68,7 @@ object GroupElement:
       value         <- c.as[Either[Observation.Id, Grouping]]
       parentIndex   <- c.get[NonNegShort]("parentIndex")
       parentGroupId <- c.get[Option[Group.Id]]("parentGroupId")
-    yield GroupElement(ServerIndexed(value, parentIndex), parentGroupId)
+    yield GroupElement(value, Option.when(parentGroupId.isEmpty)(parentIndex))
 
 case class GroupUpdate(
   value:         ServerIndexed[Grouping],

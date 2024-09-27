@@ -102,14 +102,22 @@ case class KeyedIndexedTree[K: Eq, A] private (
     val newTree: Tree[IndexedElem[K, A]]   = Tree(insertInChildren(cleanTree.children))
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
+  def updated( // TODO TEST!!!
+    key:         K,
+    newValue:    A,
+    newChildren: List[Node[A]],
+    newIndex:    Index[K]
+  ): KeyedIndexedTree[K, A] =
+    removed(key).inserted(key, Node(newValue, newChildren), newIndex)
 
   def updated(key: K, newValue: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
     val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
-    removed(key).inserted(key, Node(newValue, existingChildren), newIndex)
+    updated(key, newValue, existingChildren, newIndex)
 
   def updated( // TODO TEST!!!
     key:             K,
     newValue:        A,
+    newChildren:     List[Node[A]],
     parentKey:       Option[K],
     beforeNodeWhere: Node[A] => Boolean
   ): KeyedIndexedTree[K, A] =
@@ -122,13 +130,21 @@ case class KeyedIndexedTree[K: Eq, A] private (
       val newIndex: Int                           = Option(siblings.indexWhere(beforeNodeWhere))
         .filter(_ =!= -1)
         .getOrElse(siblings.length)
-      val existingChildren: List[Node[A]]         = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
       val withRemovedNode: KeyedIndexedTree[K, A] = removed(key)
       withRemovedNode.inserted(
         key,
-        Node(newValue, existingChildren),
+        Node(newValue, newChildren),
         Index(parentKey, NonNegInt.unsafeFrom(newIndex))
       )
+
+  def updated( // TODO TEST!!!
+    key:             K,
+    newValue:        A,
+    parentKey:       Option[K],
+    beforeNodeWhere: Node[A] => Boolean
+  ): KeyedIndexedTree[K, A] =
+    val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
+    updated(key, newValue, existingChildren, parentKey, beforeNodeWhere)
 
   def collect[B](pf: PartialFunction[(K, Node[A], Index[K]), B]): List[B] =
     byKey

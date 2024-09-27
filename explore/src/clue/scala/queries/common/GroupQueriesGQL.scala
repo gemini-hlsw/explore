@@ -18,8 +18,8 @@ object GroupQueriesGQL:
       extends GraphQLSubquery.Typed[ObservationDB, GroupElement]("GroupElement"):
     override val subquery: String = s"""
       {
-        parentGroupId
-        parentIndex
+        parentGroupId # Only used for identifying root group
+        parentIndex   # Only used if element is in root group
         observation { id }
         group $GroupSubQuery
       }
@@ -37,8 +37,14 @@ object GroupQueriesGQL:
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
         elements {
-          observation { id }
-          group { id }
+          observation { 
+            id
+            groupIndex
+          }
+          group {
+            id
+            parentIndex
+          }
         }
       }
     """

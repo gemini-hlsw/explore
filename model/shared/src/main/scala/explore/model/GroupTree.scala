@@ -46,35 +46,31 @@ object GroupTree:
 
   def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
-    val (obsList, groupList): (List[(Observation.Id, ServerIndexed[Observation.Id])],
-                               List[(Group.Id, ServerIndexed[Grouping])]
-    ) =
-      groups.partitionMap:
-        _.value match
-          case ServerIndexed(Left(obsId), parentIndex)     =>
-            Left(obsId -> ServerIndexed(obsId, parentIndex))
-          case ServerIndexed(Right(grouping), parentIndex) =>
-            Right(grouping.group.id -> ServerIndexed(grouping, parentIndex))
+    val groupMap: Map[Group.Id, Grouping] =
+      groups.mapFilter(_.value.toOption.map(g => g.group.id -> g)).toMap
 
-    val obsMap: Map[Observation.Id, ServerIndexed[Observation.Id]] = obsList.toMap
-    val groupMap: Map[Group.Id, ServerIndexed[Grouping]]           = groupList.toMap
+    def createObsNode(obsId: Observation.Id, parentIndex: NonNegShort): Node =
+      TreeNode(ServerIndexed(obsId.asLeft, parentIndex), Nil)
 
-    def createObsNode(obsId: Observation.Id): Node =
-      TreeNode(obsMap(obsId).map(_.asLeft), Nil)
+    def createGroupNode(groupId: Group.Id, parentIndex: NonNegShort): Node =
+      val grouping: Grouping   = groupMap(groupId)
+      val children: List[Node] =
+        grouping.elements
+          .map(child => toChild(child.elem, child.parentIndex))
+          .sortBy(_.value.parentIndex)
+      TreeNode(ServerIndexed(grouping.group.asRight, parentIndex), children)
 
-    def createGroupNode(groupId: Group.Id): Node =
-      val grouping: ServerIndexed[Grouping] = groupMap(groupId)
-      val children: List[Node]              = toChildren(grouping.elem.elements)
-      TreeNode(grouping.map(_.group.asRight), children)
+    def toChild(elem: Either[Observation.Id, Group.Id], parentIndex: NonNegShort): Node =
+      elem.fold(createObsNode(_, parentIndex), createGroupNode(_, parentIndex))
 
-    def toChildren(elems: List[Either[Observation.Id, Group.Id]]): List[Node] =
-      elems.map(_.fold(createObsNode, createGroupNode)).sortBy(_.value.parentIndex)
-
-    val rootElems: List[Either[Observation.Id, Group.Id]] =
+    val rootElems: List[Node] =
       groups
-        .mapFilter(g => Option.when(g.parentGroupId.isEmpty)(g.value.elem.map(_.group.id)))
+        .mapFilter: child =>
+          child.indexInRootGroup
+            .map(idx => toChild(child.value.map(_.group.id), idx))
+        .sortBy(_.value.parentIndex)
 
-    KeyedIndexedTree.fromTree(Tree(toChildren(rootElems)), _.id)
+    KeyedIndexedTree.fromTree(Tree(rootElems), _.id)
   }
 
 // parentIndices may skip values, since they also index deleted elements, so we have to keep track of them.
