@@ -4,9 +4,7 @@
 package explore.model
 
 import cats.Eq
-import cats.Order.*
 import cats.derived.*
-import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
@@ -32,6 +30,7 @@ case class Group(
 
 object Group:
   type Id = lucuma.core.model.Group.Id
+  val Id = lucuma.core.model.Group.Id
 
   val id: Lens[Group, Group.Id]                         = Focus[Group](_.id)
   val name: Lens[Group, Option[NonEmptyString]]         = Focus[Group](_.name)

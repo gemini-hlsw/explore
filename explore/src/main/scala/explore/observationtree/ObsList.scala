@@ -21,7 +21,9 @@ import explore.data.tree.Node as ExploreNode
 import explore.data.tree.Tree as ExploreTree
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.Group
 import explore.model.GroupTree
+import explore.model.GroupTree.syntax.*
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
@@ -36,7 +38,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
-import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*
@@ -58,6 +59,7 @@ import queries.schemas.odb.ObsQueries
 import scala.scalajs.js
 
 import ObsQueries.*
+import explore.model.ServerIndexed
 
 case class ObsList(
   observations:         UndoSetter[ObservationList],
@@ -77,7 +79,7 @@ case class ObsList(
   readonly:             Boolean
 ) extends ReactFnProps(ObsList.component):
   private val activeGroup: Option[Group.Id] = focusedGroup.orElse:
-    focusedObs.flatMap(obsId => observations.get.getValue(obsId).flatMap(_.groupId))
+    focusedObs.flatMap(groups.get.obsGroupId)
 
   private val copyDisabled: Boolean   = focusedObs.isEmpty
   private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
@@ -116,9 +118,9 @@ object ObsList:
   ): Iso[GroupTree, List[Node[GroupTree.Value]]] =
     Iso[GroupTree, List[Node[GroupTree.Value]]](groupTree =>
       def createNode(node: GroupTree.Node): Node[GroupTree.Value] =
-        val isSystemGroup: Boolean    = node.value.toOption.exists(_.system)
-        val isCalibrationObs: Boolean = node.value.left.toOption
-          .flatMap(obs => allObservations.getValue(obs.id))
+        val isSystemGroup: Boolean    = node.value.elem.toOption.exists(_.system)
+        val isCalibrationObs: Boolean = node.value.elem.left.toOption
+          .flatMap(obsId => allObservations.getValue(obsId))
           .exists(_.isCalibration)
 
         Tree.Node(
@@ -210,45 +212,65 @@ object ObsList:
       .render: (props, ctx, _, adding, treeNodes) =>
         import ctx.given
 
-        val expandedGroups = props.expandedGroups.as(groupTreeIdLens)
+        val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
 
         def onDragDrop(e: Tree.DragDropEvent[GroupTree.Value]): Callback =
           // If PrimeReact fixes https://github.com/primefaces/primereact/issues/6976,
           // then we can remove the 2nd check and set `droppable` to false for groups.
-          if (e.dropNode.exists(node => node.data.isLeft || node.data.toOption.exists(_.system)))
+          if (
+            e.dropNode
+              .exists(node => node.data.elem.isLeft || node.data.elem.toOption.exists(_.system))
+          )
             Callback.empty
           else {
-            val dragNode   = e.dragNode.data
-            val dropNodeId = e.dropNode.flatMap(_.data.id.toOption)
+            val dragNode: ServerIndexed[Either[Observation.Id, Group]] = e.dragNode.data
+            val dropNodeId: Option[Group.Id]                           = e.dropNode.flatMap(_.data.id.toOption)
 
-            val dropIndex =
+            val dropIndex: NonNegShort =
               NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
 
-              // Group updates are done through the `treeNodes.set`, but obs updates have to be done separately
-            val obsEdit: Callback = dragNode.left.toOption
-              .map: obs =>
-                props.observations.model
-                  .mod:
-                    _.updatedValueWith(
-                      obs.id,
-                      ???
-                      // Observation.groupId
-                      //   .replace(dropNodeId)
-                      //   .andThen: // TODO groupIndex IS NOT OUR INDEX!!!!
-                      //     Observation.groupIndex.replace(dropIndex)
-                    )
-              .getOrEmpty
+            // Group updates are done through the `treeNodes.set`, but obs updates have to be done separately
+            // val obsEdit: Callback = dragNode.elem.left.toOption
+            //   .map: obsId =>
+            //     props.observations.model
+            //       .mod:
+            //         _.updatedValueWith(
+            //           obsId,
+            //           ???
+            //           // Observation.groupId
+            //           //   .replace(dropNodeId)
+            //           //   .andThen: // TODO groupIndex IS NOT OUR INDEX!!!!
+            //           //     Observation.groupIndex.replace(dropIndex)
+            //         )
+            //   .getOrEmpty
+
+            // println(e.dropNode)
+            // println(e.dropIndex)
+
+            val newParentGroupIndex: NonNegShort =
+              if dropIndex.value == 0 then dropIndex
+              else
+                dropNodeId
+                  .flatMap: groupId =>
+                    props.groups.get.getNodeAndIndexByKey(groupId.asRight)
+                  .map(_._1.children)
+                  .filter(_.nonEmpty)
+                  .flatMap(_.get(dropIndex.value.toInt - 1))
+                  .map: previousNode =>
+                    NonNegShort.unsafeFrom((previousNode.value.parentIndex.value + 1).toShort)
+                  .getOrElse(NonNegShort.unsafeFrom(0))
+
+            println(newParentGroupIndex)
 
             dragNode.id
               .fold(
-                // TODO groupIndex IS NOT OUR INDEX!!!!
-                obsId => ObsQueries.moveObservation[IO](obsId, dropNodeId, dropIndex.some),
-                // TODO groupIndex IS NOT OUR INDEX!!!!
-                groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, dropIndex.some)
+                obsId =>
+                  ObsQueries.moveObservation[IO](obsId, dropNodeId, newParentGroupIndex.some),
+                groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, newParentGroupIndex.some)
               )
-              .runAsync *>
-              treeNodes.value.set(e.value.toList) *>
-              obsEdit *>
+              .runAsync >>
+              treeNodes.value.set(e.value.toList) >>
+              // obsEdit *>
               // Open the group we moved to
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
@@ -269,51 +291,50 @@ object ObsList:
             .mod(props.groups)(groupTreeMod.delete)
             .showToastCB(s"Deleted group ${gid.shortName}")
 
-        def renderItem(node: GroupTree.Value, options: TreeNodeTemplateOptions): VdomNode =
-          node match
-            case Left(GroupTree.Obs(id)) =>
+        def renderItem(nodeValue: GroupTree.Value, options: TreeNodeTemplateOptions): VdomNode =
+          nodeValue.elem match
+            case Left(obsId)  =>
               props.observations.get
-                .getValue(id)
+                .getValue(obsId)
                 .map: obs =>
-                  val selected: Boolean = props.focusedObs.contains_(id)
+                  val selected: Boolean = props.focusedObs.contains_(obsId)
 
                   <.a(
-                    ^.id        := s"obs-list-${id.toString}",
+                    ^.id        := s"obs-list-${obsId.toString}",
                     ^.href      := ctx.pageUrl(
                       AppTab.Observations,
                       props.programId,
-                      Focused.singleObs(id, props.focusedTarget)
+                      Focused.singleObs(obsId, props.focusedTarget)
                     ),
                     // Disable link dragging to enable tree node dragging
                     ^.draggable := false,
                     ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                     ^.onClick ==> linkOverride(
-                      setObs(props.programId, id.some, ctx)
+                      setObs(props.programId, obsId.some, ctx)
                     )
                   )(
                     ObsBadge(
                       obs,
-                      props.obsExecutionTimes.getPot(id).map(_.programTimeEstimate),
+                      props.obsExecutionTimes.getPot(obsId).map(_.programTimeEstimate),
                       ObsBadge.Layout.ObservationsTab,
                       selected = selected,
-                      setStatusCB = obsEditStatus(id)
+                      setStatusCB = obsEditStatus(obsId)
                         .set(props.observations)
                         .compose((_: ObsStatus).some)
                         .some,
-                      setActiveStatusCB = obsActiveStatus(id)
+                      setActiveStatusCB = obsActiveStatus(obsId)
                         .set(props.observations)
                         .compose((_: ObsActiveStatus).some)
                         .some,
-                      setSubtitleCB = obsEditSubtitle(id)
+                      setSubtitleCB = obsEditSubtitle(obsId)
                         .set(props.observations)
                         .compose((_: Option[NonEmptyString]).some)
                         .some,
-                      deleteCB = deleteObs(id),
+                      deleteCB = deleteObs(obsId),
                       cloneCB = cloneObs(
                         props.programId,
-                        id,
-                        ???,
-                        // obs.groupId, // Clone to the same group
+                        obsId,
+                        props.groups.get.obsGroupId(obsId), // Clone to the same group
                         props.observations,
                         ctx,
                         adding.async.set(AddingObservation(true)),
@@ -325,7 +346,7 @@ object ObsList:
                       readonly = props.readonly
                     )
                   )
-            case Right(group)            =>
+            case Right(group) =>
               val isEmpty = props.groups.get
                 .getNodeAndIndexByKey(group.id.asRight)
                 .exists(_._1.children.isEmpty)
@@ -351,7 +372,7 @@ object ObsList:
           props.focusedGroup
             .flatMap: groupId =>
               props.groups.get.getNodeAndIndexByKey(groupId.asRight)
-            .exists(_._1.value.toOption.exists(_.system))
+            .exists(_._1.value.elem.toOption.exists(_.system))
 
         val tree: VdomNode =
           if (props.deckShown.get === DeckShown.Shown) {

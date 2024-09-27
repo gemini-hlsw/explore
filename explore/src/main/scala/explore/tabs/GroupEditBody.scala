@@ -18,7 +18,6 @@ import explore.Icons
 import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.GroupTree
 import explore.model.ProgramTimeRange
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
@@ -40,11 +39,12 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import monocle.Iso
 import monocle.Lens
+import explore.model.Group
 
 import scala.scalajs.js
 
 case class GroupEditBody(
-  group:             UndoSetter[GroupTree.Group],
+  group:             UndoSetter[Group],
   elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   readonly:          Boolean
@@ -66,13 +66,10 @@ object GroupEditBody:
   val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    // editType
-    .useStateViewBy: (props, _) =>
+    .useStateViewBy: (props, _) => // editType
       if props.group.get.isAnd then GroupEditType.And else GroupEditType.Or
-    // isLoading
-    .useStateView(false)
-    // nameDisplay
-    .useStateBy((props, _, _, _) => props.group.get.name)
+    .useStateView(false) // isLoading
+    .useStateBy((props, _, _, _) => props.group.get.name) // nameDisplay
     .render: (props, ctx, editType, isLoading, nameDisplay) =>
       import ctx.given
 
@@ -81,7 +78,7 @@ object GroupEditBody:
 
       val isDisabled: Boolean = props.readonly || isLoading.get
 
-      def groupModView[A](lens: Lens[GroupTree.Group, A], prop: A => GroupPropertiesInput) =
+      def groupModView[A](lens: Lens[Group, A], prop: A => GroupPropertiesInput) =
         props.group
           .undoableView(lens)
           .withOnMod(a =>
@@ -89,27 +86,27 @@ object GroupEditBody:
           )
 
       val minRequiredV = groupModView(
-        GroupTree.Group.minimumRequired,
+        Group.minimumRequired,
         m => GroupPropertiesInput(minimumRequired = m.orUnassign)
       )
       val nameV        = groupModView(
-        GroupTree.Group.name,
+        Group.name,
         n => GroupPropertiesInput(name = n.orUnassign)
       )
       val orderedV     =
-        groupModView(GroupTree.Group.ordered, o => GroupPropertiesInput(ordered = o.assign))
+        groupModView(Group.ordered, o => GroupPropertiesInput(ordered = o.assign))
 
       val timeSpanOrEmptyLens =
         Iso[Option[TimeSpan], TimeSpan](_.orEmpty)(_.some.filterNot(_.isZero))
       val minIntervalV        = groupModView(
-        GroupTree.Group.minimumInterval.andThen(timeSpanOrEmptyLens),
+        Group.minimumInterval.andThen(timeSpanOrEmptyLens),
         ts =>
           GroupPropertiesInput(minimumInterval =
             TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
           )
       )
       val maxIntervalV        = groupModView(
-        GroupTree.Group.maximumInterval.andThen(timeSpanOrEmptyLens),
+        Group.maximumInterval.andThen(timeSpanOrEmptyLens),
         ts =>
           GroupPropertiesInput(maximumInterval =
             TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
@@ -238,7 +235,7 @@ object GroupEditBody:
       )
 
 case class GroupEditTitle(
-  group:             UndoSetter[GroupTree.Group],
+  group:             UndoSetter[Group],
   elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]]
 ) extends ReactFnProps(GroupEditTitle.component)
@@ -247,7 +244,7 @@ object GroupEditTitle:
   private type Props = GroupEditTitle
 
   private def makeTitle(
-    group:             GroupTree.Group,
+    group:             Group,
     timeEstimateRange: Pot[Option[ProgramTimeRange]],
     elementsLength:    Int
   ) =

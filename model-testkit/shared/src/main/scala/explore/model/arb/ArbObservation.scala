@@ -4,9 +4,7 @@
 package explore.model.arb
 
 import cats.Order.given
-import eu.timepit.refined.scalacheck.numeric.given
 import eu.timepit.refined.scalacheck.string.given
-import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Observation
 import explore.model.ScienceRequirements
@@ -16,7 +14,6 @@ import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.given
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint
@@ -64,8 +61,8 @@ trait ArbObservation:
         vizDuration         <- arbitrary[Option[TimeSpan]]
         posAngleConstraint  <- arbitrary[PosAngleConstraint]
         wavelength          <- arbitrary[Option[Wavelength]]
-        groupId             <- arbitrary[Option[Group.Id]]
-        groupIndex          <- arbitrary[NonNegShort]
+        // groupId             <- arbitrary[Option[Group.Id]]
+        // groupIndex          <- arbitrary[NonNegShort]
         validations         <- arbitrary[List[ObservationValidation]]
         observerNotes       <- arbitrary[Option[NonEmptyString]]
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
@@ -86,8 +83,8 @@ trait ArbObservation:
         vizDuration,
         posAngleConstraint,
         wavelength,
-        groupId,
-        groupIndex,
+        // groupId,
+        // groupIndex,
         validations,
         observerNotes,
         calibrationRole
@@ -111,8 +108,8 @@ trait ArbObservation:
        Option[TimeSpan],
        PosAngleConstraint,
        Option[Wavelength],
-       Option[Group.Id],
-       Short,
+       //  Option[Group.Id],
+       //  Short,
        List[ObservationValidation],
        Option[String],
        Option[CalibrationRole]
@@ -134,8 +131,8 @@ trait ArbObservation:
          o.observationDuration,
          o.posAngleConstraint,
          o.wavelength,
-         o.groupId,
-         o.groupIndex.value,
+         //  o.groupId,
+         //  o.groupIndex.value,
          o.validations,
          o.observerNotes.map(_.value),
          o.calibrationRole

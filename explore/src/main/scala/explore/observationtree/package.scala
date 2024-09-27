@@ -73,7 +73,7 @@ def cloneObs(
       .flatMap: newObs =>
         obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
           .mod(observations): // TODO groupIndex IS NOT OUR INDEX!!!!
-            obsListMod.upsert(newObs, newObs.groupIndex.toNonNegInt)
+            obsListMod.upsert(newObs, ???) // newObs.groupIndex.toNonNegInt)
           .toAsync
       .guarantee(after)
 
@@ -233,11 +233,11 @@ def insertGroup(
   import ctx.given
   GroupQueries
     .createGroup[IO](programId, parentId)
-    .flatMap(group =>
-      groupExistence(group.id, g => setGroup(programId, g.some, ctx))
-        .set(groups)(
-          (Node(group.toGroupTreeGroup.asRight), group.toIndex).some
-        )
-        .toAsync
-    )
+    // .flatMap: grouping =>
+    //   groupExistence(grouping.group.id, g => setGroup(programId, g.some, ctx))
+    //     .set(groups)(
+    //       (Node(grouping.toGroupTreeGroup.asRight), grouping.group.toIndex).some
+    //     )
+    //     .toAsync
+    .void
     .switching(adding.zoom(AddingObservation.value.asLens).async)

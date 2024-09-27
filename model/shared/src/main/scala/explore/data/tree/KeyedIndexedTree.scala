@@ -103,13 +103,13 @@ case class KeyedIndexedTree[K: Eq, A] private (
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
 
-  def updated(key: K, newNode: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
+  def updated(key: K, newValue: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
     val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
-    removed(key).inserted(key, Node(newNode, existingChildren), newIndex)
+    removed(key).inserted(key, Node(newValue, existingChildren), newIndex)
 
   def updated( // TODO TEST!!!
     key:             K,
-    newNode:         A,
+    newValue:        A,
     parentKey:       Option[K],
     beforeNodeWhere: Node[A] => Boolean
   ): KeyedIndexedTree[K, A] =
@@ -126,7 +126,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
       val withRemovedNode: KeyedIndexedTree[K, A] = removed(key)
       withRemovedNode.inserted(
         key,
-        Node(newNode, existingChildren),
+        Node(newValue, existingChildren),
         Index(parentKey, NonNegInt.unsafeFrom(newIndex))
       )
 

@@ -55,6 +55,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import explore.model.GroupTree.syntax.*
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -81,11 +82,11 @@ case class ObsTabContents(
   private val focusedGroup: Option[Group.Id]                               = focused.group
   private val observations: UndoSetter[ObservationList]                    =
     programSummaries.zoom(ProgramSummaries.observations)
+  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
   private val activeGroup: Option[Group.Id]                                = focusedGroup.orElse:
-    focusedObs.flatMap(obsId => observations.get.getValue(obsId).flatMap(_.groupId))
+    focusedObs.flatMap(groups.get.obsGroupId)
   private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
   private val groupTimeRanges: GroupTimeRangeMap                           = programSummaries.get.groupTimeRangePots
-  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
   private val targets: UndoSetter[TargetList]                              = programSummaries.zoom(ProgramSummaries.targets)
   private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
     observations.get.toIndexedList.map((o, idx) => (o.id, idx))

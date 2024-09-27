@@ -10,6 +10,7 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.GroupEditIds
 import explore.model.GroupTree
+import explore.model.Group
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -61,9 +62,12 @@ object ObsGroupTiles:
             )
 
           // Then zoom to the Grouping itself
-          val group =
-            node.zoom(_._1.value.toOption.get,
-                      modF => _.leftMap(node => node.copy(value = node.value.map(modF)))
+          val group: UndoSetter[Group] =
+            node.zoom(
+              _._1.value.elem.toOption.get,
+              modF =>
+                _.leftMap: node =>
+                  node.copy(value = node.value.copy(elem = node.value.elem.map(modF)))
             )
 
           val editTile = Tile(

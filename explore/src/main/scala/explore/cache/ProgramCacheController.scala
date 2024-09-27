@@ -43,7 +43,7 @@ case class ProgramCacheController(
   programId:           Program.Id,
   modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
-    extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
+    extends ReactFnProps(ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
   val modState                             = modProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
@@ -235,10 +235,10 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
-            _.groupEdit.value.map(_.id),
+            _.groupEdit.value.map(_.group.id),
             data =>
               data.groupEdit.value
-                .map(_.id)
+                .map(_.group.id)
                 .fold(identity[ProgramSummaries].pure[IO])(
                   updateGroupTimeRange
                 ) <* queryProgramTimes
@@ -246,8 +246,9 @@ object ProgramCacheController
 
           val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ObsQueriesGQL.ProgramObservationsDelta
-              .subscribe[IO](props.programId.toObservationEditInput)(summon,
-                                                                     ErrorPolicy.IgnoreOnData
+              .subscribe[IO](props.programId.toObservationEditInput)(
+                summon,
+                ErrorPolicy.IgnoreOnData
               )
               .map:
                 _.broadcastThrough(

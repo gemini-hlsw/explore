@@ -32,8 +32,6 @@ object GroupQueriesGQL:
         id
         name
         minimumRequired
-        parentId
-        parentIndex
         ordered
         system
         minimumInterval $TimeSpanSubquery
@@ -57,7 +55,7 @@ object GroupQueriesGQL:
 
   @GraphQL
   trait CreateGroupMutation extends GraphQLOperation[ObservationDB]:
-    override val document = s"""#graphql
+    override val document = s"""
       mutation($$input: CreateGroupInput!) {
         createGroup(input: $$input) {
           group $GroupSubQuery

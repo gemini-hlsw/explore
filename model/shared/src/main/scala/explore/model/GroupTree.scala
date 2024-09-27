@@ -3,19 +3,15 @@
 
 package explore.model
 
-import cats.Eq
 import cats.Order.*
-import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.tree.KeyedIndexedTree
 import explore.data.tree.Node as TreeNode
 import explore.data.tree.Tree
 import explore.model.syntax.all.*
-import lucuma.core.util.TimeSpan
-import monocle.Focus
+import cats.Eq
 import monocle.Lens
 
 type GroupTree = KeyedIndexedTree[GroupTree.Key, GroupTree.Value]
@@ -26,16 +22,27 @@ object GroupTree:
   type Value = ServerIndexed[Either[Observation.Id, Group]]
   type Node  = TreeNode[Value]
 
-  // def key: Lens[Value, Key] = Lens[Value, Key](_.bimap(_.id, _.id))(newId =>
-  //   case Left(obs)    =>
-  //     newId match
-  //       case Left(id) => Obs.id.replace(id)(obs).asLeft
-  //       case _        => obs.asLeft
-  //   case Right(group) =>
-  //     newId match
-  //       case Right(id) => Group.id.replace(id)(group).asRight
-  //       case _         => group.asRight
-  // )
+  object syntax:
+    extension (self: ServerIndexed[Either[Observation.Id, Group]])
+      def id: Either[Observation.Id, Group.Id] = self.elem.map(_.id)
+
+    extension (self: GroupTree)
+      def obsGroupId(obsId: Observation.Id): Option[Group.Id] =
+        self.getNodeAndIndexByKey(Left(obsId)).flatMap(_._1.value.elem.toOption.map(_.id))
+
+  import syntax.*
+
+  def key: Lens[Value, Key] = Lens[Value, Key](_.id)(newId =>
+    case old @ ServerIndexed(Left(oldObsId), parentIndex)  =>
+      newId match
+        case Left(newObsId) => ServerIndexed(newObsId.asLeft, parentIndex)
+        case _              => old
+    case old @ ServerIndexed(Right(oldGroup), parentIndex) =>
+      newId match
+        case Right(newGroupId) =>
+          ServerIndexed(Group.id.replace(newGroupId)(oldGroup).asRight, parentIndex)
+        case _                 => old
+  )
 
   def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
@@ -67,9 +74,12 @@ object GroupTree:
       groups
         .mapFilter(g => Option.when(g.parentGroupId.isEmpty)(g.value.elem.map(_.group.id)))
 
-    KeyedIndexedTree.fromTree(Tree(toChildren(rootElems)), _.elem.map(_.id))
+    KeyedIndexedTree.fromTree(Tree(toChildren(rootElems)), _.id)
   }
 
 // parentIndices may skip values, since they also index deleted elements, so we have to keep track of them.
 case class ServerIndexed[A](elem: A, parentIndex: NonNegShort):
   def map[B](f: A => B): ServerIndexed[B] = ServerIndexed(f(elem), parentIndex)
+
+object ServerIndexed:
+  given [A: Eq]: Eq[ServerIndexed[A]] = Eq.by(x => (x.elem, x.parentIndex))
