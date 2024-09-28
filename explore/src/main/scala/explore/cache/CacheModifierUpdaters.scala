@@ -180,14 +180,9 @@ trait CacheModifierUpdaters {
         val findIndexFn: GroupTree.Node => Boolean =
           _.value.parentIndex >= meta.groupIndex
 
-        println(s"modifying! ${obsId} ${meta}")
-
         val editGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups
             .modify: groupTree =>
-              // println(pprint(groupTree))
-              println("EDIT GROUP!!")
-
               groupTree.updated(
                 obsId.asLeft,
                 ServerIndexed(obsId.asLeft, meta.groupIndex),
@@ -195,6 +190,7 @@ trait CacheModifierUpdaters {
                 findIndexFn
               )
 
+        // I'm almost sure we don't need this anymore.
         // val parentTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
         //   programSummaries =>
         //     programSummaries.groups

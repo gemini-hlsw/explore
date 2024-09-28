@@ -91,7 +91,7 @@ object GroupUpdate:
                     .flatMap:
                       _.map: grouping =>
                         for
-                          parentGroupId <- c.downField("meta").get[Option[Group.Id]]("parentGroupId")
+                          parentGroupId <- c.downField("meta").get[Option[Group.Id]]("parentId")
                           parentIndex   <- c.downField("meta").get[NonNegShort]("parentIndex")
                           existence     <- c.downField("meta").get[Existence]("existence")
                         yield GroupUpdatePayload(
