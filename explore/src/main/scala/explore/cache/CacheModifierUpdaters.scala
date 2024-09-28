@@ -57,11 +57,8 @@ trait CacheModifierUpdaters {
               else observations.removed(obsId)
 
         // TODO: this won't be needed anymore when groups are also updated through events of observation updates.
-        // We only need this for the root group, other groups are updated through the groupEdit subscription.
         val groupsUpdate: ProgramSummaries => ProgramSummaries =
-          if (observationEdit.meta.exists(_.groupId.isEmpty))
-            updateGroupsMappingForObsEdit(observationEdit)
-          else identity
+          updateGroupsMappingForObsEdit(observationEdit)
 
         val programTimesReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.programTimesPot.replace(Pot.pending)
@@ -71,14 +68,7 @@ trait CacheModifierUpdaters {
             if (exists) oem.withUpdatePending(obsId)
             else oem.removed(obsId)
 
-        val allUpdates: ProgramSummaries => ProgramSummaries =
-          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
-
-        (programSummaries: ProgramSummaries) =>
-          if (programSummaries.observations.contains(obsId))
-            allUpdates(programSummaries)
-          else
-            programSummaries
+        obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
       .getOrElse:
         updateGroupsMappingForObsEdit(observationEdit)
 
@@ -87,8 +77,12 @@ trait CacheModifierUpdaters {
       .map: payload =>
         val groupId: Group.Id = payload.value.elem.group.id
 
+        println("MODIFY GROUPS!!!")
+
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupTree =>
+            println("UPDATE GROUP!!!")
+
             val mod: GroupTree => GroupTree =
               if (payload.existence === Existence.Deleted)
                 _.removed(groupId.asRight)
@@ -165,10 +159,10 @@ trait CacheModifierUpdaters {
   private def updateGroupsMappingForObsEdit(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
-    val obsId = observationEdit.observationId
-    println("hello")
+    val obsId: Observation.Id = observationEdit.observationId
     (observationEdit.value, observationEdit.meta)
       .mapN: (newObservation, meta) =>
+
         val findIndexFn: GroupTree.Node => Boolean =
           _.value.parentIndex >= meta.groupIndex
 
@@ -177,7 +171,8 @@ trait CacheModifierUpdaters {
         val editGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups
             .modify: groupTree =>
-              println(pprint(groupTree))
+              // println(pprint(groupTree))
+              println("EDIT GROUP!!")
 
               groupTree.updated(
                 obsId.asLeft,
@@ -238,10 +233,10 @@ trait CacheModifierUpdaters {
         editGroup // >>> parentTimeRangePotsReset
       .getOrElse:
         ProgramSummaries.groups
-          .modify: groupElements =>
+          .modify: groupTree =>
             if (observationEdit.editType === EditType.DeletedCal)
-              groupElements.removed(obsId.asLeft)
-            else groupElements
+              groupTree.removed(obsId.asLeft)
+            else groupTree
 
   /**
    * Reset the time range pots for all parent groups of the given id
