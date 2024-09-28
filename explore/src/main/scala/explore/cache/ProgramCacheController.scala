@@ -38,6 +38,7 @@ import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 
 import scala.concurrent.duration.*
+import lucuma.schemas.ObservationDB.Enums.Existence
 
 case class ProgramCacheController(
   programId:           Program.Id,
@@ -196,11 +197,12 @@ object ProgramCacheController
   override protected val updateStream
     : ProgramCacheController => Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] = {
     props =>
+      // programUpdateChannel is just a sigal queue to trigger a (switchable) program times update.
       Resource.make(Channel.unbounded[IO, Unit])(_.close.void).flatMap { programUpdateChannel =>
         try {
           import props.given
 
-          // programUpdateChannel is just a sigal queue to trigger a (switchable) program times update.
+          // Signal a program times update.
           val queryProgramTimes: IO[Unit] =
             programUpdateChannel.send(()).void
 
@@ -219,6 +221,20 @@ object ProgramCacheController
             TargetQueriesGQL.ProgramTargetsDelta
               .subscribe[IO](props.programId.toTargetEditInput)
               .map(_.map(data => modifyTargets(data.targetEdit)))
+
+          val onlyExistingObs: Pipe[
+            IO,
+            ObsQueriesGQL.ProgramObservationsDelta.Data,
+            ObsQueriesGQL.ProgramObservationsDelta.Data
+          ] =
+            _.filter(_.observationEdit.meta.exists(_.existence === Existence.Present))
+
+          val onlyExistingGroups: Pipe[
+            IO,
+            ProgramQueriesGQL.GroupEditSubscription.Data,
+            ProgramQueriesGQL.GroupEditSubscription.Data
+          ] =
+            _.filter(_.groupEdit.payload.exists(_.existence === Existence.Present))
 
           val obsTimesUpdates: Pipe[
             IO,
@@ -244,14 +260,14 @@ object ProgramCacheController
 
           val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ObsQueriesGQL.ProgramObservationsDelta
-              .subscribe[IO](props.programId.toObservationEditInput)(
+              .subscribe[IO](props.programId.toObservationEditInput)(using
                 summon,
                 ErrorPolicy.IgnoreOnData
               )
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyObservations(data.observationEdit)),
-                  obsTimesUpdates
+                  onlyExistingObs.andThen(obsTimesUpdates)
                 )
 
           val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
@@ -260,7 +276,7 @@ object ProgramCacheController
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyGroups(data.groupEdit)),
-                  groupTimeRangeUpdate
+                  onlyExistingGroups.andThen(groupTimeRangeUpdate)
                 )
 
           // Right now the programEdit subsription isn't fine grained enough to
