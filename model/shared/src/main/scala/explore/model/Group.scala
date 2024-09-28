@@ -9,12 +9,12 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.syntax.all.*
-import lucuma.core.util.TimeSpan
-import monocle.Focus
-import monocle.Lens
 import io.circe.Decoder
 import io.circe.refined.given
+import lucuma.core.util.TimeSpan
 import lucuma.odb.json.time.decoder.given
+import monocle.Focus
+import monocle.Lens
 
 case class Group(
   id:              Group.Id,

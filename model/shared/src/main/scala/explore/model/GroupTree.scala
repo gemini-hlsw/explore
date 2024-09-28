@@ -3,6 +3,7 @@
 
 package explore.model
 
+import cats.Eq
 import cats.Order.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
@@ -11,7 +12,6 @@ import explore.data.tree.KeyedIndexedTree
 import explore.data.tree.Node as TreeNode
 import explore.data.tree.Tree
 import explore.model.syntax.all.*
-import cats.Eq
 import monocle.Lens
 
 type GroupTree = KeyedIndexedTree[GroupTree.Key, GroupTree.Value]

@@ -8,9 +8,9 @@ import crystal.Pot
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.model.Group
 import explore.model.GroupEditIds
 import explore.model.GroupTree
-import explore.model.Group
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap

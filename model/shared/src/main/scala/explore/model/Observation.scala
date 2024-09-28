@@ -9,7 +9,6 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-// import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.syntax.all.*
 import explore.modes.GmosSpectroscopyOverrides
@@ -25,7 +24,6 @@ import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-// import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint

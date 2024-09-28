@@ -19,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
+import explore.model.GroupTree.syntax.*
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramSummaries
@@ -55,7 +56,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import explore.model.GroupTree.syntax.*
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)

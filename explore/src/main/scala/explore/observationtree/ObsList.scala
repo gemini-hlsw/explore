@@ -27,9 +27,9 @@ import explore.model.GroupTree.syntax.*
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
+import explore.model.ServerIndexed
 import explore.model.enums.AppTab
 import explore.model.reusability.given
-import explore.model.syntax.all.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
 import explore.undo.Undoer
@@ -59,7 +59,6 @@ import queries.schemas.odb.ObsQueries
 import scala.scalajs.js
 
 import ObsQueries.*
-import explore.model.ServerIndexed
 
 case class ObsList(
   observations:         UndoSetter[ObservationList],

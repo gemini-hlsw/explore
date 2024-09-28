@@ -4,14 +4,16 @@
 package explore.cache
 
 import cats.Order.given
-import eu.timepit.refined.cats.*
 import cats.syntax.all.*
 import crystal.Pot
+import eu.timepit.refined.auto.autoUnwrap
+import eu.timepit.refined.cats.*
 import explore.data.tree.Node
 import explore.model.GroupTree
 import explore.model.GroupUpdate
 import explore.model.Observation
 import explore.model.ProgramSummaries
+import explore.model.ServerIndexed
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
@@ -21,8 +23,6 @@ import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdi
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
-import eu.timepit.refined.auto.autoUnwrap
-import explore.model.ServerIndexed
 
 /**
  * Functions to modify cache through subscription updates
@@ -91,28 +91,28 @@ trait CacheModifierUpdaters {
       .map: payload =>
         val groupId: Group.Id = payload.value.elem.group.id
 
-        println("MODIFY GROUPS!!!")
+        val isPresentInServer: Boolean = payload.existence === Existence.Present
+
+        // Only applies the modification if the observation exists in the cache.
+        def unlessDeleted(
+          mod: ProgramSummaries => ProgramSummaries
+        ): ProgramSummaries => ProgramSummaries =
+          programSummaries =>
+            if (programSummaries.groups.contains(groupId.asRight) || isPresentInServer)
+              mod(programSummaries)
+            else programSummaries // Only happens if is deleted locally and in server.
 
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupTree =>
-            println("UPDATE GROUP!!!")
 
             val mod: GroupTree => GroupTree =
-              if (payload.existence === Existence.Deleted)
+              if (!isPresentInServer)
                 _.removed(groupId.asRight)
               else
                 groupUpdate.editType match
                   case DeletedCal =>
                     _.removed(groupId.asRight)
-                  // case Created          =>
-                  //   identity
-                  // _.inserted(
-                  //   groupId.asRight,
-                  //   Node(newGrouping.toGroupTreeGroup.asRight),
-                  //   newGrouping.toIndex
-                  // )
                   case _          =>
-                    // val groupMap: Map[Group.Id, ServerIndexed[Grouping]] =
                     // The group may have changed, or its contents.
                     val newChildren: List[GroupTree.Node] =
                       payload.value.elem.elements
@@ -142,14 +142,14 @@ trait CacheModifierUpdaters {
                     )
             mod(groupTree)
 
-        // val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
-        //   ProgramSummaries.groupTimeRangePots
-        //     .modify:
-        //       if existence === Existence.Present then _.withUpdatePending(groupId)
-        //       else _.removed(groupId)
-        //     .andThen(parentGroupTimeRangeReset(groupId.asRight))
+        val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groupTimeRangePots
+            .modify:
+              if isPresentInServer then _.withUpdatePending(groupId)
+              else _.removed(groupId)
+            .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
-        updateGroup // >>> groupTimeRangePotsReset
+        unlessDeleted(updateGroup >>> groupTimeRangePotsReset)
       .getOrElse(identity)
 
   protected def modifyAttachments(
@@ -194,46 +194,6 @@ trait CacheModifierUpdaters {
                 meta.groupId.map(_.asRight),
                 findIndexFn
               )
-        // val groupEdit: ProgramSummaries => ProgramSummaries =
-        //   programSummaries =>
-        //     ProgramSummaries.groups
-        //       .modify { groupElements =>
-        //         // TODO groupIndex IS NOT OUR INDEX!!!!
-
-        //         val groupId: Option[Group.Id]            = newObservation.groupId
-        //         val newGroupObs: GroupTree.Obs           = GroupTree.Obs(obsId)
-        //         val newParent: Option[groupElements.Key] = groupId.map(_.asRight[Observation.Id])
-        //         // val newIndex: Index[Either[Observation.Id, Group.Id]] =
-        //         //   Index(groupId.map(_.asRight[Observation.Id]), value.groupIndex)
-
-        //         val findIndexFn: GroupTree.Node => Boolean =
-        //           _.value match
-        //             case Left(obs)    =>
-        //               programSummaries.observations
-        //                 .getValue(obs.id)
-        //                 .forall(_.groupIndex >= value.groupIndex)
-        //             case Right(group) => true // Groups always go first.
-
-        //         // if (observationEdit.editType === EditType.Created)
-        //         //   groupElements.updated(
-        //         //     obsId.asLeft,
-        //         //     newGroupObs.asLeft,
-        //         //     newParent,
-        //         //     findIndexFn
-        //         //   )
-        //         // else
-        //         if (observationEdit.meta.forall(_.existence === Existence.Deleted))
-        //           groupElements.removed(obsId.asLeft)
-        //         // else if (observationEdit.editType === EditType.Updated)
-        //         else // Created or Updated
-        //           groupElements.updated(
-        //             obsId.asLeft,
-        //             newGroupObs.asLeft,
-        //             newParent,
-        //             findIndexFn
-        //           )
-        //         // else groupElements
-        //       }(programSummaries)
 
         // val parentTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
         //   programSummaries =>

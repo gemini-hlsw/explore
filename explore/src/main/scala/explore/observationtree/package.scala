@@ -12,7 +12,6 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
-import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
@@ -36,7 +35,6 @@ import lucuma.schemas.odb.input.*
 import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
-import explore.model.syntax.all.toNonNegInt
 
 val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 

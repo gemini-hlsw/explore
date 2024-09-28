@@ -30,6 +30,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL
@@ -38,7 +39,6 @@ import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 
 import scala.concurrent.duration.*
-import lucuma.schemas.ObservationDB.Enums.Existence
 
 case class ProgramCacheController(
   programId:           Program.Id,

@@ -18,6 +18,7 @@ import explore.Icons
 import explore.common.GroupQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Group
 import explore.model.ProgramTimeRange
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
@@ -39,7 +40,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import monocle.Iso
 import monocle.Lens
-import explore.model.Group
 
 import scala.scalajs.js
 

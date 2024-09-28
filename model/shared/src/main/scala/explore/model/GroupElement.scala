@@ -6,14 +6,15 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegShort
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.model.Group
-import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Enums.EditType
+import lucuma.schemas.ObservationDB.Enums.Existence
+
 import scala.annotation.targetName
-import eu.timepit.refined.cats.given
 
 // These case classes are only used for decoding the graphql response.
 case class Grouping(
