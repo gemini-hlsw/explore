@@ -56,9 +56,12 @@ trait CacheModifierUpdaters {
                 )
               else observations.removed(obsId)
 
-        // TODO: this won't be needed anymore when groups are also updated through events of observation updates
+        // TODO: this won't be needed anymore when groups are also updated through events of observation updates.
+        // We only need this for the root group, other groups are updated through the groupEdit subscription.
         val groupsUpdate: ProgramSummaries => ProgramSummaries =
-          updateGroupsMappingForObsEdit(observationEdit)
+          if (observationEdit.meta.exists(_.groupId.isEmpty))
+            updateGroupsMappingForObsEdit(observationEdit)
+          else identity
 
         val programTimesReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.programTimesPot.replace(Pot.pending)
