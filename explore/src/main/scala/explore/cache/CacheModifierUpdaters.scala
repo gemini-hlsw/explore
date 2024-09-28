@@ -42,13 +42,23 @@ trait CacheModifierUpdaters {
   ): ProgramSummaries => ProgramSummaries =
     observationEdit.value
       .map: value =>
-        val obsId: Observation.Id = value.id
-        val exists: Boolean       = observationEdit.meta.forall(_.existence === Existence.Present)
+        val obsId: Observation.Id      = value.id
+        val isPresentInServer: Boolean =
+          observationEdit.meta.forall(_.existence === Existence.Present)
+
+        // Only applies the modification if the observation exists in the cache.
+        def unlessDeleted(
+          mod: ProgramSummaries => ProgramSummaries
+        ): ProgramSummaries => ProgramSummaries =
+          programSummaries =>
+            if (programSummaries.observations.contains(obsId) || isPresentInServer)
+              mod(programSummaries)
+            else programSummaries // Only happens if is deleted locally and in server.
 
         val obsUpdate: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.observations
             .modify: observations =>
-              if (exists)
+              if (isPresentInServer)
                 observations.inserted(
                   obsId,
                   value,
@@ -58,17 +68,21 @@ trait CacheModifierUpdaters {
 
         // TODO: this won't be needed anymore when groups are also updated through events of observation updates.
         val groupsUpdate: ProgramSummaries => ProgramSummaries =
-          updateGroupsMappingForObsEdit(observationEdit)
+          if (isPresentInServer)
+            updateGroupsMappingForObsEdit(observationEdit)
+          else identity
 
         val programTimesReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.programTimesPot.replace(Pot.pending)
 
         val obsExecutionReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.obsExecutionPots.modify: oem =>
-            if (exists) oem.withUpdatePending(obsId)
+            if (isPresentInServer) oem.withUpdatePending(obsId)
             else oem.removed(obsId)
 
-        obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+        unlessDeleted(
+          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+        )
       .getOrElse:
         updateGroupsMappingForObsEdit(observationEdit)
 
