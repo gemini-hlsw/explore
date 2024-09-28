@@ -12,12 +12,14 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
 import explore.common.Aligner
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.*
 import explore.model.AppContext
 import explore.model.CallForProposal
+import explore.model.Constants
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
@@ -36,6 +38,7 @@ import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
@@ -169,10 +172,19 @@ object ProposalEditor:
           )
 
         val attachmentsTile =
-          Tile(ProposalTabTileIds.AttachmentsId.id, "Attachments")(_ =>
-            props.authToken.map(token =>
-              ProposalAttachmentsTable(props.programId, token, props.attachments, props.readonly)
-            )
+          Tile(ProposalTabTileIds.AttachmentsId.id,
+               "Attachments",
+               tileClass = ExploreStyles.ProposalAttachmentsTile
+          )(
+            _ =>
+              props.authToken.map(token =>
+                ProposalAttachmentsTable(props.programId, token, props.attachments, props.readonly)
+              ),
+            (_, _) =>
+              <.a(^.href           := Constants.P1TemplatesUrl,
+                  ^.target := "_blank",
+                  Icons.ArrowUpRightFromSquare
+              ).withTooltip("Download templates")
           )
 
         <.div(ExploreStyles.MultiPanelTile)(
