@@ -70,19 +70,33 @@ object GroupElement:
       parentGroupId <- c.get[Option[Group.Id]]("parentGroupId")
     yield GroupElement(value, Option.when(parentGroupId.isEmpty)(parentIndex))
 
-case class GroupUpdate(
+// Necessary because we receive events with null values when they are on the root group.
+case class GroupUpdatePayload(
   value:         ServerIndexed[Grouping],
   parentGroupId: Option[Group.Id],
-  existence:     Existence,
-  editType:      EditType
+  existence:     Existence
+) derives Eq
+
+case class GroupUpdate(
+  payload:  Option[GroupUpdatePayload],
+  editType: EditType
 ) derives Eq
 
 object GroupUpdate:
   given Decoder[GroupUpdate] = Decoder.instance: c =>
     for
-      value         <- c.get[Grouping]("value")
-      parentGroupId <- c.downField("meta").get[Option[Group.Id]]("parentGroupId")
-      parentIndex   <- c.downField("meta").get[NonNegShort]("parentIndex")
-      existence     <- c.downField("meta").get[Existence]("existence")
-      editType      <- c.get[EditType]("editType")
-    yield GroupUpdate(ServerIndexed(value, parentIndex), parentGroupId, existence, editType)
+      editType <- c.get[EditType]("editType")
+      payload  <- c.get[Option[Grouping]]("value")
+                    .flatMap:
+                      _.map: grouping =>
+                        for
+                          parentGroupId <- c.downField("meta").get[Option[Group.Id]]("parentGroupId")
+                          parentIndex   <- c.downField("meta").get[NonNegShort]("parentIndex")
+                          existence     <- c.downField("meta").get[Existence]("existence")
+                        yield GroupUpdatePayload(
+                          ServerIndexed(grouping, parentIndex),
+                          parentGroupId,
+                          existence
+                        ).some
+                      .getOrElse(none.asRight)
+    yield GroupUpdate(payload, editType)

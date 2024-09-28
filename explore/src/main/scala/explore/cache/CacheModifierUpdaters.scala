@@ -22,7 +22,6 @@ import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.P
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 import eu.timepit.refined.auto.autoUnwrap
-import explore.model.RootModelViews.programSummaries
 import explore.model.ServerIndexed
 
 /**
@@ -69,67 +68,78 @@ trait CacheModifierUpdaters {
             if (exists) oem.withUpdatePending(obsId)
             else oem.removed(obsId)
 
-        obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+        val allUpdates: ProgramSummaries => ProgramSummaries =
+          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+
+        (programSummaries: ProgramSummaries) =>
+          if (programSummaries.observations.contains(obsId))
+            allUpdates(programSummaries)
+          else
+            programSummaries
       .getOrElse:
         updateGroupsMappingForObsEdit(observationEdit)
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
-    val groupId: Group.Id = groupUpdate.value.elem.group.id
+    groupUpdate.payload
+      .map: payload =>
+        val groupId: Group.Id = payload.value.elem.group.id
 
-    val updateGroup: ProgramSummaries => ProgramSummaries =
-      ProgramSummaries.groups.modify: groupTree =>
-        val mod: GroupTree => GroupTree =
-          if (groupUpdate.existence === Existence.Deleted)
-            _.removed(groupId.asRight)
-          else
-            groupUpdate.editType match
-              case DeletedCal =>
+        val updateGroup: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groups.modify: groupTree =>
+            val mod: GroupTree => GroupTree =
+              if (payload.existence === Existence.Deleted)
                 _.removed(groupId.asRight)
-              // case Created          =>
-              //   identity
-              // _.inserted(
-              //   groupId.asRight,
-              //   Node(newGrouping.toGroupTreeGroup.asRight),
-              //   newGrouping.toIndex
-              // )
-              case _          =>
-                // val groupMap: Map[Group.Id, ServerIndexed[Grouping]] =
-                // The group may have changed, or its contents.
-                val newChildren: List[GroupTree.Node] =
-                  groupUpdate.value.elem.elements
-                    .map: indexedElem =>
-                      indexedElem.elem.fold(
-                        obsId => Node(ServerIndexed(obsId.asLeft, indexedElem.parentIndex), Nil),
-                        groupId =>
-                          val oldNode: GroupTree.Node =
-                            groupTree.getNodeAndIndexByKey(groupId.asRight).get._1
-                          Node(
-                            ServerIndexed(oldNode.value.elem, indexedElem.parentIndex),
-                            oldNode.children
+              else
+                groupUpdate.editType match
+                  case DeletedCal =>
+                    _.removed(groupId.asRight)
+                  // case Created          =>
+                  //   identity
+                  // _.inserted(
+                  //   groupId.asRight,
+                  //   Node(newGrouping.toGroupTreeGroup.asRight),
+                  //   newGrouping.toIndex
+                  // )
+                  case _          =>
+                    // val groupMap: Map[Group.Id, ServerIndexed[Grouping]] =
+                    // The group may have changed, or its contents.
+                    val newChildren: List[GroupTree.Node] =
+                      payload.value.elem.elements
+                        .map: indexedElem =>
+                          indexedElem.elem.fold(
+                            obsId =>
+                              Node(ServerIndexed(obsId.asLeft, indexedElem.parentIndex), Nil),
+                            groupId =>
+                              val oldNode: GroupTree.Node =
+                                groupTree.getNodeAndIndexByKey(groupId.asRight).get._1
+                              Node(
+                                ServerIndexed(oldNode.value.elem, indexedElem.parentIndex),
+                                oldNode.children
+                              )
                           )
-                      )
-                    .sortBy(_.value.parentIndex)
+                        .sortBy(_.value.parentIndex)
 
-                val findIndexFn: GroupTree.Node => Boolean =
-                  _.value.parentIndex >= groupUpdate.value.parentIndex
+                    val findIndexFn: GroupTree.Node => Boolean =
+                      _.value.parentIndex >= payload.value.parentIndex
 
-                _.updated(
-                  groupId.asRight,
-                  groupUpdate.value.map(_.group.asRight),
-                  newChildren,
-                  groupUpdate.parentGroupId.map(_.asRight),
-                  findIndexFn
-                )
-        mod(groupTree)
+                    _.updated(
+                      groupId.asRight,
+                      payload.value.map(_.group.asRight),
+                      newChildren,
+                      payload.parentGroupId.map(_.asRight),
+                      findIndexFn
+                    )
+            mod(groupTree)
 
-    // val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
-    //   ProgramSummaries.groupTimeRangePots
-    //     .modify:
-    //       if existence === Existence.Present then _.withUpdatePending(groupId)
-    //       else _.removed(groupId)
-    //     .andThen(parentGroupTimeRangeReset(groupId.asRight))
+        // val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
+        //   ProgramSummaries.groupTimeRangePots
+        //     .modify:
+        //       if existence === Existence.Present then _.withUpdatePending(groupId)
+        //       else _.removed(groupId)
+        //     .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
-    updateGroup // >>> groupTimeRangePotsReset
+        updateGroup // >>> groupTimeRangePotsReset
+      .getOrElse(identity)
 
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit
@@ -153,8 +163,25 @@ trait CacheModifierUpdaters {
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
     val obsId = observationEdit.observationId
-    observationEdit.value
-      .map { newObservation =>
+    println("hello")
+    (observationEdit.value, observationEdit.meta)
+      .mapN: (newObservation, meta) =>
+        val findIndexFn: GroupTree.Node => Boolean =
+          _.value.parentIndex >= meta.groupIndex
+
+        println(s"modifying! ${obsId} ${meta}")
+
+        val editGroup: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groups
+            .modify: groupTree =>
+              println(pprint(groupTree))
+
+              groupTree.updated(
+                obsId.asLeft,
+                ServerIndexed(obsId.asLeft, meta.groupIndex),
+                meta.groupId.map(_.asRight),
+                findIndexFn
+              )
         // val groupEdit: ProgramSummaries => ProgramSummaries =
         //   programSummaries =>
         //     ProgramSummaries.groups
@@ -205,9 +232,7 @@ trait CacheModifierUpdaters {
         //       .map(gid => parentGroupTimeRangeReset(gid))
         //       .getOrElse(identity)(programSummaries)
 
-        // groupEdit >>> parentTimeRangePotsReset
-        identity[ProgramSummaries]
-      }
+        editGroup // >>> parentTimeRangePotsReset
       .getOrElse:
         ProgramSummaries.groups
           .modify: groupElements =>

@@ -8,6 +8,8 @@ import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
+// gql: import io.circe.refined.given
+
 object ObsQueriesGQL:
   @GraphQL
   trait ProgramCreateObservation extends GraphQLOperation[ObservationDB]:
@@ -173,6 +175,8 @@ object ObsQueriesGQL:
           observationId
           value $ObservationSubquery
           meta:value {
+            groupId
+            groupIndex
             existence
           }
           editType

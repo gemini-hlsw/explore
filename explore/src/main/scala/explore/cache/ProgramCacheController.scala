@@ -235,10 +235,11 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
-            _.groupEdit.value.elem.group.id,
-            data =>
-              updateGroupTimeRange(data.groupEdit.value.elem.group.id)
-                <* queryProgramTimes
+            _.groupEdit.payload.map(_.value.elem.group.id),
+            _.groupEdit.payload
+              .map: payload =>
+                updateGroupTimeRange(payload.value.elem.group.id) <* queryProgramTimes
+              .getOrElse(IO(identity))
           )
 
           val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
