@@ -59,8 +59,12 @@ sealed trait InstrumentRow derives Eq {
 }
 
 sealed trait InstrumentOverrides derives Eq
-case class GmosSpectroscopyOverrides(ccdMode: Option[GmosCcdMode], roi: Option[GmosRoi])
-    extends InstrumentOverrides derives Eq
+case class GmosSpectroscopyOverrides(
+  centralWavelength: CentralWavelength,
+  ccdMode:           Option[GmosCcdMode],
+  roi:               Option[GmosRoi]
+) extends InstrumentOverrides
+    derives Eq
 
 case class GmosNorthSpectroscopyRow(
   grating:                    GmosNorthGrating,

@@ -81,8 +81,18 @@ case class ItcProps(
     finalConfig
       .map(_.configuration)
       .map:
-        case BasicConfiguration.GmosNorthLongSlit(_, _, _, cw) => cw
-        case BasicConfiguration.GmosSouthLongSlit(_, _, _, cw) => cw
+        case BasicConfiguration.GmosNorthLongSlit(_, _, _, cw) =>
+          modeOverrides match
+            case Some(GmosSpectroscopyOverrides(overrideCw, _, _)) =>
+              println(s"Use override $overrideCw")
+              overrideCw
+            case _                                                 => cw
+        case BasicConfiguration.GmosSouthLongSlit(_, _, _, cw) =>
+          modeOverrides match
+            case Some(GmosSpectroscopyOverrides(overrideCw, _, _)) =>
+              println(s"Use override $overrideCw")
+              overrideCw
+            case _                                                 => cw
 
   private val instrumentRow: Option[InstrumentRow] =
     finalConfig
