@@ -249,17 +249,20 @@ object ObsList:
             val newParentGroupIndex: NonNegShort =
               if dropIndex.value == 0 then dropIndex
               else
-                dropNodeId
+                val groupTree: GroupTree = props.groups.get
+
+                val newSiblings: List[GroupTree.Node] = dropNodeId
                   .flatMap: groupId =>
-                    props.groups.get.getNodeAndIndexByKey(groupId.asRight)
+                    groupTree.getNodeAndIndexByKey(groupId.asRight)
                   .map(_._1.children)
-                  .filter(_.nonEmpty)
-                  .flatMap(_.get(dropIndex.value.toInt - 1))
+                  .getOrElse(groupTree.rootChildren)
+
+                // Get the parentIndex of the previous node and add one.
+                newSiblings
+                  .get(dropIndex.value.toInt - 1)
                   .map: previousNode =>
                     NonNegShort.unsafeFrom((previousNode.value.parentIndex.value + 1).toShort)
                   .getOrElse(NonNegShort.unsafeFrom(0))
-
-            println(newParentGroupIndex)
 
             dragNode.id
               .fold(

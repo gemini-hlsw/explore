@@ -29,6 +29,9 @@ case class KeyedIndexedTree[K: Eq, A] private (
   def toKeyedTree: Tree[(K, A)] =
     tree.map(value => (getKey(value.elem), value.elem))
 
+  def rootChildren: List[Node[A]] =
+    tree.children.map(_.map(_.elem))
+
   def getNodeAndIndexByKey(key: K): Option[(Node[A], Index[K])] =
     byKey
       .get(key)

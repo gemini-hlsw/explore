@@ -23,11 +23,16 @@ import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdi
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
+import cats.Monoid
+import cats.MonoidK
+import cats.Endo
 
 /**
  * Functions to modify cache through subscription updates
  */
 trait CacheModifierUpdaters {
+  // TODO Move somewhere else
+  private given [A]: Monoid[Endo[A]] = MonoidK[Endo].algebra[A]
 
   protected def modifyTargets(targetEdit: TargetEdit): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.targets
@@ -74,7 +79,8 @@ trait CacheModifierUpdaters {
             else oem.removed(obsId)
 
         obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
-      .getOrElse(identity)
+      // .getOrElse(identity)
+      .orEmpty
     // updateGroupsMappingForObsEdit(observationEdit)
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
@@ -86,6 +92,8 @@ trait CacheModifierUpdaters {
 
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupTree =>
+
+            // TODO CHECK WHAT EXACTLY HAPPENS WHEN WE GET A REFERENCE FOR A (YET) UNEXISTING OBSERVATION
 
             val mod: GroupTree => GroupTree =
               if (!isPresentInServer)
@@ -132,7 +140,8 @@ trait CacheModifierUpdaters {
             .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
         updateGroup >>> groupTimeRangePotsReset
-      .getOrElse(identity)
+      // .getOrElse(identity)
+      .orEmpty
 
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit
@@ -159,6 +168,9 @@ trait CacheModifierUpdaters {
     (observationEdit.value, observationEdit.meta)
       .mapN: (newObservation, meta) =>
 
+        // TODO STRANGE THINGS ARE HAPPENING WHEN WE REARRANGE THINGS IN ROOT GROUP!
+        // (moved object jumps to top)
+
         val findIndexFn: GroupTree.Node => Boolean =
           _.value.parentIndex >= meta.groupIndex
 
@@ -172,7 +184,7 @@ trait CacheModifierUpdaters {
                 findIndexFn
               )
 
-        // I'm almost sure we don't need this anymore.
+        // I'm almost sure we don't need this anymore. It happens via group edit.
         // val parentTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
         //   programSummaries =>
         //     programSummaries.groups
