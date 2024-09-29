@@ -63,14 +63,15 @@ object GroupTree:
     def toChild(elem: Either[Observation.Id, Group.Id], parentIndex: NonNegShort): Node =
       elem.fold(createObsNode(_, parentIndex), createGroupNode(_, parentIndex))
 
-    val rootElems: List[Node] =
+    val (rootSystemElems, rootElems): (List[Node], List[Node]) =
       groups
         .mapFilter: child =>
           child.indexInRootGroup
             .map(idx => toChild(child.value.map(_.group.id), idx))
         .sortBy(_.value.parentIndex)
+        .partition(_.value.elem.exists(_.system)) // Move system groups to the end.
 
-    KeyedIndexedTree.fromTree(Tree(rootElems), _.id)
+    KeyedIndexedTree.fromTree(Tree(rootElems ++ rootSystemElems), _.id)
   }
 
 // parentIndices may skip values, since they also index deleted elements, so we have to keep track of them.
