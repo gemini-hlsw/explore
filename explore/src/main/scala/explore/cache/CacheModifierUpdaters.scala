@@ -40,20 +40,13 @@ trait CacheModifierUpdaters {
   protected def modifyObservations(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
-    observationEdit.value
-      .map: value =>
-        val obsId: Observation.Id      = value.id
-        val isPresentInServer: Boolean =
-          observationEdit.meta.forall(_.existence === Existence.Present)
+    val isPresentInServer: Boolean =
+      observationEdit.meta.exists(_.existence === Existence.Present)
 
-        // Only applies the modification if the observation exists in the cache.
-        def unlessDeleted(
-          mod: ProgramSummaries => ProgramSummaries
-        ): ProgramSummaries => ProgramSummaries =
-          programSummaries =>
-            if (programSummaries.observations.contains(obsId) || isPresentInServer)
-              mod(programSummaries)
-            else programSummaries // Only happens if is deleted locally and in server.
+    observationEdit.value // We ignore updates on deleted groups.
+      .filter(_ => isPresentInServer || observationEdit.editType =!= EditType.Updated)
+      .map: value =>
+        val obsId: Observation.Id = value.id
 
         val obsUpdate: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.observations
@@ -80,27 +73,16 @@ trait CacheModifierUpdaters {
             if (isPresentInServer) oem.withUpdatePending(obsId)
             else oem.removed(obsId)
 
-        unlessDeleted(
-          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
-        )
-      .getOrElse:
-        updateGroupsMappingForObsEdit(observationEdit)
+        obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+      .getOrElse(identity)
+    // updateGroupsMappingForObsEdit(observationEdit)
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
-    groupUpdate.payload
+    val isPresentInServer: Boolean = groupUpdate.payload.exists(_.existence === Existence.Present)
+    groupUpdate.payload // We ignore updates on deleted groups.
+      .filter(_ => isPresentInServer || groupUpdate.editType =!= EditType.Updated)
       .map: payload =>
         val groupId: Group.Id = payload.value.elem.group.id
-
-        val isPresentInServer: Boolean = payload.existence === Existence.Present
-
-        // Only applies the modification if the observation exists in the cache.
-        def unlessDeleted(
-          mod: ProgramSummaries => ProgramSummaries
-        ): ProgramSummaries => ProgramSummaries =
-          programSummaries =>
-            if (programSummaries.groups.contains(groupId.asRight) || isPresentInServer)
-              mod(programSummaries)
-            else programSummaries // Only happens if is deleted locally and in server.
 
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupTree =>
@@ -149,7 +131,7 @@ trait CacheModifierUpdaters {
               else _.removed(groupId)
             .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
-        unlessDeleted(updateGroup >>> groupTimeRangePotsReset)
+        updateGroup >>> groupTimeRangePotsReset
       .getOrElse(identity)
 
   protected def modifyAttachments(
