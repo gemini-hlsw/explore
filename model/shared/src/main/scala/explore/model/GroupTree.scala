@@ -28,7 +28,7 @@ object GroupTree:
 
     extension (self: GroupTree)
       def obsGroupId(obsId: Observation.Id): Option[Group.Id] =
-        self.getNodeAndIndexByKey(Left(obsId)).flatMap(_._1.value.elem.toOption.map(_.id))
+        self.getNodeAndIndexByKey(Left(obsId)).flatMap(_._2.parentKey.flatMap(_.toOption))
 
   import syntax.*
 

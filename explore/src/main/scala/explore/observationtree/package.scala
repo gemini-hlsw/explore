@@ -66,12 +66,16 @@ def cloneObs(
 ): IO[Unit] =
   import ctx.given
 
-  before >>
+  // import eu.timepit.refined.auto.autoUnwrap
+
+  IO.println(s"cloneObs $obsId $newGroupId") >>
+    before >>
     cloneObservation[IO](obsId, newGroupId)
       .flatMap: newObs =>
         obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
-          .mod(observations): // TODO groupIndex IS NOT OUR INDEX!!!!
-            obsListMod.upsert(newObs, ???) // newObs.groupIndex.toNonNegInt)
+          .mod(observations):
+            // Just place the new obs at the end of the group, which is where the server clones it.
+            obsListMod.upsert(newObs, NonNegInt.MaxValue)
           .toAsync
       .guarantee(after)
 

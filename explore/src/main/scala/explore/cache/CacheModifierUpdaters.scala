@@ -3,6 +3,9 @@
 
 package explore.cache
 
+import cats.Endo
+import cats.Monoid
+import cats.MonoidK
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
@@ -23,9 +26,6 @@ import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdi
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
-import cats.Monoid
-import cats.MonoidK
-import cats.Endo
 
 /**
  * Functions to modify cache through subscription updates
