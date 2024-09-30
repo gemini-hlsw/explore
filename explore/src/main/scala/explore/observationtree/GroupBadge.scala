@@ -66,4 +66,5 @@ object GroupBadge:
         .from(s"groups/system-$name.md")
         .toOption
         .map(HelpIcon(_, ExploreStyles.GroupHelp))
+        .when(group.system)
     )
