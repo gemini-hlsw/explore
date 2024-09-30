@@ -117,23 +117,23 @@ case class KeyedIndexedTree[K: Eq, A] private (
     val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
     updated(key, newValue, existingChildren, newIndex)
 
-  def updated( // TODO TEST!!!
+  def updated( // TODO TEST!!! call it upserted?
     key:             K,
     newValue:        A,
     newChildren:     List[Node[A]],
     parentKey:       Option[K],
     beforeNodeWhere: Node[A] => Boolean
   ): KeyedIndexedTree[K, A] =
-    val newSiblings: Option[List[Node[A]]] =
+    val withRemovedNode: KeyedIndexedTree[K, A] = removed(key)
+    val newSiblings: Option[List[Node[A]]]      =
       parentKey match
-        case None       => tree.children.map(_.map(_.elem)).some
-        case Some(pkey) => getNodeAndIndexByKey(pkey).map(_._1.children)
+        case None       => withRemovedNode.tree.children.map(_.map(_.elem)).some
+        case Some(pkey) => withRemovedNode.getNodeAndIndexByKey(pkey).map(_._1.children)
     // If newSiblings is None, then parentKey doesn't exist. We don't alter the tree.
     newSiblings.fold(this): siblings =>
-      val newIndex: Int                           = Option(siblings.indexWhere(beforeNodeWhere))
+      val newIndex: Int = Option(siblings.indexWhere(beforeNodeWhere))
         .filter(_ =!= -1)
         .getOrElse(siblings.length)
-      val withRemovedNode: KeyedIndexedTree[K, A] = removed(key)
       withRemovedNode.inserted(
         key,
         Node(newValue, newChildren),

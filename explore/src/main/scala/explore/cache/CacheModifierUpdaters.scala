@@ -168,16 +168,13 @@ trait CacheModifierUpdaters {
     (observationEdit.value, observationEdit.meta)
       .mapN: (newObservation, meta) =>
 
-        // TODO STRANGE THINGS ARE HAPPENING WHEN WE REARRANGE THINGS IN ROOT GROUP!
-        // (moved object jumps to top)
-
         val findIndexFn: GroupTree.Node => Boolean =
           _.value.parentIndex >= meta.groupIndex
 
         val editGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups
-            .modify: groupTree =>
-              groupTree.updated(
+            .modify:
+              _.updated(
                 obsId.asLeft,
                 ServerIndexed(obsId.asLeft, meta.groupIndex),
                 meta.groupId.map(_.asRight),
