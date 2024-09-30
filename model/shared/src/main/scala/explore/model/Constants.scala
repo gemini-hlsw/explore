@@ -67,5 +67,6 @@ trait Constants:
   val MissingCandidates  = "No catalog stars available"
   val BadTimingWindow    = "Review the dates on this timing window."
   val MissingInfoMsg     = "Not enough information to call ITC"
+  val P1TemplatesUrl     = "https://www.gemini.edu/observing/phase-i/pit/pit-description#PDF"
 
 object Constants extends Constants
