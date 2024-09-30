@@ -52,6 +52,7 @@ object ExploreStyles:
   val ObsGroupTitleWithWrap: Css = Css("obs-group-title-with-wrap")
   val ObsGroupTitleWithList: Css = Css("obs-group-title-with-list")
   val DeleteButton: Css          = Css("delete-button")
+  val GroupHelp: Css             = Css("group-help")
 
   val MainTitleProgramId: Css = Css("main-title-program-id")
   val ResizeHandle: Css       = Css("resize-handle")

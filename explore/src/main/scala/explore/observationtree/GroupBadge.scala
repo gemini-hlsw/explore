@@ -4,7 +4,9 @@
 package explore.observationtree
 
 import cats.syntax.all.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.GroupTree.Group
 import japgolly.scalajs.react.*
@@ -32,6 +34,7 @@ object GroupBadge:
 
   private val component = ScalaFnComponent[Props]: props =>
     val group = props.group
+    val name  = group.name.foldMap(_.value.toLowerCase())
 
     val deleteButton =
       <.span(
@@ -58,5 +61,10 @@ object GroupBadge:
     )(
       if group.isAnd then "AND" else "OR",
       group.name.map(n => <.em(n.value)),
-      deleteButton
+      deleteButton,
+      NonEmptyString
+        .from(s"groups/system-$name.md")
+        .toOption
+        .map(HelpIcon(_, ExploreStyles.GroupHelp))
+        .when(group.system)
     )
