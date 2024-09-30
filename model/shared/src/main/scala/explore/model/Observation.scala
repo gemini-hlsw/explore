@@ -105,7 +105,7 @@ case class Observation(
             _,
             fpu,
             _,
-            _,
+            centralWavelength,
             _,
             explicitXBinning,
             _,
@@ -127,6 +127,7 @@ case class Observation(
             else asterismBinning(ps.map(northBinning(fpu, _, constraints.imageQuality, grating)))
 
           GmosSpectroscopyOverrides(
+            centralWavelength,
             GmosCcdMode(
               explicitXBinning.getOrElse(defaultXBinning),
               explicitYBinning.getOrElse(defaultYBinning),
@@ -144,7 +145,7 @@ case class Observation(
             _,
             fpu,
             _,
-            _,
+            centralWavelength,
             _,
             explicitXBinning,
             _,
@@ -166,6 +167,7 @@ case class Observation(
             else asterismBinning(ps.map(southBinning(fpu, _, constraints.imageQuality, grating)))
 
           GmosSpectroscopyOverrides(
+            centralWavelength,
             GmosCcdMode(
               explicitXBinning.getOrElse(defaultXBinning),
               explicitYBinning.getOrElse(defaultYBinning),
