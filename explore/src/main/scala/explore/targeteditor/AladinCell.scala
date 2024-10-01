@@ -280,14 +280,14 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useStateBy((props, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, _, _, _, options, mouseCoords) =>
+        (props, ctx, _, analysis, _, options, mouseCoords) =>
           _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
             // if the coordinates change, reset ags, offset and mouse coordinates
             for {
-              // FIXME, this is getting into a weird loop
-              // _ <- gs.set(AgsSelection(none)).when_(gs.get.isOverride)
+              _ <- props.guideStarSelection.set(GuideStarSelection.Default)
+              _ <- analysis.setState(List.empty)
               _ <- offsetOnCenter.set(Offset.Zero)
               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
             } yield ()
