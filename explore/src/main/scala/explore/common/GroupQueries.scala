@@ -9,7 +9,7 @@ import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.DefaultErrorPolicy
-import explore.model.Grouping
+import explore.model.GroupWithChildren
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
@@ -60,7 +60,7 @@ object GroupQueries:
 
   def createGroup[F[_]: Async](programId: Program.Id, parentId: Option[Group.Id])(using
     FetchClient[F, ObservationDB]
-  ): F[Grouping] =
+  ): F[GroupWithChildren] =
     CreateGroupMutation[F]
       .execute:
         CreateGroupInput(

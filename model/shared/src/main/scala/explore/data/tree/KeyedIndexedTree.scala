@@ -105,6 +105,8 @@ case class KeyedIndexedTree[K: Eq, A] private (
     val newTree: Tree[IndexedElem[K, A]]   = Tree(insertInChildren(cleanTree.children))
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
+
+  /** SCALADOC TODO!!!! */
   def upserted(
     key:         K,
     newValue:    A,

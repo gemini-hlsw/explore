@@ -10,8 +10,6 @@ import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
 import eu.timepit.refined.auto.autoUnwrap
-import eu.timepit.refined.cats.*
-import explore.data.tree.Node
 import explore.model.GroupTree
 import explore.model.GroupUpdate
 import explore.model.Observation
@@ -79,16 +77,14 @@ trait CacheModifierUpdaters {
             else oem.removed(obsId)
 
         obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
-      // .getOrElse(identity)
       .orEmpty
-    // updateGroupsMappingForObsEdit(observationEdit)
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
     val isPresentInServer: Boolean = groupUpdate.payload.exists(_.existence === Existence.Present)
     groupUpdate.payload // We ignore updates on deleted groups.
       .filter(_ => isPresentInServer || groupUpdate.editType =!= EditType.Updated)
       .map: payload =>
-        val groupId: Group.Id = payload.value.elem.group.id
+        val groupId: Group.Id = payload.value.elem.id
 
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupTree =>
@@ -103,30 +99,13 @@ trait CacheModifierUpdaters {
                   case DeletedCal =>
                     _.removed(groupId.asRight)
                   case _          =>
-                    // The group may have changed, or its contents.
-                    val newChildren: List[GroupTree.Node] =
-                      payload.value.elem.elements
-                        .map: indexedElem =>
-                          indexedElem.elem.fold(
-                            obsId =>
-                              Node(ServerIndexed(obsId.asLeft, indexedElem.parentIndex), Nil),
-                            groupId =>
-                              val oldNode: GroupTree.Node =
-                                groupTree.getNodeAndIndexByKey(groupId.asRight).get._1
-                              Node(
-                                ServerIndexed(oldNode.value.elem, indexedElem.parentIndex),
-                                oldNode.children
-                              )
-                          )
-                        .sortBy(_.value.parentIndex)
-
                     val findIndexFn: GroupTree.Node => Boolean =
                       _.value.parentIndex >= payload.value.parentIndex
 
                     _.upserted(
                       groupId.asRight,
-                      payload.value.map(_.group.asRight),
-                      newChildren,
+                      payload.value.map(_.asRight),
+                      // newChildren,
                       payload.parentGroupId.map(_.asRight),
                       findIndexFn
                     )
@@ -140,7 +119,6 @@ trait CacheModifierUpdaters {
             .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
         updateGroup >>> groupTimeRangePotsReset
-      // .getOrElse(identity)
       .orEmpty
 
   protected def modifyAttachments(

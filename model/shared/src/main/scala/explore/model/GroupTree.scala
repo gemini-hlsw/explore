@@ -46,19 +46,19 @@ object GroupTree:
 
   def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
-    val groupMap: Map[Group.Id, Grouping] =
+    val groupMap: Map[Group.Id, GroupWithChildren] =
       groups.mapFilter(_.value.toOption.map(g => g.group.id -> g)).toMap
 
     def createObsNode(obsId: Observation.Id, parentIndex: NonNegShort): Node =
       TreeNode(ServerIndexed(obsId.asLeft, parentIndex), Nil)
 
     def createGroupNode(groupId: Group.Id, parentIndex: NonNegShort): Node =
-      val grouping: Grouping   = groupMap(groupId)
-      val children: List[Node] =
-        grouping.elements
+      val groupWithChildren: GroupWithChildren = groupMap(groupId)
+      val children: List[Node]                 =
+        groupWithChildren.children
           .map(child => toChild(child.elem, child.parentIndex))
           .sortBy(_.value.parentIndex)
-      TreeNode(ServerIndexed(grouping.group.asRight, parentIndex), children)
+      TreeNode(ServerIndexed(groupWithChildren.group.asRight, parentIndex), children)
 
     def toChild(elem: Either[Observation.Id, Group.Id], parentIndex: NonNegShort): Node =
       elem.fold(createObsNode(_, parentIndex), createGroupNode(_, parentIndex))

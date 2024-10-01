@@ -3,10 +3,10 @@
 
 package explore.data
 
-import cats.syntax.option.*
 import cats.data.NonEmptyList
 import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.arbitrary.*
+import cats.syntax.option.*
 import explore.data.tree.KeyedIndexedTree
 import explore.data.tree.Node
 import explore.data.tree.Tree

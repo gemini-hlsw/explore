@@ -7,13 +7,13 @@ import clue.GraphQLOperation
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
 import explore.model.GroupElement
-import explore.model.Grouping
+import explore.model.GroupWithChildren
+import explore.model.GroupWithChildren.given
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.TimeSpanSubquery
 
 object GroupQueriesGQL:
 
-  @GraphQL
   object GroupElementsSubQuery
       extends GraphQLSubquery.Typed[ObservationDB, GroupElement]("GroupElement"):
     override val subquery: String = s"""
@@ -22,11 +22,13 @@ object GroupQueriesGQL:
         parentIndex   # Only used if element is in root group
         observation { id }
         group $GroupSubQuery
+        groupChildren:group {
+          elements $GroupElementSubQuery
+        }
       }
     """
 
-  @GraphQL
-  object GroupSubQuery extends GraphQLSubquery.Typed[ObservationDB, Grouping]("Group"):
+  object GroupSubQuery extends GraphQLSubquery.Typed[ObservationDB, GroupWithChildren]("Group"):
     override val subquery: String = s"""
       {
         id
@@ -36,15 +38,20 @@ object GroupQueriesGQL:
         system
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
-        elements {
-          observation { 
-            id
-            groupIndex
-          }
-          group {
-            id
-            parentIndex
-          }
+      }
+    """
+
+  object GroupElementSubQuery
+      extends GraphQLSubquery.Typed[ObservationDB, GroupWithChildren.Child]("Group"):
+    override val subquery: String = s"""
+      {
+        observation { 
+          id
+          groupIndex
+        }
+        group {
+          id
+          parentIndex
         }
       }
     """
