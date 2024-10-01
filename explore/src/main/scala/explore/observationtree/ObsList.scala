@@ -378,6 +378,7 @@ object ObsList:
                           props.focusedGroup,
                           props.observations.get.length,
                           props.observations,
+                          props.groups.model,
                           adding,
                           ctx
                         ).runAsync *> expandFocusedGroup

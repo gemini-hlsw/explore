@@ -180,17 +180,23 @@ def insertObs(
   parentId:     Option[Group.Id],
   pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
+  groupTree:    View[GroupTree],
   adding:       View[AddingObservation],
   ctx:          AppContext[IO]
 ): IO[Unit] =
   import ctx.given
 
   createObservation[IO](programId, parentId)
-    .flatMap { obs =>
-      obsExistence(obs.id, o => setObs(programId, o.some, ctx))
-        .mod(observations)(obsListMod.upsert(obs, pos))
-        .toAsync
-    }
+    .flatMap: (obs, groupIndex) =>
+      (obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+        .mod(observations)(obsListMod.upsert(obs, pos)) >>
+        groupTree.mod:
+          _.inserted(
+            obs.id.asLeft,
+            Node(ServerIndexed(obs.id.asLeft, groupIndex)),
+            Index(parentId.map(_.asRight), NonNegInt.MaxValue)
+          )
+      ).toAsync
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 
 private def findGrouping(
@@ -233,6 +239,7 @@ def insertGroup(
   ctx:       AppContext[IO]
 ): IO[Unit] =
   import ctx.given
+
   GroupQueries
     .createGroup[IO](programId, parentId)
     .flatMap: (group, parentIndex) =>

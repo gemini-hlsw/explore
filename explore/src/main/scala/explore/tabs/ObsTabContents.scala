@@ -266,6 +266,7 @@ object ObsTabContents extends TwoPanels:
                 props.vault.userId,
                 props.programId,
                 props.observations,
+                props.groups.model,
                 props.obsExecutions,
                 props.targets.get,
                 _

@@ -20,6 +20,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Focused
+import explore.model.GroupTree
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.TargetList
@@ -64,6 +65,7 @@ final case class ObsSummaryTable(
   userId:        Option[User.Id],
   programId:     Program.Id,
   observations:  UndoSetter[ObservationList],
+  groups:        View[GroupTree],
   obsExecutions: ObservationExecutionMap,
   allTargets:    TargetList,
   tileState:     View[ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]]
@@ -361,6 +363,7 @@ object ObsSummaryTable:
               none,
               0.refined,
               props.observations,
+              props.groups,
               adding,
               ctx
             ).runAsyncAndForget
