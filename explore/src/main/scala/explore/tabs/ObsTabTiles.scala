@@ -47,7 +47,6 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
@@ -170,22 +169,19 @@ object ObsTabTiles:
             ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
-      // Selected GS. to share the PA chosen for Unconstrained and average modes
-      // This should go to the db eventually
-      .useStateView(none[AgsAnalysis])
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateWithReuseBy: (props, _, _, _, _, selectedConfig) =>
+      .useStateWithReuseBy: (props, _, _, _, selectedConfig) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
       // Chart results
       .useState(Map.empty[ItcTarget, Pot[ItcGraphResult]])
       // Brightest target
-      .useStateBy((_, _, _, _, _, _, itcProps, _) => itcProps.value.defaultTarget)
+      .useStateBy((_, _, _, _, _, itcProps, _) => itcProps.value.defaultTarget)
       // itc loading
       .useStateWithReuse(LoadingState.Done)
-      .useEffectWithDepsBy((props, _, _, _, _, selectedConfig, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, selectedConfig, _, _, _, _) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
-      ): (props, ctx, _, _, _, _, oldItcProps, graphs, brightestTarget, loading) =>
+      ): (props, ctx, _, _, _, oldItcProps, graphs, brightestTarget, loading) =>
         itcProps =>
           import ctx.given
 
@@ -220,17 +216,17 @@ object ObsTabTiles:
               .runAsyncAndForget
       // Signal that the sequence has changed
       .useStateView(().ready)
-      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
-      ): (_, _, _, _, _, _, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       // Store guide star selection in a view for fast local updates
       // This is not the ideal place for this but we need to share the selected guide star
       // across the configuration and target tile
-      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _, _) =>
+      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _) =>
         props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
       )
-      .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
+      .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
         import ctx.given
 
         // We tell the backend and the local cache of changes to the selected guidestar
@@ -245,9 +241,10 @@ object ObsTabTiles:
                   .runAsyncAndForget
             // Going from automatic to manual selection
             case (AgsSelection(_), AgsOverride(n, _, _))                 =>
-              ObsQueries
-                .setGuideTargetName[IO](props.obsId, n.some)
-                .runAsyncAndForget
+              props.selectedGSName.set(n.some) *>
+                ObsQueries
+                  .setGuideTargetName[IO](props.obsId, n.some)
+                  .runAsyncAndForget
             // Going from manual to automated selection
             case (AgsOverride(n, _, _), AgsSelection(_))                 =>
               props.selectedGSName.set(none) *>
@@ -266,7 +263,6 @@ object ObsTabTiles:
           ctx,
           sequenceOffsets,
           agsState,
-          selectedPA,
           selectedConfig,
           itcProps,
           itcGraphResults,
@@ -430,7 +426,8 @@ object ObsTabTiles:
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,
                 obsDuration.map(_.toDuration),
-                props.observation.get.needsAGS
+                props.observation.get.needsAGS,
+                props.observation.get.selectedGSName
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =

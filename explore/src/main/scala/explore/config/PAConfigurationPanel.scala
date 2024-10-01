@@ -105,7 +105,7 @@ object PAConfigurationPanel:
             disabled = !props.agsState.get.canRecalculate || props.readonly,
             validFormat = MathValidators.truncatedAngleDegrees,
             changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
-          )
+          )(^.autoComplete.off)
         )
 
       <.div(

@@ -55,7 +55,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
 
 import java.time.Instant
-import scala.annotation.unused
 import scala.concurrent.duration.*
 
 case class AladinCell(
@@ -110,7 +109,7 @@ case class AladinCell(
     obsConf.exists(_.configuration.isDefined)
 
   def selectedGSName: Option[NonEmptyString] =
-    guideStarSelection.get.targetName
+    obsConf.flatMap(_.remoteGSName)
 
   def sciencePositionsAt(vizTime: Instant): List[Coordinates] =
     asterism.asList
@@ -209,7 +208,6 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
-  @unused // TODO Restore support for flips
   private def flipAngle(
     props: Props
   ): Option[AgsAnalysis] => Callback =
@@ -271,8 +269,8 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useEffectWithDepsBy((props, _, _, _, _, _) => props.selectedGSName)(
         (props, _, _, analysis, _, _) =>
           n =>
+            // Go to the first analysis if present or pick the name from the selection
             props.guideStarSelection.set(
-              // Go to the first analysis if present or pick the name from the selection
               n.fold(AgsSelection(analysis.value.value.headOption.tupleLeft(0)))(
                 analysis.value.value.pick
               )
@@ -282,14 +280,14 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useStateBy((props, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.asterism)(
-        (props, ctx, _, _, _, options, mouseCoords) =>
+        (props, ctx, _, analysis, _, options, mouseCoords) =>
           _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
 
             // if the coordinates change, reset ags, offset and mouse coordinates
             for {
-              // FIXME, this is getting into a weird loop
-              // _ <- gs.set(AgsSelection(none)).when_(gs.get.isOverride)
+              _ <- props.guideStarSelection.set(GuideStarSelection.Default)
+              _ <- analysis.setState(List.empty)
               _ <- offsetOnCenter.set(Offset.Zero)
               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
             } yield ()
@@ -298,15 +296,12 @@ object AladinCell extends ModelOptics with AladinCommon:
       .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint))(
         (p, ctx, candidates, _, _, _, _) =>
           _ =>
-            p.obsConf
+            (p.obsConf
               .flatMap(_.agsState)
               .foldMap(
                 _.set(AgsState.Calculating)
-                  .whenA(p.needsAGS && candidates.toOption.flatten.nonEmpty)
-              ) *>
-              p.guideStarSelection.set(
-                GuideStarSelection.Default
-              )
+              ) *> p.guideStarSelection.set(GuideStarSelection.Default))
+              .whenA(p.needsAGS && candidates.toOption.flatten.nonEmpty)
       )
       // Request ags calculation
       .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
@@ -357,13 +352,11 @@ object AladinCell extends ModelOptics with AladinCommon:
                 (for {
                   // Store the analysis
                   _ <- r.map(ags.setState).getOrEmpty
-                  // TODO Restore support for flips
                   // If we need to flip change the constraint
-                  // _ <- r
-                  //        .map(_.headOption)
-                  //        .map(flipAngle(props))
-                  //        .orEmpty
-                  //        .unlessA(props.guideStarSelection.get.isOverride)
+                  _ <- r
+                         .map(_.headOption)
+                         .map(flipAngle(props))
+                         .orEmpty
                   // set the selected index to the first entry
                   _ <- {
                     val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
@@ -380,7 +373,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                           // If overriden ignore
                           a
                       }
-                      .unlessA(props.guideStarSelection.get.isOverride)
                   }
                 } yield ()).toAsync
 
