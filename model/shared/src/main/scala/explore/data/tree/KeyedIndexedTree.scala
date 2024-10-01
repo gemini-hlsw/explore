@@ -106,7 +106,13 @@ case class KeyedIndexedTree[K: Eq, A] private (
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
 
-  /** SCALADOC TODO!!!! */
+  /**
+   * Insert or update a node in the tree at a given index.
+   *
+   * If the key is already present in the tree, the node is updated with the new value and children
+   * and possibly relocated to the given index. If the key is not present in the tree, the node is
+   * inserted at the given index.
+   */
   def upserted(
     key:         K,
     newValue:    A,
@@ -115,10 +121,25 @@ case class KeyedIndexedTree[K: Eq, A] private (
   ): KeyedIndexedTree[K, A] =
     removed(key).inserted(key, Node(newValue, newChildren), newIndex)
 
+  /**
+   * Insert or update a node in the tree at a given index, keeping its current children.
+   *
+   * If the key is already present in the tree, the node is updated with the new value and possibly
+   * relocated to the given index. If the key is not present in the tree, the node is inserted at
+   * the given index.
+   */
   def upserted(key: K, newValue: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
     val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
     upserted(key, newValue, existingChildren, newIndex)
 
+  /**
+   * Insert or update a node in the tree under a given parent and right before a node that satisfies
+   * a given predicate.
+   *
+   * If the key is already present in the tree, the node is updated with the new value and children
+   * and possibly relocated under the given parent. If the key is not present in the tree, the node
+   * is inserted under the given parent.
+   */
   def upserted(
     key:             K,
     newValue:        A,
@@ -142,6 +163,14 @@ case class KeyedIndexedTree[K: Eq, A] private (
         Index(parentKey, NonNegInt.unsafeFrom(newIndex))
       )
 
+  /**
+   * Insert or update a node in the tree, keeping its existing children, under a given parent and
+   * right before a node that satisfies a given predicate.
+   *
+   * If the key is already present in the tree, the node is updated with the new value and possibly
+   * relocated under the given parent. If the key is not present in the tree, the node is inserted
+   * under the given parent.
+   */
   def upserted(
     key:             K,
     newValue:        A,
