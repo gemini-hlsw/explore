@@ -43,13 +43,21 @@ trait CacheModifierUpdaters {
   protected def modifyObservations(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
-    val isPresentInServer: Boolean =
-      observationEdit.meta.exists(_.existence === Existence.Present)
-
     observationEdit.value // We ignore updates on deleted groups.
-      .filter(_ => isPresentInServer || observationEdit.editType =!= EditType.Updated)
       .map: value =>
-        val obsId: Observation.Id = value.id
+        val obsId: Observation.Id      = value.id
+        val isPresentInServer: Boolean =
+          observationEdit.meta.exists(_.existence === Existence.Present)
+
+        // The server sends updates for deleted observations. We want to filter those out,
+        // but still process deletions for observations we already have.
+        def ifPresentInServerOrLocally(
+          mod: ProgramSummaries => ProgramSummaries
+        ): ProgramSummaries => ProgramSummaries =
+          programSummaries =>
+            val isPresentLocally: Boolean = programSummaries.observations.contains(obsId)
+            if isPresentInServer || isPresentLocally then mod(programSummaries)
+            else programSummaries
 
         val obsUpdate: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.observations
@@ -76,21 +84,29 @@ trait CacheModifierUpdaters {
             if (isPresentInServer) oem.withUpdatePending(obsId)
             else oem.removed(obsId)
 
-        obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+        ifPresentInServerOrLocally:
+          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
       .orEmpty
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
-    val isPresentInServer: Boolean = groupUpdate.payload.exists(_.existence === Existence.Present)
     groupUpdate.payload // We ignore updates on deleted groups.
-      .filter(_ => isPresentInServer || groupUpdate.editType =!= EditType.Updated)
       .map: payload =>
-        val groupId: Group.Id = payload.value.elem.id
+        val groupId: Group.Id          = payload.value.elem.id
+        val isPresentInServer: Boolean =
+          groupUpdate.payload.exists(_.existence === Existence.Present)
+
+        // The server sends updates for deleted groups. We want to filter those out,
+        // but still process deletions for groups we already have.
+        def ifPresentInServerOrLocally(
+          mod: ProgramSummaries => ProgramSummaries
+        ): ProgramSummaries => ProgramSummaries =
+          programSummaries =>
+            val isPresentLocally: Boolean = programSummaries.groups.contains(groupId.asRight)
+            if isPresentInServer || isPresentLocally then mod(programSummaries)
+            else programSummaries
 
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupTree =>
-
-            // TODO CHECK WHAT EXACTLY HAPPENS WHEN WE GET A REFERENCE FOR A (YET) UNEXISTING OBSERVATION
-
             val mod: GroupTree => GroupTree =
               if (!isPresentInServer)
                 _.removed(groupId.asRight)
@@ -105,7 +121,6 @@ trait CacheModifierUpdaters {
                     _.upserted(
                       groupId.asRight,
                       payload.value.map(_.asRight),
-                      // newChildren,
                       payload.parentGroupId.map(_.asRight),
                       findIndexFn
                     )
@@ -118,7 +133,8 @@ trait CacheModifierUpdaters {
               else _.removed(groupId)
             .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
-        updateGroup >>> groupTimeRangePotsReset
+        ifPresentInServerOrLocally:
+          updateGroup >>> groupTimeRangePotsReset
       .orEmpty
 
   protected def modifyAttachments(
@@ -159,17 +175,7 @@ trait CacheModifierUpdaters {
                 findIndexFn
               )
 
-        // I'm almost sure we don't need this anymore. It happens via group edit.
-        // val parentTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
-        //   programSummaries =>
-        //     programSummaries.groups
-        //       .getNodeAndIndexByKey(obsId.asLeft)
-        //       // I think this may be wrong, the parent could be empty if it's the root node
-        //       .flatMap(_._2.parentKey)
-        //       .map(gid => parentGroupTimeRangeReset(gid))
-        //       .getOrElse(identity)(programSummaries)
-
-        editGroup // >>> parentTimeRangePotsReset
+        editGroup
       .getOrElse:
         ProgramSummaries.groups
           .modify: groupTree =>

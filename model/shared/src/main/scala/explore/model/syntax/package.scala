@@ -24,7 +24,6 @@ import java.time.ZoneOffset
 import scala.annotation.targetName
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-// import explore.model.GroupTree.Group
 
 object all:
 
@@ -119,12 +118,6 @@ object all:
       s"${Constants.GppDateFormatter.format(i)} @ ${Constants.GppTimeTZFormatterWithZone.format(i)}"
 
   extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)
-
-  // extension (e: Either[Group.Obs, Grouping])
-  //   // @targetName("groupIndexGrouping")
-  //   def parentIndex: NonNegShort = e.fold(_.parentIndex, _.parentIndex)
-
-  // extension (e: GroupTree.Value) def id: GroupTree.Key = e.bimap(_.id, _.id)
 
   extension (e: NonNegShort) def toNonNegInt: NonNegInt = NonNegInt.unsafeFrom(e.value)
 

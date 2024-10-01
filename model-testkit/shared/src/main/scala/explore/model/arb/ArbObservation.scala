@@ -61,8 +61,6 @@ trait ArbObservation:
         vizDuration         <- arbitrary[Option[TimeSpan]]
         posAngleConstraint  <- arbitrary[PosAngleConstraint]
         wavelength          <- arbitrary[Option[Wavelength]]
-        // groupId             <- arbitrary[Option[Group.Id]]
-        // groupIndex          <- arbitrary[NonNegShort]
         validations         <- arbitrary[List[ObservationValidation]]
         observerNotes       <- arbitrary[Option[NonEmptyString]]
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
@@ -83,8 +81,6 @@ trait ArbObservation:
         vizDuration,
         posAngleConstraint,
         wavelength,
-        // groupId,
-        // groupIndex,
         validations,
         observerNotes,
         calibrationRole
@@ -108,8 +104,6 @@ trait ArbObservation:
        Option[TimeSpan],
        PosAngleConstraint,
        Option[Wavelength],
-       //  Option[Group.Id],
-       //  Short,
        List[ObservationValidation],
        Option[String],
        Option[CalibrationRole]
@@ -131,8 +125,6 @@ trait ArbObservation:
          o.observationDuration,
          o.posAngleConstraint,
          o.wavelength,
-         //  o.groupId,
-         //  o.groupIndex.value,
          o.validations,
          o.observerNotes.map(_.value),
          o.calibrationRole

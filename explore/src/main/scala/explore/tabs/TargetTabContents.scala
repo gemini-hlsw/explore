@@ -420,8 +420,6 @@ object TargetTabContents extends TwoPanels:
                           _,
                           posAngle,
                           Some(wavelength),
-                          // _,
-                          // _,
                           _,
                           _,
                           _

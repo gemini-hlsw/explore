@@ -12,10 +12,13 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
+import explore.data.tree.KeyedIndexedTree.Index
+import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
 import explore.model.Observation
+import explore.model.ServerIndexed
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
 import explore.optics.all.*
@@ -232,11 +235,12 @@ def insertGroup(
   import ctx.given
   GroupQueries
     .createGroup[IO](programId, parentId)
-    // .flatMap: grouping =>
-    //   groupExistence(grouping.group.id, g => setGroup(programId, g.some, ctx))
-    //     .set(groups)(
-    //       (Node(grouping.toGroupTreeGroup.asRight), grouping.group.toIndex).some
-    //     )
-    //     .toAsync
+    .flatMap: (group, parentIndex) =>
+      groupExistence(group.id, g => setGroup(programId, g.some, ctx))
+        .set(groups):
+          (Node(ServerIndexed(group.asRight, parentIndex)),
+           Index(parentId.map(_.asRight), NonNegInt.MaxValue)
+          ).some
+        .toAsync
     .void
     .switching(adding.zoom(AddingObservation.value.asLens).async)

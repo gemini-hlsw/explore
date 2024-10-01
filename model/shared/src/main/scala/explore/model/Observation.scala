@@ -62,8 +62,6 @@ case class Observation(
   observationDuration: Option[TimeSpan],
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
-  // groupId:             Option[Group.Id],
-  // groupIndex:          NonNegShort,
   validations:         List[ObservationValidation],
   observerNotes:       Option[NonEmptyString],
   calibrationRole:     Option[CalibrationRole]
@@ -201,8 +199,6 @@ object Observation:
   val observationDuration = Focus[Observation](_.observationDuration)
   val posAngleConstraint  = Focus[Observation](_.posAngleConstraint)
   val wavelength          = Focus[Observation](_.wavelength)
-  // val groupId             = Focus[Observation](_.groupId)
-  // val groupIndex          = Focus[Observation](_.groupIndex)
   val validations         = Focus[Observation](_.validations)
   val observerNotes       = Focus[Observation](_.observerNotes)
   val calibrationRole     = Focus[Observation](_.calibrationRole)
@@ -238,8 +234,6 @@ object Observation:
       wavelength          <- c.downField("scienceRequirements")
                                .downField("spectroscopy")
                                .get[Option[Wavelength]]("wavelength")
-      // groupId             <- c.get[Option[Group.Id]]("groupId")
-      // groupIndex          <- c.get[NonNegShort]("groupIndex")
       validations         <- c.get[List[ObservationValidation]]("validations")
       observerNotes       <- c.get[Option[NonEmptyString]]("observerNotes")
       calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
@@ -260,8 +254,6 @@ object Observation:
       observationDur,
       posAngleConstraint,
       wavelength,
-      // groupId,
-      // groupIndex,
       validations,
       observerNotes,
       calibrationRole

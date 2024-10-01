@@ -228,24 +228,6 @@ object ObsList:
             val dropIndex: NonNegShort =
               NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
 
-            // Group updates are done through the `treeNodes.set`, but obs updates have to be done separately
-            // val obsEdit: Callback = dragNode.elem.left.toOption
-            //   .map: obsId =>
-            //     props.observations.model
-            //       .mod:
-            //         _.updatedValueWith(
-            //           obsId,
-            //           ???
-            //           // Observation.groupId
-            //           //   .replace(dropNodeId)
-            //           //   .andThen: // TODO groupIndex IS NOT OUR INDEX!!!!
-            //           //     Observation.groupIndex.replace(dropIndex)
-            //         )
-            //   .getOrEmpty
-
-            // println(e.dropNode)
-            // println(e.dropIndex)
-
             val newParentGroupIndex: NonNegShort =
               if dropIndex.value == 0 then dropIndex
               else
@@ -272,7 +254,6 @@ object ObsList:
               )
               .runAsync >>
               treeNodes.value.set(e.value.toList) >>
-              // obsEdit *>
               // Open the group we moved to
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
