@@ -56,7 +56,7 @@ object ObsGroupTiles:
                     .getNodeAndIndexByKey(groupTreeKey)
                     .map(modF)
                     .map((newValue, newIndex) =>
-                      groups.updated(groupTreeKey, newValue.value, newIndex)
+                      groups.upserted(groupTreeKey, newValue.value, newIndex)
                     )
                     .getOrElse(groups)
             )

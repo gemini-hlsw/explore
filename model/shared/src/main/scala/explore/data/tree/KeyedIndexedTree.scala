@@ -105,7 +105,7 @@ case class KeyedIndexedTree[K: Eq, A] private (
     val newTree: Tree[IndexedElem[K, A]]   = Tree(insertInChildren(cleanTree.children))
     KeyedIndexedTree(buildKeyMap(newTree, getKey), newTree)(getKey)
   }
-  def updated( // TODO TEST!!!
+  def upserted(
     key:         K,
     newValue:    A,
     newChildren: List[Node[A]],
@@ -113,11 +113,11 @@ case class KeyedIndexedTree[K: Eq, A] private (
   ): KeyedIndexedTree[K, A] =
     removed(key).inserted(key, Node(newValue, newChildren), newIndex)
 
-  def updated(key: K, newValue: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
+  def upserted(key: K, newValue: A, newIndex: Index[K]): KeyedIndexedTree[K, A] =
     val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
-    updated(key, newValue, existingChildren, newIndex)
+    upserted(key, newValue, existingChildren, newIndex)
 
-  def updated( // TODO TEST!!! call it upserted?
+  def upserted(
     key:             K,
     newValue:        A,
     newChildren:     List[Node[A]],
@@ -140,14 +140,14 @@ case class KeyedIndexedTree[K: Eq, A] private (
         Index(parentKey, NonNegInt.unsafeFrom(newIndex))
       )
 
-  def updated( // TODO TEST!!!
+  def upserted(
     key:             K,
     newValue:        A,
     parentKey:       Option[K],
     beforeNodeWhere: Node[A] => Boolean
   ): KeyedIndexedTree[K, A] =
     val existingChildren: List[Node[A]] = getNodeAndIndexByKey(key).map(_._1.children).orEmpty
-    updated(key, newValue, existingChildren, parentKey, beforeNodeWhere)
+    upserted(key, newValue, existingChildren, parentKey, beforeNodeWhere)
 
   def collect[B](pf: PartialFunction[(K, Node[A], Index[K]), B]): List[B] =
     byKey
@@ -233,6 +233,9 @@ object KeyedIndexedTree {
     val indexedTree: Tree[IndexedElem[K, A]] = Tree(indexedUniqueKeyChildren(tree.children, getKey))
     KeyedIndexedTree(buildKeyMap(indexedTree, getKey), indexedTree)(getKey)
   }
+
+  def empty[K: Eq, A](getKey: A => K): KeyedIndexedTree[K, A] =
+    KeyedIndexedTree.fromTree(Tree.empty, getKey)
 
   implicit def eqKeyedIndexedTree[K, A: Eq]: Eq[KeyedIndexedTree[K, A]] =
     Eq.by(_.toTree)

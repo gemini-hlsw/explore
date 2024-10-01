@@ -66,10 +66,7 @@ def cloneObs(
 ): IO[Unit] =
   import ctx.given
 
-  // import eu.timepit.refined.auto.autoUnwrap
-
-  IO.println(s"cloneObs $obsId $newGroupId") >>
-    before >>
+  before >>
     cloneObservation[IO](obsId, newGroupId)
       .flatMap: newObs =>
         obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
@@ -211,7 +208,7 @@ def groupExistence(
         case None              => groupList.removed(groupId.asRight)
         case Some((node, idx)) =>
           val group = node.value
-          groupList.updated(groupId.asRight, group, idx)
+          groupList.upserted(groupId.asRight, group, idx)
 )(
   onSet = (_, node) =>
     node.fold {

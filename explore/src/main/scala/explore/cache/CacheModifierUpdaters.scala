@@ -123,7 +123,7 @@ trait CacheModifierUpdaters {
                     val findIndexFn: GroupTree.Node => Boolean =
                       _.value.parentIndex >= payload.value.parentIndex
 
-                    _.updated(
+                    _.upserted(
                       groupId.asRight,
                       payload.value.map(_.group.asRight),
                       newChildren,
@@ -174,7 +174,7 @@ trait CacheModifierUpdaters {
         val editGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups
             .modify:
-              _.updated(
+              _.upserted(
                 obsId.asLeft,
                 ServerIndexed(obsId.asLeft, meta.groupIndex),
                 meta.groupId.map(_.asRight),
