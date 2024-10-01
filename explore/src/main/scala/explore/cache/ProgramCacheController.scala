@@ -44,7 +44,8 @@ case class ProgramCacheController(
   programId:           Program.Id,
   modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
-    extends ReactFnProps(ProgramCacheController.component)
+// Do not remove the explicit type parameter below, it confuses the compiler.
+    extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
   val modState                             = modProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
