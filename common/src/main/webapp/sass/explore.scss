@@ -2900,6 +2900,20 @@ $help-title-height: 40px;
   .p-button {
     flex: 0 0 auto;
   }
+
+  .p-tag {
+    @include lucumaUICommon.text-ellipsis;
+
+    display: block;
+    background-color: unset;
+    border: solid var(--site-solid-border-color) 1px;
+
+    span {
+      display: block;
+
+      @include lucumaUICommon.text-ellipsis;
+    }
+  }
 }
 
 .explore-basic-configuration-form {
@@ -2972,7 +2986,7 @@ $help-title-height: 40px;
   grid-template:
     'form table-header' auto
     'form table' 1fr
-    'buttons buttons' auto / 1fr minmax(0, 4fr);
+    'form buttons' auto / 1fr minmax(0, 4fr);
 }
 
 .explore-basic-configuration-focal-plane {
