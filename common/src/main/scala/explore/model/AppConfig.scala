@@ -23,7 +23,8 @@ case class AppConfig(
   odbURI:           Uri,
   odbRestURI:       Uri,
   itcURI:           Uri,
-  sso:              SSOConfig
+  sso:              SSOConfig,
+  tracing:          Option[TracingConfig]
 ) derives Eq,
       Show,
       Decoder
