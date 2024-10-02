@@ -76,11 +76,7 @@ object ITCRequests:
         .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.asterism.length}"
         ) *>
-        params.mode
-          .toItcClientMode(
-            params.asterism.map(_.sourceProfile),
-            params.constraints.imageQuality
-          )
+        params.mode.toItcClientMode
           .traverse: mode =>
             ItcClient[F]
               .spectroscopy(

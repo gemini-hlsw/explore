@@ -223,10 +223,9 @@ object ObsTabTiles:
       // Store guide star selection in a view for fast local updates
       // This is not the ideal place for this but we need to share the selected guide star
       // across the configuration and target tile
-      .useStateViewBy((props, _, _, _, _, _, _, _, _, _, _) =>
+      .useStateViewBy: (props, _, _, _, _, _, _, _, _, _, _) =>
         props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
-      )
-      .localValBy((props, ctx, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
+      .localValBy: (props, ctx, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
         import ctx.given
 
         // We tell the backend and the local cache of changes to the selected guidestar
@@ -256,7 +255,6 @@ object ObsTabTiles:
               Callback.empty
           }
         }
-      )
       .render:
         (
           props,

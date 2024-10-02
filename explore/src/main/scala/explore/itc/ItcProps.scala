@@ -96,13 +96,13 @@ case class ItcProps(
       .map:
         case BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, _) =>
           val gmosOverride: Option[GmosSpectroscopyOverrides] = modeOverrides match
-            case Some(o: GmosSpectroscopyOverrides) => o.some
-            case _                                  => none
+            case Some(o @ GmosSpectroscopyOverrides(_, _, _)) => o.some
+            case _                                            => none
           GmosNorthSpectroscopyRow(grating, fpu, filter, gmosOverride)
         case BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, _) =>
           val gmosOverride: Option[GmosSpectroscopyOverrides] = modeOverrides match
-            case Some(o: GmosSpectroscopyOverrides) => o.some
-            case _                                  => none
+            case Some(o @ GmosSpectroscopyOverrides(_, _, _)) => o.some
+            case _                                            => none
           GmosSouthSpectroscopyRow(grating, fpu, filter, gmosOverride)
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =
@@ -164,6 +164,7 @@ object ItcProps:
        p.observation.constraints,
        p.observation.scienceRequirements,
        p.observation.wavelength,
+       p.observation.basicConfiguration,
        p.selectedConfig,
        p.at,
        p.modeOverrides
