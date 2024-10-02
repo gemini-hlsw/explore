@@ -28,7 +28,7 @@ import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.Message
+import lucuma.react.primereact.Tag
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 
@@ -64,20 +64,19 @@ private object BasicConfigurationPanel:
           props.selectedConfig.get.flatMap(_.itcResult).flatMap(_.toOption).exists(_.isSuccess)
 
         // wavelength has to be handled special because you can't select a row without a wavelength.
-        val message: String =
+        val message: Option[String] =
           props.spectroscopyView.get
             .map(_.wavelength)
-            .fold("Wavelength is required for creating a configuration.")(_ =>
+            .fold("Wavelength is required for creating a configuration.".some)(_ =>
               props.selectedConfig.get match {
                 case Some(BasicConfigAndItc(_, itc)) =>
                   itc match {
-                    case Some(Right(r)) if r.isPending => "Waiting for ITC result..."
-                    case Some(Right(r)) if r.isSuccess =>
-                      "Click `Accept` to create configuration and view details."
-                    case _                             => "ITC issues must be fixed before creating a configuration."
+                    case Some(Right(r)) if r.isPending => "Waiting for ITC result...".some
+                    case Some(Right(r)) if r.isSuccess => none
+                    case _                             => "ITC issues must be fixed.".some
                   }
 
-                case None => "To create a configuration, select a table row."
+                case None => "To create a configuration, select a table row.".some
               }
             )
 
@@ -111,12 +110,12 @@ private object BasicConfigurationPanel:
             )
           ),
           <.div(ExploreStyles.BasicConfigurationButtons)(
-            Message(text = message),
+            message.map(Tag(_, severity = Tag.Severity.Success)),
             Button(
               "Accept Configuration",
               icon = buttonIcon,
               disabled = creating.get.value || !canAccept,
-              severity = Button.Severity.Secondary,
+              severity = Button.Severity.Primary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
           ).when(props.spectroscopyView.get.isDefined && !props.readonly)
