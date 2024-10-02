@@ -8,7 +8,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model.GroupTree.Group
+import explore.model.Group
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*

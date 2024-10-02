@@ -9,7 +9,6 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.syntax.all.*
 import explore.modes.GmosSpectroscopyOverrides
@@ -25,7 +24,6 @@ import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.PosAngleConstraint
@@ -64,8 +62,6 @@ case class Observation(
   observationDuration: Option[TimeSpan],
   posAngleConstraint:  PosAngleConstraint,
   wavelength:          Option[Wavelength],
-  groupId:             Option[Group.Id],
-  groupIndex:          NonNegShort,
   validations:         List[ObservationValidation],
   observerNotes:       Option[NonEmptyString],
   calibrationRole:     Option[CalibrationRole]
@@ -203,8 +199,6 @@ object Observation:
   val observationDuration = Focus[Observation](_.observationDuration)
   val posAngleConstraint  = Focus[Observation](_.posAngleConstraint)
   val wavelength          = Focus[Observation](_.wavelength)
-  val groupId             = Focus[Observation](_.groupId)
-  val groupIndex          = Focus[Observation](_.groupIndex)
   val validations         = Focus[Observation](_.validations)
   val observerNotes       = Focus[Observation](_.observerNotes)
   val calibrationRole     = Focus[Observation](_.calibrationRole)
@@ -240,8 +234,6 @@ object Observation:
       wavelength          <- c.downField("scienceRequirements")
                                .downField("spectroscopy")
                                .get[Option[Wavelength]]("wavelength")
-      groupId             <- c.get[Option[Group.Id]]("groupId")
-      groupIndex          <- c.get[NonNegShort]("groupIndex")
       validations         <- c.get[List[ObservationValidation]]("validations")
       observerNotes       <- c.get[Option[NonEmptyString]]("observerNotes")
       calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
@@ -262,8 +254,6 @@ object Observation:
       observationDur,
       posAngleConstraint,
       wavelength,
-      groupId,
-      groupIndex,
       validations,
       observerNotes,
       calibrationRole

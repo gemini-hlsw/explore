@@ -5,91 +5,77 @@ package explore.model
 
 import cats.Eq
 import cats.Order.*
-import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.data.tree.KeyedIndexedTree
 import explore.data.tree.Node as TreeNode
 import explore.data.tree.Tree
 import explore.model.syntax.all.*
-import lucuma.core.model.Group.Id as GroupId
-import lucuma.core.util.TimeSpan
-import monocle.Focus
 import monocle.Lens
 
 type GroupTree = KeyedIndexedTree[GroupTree.Key, GroupTree.Value]
 
 object GroupTree:
-
-  type Key   = Either[Observation.Id, GroupId]
+  type Key   = Either[Observation.Id, Group.Id]
   type Index = KeyedIndexedTree.Index[Key]
-  type Value = Either[Obs, Group]
+  type Value = ServerIndexed[Either[Observation.Id, Group]]
   type Node  = TreeNode[Value]
 
-  def key: Lens[Value, Key] = Lens[Value, Key](_.bimap(_.id, _.id))(newId =>
-    case Left(obs)    =>
+  object syntax:
+    extension (self: ServerIndexed[Either[Observation.Id, Group]])
+      def id: Either[Observation.Id, Group.Id] = self.elem.map(_.id)
+
+    extension (self: GroupTree)
+      def obsGroupId(obsId: Observation.Id): Option[Group.Id] =
+        self.getNodeAndIndexByKey(Left(obsId)).flatMap(_._2.parentKey.flatMap(_.toOption))
+
+  import syntax.*
+
+  def key: Lens[Value, Key] = Lens[Value, Key](_.id)(newId =>
+    case old @ ServerIndexed(Left(oldObsId), parentIndex)  =>
       newId match
-        case Left(id) => Obs.id.replace(id)(obs).asLeft
-        case _        => obs.asLeft
-    case Right(group) =>
+        case Left(newObsId) => ServerIndexed(newObsId.asLeft, parentIndex)
+        case _              => old
+    case old @ ServerIndexed(Right(oldGroup), parentIndex) =>
       newId match
-        case Right(id) => Group.id.replace(id)(group).asRight
-        case _         => group.asRight
+        case Right(newGroupId) =>
+          ServerIndexed(Group.id.replace(newGroupId)(oldGroup).asRight, parentIndex)
+        case _                 => old
   )
 
   def fromList(groups: List[GroupElement]): GroupTree = {
     // For faster lookup when creating the tree
-    val (obsList, groupList) = groups.partitionMap(_.value)
-    val obsMap               = obsList.map(obs => (obs.id, obs)).toMap
-    val groupMap             = groupList.map(group => (group.id, group)).toMap
+    val groupMap: Map[Group.Id, GroupWithChildren] =
+      groups.mapFilter(_.value.toOption.map(g => g.group.id -> g)).toMap
 
-    def createObsNode(obs: GroupObs): Node = TreeNode(Obs(obs.id).asLeft[Group], Nil)
+    def createObsNode(obsId: Observation.Id, parentIndex: NonNegShort): Node =
+      TreeNode(ServerIndexed(obsId.asLeft, parentIndex), Nil)
 
-    def createGroupNode(group: Grouping): Node =
-      val children = group.elements
-        .flatMap(
-          _.fold(
-            obs => obsMap.get(obs.id).map(_.asLeft),
-            group => groupMap.get(group.id).map(_.asRight)
-          )
-        )
-        .sortBy(_.groupIndex)
-        .map(_.fold(createObsNode(_), createGroupNode))
-      TreeNode(group.toGroupTreeGroup.asRight, children)
+    def createGroupNode(groupId: Group.Id, parentIndex: NonNegShort): Node =
+      val groupWithChildren: GroupWithChildren = groupMap(groupId)
+      val children: List[Node]                 =
+        groupWithChildren.children
+          .map(child => toChild(child.elem, child.parentIndex))
+          .sortBy(_.value.parentIndex)
+      TreeNode(ServerIndexed(groupWithChildren.group.asRight, parentIndex), children)
 
-    val rootGroups =
+    def toChild(elem: Either[Observation.Id, Group.Id], parentIndex: NonNegShort): Node =
+      elem.fold(createObsNode(_, parentIndex), createGroupNode(_, parentIndex))
+
+    val rootElems: List[Node] =
       groups
-        .mapFilter(g => if g.parentGroupId.isEmpty then g.value.some else none)
-        .sortBy(_.groupIndex)
+        .mapFilter: child =>
+          child.indexInRootGroup
+            .map(idx => toChild(child.value.map(_.group.id), idx))
+        .sortBy(_.value.parentIndex)
 
-    val nodes = rootGroups.map(_.fold(createObsNode, createGroupNode))
-
-    KeyedIndexedTree.fromTree(Tree(nodes), _.id)
+    KeyedIndexedTree.fromTree(Tree(rootElems), _.id)
   }
 
-  case class Group(
-    id:              GroupId,
-    name:            Option[NonEmptyString],
-    minimumRequired: Option[NonNegShort],
-    minimumInterval: Option[TimeSpan],
-    maximumInterval: Option[TimeSpan],
-    ordered:         Boolean,
-    system:          Boolean
-  ) derives Eq:
-    def isAnd: Boolean = minimumRequired.isEmpty
+// parentIndices may skip values, since they also index deleted elements, so we have to keep track of them.
+case class ServerIndexed[A](elem: A, parentIndex: NonNegShort):
+  def map[B](f: A => B): ServerIndexed[B] = ServerIndexed(f(elem), parentIndex)
 
-  object Group:
-    val id: Lens[Group, GroupId]                          = Focus[Group](_.id)
-    val name: Lens[Group, Option[NonEmptyString]]         = Focus[Group](_.name)
-    val minimumInterval: Lens[Group, Option[TimeSpan]]    = Focus[Group](_.minimumInterval)
-    val maximumInterval: Lens[Group, Option[TimeSpan]]    = Focus[Group](_.maximumInterval)
-    val minimumRequired: Lens[Group, Option[NonNegShort]] = Focus[Group](_.minimumRequired)
-    val ordered: Lens[Group, Boolean]                     = Focus[Group](_.ordered)
-    val system: Lens[Group, Boolean]                      = Focus[Group](_.system)
-
-  case class Obs(id: Observation.Id) derives Eq
-
-  object Obs:
-    val id: Lens[Obs, Observation.Id] = Focus[Obs](_.id)
+object ServerIndexed:
+  given [A: Eq]: Eq[ServerIndexed[A]] = Eq.by(x => (x.elem, x.parentIndex))

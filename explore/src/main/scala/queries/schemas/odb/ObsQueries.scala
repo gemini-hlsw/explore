@@ -154,7 +154,7 @@ object ObsQueries:
   def createObservation[F[_]: Async](
     programId: Program.Id,
     parentId:  Option[Group.Id]
-  )(using FetchClient[F, ObservationDB]): F[Observation] =
+  )(using FetchClient[F, ObservationDB]): F[(Observation, NonNegShort)] =
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
@@ -164,7 +164,8 @@ object ObsQueries:
             .orIgnore
         )
       )
-      .map(_.createObservation.observation)
+      .map: result =>
+        (result.createObservation.observation, result.createObservation.meta.groupIndex)
 
   def createObservationWithTargets[F[_]: Async](
     programId: Program.Id,

@@ -30,6 +30,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL
@@ -43,6 +44,7 @@ case class ProgramCacheController(
   programId:           Program.Id,
   modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
+// Do not remove the explicit type parameter below, it confuses the compiler.
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
   val modState                             = modProgramSummaries
@@ -196,11 +198,12 @@ object ProgramCacheController
   override protected val updateStream
     : ProgramCacheController => Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] = {
     props =>
+      // programUpdateChannel is just a sigal queue to trigger a (switchable) program times update.
       Resource.make(Channel.unbounded[IO, Unit])(_.close.void).flatMap { programUpdateChannel =>
         try {
           import props.given
 
-          // programUpdateChannel is just a sigal queue to trigger a (switchable) program times update.
+          // Signal a program times update.
           val queryProgramTimes: IO[Unit] =
             programUpdateChannel.send(()).void
 
@@ -220,6 +223,20 @@ object ProgramCacheController
               .subscribe[IO](props.programId.toTargetEditInput)
               .map(_.map(data => modifyTargets(data.targetEdit)))
 
+          val onlyExistingObs: Pipe[
+            IO,
+            ObsQueriesGQL.ProgramObservationsDelta.Data,
+            ObsQueriesGQL.ProgramObservationsDelta.Data
+          ] =
+            _.filter(_.observationEdit.meta.exists(_.existence === Existence.Present))
+
+          val onlyExistingGroups: Pipe[
+            IO,
+            ProgramQueriesGQL.GroupEditSubscription.Data,
+            ProgramQueriesGQL.GroupEditSubscription.Data
+          ] =
+            _.filter(_.groupEdit.payload.exists(_.existence === Existence.Present))
+
           val obsTimesUpdates: Pipe[
             IO,
             ObsQueriesGQL.ProgramObservationsDelta.Data,
@@ -235,24 +252,23 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
-            _.groupEdit.value.map(_.id),
-            data =>
-              data.groupEdit.value
-                .map(_.id)
-                .fold(identity[ProgramSummaries].pure[IO])(
-                  updateGroupTimeRange
-                ) <* queryProgramTimes
+            _.groupEdit.payload.map(_.value.elem.id),
+            _.groupEdit.payload
+              .map: payload =>
+                updateGroupTimeRange(payload.value.elem.id) <* queryProgramTimes
+              .getOrElse(IO(identity))
           )
 
           val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ObsQueriesGQL.ProgramObservationsDelta
-              .subscribe[IO](props.programId.toObservationEditInput)(summon,
-                                                                     ErrorPolicy.IgnoreOnData
+              .subscribe[IO](props.programId.toObservationEditInput)(using
+                summon,
+                ErrorPolicy.IgnoreOnData
               )
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyObservations(data.observationEdit)),
-                  obsTimesUpdates
+                  onlyExistingObs.andThen(obsTimesUpdates)
                 )
 
           val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
@@ -261,7 +277,7 @@ object ProgramCacheController
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyGroups(data.groupEdit)),
-                  groupTimeRangeUpdate
+                  onlyExistingGroups.andThen(groupTimeRangeUpdate)
                 )
 
           // Right now the programEdit subsription isn't fine grained enough to

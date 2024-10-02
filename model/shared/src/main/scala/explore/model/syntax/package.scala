@@ -68,7 +68,7 @@ object all:
         list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - targetId))
       )
     def allWithTarget(targetId: Target.Id): Set[Observation.Id]                              =
-      observations.values
+      observations.toList
         .filter(_.scienceTargetIds.contains(targetId))
         .map(_.id)
         .toSet
@@ -118,12 +118,6 @@ object all:
       s"${Constants.GppDateFormatter.format(i)} @ ${Constants.GppTimeTZFormatterWithZone.format(i)}"
 
   extension (t: IO.type) def now(): IO[Instant] = IO(Instant.now)
-
-  extension (e: Either[GroupObs, Grouping])
-    @targetName("groupIndexGrouping")
-    def groupIndex: NonNegShort = e.fold(_.groupIndex, _.parentIndex)
-
-  extension (e: GroupTree.Value) def id: GroupTree.Key = e.bimap(_.id, _.id)
 
   extension (e: NonNegShort) def toNonNegInt: NonNegInt = NonNegInt.unsafeFrom(e.value)
 

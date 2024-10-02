@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+import explore.model.GroupUpdate
 
 import GroupQueriesGQL.*
 
@@ -46,7 +47,7 @@ object ProgramQueriesGQL:
 
   @GraphQL
   trait ProgramGroupsQuery extends GraphQLOperation[ObservationDB]:
-    val document: String = s"""#graphql
+    val document: String = s"""
       query ($$programId: ProgramId!) {
         program(programId: $$programId) {
           allGroupElements $GroupElementsSubQuery
@@ -60,13 +61,18 @@ object ProgramQueriesGQL:
       subscription($$input: ProgramEditInput!) {
         groupEdit(input: $$input) {
           value $GroupSubQuery
-          meta:value {
+          meta:value { 
+            parentId
+            parentIndex
             existence
           }
           editType
         }
       }
     """
+
+    object Data:
+      type GroupEdit = GroupUpdate
 
   @GraphQL
   trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB]:

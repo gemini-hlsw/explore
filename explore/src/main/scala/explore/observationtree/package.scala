@@ -12,11 +12,13 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.data.KeyedIndexedList
+import explore.data.tree.KeyedIndexedTree.Index
 import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.GroupTree
 import explore.model.Observation
+import explore.model.ServerIndexed
 import explore.model.enums.AppTab
 import explore.optics.GetAdjust
 import explore.optics.all.*
@@ -71,8 +73,9 @@ def cloneObs(
     cloneObservation[IO](obsId, newGroupId)
       .flatMap: newObs =>
         obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
-          .mod(observations): // Convert NonNegShort => NonNegInt
-            obsListMod.upsert(newObs, NonNegInt.unsafeFrom(newObs.groupIndex.value))
+          .mod(observations):
+            // Just place the new obs at the end of the group, which is where the server clones it.
+            obsListMod.upsert(newObs, NonNegInt.MaxValue)
           .toAsync
       .guarantee(after)
 
@@ -177,17 +180,23 @@ def insertObs(
   parentId:     Option[Group.Id],
   pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
+  groupTree:    View[GroupTree],
   adding:       View[AddingObservation],
   ctx:          AppContext[IO]
 ): IO[Unit] =
   import ctx.given
 
   createObservation[IO](programId, parentId)
-    .flatMap { obs =>
-      obsExistence(obs.id, o => setObs(programId, o.some, ctx))
-        .mod(observations)(obsListMod.upsert(obs, pos))
-        .toAsync
-    }
+    .flatMap: (obs, groupIndex) =>
+      (obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+        .mod(observations)(obsListMod.upsert(obs, pos)) >>
+        groupTree.mod:
+          _.inserted(
+            obs.id.asLeft,
+            Node(ServerIndexed(obs.id.asLeft, groupIndex)),
+            Index(parentId.map(_.asRight), NonNegInt.MaxValue)
+          )
+      ).toAsync
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 
 private def findGrouping(
@@ -208,7 +217,7 @@ def groupExistence(
         case None              => groupList.removed(groupId.asRight)
         case Some((node, idx)) =>
           val group = node.value
-          groupList.updated(groupId.asRight, group, idx)
+          groupList.upserted(groupId.asRight, group, idx)
 )(
   onSet = (_, node) =>
     node.fold {
@@ -230,13 +239,15 @@ def insertGroup(
   ctx:       AppContext[IO]
 ): IO[Unit] =
   import ctx.given
+
   GroupQueries
     .createGroup[IO](programId, parentId)
-    .flatMap(group =>
+    .flatMap: (group, parentIndex) =>
       groupExistence(group.id, g => setGroup(programId, g.some, ctx))
-        .set(groups)(
-          (Node(group.toGroupTreeGroup.asRight), group.toIndex).some
-        )
+        .set(groups):
+          (Node(ServerIndexed(group.asRight, parentIndex)),
+           Index(parentId.map(_.asRight), NonNegInt.MaxValue)
+          ).some
         .toAsync
-    )
+    .void
     .switching(adding.zoom(AddingObservation.value.asLens).async)

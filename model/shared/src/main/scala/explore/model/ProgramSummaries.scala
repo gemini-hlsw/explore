@@ -46,18 +46,16 @@ case class ProgramSummaries(
     optProgramDetails.flatMap(_.proposal.flatMap(_.reference))
 
   lazy val asterismGroups: AsterismGroupList =
-    SortedMap.from(
-      observations.values
+    SortedMap.from:
+      observations.toList
         .map(obs => obs.id -> obs.scienceTargetIds)
         .groupMap(_._2)(_._1)
-        .map((targets, observations) =>
+        .map: (targets, observations) =>
           ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList*)) -> SortedSet
             .from(targets)
-        )
-    )
 
   lazy val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
-    observations.values
+    observations.toList
       .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
       .groupMap(_._1)(_._2)
       .view
@@ -65,7 +63,7 @@ case class ProgramSummaries(
       .toMap
 
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
-    observations.values
+    observations.toList
       .flatMap(obs => obs.attachmentIds.map(_ -> obs.id))
       .groupMap(_._1)(_._2)
       .view
@@ -79,15 +77,14 @@ case class ProgramSummaries(
     )
 
   lazy val constraintGroups: ConstraintGroupList =
-    SortedMap.from(
-      observations.values
+    SortedMap.from:
+      observations.toList
         .groupMap(_.constraints)(_.id)
         .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> c)
-    )
 
   lazy val schedulingGroups: SchedulingGroupList =
     SortedMap.from(
-      observations.values
+      observations.toList
         .groupMap(_.timingWindows.sorted)(_.id)
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )

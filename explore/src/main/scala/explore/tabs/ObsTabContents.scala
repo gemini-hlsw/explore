@@ -19,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
+import explore.model.GroupTree.syntax.*
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramSummaries
@@ -81,15 +82,14 @@ case class ObsTabContents(
   private val focusedGroup: Option[Group.Id]                               = focused.group
   private val observations: UndoSetter[ObservationList]                    =
     programSummaries.zoom(ProgramSummaries.observations)
+  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
   private val activeGroup: Option[Group.Id]                                = focusedGroup.orElse:
-    focusedObs.flatMap(obsId => observations.get.getValue(obsId).flatMap(_.groupId))
+    focusedObs.flatMap(groups.get.obsGroupId)
   private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
   private val groupTimeRanges: GroupTimeRangeMap                           = programSummaries.get.groupTimeRangePots
-  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
   private val targets: UndoSetter[TargetList]                              = programSummaries.zoom(ProgramSummaries.targets)
-  private val observationIds: List[Observation.Id]                         = observations.get.values.map(_.id).toList
   private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
-    observationIds.zipWithIndex.map((id, idx) => id -> NonNegInt.unsafeFrom(idx))
+    observations.get.toIndexedList.map((o, idx) => (o.id, idx))
   val readonly: Boolean                                                    = programSummaries.get.proposalIsSubmitted
 
 object ObsTabContents extends TwoPanels:
@@ -102,13 +102,11 @@ object ObsTabContents extends TwoPanels:
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
       .useEffectWithDepsBy((props, _, _) => props.focusedObs): (_, _, selected) =>
         focusedObs =>
-          (focusedObs, selected.get) match {
+          (focusedObs, selected.get) match
             case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
             case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
             case _                            => Callback.empty
-          }
-      // Measure its size
-      .useResizeDetector()
+      .useResizeDetector() // Measure its size
       .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
       .useEffectOnMountBy: (_, ctx, _, _, shadowClipboardObs) => // initialize shadowClipboard
         import ctx.given
@@ -268,6 +266,7 @@ object ObsTabContents extends TwoPanels:
                 props.vault.userId,
                 props.programId,
                 props.observations,
+                props.groups.model,
                 props.obsExecutions,
                 props.targets.get,
                 _

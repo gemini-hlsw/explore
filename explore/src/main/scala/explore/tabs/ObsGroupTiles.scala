@@ -8,6 +8,7 @@ import crystal.Pot
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.model.Group
 import explore.model.GroupEditIds
 import explore.model.GroupTree
 import explore.model.ProgramTimeRange
@@ -55,15 +56,18 @@ object ObsGroupTiles:
                     .getNodeAndIndexByKey(groupTreeKey)
                     .map(modF)
                     .map((newValue, newIndex) =>
-                      groups.updated(groupTreeKey, newValue.value, newIndex)
+                      groups.upserted(groupTreeKey, newValue.value, newIndex)
                     )
                     .getOrElse(groups)
             )
 
           // Then zoom to the Grouping itself
-          val group =
-            node.zoom(_._1.value.toOption.get,
-                      modF => _.leftMap(node => node.copy(value = node.value.map(modF)))
+          val group: UndoSetter[Group] =
+            node.zoom(
+              _._1.value.elem.toOption.get,
+              modF =>
+                _.leftMap: node =>
+                  node.copy(value = node.value.copy(elem = node.value.elem.map(modF)))
             )
 
           val editTile = Tile(

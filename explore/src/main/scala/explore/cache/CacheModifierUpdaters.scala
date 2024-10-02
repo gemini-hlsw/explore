@@ -3,21 +3,24 @@
 
 package explore.cache
 
+import cats.Endo
+import cats.Monoid
+import cats.MonoidK
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
-import explore.data.tree.KeyedIndexedTree.Index
-import explore.data.tree.Node
+import eu.timepit.refined.auto.autoUnwrap
 import explore.model.GroupTree
+import explore.model.GroupUpdate
 import explore.model.Observation
 import explore.model.ProgramSummaries
+import explore.model.ServerIndexed
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
-import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
@@ -26,86 +29,113 @@ import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
  * Functions to modify cache through subscription updates
  */
 trait CacheModifierUpdaters {
+  // TODO Move somewhere else
+  private given [A]: Monoid[Endo[A]] = MonoidK[Endo].algebra[A]
 
   protected def modifyTargets(targetEdit: TargetEdit): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.targets
-      .modify(targets =>
+      .modify: targets =>
         if (targetEdit.meta.existence === Existence.Present)
           targets.updated(targetEdit.value.id, targetEdit.value.target)
         else
           targets.removed(targetEdit.value.id)
-      )
 
   protected def modifyObservations(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
-    observationEdit.value
-      .map { value =>
-        val obsId  = value.id
-        val exists = observationEdit.meta.forall(_.existence === Existence.Present)
+    observationEdit.value // We ignore updates on deleted groups.
+      .map: value =>
+        val obsId: Observation.Id      = value.id
+        val isPresentInServer: Boolean =
+          observationEdit.meta.exists(_.existence === Existence.Present)
 
-        val obsUpdate    = ProgramSummaries.observations
-          .modify(observations =>
-            if (exists)
-              observations.inserted(
-                obsId,
-                value,
-                observations.getIndex(obsId).getOrElse(observations.length)
-              )
-            else
-              observations.removed(obsId)
-          )
-        // TODO: this won't be needed anymore when groups are also updated through events of observation updates
-        val groupsUpdate = updateGroupsMappingForObsEdit(observationEdit)
+        // The server sends updates for deleted observations. We want to filter those out,
+        // but still process deletions for observations we already have.
+        def ifPresentInServerOrLocally(
+          mod: ProgramSummaries => ProgramSummaries
+        ): ProgramSummaries => ProgramSummaries =
+          programSummaries =>
+            val isPresentLocally: Boolean = programSummaries.observations.contains(obsId)
+            if isPresentInServer || isPresentLocally then mod(programSummaries)
+            else programSummaries
 
-        val programTimesReset = ProgramSummaries.programTimesPot.replace(Pot.pending)
-        val obsExecutionReset = ProgramSummaries.obsExecutionPots.modify(oem =>
-          if (exists) oem.withUpdatePending(obsId)
-          else oem.removed(obsId)
-        )
+        val obsUpdate: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.observations
+            .modify: observations =>
+              if (isPresentInServer)
+                observations.inserted(
+                  obsId,
+                  value,
+                  observations.getIndex(obsId).getOrElse(observations.length)
+                )
+              else observations.removed(obsId)
 
-        obsUpdate.andThen(groupsUpdate).andThen(programTimesReset).andThen(obsExecutionReset)
-      }
-      .getOrElse(
-        updateGroupsMappingForObsEdit(observationEdit)
-      )
+        // TODO: this won't be needed anymore when groups are also updated through events of observation updates.
+        val groupsUpdate: ProgramSummaries => ProgramSummaries =
+          if (isPresentInServer)
+            updateGroupsMappingForObsEdit(observationEdit)
+          else identity
 
-  protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
-    (groupEdit.value, groupEdit.meta).tupled
-      .map: (newGrouping, meta) =>
-        val groupId   = newGrouping.id
-        val editType  = groupEdit.editType
-        val existence = meta.existence
+        val programTimesReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.programTimesPot.replace(Pot.pending)
 
-        val groupUpdate = ProgramSummaries.groups.modify:
-          if (existence === Existence.Deleted)
-            _.removed(groupId.asRight)
-          else
-            editType match
-              case DeletedCal       =>
+        val obsExecutionReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.obsExecutionPots.modify: oem =>
+            if (isPresentInServer) oem.withUpdatePending(obsId)
+            else oem.removed(obsId)
+
+        ifPresentInServerOrLocally:
+          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+      .orEmpty
+
+  protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
+    groupUpdate.payload // We ignore updates on deleted groups.
+      .map: payload =>
+        val groupId: Group.Id          = payload.value.elem.id
+        val isPresentInServer: Boolean =
+          groupUpdate.payload.exists(_.existence === Existence.Present)
+
+        // The server sends updates for deleted groups. We want to filter those out,
+        // but still process deletions for groups we already have.
+        def ifPresentInServerOrLocally(
+          mod: ProgramSummaries => ProgramSummaries
+        ): ProgramSummaries => ProgramSummaries =
+          programSummaries =>
+            val isPresentLocally: Boolean = programSummaries.groups.contains(groupId.asRight)
+            if isPresentInServer || isPresentLocally then mod(programSummaries)
+            else programSummaries
+
+        val updateGroup: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groups.modify: groupTree =>
+            val mod: GroupTree => GroupTree =
+              if (!isPresentInServer)
                 _.removed(groupId.asRight)
-              case Created          =>
-                _.inserted(
-                  groupId.asRight,
-                  Node(newGrouping.toGroupTreeGroup.asRight),
-                  newGrouping.toIndex
-                )
-              case EditType.Updated =>
-                _.updated(
-                  groupId.asRight,
-                  newGrouping.toGroupTreeGroup.asRight,
-                  newGrouping.toIndex
-                )
+              else
+                groupUpdate.editType match
+                  case DeletedCal =>
+                    _.removed(groupId.asRight)
+                  case _          =>
+                    val findIndexFn: GroupTree.Node => Boolean =
+                      _.value.parentIndex >= payload.value.parentIndex
 
-        val groupTimeRangePotsReset = ProgramSummaries.groupTimeRangePots
-          .modify(
-            if existence === Existence.Present then _.withUpdatePending(groupId)
-            else _.removed(groupId)
-          )
-          .andThen(parentGroupTimeRangeReset(groupId.asRight))
+                    _.upserted(
+                      groupId.asRight,
+                      payload.value.map(_.asRight),
+                      payload.parentGroupId.map(_.asRight),
+                      findIndexFn
+                    )
+            mod(groupTree)
 
-        groupUpdate.andThen(groupTimeRangePotsReset)
-      .getOrElse(identity)
+        val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groupTimeRangePots
+            .modify:
+              if isPresentInServer then _.withUpdatePending(groupId)
+              else _.removed(groupId)
+            .andThen(parentGroupTimeRangeReset(groupId.asRight))
+
+        ifPresentInServerOrLocally:
+          updateGroup >>> groupTimeRangePotsReset
+      .orEmpty
 
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit
@@ -128,48 +158,30 @@ trait CacheModifierUpdaters {
   private def updateGroupsMappingForObsEdit(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
-    val obsId = observationEdit.observationId
-    observationEdit.value
-      .map { value =>
+    val obsId: Observation.Id = observationEdit.observationId
+    (observationEdit.value, observationEdit.meta)
+      .mapN: (newObservation, meta) =>
 
-        val groupEdit = ProgramSummaries.groups
-          .modify { groupElements =>
-            val groupId     = value.groupId
-            val newGroupObs = GroupTree.Obs(obsId)
-            val newIndex    =
-              Index(groupId.map(_.asRight[Observation.Id]), value.groupIndex)
+        val findIndexFn: GroupTree.Node => Boolean =
+          _.value.parentIndex >= meta.groupIndex
 
-            if (observationEdit.editType === EditType.Created)
-              groupElements.inserted(
+        val editGroup: ProgramSummaries => ProgramSummaries =
+          ProgramSummaries.groups
+            .modify:
+              _.upserted(
                 obsId.asLeft,
-                Node(newGroupObs.asLeft),
-                newIndex
+                ServerIndexed(obsId.asLeft, meta.groupIndex),
+                meta.groupId.map(_.asRight),
+                findIndexFn
               )
-            else if (observationEdit.meta.forall(_.existence === Existence.Deleted))
-              groupElements.removed(obsId.asLeft)
-            else if (observationEdit.editType === EditType.Updated)
-              groupElements.updated(
-                obsId.asLeft,
-                newGroupObs.asLeft,
-                newIndex
-              )
-            else groupElements
-          }
 
-        val parentTimeRangePotsReset = value.groupId
-          .map(gid => parentGroupTimeRangeReset(gid.asRight))
-          .getOrElse(identity[ProgramSummaries])
-
-        groupEdit.andThen(parentTimeRangePotsReset)
-      }
-      .getOrElse {
+        editGroup
+      .getOrElse:
         ProgramSummaries.groups
-          .modify { groupElements =>
+          .modify: groupTree =>
             if (observationEdit.editType === EditType.DeletedCal)
-              groupElements.removed(obsId.asLeft)
-            else groupElements
-          }
-      }
+              groupTree.removed(obsId.asLeft)
+            else groupTree
 
   /**
    * Reset the time range pots for all parent groups of the given id

@@ -9,8 +9,7 @@ import clue.FetchClient
 import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.DefaultErrorPolicy
-import explore.model.Grouping
-import lucuma.core.model.Group
+import explore.model.Group
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
@@ -60,14 +59,15 @@ object GroupQueries:
 
   def createGroup[F[_]: Async](programId: Program.Id, parentId: Option[Group.Id])(using
     FetchClient[F, ObservationDB]
-  ): F[Grouping] =
+  ): F[(Group, NonNegShort)] =
     CreateGroupMutation[F]
       .execute:
         CreateGroupInput(
           programId = programId.assign,
           SET = parentId.map(gId => GroupPropertiesInput(parentGroup = gId.assign)).orIgnore
         )
-      .map(_.createGroup.group)
+      .map: result =>
+        (result.createGroup.group, result.createGroup.meta.parentIndex)
 
   def deleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
     updateGroup(groupId, GroupPropertiesInput(existence = Existence.Deleted.assign))

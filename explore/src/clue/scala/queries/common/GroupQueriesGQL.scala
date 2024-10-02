@@ -6,47 +6,54 @@ package queries.common
 import clue.GraphQLOperation
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
+import explore.model.Group
 import explore.model.GroupElement
-import explore.model.Grouping
+import explore.model.GroupWithChildren
+import explore.model.GroupWithChildren.given
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.TimeSpanSubquery
+// gql: import io.circe.refined.given
 
 object GroupQueriesGQL:
 
-  @GraphQL
   object GroupElementsSubQuery
       extends GraphQLSubquery.Typed[ObservationDB, GroupElement]("GroupElement"):
     override val subquery: String = s"""
       {
-        parentGroupId
-        observation {
-          id
-          groupIndex
-        }
+        parentGroupId # Only used for identifying root group
+        parentIndex   # Only used if element is in root group
+        observation { id }
         group $GroupSubQuery
+        groupChildren:group {
+          elements $GroupElementSubQuery
+        }
       }
     """
 
-  @GraphQL
-  object GroupSubQuery extends GraphQLSubquery.Typed[ObservationDB, Grouping]("Group"):
+  object GroupSubQuery extends GraphQLSubquery.Typed[ObservationDB, Group]("Group"):
     override val subquery: String = s"""
       {
         id
         name
         minimumRequired
-        parentId
-        parentIndex
         ordered
         system
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
-        elements {
-          observation {
-            id
-          }
-          group {
-            id
-          }
+      }
+    """
+
+  object GroupElementSubQuery
+      extends GraphQLSubquery.Typed[ObservationDB, GroupWithChildren.Child]("Group"):
+    override val subquery: String = s"""
+      {
+        observation { 
+          id
+          groupIndex
+        }
+        group {
+          id
+          parentIndex
         }
       }
     """
@@ -56,18 +63,17 @@ object GroupQueriesGQL:
     override val document = """
       mutation($input: UpdateGroupsInput!) {
         updateGroups(input: $input) {
-          groups {
-            id
-          }
+          groups { id }
         }
       }
     """
 
   @GraphQL
   trait CreateGroupMutation extends GraphQLOperation[ObservationDB]:
-    override val document = s"""#graphql
+    override val document = s"""
       mutation($$input: CreateGroupInput!) {
         createGroup(input: $$input) {
           group $GroupSubQuery
+          meta:group { parentIndex }
         }
       }"""
