@@ -24,15 +24,16 @@ import scala.math.*
 // Do not turn into enum or compositePickler will break.
 sealed trait ItcQueryProblem(val message: String) derives Eq
 object ItcQueryProblem:
-  case object UnsupportedMode                      extends ItcQueryProblem("Unsupported mode")
-  case object MissingWavelength                    extends ItcQueryProblem("Missing wavelength")
-  case object MissingSignalToNoise                 extends ItcQueryProblem("Missing signal to noise")
+  case object UnsupportedMode          extends ItcQueryProblem("Unsupported mode")
+  case object MissingWavelength        extends ItcQueryProblem("Missing wavelength")
+  case object MissingSignalToNoise     extends ItcQueryProblem("Missing signal to noise")
   case object MissingSignalToNoiseAt
       extends ItcQueryProblem("Missing signal to noise at wavelength")
-  case object MissingTargetInfo                    extends ItcQueryProblem("Missing target info")
-  case object MissingBrightness                    extends ItcQueryProblem("Missing brightness")
-  case class SourceTooBright(halfWell: BigDecimal) extends ItcQueryProblem(s"Source too bright")
-  case class GenericError(msg: String)             extends ItcQueryProblem(msg)
+  case object MissingTargetInfo        extends ItcQueryProblem("Missing target info")
+  case object MissingBrightness        extends ItcQueryProblem("Missing brightness")
+  case class SourceTooBright(wellHalfFilledSeconds: BigDecimal)
+      extends ItcQueryProblem(s"Source too bright")
+  case class GenericError(msg: String) extends ItcQueryProblem(msg)
 
 case class ItcTargetProblem(targetName: Option[NonEmptyString], problem: ItcQueryProblem) derives Eq
 

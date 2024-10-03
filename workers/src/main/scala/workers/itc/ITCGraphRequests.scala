@@ -25,6 +25,7 @@ import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
+import lucuma.itc.Error
 
 object ITCGraphRequests:
   private val significantFigures =
@@ -85,9 +86,20 @@ object ITCGraphRequests:
               val asterismGraphs =
                 graphsResult.graphsOrTimes.value
                   .fold[NonEmptyList[(ItcTarget, Either[ItcQueryProblem, ItcGraphResult])]](
-                    _ =>
-                      request.asterism
-                        .map(_ -> ItcQueryProblem.GenericError("Error computing ITC graph").asLeft),
+                    justTimes =>
+                      NonEmptyList.fromListUnsafe:
+                        justTimes.value.toNonEmptyList
+                          .zip(request.asterism)
+                          .toList
+                          .flatMap: (targetResult, itcTarget) =>
+                            targetResult.value.left.toOption.map:
+                              case Error.SourceTooBright(wellHalfFilledSeconds) =>
+                                itcTarget -> ItcQueryProblem
+                                  .SourceTooBright(wellHalfFilledSeconds)
+                                  .asLeft
+                              case Error.General(message)                       =>
+                                itcTarget -> ItcQueryProblem.GenericError(message).asLeft
+                    ,
                     _.value.toNonEmptyList
                       .zip(request.asterism)
                       .map: (targetResult, itcTarget) =>

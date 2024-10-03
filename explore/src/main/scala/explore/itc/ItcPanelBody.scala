@@ -80,9 +80,16 @@ object ItcPanelBody:
           val selectModeText: Option[String] =
             "Select a mode to plot".some.filterNot(_ => isModeSelected)
 
+          val targetErrors: String =
+            graphResults.asterismGraphs.collect:
+              case (t, Left(e)) => s"${t.name.value}: ${e.message}"
+            match
+              case Nil  => "No target available"
+              case list => list.mkString("/n")
+
           val error: Option[String] =
             selectedTarget
-              .fold("No target available".some): t =>
+              .fold(targetErrors.some): t =>
                 graphResults.asterismGraphs
                   .get(t)
                   .flatMap:
