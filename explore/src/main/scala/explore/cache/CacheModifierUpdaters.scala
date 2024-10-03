@@ -105,8 +105,14 @@ trait CacheModifierUpdaters {
             if isPresentInServer || isPresentLocally then mod(programSummaries)
             else programSummaries
 
+        val groupMod: Endo[GroupTree] => Endo[ProgramSummaries] =
+          if (groupUpdate.payload.exists(_.value.elem.system))
+            ProgramSummaries.systemGroups.modify
+          else
+            ProgramSummaries.groups.modify
+
         val updateGroup: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.groups.modify: groupTree =>
+          groupMod: groupTree =>
             val mod: GroupTree => GroupTree =
               if (!isPresentInServer)
                 _.removed(groupId.asRight)
