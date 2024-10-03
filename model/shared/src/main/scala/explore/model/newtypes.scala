@@ -5,12 +5,6 @@ package explore.model
 
 import lucuma.core.util.NewType
 
-object LoadingState extends NewType[Boolean]:
-  inline def Loading: LoadingState = LoadingState(true)
-  inline def Done: LoadingState    = LoadingState(false)
-
-type LoadingState = LoadingState.Type
-
 object AladinFullScreen extends NewType[Boolean]:
   inline def FullScreen: AladinFullScreen = AladinFullScreen(true)
   inline def Normal: AladinFullScreen     = AladinFullScreen(false)

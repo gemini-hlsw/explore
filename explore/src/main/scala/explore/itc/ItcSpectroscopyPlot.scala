@@ -7,7 +7,6 @@ import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.highcharts.*
-import explore.model.LoadingState
 import explore.model.itc.*
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
@@ -33,7 +32,6 @@ case class ItcSpectroscopyPlot(
   graphType:       GraphType,
   targetName:      Option[String],
   signalToNoiseAt: Option[Wavelength],
-  loading:         LoadingState,
   details:         PlotDetails
 ) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
@@ -43,7 +41,6 @@ object ItcSpectroscopyPlot {
   private def chartOptions(
     graph:           GraphResult,
     targetName:      Option[String],
-    loading:         LoadingState,
     signalToNoiseAt: Option[Wavelength],
     maxSNWavelength: Option[Wavelength]
   ) = {
@@ -105,11 +102,7 @@ object ItcSpectroscopyPlot {
 
     Options()
       .setChart(
-        commonOptions
-          .clazz(
-            ExploreStyles.ItcPlotChart |+|
-              ExploreStyles.ItcPlotLoading.when_(loading.value)
-          )
+        commonOptions.clazz(ExploreStyles.ItcPlotChart)
       )
       .setTitle(TitleOptions().setText(graphTitle))
       .setSubtitle(
@@ -168,10 +161,8 @@ object ItcSpectroscopyPlot {
           ChartOptions()
             .setStyledMode(true)
             .setAlignTicks(false)
-            .clazz(
-              ExploreStyles.ItcPlotChart |+| ExploreStyles.ItcPlotLoading
-            )
-            // Will be used in the future to persist the soom
+            .clazz(ExploreStyles.ItcPlotChart)
+            // Will be used in the future to persist the zoom
             // .selectionCB(s => Callback.log(s"selection ${s.xAxis(0).min}"))
         )
         .setTitle(TitleOptions().setTextUndefined)
@@ -192,18 +183,15 @@ object ItcSpectroscopyPlot {
                     .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
                 )
             )
-            // .setHeight("100%")
         )
     }
 
   private val component = ScalaFnComponent
     .withHooks[Props]
-    .useMemoBy(props =>
-      (props.graphs, props.targetName, props.loading, props.signalToNoiseAt, props.ccds)
-    ): _ =>
-      (graphs, targetName, loading, signalToNoiseAt, ccds) =>
+    .useMemoBy(props => (props.graphs, props.targetName, props.signalToNoiseAt, props.ccds)): _ =>
+      (graphs, targetName, signalToNoiseAt, ccds) =>
         val series: List[GraphResult] =
-          graphs.filterNot(_ => loading.value).foldMap(_.toList)
+          graphs.foldMap(_.toList)
 
         val maxSNWavelength: Option[Wavelength] =
           ccds
@@ -217,7 +205,6 @@ object ItcSpectroscopyPlot {
             graph.graphType -> chartOptions(
               graph,
               targetName,
-              loading,
               signalToNoiseAt,
               maxSNWavelength
             )
@@ -225,15 +212,12 @@ object ItcSpectroscopyPlot {
     .useMemoBy((props, itcGraphOptions) => (props.graphType, itcGraphOptions)): (_, _) =>
       (graphType, itcGraphOptions) => itcGraphOptions.get(graphType)
     .render: (props, _, options) =>
-      val loading = props.loading.value
-
       val chartOptions: Reusable[Options] = options.sequenceOption.getOrElse(EmptyGraphOptions)
 
       def formatErrorMessage(c: Chart_): Callback =
-        c.showLoadingCB.when_(loading) *>
-          props.error
-            .map(e => c.showLoadingCB(e).unless_(loading))
-            .orEmpty
+        props.error
+          .map(e => c.showLoadingCB(e))
+          .orEmpty
 
       Chart(
         chartOptions,

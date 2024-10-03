@@ -12,11 +12,10 @@ import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
 import explore.itc.SelectedItcTarget
 import explore.model.GlobalPreferences
-import explore.model.LoadingState
 import explore.model.ObsTabTilesIds
 import explore.model.Observation
 import explore.model.TargetList
-import explore.model.itc.ItcGraphResult
+import explore.model.itc.ItcAsterismGraphResults
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
@@ -25,19 +24,17 @@ import lucuma.ui.syntax.all.given
 object ItcTile:
 
   def itcTile(
-    uid:                Option[User.Id],
-    oid:                Observation.Id,
-    allTargets:         TargetList,
-    itcProps:           ItcProps,
-    itcGraphResults:    Map[ItcTarget, Pot[ItcGraphResult]],
-    itcBrightestTarget: Option[ItcTarget],
-    itcLoading:         LoadingState,
-    globalPreferences:  View[GlobalPreferences]
+    uid:               Option[User.Id],
+    oid:               Observation.Id,
+    allTargets:        TargetList,
+    itcProps:          ItcProps,
+    itcGraphResults:   Pot[ItcAsterismGraphResults],
+    globalPreferences: View[GlobalPreferences]
   ) =
     Tile(
       ObsTabTilesIds.ItcId.id,
       s"ITC",
-      SelectedItcTarget(itcBrightestTarget),
+      SelectedItcTarget(itcGraphResults.toOption.flatMap(_.brightestTarget)),
       bodyClass = ExploreStyles.ItcTileBody
     )(
       s =>
@@ -47,8 +44,6 @@ object ItcTile:
             oid,
             itcProps,
             itcGraphResults,
-            itcBrightestTarget,
-            itcLoading,
             globalPreferences,
             s
           )
@@ -57,7 +52,6 @@ object ItcTile:
         ItcPanelTitle(
           itcProps,
           itcGraphResults,
-          itcLoading,
           s
         )
     )

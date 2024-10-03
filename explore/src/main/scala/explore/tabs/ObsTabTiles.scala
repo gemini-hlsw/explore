@@ -24,7 +24,6 @@ import explore.itc.ItcProps
 import explore.model.*
 import explore.model.AppContext
 import explore.model.GuideStarSelection.*
-import explore.model.LoadingState
 import explore.model.Observation
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
@@ -36,8 +35,7 @@ import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
-import explore.model.itc.ItcGraphResult
-import explore.model.itc.ItcTarget
+import explore.model.itc.ItcAsterismGraphResults
 import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
@@ -173,59 +171,32 @@ object ObsTabTiles:
       .useStateView(none[BasicConfigAndItc])
       .useStateWithReuseBy: (props, _, _, _, selectedConfig) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
-      // Chart results
-      .useState(Map.empty[ItcTarget, Pot[ItcGraphResult]])
-      // Brightest target
-      .useStateBy((_, _, _, _, _, itcProps, _) => itcProps.value.defaultTarget)
-      // itc loading
-      .useStateWithReuse(LoadingState.Done)
-      .useEffectWithDepsBy((props, _, _, _, selectedConfig, _, _, _, _) =>
+      .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults
+      .useEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
-      ): (props, ctx, _, _, _, oldItcProps, graphs, brightestTarget, loading) =>
+      ): (props, ctx, _, _, _, oldItcProps, itcGraphResults) =>
         itcProps =>
           import ctx.given
 
-          oldItcProps.setState(itcProps).when_(itcProps.isExecutable) *>
-            itcProps
-              .requestGraphs(
-                (asterismGraphs, brightestTargetResult) => {
-                  val graphsResult =
-                    asterismGraphs
-                      .map:
-                        case (k, Left(e))  =>
-                          k -> (Pot.error(new RuntimeException(e.shortName)): Pot[ItcGraphResult])
-                        case (k, Right(e)) =>
-                          k -> (Pot.Ready(e): Pot[ItcGraphResult])
-                      .toMap
-                  graphs.setStateAsync(graphsResult) *>
-                    brightestTarget.setStateAsync(brightestTargetResult) *>
-                    loading.setState(LoadingState.Done).value.toAsync
-                },
-                (graphs.setState(
-                  itcProps.targets
-                    .map: t =>
-                      t -> Pot.error:
-                        new RuntimeException("Not enough information to calculate the ITC graph")
-                    .toMap
-                ) *>
-                  brightestTarget.setState(none) *>
-                  loading.setState(LoadingState.Done)).toAsync,
-                loading.setState(LoadingState.Loading).value.toAsync
-              )
+          oldItcProps.setState(itcProps).when_(itcProps.isExecutable) >>
+            itcGraphResults.setState(Pot.pending) >>
+            itcProps.requestGraphs.attemptPot
+              .flatMap: result =>
+                itcGraphResults.setStateAsync(result)
               .whenA(itcProps.isExecutable)
               .runAsyncAndForget
       // Signal that the sequence has changed
       .useStateView(().ready)
-      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
-      ): (_, _, _, _, _, _, _, _, _, _) =>
+      ): (_, _, _, _, _, _, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
       // Store guide star selection in a view for fast local updates
       // This is not the ideal place for this but we need to share the selected guide star
       // across the configuration and target tile
-      .useStateViewBy: (props, _, _, _, _, _, _, _, _, _, _) =>
+      .useStateViewBy: (props, _, _, _, _, _, _, _, _) =>
         props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
-      .localValBy: (props, ctx, _, _, _, _, _, _, _, _, _, guideStarSelection) =>
+      .localValBy: (props, ctx, _, _, _, _, _, _, _, guideStarSelection) =>
         import ctx.given
 
         // We tell the backend and the local cache of changes to the selected guidestar
@@ -264,8 +235,6 @@ object ObsTabTiles:
           selectedConfig,
           itcProps,
           itcGraphResults,
-          itcBrightestTarget,
-          itcLoading,
           sequenceChanged,
           vizTimeOrNowPot,
           _,
@@ -386,8 +355,6 @@ object ObsTabTiles:
                 props.allTargets,
                 itcProps.value,
                 itcGraphResults.value,
-                itcBrightestTarget.value,
-                itcLoading.value,
                 props.globalPreferences
               )
 

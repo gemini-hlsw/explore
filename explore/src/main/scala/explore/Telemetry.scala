@@ -95,7 +95,7 @@ object Observability:
       .withHooks[Props]
       .useEffectOnMountBy: props =>
         val sdk = new HoneycombWebSDK(props.options)
-        Callback { println(sdk); sdk.start() } *> CallbackTo(
+        Callback.log(sdk) *> Callback(sdk.start()) *> CallbackTo(
           Callback.log("shutdown") *> Callback(sdk.shutdown())
         )
       .render(_ => EmptyVdom)

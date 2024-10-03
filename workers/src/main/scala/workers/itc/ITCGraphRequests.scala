@@ -7,7 +7,6 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
-import explore.events.ItcMessage.GraphResponse
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.modes.GmosNorthSpectroscopyRow
@@ -39,7 +38,7 @@ object ITCGraphRequests:
     targets:         NonEmptyList[ItcTarget],
     mode:            InstrumentRow,
     cache:           Cache[F],
-    callback:        GraphResponse => F[Unit]
+    callback:        ItcAsterismGraphResults => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -64,7 +63,7 @@ object ITCGraphRequests:
       case _                                        =>
         none
 
-    def doRequest(request: ItcGraphRequestParams): F[GraphResponse] =
+    def doRequest(request: ItcGraphRequestParams): F[ItcAsterismGraphResults] =
       request.mode.toItcClientMode
         .map: mode =>
           ItcClient[F]
@@ -101,14 +100,14 @@ object ITCGraphRequests:
                   .toList
                   .toMap
 
-              GraphResponse(
+              ItcAsterismGraphResults(
                 asterismGraphs,
                 graphsResult.brightestIndex.flatMap(request.asterism.get)
               )
-        .getOrElse(GraphResponse(Map.empty, none).pure[F])
+        .getOrElse(ItcAsterismGraphResults(Map.empty, none).pure[F])
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest: Cacheable[F, ItcGraphRequestParams, GraphResponse] =
+    val cacheableRequest: Cacheable[F, ItcGraphRequestParams, ItcAsterismGraphResults] =
       Cacheable(
         CacheName("itcGraphQuery"),
         ITCRequests.cacheVersion,

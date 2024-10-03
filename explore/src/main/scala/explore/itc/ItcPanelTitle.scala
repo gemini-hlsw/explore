@@ -10,7 +10,7 @@ import eu.timepit.refined.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.MissingInfoMsg
-import explore.model.LoadingState
+import explore.model.itc.ItcAsterismGraphResults
 import explore.model.itc.ItcGraphResult
 import explore.model.itc.ItcTarget
 import japgolly.scalajs.react.*
@@ -25,8 +25,7 @@ import lucuma.ui.utils.*
 
 case class ItcPanelTitle(
   itcPanelProps:   ItcProps,
-  itcGraphResults: Map[ItcTarget, Pot[ItcGraphResult]],
-  itcLoading:      LoadingState,
+  itcGraphResults: Pot[ItcAsterismGraphResults],
   tileState:       View[SelectedItcTarget]
 ) extends ReactFnProps(ItcPanelTitle.component) {
   val selectedTarget = tileState.zoom(SelectedItcTarget.value.asLens)
@@ -35,19 +34,15 @@ case class ItcPanelTitle(
 object ItcPanelTitle:
   private type Props = ItcPanelTitle
 
-  private val pendingChart =
-    Pot.pending[ItcGraphResult]
-
   private val component =
     ScalaFnComponent[Props] { props =>
       def newSelected(p: Int): Option[ItcTarget] =
         props.itcPanelProps.targets.lift(p)
 
       val selectedResult: Pot[ItcGraphResult] =
-        Pot
-          .fromOption(props.selectedTarget.get)
-          .filterNot(_ => props.itcLoading.value)
-          .flatMap(t => props.itcGraphResults.getOrElse(t, pendingChart))
+        props.selectedTarget.get.toPot
+          .flatMap: t =>
+            props.itcGraphResults.flatMap(_.asterismGraphs.get(t).flatMap(_.toOption).toPot)
 
       val selectedTarget = props.selectedTarget
       val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.get.isDefined
@@ -65,15 +60,14 @@ object ItcPanelTitle:
       def snSection(title: String, fn: ItcGraphResult => VdomNode) =
         React.Fragment(
           <.label(title),
-          if (existTargets && props.itcPanelProps.isExecutable) {
+          if (existTargets && props.itcPanelProps.isExecutable)
             selectedResult.renderPot(
               fn,
               Icons.Spinner.withSpin(true),
               e => <.span(Icons.MissingInfoIcon).withTooltip(e.getMessage)
             )
-          } else {
+          else
             <.span(Icons.MissingInfoIcon).withTooltip(MissingInfoMsg)
-          }
         )
 
       <.div(
