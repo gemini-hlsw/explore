@@ -83,6 +83,7 @@ case class ObsTabContents(
   private val observations: UndoSetter[ObservationList]                    =
     programSummaries.zoom(ProgramSummaries.observations)
   private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
+  private val systemGroups: GroupTree                                      = programSummaries.get.systemGroups
   private val activeGroup: Option[Group.Id]                                = focusedGroup.orElse:
     focusedObs.flatMap(groups.get.obsGroupId)
   private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
@@ -229,6 +230,7 @@ object ObsTabContents extends TwoPanels:
                 props.focusedGroup,
                 twoPanelState.set(SelectedPanel.Summary),
                 props.groups,
+                props.systemGroups,
                 props.expandedGroups,
                 deckShown,
                 copyCallback,
