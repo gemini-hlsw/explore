@@ -500,5 +500,3 @@ object ExploreStyles:
   val FocusedInfo: Css = Css("explore-focused-info")
 
   val Hidden: Css = Css("explore-hidden")
-
-  val UndroppableNode: Css = Css("explore-undroppable-node")
