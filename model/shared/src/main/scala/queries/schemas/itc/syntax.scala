@@ -4,7 +4,6 @@
 package queries.schemas.itc
 
 import cats.Hash
-import cats.data.NonEmptyList
 import cats.syntax.all.*
 import explore.model.AsterismIds
 import explore.model.TargetList
@@ -14,7 +13,6 @@ import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.InstrumentRow
 import explore.optics.all.*
 import lucuma.core.enums.GmosRoi
-import lucuma.core.enums.ImageQuality
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
@@ -26,7 +24,7 @@ import lucuma.itc.client.TargetInput
 trait syntax:
 
   extension (row: InstrumentRow)
-    def toItcClientMode(ps: NonEmptyList[SourceProfile], iq: ImageQuality): Option[InstrumentMode] =
+    def toItcClientMode: Option[InstrumentMode] =
       row match
         case GmosNorthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
           val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)

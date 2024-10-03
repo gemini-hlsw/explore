@@ -65,8 +65,7 @@ object ITCGraphRequests:
         none
 
     def doRequest(request: ItcGraphRequestParams): F[GraphResponse] =
-      request.mode
-        .toItcClientMode(request.asterism.map(_.sourceProfile), request.constraints.imageQuality)
+      request.mode.toItcClientMode
         .map: mode =>
           ItcClient[F]
             .spectroscopyIntegrationTimeAndGraphs(
