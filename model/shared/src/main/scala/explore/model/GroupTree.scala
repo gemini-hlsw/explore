@@ -44,7 +44,8 @@ object GroupTree:
         case _                 => old
   )
 
-  def fromList(groups: List[GroupElement]): GroupTree = {
+  // Returns 2 tree: one of regular groups/observations and one of system groups
+  def fromList(groups: List[GroupElement]): (GroupTree, GroupTree) = {
     // For faster lookup when creating the tree
     val groupMap: Map[Group.Id, GroupWithChildren] =
       groups.mapFilter(_.value.toOption.map(g => g.group.id -> g)).toMap
@@ -70,7 +71,12 @@ object GroupTree:
             .map(idx => toChild(child.value.map(_.group.id), idx))
         .sortBy(_.value.parentIndex)
 
-    KeyedIndexedTree.fromTree(Tree(rootElems), _.id)
+    def buildGroupTree(rootNodes: List[Node]): GroupTree =
+      KeyedIndexedTree.fromTree(Tree(rootNodes), _.id)
+
+    rootElems
+      .partition(_.value.elem.toOption.forall(!_.system))
+      .bimap(buildGroupTree, buildGroupTree)
   }
 
 // parentIndices may skip values, since they also index deleted elements, so we have to keep track of them.

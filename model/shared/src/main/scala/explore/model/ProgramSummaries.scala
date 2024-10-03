@@ -32,6 +32,7 @@ case class ProgramSummaries(
   targets:             TargetList,
   observations:        ObservationList,
   groups:              GroupTree,
+  systemGroups:        GroupTree,
   obsAttachments:      ObsAttachmentList,
   proposalAttachments: List[ProposalAttachment],
   programs:            ProgramInfoList,
@@ -160,6 +161,7 @@ object ProgramSummaries:
   val observations: Lens[ProgramSummaries, ObservationList]                 =
     Focus[ProgramSummaries](_.observations)
   val groups: Lens[ProgramSummaries, GroupTree]                             = Focus[ProgramSummaries](_.groups)
+  val systemGroups: Lens[ProgramSummaries, GroupTree]                       = Focus[ProgramSummaries](_.systemGroups)
   val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]             =
     Focus[ProgramSummaries](_.obsAttachments)
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
@@ -188,6 +190,7 @@ object ProgramSummaries:
     targetList:          List[TargetWithId],
     obsList:             List[Observation],
     groups:              GroupTree,
+    systemGroups:        GroupTree,
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
     programs:            List[ProgramInfo],
@@ -200,6 +203,7 @@ object ProgramSummaries:
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, Observation.id.get),
       groups,
+      systemGroups,
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,
       programs.toSortedMap(_.id),

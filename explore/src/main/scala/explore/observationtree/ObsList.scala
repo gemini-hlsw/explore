@@ -70,6 +70,7 @@ case class ObsList(
   focusedGroup:         Option[Group.Id],
   setSummaryPanel:      Callback,
   groups:               UndoSetter[GroupTree],
+  systemGroups:         GroupTree,
   expandedGroups:       View[Set[Group.Id]],
   deckShown:            View[DeckShown],
   copyCallback:         Callback,
@@ -192,12 +193,16 @@ object ObsList:
       // treeNodes
       .useMemoBy((props, _, _, _) => (props.groups.model.reuseByValue, props.observations.get)):
         (_, _, _, _) => (groups, observations) => groups.as(groupTreeNodeIsoBuilder(observations))
+      // systemTreeNodes
+      .useMemoBy((props, _, _, _, _) => (props.systemGroups, props.observations.get)):
+        (_, _, _, _, _) =>
+          (systemGroups, observations) => groupTreeNodeIsoBuilder(observations).get(systemGroups)
       // Scroll to newly created/selected observation
-      .useEffectWithDepsBy((props, _, _, _, _) => props.focusedObs): (_, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _) => props.focusedObs): (_, _, _, _, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
       // Open the group (and all super-groups) of the focused observation
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.focusedObs, props.groups.get)):
-        (props, _, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _, _, _) => (props.focusedObs, props.groups.get)):
+        (props, _, _, _, _, _) =>
           case (None, _)             => Callback.empty
           case (Some(obsId), groups) =>
             val groupsToAddFocus = groups
@@ -205,7 +210,7 @@ object ObsList:
               .flatMap(_.toOption)
 
             props.expandedGroups.mod(_ ++ groupsToAddFocus).when_(groupsToAddFocus.nonEmpty)
-      .render: (props, ctx, _, adding, treeNodes) =>
+      .render: (props, ctx, _, adding, treeNodes, systemTreeNodes) =>
         import ctx.given
 
         val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
@@ -444,6 +449,12 @@ object ObsList:
                   onToggle = expandedGroups.set,
                   dragDropScope = if (props.readonly) js.undefined else "obs-tree",
                   onDragDrop = if (props.readonly) js.undefined else onDragDrop
+                ),
+                Tree(
+                  systemTreeNodes,
+                  renderItem,
+                  expandedKeys = expandedGroups.get,
+                  onToggle = expandedGroups.set
                 )
               )
             )

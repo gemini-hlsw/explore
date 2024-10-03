@@ -138,7 +138,8 @@ object ProgramCacheController
         _.id
       )
 
-    val groups: IO[GroupTree] =
+    // (Regular group tree, system group tree)
+    val groups: IO[(GroupTree, GroupTree)] =
       ProgramQueriesGQL
         .ProgramGroupsQuery[IO]
         .query(props.programId)
@@ -166,33 +167,49 @@ object ProgramCacheController
 
     def initializeSummaries(
       observations: List[Observation],
-      groups:       GroupTree
+      groups:       GroupTree,
+      systemGroups: GroupTree
     ): IO[ProgramSummaries] =
       val obsPots   = observations.map(o => (o.id, Pot.pending)).toMap
       val groupPots =
         groups.collect { case (Right(gId), _, _) => gId -> Pot.pending }.toMap
       (optProgramDetails, targets, attachments, programs).mapN { case (pd, ts, (oas, pas), ps) =>
         ProgramSummaries
-          .fromLists(pd, ts, observations, groups, oas, pas, ps, Pot.pending, obsPots, groupPots)
+          .fromLists(
+            pd,
+            ts,
+            observations,
+            groups,
+            systemGroups,
+            oas,
+            pas,
+            ps,
+            Pot.pending,
+            obsPots,
+            groupPots
+          )
       }
 
     def combineTimesUpdates(
       observations: List[Observation],
-      groups:       GroupTree
+      groups:       GroupTree,
+      systemGroups: GroupTree
     ): Stream[IO, ProgramSummaries => ProgramSummaries] =
       // We want to update all the observations first, followed by the groups,
       // and then the program, because the program requires all of the observation times be calculated.
       // So, if we do it first, it could take a long time.
       Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
         Stream
-          .emits(groups.collect { case (Right(id), _, _) => id })
+          .emits:
+            groups.collect { case (Right(id), _, _) => id } ++
+              systemGroups.collect { case (Right(id), _, _) => id }
           .evalMap(updateGroupTimeRange) ++
         Stream.eval(updateProgramTimes(props.programId))
 
     for
-      (obs, groupss) <- (observations, groups).parTupled
-      summaries      <- initializeSummaries(obs, groupss)
-    yield (summaries, combineTimesUpdates(obs, groupss))
+      (obs, (groups, systemGroups)) <- (observations, groups).parTupled
+      summaries                     <- initializeSummaries(obs, groups, systemGroups)
+    yield (summaries, combineTimesUpdates(obs, groups, systemGroups))
   }
 
   override protected val updateStream
