@@ -10,6 +10,10 @@
       "uri": "https://sso-dev.gpp.lucuma.xyz",
       "readTimeoutSeconds": 10,
       "expirationAnticipationSeconds": 10
+    },
+    "tracing": {
+      "key": "hcaik_01j94x9ckgc61kzsyjk2xjm4nkn23hn1f3baeqjnbr4n1hywhezrzqcxdj",
+      "serviceName": "explore-local"
     }
   },
   {
@@ -23,6 +27,10 @@
       "uri": "https://sso.gpp.lucuma.xyz",
       "readTimeoutSeconds": 10,
       "expirationAnticipationSeconds": 10
+    },
+    "tracing": {
+      "key": "hcaik_01j94x9ckgc61kzsyjk2xjm4nkn23hn1f3baeqjnbr4n1hywhezrzqcxdj",
+      "serviceName": "explore-staging"
     }
   },
   {
@@ -36,6 +44,10 @@
       "uri": "https://sso.gpp.gemini.edu",
       "readTimeoutSeconds": 10,
       "expirationAnticipationSeconds": 10
+    },
+    "tracing": {
+      "key": "hcaik_01j94x9ckgc61kzsyjk2xjm4nkn23hn1f3baeqjnbr4n1hywhezrzqcxdj",
+      "serviceName": "explore-production"
     }
   }
 ]
