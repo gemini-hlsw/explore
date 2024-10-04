@@ -11,7 +11,6 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
-import crystal.syntax.*
 import explore.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
