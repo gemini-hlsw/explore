@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import explore.components.Tile
@@ -35,7 +36,8 @@ object ItcTile:
       ObsTabTilesIds.ItcId.id,
       s"ITC",
       SelectedItcTarget(itcGraphResults.toOption.flatMap(_.brightestTarget)),
-      bodyClass = ExploreStyles.ItcTileBody
+      bodyClass =
+        ExploreStyles.ItcTileBody |+| ExploreStyles.ItcTileBodyError.when_(itcGraphResults.isError)
     )(
       s =>
         uid.map(

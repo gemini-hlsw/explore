@@ -172,19 +172,17 @@ object ObsTabTiles:
       .useStateWithReuseBy: (props, _, _, _, selectedConfig) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
       .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults
-      .useEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
+      .useAsyncEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
         itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
       ): (props, ctx, _, _, _, oldItcProps, itcGraphResults) =>
         itcProps =>
           import ctx.given
 
-          oldItcProps.setState(itcProps).when_(itcProps.isExecutable) >>
-            itcGraphResults.setState(Pot.pending) >>
+          oldItcProps.setStateAsync(itcProps) >>
+            itcGraphResults.setStateAsync(Pot.pending) >>
             itcProps.requestGraphs.attemptPot
               .flatMap: result =>
                 itcGraphResults.setStateAsync(result)
-              .whenA(itcProps.isExecutable)
-              .runAsyncAndForget
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>

@@ -15,6 +15,7 @@ import explore.modes.InstrumentRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.itc.Error
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SignificantFiguresInput
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsInput
@@ -25,7 +26,6 @@ import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
-import lucuma.itc.Error
 
 object ITCGraphRequests:
   private val significantFigures =

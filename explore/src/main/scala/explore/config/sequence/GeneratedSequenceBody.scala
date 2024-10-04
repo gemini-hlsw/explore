@@ -11,6 +11,7 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
+import crystal.syntax.*
 import explore.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -39,7 +40,6 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL.*
-import crystal.syntax.*
 
 case class GeneratedSequenceBody(
   programId:       Program.Id,
@@ -97,25 +97,19 @@ object GeneratedSequenceBody:
           .map(SequenceData.fromOdbResponse)
           .adaptError:
             case t @ clue.ResponseException(errors, _) =>
-              val x =
-                errors
-                  .collectFirstSome: error =>
-                    for
-                      extensions   <- error.extensions
-                      odbErrorJson <- extensions.get("odb_error")
-                      odbErrorJObj <- odbErrorJson.asObject
-                      _             = println(s"3: $odbErrorJObj")
-                      tagJson      <- odbErrorJObj("odb_error.tag")
-                      _             = println(s"4: $tagJson")
-                      tag          <- tagJson.asString if tag == "sequence_unavailable"
-                      _             = println(s"5: $tag")
-                    yield new RuntimeException(
-                      "No sequence available, you may need to setup a configuration"
-                    )
-              println(x)
-              x.getOrElse(t)
+              errors
+                .collectFirstSome: error =>
+                  for
+                    extensions   <- error.extensions
+                    odbErrorJson <- extensions.get("odb_error")
+                    odbErrorJObj <- odbErrorJson.asObject
+                    tagJson      <- odbErrorJObj("odb_error.tag")
+                    tag          <- tagJson.asString if tag == "sequence_unavailable"
+                  yield new RuntimeException(
+                    "No sequence available, you may need to setup a configuration"
+                  )
+                .getOrElse(t)
           .attemptPot
-          .flatTap(IO.println)
           .resetOnResourceSignals:
             for
               o <- ObsQueriesGQL.ObservationEditSubscription
@@ -127,26 +121,30 @@ object GeneratedSequenceBody:
       ): (props, _, _, _) =>
         dataPot => props.sequenceChanged.set(dataPot.void)
       .render: (props, _, visits, sequenceData) =>
-        println(s"visits: ${visits.toPot.flatten}")
-        println(s"sequenceData: ${sequenceData.toPot.flatten}")
         props.sequenceChanged.get
           .flatMap(_ => (visits.toPot.flatten, sequenceData.toPot.flatten).tupled) // tupled for Pot
           .renderPot(
-            _.tupled // tupled for Option
-              .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
-                case (
-                      ExecutionVisits.GmosNorth(_, visits),
-                      SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass)
-                    ) =>
-                  GmosNorthSequenceTable(visits, config, snPerClass)
-                case (
-                      ExecutionVisits.GmosSouth(_, visits),
-                      SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass)
-                    ) =>
-                  GmosSouthSequenceTable(visits, config, snPerClass)
-                case _ => // Should never happen
-                  <.div("There was an internal incosistency. Observation data may be corrupted.")
-              },
+            (visitsOpt, sequenceDataOpt) =>
+              // TODO Show visits even if sequence data is not available
+              sequenceDataOpt
+                .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
+                  case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass) =>
+                    GmosNorthSequenceTable(
+                      visitsOpt.collect { case ExecutionVisits.GmosNorth(visits) =>
+                        visits.toList
+                      }.orEmpty,
+                      config,
+                      snPerClass
+                    )
+                  case SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass) =>
+                    GmosSouthSequenceTable(
+                      visitsOpt.collect { case ExecutionVisits.GmosSouth(visits) =>
+                        visits.toList
+                      }.orEmpty,
+                      config,
+                      snPerClass
+                    )
+                },
             errorRender = m =>
               <.div(ExploreStyles.SequencesPanelError)(
                 Message(

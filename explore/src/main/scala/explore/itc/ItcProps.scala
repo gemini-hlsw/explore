@@ -137,11 +137,12 @@ case class ItcProps(
         .requestSingle:
           ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
         .map:
-          _.toRight(new Throwable("No response from ITC server"))
+          _.toRight(new Throwable("No response from ITC server."))
         .rethrow
 
     action.getOrElse:
-      IO.raiseError(new Throwable("Not enough information to calculate the ITC graph"))
+      IO.raiseError:
+        new Throwable("Not enough information to calculate the ITC graph or no mode selected.")
 
 object ItcProps:
   given Reusability[ItcProps] =

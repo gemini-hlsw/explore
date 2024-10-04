@@ -9,6 +9,7 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
@@ -75,26 +76,31 @@ object ItcPanelBody:
               c <- r.toOption
             yield c
 
-          val isModeSelected: Boolean        =
+          val isModeSelected: Boolean =
             props.itcProps.selectedConfig.isDefined || selectedResult.isDefined
-          val selectModeText: Option[String] =
-            "Select a mode to plot".some.filterNot(_ => isModeSelected)
 
-          val targetErrors: String =
-            graphResults.asterismGraphs.collect:
-              case (t, Left(e)) => s"${t.name.value}: ${e.message}"
-            match
-              case Nil  => "No target available"
-              case list => list.mkString("/n")
+          val targetErrors: Option[String] =
+            if graphResults.asterismGraphs.isEmpty then "No target available".some
+            else
+              NonEmptyString
+                .from:
+                  graphResults.asterismGraphs
+                    .collect:
+                      case (t, Left(e)) => s"${t.name.value}: ${e.message}"
+                    .mkString("/n")
+                .toOption
+                .map(_.value)
+                .orElse:
+                  "Select a mode to plot".some.filterNot(_ => isModeSelected)
 
           val error: Option[String] =
             selectedTarget
-              .fold(targetErrors.some): t =>
+              .fold(targetErrors): t =>
                 graphResults.asterismGraphs
                   .get(t)
                   .flatMap:
                     _.left.toOption.map(_.message)
-              .orElse(selectModeText)
+              .orElse(targetErrors)
 
           <.div(
             ExploreStyles.ItcPlotSection,
