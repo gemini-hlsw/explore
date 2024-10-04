@@ -6,8 +6,7 @@ package explore.events
 import boopickle.DefaultBasic.*
 import cats.data.*
 import explore.model.boopickle.ItcPicklers
-import explore.model.itc.ItcGraphResult
-import explore.model.itc.ItcQueryProblem
+import explore.model.itc.ItcAsterismGraphResults
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
@@ -40,11 +39,6 @@ object ItcMessage extends ItcPicklers:
   ) extends Request:
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 
-  case class GraphResponse(
-    asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
-    brightestTarget: Option[ItcTarget]
-  )
-
   case class GraphQuery(
     wavelength:      CentralWavelength,
     signalToNoise:   SignalToNoise,
@@ -53,7 +47,7 @@ object ItcMessage extends ItcPicklers:
     asterism:        NonEmptyList[ItcTarget],
     modes:           InstrumentRow
   ) extends Request:
-    type ResponseType = GraphResponse
+    type ResponseType = ItcAsterismGraphResults
 
   private given Pickler[Query] = generatePickler
 

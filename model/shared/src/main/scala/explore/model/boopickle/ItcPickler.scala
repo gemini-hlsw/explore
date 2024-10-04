@@ -10,7 +10,7 @@ import coulomb.Quantity
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.events.ItcMessage.GraphResponse
+import explore.model.itc.ItcAsterismGraphResults
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcGraphRequestParams
 import explore.model.itc.ItcGraphResult
@@ -289,7 +289,7 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[SpectroscopyGraphsResult] = generatePickler
 
-  given Pickler[GraphResponse] = generatePickler
+  given Pickler[ItcAsterismGraphResults] = generatePickler
 
   given Pickler[ItcVersions] = generatePickler
 }

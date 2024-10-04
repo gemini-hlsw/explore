@@ -100,11 +100,11 @@ object ITCRequests:
         cacheVersion,
         doRequest,
         (r, g) =>
-          g.exists(_.get(r).forall {
-            case Right(_)                              => true
-            case Left(ItcQueryProblem.GenericError(_)) => false
-            case Left(_)                               => true
-          })
+          g.exists:
+            _.get(r).forall:
+              case Right(_)                                     => true
+              case Left(Chain(ItcQueryProblem.GenericError(_))) => false
+              case Left(_)                                      => true
       )
 
     val itcRowsParams: List[ItcRequestParams] =

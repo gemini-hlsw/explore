@@ -7,7 +7,6 @@ import cats.Eq
 import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.ErrorPolicy
 import crystal.Pot
 import crystal.react.*
 import crystal.react.given
@@ -78,7 +77,7 @@ object GeneratedSequenceBody:
         import ctx.given
 
         ObservationVisits[IO]
-          .query(props.obsId)(ErrorPolicy.IgnoreOnData)
+          .query(props.obsId)
           .map(_.flatMap(_.observation.flatMap(_.execution)))
           .attemptPot
           .resetOnResourceSignals:
@@ -95,6 +94,20 @@ object GeneratedSequenceBody:
         SequenceQuery[IO]
           .query(props.obsId)
           .map(SequenceData.fromOdbResponse)
+          .adaptError:
+            case t @ clue.ResponseException(errors, _) =>
+              errors
+                .collectFirstSome: error =>
+                  for
+                    extensions   <- error.extensions
+                    odbErrorJson <- extensions.get("odb_error")
+                    odbErrorJObj <- odbErrorJson.asObject
+                    tagJson      <- odbErrorJObj("odb_error.tag")
+                    tag          <- tagJson.asString if tag == "sequence_unavailable"
+                  yield new RuntimeException(
+                    "No sequence available, you may need to setup a configuration"
+                  )
+                .getOrElse(t)
           .attemptPot
           .resetOnResourceSignals:
             for
@@ -110,34 +123,31 @@ object GeneratedSequenceBody:
         props.sequenceChanged.get
           .flatMap(_ => (visits.toPot.flatten, sequenceData.toPot.flatten).tupled) // tupled for Pot
           .renderPot(
-            _.tupled // tupled for Option
-              .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
-                case (
-                      ExecutionVisits.GmosNorth(_, visits),
-                      SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass)
-                    ) =>
-                  GmosNorthSequenceTable(visits, config, snPerClass)
-                case (
-                      ExecutionVisits.GmosSouth(_, visits),
-                      SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass)
-                    ) =>
-                  GmosSouthSequenceTable(visits, config, snPerClass)
-                case _ =>
-                  <.div("MISMATCH!!!") // TODO Nice error message, which should never happen BTW
-              },
+            (visitsOpt, sequenceDataOpt) =>
+              // TODO Show visits even if sequence data is not available
+              sequenceDataOpt
+                .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
+                  case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass) =>
+                    GmosNorthSequenceTable(
+                      visitsOpt.collect { case ExecutionVisits.GmosNorth(visits) =>
+                        visits.toList
+                      }.orEmpty,
+                      config,
+                      snPerClass
+                    )
+                  case SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass) =>
+                    GmosSouthSequenceTable(
+                      visitsOpt.collect { case ExecutionVisits.GmosSouth(visits) =>
+                        visits.toList
+                      }.orEmpty,
+                      config,
+                      snPerClass
+                    )
+                },
             errorRender = m =>
-              m.printStackTrace()
-
-              val msg = m match
-                case clue.ResponseException(errors, _)
-                    if errors.exists(_.message.startsWith("ITC returned")) =>
-                  "Cannot calculate ITC, please check your configuration"
-                case _ =>
-                  "No sequence available, you may need to setup a configuration"
-
               <.div(ExploreStyles.SequencesPanelError)(
                 Message(
-                  text = msg,
+                  text = m.getMessage,
                   severity = Message.Severity.Warning,
                   icon = Icons.ExclamationTriangle
                 )

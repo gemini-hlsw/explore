@@ -105,7 +105,7 @@ private object SpectroscopyModesTable:
     lazy val totalItcTime: Option[TimeSpan] =
       result.toOption.collect { case ItcResult.Result(e, t, _) => e *| t.value }
 
-  private case class TableMeta(centralWavelength: Option[Wavelength], itcProgress: Option[Progress])
+  private case class TableMeta(itcProgress: Option[Progress])
 
   private val ColDef = ColumnDef.WithTableMeta[SpectroscopyModeRowWithResult, TableMeta]
 
@@ -181,10 +181,7 @@ private object SpectroscopyModesTable:
     case FocalPlane.MultipleSlit => "Multi"
     case FocalPlane.IFU          => "IFU"
 
-  private def itcCell(
-    c: EitherNec[ItcTargetProblem, ItcResult],
-    w: Option[Wavelength]
-  ): VdomElement = {
+  private def itcCell(c: EitherNec[ItcTargetProblem, ItcResult]): VdomElement = {
     val content: TagMod = c match
       case Left(errors)               =>
         if (errors.exists(_.problem === ItcQueryProblem.UnsupportedMode))
@@ -199,24 +196,16 @@ private object SpectroscopyModesTable:
           val content: List[TagMod] =
             errors
               .collect:
-                case ItcTargetProblem(name, MissingSignalToNoise)             =>
-                  <.span(s"${renderName(name)}Set S/N")
-                case ItcTargetProblem(name, MissingSignalToNoiseAt)           =>
-                  <.span(s"${renderName(name)}Set Wavelength to measure S/N at")
-                case ItcTargetProblem(name, MissingWavelength)                =>
-                  <.span(s"${renderName(name)}Set Wavelength")
-                case ItcTargetProblem(name, MissingTargetInfo) if w.isDefined =>
-                  <.span(s"${renderName(name)}Missing target info")
-                case ItcTargetProblem(name, MissingBrightness)                =>
-                  <.span(s"${renderName(name)}No brightness defined")
-                case ItcTargetProblem(name, s @ SourceTooBright(_))           =>
+                case ItcTargetProblem(name, s @ SourceTooBright(_)) =>
                   <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon))(
                     renderName(name) + (s: ItcQueryProblem).shortName
                   )
-                case ItcTargetProblem(name, GenericError(e))                  =>
+                case ItcTargetProblem(name, GenericError(e))        =>
                   e.split("\n")
                     .map(u => <.span(u))
                     .mkTagMod(<.span(renderName(name)), <.br, EmptyVdom)
+                case ItcTargetProblem(name, problem)                =>
+                  <.span(s"${renderName(name)}${problem.message}")
               .toList
               .intersperse(<.br: VdomNode)
 
@@ -260,7 +249,7 @@ private object SpectroscopyModesTable:
           )
         .setCell: cell =>
           cell.table.options.meta.map: meta =>
-            itcCell(cell.row.original.result, meta.centralWavelength)
+            itcCell(cell.row.original.result)
         .setColumnSize(FixedSize(85.toPx))
         .setEnableSorting(true)
         .setSortUndefined(UndefinedPriority.Last)
@@ -434,7 +423,7 @@ private object SpectroscopyModesTable:
                   props.spectroscopyRequirements.focalPlane.isDefined
               )
             ),
-            meta = TableMeta(props.spectroscopyRequirements.wavelength, itcProgress.value)
+            meta = TableMeta(itcProgress.value)
           ),
           TableStore(props.userId, TableId.SpectroscopyModes, columns)
         )

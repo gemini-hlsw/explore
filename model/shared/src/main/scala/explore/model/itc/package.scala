@@ -16,24 +16,24 @@ import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
 import lucuma.itc.SingleSN
 import lucuma.itc.client.SeriesResult
-import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsResult
 import lucuma.itc.client.TargetTimeAndGraphsResult
 import lucuma.itc.math.roundToSignificantFigures
 
 import scala.math.*
 
-sealed trait ItcQueryProblem extends Product with Serializable derives Eq
-
-object ItcQueryProblem {
-  case object UnsupportedMode                      extends ItcQueryProblem
-  case object MissingWavelength                    extends ItcQueryProblem
-  case object MissingSignalToNoise                 extends ItcQueryProblem
-  case object MissingSignalToNoiseAt               extends ItcQueryProblem
-  case object MissingTargetInfo                    extends ItcQueryProblem
-  case object MissingBrightness                    extends ItcQueryProblem
-  case class SourceTooBright(halfWell: BigDecimal) extends ItcQueryProblem
-  case class GenericError(msg: String)             extends ItcQueryProblem
-}
+// Do not turn into enum or compositePickler will break.
+sealed trait ItcQueryProblem(val message: String) derives Eq
+object ItcQueryProblem:
+  case object UnsupportedMode          extends ItcQueryProblem("Unsupported mode")
+  case object MissingWavelength        extends ItcQueryProblem("Missing wavelength")
+  case object MissingSignalToNoise     extends ItcQueryProblem("Missing signal to noise")
+  case object MissingSignalToNoiseAt
+      extends ItcQueryProblem("Missing signal to noise at wavelength")
+  case object MissingTargetInfo        extends ItcQueryProblem("Missing target info")
+  case object MissingBrightness        extends ItcQueryProblem("Missing brightness")
+  case class SourceTooBright(wellHalfFilledSeconds: BigDecimal)
+      extends ItcQueryProblem(s"Source too bright")
+  case class GenericError(msg: String) extends ItcQueryProblem(msg)
 
 case class ItcTargetProblem(targetName: Option[NonEmptyString], problem: ItcQueryProblem) derives Eq
 
@@ -46,12 +46,6 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
   def isPending: Boolean = this match {
     case ItcResult.Pending => true
     case _                 => false
-  }
-
-  def toItcExposureTime: Option[ItcExposureTime] = this match {
-    case ItcResult.Result(time, count, _) =>
-      ItcExposureTime(OverridenExposureTime.FromItc, time, count).some
-    case _                                => none
   }
 }
 
@@ -119,10 +113,7 @@ case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsR
     timeAndGraphs.atWavelengthSingleSNRatio.getOrElse(timeAndGraphs.peakSingleSNRatio)
 }
 
-extension (a: SpectroscopyIntegrationTimeAndGraphsResult)
-  def toItcExposureTime: Option[ItcExposureTime] =
-    val brightestTime: Option[IntegrationTime] =
-      a.graphsOrTimes.value
-        .fold(_.brightest.map(_.times.focus), _.brightest.map(_.integrationTime.times.focus))
-    brightestTime.map: t =>
-      ItcExposureTime(OverridenExposureTime.FromItc, t.exposureTime, t.exposureCount)
+case class ItcAsterismGraphResults(
+  asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
+  brightestTarget: Option[ItcTarget]
+)

@@ -7,7 +7,6 @@ import cats.*
 import cats.data.*
 import cats.effect.*
 import cats.syntax.all.*
-import explore.events.ItcMessage.GraphResponse
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.modes.GmosNorthSpectroscopyRow
@@ -16,6 +15,7 @@ import explore.modes.InstrumentRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.itc.Error
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SignificantFiguresInput
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsInput
@@ -39,7 +39,7 @@ object ITCGraphRequests:
     targets:         NonEmptyList[ItcTarget],
     mode:            InstrumentRow,
     cache:           Cache[F],
-    callback:        GraphResponse => F[Unit]
+    callback:        ItcAsterismGraphResults => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -64,7 +64,7 @@ object ITCGraphRequests:
       case _                                        =>
         none
 
-    def doRequest(request: ItcGraphRequestParams): F[GraphResponse] =
+    def doRequest(request: ItcGraphRequestParams): F[ItcAsterismGraphResults] =
       request.mode.toItcClientMode
         .map: mode =>
           ItcClient[F]
@@ -86,9 +86,20 @@ object ITCGraphRequests:
               val asterismGraphs =
                 graphsResult.graphsOrTimes.value
                   .fold[NonEmptyList[(ItcTarget, Either[ItcQueryProblem, ItcGraphResult])]](
-                    _ =>
-                      request.asterism
-                        .map(_ -> ItcQueryProblem.GenericError("Error computing ITC graph").asLeft),
+                    justTimes =>
+                      NonEmptyList.fromListUnsafe:
+                        justTimes.value.toNonEmptyList
+                          .zip(request.asterism)
+                          .toList
+                          .flatMap: (targetResult, itcTarget) =>
+                            targetResult.value.left.toOption.map:
+                              case Error.SourceTooBright(wellHalfFilledSeconds) =>
+                                itcTarget -> ItcQueryProblem
+                                  .SourceTooBright(wellHalfFilledSeconds)
+                                  .asLeft
+                              case Error.General(message)                       =>
+                                itcTarget -> ItcQueryProblem.GenericError(message).asLeft
+                    ,
                     _.value.toNonEmptyList
                       .zip(request.asterism)
                       .map: (targetResult, itcTarget) =>
@@ -101,14 +112,14 @@ object ITCGraphRequests:
                   .toList
                   .toMap
 
-              GraphResponse(
+              ItcAsterismGraphResults(
                 asterismGraphs,
                 graphsResult.brightestIndex.flatMap(request.asterism.get)
               )
-        .getOrElse(GraphResponse(Map.empty, none).pure[F])
+        .getOrElse(ItcAsterismGraphResults(Map.empty, none).pure[F])
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest: Cacheable[F, ItcGraphRequestParams, GraphResponse] =
+    val cacheableRequest: Cacheable[F, ItcGraphRequestParams, ItcAsterismGraphResults] =
       Cacheable(
         CacheName("itcGraphQuery"),
         ITCRequests.cacheVersion,

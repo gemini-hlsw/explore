@@ -723,6 +723,11 @@ thead tr th.sticky-header {
 
 .explore-itc-tile-body {
   display: flex;
+
+  &.explore-itc-tile-body-error {
+    justify-content: center;
+    flex-grow: 0;
+  }
 }
 
 .explore-itc-tile-title {

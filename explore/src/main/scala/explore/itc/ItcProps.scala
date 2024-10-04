@@ -110,9 +110,6 @@ case class ItcProps(
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
-  // In the common case of a single target this is useful
-  val defaultTarget: Option[ItcTarget] = itcTargets.map(_.head)
-
   private val queryProps: List[Option[?]] =
     List(itcTargets, finalConfig, wavelength, instrumentRow, signalToNoise)
 
@@ -125,37 +122,27 @@ case class ItcProps(
       b <- t.sourceProfile.nearestBand(w.value)
     yield b
 
-  def requestGraphs(
-    onComplete:  (
-      Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]], // graphs for each target
-      Option[ItcTarget]                                        // brightest target
-    ) => IO[Unit],
-    orElse:      IO[Unit],
-    beforeStart: IO[Unit]
-  )(using WorkerClient[IO, ItcMessage.Request]): IO[Unit] =
-    val action: Option[IO[Unit]] =
+  // Returns graphs for each target and the brightest target
+  def requestGraphs(using
+    WorkerClient[IO, ItcMessage.Request]
+  ): IO[ItcAsterismGraphResults] =
+    val action: Option[IO[ItcAsterismGraphResults]] =
       for
         w    <- wavelength
         sn   <- signalToNoise
         snAt <- signalToNoiseAt
         t    <- itcTargets
         mode <- instrumentRow
-      yield beforeStart *>
-        ItcClient[IO]
-          .requestSingle:
-            ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
-          .flatMap:
-            _.fold(
-              onComplete(
-                targets
-                  .map(_ -> ItcQueryProblem.GenericError("No response from ITC server").asLeft)
-                  .toMap,
-                none
-              )
-            ): result =>
-              onComplete(result.asterismGraphs, result.brightestTarget)
-          .onError(t => t.printStackTrace().pure[IO])
-    action.getOrElse(orElse)
+      yield ItcClient[IO]
+        .requestSingle:
+          ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
+        .map:
+          _.toRight(new Throwable("No response from ITC server."))
+        .rethrow
+
+    action.getOrElse:
+      IO.raiseError:
+        new Throwable("Not enough information to calculate the ITC graph or no mode selected.")
 
 object ItcProps:
   given Reusability[ItcProps] =
