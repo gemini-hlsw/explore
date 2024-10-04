@@ -10,6 +10,7 @@ import cats.implicits.*
 import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
+import lucuma.core.enums.ScienceBand
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
@@ -98,6 +99,9 @@ case class ProgramSummaries(
       .getOption(this)
       .map(_.label)
       .orElse(ProgramSummaries.proposalReference.getOption(this).map(_.label))
+
+  lazy val allocatedScienceBands: SortedSet[ScienceBand] =
+    optProgramDetails.foldMap(_.allocations.scienceBands)
 
   import cats.instances.all.given
 

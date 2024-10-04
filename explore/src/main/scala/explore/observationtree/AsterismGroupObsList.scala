@@ -37,6 +37,7 @@ import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
@@ -69,6 +70,7 @@ case class AsterismGroupObsList(
   modTargets:            (TargetList => TargetList) => Callback,
   copyCallback:          Callback,
   pasteCallback:         Callback,
+  allocatedScienceBands: SortedSet[ScienceBand],
   readonly:              Boolean
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:

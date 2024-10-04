@@ -150,6 +150,21 @@ def obsActiveStatus(obsId: Observation.Id)(using
       .void
 )
 
+def obsScienceBand(obsId: Observation.Id)(using FetchClient[IO, ObservationDB]) =
+  Action(
+    access = obsWithId(obsId).composeOptionOptionLens(Observation.scienceBand)
+  )(
+    onSet = (_, scienceBand) =>
+      UpdateObservationMutation[IO]
+        .execute(
+          UpdateObservationsInput(
+            WHERE = obsId.toWhereObservation.assign,
+            SET = ObservationPropertiesInput(scienceBand = scienceBand.orUnassign)
+          )
+        )
+        .void
+  )
+
 def obsExistence(obsId: Observation.Id, setObs: Observation.Id => Callback)(using
   FetchClient[IO, ObservationDB]
 ) =

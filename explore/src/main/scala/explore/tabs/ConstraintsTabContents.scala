@@ -220,7 +220,7 @@ object ConstraintsTabContents extends TwoPanels:
                   props.expandedIds,
                   _
                 ),
-                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames, s)
+                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s)
               )
             } { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
@@ -290,6 +290,7 @@ object ConstraintsTabContents extends TwoPanels:
             copyCallback,
             pasteCallback,
             shadowClipboardObs.value,
+            props.programSummaries.get.allocatedScienceBands,
             props.readonly
           )
 

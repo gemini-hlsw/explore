@@ -243,6 +243,7 @@ object SchedulingTabContents extends TwoPanels:
             copyCallback,
             pasteCallback,
             shadowClipboardObs.value,
+            props.programSummaries.get.allocatedScienceBands,
             props.readonly
           )
 

@@ -29,6 +29,7 @@ import explore.undo.Undoer
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ScienceBand
 import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.model.Program
 import lucuma.core.model.TimingWindow
@@ -61,6 +62,7 @@ case class SchedulingGroupObsList(
   copyCallback:            Callback,
   pasteCallback:           Callback,
   clipboardObsContents:    Option[ObsIdSet],
+  allocatedScienceBands:   SortedSet[ScienceBand],
   readonly:                Boolean
 ) extends ReactFnProps[SchedulingGroupObsList](SchedulingGroupObsList.component)
     with ViewCommon:
@@ -92,7 +94,7 @@ object SchedulingGroupObsList:
       case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
       case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude
     )(
-      <.span(Icons.Circle).withTooltip(tooltip = twt.shortName)
+      <.span(Icons.CircleSolid).withTooltip(tooltip = twt.shortName)
     )
 
   private given Render[Option[TimingWindowEnd]] = Render.by {

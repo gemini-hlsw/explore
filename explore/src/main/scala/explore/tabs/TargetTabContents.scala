@@ -295,6 +295,7 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.undoableView(ProgramSummaries.targets).mod,
               copyCallback,
               pasteCallback,
+              props.programSummaries.get.allocatedScienceBands,
               props.readonly
             )
 
@@ -420,6 +421,7 @@ object TargetTabContents extends TwoPanels:
                           _,
                           posAngle,
                           Some(wavelength),
+                          _,
                           _,
                           _,
                           _
