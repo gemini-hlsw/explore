@@ -3,6 +3,7 @@
 
 package explore
 
+import cats.derived.*
 import cats.kernel.Eq
 import explore.optics.*
 import explore.optics.all.*
@@ -12,11 +13,10 @@ import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*
 
-case class Inner[A](a: A)
+case class Inner[A](a: A, oa: Option[A]) derives Eq
 object Inner {
-  def a[A]: Lens[Inner[A], A] = Focus[Inner[A]](_.a)
-
-  implicit def eqInner[A: Eq]: Eq[Inner[A]] = Eq.by(_.a)
+  def a[A]: Lens[Inner[A], A]          = Focus[Inner[A]](_.a)
+  def oa[A]: Lens[Inner[A], Option[A]] = Focus[Inner[A]](_.oa)
 }
 
 case class Outer[A](opt: Option[Inner[A]])
@@ -30,7 +30,10 @@ class OpticsSuite extends DisciplineSuite {
 
   implicit def wrapArb[A: Arbitrary]: Arbitrary[Inner[A]] =
     Arbitrary[Inner[A]] {
-      arbitrary[A].map(Inner.apply)
+      for {
+        a  <- arbitrary[A]
+        oa <- arbitrary[Option[A]]
+      } yield Inner(a, oa)
     }
 
   implicit def outerArb[A: Arbitrary]: Arbitrary[Outer[A]] =
@@ -43,5 +46,11 @@ class OpticsSuite extends DisciplineSuite {
 
   val adjusterInt = adjuster[Int]
 
+  def adjusterOption[A]: Adjuster[Outer[A], Option[A]] =
+    Outer.opt[A].asAdjuster.composeOptionOptionLens(Inner.oa[A])
+
+  val adjusterOptionInt = adjusterOption[Int]
+
   checkAll("Adjuster.composeOptionLens", AdjusterTests(adjusterInt))
+  checkAll("Adjuster.composeOptionOptionLens", AdjusterTests(adjusterInt))
 }

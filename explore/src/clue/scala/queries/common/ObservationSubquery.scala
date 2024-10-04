@@ -52,5 +52,6 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           }
           observerNotes
           calibrationRole
+          scienceBand
         }
       """

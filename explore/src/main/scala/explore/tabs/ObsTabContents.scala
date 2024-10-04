@@ -236,6 +236,7 @@ object ObsTabContents extends TwoPanels:
                 copyCallback,
                 pasteCallback,
                 shadowClipboardObs.value,
+                props.programSummaries.get.allocatedScienceBands,
                 props.readonly
               )
             } else
@@ -271,9 +272,10 @@ object ObsTabContents extends TwoPanels:
                 props.groups.model,
                 props.obsExecutions,
                 props.targets.get,
+                props.programSummaries.get.allocatedScienceBands.size > 1,
                 _
               ),
-              (s, _) => ColumnSelectorInTitle(ObsSummaryTable.columnNames, s)
+              (s, _) => ColumnSelectorInTitle(ObsSummaryTable.selectableColumnNames.get, s)
               // TODO: asterism elevation view
             )
 

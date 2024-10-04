@@ -11,6 +11,7 @@ import explore.model.ScienceRequirements
 import lucuma.core.arb.ArbTime
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
+import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.given
 import lucuma.core.model.ConstraintSet
@@ -64,6 +65,7 @@ trait ArbObservation:
         validations         <- arbitrary[List[ObservationValidation]]
         observerNotes       <- arbitrary[Option[NonEmptyString]]
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
+        scienceBand         <- arbitrary[Option[ScienceBand]]
       yield Observation(
         id,
         title,
@@ -83,7 +85,8 @@ trait ArbObservation:
         wavelength,
         validations,
         observerNotes,
-        calibrationRole
+        calibrationRole,
+        scienceBand
       )
     )
 
@@ -106,7 +109,8 @@ trait ArbObservation:
        Option[Wavelength],
        List[ObservationValidation],
        Option[String],
-       Option[CalibrationRole]
+       Option[CalibrationRole],
+       Option[ScienceBand]
       )
     ]
       .contramap(o =>
@@ -127,7 +131,8 @@ trait ArbObservation:
          o.wavelength,
          o.validations,
          o.observerNotes.map(_.value),
-         o.calibrationRole
+         o.calibrationRole,
+         o.scienceBand
         )
       )
 

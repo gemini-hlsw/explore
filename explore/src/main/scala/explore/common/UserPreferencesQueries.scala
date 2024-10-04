@@ -414,9 +414,11 @@ object UserPreferencesQueries:
   end ElevationPlotPreference
 
   case class TableStore[F[_]: MonadThrow](
-    userId:  Option[User.Id],
-    tableId: TableId,
-    columns: List[ColumnDef[?, ?, ?, ?]]
+    userId:                Option[User.Id],
+    tableId:               TableId,
+    columns:               List[ColumnDef[?, ?, ?, ?]],
+    // Allow for the ignoring of visibility while still including sort order.
+    excludeFromVisibility: Set[ColumnId] = Set.empty
   )(using FetchClient[F, UserPreferencesDB], Logger[F])
       extends TableStateStore[F]:
     def load(): F[TableState => TableState] =
@@ -436,7 +438,10 @@ object UserPreferencesQueries:
               (tableState: TableState) =>
                 tableState
                   .setColumnVisibility(
-                    prefs.lucumaTableColumnPreferences.applyVisibility(tableState.columnVisibility)
+                    prefs.lucumaTableColumnPreferences.applyVisibility(
+                      tableState.columnVisibility,
+                      excludeFromVisibility
+                    )
                   )
                   .setSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
             )
@@ -468,10 +473,12 @@ object UserPreferencesQueries:
   end TableStore
 
   extension (tableColsPrefs: List[TableColumnPreferencesQuery.Data.LucumaTableColumnPreferences])
-    def applyVisibility(original: ColumnVisibility): ColumnVisibility =
+    def applyVisibility(original: ColumnVisibility, exclude: Set[ColumnId]): ColumnVisibility =
       original.modify(
         _ ++
-          tableColsPrefs.map(col => ColumnId(col.columnId) -> Visibility.fromVisible(col.visible))
+          tableColsPrefs
+            .filterNot(col => exclude.contains(ColumnId(col.columnId)))
+            .map(col => ColumnId(col.columnId) -> Visibility.fromVisible(col.visible))
       )
 
     def applySorting(original: Sorting): Sorting =

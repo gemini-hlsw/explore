@@ -22,6 +22,7 @@ import lucuma.core.enums.GmosXBinning
 import lucuma.core.enums.GmosYBinning
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
+import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ObsAttachment
@@ -64,7 +65,8 @@ case class Observation(
   wavelength:          Option[Wavelength],
   validations:         List[ObservationValidation],
   observerNotes:       Option[NonEmptyString],
-  calibrationRole:     Option[CalibrationRole]
+  calibrationRole:     Option[CalibrationRole],
+  scienceBand:         Option[ScienceBand]
 ) derives Eq:
   lazy val basicConfiguration: Option[BasicConfiguration] =
     observingMode.map(_.toBasicConfiguration)
@@ -190,6 +192,7 @@ object Observation:
   val status              = Focus[Observation](_.status)
   val activeStatus        = Focus[Observation](_.activeStatus)
   val scienceTargetIds    = Focus[Observation](_.scienceTargetIds)
+  val selectedGSName      = Focus[Observation](_.selectedGSName)
   val constraints         = Focus[Observation](_.constraints)
   val timingWindows       = Focus[Observation](_.timingWindows)
   val attachmentIds       = Focus[Observation](_.attachmentIds)
@@ -202,7 +205,7 @@ object Observation:
   val validations         = Focus[Observation](_.validations)
   val observerNotes       = Focus[Observation](_.observerNotes)
   val calibrationRole     = Focus[Observation](_.calibrationRole)
-  val selectedGSName      = Focus[Observation](_.selectedGSName)
+  val scienceBand         = Focus[Observation](_.scienceBand)
 
   private case class TargetIdWrapper(id: Target.Id)
   private object TargetIdWrapper:
@@ -237,6 +240,7 @@ object Observation:
       validations         <- c.get[List[ObservationValidation]]("validations")
       observerNotes       <- c.get[Option[NonEmptyString]]("observerNotes")
       calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
+      scienceBand         <- c.get[Option[ScienceBand]]("scienceBand")
     } yield Observation(
       id,
       title,
@@ -256,6 +260,7 @@ object Observation:
       wavelength,
       validations,
       observerNotes,
-      calibrationRole
+      calibrationRole,
+      scienceBand
     )
   )

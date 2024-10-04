@@ -17,7 +17,7 @@ case class ColumnSelectorState[A, B](
 )
 
 case class ColumnSelectorInTitle[A, B](
-  columnNames: ColumnId => String,
+  columnNames: ColumnId => Option[String],
   state:       View[ColumnSelectorState[A, B]]
 ) extends ReactFnProps(ColumnSelectorInTitle.component)
 

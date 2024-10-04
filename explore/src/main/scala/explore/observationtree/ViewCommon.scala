@@ -18,16 +18,20 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.react.beautifuldnd.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 
+import scala.collection.immutable.SortedSet
+
 trait ViewCommon {
   def programId: Program.Id
   def focusedObsSet: Option[ObsIdSet]
   def obsExecutions: ObservationExecutionMap
+  def allocatedScienceBands: SortedSet[ScienceBand]
   def readonly: Boolean
 
   def renderObsBadge(
@@ -43,7 +47,8 @@ trait ViewCommon {
       layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
       readonly = readonly,
-      deleteCB = onDelete
+      deleteCB = onDelete,
+      allocatedScienceBands = allocatedScienceBands
     )
 
   def renderObsBadgeItem(

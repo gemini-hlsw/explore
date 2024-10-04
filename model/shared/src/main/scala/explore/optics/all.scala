@@ -91,6 +91,14 @@ object all extends ModelOptics {
       GetAdjust(getAdjust.getter.composeOptionGetter(other.getter),
                 getAdjust.adjuster.composeOptionGetAdjust(other)
       )
+
+    def composeOptionOptionLens[B](other: Lens[A, Option[B]]): GetAdjust[S, Option[B]] =
+      composeOptionOptionGetAdjust(other.asGetAdjust)
+
+    def composeOptionOptionGetAdjust[B](other: GetAdjust[A, Option[B]]): GetAdjust[S, Option[B]] =
+      GetAdjust(getAdjust.getter.composeOptionOptionGetter(other.getter),
+                getAdjust.adjuster.composeOptionOptionGetAdjust(other)
+      )
   }
 
   implicit class GetterOptionOps[S, A](val getter: Getter[S, Option[A]]) extends AnyVal {
@@ -100,6 +108,11 @@ object all extends ModelOptics {
     def composeOptionGetter[B](other: Getter[A, B]): Getter[S, Option[B]] =
       Getter(
         getter.some.andThen(other).headOption
+      )
+
+    def composeOptionOptionGetter[B](other: Getter[A, Option[B]]): Getter[S, Option[B]] =
+      Getter(
+        getter.some.andThen(other.some).headOption
       )
   }
 
@@ -112,6 +125,18 @@ object all extends ModelOptics {
         setter.modify { optA =>
           optA.flatMap[A] { a =>
             modOptB(other.get(a).some).map(b => other.set(b)(a))
+          }
+        }
+      }
+
+    def composeOptionOptionLens[B](other: Lens[A, Option[B]]): Adjuster[S, Option[B]] =
+      composeOptionOptionGetAdjust(other.asGetAdjust)
+
+    def composeOptionOptionGetAdjust[B](other: GetAdjust[A, Option[B]]): Adjuster[S, Option[B]] =
+      Adjuster { (modOptB: (Option[B] => Option[B])) =>
+        setter.modify { optA =>
+          optA.flatMap[A] { a =>
+            modOptB(other.get(a)).map(b => other.set(b.some)(a))
           }
         }
       }

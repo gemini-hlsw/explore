@@ -62,13 +62,14 @@ import java.time.Instant
 import java.util.UUID
 
 final case class ObsSummaryTable(
-  userId:        Option[User.Id],
-  programId:     Program.Id,
-  observations:  UndoSetter[ObservationList],
-  groups:        View[GroupTree],
-  obsExecutions: ObservationExecutionMap,
-  allTargets:    TargetList,
-  tileState:     View[ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]]
+  userId:          Option[User.Id],
+  programId:       Program.Id,
+  observations:    UndoSetter[ObservationList],
+  groups:          View[GroupTree],
+  obsExecutions:   ObservationExecutionMap,
+  allTargets:      TargetList,
+  showScienceBand: Boolean,
+  tileState:       View[ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]]
 ) extends ReactFnProps(ObsSummaryTable.component)
 
 object ObsSummaryTable:
@@ -85,6 +86,7 @@ object ObsSummaryTable:
   private val ObservationIdColumnId   = ColumnId("observation_id")
   private val ValidationCheckColumnId = ColumnId("validation_check")
   private val StatusColumnId          = ColumnId("status")
+  private val ScienceBandColumnId     = ColumnId("science_band")
   private val CompletionColumnId      = ColumnId("completion")
   private val ExpanderColumnId        = ColumnId("expander")
   private val TargetTypeColumnId      = ColumnId("target_type")
@@ -107,6 +109,7 @@ object ObsSummaryTable:
     ObservationIdColumnId   -> "Observation Id",
     ValidationCheckColumnId -> " ",
     StatusColumnId          -> "Status",
+    ScienceBandColumnId     -> "Science Band",
     CompletionColumnId      -> "Completion",
     ExpanderColumnId        -> " ",
     TargetTypeColumnId      -> " ",
@@ -124,6 +127,13 @@ object ObsSummaryTable:
     SEDColumnId           -> "SED",
     ChargedTimeColumnId   -> "ChargedTime"
   )
+
+  private val excludeFromVisibility = Set(ScienceBandColumnId)
+
+  // Columns to be shown in the column visibility selector. We exclude
+  // the science band because we set that visibility below.
+  val selectableColumnNames: Map[ColumnId, String] =
+    columnNames.filterNot((k, _) => excludeFromVisibility.contains(k))
 
   private val DefaultColVisibility: ColumnVisibility = ColumnVisibility(
     PriorityColumnId      -> Visibility.Hidden,
@@ -204,6 +214,9 @@ object ObsSummaryTable:
           obsColumn(ObservationIdColumnId, _.obs.id).setCell(_.value.map(_.toString).orEmpty),
           // TODO: ValidationCheckColumnId
           obsColumn(StatusColumnId, _.obs.status).setCell(_.value.map(_.toString).orEmpty),
+          obsColumn(ScienceBandColumnId, _.obs.scienceBand).setCell(
+            _.value.flatten.fold("Not set")(_.shortName)
+          ),
           // TODO: CompletionColumnId
           // TODO: TargetTypeColumnId
           obsColumn(TargetTypeColumnId, _ => ())
@@ -317,9 +330,19 @@ object ObsSummaryTable:
             ),
           initialState = TableState(columnVisibility = DefaultColVisibility)
         ),
-        TableStore(props.userId, TableId.ObservationsSummary, cols)
+        TableStore(
+          props.userId,
+          TableId.ObservationsSummary,
+          cols,
+          excludeFromVisibility
+        )
       )
     .useEffectOnMountBy((p, _, _, _, table) => p.tileState.set(ColumnSelectorState(table.some)))
+    .useEffectWithDepsBy((p, _, _, _, _) => p.showScienceBand): (_, _, _, _, table) =>
+      showScienceBand =>
+        table
+          .getColumn(ScienceBandColumnId.value)
+          .foldMap(_.toggleVisibility(showScienceBand))
     .useResizeDetector()
     // adding new observation
     .useStateView(AddingObservation(false))

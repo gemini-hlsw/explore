@@ -28,6 +28,7 @@ import explore.utils.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ScienceBand
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
@@ -58,6 +59,7 @@ case class ConstraintGroupObsList(
   copyCallback:            Callback,
   pasteCallback:           Callback,
   clipboardObsContents:    Option[ObsIdSet],
+  allocatedScienceBands:   SortedSet[ScienceBand],
   readonly:                Boolean
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon:

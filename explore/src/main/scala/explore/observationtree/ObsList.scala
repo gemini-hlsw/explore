@@ -38,6 +38,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObsActiveStatus
 import lucuma.core.enums.ObsStatus
+import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*
@@ -56,27 +57,29 @@ import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
 
+import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 
 import ObsQueries.*
 
 case class ObsList(
-  observations:         UndoSetter[ObservationList],
-  obsExecutionTimes:    ObservationExecutionMap,
-  undoer:               Undoer,
-  programId:            Program.Id,
-  focusedObs:           Option[Observation.Id],
-  focusedTarget:        Option[Target.Id],
-  focusedGroup:         Option[Group.Id],
-  setSummaryPanel:      Callback,
-  groups:               UndoSetter[GroupTree],
-  systemGroups:         GroupTree,
-  expandedGroups:       View[Set[Group.Id]],
-  deckShown:            View[DeckShown],
-  copyCallback:         Callback,
-  pasteCallback:        Callback,
-  clipboardObsContents: Option[ObsIdSet],
-  readonly:             Boolean
+  observations:          UndoSetter[ObservationList],
+  obsExecutionTimes:     ObservationExecutionMap,
+  undoer:                Undoer,
+  programId:             Program.Id,
+  focusedObs:            Option[Observation.Id],
+  focusedTarget:         Option[Target.Id],
+  focusedGroup:          Option[Group.Id],
+  setSummaryPanel:       Callback,
+  groups:                UndoSetter[GroupTree],
+  systemGroups:          GroupTree,
+  expandedGroups:        View[Set[Group.Id]],
+  deckShown:             View[DeckShown],
+  copyCallback:          Callback,
+  pasteCallback:         Callback,
+  clipboardObsContents:  Option[ObsIdSet],
+  allocatedScienceBands: SortedSet[ScienceBand],
+  readonly:              Boolean
 ) extends ReactFnProps(ObsList.component):
   private val activeGroup: Option[Group.Id] = focusedGroup.orElse:
     focusedObs.flatMap(groups.get.obsGroupId)
@@ -323,6 +326,10 @@ object ObsList:
                         .withToast(s"Duplicating obs ${id}")
                         .runAsync
                         .some,
+                      setScienceBandCB = (
+                        (b: ScienceBand) => obsScienceBand(obsId).set(props.observations)(b.some)
+                      ).some,
+                      allocatedScienceBands = props.allocatedScienceBands,
                       readonly = props.readonly
                     )
                   )

@@ -17,6 +17,7 @@ import monocle.Focus
 import monocle.Lens
 
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.SortedSet
 
 case class Allocation(
   category:    TimeAccountingCategory,
@@ -47,5 +48,9 @@ object CategoryAllocationList extends NewType[SortedMap[TimeAccountingCategory, 
                 as.map(a => a.scienceBand -> a.duration)
 
   given Decoder[CategoryAllocationList] = Decoder.decodeList[Allocation].map(fromAllocations)
+
+  extension (self: CategoryAllocationList)
+    def scienceBands: SortedSet[ScienceBand] =
+      SortedSet.from(self.value.values.flatMap(_.value.keySet))
 
 type CategoryAllocationList = CategoryAllocationList.Type

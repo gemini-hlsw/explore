@@ -365,6 +365,6 @@ object TargetSummaryTitle:
                 ).compact
               ),
             <.span(ExploreStyles.TitleSelectColumns)(
-              ColumnSelector(table, TargetSummaryBody.ColNames, ExploreStyles.SelectColumns)
+              ColumnSelector(table, TargetSummaryBody.ColNames.get, ExploreStyles.SelectColumns)
             )
           )

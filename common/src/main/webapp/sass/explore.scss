@@ -1485,6 +1485,7 @@ svg.fa-triangle-exclamation.explore-error-icon {
     }
 
     .p-component.p-button.obs-clone-button,
+    .p-component.p-button.obs-science-band-button,
     .p-component.p-button.obs-delete-button {
       margin: 0;
       padding: 0;
@@ -1591,6 +1592,12 @@ svg.fa-triangle-exclamation.explore-error-icon {
 .p-treenode:has(.selected-group-item) {
   background-color: var(--obs-selected-badge-background);
   box-shadow: 0 0 0 1.5px var(--site-solid-border-color);
+}
+
+.p-menu.p-component.science-band-popup-menu {
+  .p-menuitem-link {
+    padding: 0.6em;
+  }
 }
 
 .group-edit-title {

@@ -98,6 +98,7 @@ object ExploreStyles:
   val ObsBadgeSelected: Css         = Css("obs-badge-selected")
   val ObsDeleteButton: Css          = Css("obs-delete-button")
   val ObsCloneButton: Css           = Css("obs-clone-button")
+  val ObsScienceBandButton: Css     = Css("obs-science-band-button")
   val ObsStatusSelect: Css          = Css("obs-status-select")
   val ObsStatusSelectWrapper: Css   = Css("obs-status-select-wrapper")
   val ObsStatusSelectPanel: Css     = Css("obs-status-select-panel")
@@ -109,6 +110,8 @@ object ExploreStyles:
   val ObsItem: Css                  = Css("obs-item")
   val TrashIcon: Css                = Css("trash-icon")
   val EraserIcon: Css               = Css("eraser-icon")
+
+  val ScienceBandPopupMenu = Css("science-band-popup-menu")
 
   val GroupEditTile: Css      = Css("group-edit-tile")
   val GroupEditTitle: Css     = Css("group-edit-title")
