@@ -39,7 +39,8 @@ object SubmittedProposalMessage:
         Stream
           .fixedRateStartImmediately[IO](1.second)
           .evalMap: _ =>
-            IO.monotonic.map(finiteDuration => Timestamp.ofEpochMilli(finiteDuration.toMillis))
+            IO.realTime.map: finiteDuration =>
+              Timestamp.ofEpochMilli(finiteDuration.toMillis)
       .render: (props, nowPot) =>
         val retractStr: String = nowPot.toOption.flatten
           .filter(now => props.deadline.forall(_ > now))

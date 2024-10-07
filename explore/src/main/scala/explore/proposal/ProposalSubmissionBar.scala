@@ -88,7 +88,8 @@ object ProposalSubmissionBar:
         Stream
           .fixedRateStartImmediately[IO](1.second)
           .evalMap: _ =>
-            IO.monotonic.map(finiteDuration => Timestamp.ofEpochMilli(finiteDuration.toMillis))
+            IO.realTime.map: finiteDuration =>
+              Timestamp.ofEpochMilli(finiteDuration.toMillis)
       .render: (props, ctx, isUpdatingStatus, errorMessage, nowPot) =>
         import ctx.given
 
