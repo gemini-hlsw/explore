@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop-react-beautiful-dnd-migration": "1.2.2",
     "@cquiroz/aladin-lite": "0.7.7",
     "@floating-ui/react": "^0.26.24",
     "@fontsource/lato": "^5.1.0",
@@ -21,7 +22,6 @@
     "primereact": "~10.8.3",
     "prop-types": "15.8.1",
     "react": "18.3.1",
-    "react-beautiful-dnd": "13.1.1",
     "react-circular-progressbar": "^2.1.0",
     "react-datepicker": "7.4.0",
     "react-dom": "18.3.1",
