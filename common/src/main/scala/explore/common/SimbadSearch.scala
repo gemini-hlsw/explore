@@ -27,7 +27,7 @@ object SimbadSearch {
     wildcard: Boolean = false
   )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] = {
     val baseURL =
-      uri"https://simbad.u-strasbg.fr/simbad/sim-id"
+      uri"https://simbad.cfa.harvard.edu/simbad/sim-id"
         .withQueryParam("Ident", term.value)
         .withQueryParam("output.format", "VOTable")
         .withQueryParam("output.max", Constants.SimbadResultLimit)
@@ -59,6 +59,20 @@ object SimbadSearch {
                 .through(CatalogSearch.siderealTargets(CatalogAdapter.Simbad))
                 .compile
                 .toList
+                .flatTap(l =>
+                  l.map(e =>
+                    e match
+                      case Left(problems) =>
+                        Logger[F].debug(
+                          problems
+                            .map(_.displayValue)
+                            .toList
+                            .mkString("Simbad errors: (", ", ", ")")
+                        )
+                      case Right(result)  =>
+                        Logger[F].debug(s"Successful Simbad result ${result.target.name}")
+                  ).sequence
+                )
                 .map {
                   _.collect { case Right(r) => r }
                 }
