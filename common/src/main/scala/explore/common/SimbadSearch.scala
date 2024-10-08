@@ -27,7 +27,7 @@ object SimbadSearch {
     wildcard: Boolean = false
   )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] = {
     val baseURL =
-      uri"https://simbad.u-strasbg.fr/simbad/sim-id"
+      uri"https://simbad.cfa.harvard.edu/simbad/sim-id"
         .withQueryParam("Ident", term.value)
         .withQueryParam("output.format", "VOTable")
         .withQueryParam("output.max", Constants.SimbadResultLimit)
