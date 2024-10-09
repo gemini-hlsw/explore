@@ -584,21 +584,21 @@ object TargetTabContents extends TwoPanels:
               props.targets
                 .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
                 .map { target =>
-                  val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
-                    props.programId,
-                    props.userId,
-                    targetId,
-                    target,
-                    props.obsAndTargets,
-                    props.searching,
-                    s"Editing Target ${target.get.name.value} [$targetId]",
-                    fullScreen,
-                    props.globalPreferences,
-                    guideStarSelection,
-                    props.readonly,
-                    getObsInfo(none)(targetId),
-                    onCloneTarget4Target
-                  )
+                  // val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+                  //   props.programId,
+                  //   props.userId,
+                  //   targetId,
+                  //   target,
+                  //   props.obsAndTargets,
+                  //   props.searching,
+                  //   s"Editing Target ${target.get.name.value} [$targetId]",
+                  //   fullScreen,
+                  //   props.globalPreferences,
+                  //   guideStarSelection,
+                  //   props.readonly,
+                  //   getObsInfo(none)(targetId),
+                  //   onCloneTarget4Target
+                  // )
 
                   val skyPlotTile =
                     ElevationPlotTile.elevationPlotTile(
@@ -612,7 +612,8 @@ object TargetTabContents extends TwoPanels:
                       props.globalPreferences.get
                     )
 
-                  List(targetTile, skyPlotTile)
+                  // List(targetTile, skyPlotTile)
+                  List(skyPlotTile, skyPlotTile)
                 }
                 .orEmpty
 
