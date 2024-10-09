@@ -6,12 +6,10 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import io.circe.Decoder
-import lucuma.core.util.TimeSpan
+import lucuma.core.enums.ScienceBand
 
-final case class ProgramTimes(
-  timeEstimateRange: Option[ProgramTimeRange],
-  timeCharge:        List[BandedProgramTime]
+final case class BandedProgramTime(
+  band: ScienceBand,
+  time: ProgramTime
 ) derives Eq,
-      Decoder:
-  val fullProgramTime: TimeSpan =
-    timeCharge.foldLeft(TimeSpan.Zero)((acc, bpt) => acc +| bpt.time.value)
+      Decoder
