@@ -46,6 +46,7 @@ import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
+import lucuma.core.model.Semester
 
 case class ElevationPlotSection(
   uid:               User.Id,
@@ -108,15 +109,15 @@ object ElevationPlotSection:
             .runAsync
         )
 
-        val siteView           = options.zoom(ElevationPlotOptions.site)
-        val rangeView          = options.zoom(ElevationPlotOptions.range)
-        val dateView           = options.zoom(ElevationPlotOptions.date)
-        val semesterView       = options.zoom(ElevationPlotOptions.semester)
-        val timeDisplayView    = options.zoom(ElevationPlotOptions.timeDisplay)
-        val showSchedulingView =
+        val siteView: View[Site]                              = options.zoom(ElevationPlotOptions.site)
+        val rangeView: View[PlotRange]                        = options.zoom(ElevationPlotOptions.range)
+        val dateView: View[LocalDate]                         = options.zoom(ElevationPlotOptions.date)
+        val semesterView: View[Semester]                      = options.zoom(ElevationPlotOptions.semester)
+        val timeDisplayView: View[TimeDisplay]                = options.zoom(ElevationPlotOptions.timeDisplay)
+        val showSchedulingView: View[ElevationPlotScheduling] =
           options.zoom(ElevationPlotOptions.showScheduling)
 
-        val opt = options.get
+        val opt: ElevationPlotOptions = options.get
 
         def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
           windows
@@ -148,7 +149,7 @@ object ElevationPlotSection:
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
-                  props.coords,
+                  Map(props.tid -> ("target".refined, props.coords)),
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,
@@ -161,8 +162,7 @@ object ElevationPlotSection:
                   windowsNetExcludeIntervals
                 ),
           ),
-          <.div(
-            ExploreStyles.ElevationPlotControls,
+          <.div(ExploreStyles.ElevationPlotControls)(
             SelectButtonEnumView(
               "elevation-plot-site".refined,
               siteView,
