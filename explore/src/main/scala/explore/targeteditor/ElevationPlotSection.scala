@@ -49,6 +49,7 @@ import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
+import lucuma.core.model.Semester
 
 case class ElevationPlotSection(
   userId:            User.Id,
@@ -156,7 +157,7 @@ object ElevationPlotSection:
                     .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
 
                 ElevationPlotNight(
-                  coords,
+                  Map(props.tid -> ("target".refined, coords)),
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,

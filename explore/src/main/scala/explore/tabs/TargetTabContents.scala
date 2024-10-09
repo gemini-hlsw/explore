@@ -574,11 +574,11 @@ object TargetTabContents extends TwoPanels:
             targetId:           Target.Id,
             guideStarSelection: View[GuideStarSelection]
           ): List[Tile[?]] = {
-            def onCloneTarget4Target(params: OnCloneParameters): Callback =
-              // It's not perfect, but we'll go to whatever url has the "new" id. This means
-              // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
-              selectedTargetIds.set(List(params.idToAdd)) >>
-                ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
+            // def onCloneTarget4Target(params: OnCloneParameters): Callback =
+            //   // It's not perfect, but we'll go to whatever url has the "new" id. This means
+            //   // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
+            //   selectedTargetIds.set(List(params.idToAdd)) >>
+            //     ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
 
             val targetTiles: List[Tile[?]] =
               props.targets
