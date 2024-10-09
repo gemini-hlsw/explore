@@ -31,7 +31,7 @@ case class Proposal(
   reference:    Option[ProposalReference]
 ) derives Eq:
   def deadline(cfps: List[CallForProposal], piPartner: Option[PartnerLink]): Option[Timestamp] =
-    cfps.find(u => callId.exists(_ === u.id)).flatMap(_.deadline(piPartner))
+    cfps.find(cfp => callId.exists(_ === cfp.id)).flatMap(_.deadline(piPartner))
 
 object Proposal:
   val callId: Lens[Proposal, Option[CallForProposals.Id]]  =

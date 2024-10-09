@@ -102,7 +102,7 @@ object ProposalSubmissionBar:
           )
 
         nowPot.toOption.flatten.map: now =>
-          val isDueDeadline: Boolean = props.deadline.exists(_ < now)
+          val isDueDeadline: Boolean = props.deadline.forall(_ < now)
 
           Toolbar(left =
             <.div(ExploreStyles.ProposalSubmissionBar)(
