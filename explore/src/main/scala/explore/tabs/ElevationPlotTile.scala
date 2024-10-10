@@ -12,7 +12,7 @@ import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
@@ -24,36 +24,35 @@ import java.time.Instant
 object ElevationPlotTile:
 
   def elevationPlotTile(
-    uid:               Option[User.Id],
-    tid:               Option[Target.Id],
+    userId:            Option[User.Id],
+    targetId:          Option[Target.Id],
+    tracking:          Option[ObjectTracking],
     site:              Option[Site],
-    coordinates:       Option[CoordinatesAtVizTime],
     vizTime:           Option[Instant],
     pendingTime:       Option[Duration],
     timingWindows:     List[TimingWindow] = List.empty,
     globalPreferences: GlobalPreferences
-  ) =
+  ): Tile[Unit] =
     Tile(
       ObsTabTilesIds.PlotId.id,
       "Elevation Plot",
       bodyClass = ExploreStyles.ElevationPlotTileBody
     ) { _ =>
-      (uid, tid, coordinates)
-        .mapN { (uid, targetId, coordinates) =>
-          ElevationPlotSection(uid,
-                               targetId,
-                               site,
-                               vizTime,
-                               pendingTime,
-                               coordinates,
-                               timingWindows,
-                               globalPreferences
+      (userId, targetId, tracking)
+        .mapN: (uid, tid, track) =>
+          ElevationPlotSection(
+            uid,
+            tid,
+            track,
+            site,
+            vizTime,
+            pendingTime,
+            timingWindows,
+            globalPreferences
           ): VdomNode
-        }
-        .getOrElse {
+        .getOrElse:
           <.div(
             ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
             <.div("Select a target")
           )
-        }
     }
