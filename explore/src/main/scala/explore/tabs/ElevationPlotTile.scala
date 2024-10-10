@@ -20,6 +20,7 @@ import lucuma.ui.syntax.all.given
 
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.math.Coordinates
 
 object ElevationPlotTile:
 
