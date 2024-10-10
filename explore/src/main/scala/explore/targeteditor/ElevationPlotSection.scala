@@ -157,7 +157,13 @@ object ElevationPlotSection:
                     .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
 
                 ElevationPlotNight(
-                  Map(props.tid -> ("target".refined, coords)),
+                  Map(
+                    props.tid -> TargetPlotData(
+                      "target".refined,
+                      coords,
+                      TargetPlotData.Style.Solid
+                    )
+                  ),
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,
