@@ -12,7 +12,9 @@ import explore.model.enums.Visible
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
+import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.ObservingNight
 import lucuma.core.model.Semester
 import monocle.Focus
@@ -91,12 +93,14 @@ object ElevationPlotOptions:
   def default(
     predefinedSite:  Option[Site],
     observationTime: Option[Instant],
-    coords:          CoordinatesAtVizTime
+    tracking:        ObjectTracking
   ) =
-    val site: Site       = predefinedSite.getOrElse(
-      if (coords.value.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
+    val coords: Coordinates =
+      observationTime.flatMap(tracking.at(_).map(_.value)).getOrElse(tracking.baseCoordinates)
+    val site: Site          = predefinedSite.getOrElse(
+      if (coords.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
     )
-    val (date, semester) = dateAndSemesterOf(observationTime, site)
+    val (date, semester)    = dateAndSemesterOf(observationTime, site)
 
     ElevationPlotOptions(
       site,
