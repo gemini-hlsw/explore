@@ -2440,6 +2440,10 @@ input[type='file'].explore-fileupload {
     }
   }
 
+  .p-tree-container > .p-treenode.p-tree-empty-message {
+    display: none;
+  }
+
   .p-tree-container > .p-treenode > .p-treenode-content {
     > .obs-tree-group-leaf {
       margin: 8px;
