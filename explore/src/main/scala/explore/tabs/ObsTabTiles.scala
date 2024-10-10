@@ -50,6 +50,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -102,6 +103,13 @@ case class ObsTabTiles(
   val allTargets: TargetList                                        = programSummaries.targets
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
+  val asterismTracking: Option[ObjectTracking]                      =
+    NonEmptyList
+      .fromList:
+        observation.get.scienceTargetIds.toList
+          .map(id => allTargets.get(id))
+          .flattenOption
+      .map(ObjectTracking.fromAsterism(_))
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -369,8 +377,8 @@ object ObsTabTiles:
               ElevationPlotTile.elevationPlotTile(
                 props.vault.userId,
                 props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
+                props.asterismTracking,
                 props.observation.get.observingMode.map(_.siteFor),
-                targetCoords,
                 vizTimeView.get,
                 obsDuration.map(_.toDuration),
                 timingWindows.get,
