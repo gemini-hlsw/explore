@@ -51,10 +51,10 @@ import lucuma.core.model.Semester
 case class ElevationPlotSection(
   uid:               User.Id,
   tid:               Target.Id,
+  coordinates:       Coordinates,
   site:              Option[Site],
   visualizationTime: Option[Instant],
   pendingTime:       Option[Duration],
-  coords:            CoordinatesAtVizTime,
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
 ) extends ReactFnProps(ElevationPlotSection.component)
@@ -149,7 +149,13 @@ object ElevationPlotSection:
             opt.range match
               case PlotRange.Night    =>
                 ElevationPlotNight(
-                  Map(props.tid -> ("target".refined, props.coords)),
+                  Map(
+                    props.tid -> TargetPlotData(
+                      "target".refined,
+                      props.coords,
+                      TargetPlotData.Style.Solid
+                    )
+                  ),
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,

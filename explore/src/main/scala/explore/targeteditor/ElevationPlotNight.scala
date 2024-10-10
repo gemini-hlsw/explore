@@ -16,7 +16,6 @@ import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
@@ -49,14 +48,13 @@ import scala.deriving.Mirror
 import scala.scalajs.js
 
 import js.JSConverters.*
-import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Site
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.math.skycalc.SkyCalcResults
 import lucuma.core.model.Target
 
 case class ElevationPlotNight(
-  targetCoords:      Map[Target.Id, (NonEmptyString, CoordinatesAtVizTime)],
+  targetCoords:      Map[Target.Id, TargetPlotData],
   visualizationTime: Option[Instant],
   excludeIntervals:  List[BoundedInterval[Instant]],
   pendingTime:       Option[Duration],
@@ -213,7 +211,7 @@ object ElevationPlotNight:
       plotBand("bright", "Bright", 17, 19.61)
     )
 
-  private given Reusability[Map[Target.Id, (NonEmptyString, CoordinatesAtVizTime)]] =
+  private given Reusability[Map[Target.Id, TargetPlotData]] =
     Reusability.map
 
   private val component =
@@ -244,8 +242,8 @@ object ElevationPlotNight:
           val end: Instant                                                                       = tbOfficialNight.end
           val skyCalcResults: MapView[Target.Id, List[(Instant, SkyCalcResults)]]                =
             coords.view
-              .mapValues: (_, targetCoords) =>
-                SkyCalc.forInterval(site, start, end, PlotEvery, _ => targetCoords.value)
+              .mapValues: (targetPlotData: TargetPlotData) =>
+                SkyCalc.forInterval(site, start, end, PlotEvery, _ => targetPlotData.coords.value)
           val series: MapView[Target.Id, List[(Chart.Data, Chart.Data, Chart.Data, Chart.Data)]] =
             skyCalcResults
               .mapValues:

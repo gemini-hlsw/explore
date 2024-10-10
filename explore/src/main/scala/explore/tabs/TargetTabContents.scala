@@ -340,7 +340,7 @@ object TargetTabContents extends TwoPanels:
            * Render the asterism editor
            *
            * @param idsToEdit
-           *   The observations to include in the edit. This needs to be asubset of the ids in
+           *   The observations to include in the edit. This needs to be a subset of the ids in
            *   asterismGroup
            * @param asterismGroup
            *   The AsterismGroup that is the basis for editing. All or part of it may be included in
@@ -544,25 +544,27 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            // coordinates for the elevation plot, if no obs time default to base
-            val skyPlotCoordinates: Option[Coordinates] =
+            // // coordinates for the elevation plot, if no obs time default to base
+            val coordinates: Option[Coordinates] =
               props.focused.target.flatMap: id =>
                 props.targets.get
                   .get(id)
                   .flatMap:
-                    case t @ Target.Sidereal(_, _, _, _) =>
-                      obsTimeView.get
-                        .flatMap(ot => Target.Sidereal.tracking.get(t).at(ot))
-                        // If no obs time default to base coords
-                        .orElse(t.tracking.baseCoordinates.some)
-                    case _                               => none
+                    case Target.Sidereal(_, tracking, _, _) =>
+                      tracking.baseCoordinates.some
+                    // TODO We should actually compute at the selected date in the plot, we can do this further down.
+                    // obsTimeView.get
+                    //   .flatMap(ot => Target.Sidereal.tracking.get(t))//.at(ot))
+                    //   // If no obs time default to base coords
+                    //   .orElse(t.tracking.baseCoordinates.some)
+                    case _                                  => none
 
             val skyPlotTile =
               ElevationPlotTile.elevationPlotTile(
                 props.userId,
                 props.focused.target,
+                coordinates,
                 configuration.map(_.siteFor),
-                skyPlotCoordinates.map(CoordinatesAtVizTime(_)),
                 obsTimeView.get,
                 none,
                 Nil,

@@ -20,14 +20,15 @@ import lucuma.ui.syntax.all.given
 
 import java.time.Duration
 import java.time.Instant
+import lucuma.core.math.Coordinates
 
 object ElevationPlotTile:
 
   def elevationPlotTile(
-    uid:               Option[User.Id],
-    tid:               Option[Target.Id],
+    userId:            Option[User.Id],
+    targetId:          Option[Target.Id],
+    coordinates:       Option[Coordinates],
     site:              Option[Site],
-    coordinates:       Option[CoordinatesAtVizTime],
     vizTime:           Option[Instant],
     pendingTime:       Option[Duration],
     timingWindows:     List[TimingWindow] = List.empty,
@@ -38,22 +39,21 @@ object ElevationPlotTile:
       "Elevation Plot",
       bodyClass = ExploreStyles.ElevationPlotTileBody
     ) { _ =>
-      (uid, tid, coordinates)
-        .mapN { (uid, targetId, coordinates) =>
-          ElevationPlotSection(uid,
-                               targetId,
-                               site,
-                               vizTime,
-                               pendingTime,
-                               coordinates,
-                               timingWindows,
-                               globalPreferences
+      (userId, targetId, coords)
+        .mapN: (uid, tid, coords) =>
+          ElevationPlotSection(
+            uid,
+            tid,
+            coords,
+            site,
+            vizTime,
+            pendingTime,
+            timingWindows,
+            globalPreferences
           ): VdomNode
-        }
-        .getOrElse {
+        .getOrElse:
           <.div(
             ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
             <.div("Select a target")
           )
-        }
     }
