@@ -43,7 +43,7 @@ object SubmittedProposalMessage:
               Timestamp.ofEpochMilli(finiteDuration.toMillis)
       .render: (props, nowPot) =>
         val retractStr: String = nowPot.toOption.flatten
-          .filter(now => props.deadline.forall(_ > now))
+          .filter(now => props.deadline.exists(_ > now))
           .as(s" and may be retracted${props.deadlineStr}")
           .orEmpty
 
