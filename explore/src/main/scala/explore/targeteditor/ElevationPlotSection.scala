@@ -172,7 +172,7 @@ object ElevationPlotSection:
                   options.get,
                   coords,
                   windowsNetExcludeIntervals
-                ),
+                )
           ),
           <.div(ExploreStyles.ElevationPlotControls)(
             SelectButtonEnumView(

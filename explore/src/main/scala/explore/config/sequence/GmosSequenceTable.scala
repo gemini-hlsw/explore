@@ -261,7 +261,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
                     ExploreStyles.SequenceBracketCell
                   case colId if colId == SequenceColumns.IndexAndTypeColumnId =>
                     ExploreStyles.CellHideBorder // Hide border between bracket column and next one
-                  case _                                                      =>
+                  case _ =>
                     TagMod.empty
         )
 

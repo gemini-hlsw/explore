@@ -151,7 +151,7 @@ object TargetImportPopup:
             columnVisibility = TargetColumns.DefaultVisibility,
             rowSelection = RowSelection()
           )
-        ),
+        )
       )
       .render { (props, _, state, _, rows, table) =>
         Dialog(

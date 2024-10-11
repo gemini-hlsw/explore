@@ -261,7 +261,7 @@ object TargetSelectionPopup:
                           .submit(
                             IO.sleep(700.milliseconds) >> searchName(t)
                           )
-                          .runAsync,
+                          .runAsync
                   ).withMods(^.autoFocus := true)
                 )(
                   ^.autoComplete.off,

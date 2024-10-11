@@ -250,7 +250,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
               validFormat = InputValidSplitEpi.bigDecimal,
               changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
               disabled = props.disabled
-            ),
+            )
           ),
         blackBodyTemperatureAlignerOpt
           .map(rsu =>
@@ -264,7 +264,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
                 .denyNeg,
               units = "°K",
               disabled = props.disabled
-            ),
+            )
           ),
         props.bandBrightnessesViewOpt
           .map(bandBrightnessesView =>

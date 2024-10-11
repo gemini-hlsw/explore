@@ -9,7 +9,7 @@ object AladinFullScreen extends NewType[Boolean]:
   inline def FullScreen: AladinFullScreen = AladinFullScreen(true)
   inline def Normal: AladinFullScreen     = AladinFullScreen(false)
   extension (s: AladinFullScreen)
-    def flip: AladinFullScreen =
+    def flip: AladinFullScreen            =
       if (s.value) AladinFullScreen.Normal else AladinFullScreen.FullScreen
 
 type AladinFullScreen = AladinFullScreen.Type

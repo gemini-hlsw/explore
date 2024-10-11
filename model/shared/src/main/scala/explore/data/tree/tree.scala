@@ -18,7 +18,7 @@ case class Node[A](value: A, children: List[Node[A]] = List.empty) {
 }
 
 object Tree {
-  def empty[A]: Tree[A] = Tree(List.empty)
+  def empty[A]: Tree[A]                     = Tree(List.empty)
   def apply[A](children: Node[A]*): Tree[A] = Tree(children.toList)
 
   implicit def eqTree[A: Eq]: Eq[Tree[A]] = Eq.by(_.children)

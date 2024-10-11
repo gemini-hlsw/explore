@@ -242,12 +242,12 @@ fixCSS := {
     throw new Exception("Error in CSS fix")
 }
 
-val pushCond          = "github.event_name == 'push'"
-val prCond            = "github.event_name == 'pull_request'"
-val masterCond        = "github.ref == 'refs/heads/master'"
-val notMasterCond     = "github.ref != 'refs/heads/master'"
-val geminiRepoCond    = "startsWith(github.repository, 'gemini')"
-val notDependabotCond = "github.actor != 'dependabot[bot]'"
+val pushCond                 = "github.event_name == 'push'"
+val prCond                   = "github.event_name == 'pull_request'"
+val masterCond               = "github.ref == 'refs/heads/master'"
+val notMasterCond            = "github.ref != 'refs/heads/master'"
+val geminiRepoCond           = "startsWith(github.repository, 'gemini')"
+val notDependabotCond        = "github.actor != 'dependabot[bot]'"
 def allConds(conds: String*) = conds.mkString("(", " && ", ")")
 def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 

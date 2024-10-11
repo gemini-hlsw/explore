@@ -35,16 +35,14 @@ object SVGTarget {
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   case class CrosshairTarget(
     coordinates: Coordinates,
     css:         Css,
     side:        Double,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   case class ScienceTarget(
     coordinates: Coordinates,
@@ -53,16 +51,14 @@ object SVGTarget {
     side:        Double,
     selected:    Boolean,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   case class LineTo(
     coordinates: Coordinates,
     destination: Coordinates,
     css:         Css,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   case class GuideStarCandidateTarget(
     coordinates: Coordinates,
@@ -70,8 +66,7 @@ object SVGTarget {
     radius:      Double,
     analysis:    AgsAnalysis,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   case class GuideStarTarget(
     coordinates: Coordinates,
@@ -79,8 +74,7 @@ object SVGTarget {
     radius:      Double,
     analysis:    AgsAnalysis,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   case class OffsetIndicator(
     coordinates: Coordinates,
@@ -90,8 +84,7 @@ object SVGTarget {
     css:         Css,
     radius:      Double,
     title:       Option[String] = None
-  ) extends SVGTarget
-      derives Eq
+  ) extends SVGTarget derives Eq
 
   given Reusability[SVGTarget] = Reusability.byEq
 }

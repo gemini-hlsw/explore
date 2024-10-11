@@ -28,7 +28,7 @@ object ObservationInsertAction {
   ): ProgramSummaries => ProgramSummaries = agwo =>
     optObs.fold { // undo
       agwo.removeObs(obsId)
-    } {           // do or re-do
+    } { // do or re-do
       agwo.insertObs
     }
 

@@ -26,8 +26,7 @@ object GuideStarSelection:
     selectedGSName:  NonEmptyString,
     selectedGSIndex: Int,
     analysis:        AgsAnalysis
-  ) extends GuideStarSelection
-      derives Eq
+  ) extends GuideStarSelection derives Eq
 
   val Default: GuideStarSelection = AgsSelection(None)
 

@@ -450,9 +450,9 @@ object TargetTabContents extends TwoPanels:
               selectedTargetIds.set(List(params.idToAdd)) >>
                 (if (params.areCreating) {
                    val obsIds4Url =
-                     ObsIdSet.fromSortedSet(idsToEdit.idSet.intersect(params.obsIds.idSet))
-                     // all of the original groups that have any of the cloned ids
-                     // Deal with the expanded groups - we'll open all affected groups
+                   ObsIdSet.fromSortedSet(idsToEdit.idSet.intersect(params.obsIds.idSet))
+                   // all of the original groups that have any of the cloned ids
+                   // Deal with the expanded groups - we'll open all affected groups
                    allOriginalGroups.toList.traverse { ids =>
                      val intersect = ids.idSet.intersect(params.obsIds.idSet)
                      if (intersect === ids.idSet.toSortedSet)
