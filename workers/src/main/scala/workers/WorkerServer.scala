@@ -28,11 +28,11 @@ import WorkerMessage.*
  */
 trait WorkerServer[F[_]: Async, T: Pickler](using Monoid[F[Unit]]):
   protected val run: F[Unit] =
-  (for {
-    dispatcher      <- Dispatcher.parallel[F]
-    given Logger[F] <- Resource.eval(setupLogger)
-    _               <- Resource.eval(runInternal(dispatcher))
-  } yield ()).useForever.void
+    (for {
+      dispatcher      <- Dispatcher.parallel[F]
+      given Logger[F] <- Resource.eval(setupLogger)
+      _               <- Resource.eval(runInternal(dispatcher))
+    } yield ()).useForever.void
 
   /**
    * Provide an interface to handlers with an incoming message and a method to send responses (which
