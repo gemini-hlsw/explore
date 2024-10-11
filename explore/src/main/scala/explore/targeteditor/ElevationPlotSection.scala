@@ -49,7 +49,6 @@ import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
-import lucuma.core.model.Semester
 
 case class ElevationPlotSection(
   userId:            User.Id,
@@ -158,7 +157,7 @@ object ElevationPlotSection:
 
                 ElevationPlotNight(
                   Map(
-                    props.tid -> TargetPlotData(
+                    props.targetId -> TargetPlotData(
                       "target".refined,
                       coords,
                       TargetPlotData.Style.Solid
