@@ -3,11 +3,11 @@
 
 package explore.targeteditor
 
+import cats.Eq
+import cats.derived.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.*
-import cats.Eq
-import cats.derived.*
 import lucuma.core.model.CoordinatesAtVizTime
 
 case class TargetPlotData(

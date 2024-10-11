@@ -17,13 +17,17 @@ import explore.model.enums.Visible
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
+import lucuma.core.math.skycalc.SkyCalcResults
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
+import lucuma.core.model.Target
+import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.util.time.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
@@ -42,16 +46,12 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import scala.collection.immutable.HashSet
 import scala.collection.MapView
+import scala.collection.immutable.HashSet
 import scala.deriving.Mirror
 import scala.scalajs.js
 
 import js.JSConverters.*
-import lucuma.core.enums.Site
-import lucuma.core.model.TwilightBoundedNight
-import lucuma.core.math.skycalc.SkyCalcResults
-import lucuma.core.model.Target
 
 case class ElevationPlotNight(
   targetCoords:      Map[Target.Id, TargetPlotData],
@@ -80,15 +80,13 @@ case class ElevationPlotNight(
   ): Callback =
     options.zoom(zoomFn(series)).set(Visible.Shown) *>
       shownSeries.mod(_ + series) *>
-      Callback {
-        ElevationPlotNight.SkyBrightnessPercentileLines.foreach(line =>
+      Callback:
+        ElevationPlotNight.SkyBrightnessPercentileLines.foreach: line =>
           chart.yAxis(2).addPlotLine(line)
-        )
-        ElevationPlotNight.SkyBrightnessPercentileBands.foreach(band =>
-          chart.yAxis(2).addPlotBand(band)
-        )
-      }
-        .when(series === ElevationSeries.SkyBrightness)
+        ElevationPlotNight.SkyBrightnessPercentileBands
+          .foreach: band =>
+            chart.yAxis(2).addPlotBand(band)
+      .when(series === ElevationSeries.SkyBrightness)
         .void
 
   protected[ElevationPlotNight] def hideSeriesCB(
