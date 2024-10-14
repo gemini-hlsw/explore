@@ -54,11 +54,12 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class ElevationPlotNight(
-  targetCoords:      Map[Target.Id, TargetPlotData],
-  visualizationTime: Option[Instant],
-  excludeIntervals:  List[BoundedInterval[Instant]],
-  pendingTime:       Option[Duration],
-  options:           View[ElevationPlotOptions]
+  plotData:         ElevationPlotData,
+  coordsTime:       Instant,
+  obsTime:          Option[Instant],
+  excludeIntervals: List[BoundedInterval[Instant]],
+  pendingTime:      Option[Duration],
+  options:          View[ElevationPlotOptions]
 ) extends ReactFnProps(ElevationPlotNight.component):
   import ElevationPlotNight.ElevationSeries
 
@@ -209,23 +210,20 @@ object ElevationPlotNight:
       plotBand("bright", "Bright", 17, 19.61)
     )
 
-  private given Reusability[Map[Target.Id, TargetPlotData]] =
-    Reusability.map
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
       .useStateView(HashSet.from(ElevationSeries.values)) // shownSeries
       .useMemoBy((props, shownSeries) =>
         (props.options.get,
-         props.targetCoords,
-         props.visualizationTime,
+         props.plotData,
+         props.obsTime,
          props.pendingTime,
          props.excludeIntervals,
          shownSeries.get
         )
       ): (props, shownSeries) =>
-        (opts, coords, visualizationTime, pendingTime, excludeIntervals, _) =>
+        (opts, plotData, visualizationTime, pendingTime, excludeIntervals, _) =>
           val site: Site               = opts.site
           val timeDisplay: TimeDisplay = opts.timeDisplay
 
@@ -236,13 +234,20 @@ object ElevationPlotNight:
           val tbNauticalNight: TwilightBoundedNight =
             observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
 
-          val start: Instant                                                                     = tbOfficialNight.start
-          val end: Instant                                                                       = tbOfficialNight.end
-          val skyCalcResults: MapView[Target.Id, List[(Instant, SkyCalcResults)]]                =
-            coords.view
-              .mapValues: (targetPlotData: TargetPlotData) =>
-                SkyCalc.forInterval(site, start, end, PlotEvery, _ => targetPlotData.coords.value)
-          val series: MapView[Target.Id, List[(Chart.Data, Chart.Data, Chart.Data, Chart.Data)]] =
+          val start: Instant                                                                   = tbOfficialNight.start
+          val end: Instant                                                                     = tbOfficialNight.end
+          val skyCalcResults: MapView[ElevationPlotSeries.Id, List[(Instant, SkyCalcResults)]] =
+            plotData.value.toSortedMap.view
+              .mapValues: (targetPlotData: ElevationPlotSeries) =>
+                val coords: CoordinatesAtVizTime =
+                  targetPlotData.tracking
+                    .at(props.coordsTime)
+                    .getOrElse(CoordinatesAtVizTime(targetPlotData.tracking.baseCoordinates))
+                SkyCalc.forInterval(site, start, end, PlotEvery, _ => coords.value)
+          val series: MapView[
+            ElevationPlotSeries.Id,
+            List[(Chart.Data, Chart.Data, Chart.Data, Chart.Data)]
+          ] =
             skyCalcResults
               .mapValues:
                 _.map: (instant, results) =>
@@ -267,7 +272,7 @@ object ElevationPlotNight:
                    point(results.lunarElevation.toAngle.toSignedDoubleDegrees)
                   )
 
-          val seriesData: MapView[Target.Id, SeriesData] =
+          val seriesData: MapView[ElevationPlotSeries.Id, SeriesData] =
             series.mapValues: targetSeries =>
               summon[Mirror.Of[SeriesData]].fromProduct(targetSeries.unzip4)
 
@@ -333,7 +338,7 @@ object ElevationPlotNight:
                   .data(targetSeriesData)
                   .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
             ):
-              if (coords.size === 1) "Target is below horizon"
+              if (plotData.value.size === 1) "Target is below horizon"
               else "All targets are below horizon"
 
           val options: Options = Options()
@@ -448,7 +453,7 @@ object ElevationPlotNight:
             .setSeries(
               ElevationSeries.values
                 .map(series =>
-                  val zones: Option[js.Array[SeriesZonesOptionsObject]]  =
+                  val zones: Option[js.Array[SeriesZonesOptionsObject]]               =
                     (visualizationTime, pendingTime).mapN: (vt, pt) =>
                       js.Array(
                         SeriesZonesOptionsObject()
@@ -457,7 +462,7 @@ object ElevationPlotNight:
                           .setValue(vt.plus(pt).toEpochMilli.toDouble)
                           .setClassName("elevation-plot-visualization-period")
                       )
-                  val baseSeries: MapView[Target.Id, SeriesAreaOptions]  =
+                  val baseSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions]  =
                     seriesData.mapValues: targetSeriesData =>
                       SeriesAreaOptions((), (), ())
                         .setName(series.name)
@@ -474,7 +479,7 @@ object ElevationPlotNight:
                               props.showSeriesCB(shownSeries, series, s.chart).runNow()
                         .setFillOpacity(0)
                         .setZoneAxis("x")
-                  val zonedSeries: MapView[Target.Id, SeriesAreaOptions] =
+                  val zonedSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions] =
                     zones.fold(baseSeries)(z => baseSeries.mapValues(_.setZones(z)))
 
                   series match // Adjust fill area to axis

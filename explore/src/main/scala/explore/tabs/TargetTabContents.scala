@@ -63,10 +63,15 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
+import cats.Order.given
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
+import explore.targeteditor.ElevationPlotData
+import explore.targeteditor.ElevationPlotSeries
+import cats.data.NonEmptyMap
+import cats.data.NonEmptyList
 
 case class TargetTabContents(
   programId:        Program.Id,
@@ -502,8 +507,9 @@ object TargetTabContents extends TwoPanels:
                     if (params.isUndo)
                       setCurrentTarget(idsToEdit.some)(targetForPage, SetRouteVia.HistoryReplace)
                     else
-                      setCurrentTarget(params.obsIds.some)(targetForPage,
-                                                           SetRouteVia.HistoryReplace
+                      setCurrentTarget(params.obsIds.some)(
+                        targetForPage,
+                        SetRouteVia.HistoryReplace
                       )
                   setExpanded >> setPage
                 )
@@ -544,26 +550,42 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            val tracking: Option[ObjectTracking] =
-              props.focused.target
-                .flatMap: targetId =>
-                  props.targets.get.get(targetId)
-                .map:
-                  ObjectTracking.fromTarget(_)
+            // val tracking: Option[ObjectTracking] =
+            //   props.focused.target
+            //     .flatMap: targetId =>
+            //       props.targets.get.get(targetId)
+            //     .map:
+            //       ObjectTracking.fromTarget(_)
+
+            val plotData: Option[ElevationPlotData] =
+              NonEmptyMap
+                .fromMap:
+                  selectedTargetIds.get
+                    .flatMap: targetId =>
+                      props.targets.get
+                        .get(targetId)
+                        .map: target =>
+                          ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
+                            target.name,
+                            ObjectTracking.fromTarget(target),
+                            ElevationPlotSeries.Style.Solid
+                          )
+                    .toSortedMap(_._1, _._2)
+                .map(ElevationPlotData(_))
 
             val skyPlotTile =
-              ElevationPlotTile.elevationPlotTile(
-                props.userId,
-                props.focused.target,
-                tracking,
-                configuration.map(_.siteFor),
-                obsTimeView.get,
-                none,
-                Nil,
-                props.globalPreferences.get
-              )
+              plotData.map:
+                ElevationPlotTile.elevationPlotTile(
+                  props.userId,
+                  _,
+                  configuration.map(_.siteFor),
+                  obsTimeView.get,
+                  none,
+                  Nil,
+                  props.globalPreferences.get
+                )
 
-            List(asterismEditorTile, skyPlotTile)
+            List(asterismEditorTile) ++ skyPlotTile
           }
 
           /**
@@ -571,7 +593,7 @@ object TargetTabContents extends TwoPanels:
            */
           def renderSiderealTargetEditor(
             resize:             UseResizeDetectorReturn,
-            targetId:           Target.Id,
+            targetIds:          NonEmptyList[Target.Id],
             guideStarSelection: View[GuideStarSelection]
           ): List[Tile[?]] = {
             // def onCloneTarget4Target(params: OnCloneParameters): Callback =
@@ -581,49 +603,68 @@ object TargetTabContents extends TwoPanels:
             //     ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
 
             val targetTiles: List[Tile[?]] =
-              props.targets
-                .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
-                .map { target =>
-                  // val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
-                  //   props.programId,
-                  //   props.userId,
-                  //   targetId,
-                  //   target,
-                  //   props.obsAndTargets,
-                  //   props.searching,
-                  //   s"Editing Target ${target.get.name.value} [$targetId]",
-                  //   fullScreen,
-                  //   props.globalPreferences,
-                  //   guideStarSelection,
-                  //   props.readonly,
-                  //   getObsInfo(none)(targetId),
-                  //   onCloneTarget4Target
-                  // )
+              // props.targets
+              //   .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
+              //   .map { target =>
+              // val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+              //   props.programId,
+              //   props.userId,
+              //   targetId,
+              //   target,
+              //   props.obsAndTargets,
+              //   props.searching,
+              //   s"Editing Target ${target.get.name.value} [$targetId]",
+              //   fullScreen,
+              //   props.globalPreferences,
+              //   guideStarSelection,
+              //   props.readonly,
+              //   getObsInfo(none)(targetId),
+              //   onCloneTarget4Target
+              // )
 
-                  val skyPlotTile =
-                    ElevationPlotTile.elevationPlotTile(
-                      props.userId,
-                      targetId.some,
-                      ObjectTracking.fromTarget(target.get).some,
-                      none,
-                      none,
-                      none,
-                      Nil,
-                      props.globalPreferences.get
-                    )
+              // TODO Unify with the same block above
+              val plotData: Option[ElevationPlotData] =
+                NonEmptyMap
+                  .fromMap:
+                    selectedTargetIds.get
+                      .flatMap: targetId =>
+                        props.targets.get
+                          .get(targetId)
+                          .map: target =>
+                            ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
+                              target.name,
+                              ObjectTracking.fromTarget(target),
+                              ElevationPlotSeries.Style.Solid
+                            )
+                      .toSortedMap(_._1, _._2)
+                  .map(ElevationPlotData(_))
 
-                  // List(targetTile, skyPlotTile)
-                  List(skyPlotTile, skyPlotTile)
-                }
-                .orEmpty
+              val skyPlotTile =
+                plotData.map:
+                  ElevationPlotTile.elevationPlotTile(
+                    props.userId,
+                    _,
+                    none,
+                    none,
+                    none,
+                    Nil,
+                    props.globalPreferences.get
+                  )
+
+              // List(targetTile, skyPlotTile)
+              // List(targetTile) ++ skyPlotTile.toList
+              skyPlotTile.toList
+            // }
+            // .orEmpty
 
             renderSummary +: targetTiles
           }
 
-          val optSelected: Option[Either[Target.Id, ObsIdSet]] = props.focused match
-            case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
-            case Focused(None, Some(targetId), _) => targetId.asLeft.some
-            case _                                => none
+          val optSelected: Option[Either[Target.Id, ObsIdSet]] =
+            props.focused match
+              case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
+              case Focused(None, Some(targetId), _) => targetId.asLeft.some
+              case _                                => none
 
           // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
           val dummyTargetTile: Tile[Unit]    =
@@ -640,27 +681,32 @@ object TargetTabContents extends TwoPanels:
               dummyElevationTile
             )
 
+          println(optSelected)
+
           val rightSide = { (resize: UseResizeDetectorReturn) =>
             val tileListKeyOpt: Option[(List[Tile[?]], NonEmptyString)] =
               optSelected
-                .flatMap:
-                  _ match
-                    case Left(targetId) =>
-                      props.targets.get
-                        .get(targetId)
-                        .map:
-                          case Nonsidereal(_, _, _) =>
-                            (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
-                          case Sidereal(_, _, _, _) =>
-                            (renderSiderealTargetEditor(resize, targetId, guideStarSelection),
-                             TargetTabControllerIds.Summary.id
-                            )
-                    case Right(obsIds)  =>
-                      findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
-                        .map: asterismGroup =>
-                          (renderAsterismEditor(resize, obsIds, asterismGroup),
-                           TargetTabControllerIds.AsterismEditor.id
-                          )
+                .flatMap(_.toOption)
+                .flatMap: obsIds =>
+                  findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
+                    .map: asterismGroup =>
+                      (renderAsterismEditor(resize, obsIds, asterismGroup),
+                       TargetTabControllerIds.AsterismEditor.id
+                      )
+                .orElse:
+                  NonEmptyList
+                    .fromList(selectedTargetIds.get)
+                    .map: targetIds =>
+                      // TODO We will have to restructure when we have non-sidereal targets
+                      // props.targets.get
+                      //   .get(targetId)
+                      //   .map:
+                      //     case Nonsidereal(_, _, _) =>
+                      //       (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
+                      //     case Sidereal(_, _, _, _) =>
+                      (renderSiderealTargetEditor(resize, targetIds, guideStarSelection),
+                       TargetTabControllerIds.Summary.id
+                      )
 
             val justSummaryTiles = List(
               renderSummary.withFullSize,

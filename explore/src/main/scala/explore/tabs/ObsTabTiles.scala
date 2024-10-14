@@ -72,6 +72,10 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
+import explore.targeteditor.ElevationPlotSeries
+import explore.targeteditor.ElevationPlotData
+import cats.data.NonEmptyMap
+import lucuma.refined.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
@@ -373,17 +377,29 @@ object ObsTabTiles:
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
               )
 
+            val plotData: Option[ElevationPlotData] =
+              props.asterismTracking.map: tracking =>
+                ElevationPlotData:
+                  NonEmptyMap.one(
+                    ElevationPlotSeries.Id(props.obsId.asLeft),
+                    ElevationPlotSeries(
+                      NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
+                      tracking,
+                      ElevationPlotSeries.Style.Solid
+                    )
+                  )
+
             val skyPlotTile =
-              ElevationPlotTile.elevationPlotTile(
-                props.vault.userId,
-                props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
-                props.asterismTracking,
-                props.observation.get.observingMode.map(_.siteFor),
-                vizTimeView.get,
-                obsDuration.map(_.toDuration),
-                timingWindows.get,
-                props.globalPreferences.get
-              )
+              plotData.map:
+                ElevationPlotTile.elevationPlotTile(
+                  props.vault.userId,
+                  _,
+                  props.observation.get.observingMode.map(_.siteFor),
+                  vizTimeView.get,
+                  obsDuration.map(_.toDuration),
+                  timingWindows.get,
+                  props.globalPreferences.get
+                )
 
             val obsConf =
               ObsConfiguration(
@@ -514,7 +530,7 @@ object ObsTabTiles:
                 notesTile.some,
                 targetTile.some,
                 if (!props.vault.isGuest) finderChartsTile.some else none,
-                skyPlotTile.some,
+                skyPlotTile,
                 constraintsTile.some,
                 timingWindowsTile.some,
                 configurationTile.some,

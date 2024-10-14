@@ -20,13 +20,13 @@ import lucuma.ui.syntax.all.given
 
 import java.time.Duration
 import java.time.Instant
+import explore.targeteditor.ElevationPlotData
 
 object ElevationPlotTile:
 
   def elevationPlotTile(
     userId:            Option[User.Id],
-    targetId:          Option[Target.Id],
-    tracking:          Option[ObjectTracking],
+    plotData:          ElevationPlotData,
     site:              Option[Site],
     vizTime:           Option[Instant],
     pendingTime:       Option[Duration],
@@ -38,12 +38,11 @@ object ElevationPlotTile:
       "Elevation Plot",
       bodyClass = ExploreStyles.ElevationPlotTileBody
     ) { _ =>
-      (userId, targetId, tracking)
-        .mapN: (uid, tid, track) =>
+      userId
+        .map: uid =>
           ElevationPlotSection(
             uid,
-            tid,
-            track,
+            plotData,
             site,
             vizTime,
             pendingTime,

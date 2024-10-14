@@ -27,7 +27,6 @@ import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
@@ -52,8 +51,7 @@ import java.time.*
 
 case class ElevationPlotSection(
   userId:            User.Id,
-  targetId:          Target.Id,
-  tracking:          ObjectTracking,
+  plotData:          ElevationPlotData,
   site:              Option[Site],
   visualizationTime: Option[Instant],
   pendingTime:       Option[Duration],
@@ -71,7 +69,11 @@ object ElevationPlotSection:
       // Plot options, will be read from the user preferences
       .useStateViewBy((props, _) =>
         ElevationPlotOptions
-          .default(props.site, props.visualizationTime, props.tracking)
+          .default(
+            props.site,
+            props.visualizationTime,
+            props.plotData.value.head._2.tracking
+          )
           .copy(
             range = props.globalPreferences.elevationPlotRange,
             timeDisplay = props.globalPreferences.elevationPlotTime,
@@ -150,19 +152,9 @@ object ElevationPlotSection:
           <.div(ExploreStyles.ElevationPlot)(
             opt.range match
               case PlotRange.Night    =>
-                val coords: CoordinatesAtVizTime =
-                  props.tracking
-                    .at(dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC))
-                    .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
-
                 ElevationPlotNight(
-                  Map(
-                    props.targetId -> TargetPlotData(
-                      "target".refined,
-                      coords,
-                      TargetPlotData.Style.Solid
-                    )
-                  ),
+                  props.plotData,
+                  dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC),
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,
@@ -170,9 +162,10 @@ object ElevationPlotSection:
                 )
               case PlotRange.Semester =>
                 val coords: CoordinatesAtVizTime =
-                  props.tracking
+                  props.plotData.value.head._2.tracking
                     .at(semesterView.get.start.atSite(siteView.get).toInstant)
-                    .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
+                    .getOrElse:
+                      CoordinatesAtVizTime(props.plotData.value.head._2.tracking.baseCoordinates)
 
                 ElevationPlotSemester(
                   options.get,
