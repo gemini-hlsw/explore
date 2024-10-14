@@ -55,7 +55,7 @@ import js.JSConverters.*
 case class ElevationPlotNight(
   plotData:         ElevationPlotData,
   coordsTime:       Instant,
-  obsTime:          Option[Instant],
+  // obsTime:          Option[Instant],
   excludeIntervals: List[BoundedInterval[Instant]],
   pendingTime:      Option[Duration],
   options:          View[ElevationPlotOptions]
@@ -113,29 +113,10 @@ object ElevationPlotNight:
   private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
-  @js.native
-  protected trait PointOptionsWithAirmass extends PointOptionsObject:
-    var airmass: Double
-
-  @js.native
-  protected trait ElevationPointWithAirmass extends Point:
-    var airmass: Double
-
-  inline def setAirMass(x: PointOptionsWithAirmass, value: Double): PointOptionsWithAirmass =
-    x.airmass = value
-    x
-
-  protected case class SeriesData(
-    targetAltitude:   List[Chart.Data],
-    skyBrightness:    List[Chart.Data],
-    parallacticAngle: List[Chart.Data],
-    moonAltitude:     List[Chart.Data]
-  )
-
   private enum ElevationSeries(
     val name:    String,
     val yAxis:   Int,
-    val data:    SeriesData => List[Chart.Data],
+    val data:    ElevationPlotSeries.ChartData => List[Chart.Data],
     val enabled: ElevationPlotOptions => Visible
   ) derives Eq:
     case Elevation
@@ -216,13 +197,13 @@ object ElevationPlotNight:
       .useMemoBy((props, shownSeries) =>
         (props.options.get,
          props.plotData,
-         props.obsTime,
+         //  props.obsTime,
          props.pendingTime,
          props.excludeIntervals,
          shownSeries.get
         )
       ): (props, shownSeries) =>
-        (opts, plotData, visualizationTime, pendingTime, excludeIntervals, _) =>
+        (opts, plotData, pendingTime, excludeIntervals, _) =>
           val site: Site               = opts.site
           val timeDisplay: TimeDisplay = opts.timeDisplay
 
@@ -233,47 +214,8 @@ object ElevationPlotNight:
           val tbNauticalNight: TwilightBoundedNight =
             observingNight.twilightBoundedUnsafe(TwilightType.Nautical)
 
-          val start: Instant                                                                   = tbOfficialNight.start
-          val end: Instant                                                                     = tbOfficialNight.end
-          val skyCalcResults: MapView[ElevationPlotSeries.Id, List[(Instant, SkyCalcResults)]] =
-            plotData.value.toSortedMap.view
-              .mapValues: (targetPlotData: ElevationPlotSeries) =>
-                val coords: CoordinatesAtVizTime =
-                  targetPlotData.tracking
-                    .at(props.coordsTime)
-                    .getOrElse(CoordinatesAtVizTime(targetPlotData.tracking.baseCoordinates))
-                SkyCalc.forInterval(site, start, end, PlotEvery, _ => coords.value)
-          val series: MapView[
-            ElevationPlotSeries.Id,
-            List[(Chart.Data, Chart.Data, Chart.Data, Chart.Data)]
-          ] =
-            skyCalcResults
-              .mapValues:
-                _.map: (instant, results) =>
-                  val millisSinceEpoch = instant.toEpochMilli.toDouble
-
-                  def point(value: Double): Chart.Data =
-                    PointOptionsObject()
-                      .setX(millisSinceEpoch)
-                      .setY(value)
-
-                  def pointWithAirmass(value: Double, airmass: Double): Chart.Data =
-                    setAirMass(
-                      point(value).asInstanceOf[PointOptionsWithAirmass],
-                      airmass
-                    )
-
-                  (pointWithAirmass(results.altitude.toAngle.toSignedDoubleDegrees,
-                                    results.airmass
-                   ),
-                   point(results.totalSkyBrightness),
-                   point(results.parallacticAngle.toSignedDoubleDegrees),
-                   point(results.lunarElevation.toAngle.toSignedDoubleDegrees)
-                  )
-
-          val seriesData: MapView[ElevationPlotSeries.Id, SeriesData] =
-            series.mapValues: targetSeries =>
-              summon[Mirror.Of[SeriesData]].fromProduct(targetSeries.unzip4)
+          val start: Instant = tbOfficialNight.start
+          val end: Instant   = tbOfficialNight.end
 
           def timezoneInstantFormat(instant: Instant, zoneId: ZoneId): String =
             ZonedDateTime
@@ -451,8 +393,8 @@ object ElevationPlotNight:
             )
             .setSeries(
               ElevationSeries.values
-                .map(series =>
-                  val zones: Option[js.Array[SeriesZonesOptionsObject]]               =
+                .map: series =>
+                  val zones: Option[js.Array[SeriesZonesOptionsObject]] =
                     (visualizationTime, pendingTime).mapN: (vt, pt) =>
                       js.Array(
                         SeriesZonesOptionsObject()
@@ -461,7 +403,8 @@ object ElevationPlotNight:
                           .setValue(vt.plus(pt).toEpochMilli.toDouble)
                           .setClassName("elevation-plot-visualization-period")
                       )
-                  val baseSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions]  =
+
+                  val baseSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions] =
                     seriesData.mapValues: targetSeriesData =>
                       SeriesAreaOptions((), (), ())
                         .setName(series.name)
@@ -478,6 +421,7 @@ object ElevationPlotNight:
                               props.showSeriesCB(shownSeries, series, s.chart).runNow()
                         .setFillOpacity(0)
                         .setZoneAxis("x")
+
                   val zonedSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions] =
                     zones.fold(baseSeries)(z => baseSeries.mapValues(_.setZones(z)))
 
@@ -487,7 +431,6 @@ object ElevationPlotNight:
                     case ElevationSeries.ParallacticAngle =>
                       zonedSeries.mapValues(_.setThreshold(-180))
                     case _                                => zonedSeries
-                )
                 .flatMap(_.toList.map((_, s) => s.asInstanceOf[SeriesOptionsType]))
                 .toJSArray
             )
