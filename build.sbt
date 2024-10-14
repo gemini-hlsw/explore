@@ -258,12 +258,6 @@ def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
 val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
 
-lazy val setupSbt = WorkflowStep.Use(
-  UseRef.Public("sbt", "setup-sbt", "v1"),
-  name = Some("Setup SBT"),
-  params = Map("sbt-runner-version" -> "1.10.2")
-)
-
 // https://github.com/actions/setup-node/issues/835#issuecomment-1753052021
 lazy val setupNodeNpmInstall =
   List(
@@ -370,11 +364,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     "full",
     SetupSbt ::
       WorkflowStep.Checkout ::
-      WorkflowStep.SetupJava(
-        githubWorkflowJavaVersions.value.toList.take(1),
-        enableCaching = false
-      ) :::
-      setupSbt ::
+      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNodeNpmInstall :::
       sbtStage ::
       npmBuild ::

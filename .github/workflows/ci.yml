@@ -144,11 +144,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: sbt
 
-      - name: Setup SBT
-        uses: sbt/setup-sbt@v1
-        with:
-          sbt-runner-version: 1.10.2
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
+        run: sbt -v -J-Xmx6g +update
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
