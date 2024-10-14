@@ -26,7 +26,6 @@ import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.math.skycalc.SkyCalcResults
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
-import lucuma.core.model.Target
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.util.time.*
 import lucuma.react.common.ReactFnProps
@@ -343,11 +342,9 @@ object ElevationPlotNight:
 
           val options: Options = Options()
             .setChart(commonOptions)
-            .setTitle(
-              TitleOptions().setText(
+            .setTitle:
+              TitleOptions().setText:
                 s"Sunset ${observingNight.toLocalDate.minusDays(1)} ➟ Sunrise ${observingNight.toLocalDate} "
-              )
-            )
             .setCredits(CreditsOptions().setEnabled(false))
             .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
             .setXAxis(
