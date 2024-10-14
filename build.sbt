@@ -247,22 +247,16 @@ val SetupSbt = WorkflowStep.Use(
   name = Some("Install sbt")
 )
 
-val pushCond                 = "github.event_name == 'push'"
-val prCond                   = "github.event_name == 'pull_request'"
-val masterCond               = "github.ref == 'refs/heads/master'"
-val notMasterCond            = "github.ref != 'refs/heads/master'"
-val geminiRepoCond           = "startsWith(github.repository, 'gemini')"
-val notDependabotCond        = "github.actor != 'dependabot[bot]'"
+val pushCond          = "github.event_name == 'push'"
+val prCond            = "github.event_name == 'pull_request'"
+val masterCond        = "github.ref == 'refs/heads/master'"
+val notMasterCond     = "github.ref != 'refs/heads/master'"
+val geminiRepoCond    = "startsWith(github.repository, 'gemini')"
+val notDependabotCond = "github.actor != 'dependabot[bot]'"
 def allConds(conds: String*) = conds.mkString("(", " && ", ")")
 def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
 val faNpmAuthToken = "FONTAWESOME_NPM_AUTH_TOKEN" -> "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
-
-lazy val setupSbt = WorkflowStep.Use(
-  UseRef.Public("sbt", "setup-sbt", "v1"),
-  name = Some("Setup SBT"),
-  params = Map("sbt-runner-version" -> "1.10.2")
-)
 
 // https://github.com/actions/setup-node/issues/835#issuecomment-1753052021
 lazy val setupNodeNpmInstall =
@@ -368,13 +362,8 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "full",
     "full",
-    SetupSbt ::
-      WorkflowStep.Checkout ::
-      WorkflowStep.SetupJava(
-        githubWorkflowJavaVersions.value.toList.take(1),
-        enableCaching = false
-      ) :::
-      setupSbt ::
+    WorkflowStep.Checkout ::
+      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNodeNpmInstall :::
       sbtStage ::
       npmBuild ::
