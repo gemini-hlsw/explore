@@ -394,8 +394,9 @@ object ObsSummaryTable:
         )
       )
 
+  // 24 October 2024 - scalafix failing to parse with fewer braces
   // Helper ADT for table rows type
-  enum ObsSummaryRow:
+  enum ObsSummaryRow {
     case ExpandedTargetRow(
       obsId:        Observation.Id,
       targetWithId: TargetWithId,
@@ -433,3 +434,4 @@ object ObsSummaryTable:
       asterism
         .map(_.baseTracking)
         .flatMap(bt => vizTime.fold(bt.baseCoordinates.some)(v => bt.at(v).map(_.value)))
+  }

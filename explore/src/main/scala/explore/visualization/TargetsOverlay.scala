@@ -106,7 +106,7 @@ object TargetsOverlay {
   val JtsGuides  = Css("viz-guides")
 
   val component =
-    ScalaFnComponent[Props]: p =>
+    ScalaFnComponent[Props] { p =>
       val pixx = p.fov.x.toMicroarcseconds / p.width
       val pixy = p.fov.y.toMicroarcseconds / p.height
       val maxP = max(pixx, pixy)
@@ -143,7 +143,8 @@ object TargetsOverlay {
           val (offP, offQ) = offset.micros // Offset amount
           (offP, offQ, target)
 
-      val guideStarTooltips: List[VdomNode] = p.targets.collect:
+      // 24 October 2024 - scalafix failing to parse with fewer braces
+      val guideStarTooltips: List[VdomNode] = p.targets.collect {
         case SVGTarget.GuideStarCandidateTarget(_, _, _, ags, _) =>
           Tooltip(clazz = ExploreStyles.VisualizationTooltip, targetCss = ags.target.selector)(
             GuideStarTooltip(ags)
@@ -152,6 +153,7 @@ object TargetsOverlay {
           Tooltip(clazz = ExploreStyles.VisualizationTooltip, targetCss = ags.target.selector)(
             GuideStarTooltip(ags)
           )
+      }
 
       val svg: VdomNode = <.svg(
         JtsSvg,
@@ -246,4 +248,5 @@ object TargetsOverlay {
         React.Fragment.withKey(p.targets.length)((textTooltip +: guideStarTooltips)*)
 
       React.Fragment(svg, tooltips)
+    }
 }
