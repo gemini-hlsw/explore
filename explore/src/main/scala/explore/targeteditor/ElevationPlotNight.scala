@@ -21,10 +21,7 @@ import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.Angle
 import lucuma.core.math.BoundedInterval
-import lucuma.core.math.Coordinates
 import lucuma.core.math.skycalc.ImprovedSkyCalc
-import lucuma.core.math.skycalc.SkyCalcResults
-import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObservingNight
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.util.time.*
@@ -35,7 +32,6 @@ import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.ui.components.MoonPhase
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 import monocle.Lens
 import org.typelevel.cats.time.given
 
@@ -47,7 +43,6 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import scala.collection.MapView
 import scala.collection.immutable.HashSet
-import scala.deriving.Mirror
 import scala.scalajs.js
 
 import js.JSConverters.*
@@ -110,7 +105,6 @@ case class ElevationPlotNight(
 object ElevationPlotNight:
   private type Props = ElevationPlotNight
 
-  private val PlotEvery: Duration   = Duration.ofMinutes(1)
   private val MillisPerHour: Double = 60 * 60 * 1000
 
   private enum ElevationSeries(
@@ -274,11 +268,14 @@ object ElevationPlotNight:
           val dusk: String = instantFormat(tbNauticalNight.start)
           val dawn: String = instantFormat(tbNauticalNight.end)
 
+          val seriesData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.Points] =
+            plotData.value.toSortedMap.view.mapValues(_.pointsAtInstant(site, start, end))
+
           val targetsBelowHorizonStr: Option[String] =
             Option.when(
               seriesData.forall: (_, targetSeriesData) =>
                 ElevationSeries.Elevation
-                  .data(targetSeriesData)
+                  .data(targetSeriesData.chartData)
                   .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
             ):
               if (plotData.value.size === 1) "Target is below horizon"
@@ -395,22 +392,26 @@ object ElevationPlotNight:
               ElevationSeries.values
                 .map: series =>
                   val zones: Option[js.Array[SeriesZonesOptionsObject]] =
-                    (visualizationTime, pendingTime).mapN: (vt, pt) =>
+                    pendingTime.map: pt =>
                       js.Array(
                         SeriesZonesOptionsObject()
-                          .setValue(vt.toEpochMilli.toDouble),
+                          .setValue(start.toEpochMilli.toDouble),
                         SeriesZonesOptionsObject()
-                          .setValue(vt.plus(pt).toEpochMilli.toDouble)
+                          .setValue(start.plus(pt).toEpochMilli.toDouble)
                           .setClassName("elevation-plot-visualization-period")
                       )
 
-                  val baseSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions] =
-                    seriesData.mapValues: targetSeriesData =>
+                  val baseSeries: List[SeriesAreaOptions] =
+                    seriesData.toList.map: (id, targetSeriesData) =>
+                      val name: String = plotData
+                        .value(id)
+                        .map(_.name.value)
+                        .getOrElse(id.value.fold(_.toString, _.toString))
                       SeriesAreaOptions((), (), ())
-                        .setName(series.name)
+                        .setName(s"${series.name} ($name)")
                         .setClassName("elevation-plot-series")
                         .setYAxis(series.yAxis)
-                        .setData(series.data(targetSeriesData).toJSArray)
+                        .setData(series.data(targetSeriesData.chartData).toJSArray)
                         .setVisible:
                           series.enabled(opts).isVisible && shownSeries.get.contains(series)
                         .setEvents:
@@ -422,30 +423,23 @@ object ElevationPlotNight:
                         .setFillOpacity(0)
                         .setZoneAxis("x")
 
-                  val zonedSeries: MapView[ElevationPlotSeries.Id, SeriesAreaOptions] =
-                    zones.fold(baseSeries)(z => baseSeries.mapValues(_.setZones(z)))
+                  val zonedSeries: List[SeriesAreaOptions] =
+                    zones.fold(baseSeries)(z => baseSeries.map(_.setZones(z)))
 
                   series match // Adjust fill area to axis
                     case ElevationSeries.SkyBrightness    =>
-                      zonedSeries.mapValues(_.setThreshold(22))
+                      zonedSeries.map(_.setThreshold(22))
                     case ElevationSeries.ParallacticAngle =>
-                      zonedSeries.mapValues(_.setThreshold(-180))
+                      zonedSeries.map(_.setThreshold(-180))
                     case _                                => zonedSeries
-                .flatMap(_.toList.map((_, s) => s.asInstanceOf[SeriesOptionsType]))
+                .flatMap(_.map(_.asInstanceOf[SeriesOptionsType]))
                 .toJSArray
             )
 
-          val moonData: Option[(Double, Double)] =
-            skyCalcResults.headOption.map: (_, targetResults) =>
-              val (midOfNight, midOfNightResult) = targetResults(targetResults.length / 2)
-              val moonPhase                      = MoonCalc.approxPhase(midOfNight)
-              val moonIllum                      = midOfNightResult.lunarIlluminatedFraction.toDouble
-              (moonPhase, moonIllum)
-
-          (options, moonData)
+          (options, seriesData.headOption.map(_._2.moonData))
       .render: (props, shownSeries, computed) =>
         React.Fragment(
           Chart(computed.map(_._1)),
-          computed._2.map: (moonPhase, moonIllum) =>
-            MoonPhase(moonPhase)(<.small("%1.0f%%".format(moonIllum * 100)))
+          computed._2.map: moonData =>
+            MoonPhase(moonData.moonPhase)(<.small("%1.0f%%".format(moonData.moonIllum * 100)))
         )

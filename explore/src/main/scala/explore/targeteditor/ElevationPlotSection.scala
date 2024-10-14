@@ -28,7 +28,6 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
-import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.display.given
@@ -155,7 +154,6 @@ object ElevationPlotSection:
                 ElevationPlotNight(
                   props.plotData,
                   dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC),
-                  props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,
                   options

@@ -8,19 +8,17 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTilesIds
+import explore.targeteditor.ElevationPlotData
 import explore.targeteditor.ElevationPlotSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
-import lucuma.core.model.ObjectTracking
-import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.ui.syntax.all.given
 
 import java.time.Duration
 import java.time.Instant
-import explore.targeteditor.ElevationPlotData
 
 object ElevationPlotTile:
 

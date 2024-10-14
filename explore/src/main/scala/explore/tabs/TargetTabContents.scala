@@ -3,7 +3,9 @@
 
 package explore.tabs
 
-import cats.Order.*
+import cats.Order.given
+import cats.data.NonEmptyList
+import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -33,6 +35,8 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.targeteditor.ElevationPlotData
+import explore.targeteditor.ElevationPlotSeries
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -45,8 +49,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.model.Target.Nonsidereal
-import lucuma.core.model.Target.Sidereal
 import lucuma.core.model.User
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.*
@@ -54,25 +56,18 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.*
 import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
-import cats.Order.given
 
 import java.time.Instant
+import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.targeteditor.ElevationPlotData
-import explore.targeteditor.ElevationPlotSeries
-import cats.data.NonEmptyMap
-import cats.data.NonEmptyList
-import scala.collection.immutable.SortedMap
 
 case class TargetTabContents(
   programId:        Program.Id,
@@ -673,14 +668,14 @@ object TargetTabContents extends TwoPanels:
           val dummyElevationTile: Tile[Unit] =
             Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
 
-          val renderNonSiderealTargetEditor: List[Tile[?]] =
-            List(
-              renderSummary.withFullSize,
-              Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
-                <.div("Editing of Non-Sidereal targets not supported")
-              ),
-              dummyElevationTile
-            )
+          // val renderNonSiderealTargetEditor: List[Tile[?]] =
+          //   List(
+          //     renderSummary.withFullSize,
+          //     Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
+          //       <.div("Editing of Non-Sidereal targets not supported")
+          //     ),
+          //     dummyElevationTile
+          //   )
 
           println(optSelected)
 
