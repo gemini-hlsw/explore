@@ -90,7 +90,8 @@ trait CacheModifierUpdaters {
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
     groupUpdate.payload // We ignore updates on deleted groups.
-      .map: payload =>
+      // 24 October 2024 - scalafix failing to parse with fewer braces
+      .map { payload =>
         val groupId: Group.Id          = payload.value.elem.id
         val isPresentInServer: Boolean =
           groupUpdate.payload.exists(_.existence === Existence.Present)
@@ -123,7 +124,6 @@ trait CacheModifierUpdaters {
                   case _          =>
                     val findIndexFn: GroupTree.Node => Boolean =
                       _.value.parentIndex >= payload.value.parentIndex
-
                     _.upserted(
                       groupId.asRight,
                       payload.value.map(_.asRight),
@@ -141,7 +141,7 @@ trait CacheModifierUpdaters {
 
         ifPresentInServerOrLocally:
           updateGroup >>> groupTimeRangePotsReset
-      .orEmpty
+      }.orEmpty
 
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit

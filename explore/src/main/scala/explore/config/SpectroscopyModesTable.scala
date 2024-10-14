@@ -345,7 +345,7 @@ private object SpectroscopyModesTable:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useState:                       // itcResults
+      .useState: // itcResults
         ItcResultsCache(Map.empty[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]])
       .useMemoBy((props, _, itcResults) => // rows
         (props.matrix,
@@ -384,7 +384,7 @@ private object SpectroscopyModesTable:
                 ModeCommonWavelengths.wavelengthInterval(w)(row),
               row.rowToConf(s.wavelength).map(_.configurationSummary)
             )
-      .useState(none[Progress])        // itcProgress
+      .useState(none[Progress]) // itcProgress
       .useMemoBy((props, _, itcResults, rows, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
          props.spectroscopyRequirements.signalToNoise,
@@ -464,7 +464,7 @@ private object SpectroscopyModesTable:
               props.selectedConfig.set(conf)
             else Callback.empty
       .useState(none[Range.Inclusive]) // visibleRows
-      .useState(false)                 // atTop
+      .useState(false) // atTop
       // Recalculate ITC values if the wv or sn change or if the rows get modified
       .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
         (

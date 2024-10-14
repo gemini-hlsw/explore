@@ -39,7 +39,7 @@ object AladinZoomControl {
           icon = Icons.ThinMinus,
           onClick = p.aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
         ).small
-      ),
+      )
     )
 }
 

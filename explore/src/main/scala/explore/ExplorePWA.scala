@@ -119,8 +119,8 @@ object ExplorePWA {
             import scala.concurrent.ExecutionContext.Implicits.global
             // https://vite-plugin-pwa.netlify.app/guide/periodic-sw-updates.html
             val isOffline =
-              !(!(r.installing && !js.isUndefined(org.scalajs.dom.window.navigator))) ||
-                (dom.window.navigator.hasOwnProperty("connection") && dom.window.navigator.onLine)
+              !(!(r.installing && !js.isUndefined(org.scalajs.dom.window.navigator)) ||
+                (dom.window.navigator.hasOwnProperty("connection") && dom.window.navigator.onLine))
             (IO.println(
               s"Service worker registered, check for updates every $updateInteval, offline: $isOffline"
             ) *>

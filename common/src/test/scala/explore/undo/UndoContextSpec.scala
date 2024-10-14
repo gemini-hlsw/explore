@@ -98,7 +98,7 @@ class UndoContextSpec extends munit.CatsEffectSuite {
 
   case class V(id: Int, s: String)
   object V {
-    def apply(id: Int): V = V(id, id.toString)
+    def apply(id: Int): V  = V(id, id.toString)
     val id: Lens[V, Int]   = GenLens[V](_.id)
     val s: Lens[V, String] = GenLens[V](_.s)
   }

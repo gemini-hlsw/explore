@@ -68,7 +68,7 @@ object TimeAccountingTable:
       for
         minTime     <- programTimes.timeEstimateRange.map(_.minimum.value)
         maxTime     <- programTimes.timeEstimateRange.map(_.maximum.value)
-        used         = programTimes.timeCharge.value
+        used         = programTimes.fullProgramTime
         remain       = TimeSpan.Zero // TODO
         isSingleTime = minTime == maxTime
       yield table(

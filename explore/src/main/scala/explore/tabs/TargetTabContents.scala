@@ -42,8 +42,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.Coordinates
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.Target.Nonsidereal
@@ -340,7 +339,7 @@ object TargetTabContents extends TwoPanels:
            * Render the asterism editor
            *
            * @param idsToEdit
-           *   The observations to include in the edit. This needs to be asubset of the ids in
+           *   The observations to include in the edit. This needs to be a subset of the ids in
            *   asterismGroup
            * @param asterismGroup
            *   The AsterismGroup that is the basis for editing. All or part of it may be included in
@@ -452,8 +451,8 @@ object TargetTabContents extends TwoPanels:
                 (if (params.areCreating) {
                    val obsIds4Url =
                      ObsIdSet.fromSortedSet(idsToEdit.idSet.intersect(params.obsIds.idSet))
-                     // all of the original groups that have any of the cloned ids
-                     // Deal with the expanded groups - we'll open all affected groups
+                   // all of the original groups that have any of the cloned ids
+                   // Deal with the expanded groups - we'll open all affected groups
                    allOriginalGroups.toList.traverse { ids =>
                      val intersect = ids.idSet.intersect(params.obsIds.idSet)
                      if (intersect === ids.idSet.toSortedSet)
@@ -544,25 +543,19 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            // coordinates for the elevation plot, if no obs time default to base
-            val skyPlotCoordinates: Option[Coordinates] =
-              props.focused.target.flatMap: id =>
-                props.targets.get
-                  .get(id)
-                  .flatMap:
-                    case t @ Target.Sidereal(_, _, _, _) =>
-                      obsTimeView.get
-                        .flatMap(ot => Target.Sidereal.tracking.get(t).at(ot))
-                        // If no obs time default to base coords
-                        .orElse(t.tracking.baseCoordinates.some)
-                    case _                               => none
+            val tracking: Option[ObjectTracking] =
+              props.focused.target
+                .flatMap: targetId =>
+                  props.targets.get.get(targetId)
+                .map:
+                  ObjectTracking.fromTarget(_)
 
             val skyPlotTile =
               ElevationPlotTile.elevationPlotTile(
                 props.userId,
                 props.focused.target,
+                tracking,
                 configuration.map(_.siteFor),
-                skyPlotCoordinates.map(CoordinatesAtVizTime(_)),
                 obsTimeView.get,
                 none,
                 Nil,
@@ -610,8 +603,8 @@ object TargetTabContents extends TwoPanels:
                     ElevationPlotTile.elevationPlotTile(
                       props.userId,
                       targetId.some,
+                      ObjectTracking.fromTarget(target.get).some,
                       none,
-                      CoordinatesAtVizTime(Target.Sidereal.baseCoordinates.get(target.get)).some,
                       none,
                       none,
                       Nil,

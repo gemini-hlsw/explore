@@ -8,9 +8,9 @@ import lucuma.react.common.style.Css
 import lucuma.typed.highcharts.mod.*
 
 extension (c: Chart_)
-  inline def showLoadingCB: Callback = CallbackTo(c.showLoading())
+  inline def showLoadingCB: Callback              = CallbackTo(c.showLoading())
   inline def showLoadingCB(str: String): Callback = CallbackTo(c.showLoading(str))
-  inline def reflowCB: Callback = Callback(c.reflow())
+  inline def reflowCB: Callback                   = Callback(c.reflow())
 
 extension (c: ChartOptions)
   inline def clazz(s: Css) = c.setClassName(s.htmlClass)

@@ -156,9 +156,8 @@ object EditableLabel {
               ^.untypedRef(focus)
             ),
             props.okButtonTooltip.fold(acceptButton)(tt => <.span(acceptButton).withTooltip(tt)),
-            props.discardButtonTooltip.fold(discardButton)(tt =>
-              <.span(discardButton).withTooltip(tt)
-            )
+            props.discardButtonTooltip
+              .fold(discardButton)(tt => <.span(discardButton).withTooltip(tt))
           )
         else
           props.value.fold[VdomNode](

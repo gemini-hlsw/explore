@@ -35,8 +35,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Install sbt
-        if: contains(runner.os, 'macos')
-        run: brew install sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Checkout current branch (full)
         uses: actions/checkout@v4
@@ -132,6 +131,9 @@ jobs:
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (fast)
         uses: actions/checkout@v4
 
@@ -142,11 +144,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: sbt
 
-      - name: sbt update
-        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
-        run: sbt -v -J-Xmx6g +update
+      - name: Setup SBT
+        uses: sbt/setup-sbt@v1
+        with:
+          sbt-runner-version: 1.10.2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -201,6 +203,9 @@ jobs:
         java: [temurin@17]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Checkout current branch (fast)
         uses: actions/checkout@v4
 

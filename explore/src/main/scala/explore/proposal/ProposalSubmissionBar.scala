@@ -83,7 +83,7 @@ object ProposalSubmissionBar:
       .useStateView(IsUpdatingStatus(false))
       .useStateView(none[String]) // Submission error message
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.callId): (_, _, _, e) =>
-        _ => e.set(none) // Reset error message on CfP change
+        _ => e.set(none)          // Reset error message on CfP change
       .useStreamOnMount:
         Stream
           .fixedRateStartImmediately[IO](1.second)
@@ -102,7 +102,7 @@ object ProposalSubmissionBar:
           )
 
         nowPot.toOption.flatten.map: now =>
-          val isDueDeadline: Boolean = props.deadline.exists(_ < now)
+          val isDueDeadline: Boolean = props.deadline.forall(_ < now)
 
           Toolbar(left =
             <.div(ExploreStyles.ProposalSubmissionBar)(

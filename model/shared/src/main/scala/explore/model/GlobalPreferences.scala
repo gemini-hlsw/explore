@@ -18,14 +18,14 @@ object AladinMouseScroll extends NewType[Boolean]:
   inline def Allowed: AladinMouseScroll  = AladinMouseScroll(true)
   inline def Disabled: AladinMouseScroll = AladinMouseScroll(false)
   extension (s: AladinMouseScroll)
-    inline def flip: AladinMouseScroll =
+    inline def flip: AladinMouseScroll   =
       if (s.value) AladinMouseScroll.Disabled else AladinMouseScroll.Allowed
 
 type AladinMouseScroll = AladinMouseScroll.Type
 
 object ElevationPlotScheduling extends NewType[Boolean]:
-  val On: ElevationPlotScheduling  = ElevationPlotScheduling(true)
-  val Off: ElevationPlotScheduling = ElevationPlotScheduling(false)
+  val On: ElevationPlotScheduling            = ElevationPlotScheduling(true)
+  val Off: ElevationPlotScheduling           = ElevationPlotScheduling(false)
   extension (s: ElevationPlotScheduling)
     inline def flip: ElevationPlotScheduling =
       if (s.value) ElevationPlotScheduling.Off else ElevationPlotScheduling.On

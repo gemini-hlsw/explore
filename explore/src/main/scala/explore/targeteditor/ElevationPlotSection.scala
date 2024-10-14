@@ -25,7 +25,10 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
+import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObjectTracking
+import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
@@ -48,12 +51,12 @@ import spire.math.extras.interval.IntervalSeq
 import java.time.*
 
 case class ElevationPlotSection(
-  uid:               User.Id,
-  tid:               Target.Id,
+  userId:            User.Id,
+  targetId:          Target.Id,
+  tracking:          ObjectTracking,
   site:              Option[Site],
   visualizationTime: Option[Instant],
   pendingTime:       Option[Duration],
-  coords:            CoordinatesAtVizTime,
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
 ) extends ReactFnProps(ElevationPlotSection.component)
@@ -68,7 +71,7 @@ object ElevationPlotSection:
       // Plot options, will be read from the user preferences
       .useStateViewBy((props, _) =>
         ElevationPlotOptions
-          .default(props.site, props.visualizationTime, props.coords)
+          .default(props.site, props.visualizationTime, props.tracking)
           .copy(
             range = props.globalPreferences.elevationPlotRange,
             timeDisplay = props.globalPreferences.elevationPlotTime,
@@ -96,7 +99,7 @@ object ElevationPlotSection:
         val options = elevationPlotOptions.withOnMod(opts =>
           ElevationPlotPreference
             .updatePlotPreferences[IO](
-              props.uid,
+              props.userId,
               opts.range,
               opts.timeDisplay,
               opts.showScheduling.value,
@@ -108,15 +111,15 @@ object ElevationPlotSection:
             .runAsync
         )
 
-        val siteView           = options.zoom(ElevationPlotOptions.site)
-        val rangeView          = options.zoom(ElevationPlotOptions.range)
-        val dateView           = options.zoom(ElevationPlotOptions.date)
-        val semesterView       = options.zoom(ElevationPlotOptions.semester)
-        val timeDisplayView    = options.zoom(ElevationPlotOptions.timeDisplay)
-        val showSchedulingView =
+        val siteView: View[Site]                              = options.zoom(ElevationPlotOptions.site)
+        val rangeView: View[PlotRange]                        = options.zoom(ElevationPlotOptions.range)
+        val dateView: View[LocalDate]                         = options.zoom(ElevationPlotOptions.date)
+        val semesterView: View[Semester]                      = options.zoom(ElevationPlotOptions.semester)
+        val timeDisplayView: View[TimeDisplay]                = options.zoom(ElevationPlotOptions.timeDisplay)
+        val showSchedulingView: View[ElevationPlotScheduling] =
           options.zoom(ElevationPlotOptions.showScheduling)
 
-        val opt = options.get
+        val opt: ElevationPlotOptions = options.get
 
         def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
           windows
@@ -147,22 +150,31 @@ object ElevationPlotSection:
           <.div(ExploreStyles.ElevationPlot)(
             opt.range match
               case PlotRange.Night    =>
+                val coords: CoordinatesAtVizTime =
+                  props.tracking
+                    .at(dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC))
+                    .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
+
                 ElevationPlotNight(
-                  props.coords,
+                  coords,
                   props.visualizationTime,
                   windowsNetExcludeIntervals,
                   props.pendingTime,
                   options
                 )
               case PlotRange.Semester =>
+                val coords: CoordinatesAtVizTime =
+                  props.tracking
+                    .at(semesterView.get.start.atSite(siteView.get).toInstant)
+                    .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
+
                 ElevationPlotSemester(
                   options.get,
-                  props.coords,
+                  coords,
                   windowsNetExcludeIntervals
-                ),
+                )
           ),
-          <.div(
-            ExploreStyles.ElevationPlotControls,
+          <.div(ExploreStyles.ElevationPlotControls)(
             SelectButtonEnumView(
               "elevation-plot-site".refined,
               siteView,
