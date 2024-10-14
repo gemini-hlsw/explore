@@ -4,29 +4,28 @@
 package explore.targeteditor
 
 import cats.Eq
+import cats.Order
+import cats.data.NonEmptyMap
 import cats.derived.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.*
+import lucuma.core.enums.Site
+import lucuma.core.math.skycalc.SkyCalcResults
+import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
-import cats.data.NonEmptyMap
 import lucuma.core.util.NewType
-import lucuma.ui.reusability.given
-import scala.collection.immutable.SortedMap
-import cats.Order
-import java.time.Instant
-import lucuma.react.highcharts.Chart
-import lucuma.typed.highcharts.mod.PointOptionsObject
-import lucuma.core.math.skycalc.SkyCalcResults
-import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.enums.Site
-import java.time.Duration
-import scalajs.js
 import lucuma.typed.highcharts.mod.Point
-import scala.deriving.Mirror
+import lucuma.typed.highcharts.mod.PointOptionsObject
 import lucuma.ui.utils.unzip4
+
+import java.time.Duration
+import java.time.Instant
+import scala.deriving.Mirror
+
+import scalajs.js
 
 @js.native
 trait PointOptionsWithAirmass extends PointOptionsObject:

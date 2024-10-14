@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.data.NonEmptyList
+import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -40,6 +41,8 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
+import explore.targeteditor.ElevationPlotData
+import explore.targeteditor.ElevationPlotSeries
 import explore.timingwindows.TimingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -61,6 +64,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
 import lucuma.react.resizeDetector.*
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
@@ -72,10 +76,6 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
-import explore.targeteditor.ElevationPlotSeries
-import explore.targeteditor.ElevationPlotData
-import cats.data.NonEmptyMap
-import lucuma.refined.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
