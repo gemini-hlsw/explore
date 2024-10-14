@@ -16,13 +16,43 @@ import lucuma.core.util.NewType
 import lucuma.ui.reusability.given
 import scala.collection.immutable.SortedMap
 import cats.Order
+import java.time.Instant
+import lucuma.react.highcharts.Chart
+import lucuma.typed.highcharts.mod.PointOptionsObject
+import lucuma.core.math.skycalc.SkyCalcResults
+import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.enums.Site
+import java.time.Duration
+import scalajs.js
+import lucuma.typed.highcharts.mod.Point
+import scala.deriving.Mirror
+import lucuma.ui.utils.unzip4
+
+@js.native
+trait PointOptionsWithAirmass extends PointOptionsObject:
+  var airmass: Double
+
+@js.native
+trait ElevationPointWithAirmass extends Point:
+  var airmass: Double
 
 // Can wrap data for a target or an asterism.
 case class ElevationPlotSeries(
   name:     NonEmptyString,
   tracking: ObjectTracking,
   style:    ElevationPlotSeries.Style
-) derives Eq
+) derives Eq:
+  private val PlotEvery: Duration = Duration.ofMinutes(1)
+
+  def pointsAtInstant(site: Site, start: Instant, end: Instant): ElevationPlotSeries.Points =
+    ElevationPlotSeries.Points:
+      SkyCalc.forInterval(
+        site,
+        start,
+        end,
+        PlotEvery,
+        tracking.at(_).map(_.value).getOrElse(tracking.baseCoordinates)
+      )
 
 object ElevationPlotSeries:
   object Id extends NewType[Either[Observation.Id, Target.Id]]:
@@ -33,6 +63,58 @@ object ElevationPlotSeries:
     case Solid, Dashed
 
   given Reusability[ElevationPlotSeries] = Reusability.byEq
+
+  inline private def setAirMass(
+    x:     PointOptionsWithAirmass,
+    value: Double
+  ): PointOptionsWithAirmass =
+    x.airmass = value
+    x
+
+  case class ChartData(
+    targetAltitude:   List[PointOptionsWithAirmass],
+    skyBrightness:    List[PointOptionsObject],
+    parallacticAngle: List[PointOptionsObject],
+    moonAltitude:     List[PointOptionsObject]
+  )
+
+  case class MoonData(moonPhase: Double, moonIllum: Double)
+
+  case class Points(value: List[(Instant, SkyCalcResults)]):
+    lazy val chartData: ChartData = {
+      val series
+        : List[(PointOptionsObject, PointOptionsObject, PointOptionsObject, PointOptionsObject)] =
+        value.map: (instant, results) =>
+          val millisSinceEpoch = instant.toEpochMilli.toDouble
+
+          def point(value: Double): PointOptionsObject =
+            PointOptionsObject()
+              .setX(millisSinceEpoch)
+              .setY(value)
+
+          def pointWithAirmass(value: Double, airmass: Double): PointOptionsObject =
+            setAirMass(
+              point(value).asInstanceOf[PointOptionsWithAirmass],
+              airmass
+            )
+
+          (pointWithAirmass(
+             results.altitude.toAngle.toSignedDoubleDegrees,
+             results.airmass
+           ),
+           point(results.totalSkyBrightness),
+           point(results.parallacticAngle.toSignedDoubleDegrees),
+           point(results.lunarElevation.toAngle.toSignedDoubleDegrees)
+          )
+
+      summon[Mirror.Of[ChartData]].fromProduct(series.unzip4)
+    }
+
+    lazy val moonData: MoonData =
+      val (midOfNight, midOfNightResult) = value(value.length / 2)
+      val moonPhase                      = MoonCalc.approxPhase(midOfNight)
+      val moonIllum                      = midOfNightResult.lunarIlluminatedFraction.toDouble
+      MoonData(moonPhase, moonIllum)
 
 object ElevationPlotData extends NewType[NonEmptyMap[ElevationPlotSeries.Id, ElevationPlotSeries]]:
   given Reusability[ElevationPlotData] =
