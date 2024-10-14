@@ -310,16 +310,18 @@ object ElevationPlotNight:
 
           val tooltipFormatter: TooltipFormatterCallbackFunction =
             (ctx: TooltipFormatterContextObject, _: Tooltip) =>
-              val x     = ctx.x match
+              val x                = ctx.x match
                 case x: Double => x
                 case x: String => x.toDouble
                 case _         => 0.0
-              val y     = ctx.y.asInstanceOf[js.UndefOr[String | Double]] match
+              val y                = ctx.y.asInstanceOf[js.UndefOr[String | Double]] match
                 case y: Double => y
                 case y: String => y.toDouble
                 case _         => 0.0
-              val time  = timeFormat(x)
-              val value = ctx.series.index match
+              val time             = timeFormat(x)
+              // HACK. TODO Think of something better
+              val seriesIndex: Int = ctx.series.index.toInt / props.plotData.value.size.toInt
+              val value            = seriesIndex match
                 case 0 =>                      // Target elevation with airmass
                   formatAngle(y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
                 case 2 => "%.2f".format(ctx.y) // Sky Brightness
