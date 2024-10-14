@@ -29,7 +29,7 @@ object ExploreEvent {
   }
 
   object LogoutEvent {
-    val event = LogoutEventId
+    val event                                   = LogoutEventId
     def apply(nonce: String)                    = new LogoutEvent(nonce)
     def unapply(l:   LogoutEvent): Some[String] = Some(l.nonce)
   }

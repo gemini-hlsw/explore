@@ -53,8 +53,8 @@ case class NotesTileBody(
 
 type Editing = Editing.Type
 object Editing extends NewType[Boolean]:
-  inline def NotEditing = Editing(false)
-  inline def InEdition  = Editing(true)
+  inline def NotEditing       = Editing(false)
+  inline def InEdition        = Editing(true)
   inline def flip(e: Editing) = Editing(!e.value)
 
 object NotesTileBody:

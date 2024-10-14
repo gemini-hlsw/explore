@@ -168,7 +168,7 @@ object ObsList:
               // there is a focused obsId, look for it in the list
               val foundIdx = obsList.getIndex(obsId)
               (optIndex.value, foundIdx) match
-                case (_, Some(fidx))    =>
+                case (_, Some(fidx)) =>
                   optIndex.setState(fidx.some) // focused obs is in list
                 case (None, None)       =>
                   setObs(props.programId, none, ctx) >> optIndex.setState(none)

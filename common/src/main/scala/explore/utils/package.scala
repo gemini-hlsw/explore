@@ -117,10 +117,10 @@ extension (toastRef: ToastRef)
     )
 
 // TODO Move these to react-datetime
-extension (instant: Instant)
+extension (instant:  Instant)
   // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
   // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-  def toDatePickerJsDate: js.Date =
+  def toDatePickerJsDate: js.Date                                 =
     val zdt: ZonedDateTime = ZonedDateTime.ofInstant(instant, ZoneOffset.UTC)
     // init removes the Z timezone
     new js.Date(js.Date.parse(zdt.toString.init))

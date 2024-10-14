@@ -36,8 +36,7 @@ object ScienceRequirements {
     focalPlane:         Option[FocalPlane],
     focalPlaneAngle:    Option[Angle],
     capability:         Option[SpectroscopyCapabilities]
-  ) extends ScienceRequirements
-      derives Eq
+  ) extends ScienceRequirements derives Eq
 
   object Spectroscopy {
     given Decoder[Spectroscopy] = deriveDecoder

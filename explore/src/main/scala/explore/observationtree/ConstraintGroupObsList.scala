@@ -73,7 +73,7 @@ case class ConstraintGroupObsList(
     observations.idSet.size match
       case 1    => s"observation ${observations.idSet.head}"
       case more => s"$more observations"
-  private def constraintSetText(cs: ConstraintSet): String = s"constraints '${cs.shortName}'"
+  private def constraintSetText(cs: ConstraintSet): String     = s"constraints '${cs.shortName}'"
 
   private val selectedText: Option[String]  = focusedObsSet.map(observationsText)
   private val clipboardText: Option[String] = clipboardObsContents.map(observationsText)

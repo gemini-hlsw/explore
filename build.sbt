@@ -242,12 +242,17 @@ fixCSS := {
     throw new Exception("Error in CSS fix")
 }
 
-val pushCond          = "github.event_name == 'push'"
-val prCond            = "github.event_name == 'pull_request'"
-val masterCond        = "github.ref == 'refs/heads/master'"
-val notMasterCond     = "github.ref != 'refs/heads/master'"
-val geminiRepoCond    = "startsWith(github.repository, 'gemini')"
-val notDependabotCond = "github.actor != 'dependabot[bot]'"
+val SetupSbt = WorkflowStep.Use(
+  UseRef.Public("sbt", "setup-sbt", "v1"),
+  name = Some("Install sbt")
+)
+
+val pushCond                 = "github.event_name == 'push'"
+val prCond                   = "github.event_name == 'pull_request'"
+val masterCond               = "github.ref == 'refs/heads/master'"
+val notMasterCond            = "github.ref != 'refs/heads/master'"
+val geminiRepoCond           = "startsWith(github.repository, 'gemini')"
+val notDependabotCond        = "github.actor != 'dependabot[bot]'"
 def allConds(conds: String*) = conds.mkString("(", " && ", ")")
 def anyConds(conds: String*) = conds.mkString("(", " || ", ")")
 
@@ -363,7 +368,8 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "full",
     "full",
-    WorkflowStep.Checkout ::
+    SetupSbt ::
+      WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(
         githubWorkflowJavaVersions.value.toList.take(1),
         enableCaching = false
@@ -388,7 +394,8 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "lint",
     "Run linters",
-    WorkflowStep.Checkout ::
+    SetupSbt ::
+      WorkflowStep.Checkout ::
       WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
       setupNodeNpmInstall :::
       lucumaCssStep ::

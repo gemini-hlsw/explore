@@ -83,7 +83,7 @@ object ProposalSubmissionBar:
       .useStateView(IsUpdatingStatus(false))
       .useStateView(none[String]) // Submission error message
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.callId): (_, _, _, e) =>
-        _ => e.set(none) // Reset error message on CfP change
+        _ => e.set(none)          // Reset error message on CfP change
       .useStreamOnMount:
         Stream
           .fixedRateStartImmediately[IO](1.second)

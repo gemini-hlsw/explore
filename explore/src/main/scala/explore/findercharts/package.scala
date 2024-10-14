@@ -47,7 +47,7 @@ object ChartSelector extends NewType[Boolean]:
   inline def Open: ChartSelector   = ChartSelector(true)
   inline def Closed: ChartSelector = ChartSelector(false)
   extension (s: ChartSelector)
-    def flip: ChartSelector =
+    def flip: ChartSelector        =
       if (s.value) ChartSelector.Closed else ChartSelector.Open
 
 type ChartSelector = ChartSelector.Type

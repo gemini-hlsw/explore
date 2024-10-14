@@ -48,54 +48,118 @@ class LayoutSuite extends FunSuite {
   val originalMap: SectionLayoutsMap = Map(
     GridLayoutSection.ObservationsLayout -> SortedMap(
       BreakpointName.md -> (8, 10, observationMdLayout),
-      BreakpointName.lg -> (7, 11, Layout(
-        List[LayoutItem](
-          LayoutItem(i = "X", x = 2, y = 1, w = 6, h = 6, minH = 5, maxH = 11, minW = 3, maxW = 10)
-        )
-      ))
+      BreakpointName.lg -> (7,
+                            11,
+                            Layout(
+                              List[LayoutItem](
+                                LayoutItem(i = "X",
+                                           x = 2,
+                                           y = 1,
+                                           w = 6,
+                                           h = 6,
+                                           minH = 5,
+                                           maxH = 11,
+                                           minW = 3,
+                                           maxW = 10
+                                )
+                              )
+                            )
+      )
     ),
     GridLayoutSection.ConstraintsLayout  -> SortedMap(
-      BreakpointName.md -> (9, 13, Layout(
-        List[LayoutItem](
-          LayoutItem(i = "Z", x = 0, y = 0, w = 8, h = 5, minH = 3, maxH = 10, minW = 2, maxW = 12)
-        )
-      ))
+      BreakpointName.md -> (9,
+                            13,
+                            Layout(
+                              List[LayoutItem](
+                                LayoutItem(i = "Z",
+                                           x = 0,
+                                           y = 0,
+                                           w = 8,
+                                           h = 5,
+                                           minH = 3,
+                                           maxH = 10,
+                                           minW = 2,
+                                           maxW = 12
+                                )
+                              )
+                            )
+      )
     )
   )
 
   val dbMap: SectionLayoutsMap = Map(
     GridLayoutSection.ObservationsLayout -> SortedMap(
       BreakpointName.md  -> (9, 20, dbObservationMdLayout),
-      BreakpointName.xxs -> (7, 12, Layout(
-        List[LayoutItem](
-          LayoutItem(i = "X", x = 5, y = 1, w = 6, h = 6, minH = 5, maxH = 11, minW = 3, maxW = 10)
-        )
-      ))
+      BreakpointName.xxs -> (7,
+                             12,
+                             Layout(
+                               List[LayoutItem](
+                                 LayoutItem(i = "X",
+                                            x = 5,
+                                            y = 1,
+                                            w = 6,
+                                            h = 6,
+                                            minH = 5,
+                                            maxH = 11,
+                                            minW = 3,
+                                            maxW = 10
+                                 )
+                               )
+                             )
+      )
     ),
     GridLayoutSection.SchedulingLayout   -> SortedMap(
-      BreakpointName.md -> (8, 10, Layout(
-        List[LayoutItem](
-          LayoutItem(i = "Y", x = 5, y = 9, w = 9, h = 7, minH = 4, maxH = 9, minW = 4, maxW = 11)
+      BreakpointName.md -> (
+        8,
+        10,
+        Layout(
+          List[LayoutItem](
+            LayoutItem(i = "Y", x = 5, y = 9, w = 9, h = 7, minH = 4, maxH = 9, minW = 4, maxW = 11)
+          )
         )
-      ))
+      )
     )
   )
 
   val expectedMap: SectionLayoutsMap = Map(
     GridLayoutSection.ObservationsLayout -> SortedMap(
       BreakpointName.md -> (8, 10, expectedObservationMdLayout),
-      BreakpointName.lg -> (7, 11, Layout(
-        List[LayoutItem](
-          LayoutItem(i = "X", x = 2, y = 1, w = 6, h = 6, minH = 5, maxH = 11, minW = 3, maxW = 10)
-        )
-      ))
+      BreakpointName.lg -> (7,
+                            11,
+                            Layout(
+                              List[LayoutItem](
+                                LayoutItem(i = "X",
+                                           x = 2,
+                                           y = 1,
+                                           w = 6,
+                                           h = 6,
+                                           minH = 5,
+                                           maxH = 11,
+                                           minW = 3,
+                                           maxW = 10
+                                )
+                              )
+                            )
+      )
     ),
     GridLayoutSection.ConstraintsLayout  -> SortedMap(
-      BreakpointName.md -> (9, 13, Layout(
-        List[LayoutItem](
-          LayoutItem(i = "Z", x = 0, y = 0, w = 8, h = 5, minH = 3, maxH = 10, minW = 2, maxW = 12)
-        )
-      ))
+      BreakpointName.md -> (9,
+                            13,
+                            Layout(
+                              List[LayoutItem](
+                                LayoutItem(i = "Z",
+                                           x = 0,
+                                           y = 0,
+                                           w = 8,
+                                           h = 5,
+                                           minH = 3,
+                                           maxH = 10,
+                                           minW = 2,
+                                           maxW = 12
+                                )
+                              )
+                            )
+      )
     )
   )
 

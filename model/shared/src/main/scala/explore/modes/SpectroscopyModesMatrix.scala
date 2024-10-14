@@ -63,8 +63,7 @@ case class GmosSpectroscopyOverrides(
   centralWavelength: CentralWavelength,
   ccdMode:           Option[GmosCcdMode],
   roi:               Option[GmosRoi]
-) extends InstrumentOverrides
-    derives Eq
+) extends InstrumentOverrides derives Eq
 
 case class GmosNorthSpectroscopyRow(
   grating:                    GmosNorthGrating,
@@ -208,8 +207,7 @@ case class SpectroscopyModeRow(
   resolution: PosInt,
   slitLength: SlitLength,
   slitWidth:  SlitWidth
-) extends ModeCommonWavelengths
-    derives Eq {
+) extends ModeCommonWavelengths derives Eq {
   // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthDelta
 
   inline def hasFilter: Boolean = instrument.hasFilter

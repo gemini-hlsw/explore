@@ -114,8 +114,7 @@ object ProposalType:
     scienceSubtype: ScienceSubtype,
     minPercentTime: IntPercent,
     partnerSplits:  List[PartnerSplit]
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object Classical {
     val minPercentTime: Lens[Classical, IntPercent] = Focus[Classical](_.minPercentTime)
@@ -128,8 +127,7 @@ object ProposalType:
     scienceSubtype: ScienceSubtype,
     toOActivation:  ToOActivation,
     minPercentTime: IntPercent
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object DemoScience {
     val minPercentTime: Lens[DemoScience, IntPercent]   = Focus[DemoScience](_.minPercentTime)
@@ -144,8 +142,7 @@ object ProposalType:
     scienceSubtype: ScienceSubtype,
     toOActivation:  ToOActivation,
     minPercentTime: IntPercent
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object DirectorsTime {
     val minPercentTime: Lens[DirectorsTime, IntPercent]   = Focus[DirectorsTime](_.minPercentTime)
@@ -161,8 +158,7 @@ object ProposalType:
     toOActivation:  ToOActivation,
     minPercentTime: IntPercent,
     piAffiliation:  Option[Partner]
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object FastTurnaround {
     val minPercentTime: Lens[FastTurnaround, IntPercent]     = Focus[FastTurnaround](_.minPercentTime)
@@ -181,8 +177,7 @@ object ProposalType:
     minPercentTime:      IntPercent,
     minPercentTotalTime: IntPercent,
     totalTime:           TimeSpan
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object LargeProgram {
     val minPercentTime: Lens[LargeProgram, IntPercent]      = Focus[LargeProgram](_.minPercentTime)
@@ -203,8 +198,7 @@ object ProposalType:
   // Define the PoorWeather case class implementing ProposalType
   case class PoorWeather(
     scienceSubtype: ScienceSubtype
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object PoorWeather {
     val Default: PoorWeather = PoorWeather(ScienceSubtype.PoorWeather)
@@ -216,8 +210,7 @@ object ProposalType:
     toOActivation:  ToOActivation,
     minPercentTime: IntPercent,
     partnerSplits:  List[PartnerSplit]
-  ) extends ProposalType
-      derives Eq
+  ) extends ProposalType derives Eq
 
   object Queue {
     val minPercentTime: Lens[Queue, IntPercent]   = Focus[Queue](_.minPercentTime)
