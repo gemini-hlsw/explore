@@ -72,6 +72,7 @@ import explore.targeteditor.ElevationPlotData
 import explore.targeteditor.ElevationPlotSeries
 import cats.data.NonEmptyMap
 import cats.data.NonEmptyList
+import scala.collection.immutable.SortedMap
 
 case class TargetTabContents(
   programId:        Program.Id,
@@ -559,17 +560,17 @@ object TargetTabContents extends TwoPanels:
             val plotData: Option[ElevationPlotData] =
               NonEmptyMap
                 .fromMap:
-                  selectedTargetIds.get
-                    .flatMap: targetId =>
-                      props.targets.get
-                        .get(targetId)
-                        .map: target =>
-                          ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
-                            target.name,
-                            ObjectTracking.fromTarget(target),
-                            ElevationPlotSeries.Style.Solid
-                          )
-                    .toSortedMap(_._1, _._2)
+                  SortedMap.from:
+                    selectedTargetIds.get
+                      .flatMap: targetId =>
+                        props.targets.get
+                          .get(targetId)
+                          .map: target =>
+                            ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
+                              target.name,
+                              ObjectTracking.fromTarget(target),
+                              ElevationPlotSeries.Style.Solid
+                            )
                 .map(ElevationPlotData(_))
 
             val skyPlotTile =
@@ -625,17 +626,17 @@ object TargetTabContents extends TwoPanels:
               val plotData: Option[ElevationPlotData] =
                 NonEmptyMap
                   .fromMap:
-                    selectedTargetIds.get
-                      .flatMap: targetId =>
-                        props.targets.get
-                          .get(targetId)
-                          .map: target =>
-                            ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
-                              target.name,
-                              ObjectTracking.fromTarget(target),
-                              ElevationPlotSeries.Style.Solid
-                            )
-                      .toSortedMap(_._1, _._2)
+                    SortedMap.from:
+                      selectedTargetIds.get
+                        .flatMap: targetId =>
+                          props.targets.get
+                            .get(targetId)
+                            .map: target =>
+                              ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
+                                target.name,
+                                ObjectTracking.fromTarget(target),
+                                ElevationPlotSeries.Style.Solid
+                              )
                   .map(ElevationPlotData(_))
 
               val skyPlotTile =
