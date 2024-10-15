@@ -7,7 +7,6 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
 import explore.*
 import explore.highcharts.*
 import explore.model.Constants
@@ -46,8 +45,6 @@ import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import js.JSConverters.*
-import lucuma.typed.csstype.csstypeStrings.exclude
-import cats.instances.char
 
 case class ElevationPlotNight(
   plotData:         ElevationPlotData,
@@ -112,30 +109,35 @@ object ElevationPlotNight:
   private enum PlotSeries(
     val name:    String,
     val yAxis:   Int,
-    val data:    ElevationPlotSeries.ChartData => List[Chart.Data],
+    val data:    ElevationPlotSeries.ChartData => js.Array[Chart.Data],
     val enabled: ElevationPlotOptions => Visible
   ) derives Eq:
     case Elevation
-        extends PlotSeries("Elevation", 0, _.targetAltitude, _.elevationPlotElevationVisible)
+        extends PlotSeries(
+          "Elevation",
+          0,
+          _.targetAltitude.asInstanceOf[js.Array[Chart.Data]],
+          _.elevationPlotElevationVisible
+        )
     case ParallacticAngle
         extends PlotSeries(
           "Parallactic Angle",
           1,
-          _.parallacticAngle,
+          _.parallacticAngle.asInstanceOf[js.Array[Chart.Data]],
           _.elevationPlotParallacticAngleVisible
         )
     case SkyBrightness
         extends PlotSeries(
           "Sky Brightness",
           2,
-          _.skyBrightness,
+          _.skyBrightness.asInstanceOf[js.Array[Chart.Data]],
           _.elevationPlotSkyBrightnessVisible
         )
     case LunarElevation
         extends PlotSeries(
           "Lunar Elevation",
           0,
-          _.moonAltitude,
+          _.moonAltitude.asInstanceOf[js.Array[Chart.Data]],
           _.elevationPlotLunarElevationVisible
         )
 
@@ -199,9 +201,9 @@ object ElevationPlotNight:
         val end: Instant   = tbOfficialNight.end
 
         (start, end)
-      .useMemoBy((props, _, _) => (props.options.get.site, props.options.get.date, props.plotData)):
+      .useMemoBy((props, _, _) => (props.options.get.site, props.plotData)):
         (_, observingNight, bounds) =>
-          (site, date, plotData) =>
+          (site, plotData) =>
             val (start, end): (Instant, Instant) = bounds
 
             val seriesData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.Points] =
@@ -209,7 +211,6 @@ object ElevationPlotNight:
 
             val chartData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.ChartData] =
               seriesData.mapValues(_.chartData)
-            // series.data(targetSeriesData.chartData).toJSArray
 
             (chartData, seriesData.headOption.map(_._2.moonData))
       .useMemoBy((props, _, _, chartAndMoonData) =>
@@ -289,15 +290,17 @@ object ElevationPlotNight:
           val dusk: String = instantFormat(tbNauticalNight.start)
           val dawn: String = instantFormat(tbNauticalNight.end)
 
-          val targetsBelowHorizonStr: Option[String] =
-            Option.when(
-              chartData.forall: (_, targetSeriesData) =>
-                PlotSeries.Elevation
-                  .data(targetSeriesData)
-                  .forall(_.asInstanceOf[PointOptionsObject].y.forall(_.asInstanceOf[Double] <= 0))
-            ):
-              if (chartData.size === 1) "Target is below horizon"
-              else "All targets are below horizon"
+          val targetsBelowHorizonStr: Option[String] = none
+          // Option.when(
+          //   chartData.forall: (_, targetChartData) =>
+          //     PlotSeries.Elevation
+          //       .data(targetChartData)
+          //       .forall: point =>
+          //         Option(point.asInstanceOf[PointOptionsObject].y)
+          //           .forall(_.asInstanceOf[Double] <= 0)
+          // ):
+          //   if (chartData.size === 1) "Target is below horizon"
+          //   else "All targets are below horizon"
 
           Options()
             .setChart(commonOptions)
@@ -433,7 +436,7 @@ object ElevationPlotNight:
                             .setOnArea(false)
                         .setClassName("elevation-plot-series")
                         .setYAxis(series.yAxis)
-                        .setData(series.data(targetChartData).toJSArray)
+                        .setData(series.data(targetChartData))
                         // .setVisible:
                         //   series.enabled(opts).isVisible && shownSeries.get.contains(series)
                         // .setEvents:
