@@ -26,6 +26,7 @@ import java.time.Instant
 import scala.deriving.Mirror
 
 import scalajs.js
+import scalajs.js.JSConverters.*
 
 @js.native
 trait PointOptionsWithAirmass extends PointOptionsObject:
@@ -73,11 +74,25 @@ object ElevationPlotSeries:
     x
 
   case class ChartData(
-    targetAltitude:   List[PointOptionsWithAirmass],
-    skyBrightness:    List[PointOptionsObject],
-    parallacticAngle: List[PointOptionsObject],
-    moonAltitude:     List[PointOptionsObject]
+    targetAltitude:   js.Array[PointOptionsWithAirmass],
+    skyBrightness:    js.Array[PointOptionsObject],
+    parallacticAngle: js.Array[PointOptionsObject],
+    moonAltitude:     js.Array[PointOptionsObject]
   )
+
+  object ChartData:
+    def apply(
+      targetAltitude:   List[PointOptionsWithAirmass],
+      skyBrightness:    List[PointOptionsObject],
+      parallacticAngle: List[PointOptionsObject],
+      moonAltitude:     List[PointOptionsObject]
+    ): ChartData =
+      ChartData(
+        targetAltitude.toJSArray,
+        skyBrightness.toJSArray,
+        parallacticAngle.toJSArray,
+        moonAltitude.toJSArray
+      )
 
   case class MoonData(moonPhase: Double, moonIllum: Double)
 
