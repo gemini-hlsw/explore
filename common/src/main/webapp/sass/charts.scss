@@ -34,7 +34,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     fill: var(--plot-background-color);
   }
 
-  .highcharts-root text {
+  .highcharts-root :not(.highcharts-series-label) text {
     fill: var(--plot-text-color);
   }
 
@@ -56,54 +56,54 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 
   /* Target Elevation */
-  .highcharts-color-0 {
-    fill: hsl(0deg 87% 66%);
-    stroke: hsl(0deg 87% 66%);
-  }
+  // .highcharts-color-0 {
+  //   fill: hsl(0deg 87% 66%);
+  //   stroke: hsl(0deg 87% 66%);
+  // }
 
-  /* Parallactic angle */
-  .highcharts-color-1 {
-    fill: hsl(79deg 70% 43%);
-    stroke: hsl(79deg 70% 43%);
-  }
+  // /* Parallactic angle */
+  // .highcharts-color-1 {
+  //   fill: hsl(79deg 70% 43%);
+  //   stroke: hsl(79deg 70% 43%);
+  // }
 
-  .plot-sky-brightness-percentile {
-    stroke-dasharray: 3, 5;
-  }
+  // .plot-sky-brightness-percentile {
+  //   stroke-dasharray: 3, 5;
+  // }
 
-  /* Sky Brightness */
-  .elevation-plot {
-    .highcharts-color-2,
-    .plot-sky-brightness-percentile,
-    .highcharts-plot-line-label {
-      fill: hsl(209deg 75% 71%) !important;
-      stroke: hsl(209deg 75% 71%);
-    }
-  }
+  // /* Sky Brightness */
+  // .elevation-plot {
+  //   .highcharts-color-2,
+  //   .plot-sky-brightness-percentile,
+  //   .highcharts-plot-line-label {
+  //     fill: hsl(209deg 75% 71%) !important;
+  //     stroke: hsl(209deg 75% 71%);
+  //   }
+  // }
 
-  /* Lunar Elevation */
-  .highcharts-color-3 {
-    fill: hsl(27deg 91% 66%);
-    stroke: hsl(27deg 91% 66%);
-  }
+  // /* Lunar Elevation */
+  // .highcharts-color-3 {
+  //   fill: hsl(27deg 91% 66%);
+  //   stroke: hsl(27deg 91% 66%);
+  // }
 
   .plot-axis-parallactic-angle {
     stroke-width: 0;
     fill: hsl(79deg 70% 43%);
   }
 
-  .plot-axis-parallactic-angle text {
-    fill: hsl(79deg 70% 43%);
-  }
+  // .plot-axis-parallactic-angle text {
+  //   fill: hsl(79deg 70% 43%);
+  // }
 
-  .plot-axis-sky-brightness {
-    stroke-width: 0;
-    fill: hsl(209deg 75% 71%);
-  }
+  // .plot-axis-sky-brightness {
+  //   stroke-width: 0;
+  //   fill: hsl(209deg 75% 71%);
+  // }
 
-  .plot-axis-sky-brightness text {
-    fill: hsl(209deg 75% 71%);
-  }
+  // .plot-axis-sky-brightness text {
+  //   fill: hsl(209deg 75% 71%);
+  // }
 
   .plot-band-exclude-window {
     fill: var(--plot-plot-band-exclude-window-color);
