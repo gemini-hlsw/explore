@@ -50,6 +50,8 @@ case class ElevationPlotSeries(
         start,
         end,
         PlotEvery,
+        // We are computing the coordinates at each point in time, this may be expensive
+        // and could be optimized for sidereals, but it's probably necessary for non-sidereals.
         tracking.at(_).map(_.value).getOrElse(tracking.baseCoordinates)
       )
 
