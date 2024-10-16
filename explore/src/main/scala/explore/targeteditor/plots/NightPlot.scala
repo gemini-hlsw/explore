@@ -42,57 +42,10 @@ import js.JSConverters.*
 case class NightPlot(
   plotData:         PlotData,
   coordsTime:       Instant,
-  // obsTime:          Option[Instant],
   excludeIntervals: List[BoundedInterval[Instant]],
   pendingTime:      Option[Duration],
   options:          View[ObjectPlotOptions]
 ) extends ReactFnProps(NightPlot.component)
-// import ElevationPlotNight.PlotSeries
-
-// private def visibleZoomFn(series: PlotSeries): Lens[ElevationPlotOptions, Visible] =
-//   series match
-//     case PlotSeries.Elevation        =>
-//       ElevationPlotOptions.elevationPlotElevationVisible
-//     case PlotSeries.ParallacticAngle =>
-//       ElevationPlotOptions.elevationPlotParallacticAngleVisible
-//     case PlotSeries.SkyBrightness    =>
-//       ElevationPlotOptions.elevationPlotSkyBrightnessVisible
-//     case PlotSeries.LunarElevation   =>
-//       ElevationPlotOptions.elevationPlotLunarElevationVisible
-
-// protected[ElevationPlotNight] def showSeriesCB(
-//   shownSeries: View[HashSet[PlotSeries]],
-//   series:      PlotSeries,
-//   chart:       Chart_
-// ): Callback =
-//   options.zoom(visibleZoomFn(series)).set(Visible.Shown) *>
-//     shownSeries.mod(_ + series) *>
-//     Callback:
-//       ElevationPlotNight.SkyBrightnessPercentileLines.foreach: line =>
-//         chart.yAxis(2).addPlotLine(line)
-//       ElevationPlotNight.SkyBrightnessPercentileBands
-//         .foreach: band =>
-//           chart.yAxis(2).addPlotBand(band)
-//     .when(series === PlotSeries.SkyBrightness)
-//       .void
-
-// protected[ElevationPlotNight] def hideSeriesCB(
-//   shownSeries: View[HashSet[PlotSeries]],
-//   series:      PlotSeries,
-//   chart:       Chart_
-// ): Callback =
-//   options.zoom(visibleZoomFn(series)).set(Visible.Hidden) *>
-//     shownSeries.mod(_ - series) *>
-//     Callback {
-//       ElevationPlotNight.SkyBrightnessPercentileLines
-//         .flatMap(_.id.toList)
-//         .foreach(id => chart.yAxis(2).removePlotLine(id))
-//       ElevationPlotNight.SkyBrightnessPercentileBands
-//         .flatMap(_.id.toList)
-//         .foreach(id => chart.yAxis(2).removePlotBand(id))
-//     }
-//       .when(series === PlotSeries.SkyBrightness)
-//       .void
 
 object NightPlot:
   private type Props = NightPlot
@@ -261,7 +214,6 @@ object NightPlot:
             (String, Int, Int, Boolean, ObjectPlotData.Style, js.Array[Chart.Data])
           ] =
             SeriesType.values
-              // .filter(opts.visiblePlots.contains_)
               .flatMap: series =>
                 chartData.toList
                   .map: (id, targetChartData) =>
@@ -271,8 +223,8 @@ object NightPlot:
                     case (Some((targetPlotData, targetChartData)), index)
                         if series =!= SeriesType.LunarElevation || index === 0 =>
                       (
-                        if (series === SeriesType.LunarElevation) series.name
-                        else s"${series.name} (${targetPlotData.name})",
+                        if (series === SeriesType.LunarElevation) "Moon"
+                        else targetPlotData.name.value,
                         series.yAxis,
                         series.threshold,
                         opts.visiblePlots.contains_(series),
@@ -385,7 +337,7 @@ object NightPlot:
                       js.Array()
               ).toJSArray
             )
-            .setPlotOptions(
+            .setPlotOptions:
               PlotOptions()
                 .setSeries(
                   PlotSeriesOptions()
@@ -395,16 +347,10 @@ object NightPlot:
                       SeriesStatesOptionsObject()
                         .setHover(SeriesStatesHoverOptionsObject().setEnabled(false))
                 )
-            )
-            .setSeries(
+            .setSeries:
               seriesToPlot
                 .map: (name, yAxis, threshold, visible, style, data) =>
                   val baseSeries: SeriesAreaOptions =
-                    // chartData.toList.map: (id, targetChartData) =>
-                    //   val name: String = plotData
-                    //     .value(id)
-                    //     .map(_.name.value)
-                    //     .getOrElse(id.value.fold(_.toString, _.toString))
                     SeriesAreaOptions((), (), ())
                       .setName(name)
                       .setLabel:
@@ -420,33 +366,17 @@ object NightPlot:
                         style match
                           case ObjectPlotData.Style.Solid  => DashStyleValue.Solid
                           case ObjectPlotData.Style.Dashed => DashStyleValue.Dash
-                      // series.enabled(opts).isVisible && shownSeries.get.contains(series)
-                      // .setEvents:
-                      //   SeriesEventsOptionsObject()
-                      //     .setHide: (s, _) =>
-                      //       props.hideSeriesCB(shownSeries, series, s.chart).runNow()
-                      //     .setShow: (s, _) =>
-                      //       props.showSeriesCB(shownSeries, series, s.chart).runNow()
                       .setFillOpacity(0)
                       .setZoneAxis("x")
                       .setThreshold(threshold)
 
-                  // val zonedSeries: SeriesAreaOptions =
                   zones
                     .fold(baseSeries)(z => baseSeries.setZones(z))
                     .asInstanceOf[SeriesOptionsType]
-
-                  // series match // Adjust fill area to axis
-                  //   case PlotSeries.SkyBrightness    => zonedSeries.map(_.setThreshold(22))
-                  //   case PlotSeries.ParallacticAngle => zonedSeries.map(_.setThreshold(-180))
-                  //   case _                           => zonedSeries
-                  // .flatMap(_.map(_.asInstanceOf[SeriesOptionsType]))
-                  // zonedSeries
                 .toJSArray
-            )
       .render: (props, _, _, chartAndMoonData, chartOptions) =>
         React.Fragment(
-          Chart(chartOptions),
+          Chart(chartOptions, allowUpdate = false),
           chartAndMoonData._2.map: moonData =>
             MoonPhase(moonData.moonPhase)(<.small("%1.0f%%".format(moonData.moonIllum * 100)))
         )
