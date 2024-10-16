@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.plots
 
 import cats.syntax.all.*
 import lucuma.core.enums.Site
@@ -12,8 +12,8 @@ import lucuma.core.math.skycalc.SkyCalcResults
 import java.time.Duration
 import java.time.Instant
 
-object SkyCalc {
-  // TODO Cache
+object SkyCalc:
+  // TODO Cache?
 
   def forInterval(
     site:             Site,
@@ -21,14 +21,14 @@ object SkyCalc {
     end:              Instant,
     every:            Duration,
     coordsForInstant: Instant => Coordinates
-  ): List[(Instant, SkyCalcResults)] = {
-    val calc     = ImprovedSkyCalc(site.place)
+  ): List[(Instant, SkyCalcResults)] =
+    val calc = ImprovedSkyCalc(site.place)
+
     val instants =
       List.unfold(start)(prev =>
         prev.plus(every).some.filter(_.isBefore(end)).map(i => (i, i))
       ) :+ end
+
     instants.map { i =>
       (i, calc.calculate(coordsForInstant(i), i, true))
     }
-  }
-}

@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.plots
 
 import cats.Eq
 import cats.Order
@@ -23,7 +23,6 @@ import lucuma.ui.utils.unzip4
 
 import java.time.Duration
 import java.time.Instant
-import scala.deriving.Mirror
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -82,24 +81,22 @@ object ElevationPlotSeries:
 
   object ChartData:
     def apply(
-      targetAltitude:   List[PointOptionsWithAirmass],
-      skyBrightness:    List[PointOptionsObject],
-      parallacticAngle: List[PointOptionsObject],
-      moonAltitude:     List[PointOptionsObject]
-    ): ChartData =
-      ChartData(
-        targetAltitude.toJSArray,
-        skyBrightness.toJSArray,
-        parallacticAngle.toJSArray,
-        moonAltitude.toJSArray
+      data: (
+        List[PointOptionsWithAirmass],
+        List[PointOptionsObject],
+        List[PointOptionsObject],
+        List[PointOptionsObject]
       )
+    ): ChartData =
+      ChartData(data._1.toJSArray, data._2.toJSArray, data._3.toJSArray, data._4.toJSArray)
 
   case class MoonData(moonPhase: Double, moonIllum: Double)
 
   case class Points(value: List[(Instant, SkyCalcResults)]):
     lazy val chartData: ChartData = {
-      val series
-        : List[(PointOptionsObject, PointOptionsObject, PointOptionsObject, PointOptionsObject)] =
+      val series: List[
+        (PointOptionsWithAirmass, PointOptionsObject, PointOptionsObject, PointOptionsObject)
+      ] =
         value.map: (instant, results) =>
           val millisSinceEpoch = instant.toEpochMilli.toDouble
 
@@ -108,7 +105,7 @@ object ElevationPlotSeries:
               .setX(millisSinceEpoch)
               .setY(value)
 
-          def pointWithAirmass(value: Double, airmass: Double): PointOptionsObject =
+          def pointWithAirmass(value: Double, airmass: Double): PointOptionsWithAirmass =
             setAirMass(
               point(value).asInstanceOf[PointOptionsWithAirmass],
               airmass
@@ -123,7 +120,7 @@ object ElevationPlotSeries:
            point(results.lunarElevation.toAngle.toSignedDoubleDegrees)
           )
 
-      summon[Mirror.Of[ChartData]].fromProduct(series.unzip4)
+      ChartData(series.unzip4)
     }
 
     lazy val moonData: MoonData =

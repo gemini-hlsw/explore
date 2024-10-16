@@ -41,8 +41,8 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
-import explore.targeteditor.ElevationPlotData
-import explore.targeteditor.ElevationPlotSeries
+import explore.targeteditor.plots.ElevationPlotData
+import explore.targeteditor.plots.ElevationPlotSeries
 import explore.timingwindows.TimingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*

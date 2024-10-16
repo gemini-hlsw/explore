@@ -134,7 +134,6 @@ object reusability:
   given Reusability[PAProperties]                       = Reusability.byEq
   given Reusability[GraphResult]                        = Reusability.byEq
   given Reusability[ItcCcd]                             = Reusability.byEq
-  given Reusability[ElevationPlotOptions]               = Reusability.byEq
   given Reusability[PartnerSplit]                       = Reusability.byEq
   given Reusability[CallForProposal]                    = Reusability.byEq
   given Reusability[CategoryAllocationList]             = Reusability.byEq

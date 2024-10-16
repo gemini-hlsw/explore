@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.plots
 
 import cats.effect.IO
 import cats.syntax.all.*
@@ -14,7 +14,6 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ElevationPlotOptions
 import explore.model.ElevationPlotScheduling
 import explore.model.GlobalPreferences
 import explore.model.display.given
@@ -47,6 +46,7 @@ import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
+import explore.model.enums.Visible
 
 case class ElevationPlotSection(
   userId:            User.Id,
@@ -77,13 +77,27 @@ object ElevationPlotSection:
             range = props.globalPreferences.elevationPlotRange,
             timeDisplay = props.globalPreferences.elevationPlotTime,
             showScheduling = props.globalPreferences.elevationPlotScheduling,
-            elevationPlotElevationVisible = props.globalPreferences.elevationPlotElevationVisible,
-            elevationPlotParallacticAngleVisible =
-              props.globalPreferences.elevationPlotParallacticAngleVisible,
-            elevationPlotSkyBrightnessVisible =
-              props.globalPreferences.elevationPlotSkyBrightnessVisible,
-            elevationPlotLunarElevationVisible =
-              props.globalPreferences.elevationPlotLunarElevationVisible
+            visiblePlots = List(
+              Option.when(
+                props.globalPreferences.elevationPlotElevationVisible.isVisible
+              )(SeriesType.Elevation),
+              Option.when(
+                props.globalPreferences.elevationPlotParallacticAngleVisible.isVisible
+              )(SeriesType.ParallacticAngle),
+              Option.when(
+                props.globalPreferences.elevationPlotSkyBrightnessVisible.isVisible
+              )(SeriesType.SkyBrightness),
+              Option.when(
+                props.globalPreferences.elevationPlotLunarElevationVisible.isVisible
+              )(SeriesType.LunarElevation)
+            ).flattenOption
+            // elevationPlotElevationVisible = props.globalPreferences.elevationPlotElevationVisible,
+            // elevationPlotParallacticAngleVisible =
+            //   props.globalPreferences.elevationPlotParallacticAngleVisible,
+            // elevationPlotSkyBrightnessVisible =
+            //   props.globalPreferences.elevationPlotSkyBrightnessVisible,
+            // elevationPlotLunarElevationVisible =
+            //   props.globalPreferences.elevationPlotLunarElevationVisible
           )
       )
       // If predefined site changes, switch to it.
@@ -104,10 +118,10 @@ object ElevationPlotSection:
               opts.range,
               opts.timeDisplay,
               opts.showScheduling.value,
-              opts.elevationPlotElevationVisible,
-              opts.elevationPlotParallacticAngleVisible,
-              opts.elevationPlotSkyBrightnessVisible,
-              opts.elevationPlotLunarElevationVisible
+              Visible(opts.visiblePlots.contains_(SeriesType.Elevation)),
+              Visible(opts.visiblePlots.contains_(SeriesType.ParallacticAngle)),
+              Visible(opts.visiblePlots.contains_(SeriesType.SkyBrightness)),
+              Visible(opts.visiblePlots.contains_(SeriesType.LunarElevation))
             )
             .runAsync
         )
@@ -117,6 +131,8 @@ object ElevationPlotSection:
         val dateView: View[LocalDate]                         = options.zoom(ElevationPlotOptions.date)
         val semesterView: View[Semester]                      = options.zoom(ElevationPlotOptions.semester)
         val timeDisplayView: View[TimeDisplay]                = options.zoom(ElevationPlotOptions.timeDisplay)
+        val visiblePlotsView: View[List[SeriesType]]          =
+          options.zoom(ElevationPlotOptions.visiblePlots)
         val showSchedulingView: View[ElevationPlotScheduling] =
           options.zoom(ElevationPlotOptions.showScheduling)
 
@@ -151,7 +167,7 @@ object ElevationPlotSection:
           <.div(ExploreStyles.ElevationPlot)(
             opt.range match
               case PlotRange.Night    =>
-                ElevationPlotNight(
+                NightPlot(
                   props.plotData,
                   dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC),
                   windowsNetExcludeIntervals,
@@ -165,7 +181,7 @@ object ElevationPlotSection:
                     .getOrElse:
                       CoordinatesAtVizTime(props.plotData.value.head._2.tracking.baseCoordinates)
 
-                ElevationPlotSemester(
+                SemesterPlot(
                   options.get,
                   coords,
                   windowsNetExcludeIntervals
@@ -217,6 +233,11 @@ object ElevationPlotSection:
             SelectButtonEnumView(
               "elevation-plot-range".refined,
               rangeView,
+              buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
+            ),
+            SelectButtonMultipleEnumView(
+              "elevation-plot-visible-series".refined,
+              visiblePlotsView,
               buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
             ),
             SelectButtonEnumView(
