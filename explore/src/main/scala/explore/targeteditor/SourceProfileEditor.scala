@@ -12,6 +12,7 @@ import explore.model.enums.SourceProfileType
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.CatalogInfo
 import lucuma.core.model.SourceProfile
@@ -29,9 +30,10 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class SourceProfileEditor(
-  sourceProfile: Aligner[SourceProfile, SourceProfileInput],
-  catalogInfo:   Option[CatalogInfo],
-  disabled:      Boolean
+  sourceProfile:   Aligner[SourceProfile, SourceProfileInput],
+  catalogInfo:     Option[CatalogInfo],
+  disabled:        Boolean,
+  calibrationRole: Option[CalibrationRole]
 ) extends ReactFnProps(SourceProfileEditor.component)
 
 object SourceProfileEditor:
@@ -73,7 +75,8 @@ object SourceProfileEditor:
                 pointSpectralDefinitionAccess,
                 props.catalogInfo,
                 brightnessExpanded,
-                props.disabled
+                props.disabled,
+                props.calibrationRole
               )
             ),
           props.sourceProfile
@@ -86,7 +89,8 @@ object SourceProfileEditor:
                 uniformSpectralDefinitionAccess,
                 props.catalogInfo,
                 brightnessExpanded,
-                props.disabled
+                props.disabled,
+                props.calibrationRole
               )
             ),
           gaussianAlignerOpt
@@ -115,7 +119,8 @@ object SourceProfileEditor:
                   ),
                   props.catalogInfo,
                   brightnessExpanded,
-                  props.disabled
+                  props.disabled,
+                  props.calibrationRole
                 )
               )
             )

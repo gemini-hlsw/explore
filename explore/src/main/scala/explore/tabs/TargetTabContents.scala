@@ -527,6 +527,7 @@ object TargetTabContents extends TwoPanels:
                   none,
                   none,
                   needsAGS,
+                  none,
                   none
                 ),
                 none,

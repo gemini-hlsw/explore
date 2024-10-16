@@ -26,10 +26,12 @@ import explore.model.enums.IntegratedSEDType.given
 import explore.model.enums.SEDType
 import explore.model.enums.SurfaceSEDType
 import explore.model.enums.SurfaceSEDType.given
+import explore.model.syntax.all.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.CatalogName
 import lucuma.core.enums.CoolStarTemperature
 import lucuma.core.enums.GalaxySpectrum
@@ -70,6 +72,7 @@ import scala.collection.immutable.SortedMap
 sealed trait SpectralDefinitionEditor[T, S]:
   def spectralDefinition: Aligner[SpectralDefinition[T], S]
   def catalogInfo: Option[CatalogInfo]
+  def calibrationRole: Option[CalibrationRole]
   def brightnessExpanded: View[IsExpanded]
   def disabled: Boolean
 
@@ -212,7 +215,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         ),
         FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
         <.div(
-          ExploreStyles.SEDTypeDropdown |+| ExploreStyles.WarningInput.when_(sed.isEmpty),
+          ExploreStyles.SEDTypeDropdown |+| ExploreStyles.WarningInput
+            .when_(sed.isEmpty && props.calibrationRole.needsITC),
           EnumOptionalDropdown[SEDType[T]](
             id = "sed".refined,
             value = sed,
@@ -224,7 +228,10 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             clazz = LucumaPrimeStyles.FormField,
             disabled = props.disabled
           ),
-          <.span(PrimeStyles.InputGroupAddon, ^.borderRight := 0.px, renderRequiredForITCIcon)
+          <.span(PrimeStyles.InputGroupAddon,
+                 ^.borderRight := 0.px,
+                 props.calibrationRole.renderRequiredForITCIcon
+          )
             .when(sed.isEmpty)
         ),
         stellarLibrarySpectrumAlignerOpt
@@ -310,7 +317,8 @@ case class IntegratedSpectralDefinitionEditor(
   spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
   catalogInfo:        Option[CatalogInfo],
   brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean
+  disabled:           Boolean,
+  calibrationRole:    Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[IntegratedSpectralDefinitionEditor](
       IntegratedSpectralDefinitionEditor.component
@@ -413,7 +421,8 @@ case class SurfaceSpectralDefinitionEditor(
   spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
   catalogInfo:        Option[CatalogInfo],
   brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean
+  disabled:           Boolean,
+  calibrationRole:    Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component

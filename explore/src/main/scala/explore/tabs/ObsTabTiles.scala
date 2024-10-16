@@ -398,7 +398,8 @@ object ObsTabTiles:
                 averagePA,
                 obsDuration.map(_.toDuration),
                 props.observation.get.needsAGS,
-                props.observation.get.selectedGSName
+                props.observation.get.selectedGSName,
+                props.observation.get.calibrationRole
               )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =

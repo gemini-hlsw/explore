@@ -401,7 +401,7 @@ object SiderealTargetEditor:
                 changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
                 units = "mas"
               ),
-              RVInput(radialVelocityView, disabled)
+              RVInput(radialVelocityView, disabled, props.obsConf.flatMap(_.calibrationRole))
             ),
             <.div(
               ExploreStyles.Grid,
@@ -419,7 +419,8 @@ object SiderealTargetEditor:
               SourceProfileEditor(
                 sourceProfileAligner,
                 props.target.get.catalogInfo,
-                disabled
+                disabled,
+                props.obsConf.flatMap(_.calibrationRole)
               ).withKey(obsToCloneTo.get.fold("none")(_.show))
             )
           )
