@@ -5,16 +5,17 @@ package explore.targeteditor.plots
 
 import cats.Eq
 import cats.derived.*
-import scalajs.js
-import lucuma.react.highcharts.Chart
-import lucuma.core.util.Enumerated
 import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
+import lucuma.react.highcharts.Chart
+
+import scalajs.js
 
 enum SeriesType(
   val name:      String,
   val yAxis:     Int,
   val threshold: Int,
-  val data:      ElevationPlotSeries.ChartData => js.Array[Chart.Data]
+  val data:      ObjectPlotData.SeriesData => js.Array[Chart.Data]
 ) derives Eq,
       Enumerated:
   val tag: String = name

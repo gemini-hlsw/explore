@@ -40,12 +40,12 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class NightPlot(
-  plotData:         ElevationPlotData,
+  plotData:         PlotData,
   coordsTime:       Instant,
   // obsTime:          Option[Instant],
   excludeIntervals: List[BoundedInterval[Instant]],
   pendingTime:      Option[Duration],
-  options:          View[ElevationPlotOptions]
+  options:          View[ObjectPlotOptions]
 ) extends ReactFnProps(NightPlot.component)
 // import ElevationPlotNight.PlotSeries
 
@@ -161,11 +161,11 @@ object NightPlot:
           (site, plotData, bounds) =>
             val (start, end): (Instant, Instant) = bounds
 
-            val seriesData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.Points] =
+            val seriesData: MapView[ObjectPlotData.Id, ObjectPlotData.Points] =
               plotData.value.toSortedMap.view.mapValues(_.pointsAtInstant(site, start, end))
 
-            val chartData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.ChartData] =
-              seriesData.mapValues(_.chartData)
+            val chartData: MapView[ObjectPlotData.Id, ObjectPlotData.SeriesData] =
+              seriesData.mapValues(_.seriesData)
 
             (chartData, seriesData.headOption.map(_._2.moonData))
       .useMemoBy((props, _, _, chartAndMoonData) =>
@@ -179,7 +179,7 @@ object NightPlot:
         (plotData, opts, chartAndMoonData, pendingTime, excludeIntervals) =>
           val start: Instant = bounds._1
 
-          val chartData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.ChartData] =
+          val chartData: MapView[ObjectPlotData.Id, ObjectPlotData.SeriesData] =
             chartAndMoonData._1
 
           val site: Site               = opts.site
@@ -258,7 +258,7 @@ object NightPlot:
           //   else "All targets are below horizon"
 
           val seriesToPlot: Array[
-            (String, Int, Int, Boolean, ElevationPlotSeries.Style, js.Array[Chart.Data])
+            (String, Int, Int, Boolean, ObjectPlotData.Style, js.Array[Chart.Data])
           ] =
             SeriesType.values
               // .filter(opts.visiblePlots.contains_)
@@ -418,8 +418,8 @@ object NightPlot:
                       .setVisible(visible)
                       .setDashStyle:
                         style match
-                          case ElevationPlotSeries.Style.Solid  => DashStyleValue.Solid
-                          case ElevationPlotSeries.Style.Dashed => DashStyleValue.Dash
+                          case ObjectPlotData.Style.Solid  => DashStyleValue.Solid
+                          case ObjectPlotData.Style.Dashed => DashStyleValue.Dash
                       // series.enabled(opts).isVisible && shownSeries.get.contains(series)
                       // .setEvents:
                       //   SeriesEventsOptionsObject()

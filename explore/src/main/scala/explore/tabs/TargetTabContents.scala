@@ -35,8 +35,8 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.targeteditor.plots.ElevationPlotData
-import explore.targeteditor.plots.ElevationPlotSeries
+import explore.targeteditor.plots.ObjectPlotData
+import explore.targeteditor.plots.PlotData
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -553,7 +553,7 @@ object TargetTabContents extends TwoPanels:
             //     .map:
             //       ObjectTracking.fromTarget(_)
 
-            val plotData: Option[ElevationPlotData] =
+            val plotData: Option[PlotData] =
               NonEmptyMap
                 .fromMap:
                   SortedMap.from:
@@ -562,12 +562,12 @@ object TargetTabContents extends TwoPanels:
                         props.targets.get
                           .get(targetId)
                           .map: target =>
-                            ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
+                            ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
                               target.name,
                               ObjectTracking.fromTarget(target),
-                              ElevationPlotSeries.Style.Solid
+                              ObjectPlotData.Style.Solid
                             )
-                .map(ElevationPlotData(_))
+                .map(PlotData(_))
 
             val skyPlotTile =
               plotData.map:
@@ -625,7 +625,7 @@ object TargetTabContents extends TwoPanels:
               // )
 
               // TODO Unify with the same block above
-              val plotData: Option[ElevationPlotData] =
+              val plotData: Option[PlotData] =
                 NonEmptyMap
                   .fromMap:
                     SortedMap.from:
@@ -634,12 +634,12 @@ object TargetTabContents extends TwoPanels:
                           props.targets.get
                             .get(targetId)
                             .map: target =>
-                              ElevationPlotSeries.Id(targetId.asRight) -> ElevationPlotSeries(
+                              ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
                                 target.name,
                                 ObjectTracking.fromTarget(target),
-                                ElevationPlotSeries.Style.Solid
+                                ObjectPlotData.Style.Solid
                               )
-                  .map(ElevationPlotData(_))
+                  .map(PlotData(_))
 
               val skyPlotTile =
                 plotData.map:
