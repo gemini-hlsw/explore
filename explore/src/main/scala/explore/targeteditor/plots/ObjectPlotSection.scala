@@ -19,6 +19,7 @@ import explore.model.GlobalPreferences
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -46,20 +47,19 @@ import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
-import explore.model.enums.Visible
 
-case class ElevationPlotSection(
+case class ObjectPlotSection(
   userId:            User.Id,
-  plotData:          ElevationPlotData,
+  plotData:          PlotData,
   site:              Option[Site],
   visualizationTime: Option[Instant],
   pendingTime:       Option[Duration],
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
-) extends ReactFnProps(ElevationPlotSection.component)
+) extends ReactFnProps(ObjectPlotSection.component)
 
-object ElevationPlotSection:
-  private type Props = ElevationPlotSection
+object ObjectPlotSection:
+  private type Props = ObjectPlotSection
 
   private val component =
     ScalaFnComponent
@@ -67,7 +67,7 @@ object ElevationPlotSection:
       .useContext(AppContext.ctx)
       // Plot options, will be read from the user preferences
       .useStateViewBy((props, _) =>
-        ElevationPlotOptions
+        ObjectPlotOptions
           .default(
             props.site,
             props.visualizationTime,
@@ -102,7 +102,7 @@ object ElevationPlotSection:
       )
       // If predefined site changes, switch to it.
       .useEffectWithDepsBy((props, _, _) => props.site)((props, _, options) =>
-        _.map(options.zoom(ElevationPlotOptions.site).set).orEmpty
+        _.map(options.zoom(ObjectPlotOptions.site).set).orEmpty
       )
       // If visualization time changes, switch to it.
       .useEffectWithDepsBy((props, _, _) => props.visualizationTime)((props, _, options) =>
@@ -126,17 +126,17 @@ object ElevationPlotSection:
             .runAsync
         )
 
-        val siteView: View[Site]                              = options.zoom(ElevationPlotOptions.site)
-        val rangeView: View[PlotRange]                        = options.zoom(ElevationPlotOptions.range)
-        val dateView: View[LocalDate]                         = options.zoom(ElevationPlotOptions.date)
-        val semesterView: View[Semester]                      = options.zoom(ElevationPlotOptions.semester)
-        val timeDisplayView: View[TimeDisplay]                = options.zoom(ElevationPlotOptions.timeDisplay)
+        val siteView: View[Site]                              = options.zoom(ObjectPlotOptions.site)
+        val rangeView: View[PlotRange]                        = options.zoom(ObjectPlotOptions.range)
+        val dateView: View[LocalDate]                         = options.zoom(ObjectPlotOptions.date)
+        val semesterView: View[Semester]                      = options.zoom(ObjectPlotOptions.semester)
+        val timeDisplayView: View[TimeDisplay]                = options.zoom(ObjectPlotOptions.timeDisplay)
         val visiblePlotsView: View[List[SeriesType]]          =
-          options.zoom(ElevationPlotOptions.visiblePlots)
+          options.zoom(ObjectPlotOptions.visiblePlots)
         val showSchedulingView: View[ElevationPlotScheduling] =
-          options.zoom(ElevationPlotOptions.showScheduling)
+          options.zoom(ObjectPlotOptions.showScheduling)
 
-        val opt: ElevationPlotOptions = options.get
+        val opt: ObjectPlotOptions = options.get
 
         def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
           windows

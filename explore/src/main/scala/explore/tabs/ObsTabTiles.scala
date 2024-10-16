@@ -41,8 +41,8 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
-import explore.targeteditor.plots.ElevationPlotData
-import explore.targeteditor.plots.ElevationPlotSeries
+import explore.targeteditor.plots.ObjectPlotData
+import explore.targeteditor.plots.PlotData
 import explore.timingwindows.TimingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -377,15 +377,15 @@ object ObsTabTiles:
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
               )
 
-            val plotData: Option[ElevationPlotData] =
+            val plotData: Option[PlotData] =
               props.asterismTracking.map: tracking =>
-                ElevationPlotData:
+                PlotData:
                   NonEmptyMap.one(
-                    ElevationPlotSeries.Id(props.obsId.asLeft),
-                    ElevationPlotSeries(
+                    ObjectPlotData.Id(props.obsId.asLeft),
+                    ObjectPlotData(
                       NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
                       tracking,
-                      ElevationPlotSeries.Style.Solid
+                      ObjectPlotData.Style.Solid
                     )
                   )
 

@@ -36,15 +36,15 @@ trait ElevationPointWithAirmass extends Point:
   var airmass: Double
 
 // Can wrap data for a target or an asterism.
-case class ElevationPlotSeries(
+case class ObjectPlotData(
   name:     NonEmptyString,
   tracking: ObjectTracking,
-  style:    ElevationPlotSeries.Style
+  style:    ObjectPlotData.Style
 ) derives Eq:
   private val PlotEvery: Duration = Duration.ofMinutes(1)
 
-  def pointsAtInstant(site: Site, start: Instant, end: Instant): ElevationPlotSeries.Points =
-    ElevationPlotSeries.Points:
+  def pointsAtInstant(site: Site, start: Instant, end: Instant): ObjectPlotData.Points =
+    ObjectPlotData.Points:
       SkyCalc.forInterval(
         site,
         start,
@@ -55,7 +55,7 @@ case class ElevationPlotSeries(
         tracking.at(_).map(_.value).getOrElse(tracking.baseCoordinates)
       )
 
-object ElevationPlotSeries:
+object ObjectPlotData:
   object Id extends NewType[Either[Observation.Id, Target.Id]]:
     given Order[Id] = Order.by(_.value)
   type Id = Id.Type
@@ -63,7 +63,7 @@ object ElevationPlotSeries:
   enum Style derives Eq:
     case Solid, Dashed
 
-  given Reusability[ElevationPlotSeries] = Reusability.byEq
+  given Reusability[ObjectPlotData] = Reusability.byEq
 
   inline private def setAirMass(
     x:     PointOptionsWithAirmass,
@@ -72,14 +72,14 @@ object ElevationPlotSeries:
     x.airmass = value
     x
 
-  case class ChartData(
+  case class SeriesData(
     targetAltitude:   js.Array[PointOptionsWithAirmass],
     skyBrightness:    js.Array[PointOptionsObject],
     parallacticAngle: js.Array[PointOptionsObject],
     moonAltitude:     js.Array[PointOptionsObject]
   )
 
-  object ChartData:
+  object SeriesData:
     def apply(
       data: (
         List[PointOptionsWithAirmass],
@@ -87,13 +87,13 @@ object ElevationPlotSeries:
         List[PointOptionsObject],
         List[PointOptionsObject]
       )
-    ): ChartData =
-      ChartData(data._1.toJSArray, data._2.toJSArray, data._3.toJSArray, data._4.toJSArray)
+    ): SeriesData =
+      SeriesData(data._1.toJSArray, data._2.toJSArray, data._3.toJSArray, data._4.toJSArray)
 
   case class MoonData(moonPhase: Double, moonIllum: Double)
 
   case class Points(value: List[(Instant, SkyCalcResults)]):
-    lazy val chartData: ChartData = {
+    lazy val seriesData: SeriesData = {
       val series: List[
         (PointOptionsWithAirmass, PointOptionsObject, PointOptionsObject, PointOptionsObject)
       ] =
@@ -120,7 +120,7 @@ object ElevationPlotSeries:
            point(results.lunarElevation.toAngle.toSignedDoubleDegrees)
           )
 
-      ChartData(series.unzip4)
+      SeriesData(series.unzip4)
     }
 
     lazy val moonData: MoonData =
@@ -129,9 +129,9 @@ object ElevationPlotSeries:
       val moonIllum                      = midOfNightResult.lunarIlluminatedFraction.toDouble
       MoonData(moonPhase, moonIllum)
 
-object ElevationPlotData extends NewType[NonEmptyMap[ElevationPlotSeries.Id, ElevationPlotSeries]]:
-  given Reusability[ElevationPlotData] =
-    Reusability.by[Type, Map[ElevationPlotSeries.Id, ElevationPlotSeries]](
+object PlotData extends NewType[NonEmptyMap[ObjectPlotData.Id, ObjectPlotData]]:
+  given Reusability[PlotData] =
+    Reusability.by[Type, Map[ObjectPlotData.Id, ObjectPlotData]](
       _.value.toSortedMap.unsorted
     )(using Reusability.map)
-type ElevationPlotData = ElevationPlotData.Type
+type PlotData = PlotData.Type

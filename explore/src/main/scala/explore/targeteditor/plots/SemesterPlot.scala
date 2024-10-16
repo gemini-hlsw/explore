@@ -36,7 +36,7 @@ import scala.scalajs.js
 import js.JSConverters.*
 
 case class SemesterPlot(
-  options:          ElevationPlotOptions,
+  options:          ObjectPlotOptions,
   coords:           CoordinatesAtVizTime,
   excludeIntervals: List[BoundedInterval[Instant]]
 ) extends ReactFnProps(SemesterPlot.component)

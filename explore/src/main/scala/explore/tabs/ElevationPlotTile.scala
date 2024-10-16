@@ -8,8 +8,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTilesIds
-import explore.targeteditor.plots.ElevationPlotData
-import explore.targeteditor.plots.ElevationPlotSection
+import explore.targeteditor.plots.ObjectPlotSection
+import explore.targeteditor.plots.PlotData
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -24,7 +24,7 @@ object ElevationPlotTile:
 
   def elevationPlotTile(
     userId:            Option[User.Id],
-    plotData:          ElevationPlotData,
+    plotData:          PlotData,
     site:              Option[Site],
     vizTime:           Option[Instant],
     pendingTime:       Option[Duration],
@@ -38,7 +38,7 @@ object ElevationPlotTile:
     ) { _ =>
       userId
         .map: uid =>
-          ElevationPlotSection(
+          ObjectPlotSection(
             uid,
             plotData,
             site,

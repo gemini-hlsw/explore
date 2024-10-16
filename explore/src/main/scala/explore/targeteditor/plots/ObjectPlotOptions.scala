@@ -6,8 +6,11 @@ package explore.targeteditor.plots
 import cats.*
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.ElevationPlotScheduling
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
+import japgolly.scalajs.react.ReactCats.*
+import japgolly.scalajs.react.Reusability
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
@@ -18,14 +21,11 @@ import lucuma.core.model.ObservingNight
 import lucuma.core.model.Semester
 import monocle.Focus
 import org.typelevel.cats.time.given
-import explore.model.ElevationPlotScheduling
 
 import java.time.Instant
 import java.time.LocalDate
-import japgolly.scalajs.react.Reusability
-import japgolly.scalajs.react.ReactCats.*
 
-case class ElevationPlotOptions(
+case class ObjectPlotOptions(
   site:           Site,
   range:          PlotRange,
   date:           LocalDate,
@@ -34,8 +34,8 @@ case class ElevationPlotOptions(
   showScheduling: ElevationPlotScheduling,
   visiblePlots:   List[SeriesType] = SeriesType.values.toList
 ) derives Eq:
-  def withDateAndSemesterOf(observationTime: Instant): ElevationPlotOptions =
-    val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(observationTime.some, site)
+  def withDateAndSemesterOf(observationTime: Instant): ObjectPlotOptions =
+    val (date, semester) = ObjectPlotOptions.dateAndSemesterOf(observationTime.some, site)
     copy(date = date, semester = semester)
 
   def minInstant: Instant =
@@ -58,14 +58,14 @@ case class ElevationPlotOptions(
 
   def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)
 
-object ElevationPlotOptions:
-  val site           = Focus[ElevationPlotOptions](_.site)
-  val range          = Focus[ElevationPlotOptions](_.range)
-  val date           = Focus[ElevationPlotOptions](_.date)
-  val semester       = Focus[ElevationPlotOptions](_.semester)
-  val timeDisplay    = Focus[ElevationPlotOptions](_.timeDisplay)
-  val showScheduling = Focus[ElevationPlotOptions](_.showScheduling)
-  val visiblePlots   = Focus[ElevationPlotOptions](_.visiblePlots)
+object ObjectPlotOptions:
+  val site           = Focus[ObjectPlotOptions](_.site)
+  val range          = Focus[ObjectPlotOptions](_.range)
+  val date           = Focus[ObjectPlotOptions](_.date)
+  val semester       = Focus[ObjectPlotOptions](_.semester)
+  val timeDisplay    = Focus[ObjectPlotOptions](_.timeDisplay)
+  val showScheduling = Focus[ObjectPlotOptions](_.showScheduling)
+  val visiblePlots   = Focus[ObjectPlotOptions](_.visiblePlots)
 
   // val elevationPlotElevationVisible        = Focus[ElevationPlotOptions](_.elevationPlotElevationVisible)
   // val elevationPlotParallacticAngleVisible =
@@ -103,7 +103,7 @@ object ElevationPlotOptions:
     )
     val (date, semester)    = dateAndSemesterOf(observationTime, site)
 
-    ElevationPlotOptions(
+    ObjectPlotOptions(
       site,
       PlotRange.Night,
       date,
@@ -113,4 +113,4 @@ object ElevationPlotOptions:
       List(SeriesType.Elevation, SeriesType.SkyBrightness)
     )
 
-  given Reusability[ElevationPlotOptions] = Reusability.byEq
+  given Reusability[ObjectPlotOptions] = Reusability.byEq
