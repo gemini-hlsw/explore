@@ -546,13 +546,6 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            // val tracking: Option[ObjectTracking] =
-            //   props.focused.target
-            //     .flatMap: targetId =>
-            //       props.targets.get.get(targetId)
-            //     .map:
-            //       ObjectTracking.fromTarget(_)
-
             val plotData: Option[PlotData] =
               NonEmptyMap
                 .fromMap:
@@ -668,15 +661,6 @@ object TargetTabContents extends TwoPanels:
               case Focused(None, Some(targetId), _) => targetId.asLeft.some
               case _                                => none
 
-          // val renderNonSiderealTargetEditor: List[Tile[?]] =
-          //   List(
-          //     renderSummary.withFullSize,
-          //     Tile("nonSiderealTarget".refined, "Non-sidereal target")(_ =>
-          //       <.div("Editing of Non-Sidereal targets not supported")
-          //     ),
-          //     dummyElevationTile
-          //   )
-
           val rightSide = { (resize: UseResizeDetectorReturn) =>
             val tileListKeyOpt: Option[(List[Tile[?]], NonEmptyString)] =
               optSelected
@@ -690,14 +674,8 @@ object TargetTabContents extends TwoPanels:
                 .orElse:
                   NonEmptyList
                     .fromList(selectedTargetIds.get)
+                    // TODO filter out non-sidereal targets
                     .map: targetIds =>
-                      // TODO We will have to restructure when we have non-sidereal targets
-                      // props.targets.get
-                      //   .get(targetId)
-                      //   .map:
-                      //     case Nonsidereal(_, _, _) =>
-                      //       (renderNonSiderealTargetEditor, TargetTabControllerIds.Summary.id)
-                      //     case Sidereal(_, _, _, _) =>
                       (renderSiderealTargetEditor(resize, targetIds, guideStarSelection),
                        TargetTabControllerIds.Summary.id
                       )

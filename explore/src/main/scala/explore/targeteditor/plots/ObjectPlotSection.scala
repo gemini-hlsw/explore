@@ -91,13 +91,6 @@ object ObjectPlotSection:
                 props.globalPreferences.elevationPlotLunarElevationVisible.isVisible
               )(SeriesType.LunarElevation)
             ).flattenOption
-            // elevationPlotElevationVisible = props.globalPreferences.elevationPlotElevationVisible,
-            // elevationPlotParallacticAngleVisible =
-            //   props.globalPreferences.elevationPlotParallacticAngleVisible,
-            // elevationPlotSkyBrightnessVisible =
-            //   props.globalPreferences.elevationPlotSkyBrightnessVisible,
-            // elevationPlotLunarElevationVisible =
-            //   props.globalPreferences.elevationPlotLunarElevationVisible
           )
       )
       // If predefined site changes, switch to it.
@@ -108,7 +101,7 @@ object ObjectPlotSection:
       .useEffectWithDepsBy((props, _, _) => props.visualizationTime)((props, _, options) =>
         _.map(vt => options.mod(_.withDateAndSemesterOf(vt))).orEmpty
       )
-      .render { (props, ctx, elevationPlotOptions) =>
+      .render: (props, ctx, elevationPlotOptions) =>
         import ctx.given
 
         val options = elevationPlotOptions.withOnMod(opts =>
@@ -254,4 +247,3 @@ object ObjectPlotSection:
             )
           )
         )
-      }
