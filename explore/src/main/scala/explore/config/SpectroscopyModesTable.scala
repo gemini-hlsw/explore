@@ -70,6 +70,8 @@ import scala.concurrent.duration.*
 
 import scalajs.js
 import scalajs.js.JSConverters.*
+import lucuma.core.util.Display
+import explore.model.enums.WavelengthUnits
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
@@ -222,6 +224,10 @@ private object SpectroscopyModesTable:
 
     <.div(ExploreStyles.ITCCell, content)
   }
+
+  given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(
+    WavelengthUnits.Micrometers
+  )
 
   private val columns =
     List(

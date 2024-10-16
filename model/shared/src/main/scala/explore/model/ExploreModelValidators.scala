@@ -105,12 +105,21 @@ object ExploreModelValidators:
           .toErrorsValidSplitEpiUnsafe
       )
 
-  val wavelengthValidWedge: InputValidWedge[Wavelength] =
+  val wavelengthMicroValidWedge: InputValidWedge[Wavelength] =
     InputValidWedge
       .truncatedBigDecimal(4.refined)
       .andThen(
         ValidWedge
           .fromFormat(Wavelength.decimalMicrometers, _ => "Invalid Wavelength".refined[NonEmpty])
+          .toErrorsValidWedge
+      )
+
+  val wavelengthNanoValidWedge: InputValidWedge[Wavelength] =
+    InputValidWedge
+      .truncatedBigDecimal(0.refined)
+      .andThen(
+        ValidWedge
+          .fromFormat(Wavelength.decimalNanometers, _ => "Invalid Wavelength".refined[NonEmpty])
           .toErrorsValidWedge
       )
 
@@ -128,9 +137,22 @@ object ExploreModelValidators:
           .toErrorsValidWedge
       )
 
-  val wavelengthDeltaValidWedge: InputValidWedge[WavelengthDelta] =
-    wavelengthValidWedge.andThen(
+  val wavelengthMicroDeltaValidWedge: InputValidWedge[WavelengthDelta] =
+    wavelengthMicroValidWedge.andThen(
       Iso[Wavelength, WavelengthDelta](w => WavelengthDelta(w.pm))(wc => Wavelength(wc.pm))
+    )
+
+  val wavelengthNanoDeltaValidWedge: InputValidWedge[WavelengthDelta] =
+    wavelengthNanoValidWedge.andThen(
+      Iso[Wavelength, WavelengthDelta](w =>
+        WavelengthDelta
+          .fromIntNanometers(w.nm.value.value.toInt)
+          .getOrElse(sys.error("Invalid Wavelength"))
+      )(wc =>
+        Wavelength
+          .fromIntNanometers(wc.nm.value.value.toInt)
+          .getOrElse(sys.error("Invalid Wavelength"))
+      )
     )
 
   // Only support numbers (one or more) with an optional sign and an optional

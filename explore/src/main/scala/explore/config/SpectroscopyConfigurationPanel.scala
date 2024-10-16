@@ -30,10 +30,12 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.clearable
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
+import explore.model.enums.WavelengthUnits
 
 case class SpectroscopyConfigurationPanel(
   options:  View[ScienceRequirements.Spectroscopy],
-  readonly: Boolean
+  readonly: Boolean,
+  units:    WavelengthUnits = WavelengthUnits.Nanometers
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
 object SpectroscopyConfigurationPanel extends ConfigurationFormats {
@@ -66,15 +68,15 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
           FormInputTextView[View, Option[Wavelength]](
             id = "configuration-wavelength".refined,
             value = wv,
-            label = ReactFragment(
+            label = <.div(
               "Wavelength",
               HelpIcon("configuration/wavelength.md".refined)
             ),
             groupClass = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
             postAddons = wv.get.fold(List(requiredForITC))(_ => Nil),
-            units = "μm",
-            validFormat = wvMicroInput,
-            changeAuditor = wvChangeAuditor,
+            units = p.units.label.value,
+            validFormat = p.units.toInputWedge,
+            changeAuditor = p.units.toAuditor,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
           FormInputTextView(
@@ -92,13 +94,13 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,
-            units = "μm",
+            units = p.units.label.value,
             label = ReactFragment(
               "Δλ",
               HelpIcon("configuration/wavelength_coverage.md".refined)
             ),
-            validFormat = wvcMicroInput,
-            changeAuditor = wvChangeAuditor,
+            validFormat = p.units.toDeltaInputWedge,
+            changeAuditor = p.units.toAuditor,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
           FormLabel("focal-plane".refined)("Focal Plane",
