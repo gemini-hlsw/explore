@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.plots
 
 import cats.effect.IO
 import cats.syntax.all.*
@@ -11,7 +11,6 @@ import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
 import explore.model.Constants
-import explore.model.ElevationPlotOptions
 import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
@@ -36,14 +35,14 @@ import scala.scalajs.js
 
 import js.JSConverters.*
 
-case class ElevationPlotSemester(
+case class SemesterPlot(
   options:          ElevationPlotOptions,
   coords:           CoordinatesAtVizTime,
   excludeIntervals: List[BoundedInterval[Instant]]
-) extends ReactFnProps(ElevationPlotSemester.component)
+) extends ReactFnProps(SemesterPlot.component)
 
-object ElevationPlotSemester:
-  private type Props = ElevationPlotSemester
+object SemesterPlot:
+  private type Props = SemesterPlot
 
   private val PlotDayRate: Long     = 3
   private val MillisPerHour: Double = 60 * 60 * 1000

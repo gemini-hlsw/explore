@@ -8,8 +8,8 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTilesIds
-import explore.targeteditor.ElevationPlotData
-import explore.targeteditor.ElevationPlotSection
+import explore.targeteditor.plots.ElevationPlotData
+import explore.targeteditor.plots.ElevationPlotSection
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site

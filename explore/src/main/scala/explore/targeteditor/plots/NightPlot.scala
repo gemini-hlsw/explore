@@ -1,19 +1,14 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.plots
 
-import cats.Eq
-import cats.derived.*
 import cats.syntax.all.*
 import crystal.react.*
 import explore.*
 import explore.highcharts.*
 import explore.model.Constants
-import explore.model.ElevationPlotOptions
 import explore.model.enums.TimeDisplay
-import explore.model.enums.Visible
-import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -31,7 +26,6 @@ import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.ui.components.MoonPhase
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import monocle.Lens
 import org.typelevel.cats.time.given
 
 import java.time.Duration
@@ -41,108 +35,69 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import scala.collection.MapView
-import scala.collection.immutable.HashSet
 import scala.scalajs.js
 
 import js.JSConverters.*
 
-case class ElevationPlotNight(
+case class NightPlot(
   plotData:         ElevationPlotData,
   coordsTime:       Instant,
   // obsTime:          Option[Instant],
   excludeIntervals: List[BoundedInterval[Instant]],
   pendingTime:      Option[Duration],
   options:          View[ElevationPlotOptions]
-) extends ReactFnProps(ElevationPlotNight.component):
-  import ElevationPlotNight.PlotSeries
+) extends ReactFnProps(NightPlot.component)
+// import ElevationPlotNight.PlotSeries
 
-  private def visibleZoomFn(series: PlotSeries): Lens[ElevationPlotOptions, Visible] =
-    series match
-      case PlotSeries.Elevation        =>
-        ElevationPlotOptions.elevationPlotElevationVisible
-      case PlotSeries.ParallacticAngle =>
-        ElevationPlotOptions.elevationPlotParallacticAngleVisible
-      case PlotSeries.SkyBrightness    =>
-        ElevationPlotOptions.elevationPlotSkyBrightnessVisible
-      case PlotSeries.LunarElevation   =>
-        ElevationPlotOptions.elevationPlotLunarElevationVisible
+// private def visibleZoomFn(series: PlotSeries): Lens[ElevationPlotOptions, Visible] =
+//   series match
+//     case PlotSeries.Elevation        =>
+//       ElevationPlotOptions.elevationPlotElevationVisible
+//     case PlotSeries.ParallacticAngle =>
+//       ElevationPlotOptions.elevationPlotParallacticAngleVisible
+//     case PlotSeries.SkyBrightness    =>
+//       ElevationPlotOptions.elevationPlotSkyBrightnessVisible
+//     case PlotSeries.LunarElevation   =>
+//       ElevationPlotOptions.elevationPlotLunarElevationVisible
 
-  protected[ElevationPlotNight] def showSeriesCB(
-    shownSeries: View[HashSet[PlotSeries]],
-    series:      PlotSeries,
-    chart:       Chart_
-  ): Callback =
-    options.zoom(visibleZoomFn(series)).set(Visible.Shown) *>
-      shownSeries.mod(_ + series) *>
-      Callback:
-        ElevationPlotNight.SkyBrightnessPercentileLines.foreach: line =>
-          chart.yAxis(2).addPlotLine(line)
-        ElevationPlotNight.SkyBrightnessPercentileBands
-          .foreach: band =>
-            chart.yAxis(2).addPlotBand(band)
-      .when(series === PlotSeries.SkyBrightness)
-        .void
+// protected[ElevationPlotNight] def showSeriesCB(
+//   shownSeries: View[HashSet[PlotSeries]],
+//   series:      PlotSeries,
+//   chart:       Chart_
+// ): Callback =
+//   options.zoom(visibleZoomFn(series)).set(Visible.Shown) *>
+//     shownSeries.mod(_ + series) *>
+//     Callback:
+//       ElevationPlotNight.SkyBrightnessPercentileLines.foreach: line =>
+//         chart.yAxis(2).addPlotLine(line)
+//       ElevationPlotNight.SkyBrightnessPercentileBands
+//         .foreach: band =>
+//           chart.yAxis(2).addPlotBand(band)
+//     .when(series === PlotSeries.SkyBrightness)
+//       .void
 
-  protected[ElevationPlotNight] def hideSeriesCB(
-    shownSeries: View[HashSet[PlotSeries]],
-    series:      PlotSeries,
-    chart:       Chart_
-  ): Callback =
-    options.zoom(visibleZoomFn(series)).set(Visible.Hidden) *>
-      shownSeries.mod(_ - series) *>
-      Callback {
-        ElevationPlotNight.SkyBrightnessPercentileLines
-          .flatMap(_.id.toList)
-          .foreach(id => chart.yAxis(2).removePlotLine(id))
-        ElevationPlotNight.SkyBrightnessPercentileBands
-          .flatMap(_.id.toList)
-          .foreach(id => chart.yAxis(2).removePlotBand(id))
-      }
-        .when(series === PlotSeries.SkyBrightness)
-        .void
+// protected[ElevationPlotNight] def hideSeriesCB(
+//   shownSeries: View[HashSet[PlotSeries]],
+//   series:      PlotSeries,
+//   chart:       Chart_
+// ): Callback =
+//   options.zoom(visibleZoomFn(series)).set(Visible.Hidden) *>
+//     shownSeries.mod(_ - series) *>
+//     Callback {
+//       ElevationPlotNight.SkyBrightnessPercentileLines
+//         .flatMap(_.id.toList)
+//         .foreach(id => chart.yAxis(2).removePlotLine(id))
+//       ElevationPlotNight.SkyBrightnessPercentileBands
+//         .flatMap(_.id.toList)
+//         .foreach(id => chart.yAxis(2).removePlotBand(id))
+//     }
+//       .when(series === PlotSeries.SkyBrightness)
+//       .void
 
-object ElevationPlotNight:
-  private type Props = ElevationPlotNight
+object NightPlot:
+  private type Props = NightPlot
 
   private val MillisPerHour: Double = 60 * 60 * 1000
-
-  private enum PlotSeries(
-    val name:    String,
-    val yAxis:   Int,
-    val data:    ElevationPlotSeries.ChartData => js.Array[Chart.Data],
-    val enabled: ElevationPlotOptions => Visible
-  ) derives Eq:
-    case Elevation
-        extends PlotSeries(
-          "Elevation",
-          0,
-          _.targetAltitude.asInstanceOf[js.Array[Chart.Data]],
-          _.elevationPlotElevationVisible
-        )
-    case ParallacticAngle
-        extends PlotSeries(
-          "Parallactic Angle",
-          1,
-          _.parallacticAngle.asInstanceOf[js.Array[Chart.Data]],
-          _.elevationPlotParallacticAngleVisible
-        )
-    case SkyBrightness
-        extends PlotSeries(
-          "Sky Brightness",
-          2,
-          _.skyBrightness.asInstanceOf[js.Array[Chart.Data]],
-          _.elevationPlotSkyBrightnessVisible
-        )
-    case LunarElevation
-        extends PlotSeries(
-          "Lunar Elevation",
-          0,
-          _.moonAltitude.asInstanceOf[js.Array[Chart.Data]],
-          _.elevationPlotLunarElevationVisible
-        )
-
-  private object PlotSeries:
-    given Reusability[PlotSeries] = Reusability.byEq
 
   private def formatAngle(degs: Double): String =
     val dms     = Angle.DMS(Angle.fromDoubleDegrees(degs))
@@ -201,9 +156,9 @@ object ElevationPlotNight:
         val end: Instant   = tbOfficialNight.end
 
         (start, end)
-      .useMemoBy((props, _, _) => (props.options.get.site, props.plotData)):
-        (_, observingNight, bounds) =>
-          (site, plotData) =>
+      .useMemoBy((props, _, bounds) => (props.options.get.site, props.plotData, bounds)):
+        (_, _, _) =>
+          (site, plotData, bounds) =>
             val (start, end): (Instant, Instant) = bounds
 
             val seriesData: MapView[ElevationPlotSeries.Id, ElevationPlotSeries.Points] =
@@ -302,8 +257,42 @@ object ElevationPlotNight:
           //   if (chartData.size === 1) "Target is below horizon"
           //   else "All targets are below horizon"
 
+          val seriesToPlot: Array[
+            (String, Int, Int, Boolean, ElevationPlotSeries.Style, js.Array[Chart.Data])
+          ] =
+            SeriesType.values
+              // .filter(opts.visiblePlots.contains_)
+              .flatMap: series =>
+                chartData.toList
+                  .map: (id, targetChartData) =>
+                    plotData.value(id).map(targetPlotData => (targetPlotData, targetChartData))
+                  .zipWithIndex
+                  .collect: // Plot lunar elevation only once.
+                    case (Some((targetPlotData, targetChartData)), index)
+                        if series =!= SeriesType.LunarElevation || index === 0 =>
+                      (
+                        if (series === SeriesType.LunarElevation) series.name
+                        else s"${series.name} (${targetPlotData.name})",
+                        series.yAxis,
+                        series.threshold,
+                        opts.visiblePlots.contains_(series),
+                        targetPlotData.style,
+                        series.data(targetChartData)
+                      )
+
+          val zones: Option[js.Array[SeriesZonesOptionsObject]] =
+            pendingTime.map: pt =>
+              js.Array(
+                SeriesZonesOptionsObject()
+                  .setValue(start.toEpochMilli.toDouble),
+                SeriesZonesOptionsObject()
+                  .setValue(start.plus(pt).toEpochMilli.toDouble)
+                  .setClassName("elevation-plot-visualization-period")
+              )
+
           Options()
             .setChart(commonOptions)
+            .setLegend(LegendOptions().setEnabled(false))
             .setTitle:
               TitleOptions().setText:
                 s"Sunset ${observingNight.toLocalDate.minusDays(1)} ➟ Sunrise ${observingNight.toLocalDate} "
@@ -345,14 +334,13 @@ object ElevationPlotNight:
                         .setTo(tbNauticalNight.start.toEpochMilli.toDouble)
                         .setClassName("plot-band-twilight-nautical-end")
                         .setZIndex(1)
-                        .setLabel(
+                        .setLabel:
                           XAxisPlotBandsLabelOptions()
                             .setText(s"  Morning 12° - Twilight: $dawn")
                             .setRotation(270)
                             .setAlign(AlignValue.right)
                             .setTextAlign(AlignValue.center)
                             .setVerticalAlign(VerticalAlignValue.middle)
-                        )
                     )).toJSArray
                 )
             )
@@ -386,12 +374,12 @@ object ElevationPlotNight:
                   .setShowEmpty(false)
                   .setLabels(YAxisLabelsOptions().setFormat("{value}"))
                   .setPlotLines:
-                    if (opts.elevationPlotSkyBrightnessVisible === Visible.Shown)
+                    if (opts.visiblePlots.contains_(SeriesType.SkyBrightness))
                       SkyBrightnessPercentileLines.toJSArray
                     else
                       js.Array()
                   .setPlotBands:
-                    if (opts.elevationPlotSkyBrightnessVisible === Visible.Shown)
+                    if (opts.visiblePlots.contains_(SeriesType.SkyBrightness))
                       SkyBrightnessPercentileBands.toJSArray
                     else
                       js.Array()
@@ -409,55 +397,51 @@ object ElevationPlotNight:
                 )
             )
             .setSeries(
-              PlotSeries.values
-                .map: series =>
-                  val zones: Option[js.Array[SeriesZonesOptionsObject]] =
-                    pendingTime.map: pt =>
-                      js.Array(
-                        SeriesZonesOptionsObject()
-                          .setValue(start.toEpochMilli.toDouble),
-                        SeriesZonesOptionsObject()
-                          .setValue(start.plus(pt).toEpochMilli.toDouble)
-                          .setClassName("elevation-plot-visualization-period")
-                      )
+              seriesToPlot
+                .map: (name, yAxis, threshold, visible, style, data) =>
+                  val baseSeries: SeriesAreaOptions =
+                    // chartData.toList.map: (id, targetChartData) =>
+                    //   val name: String = plotData
+                    //     .value(id)
+                    //     .map(_.name.value)
+                    //     .getOrElse(id.value.fold(_.toString, _.toString))
+                    SeriesAreaOptions((), (), ())
+                      .setName(name)
+                      .setLabel:
+                        SeriesLabelOptionsObject()
+                          .setEnabled(true)
+                          .setConnectorAllowed(true)
+                          .setOnArea(false)
+                      .setClassName("elevation-plot-series")
+                      .setYAxis(yAxis)
+                      .setData(data)
+                      .setVisible(visible)
+                      .setDashStyle:
+                        style match
+                          case ElevationPlotSeries.Style.Solid  => DashStyleValue.Solid
+                          case ElevationPlotSeries.Style.Dashed => DashStyleValue.Dash
+                      // series.enabled(opts).isVisible && shownSeries.get.contains(series)
+                      // .setEvents:
+                      //   SeriesEventsOptionsObject()
+                      //     .setHide: (s, _) =>
+                      //       props.hideSeriesCB(shownSeries, series, s.chart).runNow()
+                      //     .setShow: (s, _) =>
+                      //       props.showSeriesCB(shownSeries, series, s.chart).runNow()
+                      .setFillOpacity(0)
+                      .setZoneAxis("x")
+                      .setThreshold(threshold)
 
-                  val baseSeries: List[SeriesAreaOptions] =
-                    chartData.toList.map: (id, targetChartData) =>
-                      val name: String = plotData
-                        .value(id)
-                        .map(_.name.value)
-                        .getOrElse(id.value.fold(_.toString, _.toString))
-                      SeriesAreaOptions((), (), ())
-                        .setName(s"${series.name} ($name)")
-                        .setLabel:
-                          SeriesLabelOptionsObject()
-                            .setEnabled(true)
-                            .setConnectorAllowed(true)
-                            .setOnArea(false)
-                        .setClassName("elevation-plot-series")
-                        .setYAxis(series.yAxis)
-                        .setData(series.data(targetChartData))
-                        // .setVisible:
-                        //   series.enabled(opts).isVisible && shownSeries.get.contains(series)
-                        // .setEvents:
-                        //   SeriesEventsOptionsObject()
-                        //     .setHide: (s, _) =>
-                        //       props.hideSeriesCB(shownSeries, series, s.chart).runNow()
-                        //     .setShow: (s, _) =>
-                        //       props.showSeriesCB(shownSeries, series, s.chart).runNow()
-                        .setFillOpacity(0)
-                        .setZoneAxis("x")
+                  // val zonedSeries: SeriesAreaOptions =
+                  zones
+                    .fold(baseSeries)(z => baseSeries.setZones(z))
+                    .asInstanceOf[SeriesOptionsType]
 
-                  val zonedSeries: List[SeriesAreaOptions] =
-                    zones.fold(baseSeries)(z => baseSeries.map(_.setZones(z)))
-
-                  series match // Adjust fill area to axis
-                    case PlotSeries.SkyBrightness    =>
-                      zonedSeries.map(_.setThreshold(22))
-                    case PlotSeries.ParallacticAngle =>
-                      zonedSeries.map(_.setThreshold(-180))
-                    case _                           => zonedSeries
-                .flatMap(_.map(_.asInstanceOf[SeriesOptionsType]))
+                  // series match // Adjust fill area to axis
+                  //   case PlotSeries.SkyBrightness    => zonedSeries.map(_.setThreshold(22))
+                  //   case PlotSeries.ParallacticAngle => zonedSeries.map(_.setThreshold(-180))
+                  //   case _                           => zonedSeries
+                  // .flatMap(_.map(_.asInstanceOf[SeriesOptionsType]))
+                  // zonedSeries
                 .toJSArray
             )
       .render: (props, _, _, chartAndMoonData, chartOptions) =>

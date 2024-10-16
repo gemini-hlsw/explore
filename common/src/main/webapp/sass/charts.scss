@@ -67,9 +67,9 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   //   stroke: hsl(79deg 70% 43%);
   // }
 
-  // .plot-sky-brightness-percentile {
-  //   stroke-dasharray: 3, 5;
-  // }
+  .plot-sky-brightness-percentile {
+    stroke-dasharray: 3, 5;
+  }
 
   // /* Sky Brightness */
   // .elevation-plot {
@@ -92,18 +92,18 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     fill: hsl(79deg 70% 43%);
   }
 
-  // .plot-axis-parallactic-angle text {
-  //   fill: hsl(79deg 70% 43%);
-  // }
+  .plot-axis-parallactic-angle text {
+    fill: hsl(79deg 70% 43%);
+  }
 
-  // .plot-axis-sky-brightness {
-  //   stroke-width: 0;
-  //   fill: hsl(209deg 75% 71%);
-  // }
+  .plot-axis-sky-brightness {
+    stroke-width: 0;
+    fill: hsl(209deg 75% 71%);
+  }
 
-  // .plot-axis-sky-brightness text {
-  //   fill: hsl(209deg 75% 71%);
-  // }
+  .plot-axis-sky-brightness text {
+    fill: hsl(209deg 75% 71%);
+  }
 
   .plot-band-exclude-window {
     fill: var(--plot-plot-band-exclude-window-color);

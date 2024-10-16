@@ -35,8 +35,8 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.targeteditor.ElevationPlotData
-import explore.targeteditor.ElevationPlotSeries
+import explore.targeteditor.plots.ElevationPlotData
+import explore.targeteditor.plots.ElevationPlotSeries
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -584,6 +584,12 @@ object TargetTabContents extends TwoPanels:
             List(asterismEditorTile) ++ skyPlotTile
           }
 
+          // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
+          val dummyTargetTile: Tile[Unit]    =
+            Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
+          val dummyElevationTile: Tile[Unit] =
+            Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
+
           /**
            * Renders a single sidereal target editor without an obs context
            */
@@ -649,7 +655,7 @@ object TargetTabContents extends TwoPanels:
 
               // List(targetTile, skyPlotTile)
               // List(targetTile) ++ skyPlotTile.toList
-              skyPlotTile.toList
+              List(dummyTargetTile) ++ skyPlotTile.toList
             // }
             // .orEmpty
 
@@ -662,12 +668,6 @@ object TargetTabContents extends TwoPanels:
               case Focused(None, Some(targetId), _) => targetId.asLeft.some
               case _                                => none
 
-          // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
-          val dummyTargetTile: Tile[Unit]    =
-            Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
-          val dummyElevationTile: Tile[Unit] =
-            Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
-
           // val renderNonSiderealTargetEditor: List[Tile[?]] =
           //   List(
           //     renderSummary.withFullSize,
@@ -676,8 +676,6 @@ object TargetTabContents extends TwoPanels:
           //     ),
           //     dummyElevationTile
           //   )
-
-          println(optSelected)
 
           val rightSide = { (resize: UseResizeDetectorReturn) =>
             val tileListKeyOpt: Option[(List[Tile[?]], NonEmptyString)] =
@@ -712,7 +710,7 @@ object TargetTabContents extends TwoPanels:
 
             val (tiles, key) =
               tileListKeyOpt.fold((justSummaryTiles, TargetTabControllerIds.Summary.id)):
-                (tiles, key) => (tiles, key)
+                (tiles, key) => (dummyTargetTile +: tiles, key)
 
             TileController(
               props.userId,
