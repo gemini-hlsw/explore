@@ -96,6 +96,31 @@ object NightPlot:
       plotBand("bright", "Bright", 17, 19.61)
     )
 
+  private case class ChartSeriesData(
+    seriesType:       SeriesType,
+    objectPlotData:   ObjectPlotData,
+    objectSeriesData: ObjectPlotData.SeriesData,
+    visiblePlots:     List[SeriesType]
+  ):
+    lazy val name: String                =
+      if (seriesType === SeriesType.LunarElevation) "Moon" else objectPlotData.name.value
+    lazy val yAxis: Int                  = seriesType.yAxis
+    lazy val threshold: Int              = seriesType.threshold
+    lazy val visible: Boolean            = visiblePlots.contains_(seriesType)
+    lazy val style: ObjectPlotData.Style = objectPlotData.style
+    lazy val data: js.Array[Chart.Data]  = seriesType.data(objectSeriesData)
+    // SkyBrightness can be out of bounds, in that case we hide the label (otherwise it's confusingly shown at the top of the chart).
+    lazy val showLabel: Boolean          = seriesType match
+      case SeriesType.SkyBrightness =>
+        data.exists: point =>
+          point
+            .asInstanceOf[PointOptionsObject]
+            .y // Deal with js.UndefOr[Double | Null] type
+            .toOption
+            .flatMap(v => Option(v.asInstanceOf[Double]))
+            .exists(_ > threshold)
+      case _                        => true
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -198,39 +223,39 @@ object NightPlot:
           val dusk: String = instantFormat(tbNauticalNight.start)
           val dawn: String = instantFormat(tbNauticalNight.end)
 
-          val targetsBelowHorizonStr: Option[String] = none
-          // Option.when(
-          //   chartData.forall: (_, targetChartData) =>
-          //     PlotSeries.Elevation
-          //       .data(targetChartData)
-          //       .forall: point =>
-          //         Option(point.asInstanceOf[PointOptionsObject].y)
-          //           .forall(_.asInstanceOf[Double] <= 0)
-          // ):
-          //   if (chartData.size === 1) "Target is below horizon"
-          //   else "All targets are below horizon"
-
-          val seriesToPlot: Array[
-            (String, Int, Int, Boolean, ObjectPlotData.Style, js.Array[Chart.Data])
-          ] =
+          val seriesToPlot: Array[ChartSeriesData] =
             SeriesType.values
-              .flatMap: series =>
+              .flatMap: seriesType =>
                 chartData.toList
                   .map: (id, targetChartData) =>
                     plotData.value(id).map(targetPlotData => (targetPlotData, targetChartData))
                   .zipWithIndex
                   .collect: // Plot lunar elevation only once.
                     case (Some((targetPlotData, targetChartData)), index)
-                        if series =!= SeriesType.LunarElevation || index === 0 =>
-                      (
-                        if (series === SeriesType.LunarElevation) "Moon"
-                        else targetPlotData.name.value,
-                        series.yAxis,
-                        series.threshold,
-                        opts.visiblePlots.contains_(series),
-                        targetPlotData.style,
-                        series.data(targetChartData)
+                        if seriesType =!= SeriesType.LunarElevation || index === 0 =>
+                      ChartSeriesData(
+                        seriesType,
+                        targetPlotData,
+                        targetChartData,
+                        opts.visiblePlots
                       )
+
+          val targetsBelowHorizonStr: Option[String] =
+            Option.when(
+              seriesToPlot.forall: series =>
+                series.seriesType match
+                  case SeriesType.Elevation =>
+                    series.data.forall: point =>
+                      point
+                        .asInstanceOf[PointOptionsObject]
+                        .y // Deal with js.UndefOr[Double | Null] type
+                        .toOption
+                        .flatMap(v => Option(v.asInstanceOf[Double]))
+                        .forall(_ <= 0)
+                  case _                    => true
+            ):
+              if (plotData.value.size === 1) "Target is below horizon"
+              else "All targets are below horizon"
 
           val zones: Option[js.Array[SeriesZonesOptionsObject]] =
             pendingTime.map: pt =>
@@ -349,26 +374,26 @@ object NightPlot:
                 )
             .setSeries:
               seriesToPlot
-                .map: (name, yAxis, threshold, visible, style, data) =>
+                .map: series =>
                   val baseSeries: SeriesAreaOptions =
                     SeriesAreaOptions((), (), ())
-                      .setName(name)
+                      .setName(series.name)
                       .setLabel:
                         SeriesLabelOptionsObject()
-                          .setEnabled(true)
+                          .setEnabled(series.showLabel)
                           .setConnectorAllowed(true)
                           .setOnArea(false)
                       .setClassName("elevation-plot-series")
-                      .setYAxis(yAxis)
-                      .setData(data)
-                      .setVisible(visible)
+                      .setYAxis(series.yAxis)
+                      .setData(series.data)
+                      .setVisible(series.visible)
                       .setDashStyle:
-                        style match
+                        series.style match
                           case ObjectPlotData.Style.Solid  => DashStyleValue.Solid
                           case ObjectPlotData.Style.Dashed => DashStyleValue.Dash
                       .setFillOpacity(0)
                       .setZoneAxis("x")
-                      .setThreshold(threshold)
+                      .setThreshold(series.threshold)
 
                   zones
                     .fold(baseSeries)(z => baseSeries.setZones(z))
