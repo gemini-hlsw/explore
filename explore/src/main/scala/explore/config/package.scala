@@ -11,10 +11,12 @@ import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
+import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -35,21 +37,57 @@ trait ConfigurationFormats:
     .decimal(2.refined)
     .optional
   lazy val slitLengthFormat              = ExploreModelValidators.decimalArcsecondsValidWedge.optional
-  lazy val wvMicroInput                  = ExploreModelValidators.wavelengthValidWedge.optional
-  lazy val wvcMicroInput                 = ExploreModelValidators.wavelengthDeltaValidWedge.optional
-  lazy val wvBaseAuditor                 = ChangeAuditor
-    .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
+  lazy val wvMicroInput                  = ExploreModelValidators.wavelengthMicroValidWedge.optional
+  lazy val wvNanoInput                   = ExploreModelValidators.wavelengthNanoValidWedge.optional
+  lazy val wvDeltaMicroInput             = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
+  lazy val wvDeltaNanoInput              = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
+  lazy val wvMicroBaseAuditor            = ChangeAuditor
+    .fromInputValidWedge(ExploreModelValidators.wavelengthMicroValidWedge)
     .allow(s => s === "0" || s === "0.")
-  lazy val wvChangeAuditor               = wvBaseAuditor
+  lazy val wvMicroChangeAuditor          = wvMicroBaseAuditor
     .decimal(3.refined)
     .optional
-  lazy val snAtWvChangeAuditor           = wvBaseAuditor
+  lazy val snAtWvMicroChangeAuditor      = wvMicroBaseAuditor
     .decimal(4.refined)
     .optional
+  lazy val wvNanoBaseAuditor             = ChangeAuditor
+    .fromInputValidWedge(ExploreModelValidators.wavelengthNanoValidWedge)
+    .allow(s => s === "0" || s === "0.")
+  lazy val wvNanoChangeAuditor           = wvNanoBaseAuditor.decimal(1.refined).optional
+  lazy val snAtWvNanoChangeAuditor       = wvNanoBaseAuditor.decimal(1.refined).optional
+
+  extension (u: WavelengthUnits)
+    def toAuditor: ChangeAuditor =
+      u match
+        case WavelengthUnits.Micrometers => wvMicroChangeAuditor
+        case WavelengthUnits.Nanometers  => wvNanoChangeAuditor
+
+    def toSNAuditor: ChangeAuditor =
+      u match
+        case WavelengthUnits.Micrometers => snAtWvMicroChangeAuditor
+        case WavelengthUnits.Nanometers  => snAtWvNanoChangeAuditor
+
+    def toInputWedge: InputValidWedge[Option[Wavelength]] =
+      u match
+        case WavelengthUnits.Micrometers => wvMicroInput
+        case WavelengthUnits.Nanometers  => wvNanoInput
+
+    def toInputFormat: InputValidFormat[Wavelength] =
+      u match
+        case WavelengthUnits.Micrometers => ExploreModelValidators.wavelengthMicroValidWedge
+        case WavelengthUnits.Nanometers  => ExploreModelValidators.wavelengthNanoValidWedge
+
+    def toDeltaInputWedge: InputValidWedge[Option[WavelengthDelta]] =
+      u match
+        case WavelengthUnits.Micrometers => wvDeltaMicroInput
+        case WavelengthUnits.Nanometers  => wvDeltaNanoInput
+
+object ConfigurationFormats extends ConfigurationFormats
 
 case class SignalToNoiseAt(
   options:  View[ScienceRequirements.Spectroscopy],
-  readonly: Boolean
+  readonly: Boolean,
+  units:    WavelengthUnits
 ) extends ReactFnProps[SignalToNoiseAt](SignalToNoiseAt.component)
 
 object SignalToNoiseAt extends ConfigurationFormats {
@@ -81,9 +119,9 @@ object SignalToNoiseAt extends ConfigurationFormats {
             groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
             postAddons = signalToNoiseAt.get.fold(List(requiredForITC))(_ => Nil),
             value = signalToNoiseAt,
-            units = "μm",
-            validFormat = wvMicroInput,
-            changeAuditor = snAtWvChangeAuditor,
+            units = props.units.symbol,
+            validFormat = props.units.toInputWedge,
+            changeAuditor = props.units.toSNAuditor,
             disabled = props.readonly
           ).clearable(^.autoComplete.off)
         )

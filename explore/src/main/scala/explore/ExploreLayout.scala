@@ -250,18 +250,26 @@ object ExploreLayout:
                       vault.get.user.id,
                       view.zoom(RootModel.userPreferences).async.mod
                     ).withKey(cacheKey),
-                    TopBar(
-                      vault,
-                      routingInfo.optProgramId,
-                      props.model.programSummariesValue.flatMap(_.programOrProposalReference),
-                      view.zoom(RootModel.localPreferences).get,
-                      view.zoom(RootModel.undoStacks),
-                      props.model.programSummaries.throttlerView
-                        .zoom(Iso.id[Option[ProgramSummaries]].some)
-                        .zoom(ProgramSummaries.programs),
-                      theme,
-                      onLogout >> view.zoom(RootModel.vault).set(none).toAsync
-                    )
+                    props.model.rootModel
+                      .zoom(
+                        RootModel.userPreferences.some.andThen(UserPreferences.globalPreferences)
+                      )
+                      .asView
+                      .map(prefs =>
+                        TopBar(
+                          vault,
+                          routingInfo.optProgramId,
+                          props.model.programSummariesValue.flatMap(_.programOrProposalReference),
+                          view.zoom(RootModel.localPreferences).get,
+                          view.zoom(RootModel.undoStacks),
+                          props.model.programSummaries.throttlerView
+                            .zoom(Iso.id[Option[ProgramSummaries]].some)
+                            .zoom(ProgramSummaries.programs),
+                          theme,
+                          onLogout >> view.zoom(RootModel.vault).set(none).toAsync,
+                          prefs
+                        )
+                      )
                   ),
                 SideTabs(
                   "side-tabs".refined,

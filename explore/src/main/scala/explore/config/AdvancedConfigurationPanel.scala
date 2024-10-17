@@ -19,12 +19,15 @@ import explore.Icons
 import explore.common.Aligner
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.config.ConfigurationFormats.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.Observation
 import explore.model.ScienceRequirements
+import explore.model.display.*
 import explore.model.display.given
+import explore.model.enums.WavelengthUnits
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.ModeCommonWavelengths
@@ -83,6 +86,7 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def selectedConfig: View[Option[BasicConfigAndItc]]
   def sequenceChanged: Callback
   def readonly: Boolean
+  def units: WavelengthUnits
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ObservingMode,
@@ -188,12 +192,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.shortName} Gain" },
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
-
-  private val wavelengthChangeAuditor =
-    ChangeAuditor
-      .fromInputValidWedge(ExploreModelValidators.wavelengthValidWedge)
-      .allow(s => s === "0" || s === "0.")
-      .decimal(3.refined)
 
   private case class ModeData private (
     centralWavelength: Wavelength,
@@ -510,6 +508,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val invalidateITC: Callback =
           Callback.empty
 
+        given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(props.units)
+
         <.div(
           ExploreStyles.AdvancedConfigurationGrid
         )(
@@ -560,14 +560,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = React.Fragment("Central Wavelength",
                                      HelpIcon("configuration/central=wavelength.md".refined)
               ),
-              validFormat = ExploreModelValidators.wavelengthValidWedge,
-              changeAuditor = wavelengthChangeAuditor,
-              units = "μm".some,
+              units = props.units.symbol.some,
+              validFormat = props.units.toInputFormat,
+              changeAuditor = props.units.toAuditor,
               originalValue = initialCentralWavelength,
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            SignalToNoiseAt(props.spectroscopyRequirements, props.readonly)
+            SignalToNoiseAt(props.spectroscopyRequirements, props.readonly, props.units)
             // FormLabel(htmlFor = "exposureMode".refined)(
             //   "Exposure Mode",
             //   HelpIcon("configuration/exposure-mode.md".refined)
@@ -713,7 +713,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
             <.label(^.id := "lambdaInterval",
                     ExploreStyles.FormValue,
-                    s"${adjustedInterval.fold("Unknown")(_.shortName)} μm"
+                    s"${adjustedInterval.fold("Unknown")(_.shortName)} ${props.units.symbol}"
             )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
@@ -793,7 +793,8 @@ object AdvancedConfigurationPanel {
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
-    readonly:                 Boolean
+    readonly:                 Boolean,
+    units:                    WavelengthUnits
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
@@ -994,7 +995,8 @@ object AdvancedConfigurationPanel {
     confMatrix:               SpectroscopyModesMatrix,
     selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
-    readonly:                 Boolean
+    readonly:                 Boolean,
+    units:                    WavelengthUnits
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )

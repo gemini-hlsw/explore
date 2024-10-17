@@ -8,6 +8,7 @@ import cats.derived.*
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
+import explore.model.enums.WavelengthUnits
 import explore.model.itc.PlotDetails
 import io.circe.Decoder
 import lucuma.core.util.NewType
@@ -47,7 +48,8 @@ case class GlobalPreferences(
   elevationPlotElevationVisible:        Visible,
   elevationPlotParallacticAngleVisible: Visible,
   elevationPlotSkyBrightnessVisible:    Visible,
-  elevationPlotLunarElevationVisible:   Visible
+  elevationPlotLunarElevationVisible:   Visible,
+  wavelengthUnits:                      WavelengthUnits
 ) derives Eq,
       Decoder
 
@@ -70,6 +72,7 @@ object GlobalPreferences:
     Focus[GlobalPreferences](_.elevationPlotSkyBrightnessVisible)
   val elevationPlotLunarElevationVisible   =
     Focus[GlobalPreferences](_.elevationPlotLunarElevationVisible)
+  val wavelengthUnits                      = Focus[GlobalPreferences](_.wavelengthUnits)
 
   val Default =
     GlobalPreferences(
@@ -87,5 +90,6 @@ object GlobalPreferences:
       Visible.Shown,
       Visible.Hidden,
       Visible.Shown,
-      Visible.Hidden
+      Visible.Hidden,
+      WavelengthUnits.Nanometers
     )

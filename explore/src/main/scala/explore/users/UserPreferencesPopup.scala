@@ -12,12 +12,14 @@ import crystal.react.hooks.*
 import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.UserPreferencesQueries.GridLayouts
+import explore.common.UserPreferencesQueries.WavelengthUnitsPreference
 import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
 import explore.model.ApiKey
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.display.given
+import explore.model.enums.WavelengthUnits
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.ToastCtx
@@ -48,8 +50,11 @@ import org.typelevel.log4cats.Logger
 import queries.common.SSOQueriesGQL.*
 import queries.schemas.SSO
 
-case class UserPreferencesPopup(vault: UserVault, onClose: Option[Callback] = none)
-    extends ReactFnProps(UserPreferencesPopup.component)
+case class UserPreferencesPopup(
+  vault:   UserVault,
+  onClose: Option[Callback] = none,
+  units:   View[WavelengthUnits]
+) extends ReactFnProps(UserPreferencesPopup.component)
 
 private object IsOpen extends NewType[Boolean]
 private type IsOpen = IsOpen.Type
@@ -75,13 +80,18 @@ object UserPreferencesPopup:
         clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ApiKeysPopup,
         header = "User Preferences"
       )(
-        UserPreferencesContent(props.vault, props.onClose, isOpen.withOnMod(_ => onHide))
+        UserPreferencesContent(props.vault,
+                               props.onClose,
+                               isOpen.withOnMod(_ => onHide),
+                               props.units
+        )
       )
 
 case class UserPreferencesContent(
   vault:   UserVault,
   onClose: Option[Callback] = none,
-  isOpen:  View[IsOpen]
+  isOpen:  View[IsOpen],
+  units:   View[WavelengthUnits]
 ) extends ReactFnProps(UserPreferencesContent.component)
 
 object UserPreferencesContent:
@@ -213,6 +223,12 @@ object UserPreferencesContent:
           )
         )
 
+        val unitsView = props.units.withOnMod { units =>
+          WavelengthUnitsPreference
+            .updateWavelengthUnits(props.vault.user.id, units)
+            .runAsyncAndForget
+        }
+
         user.renderPot(
           ssoUser => {
             val id   = ssoUser.user.id
@@ -275,6 +291,16 @@ object UserPreferencesContent:
                 <.label(LucumaPrimeStyles.FormField, name),
                 <.label(LucumaPrimeStyles.FormFieldLabel, "Role: "),
                 <.label(LucumaPrimeStyles.FormField, role)
+              ),
+              Divider(),
+              <.div(LucumaPrimeStyles.FormColumnCompact |+| ExploreStyles.WavelengthUnits)(
+                <.label(LucumaPrimeStyles.FormFieldLabel, "Wavelength Units:"),
+                SelectButtonEnumView(
+                  id = "wavelength-units".refined,
+                  view = unitsView,
+                  disabled = active.get.value,
+                  buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.Compact
+                )
               ),
               Divider(),
               <.h4("API Keys:"),

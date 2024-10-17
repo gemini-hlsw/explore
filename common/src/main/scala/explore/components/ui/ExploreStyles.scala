@@ -131,6 +131,7 @@ object ExploreStyles:
   val UserPreferencesFooter = Css("user-preferences-footer")
   val UserPreferencesNewKey = Css("user-preferences-new-key")
   val EmptyUserPreferences  = Css("empty-user-preferences")
+  val WavelengthUnits       = Css("wavelength-units")
 
   val ProgramsPopup    = Css("programs-popup")
   val ProgramTable     = Css("program-table")

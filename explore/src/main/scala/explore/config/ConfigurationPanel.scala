@@ -23,6 +23,7 @@ import explore.model.ObsConfiguration
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
+import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
@@ -55,7 +56,8 @@ case class ConfigurationPanel(
   selectedConfig:  View[Option[BasicConfigAndItc]],
   modes:           SpectroscopyModesMatrix,
   sequenceChanged: Callback,
-  readonly:        Boolean
+  readonly:        Boolean,
+  units:           WavelengthUnits
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel:
@@ -214,7 +216,8 @@ object ConfigurationPanel:
                       optModeView
                     ),
                     props.modes,
-                    props.readonly
+                    props.readonly,
+                    props.units
                   )
                 )
             else
@@ -231,7 +234,8 @@ object ConfigurationPanel:
                       props.modes,
                       props.selectedConfig,
                       props.sequenceChanged,
-                      props.readonly
+                      props.readonly,
+                      props.units
                     )
                 ),
                 // Gmos South Long Slit
@@ -246,7 +250,8 @@ object ConfigurationPanel:
                       props.modes,
                       props.selectedConfig,
                       props.sequenceChanged,
-                      props.readonly
+                      props.readonly,
+                      props.units
                     )
                 )
               )

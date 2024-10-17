@@ -28,6 +28,7 @@ import explore.model.enums.PlotRange
 import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
 import explore.model.enums.Visible
+import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
 import explore.model.itc.PlotDetails
 import explore.model.layout.*
@@ -386,6 +387,20 @@ object UserPreferencesQueries:
         .attempt
         .void
   end ItcPlotPreferences
+
+  object WavelengthUnitsPreference:
+    def updateWavelengthUnits[F[_]: ApplicativeThrow](
+      userId: User.Id,
+      units:  WavelengthUnits
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
+      UserWavelengthUnitsUpdate[F]
+        .execute(
+          userId = userId.show.assign,
+          wavelengthUnits = units.assign
+        )
+        .attempt
+        .void
+  end WavelengthUnitsPreference
 
   object ElevationPlotPreference:
     def updatePlotPreferences[F[_]: ApplicativeThrow](

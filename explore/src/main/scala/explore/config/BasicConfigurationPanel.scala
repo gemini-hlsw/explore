@@ -15,6 +15,7 @@ import explore.model.ImagingConfigurationOptions
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
+import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
@@ -42,7 +43,8 @@ case class BasicConfigurationPanel(
   baseCoordinates:  Option[CoordinatesAtVizTime],
   createConfig:     IO[Unit],
   confMatrix:       SpectroscopyModesMatrix,
-  readonly:         Boolean
+  readonly:         Boolean,
+  units:            WavelengthUnits
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
 private object BasicConfigurationPanel:
@@ -93,7 +95,8 @@ private object BasicConfigurationPanel:
             //                      value = mode,
             //                      disabled = props.readonly
             // ),
-            props.spectroscopyView.mapValue(v => SpectroscopyConfigurationPanel(v, props.readonly))
+            props.spectroscopyView
+              .mapValue(SpectroscopyConfigurationPanel(_, props.readonly, props.units))
             // TODO Pending reinstate
             // ImagingConfigurationPanel(imaging)
             //   .unless(isSpectroscopy)

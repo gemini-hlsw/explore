@@ -5,6 +5,7 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcQueryProblem
 import lucuma.core.enums.*
 import lucuma.core.enums.EducationalStatus
@@ -64,6 +65,8 @@ trait DisplayImplicits:
   given Display[WaterVapor] = Display.byShortName(_.label)
 
   given Display[SkyBackground] = Display.byShortName(_.label)
+
+  given Display[WavelengthUnits] = Display.byShortName(_.symbol)
 
   given Display[ConstraintSet] = Display.byShortName: cs =>
     val wv = if (cs.waterVapor === WaterVapor.Wet) "" else s" ${cs.waterVapor.label}"
@@ -157,12 +160,19 @@ trait DisplayImplicits:
     case ScienceSubtype.DemoScience        => "Demo Science"
     case ScienceSubtype.SystemVerification => "System Verification"
 
-  given Display[BoundedInterval[Wavelength]] = Display.byShortName: interval =>
-    List(interval.lower, interval.upper)
-      .map(q =>
-        "%.3f".format(q.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN))
-      )
-      .mkString(" - ")
+  def wavelengthIntervalDisplay(units: WavelengthUnits): Display[BoundedInterval[Wavelength]] =
+    Display.byShortName: interval =>
+      List(interval.lower, interval.upper)
+        .map { q =>
+          units match
+            case WavelengthUnits.Nanometers  =>
+              val v = q.toNanometers.value.value.setScale(1, BigDecimal.RoundingMode.DOWN)
+              "%.1f".format(v)
+            case WavelengthUnits.Micrometers =>
+              val v = q.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN)
+              "%.3f".format(v)
+        }
+        .mkString(" - ")
 
   given Display[CatalogName] = Display.byShortName:
     case CatalogName.Simbad => "SIMBAD"
