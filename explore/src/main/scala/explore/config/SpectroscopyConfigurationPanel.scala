@@ -17,6 +17,7 @@ import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.FocalPlane
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
@@ -33,9 +34,10 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class SpectroscopyConfigurationPanel(
-  options:  View[ScienceRequirements.Spectroscopy],
-  readonly: Boolean,
-  units:    WavelengthUnits
+  options:         View[ScienceRequirements.Spectroscopy],
+  readonly:        Boolean,
+  units:           WavelengthUnits,
+  calibrationRole: Option[CalibrationRole]
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
 object SpectroscopyConfigurationPanel extends ConfigurationFormats:
@@ -73,7 +75,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
               HelpIcon("configuration/wavelength.md".refined)
             ),
             groupClass = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
-            postAddons = wv.get.fold(List(renderRequiredForITCIcon))(_ => Nil),
+            postAddons = wv.get.fold(List(p.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
             units = p.units.symbol,
             validFormat = p.units.toInputWedge,
             changeAuditor = p.units.toAuditor,
@@ -90,7 +92,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          SignalToNoiseAt(options, p.readonly, p.units),
+          SignalToNoiseAt(options, p.readonly, p.units, p.calibrationRole),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,

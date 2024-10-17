@@ -79,6 +79,7 @@ import scalajs.js.JSConverters.*
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id
   def obsId: Observation.Id
+  def calibrationRole: Option[CalibrationRole]
   def observingMode: Aligner[T, Input]
   def spectroscopyRequirements: View[ScienceRequirements.Spectroscopy]
   def deleteConfig: Callback
@@ -567,7 +568,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            SignalToNoiseAt(props.spectroscopyRequirements, props.readonly, props.units)
+            SignalToNoiseAt(props.spectroscopyRequirements,
+                            props.readonly,
+                            props.units,
+                            props.calibrationRole
+            )
             // FormLabel(htmlFor = "exposureMode".refined)(
             //   "Exposure Mode",
             //   HelpIcon("configuration/exposure-mode.md".refined)
@@ -787,6 +792,7 @@ object AdvancedConfigurationPanel {
   case class GmosNorthLongSlit(
     programId:                Program.Id,
     obsId:                    Observation.Id,
+    calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     deleteConfig:             Callback,
@@ -989,6 +995,7 @@ object AdvancedConfigurationPanel {
   case class GmosSouthLongSlit(
     programId:                Program.Id,
     obsId:                    Observation.Id,
+    calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     deleteConfig:             Callback,

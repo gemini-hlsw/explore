@@ -11,6 +11,7 @@ import crystal.react.View
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enums.AgsState
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
@@ -31,7 +32,8 @@ case class ObsConfiguration(
   averagePA:          Option[AveragePABasis],
   obsDuration:        Option[Duration],
   needGuideStar:      Boolean,
-  remoteGSName:       Option[NonEmptyString]
+  remoteGSName:       Option[NonEmptyString],
+  calibrationRole:    Option[CalibrationRole]
 ) derives Eq:
   // In case there is no guide star we still want to have a posAngle equivalent
   // To draw visualization

@@ -14,6 +14,7 @@ import explore.model.ScienceRequirements
 import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
@@ -85,9 +86,10 @@ trait ConfigurationFormats:
 object ConfigurationFormats extends ConfigurationFormats
 
 case class SignalToNoiseAt(
-  options:  View[ScienceRequirements.Spectroscopy],
-  readonly: Boolean,
-  units:    WavelengthUnits
+  options:         View[ScienceRequirements.Spectroscopy],
+  readonly:        Boolean,
+  units:           WavelengthUnits,
+  calibrationRole: Option[CalibrationRole]
 ) extends ReactFnProps[SignalToNoiseAt](SignalToNoiseAt.component)
 
 object SignalToNoiseAt extends ConfigurationFormats {
@@ -109,7 +111,10 @@ object SignalToNoiseAt extends ConfigurationFormats {
             value = signalToNoise,
             groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
             validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
-            postAddons = signalToNoise.get.fold(List(renderRequiredForITCIcon))(_ => Nil),
+            postAddons =
+              signalToNoise.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
+                Nil
+              ),
             changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional,
             disabled = props.readonly
           ).withMods(^.autoComplete.off),
@@ -117,7 +122,10 @@ object SignalToNoiseAt extends ConfigurationFormats {
           FormInputTextView(
             id = "signal-to-noise-at".refined,
             groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-            postAddons = signalToNoiseAt.get.fold(List(renderRequiredForITCIcon))(_ => Nil),
+            postAddons =
+              signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
+                Nil
+              ),
             value = signalToNoiseAt,
             units = props.units.symbol,
             validFormat = props.units.toInputWedge,

@@ -210,6 +210,7 @@ object ConfigurationPanel:
                     constraints,
                     props.itcTargets,
                     props.baseCoordinates,
+                    props.obsConf.calibrationRole,
                     createConfiguration(
                       props.obsId,
                       props.selectedConfig.get.map(_.configuration),
@@ -228,6 +229,7 @@ object ConfigurationPanel:
                     .GmosNorthLongSlit(
                       props.programId,
                       props.obsId,
+                      props.obsConf.calibrationRole,
                       northAligner,
                       specView,
                       deleteConfiguration,
@@ -244,6 +246,7 @@ object ConfigurationPanel:
                     .GmosSouthLongSlit(
                       props.programId,
                       props.obsId,
+                      props.obsConf.calibrationRole,
                       southAligner,
                       specView,
                       deleteConfiguration,

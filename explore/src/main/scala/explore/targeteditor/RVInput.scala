@@ -14,6 +14,7 @@ import explore.model.conversions.*
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.RadialVelocity
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -29,8 +30,9 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class RVInput(
-  rv:       View[Option[RadialVelocity]],
-  disabled: Boolean
+  rv:              View[Option[RadialVelocity]],
+  disabled:        Boolean,
+  calibrationRole: Option[CalibrationRole]
 ) extends ReactFnProps[RVInput](RVInput.component)
 
 object RVInput {
@@ -45,8 +47,8 @@ object RVInput {
     given Enumerated[RVView] = Enumerated.from(RVView.RV, RVView.Z, RVView.CZ).withTag(_.tag)
     given Display[RVView]    = Display.byShortName(_.tag.value)
 
-  private def addons(v: Option[RadialVelocity]): List[TagMod] =
-    if (v.isEmpty) List(renderRequiredForITCIcon) else List.empty
+  private def addons(v: Option[RadialVelocity], role: Option[CalibrationRole]): List[TagMod] =
+    if (v.isEmpty) List(role.renderRequiredForITCIcon) else List.empty
 
   protected val component =
     ScalaFnComponent
@@ -67,7 +69,7 @@ object RVInput {
               changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined).optional,
               groupClass = baseCss,
               disabled = props.disabled,
-              postAddons = addons(props.rv.get)
+              postAddons = addons(props.rv.get, props.calibrationRole)
             )
           case RVView.CZ =>
             FormInputTextView(
@@ -79,7 +81,7 @@ object RVInput {
               groupClass = baseCss,
               disabled = props.disabled,
               units = "km/s",
-              postAddons = addons(props.rv.get)
+              postAddons = addons(props.rv.get, props.calibrationRole)
             )
           case RVView.RV =>
             FormInputTextView(
@@ -91,7 +93,7 @@ object RVInput {
               groupClass = baseCss,
               disabled = props.disabled,
               units = "km/s",
-              postAddons = addons(props.rv.get)
+              postAddons = addons(props.rv.get, props.calibrationRole)
             )
         }
         React.Fragment(

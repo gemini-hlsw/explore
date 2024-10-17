@@ -7,19 +7,21 @@ import cats.data.NonEmptyChain
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.itc.ItcCcd
 import lucuma.react.fa.*
 import lucuma.react.floatingui.syntax.*
 import lucuma.ui.syntax.all.given
 
-// Icon to indicate a field is required to do ITC calculations
-def renderRequiredForITCIcon: TagMod =
-  <.span(
-    LayeredIcon(fixedWidth = true, clazz = ExploreStyles.WarningIcon)(
-      Icons.StarExclamation.withSize(IconSize.X1),
-      TextLayer("ITC", clazz = ExploreStyles.RequiredForItcText, inverse = true)
-    )
-  ).withTooltip("Required for ITC")
+extension (role: Option[CalibrationRole])
+  // Icon to indicate a field is required to do ITC calculations
+  def renderRequiredForITCIcon: TagMod =
+    <.span(
+      LayeredIcon(fixedWidth = true, clazz = ExploreStyles.WarningIcon)(
+        Icons.StarExclamation.withSize(IconSize.X1),
+        TextLayer("ITC", clazz = ExploreStyles.RequiredForItcText, inverse = true)
+      )
+    ).withTooltip("Required for ITC")
 
 def formatCcds(
   ccds:      Option[NonEmptyChain[ItcCcd]],

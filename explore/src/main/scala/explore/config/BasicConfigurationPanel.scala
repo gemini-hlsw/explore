@@ -21,6 +21,7 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
@@ -41,6 +42,7 @@ case class BasicConfigurationPanel(
   constraints:      ConstraintSet,
   itcTargets:       List[ItcTarget],
   baseCoordinates:  Option[CoordinatesAtVizTime],
+  calibrationRole:  Option[CalibrationRole],
   createConfig:     IO[Unit],
   confMatrix:       SpectroscopyModesMatrix,
   readonly:         Boolean,
@@ -96,7 +98,13 @@ private object BasicConfigurationPanel:
             //                      disabled = props.readonly
             // ),
             props.spectroscopyView
-              .mapValue(SpectroscopyConfigurationPanel(_, props.readonly, props.units))
+              .mapValue(
+                SpectroscopyConfigurationPanel(_,
+                                               props.readonly,
+                                               props.units,
+                                               props.calibrationRole
+                )
+              )
             // TODO Pending reinstate
             // ImagingConfigurationPanel(imaging)
             //   .unless(isSpectroscopy)
