@@ -13,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.itc.requiredForITC
 import explore.model.ScienceRequirements
 import explore.model.display.given
+import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -30,15 +31,14 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.clearable
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import explore.model.enums.WavelengthUnits
 
 case class SpectroscopyConfigurationPanel(
   options:  View[ScienceRequirements.Spectroscopy],
   readonly: Boolean,
-  units:    WavelengthUnits = WavelengthUnits.Nanometers
+  units:    WavelengthUnits
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
-object SpectroscopyConfigurationPanel extends ConfigurationFormats {
+object SpectroscopyConfigurationPanel extends ConfigurationFormats:
   private type Props = SpectroscopyConfigurationPanel
 
   protected val component =
@@ -47,7 +47,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
       .useStateView(
         FocalPlane.SingleSlit.some.widen[FocalPlane]
       ) // For now only SlitView is allowed
-      .render { (p, fpView) =>
+      .render: (p, fpView) =>
         val prevSignalToNoiseAt = p.options.get.signalToNoiseAt
 
         // Set SignalToNoiseAt to wavelength if it is empty
@@ -74,7 +74,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
             ),
             groupClass = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
             postAddons = wv.get.fold(List(requiredForITC))(_ => Nil),
-            units = p.units.label.value,
+            units = p.units.symbol,
             validFormat = p.units.toInputWedge,
             changeAuditor = p.units.toAuditor,
             disabled = p.readonly
@@ -90,11 +90,11 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          SignalToNoiseAt(options, p.readonly),
+          SignalToNoiseAt(options, p.readonly, p.units),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,
-            units = p.units.label.value,
+            units = p.units.symbol,
             label = ReactFragment(
               "Δλ",
               HelpIcon("configuration/wavelength_coverage.md".refined)
@@ -134,5 +134,3 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats {
             disabled = true
           )
         )
-      }
-}

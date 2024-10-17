@@ -13,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences
 import explore.model.ExploreLocalPreferences.*
+import explore.model.GlobalPreferences
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
 import explore.programs.ProgramsPopup
@@ -55,7 +56,8 @@ case class TopBar(
   undoStacks:                 View[UndoStacks[IO, ProgramSummaries]],
   programInfos:               ViewOpt[ProgramInfoList],
   theme:                      View[Theme],
-  onLogout:                   IO[Unit]
+  onLogout:                   IO[Unit],
+  globalPreferences:          View[GlobalPreferences]
 ) extends ReactFnProps(TopBar.component)
 
 object TopBar:
@@ -232,7 +234,8 @@ object TopBar:
             if (isUserPropertiesOpen.value.value)
               UserPreferencesPopup(
                 props.vault.get,
-                isUserPropertiesOpen.setState(IsUserPropertiesOpen(false)).some
+                isUserPropertiesOpen.setState(IsUserPropertiesOpen(false)).some,
+                props.globalPreferences.zoom(GlobalPreferences.wavelengthUnits)
               )
             else EmptyVdom,
             if (isReedemInvitationsOpen.value.value)

@@ -190,6 +190,7 @@ object UserPreferencesQueriesGQL {
           elevationPlotParallacticAngleVisible
           elevationPlotSkyBrightnessVisible
           elevationPlotLunarElevationVisible
+          wavelengthUnits
         }
       }
     """
@@ -218,6 +219,7 @@ object UserPreferencesQueriesGQL {
           elevationPlotParallacticAngleVisible
           elevationPlotSkyBrightnessVisible
           elevationPlotLunarElevationVisible
+          wavelengthUnits
         }
       }
     """
@@ -234,6 +236,31 @@ object UserPreferencesQueriesGQL {
         userId
       }
     }"""
+  }
+
+  @GraphQL
+  trait UserWavelengthUnitsUpdate extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation userPreferencesUpsert(
+        $userId: String = "",
+        $wavelengthUnits: LucumaWavelengthUnitsEnum = "",
+      ) {
+        insertLucumaUserPreferencesOne(
+          object: {
+            userId: $userId,
+            wavelengthUnits: $wavelengthUnits
+          },
+          onConflict: {
+            constraint: lucuma_user_preferences_pkey,
+            update_columns: [
+              wavelengthUnits
+            ]
+          }
+        ) {
+          userId
+        }
+      }
+    """
   }
 
   @GraphQL

@@ -22,6 +22,7 @@ trait UserPreferencesDB:
     Encoder.encodeZonedDateTimeWithFormatter(Constants.IsoUTCFormatter)
 
   type Timestamptz = java.time.ZonedDateTime
+  type Timestamp   = java.time.ZonedDateTime
 
   given Enumerated[SortDirection] =
     Enumerated.from(SortDirection.Ascending, SortDirection.Descending).withTag {
@@ -42,3 +43,4 @@ trait UserPreferencesDB:
     type LucumaGridBreakpointNameEnum = explore.model.enums.GridBreakpointName
     type ExplorePlotRangeEnum         = explore.model.enums.PlotRange
     type ExplorePlotTimeEnum          = explore.model.enums.TimeDisplay
+    type LucumaWavelengthUnitsEnum    = explore.model.enums.WavelengthUnits

@@ -3,10 +3,9 @@
 
 package explore.model.enums
 
-import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.refined.*
+import lucuma.core.util.Enumerated
 
-enum WavelengthUnits(val label: NonEmptyString) {
-  case Micrometers extends WavelengthUnits("μm".refined)
-  case Nanometers  extends WavelengthUnits("nm".refined)
+enum WavelengthUnits(val tag: String, val symbol: String) derives Enumerated {
+  case Micrometers extends WavelengthUnits("micrometers", "μm")
+  case Nanometers  extends WavelengthUnits("nanometers", "nm")
 }

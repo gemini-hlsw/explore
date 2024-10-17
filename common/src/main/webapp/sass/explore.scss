@@ -1947,7 +1947,7 @@ svg.fa-triangle-exclamation.explore-error-icon {
 }
 
 // ------
-// Api keyys Popup
+// Api keys Popup
 // ------
 .api-keys-popup.p-dialog {
   .api-keys-delete {
@@ -1958,8 +1958,13 @@ svg.fa-triangle-exclamation.explore-error-icon {
     width: 100%;
   }
 
-  .pl-form-column {
+  .pl-form-column.user-preferences-new-key {
     grid-template-columns: min-content 1fr min-content;
+  }
+
+  .pl-form-column.pl-compact.wavelength-units {
+    display: flex;
+    align-items: center;
   }
 
   .pl-form-column.pl-compact {

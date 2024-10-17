@@ -19,13 +19,15 @@ import explore.Icons
 import explore.common.Aligner
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.config.ConfigurationFormats.*
 import explore.model.AppContext
 import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.Observation
 import explore.model.ScienceRequirements
-import explore.model.display.given
 import explore.model.display.*
+import explore.model.display.given
+import explore.model.enums.WavelengthUnits
 import explore.modes.GmosNorthSpectroscopyRow
 import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.ModeCommonWavelengths
@@ -34,7 +36,6 @@ import explore.modes.ModeWavelength
 import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
-import explore.config.ConfigurationFormats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -74,7 +75,6 @@ import org.typelevel.log4cats.Logger
 
 import scalajs.js
 import scalajs.js.JSConverters.*
-import explore.model.enums.WavelengthUnits
 
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id
@@ -560,14 +560,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = React.Fragment("Central Wavelength",
                                      HelpIcon("configuration/central=wavelength.md".refined)
               ),
-              units = props.units.label.value.some,
+              units = props.units.symbol.some,
               validFormat = props.units.toInputFormat,
               changeAuditor = props.units.toAuditor,
               originalValue = initialCentralWavelength,
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            SignalToNoiseAt(props.spectroscopyRequirements, props.readonly)
+            SignalToNoiseAt(props.spectroscopyRequirements, props.readonly, props.units)
             // FormLabel(htmlFor = "exposureMode".refined)(
             //   "Exposure Mode",
             //   HelpIcon("configuration/exposure-mode.md".refined)
@@ -713,7 +713,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
             <.label(^.id := "lambdaInterval",
                     ExploreStyles.FormValue,
-                    s"${adjustedInterval.fold("Unknown")(_.shortName)} ${props.units.label.value}"
+                    s"${adjustedInterval.fold("Unknown")(_.shortName)} ${props.units.symbol}"
             )
           ),
           <.div(ExploreStyles.AdvancedConfigurationButtons)(
@@ -794,7 +794,7 @@ object AdvancedConfigurationPanel {
     selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
-    units:                    WavelengthUnits = WavelengthUnits.Nanometers
+    units:                    WavelengthUnits
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosNorthLongSlit](
         AdvancedConfigurationPanel.GmosNorthLongSlit.component
       )
@@ -996,7 +996,7 @@ object AdvancedConfigurationPanel {
     selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
-    units:                    WavelengthUnits = WavelengthUnits.Nanometers
+    units:                    WavelengthUnits
   ) extends ReactFnProps[AdvancedConfigurationPanel.GmosSouthLongSlit](
         AdvancedConfigurationPanel.GmosSouthLongSlit.component
       )

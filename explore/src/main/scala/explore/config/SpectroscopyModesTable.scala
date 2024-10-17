@@ -30,6 +30,7 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.TableId
+import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
 import explore.model.itc.ItcTarget
 import explore.model.reusability.given
@@ -42,6 +43,7 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
+import lucuma.core.util.Display
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.react.circularprogressbar.CircularProgressbar
@@ -70,8 +72,6 @@ import scala.concurrent.duration.*
 
 import scalajs.js
 import scalajs.js.JSConverters.*
-import lucuma.core.util.Display
-import explore.model.enums.WavelengthUnits
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],

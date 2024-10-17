@@ -116,7 +116,7 @@ object ExploreModelValidators:
 
   val wavelengthNanoValidWedge: InputValidWedge[Wavelength] =
     InputValidWedge
-      .truncatedBigDecimal(0.refined)
+      .truncatedBigDecimal(1.refined)
       .andThen(
         ValidWedge
           .fromFormat(Wavelength.decimalNanometers, _ => "Invalid Wavelength".refined[NonEmpty])

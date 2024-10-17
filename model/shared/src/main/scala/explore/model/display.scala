@@ -5,8 +5,8 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
-import explore.model.itc.ItcQueryProblem
 import explore.model.enums.WavelengthUnits
+import explore.model.itc.ItcQueryProblem
 import lucuma.core.enums.*
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.RoleType
@@ -65,6 +65,8 @@ trait DisplayImplicits:
   given Display[WaterVapor] = Display.byShortName(_.label)
 
   given Display[SkyBackground] = Display.byShortName(_.label)
+
+  given Display[WavelengthUnits] = Display.byShortName(_.symbol)
 
   given Display[ConstraintSet] = Display.byShortName: cs =>
     val wv = if (cs.waterVapor === WaterVapor.Wet) "" else s" ${cs.waterVapor.label}"

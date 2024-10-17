@@ -500,7 +500,8 @@ object ObsTabTiles:
                   case Ready(x) => Pot.pending
                   case x        => x
                 },
-                props.isDisabled
+                props.isDisabled,
+                props.globalPreferences.get.wavelengthUnits
               )
 
             TileController(

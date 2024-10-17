@@ -16,6 +16,7 @@ import explore.model.ObsTabTilesIds
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
+import explore.model.enums.WavelengthUnits
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.Callback
@@ -43,7 +44,8 @@ object ConfigurationTile:
     modes:              SpectroscopyModesMatrix,
     allTargets:         TargetList,
     sequenceChanged:    Callback,
-    readonly:           Boolean
+    readonly:           Boolean,
+    units:              WavelengthUnits
   )(using Logger[IO]) =
     Tile(
       ObsTabTilesIds.ConfigurationId.id,
@@ -63,6 +65,7 @@ object ConfigurationTile:
         selectedConfig,
         modes,
         sequenceChanged,
-        readonly
+        readonly,
+        units
       )
     )

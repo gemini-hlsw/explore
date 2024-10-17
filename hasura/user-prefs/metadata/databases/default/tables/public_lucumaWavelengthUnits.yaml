@@ -1,0 +1,4 @@
+table:
+  name: lucumaWavelengthUnits
+  schema: public
+is_enum: true

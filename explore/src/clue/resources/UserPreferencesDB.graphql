@@ -1,8 +1,3 @@
-schema {
-  query: query_root
-  mutation: mutation_root
-  subscription: subscription_root
-}
 
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
@@ -1080,8 +1075,8 @@ enum ItcChartTypeConstraint {
 }
 
 enum ItcChartTypeEnum {
-  S2N_CHART
-  SIGNAL_CHART
+  S2N_GRAPH
+  SIGNAL_GRAPH
 }
 
 """
@@ -1598,6 +1593,7 @@ enum LucumaGridLayoutIdConstraint {
 
 enum LucumaGridLayoutIdEnum {
   CONSTRAINTS
+  GROUPEDIT
   OBSERVATIONS
   OVERVIEW
   PROGRAMS
@@ -1698,9 +1694,11 @@ columns and relationships of "lucumaGridLayoutPositions"
 """
 type LucumaGridLayoutPositions {
   breakpointName: LucumaGridBreakpointNameEnum!
+  createdAt: timestamp
   height: Int!
   section: LucumaGridLayoutIdEnum!
   tile: String!
+  updatedAt: timestamp
   userId: String!
   width: Int!
   x: Int!
@@ -1748,9 +1746,11 @@ input LucumaGridLayoutPositionsBoolExp {
   _not: LucumaGridLayoutPositionsBoolExp
   _or: [LucumaGridLayoutPositionsBoolExp!]
   breakpointName: LucumaGridBreakpointNameEnumComparisonExp
+  createdAt: TimestampComparisonExp
   height: IntComparisonExp
   section: LucumaGridLayoutIdEnumComparisonExp
   tile: StringComparisonExp
+  updatedAt: TimestampComparisonExp
   userId: StringComparisonExp
   width: IntComparisonExp
   x: IntComparisonExp
@@ -1782,9 +1782,11 @@ input type for inserting data into table "lucumaGridLayoutPositions"
 """
 input LucumaGridLayoutPositionsInsertInput {
   breakpointName: LucumaGridBreakpointNameEnum
+  createdAt: timestamp
   height: Int
   section: LucumaGridLayoutIdEnum
   tile: String
+  updatedAt: timestamp
   userId: String
   width: Int
   x: Int
@@ -1793,8 +1795,10 @@ input LucumaGridLayoutPositionsInsertInput {
 
 """aggregate max on columns"""
 type LucumaGridLayoutPositionsMaxFields {
+  createdAt: timestamp
   height: Int
   tile: String
+  updatedAt: timestamp
   userId: String
   width: Int
   x: Int
@@ -1803,8 +1807,10 @@ type LucumaGridLayoutPositionsMaxFields {
 
 """aggregate min on columns"""
 type LucumaGridLayoutPositionsMinFields {
+  createdAt: timestamp
   height: Int
   tile: String
+  updatedAt: timestamp
   userId: String
   width: Int
   x: Int
@@ -1834,9 +1840,11 @@ input LucumaGridLayoutPositionsOnConflict {
 """Ordering options when selecting data from "lucumaGridLayoutPositions"."""
 input LucumaGridLayoutPositionsOrderBy {
   breakpointName: OrderBy
+  createdAt: OrderBy
   height: OrderBy
   section: OrderBy
   tile: OrderBy
+  updatedAt: OrderBy
   userId: OrderBy
   width: OrderBy
   x: OrderBy
@@ -1859,6 +1867,9 @@ enum LucumaGridLayoutPositionsSelectColumn {
   breakpointName
 
   """column name"""
+  createdAt
+
+  """column name"""
   height
 
   """column name"""
@@ -1866,6 +1877,9 @@ enum LucumaGridLayoutPositionsSelectColumn {
 
   """column name"""
   tile
+
+  """column name"""
+  updatedAt
 
   """column name"""
   userId
@@ -1885,9 +1899,11 @@ input type for updating data in table "lucumaGridLayoutPositions"
 """
 input LucumaGridLayoutPositionsSetInput {
   breakpointName: LucumaGridBreakpointNameEnum
+  createdAt: timestamp
   height: Int
   section: LucumaGridLayoutIdEnum
   tile: String
+  updatedAt: timestamp
   userId: String
   width: Int
   x: Int
@@ -1934,6 +1950,9 @@ enum LucumaGridLayoutPositionsUpdateColumn {
   breakpointName
 
   """column name"""
+  createdAt
+
+  """column name"""
   height
 
   """column name"""
@@ -1941,6 +1960,9 @@ enum LucumaGridLayoutPositionsUpdateColumn {
 
   """column name"""
   tile
+
+  """column name"""
+  updatedAt
 
   """column name"""
   userId
@@ -2824,6 +2846,7 @@ type LucumaUserPreferences {
   showCatalog: Boolean!
   updatedAt: timestamptz
   userId: String!
+  wavelengthUnits: LucumaWavelengthUnitsEnum!
 }
 
 """
@@ -2869,6 +2892,7 @@ input LucumaUserPreferencesBoolExp {
   showCatalog: BooleanComparisonExp
   updatedAt: TimestamptzComparisonExp
   userId: StringComparisonExp
+  wavelengthUnits: LucumaWavelengthUnitsEnumComparisonExp
 }
 
 """
@@ -2904,6 +2928,7 @@ input LucumaUserPreferencesInsertInput {
   showCatalog: Boolean
   updatedAt: timestamptz
   userId: String
+  wavelengthUnits: LucumaWavelengthUnitsEnum
 }
 
 """aggregate max on columns"""
@@ -2961,6 +2986,7 @@ input LucumaUserPreferencesOrderBy {
   showCatalog: OrderBy
   updatedAt: OrderBy
   userId: OrderBy
+  wavelengthUnits: OrderBy
 }
 
 """primary key columns input for table: lucumaUserPreferences"""
@@ -3025,6 +3051,9 @@ enum LucumaUserPreferencesSelectColumn {
 
   """column name"""
   userId
+
+  """column name"""
+  wavelengthUnits
 }
 
 """
@@ -3049,6 +3078,7 @@ input LucumaUserPreferencesSetInput {
   showCatalog: Boolean
   updatedAt: timestamptz
   userId: String
+  wavelengthUnits: LucumaWavelengthUnitsEnum
 }
 
 """
@@ -3108,6 +3138,9 @@ enum LucumaUserPreferencesUpdateColumn {
 
   """column name"""
   userId
+
+  """column name"""
+  wavelengthUnits
 }
 
 input LucumaUserPreferencesUpdates {
@@ -3143,6 +3176,142 @@ input LucumaUserUpdates {
   """sets the columns of the filtered rows to the given values"""
   _set: LucumaUserSetInput
   where: LucumaUserBoolExp!
+}
+
+"""
+columns and relationships of "lucumaWavelengthUnits"
+"""
+type LucumaWavelengthUnits {
+  id: String!
+}
+
+"""
+aggregated selection of "lucumaWavelengthUnits"
+"""
+type LucumaWavelengthUnitsAggregate {
+  aggregate: LucumaWavelengthUnitsAggregateFields
+  nodes: [LucumaWavelengthUnits!]!
+}
+
+"""
+aggregate fields of "lucumaWavelengthUnits"
+"""
+type LucumaWavelengthUnitsAggregateFields {
+  count(columns: [LucumaWavelengthUnitsSelectColumn!], distinct: Boolean): Int!
+  max: LucumaWavelengthUnitsMaxFields
+  min: LucumaWavelengthUnitsMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaWavelengthUnits". All fields are combined with a logical 'AND'.
+"""
+input LucumaWavelengthUnitsBoolExp {
+  _and: [LucumaWavelengthUnitsBoolExp!]
+  _not: LucumaWavelengthUnitsBoolExp
+  _or: [LucumaWavelengthUnitsBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaWavelengthUnits"
+"""
+enum LucumaWavelengthUnitsConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  lucumaWavelengthUnits_pkey
+}
+
+enum LucumaWavelengthUnitsEnum {
+  MICROMETERS
+  NANOMETERS
+}
+
+"""
+Boolean expression to compare columns of type "LucumaWavelengthUnitsEnum". All fields are combined with logical 'AND'.
+"""
+input LucumaWavelengthUnitsEnumComparisonExp {
+  _eq: LucumaWavelengthUnitsEnum
+  _in: [LucumaWavelengthUnitsEnum!]
+  _isNull: Boolean
+  _neq: LucumaWavelengthUnitsEnum
+  _nin: [LucumaWavelengthUnitsEnum!]
+}
+
+"""
+input type for inserting data into table "lucumaWavelengthUnits"
+"""
+input LucumaWavelengthUnitsInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type LucumaWavelengthUnitsMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type LucumaWavelengthUnitsMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "lucumaWavelengthUnits"
+"""
+type LucumaWavelengthUnitsMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaWavelengthUnits!]!
+}
+
+"""
+on_conflict condition type for table "lucumaWavelengthUnits"
+"""
+input LucumaWavelengthUnitsOnConflict {
+  constraint: LucumaWavelengthUnitsConstraint!
+  update_columns: [LucumaWavelengthUnitsUpdateColumn!]! = []
+  where: LucumaWavelengthUnitsBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaWavelengthUnits"."""
+input LucumaWavelengthUnitsOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: lucumaWavelengthUnits"""
+input LucumaWavelengthUnitsPkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "lucumaWavelengthUnits"
+"""
+enum LucumaWavelengthUnitsSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "lucumaWavelengthUnits"
+"""
+input LucumaWavelengthUnitsSetInput {
+  id: String
+}
+
+"""
+update columns of table "lucumaWavelengthUnits"
+"""
+enum LucumaWavelengthUnitsUpdateColumn {
+  """column name"""
+  id
+}
+
+input LucumaWavelengthUnitsUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaWavelengthUnitsSetInput
+  where: LucumaWavelengthUnitsBoolExp!
 }
 
 """column ordering options"""
@@ -3217,6 +3386,21 @@ input StringComparisonExp {
 
   """does the column match the given SQL regular expression"""
   _similar: String
+}
+
+"""
+Boolean expression to compare columns of type "timestamp". All fields are combined with logical 'AND'.
+"""
+input TimestampComparisonExp {
+  _eq: timestamp
+  _gt: timestamp
+  _gte: timestamp
+  _in: [timestamp!]
+  _isNull: Boolean
+  _lt: timestamp
+  _lte: timestamp
+  _neq: timestamp
+  _nin: [timestamp!]
 }
 
 """
@@ -3543,9 +3727,11 @@ input lucumaGridLayoutPositions_streamCursorInput {
 """Initial value of the column from where the streaming should start"""
 input lucumaGridLayoutPositions_streamCursorValueInput {
   breakpointName: LucumaGridBreakpointNameEnum
+  createdAt: timestamp
   height: Int
   section: LucumaGridLayoutIdEnum
   tile: String
+  updatedAt: timestamp
   userId: String
   width: Int
   x: Int
@@ -3654,6 +3840,7 @@ input lucumaUserPreferences_streamCursorValueInput {
   showCatalog: Boolean
   updatedAt: timestamptz
   userId: String
+  wavelengthUnits: LucumaWavelengthUnitsEnum
 }
 
 """
@@ -3670,6 +3857,22 @@ input lucumaUser_streamCursorInput {
 """Initial value of the column from where the streaming should start"""
 input lucumaUser_streamCursorValueInput {
   userId: String
+}
+
+"""
+Streaming cursor of the table "lucumaWavelengthUnits"
+"""
+input lucumaWavelengthUnits_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaWavelengthUnits_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucumaWavelengthUnits_streamCursorValueInput {
+  id: String
 }
 
 """mutation root"""
@@ -3868,6 +4071,19 @@ type Mutation {
   delete single row from the table: "lucumaUserPreferences"
   """
   deleteLucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
+
+  """
+  delete data from the table: "lucumaWavelengthUnits"
+  """
+  deleteLucumaWavelengthUnits(
+    """filter the rows which have to be deleted"""
+    where: LucumaWavelengthUnitsBoolExp!
+  ): LucumaWavelengthUnitsMutationResponse
+
+  """
+  delete single row from the table: "lucumaWavelengthUnits"
+  """
+  deleteLucumaWavelengthUnitsByPk(id: String!): LucumaWavelengthUnits
 
   """
   insert data into the table: "exploreAsterismPreferences"
@@ -4198,6 +4414,28 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaUserPreferencesOnConflict
   ): LucumaUserPreferences
+
+  """
+  insert data into the table: "lucumaWavelengthUnits"
+  """
+  insertLucumaWavelengthUnits(
+    """the rows to be inserted"""
+    objects: [LucumaWavelengthUnitsInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaWavelengthUnitsOnConflict
+  ): LucumaWavelengthUnitsMutationResponse
+
+  """
+  insert a single row into the table: "lucumaWavelengthUnits"
+  """
+  insertLucumaWavelengthUnitsOne(
+    """the row to be inserted"""
+    object: LucumaWavelengthUnitsInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaWavelengthUnitsOnConflict
+  ): LucumaWavelengthUnits
 
   """
   update data of the table: "exploreAsterismPreferences"
@@ -4648,6 +4886,34 @@ type Mutation {
     """updates to execute, in order"""
     updates: [LucumaUserPreferencesUpdates!]!
   ): [LucumaUserPreferencesMutationResponse]
+
+  """
+  update data of the table: "lucumaWavelengthUnits"
+  """
+  updateLucumaWavelengthUnits(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaWavelengthUnitsSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaWavelengthUnitsBoolExp!
+  ): LucumaWavelengthUnitsMutationResponse
+
+  """
+  update single row of the table: "lucumaWavelengthUnits"
+  """
+  updateLucumaWavelengthUnitsByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaWavelengthUnitsSetInput
+    pk_columns: LucumaWavelengthUnitsPkColumnsInput!
+  ): LucumaWavelengthUnits
+
+  """
+  update multiples rows of table: "lucumaWavelengthUnits"
+  """
+  updateLucumaWavelengthUnitsMany(
+    """updates to execute, in order"""
+    updates: [LucumaWavelengthUnitsUpdates!]!
+  ): [LucumaWavelengthUnitsMutationResponse]
 }
 
 type Query {
@@ -5315,6 +5581,51 @@ type Query {
   fetch data from the table: "lucumaUserPreferences" using primary key columns
   """
   lucumaUserPreferencesByPk(userId: String!): LucumaUserPreferences
+
+  """
+  fetch data from the table: "lucumaWavelengthUnits"
+  """
+  lucumaWavelengthUnits(
+    """distinct select on columns"""
+    distinctOn: [LucumaWavelengthUnitsSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaWavelengthUnitsOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaWavelengthUnitsBoolExp
+  ): [LucumaWavelengthUnits!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaWavelengthUnits"
+  """
+  lucumaWavelengthUnitsAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaWavelengthUnitsSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaWavelengthUnitsOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaWavelengthUnitsBoolExp
+  ): LucumaWavelengthUnitsAggregate!
+
+  """
+  fetch data from the table: "lucumaWavelengthUnits" using primary key columns
+  """
+  lucumaWavelengthUnitsByPk(id: String!): LucumaWavelengthUnits
 }
 
 type Subscription {
@@ -6192,7 +6503,68 @@ type Subscription {
     """filter the rows returned"""
     where: LucumaUserBoolExp
   ): [LucumaUser!]!
+
+  """
+  fetch data from the table: "lucumaWavelengthUnits"
+  """
+  lucumaWavelengthUnits(
+    """distinct select on columns"""
+    distinctOn: [LucumaWavelengthUnitsSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaWavelengthUnitsOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaWavelengthUnitsBoolExp
+  ): [LucumaWavelengthUnits!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaWavelengthUnits"
+  """
+  lucumaWavelengthUnitsAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaWavelengthUnitsSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaWavelengthUnitsOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaWavelengthUnitsBoolExp
+  ): LucumaWavelengthUnitsAggregate!
+
+  """
+  fetch data from the table: "lucumaWavelengthUnits" using primary key columns
+  """
+  lucumaWavelengthUnitsByPk(id: String!): LucumaWavelengthUnits
+
+  """
+  fetch data from the table in a streaming manner : "lucumaWavelengthUnits"
+  """
+  lucumaWavelengthUnitsStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaWavelengthUnits_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaWavelengthUnitsBoolExp
+  ): [LucumaWavelengthUnits!]!
 }
+
+scalar timestamp
 
 scalar timestamptz
 

@@ -13,3 +13,4 @@
 - "!include public_lucumaTableIds.yaml"
 - "!include public_lucumaUser.yaml"
 - "!include public_lucumaUserPreferences.yaml"
+- "!include public_lucumaWavelengthUnits.yaml"

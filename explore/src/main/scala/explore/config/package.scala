@@ -53,7 +53,7 @@ trait ConfigurationFormats:
   lazy val wvNanoBaseAuditor             = ChangeAuditor
     .fromInputValidWedge(ExploreModelValidators.wavelengthNanoValidWedge)
     .allow(s => s === "0" || s === "0.")
-  lazy val wvNanoChangeAuditor           = wvNanoBaseAuditor.int.optional
+  lazy val wvNanoChangeAuditor           = wvNanoBaseAuditor.decimal(1.refined).optional
   lazy val snAtWvNanoChangeAuditor       = wvNanoBaseAuditor.decimal(1.refined).optional
 
   extension (u: WavelengthUnits)
@@ -87,7 +87,7 @@ object ConfigurationFormats extends ConfigurationFormats
 case class SignalToNoiseAt(
   options:  View[ScienceRequirements.Spectroscopy],
   readonly: Boolean,
-  units:    WavelengthUnits = WavelengthUnits.Nanometers
+  units:    WavelengthUnits
 ) extends ReactFnProps[SignalToNoiseAt](SignalToNoiseAt.component)
 
 object SignalToNoiseAt extends ConfigurationFormats {
@@ -119,7 +119,7 @@ object SignalToNoiseAt extends ConfigurationFormats {
             groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
             postAddons = signalToNoiseAt.get.fold(List(requiredForITC))(_ => Nil),
             value = signalToNoiseAt,
-            units = props.units.label.value,
+            units = props.units.symbol,
             validFormat = props.units.toInputWedge,
             changeAuditor = props.units.toSNAuditor,
             disabled = props.readonly
