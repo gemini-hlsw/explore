@@ -323,7 +323,7 @@ object ObsList:
                         adding.async.set(AddingObservation(true)),
                         adding.async.set(AddingObservation(false))
                       )
-                        .withToast(s"Duplicating obs ${id}")
+                        .withToast(s"Duplicating obs ${obsId}")
                         .runAsync
                         .some,
                       setScienceBandCB = (
