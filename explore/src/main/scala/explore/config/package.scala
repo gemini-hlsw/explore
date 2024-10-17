@@ -8,7 +8,7 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.itc.requiredForITC
+import explore.itc.renderRequiredForITCIcon
 import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.enums.WavelengthUnits
@@ -109,7 +109,7 @@ object SignalToNoiseAt extends ConfigurationFormats {
             value = signalToNoise,
             groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
             validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
-            postAddons = signalToNoise.get.fold(List(requiredForITC))(_ => Nil),
+            postAddons = signalToNoise.get.fold(List(renderRequiredForITCIcon))(_ => Nil),
             changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional,
             disabled = props.readonly
           ).withMods(^.autoComplete.off),
@@ -117,7 +117,7 @@ object SignalToNoiseAt extends ConfigurationFormats {
           FormInputTextView(
             id = "signal-to-noise-at".refined,
             groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-            postAddons = signalToNoiseAt.get.fold(List(requiredForITC))(_ => Nil),
+            postAddons = signalToNoiseAt.get.fold(List(renderRequiredForITCIcon))(_ => Nil),
             value = signalToNoiseAt,
             units = props.units.symbol,
             validFormat = props.units.toInputWedge,

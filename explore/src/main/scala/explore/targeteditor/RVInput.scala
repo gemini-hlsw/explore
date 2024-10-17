@@ -9,7 +9,7 @@ import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
-import explore.itc.requiredForITC
+import explore.itc.renderRequiredForITCIcon
 import explore.model.conversions.*
 import explore.model.formats.*
 import japgolly.scalajs.react.*
@@ -46,7 +46,7 @@ object RVInput {
     given Display[RVView]    = Display.byShortName(_.tag.value)
 
   private def addons(v: Option[RadialVelocity]): List[TagMod] =
-    if (v.isEmpty) List(requiredForITC) else List.empty
+    if (v.isEmpty) List(renderRequiredForITCIcon) else List.empty
 
   protected val component =
     ScalaFnComponent

@@ -10,7 +10,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.itc.requiredForITC
+import explore.itc.renderRequiredForITCIcon
 import explore.model.ScienceRequirements
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
@@ -73,7 +73,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
               HelpIcon("configuration/wavelength.md".refined)
             ),
             groupClass = ExploreStyles.WarningInput.when_(wv.get.isEmpty),
-            postAddons = wv.get.fold(List(requiredForITC))(_ => Nil),
+            postAddons = wv.get.fold(List(renderRequiredForITCIcon))(_ => Nil),
             units = p.units.symbol,
             validFormat = p.units.toInputWedge,
             changeAuditor = p.units.toAuditor,

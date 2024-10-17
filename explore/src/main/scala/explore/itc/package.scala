@@ -13,7 +13,7 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.ui.syntax.all.given
 
 // Icon to indicate a field is required to do ITC calculations
-def requiredForITC: TagMod =
+def renderRequiredForITCIcon: TagMod =
   <.span(
     LayeredIcon(fixedWidth = true, clazz = ExploreStyles.WarningIcon)(
       Icons.StarExclamation.withSize(IconSize.X1),

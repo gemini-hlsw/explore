@@ -18,7 +18,7 @@ import explore.*
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.itc.requiredForITC
+import explore.itc.renderRequiredForITCIcon
 import explore.model.AppContext
 import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
@@ -224,7 +224,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             clazz = LucumaPrimeStyles.FormField,
             disabled = props.disabled
           ),
-          <.span(PrimeStyles.InputGroupAddon, ^.borderRight := 0.px, requiredForITC)
+          <.span(PrimeStyles.InputGroupAddon, ^.borderRight := 0.px, renderRequiredForITCIcon)
             .when(sed.isEmpty)
         ),
         stellarLibrarySpectrumAlignerOpt
