@@ -677,22 +677,12 @@ object TargetTabContents extends TwoPanels:
             val onlySummary: Boolean =
               observationSetTargetEditorTile.isEmpty && singleTargetEditorTile.isEmpty && skyPlotTile.isEmpty
 
-            val (tiles, key) = // : (List[Tile[?]], NonEmptyString) =
+            val (tiles, key) =
               observationSetTargetEditorTile
                 .map:
                   (_, TargetTabControllerIds.AsterismEditor.id)
                 .getOrElse:
                   (selectedTargetsTiles, TargetTabControllerIds.Summary.id)
-
-            // val justSummaryTiles: List[Tile[?]] = List(
-            //   renderSummary.withFullSize,
-            //   dummyTargetTile,
-            //   dummyElevationTile
-            // )
-
-            // val (tiles, key) = // : (List[Tile[?]], NonEmptyString) =
-            //   tileListKeyOpt.fold((justSummaryTiles, TargetTabControllerIds.Summary.id)):
-            //     (tiles, key) => (tiles, key)
 
             TileController(
               props.userId,

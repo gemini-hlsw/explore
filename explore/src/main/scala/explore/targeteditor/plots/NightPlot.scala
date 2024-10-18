@@ -3,6 +3,7 @@
 
 package explore.targeteditor.plots
 
+import cats.Semigroupal
 import cats.syntax.all.*
 import crystal.react.*
 import explore.*
@@ -105,7 +106,7 @@ object NightPlot:
     lazy val name: String                =
       if (seriesType === SeriesType.LunarElevation) "Moon" else objectPlotData.name.value
     lazy val yAxis: Int                  = seriesType.yAxis
-    lazy val threshold: Int              = seriesType.threshold
+    // lazy val threshold: Int              = seriesType.threshold
     lazy val visible: Boolean            = visiblePlots.contains_(seriesType)
     lazy val style: ObjectPlotData.Style = objectPlotData.style
     lazy val data: js.Array[Chart.Data]  = seriesType.data(objectSeriesData)
@@ -118,7 +119,7 @@ object NightPlot:
             .y // Deal with js.UndefOr[Double | Null] type
             .toOption
             .flatMap(v => Option(v.asInstanceOf[Double]))
-            .exists(_ > threshold)
+            .exists(_ > 17)
       case _                        => true
 
   private val component =
@@ -156,6 +157,8 @@ object NightPlot:
       ): (_, observingNight, bounds, _) =>
         (plotData, opts, chartAndMoonData, pendingTime, excludeIntervals) =>
           val start: Instant = bounds._1
+
+          val isSingleTargetPlot: Boolean = plotData.value.size === 1
 
           val chartData: MapView[ObjectPlotData.Id, ObjectPlotData.SeriesData] =
             chartAndMoonData._1
@@ -223,22 +226,24 @@ object NightPlot:
           val dusk: String = instantFormat(tbNauticalNight.start)
           val dawn: String = instantFormat(tbNauticalNight.end)
 
-          val seriesToPlot: Array[ChartSeriesData] =
-            SeriesType.values
-              .flatMap: seriesType =>
+          val seriesToPlot: List[ChartSeriesData] =
+            Semigroupal[List]
+              .product(
                 chartData.toList
                   .map: (id, targetChartData) =>
                     plotData.value(id).map(targetPlotData => (targetPlotData, targetChartData))
-                  .zipWithIndex
-                  .collect: // Plot lunar elevation only once.
-                    case (Some((targetPlotData, targetChartData)), index)
-                        if seriesType =!= SeriesType.LunarElevation || index === 0 =>
-                      ChartSeriesData(
-                        seriesType,
-                        targetPlotData,
-                        targetChartData,
-                        opts.visiblePlots
-                      )
+                  .zipWithIndex,
+                SeriesType.values.toList
+              )
+              .collect: // Plot lunar elevation only once.
+                case ((Some((targetPlotData, targetChartData)), index), seriesType)
+                    if seriesType =!= SeriesType.LunarElevation || index === 0 =>
+                  ChartSeriesData(
+                    seriesType,
+                    targetPlotData,
+                    targetChartData,
+                    opts.visiblePlots
+                  )
 
           val targetsBelowHorizonStr: Option[String] =
             Option.when(
@@ -254,7 +259,7 @@ object NightPlot:
                         .forall(_ <= 0)
                   case _                    => true
             ):
-              if (plotData.value.size === 1) "Target is below horizon"
+              if isSingleTargetPlot then "Target is below horizon"
               else "All targets are below horizon"
 
           val zones: Option[js.Array[SeriesZonesOptionsObject]] =
@@ -393,7 +398,6 @@ object NightPlot:
                           case ObjectPlotData.Style.Dashed => DashStyleValue.Dash
                       .setFillOpacity(0)
                       .setZoneAxis("x")
-                      .setThreshold(series.threshold)
 
                   zones
                     .fold(baseSeries)(z => baseSeries.setZones(z))
