@@ -106,7 +106,8 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     fill-opacity: 0;
   }
 
-  .highcharts-plot-band-label { // Twilight labels
+  .highcharts-plot-band-label {
+    // Twilight labels
     fill: hsl(0deg 0% 40%);
   }
 
