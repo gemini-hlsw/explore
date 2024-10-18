@@ -336,6 +336,22 @@ object TargetTabContents extends TwoPanels:
               )
           )
 
+          val plotData: Option[PlotData] =
+            NonEmptyMap
+              .fromMap:
+                SortedMap.from:
+                  selectedTargetIds.get
+                    .flatMap: targetId =>
+                      props.targets.get
+                        .get(targetId)
+                        .map: target =>
+                          ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                            target.name,
+                            ObjectTracking.fromTarget(target),
+                            ObjectPlotData.Style.Solid
+                          )
+              .map(PlotData(_))
+
           /**
            * Render the asterism editor
            *
@@ -546,22 +562,6 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            val plotData: Option[PlotData] =
-              NonEmptyMap
-                .fromMap:
-                  SortedMap.from:
-                    selectedTargetIds.get
-                      .flatMap: targetId =>
-                        props.targets.get
-                          .get(targetId)
-                          .map: target =>
-                            ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                              target.name,
-                              ObjectTracking.fromTarget(target),
-                              ObjectPlotData.Style.Solid
-                            )
-                .map(PlotData(_))
-
             val skyPlotTile =
               plotData.map:
                 ElevationPlotTile.elevationPlotTile(
@@ -615,23 +615,6 @@ object TargetTabContents extends TwoPanels:
                   onCloneTarget4Target
                 )
           }
-
-          // TODO Unify with the same block above
-          val plotData: Option[PlotData] =
-            NonEmptyMap
-              .fromMap:
-                SortedMap.from:
-                  selectedTargetIds.get
-                    .flatMap: targetId =>
-                      props.targets.get
-                        .get(targetId)
-                        .map: target =>
-                          ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                            target.name,
-                            ObjectTracking.fromTarget(target),
-                            ObjectPlotData.Style.Solid
-                          )
-              .map(PlotData(_))
 
           val skyPlotTile: Option[Tile[?]] =
             plotData.map:

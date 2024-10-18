@@ -67,14 +67,6 @@ object ObjectPlotOptions:
   val showScheduling = Focus[ObjectPlotOptions](_.showScheduling)
   val visiblePlots   = Focus[ObjectPlotOptions](_.visiblePlots)
 
-  // val elevationPlotElevationVisible        = Focus[ElevationPlotOptions](_.elevationPlotElevationVisible)
-  // val elevationPlotParallacticAngleVisible =
-  //   Focus[ElevationPlotOptions](_.elevationPlotParallacticAngleVisible)
-  // val elevationPlotSkyBrightnessVisible    =
-  //   Focus[ElevationPlotOptions](_.elevationPlotSkyBrightnessVisible)
-  // val elevationPlotLunarElevationVisible   =
-  //   Focus[ElevationPlotOptions](_.elevationPlotLunarElevationVisible)
-
   private def dateAndSemesterOf(
     observationTime: Option[Instant],
     site:            Site
