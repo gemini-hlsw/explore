@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.Order.given
-import cats.data.NonEmptyList
 import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
@@ -61,6 +60,7 @@ import lucuma.schemas.model.*
 import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
@@ -587,73 +587,63 @@ object TargetTabContents extends TwoPanels:
            * Renders a single sidereal target editor without an obs context
            */
           def renderSiderealTargetEditor(
-            resize:             UseResizeDetectorReturn,
-            targetIds:          NonEmptyList[Target.Id],
-            guideStarSelection: View[GuideStarSelection]
-          ): List[Tile[?]] = {
-            // def onCloneTarget4Target(params: OnCloneParameters): Callback =
-            //   // It's not perfect, but we'll go to whatever url has the "new" id. This means
-            //   // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
-            //   selectedTargetIds.set(List(params.idToAdd)) >>
-            //     ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
+            resize:   UseResizeDetectorReturn,
+            targetId: Target.Id
+          ): Option[Tile[?]] = {
+            def onCloneTarget4Target(params: OnCloneParameters): Callback =
+              // It's not perfect, but we'll go to whatever url has the "new" id. This means
+              // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
+              selectedTargetIds.set(List(params.idToAdd)) >>
+                ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
 
-            val targetTiles: List[Tile[?]] =
-              // props.targets
-              //   .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
-              //   .map { target =>
-              // val targetTile = SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
-              //   props.programId,
-              //   props.userId,
-              //   targetId,
-              //   target,
-              //   props.obsAndTargets,
-              //   props.searching,
-              //   s"Editing Target ${target.get.name.value} [$targetId]",
-              //   fullScreen,
-              //   props.globalPreferences,
-              //   guideStarSelection,
-              //   props.readonly,
-              //   getObsInfo(none)(targetId),
-              //   onCloneTarget4Target
-              // )
-
-              // TODO Unify with the same block above
-              val plotData: Option[PlotData] =
-                NonEmptyMap
-                  .fromMap:
-                    SortedMap.from:
-                      selectedTargetIds.get
-                        .flatMap: targetId =>
-                          props.targets.get
-                            .get(targetId)
-                            .map: target =>
-                              ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                                target.name,
-                                ObjectTracking.fromTarget(target),
-                                ObjectPlotData.Style.Solid
-                              )
-                  .map(PlotData(_))
-
-              val skyPlotTile =
-                plotData.map:
-                  ElevationPlotTile.elevationPlotTile(
-                    props.userId,
-                    _,
-                    none,
-                    none,
-                    none,
-                    Nil,
-                    props.globalPreferences.get
-                  )
-
-              // List(targetTile, skyPlotTile)
-              // List(targetTile) ++ skyPlotTile.toList
-              List(dummyTargetTile) ++ skyPlotTile.toList
-            // }
-            // .orEmpty
-
-            renderSummary +: targetTiles
+            props.targets
+              .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
+              .map: target =>
+                SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+                  props.programId,
+                  props.userId,
+                  targetId,
+                  target,
+                  props.obsAndTargets,
+                  props.searching,
+                  s"Editing Target ${target.get.name.value} [$targetId]",
+                  fullScreen,
+                  props.globalPreferences,
+                  guideStarSelection,
+                  props.readonly,
+                  getObsInfo(none)(targetId),
+                  onCloneTarget4Target
+                )
           }
+
+          // TODO Unify with the same block above
+          val plotData: Option[PlotData] =
+            NonEmptyMap
+              .fromMap:
+                SortedMap.from:
+                  selectedTargetIds.get
+                    .flatMap: targetId =>
+                      props.targets.get
+                        .get(targetId)
+                        .map: target =>
+                          ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                            target.name,
+                            ObjectTracking.fromTarget(target),
+                            ObjectPlotData.Style.Solid
+                          )
+              .map(PlotData(_))
+
+          val skyPlotTile: Option[Tile[?]] =
+            plotData.map:
+              ElevationPlotTile.elevationPlotTile(
+                props.userId,
+                _,
+                none,
+                none,
+                none,
+                Nil,
+                props.globalPreferences.get
+              )
 
           val optSelected: Option[Either[Target.Id, ObsIdSet]] =
             props.focused match
@@ -662,33 +652,47 @@ object TargetTabContents extends TwoPanels:
               case _                                => none
 
           val rightSide = { (resize: UseResizeDetectorReturn) =>
-            val tileListKeyOpt: Option[(List[Tile[?]], NonEmptyString)] =
+            val observationSetTargetEditorTile
+              : Option[List[Tile[?]]] = // Observations selected on tree
               optSelected
                 .flatMap(_.toOption)
                 .flatMap: obsIds =>
                   findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
                     .map: asterismGroup =>
-                      (renderAsterismEditor(resize, obsIds, asterismGroup),
-                       TargetTabControllerIds.AsterismEditor.id
-                      )
-                .orElse:
-                  NonEmptyList
-                    .fromList(selectedTargetIds.get)
-                    // TODO filter out non-sidereal targets
-                    .map: targetIds =>
-                      (renderSiderealTargetEditor(resize, targetIds, guideStarSelection),
-                       TargetTabControllerIds.Summary.id
-                      )
+                      renderAsterismEditor(resize, obsIds, asterismGroup)
 
-            val justSummaryTiles = List(
-              renderSummary.withFullSize,
-              dummyTargetTile,
-              dummyElevationTile
-            )
+            val singleTargetEditorTile: Option[Tile[?]] = // Targets selected on summary table
+              Option
+                .when(selectedTargetIds.get.size === 1):
+                  renderSiderealTargetEditor(resize, selectedTargetIds.get.head)
+                .flatten
 
-            val (tiles, key) =
-              tileListKeyOpt.fold((justSummaryTiles, TargetTabControllerIds.Summary.id)):
-                (tiles, key) => (dummyTargetTile +: tiles, key)
+            val selectedTargetsTiles: List[Tile[?]] =
+              List(
+                renderSummary.withFullSize,
+                singleTargetEditorTile.getOrElse(dummyTargetTile),
+                skyPlotTile.getOrElse(dummyElevationTile)
+              )
+
+            val onlySummary: Boolean =
+              observationSetTargetEditorTile.isEmpty && singleTargetEditorTile.isEmpty && skyPlotTile.isEmpty
+
+            val (tiles, key) = // : (List[Tile[?]], NonEmptyString) =
+              observationSetTargetEditorTile
+                .map:
+                  (_, TargetTabControllerIds.AsterismEditor.id)
+                .getOrElse:
+                  (selectedTargetsTiles, TargetTabControllerIds.Summary.id)
+
+            // val justSummaryTiles: List[Tile[?]] = List(
+            //   renderSummary.withFullSize,
+            //   dummyTargetTile,
+            //   dummyElevationTile
+            // )
+
+            // val (tiles, key) = // : (List[Tile[?]], NonEmptyString) =
+            //   tileListKeyOpt.fold((justSummaryTiles, TargetTabControllerIds.Summary.id)):
+            //     (tiles, key) => (tiles, key)
 
             TileController(
               props.userId,
@@ -698,8 +702,8 @@ object TargetTabContents extends TwoPanels:
               tiles,
               GridLayoutSection.TargetLayout,
               backButton.some,
-              Option.when(tileListKeyOpt.isEmpty)(ExploreStyles.SingleTileMaximized),
-              storeLayout = tileListKeyOpt.nonEmpty
+              Option.when(onlySummary)(ExploreStyles.SingleTileMaximized),
+              storeLayout = !onlySummary
             ).withKey(key.value): VdomNode
             // withKey is required for the controller to clear it's state between the different
             // layouts or it can get into an invalid state.
