@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.data.NonEmptyList
+import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -40,6 +41,8 @@ import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
+import explore.targeteditor.plots.ObjectPlotData
+import explore.targeteditor.plots.PlotData
 import explore.timingwindows.TimingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -61,6 +64,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
 import lucuma.react.resizeDetector.*
+import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
@@ -373,17 +377,29 @@ object ObsTabTiles:
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
               )
 
+            val plotData: Option[PlotData] =
+              props.asterismTracking.map: tracking =>
+                PlotData:
+                  NonEmptyMap.one(
+                    ObjectPlotData.Id(props.obsId.asLeft),
+                    ObjectPlotData(
+                      NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
+                      tracking,
+                      ObjectPlotData.Style.Solid
+                    )
+                  )
+
             val skyPlotTile =
-              ElevationPlotTile.elevationPlotTile(
-                props.vault.userId,
-                props.focusedTarget.orElse(props.observation.get.scienceTargetIds.headOption),
-                props.asterismTracking,
-                props.observation.get.observingMode.map(_.siteFor),
-                vizTimeView.get,
-                obsDuration.map(_.toDuration),
-                timingWindows.get,
-                props.globalPreferences.get
-              )
+              plotData.map:
+                ElevationPlotTile.elevationPlotTile(
+                  props.vault.userId,
+                  _,
+                  props.observation.get.observingMode.map(_.siteFor),
+                  vizTimeView.get,
+                  obsDuration.map(_.toDuration),
+                  timingWindows.get,
+                  props.globalPreferences.get
+                )
 
             val obsConf =
               ObsConfiguration(
@@ -514,7 +530,7 @@ object ObsTabTiles:
                 notesTile.some,
                 targetTile.some,
                 if (!props.vault.isGuest) finderChartsTile.some else none,
-                skyPlotTile.some,
+                skyPlotTile,
                 constraintsTile.some,
                 timingWindowsTile.some,
                 configurationTile.some,

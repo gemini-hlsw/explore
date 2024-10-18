@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.plots
 
 import cats.effect.IO
 import cats.syntax.all.*
@@ -14,12 +14,12 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ElevationPlotOptions
 import explore.model.ElevationPlotScheduling
 import explore.model.GlobalPreferences
 import explore.model.display.given
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
+import explore.model.enums.Visible
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
@@ -27,9 +27,7 @@ import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Semester
-import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
 import lucuma.core.syntax.display.given
@@ -50,19 +48,18 @@ import spire.math.extras.interval.IntervalSeq
 
 import java.time.*
 
-case class ElevationPlotSection(
+case class ObjectPlotSection(
   userId:            User.Id,
-  targetId:          Target.Id,
-  tracking:          ObjectTracking,
+  plotData:          PlotData,
   site:              Option[Site],
   visualizationTime: Option[Instant],
   pendingTime:       Option[Duration],
   timingWindows:     List[TimingWindow],
   globalPreferences: GlobalPreferences
-) extends ReactFnProps(ElevationPlotSection.component)
+) extends ReactFnProps(ObjectPlotSection.component)
 
-object ElevationPlotSection:
-  private type Props = ElevationPlotSection
+object ObjectPlotSection:
+  private type Props = ObjectPlotSection
 
   private val component =
     ScalaFnComponent
@@ -70,30 +67,41 @@ object ElevationPlotSection:
       .useContext(AppContext.ctx)
       // Plot options, will be read from the user preferences
       .useStateViewBy((props, _) =>
-        ElevationPlotOptions
-          .default(props.site, props.visualizationTime, props.tracking)
+        ObjectPlotOptions
+          .default(
+            props.site,
+            props.visualizationTime,
+            props.plotData.value.head._2.tracking
+          )
           .copy(
             range = props.globalPreferences.elevationPlotRange,
             timeDisplay = props.globalPreferences.elevationPlotTime,
             showScheduling = props.globalPreferences.elevationPlotScheduling,
-            elevationPlotElevationVisible = props.globalPreferences.elevationPlotElevationVisible,
-            elevationPlotParallacticAngleVisible =
-              props.globalPreferences.elevationPlotParallacticAngleVisible,
-            elevationPlotSkyBrightnessVisible =
-              props.globalPreferences.elevationPlotSkyBrightnessVisible,
-            elevationPlotLunarElevationVisible =
-              props.globalPreferences.elevationPlotLunarElevationVisible
+            visiblePlots = List(
+              Option.when(
+                props.globalPreferences.elevationPlotElevationVisible.isVisible
+              )(SeriesType.Elevation),
+              Option.when(
+                props.globalPreferences.elevationPlotParallacticAngleVisible.isVisible
+              )(SeriesType.ParallacticAngle),
+              Option.when(
+                props.globalPreferences.elevationPlotSkyBrightnessVisible.isVisible
+              )(SeriesType.SkyBrightness),
+              Option.when(
+                props.globalPreferences.elevationPlotLunarElevationVisible.isVisible
+              )(SeriesType.LunarElevation)
+            ).flattenOption
           )
       )
       // If predefined site changes, switch to it.
       .useEffectWithDepsBy((props, _, _) => props.site)((props, _, options) =>
-        _.map(options.zoom(ElevationPlotOptions.site).set).orEmpty
+        _.map(options.zoom(ObjectPlotOptions.site).set).orEmpty
       )
       // If visualization time changes, switch to it.
       .useEffectWithDepsBy((props, _, _) => props.visualizationTime)((props, _, options) =>
         _.map(vt => options.mod(_.withDateAndSemesterOf(vt))).orEmpty
       )
-      .render { (props, ctx, elevationPlotOptions) =>
+      .render: (props, ctx, elevationPlotOptions) =>
         import ctx.given
 
         val options = elevationPlotOptions.withOnMod(opts =>
@@ -103,23 +111,25 @@ object ElevationPlotSection:
               opts.range,
               opts.timeDisplay,
               opts.showScheduling.value,
-              opts.elevationPlotElevationVisible,
-              opts.elevationPlotParallacticAngleVisible,
-              opts.elevationPlotSkyBrightnessVisible,
-              opts.elevationPlotLunarElevationVisible
+              Visible(opts.visiblePlots.contains_(SeriesType.Elevation)),
+              Visible(opts.visiblePlots.contains_(SeriesType.ParallacticAngle)),
+              Visible(opts.visiblePlots.contains_(SeriesType.SkyBrightness)),
+              Visible(opts.visiblePlots.contains_(SeriesType.LunarElevation))
             )
             .runAsync
         )
 
-        val siteView: View[Site]                              = options.zoom(ElevationPlotOptions.site)
-        val rangeView: View[PlotRange]                        = options.zoom(ElevationPlotOptions.range)
-        val dateView: View[LocalDate]                         = options.zoom(ElevationPlotOptions.date)
-        val semesterView: View[Semester]                      = options.zoom(ElevationPlotOptions.semester)
-        val timeDisplayView: View[TimeDisplay]                = options.zoom(ElevationPlotOptions.timeDisplay)
+        val siteView: View[Site]                              = options.zoom(ObjectPlotOptions.site)
+        val rangeView: View[PlotRange]                        = options.zoom(ObjectPlotOptions.range)
+        val dateView: View[LocalDate]                         = options.zoom(ObjectPlotOptions.date)
+        val semesterView: View[Semester]                      = options.zoom(ObjectPlotOptions.semester)
+        val timeDisplayView: View[TimeDisplay]                = options.zoom(ObjectPlotOptions.timeDisplay)
+        val visiblePlotsView: View[List[SeriesType]]          =
+          options.zoom(ObjectPlotOptions.visiblePlots)
         val showSchedulingView: View[ElevationPlotScheduling] =
-          options.zoom(ElevationPlotOptions.showScheduling)
+          options.zoom(ObjectPlotOptions.showScheduling)
 
-        val opt: ElevationPlotOptions = options.get
+        val opt: ObjectPlotOptions = options.get
 
         def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
           windows
@@ -150,25 +160,21 @@ object ElevationPlotSection:
           <.div(ExploreStyles.ElevationPlot)(
             opt.range match
               case PlotRange.Night    =>
-                val coords: CoordinatesAtVizTime =
-                  props.tracking
-                    .at(dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC))
-                    .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
-
-                ElevationPlotNight(
-                  coords,
-                  props.visualizationTime,
+                NightPlot(
+                  props.plotData,
+                  dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC),
                   windowsNetExcludeIntervals,
                   props.pendingTime,
                   options
                 )
               case PlotRange.Semester =>
                 val coords: CoordinatesAtVizTime =
-                  props.tracking
+                  props.plotData.value.head._2.tracking
                     .at(semesterView.get.start.atSite(siteView.get).toInstant)
-                    .getOrElse(CoordinatesAtVizTime(props.tracking.baseCoordinates))
+                    .getOrElse:
+                      CoordinatesAtVizTime(props.plotData.value.head._2.tracking.baseCoordinates)
 
-                ElevationPlotSemester(
+                SemesterPlot(
                   options.get,
                   coords,
                   windowsNetExcludeIntervals
@@ -221,7 +227,16 @@ object ElevationPlotSection:
               "elevation-plot-range".refined,
               rangeView,
               buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
-            ),
+            ).when: // Only show range selector if there is a single target
+              props.plotData.value.size === 1
+            ,
+            SelectButtonMultipleEnumView(
+              "elevation-plot-visible-series".refined,
+              visiblePlotsView,
+              buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
+            ).when: // Only show series selector if it's a night plot
+              rangeView.get === PlotRange.Night
+            ,
             SelectButtonEnumView(
               "elevation-plot-time".refined,
               timeDisplayView,
@@ -236,4 +251,3 @@ object ElevationPlotSection:
             )
           )
         )
-      }

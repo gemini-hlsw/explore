@@ -103,6 +103,7 @@ object ExploreMain {
     // Order is important you need to import Highcharts first
     lucuma.react.highcharts.Highcharts
     lucuma.react.highcharts.HighchartsAccesibility
+    lucuma.react.highcharts.seriesLabel.enable
   }.void
 
   def run: IO[Unit] = {

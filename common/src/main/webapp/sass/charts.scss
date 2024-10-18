@@ -34,7 +34,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     fill: var(--plot-background-color);
   }
 
-  .highcharts-root text {
+  .highcharts-root :not(.highcharts-series-label) text {
     fill: var(--plot-text-color);
   }
 
@@ -55,7 +55,10 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     fill-opacity: 0.75;
   }
 
-  /* Target Elevation */
+  .plot-sky-brightness-percentile {
+    stroke-dasharray: 3, 5;
+  }
+
   .highcharts-color-0 {
     fill: hsl(0deg 87% 66%);
     stroke: hsl(0deg 87% 66%);
@@ -67,18 +70,12 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     stroke: hsl(79deg 70% 43%);
   }
 
-  .plot-sky-brightness-percentile {
-    stroke-dasharray: 3, 5;
-  }
-
   /* Sky Brightness */
-  .elevation-plot {
-    .highcharts-color-2,
-    .plot-sky-brightness-percentile,
-    .highcharts-plot-line-label {
-      fill: hsl(209deg 75% 71%) !important;
-      stroke: hsl(209deg 75% 71%);
-    }
+  .highcharts-color-2,
+  .plot-sky-brightness-percentile,
+  .highcharts-plot-line-label {
+    fill: hsl(209deg 75% 71%);
+    stroke: hsl(209deg 75% 71%);
   }
 
   /* Lunar Elevation */
@@ -87,22 +84,12 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     stroke: hsl(27deg 91% 66%);
   }
 
-  .plot-axis-parallactic-angle {
-    stroke-width: 0;
-    fill: hsl(79deg 70% 43%);
-  }
-
   .plot-axis-parallactic-angle text {
-    fill: hsl(79deg 70% 43%);
-  }
-
-  .plot-axis-sky-brightness {
-    stroke-width: 0;
-    fill: hsl(209deg 75% 71%);
+    fill: hsl(79deg 70% 43%) !important;
   }
 
   .plot-axis-sky-brightness text {
-    fill: hsl(209deg 75% 71%);
+    fill: hsl(209deg 75% 71%) !important;
   }
 
   .plot-band-exclude-window {
@@ -120,6 +107,7 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 
   .highcharts-plot-band-label {
+    // Twilight labels
     fill: hsl(0deg 0% 40%);
   }
 

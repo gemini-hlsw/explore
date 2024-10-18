@@ -1,14 +1,16 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.model
+package explore.targeteditor.plots
 
 import cats.*
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.ElevationPlotScheduling
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
-import explore.model.enums.Visible
+import japgolly.scalajs.react.ReactCats.*
+import japgolly.scalajs.react.Reusability
 import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
@@ -23,20 +25,17 @@ import org.typelevel.cats.time.given
 import java.time.Instant
 import java.time.LocalDate
 
-case class ElevationPlotOptions(
-  site:                                 Site,
-  range:                                PlotRange,
-  date:                                 LocalDate,
-  semester:                             Semester,
-  timeDisplay:                          TimeDisplay,
-  showScheduling:                       ElevationPlotScheduling,
-  elevationPlotElevationVisible:        Visible,
-  elevationPlotParallacticAngleVisible: Visible,
-  elevationPlotSkyBrightnessVisible:    Visible,
-  elevationPlotLunarElevationVisible:   Visible
+case class ObjectPlotOptions(
+  site:           Site,
+  range:          PlotRange,
+  date:           LocalDate,
+  semester:       Semester,
+  timeDisplay:    TimeDisplay,
+  showScheduling: ElevationPlotScheduling,
+  visiblePlots:   List[SeriesType] = SeriesType.values.toList
 ) derives Eq:
-  def withDateAndSemesterOf(observationTime: Instant): ElevationPlotOptions =
-    val (date, semester) = ElevationPlotOptions.dateAndSemesterOf(observationTime.some, site)
+  def withDateAndSemesterOf(observationTime: Instant): ObjectPlotOptions =
+    val (date, semester) = ObjectPlotOptions.dateAndSemesterOf(observationTime.some, site)
     copy(date = date, semester = semester)
 
   def minInstant: Instant =
@@ -59,20 +58,14 @@ case class ElevationPlotOptions(
 
   def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)
 
-object ElevationPlotOptions:
-  val site                                 = Focus[ElevationPlotOptions](_.site)
-  val range                                = Focus[ElevationPlotOptions](_.range)
-  val date                                 = Focus[ElevationPlotOptions](_.date)
-  val semester                             = Focus[ElevationPlotOptions](_.semester)
-  val timeDisplay                          = Focus[ElevationPlotOptions](_.timeDisplay)
-  val showScheduling                       = Focus[ElevationPlotOptions](_.showScheduling)
-  val elevationPlotElevationVisible        = Focus[ElevationPlotOptions](_.elevationPlotElevationVisible)
-  val elevationPlotParallacticAngleVisible =
-    Focus[ElevationPlotOptions](_.elevationPlotParallacticAngleVisible)
-  val elevationPlotSkyBrightnessVisible    =
-    Focus[ElevationPlotOptions](_.elevationPlotSkyBrightnessVisible)
-  val elevationPlotLunarElevationVisible   =
-    Focus[ElevationPlotOptions](_.elevationPlotLunarElevationVisible)
+object ObjectPlotOptions:
+  val site           = Focus[ObjectPlotOptions](_.site)
+  val range          = Focus[ObjectPlotOptions](_.range)
+  val date           = Focus[ObjectPlotOptions](_.date)
+  val semester       = Focus[ObjectPlotOptions](_.semester)
+  val timeDisplay    = Focus[ObjectPlotOptions](_.timeDisplay)
+  val showScheduling = Focus[ObjectPlotOptions](_.showScheduling)
+  val visiblePlots   = Focus[ObjectPlotOptions](_.visiblePlots)
 
   private def dateAndSemesterOf(
     observationTime: Option[Instant],
@@ -102,15 +95,14 @@ object ElevationPlotOptions:
     )
     val (date, semester)    = dateAndSemesterOf(observationTime, site)
 
-    ElevationPlotOptions(
+    ObjectPlotOptions(
       site,
       PlotRange.Night,
       date,
       semester,
       TimeDisplay.Site,
       ElevationPlotScheduling.On,
-      Visible.Shown,
-      Visible.Hidden,
-      Visible.Shown,
-      Visible.Hidden
+      List(SeriesType.Elevation, SeriesType.SkyBrightness)
     )
+
+  given Reusability[ObjectPlotOptions] = Reusability.byEq
