@@ -227,12 +227,16 @@ object ObjectPlotSection:
               "elevation-plot-range".refined,
               rangeView,
               buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
-            ),
+            ).when: // Only show range selector if there is a single target
+              props.plotData.value.size === 1
+            ,
             SelectButtonMultipleEnumView(
               "elevation-plot-visible-series".refined,
               visiblePlotsView,
               buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
-            ),
+            ).when: // Only show series selector if it's a night plot
+              rangeView.get === PlotRange.Night
+            ,
             SelectButtonEnumView(
               "elevation-plot-time".refined,
               timeDisplayView,

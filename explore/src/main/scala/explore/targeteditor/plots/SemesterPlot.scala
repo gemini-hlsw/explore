@@ -198,6 +198,7 @@ object SemesterPlot:
 
           Options()
             .setChart(commonOptions.setAnimation(false))
+            .setLegend(LegendOptions().setEnabled(false))
             .setTitle(TitleOptions().setText(s"Semester ${semester.format}"))
             .setCredits(CreditsOptions().setEnabled(false))
             .setTooltip(TooltipOptions().setFormatter(tooltipFormatter))
