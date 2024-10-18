@@ -17,6 +17,7 @@ import explore.model.AppContext
 import explore.model.GlobalPreferences
 import explore.model.Observation
 import explore.model.itc.*
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
@@ -49,7 +50,7 @@ object ItcPanelBody:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // Reset the selected target if it changes
-      .useEffectWhenDepsReadyBy((props, _) => props.itcGraphResults.map(_.brightestTarget)):
+      .useEffectWhenDepsReadyOrChangeBy((props, _) => props.itcGraphResults.map(_.brightestTarget)):
         (props, _) => itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
       .render: (props, ctx) =>
         import ctx.given
