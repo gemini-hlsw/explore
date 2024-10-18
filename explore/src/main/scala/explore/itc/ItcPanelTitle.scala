@@ -14,6 +14,7 @@ import explore.model.Constants.MissingInfoMsg
 import explore.model.itc.ItcAsterismGraphResults
 import explore.model.itc.ItcGraphResult
 import explore.model.itc.ItcTarget
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
@@ -38,8 +39,8 @@ object ItcPanelTitle:
     ScalaFnComponent
       .withHooks[Props]
       // Reset the selected target if it changes
-      .useEffectWhenDepsReadyBy(props => props.itcGraphResults.map(_.brightestTarget)): props =>
-        itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
+      .useEffectWhenDepsReadyOrChangeBy(props => props.itcGraphResults.map(_.brightestTarget)):
+        props => itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
       .render: props =>
         def newSelected(p: Int): Option[ItcTarget] =
           props.itcPanelProps.targets.lift(p)
