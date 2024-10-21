@@ -43,9 +43,9 @@ trait CacheModifierUpdaters {
   protected def modifyObservations(
     observationEdit: ObservationEdit
   ): ProgramSummaries => ProgramSummaries =
+    val obsId: Observation.Id = observationEdit.observationId
     observationEdit.value // We ignore updates on deleted groups.
       .map: value =>
-        val obsId: Observation.Id      = value.id
         val isPresentInServer: Boolean =
           observationEdit.meta.exists(_.existence === Existence.Present)
 
@@ -86,7 +86,13 @@ trait CacheModifierUpdaters {
 
         ifPresentInServerOrLocally:
           obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
-      .orEmpty
+      .getOrElse {
+        if (observationEdit.editType === DeletedCal)
+          ProgramSummaries.systemGroups
+            .modify: groupTree =>
+              groupTree.removed(observationEdit.observationId.asLeft)
+        else identity
+      }
 
   protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
     groupUpdate.payload // We ignore updates on deleted groups.
@@ -171,19 +177,29 @@ trait CacheModifierUpdaters {
         val findIndexFn: GroupTree.Node => Boolean =
           _.value.parentIndex >= meta.groupIndex
 
-        val editGroup: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.groups
-            .modify:
-              _.upserted(
-                obsId.asLeft,
-                ServerIndexed(obsId.asLeft, meta.groupIndex),
-                meta.groupId.map(_.asRight),
-                findIndexFn
-              )
+        val isInSystemGroup: ProgramSummaries => Boolean = meta.groupId match {
+          case Some(g) =>
+            ProgramSummaries.systemGroups.exist(_.contains(g.asRight))
+          case None    => _ => false
+        }
 
-        editGroup
+        val groupMod: Endo[GroupTree] => Endo[ProgramSummaries] =
+          modGroup =>
+            programSummaries =>
+              if (isInSystemGroup(programSummaries))
+                ProgramSummaries.systemGroups.modify(modGroup)(programSummaries)
+              else
+                ProgramSummaries.groups.modify(modGroup)(programSummaries)
+
+        groupMod:
+          _.upserted(
+            obsId.asLeft,
+            ServerIndexed(obsId.asLeft, meta.groupIndex),
+            meta.groupId.map(_.asRight),
+            findIndexFn
+          )
       .getOrElse:
-        ProgramSummaries.groups
+        ProgramSummaries.systemGroups
           .modify: groupTree =>
             if (observationEdit.editType === EditType.DeletedCal)
               groupTree.removed(obsId.asLeft)
