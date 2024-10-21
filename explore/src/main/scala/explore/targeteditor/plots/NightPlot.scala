@@ -328,47 +328,72 @@ object NightPlot:
                     )).toJSArray
                 )
             )
-            .setYAxis(
-              List(
-                YAxisOptions()
-                  .setTitle(YAxisTitleOptions().setText("Elevation"))
-                  .setAllowDecimals(false)
-                  .setMin(0)
-                  .setMax(90)
-                  .setTickInterval(10)
-                  .setMinorTickInterval(5)
-                  .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
-                YAxisOptions()
-                  .setOpposite(true)
-                  .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
-                  .setMin(-180)
-                  .setMax(180)
-                  .setTickInterval(60)
-                  .setClassName("plot-axis-parallactic-angle")
-                  .setShowEmpty(false)
-                  .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
-                YAxisOptions()
-                  .setOpposite(true)
-                  .setTitle(YAxisTitleOptions().setText("Sky Brightness [V] (mag/arcsec²)"))
-                  .setMin(17)
-                  .setMax(22)
-                  .setReversed(true)
-                  .setTickInterval(1)
-                  .setClassName("plot-axis-sky-brightness")
-                  .setShowEmpty(false)
-                  .setLabels(YAxisLabelsOptions().setFormat("{value}"))
-                  .setPlotLines:
-                    if (opts.visiblePlots.contains_(SeriesType.SkyBrightness))
-                      SkyBrightnessPercentileLines.toJSArray
-                    else
-                      js.Array()
-                  .setPlotBands:
-                    if (opts.visiblePlots.contains_(SeriesType.SkyBrightness))
-                      SkyBrightnessPercentileBands.toJSArray
-                    else
-                      js.Array()
+            .setYAxis:
+              (
+                List(
+                  YAxisOptions()
+                    .setTitle(YAxisTitleOptions().setText("Elevation"))
+                    .setAllowDecimals(false)
+                    .setMin(0)
+                    .setMax(90)
+                    .setTickInterval(10)
+                    .setMinorTickInterval(5)
+                    .setShowEmpty(false)
+                    .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
+                  YAxisOptions()
+                    .setOpposite(true)
+                    .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
+                    .setMin(-180)
+                    .setMax(180)
+                    .setTickInterval(60)
+                    .setClassName("plot-axis-parallactic-angle")
+                    .setShowEmpty(false)
+                    .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
+                  YAxisOptions()
+                    .setOpposite(true)
+                    .setTitle(YAxisTitleOptions().setText("Sky Brightness [V] (mag/arcsec²)"))
+                    .setMin(17)
+                    .setMax(22)
+                    .setReversed(true)
+                    .setTickInterval(1)
+                    .setClassName("plot-axis-sky-brightness")
+                    .setShowEmpty(false)
+                    .setLabels(YAxisLabelsOptions().setFormat("{value}"))
+                    .setPlotLines:
+                      if (opts.visiblePlots.contains_(SeriesType.SkyBrightness))
+                        SkyBrightnessPercentileLines.toJSArray
+                      else
+                        js.Array()
+                    .setPlotBands:
+                      if (opts.visiblePlots.contains_(SeriesType.SkyBrightness))
+                        SkyBrightnessPercentileBands.toJSArray
+                      else
+                        js.Array()
+                ) ++
+                  (if (opts.visiblePlots.contains_(SeriesType.Elevation))
+                     List(
+                       YAxisOptions()
+                         .setOpposite(true)
+                         .setLinkedTo(0)
+                         .setTitle(YAxisTitleOptions().setText("Airmass"))
+                         .setAllowDecimals(true)
+                         .setTickInterval(10)
+                         .setMinorTickInterval(5)
+                         .setLabels:
+                           YAxisLabelsOptions().setFormatter:
+                             (
+                               labelValue: AxisLabelsFormatterContextObject,
+                               _:          AxisLabelsFormatterContextObject
+                             ) =>
+                               val h: Double = labelValue.value.asInstanceOf[Double]
+                               if h > 0 then
+                                 "%.2f".format: // Pickering (2002) method
+                                   1 / (math
+                                     .sin(math.toRadians(h + 244 / (165 + 47 * math.pow(h, 1.1)))))
+                               else ""
+                     )
+                   else List.empty)
               ).toJSArray
-            )
             .setPlotOptions:
               PlotOptions()
                 .setSeries(
