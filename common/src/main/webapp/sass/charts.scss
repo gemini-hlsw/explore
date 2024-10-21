@@ -59,6 +59,10 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     stroke-dasharray: 3, 5;
   }
 
+  .highcharts-dashed-series {
+    stroke-dasharray: 10, 12;
+  }
+
   .highcharts-color-0 {
     fill: hsl(0deg 87% 66%);
     stroke: hsl(0deg 87% 66%);

@@ -48,6 +48,7 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
@@ -59,6 +60,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.syntax.all.*
+import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
@@ -385,7 +387,7 @@ object ObsTabTiles:
                     ObjectPlotData(
                       NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
                       tracking,
-                      ObjectPlotData.Style.Solid
+                      Enumerated[Site].all // In obs elevation plot, we want all solid lines
                     )
                   )
 

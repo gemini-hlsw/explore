@@ -39,7 +39,7 @@ trait ElevationPointWithAirmass extends Point:
 case class ObjectPlotData(
   name:     NonEmptyString,
   tracking: ObjectTracking,
-  style:    ObjectPlotData.Style
+  sites:    List[Site]
 ) derives Eq:
   private val PlotEvery: Duration = Duration.ofMinutes(1)
 
@@ -59,9 +59,6 @@ object ObjectPlotData:
   object Id extends NewType[Either[Observation.Id, Target.Id]]:
     given Order[Id] = Order.by(_.value)
   type Id = Id.Type
-
-  enum Style derives Eq:
-    case Solid, Dashed
 
   given Reusability[ObjectPlotData] = Reusability.byEq
 

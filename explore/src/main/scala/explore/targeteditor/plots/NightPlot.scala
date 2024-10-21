@@ -19,6 +19,7 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.skycalc.ImprovedSkyCalc
 import lucuma.core.model.ObservingNight
 import lucuma.core.model.TwilightBoundedNight
+import lucuma.core.util.Enumerated
 import lucuma.core.util.time.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
@@ -103,15 +104,16 @@ object NightPlot:
     objectSeriesData: ObjectPlotData.SeriesData,
     visiblePlots:     List[SeriesType]
   ):
-    lazy val name: String                =
+    lazy val name: String               =
       if (seriesType === SeriesType.LunarElevation) "Moon" else objectPlotData.name.value
-    lazy val yAxis: Int                  = seriesType.yAxis
-    // lazy val threshold: Int              = seriesType.threshold
-    lazy val visible: Boolean            = visiblePlots.contains_(seriesType)
-    lazy val style: ObjectPlotData.Style = objectPlotData.style
-    lazy val data: js.Array[Chart.Data]  = seriesType.data(objectSeriesData)
+    lazy val yAxis: Int                 = seriesType.yAxis
+    lazy val visible: Boolean           = visiblePlots.contains_(seriesType)
+    // Moon elevation plot is always solid
+    lazy val sites: List[Site]          =
+      if (seriesType === SeriesType.LunarElevation) Enumerated[Site].all else objectPlotData.sites
+    lazy val data: js.Array[Chart.Data] = seriesType.data(objectSeriesData)
     // SkyBrightness can be out of bounds, in that case we hide the label (otherwise it's confusingly shown at the top of the chart).
-    lazy val showLabel: Boolean          = seriesType match
+    lazy val showLabel: Boolean         = seriesType match
       case SeriesType.SkyBrightness =>
         data.exists: point =>
           point
@@ -388,14 +390,12 @@ object NightPlot:
                           .setEnabled(series.showLabel)
                           .setConnectorAllowed(true)
                           .setOnArea(false)
-                      .setClassName("elevation-plot-series")
+                      .setClassName:
+                        "elevation-plot-series" +
+                          (if (!series.sites.contains_(site)) " highcharts-dashed-series" else "")
                       .setYAxis(series.yAxis)
                       .setData(series.data)
                       .setVisible(series.visible)
-                      .setDashStyle:
-                        series.style match
-                          case ObjectPlotData.Style.Solid  => DashStyleValue.Solid
-                          case ObjectPlotData.Style.Dashed => DashStyleValue.Dash
                       .setFillOpacity(0)
                       .setZoneAxis("x")
 

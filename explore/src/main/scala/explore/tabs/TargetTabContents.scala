@@ -45,6 +45,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Site
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -79,14 +80,25 @@ case class TargetTabContents(
   expandedIds:      View[SortedSet[ObsIdSet]],
   readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
-  val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
+  private val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
-  val obsAndTargets: UndoSetter[ObservationsAndTargets] =
+  private def sitesForTarget(targetId: Target.Id): List[Site] =
+    programSummaries.get.targetObservations
+      .get(targetId)
+      .foldMap: obsIds =>
+        obsIds.toList
+          .map: obsId =>
+            programSummaries.get.observations
+              .getValue(obsId)
+              .flatMap(_.observingMode.map(_.siteFor))
+          .flattenOption
+
+  private val obsAndTargets: UndoSetter[ObservationsAndTargets] =
     programSummaries.zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip)
 
-  val observations: ObservationList = obsAndTargets.get._1
+  private val observations: ObservationList = obsAndTargets.get._1
 
-  val globalPreferences: View[GlobalPreferences] =
+  private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
 
 object TargetTabContents extends TwoPanels:
@@ -348,7 +360,7 @@ object TargetTabContents extends TwoPanels:
                           ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
                             target.name,
                             ObjectTracking.fromTarget(target),
-                            ObjectPlotData.Style.Solid
+                            props.sitesForTarget(targetId)
                           )
               .map(PlotData(_))
 
