@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.Order.given
-import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -66,7 +65,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
-import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 
@@ -348,21 +346,19 @@ object TargetTabContents extends TwoPanels:
               )
           )
 
-          val plotData: Option[PlotData] =
-            NonEmptyMap
-              .fromMap:
-                SortedMap.from:
-                  selectedTargetIds.get
-                    .flatMap: targetId =>
-                      props.targets.get
-                        .get(targetId)
-                        .map: target =>
-                          ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                            target.name,
-                            ObjectTracking.fromTarget(target),
-                            props.sitesForTarget(targetId)
-                          )
-              .map(PlotData(_))
+          val plotData: PlotData =
+            PlotData:
+              selectedTargetIds.get
+                .flatMap: targetId =>
+                  props.targets.get
+                    .get(targetId)
+                    .map: target =>
+                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                        target.name,
+                        ObjectTracking.fromTarget(target),
+                        props.sitesForTarget(targetId)
+                      )
+                .toMap
 
           /**
            * Render the asterism editor
@@ -485,9 +481,8 @@ object TargetTabContents extends TwoPanels:
                    allOriginalGroups.toList.traverse { ids =>
                      val intersect = ids.idSet.intersect(params.obsIds.idSet)
                      if (intersect === ids.idSet.toSortedSet)
-                       props.expandedIds.mod(
-                         _ + ids
-                       ) // it is the whole group, so make sure it is open
+                       // it is the whole group, so make sure it is open
+                       props.expandedIds.mod(_ + ids)
                      else
                        // otherwise, close the original and open the subsets
                        ObsIdSet
@@ -575,18 +570,17 @@ object TargetTabContents extends TwoPanels:
               )
 
             val skyPlotTile =
-              plotData.map:
-                ElevationPlotTile.elevationPlotTile(
-                  props.userId,
-                  _,
-                  configuration.map(_.siteFor),
-                  obsTimeView.get,
-                  none,
-                  Nil,
-                  props.globalPreferences.get
-                )
+              ElevationPlotTile.elevationPlotTile(
+                props.userId,
+                plotData,
+                configuration.map(_.siteFor),
+                obsTimeView.get,
+                none,
+                Nil,
+                props.globalPreferences.get
+              )
 
-            List(asterismEditorTile) ++ skyPlotTile
+            List(asterismEditorTile, skyPlotTile)
           }
 
           // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
@@ -628,17 +622,16 @@ object TargetTabContents extends TwoPanels:
                 )
           }
 
-          val skyPlotTile: Option[Tile[?]] =
-            plotData.map:
-              ElevationPlotTile.elevationPlotTile(
-                props.userId,
-                _,
-                none,
-                none,
-                none,
-                Nil,
-                props.globalPreferences.get
-              )
+          val skyPlotTile: Tile[?] =
+            ElevationPlotTile.elevationPlotTile(
+              props.userId,
+              plotData,
+              selectedTargetIds.get.headOption.flatMap(props.sitesForTarget(_).headOption),
+              none,
+              none,
+              Nil,
+              props.globalPreferences.get
+            )
 
           val optSelected: Option[Either[Target.Id, ObsIdSet]] =
             props.focused match

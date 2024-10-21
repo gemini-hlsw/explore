@@ -71,7 +71,7 @@ object ObjectPlotSection:
           .default(
             props.site,
             props.visualizationTime,
-            props.plotData.value.head._2.tracking
+            props.plotData.value.headOption.map(_._2.tracking)
           )
           .copy(
             range = props.globalPreferences.elevationPlotRange,
@@ -168,17 +168,19 @@ object ObjectPlotSection:
                   options
                 )
               case PlotRange.Semester =>
-                val coords: CoordinatesAtVizTime =
-                  props.plotData.value.head._2.tracking
-                    .at(semesterView.get.start.atSite(siteView.get).toInstant)
-                    .getOrElse:
-                      CoordinatesAtVizTime(props.plotData.value.head._2.tracking.baseCoordinates)
+                props.plotData.value.headOption.map { case (_, data) =>
+                  val coords: CoordinatesAtVizTime =
+                    data.tracking
+                      .at(semesterView.get.start.atSite(siteView.get).toInstant)
+                      .getOrElse:
+                        CoordinatesAtVizTime(data.tracking.baseCoordinates)
 
-                SemesterPlot(
-                  options.get,
-                  coords,
-                  windowsNetExcludeIntervals
-                )
+                  SemesterPlot(
+                    options.get,
+                    coords,
+                    windowsNetExcludeIntervals
+                  )
+                }
           ),
           <.div(ExploreStyles.ElevationPlotControls)(
             SelectButtonEnumView(

@@ -86,14 +86,21 @@ object ObjectPlotOptions:
   def default(
     predefinedSite:  Option[Site],
     observationTime: Option[Instant],
-    tracking:        ObjectTracking
+    tracking:        Option[ObjectTracking]
   ) =
-    val coords: Coordinates =
-      observationTime.flatMap(tracking.at(_).map(_.value)).getOrElse(tracking.baseCoordinates)
-    val site: Site          = predefinedSite.getOrElse(
-      if (coords.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
-    )
-    val (date, semester)    = dateAndSemesterOf(observationTime, site)
+    val coords: Option[Coordinates] =
+      for
+        time <- observationTime
+        t    <- tracking
+      yield t.at(time).map(_.value).getOrElse(t.baseCoordinates)
+    val site: Site                  =
+      predefinedSite
+        .orElse:
+          coords
+            .map: c =>
+              if (c.dec.toAngle.toSignedDoubleDegrees > -5) Site.GN else Site.GS
+        .getOrElse(Site.GN)
+    val (date, semester)            = dateAndSemesterOf(observationTime, site)
 
     ObjectPlotOptions(
       site,
