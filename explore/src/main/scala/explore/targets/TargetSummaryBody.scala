@@ -16,11 +16,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Observation
-import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
-import explore.undo.UndoContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -63,10 +61,7 @@ case class TargetSummaryBody(
   targetObservations:      Map[Target.Id, SortedSet[Observation.Id]],
   calibrationObservations: Set[Observation.Id],
   selectObservation:       (Observation.Id, Target.Id) => Callback,
-  selectTargetOrSummary:   Option[Target.Id] => Callback,
   selectedTargetIds:       View[List[Target.Id]],
-  undoCtx:                 UndoContext[ProgramSummaries],
-  readonly:                Boolean,
   tileState:               View[TargetSummaryTileState]
 ) extends ReactFnProps(TargetSummaryBody.component):
   val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
@@ -306,13 +301,9 @@ object TargetSummaryBody:
         ).withKey(s"summary-table-${props.filesToImport.get.size}")
 
 case class TargetSummaryTitle(
-  programId:             Program.Id,
-  targets:               View[TargetList],
-  selectTargetOrSummary: Option[Target.Id] => Callback,
-  selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[ProgramSummaries],
-  readonly:              Boolean,
-  tileState:             View[TargetSummaryTileState]
+  programId: Program.Id,
+  readonly:  Boolean,
+  tileState: View[TargetSummaryTileState]
 ) extends ReactFnProps(TargetSummaryTitle.component):
   val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
   val table         = tileState.zoom(TargetSummaryTileState.table)

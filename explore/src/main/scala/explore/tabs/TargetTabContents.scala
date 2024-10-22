@@ -131,7 +131,7 @@ object TargetTabContents extends TwoPanels:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)     // Two panel state
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized) // Two panel state
       .useEffectWithDepsBy((props, _, _) => props.focused): (_, _, selected) =>
         focused =>
           (focused, selected.get) match
@@ -140,9 +140,10 @@ object TargetTabContents extends TwoPanels:
             case (Focused(None, None, _), SelectedPanel.Editor) =>
               selected.set(SelectedPanel.Summary)
             case _                                              => Callback.empty
-      .useStateViewBy((props, _, _) => props.focused.target.toList) // Selected targets on table
+      .useStateViewBy((props, _, _) => List.empty[Target.Id])   // Selected targets on table
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target):
-        (_, _, _, selTargetIds) => _.foldMap(focusedTarget => selTargetIds.set(List(focusedTarget)))
+        // If a target enters edit mode, unselect the rows.
+        (_, _, _, selTargetIds) => _.foldMap(_ => selTargetIds.set(List.empty))
       .useMemoBy((props, _, _, selTargetIds) => (props.focused, selTargetIds.get)): // Selected observations (right) or targets (left)
         (_, _, _, _) =>
           (target, selTargetIds) =>
@@ -328,22 +329,10 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.get.targetObservations,
               props.programSummaries.get.calibrationObservations,
               selectObservationAndTarget(props.expandedIds),
-              selectTargetOrSummary,
               selectedTargetIds,
-              props.programSummaries,
-              props.readonly,
               _
             ),
-            (s, _) =>
-              TargetSummaryTitle(
-                props.programId,
-                props.targets.model,
-                selectTargetOrSummary,
-                selectedTargetIds,
-                props.programSummaries,
-                props.readonly,
-                s
-              )
+            (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
           )
 
           val plotData: PlotData =
