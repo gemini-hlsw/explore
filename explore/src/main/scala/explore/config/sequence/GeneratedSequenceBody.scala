@@ -61,10 +61,11 @@ object GeneratedSequenceBody:
         obs.execution.config.map: config =>
           SequenceData(
             config,
-            Map(
-              ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
-              ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
-            )
+            Map.empty
+            // (
+            //   ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
+            //   ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
+            // )
           )
 
     given Reusability[SequenceData] = Reusability.byEq
