@@ -203,13 +203,14 @@ object TargetSummaryBody:
             state = PartialTableState(
               rowSelection = targetIds2RowSelection(props.selectedTargetIds.get)
             ),
-            onRowSelectionChange = _ match
-              case Updater.Set(selection) =>
-                props.selectedTargetIds.set(rowSelection2TargetIds(selection))
-              case Updater.Mod(f)         =>
-                props.selectedTargetIds.mod: targetIds =>
-                  rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
-              >> props.focusTargetId(none), // Unselect edited target if rows are selected.
+            onRowSelectionChange = (u: Updater[RowSelection]) =>
+              (u match
+                case Updater.Set(selection) =>
+                  props.selectedTargetIds.set(rowSelection2TargetIds(selection))
+                case Updater.Mod(f)         =>
+                  props.selectedTargetIds.mod: targetIds =>
+                    rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
+              ) >> props.focusTargetId(none), // Unselect edited target if rows are selected.
             initialState = TableState(
               columnVisibility = TargetColumns.DefaultVisibility
             )
