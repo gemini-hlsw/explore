@@ -346,20 +346,6 @@ object TargetTabContents extends TwoPanels:
             (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
           )
 
-          val plotData: PlotData =
-            PlotData:
-              selectedTargetIds.get
-                .flatMap: targetId =>
-                  props.targets.get
-                    .get(targetId)
-                    .map: target =>
-                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                        target.name,
-                        ObjectTracking.fromTarget(target),
-                        props.sitesForTarget(targetId)
-                      )
-                .toMap
-
           /**
            * Render the asterism editor
            *
@@ -569,7 +555,21 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            val skyPlotTile =
+            val plotData: PlotData =
+              PlotData:
+                focusedTargetId
+                  .flatMap: targetId =>
+                    props.targets.get
+                      .get(targetId)
+                      .map: target =>
+                        ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                          target.name,
+                          ObjectTracking.fromTarget(target),
+                          props.sitesForTarget(targetId)
+                        )
+                  .toMap
+
+            val skyPlotTile: Tile[?] =
               ElevationPlotTile.elevationPlotTile(
                 props.userId,
                 plotData,
@@ -621,6 +621,20 @@ object TargetTabContents extends TwoPanels:
                   onCloneTarget4Target
                 )
           }
+
+          val plotData: PlotData =
+            PlotData:
+              selectedTargetIds.get
+                .flatMap: targetId =>
+                  props.targets.get
+                    .get(targetId)
+                    .map: target =>
+                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                        target.name,
+                        ObjectTracking.fromTarget(target),
+                        props.sitesForTarget(targetId)
+                      )
+                .toMap
 
           val skyPlotTile: Tile[?] =
             ElevationPlotTile.elevationPlotTile(
