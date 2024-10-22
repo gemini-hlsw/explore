@@ -286,7 +286,16 @@ object TargetTabContents extends TwoPanels:
               .orEmpty >>
               setPage(Focused(obsIdSet.some, targetId.some))
 
-          def focusTarget(oTargetId: Option[Target.Id]): Callback =
+          val focusedIds: Option[Either[Target.Id, ObsIdSet]] =
+            props.focused match
+              case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
+              case Focused(None, Some(targetId), _) => targetId.asLeft.some
+              case _                                => none
+
+          val focusedTargetId: Option[Target.Id] =
+            focusedIds.flatMap(_.left.toOption)
+
+          def focusTargetId(oTargetId: Option[Target.Id]): Callback =
             oTargetId.fold(
               selectedPanelView.set(SelectedPanel.Summary) *>
                 setPage(Focused.None)
@@ -301,7 +310,7 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries,
               selectedIdsOpt,
               shadowClipboard.value,
-              focusTarget,
+              focusTargetId,
               selectedTargetIds.set,
               props.programSummaries.undoableView(ProgramSummaries.targets).mod,
               copyCallback,
@@ -330,7 +339,8 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.get.calibrationObservations,
               selectObservationAndTarget(props.expandedIds),
               selectedTargetIds,
-              focusTarget,
+              focusedTargetId,
+              focusTargetId,
               _
             ),
             (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
@@ -623,16 +633,10 @@ object TargetTabContents extends TwoPanels:
               props.globalPreferences.get
             )
 
-          val optSelected: Option[Either[Target.Id, ObsIdSet]] =
-            props.focused match
-              case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
-              case Focused(None, Some(targetId), _) => targetId.asLeft.some
-              case _                                => none
-
           val rightSide = { (resize: UseResizeDetectorReturn) =>
             val observationSetTargetEditorTile
               : Option[List[Tile[?]]] = // Observations selected on tree
-              optSelected
+              focusedIds
                 .flatMap(_.toOption)
                 .flatMap: obsIds =>
                   findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
@@ -640,8 +644,7 @@ object TargetTabContents extends TwoPanels:
                       renderAsterismEditor(resize, obsIds, asterismGroup)
 
             val singleTargetEditorTile: Option[Tile[?]] = // Target selected on summary table
-              optSelected
-                .flatMap(_.left.toOption)
+              focusedTargetId
                 .map:
                   renderSiderealTargetEditor(resize, _)
                 .flatten
