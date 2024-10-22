@@ -175,7 +175,7 @@ object TargetSummaryBody:
           targets.toList
             .filterNot((id, _) => isCalibrationTarget(id))
             .map((id, target) => TargetWithId(id, target))
-      .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
+      .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
 
         def targetIds2RowSelection: List[Target.Id] => RowSelection = targetIds =>
@@ -216,6 +216,7 @@ object TargetSummaryBody:
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
+      )
       .useEffectOnMountBy((p, _, _, _, table) => p.table.set(ColumnSelectorState(table.some)))
       .useRef(none[HTMLTableVirtualizer])
       .useResizeDetector()
