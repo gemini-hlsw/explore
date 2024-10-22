@@ -13,7 +13,6 @@ import explore.events.ItcMessage
 import explore.model.BasicConfigAndItc
 import explore.model.Observation
 import explore.model.ScienceRequirements
-import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
@@ -37,24 +36,16 @@ import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
 
-import scala.collection.immutable.SortedMap
-
 case class ItcProps(
   observation:    Observation,
   selectedConfig: Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  at:             TargetList,
-  modeOverrides:  Option[InstrumentOverrides]
+  modeOverrides:  Option[InstrumentOverrides],
+  itcTargets:     Option[NonEmptyList[ItcTarget]]
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
     ScienceRequirements.spectroscopy.getOption(observation.scienceRequirements)
 
-  private val allTargets: TargetList =
-    SortedMap.from(
-      at.view.mapValues(Target.sourceProfile.modify(_.gaiaFree))
-    )
-
   private val constraints = observation.constraints
-  private val asterismIds = observation.scienceTargetIds
 
   // The remote configuration is read in a different query than the itc results
   // This will work even in the case the user has overriden some parameters
@@ -105,11 +96,6 @@ case class ItcProps(
             case _                                            => none
           GmosSouthSpectroscopyRow(grating, fpu, filter, gmosOverride)
 
-  val itcTargets: Option[NonEmptyList[ItcTarget]] =
-    asterismIds.itcTargets(allTargets).filter(_.canQueryITC).toNel
-
-  val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
-
   private val queryProps: List[Option[?]] =
     List(itcTargets, finalConfig, wavelength, instrumentRow, signalToNoise)
 
@@ -153,6 +139,6 @@ object ItcProps:
        p.observation.wavelength,
        p.observation.basicConfiguration,
        p.selectedConfig,
-       p.at,
+       p.itcTargets,
        p.modeOverrides
       )

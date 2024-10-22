@@ -9,6 +9,7 @@ import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
+import io.circe.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.given
@@ -43,6 +44,7 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
+import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.core.util.Display
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
@@ -72,6 +74,7 @@ import scala.concurrent.duration.*
 
 import scalajs.js
 import scalajs.js.JSConverters.*
+import lucuma.core.model.sequence.gmos.GmosCcdMode
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
@@ -518,14 +521,67 @@ private object SpectroscopyModesTable:
                       cw.exists: w =>
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
+                            val profiles: NonEmptyList[SourceProfile] =
+                              asterism.map(_.sourceProfile)
+
+                            val updatedRow =
+                              row.entry.instrument match {
+                                case r @ GmosNorthSpectroscopyRow(grating, fpu, _, None) =>
+                                  val (defaultXBinning, defaultYBinning) =
+                                    if (fpu.isIFU)
+                                      (GmosXBinning.One, GmosYBinning.One)
+                                    else
+                                      asterismBinning(
+                                        profiles.map(
+                                          northBinning(fpu, _, constraints.imageQuality, grating)
+                                        )
+                                      )
+
+                                  val overrides = GmosSpectroscopyOverrides(
+                                    w,
+                                    GmosCcdMode(
+                                      defaultXBinning,
+                                      defaultYBinning,
+                                      GmosAmpCount.Twelve,
+                                      GmosAmpGain.Low,
+                                      GmosAmpReadMode.Slow
+                                    ).some,
+                                    GmosRoi.FullFrame.some
+                                  )
+                                  println(s"overrides: $overrides")
+                                  r.copy(modeOverrides = overrides.some)
+                                case r @ GmosSouthSpectroscopyRow(grating, fpu, _, None) =>
+                                  val (defaultXBinning, defaultYBinning) =
+                                    if (fpu.isIFU)
+                                      (GmosXBinning.One, GmosYBinning.One)
+                                    else
+                                      asterismBinning(
+                                        profiles.map(
+                                          southBinning(fpu, _, constraints.imageQuality, grating)
+                                        )
+                                      )
+                                  val overrides                          = GmosSpectroscopyOverrides(
+                                    w,
+                                    GmosCcdMode(
+                                      defaultXBinning,
+                                      defaultYBinning,
+                                      GmosAmpCount.Twelve,
+                                      GmosAmpGain.Low,
+                                      GmosAmpReadMode.Slow
+                                    ).some,
+                                    GmosRoi.FullFrame.some
+                                  )
+                                  println(s"overrides: $overrides")
+                                  // println(r.copy(modeOverrides = overrides.some))
+                                  r.copy(modeOverrides = overrides.some)
+                                case r                                                   =>
+                                  println(s"no overrides: $r")
+                                  r
+                              }
+                            println(updatedRow)
+
                             cache.contains:
-                              ItcRequestParams(w,
-                                               sn,
-                                               snAt,
-                                               constraints,
-                                               asterism,
-                                               row.entry.instrument
-                              )
+                              ItcRequestParams(w, sn, snAt, constraints, asterism, updatedRow)
                           case _                                           => true
 
                 Option.when(modes.nonEmpty):
@@ -535,6 +591,7 @@ private object SpectroscopyModesTable:
                     request <-
                       ItcClient[IO]
                         .request:
+                          modes.foreach(println)
                           ItcMessage.Query(w, sn, constraints, asterism, modes.map(_.entry), snAt)
                         .map:
                           // Avoid rerendering on every single result, it's slow.

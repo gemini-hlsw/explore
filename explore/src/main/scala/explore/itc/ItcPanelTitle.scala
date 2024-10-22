@@ -43,7 +43,7 @@ object ItcPanelTitle:
         props => itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
       .render: props =>
         def newSelected(p: Int): Option[ItcTarget] =
-          props.itcPanelProps.targets.lift(p)
+          props.itcPanelProps.itcTargets.flatMap(_.toList.lift(p))
 
         val selectedResult: Pot[ItcGraphResult] =
           props.selectedTarget.get.toPot
@@ -51,7 +51,7 @@ object ItcPanelTitle:
               props.itcGraphResults.flatMap(_.asterismGraphs.get(t).flatMap(_.toOption).toPot)
 
         val selectedTarget = props.selectedTarget
-        val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.get.isDefined
+        val existTargets   = props.itcPanelProps.itcTargets.isDefined && selectedTarget.get.isDefined
 
         val itcTargets          = props.itcPanelProps.itcTargets.foldMap(_.toList)
         val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)

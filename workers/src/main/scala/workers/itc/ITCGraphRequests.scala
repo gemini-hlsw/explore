@@ -67,6 +67,7 @@ object ITCGraphRequests:
     def doRequest(request: ItcGraphRequestParams): F[ItcAsterismGraphResults] =
       request.mode.toItcClientMode
         .map: mode =>
+          println(s"request for mode $mode")
           ItcClient[F]
             .spectroscopyIntegrationTimeAndGraphs(
               SpectroscopyIntegrationTimeAndGraphsInput(

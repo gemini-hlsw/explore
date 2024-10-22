@@ -20,6 +20,9 @@ import lucuma.itc.client.TargetTimeAndGraphsResult
 import lucuma.itc.math.roundToSignificantFigures
 
 import scala.math.*
+import cats.data.NonEmptyList
+import lucuma.core.enums.GmosXBinning
+import lucuma.core.enums.GmosYBinning
 
 // Do not turn into enum or compositePickler will break.
 sealed trait ItcQueryProblem(val message: String) derives Eq
@@ -117,3 +120,10 @@ case class ItcAsterismGraphResults(
   asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
   brightestTarget: Option[ItcTarget]
 )
+
+// For multiple targets, we take the smallest binning for each axis.
+// https://docs.google.com/document/d/1P8_pXLRVomUSvofyVkAniOyGROcAtiJ7EMYt9wWXB0o/edit?disco=AAAA32SmtD4
+def asterismBinning(
+  bs: NonEmptyList[(GmosXBinning, GmosYBinning)]
+): (GmosXBinning, GmosYBinning) =
+  (bs.map(_._1).minimumBy(_.count), bs.map(_._2).minimumBy(_.count))

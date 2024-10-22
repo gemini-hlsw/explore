@@ -75,7 +75,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import queries.schemas.odb.ObsQueries.*
+import queries.schemas.itc.syntax.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
@@ -105,6 +105,7 @@ case class ObsTabTiles(
     programSummaries.targetObservations
   val obsExecution: Pot[Execution]                                  = programSummaries.obsExecutionPots.getPot(obsId)
   val allTargets: TargetList                                        = programSummaries.targets
+  val obsTargets                                                    = programSummaries.obsTargets.get(obsId).orEmpty
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
   val asterismTracking: Option[ObjectTracking]                      =
@@ -138,9 +139,14 @@ object ObsTabTiles:
   private def itcQueryProps(
     obs:            Observation,
     selectedConfig: Option[BasicConfigAndItc],
+    obsTargets:     AsterismIds,
     targetList:     TargetList
   ): ItcProps =
-    ItcProps(obs, selectedConfig, targetList, obs.toModeOverride(targetList))
+    ItcProps(obs,
+             selectedConfig,
+             obs.toModeOverride(targetList),
+             obsTargets.itcTargets(targetList).filter(_.canQueryITC).toNel
+    )
 
   private case class Offsets(
     science:     Option[NonEmptyList[Offset]],
@@ -177,19 +183,24 @@ object ObsTabTiles:
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
       .useStateWithReuseBy: (props, _, _, _, selectedConfig) =>
-        itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
+        println(props.obsTargets)
+        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets, props.allTargets)
       .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults
       .useAsyncEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
-        itcQueryProps(props.observation.get, selectedConfig.get, props.allTargets)
+        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets, props.allTargets)
       ): (props, ctx, _, _, _, oldItcProps, itcGraphResults) =>
         itcProps =>
           import ctx.given
 
-          oldItcProps.setStateAsync(itcProps) >>
+          IO.println(s"Reqquesting ITC graphs for ${itcProps.itcTargets}") *>
+            oldItcProps.setStateAsync(itcProps) >>
             itcGraphResults.setStateAsync(Pot.pending) >>
             itcProps.requestGraphs.attemptPot
               .flatMap: result =>
-                itcGraphResults.setStateAsync(result)
+                IO.println(
+                  s"result ${result.toOption.map(_._1.values.map(_.toOption.map(_.itcExposureTime)))}"
+                ) *>
+                  itcGraphResults.setStateAsync(result)
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>

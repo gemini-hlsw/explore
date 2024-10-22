@@ -13,6 +13,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.syntax.all.*
 import explore.modes.GmosSpectroscopyOverrides
 import explore.modes.InstrumentOverrides
+import explore.model.itc.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
@@ -86,13 +87,6 @@ case class Observation(
         none
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
-
-  // For multiple targets, we take the smallest binning for each axis.
-  // https://docs.google.com/document/d/1P8_pXLRVomUSvofyVkAniOyGROcAtiJ7EMYt9wWXB0o/edit?disco=AAAA32SmtD4
-  private def asterismBinning(
-    bs: NonEmptyList[(GmosXBinning, GmosYBinning)]
-  ): (GmosXBinning, GmosYBinning) =
-    (bs.map(_._1).minimumBy(_.count), bs.map(_._2).minimumBy(_.count))
 
   private def profiles(targets: TargetList): Option[NonEmptyList[SourceProfile]] =
     NonEmptyList.fromList:

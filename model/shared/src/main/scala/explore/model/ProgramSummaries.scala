@@ -66,6 +66,11 @@ case class ProgramSummaries(
       .mapValues(obsIds => SortedSet.from(obsIds))
       .toMap
 
+  lazy val obsTargets: Map[Observation.Id, AsterismIds] =
+    observations.toList
+      .map(obs => obs.id -> obs.scienceTargetIds)
+      .toMap
+
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     observations.toList
       .flatMap(obs => obs.attachmentIds.map(_ -> obs.id))

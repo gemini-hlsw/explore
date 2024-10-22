@@ -55,7 +55,7 @@ sealed trait InstrumentRow derives Eq {
   type Override
   def modeOverrides: Option[Override] = None
 
-  override def toString(): String = s"Mode: ${instrument.shortName}, $grating, $filter, $fpu"
+  // override def toString(): String = s"Mode KKK: ${instrument.shortName}, $grating, $filter, $fpu"
 }
 
 sealed trait InstrumentOverrides derives Eq
@@ -75,9 +75,11 @@ case class GmosNorthSpectroscopyRow(
   type Filter   = Option[GmosNorthFilter]
   type FPU      = GmosNorthFpu
   type Override = GmosSpectroscopyOverrides
-  val instrument = Instrument.GmosNorth
-  val site       = Site.GN
-  val hasFilter  = filter.isDefined
+  val instrument                  = Instrument.GmosNorth
+  val site                        = Site.GN
+  val hasFilter                   = filter.isDefined
+  override def toString(): String =
+    s"Mode GN: ${instrument.shortName}, $grating, $filter, $fpu, OVER: $modeOverrides"
 }
 
 case class GmosSouthSpectroscopyRow(
@@ -90,9 +92,11 @@ case class GmosSouthSpectroscopyRow(
   type Filter   = Option[GmosSouthFilter]
   type FPU      = GmosSouthFpu
   type Override = GmosSpectroscopyOverrides
-  val instrument = Instrument.GmosSouth
-  val site       = Site.GS
-  val hasFilter  = filter.isDefined
+  val instrument                  = Instrument.GmosSouth
+  val site                        = Site.GS
+  val hasFilter                   = filter.isDefined
+  override def toString(): String =
+    s"Mode GS: ${instrument.shortName}, $grating, $filter, $fpu, OVER: $modeOverrides"
 }
 
 case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter) extends InstrumentRow {
