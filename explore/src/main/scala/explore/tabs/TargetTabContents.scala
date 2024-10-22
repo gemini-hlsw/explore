@@ -292,8 +292,13 @@ object TargetTabContents extends TwoPanels:
               case Focused(None, Some(targetId), _) => targetId.asLeft.some
               case _                                => none
 
-          val focusedTargetId: Option[Target.Id] =
+          val focusedSummaryTargetId: Option[Target.Id] =
             focusedIds.flatMap(_.left.toOption)
+
+          val focusedAsterismTargetId: Option[Target.Id] =
+            props.focused match
+              case Focused(Some(_), Some(targetId), _) => targetId.some
+              case _                                   => none
 
           def focusTargetId(oTargetId: Option[Target.Id]): Callback =
             oTargetId.fold(
@@ -339,12 +344,28 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.get.calibrationObservations,
               selectObservationAndTarget(props.expandedIds),
               selectedTargetIds,
-              focusedTargetId,
+              focusedSummaryTargetId,
               focusTargetId,
               _
             ),
             (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
           )
+
+          val plotData: PlotData =
+            PlotData:
+              focusedAsterismTargetId
+                .map(List(_))
+                .getOrElse(selectedTargetIds.get)
+                .flatMap: targetId =>
+                  props.targets.get
+                    .get(targetId)
+                    .map: target =>
+                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                        target.name,
+                        ObjectTracking.fromTarget(target),
+                        props.sitesForTarget(targetId)
+                      )
+                .toMap
 
           /**
            * Render the asterism editor
@@ -555,20 +576,6 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            val plotData: PlotData =
-              PlotData:
-                focusedTargetId
-                  .flatMap: targetId =>
-                    props.targets.get
-                      .get(targetId)
-                      .map: target =>
-                        ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                          target.name,
-                          ObjectTracking.fromTarget(target),
-                          props.sitesForTarget(targetId)
-                        )
-                  .toMap
-
             val skyPlotTile: Tile[?] =
               ElevationPlotTile.elevationPlotTile(
                 props.userId,
@@ -622,20 +629,6 @@ object TargetTabContents extends TwoPanels:
                 )
           }
 
-          val plotData: PlotData =
-            PlotData:
-              selectedTargetIds.get
-                .flatMap: targetId =>
-                  props.targets.get
-                    .get(targetId)
-                    .map: target =>
-                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                        target.name,
-                        ObjectTracking.fromTarget(target),
-                        props.sitesForTarget(targetId)
-                      )
-                .toMap
-
           val skyPlotTile: Tile[?] =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
@@ -658,7 +651,7 @@ object TargetTabContents extends TwoPanels:
                       renderAsterismEditor(resize, obsIds, asterismGroup)
 
             val singleTargetEditorTile: Option[Tile[?]] = // Target selected on summary table
-              focusedTargetId
+              focusedSummaryTargetId
                 .map:
                   renderSiderealTargetEditor(resize, _)
                 .flatten
