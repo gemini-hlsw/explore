@@ -132,13 +132,13 @@ object TargetTabContents extends TwoPanels:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized) // Two panel state
-      .useEffectWithDepsBy((props, _, _) => props.focused): (_, _, selected) =>
+      .useEffectWithDepsBy((props, _, _) => props.focused): (_, _, selectedPanel) =>
         focused =>
-          (focused, selected.get) match
-            case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
-            case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
+          (focused, selectedPanel.get) match
+            case (Focused(Some(_), _, _), _)                    => selectedPanel.set(SelectedPanel.Editor)
+            case (Focused(None, Some(_), _), _)                 => selectedPanel.set(SelectedPanel.Editor)
             case (Focused(None, None, _), SelectedPanel.Editor) =>
-              selected.set(SelectedPanel.Summary)
+              selectedPanel.set(SelectedPanel.Summary)
             case _                                              => Callback.empty
       .useStateViewBy((props, _, _) => List.empty[Target.Id])   // Selected targets on table
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target):
@@ -255,7 +255,7 @@ object TargetTabContents extends TwoPanels:
         (
           props,
           ctx,
-          selectedView,
+          selectedPanelView,
           selectedTargetIds,
           selectedIdsOpt,
           shadowClipboard,
@@ -286,9 +286,9 @@ object TargetTabContents extends TwoPanels:
               .orEmpty >>
               setPage(Focused(obsIdSet.some, targetId.some))
 
-          def selectTargetOrSummary(oTargetId: Option[Target.Id]): Callback =
+          def focusTarget(oTargetId: Option[Target.Id]): Callback =
             oTargetId.fold(
-              selectedView.set(SelectedPanel.Summary) *>
+              selectedPanelView.set(SelectedPanel.Summary) *>
                 setPage(Focused.None)
             ): targetId =>
               setPage(Focused.target(targetId))
@@ -301,7 +301,7 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries,
               selectedIdsOpt,
               shadowClipboard.value,
-              selectTargetOrSummary,
+              focusTarget,
               selectedTargetIds.set,
               props.programSummaries.undoableView(ProgramSummaries.targets).mod,
               copyCallback,
@@ -311,7 +311,7 @@ object TargetTabContents extends TwoPanels:
             )
 
           val backButton: VdomNode =
-            makeBackButton(props.programId, AppTab.Targets, selectedView, ctx)
+            makeBackButton(props.programId, AppTab.Targets, selectedPanelView, ctx)
 
           /**
            * Render the summary table.
@@ -330,6 +330,7 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.get.calibrationObservations,
               selectObservationAndTarget(props.expandedIds),
               selectedTargetIds,
+              focusTarget,
               _
             ),
             (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
@@ -511,7 +512,7 @@ object TargetTabContents extends TwoPanels:
                   val targetForPage: Option[Target.Id] =
                     if (params.areAddingTarget) params.targetId.some
                     else none // if we're deleting, let UI focus the first one in the asterism
-                  val setPage =
+                  val setPage: Callback =
                     if (params.isUndo)
                       setCurrentTarget(idsToEdit.some)(targetForPage, SetRouteVia.HistoryReplace)
                     else
@@ -638,17 +639,20 @@ object TargetTabContents extends TwoPanels:
                     .map: asterismGroup =>
                       renderAsterismEditor(resize, obsIds, asterismGroup)
 
-            val singleTargetEditorTile: Option[Tile[?]] = // Targets selected on summary table
-              Option
-                .when(selectedTargetIds.get.size === 1):
-                  renderSiderealTargetEditor(resize, selectedTargetIds.get.head)
+            val singleTargetEditorTile: Option[Tile[?]] = // Target selected on summary table
+              optSelected
+                .flatMap(_.left.toOption)
+                .map:
+                  renderSiderealTargetEditor(resize, _)
                 .flatten
 
             val selectedTargetsTiles: List[Tile[?]] =
               List(
                 renderSummary.withFullSize,
                 singleTargetEditorTile.getOrElse(dummyTargetTile),
-                skyPlotTile.getOrElse(dummyElevationTile)
+                Option // Show plot if and only if the editor is hidden.
+                  .when(singleTargetEditorTile.isEmpty)(skyPlotTile)
+                  .getOrElse(dummyElevationTile)
               )
 
             val onlySummary: Boolean =
@@ -681,7 +685,7 @@ object TargetTabContents extends TwoPanels:
               FocusedStatus(AppTab.Targets, props.programId, props.focused)
             else EmptyVdom,
             makeOneOrTwoPanels(
-              selectedView,
+              selectedPanelView,
               targetTree,
               rightSide,
               RightSideCardinality.Multi,

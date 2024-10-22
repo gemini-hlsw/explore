@@ -62,6 +62,7 @@ case class TargetSummaryBody(
   calibrationObservations: Set[Observation.Id],
   selectObservation:       (Observation.Id, Target.Id) => Callback,
   selectedTargetIds:       View[List[Target.Id]],
+  focusTarget:             Option[Target.Id] => Callback,
   tileState:               View[TargetSummaryTileState]
 ) extends ReactFnProps(TargetSummaryBody.component):
   val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
@@ -116,7 +117,19 @@ object TargetSummaryBody:
               IdColumnId,
               _.id,
               "id",
-              _.value.toString
+              cell =>
+                <.a(
+                  ^.href := ctx.pageUrl(
+                    AppTab.Targets,
+                    props.programId,
+                    Focused.target(cell.value)
+                  ),
+                  ^.onClick ==> (e =>
+                    e.preventDefaultCB >> e.stopPropagationCB >> props.focusTarget(cell.value.some)
+                  )
+                )(
+                  cell.value.toString
+                )
             ).sortable
           ) ++
             TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
@@ -138,7 +151,7 @@ object TargetSummaryBody:
                         <.a(
                           ^.href := obsUrl(tid, obsId),
                           ^.onClick ==> (e =>
-                            e.preventDefaultCB *>
+                            e.preventDefaultCB >> e.stopPropagationCB >>
                               props.selectObservation(obsId, cell.row.original.id)
                           ),
                           obsId.show
@@ -191,10 +204,9 @@ object TargetSummaryBody:
               case Updater.Set(selection) =>
                 props.selectedTargetIds.set(rowSelection2TargetIds(selection))
               case Updater.Mod(f)         =>
-                props.selectedTargetIds.mod(targetIds =>
+                props.selectedTargetIds.mod: targetIds =>
                   rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
-                )
-            ,
+              >> props.focusTarget(none),
             initialState = TableState(
               columnVisibility = TargetColumns.DefaultVisibility
             )
@@ -203,39 +215,38 @@ object TargetSummaryBody:
         )
       .useEffectOnMountBy((p, _, _, _, table) => p.table.set(ColumnSelectorState(table.some)))
       // Copy the selection upstream
-      .useEffectWithDepsBy((_, _, _, _, table) =>
-        table.getSelectedRowModel().rows.toList.map(_.original.id)
-      ): (props, ctx, _, _, _) =>
-        ids =>
-          props.selectedTargetIds.set(ids) >>
-            ids.headOption
-              .filter(_ => ids.length === 1) // Only if there's just 1 target selected
-              .map(targetId =>
-                ctx.pushPage(AppTab.Targets, props.programId, Focused.target(targetId))
-              )
-              .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
+      // .useEffectWithDepsBy((_, _, _, _, table) =>
+      //   table.getSelectedRowModel().rows.toList.map(_.original.id)
+      // ): (props, ctx, _, _, _) =>
+      //   ids =>
+      //     props.selectedTargetIds.set(ids) >>
+      //       ids.headOption
+      //         .filter(_ => ids.length === 1) // Only if there's just 1 target selected
+      //         .map: targetId =>
+      //           ctx.pushPage(AppTab.Targets, props.programId, Focused.target(targetId))
+      //         .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
       .useRef(none[HTMLTableVirtualizer])
       .useResizeDetector()
-      .useEffectWithDepsBy((props, _, _, _, _, _, resizer) =>
-        (props.selectedTargetIds.get.headOption, resizer)
-      ): (_, _, _, _, table, virtualizerRef, _) =>
-        (selectedTargetIds, _) =>
-          selectedTargetIds.foldMap(selectedHead =>
-            virtualizerRef.get.flatMap(refOpt =>
-              val selectedIdStr = selectedHead.toString
-              Callback(
-                for
-                  virtualizer <- refOpt
-                  idx         <- table
-                                   .getRowModel()
-                                   .flatRows
-                                   .indexWhere(_.id.value === selectedIdStr)
-                                   .some
-                                   .filterNot(_ == -1)
-                yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
-              )
-            )
-          )
+      // .useEffectWithDepsBy((props, _, _, _, _, _, resizer) =>
+      //   (props.selectedTargetIds.get.headOption, resizer)
+      // ): (_, _, _, _, table, virtualizerRef, _) =>
+      //   (selectedTargetIds, _) => // TODO This is now focused, not selected!
+      //     selectedTargetIds.foldMap(selectedHead =>
+      //       virtualizerRef.get.flatMap(refOpt =>
+      //         val selectedIdStr = selectedHead.toString
+      //         Callback(
+      //           for
+      //             virtualizer <- refOpt
+      //             idx         <- table
+      //                              .getRowModel()
+      //                              .flatRows
+      //                              .indexWhere(_.id.value === selectedIdStr)
+      //                              .some
+      //                              .filterNot(_ == -1)
+      //           yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
+      //         )
+      //       )
+      //     )
       .render: (props, _, _, _, table, virtualizerRef, resizer) =>
         val selectedRows = table.getSelectedRowModel().rows.toList
 

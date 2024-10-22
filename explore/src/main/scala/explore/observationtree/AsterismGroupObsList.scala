@@ -65,7 +65,7 @@ case class AsterismGroupObsList(
   undoCtx:               UndoContext[ProgramSummaries], // TODO Targets are not modified here
   selectedIdsOpt:        Option[Either[TargetIdSet, ObsIdSet]],
   clipboardContent:      LocalClipboard,
-  selectTargetOrSummary: Option[Target.Id] => Callback,
+  focusTarget:           Option[Target.Id] => Callback,
   selectSummaryTargets:  List[Target.Id] => Callback,
   modTargets:            (TargetList => TargetList) => Callback,
   copyCallback:          Callback,
@@ -396,7 +396,7 @@ object AsterismGroupObsList:
                 .deleteTargets(
                   selectedTargetsIds,
                   props.programId,
-                  props.selectTargetOrSummary(none).toAsync,
+                  props.focusTarget(none).toAsync,
                   ToastCtx[IO].showToast(_)
                 )
                 .set(props.undoCtx)(selectedTargetsIds.map(_ => none))
@@ -544,7 +544,7 @@ object AsterismGroupObsList:
                   props.programId,
                   props.undoCtx,
                   addingTargetOrObs,
-                  props.selectTargetOrSummary
+                  props.focusTarget
                 ).runAsync
               ).compact.mini
             ),
@@ -572,7 +572,7 @@ object AsterismGroupObsList:
               severity = Button.Severity.Secondary,
               onClick =
                 ctx.pushPage(AppTab.Targets, props.programId, props.focused.withoutObsSet) *>
-                  props.selectTargetOrSummary(None) *>
+                  props.focusTarget(None) *>
                   props.selectSummaryTargets(props.focused.target.toList),
               clazz = ExploreStyles.ButtonSummary
             )(
