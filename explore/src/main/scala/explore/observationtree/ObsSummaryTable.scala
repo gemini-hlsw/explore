@@ -54,6 +54,7 @@ import lucuma.schemas.model.TargetWithId
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
+import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import queries.schemas.odb.ObsQueries.ObservationList
@@ -65,6 +66,7 @@ final case class ObsSummaryTable(
   userId:          Option[User.Id],
   programId:       Program.Id,
   observations:    UndoSetter[ObservationList],
+  selectedObsIds:  View[List[Observation.Id]],
   groups:          View[GroupTree],
   obsExecutions:   ObservationExecutionMap,
   allTargets:      TargetList,
@@ -211,7 +213,23 @@ object ObsSummaryTable:
               else "",
             enableResizing = false
           ).setSize(35.toPx),
-          obsColumn(ObservationIdColumnId, _.obs.id).setCell(_.value.map(_.toString).orEmpty),
+          obsColumn(ObservationIdColumnId, _.obs.id).setCell:
+            _.value.map: obsId =>
+              <.a(
+                ^.href := "???",
+                ^.onClick ==> { (e: ReactMouseEvent) =>
+                  // val (obsId, targetId) = row.original.value
+                  //   .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
+                  e.preventDefaultCB >> e.stopPropagationCB >> ctx.pushPage(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.singleObs(obsId)
+                  )
+                }
+              )(
+                obsId.toString
+              )
+          ,
           // TODO: ValidationCheckColumnId
           obsColumn(StatusColumnId, _.obs.status).setCell(_.value.map(_.toString).orEmpty),
           obsColumn(ScienceBandColumnId, _.obs.scienceBand).setCell(
@@ -315,6 +333,18 @@ object ObsSummaryTable:
     .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
       import ctx.given
 
+      def obsIds2RowSelection: List[Observation.Id] => RowSelection = obsIds =>
+        RowSelection:
+          obsIds.map(obsId => RowId(obsId.toString) -> true).toMap
+
+      def rowSelection2ObsIds: RowSelection => List[Observation.Id] = selection =>
+        selection.value
+          .filter(_._2)
+          .keys
+          .toList
+          .map(rowId => Observation.Id.parse(rowId.value))
+          .flattenOption
+
       TableOptionsWithStateStore(
         TableOptions(
           cols,
@@ -322,12 +352,24 @@ object ObsSummaryTable:
           enableExpanding = true,
           getSubRows = (row, _) => row.subRows,
           getRowId = (row, _, _) =>
-            RowId(
+            RowId:
               row.value.fold(
                 o => o.obsId.toString + o.targetWithId.id.toString,
                 _.obs.id.toString
               )
-            ),
+          ,
+          enableMultiRowSelection = true,
+          state = PartialTableState(
+            rowSelection = obsIds2RowSelection(props.selectedObsIds.get)
+          ),
+          onRowSelectionChange = (u: Updater[RowSelection]) =>
+            u match
+              case Updater.Set(selection) =>
+                props.selectedObsIds.set(rowSelection2ObsIds(selection))
+              case Updater.Mod(f)         =>
+                props.selectedObsIds.mod: targetIds =>
+                  rowSelection2ObsIds(f(obsIds2RowSelection(targetIds)))
+          ,
           initialState = TableState(columnVisibility = DefaultColVisibility)
         ),
         TableStore(
@@ -359,18 +401,19 @@ object ObsSummaryTable:
         headerCellMod = _ => ExploreStyles.StickyHeader,
         rowMod = row =>
           TagMod(
-            ExploreStyles.CursorPointer,
+            // ExploreStyles.CursorPointer,
             ExploreStyles.TableRowSelected.when(row.getIsSelected()),
-            ^.role := "link",
-            ^.onClick ==> { (e: ReactMouseEvent) =>
-              val (obsId, targetId) = row.original.value
-                .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
-              e.preventDefaultCB *> ctx.pushPage(
-                AppTab.Observations,
-                props.programId,
-                Focused.singleObs(obsId, targetId)
-              )
-            }
+            ^.onClick ==> row.getMultiRowSelectedHandler(table)
+            // ^.role := "link",
+            // ^.onClick ==> { (e: ReactMouseEvent) =>
+            //   val (obsId, targetId) = row.original.value
+            //     .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
+            //   e.preventDefaultCB *> ctx.pushPage(
+            //     AppTab.Observations,
+            //     props.programId,
+            //     Focused.singleObs(obsId, targetId)
+            //   )
+            // }
           ),
         emptyMessage = <.span(
           ExploreStyles.HVCenter,
