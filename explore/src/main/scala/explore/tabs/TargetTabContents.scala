@@ -29,6 +29,7 @@ import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
+import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
@@ -79,6 +80,20 @@ case class TargetTabContents(
   readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
   private val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
+
+  private val focusedIds: Option[Either[Target.Id, ObsIdSet]] =
+    focused match
+      case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
+      case Focused(None, Some(targetId), _) => targetId.asLeft.some
+      case _                                => none
+
+  val focusedSummaryTargetId: Option[Target.Id] =
+    focusedIds.flatMap(_.left.toOption)
+
+  val focusedAsterismTargetId: Option[Target.Id] =
+    focused match
+      case Focused(Some(_), Some(targetId), _) => targetId.some
+      case _                                   => none
 
   private def sitesForTarget(targetId: Target.Id): List[Site] =
     programSummaries.get.targetObservations
@@ -144,14 +159,16 @@ object TargetTabContents extends TwoPanels:
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target):
         // If a target enters edit mode, unselect the rows.
         (_, _, _, selTargetIds) => _.foldMap(_ => selTargetIds.set(List.empty))
-      .useMemoBy((props, _, _, selTargetIds) => (props.focused, selTargetIds.get)): // Selected observations (right) or targets (left)
+      .useMemoBy((props, _, _, selTargetIds) => (props.focusedIds, selTargetIds.get)): // Selected observations (right) or targets (left)
         (_, _, _, _) =>
-          (target, selTargetIds) =>
-            target.obsSet
-              .map(_.asRight)
+          (focusedIds, selTargetIds) =>
+            focusedIds
+              .map(_.leftMap(TargetIdSet.one(_)))
               .orElse:
                 TargetIdSet.fromTargetIdList(selTargetIds).map(_.asLeft)
-      .useState[LocalClipboard](LocalClipboard.Empty) // shadowClipboard (a copy as state)
+      .useState[LocalClipboard](
+        LocalClipboard.Empty
+      )                                      // shadowClipboard (a copy of the clipboard as state)
       .useEffectOnMountBy: (_, ctx, _, _, _, shadowClipboard) => // initialize shadowClipboard
         import ctx.given
         ExploreClipboard.get.flatMap(shadowClipboard.setStateAsync)
@@ -178,8 +195,8 @@ object TargetTabContents extends TwoPanels:
                   .withToast(toastText)
               .orEmpty
               .runAsync
-      .useCallbackWithDepsBy((props, _, _, selTargetIds, _, _, _) => // PASTE Action Callback
-        (selTargetIds.get, props.readonly)
+      .useCallbackWithDepsBy((props, _, _, _, selIdsOpt, _, _) => // PASTE Action Callback
+        (selIdsOpt.flatMap(_.left.toOption).map(_.toList).orEmpty, props.readonly)
       ): (props, ctx, _, _, _, _, _) =>
         (selTargetIds, readonly) =>
           import ctx.given
@@ -248,8 +265,8 @@ object TargetTabContents extends TwoPanels:
             case GoToSummary           => ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
 
           UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
-      .useStateView(AladinFullScreen.Normal)          // full screen aladin
-      .useResizeDetector()                            // Measure its size
+      .useStateView(AladinFullScreen.Normal) // full screen aladin
+      .useResizeDetector()                   // Measure its size
       .useStateView[GuideStarSelection](AgsSelection(none)) // required for aladin but not in use
       .render:
         (
@@ -285,20 +302,6 @@ object TargetTabContents extends TwoPanels:
               .map(ag => expandedIds.mod(_ + ag.obsIds))
               .orEmpty >>
               setPage(Focused(obsIdSet.some, targetId.some))
-
-          val focusedIds: Option[Either[Target.Id, ObsIdSet]] =
-            props.focused match
-              case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
-              case Focused(None, Some(targetId), _) => targetId.asLeft.some
-              case _                                => none
-
-          val focusedSummaryTargetId: Option[Target.Id] =
-            focusedIds.flatMap(_.left.toOption)
-
-          val focusedAsterismTargetId: Option[Target.Id] =
-            props.focused match
-              case Focused(Some(_), Some(targetId), _) => targetId.some
-              case _                                   => none
 
           def focusTargetId(oTargetId: Option[Target.Id]): Callback =
             oTargetId.fold(
@@ -344,7 +347,7 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.get.calibrationObservations,
               selectObservationAndTarget(props.expandedIds),
               selectedTargetIds,
-              focusedSummaryTargetId,
+              props.focusedSummaryTargetId,
               focusTargetId,
               _
             ),
@@ -353,7 +356,7 @@ object TargetTabContents extends TwoPanels:
 
           val plotData: PlotData =
             PlotData:
-              focusedAsterismTargetId
+              props.focusedAsterismTargetId
                 .map(List(_))
                 .getOrElse(selectedTargetIds.get)
                 .flatMap: targetId =>
@@ -643,7 +646,7 @@ object TargetTabContents extends TwoPanels:
           val rightSide = { (resize: UseResizeDetectorReturn) =>
             val observationSetTargetEditorTile
               : Option[List[Tile[?]]] = // Observations selected on tree
-              focusedIds
+              props.focusedIds
                 .flatMap(_.toOption)
                 .flatMap: obsIds =>
                   findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
@@ -651,7 +654,7 @@ object TargetTabContents extends TwoPanels:
                       renderAsterismEditor(resize, obsIds, asterismGroup)
 
             val singleTargetEditorTile: Option[Tile[?]] = // Target selected on summary table
-              focusedSummaryTargetId
+              props.focusedSummaryTargetId
                 .map:
                   renderSiderealTargetEditor(resize, _)
                 .flatten
