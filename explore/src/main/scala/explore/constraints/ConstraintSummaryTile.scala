@@ -9,7 +9,6 @@ import crystal.react.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConstraintGroup
@@ -41,7 +40,7 @@ case class ConstraintsSummaryTableBody(
   programId:      Program.Id,
   constraintList: ConstraintGroupList,
   expandedIds:    View[SortedSet[ObsIdSet]],
-  tileState:      View[ColumnSelectorState[ConstraintGroup, Nothing]]
+  shareTable:     Table[ConstraintGroup, Nothing] => Callback
 ) extends ReactFnProps(ConstraintsSummaryTableBody.component)
 
 object ConstraintsSummaryTableBody:
@@ -231,7 +230,7 @@ object ConstraintsSummaryTableBody:
           TableStore(props.userId, TableId.ConstraintsSummary, cols)
         )
       )
-      .useEffectOnMountBy((p, _, _, _, table) => p.tileState.set(ColumnSelectorState(table.some)))
+      .useEffectOnMountBy((props, _, _, _, table) => props.shareTable(table))
       .render { (props, _, _, _, table) =>
         <.div(
           PrimeTable(

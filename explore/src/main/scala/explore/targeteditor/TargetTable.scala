@@ -13,7 +13,6 @@ import crystal.react.hooks.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
@@ -58,9 +57,9 @@ case class TargetTable(
   onAsterismUpdate: OnAsterismUpdateParams => Callback,
   vizTime:          Option[Instant],
   fullScreen:       AladinFullScreen,
-  readOnly:         Boolean
-)(val state: View[ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta]])
-    extends ReactFnProps(TargetTable.component)
+  readOnly:         Boolean,
+  shareTable:       Table[SiderealTargetWithId, TargetTable.TableMeta] => Callback
+) extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
   private type Props = TargetTable
@@ -166,7 +165,7 @@ object TargetTable extends AsterismModifier:
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
-      .useEffectOnMountBy((p, _, _, _, _, table) => p.state.set(ColumnSelectorState(table.some)))
+      .useEffectOnMountBy((props, _, _, _, _, table) => props.shareTable(table))
       .useStateView(AreAdding(false))
       .render: (props, ctx, _, _, rows, table, adding) =>
         import ctx.given
