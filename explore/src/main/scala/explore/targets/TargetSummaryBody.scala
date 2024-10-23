@@ -38,6 +38,7 @@ import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import monocle.Focus
@@ -126,9 +127,8 @@ object TargetSummaryBody:
                     Focused.target(cell.value)
                   ),
                   ^.onClick ==> (e =>
-                    e.preventDefaultCB >> e.stopPropagationCB >> props.focusTargetId(
-                      cell.value.some
-                    )
+                    e.preventDefaultCB >> e.stopPropagationCB >>
+                      props.focusTargetId(cell.value.some)
                   )
                 )(
                   cell.value.toString
@@ -198,8 +198,8 @@ object TargetSummaryBody:
             getRowId = (row, _, _) => RowId(row.id.toString),
             enableSorting = true,
             enableColumnResizing = true,
-            enableMultiRowSelection = true,
             columnResizeMode = ColumnResizeMode.OnChange,
+            enableMultiRowSelection = true,
             state = PartialTableState(
               rowSelection = targetIds2RowSelection(props.selectedTargetIds.get)
             ),
@@ -238,8 +238,6 @@ object TargetSummaryBody:
                                      .filterNot(_ == -1)
                   yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
       .render: (props, _, _, _, table, virtualizerRef, resizer) =>
-        val selectedRows = table.getSelectedRowModel().rows.toList
-
         PrimeAutoHeightVirtualizedTable(
           table,
           _ => 32.toPx,
@@ -257,45 +255,7 @@ object TargetSummaryBody:
               ExploreStyles.TableRowSelected.when_(
                 row.getIsSelected() || props.focusedTargetId.exists(_.toString === row.id.value)
               ),
-              ^.onClick ==> { (e: ReactMouseEvent) =>
-                val isShiftPressed   = e.shiftKey
-                val isCmdCtrlPressed = e.metaKey || e.ctrlKey
-
-                // If cmd is pressed add to the selection
-                table.toggleAllRowsSelected(false).unless(isCmdCtrlPressed) *> {
-                  if (isShiftPressed && selectedRows.nonEmpty) {
-                    // If shift is pressed extend
-                    val allRows        =
-                      table.getRowModel().rows.toList.zipWithIndex
-                    val currentId      = row.id
-                    // selectedRow is not empty, these won't fail
-                    val firstId        = selectedRows.head.id
-                    val lastId         = selectedRows.last.id
-                    val indexOfCurrent = allRows.indexWhere(_._1.id == currentId)
-                    val indexOfFirst   = allRows.indexWhere(_._1.id == firstId)
-                    val indexOfLast    = allRows.indexWhere(_._1.id == lastId)
-                    if (indexOfCurrent =!= -1 && indexOfFirst =!= -1 && indexOfLast =!= -1) {
-                      if (indexOfCurrent < indexOfFirst) {
-                        table.setRowSelection(
-                          RowSelection(
-                            (firstId -> true) :: allRows
-                              .slice(indexOfCurrent, indexOfFirst)
-                              .map { case (row, _) => row.id -> true }*
-                          )
-                        )
-                      } else {
-                        table.setRowSelection(
-                          RowSelection(
-                            (currentId -> true) :: allRows
-                              .slice(indexOfLast, indexOfCurrent)
-                              .map { case (row, _) => row.id -> true }*
-                          )
-                        )
-                      }
-                    } else Callback.empty
-                  } else row.toggleSelected()
-                }
-              }
+              ^.onClick ==> row.getMultiRowSelectedHandler(table)
             ),
           cellMod = cell => columnClasses.get(cell.column.id).orEmpty,
           virtualizerRef = virtualizerRef,

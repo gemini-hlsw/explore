@@ -206,6 +206,7 @@ object ObsTabContents extends TwoPanels:
             callbacks
           )
       .useStateView(DeckShown.Shown)
+      .useStateView(List.empty[Observation.Id])
       .render:
         (
           props,
@@ -215,7 +216,8 @@ object ObsTabContents extends TwoPanels:
           shadowClipboardObs,
           copyCallback,
           pasteCallback,
-          deckShown
+          deckShown,
+          selectedObsIds
         ) =>
 
           val observationsTree: VdomNode =
@@ -269,6 +271,7 @@ object ObsTabContents extends TwoPanels:
                 props.vault.userId,
                 props.programId,
                 props.observations,
+                selectedObsIds,
                 props.groups.model,
                 props.obsExecutions,
                 props.targets.get,
