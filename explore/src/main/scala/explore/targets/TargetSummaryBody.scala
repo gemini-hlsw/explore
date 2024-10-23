@@ -255,7 +255,7 @@ object TargetSummaryBody:
               ExploreStyles.TableRowSelected.when_(
                 row.getIsSelected() || props.focusedTargetId.exists(_.toString === row.id.value)
               ),
-              ^.onClick ==> row.getMultiRowSelectedHandler(table)
+              ^.onClick ==> table.getMultiRowSelectedHandler(row.id)
             ),
           cellMod = cell => columnClasses.get(cell.column.id).orEmpty,
           virtualizerRef = virtualizerRef,

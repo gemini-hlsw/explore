@@ -411,10 +411,8 @@ object ObsSummaryTable:
             ExploreStyles.TableRowSelectedEnd.when:
               row.original.value.isLastAsterismTargetOf.exists(props.selectedObsIds.get.contains_)
             ,
-            ^.onClick ==> row.getMultiRowSelectedHandler(
-              table,
-              RowId(row.original.value.obs.id.toString)
-            )
+            ^.onClick ==> table
+              .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
           ),
         emptyMessage = <.span(
           ExploreStyles.HVCenter,
