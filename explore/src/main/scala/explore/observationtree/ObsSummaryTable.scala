@@ -243,7 +243,7 @@ object ObsSummaryTable:
           mixedColumn(
             TargetColumnId,
             r => r.obs.title,
-            r => (r.obsId, r.targetWithId)
+            r => (r.obs.id, r.targetWithId)
           )
             .setCell { c =>
               c.value match {
@@ -327,7 +327,7 @@ object ObsSummaryTable:
               // Only expand if there are multiple targets
               if (targets.sizeIs > 1)
                 targets.map: target =>
-                  Expandable(ExpandedTargetRow(obs.id, target, obs.observationTime))
+                  Expandable(ExpandedTargetRow(obs, target, obs.observationTime))
               else Nil
             )
     .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
@@ -354,7 +354,7 @@ object ObsSummaryTable:
           getRowId = (row, _, _) =>
             RowId:
               row.value.fold(
-                o => o.obsId.toString + o.targetWithId.id.toString,
+                o => o.obs.id.toString + o.targetWithId.id.toString,
                 _.obs.id.toString
               )
           ,
@@ -386,8 +386,7 @@ object ObsSummaryTable:
           .getColumn(ScienceBandColumnId.value)
           .foldMap(_.toggleVisibility(showScienceBand))
     .useResizeDetector()
-    // adding new observation
-    .useStateView(AddingObservation(false))
+    .useStateView(AddingObservation(false)) // adding new observation
     .render: (props, ctx, _, rows, table, resizer, adding) =>
       PrimeAutoHeightVirtualizedTable(
         table,
@@ -401,19 +400,21 @@ object ObsSummaryTable:
         headerCellMod = _ => ExploreStyles.StickyHeader,
         rowMod = row =>
           TagMod(
-            // ExploreStyles.CursorPointer,
-            ExploreStyles.TableRowSelected.when(row.getIsSelected()),
-            ^.onClick ==> row.getMultiRowSelectedHandler(table)
-            // ^.role := "link",
-            // ^.onClick ==> { (e: ReactMouseEvent) =>
-            //   val (obsId, targetId) = row.original.value
-            //     .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
-            //   e.preventDefaultCB *> ctx.pushPage(
-            //     AppTab.Observations,
-            //     props.programId,
-            //     Focused.singleObs(obsId, targetId)
-            //   )
-            // }
+            ExploreStyles.TableRowSelected
+              .when(row.getIsSelected() && (row.subRows.isEmpty || !row.getIsExpanded())),
+            ExploreStyles.TableRowSelectedStart
+              .when(row.getIsSelected() && row.subRows.nonEmpty && row.getIsExpanded()),
+            ExploreStyles.TableRowSelectedSpan
+              .when:
+                props.selectedObsIds.get.contains_(row.original.value.obs.id)
+            ,
+            ExploreStyles.TableRowSelectedEnd.when:
+              row.original.value.isLastAsterismTargetOf.exists(props.selectedObsIds.get.contains_)
+            ,
+            ^.onClick ==> row.getMultiRowSelectedHandler(
+              table,
+              RowId(row.original.value.obs.id.toString)
+            )
           ),
         emptyMessage = <.span(
           ExploreStyles.HVCenter,
@@ -440,8 +441,10 @@ object ObsSummaryTable:
   // 24 October 2024 - scalafix failing to parse with fewer braces
   // Helper ADT for table rows type
   enum ObsSummaryRow {
+    val obs: Observation
+
     case ExpandedTargetRow(
-      obsId:        Observation.Id,
+      obs:          Observation,
       targetWithId: TargetWithId,
       vizTime:      Option[Instant]
     ) extends ObsSummaryRow
@@ -457,6 +460,12 @@ object ObsSummaryTable:
       this match
         case r: ExpandedTargetRow => f(r)
         case r: ObsRow            => g(r)
+
+    def isLastAsterismTargetOf: Option[Observation.Id] = fold(
+      targetRow =>
+        Option.when(obs.scienceTargetIds.lastOption.contains_(targetRow.targetWithId.id))(obs.id),
+      _ => none
+    )
 
     def coordsAtVizTime: Option[Coordinates] =
       this match

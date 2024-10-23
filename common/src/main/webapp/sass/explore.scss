@@ -2160,14 +2160,8 @@ img.partner-split-flag {
     width: 100%;
   }
 
-  tr.explore-table-row-selected {
+  @mixin row-selected-tag {
     position: relative;
-    box-shadow:
-      inset 0 1px 0 0 var(--explore-selected-box-color),
-      inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
-
-    background: var(--table-selected-background) !important;
-
     td:first-child::before {
       content: '';
       position: absolute;
@@ -2180,6 +2174,47 @@ img.partner-split-flag {
       top: 0;
       transform: rotate(-90deg);
     }
+  }
+
+  @mixin row-selected-background {
+    background: var(--table-selected-background) !important;
+  }
+
+  @mixin row-selected-line-before {
+    @include row-selected-tag();
+    box-shadow:
+      inset 0 1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
+  }
+
+  @mixin row-selected-line-after {
+    box-shadow:
+      inset 0 -1px 0 0 var(--explore-selected-box-color);
+  }
+
+  @mixin row-selected-line-both {
+    @include row-selected-tag();
+    box-shadow:
+      inset 0 -1px 0 0 var(--explore-selected-box-color),
+      inset 0 1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
+  }
+
+  tr.explore-table-row-selected {
+    @include row-selected-background();
+    @include row-selected-line-both();
+  }
+
+  tr.explore-table-row-selected-start {
+    @include row-selected-background();
+    @include row-selected-line-before();
+  }
+
+  tr.explore-table-row-selected-span {
+    @include row-selected-background();
+  }
+
+  tr.explore-table-row-selected-end {
+    @include row-selected-background();
+    @include row-selected-line-after();
   }
 
   .selected-row-ribbon {
