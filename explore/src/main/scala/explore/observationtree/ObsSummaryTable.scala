@@ -14,7 +14,6 @@ import crystal.react.syntax.pot.given
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism

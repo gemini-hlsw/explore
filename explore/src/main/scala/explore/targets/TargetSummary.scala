@@ -10,7 +10,6 @@ import crystal.react.*
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
-import explore.components.ColumnSelectorState
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -48,7 +47,7 @@ import scala.collection.immutable.SortedSet
 
 case class TargetSummaryTileState(
   filesToImport: List[DOMFile],
-  table:         ColumnSelectorState[TargetWithId, Nothing]
+  table:         Option[Table[TargetWithId, Nothing]]
 )
 
 object TargetSummaryTileState:
@@ -218,7 +217,7 @@ object TargetSummaryBody:
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
       )
-      .useEffectOnMountBy((p, _, _, _, table) => p.table.set(ColumnSelectorState(table.some)))
+      .useEffectOnMountBy((props, _, _, _, table) => props.table.set(table.some))
       .useRef(none[HTMLTableVirtualizer])
       .useResizeDetector()
       .useEffectWithDepsBy((props, _, _, _, _, _, resizer) => (props.focusedTargetId, resizer)):
@@ -279,7 +278,7 @@ object TargetSummaryTitle:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .render: (props, ctx) =>
-        props.table.get.table.map: table =>
+        props.table.get.map: table =>
           def onTextChange(e: ReactEventFromInput): Callback =
             val files = e.target.files.toList
             // set value to null so we can reuse the import button

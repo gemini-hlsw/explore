@@ -3,7 +3,6 @@
 
 package explore.components
 
-import crystal.react.View
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -12,13 +11,9 @@ import lucuma.react.table.ColumnId
 import lucuma.react.table.Table
 import lucuma.ui.table.ColumnSelector
 
-case class ColumnSelectorState[A, B](
-  table: Option[Table[A, B]] = None
-)
-
-case class ColumnSelectorInTitle[A, B](
+case class ColumnSelectorInTitle[T, TM](
   columnNames: ColumnId => Option[String],
-  state:       View[ColumnSelectorState[A, B]]
+  table:       Option[Table[T, TM]]
 ) extends ReactFnProps(ColumnSelectorInTitle.component)
 
 object ColumnSelectorInTitle:
@@ -29,9 +24,8 @@ object ColumnSelectorInTitle:
       React.Fragment(
         <.span, // Push column selector to right
         <.span(ExploreStyles.TitleSelectColumns)(
-          props.state.get.table.map(
+          props.table.map:
             ColumnSelector(_, props.columnNames, ExploreStyles.SelectColumns)
-          )
         )
       )
 
