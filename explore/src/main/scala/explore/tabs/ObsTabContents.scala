@@ -56,6 +56,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import lucuma.react.table.Table
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -262,12 +263,12 @@ object ObsTabContents extends TwoPanels:
             Tile(
               "observations".refined,
               "Observations Summary",
-              ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
+              none[Table[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]],
               backButton.some,
               canMinimize = false,
               canMaximize = false
             )(
-              ObsSummaryTable(
+              ObsSummaryTable.Body(
                 props.vault.userId,
                 props.programId,
                 props.observations,
@@ -278,7 +279,21 @@ object ObsTabContents extends TwoPanels:
                 props.programSummaries.get.allocatedScienceBands.size > 1,
                 _
               ),
-              (s, _) => ColumnSelectorInTitle(ObsSummaryTable.selectableColumnNames.get, s)
+              (s, _) =>
+                // Button(
+                //     size = Button.Size.Small,
+                //     icon = Icons.CheckDouble,
+                //     label = "All",
+                //     onClick = table.toggleAllRowsSelected(true)
+                //   ).compact,
+                //   Button(
+                //     size = Button.Size.Small,
+                //     icon = Icons.SquareXMark,
+                //     label = "None",
+                //     onClick = table.toggleAllRowsSelected(false)
+                //   ).compact
+
+                ObsSummaryTable.Title(s.get)
               // TODO: asterism elevation view
             )
 

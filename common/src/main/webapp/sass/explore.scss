@@ -2188,7 +2188,7 @@ img.partner-split-flag {
 
   @mixin row-selected-line-after {
     box-shadow:
-      inset 0 -1px 0 0 var(--explore-selected-box-color);
+      inset 0 -1px 0 0 var(--explore-selected-box-color) !important; // Important used to override hover.
   }
 
   @mixin row-selected-line-both {
