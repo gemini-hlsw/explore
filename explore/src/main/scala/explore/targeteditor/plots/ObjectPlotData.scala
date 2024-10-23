@@ -5,7 +5,6 @@ package explore.targeteditor.plots
 
 import cats.Eq
 import cats.Order
-import cats.data.NonEmptyMap
 import cats.derived.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
@@ -126,9 +125,7 @@ object ObjectPlotData:
       val moonIllum                      = midOfNightResult.lunarIlluminatedFraction.toDouble
       MoonData(moonPhase, moonIllum)
 
-object PlotData extends NewType[NonEmptyMap[ObjectPlotData.Id, ObjectPlotData]]:
+object PlotData extends NewType[Map[ObjectPlotData.Id, ObjectPlotData]]:
   given Reusability[PlotData] =
-    Reusability.by[Type, Map[ObjectPlotData.Id, ObjectPlotData]](
-      _.value.toSortedMap.unsorted
-    )(using Reusability.map)
+    Reusability.by[Type, Map[ObjectPlotData.Id, ObjectPlotData]](_.value)(using Reusability.map)
 type PlotData = PlotData.Type

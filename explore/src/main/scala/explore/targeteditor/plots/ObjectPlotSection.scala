@@ -66,12 +66,12 @@ object ObjectPlotSection:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // Plot options, will be read from the user preferences
-      .useStateViewBy((props, _) =>
+      .useStateViewBy: (props, _) =>
         ObjectPlotOptions
           .default(
             props.site,
             props.visualizationTime,
-            props.plotData.value.head._2.tracking
+            props.plotData.value.headOption.map(_._2.tracking)
           )
           .copy(
             range = props.globalPreferences.elevationPlotRange,
@@ -92,19 +92,16 @@ object ObjectPlotSection:
               )(SeriesType.LunarElevation)
             ).flattenOption
           )
-      )
       // If predefined site changes, switch to it.
-      .useEffectWithDepsBy((props, _, _) => props.site)((props, _, options) =>
+      .useEffectWithDepsBy((props, _, _) => props.site): (props, _, options) =>
         _.map(options.zoom(ObjectPlotOptions.site).set).orEmpty
-      )
       // If visualization time changes, switch to it.
-      .useEffectWithDepsBy((props, _, _) => props.visualizationTime)((props, _, options) =>
+      .useEffectWithDepsBy((props, _, _) => props.visualizationTime): (props, _, options) =>
         _.map(vt => options.mod(_.withDateAndSemesterOf(vt))).orEmpty
-      )
       .render: (props, ctx, elevationPlotOptions) =>
         import ctx.given
 
-        val options = elevationPlotOptions.withOnMod(opts =>
+        val options: View[ObjectPlotOptions] = elevationPlotOptions.withOnMod: opts =>
           ElevationPlotPreference
             .updatePlotPreferences[IO](
               props.userId,
@@ -117,7 +114,8 @@ object ObjectPlotSection:
               Visible(opts.visiblePlots.contains_(SeriesType.LunarElevation))
             )
             .runAsync
-        )
+
+        val opt: ObjectPlotOptions = options.get
 
         val siteView: View[Site]                              = options.zoom(ObjectPlotOptions.site)
         val rangeView: View[PlotRange]                        = options.zoom(ObjectPlotOptions.range)
@@ -128,8 +126,6 @@ object ObjectPlotSection:
           options.zoom(ObjectPlotOptions.visiblePlots)
         val showSchedulingView: View[ElevationPlotScheduling] =
           options.zoom(ObjectPlotOptions.showScheduling)
-
-        val opt: ObjectPlotOptions = options.get
 
         def windowsToIntervals(windows: List[TimingWindow]): IntervalSeq[Instant] =
           windows
@@ -168,17 +164,19 @@ object ObjectPlotSection:
                   options
                 )
               case PlotRange.Semester =>
-                val coords: CoordinatesAtVizTime =
-                  props.plotData.value.head._2.tracking
-                    .at(semesterView.get.start.atSite(siteView.get).toInstant)
-                    .getOrElse:
-                      CoordinatesAtVizTime(props.plotData.value.head._2.tracking.baseCoordinates)
+                props.plotData.value.headOption.map { case (_, data) =>
+                  val coords: CoordinatesAtVizTime =
+                    data.tracking
+                      .at(semesterView.get.start.atSite(siteView.get).toInstant)
+                      .getOrElse:
+                        CoordinatesAtVizTime(data.tracking.baseCoordinates)
 
-                SemesterPlot(
-                  options.get,
-                  coords,
-                  windowsNetExcludeIntervals
-                )
+                  SemesterPlot(
+                    options.get,
+                    coords,
+                    windowsNetExcludeIntervals
+                  )
+                }
           ),
           <.div(ExploreStyles.ElevationPlotControls)(
             SelectButtonEnumView(

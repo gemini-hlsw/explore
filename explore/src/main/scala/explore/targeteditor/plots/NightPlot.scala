@@ -143,7 +143,7 @@ object NightPlot:
             val (start, end): (Instant, Instant) = bounds
 
             val seriesData: MapView[ObjectPlotData.Id, ObjectPlotData.Points] =
-              plotData.value.toSortedMap.view.mapValues(_.pointsAtInstant(site, start, end))
+              plotData.value.view.mapValues(_.pointsAtInstant(site, start, end))
 
             val chartData: MapView[ObjectPlotData.Id, ObjectPlotData.SeriesData] =
               seriesData.mapValues(_.seriesData)
@@ -233,7 +233,7 @@ object NightPlot:
               .product(
                 chartData.toList
                   .map: (id, targetChartData) =>
-                    plotData.value(id).map(targetPlotData => (targetPlotData, targetChartData))
+                    plotData.value.get(id).map(targetPlotData => (targetPlotData, targetChartData))
                   .zipWithIndex,
                 SeriesType.values.toList
               )
@@ -428,9 +428,17 @@ object NightPlot:
                     .fold(baseSeries)(z => baseSeries.setZones(z))
                     .asInstanceOf[SeriesOptionsType]
                 .toJSArray
-      .render: (props, _, _, chartAndMoonData, chartOptions) =>
+      .useRef(none[Chart_]) // chart handler (chartOpt)
+      .useEffectWithDepsBy((props, _, _, _, _, chartOpt) =>
+        (props.plotData.value.size, chartOpt.value.void)
+      ): (_, _, _, _, _, chartOpt) =>
+        (size, _) =>
+          Callback:
+            if size === 0 then chartOpt.value.foreach(_.showLoading("No target selected"))
+            else chartOpt.value.foreach(_.hideLoading())
+      .render: (props, _, _, chartAndMoonData, chartOptions, chartOpt) =>
         React.Fragment(
-          Chart(chartOptions, allowUpdate = false),
+          Chart(chartOptions, allowUpdate = false, onCreate = c => chartOpt.set(c.some)),
           chartAndMoonData._2.map: moonData =>
             MoonPhase(moonData.moonPhase)(<.small("%1.0f%%".format(moonData.moonIllum * 100)))
         )

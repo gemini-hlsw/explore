@@ -16,11 +16,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Observation
-import explore.model.ProgramSummaries
 import explore.model.TargetList
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
-import explore.undo.UndoContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -63,10 +61,9 @@ case class TargetSummaryBody(
   targetObservations:      Map[Target.Id, SortedSet[Observation.Id]],
   calibrationObservations: Set[Observation.Id],
   selectObservation:       (Observation.Id, Target.Id) => Callback,
-  selectTargetOrSummary:   Option[Target.Id] => Callback,
   selectedTargetIds:       View[List[Target.Id]],
-  undoCtx:                 UndoContext[ProgramSummaries],
-  readonly:                Boolean,
+  focusedTargetId:         Option[Target.Id],
+  focusTargetId:           Option[Target.Id] => Callback,
   tileState:               View[TargetSummaryTileState]
 ) extends ReactFnProps(TargetSummaryBody.component):
   val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
@@ -99,7 +96,7 @@ object TargetSummaryBody:
   private val ScrollOptions =
     rawVirtual.mod
       .ScrollToOptions()
-      .setBehavior(rawVirtual.mod.ScrollBehavior.auto)
+      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
       .setAlign(rawVirtual.mod.ScrollAlignment.center)
 
   private given Reusability[Map[Target.Id, SortedSet[Observation.Id]]] = Reusability.map
@@ -121,7 +118,21 @@ object TargetSummaryBody:
               IdColumnId,
               _.id,
               "id",
-              _.value.toString
+              cell =>
+                <.a(
+                  ^.href := ctx.pageUrl(
+                    AppTab.Targets,
+                    props.programId,
+                    Focused.target(cell.value)
+                  ),
+                  ^.onClick ==> (e =>
+                    e.preventDefaultCB >> e.stopPropagationCB >> props.focusTargetId(
+                      cell.value.some
+                    )
+                  )
+                )(
+                  cell.value.toString
+                )
             ).sortable
           ) ++
             TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns ++
@@ -143,7 +154,7 @@ object TargetSummaryBody:
                         <.a(
                           ^.href := obsUrl(tid, obsId),
                           ^.onClick ==> (e =>
-                            e.preventDefaultCB *>
+                            e.preventDefaultCB >> e.stopPropagationCB >>
                               props.selectObservation(obsId, cell.row.original.id)
                           ),
                           obsId.show
@@ -164,7 +175,7 @@ object TargetSummaryBody:
           targets.toList
             .filterNot((id, _) => isCalibrationTarget(id))
             .map((id, target) => TargetWithId(id, target))
-      .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
+      .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
         import ctx.given
 
         def targetIds2RowSelection: List[Target.Id] => RowSelection = targetIds =>
@@ -192,55 +203,40 @@ object TargetSummaryBody:
             state = PartialTableState(
               rowSelection = targetIds2RowSelection(props.selectedTargetIds.get)
             ),
-            onRowSelectionChange = _ match
-              case Updater.Set(selection) =>
-                props.selectedTargetIds.set(rowSelection2TargetIds(selection))
-              case Updater.Mod(f)         =>
-                props.selectedTargetIds.mod(targetIds =>
-                  rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
-                )
-            ,
+            onRowSelectionChange = (u: Updater[RowSelection]) =>
+              (u match
+                case Updater.Set(selection) =>
+                  props.selectedTargetIds.set(rowSelection2TargetIds(selection))
+                case Updater.Mod(f)         =>
+                  props.selectedTargetIds.mod: targetIds =>
+                    rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
+              ) >> props.focusTargetId(none), // Unselect edited target if rows are selected.
             initialState = TableState(
               columnVisibility = TargetColumns.DefaultVisibility
             )
           ),
           TableStore(props.userId, TableId.TargetsSummary, cols)
         )
+      )
       .useEffectOnMountBy((p, _, _, _, table) => p.table.set(ColumnSelectorState(table.some)))
-      // Copy the selection upstream
-      .useEffectWithDepsBy((_, _, _, _, table) =>
-        table.getSelectedRowModel().rows.toList.map(_.original.id)
-      ): (props, ctx, _, _, _) =>
-        ids =>
-          props.selectedTargetIds.set(ids) >>
-            ids.headOption
-              .filter(_ => ids.length === 1) // Only if there's just 1 target selected
-              .map(targetId =>
-                ctx.pushPage(AppTab.Targets, props.programId, Focused.target(targetId))
-              )
-              .getOrElse(ctx.pushPage(AppTab.Targets, props.programId, Focused.None))
       .useRef(none[HTMLTableVirtualizer])
       .useResizeDetector()
-      .useEffectWithDepsBy((props, _, _, _, _, _, resizer) =>
-        (props.selectedTargetIds.get.headOption, resizer)
-      ): (_, _, _, _, table, virtualizerRef, _) =>
-        (selectedTargetIds, _) =>
-          selectedTargetIds.foldMap(selectedHead =>
-            virtualizerRef.get.flatMap(refOpt =>
-              val selectedIdStr = selectedHead.toString
-              Callback(
-                for
-                  virtualizer <- refOpt
-                  idx         <- table
-                                   .getRowModel()
-                                   .flatRows
-                                   .indexWhere(_.id.value === selectedIdStr)
-                                   .some
-                                   .filterNot(_ == -1)
-                yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
-              )
-            )
-          )
+      .useEffectWithDepsBy((props, _, _, _, _, _, resizer) => (props.focusedTargetId, resizer)):
+        (_, _, _, _, table, virtualizerRef, _) =>
+          (focusedTargetId, _) =>
+            focusedTargetId.foldMap: targetId =>
+              virtualizerRef.get.flatMap: refOpt =>
+                val focusedTargetIdStr: String = targetId.toString
+                Callback:
+                  for
+                    virtualizer <- refOpt
+                    idx         <- table
+                                     .getRowModel()
+                                     .flatRows
+                                     .indexWhere(_.id.value === focusedTargetIdStr)
+                                     .some
+                                     .filterNot(_ == -1)
+                  yield virtualizer.scrollToIndex(idx + 1, ScrollOptions)
       .render: (props, _, _, _, table, virtualizerRef, resizer) =>
         val selectedRows = table.getSelectedRowModel().rows.toList
 
@@ -258,7 +254,9 @@ object TargetSummaryBody:
               .orEmpty |+| ExploreStyles.StickyHeader,
           rowMod = row =>
             TagMod(
-              ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
+              ExploreStyles.TableRowSelected.when_(
+                row.getIsSelected() || props.focusedTargetId.exists(_.toString === row.id.value)
+              ),
               ^.onClick ==> { (e: ReactMouseEvent) =>
                 val isShiftPressed   = e.shiftKey
                 val isCmdCtrlPressed = e.metaKey || e.ctrlKey
@@ -306,13 +304,9 @@ object TargetSummaryBody:
         ).withKey(s"summary-table-${props.filesToImport.get.size}")
 
 case class TargetSummaryTitle(
-  programId:             Program.Id,
-  targets:               View[TargetList],
-  selectTargetOrSummary: Option[Target.Id] => Callback,
-  selectedTargetIds:     View[List[Target.Id]],
-  undoCtx:               UndoContext[ProgramSummaries],
-  readonly:              Boolean,
-  tileState:             View[TargetSummaryTileState]
+  programId: Program.Id,
+  readonly:  Boolean,
+  tileState: View[TargetSummaryTileState]
 ) extends ReactFnProps(TargetSummaryTitle.component):
   val filesToImport = tileState.zoom(TargetSummaryTileState.filesToImport)
   val table         = tileState.zoom(TargetSummaryTileState.table)

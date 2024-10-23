@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.Order.given
-import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -66,7 +65,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
-import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 
@@ -133,18 +131,19 @@ object TargetTabContents extends TwoPanels:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)     // Two panel state
-      .useEffectWithDepsBy((props, _, _) => props.focused): (_, _, selected) =>
+      .useStateView[SelectedPanel](SelectedPanel.Uninitialized) // Two panel state
+      .useEffectWithDepsBy((props, _, _) => props.focused): (_, _, selectedPanel) =>
         focused =>
-          (focused, selected.get) match
-            case (Focused(Some(_), _, _), _)                    => selected.set(SelectedPanel.Editor)
-            case (Focused(None, Some(_), _), _)                 => selected.set(SelectedPanel.Editor)
+          (focused, selectedPanel.get) match
+            case (Focused(Some(_), _, _), _)                    => selectedPanel.set(SelectedPanel.Editor)
+            case (Focused(None, Some(_), _), _)                 => selectedPanel.set(SelectedPanel.Editor)
             case (Focused(None, None, _), SelectedPanel.Editor) =>
-              selected.set(SelectedPanel.Summary)
+              selectedPanel.set(SelectedPanel.Summary)
             case _                                              => Callback.empty
-      .useStateViewBy((props, _, _) => props.focused.target.toList) // Selected targets on table
+      .useStateViewBy((props, _, _) => List.empty[Target.Id])   // Selected targets on table
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target):
-        (_, _, _, selTargetIds) => _.foldMap(focusedTarget => selTargetIds.set(List(focusedTarget)))
+        // If a target enters edit mode, unselect the rows.
+        (_, _, _, selTargetIds) => _.foldMap(_ => selTargetIds.set(List.empty))
       .useMemoBy((props, _, _, selTargetIds) => (props.focused, selTargetIds.get)): // Selected observations (right) or targets (left)
         (_, _, _, _) =>
           (target, selTargetIds) =>
@@ -256,7 +255,7 @@ object TargetTabContents extends TwoPanels:
         (
           props,
           ctx,
-          selectedView,
+          selectedPanelView,
           selectedTargetIds,
           selectedIdsOpt,
           shadowClipboard,
@@ -287,9 +286,23 @@ object TargetTabContents extends TwoPanels:
               .orEmpty >>
               setPage(Focused(obsIdSet.some, targetId.some))
 
-          def selectTargetOrSummary(oTargetId: Option[Target.Id]): Callback =
+          val focusedIds: Option[Either[Target.Id, ObsIdSet]] =
+            props.focused match
+              case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
+              case Focused(None, Some(targetId), _) => targetId.asLeft.some
+              case _                                => none
+
+          val focusedSummaryTargetId: Option[Target.Id] =
+            focusedIds.flatMap(_.left.toOption)
+
+          val focusedAsterismTargetId: Option[Target.Id] =
+            props.focused match
+              case Focused(Some(_), Some(targetId), _) => targetId.some
+              case _                                   => none
+
+          def focusTargetId(oTargetId: Option[Target.Id]): Callback =
             oTargetId.fold(
-              selectedView.set(SelectedPanel.Summary) *>
+              selectedPanelView.set(SelectedPanel.Summary) *>
                 setPage(Focused.None)
             ): targetId =>
               setPage(Focused.target(targetId))
@@ -302,7 +315,7 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries,
               selectedIdsOpt,
               shadowClipboard.value,
-              selectTargetOrSummary,
+              focusTargetId,
               selectedTargetIds.set,
               props.programSummaries.undoableView(ProgramSummaries.targets).mod,
               copyCallback,
@@ -312,7 +325,7 @@ object TargetTabContents extends TwoPanels:
             )
 
           val backButton: VdomNode =
-            makeBackButton(props.programId, AppTab.Targets, selectedView, ctx)
+            makeBackButton(props.programId, AppTab.Targets, selectedPanelView, ctx)
 
           /**
            * Render the summary table.
@@ -330,39 +343,29 @@ object TargetTabContents extends TwoPanels:
               props.programSummaries.get.targetObservations,
               props.programSummaries.get.calibrationObservations,
               selectObservationAndTarget(props.expandedIds),
-              selectTargetOrSummary,
               selectedTargetIds,
-              props.programSummaries,
-              props.readonly,
+              focusedSummaryTargetId,
+              focusTargetId,
               _
             ),
-            (s, _) =>
-              TargetSummaryTitle(
-                props.programId,
-                props.targets.model,
-                selectTargetOrSummary,
-                selectedTargetIds,
-                props.programSummaries,
-                props.readonly,
-                s
-              )
+            (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
           )
 
-          val plotData: Option[PlotData] =
-            NonEmptyMap
-              .fromMap:
-                SortedMap.from:
-                  selectedTargetIds.get
-                    .flatMap: targetId =>
-                      props.targets.get
-                        .get(targetId)
-                        .map: target =>
-                          ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                            target.name,
-                            ObjectTracking.fromTarget(target),
-                            props.sitesForTarget(targetId)
-                          )
-              .map(PlotData(_))
+          val plotData: PlotData =
+            PlotData:
+              focusedAsterismTargetId
+                .map(List(_))
+                .getOrElse(selectedTargetIds.get)
+                .flatMap: targetId =>
+                  props.targets.get
+                    .get(targetId)
+                    .map: target =>
+                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                        target.name,
+                        ObjectTracking.fromTarget(target),
+                        props.sitesForTarget(targetId)
+                      )
+                .toMap
 
           /**
            * Render the asterism editor
@@ -485,9 +488,8 @@ object TargetTabContents extends TwoPanels:
                    allOriginalGroups.toList.traverse { ids =>
                      val intersect = ids.idSet.intersect(params.obsIds.idSet)
                      if (intersect === ids.idSet.toSortedSet)
-                       props.expandedIds.mod(
-                         _ + ids
-                       ) // it is the whole group, so make sure it is open
+                       // it is the whole group, so make sure it is open
+                       props.expandedIds.mod(_ + ids)
                      else
                        // otherwise, close the original and open the subsets
                        ObsIdSet
@@ -527,7 +529,7 @@ object TargetTabContents extends TwoPanels:
                   val targetForPage: Option[Target.Id] =
                     if (params.areAddingTarget) params.targetId.some
                     else none // if we're deleting, let UI focus the first one in the asterism
-                  val setPage =
+                  val setPage: Callback =
                     if (params.isUndo)
                       setCurrentTarget(idsToEdit.some)(targetForPage, SetRouteVia.HistoryReplace)
                     else
@@ -574,19 +576,18 @@ object TargetTabContents extends TwoPanels:
                 backButton = backButton.some
               )
 
-            val skyPlotTile =
-              plotData.map:
-                ElevationPlotTile.elevationPlotTile(
-                  props.userId,
-                  _,
-                  configuration.map(_.siteFor),
-                  obsTimeView.get,
-                  none,
-                  Nil,
-                  props.globalPreferences.get
-                )
+            val skyPlotTile: Tile[?] =
+              ElevationPlotTile.elevationPlotTile(
+                props.userId,
+                plotData,
+                configuration.map(_.siteFor),
+                obsTimeView.get,
+                none,
+                Nil,
+                props.globalPreferences.get
+              )
 
-            List(asterismEditorTile) ++ skyPlotTile
+            List(asterismEditorTile, skyPlotTile)
           }
 
           // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
@@ -628,45 +629,40 @@ object TargetTabContents extends TwoPanels:
                 )
           }
 
-          val skyPlotTile: Option[Tile[?]] =
-            plotData.map:
-              ElevationPlotTile.elevationPlotTile(
-                props.userId,
-                _,
-                none,
-                none,
-                none,
-                Nil,
-                props.globalPreferences.get
-              )
-
-          val optSelected: Option[Either[Target.Id, ObsIdSet]] =
-            props.focused match
-              case Focused(Some(obsIdSet), _, _)    => obsIdSet.asRight.some
-              case Focused(None, Some(targetId), _) => targetId.asLeft.some
-              case _                                => none
+          val skyPlotTile: Tile[?] =
+            ElevationPlotTile.elevationPlotTile(
+              props.userId,
+              plotData,
+              selectedTargetIds.get.headOption.flatMap(props.sitesForTarget(_).headOption),
+              none,
+              none,
+              Nil,
+              props.globalPreferences.get
+            )
 
           val rightSide = { (resize: UseResizeDetectorReturn) =>
             val observationSetTargetEditorTile
               : Option[List[Tile[?]]] = // Observations selected on tree
-              optSelected
+              focusedIds
                 .flatMap(_.toOption)
                 .flatMap: obsIds =>
                   findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
                     .map: asterismGroup =>
                       renderAsterismEditor(resize, obsIds, asterismGroup)
 
-            val singleTargetEditorTile: Option[Tile[?]] = // Targets selected on summary table
-              Option
-                .when(selectedTargetIds.get.size === 1):
-                  renderSiderealTargetEditor(resize, selectedTargetIds.get.head)
+            val singleTargetEditorTile: Option[Tile[?]] = // Target selected on summary table
+              focusedSummaryTargetId
+                .map:
+                  renderSiderealTargetEditor(resize, _)
                 .flatten
 
             val selectedTargetsTiles: List[Tile[?]] =
               List(
                 renderSummary.withFullSize,
                 singleTargetEditorTile.getOrElse(dummyTargetTile),
-                skyPlotTile.getOrElse(dummyElevationTile)
+                Option // Show plot if and only if the editor is hidden.
+                  .when(singleTargetEditorTile.isEmpty)(skyPlotTile)
+                  .getOrElse(dummyElevationTile)
               )
 
             val onlySummary: Boolean =
@@ -699,7 +695,7 @@ object TargetTabContents extends TwoPanels:
               FocusedStatus(AppTab.Targets, props.programId, props.focused)
             else EmptyVdom,
             makeOneOrTwoPanels(
-              selectedView,
+              selectedPanelView,
               targetTree,
               rightSide,
               RightSideCardinality.Multi,

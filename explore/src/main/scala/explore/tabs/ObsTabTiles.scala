@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.data.NonEmptyList
-import cats.data.NonEmptyMap
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -382,13 +381,13 @@ object ObsTabTiles:
             val plotData: Option[PlotData] =
               props.asterismTracking.map: tracking =>
                 PlotData:
-                  NonEmptyMap.one(
-                    ObjectPlotData.Id(props.obsId.asLeft),
-                    ObjectPlotData(
-                      NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
-                      tracking,
-                      Enumerated[Site].all // In obs elevation plot, we want all solid lines
-                    )
+                  Map(
+                    ObjectPlotData.Id(props.obsId.asLeft) ->
+                      ObjectPlotData(
+                        NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
+                        tracking,
+                        Enumerated[Site].all // In obs elevation plot, we want all solid lines
+                      )
                   )
 
             val skyPlotTile =
