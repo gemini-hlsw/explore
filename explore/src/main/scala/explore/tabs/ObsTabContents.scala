@@ -107,7 +107,7 @@ object ObsTabContents extends TwoPanels:
             case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
             case _                            => Callback.empty
       .useResizeDetector() // Measure its size
-      .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
+      .useState(none[ObsIdSet])                 // shadowClipboardObs (a copy as state only if it has observations)
       .useEffectOnMountBy: (_, ctx, _, _, shadowClipboardObs) => // initialize shadowClipboard
         import ctx.given
 
@@ -116,25 +116,28 @@ object ObsTabContents extends TwoPanels:
             case LocalClipboard.CopiedObservations(idSet) =>
               shadowClipboardObs.setStateAsync(idSet.some)
             case _                                        => IO.unit
-      .useCallbackWithDepsBy((props, _, _, _, _) => props.focusedObs): // COPY Action Callback
-        (_, ctx, _, _, shadowClipboardObs) =>
-          obs =>
+      .useStateView(List.empty[Observation.Id]) // selectedObsIds
+      .localValBy: (props, _, _, _, _, selectedObsIds) =>
+        props.focusedObs.map(ObsIdSet.one(_)).orElse(ObsIdSet.fromList(selectedObsIds.get))
+      .useCallbackWithDepsBy((_, _, _, _, _, _, selectedObsIdSet) => selectedObsIdSet): // COPY Action Callback
+        (_, ctx, _, _, shadowClipboardObs, _, _) =>
+          selectedObsIdSet =>
             import ctx.given
 
-            obs
-              .map: id =>
+            selectedObsIdSet
+              .map: obsIdSet =>
                 (ExploreClipboard
-                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id))) >>
-                  shadowClipboardObs.setStateAsync(ObsIdSet.one(id).some))
-                  .withToast(s"Copied obs $id")
+                  .set(LocalClipboard.CopiedObservations(obsIdSet)) >>
+                  shadowClipboardObs.setStateAsync(obsIdSet.some))
+                  .withToast(s"Copied observation(s) ${obsIdSet.idSet.toList.mkString(", ")}")
               .orUnit
               .runAsync
-      .useCallbackWithDepsBy((props, _, _, _, _, _) => // PASTE Action Callback
+      .useCallbackWithDepsBy((props, _, _, _, _, _, _, _) => // PASTE Action Callback
         (Reusable.explicitly(props.observations)(Reusability.by(_.get)),
          props.activeGroup,
          props.readonly
         )
-      ): (props, ctx, _, _, _, _) =>
+      ): (props, ctx, _, _, _, _, _, _) =>
         (observations, activeGroup, readonly) =>
           import ctx.given
 
@@ -149,9 +152,9 @@ object ObsTabContents extends TwoPanels:
               case _                                           => IO.unit
             .runAsync
             .unless_(readonly)
-      .useGlobalHotkeysWithDepsBy((props, _, _, _, _, copyCallback, pasteCallback) =>
+      .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback, props.focusedObs, props.observationIdsWithIndices)
-      ): (props, ctx, _, _, _, _, _) =>
+      ): (props, ctx, _, _, _, _, _, _, _) =>
         (copyCallback, pasteCallback, obs, obsIdsWithIndices) =>
           val obsPos: Option[NonNegInt] =
             obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -205,7 +208,6 @@ object ObsTabContents extends TwoPanels:
             callbacks
           )
       .useStateView(DeckShown.Shown)
-      .useStateView(List.empty[Observation.Id])
       .render:
         (
           props,
@@ -213,12 +215,12 @@ object ObsTabContents extends TwoPanels:
           twoPanelState,
           resize,
           shadowClipboardObs,
+          selectedObsIds,
+          _,
           copyCallback,
           pasteCallback,
-          deckShown,
-          selectedObsIds
+          deckShown
         ) =>
-
           val observationsTree: VdomNode =
             if (deckShown.get === DeckShown.Shown) {
               ObsList(
@@ -229,6 +231,7 @@ object ObsTabContents extends TwoPanels:
                 props.focusedObs,
                 props.focusedTarget,
                 props.focusedGroup,
+                selectedObsIds.get,
                 twoPanelState.set(SelectedPanel.Summary),
                 props.groups,
                 props.systemGroups,
