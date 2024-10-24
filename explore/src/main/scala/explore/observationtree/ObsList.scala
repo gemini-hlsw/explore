@@ -262,18 +262,20 @@ object ObsList:
           }
 
         val deleteObs: Observation.Id => Callback = oid =>
-          obsExistence(
-            oid,
-            o => setObs(props.programId, o.some, ctx)
-          )
+          ObsActions
+            .obsExistence(
+              oid,
+              o => setObs(props.programId, o.some, ctx)
+            )
             .mod(props.observations)(obsListMod.delete)
             .showToastCB(s"Deleted obs ${oid.shortName}")
 
         val deleteGroup: Group.Id => Callback = gid =>
-          groupExistence(
-            gid,
-            g => setGroup(props.programId, g.some, ctx)
-          )
+          ObsActions
+            .groupExistence(
+              gid,
+              g => setGroup(props.programId, g.some, ctx)
+            )
             .mod(props.groups)(groupTreeMod.delete)
             .showToastCB(s"Deleted group ${gid.shortName}")
 
@@ -304,15 +306,18 @@ object ObsList:
                       props.obsExecutionTimes.getPot(obsId).map(_.programTimeEstimate),
                       ObsBadge.Layout.ObservationsTab,
                       selected = selected,
-                      setStatusCB = obsEditStatus(obsId)
+                      setStatusCB = ObsActions
+                        .obsEditStatus(obsId)
                         .set(props.observations)
                         .compose((_: ObsStatus).some)
                         .some,
-                      setActiveStatusCB = obsActiveStatus(obsId)
+                      setActiveStatusCB = ObsActions
+                        .obsActiveStatus(obsId)
                         .set(props.observations)
                         .compose((_: ObsActiveStatus).some)
                         .some,
-                      setSubtitleCB = obsEditSubtitle(obsId)
+                      setSubtitleCB = ObsActions
+                        .obsEditSubtitle(obsId)
                         .set(props.observations)
                         .compose((_: Option[NonEmptyString]).some)
                         .some,
@@ -330,7 +335,8 @@ object ObsList:
                         .runAsync
                         .some,
                       setScienceBandCB = (
-                        (b: ScienceBand) => obsScienceBand(obsId).set(props.observations)(b.some)
+                        (b: ScienceBand) =>
+                          ObsActions.obsScienceBand(obsId).set(props.observations)(b.some)
                       ).some,
                       allocatedScienceBands = props.allocatedScienceBands,
                       readonly = props.readonly
