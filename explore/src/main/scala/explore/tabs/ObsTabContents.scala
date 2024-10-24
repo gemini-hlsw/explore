@@ -277,21 +277,7 @@ object ObsTabContents extends TwoPanels:
                 props.programSummaries.get.allocatedScienceBands.size > 1,
                 _
               ),
-              (s, _) =>
-                // Button(
-                //     size = Button.Size.Small,
-                //     icon = Icons.CheckDouble,
-                //     label = "All",
-                //     onClick = table.toggleAllRowsSelected(true)
-                //   ).compact,
-                //   Button(
-                //     size = Button.Size.Small,
-                //     icon = Icons.SquareXMark,
-                //     label = "None",
-                //     onClick = table.toggleAllRowsSelected(false)
-                //   ).compact
-
-                ObsSummaryTable.Title(s.get)
+              (s, _) => ObsSummaryTable.Title(s.get)
               // TODO: asterism elevation view
             )
 

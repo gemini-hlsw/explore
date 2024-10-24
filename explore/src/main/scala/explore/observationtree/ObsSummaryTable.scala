@@ -14,6 +14,7 @@ import crystal.react.syntax.pot.given
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
+import explore.components.ColumnSelectorInTitle
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
@@ -493,6 +494,20 @@ object ObsSummaryTable:
   object Title:
     private type Props = Title
 
-    private val component = ScalaFnComponent[Props] { props =>
-      ???
-    }
+    private val component = ScalaFnComponent[Props]: props =>
+      props.table.map: table =>
+        React.Fragment(
+          Button(
+            size = Button.Size.Small,
+            icon = Icons.CheckDouble,
+            label = "All",
+            onClick = table.toggleAllRowsSelected(true)
+          ).compact,
+          Button(
+            size = Button.Size.Small,
+            icon = Icons.SquareXMark,
+            label = "None",
+            onClick = table.toggleAllRowsSelected(false)
+          ).compact,
+          ColumnSelectorInTitle(Body.SelectableColumnNames.get, props.table)
+        )
