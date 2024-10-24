@@ -67,9 +67,10 @@ case class ObsList(
   obsExecutionTimes:     ObservationExecutionMap,
   undoer:                Undoer,
   programId:             Program.Id,
-  focusedObs:            Option[Observation.Id],
+  focusedObs:            Option[Observation.Id], // obs explicitly selected for editing
   focusedTarget:         Option[Target.Id],
   focusedGroup:          Option[Group.Id],
+  selectedObsIds:        List[Observation.Id],   // obs list selected in table
   setSummaryPanel:       Callback,
   groups:                UndoSetter[GroupTree],
   systemGroups:          GroupTree,
@@ -81,17 +82,23 @@ case class ObsList(
   allocatedScienceBands: SortedSet[ScienceBand],
   readonly:              Boolean
 ) extends ReactFnProps(ObsList.component):
+  private val selectedObsIdSet: Option[ObsIdSet] =
+    focusedObs.map(ObsIdSet.one(_)).orElse(ObsIdSet.fromList(selectedObsIds))
+
   private val activeGroup: Option[Group.Id] = focusedGroup.orElse:
     focusedObs.flatMap(groups.get.obsGroupId)
 
-  private val copyDisabled: Boolean   = focusedObs.isEmpty
+  private val copyDisabled: Boolean   = selectedObsIdSet.isEmpty
   private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
-  private val deleteDisabled: Boolean = focusedObs.isEmpty && focusedGroup.isEmpty
+  private val deleteDisabled: Boolean = selectedObsIdSet.isEmpty && focusedGroup.isEmpty
 
-  private def observationText(obsId: Observation.Id): String = s"observation $obsId"
-  private def groupText(groupId:     Group.Id): String       = s"group $groupId"
+  private def observationsText(observations: ObsIdSet): String =
+    observations.idSet.size match
+      case 1    => s"observation ${observations.idSet.head}"
+      case more => s"$more observations"
+  private def groupText(groupId: Group.Id): String             = s"group $groupId"
 
-  private val copyText: Option[String]     = focusedObs.map(observationText)
+  private val copyText: Option[String]     = selectedObsIdSet.map(observationsText)
   private val selectedText: Option[String] =
     clipboardObsContents.map: obdIdSet =>
       obdIdSet.idSet.size match
@@ -100,7 +107,7 @@ case class ObsList(
   private val pasteText: Option[String]    =
     selectedText.map(_ + activeGroup.map(gid => s" into ${groupText(gid)}").orEmpty)
   private val deleteText: Option[String]   =
-    focusedObs.map(observationText).orElse(focusedGroup.map(groupText))
+    selectedObsIdSet.map(observationsText).orElse(focusedGroup.map(groupText))
 
 object ObsList:
   private type Props = ObsList
@@ -157,13 +164,10 @@ object ObsList:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // Saved index into the observation list
-      .useState(none[NonNegInt])
-      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)):
+      .useState(none[NonNegInt])              // optIndex: Saved index into the observation list
+      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)): // set the index of the focused obs
         (props, ctx, optIndex) =>
-          params =>
-            val (focusedObs, obsList) = params
-
+          (focusedObs, obsList) =>
             focusedObs.fold(optIndex.setState(none)): obsId =>
               // there is a focused obsId, look for it in the list
               val foundIdx = obsList.getIndex(obsId)
@@ -191,8 +195,7 @@ object ObsList:
               .filter(g => !groups.contains(g.asRight))
               .as(setGroup(props.programId, none, ctx))
               .getOrEmpty
-      // adding new observation
-      .useStateView(AddingObservation(false))
+      .useStateView(AddingObservation(false)) // adding new observation
       // treeNodes
       .useMemoBy((props, _, _, _) => (props.groups.model.reuseByValue, props.observations.get)):
         (_, _, _, _) => (groups, observations) => groups.as(groupTreeNodeIsoBuilder(observations))
