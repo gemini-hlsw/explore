@@ -135,6 +135,7 @@ object ProgramCacheController
           ProgramSummaryQueriesGQL
             .AllProgramObservations[IO]
             .query(props.programId.toWhereObservation, offset.orUnassign)(using
+              // We need this because we currently get errors for things like having no targets
               ErrorPolicy.IgnoreOnData
             ),
         _.observations.matches,
@@ -151,7 +152,7 @@ object ProgramCacheController
           ProgramSummaryQueriesGQL
             .AllProgramConfigurationRequests[IO]
             .query(props.programId, offset.orUnassign),
-        _.program.fold(List.empty)(_.configurationRequests.matches),
+        _.program.foldMap(_.configurationRequests.matches),
         _.program.fold(false)(_.configurationRequests.hasMore),
         _.id
       )

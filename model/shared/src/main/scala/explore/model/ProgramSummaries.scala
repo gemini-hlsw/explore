@@ -207,7 +207,6 @@ object ProgramSummaries:
     groupTimeRangePots:  Map[Group.Id, Pot[Option[ProgramTimeRange]]],
     configRequests:      List[ConfigurationRequest]
   ): ProgramSummaries =
-    println(s"stati: ${obsList.map(_.workflow.state)}")
     ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),

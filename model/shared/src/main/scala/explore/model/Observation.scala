@@ -183,7 +183,7 @@ case class Observation(
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
-  private val executedStates =
+  private val ExecutedStates =
     Set(ObservationWorkflowState.Ongoing, ObservationWorkflowState.Completed)
   lazy val disabledStates    =
     Enumerated[
@@ -192,8 +192,8 @@ case class Observation(
 
   inline def isCalibration: Boolean = calibrationRole.isDefined
   inline def isExecuted: Boolean    =
-    executedStates.contains(workflow.state) ||
-      workflow.validTransitions.exists(executedStates.contains)
+    ExecutedStates.contains(workflow.state) ||
+      workflow.validTransitions.exists(ExecutedStates.contains)
 
   inline def configurationApplies(config: Configuration): Boolean =
     configuration.fold(false)(config.subsumes)
