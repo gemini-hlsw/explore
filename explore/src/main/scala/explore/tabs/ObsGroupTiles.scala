@@ -72,7 +72,11 @@ object ObsGroupTiles:
 
           val editTile = Tile(
             GroupEditIds.GroupEditId.id,
-            s"${if group.get.isAnd then "AND" else "OR"} Group",
+            s"${
+                if group.get.system then group.get.name.foldMap(_.value)
+                else if group.get.isAnd then "AND"
+                else "OR"
+              } Group",
             props.backButton.some,
             tileTitleClass = ExploreStyles.GroupEditTitle
           )(

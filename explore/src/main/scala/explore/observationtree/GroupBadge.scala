@@ -59,7 +59,7 @@ object GroupBadge:
       ^.onClick ==> props.onClickCB,
       ^.href      := props.href
     )(
-      if group.isAnd then "AND" else "OR",
+      if group.system then "" else if group.isAnd then "AND" else "OR",
       group.name.map(n => <.em(n.value)),
       deleteButton,
       NonEmptyString
