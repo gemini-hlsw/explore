@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
@@ -24,9 +25,8 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ObsQueries.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import queries.schemas.odb.ObsQueries
+import queries.schemas.odb.ObsQueries.*
 
 object ObsActions:
   def obsEditStatus(
@@ -90,28 +90,6 @@ object ObsActions:
               SET = ObservationPropertiesInput(scienceBand = scienceBand.orUnassign)
             )
           .void
-    )
-
-  def obsExistence(obsId: Observation.Id, focusObs: Observation.Id => Callback)(using
-    FetchClient[IO, ObservationDB]
-  ): Action[ObservationList, Option[obsListMod.ElemWithIndex]] =
-    Action(
-      access = obsListMod.withKey(obsId)
-    )(
-      onSet = (_, elemWithIndexOpt) =>
-        elemWithIndexOpt.fold {
-          deleteObservation[IO](obsId)
-        } { case (obs, _) =>
-          // Not much to do here, the observation must be created before we get here
-          focusObs(obs.id).toAsync
-        },
-      onRestore = (_, elemWithIndexOpt) =>
-        elemWithIndexOpt.fold {
-          deleteObservation[IO](obsId)
-        } { case (obs, _) =>
-          undeleteObservation[IO](obs.id) >>
-            focusObs(obs.id).toAsync
-        }
     )
 
   def groupExistence(
@@ -189,28 +167,21 @@ object ObsActions:
         )
     )
 
-  def obsExistence2(obsIds: List[Observation.Id])(using
+  def obsExistence(obsIds: List[Observation.Id], focusObs: Observation.Id => Callback)(using
     FetchClient[IO, ObservationDB]
-  ): Action[ObservationList, Option[List[obsListMod.ElemWithIndex]]] =
-    Action(
-      getter = obsListGetter(obsIds).andThen(_.sequence),
-      setter = obsListOpt => obsListSetter(obsIds)(obsListOpt.sequence)
-    )(
+  ): Action[ObservationList, List[Option[obsListMod.ElemWithIndex]]] =
+    Action(getter = obsListGetter(obsIds), setter = obsListSetter(obsIds))(
       onSet = (_, elemWithIndexListOpt) =>
-        elemWithIndexListOpt.fold {
+        elemWithIndexListOpt.sequence.fold(
           ObsQueries.deleteObservations[IO](obsIds)
-        } { case (obs, _) =>
-          IO.unit
-        // Not much to do here, the observation must be created before we get here
-        // focusObs(obs.id).toAsync
-        },
-      // ,
-      onRestore = (_, elemWithIndexOpt) => // IO.unit
-        elemWithIndexOpt.fold {
+        )(obsList => // Not much to do here, the observation must be created before we get here
+          obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
+        ),
+      onRestore = (_, elemWithIndexOpt) =>
+        elemWithIndexOpt.sequence.fold(
           ObsQueries.deleteObservations[IO](obsIds)
-        } { case (obs, _) =>
-          ObsQueries.undeleteObservations[IO](obsIds)
-        // undeleteObservation[IO](obs.id) >>
-        //   focusObs(obs.id).toAsync
-        }
+        )(obsList =>
+          ObsQueries.undeleteObservations[IO](obsIds) >>
+            obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
+        )
     )

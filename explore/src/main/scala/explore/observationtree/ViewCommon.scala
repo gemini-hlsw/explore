@@ -112,12 +112,12 @@ trait ViewCommon {
   ): Callback =
     ObsActions
       .obsExistence(
-        obsId,
+        List(obsId),
         oid =>
           ToastCtx[IO].showToast(s"Restore deleted obs: ${obsId.show}").runAsyncAndForget *>
             afterUndo(oid)
       )
-      .mod(observations)(obsListMod.delete)
+      .mod(observations)(_ => List(none))
       .flatMap(_ => afterDelete)
       .showToastCB(s"Deleted obs: ${obsId.show}")
 

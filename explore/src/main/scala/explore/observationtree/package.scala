@@ -72,12 +72,12 @@ def cloneObs(
       .traverse(cloneObservation[IO](_, newGroupId))
       .flatMap: newObsList =>
         ObsActions
-          .obsExistence2(newObsList.map(_.id)) // , o => focusObs(programId, o.some, ctx))
-          .mod(observations):
-            obsListMod.upsert(newObsList.head, NonNegInt.MaxValue)
-            // Just place the new obs at the end of the group, which is where the server clones it.
-            // newObsList.foldLeft(identity[ObservationList]): (accum, obs) =>
-            //   accum >>> obsListMod.upsert(obs, NonNegInt.MaxValue)
+          .obsExistence(newObsList.map(_.id), o => focusObs(programId, o.some, ctx))
+          .mod(observations): obsList =>
+            obsList
+              .zip(newObsList)
+              // Just place the new obs at the end of the group, which is where the server clones it.
+              .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
           .toAsync
       .guarantee(after)
 
@@ -116,15 +116,19 @@ def insertObs(
 
   createObservation[IO](programId, parentId)
     .flatMap: (obs, groupIndex) =>
-      (ObsActions
-        .obsExistence(obs.id, o => focusObs(programId, o.some, ctx))
-        .mod(observations)(obsListMod.upsert(obs, pos)) >>
-        groupTree.mod:
-          _.inserted(
-            obs.id.asLeft,
-            Node(ServerIndexed(obs.id.asLeft, groupIndex)),
-            Index(parentId.map(_.asRight), NonNegInt.MaxValue)
-          )
+      ((ObsActions
+        .obsExistence(List(obs.id), o => focusObs(programId, o.some, ctx))
+        .mod(observations): obsList =>
+          obsList
+            .zip(List(obs))
+            // Just place the new obs at the end of the group, which is where the server clones it.
+            .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs)))
+      >> groupTree.mod:
+        _.inserted(
+          obs.id.asLeft,
+          Node(ServerIndexed(obs.id.asLeft, groupIndex)),
+          Index(parentId.map(_.asRight), NonNegInt.MaxValue)
+        )
       ).toAsync
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 

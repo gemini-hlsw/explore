@@ -264,10 +264,10 @@ object ObsList:
         val deleteObs: Observation.Id => Callback = oid =>
           ObsActions
             .obsExistence(
-              oid,
+              List(oid),
               o => focusObs(props.programId, o.some, ctx)
             )
-            .mod(props.observations)(obsListMod.delete)
+            .mod(props.observations)(_ => List(none))
             .showToastCB(s"Deleted obs ${oid.shortName}")
 
         val deleteGroup: Group.Id => Callback = gid =>
@@ -324,7 +324,7 @@ object ObsList:
                       deleteCB = deleteObs(obsId),
                       cloneCB = cloneObs(
                         props.programId,
-                        obsId,
+                        List(obsId),
                         props.groups.get.obsGroupId(obsId), // Clone to the same group
                         props.observations,
                         ctx,

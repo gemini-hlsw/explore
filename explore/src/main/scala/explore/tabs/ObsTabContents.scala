@@ -144,10 +144,12 @@ object ObsTabContents extends TwoPanels:
           ExploreClipboard.get
             .flatMap:
               case LocalClipboard.CopiedObservations(obsIdSet) =>
-                obsIdSet.idSet.toList
-                  .traverse: oid =>
-                    cloneObs(props.programId, oid, activeGroup, observations, ctx)
-                  .void
+                cloneObs(props.programId,
+                         obsIdSet.idSet.toList,
+                         activeGroup,
+                         observations,
+                         ctx
+                ).void
                   .withToast(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
               case _                                           => IO.unit
             .runAsync
