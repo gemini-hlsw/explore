@@ -36,7 +36,7 @@ case class OverviewTabContents(
   userVault:                Option[UserVault],
   obsAttachments:           View[ObsAttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  observations:             ObservationList,
+  observations:             View[ObservationList],
   layout:                   LayoutsMap,
   readonly:                 Boolean
 ) extends ReactFnProps(OverviewTabContents.component)

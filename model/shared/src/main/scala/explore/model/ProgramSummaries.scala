@@ -11,6 +11,7 @@ import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
 import lucuma.core.enums.ScienceBand
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
@@ -29,17 +30,18 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ProgramSummaries(
-  optProgramDetails:   Option[ProgramDetails],
-  targets:             TargetList,
-  observations:        ObservationList,
-  groups:              GroupTree,
-  systemGroups:        GroupTree,
-  obsAttachments:      ObsAttachmentList,
-  proposalAttachments: List[ProposalAttachment],
-  programs:            ProgramInfoList,
-  programTimesPot:     Pot[ProgramTimes],
-  obsExecutionPots:    ObservationExecutionMap,
-  groupTimeRangePots:  GroupTimeRangeMap
+  optProgramDetails:     Option[ProgramDetails],
+  targets:               TargetList,
+  observations:          ObservationList,
+  groups:                GroupTree,
+  systemGroups:          GroupTree,
+  obsAttachments:        ObsAttachmentList,
+  proposalAttachments:   List[ProposalAttachment],
+  programs:              ProgramInfoList,
+  programTimesPot:       Pot[ProgramTimes],
+  obsExecutionPots:      ObservationExecutionMap,
+  groupTimeRangePots:    GroupTimeRangeMap,
+  configurationRequests: ConfigurationRequestList
 ) derives Eq:
   lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
@@ -157,26 +159,28 @@ case class ProgramSummaries(
     copy(observations = obs, targets = ts)
 
 object ProgramSummaries:
-  val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]     =
+  val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]       =
     Focus[ProgramSummaries](_.optProgramDetails)
-  val proposal: Optional[ProgramSummaries, Option[Proposal]]                =
+  val proposal: Optional[ProgramSummaries, Option[Proposal]]                  =
     optProgramDetails.some.andThen(ProgramDetails.proposal)
-  val targets: Lens[ProgramSummaries, TargetList]                           = Focus[ProgramSummaries](_.targets)
-  val observations: Lens[ProgramSummaries, ObservationList]                 =
+  val targets: Lens[ProgramSummaries, TargetList]                             = Focus[ProgramSummaries](_.targets)
+  val observations: Lens[ProgramSummaries, ObservationList]                   =
     Focus[ProgramSummaries](_.observations)
-  val groups: Lens[ProgramSummaries, GroupTree]                             = Focus[ProgramSummaries](_.groups)
-  val systemGroups: Lens[ProgramSummaries, GroupTree]                       = Focus[ProgramSummaries](_.systemGroups)
-  val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]             =
+  val groups: Lens[ProgramSummaries, GroupTree]                               = Focus[ProgramSummaries](_.groups)
+  val systemGroups: Lens[ProgramSummaries, GroupTree]                         = Focus[ProgramSummaries](_.systemGroups)
+  val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]               =
     Focus[ProgramSummaries](_.obsAttachments)
-  val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]] =
+  val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]]   =
     Focus[ProgramSummaries](_.proposalAttachments)
-  val programs: Lens[ProgramSummaries, ProgramInfoList]                     = Focus[ProgramSummaries](_.programs)
-  val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]            =
+  val programs: Lens[ProgramSummaries, ProgramInfoList]                       = Focus[ProgramSummaries](_.programs)
+  val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]              =
     Focus[ProgramSummaries](_.programTimesPot)
-  val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]     =
+  val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]       =
     Focus[ProgramSummaries](_.obsExecutionPots)
-  val groupTimeRangePots: Lens[ProgramSummaries, GroupTimeRangeMap]         =
+  val groupTimeRangePots: Lens[ProgramSummaries, GroupTimeRangeMap]           =
     Focus[ProgramSummaries](_.groupTimeRangePots)
+  val configurationRequests: Lens[ProgramSummaries, ConfigurationRequestList] =
+    Focus[ProgramSummaries](_.configurationRequests)
 
   val programReference: Optional[ProgramSummaries, ProgramReference] =
     optProgramDetails.some.andThen(ProgramDetails.reference.some)
@@ -200,8 +204,10 @@ object ProgramSummaries:
     programs:            List[ProgramInfo],
     programTimesPot:     Pot[ProgramTimes],
     obsExecutionPots:    Map[Observation.Id, Pot[Execution]],
-    groupTimeRangePots:  Map[Group.Id, Pot[Option[ProgramTimeRange]]]
+    groupTimeRangePots:  Map[Group.Id, Pot[Option[ProgramTimeRange]]],
+    configRequests:      List[ConfigurationRequest]
   ): ProgramSummaries =
+    println(s"stati: ${obsList.map(_.workflow.state)}")
     ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
@@ -213,5 +219,6 @@ object ProgramSummaries:
       programs.toSortedMap(_.id),
       programTimesPot,
       ObservationExecutionMap(obsExecutionPots),
-      GroupTimeRangeMap(groupTimeRangePots)
+      GroupTimeRangeMap(groupTimeRangePots),
+      configRequests.toSortedMap(_.id)
     )

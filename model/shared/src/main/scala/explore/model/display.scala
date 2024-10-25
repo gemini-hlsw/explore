@@ -9,6 +9,7 @@ import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcQueryProblem
 import lucuma.core.enums.*
 import lucuma.core.enums.EducationalStatus
+import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.RoleType
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
@@ -227,6 +228,8 @@ trait DisplayImplicits:
     case ProgramUserRole.CoiRO            => "Observer"
     case ProgramUserRole.SupportPrimary   => "Principal Support"
     case ProgramUserRole.SupportSecondary => "Additional Support"
+
+  given Display[ObservationWorkflowState] = Display.byShortName(_.tag.capitalize)
 
   extension (configuration: BasicConfiguration)
     def configurationSummary: String = configuration match

@@ -1518,22 +1518,6 @@ svg.fa-triangle-exclamation.explore-error-icon {
     // because of the rotate, Y is X
     $active-status-translate-x: -0.4em;
     $active-status-translate-y: 2em;
-
-    .p-component.p-inputswitch.obs-active-status-toggle {
-      transform: rotate(270deg) scale(0.6) translateX($active-status-translate-x)
-        translateY($active-status-translate-y);
-      height: 21px;
-
-      &.p-inputswitch-checked .p-inputswitch-slider {
-        background: var(--explore-accent-color);
-      }
-    }
-
-    // if we have the active status toggle, it is transformed and leaves
-    // unused space. We want to be able to use that space.
-    &.obs-badge-has-active-status span:first-child {
-      margin-right: -$active-status-translate-y;
-    }
   }
 
   .obs-badge-extra {

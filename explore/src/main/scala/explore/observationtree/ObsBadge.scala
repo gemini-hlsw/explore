@@ -18,8 +18,7 @@ import explore.model.display.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.ObsActiveStatus
-import lucuma.core.enums.ObsStatus
+import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
@@ -29,7 +28,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.LayeredIcon
 import lucuma.react.fa.TextLayer
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.InputSwitch
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
 import lucuma.react.primereact.hooks.all.*
@@ -46,8 +44,7 @@ case class ObsBadge(
   executionTime:         Pot[Option[TimeSpan]],
   layout:                ObsBadge.Layout,
   selected:              Boolean = false,
-  setStatusCB:           Option[ObsStatus => Callback] = none,
-  setActiveStatusCB:     Option[ObsActiveStatus => Callback] = none,
+  setStateCB:            Option[ObservationWorkflowState => Callback] = none,
   setSubtitleCB:         Option[Option[NonEmptyString] => Callback] = none,
   setScienceBandCB:      Option[ScienceBand => Callback] = none,
   deleteCB:              Callback,
@@ -176,11 +173,11 @@ object ObsBadge:
             )
             .whenDefined
             .when(layout.showSubtitle),
-          renderEnumProgress(obs.status)
+          renderEnumProgress(obs.workflow.state)
         )
 
         val validationTooltip = <.div(
-          obs.validations
+          obs.workflow.validationErrors
             .toTagMod(ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_)))))
         )
         val validationIcon    = Tooltip.Fragment(content = validationTooltip)(<.span(Icons.ErrorIcon))
@@ -191,55 +188,32 @@ object ObsBadge:
               header,
               meta,
               <.div(ExploreStyles.ObsBadgeDescription)(
-                props.setActiveStatusCB.map(_ => ExploreStyles.ObsBadgeHasActiveStatus).orEmpty,
                 <.span(
                   obs.configurationSummary
                     .map(conf => <.div(conf))
                     .whenDefined
                     .when(layout.showConfiguration === Section.Detail),
                   <.div(obs.constraintsSummary).when(layout.showConstraints)
-                ),
-                props.setActiveStatusCB.map(setActiveStatus =>
-                  <.span(
-                    InputSwitch(
-                      checked = obs.activeStatus.toBoolean,
-                      onChange = _ =>
-                        setActiveStatus(
-                          ObsActiveStatus.FromBoolean.get(!obs.activeStatus.toBoolean)
-                        ),
-                      clazz = ExploreStyles.ObsActiveStatusToggle,
-                      tooltip = obs.activeStatus match
-                        case ObsActiveStatus.Active   => "Observation is active"
-                        case ObsActiveStatus.Inactive => "Observation is not active"
-                      ,
-                      tooltipOptions = TooltipOptions(position = Tooltip.Position.Left),
-                      disabled = props.isDisabled
-                    )
-                  )(
-                    // don't select the observation when changing the active status
-                    ^.onClick ==> { e =>
-                      (e.preventDefaultCB >> e.stopPropagationCB).unless_(props.isDisabled)
-                    }
-                  )
                 )
               ),
               <.div(ExploreStyles.ObsBadgeExtra)(
-                props.setStatusCB.map(setStatus =>
+                props.setStateCB.map(setStatus =>
                   <.span(
                     ExploreStyles.ObsStatusSelectWrapper,
                     EnumDropdownView(
                       id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
-                      value = View[ObsStatus](
-                        obs.status,
+                      value = View[ObservationWorkflowState](
+                        obs.workflow.state,
                         (f, cb) =>
-                          val oldValue = obs.status
-                          val newValue = f(obs.status)
+                          val oldValue = obs.workflow.state
+                          val newValue = f(obs.workflow.state)
                           setStatus(newValue) >> cb(oldValue, newValue)
                       ),
                       size = PlSize.Mini,
                       clazz = ExploreStyles.ObsStatusSelect,
                       panelClass = ExploreStyles.ObsStatusSelectPanel,
-                      disabled = props.isDisabled
+                      disabled = props.isDisabled,
+                      disabledItems = obs.disabledStates
                     )
                   )(
                     // don't select the observation when changing the status
@@ -247,7 +221,7 @@ object ObsBadge:
                   )
                 ),
                 props.executionTime.orSpinner(_.map(TimeSpanView(_))),
-                validationIcon.unless(obs.validations.isEmpty)
+                validationIcon.unless(obs.workflow.validationErrors.isEmpty)
               )
             )
           ),

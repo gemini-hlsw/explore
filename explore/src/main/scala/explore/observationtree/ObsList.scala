@@ -36,8 +36,7 @@ import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.ObsActiveStatus
-import lucuma.core.enums.ObsStatus
+import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -315,15 +314,10 @@ object ObsList:
                       props.obsExecutionTimes.getPot(obsId).map(_.programTimeEstimate),
                       ObsBadge.Layout.ObservationsTab,
                       selected = selected,
-                      setStatusCB = ObsActions
-                        .obsEditStatus(obsId)
+                      setStateCB = ObsActions
+                        .obsEditState(obsId)
                         .set(props.observations)
-                        .compose((_: ObsStatus).some)
-                        .some,
-                      setActiveStatusCB = ObsActions
-                        .obsActiveStatus(obsId)
-                        .set(props.observations)
-                        .compose((_: ObsActiveStatus).some)
+                        .compose((_: ObservationWorkflowState).some)
                         .some,
                       setSubtitleCB = ObsActions
                         .obsEditSubtitle(obsId)

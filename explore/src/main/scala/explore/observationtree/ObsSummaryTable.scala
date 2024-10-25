@@ -89,7 +89,7 @@ object ObsSummaryTable:
     private val GroupsColumnId          = ColumnId("groups")
     private val ObservationIdColumnId   = ColumnId("observation_id")
     private val ValidationCheckColumnId = ColumnId("validation_check")
-    private val StatusColumnId          = ColumnId("status")
+    private val StateColumnId           = ColumnId("state")
     private val ScienceBandColumnId     = ColumnId("science_band")
     private val CompletionColumnId      = ColumnId("completion")
     private val ExpanderColumnId        = ColumnId("expander")
@@ -112,7 +112,7 @@ object ObsSummaryTable:
       GroupsColumnId          -> "Groups",
       ObservationIdColumnId   -> "Observation Id",
       ValidationCheckColumnId -> " ",
-      StatusColumnId          -> "Status",
+      StateColumnId           -> "State",
       ScienceBandColumnId     -> "Science Band",
       CompletionColumnId      -> "Completion",
       ExpanderColumnId        -> " ",
@@ -233,7 +233,7 @@ object ObsSummaryTable:
                 )
             ,
             // TODO: ValidationCheckColumnId
-            obsColumn(StatusColumnId, _.obs.status).setCell(_.value.map(_.toString).orEmpty),
+            obsColumn(StateColumnId, _.obs.workflow.state).setCell(_.value.map(_.toString).orEmpty),
             obsColumn(ScienceBandColumnId, _.obs.scienceBand).setCell(
               _.value.flatten.fold("Not set")(_.shortName)
             ),

@@ -60,7 +60,7 @@ object Routing:
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.model.zoom(ProgramSummaries.obsAttachments),
         programSummaries.model.get.obsAttachmentAssignments,
-        programSummaries.get.observations,
+        programSummaries.model.zoom(ProgramSummaries.observations),
         userPreferences(model.rootModel).overviewTabLayout,
         programSummaries.get.proposalIsSubmitted
       )

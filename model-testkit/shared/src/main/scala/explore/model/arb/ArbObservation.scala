@@ -9,19 +9,21 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import lucuma.core.arb.ArbTime
-import lucuma.core.enums.ObsActiveStatus
-import lucuma.core.enums.ObsStatus
 import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.given
+import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
+import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.arb.ArbConfiguration.given
 import lucuma.core.model.arb.ArbConstraintSet.given
 import lucuma.core.model.arb.ArbObservationValidation.given
+import lucuma.core.model.arb.ArbObservationWorkflow.given
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
 import lucuma.core.model.arb.ArbTimingWindow.given
 import lucuma.core.util.TimeSpan
@@ -49,8 +51,6 @@ trait ArbObservation:
         id                  <- arbitrary[Observation.Id]
         title               <- arbitrary[String]
         subtitle            <- arbitrary[Option[NonEmptyString]]
-        status              <- arbitrary[ObsStatus]
-        activeStatus        <- arbitrary[ObsActiveStatus]
         scienceTargetIds    <- arbitrary[Set[Target.Id]]
         selectedGSName      <- arbitrary[Option[NonEmptyString]]
         constraints         <- arbitrary[ConstraintSet]
@@ -66,12 +66,12 @@ trait ArbObservation:
         observerNotes       <- arbitrary[Option[NonEmptyString]]
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
         scienceBand         <- arbitrary[Option[ScienceBand]]
+        configuration       <- arbitrary[Option[Configuration]]
+        workflow            <- arbitrary[ObservationWorkflow]
       yield Observation(
         id,
         title,
         subtitle,
-        status,
-        activeStatus,
         SortedSet.from(scienceTargetIds),
         selectedGSName,
         constraints,
@@ -83,10 +83,11 @@ trait ArbObservation:
         vizDuration,
         posAngleConstraint,
         wavelength,
-        validations,
         observerNotes,
         calibrationRole,
-        scienceBand
+        scienceBand,
+        configuration,
+        workflow
       )
     )
 
@@ -95,8 +96,6 @@ trait ArbObservation:
       (Observation.Id,
        String,
        Option[String],
-       ObsStatus,
-       ObsActiveStatus,
        List[Target.Id],
        Option[String],
        ConstraintSet,
@@ -107,18 +106,17 @@ trait ArbObservation:
        Option[TimeSpan],
        PosAngleConstraint,
        Option[Wavelength],
-       List[ObservationValidation],
        Option[String],
        Option[CalibrationRole],
-       Option[ScienceBand]
+       Option[ScienceBand],
+       Option[Configuration],
+       ObservationWorkflow
       )
     ]
       .contramap(o =>
         (o.id,
          o.title,
          o.subtitle.map(_.value),
-         o.status,
-         o.activeStatus,
          o.scienceTargetIds.toList,
          o.selectedGSName.map(_.value),
          o.constraints,
@@ -129,10 +127,11 @@ trait ArbObservation:
          o.observationDuration,
          o.posAngleConstraint,
          o.wavelength,
-         o.validations,
          o.observerNotes.map(_.value),
          o.calibrationRole,
-         o.scienceBand
+         o.scienceBand,
+         o.configuration,
+         o.workflow
         )
       )
 
