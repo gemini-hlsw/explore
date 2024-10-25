@@ -21,21 +21,21 @@ case class ExecutionSequence(
   possibleFuture: List[AtomOffset]
 ) derives Decoder
 
-case class ExecutionOffsets(science: ExecutionSequence, acquisition: ExecutionSequence):
+case class ExecutionOffsets(science: ExecutionSequence, acquisition: Option[ExecutionSequence]):
   def allScienceOffsets: List[Offset] =
     science.nextAtom.steps.flatMap(_.stepConfig.offset) ++
       science.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset))
 
   def allAcquisitionOffsets: List[Offset] =
-    acquisition.nextAtom.steps.flatMap(_.stepConfig.offset) ++
-      acquisition.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset))
+    acquisition.foldMap(_.nextAtom.steps.flatMap(_.stepConfig.offset)) ++
+      acquisition.foldMap(_.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset)))
 
 object ExecutionOffsets:
-  private type OffsetTuple = (ExecutionSequence, ExecutionSequence)
+  private type OffsetTuple = (ExecutionSequence, Option[ExecutionSequence])
   given Decoder[OffsetTuple] = Decoder.instance: c =>
     for
       science     <- c.downField("science").as[ExecutionSequence]
-      acquisition <- c.downField("acquisition").as[ExecutionSequence]
+      acquisition <- c.downField("acquisition").as[Option[ExecutionSequence]]
     yield (science, acquisition)
 
   given Decoder[ExecutionOffsets] = Decoder.instance: c =>
