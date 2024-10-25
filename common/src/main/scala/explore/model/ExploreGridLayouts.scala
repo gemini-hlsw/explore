@@ -24,14 +24,15 @@ import scala.collection.immutable.SortedMap
 object ExploreGridLayouts:
 
   def sectionLayout: GridLayoutSection => LayoutsMap = _ match {
-    case GridLayoutSection.ProgramsLayout     => programs.defaultProgramsLayouts
-    case GridLayoutSection.ConstraintsLayout  => constraints.defaultConstraintsLayouts
-    case GridLayoutSection.SchedulingLayout   => scheduling.defaultSchedulingLayouts
-    case GridLayoutSection.TargetLayout       => targets.defaultTargetLayouts
-    case GridLayoutSection.ObservationsLayout => observations.defaultObsLayouts
-    case GridLayoutSection.OverviewLayout     => overview.defaultOverviewLayouts
-    case GridLayoutSection.ProposalLayout     => proposal.defaultProposalLayouts
-    case GridLayoutSection.GroupEditLayout    => groupEdit.defaultGroupEditLayouts
+    case GridLayoutSection.ProgramsLayout        => programs.defaultProgramsLayouts
+    case GridLayoutSection.ConstraintsLayout     => constraints.defaultConstraintsLayouts
+    case GridLayoutSection.SchedulingLayout      => scheduling.defaultSchedulingLayouts
+    case GridLayoutSection.TargetLayout          => targets.defaultTargetLayouts
+    case GridLayoutSection.ObservationsLayout    => observations.defaultObsLayouts
+    case GridLayoutSection.ObservationListLayout => observationList.defaultObsListLayouts
+    case GridLayoutSection.OverviewLayout        => overview.defaultOverviewLayouts
+    case GridLayoutSection.ProposalLayout        => proposal.defaultProposalLayouts
+    case GridLayoutSection.GroupEditLayout       => groupEdit.defaultGroupEditLayouts
   }
 
   extension (l: LayoutsMap)
@@ -268,6 +269,38 @@ object ExploreGridLayouts:
         )
       ).withMinWidth
   end observations
+
+  object observationList:
+    private lazy val SummaryHeight: NonNegInt = 6.refined
+    private lazy val SkyPlotHeight: NonNegInt = 9.refined
+
+    private lazy val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = SummaryHeight.value,
+          i = ObsSummaryTabTileIds.SummaryId.id.value
+        ),
+        LayoutItem(
+          x = 0,
+          y = SummaryHeight.value,
+          w = DefaultWidth.value,
+          h = SkyPlotHeight.value,
+          i = ObsSummaryTabTileIds.PlotId.id.value
+        )
+      )
+    )
+
+    lazy val defaultObsListLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg, layoutMedium),
+          (BreakpointName.md, layoutMedium)
+        )
+      ).withMinWidth
+  end observationList
 
   object programs:
     private lazy val DetailsHeight: NonNegInt        = 6.refined

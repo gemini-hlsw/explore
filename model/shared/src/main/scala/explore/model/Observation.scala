@@ -26,6 +26,7 @@ import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.ObservationWorkflow
@@ -50,7 +51,6 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import lucuma.core.model.ObjectTracking
 
 case class Observation(
   id:                  Observation.Id,

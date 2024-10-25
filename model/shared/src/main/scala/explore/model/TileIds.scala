@@ -24,6 +24,13 @@ enum ObsTabTilesIds:
     case FinderChartsId      => "finderCharts".refined
     case SequenceId          => "sequence".refined
 
+enum ObsSummaryTabTileIds:
+  case SummaryId, PlotId
+
+  def id: NonEmptyString = this match
+    case SummaryId => "summary".refined
+    case PlotId    => "plot".refined
+
 enum ProgramTabTileIds:
   case DetailsId, NotesId, ChangeRequestsId
 

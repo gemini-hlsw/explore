@@ -9,9 +9,11 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.Icons
 import explore.components.Tile
+import explore.components.TileController
 import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
 import explore.data.KeyedIndexedList
@@ -30,6 +32,8 @@ import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
+import explore.targeteditor.plots.ObjectPlotData
+import explore.targeteditor.plots.PlotData
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -55,9 +59,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import explore.targeteditor.plots.PlotData
-import explore.targeteditor.plots.ObjectPlotData
-import eu.timepit.refined.types.string.NonEmptyString
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -93,7 +94,9 @@ case class ObsTabContents(
   private val targets: UndoSetter[TargetList]                              = programSummaries.zoom(ProgramSummaries.targets)
   private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
     observations.get.toIndexedList.map((o, idx) => (o.id, idx))
-  val readonly: Boolean                                                    = programSummaries.get.proposalIsSubmitted
+  private val readonly: Boolean                                            = programSummaries.get.proposalIsSubmitted
+  private val globalPreferences: View[GlobalPreferences]                   =
+    userPreferences.zoom(UserPreferences.globalPreferences)
 
 object ObsTabContents extends TwoPanels:
   private type Props = ObsTabContents
@@ -291,9 +294,9 @@ object ObsTabContents extends TwoPanels:
             )
 
           val plotData: PlotData =
-            // props.asterismTracking.map: tracking =>
             PlotData:
-              selectedOrFocusedObsIds.get.idSet.toList
+              selectedOrFocusedObsIds
+                .foldMap(_.idSet.toList)
                 .map(props.observations.get.getValue(_))
                 .flattenOption
                 .map: obs =>
@@ -302,9 +305,7 @@ object ObsTabContents extends TwoPanels:
                     .map: tracking =>
                       ObjectPlotData.Id(obs.id.asLeft) ->
                         ObjectPlotData(
-                          NonEmptyString
-                            .from(obs.title)
-                            .getOrElse(NonEmptyString.unsafeFrom(obs.id.toString)),
+                          NonEmptyString.unsafeFrom(s"${obs.title} (${obs.id.toString})"),
                           tracking,
                           obs.basicConfiguration.foldMap(conf => List(conf.siteFor))
                         )
@@ -315,11 +316,21 @@ object ObsTabContents extends TwoPanels:
             ElevationPlotTile.elevationPlotTile(
               props.vault.userId,
               plotData,
-              props.observation.get.observingMode.map(_.siteFor),
-              vizTimeView.get,
-              obsDuration.map(_.toDuration),
-              timingWindows.get,
+              none, // Deduce site from the first target
+              none,
+              none,
+              List.empty,
               props.globalPreferences.get
+            )
+
+          val summaryTiles: VdomNode =
+            TileController(
+              props.vault.map(_.user.id),
+              resize.width.getOrElse(0),
+              ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationListLayout),
+              props.userPreferences.get.observationListTabLayout,
+              List(obsSummaryTableTile, skyPlotTile),
+              GridLayoutSection.ObservationListLayout
             )
 
           def obsEditorTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode = {
@@ -347,7 +358,7 @@ object ObsTabContents extends TwoPanels:
                   ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
                   props.userPreferences.get.observationsTabLayout,
                   resize,
-                  props.userPreferences.zoom(UserPreferences.globalPreferences),
+                  props.globalPreferences,
                   props.readonly
                 ).withKey(s"${obsId.show}")
               )
@@ -369,7 +380,7 @@ object ObsTabContents extends TwoPanels:
             (props.focusedObs, props.focusedGroup) match
               case (Some(obsId), _)   => obsEditorTiles(obsId, resize)
               case (_, Some(groupId)) => groupEditorTiles(groupId, resize)
-              case _                  => observationTable
+              case _                  => summaryTiles
 
           makeOneOrTwoPanels(
             twoPanelState,
