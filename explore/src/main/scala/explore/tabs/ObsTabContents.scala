@@ -11,8 +11,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.*
 import explore.Icons
-import explore.components.ColumnSelectorInTitle
-import explore.components.ColumnSelectorState
 import explore.components.Tile
 import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
@@ -49,6 +47,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.table.Expandable
+import lucuma.react.table.Table
 import lucuma.refined.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
@@ -108,7 +107,7 @@ object ObsTabContents extends TwoPanels:
             case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
             case _                            => Callback.empty
       .useResizeDetector() // Measure its size
-      .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
+      .useState(none[ObsIdSet])                 // shadowClipboardObs (a copy as state only if it has observations)
       .useEffectOnMountBy: (_, ctx, _, _, shadowClipboardObs) => // initialize shadowClipboard
         import ctx.given
 
@@ -117,42 +116,47 @@ object ObsTabContents extends TwoPanels:
             case LocalClipboard.CopiedObservations(idSet) =>
               shadowClipboardObs.setStateAsync(idSet.some)
             case _                                        => IO.unit
-      .useCallbackWithDepsBy((props, _, _, _, _) => props.focusedObs): // COPY Action Callback
-        (_, ctx, _, _, shadowClipboardObs) =>
-          obs =>
+      .useStateView(List.empty[Observation.Id]) // selectedObsIds
+      .localValBy: (props, _, _, _, _, selectedObsIds) =>
+        props.focusedObs.map(ObsIdSet.one(_)).orElse(ObsIdSet.fromList(selectedObsIds.get))
+      .useCallbackWithDepsBy((_, _, _, _, _, _, selectedObsIdSet) => selectedObsIdSet): // COPY Action Callback
+        (_, ctx, _, _, shadowClipboardObs, _, _) =>
+          selectedObsIdSet =>
             import ctx.given
 
-            obs
-              .map: id =>
+            selectedObsIdSet
+              .map: obsIdSet =>
                 (ExploreClipboard
-                  .set(LocalClipboard.CopiedObservations(ObsIdSet.one(id))) >>
-                  shadowClipboardObs.setStateAsync(ObsIdSet.one(id).some))
-                  .withToast(s"Copied obs $id")
+                  .set(LocalClipboard.CopiedObservations(obsIdSet)) >>
+                  shadowClipboardObs.setStateAsync(obsIdSet.some))
+                  .withToast(s"Copied observation(s) ${obsIdSet.idSet.toList.mkString(", ")}")
               .orUnit
               .runAsync
-      .useCallbackWithDepsBy((props, _, _, _, _, _) => // PASTE Action Callback
+      .useCallbackWithDepsBy((props, _, _, _, _, _, _, _) => // PASTE Action Callback
         (Reusable.explicitly(props.observations)(Reusability.by(_.get)),
          props.activeGroup,
          props.readonly
         )
-      ): (props, ctx, _, _, _, _) =>
+      ): (props, ctx, _, _, _, _, _, _) =>
         (observations, activeGroup, readonly) =>
           import ctx.given
 
           ExploreClipboard.get
             .flatMap:
               case LocalClipboard.CopiedObservations(obsIdSet) =>
-                obsIdSet.idSet.toList
-                  .traverse: oid =>
-                    cloneObs(props.programId, oid, activeGroup, observations, ctx)
-                  .void
+                cloneObs(props.programId,
+                         obsIdSet.idSet.toList,
+                         activeGroup,
+                         observations,
+                         ctx
+                ).void
                   .withToast(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
               case _                                           => IO.unit
             .runAsync
             .unless_(readonly)
-      .useGlobalHotkeysWithDepsBy((props, _, _, _, _, copyCallback, pasteCallback) =>
+      .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback, props.focusedObs, props.observationIdsWithIndices)
-      ): (props, ctx, _, _, _, _, _) =>
+      ): (props, ctx, _, _, _, _, _, _, _) =>
         (copyCallback, pasteCallback, obs, obsIdsWithIndices) =>
           val obsPos: Option[NonNegInt] =
             obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
@@ -213,11 +217,12 @@ object ObsTabContents extends TwoPanels:
           twoPanelState,
           resize,
           shadowClipboardObs,
+          selectedObsIds,
+          _,
           copyCallback,
           pasteCallback,
           deckShown
         ) =>
-
           val observationsTree: VdomNode =
             if (deckShown.get === DeckShown.Shown) {
               ObsList(
@@ -228,6 +233,7 @@ object ObsTabContents extends TwoPanels:
                 props.focusedObs,
                 props.focusedTarget,
                 props.focusedGroup,
+                selectedObsIds.get,
                 twoPanelState.set(SelectedPanel.Summary),
                 props.groups,
                 props.systemGroups,
@@ -260,22 +266,23 @@ object ObsTabContents extends TwoPanels:
             Tile(
               "observations".refined,
               "Observations Summary",
-              ColumnSelectorState[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing](),
+              none[Table[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]],
               backButton.some,
               canMinimize = false,
               canMaximize = false
             )(
-              ObsSummaryTable(
+              ObsSummaryTable.Body(
                 props.vault.userId,
                 props.programId,
                 props.observations,
+                selectedObsIds,
                 props.groups.model,
                 props.obsExecutions,
                 props.targets.get,
                 props.programSummaries.get.allocatedScienceBands.size > 1,
                 _
               ),
-              (s, _) => ColumnSelectorInTitle(ObsSummaryTable.selectableColumnNames.get, s)
+              (s, _) => ObsSummaryTable.Title(s.get)
               // TODO: asterism elevation view
             )
 

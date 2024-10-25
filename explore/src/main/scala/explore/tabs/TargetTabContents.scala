@@ -13,7 +13,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.actions.ObservationPasteIntoAsterismAction
-import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
@@ -336,7 +335,7 @@ object TargetTabContents extends TwoPanels:
           val renderSummary: Tile[TargetSummaryTileState] = Tile(
             ObsTabTilesIds.TargetSummaryId.id,
             "Target Summary",
-            TargetSummaryTileState(Nil, ColumnSelectorState()),
+            TargetSummaryTileState(Nil, none),
             backButton.some
           )(
             TargetSummaryBody(

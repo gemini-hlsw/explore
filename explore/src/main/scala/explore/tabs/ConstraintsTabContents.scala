@@ -14,7 +14,6 @@ import explore.*
 import explore.actions.ObservationPasteIntoConstraintSetAction
 import explore.common.TimingWindowsQueries
 import explore.components.ColumnSelectorInTitle
-import explore.components.ColumnSelectorState
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
@@ -51,6 +50,7 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
+import lucuma.react.table.Table
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
@@ -208,19 +208,20 @@ object ConstraintsTabContents extends TwoPanels:
               Tile(
                 "constraints".refined,
                 "Constraints Summary",
-                ColumnSelectorState[ConstraintGroup, Nothing](),
+                none[Table[ConstraintGroup, Nothing]],
                 backButton.some,
                 canMinimize = false,
                 canMaximize = false
               )(
-                ConstraintsSummaryTableBody(
-                  props.userId,
-                  props.programId,
-                  props.programSummaries.get.constraintGroups,
-                  props.expandedIds,
-                  _
-                ),
-                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s)
+                tableView =>
+                  ConstraintsSummaryTableBody(
+                    props.userId,
+                    props.programId,
+                    props.programSummaries.get.constraintGroups,
+                    props.expandedIds,
+                    tableView.set.compose(_.some)
+                  ),
+                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s.get)
               )
             } { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso

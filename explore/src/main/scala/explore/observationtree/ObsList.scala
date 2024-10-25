@@ -45,6 +45,9 @@ import lucuma.core.syntax.display.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.ConfirmDialog
+import lucuma.react.primereact.DialogPosition
+import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.Tree
 import lucuma.react.primereact.Tree.Node
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
@@ -67,9 +70,10 @@ case class ObsList(
   obsExecutionTimes:     ObservationExecutionMap,
   undoer:                Undoer,
   programId:             Program.Id,
-  focusedObs:            Option[Observation.Id],
+  focusedObs:            Option[Observation.Id], // obs explicitly selected for editing
   focusedTarget:         Option[Target.Id],
   focusedGroup:          Option[Group.Id],
+  selectedObsIds:        List[Observation.Id],   // obs list selected in table
   setSummaryPanel:       Callback,
   groups:                UndoSetter[GroupTree],
   systemGroups:          GroupTree,
@@ -81,17 +85,23 @@ case class ObsList(
   allocatedScienceBands: SortedSet[ScienceBand],
   readonly:              Boolean
 ) extends ReactFnProps(ObsList.component):
+  private val selectedObsIdSet: Option[ObsIdSet] =
+    focusedObs.map(ObsIdSet.one(_)).orElse(ObsIdSet.fromList(selectedObsIds))
+
   private val activeGroup: Option[Group.Id] = focusedGroup.orElse:
     focusedObs.flatMap(groups.get.obsGroupId)
 
-  private val copyDisabled: Boolean   = focusedObs.isEmpty
+  private val copyDisabled: Boolean   = selectedObsIdSet.isEmpty
   private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
-  private val deleteDisabled: Boolean = focusedObs.isEmpty && focusedGroup.isEmpty
+  private val deleteDisabled: Boolean = selectedObsIdSet.isEmpty && focusedGroup.isEmpty
 
-  private def observationText(obsId: Observation.Id): String = s"observation $obsId"
-  private def groupText(groupId:     Group.Id): String       = s"group $groupId"
+  private def observationsText(observations: ObsIdSet): String =
+    observations.idSet.size match
+      case 1    => s"observation ${observations.idSet.head}"
+      case more => s"$more observations"
+  private def groupText(groupId: Group.Id): String             = s"group $groupId"
 
-  private val copyText: Option[String]     = focusedObs.map(observationText)
+  private val copyText: Option[String]     = selectedObsIdSet.map(observationsText)
   private val selectedText: Option[String] =
     clipboardObsContents.map: obdIdSet =>
       obdIdSet.idSet.size match
@@ -100,7 +110,7 @@ case class ObsList(
   private val pasteText: Option[String]    =
     selectedText.map(_ + activeGroup.map(gid => s" into ${groupText(gid)}").orEmpty)
   private val deleteText: Option[String]   =
-    focusedObs.map(observationText).orElse(focusedGroup.map(groupText))
+    selectedObsIdSet.map(observationsText).orElse(focusedGroup.map(groupText))
 
 object ObsList:
   private type Props = ObsList
@@ -157,13 +167,10 @@ object ObsList:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // Saved index into the observation list
-      .useState(none[NonNegInt])
-      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)):
+      .useState(none[NonNegInt])              // optIndex: Saved index into the observation list
+      .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)): // set the index of the focused obs
         (props, ctx, optIndex) =>
-          params =>
-            val (focusedObs, obsList) = params
-
+          (focusedObs, obsList) =>
             focusedObs.fold(optIndex.setState(none)): obsId =>
               // there is a focused obsId, look for it in the list
               val foundIdx = obsList.getIndex(obsId)
@@ -171,17 +178,17 @@ object ObsList:
                 case (_, Some(fidx)) =>
                   optIndex.setState(fidx.some) // focused obs is in list
                 case (None, None)       =>
-                  setObs(props.programId, none, ctx) >> optIndex.setState(none)
+                  focusObs(props.programId, none, ctx) >> optIndex.setState(none)
                 case (Some(oidx), None) =>
                   // focused obs no longer exists, but we have a previous index.
                   val newIdx = math.min(oidx.value, obsList.length.value - 1)
                   obsList.toList
                     .get(newIdx.toLong)
                     .fold(
-                      optIndex.setState(none) >> setObs(props.programId, none, ctx)
+                      optIndex.setState(none) >> focusObs(props.programId, none, ctx)
                     )(obsSumm =>
                       optIndex.setState(NonNegInt.from(newIdx).toOption) >>
-                        setObs(props.programId, obsSumm.id.some, ctx)
+                        focusObs(props.programId, obsSumm.id.some, ctx)
                     )
       .useEffectWithDepsBy((props, _, _) => (props.focusedGroup, props.groups.get)):
         (props, ctx, _) =>
@@ -189,10 +196,9 @@ object ObsList:
             // If the focused group is not in the tree, reset the focused group
             focusedGroup
               .filter(g => !groups.contains(g.asRight))
-              .as(setGroup(props.programId, none, ctx))
+              .as(focusGroup(props.programId, none, ctx))
               .getOrEmpty
-      // adding new observation
-      .useStateView(AddingObservation(false))
+      .useStateView(AddingObservation(false)) // adding new observation
       // treeNodes
       .useMemoBy((props, _, _, _) => (props.groups.model.reuseByValue, props.observations.get)):
         (_, _, _, _) => (groups, observations) => groups.as(groupTreeNodeIsoBuilder(observations))
@@ -258,19 +264,27 @@ object ObsList:
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
 
-        val deleteObs: Observation.Id => Callback = oid =>
-          obsExistence(
-            oid,
-            o => setObs(props.programId, o.some, ctx)
-          )
-            .mod(props.observations)(obsListMod.delete)
-            .showToastCB(s"Deleted obs ${oid.shortName}")
+        val deleteObsList: List[Observation.Id] => Callback =
+          selectedObsIds =>
+            ConfirmDialog.confirmDialog(
+              message = <.div(s"This action will delete ${props.selectedText.orEmpty}."),
+              header = "Observations delete",
+              acceptLabel = "Yes, delete",
+              position = DialogPosition.Top,
+              accept = ObsActions
+                .obsExistence(selectedObsIds, postMessage = ToastCtx[IO].showToast(_))
+                .mod(props.observations)(_ => selectedObsIds.map(_ => none)),
+              acceptClass = PrimeStyles.ButtonSmall,
+              rejectClass = PrimeStyles.ButtonSmall,
+              icon = Icons.SkullCrossBones(^.color.red)
+            )
 
         val deleteGroup: Group.Id => Callback = gid =>
-          groupExistence(
-            gid,
-            g => setGroup(props.programId, g.some, ctx)
-          )
+          ObsActions
+            .groupExistence(
+              gid,
+              g => focusGroup(props.programId, g.some, ctx)
+            )
             .mod(props.groups)(groupTreeMod.delete)
             .showToastCB(s"Deleted group ${gid.shortName}")
 
@@ -293,7 +307,7 @@ object ObsList:
                     ^.draggable := false,
                     ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                     ^.onClick ==> linkOverride(
-                      setObs(props.programId, obsId.some, ctx)
+                      focusObs(props.programId, obsId.some, ctx)
                     )
                   )(
                     ObsBadge(
@@ -301,22 +315,25 @@ object ObsList:
                       props.obsExecutionTimes.getPot(obsId).map(_.programTimeEstimate),
                       ObsBadge.Layout.ObservationsTab,
                       selected = selected,
-                      setStatusCB = obsEditStatus(obsId)
+                      setStatusCB = ObsActions
+                        .obsEditStatus(obsId)
                         .set(props.observations)
                         .compose((_: ObsStatus).some)
                         .some,
-                      setActiveStatusCB = obsActiveStatus(obsId)
+                      setActiveStatusCB = ObsActions
+                        .obsActiveStatus(obsId)
                         .set(props.observations)
                         .compose((_: ObsActiveStatus).some)
                         .some,
-                      setSubtitleCB = obsEditSubtitle(obsId)
+                      setSubtitleCB = ObsActions
+                        .obsEditSubtitle(obsId)
                         .set(props.observations)
                         .compose((_: Option[NonEmptyString]).some)
                         .some,
-                      deleteCB = deleteObs(obsId),
+                      deleteCB = deleteObsList(List(obsId)),
                       cloneCB = cloneObs(
                         props.programId,
-                        obsId,
+                        List(obsId),
                         props.groups.get.obsGroupId(obsId), // Clone to the same group
                         props.observations,
                         ctx,
@@ -327,7 +344,8 @@ object ObsList:
                         .runAsync
                         .some,
                       setScienceBandCB = (
-                        (b: ScienceBand) => obsScienceBand(obsId).set(props.observations)(b.some)
+                        (b: ScienceBand) =>
+                          ObsActions.obsScienceBand(obsId).set(props.observations)(b.some)
                       ).some,
                       allocatedScienceBands = props.allocatedScienceBands,
                       readonly = props.readonly
@@ -341,7 +359,7 @@ object ObsList:
                 group,
                 selected = props.focusedGroup.contains_(group.id),
                 onClickCB = linkOverride(
-                  setGroup(props.programId, group.id.some, ctx)
+                  focusGroup(props.programId, group.id.some, ctx)
                 ),
                 href = ctx.pageUrl(
                   AppTab.Observations,
@@ -418,8 +436,8 @@ object ObsList:
                         tooltipExtra = props.pasteText
                       ),
                       ActionButtons.ButtonProps(
-                        props.focusedObs
-                          .map(deleteObs)
+                        props.selectedObsIdSet
+                          .map(obsIdSet => deleteObsList(obsIdSet.idSet.toList))
                           .orElse(props.focusedGroup.map(deleteGroup))
                           .orEmpty,
                         disabled = props.deleteDisabled,
@@ -444,7 +462,7 @@ object ObsList:
                   severity = Button.Severity.Secondary,
                   icon = Icons.ListIcon,
                   label = "Observations Summary",
-                  onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
+                  onClick = focusObs(props.programId, none, ctx) >> props.setSummaryPanel,
                   clazz = ExploreStyles.ButtonSummary
                 )
               ),

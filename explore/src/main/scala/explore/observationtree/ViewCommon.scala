@@ -6,7 +6,6 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
@@ -78,7 +77,7 @@ trait ViewCommon {
                else onSelect(obs.id))
           }).when(selectable),
           (^.onDoubleClick ==> { (e: ReactEvent) =>
-            e.preventDefaultCB *> e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
+            e.preventDefaultCB *> e.stopPropagationCB >> focusObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
         )(
           <.span(provided.dragHandleProps)(
@@ -110,14 +109,11 @@ trait ViewCommon {
     Logger[IO],
     ToastCtx[IO]
   ): Callback =
-    obsExistence(
-      obsId,
-      oid =>
-        ToastCtx[IO].showToast(s"Restore deleted obs: ${obsId.show}").runAsyncAndForget *>
-          afterUndo(oid)
-    )
-      .mod(observations)(obsListMod.delete)
+    ObsActions
+      .obsExistence(
+        List(obsId),
+        postMessage = ToastCtx[IO].showToast(_)
+      )
+      .mod(observations)(_ => List(none))
       .flatMap(_ => afterDelete)
-      .showToastCB(s"Deleted obs: ${obsId.show}")
-
 }

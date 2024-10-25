@@ -7,7 +7,6 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.ColumnSelectorInTitle
-import explore.components.ColumnSelectorState
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
@@ -34,6 +33,7 @@ import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
+import lucuma.react.table.Table
 import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -44,9 +44,8 @@ import monocle.Lens
 import java.time.Instant
 
 case class AsterismTileState(
-  table:       ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta] =
-    ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta](),
-  obsEditInfo: Option[ObsIdSetEditInfo] = None
+  table:       Option[Table[SiderealTargetWithId, TargetTable.TableMeta]] = none,
+  obsEditInfo: Option[ObsIdSetEditInfo] = none
 ) {
   // the 'getOrElse doesn't matter. Controls will be readonly if all are executed
   def unexecutedObs(obsIds: ObsIdSet): Option[ObsIdSet] =
@@ -54,10 +53,9 @@ case class AsterismTileState(
 }
 
 object AsterismTileState:
-  val table
-    : Lens[AsterismTileState, ColumnSelectorState[SiderealTargetWithId, TargetTable.TableMeta]] =
+  val table: Lens[AsterismTileState, Option[Table[SiderealTargetWithId, TargetTable.TableMeta]]] =
     Focus[AsterismTileState](_.table)
-  val obsEditInfo: Lens[AsterismTileState, Option[ObsIdSetEditInfo]] =
+  val obsEditInfo: Lens[AsterismTileState, Option[ObsIdSetEditInfo]]                             =
     Focus[AsterismTileState](_.obsEditInfo)
 
 case class AsterismEditorBody(
@@ -145,8 +143,9 @@ object AsterismEditorBody extends AsterismModifier:
                 props.onAsterismUpdate,
                 vizTime,
                 fullScreen.get,
-                props.readonly || obsEditInfo.allAreExecuted
-              )(props.tileState.zoom(AsterismTileState.table))
+                props.readonly || obsEditInfo.allAreExecuted,
+                props.tileState.zoom(AsterismTileState.table).set.compose(_.some)
+              )
             ),
           // it's possible for us to get here without an asterism but with a focused target id. This will get
           // corrected, but we need to not render the target editor before it is corrected.
@@ -234,7 +233,8 @@ object AsterismEditorTitle extends AsterismModifier:
                         props.pendingTime,
                         props.obsIds.size > 1
           ),
-          ColumnSelectorInTitle(TargetTable.columnNames.get,
-                                props.tileState.zoom(AsterismTileState.table)
+          ColumnSelectorInTitle(
+            TargetTable.columnNames.get,
+            props.tileState.zoom(AsterismTileState.table).get
           )
         )
