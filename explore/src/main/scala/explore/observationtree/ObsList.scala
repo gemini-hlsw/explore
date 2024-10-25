@@ -45,6 +45,9 @@ import lucuma.core.syntax.display.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.ConfirmDialog
+import lucuma.react.primereact.DialogPosition
+import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.Tree
 import lucuma.react.primereact.Tree.Node
 import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
@@ -261,14 +264,20 @@ object ObsList:
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
 
-        val deleteObs: Observation.Id => Callback = oid =>
-          ObsActions
-            .obsExistence(
-              List(oid),
-              o => focusObs(props.programId, o.some, ctx)
+        val deleteObsList: List[Observation.Id] => Callback =
+          selectedObsIds =>
+            ConfirmDialog.confirmDialog(
+              message = <.div(s"This action will delete ${props.selectedText.orEmpty}."),
+              header = "Observations delete",
+              acceptLabel = "Yes, delete",
+              position = DialogPosition.Top,
+              accept = ObsActions
+                .obsExistence(selectedObsIds, postMessage = ToastCtx[IO].showToast(_))
+                .mod(props.observations)(_ => selectedObsIds.map(_ => none)),
+              acceptClass = PrimeStyles.ButtonSmall,
+              rejectClass = PrimeStyles.ButtonSmall,
+              icon = Icons.SkullCrossBones(^.color.red)
             )
-            .mod(props.observations)(_ => List(none))
-            .showToastCB(s"Deleted obs ${oid.shortName}")
 
         val deleteGroup: Group.Id => Callback = gid =>
           ObsActions
@@ -321,7 +330,7 @@ object ObsList:
                         .set(props.observations)
                         .compose((_: Option[NonEmptyString]).some)
                         .some,
-                      deleteCB = deleteObs(obsId),
+                      deleteCB = deleteObsList(List(obsId)),
                       cloneCB = cloneObs(
                         props.programId,
                         List(obsId),
@@ -428,10 +437,7 @@ object ObsList:
                       ),
                       ActionButtons.ButtonProps(
                         props.selectedObsIdSet
-                          .map: obsIdSet =>
-                            ObsActions
-                              .deleteObservations(obsIdSet.idSet.toList)
-                              .set(props.observations)(obsIdSet.idSet.toList.map(_ => none))
+                          .map(obsIdSet => deleteObsList(obsIdSet.idSet.toList))
                           .orElse(props.focusedGroup.map(deleteGroup))
                           .orEmpty,
                         disabled = props.deleteDisabled,

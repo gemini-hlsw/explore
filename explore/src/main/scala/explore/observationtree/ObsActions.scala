@@ -145,43 +145,28 @@ object ObsActions:
         singleObsSetter(obsId)(obsOpt)(acc)
       }
 
-  def deleteObservations(
+  def obsExistence(
     obsIds:      List[Observation.Id],
-    setSummary:  IO[Unit] = IO.unit,
+    focusObs:    Observation.Id => Callback = _ => Callback.empty,
     postMessage: String => IO[Unit] = _ => IO.unit
   )(using
-    c:           FetchClient[IO, ObservationDB]
-  ): Action[ObservationList, List[Option[(Observation, NonNegInt)]]] =
-    Action(getter = obsListGetter(obsIds), setter = obsListSetter(obsIds))(
-      onSet = (_, loObs) =>
-        loObs.sequence.fold(ObsQueries.deleteObservations[IO](obsIds))(_ =>
-          ObsQueries.undeleteObservations[IO](obsIds)
-        ),
-      onRestore = (_, loObs) =>
-        loObs.sequence.fold(
-          ObsQueries.deleteObservations[IO](obsIds) >> setSummary >>
-            postMessage(s"Deleted ${obsIds.length} observation(s)")
-        )(_ =>
-          ObsQueries.undeleteObservations[IO](obsIds) >> setSummary >>
-            postMessage(s"Restored ${obsIds.length} observation(s)")
-        )
-    )
-
-  def obsExistence(obsIds: List[Observation.Id], focusObs: Observation.Id => Callback)(using
     FetchClient[IO, ObservationDB]
   ): Action[ObservationList, List[Option[obsListMod.ElemWithIndex]]] =
     Action(getter = obsListGetter(obsIds), setter = obsListSetter(obsIds))(
       onSet = (_, elemWithIndexListOpt) =>
         elemWithIndexListOpt.sequence.fold(
-          ObsQueries.deleteObservations[IO](obsIds)
+          ObsQueries.deleteObservations[IO](obsIds) >>
+            postMessage(s"Deleted ${obsIds.length} observation(s)")
         )(obsList => // Not much to do here, the observation must be created before we get here
           obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
         ),
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.sequence.fold(
-          ObsQueries.deleteObservations[IO](obsIds)
+          ObsQueries.deleteObservations[IO](obsIds) >>
+            postMessage(s"Deleted ${obsIds.length} observation(s)")
         )(obsList =>
           ObsQueries.undeleteObservations[IO](obsIds) >>
+            postMessage(s"Restored ${obsIds.length} observation(s)") >>
             obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
         )
     )

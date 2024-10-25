@@ -6,7 +6,6 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.react.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
@@ -113,12 +112,8 @@ trait ViewCommon {
     ObsActions
       .obsExistence(
         List(obsId),
-        oid =>
-          ToastCtx[IO].showToast(s"Restore deleted obs: ${obsId.show}").runAsyncAndForget *>
-            afterUndo(oid)
+        postMessage = ToastCtx[IO].showToast(_)
       )
       .mod(observations)(_ => List(none))
       .flatMap(_ => afterDelete)
-      .showToastCB(s"Deleted obs: ${obsId.show}")
-
 }

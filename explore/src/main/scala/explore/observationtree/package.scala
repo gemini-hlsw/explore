@@ -25,6 +25,7 @@ import explore.syntax.ui.*
 import explore.undo.KIListMod
 import explore.undo.KITreeMod
 import explore.undo.UndoSetter
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
@@ -72,7 +73,11 @@ def cloneObs(
       .traverse(cloneObservation[IO](_, newGroupId))
       .flatMap: newObsList =>
         ObsActions
-          .obsExistence(newObsList.map(_.id), o => focusObs(programId, o.some, ctx))
+          .obsExistence(
+            newObsList.map(_.id),
+            focusObs = obsId => focusObs(programId, obsId.some, ctx),
+            postMessage = ToastCtx[IO].showToast(_)
+          )
           .mod(observations): obsList =>
             obsList
               .zip(newObsList)
@@ -117,7 +122,11 @@ def insertObs(
   createObservation[IO](programId, parentId)
     .flatMap: (obs, groupIndex) =>
       ((ObsActions
-        .obsExistence(List(obs.id), o => focusObs(programId, o.some, ctx))
+        .obsExistence(
+          List(obs.id),
+          focusObs = obsId => focusObs(programId, obsId.some, ctx),
+          postMessage = ToastCtx[IO].showToast(_)
+        )
         .mod(observations): obsList =>
           obsList
             .zip(List(obs))
