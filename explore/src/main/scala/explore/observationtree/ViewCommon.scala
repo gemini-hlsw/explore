@@ -78,7 +78,7 @@ trait ViewCommon {
                else onSelect(obs.id))
           }).when(selectable),
           (^.onDoubleClick ==> { (e: ReactEvent) =>
-            e.preventDefaultCB *> e.stopPropagationCB >> setObs(programId, obs.id.some, ctx)
+            e.preventDefaultCB *> e.stopPropagationCB >> focusObs(programId, obs.id.some, ctx)
           }).when(linkToObsTab)
         )(
           <.span(provided.dragHandleProps)(

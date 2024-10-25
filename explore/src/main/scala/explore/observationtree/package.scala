@@ -42,14 +42,14 @@ val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 val groupTreeMod: KITreeMod[GroupTree.Value, GroupTree.Key] =
   KITreeMod[GroupTree.Value, GroupTree.Key](GroupTree.key)
 
-def setObs[F[_]](
+def focusObs[F[_]](
   programId: Program.Id,
   obsId:     Option[Observation.Id],
   ctx:       AppContext[F]
 ): Callback =
   ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
 
-def setGroup[F[_]](
+def focusGroup[F[_]](
   programId: Program.Id,
   groupId:   Option[Group.Id],
   ctx:       AppContext[F]
@@ -58,7 +58,7 @@ def setGroup[F[_]](
 
 def cloneObs(
   programId:    Program.Id,
-  obsId:        Observation.Id,
+  obsIds:       List[Observation.Id],
   newGroupId:   Option[Group.Id],
   observations: UndoSetter[ObservationList],
   ctx:          AppContext[IO],
@@ -68,13 +68,16 @@ def cloneObs(
   import ctx.given
 
   before >>
-    cloneObservation[IO](obsId, newGroupId)
-      .flatMap: newObs =>
+    obsIds
+      .traverse(cloneObservation[IO](_, newGroupId))
+      .flatMap: newObsList =>
         ObsActions
-          .obsExistence(newObs.id, o => setObs(programId, o.some, ctx))
+          .obsExistence2(newObsList.map(_.id)) // , o => focusObs(programId, o.some, ctx))
           .mod(observations):
+            obsListMod.upsert(newObsList.head, NonNegInt.MaxValue)
             // Just place the new obs at the end of the group, which is where the server clones it.
-            obsListMod.upsert(newObs, NonNegInt.MaxValue)
+            // newObsList.foldLeft(identity[ObservationList]): (accum, obs) =>
+            //   accum >>> obsListMod.upsert(obs, NonNegInt.MaxValue)
           .toAsync
       .guarantee(after)
 
@@ -114,7 +117,7 @@ def insertObs(
   createObservation[IO](programId, parentId)
     .flatMap: (obs, groupIndex) =>
       (ObsActions
-        .obsExistence(obs.id, o => setObs(programId, o.some, ctx))
+        .obsExistence(obs.id, o => focusObs(programId, o.some, ctx))
         .mod(observations)(obsListMod.upsert(obs, pos)) >>
         groupTree.mod:
           _.inserted(
@@ -143,7 +146,7 @@ def insertGroup(
     .createGroup[IO](programId, parentId)
     .flatMap: (group, parentIndex) =>
       ObsActions
-        .groupExistence(group.id, g => setGroup(programId, g.some, ctx))
+        .groupExistence(group.id, g => focusGroup(programId, g.some, ctx))
         .set(groups):
           (Node(ServerIndexed(group.asRight, parentIndex)),
            Index(parentId.map(_.asRight), NonNegInt.MaxValue)

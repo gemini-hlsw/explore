@@ -175,17 +175,17 @@ object ObsList:
                 case (_, Some(fidx)) =>
                   optIndex.setState(fidx.some) // focused obs is in list
                 case (None, None)       =>
-                  setObs(props.programId, none, ctx) >> optIndex.setState(none)
+                  focusObs(props.programId, none, ctx) >> optIndex.setState(none)
                 case (Some(oidx), None) =>
                   // focused obs no longer exists, but we have a previous index.
                   val newIdx = math.min(oidx.value, obsList.length.value - 1)
                   obsList.toList
                     .get(newIdx.toLong)
                     .fold(
-                      optIndex.setState(none) >> setObs(props.programId, none, ctx)
+                      optIndex.setState(none) >> focusObs(props.programId, none, ctx)
                     )(obsSumm =>
                       optIndex.setState(NonNegInt.from(newIdx).toOption) >>
-                        setObs(props.programId, obsSumm.id.some, ctx)
+                        focusObs(props.programId, obsSumm.id.some, ctx)
                     )
       .useEffectWithDepsBy((props, _, _) => (props.focusedGroup, props.groups.get)):
         (props, ctx, _) =>
@@ -193,7 +193,7 @@ object ObsList:
             // If the focused group is not in the tree, reset the focused group
             focusedGroup
               .filter(g => !groups.contains(g.asRight))
-              .as(setGroup(props.programId, none, ctx))
+              .as(focusGroup(props.programId, none, ctx))
               .getOrEmpty
       .useStateView(AddingObservation(false)) // adding new observation
       // treeNodes
@@ -265,7 +265,7 @@ object ObsList:
           ObsActions
             .obsExistence(
               oid,
-              o => setObs(props.programId, o.some, ctx)
+              o => focusObs(props.programId, o.some, ctx)
             )
             .mod(props.observations)(obsListMod.delete)
             .showToastCB(s"Deleted obs ${oid.shortName}")
@@ -274,7 +274,7 @@ object ObsList:
           ObsActions
             .groupExistence(
               gid,
-              g => setGroup(props.programId, g.some, ctx)
+              g => focusGroup(props.programId, g.some, ctx)
             )
             .mod(props.groups)(groupTreeMod.delete)
             .showToastCB(s"Deleted group ${gid.shortName}")
@@ -298,7 +298,7 @@ object ObsList:
                     ^.draggable := false,
                     ExploreStyles.ObsItem |+| ExploreStyles.SelectedObsItem.when_(selected),
                     ^.onClick ==> linkOverride(
-                      setObs(props.programId, obsId.some, ctx)
+                      focusObs(props.programId, obsId.some, ctx)
                     )
                   )(
                     ObsBadge(
@@ -350,7 +350,7 @@ object ObsList:
                 group,
                 selected = props.focusedGroup.contains_(group.id),
                 onClickCB = linkOverride(
-                  setGroup(props.programId, group.id.some, ctx)
+                  focusGroup(props.programId, group.id.some, ctx)
                 ),
                 href = ctx.pageUrl(
                   AppTab.Observations,
@@ -427,8 +427,11 @@ object ObsList:
                         tooltipExtra = props.pasteText
                       ),
                       ActionButtons.ButtonProps(
-                        props.focusedObs
-                          .map(deleteObs)
+                        props.selectedObsIdSet
+                          .map: obsIdSet =>
+                            ObsActions
+                              .deleteObservations(obsIdSet.idSet.toList)
+                              .set(props.observations)(obsIdSet.idSet.toList.map(_ => none))
                           .orElse(props.focusedGroup.map(deleteGroup))
                           .orEmpty,
                         disabled = props.deleteDisabled,
@@ -453,7 +456,7 @@ object ObsList:
                   severity = Button.Severity.Secondary,
                   icon = Icons.ListIcon,
                   label = "Observations Summary",
-                  onClick = setObs(props.programId, none, ctx) >> props.setSummaryPanel,
+                  onClick = focusObs(props.programId, none, ctx) >> props.setSummaryPanel,
                   clazz = ExploreStyles.ButtonSummary
                 )
               ),
