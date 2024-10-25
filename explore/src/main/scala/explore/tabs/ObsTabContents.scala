@@ -55,6 +55,9 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import explore.targeteditor.plots.PlotData
+import explore.targeteditor.plots.ObjectPlotData
+import eu.timepit.refined.types.string.NonEmptyString
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -117,14 +120,16 @@ object ObsTabContents extends TwoPanels:
               shadowClipboardObs.setStateAsync(idSet.some)
             case _                                        => IO.unit
       .useStateView(List.empty[Observation.Id]) // selectedObsIds
-      .localValBy: (props, _, _, _, _, selectedObsIds) =>
+      .localValBy: (props, _, _, _, _, selectedObsIds) => // selectedOrFocusedObsIds
         props.focusedObs.map(ObsIdSet.one(_)).orElse(ObsIdSet.fromList(selectedObsIds.get))
-      .useCallbackWithDepsBy((_, _, _, _, _, _, selectedObsIdSet) => selectedObsIdSet): // COPY Action Callback
+      .useCallbackWithDepsBy((_, _, _, _, _, _, selectedOrFocusedObsIds) =>
+        selectedOrFocusedObsIds
+      ): // COPY Action Callback
         (_, ctx, _, _, shadowClipboardObs, _, _) =>
-          selectedObsIdSet =>
+          selectedOrFocusedObsIds =>
             import ctx.given
 
-            selectedObsIdSet
+            selectedOrFocusedObsIds
               .map: obsIdSet =>
                 (ExploreClipboard
                   .set(LocalClipboard.CopiedObservations(obsIdSet)) >>
@@ -218,7 +223,7 @@ object ObsTabContents extends TwoPanels:
           resize,
           shadowClipboardObs,
           selectedObsIds,
-          _,
+          selectedOrFocusedObsIds, // Mixes focused obs and selected obs in table
           copyCallback,
           pasteCallback,
           deckShown
@@ -262,7 +267,7 @@ object ObsTabContents extends TwoPanels:
           val backButton: VdomNode =
             makeBackButton(props.programId, AppTab.Observations, twoPanelState, ctx)
 
-          val observationTable: VdomNode =
+          val obsSummaryTableTile: Tile[?] =
             Tile(
               "observations".refined,
               "Observations Summary",
@@ -283,10 +288,41 @@ object ObsTabContents extends TwoPanels:
                 _
               ),
               (s, _) => ObsSummaryTable.Title(s.get)
-              // TODO: asterism elevation view
             )
 
-          def obsTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode =
+          val plotData: PlotData =
+            // props.asterismTracking.map: tracking =>
+            PlotData:
+              selectedOrFocusedObsIds.get.idSet.toList
+                .map(props.observations.get.getValue(_))
+                .flattenOption
+                .map: obs =>
+                  obs
+                    .asterismTracking(props.programSummaries.get.targets)
+                    .map: tracking =>
+                      ObjectPlotData.Id(obs.id.asLeft) ->
+                        ObjectPlotData(
+                          NonEmptyString
+                            .from(obs.title)
+                            .getOrElse(NonEmptyString.unsafeFrom(obs.id.toString)),
+                          tracking,
+                          obs.basicConfiguration.foldMap(conf => List(conf.siteFor))
+                        )
+                .flattenOption
+                .toMap
+
+          val skyPlotTile: Tile[?] =
+            ElevationPlotTile.elevationPlotTile(
+              props.vault.userId,
+              plotData,
+              props.observation.get.observingMode.map(_.siteFor),
+              vizTimeView.get,
+              obsDuration.map(_.toDuration),
+              timingWindows.get,
+              props.globalPreferences.get
+            )
+
+          def obsEditorTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode = {
             val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
 
             props.observations.model
@@ -315,8 +351,9 @@ object ObsTabContents extends TwoPanels:
                   props.readonly
                 ).withKey(s"${obsId.show}")
               )
+          }
 
-          def groupTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
+          def groupEditorTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
             ObsGroupTiles(
               props.vault.userId,
               groupId,
@@ -330,8 +367,8 @@ object ObsTabContents extends TwoPanels:
 
           def rightSide(resize: UseResizeDetectorReturn): VdomNode =
             (props.focusedObs, props.focusedGroup) match
-              case (Some(obsId), _)   => obsTiles(obsId, resize)
-              case (_, Some(groupId)) => groupTiles(groupId, resize)
+              case (Some(obsId), _)   => obsEditorTiles(obsId, resize)
+              case (_, Some(groupId)) => groupEditorTiles(groupId, resize)
               case _                  => observationTable
 
           makeOneOrTwoPanels(

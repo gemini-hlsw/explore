@@ -50,6 +50,7 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
+import lucuma.core.model.ObjectTracking
 
 case class Observation(
   id:                  Observation.Id,
@@ -214,6 +215,14 @@ case class Observation(
   def updateToPendingIfConfigurationApplies(config: Configuration): Observation =
     if (configurationApplies(config)) updateNeedsApprovalToPending
     else this
+
+  def asterismTracking(allTargets: TargetList): Option[ObjectTracking] =
+    NonEmptyList
+      .fromList:
+        scienceTargetIds.toList
+          .map(id => allTargets.get(id))
+          .flattenOption
+      .map(ObjectTracking.fromAsterism(_))
 
 object Observation:
   type Id = lucuma.core.model.Observation.Id
