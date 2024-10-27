@@ -337,7 +337,8 @@ object ObsTabTiles:
                 props.obsId,
                 props.obsExecution,
                 asterismIds.get,
-                sequenceChanged
+                sequenceChanged,
+                itcGraphResults.toOption
               )
 
             val itcTile =

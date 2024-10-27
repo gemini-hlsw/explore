@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.View
 import crystal.react.given
 import crystal.react.hooks.*
 import explore.*
@@ -21,6 +20,7 @@ import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTileIds
 import explore.model.Observation
+import explore.model.itc.ItcAsterismGraphResults
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.*
@@ -38,6 +38,7 @@ import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
@@ -50,7 +51,8 @@ object SequenceTile:
     obsId:           Observation.Id,
     obsExecution:    Pot[Execution],
     asterismIds:     AsterismIds,
-    sequenceChanged: View[Pot[Unit]]
+    sequenceChanged: View[Pot[Unit]],
+    itcGraphResults: Option[ItcAsterismGraphResults]
   ) =
     Tile(
       ObsTabTileIds.SequenceId.id,
@@ -61,7 +63,8 @@ object SequenceTile:
           programId,
           obsId,
           asterismIds.toList,
-          sequenceChanged
+          sequenceChanged,
+          itcGraphResults
         ),
       (_, _) => Title(obsExecution)
     )
@@ -70,7 +73,8 @@ object SequenceTile:
     programId:       Program.Id,
     obsId:           Observation.Id,
     targetIds:       List[Target.Id],
-    sequenceChanged: View[Pot[Unit]]
+    sequenceChanged: View[Pot[Unit]],
+    itcGraphResults: Option[ItcAsterismGraphResults]
   ) extends ReactFnProps(Body.component)
 
   private object Body:
@@ -82,19 +86,19 @@ object SequenceTile:
     ) derives Eq
 
     private object SequenceData:
-      def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
-        data.observation.flatMap: obs =>
-          obs.execution.config.map: config =>
-            SequenceData(
-              config,
-              Map.empty
-              // (
-              //   ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
-              //   ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
-              // )
-            )
+      def fromOdbResponse(data: SequenceQuery.Data): Option[InstrumentExecutionConfig] =
+        data.observation.flatMap:
+          _.execution.config
+
+      def fromItcResponse(data: ObsQueriesGQL.SequenceItc.Data): Map[ObserveClass, SignalToNoise] =
+        Map(
+          ObserveClass.Science     -> data.observation.map(_.itc.science.selected.signalToNoise),
+          ObserveClass.Acquisition -> data.observation.map(_.itc.acquisition.selected.signalToNoise)
+        ).collect { case (k, Some(v)) => k -> v }
 
       given Reusability[SequenceData] = Reusability.byEq
+
+    given Reusability[Map[ObserveClass, SignalToNoise]] = Reusability.by(_.toList)
 
     private val component =
       ScalaFnComponent
@@ -111,7 +115,19 @@ object SequenceTile:
               ObsQueriesGQL.ObservationEditSubscription
                 .subscribe[IO]:
                   props.obsId.toObservationEditInput
-        .useStreamResourceOnMountBy: (props, ctx, _) => // Query Sequence
+        .useStreamResourceOnMountBy: (props, ctx, _) => // Query Visits
+          import ctx.given
+
+          ObsQueriesGQL
+            .SequenceItc[IO]
+            .query(props.obsId)
+            .map(SequenceData.fromItcResponse)
+            .attemptPot
+            .resetOnResourceSignals:
+              ObsQueriesGQL.ObservationEditSubscription
+                .subscribe[IO]:
+                  props.obsId.toObservationEditInput
+        .useStreamResourceOnMountBy: (props, ctx, _, _) => // Query Sequence
           import ctx.given
 
           val targetChanges = props.targetIds.traverse: targetId =>
@@ -142,19 +158,29 @@ object SequenceTile:
                        .subscribe[IO](props.obsId.toObservationEditInput)
                 t <- targetChanges
               yield o.merge(t.sequence)
-        .useEffectWithDepsBy((_, _, visits, sequenceData) =>
-          (visits.toPot.flatten, sequenceData.toPot.flatten).tupled
-        ): (props, _, _, _) =>
+        .useEffectWithDepsBy((_, _, visits, itc, sequenceData) =>
+          (visits.toPot.flatten, itc.toPot.flatten, sequenceData.toPot.flatten).tupled
+        ): (props, _, _, _, _) =>
           dataPot => props.sequenceChanged.set(dataPot.void)
-        .render: (props, _, visits, sequenceData) =>
+        .render: (props, _, visits, itc, sequenceData) =>
+          // println(itc)
+          val scienceSN =
+            props.itcGraphResults
+              .flatMap(_.resultForBrightest)
+              .map(_.singleSNRatio)
           props.sequenceChanged.get
             .flatMap(_ =>
-              (visits.toPot.flatten, sequenceData.toPot.flatten).tupled
+              (visits.toPot.flatten,
+               itc.toPot.flatten,
+               sequenceData.toPot.flatten,
+               Pot.fromOption(scienceSN)
+              ).tupled
             ) // tupled for Pot
             .renderPot(
-              (visitsOpt, sequenceDataOpt) =>
+              (visitsOpt, itcOpt, sequenceDataOpt, scienceSN) =>
                 // TODO Show visits even if sequence data is not available
                 sequenceDataOpt
+                  .map(SequenceData(_, itcOpt.updated(ObserveClass.Science, scienceSN.value)))
                   .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
                     case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass) =>
                       GmosNorthSequenceTable(

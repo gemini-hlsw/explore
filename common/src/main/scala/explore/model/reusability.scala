@@ -40,6 +40,7 @@ import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.Atom
+import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.itc.ItcCcd
 import lucuma.itc.client.GraphResult
 import lucuma.schemas.ObservationDB.Enums.Existence
@@ -139,6 +140,7 @@ object reusability:
   given Reusability[CallForProposal]                    = Reusability.byEq
   given Reusability[CategoryAllocationList]             = Reusability.byEq
   given Reusability[InstrumentOverrides]                = Reusability.byEq
+  given Reusability[InstrumentExecutionConfig]          = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
   given Reusability[WavelengthDither]                   = Reusability.byEq
   given [A]: Reusability[Offset.Component[A]]           = Reusability.byEq

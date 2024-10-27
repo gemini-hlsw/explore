@@ -116,4 +116,6 @@ case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsR
 case class ItcAsterismGraphResults(
   asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
   brightestTarget: Option[ItcTarget]
-)
+):
+  def resultForBrightest: Option[ItcGraphResult] =
+    brightestTarget.flatMap(asterismGraphs.get).flatMap(_.toOption)

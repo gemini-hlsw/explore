@@ -26,6 +26,26 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
+  trait SequenceItc extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      query($$obsId: ObservationId!) {
+        observation(observationId: $$obsId) {
+          itc {
+            science {
+              selected {
+                signalToNoise
+              }
+            }
+            acquisition {
+              selected {
+                signalToNoise
+              }
+            }
+          }
+        }
+      }"""
+
+  @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
     val document = s"""
       fragment stepDataGN on GmosNorthStep {
