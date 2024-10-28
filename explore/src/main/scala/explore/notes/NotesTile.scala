@@ -10,7 +10,7 @@ import explore.Icons
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.enums.TileSizeState
 import japgolly.scalajs.react.*
@@ -33,7 +33,7 @@ object NotesTile:
 
   def notesTile(obsId: Observation.Id, notes: View[Option[NonEmptyString]]) =
     Tile(
-      ObsTabTilesIds.NotesId.id,
+      ObsTabTileIds.NotesId.id,
       s"Note for Observer",
       NotesTileState(notes.get.foldMap(_.value), Editing.NotEditing),
       bodyClass = ExploreStyles.NotesTile

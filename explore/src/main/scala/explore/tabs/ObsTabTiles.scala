@@ -59,7 +59,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.syntax.all.*
-import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
@@ -109,12 +108,7 @@ case class ObsTabTiles(
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
   val asterismTracking: Option[ObjectTracking]                      =
-    NonEmptyList
-      .fromList:
-        observation.get.scienceTargetIds.toList
-          .map(id => allTargets.get(id))
-          .flattenOption
-      .map(ObjectTracking.fromAsterism(_))
+    observation.get.asterismTracking(allTargets)
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -378,31 +372,7 @@ object ObsTabTiles:
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
               )
 
-            val plotData: Option[PlotData] =
-              props.asterismTracking.map: tracking =>
-                PlotData:
-                  Map(
-                    ObjectPlotData.Id(props.obsId.asLeft) ->
-                      ObjectPlotData(
-                        NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
-                        tracking,
-                        Enumerated[Site].all // In obs elevation plot, we want all solid lines
-                      )
-                  )
-
-            val skyPlotTile =
-              plotData.map:
-                ElevationPlotTile.elevationPlotTile(
-                  props.vault.userId,
-                  _,
-                  props.observation.get.observingMode.map(_.siteFor),
-                  vizTimeView.get,
-                  obsDuration.map(_.toDuration),
-                  timingWindows.get,
-                  props.globalPreferences.get
-                )
-
-            val obsConf =
+            val obsConf: ObsConfiguration =
               ObsConfiguration(
                 basicConfiguration,
                 paProps.some,
@@ -418,6 +388,31 @@ object ObsTabTiles:
                 props.observation.get.selectedGSName,
                 props.observation.get.calibrationRole
               )
+
+            val plotData: Option[PlotData] =
+              props.asterismTracking.map: tracking =>
+                PlotData:
+                  Map(
+                    ObjectPlotData.Id(props.obsId.asLeft) ->
+                      ObjectPlotData(
+                        NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
+                        tracking,
+                        obsConf.configuration.foldMap(conf => List(conf.siteFor))
+                      )
+                  )
+
+            val skyPlotTile: Option[Tile[?]] =
+              plotData.map:
+                ElevationPlotTile.elevationPlotTile(
+                  props.vault.userId,
+                  ObsTabTileIds.PlotId.id,
+                  _,
+                  props.observation.get.observingMode.map(_.siteFor),
+                  vizTimeView.get,
+                  obsDuration.map(_.toDuration),
+                  timingWindows.get,
+                  props.globalPreferences.get
+                )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
               TargetEditObsInfo.fromProgramSummaries(
@@ -485,7 +480,7 @@ object ObsTabTiles:
             // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
             val constraintsTile =
               Tile(
-                ObsTabTilesIds.ConstraintsId.id,
+                ObsTabTileIds.ConstraintsId.id,
                 "Constraints"
               )(
                 renderInTitle =>

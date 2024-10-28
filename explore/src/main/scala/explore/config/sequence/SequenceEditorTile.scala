@@ -8,7 +8,7 @@ import crystal.react.View
 import explore.components.Tile
 import explore.model.AsterismIds
 import explore.model.Execution
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import lucuma.core.model.Program
 
@@ -22,7 +22,7 @@ object SequenceEditorTile:
     sequenceChanged: View[Pot[Unit]]
   ) =
     Tile(
-      ObsTabTilesIds.SequenceId.id,
+      ObsTabTileIds.SequenceId.id,
       s"Sequence"
     )(
       _ =>

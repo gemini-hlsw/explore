@@ -9,7 +9,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.Group
-import explore.model.GroupEditIds
+import explore.model.GroupEditTileIds
 import explore.model.GroupTree
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
@@ -71,7 +71,7 @@ object ObsGroupTiles:
             )
 
           val editTile = Tile(
-            GroupEditIds.GroupEditId.id,
+            GroupEditTileIds.GroupEditId.id,
             s"${
                 if group.get.system then group.get.name.foldMap(_.value)
                 else if group.get.isAnd then "AND"
@@ -93,7 +93,7 @@ object ObsGroupTiles:
           )
 
           val notesTile = Tile(
-            GroupEditIds.GroupNotesId.id,
+            GroupEditTileIds.GroupNotesId.id,
             s"Note for Observer"
           )(_ =>
             <.div(

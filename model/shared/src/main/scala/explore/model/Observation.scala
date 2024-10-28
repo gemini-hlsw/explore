@@ -26,6 +26,7 @@ import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.ObservationWorkflow
@@ -214,6 +215,14 @@ case class Observation(
   def updateToPendingIfConfigurationApplies(config: Configuration): Observation =
     if (configurationApplies(config)) updateNeedsApprovalToPending
     else this
+
+  def asterismTracking(allTargets: TargetList): Option[ObjectTracking] =
+    NonEmptyList
+      .fromList:
+        scienceTargetIds.toList
+          .map(id => allTargets.get(id))
+          .flattenOption
+      .map(ObjectTracking.fromAsterism(_))
 
 object Observation:
   type Id = lucuma.core.model.Observation.Id

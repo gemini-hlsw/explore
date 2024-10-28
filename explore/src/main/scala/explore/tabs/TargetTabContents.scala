@@ -333,7 +333,7 @@ object TargetTabContents extends TwoPanels:
            * Render the summary table.
            */
           val renderSummary: Tile[TargetSummaryTileState] = Tile(
-            ObsTabTilesIds.TargetSummaryId.id,
+            ObsTabTileIds.TargetSummaryId.id,
             "Target Summary",
             TargetSummaryTileState(Nil, none),
             backButton.some
@@ -580,6 +580,7 @@ object TargetTabContents extends TwoPanels:
             val skyPlotTile: Tile[?] =
               ElevationPlotTile.elevationPlotTile(
                 props.userId,
+                TargetTabTileIds.ElevationPlot.id,
                 plotData,
                 configuration.map(_.siteFor),
                 obsTimeView.get,
@@ -593,9 +594,9 @@ object TargetTabContents extends TwoPanels:
 
           // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
           val dummyTargetTile: Tile[Unit]    =
-            Tile(ObsTabTilesIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
+            Tile(ObsTabTileIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
           val dummyElevationTile: Tile[Unit] =
-            Tile(ObsTabTilesIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
+            Tile(ObsTabTileIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
 
           /**
            * Renders a single sidereal target editor without an obs context
@@ -633,6 +634,7 @@ object TargetTabContents extends TwoPanels:
           val skyPlotTile: Tile[?] =
             ElevationPlotTile.elevationPlotTile(
               props.userId,
+              TargetTabTileIds.ElevationPlot.id,
               plotData,
               selectedTargetIds.get.headOption.flatMap(props.sitesForTarget(_).headOption),
               none,
@@ -672,9 +674,9 @@ object TargetTabContents extends TwoPanels:
             val (tiles, key) =
               observationSetTargetEditorTile
                 .map:
-                  (_, TargetTabControllerIds.AsterismEditor.id)
+                  (_, TargetTabTileIds.AsterismEditor.id)
                 .getOrElse:
-                  (selectedTargetsTiles, TargetTabControllerIds.Summary.id)
+                  (selectedTargetsTiles, TargetTabTileIds.Summary.id)
 
             TileController(
               props.userId,

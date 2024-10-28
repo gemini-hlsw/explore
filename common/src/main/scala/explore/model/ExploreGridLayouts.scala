@@ -24,14 +24,15 @@ import scala.collection.immutable.SortedMap
 object ExploreGridLayouts:
 
   def sectionLayout: GridLayoutSection => LayoutsMap = _ match {
-    case GridLayoutSection.ProgramsLayout     => programs.defaultProgramsLayouts
-    case GridLayoutSection.ConstraintsLayout  => constraints.defaultConstraintsLayouts
-    case GridLayoutSection.SchedulingLayout   => scheduling.defaultSchedulingLayouts
-    case GridLayoutSection.TargetLayout       => targets.defaultTargetLayouts
-    case GridLayoutSection.ObservationsLayout => observations.defaultObsLayouts
-    case GridLayoutSection.OverviewLayout     => overview.defaultOverviewLayouts
-    case GridLayoutSection.ProposalLayout     => proposal.defaultProposalLayouts
-    case GridLayoutSection.GroupEditLayout    => groupEdit.defaultGroupEditLayouts
+    case GridLayoutSection.ProgramsLayout        => programs.defaultProgramsLayouts
+    case GridLayoutSection.ConstraintsLayout     => constraints.defaultConstraintsLayouts
+    case GridLayoutSection.SchedulingLayout      => scheduling.defaultSchedulingLayouts
+    case GridLayoutSection.TargetLayout          => targets.defaultTargetLayouts
+    case GridLayoutSection.ObservationsLayout    => observations.defaultObsLayouts
+    case GridLayoutSection.ObservationListLayout => observationList.defaultObsListLayouts
+    case GridLayoutSection.OverviewLayout        => overview.defaultOverviewLayouts
+    case GridLayoutSection.ProposalLayout        => proposal.defaultProposalLayouts
+    case GridLayoutSection.GroupEditLayout       => groupEdit.defaultGroupEditLayouts
   }
 
   extension (l: LayoutsMap)
@@ -63,14 +64,14 @@ object ExploreGridLayouts:
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTilesIds.ConstraintsId.id.value,
+          i = ObsTabTileIds.ConstraintsId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
           h = ConstraintsHeight.value
         ),
         LayoutItem(
-          i = ObsTabTilesIds.TimingWindowsId.id.value,
+          i = ObsTabTileIds.TimingWindowsId.id.value,
           x = 0,
           y = ConstraintsHeight.value,
           w = DefaultWidth.value,
@@ -95,7 +96,7 @@ object ExploreGridLayouts:
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTilesIds.TimingWindowsId.id.value,
+          i = ObsTabTileIds.TimingWindowsId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
@@ -122,21 +123,21 @@ object ExploreGridLayouts:
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTilesIds.TargetSummaryId.id.value,
+          i = ObsTabTileIds.TargetSummaryId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
           h = SummaryHeight.value
         ),
         LayoutItem(
-          i = ObsTabTilesIds.TargetId.id.value,
+          i = ObsTabTileIds.TargetId.id.value,
           x = 0,
           y = SummaryHeight.value,
           w = DefaultWidth.value,
           h = TargetHeight.value
         ),
         LayoutItem(
-          i = ObsTabTilesIds.PlotId.id.value,
+          i = ObsTabTileIds.PlotId.id.value,
           x = 0,
           y = SummaryHeight.value + TargetHeight.value,
           w = DefaultWidth.value,
@@ -157,7 +158,7 @@ object ExploreGridLayouts:
     private lazy val singleLayoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTilesIds.TargetSummaryId.id.value,
+          i = ObsTabTileIds.TargetSummaryId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
@@ -195,35 +196,35 @@ object ExploreGridLayouts:
           y = 0,
           w = DefaultWidth.value,
           h = NotesMaxHeight.value,
-          i = ObsTabTilesIds.NotesId.id.value
+          i = ObsTabTileIds.NotesId.id.value
         ),
         LayoutItem(
           x = 0,
           y = NotesMaxHeight.value,
           w = DefaultWidth.value,
           h = TargetHeight.value,
-          i = ObsTabTilesIds.TargetId.id.value
+          i = ObsTabTileIds.TargetId.id.value
         ),
         LayoutItem(
           x = 0,
           y = (NotesMaxHeight |+| TargetHeight).value,
           w = DefaultWidth.value,
           h = FinderChartHeight.value,
-          i = ObsTabTilesIds.FinderChartsId.id.value
+          i = ObsTabTileIds.FinderChartsId.id.value
         ),
         LayoutItem(
           x = 0,
           y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight).value,
           w = DefaultWidth.value,
           h = SkyPlotHeight.value,
-          i = ObsTabTilesIds.PlotId.id.value
+          i = ObsTabTileIds.PlotId.id.value
         ),
         LayoutItem(
           x = 0,
           y = (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight).value,
           w = DefaultWidth.value,
           h = ConstraintsMaxHeight.value,
-          i = ObsTabTilesIds.ConstraintsId.id.value
+          i = ObsTabTileIds.ConstraintsId.id.value
         ),
         LayoutItem(
           x = 0,
@@ -231,7 +232,7 @@ object ExploreGridLayouts:
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight).value,
           w = DefaultWidth.value,
           h = TimingWindowsMaxHeight.value,
-          i = ObsTabTilesIds.TimingWindowsId.id.value
+          i = ObsTabTileIds.TimingWindowsId.id.value
         ),
         LayoutItem(
           x = 0,
@@ -239,7 +240,7 @@ object ExploreGridLayouts:
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight).value,
           w = DefaultWidth.value,
           h = ConfigurationMaxHeight.value,
-          i = ObsTabTilesIds.ConfigurationId.id.value
+          i = ObsTabTileIds.ConfigurationId.id.value
         ),
         LayoutItem(
           x = 0,
@@ -247,7 +248,7 @@ object ExploreGridLayouts:
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight).value,
           w = DefaultWidth.value,
           h = ItcMaxHeight.value,
-          i = ObsTabTilesIds.ItcId.id.value
+          i = ObsTabTileIds.ItcId.id.value
         ),
         LayoutItem(
           x = 0,
@@ -255,7 +256,7 @@ object ExploreGridLayouts:
             (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| ItcMaxHeight).value,
           w = DefaultWidth.value,
           h = SequenceMaxHeight.value,
-          i = ObsTabTilesIds.SequenceId.id.value
+          i = ObsTabTileIds.SequenceId.id.value
         )
       )
     )
@@ -268,6 +269,40 @@ object ExploreGridLayouts:
         )
       ).withMinWidth
   end observations
+
+  object observationList:
+    private lazy val SummaryHeight: NonNegInt = 9.refined
+    private lazy val SkyPlotHeight: NonNegInt = 9.refined
+
+    private lazy val layoutMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          i = ObsSummaryTabTileIds.SummaryId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = SummaryHeight.value
+        ),
+        LayoutItem(
+          i = ObsSummaryTabTileIds.PlotId.id.value,
+          x = 0,
+          y = SummaryHeight.value,
+          w = DefaultWidth.value,
+          h = SkyPlotHeight.value
+        )
+      )
+    )
+
+    lazy val defaultObsListLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg,
+           layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+          ),
+          (BreakpointName.md, layoutMedium)
+        )
+      ).withMinWidth
+  end observationList
 
   object programs:
     private lazy val DetailsHeight: NonNegInt        = 6.refined
@@ -318,14 +353,14 @@ object ExploreGridLayouts:
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTilesIds.WarningsAndErrorsId.id.value,
+          i = ObsTabTileIds.WarningsAndErrorsId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
           h = WarningsAndErrorsHeight.value
         ),
         LayoutItem(
-          i = ObsTabTilesIds.ObsAttachmentsId.id.value,
+          i = ObsTabTileIds.ObsAttachmentsId.id.value,
           x = 0,
           y = WarningsAndErrorsHeight.value,
           w = DefaultWidth.value,
@@ -403,14 +438,14 @@ object ExploreGridLayouts:
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = GroupEditIds.GroupEditId.id.value,
+          i = GroupEditTileIds.GroupEditId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
           h = GroupEditHeight.value
         ),
         LayoutItem(
-          i = GroupEditIds.GroupNotesId.id.value,
+          i = GroupEditTileIds.GroupNotesId.id.value,
           x = 0,
           y = GroupEditHeight.value,
           w = DefaultWidth.value,
