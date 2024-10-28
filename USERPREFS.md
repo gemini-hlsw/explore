@@ -32,7 +32,7 @@ We have four environments with a respective db and heroku app:
 You can spin up a server that servers a console app for an environment by using the CLI from the `hasura/user-prefs` directory. For example:
 
 ```
-hasura console --endpoint https://user-prefs-development.herokuapp.com
+hasura console --endpoint https://user-prefs-master.herokuapp.com
 ```
 
 ## Copy the database
