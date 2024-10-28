@@ -17,8 +17,6 @@ import explore.model.Observation
 import explore.optics.all.*
 import explore.undo.Action
 import japgolly.scalajs.react.*
-import lucuma.core.enums.ObsActiveStatus
-import lucuma.core.enums.ObsStatus
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB
@@ -29,21 +27,24 @@ import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
 
 object ObsActions:
-  def obsEditStatus(
-    obsId: Observation.Id
-  )(using FetchClient[IO, ObservationDB]): Action[ObservationList, Option[ObsStatus]] =
-    Action(
-      access = obsWithId(obsId).composeOptionLens(Observation.status)
-    )(onSet =
-      (_, status) =>
-        UpdateObservationMutation[IO]
-          .execute:
-            UpdateObservationsInput(
-              WHERE = obsId.toWhereObservation.assign,
-              SET = ObservationPropertiesInput(status = status.orIgnore)
-            )
-          .void
-    )
+  def obsEditState(obsId: Observation.Id)(using
+    FetchClient[IO, ObservationDB]
+  ) = Action(
+    // need to also optimistically update the list of valid transistions
+    access = obsWithId(obsId).composeOptionLens(Observation.unlawfulWorkflowState)
+  )(
+    onSet =
+    (_, status) => IO.unit
+    // Update when we have a mutation for workflow state
+    // UpdateObservationMutation[IO]
+    //   .execute(
+    //     UpdateObservationsInput(
+    //       WHERE = obsId.toWhereObservation.assign,
+    //       SET = ObservationPropertiesInput(status = status.orIgnore)
+    //     )
+    //   )
+    //   .void
+  )
 
   def obsEditSubtitle(obsId: Observation.Id)(using
     FetchClient[IO, ObservationDB]
@@ -59,22 +60,6 @@ object ObsActions:
           )
         .void
   )
-
-  def obsActiveStatus(obsId: Observation.Id)(using
-    FetchClient[IO, ObservationDB]
-  ): Action[ObservationList, Option[ObsActiveStatus]] =
-    Action(
-      access = obsWithId(obsId).composeOptionLens(Observation.activeStatus)
-    )(onSet =
-      (_, activeStatus) =>
-        UpdateObservationMutation[IO]
-          .execute:
-            UpdateObservationsInput(
-              WHERE = obsId.toWhereObservation.assign,
-              SET = ObservationPropertiesInput(activeStatus = activeStatus.orIgnore)
-            )
-          .void
-    )
 
   def obsScienceBand(
     obsId: Observation.Id

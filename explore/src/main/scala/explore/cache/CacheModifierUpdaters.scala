@@ -21,6 +21,7 @@ import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
+import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription.Data.ConfigurationRequestEdit
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
@@ -163,6 +164,14 @@ trait CacheModifierUpdaters {
     ProgramSummaries.programs
       .modify(_.updated(programEdit.value.id, programEdit.value))
 
+  protected def modifyConfigurationRequests(
+    crEdit: ConfigurationRequestEdit
+  ): ProgramSummaries => ProgramSummaries =
+    crEdit.configurationRequest.foldMap: cr =>
+      ProgramSummaries.configurationRequests
+        .modify: crs =>
+          crs.updated(cr.id, cr)
+
   /**
    * Update the groups for an observation edit. When an observation is updated, we also need to
    * update the groups it belongs to.
@@ -219,5 +228,4 @@ trait CacheModifierUpdaters {
       ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
         programSummaries
       )
-
 }

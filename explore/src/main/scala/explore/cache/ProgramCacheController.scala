@@ -25,12 +25,14 @@ import fs2.Pipe
 import fs2.Stream
 import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.ObservationDB.Types.ConfigurationRequestEditInput
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL
@@ -132,9 +134,26 @@ object ProgramCacheController
         offset =>
           ProgramSummaryQueriesGQL
             .AllProgramObservations[IO]
-            .query(props.programId.toWhereObservation, offset.orUnassign),
+            .query(props.programId.toWhereObservation, offset.orUnassign)(using
+              // We need this because we currently get errors for things like having no targets
+              ErrorPolicy.IgnoreOnData
+            ),
         _.observations.matches,
         _.observations.hasMore,
+        _.id
+      )
+
+    val configurationRequests: IO[List[ConfigurationRequest]] =
+      drain[ConfigurationRequest,
+            ConfigurationRequest.Id,
+            ProgramSummaryQueriesGQL.AllProgramConfigurationRequests.Data
+      ](
+        offset =>
+          ProgramSummaryQueriesGQL
+            .AllProgramConfigurationRequests[IO]
+            .query(props.programId, offset.orUnassign),
+        _.program.foldMap(_.configurationRequests.matches),
+        _.program.fold(false)(_.configurationRequests.hasMore),
         _.id
       )
 
@@ -173,21 +192,23 @@ object ProgramCacheController
       val obsPots   = observations.map(o => (o.id, Pot.pending)).toMap
       val groupPots =
         groups.collect { case (Right(gId), _, _) => gId -> Pot.pending }.toMap
-      (optProgramDetails, targets, attachments, programs).mapN { case (pd, ts, (oas, pas), ps) =>
-        ProgramSummaries
-          .fromLists(
-            pd,
-            ts,
-            observations,
-            groups,
-            systemGroups,
-            oas,
-            pas,
-            ps,
-            Pot.pending,
-            obsPots,
-            groupPots
-          )
+      (optProgramDetails, targets, attachments, programs, configurationRequests).mapN {
+        case (pd, ts, (oas, pas), ps, crs) =>
+          ProgramSummaries
+            .fromLists(
+              pd,
+              ts,
+              observations,
+              groups,
+              systemGroups,
+              oas,
+              pas,
+              ps,
+              Pot.pending,
+              obsPots,
+              groupPots,
+              crs
+            )
       }
 
     def combineTimesUpdates(
@@ -239,6 +260,12 @@ object ProgramCacheController
             TargetQueriesGQL.ProgramTargetsDelta
               .subscribe[IO](props.programId.toTargetEditInput)
               .map(_.map(data => modifyTargets(data.targetEdit)))
+
+          val updateConfigurationRequests
+            : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+            ProgramQueriesGQL.ConfigurationRequestSubscription
+              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
+              .map(_.map(data => modifyConfigurationRequests(data.configurationRequestEdit)))
 
           val onlyExistingObs: Pipe[
             IO,
@@ -317,7 +344,8 @@ object ProgramCacheController
             updateObservations,
             updateGroups,
             updateAttachments,
-            updatePrograms
+            updatePrograms,
+            updateConfigurationRequests
           ).sequence.map: updateStreams =>
             (updateStreams :+ updateProgramTimesStream)
               .reduceLeft(_.merge(_))

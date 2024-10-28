@@ -10,6 +10,8 @@ import explore.model.GroupUpdate
 
 import GroupQueriesGQL.*
 
+// gql: import lucuma.odb.json.configurationrequest.query.given
+
 object ProgramQueriesGQL:
   @GraphQL
   trait CreateProgramMutation extends GraphQLOperation[ObservationDB]:
@@ -107,6 +109,16 @@ object ProgramQueriesGQL:
       subscription {
         programEdit {
           value $ProgramInfoSubquery
+        }
+      }
+    """
+
+  @GraphQL
+  trait ConfigurationRequestSubscription extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      subscription($$input: ConfigurationRequestEditInput!) {
+        configurationRequestEdit(input: $$input) {
+          configurationRequest $ConfigurationRequestSubquery
         }
       }
     """

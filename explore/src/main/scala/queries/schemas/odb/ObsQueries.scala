@@ -15,6 +15,7 @@ import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.Observation
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Group
@@ -286,3 +287,9 @@ object ObsQueries:
       targetName = targetName.orUnassign
     )
     SetGuideTargetName[F].execute(input).void
+
+  def createConfigurationRequest[F[_]: Async](
+    obsId: Observation.Id
+  )(using FetchClient[F, ObservationDB]): F[ConfigurationRequest] =
+    val input = CreateConfigurationRequestInput(obsId.assign)
+    CreateConfigurationRequestMutation[F].execute(input).map(_._1)

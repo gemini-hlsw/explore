@@ -7,6 +7,7 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
+// gql: import lucuma.odb.json.configurationrequest.query.given
 // gql: import lucuma.schemas.decoders.given
 
 object ProgramSummaryQueriesGQL {
@@ -29,6 +30,20 @@ object ProgramSummaryQueriesGQL {
         targets(WHERE: $$where, OFFSET: $$OFFSET) {
           matches $TargetWithIdSubquery
           hasMore
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait AllProgramConfigurationRequests extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$pid: ProgramId!, $$OFFSET: ConfigurationRequestId) {
+        program(programId: $$pid) {
+          configurationRequests(OFFSET: $$OFFSET) {
+            matches $ConfigurationRequestSubquery
+            hasMore
+          }
         }
       }
     """

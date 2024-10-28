@@ -3,8 +3,10 @@
 
 package explore.validations
 
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.syntax.effect.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -32,6 +34,7 @@ import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
+import queries.schemas.odb.ObsQueries
 
 import scala.scalajs.js
 
@@ -40,7 +43,7 @@ type ObservationValidationsTableTileState = ObservationValidationsTableTileState
 
 case class ObservationValidationsTableBody(
   programId:    Program.Id,
-  observations: ObservationList,
+  observations: View[ObservationList],
   tileState:    View[ObservationValidationsTableTileState]
 ) extends ReactFnProps(ObservationValidationsTableBody.component)
 
@@ -53,14 +56,15 @@ object ObservationValidationsTableBody {
 
   private val ObservationIdColumnId     = ColumnId("observation_id")
   private val ObservationTitleColumnId  = ColumnId("observation_title")
-  private val ObservationStatusColumnId = ColumnId("observation_status")
+  private val ObservationStateColumnId  = ColumnId("observation_state")
   private val ValidationCodeColumnId    = ColumnId("validation_code")
   private val ValidationMessageColumnId = ColumnId("validation_message")
+  private val ActionsColumnId           = ColumnId("actions")
 
   private val columnNames: Map[ColumnId, String] = Map(
     ObservationIdColumnId     -> "Observation Id",
     ObservationTitleColumnId  -> "Title",
-    ObservationStatusColumnId -> "Status",
+    ObservationStateColumnId  -> "State",
     ValidationCodeColumnId    -> "Category",
     ValidationMessageColumnId -> "Validation"
   )
@@ -82,6 +86,8 @@ object ObservationValidationsTableBody {
     .useContext(AppContext.ctx)
     // columns
     .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
+      import ctx.given
+
       def obsUrl(obsId: Observation.Id): String    =
         ctx.pageUrl(AppTab.Observations, props.programId, Focused.singleObs(obsId))
       def goToObs(obsId: Observation.Id): Callback =
@@ -89,6 +95,24 @@ object ObservationValidationsTableBody {
 
       def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing]): Callback =
         row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
+
+      def requestApprovalButton(row: ValidationsTableRow): Option[Button] =
+        row
+          .forObsOption(row =>
+            val obs = row.obs
+            if (obs.hasNeedsApprovalError)
+              obs.configuration.flatMap(config =>
+                Button(
+                  "Request Approval",
+                  onClick = props.observations.mod(
+                    // this also gets rid of any buttons on "affected" observations
+                    _.unsafeMapValues(_.updateToPendingIfConfigurationApplies(config))
+                  ) >>
+                    ObsQueries.createConfigurationRequest[IO](row.id).void.runAsync
+                ).tiny.compact.some
+              )
+            else none
+          )
 
       List(
         ColDef(
@@ -113,7 +137,7 @@ object ObservationValidationsTableBody {
               )
           )
           .setSize(50.toPx),
-        column(ObservationStatusColumnId, _.forObs(_.obs.status)).setMaxSize(50.toPx),
+        column(ObservationStateColumnId, _.forObs(_.obs.workflow.state)).setMaxSize(50.toPx),
         column(ObservationTitleColumnId, _.forObs(_.obs.title)).setCell(_.value),
         ColDef(
           ValidationCodeColumnId,
@@ -124,19 +148,23 @@ object ObservationValidationsTableBody {
           ValidationMessageColumnId,
           cell = cell => cell.row.original.value.message(cell.row.getIsExpanded()),
           header = columnNames(ValidationMessageColumnId)
-        )
+        ),
+        ColDef(
+          ActionsColumnId,
+          cell = cell => requestApprovalButton(cell.row.original.value)
+        ).setMaxSize(111.toPx)
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => props.observations.toList)((_, _, _) =>
-      _.filterNot(_.validations.isEmpty)
+    .useMemoBy((props, _, _) => props.observations.get.toList)((_, _, _) =>
+      _.filterNot(_.workflow.validationErrors.isEmpty)
         .map(obs =>
           Expandable(
             ObsRow(obs),
-            if (obs.validations.size > 1)
+            if (obs.workflow.validationErrors.size > 1)
               // only include the tails for messages and validations. The head will be shown in the "parent" row.
-              messagesTailRows(obs.id, obs.validations.head) ++
-                obs.validations.tail
+              messagesTailRows(obs.id, obs.workflow.validationErrors.head) ++
+                obs.workflow.validationErrors.tail
                   .map(v =>
                     Expandable(
                       ValidationRow(obs.id, v),
@@ -201,13 +229,19 @@ object ObservationValidationsTableBody {
         case r: ValidationRow => g(r)
         case r: MessageRow    => h(r)
 
+    def id: Observation.Id = fold(_.obs.id, _.obsId, _.obsId)
+
     def forObs[A](f: ObsRow => A): js.UndefOr[A] =
       fold(r => f(r), _ => js.undefined, _ => js.undefined)
 
+    def forObsOption[A](f: ObsRow => Option[A]): Option[A] =
+      fold(f, _ => none, _ => none[A])
+
     def rowId: String =
-      fold(_.obs.id.toString,
-           r => s"${r.obsId}-${r.validation.code.tag}",
-           r => s"${r.obsId}-${r.code.tag}-${r.message}"
+      fold(
+        _.obs.id.toString,
+        r => s"${r.obsId}-${r.validation.code.tag}",
+        r => s"${r.obsId}-${r.code.tag}-${r.message}"
       )
 
     private def categoryCell(validations: ObservationValidation*) =
@@ -217,8 +251,8 @@ object ObservationValidationsTableBody {
     def category(isExpanded: Boolean): VdomElement =
       fold(
         r =>
-          if (isExpanded) categoryCell(r.obs.validations.head) // head is safe here
-          else categoryCell(r.obs.validations*),
+          if (isExpanded) categoryCell(r.obs.workflow.validationErrors.head) // head is safe here
+          else categoryCell(r.obs.workflow.validationErrors*),
         r => categoryCell(r.validation),
         _ => <.span()
       )
@@ -226,8 +260,8 @@ object ObservationValidationsTableBody {
     def message(isExpanded: Boolean): String =
       fold(
         r =>
-          if (isExpanded) r.obs.validations.headOption.map(_.messages.head).orEmpty
-          else r.obs.validations.flatMap(_.messages.toList).mkString(", "),
+          if (isExpanded) r.obs.workflow.validationErrors.headOption.map(_.messages.head).orEmpty
+          else r.obs.workflow.validationErrors.flatMap(_.messages.toList).mkString(", "),
         r =>
           if (isExpanded) r.validation.messages.head
           else r.validation.messages.mkString_(", "),

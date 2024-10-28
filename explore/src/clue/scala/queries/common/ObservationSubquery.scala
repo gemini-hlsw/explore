@@ -17,8 +17,6 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           id
           title
           subtitle
-          status
-          activeStatus
           observationTime
           observationDuration $TimeSpanSubquery
           posAngleConstraint $PosAngleConstraintSubquery
@@ -46,12 +44,10 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
             }
           }
           observingMode $ObservingModeSubquery
-          validations {
-            code
-            messages
-          }
           observerNotes
           calibrationRole
           scienceBand
+          configuration $ConfigurationSubquery
+          workflow $ObservationWorkflowSubquery
         }
       """

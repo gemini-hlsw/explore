@@ -8,6 +8,7 @@ import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
+// gql: import lucuma.odb.json.configurationrequest.query.given
 // gql: import io.circe.refined.given
 
 object ObsQueriesGQL:
@@ -167,6 +168,15 @@ object ObsQueriesGQL:
         cloneObservation(input: $$input) {
           newObservation $ObservationSubquery
         }
+      }
+    """
+
+  @GraphQL
+  trait CreateConfigurationRequestMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: CreateConfigurationRequestInput!) {
+        createConfigurationRequest(input: $$input) 
+          $ConfigurationRequestSubquery
       }
     """
 
