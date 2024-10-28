@@ -1514,10 +1514,6 @@ svg.fa-triangle-exclamation.explore-error-icon {
     justify-content: space-between;
     /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
     font-size: var(--pl-tiny-font-size);
-
-    // because of the rotate, Y is X
-    $active-status-translate-x: -0.4em;
-    $active-status-translate-y: 2em;
   }
 
   .obs-badge-extra {
@@ -1526,7 +1522,7 @@ svg.fa-triangle-exclamation.explore-error-icon {
     justify-content: space-between;
     gap: 2em;
 
-    .obs-status-select-wrapper {
+    .obs-state-select-wrapper {
       flex-grow: 2;
     }
   }
@@ -1565,14 +1561,14 @@ svg.fa-triangle-exclamation.explore-error-icon {
     padding-right: 0 !important;
   }
 
-  .obs-status-select {
+  .obs-state-select {
     width: 100%;
     background-color: var(--obs-selected-badge-background);
   }
 }
 
 // The panel is not nested in the obs badge
-.obs-status-select-panel.p-dropdown-panel {
+.obs-state-select-panel.p-dropdown-panel {
   background-color: var(--obs-selected-badge-background);
 }
 
