@@ -316,7 +316,7 @@ object ObsTabContents extends TwoPanels:
             ElevationPlotTile.elevationPlotTile(
               props.vault.userId,
               plotData,
-              none, // Deduce site from the first target
+              none, // TODO Deduce site from the first target?
               none,
               none,
               List.empty,
