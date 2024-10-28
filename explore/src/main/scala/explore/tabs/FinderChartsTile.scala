@@ -13,7 +13,7 @@ import explore.findercharts.FinderChartsBody
 import explore.findercharts.FinderChartsTileState
 import explore.findercharts.FinderChartsTitle
 import explore.model.ObsAttachmentList
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
@@ -35,7 +35,7 @@ object FinderChartsTile:
     readOnly:         Boolean
   ) =
     Tile(
-      ObsTabTilesIds.FinderChartsId.id,
+      ObsTabTileIds.FinderChartsId.id,
       s"Finder Charts",
       FinderChartsTileState(ChartSelector.Closed, None),
       bodyClass = ExploreStyles.FinderChartsTile

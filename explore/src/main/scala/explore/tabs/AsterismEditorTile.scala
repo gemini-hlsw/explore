@@ -13,7 +13,7 @@ import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
@@ -74,7 +74,7 @@ object AsterismEditorTile:
       )
 
     Tile(
-      ObsTabTilesIds.TargetId.id,
+      ObsTabTileIds.TargetId.id,
       title,
       AsterismTileState(),
       back = backButton,

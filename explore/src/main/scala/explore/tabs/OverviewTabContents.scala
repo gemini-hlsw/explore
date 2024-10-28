@@ -15,7 +15,7 @@ import explore.model.AppContext
 import explore.model.ExploreGridLayouts
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObsAttachmentList
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.ObservationList
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -53,7 +53,7 @@ object OverviewTabContents {
         val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.OverviewLayout)
 
         val warningsAndErrorsTile = Tile(
-          ObsTabTilesIds.WarningsAndErrorsId.id,
+          ObsTabTileIds.WarningsAndErrorsId.id,
           "Warnings And Errors",
           ObservationValidationsTableTileState(_ => Callback.empty)
         )(ObservationValidationsTableBody(props.programId, props.observations, _),
@@ -63,7 +63,7 @@ object OverviewTabContents {
         val obsAttachmentsTile = props.userVault
           .map(vault =>
             Tile(
-              ObsTabTilesIds.ObsAttachmentsId.id,
+              ObsTabTileIds.ObsAttachmentsId.id,
               "Observation Attachments",
               ObsAttachmentsTableTileState()
             )(

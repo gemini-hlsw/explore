@@ -13,7 +13,7 @@ import explore.itc.ItcPanelTitle
 import explore.itc.ItcProps
 import explore.itc.SelectedItcTarget
 import explore.model.GlobalPreferences
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.TargetList
 import explore.model.itc.ItcAsterismGraphResults
@@ -33,7 +33,7 @@ object ItcTile:
     globalPreferences: View[GlobalPreferences]
   ) =
     Tile(
-      ObsTabTilesIds.ItcId.id,
+      ObsTabTileIds.ItcId.id,
       s"ITC",
       SelectedItcTarget(itcGraphResults.toOption.flatMap(_.brightestTarget)),
       bodyClass =

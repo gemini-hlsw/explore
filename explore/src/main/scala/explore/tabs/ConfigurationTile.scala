@@ -12,7 +12,7 @@ import explore.config.ConfigurationPanel
 import explore.model.AsterismIds
 import explore.model.BasicConfigAndItc
 import explore.model.ObsConfiguration
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
@@ -48,7 +48,7 @@ object ConfigurationTile:
     units:              WavelengthUnits
   )(using Logger[IO]) =
     Tile(
-      ObsTabTilesIds.ConfigurationId.id,
+      ObsTabTileIds.ConfigurationId.id,
       "Configuration",
       bodyClass = ExploreStyles.ConfigurationTileBody
     )(_ =>

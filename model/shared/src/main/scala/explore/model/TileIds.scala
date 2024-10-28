@@ -6,7 +6,7 @@ package explore.model
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.refined.*
 
-enum ObsTabTilesIds:
+enum ObsTabTileIds:
   case NotesId, TargetSummaryId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId,
     TimingWindowsId, WarningsAndErrorsId, ObsAttachmentsId, FinderChartsId, SequenceId
 
@@ -48,13 +48,14 @@ enum ProposalTabTileIds:
     case AbstractId    => "proposalAbstract".refined
     case AttachmentsId => "proposalAttachments".refined
 
-enum GroupEditIds:
+enum GroupEditTileIds:
   case GroupEditId, GroupNotesId
 
   def id: NonEmptyString = this match
     case GroupEditId  => "groupEdit".refined
     case GroupNotesId => "groupNotes".refined
 
-enum TargetTabControllerIds(val id: NonEmptyString):
-  case Summary        extends TargetTabControllerIds("target-summary-controller".refined)
-  case AsterismEditor extends TargetTabControllerIds("target-obs-controller".refined)
+enum TargetTabTileIds(val id: NonEmptyString):
+  case Summary        extends TargetTabTileIds("targetSummary".refined)
+  case AsterismEditor extends TargetTabTileIds("targetEditor".refined)
+  case ElevationPlot  extends TargetTabTileIds("targetPlot".refined)

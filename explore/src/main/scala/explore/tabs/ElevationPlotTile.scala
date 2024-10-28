@@ -4,10 +4,10 @@
 package explore.tabs
 
 import cats.syntax.all.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.GlobalPreferences
-import explore.model.ObsTabTilesIds
 import explore.targeteditor.plots.ObjectPlotSection
 import explore.targeteditor.plots.PlotData
 import japgolly.scalajs.react.*
@@ -24,6 +24,7 @@ object ElevationPlotTile:
 
   def elevationPlotTile(
     userId:            Option[User.Id],
+    tileId:            NonEmptyString,
     plotData:          PlotData,
     site:              Option[Site],
     vizTime:           Option[Instant],
@@ -32,7 +33,7 @@ object ElevationPlotTile:
     globalPreferences: GlobalPreferences
   ): Tile[Unit] =
     Tile(
-      ObsTabTilesIds.PlotId.id,
+      tileId,
       "Elevation Plot",
       bodyClass = ExploreStyles.ElevationPlotTileBody
     ) { _ =>

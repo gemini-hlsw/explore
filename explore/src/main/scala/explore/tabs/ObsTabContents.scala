@@ -52,7 +52,6 @@ import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.table.Expandable
 import lucuma.react.table.Table
-import lucuma.refined.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -272,7 +271,7 @@ object ObsTabContents extends TwoPanels:
 
           val obsSummaryTableTile: Tile[?] =
             Tile(
-              "observations".refined,
+              ObsSummaryTabTileIds.SummaryId.id,
               "Observations Summary",
               none[Table[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]],
               backButton.some,
@@ -315,6 +314,7 @@ object ObsTabContents extends TwoPanels:
           val skyPlotTile: Tile[?] =
             ElevationPlotTile.elevationPlotTile(
               props.vault.userId,
+              ObsSummaryTabTileIds.PlotId.id,
               plotData,
               none, // TODO Deduce site from the first target?
               none,
@@ -322,9 +322,6 @@ object ObsTabContents extends TwoPanels:
               List.empty,
               props.globalPreferences.get
             )
-
-          println(pprint(ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationListLayout)))
-          println(pprint(props.userPreferences.get.observationListTabLayout))
 
           val summaryTiles: VdomNode =
             TileController(

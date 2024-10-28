@@ -240,7 +240,7 @@ object ConstraintsTabContents extends TwoPanels:
 
               val constraintsTile: Tile[Option[VdomNode]] =
                 Tile(
-                  ObsTabTilesIds.ConstraintsId.id,
+                  ObsTabTileIds.ConstraintsId.id,
                   constraintsTitle,
                   backButton.some
                 )(_ =>

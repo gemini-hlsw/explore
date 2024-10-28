@@ -13,7 +13,7 @@ import explore.Icons
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
-import explore.model.ObsTabTilesIds
+import explore.model.ObsTabTileIds
 import explore.model.enums.TileSizeState
 import explore.model.formats.*
 import explore.model.reusability.given
@@ -75,7 +75,7 @@ object TimingWindowsTile:
     val base  = "Scheduling Windows"
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
-    Tile(ObsTabTilesIds.TimingWindowsId.id,
+    Tile(ObsTabTileIds.TimingWindowsId.id,
          title,
          TimingWindowsTileState(),
          canMaximize = !fullSize,

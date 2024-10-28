@@ -405,6 +405,7 @@ object ObsTabTiles:
               plotData.map:
                 ElevationPlotTile.elevationPlotTile(
                   props.vault.userId,
+                  ObsTabTileIds.PlotId.id,
                   _,
                   props.observation.get.observingMode.map(_.siteFor),
                   vizTimeView.get,
@@ -479,7 +480,7 @@ object ObsTabTiles:
             // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
             val constraintsTile =
               Tile(
-                ObsTabTilesIds.ConstraintsId.id,
+                ObsTabTileIds.ConstraintsId.id,
                 "Constraints"
               )(
                 renderInTitle =>
