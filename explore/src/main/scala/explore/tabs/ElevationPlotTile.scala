@@ -30,7 +30,8 @@ object ElevationPlotTile:
     vizTime:           Option[Instant],
     pendingTime:       Option[Duration],
     timingWindows:     List[TimingWindow] = List.empty,
-    globalPreferences: GlobalPreferences
+    globalPreferences: GlobalPreferences,
+    emptyMessage:      String
   ): Tile[Unit] =
     Tile(
       tileId,
@@ -46,7 +47,8 @@ object ElevationPlotTile:
             vizTime,
             pendingTime,
             timingWindows,
-            globalPreferences
+            globalPreferences,
+            emptyMessage
           ): VdomNode
         .getOrElse:
           <.div(

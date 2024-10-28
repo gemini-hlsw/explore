@@ -320,7 +320,8 @@ object ObsTabContents extends TwoPanels:
               none,
               none,
               List.empty,
-              props.globalPreferences.get
+              props.globalPreferences.get,
+              "No observation selected"
             )
 
           val summaryTiles: VdomNode =

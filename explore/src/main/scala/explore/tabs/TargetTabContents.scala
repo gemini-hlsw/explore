@@ -501,8 +501,9 @@ object TargetTabContents extends TwoPanels:
                  } else {
                    // We'll open all of the original groups who had any observations affected by the cloning.
                    props.expandedIds.mod(_ ++ SortedSet.from(allOriginalGroups)) >>
-                     setCurrentTarget(idsToEdit.some)(params.originalId.some,
-                                                      SetRouteVia.HistoryReplace
+                     setCurrentTarget(idsToEdit.some)(
+                       params.originalId.some,
+                       SetRouteVia.HistoryReplace
                      )
                  })
 
@@ -544,6 +545,7 @@ object TargetTabContents extends TwoPanels:
             val asterismEditorTile =
               AsterismEditorTile.asterismEditorTile(
                 props.userId,
+                TargetTabTileIds.AsterismEditor.id,
                 props.programId,
                 idsToEdit,
                 props.obsAndTargets,
@@ -586,7 +588,8 @@ object TargetTabContents extends TwoPanels:
                 obsTimeView.get,
                 none,
                 Nil,
-                props.globalPreferences.get
+                props.globalPreferences.get,
+                "No target selected"
               )
 
             List(asterismEditorTile, skyPlotTile)
@@ -594,9 +597,9 @@ object TargetTabContents extends TwoPanels:
 
           // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
           val dummyTargetTile: Tile[Unit]    =
-            Tile(ObsTabTileIds.TargetId.id, "", hidden = true)(_ => EmptyVdom)
+            Tile(TargetTabTileIds.AsterismEditor.id, "", hidden = true)(_ => EmptyVdom)
           val dummyElevationTile: Tile[Unit] =
-            Tile(ObsTabTileIds.PlotId.id, "", hidden = true)(_ => EmptyVdom)
+            Tile(TargetTabTileIds.ElevationPlot.id, "", hidden = true)(_ => EmptyVdom)
 
           /**
            * Renders a single sidereal target editor without an obs context
@@ -640,7 +643,8 @@ object TargetTabContents extends TwoPanels:
               none,
               none,
               Nil,
-              props.globalPreferences.get
+              props.globalPreferences.get,
+              "No target selected"
             )
 
           val rightSide = { (resize: UseResizeDetectorReturn) =>

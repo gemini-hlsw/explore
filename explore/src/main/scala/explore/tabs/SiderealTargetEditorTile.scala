@@ -11,10 +11,10 @@ import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
-import explore.model.ObsTabTileIds
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
+import explore.model.TargetTabTileIds
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -44,7 +44,7 @@ object SiderealTargetEditorTile:
     backButton:         Option[VdomNode] = none
   ) =
     Tile(
-      ObsTabTileIds.TargetId.id,
+      TargetTabTileIds.AsterismEditor.id,
       title,
       back = backButton,
       bodyClass = ExploreStyles.TargetTileBody

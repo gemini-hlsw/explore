@@ -55,7 +55,8 @@ case class ObjectPlotSection(
   visualizationTime: Option[Instant],
   pendingTime:       Option[Duration],
   timingWindows:     List[TimingWindow],
-  globalPreferences: GlobalPreferences
+  globalPreferences: GlobalPreferences,
+  emptyMessage:      String
 ) extends ReactFnProps(ObjectPlotSection.component)
 
 object ObjectPlotSection:
@@ -161,7 +162,8 @@ object ObjectPlotSection:
                   dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC),
                   windowsNetExcludeIntervals,
                   props.pendingTime,
-                  options
+                  options,
+                  props.emptyMessage
                 )
               case PlotRange.Semester =>
                 props.plotData.value.headOption.map { case (_, data) =>
