@@ -20,6 +20,7 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Focused
+import explore.model.Group
 import explore.model.GroupTree
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
@@ -69,7 +70,7 @@ object ObsSummaryTable:
     programId:       Program.Id,
     observations:    UndoSetter[ObservationList],
     selectedObsIds:  View[List[Observation.Id]],
-    groups:          View[GroupTree],
+    groupTree:       View[GroupTree],
     obsExecutions:   ObservationExecutionMap,
     allTargets:      TargetList,
     showScienceBand: Boolean,
@@ -86,19 +87,19 @@ object ObsSummaryTable:
 
     private val ColDef = ColumnDef[Expandable[ObsSummaryRow]]
 
-    private val GroupsColumnId          = ColumnId("groups")
-    private val ObservationIdColumnId   = ColumnId("observation_id")
-    private val ValidationCheckColumnId = ColumnId("validation_check")
-    private val StateColumnId           = ColumnId("state")
-    private val ScienceBandColumnId     = ColumnId("science_band")
-    private val CompletionColumnId      = ColumnId("completion")
-    private val ExpanderColumnId        = ColumnId("expander")
-    private val TargetTypeColumnId      = ColumnId("target_type")
-    private val TargetColumnId          = ColumnId("target")
-    private val ConstraintsColumnId     = ColumnId("constraints")
-    private val FindingChartColumnId    = ColumnId("finding_chart")
-    private val ConfigurationColumnId   = ColumnId("configuration")
-    private val DurationColumnId        = ColumnId("duration")
+    private val ObservationIdColumnId = ColumnId("observation_id")
+    private val GroupColumnId         = ColumnId("group")
+    // private val ValidationCheckColumnId = ColumnId("validation_check")
+    private val StateColumnId         = ColumnId("state")
+    private val ScienceBandColumnId   = ColumnId("science_band")
+    private val CompletionColumnId    = ColumnId("completion")
+    private val ExpanderColumnId      = ColumnId("expander")
+    private val TargetTypeColumnId    = ColumnId("target_type")
+    private val TargetColumnId        = ColumnId("target")
+    private val ConstraintsColumnId   = ColumnId("constraints")
+    private val FindingChartColumnId  = ColumnId("finding_chart")
+    private val ConfigurationColumnId = ColumnId("configuration")
+    private val DurationColumnId      = ColumnId("duration")
 
     private val PriorityColumnId      = ColumnId("priority")
     private val RAColumnId            = ColumnId("ra")
@@ -109,19 +110,19 @@ object ObsSummaryTable:
 
     val ColumnNames: Map[ColumnId, String] = Map(
       // Default columns
-      GroupsColumnId          -> "Groups",
-      ObservationIdColumnId   -> "Observation Id",
-      ValidationCheckColumnId -> " ",
-      StateColumnId           -> "State",
-      ScienceBandColumnId     -> "Science Band",
-      CompletionColumnId      -> "Completion",
-      ExpanderColumnId        -> " ",
-      TargetTypeColumnId      -> " ",
-      TargetColumnId          -> "Target",
-      ConstraintsColumnId     -> "Constraints",
-      FindingChartColumnId    -> "Finding Chart",
-      ConfigurationColumnId   -> "Configuration",
-      DurationColumnId        -> "Duration",
+      ObservationIdColumnId -> "Observation Id",
+      GroupColumnId         -> "Group",
+      // ValidationCheckColumnId -> " ",
+      StateColumnId         -> "State",
+      ScienceBandColumnId   -> "Science Band",
+      CompletionColumnId    -> "Completion",
+      ExpanderColumnId      -> " ",
+      TargetTypeColumnId    -> " ",
+      TargetColumnId        -> "Target",
+      ConstraintsColumnId   -> "Constraints",
+      FindingChartColumnId  -> "Finding Chart",
+      ConfigurationColumnId -> "Configuration",
+      DurationColumnId      -> "Duration",
 
       // Default hidden columns
       PriorityColumnId      -> "Priority",
@@ -184,24 +185,59 @@ object ObsSummaryTable:
           def goToConstraint(constraintId: Observation.Id): Callback =
             ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
-          def targetUrl(obsId: Observation.Id, tWId: TargetWithId) = <.a(
-            ^.href := ctx.pageUrl(
-              AppTab.Observations,
-              props.programId,
-              Focused.singleObs(obsId, tWId.id.some)
-            ),
-            ^.onClick ==> (e =>
-              e.preventDefaultCB *> e.stopPropagationCB *> ctx.pushPage(
+          def targetLink(obsId: Observation.Id, tWId: TargetWithId): VdomNode =
+            <.a(
+              ^.href := ctx.pageUrl(
                 AppTab.Observations,
                 props.programId,
                 Focused.singleObs(obsId, tWId.id.some)
+              ),
+              ^.onClick ==> (e =>
+                e.preventDefaultCB >> e.stopPropagationCB >>
+                  ctx.pushPage(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.singleObs(obsId, tWId.id.some)
+                  )
               )
-            ),
-            tWId.target.name.value
-          )
+            )(tWId.target.name.value)
+
+          def obsLink(obsId: Observation.Id): VdomNode =
+            <.a(
+              ^.href := ctx.pageUrl(
+                AppTab.Observations,
+                props.programId,
+                Focused.singleObs(obsId)
+              ),
+              ^.onClick ==> { (e: ReactMouseEvent) =>
+                e.preventDefaultCB >> e.stopPropagationCB >>
+                  ctx.pushPage(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.singleObs(obsId)
+                  )
+              }
+            )(obsId.toString)
+
+          // TODO Groups are a dependency now, check that this updates is obs is moved around
+          def groupLink(group: Group): VdomNode =
+            <.a(
+              ^.href := ctx.pageUrl(
+                AppTab.Observations,
+                props.programId,
+                Focused.group(group.id)
+              ),
+              ^.onClick ==> { (e: ReactMouseEvent) =>
+                e.preventDefaultCB >> e.stopPropagationCB >>
+                  ctx.pushPage(
+                    AppTab.Observations,
+                    props.programId,
+                    Focused.group(group.id)
+                  )
+              }
+            )(group.name.map(_.toString).getOrElse(group.id.toString))
 
           List(
-            // TODO: GroupsColumnId
             ColDef(
               ColumnId("expander"),
               cell = cell =>
@@ -216,28 +252,8 @@ object ObsSummaryTable:
               enableResizing = false
             ).setSize(35.toPx),
             obsColumn(ObservationIdColumnId, _.obs.id).setCell:
-              _.value.map: obsId =>
-                <.a(
-                  ^.href := "???",
-                  ^.onClick ==> { (e: ReactMouseEvent) =>
-                    // val (obsId, targetId) = row.original.value
-                    //   .fold(o => (o.obsId, o.targetWithId.id.some), o => (o.obs.id, none))
-                    e.preventDefaultCB >> e.stopPropagationCB >> ctx.pushPage(
-                      AppTab.Observations,
-                      props.programId,
-                      Focused.singleObs(obsId)
-                    )
-                  }
-                )(
-                  obsId.toString
-                )
+              _.value.map(obsLink)
             ,
-            // TODO: ValidationCheckColumnId
-            obsColumn(StateColumnId, _.obs.workflow.state).setCell(_.value.map(_.toString).orEmpty),
-            obsColumn(ScienceBandColumnId, _.obs.scienceBand).setCell(
-              _.value.flatten.fold("Not set")(_.shortName)
-            ),
-            // TODO: CompletionColumnId
             // TODO: TargetTypeColumnId
             obsColumn(TargetTypeColumnId, _ => ())
               .setCell(_ => Icons.Star.withFixedWidth())
@@ -250,10 +266,20 @@ object ObsSummaryTable:
               .setCell { c =>
                 c.value match {
                   case s: String => <.span(s)
-                  case (a, b)    => targetUrl(a, b)
+                  case (a, b)    => targetLink(a, b)
                 }
               }
               .sortableBy(_.sortableValue),
+            obsColumn(GroupColumnId, _.group)
+              .setCell:
+                _.value.flatten.map(groupLink)
+            ,
+            // TODO: ValidationCheckColumnId
+            obsColumn(StateColumnId, _.obs.workflow.state).setCell(_.value.map(_.toString).orEmpty),
+            obsColumn(ScienceBandColumnId, _.obs.scienceBand).setCell(
+              _.value.flatten.fold("Not set")(_.shortName)
+            ),
+            // TODO: CompletionColumnId
             mixedColumn(
               RAColumnId,
               // at visualization time, defaults to base coordinates
@@ -313,9 +339,9 @@ object ObsSummaryTable:
             // TODO: ChargedTimeColumnId
           )
       .useMemoBy((props, _, _) => // Rows
-        (props.observations.get.toList, props.allTargets, props.obsExecutions)
+        (props.observations.get.toList, props.allTargets, props.groupTree.get, props.obsExecutions)
       ): (_, _, _) =>
-        (obsList, allTargets, obsExecutions) =>
+        (obsList, allTargets, groupTree, obsExecutions) =>
           obsList
             .filterNot(_.isCalibration)
             .map: obs =>
@@ -325,7 +351,15 @@ object ObsSummaryTable:
             .map: (obs, targets) =>
               val asterism = Asterism.fromTargets(targets)
               Expandable(
-                ObsRow(obs, targets.headOption, asterism, obsExecutions.getPot(obs.id)),
+                ObsRow(
+                  obs,
+                  targets.headOption,
+                  asterism,
+                  groupTree
+                    .parentValue(obs.id.asLeft)
+                    .flatMap(_.value.elem.toOption),
+                  obsExecutions.getPot(obs.id)
+                ),
                 // Only expand if there are multiple targets
                 if (targets.sizeIs > 1)
                   targets.map: target =>
@@ -430,7 +464,7 @@ object ObsSummaryTable:
                 none,
                 0.refined,
                 props.observations,
-                props.groups,
+                props.groupTree,
                 adding,
                 ctx
               ).runAsyncAndForget
@@ -453,6 +487,7 @@ object ObsSummaryTable:
       obs:          Observation,
       targetWithId: Option[TargetWithId],
       asterism:     Option[Asterism],
+      group:        Option[Group],
       execution:    Pot[Execution]
     ) extends ObsSummaryRow
 
