@@ -219,7 +219,6 @@ object ObsSummaryTable:
               }
             )(obsId.toString)
 
-          // TODO Groups are a dependency now, check that this updates is obs is moved around
           def groupLink(group: Group): VdomNode =
             <.a(
               ^.href := ctx.pageUrl(
