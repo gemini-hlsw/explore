@@ -431,7 +431,8 @@ object ObsSummaryTable:
           innerContainerMod = ^.width := "100%",
           containerRef = resizer.ref,
           hoverableRows = rows.nonEmpty,
-          tableMod = ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable,
+          tableMod =
+            ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable |+| ExploreStyles.ExploreSelectableTable,
           headerCellMod = _ => ExploreStyles.StickyHeader,
           rowMod = row =>
             TagMod(
