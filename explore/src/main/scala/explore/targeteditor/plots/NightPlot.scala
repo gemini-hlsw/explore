@@ -62,8 +62,14 @@ object NightPlot:
     val seconds = "%02d".format(dms.arcseconds)
     s"$degrees°$minutes′$seconds″"
 
-  private val SkyBrightnessPercentileLines =
-    def plotLine(id: String, value: Double) =
+  private val ElevationMinimumLine =
+    YAxisPlotLinesOptions()
+      .setValue(30)
+      .setClassName("plot-elevation-minimum")
+      .setZIndex(1)
+
+  private val SkyBrightnessPercentileLines: List[YAxisPlotLinesOptions] =
+    def plotLine(id: String, value: Double): YAxisPlotLinesOptions =
       YAxisPlotLinesOptions()
         .setId(s"sky-brightness-$id")
         .setValue(value)
@@ -78,7 +84,7 @@ object NightPlot:
     )
 
   private val SkyBrightnessPercentileBands: List[YAxisPlotBandsOptions] =
-    def plotBand(id: String, label: String, from: Double, to: Double) =
+    def plotBand(id: String, label: String, from: Double, to: Double): YAxisPlotBandsOptions =
       YAxisPlotBandsOptions()
         .setId(s"sky-brightness-$id")
         .setLabel(
@@ -340,7 +346,8 @@ object NightPlot:
                     .setTickInterval(10)
                     .setMinorTickInterval(5)
                     .setShowEmpty(false)
-                    .setLabels(YAxisLabelsOptions().setFormat("{value}°")),
+                    .setLabels(YAxisLabelsOptions().setFormat("{value}°"))
+                    .setPlotLines(js.Array(ElevationMinimumLine)),
                   YAxisOptions()
                     .setOpposite(true)
                     .setTitle(YAxisTitleOptions().setText("Parallactic angle"))
