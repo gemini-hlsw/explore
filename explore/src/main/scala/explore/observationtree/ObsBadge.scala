@@ -199,7 +199,7 @@ object ObsBadge:
               <.div(ExploreStyles.ObsBadgeExtra)(
                 props.setStateCB.map(setStatus =>
                   <.span(
-                    ExploreStyles.ObsStatusSelectWrapper,
+                    ExploreStyles.ObsStateSelectWrapper,
                     EnumDropdownView(
                       id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
                       value = View[ObservationWorkflowState](
@@ -210,8 +210,8 @@ object ObsBadge:
                           setStatus(newValue) >> cb(oldValue, newValue)
                       ),
                       size = PlSize.Mini,
-                      clazz = ExploreStyles.ObsStatusSelect,
-                      panelClass = ExploreStyles.ObsStatusSelectPanel,
+                      clazz = ExploreStyles.ObsStateSelect,
+                      panelClass = ExploreStyles.ObsStateSelectPanel,
                       disabled = props.isDisabled,
                       disabledItems = obs.disabledStates
                     )
