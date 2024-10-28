@@ -277,18 +277,18 @@ object ExploreGridLayouts:
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
+          i = ObsSummaryTabTileIds.SummaryId.id.value,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
-          h = SummaryHeight.value,
-          i = ObsSummaryTabTileIds.SummaryId.id.value
+          h = SummaryHeight.value
         ),
         LayoutItem(
+          i = ObsSummaryTabTileIds.PlotId.id.value,
           x = 0,
           y = SummaryHeight.value,
           w = DefaultWidth.value,
-          h = SkyPlotHeight.value,
-          i = ObsSummaryTabTileIds.PlotId.id.value
+          h = SkyPlotHeight.value
         )
       )
     )
@@ -296,7 +296,9 @@ object ExploreGridLayouts:
     lazy val defaultObsListLayouts: LayoutsMap =
       defineStdLayouts(
         Map(
-          (BreakpointName.lg, layoutMedium),
+          (BreakpointName.lg,
+           layoutItems.andThen(layoutItemWidth).replace(DefaultLargeWidth)(layoutMedium)
+          ),
           (BreakpointName.md, layoutMedium)
         )
       ).withMinWidth

@@ -323,6 +323,9 @@ object ObsTabContents extends TwoPanels:
               props.globalPreferences.get
             )
 
+          println(pprint(ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationListLayout)))
+          println(pprint(props.userPreferences.get.observationListTabLayout))
+
           val summaryTiles: VdomNode =
             TileController(
               props.vault.map(_.user.id),

@@ -8,7 +8,7 @@ import lucuma.core.util.Enumerated
 enum GridLayoutSection(val value: String) derives Enumerated:
   case ProgramsLayout        extends GridLayoutSection("programs")
   case ObservationsLayout    extends GridLayoutSection("observations")
-  case ObservationListLayout extends GridLayoutSection("observationList")
+  case ObservationListLayout extends GridLayoutSection("observation_list")
   case TargetLayout          extends GridLayoutSection("targets")
   case ConstraintsLayout     extends GridLayoutSection("constraints")
   case SchedulingLayout      extends GridLayoutSection("scheduling")
