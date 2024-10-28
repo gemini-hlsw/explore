@@ -411,7 +411,8 @@ object ObsTabTiles:
                   vizTimeView.get,
                   obsDuration.map(_.toDuration),
                   timingWindows.get,
-                  props.globalPreferences.get
+                  props.globalPreferences.get,
+                  "No target selected"
                 )
 
             def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
@@ -444,6 +445,7 @@ object ObsTabTiles:
             val targetTile =
               AsterismEditorTile.asterismEditorTile(
                 props.vault.userId,
+                ObsTabTileIds.TargetId.id,
                 props.programId,
                 ObsIdSet.one(props.obsId),
                 props.obsAndTargets,

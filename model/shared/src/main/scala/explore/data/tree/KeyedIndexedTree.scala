@@ -202,6 +202,13 @@ case class KeyedIndexedTree[K: Eq, A] private (
     go(Nil, key)
   }
 
+  def parentValue(key: K): Option[Node[A]] =
+    byKey
+      .get(key)
+      .flatMap: node =>
+        node.value.index.parentKey.flatMap: parentKey =>
+          byKey.get(parentKey).map(_.map(_.elem))
+
   def mapElement[B](f: A => B, getKey: B => K): KeyedIndexedTree[K, B] = {
     val newTree: Tree[IndexedElem[K, B]] = tree.map { case IndexedElem(a, idx) =>
       IndexedElem(f(a), idx)

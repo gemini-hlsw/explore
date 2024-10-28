@@ -46,7 +46,8 @@ case class NightPlot(
   coordsTime:       Instant,
   excludeIntervals: List[BoundedInterval[Instant]],
   pendingTime:      Option[Duration],
-  options:          View[ObjectPlotOptions]
+  options:          View[ObjectPlotOptions],
+  emptyMessage:     String
 ) extends ReactFnProps(NightPlot.component)
 
 object NightPlot:
@@ -431,10 +432,10 @@ object NightPlot:
       .useRef(none[Chart_]) // chart handler (chartOpt)
       .useEffectWithDepsBy((props, _, _, _, _, chartOpt) =>
         (props.plotData.value.size, chartOpt.value.void)
-      ): (_, _, _, _, _, chartOpt) =>
+      ): (props, _, _, _, _, chartOpt) =>
         (size, _) =>
           Callback:
-            if size === 0 then chartOpt.value.foreach(_.showLoading("No target selected"))
+            if size === 0 then chartOpt.value.foreach(_.showLoading(props.emptyMessage))
             else chartOpt.value.foreach(_.hideLoading())
       .render: (props, _, _, chartAndMoonData, chartOptions, chartOpt) =>
         React.Fragment(

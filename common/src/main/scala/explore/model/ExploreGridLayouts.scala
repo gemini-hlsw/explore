@@ -116,28 +116,28 @@ object ExploreGridLayouts:
   end scheduling
 
   object targets:
-    private lazy val SummaryHeight: NonNegInt = 6.refined
+    private lazy val SummaryHeight: NonNegInt = 9.refined
     private lazy val TargetHeight: NonNegInt  = 18.refined
     private lazy val SkyPlotHeight: NonNegInt = 9.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
         LayoutItem(
-          i = ObsTabTileIds.TargetSummaryId.id.value,
+          i = TargetTabTileIds.Summary.id,
           x = 0,
           y = 0,
           w = DefaultWidth.value,
           h = SummaryHeight.value
         ),
         LayoutItem(
-          i = ObsTabTileIds.TargetId.id.value,
+          i = TargetTabTileIds.AsterismEditor.id,
           x = 0,
           y = SummaryHeight.value,
           w = DefaultWidth.value,
           h = TargetHeight.value
         ),
         LayoutItem(
-          i = ObsTabTileIds.PlotId.id.value,
+          i = TargetTabTileIds.ElevationPlot.id,
           x = 0,
           y = SummaryHeight.value + TargetHeight.value,
           w = DefaultWidth.value,

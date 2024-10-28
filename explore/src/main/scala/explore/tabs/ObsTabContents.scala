@@ -272,7 +272,7 @@ object ObsTabContents extends TwoPanels:
           val obsSummaryTableTile: Tile[?] =
             Tile(
               ObsSummaryTabTileIds.SummaryId.id,
-              "Observations Summary",
+              s"Observations Summary (${props.observations.get.toList.filterNot(_.isCalibration).length})",
               none[Table[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]],
               backButton.some,
               canMinimize = false,
@@ -320,7 +320,8 @@ object ObsTabContents extends TwoPanels:
               none,
               none,
               List.empty,
-              props.globalPreferences.get
+              props.globalPreferences.get,
+              "No observation selected"
             )
 
           val summaryTiles: VdomNode =
