@@ -424,6 +424,9 @@ object NightPlot:
                       .setVisible(series.visible)
                       .setFillOpacity(0)
                       .setZoneAxis("x")
+                      .setThreshold: // Ensure that the zones are always painted towards the bottom
+                        if (series.seriesType === SeriesType.SkyBrightness) Double.PositiveInfinity
+                        else Double.NegativeInfinity
 
                   zones
                     .fold(baseSeries)(z => baseSeries.setZones(z))
