@@ -99,9 +99,15 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, N
   def updatedValueWith(key: K, f: A => A): KeyedIndexedList[K, A] =
     updatedWith(key, (v, i) => (f(v), i))
 
-  // WARNING - Do not use to update the part of the value used as a key
-  def unsafeMapValues(f: A => A): KeyedIndexedList[K, A] =
-    KeyedIndexedList(TreeSeqMap.from(list.map { case (k, (a, idx)) => (k, (f(a), idx)) }))
+  def mapValues(keyLens: Lens[A, K])(f: A => A): KeyedIndexedList[K, A] =
+    KeyedIndexedList(
+      TreeSeqMap.from(
+        list.map { case (_, (a, idx)) =>
+          val newA = f(a)
+          (keyLens.get(newA), (newA, idx))
+        }
+      )
+    )
 
 object KeyedIndexedList:
   def empty[K, A]: KeyedIndexedList[K, A] = KeyedIndexedList[K, A](TreeSeqMap.empty)
