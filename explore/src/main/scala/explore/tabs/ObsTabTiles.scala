@@ -142,10 +142,11 @@ object ObsTabTiles:
     obsTargets:     AsterismIds,
     targetList:     TargetList
   ): ItcProps =
-    ItcProps(obs,
-             selectedConfig,
-             obs.toModeOverride(targetList),
-             obsTargets.itcTargets(targetList).filter(_.canQueryITC).toNel
+    ItcProps(
+      obs,
+      selectedConfig,
+      obs.toModeOverride(targetList),
+      obsTargets.itcTargets(targetList).filter(_.canQueryITC).toNel
     )
 
   private case class Offsets(
@@ -182,7 +183,7 @@ object ObsTabTiles:
       .useStateView[AgsState](AgsState.Idle)
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
-      .useStateWithReuseBy: (props, _, _, _, selectedConfig) =>
+      .useStateWithReuseBy: (props, _, _, _, selectedConfig) => // itcQueryProps
         println(props.obsTargets)
         itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets, props.allTargets)
       .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults

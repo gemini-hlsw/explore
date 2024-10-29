@@ -39,7 +39,7 @@ import workers.WorkerClient
 case class ItcProps(
   observation:    Observation,
   selectedConfig: Option[BasicConfigAndItc], // selected row in spectroscopy modes table
-  modeOverrides:  Option[InstrumentOverrides],
+  // modeOverrides:  Option[InstrumentOverrides],
   itcTargets:     Option[NonEmptyList[ItcTarget]]
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
@@ -50,12 +50,13 @@ case class ItcProps(
   // The remote configuration is read in a different query than the itc results
   // This will work even in the case the user has overriden some parameters
   // When we use the remote configuration we don't need the exposure time.
-  private val remoteConfig = observation.observingMode.map { o =>
-    BasicConfigAndItc(
-      o.toBasicConfiguration,
-      none
-    )
-  }
+  private val remoteConfig: Option[InstrumentRow] = observation.toModeOverride(itcTargets)
+  // .observingMode.map { o =>
+  //   BasicConfigAndItc(
+  //     o.toBasicConfiguration,
+  //     none
+  //   )
+  // }
 
   // The user may select a configuration on the modes tables, we'd prefer than but if not
   // we can try with the remote confiiguration provided by the database

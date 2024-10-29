@@ -43,7 +43,6 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
-import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.core.util.Display
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
@@ -66,8 +65,6 @@ import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 import lucuma.ui.utils.*
-import lucuma.schemas.model.CentralWavelength
-import explore.modes.syntax.*
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*
@@ -75,7 +72,6 @@ import scala.concurrent.duration.*
 
 import scalajs.js
 import scalajs.js.JSConverters.*
-import lucuma.core.model.sequence.gmos.GmosCcdMode
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
@@ -104,7 +100,7 @@ private object SpectroscopyModesTable:
     entry:                SpectroscopyModeRow,
     result:               EitherNec[ItcTargetProblem, ItcResult],
     wavelengthInterval:   Option[BoundedInterval[Wavelength]],
-    configurationSummary: Option[String]
+    configurationSummary: String
   ):
     lazy val rowId: RowId = RowId(entry.id.orEmpty.toString)
 
@@ -298,39 +294,39 @@ private object SpectroscopyModesTable:
         .sortable
     )
 
-  extension (row: SpectroscopyModeRow)
-    private def rowToConf(cw: Option[Wavelength]): Option[BasicConfiguration] =
-      cw.flatMap(row.intervalCenter)
-        .flatMap: cc =>
-          row.instrument match
-            case GmosNorthSpectroscopyRow(grating, fpu, filter, _)
-                if row.focalPlane === FocalPlane.SingleSlit =>
-              BasicConfiguration
-                .GmosNorthLongSlit(
-                  grating = grating,
-                  filter = filter,
-                  fpu = fpu,
-                  centralWavelength = cc
-                )
-                .some
-            case GmosSouthSpectroscopyRow(grating, fpu, filter, _)
-                if row.focalPlane === FocalPlane.SingleSlit =>
-              BasicConfiguration
-                .GmosSouthLongSlit(
-                  grating = grating,
-                  filter = filter,
-                  fpu = fpu,
-                  centralWavelength = cc
-                )
-                .some
-            case _ => none
+  // extension (row: SpectroscopyModeRow)
+  //   private def rowToConf(cw: Option[Wavelength]): Option[BasicConfiguration] =
+  //     cw.flatMap(row.intervalCenter)
+  //       .flatMap: cc =>
+  //         row.instrument match
+  //           case GmosNorthSpectroscopyRow(grating, fpu, filter, modeOverrides)
+  //               if row.focalPlane === FocalPlane.SingleSlit =>
+  //             BasicConfiguration
+  //               .GmosNorthLongSlit(
+  //                 grating = grating,
+  //                 filter = filter,
+  //                 fpu = fpu,
+  //                 centralWavelength = cc
+  //               )
+  //               .some
+  //           case GmosSouthSpectroscopyRow(grating, fpu, filter, _)
+  //               if row.focalPlane === FocalPlane.SingleSlit =>
+  //             BasicConfiguration
+  //               .GmosSouthLongSlit(
+  //                 grating = grating,
+  //                 filter = filter,
+  //                 fpu = fpu,
+  //                 centralWavelength = cc
+  //               )
+  //               .some
+  //           case _ => none
 
-  extension (row: SpectroscopyModeRowWithResult)
-    private def rowToConfAndItc(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
-      row.entry.rowToConf(cw).map(c => BasicConfigAndItc(c, row.result.some))
+  // extension (row: SpectroscopyModeRowWithResult)
+  //   private def rowToConfAndItc(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
+  //     row.entry.rowToConf(cw).map(c => BasicConfigAndItc(c, row.result.some))
 
-    private def equalsConf(conf: BasicConfiguration, cw: Option[Wavelength]): Boolean =
-      row.entry.rowToConf(cw).contains_(conf)
+  //   private def equalsConf(conf: BasicConfiguration, cw: Option[Wavelength]): Boolean =
+  //     row.entry.rowToConf(cw).contains_(conf)
 
   extension (row: SpectroscopyModeRow)
     private def enabledRow: Boolean =
@@ -385,53 +381,9 @@ private object SpectroscopyModesTable:
             val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
             // Computes the mode overrides for the current parameters
             val fixedModeRows: List[SpectroscopyModeRow] =
-              sortedRows.map { row =>
-                val centralWavelength: Option[CentralWavelength] =
-                  row.intervalCenter(w)
-
-                centralWavelength
-                  .flatMap { cw =>
-                    val instrumentRow: Option[InstrumentRow] =
-                      row.instrument.instrument match
-                        case Instrument.GmosNorth | Instrument.GmosSouth =>
-                          row.instrument match
-                            case i @ GmosNorthSpectroscopyRow(grating, fpu, _, None) =>
-                              i.copy(modeOverrides =
-                                GmosSpectroscopyOverrides(
-                                  cw,
-                                  GmosCcdMode
-                                    .defaultGmosNorth(
-                                      profiles,
-                                      fpu,
-                                      grating,
-                                      constraints.imageQuality
-                                    ),
-                                  DefaultRoi
-                                ).some
-                              ).some
-                            case i @ GmosSouthSpectroscopyRow(grating, fpu, _, None) =>
-                              i.copy(modeOverrides =
-                                GmosSpectroscopyOverrides(
-                                  cw,
-                                  GmosCcdMode
-                                    .defaultGmosSouth(
-                                      profiles,
-                                      fpu,
-                                      grating,
-                                      constraints.imageQuality
-                                    ),
-                                  DefaultRoi
-                                ).some
-                              ).some
-                            case i                                                   =>
-                              // println(s"no overrides: $r")
-                              i.some
-                        case _                                           => none
-
-                    instrumentRow.map: i =>
-                      row.copy(instrument = i)
-                  }
-              }.flattenOption
+              sortedRows
+                .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
+                .flattenOption
             fixedModeRows.map: row =>
               SpectroscopyModeRowWithResult(
                 row,
@@ -445,7 +397,7 @@ private object SpectroscopyModesTable:
                 ),
                 s.wavelength.flatMap: w =>
                   ModeCommonWavelengths.wavelengthInterval(w)(row),
-                row.rowToConf(s.wavelength).map(_.configurationSummary)
+                row.instrument.configurationSummary
               )
           }.orEmpty
       .useState(none[Progress]) // itcProgress
@@ -522,8 +474,10 @@ private object SpectroscopyModesTable:
       .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _) => rows):
         (props, _, _, _, _, _, _, _, sortedRows, _, selectedIndex) =>
           _ =>
-            val optRow = selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
-            val conf   = optRow.flatMap(_.rowToConfAndItc(props.spectroscopyRequirements.wavelength))
+            val optRow: Option[SpectroscopyModeRowWithResult] =
+              selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
+            val conf: Option[BasicConfigAndItc]               =
+              optRow.flatMap(_.rowToConfAndItc(props.spectroscopyRequirements.wavelength))
             if (props.selectedConfig.get =!= conf)
               props.selectedConfig.set(conf)
             else Callback.empty
@@ -585,8 +539,6 @@ private object SpectroscopyModesTable:
                                                row.entry.instrument
                               )
                           case _                                           => true
-
-                println(s"MODES TO REQUEST: ${modes.length}")
 
                 Option.when(modes.nonEmpty):
                   val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
@@ -737,8 +689,9 @@ private object SpectroscopyModesTable:
                     ExploreStyles.TableRowSelected
                       .when(
                         props.selectedConfig.get.exists(c =>
-                          row.original.equalsConf(c.configuration,
-                                                  props.spectroscopyRequirements.wavelength
+                          row.original.equalsConf(
+                            c.configuration,
+                            props.spectroscopyRequirements.wavelength
                           )
                         )
                       ),

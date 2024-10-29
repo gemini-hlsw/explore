@@ -8,17 +8,17 @@ import cats.data.EitherNec
 import cats.derived.*
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTargetProblem
-import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import monocle.Lens
+import explore.modes.InstrumentRow
 
 case class BasicConfigAndItc(
-  configuration: BasicConfiguration,
+  configuration: InstrumentRow,
   itcResult:     Option[EitherNec[ItcTargetProblem, ItcResult]]
 ) derives Eq
 
 object BasicConfigAndItc:
-  val configuration: Lens[BasicConfigAndItc, BasicConfiguration] =
+  val configuration: Lens[BasicConfigAndItc, InstrumentRow] =
     Focus[BasicConfigAndItc](_.configuration)
 
   val itcResult: Lens[BasicConfigAndItc, Option[EitherNec[ItcTargetProblem, ItcResult]]] =

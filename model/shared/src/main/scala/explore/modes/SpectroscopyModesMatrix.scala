@@ -25,7 +25,6 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
-import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.odb.json.angle.decoder.given
@@ -35,6 +34,10 @@ import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
+import explore.modes.syntax.*
+import _root_.cats.data.NonEmptyList
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.sequence.gmos.GmosCcdMode
 
 sealed trait InstrumentRow derives Eq {
   def instrument: Instrument
@@ -222,11 +225,45 @@ case class SpectroscopyModeRow(
   def intervalCenter(cw: Wavelength): Option[CentralWavelength] =
     ModeCommonWavelengths
       .wavelengthInterval(cw)(this)
-      .map(interval =>
+      .map: interval =>
         interval.lower.pm.value.value + (interval.upper.pm.value.value - interval.lower.pm.value.value) / 2
-      )
       .flatMap(pms => Wavelength.fromIntPicometers(pms))
       .map(CentralWavelength(_))
+
+  import lucuma.core.model.sequence.gmos.longslit.DefaultRoi
+
+  def withModeOverridesFor(
+    wavelength:   Wavelength,
+    profiles:     NonEmptyList[SourceProfile],
+    imageQuality: ImageQuality
+  ): Option[SpectroscopyModeRow] =
+    intervalCenter(wavelength).flatMap: cw =>
+      val instrumentRow: Option[InstrumentRow] =
+        instrument.instrument match
+          case Instrument.GmosNorth | Instrument.GmosSouth =>
+            instrument match
+              case i @ GmosNorthSpectroscopyRow(grating, fpu, _, None) =>
+                i.copy(modeOverrides =
+                  GmosSpectroscopyOverrides(
+                    cw,
+                    GmosCcdMode.defaultGmosNorth(profiles, fpu, grating, imageQuality),
+                    DefaultRoi
+                  ).some
+                ).some
+              case i @ GmosSouthSpectroscopyRow(grating, fpu, _, None) =>
+                i.copy(modeOverrides =
+                  GmosSpectroscopyOverrides(
+                    cw,
+                    GmosCcdMode.defaultGmosSouth(profiles, fpu, grating, imageQuality),
+                    DefaultRoi
+                  ).some
+                ).some
+              case i                                                   =>
+                i.some
+          case _                                           => none
+
+      instrumentRow.map: i =>
+        copy(instrument = i)
 }
 
 object SpectroscopyModeRow {
@@ -369,7 +406,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
             if (w >= l && r.hasFilter) ScoreBump else Rational.zero
           }
           .getOrElse(Rational.zero)
-      // Wavelength matche
+      // Wavelength match
       val wavelengthScore: BigDecimal = wavelength
         .map(w => w.toNanometers.value.value / (w.toNanometers.value.value + deltaWave))
         .getOrElse(BigDecimal(0))

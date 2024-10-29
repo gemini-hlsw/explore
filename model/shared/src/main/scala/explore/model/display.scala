@@ -25,8 +25,11 @@ import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
+import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
 
 import java.text.DecimalFormat
+import explore.modes.InstrumentRow
 
 trait DisplayImplicits:
   given Display[Site] =
@@ -237,5 +240,14 @@ trait DisplayImplicits:
         s"GMOS-N ${grating.shortName} ${fpu.shortName}"
       case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
         s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+
+  extension (instrumentRow: InstrumentRow)
+    def configurationSummary: String = instrumentRow match
+      case GmosNorthSpectroscopyRow(grating, fpu, _, _) =>
+        s"GMOS-N ${grating.shortName} ${fpu.shortName}"
+      case GmosSouthSpectroscopyRow(grating, fpu, _, _) =>
+        s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+      case _                                            =>
+        "UNSUPPORTED"
 
 object display extends DisplayImplicits
