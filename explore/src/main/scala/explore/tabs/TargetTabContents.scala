@@ -334,7 +334,7 @@ object TargetTabContents extends TwoPanels:
            */
           val renderSummary: Tile[TargetSummaryTileState] = Tile(
             ObsTabTileIds.TargetSummaryId.id,
-            "Target Summary",
+            s"Target Summary (${props.targets.get.size})",
             TargetSummaryTileState(Nil, none),
             backButton.some
           )(
