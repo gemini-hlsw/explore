@@ -106,7 +106,7 @@ object ObservationValidationsTableBody {
                   "Request Approval",
                   onClick = props.observations.mod(
                     // this also gets rid of any buttons on "affected" observations
-                    _.unsafeMapValues(_.updateToPendingIfConfigurationApplies(config))
+                    _.mapValues(_.id, _.updateToPendingIfConfigurationApplies(config))
                   ) >>
                     ObsQueries.createConfigurationRequest[IO](row.id).void.runAsync
                 ).tiny.compact.some
