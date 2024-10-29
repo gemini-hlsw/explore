@@ -99,12 +99,12 @@ case class KeyedIndexedList[K, A] private (private val list: TreeSeqMap[K, (A, N
   def updatedValueWith(key: K, f: A => A): KeyedIndexedList[K, A] =
     updatedWith(key, (v, i) => (f(v), i))
 
-  def mapValues(keyLens: Lens[A, K])(f: A => A): KeyedIndexedList[K, A] =
+  def mapValues[K2, B](getKey: B => K2, f: A => B): KeyedIndexedList[K2, B] =
     KeyedIndexedList(
       TreeSeqMap.from(
         list.map { case (_, (a, idx)) =>
-          val newA = f(a)
-          (keyLens.get(newA), (newA, idx))
+          val b = f(a)
+          (getKey(b), (b, idx))
         }
       )
     )
