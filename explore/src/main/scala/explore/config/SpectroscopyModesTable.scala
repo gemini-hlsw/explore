@@ -9,7 +9,6 @@ import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
-import io.circe.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.given
@@ -67,6 +66,8 @@ import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 import lucuma.ui.utils.*
+import lucuma.schemas.model.CentralWavelength
+import explore.modes.syntax.*
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*
@@ -365,34 +366,88 @@ private object SpectroscopyModesTable:
          props.constraints
         )
       ): (_, _, _) =>
-        (matrix, s, dec, itc, asterism, constraints) =>
-          val rows       =
-            matrix
-              .filtered(
-                focalPlane = s.focalPlane,
-                capability = s.capability,
-                wavelength = s.wavelength,
-                slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
-                resolution = s.resolution,
-                range = s.wavelengthCoverage,
-                declination = dec
+        (matrix, s, dec, itcResults, asterism, constraints) =>
+          (s.wavelength, asterism).mapN { (w, a) =>
+            val profiles: NonEmptyList[SourceProfile] =
+              a.map(_.sourceProfile)
+
+            val rows: List[SpectroscopyModeRow]          =
+              matrix
+                .filtered(
+                  focalPlane = s.focalPlane,
+                  capability = s.capability,
+                  wavelength = s.wavelength,
+                  slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
+                  resolution = s.resolution,
+                  range = s.wavelengthCoverage,
+                  declination = dec
+                )
+            val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
+            // Computes the mode overrides for the current parameters
+            val fixedModeRows: List[SpectroscopyModeRow] =
+              sortedRows.map { row =>
+                val centralWavelength: Option[CentralWavelength] =
+                  row.intervalCenter(w)
+
+                centralWavelength
+                  .flatMap { cw =>
+                    val instrumentRow: Option[InstrumentRow] =
+                      row.instrument.instrument match
+                        case Instrument.GmosNorth | Instrument.GmosSouth =>
+                          row.instrument match
+                            case i @ GmosNorthSpectroscopyRow(grating, fpu, _, None) =>
+                              i.copy(modeOverrides =
+                                GmosSpectroscopyOverrides(
+                                  cw,
+                                  GmosCcdMode
+                                    .defaultGmosNorth(
+                                      profiles,
+                                      fpu,
+                                      grating,
+                                      constraints.imageQuality
+                                    ),
+                                  DefaultRoi
+                                ).some
+                              ).some
+                            case i @ GmosSouthSpectroscopyRow(grating, fpu, _, None) =>
+                              i.copy(modeOverrides =
+                                GmosSpectroscopyOverrides(
+                                  cw,
+                                  GmosCcdMode
+                                    .defaultGmosSouth(
+                                      profiles,
+                                      fpu,
+                                      grating,
+                                      constraints.imageQuality
+                                    ),
+                                  DefaultRoi
+                                ).some
+                              ).some
+                            case i                                                   =>
+                              // println(s"no overrides: $r")
+                              i.some
+                        case _                                           => none
+
+                    instrumentRow.map: i =>
+                      row.copy(instrument = i)
+                  }
+              }.flattenOption
+            fixedModeRows.map: row =>
+              SpectroscopyModeRowWithResult(
+                row,
+                itcResults.forRow(
+                  s.wavelength,
+                  s.signalToNoise,
+                  s.signalToNoiseAt,
+                  constraints,
+                  asterism,
+                  row
+                ),
+                s.wavelength.flatMap: w =>
+                  ModeCommonWavelengths.wavelengthInterval(w)(row),
+                row.rowToConf(s.wavelength).map(_.configurationSummary)
               )
-          val sortedRows = rows.sortBy(_.enabledRow)
-          sortedRows.map: row =>
-            SpectroscopyModeRowWithResult(
-              row,
-              itc.forRow(
-                s.wavelength,
-                s.signalToNoise,
-                s.signalToNoiseAt,
-                constraints,
-                asterism,
-                row
-              ),
-              s.wavelength.flatMap: w =>
-                ModeCommonWavelengths.wavelengthInterval(w)(row),
-              row.rowToConf(s.wavelength).map(_.configurationSummary)
-            )
+          }.orEmpty
       .useState(none[Progress]) // itcProgress
       .useMemoBy((props, _, itcResults, rows, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
@@ -521,68 +576,17 @@ private object SpectroscopyModesTable:
                       cw.exists: w =>
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
-                            val profiles: NonEmptyList[SourceProfile] =
-                              asterism.map(_.sourceProfile)
-
-                            val updatedRow =
-                              row.entry.instrument match {
-                                case r @ GmosNorthSpectroscopyRow(grating, fpu, _, None) =>
-                                  val (defaultXBinning, defaultYBinning) =
-                                    if (fpu.isIFU)
-                                      (GmosXBinning.One, GmosYBinning.One)
-                                    else
-                                      asterismBinning(
-                                        profiles.map(
-                                          northBinning(fpu, _, constraints.imageQuality, grating)
-                                        )
-                                      )
-
-                                  val overrides = GmosSpectroscopyOverrides(
-                                    w,
-                                    GmosCcdMode(
-                                      defaultXBinning,
-                                      defaultYBinning,
-                                      GmosAmpCount.Twelve,
-                                      GmosAmpGain.Low,
-                                      GmosAmpReadMode.Slow
-                                    ).some,
-                                    GmosRoi.FullFrame.some
-                                  )
-                                  println(s"overrides: $overrides")
-                                  r.copy(modeOverrides = overrides.some)
-                                case r @ GmosSouthSpectroscopyRow(grating, fpu, _, None) =>
-                                  val (defaultXBinning, defaultYBinning) =
-                                    if (fpu.isIFU)
-                                      (GmosXBinning.One, GmosYBinning.One)
-                                    else
-                                      asterismBinning(
-                                        profiles.map(
-                                          southBinning(fpu, _, constraints.imageQuality, grating)
-                                        )
-                                      )
-                                  val overrides                          = GmosSpectroscopyOverrides(
-                                    w,
-                                    GmosCcdMode(
-                                      defaultXBinning,
-                                      defaultYBinning,
-                                      GmosAmpCount.Twelve,
-                                      GmosAmpGain.Low,
-                                      GmosAmpReadMode.Slow
-                                    ).some,
-                                    GmosRoi.FullFrame.some
-                                  )
-                                  println(s"overrides: $overrides")
-                                  // println(r.copy(modeOverrides = overrides.some))
-                                  r.copy(modeOverrides = overrides.some)
-                                case r                                                   =>
-                                  println(s"no overrides: $r")
-                                  r
-                              }
-                            println(updatedRow)
-
                             cache.contains:
-                              ItcRequestParams(w, sn, snAt, constraints, asterism, updatedRow)
+                              ItcRequestParams(w,
+                                               sn,
+                                               snAt,
+                                               constraints,
+                                               asterism,
+                                               row.entry.instrument
+                              )
                           case _                                           => true
+
+                println(s"MODES TO REQUEST: ${modes.length}")
 
                 Option.when(modes.nonEmpty):
                   val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
@@ -591,7 +595,6 @@ private object SpectroscopyModesTable:
                     request <-
                       ItcClient[IO]
                         .request:
-                          modes.foreach(println)
                           ItcMessage.Query(w, sn, constraints, asterism, modes.map(_.entry), snAt)
                         .map:
                           // Avoid rerendering on every single result, it's slow.

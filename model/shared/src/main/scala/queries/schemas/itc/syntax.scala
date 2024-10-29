@@ -16,7 +16,6 @@ import lucuma.core.enums.GmosRoi
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
-import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
 import lucuma.itc.client.TargetInput
@@ -27,14 +26,14 @@ trait syntax:
     def toItcClientMode: Option[InstrumentMode] =
       row match
         case GmosNorthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
-          val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-          val ccd: Option[GmosCcdMode] = modeOverrides.flatMap(_.ccdMode)
+          val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
+          val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
           InstrumentMode
             .GmosNorthSpectroscopy(grating, filter, GmosFpu.North(fpu.asRight), ccd, roi)
             .some
         case GmosSouthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
-          val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-          val ccd: Option[GmosCcdMode] = modeOverrides.flatMap(_.ccdMode)
+          val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
+          val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
           InstrumentMode
             .GmosSouthSpectroscopy(grating, filter, GmosFpu.South(fpu.asRight), ccd, roi)
             .some

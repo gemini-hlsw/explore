@@ -4,12 +4,11 @@
 package explore.cache
 
 import cats.Endo
-import cats.Monoid
-import cats.MonoidK
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
 import eu.timepit.refined.auto.autoUnwrap
+import explore.cats.given
 import explore.model.GroupTree
 import explore.model.GroupUpdate
 import explore.model.Observation
@@ -30,9 +29,6 @@ import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
  * Functions to modify cache through subscription updates
  */
 trait CacheModifierUpdaters {
-  // TODO Move somewhere else
-  private given [A]: Monoid[Endo[A]] = MonoidK[Endo].algebra[A]
-
   protected def modifyTargets(targetEdit: TargetEdit): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.targets
       .modify: targets =>

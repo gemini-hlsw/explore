@@ -119,12 +119,18 @@ case class ItcProps(
         snAt <- signalToNoiseAt
         t    <- itcTargets
         mode <- instrumentRow
-      yield ItcClient[IO]
-        .requestSingle:
-          ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
-        .map:
-          _.toRight(new Throwable("No response from ITC server."))
-        .rethrow
+      yield IO.println(
+        s"requesting graphs; wavelength: $w, signalToNoise $sn, signalToNoiseAt $snAt, instrumentRow $mode"
+      ) >>
+        ItcClient[IO]
+          .requestSingle:
+            ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
+          .map:
+            _.toRight(new Throwable("No response from ITC server."))
+          .rethrow
+          .flatTap: result =>
+            IO.println:
+              s"result: ${result.asterismGraphs.values.map(_.toOption.map(_.itcExposureTime))}"
 
     action.getOrElse:
       IO.raiseError:

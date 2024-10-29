@@ -192,15 +192,11 @@ object ObsTabTiles:
         itcProps =>
           import ctx.given
 
-          IO.println(s"Reqquesting ITC graphs for ${itcProps.itcTargets}") *>
-            oldItcProps.setStateAsync(itcProps) >>
+          oldItcProps.setStateAsync(itcProps) >>
             itcGraphResults.setStateAsync(Pot.pending) >>
             itcProps.requestGraphs.attemptPot
               .flatMap: result =>
-                IO.println(
-                  s"result ${result.toOption.map(_._1.values.map(_.toOption.map(_.itcExposureTime)))}"
-                ) *>
-                  itcGraphResults.setStateAsync(result)
+                itcGraphResults.setStateAsync(result)
       // Signal that the sequence has changed
       .useStateView(().ready)
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>

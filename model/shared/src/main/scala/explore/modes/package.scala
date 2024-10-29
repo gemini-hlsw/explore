@@ -10,10 +10,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.optics.Wedge
 import lucuma.core.util.NewType
-import lucuma.core.enums.GmosNorthGrating
-import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosSouthFpu
-import lucuma.core.enums.GmosSouthGrating
 
 object ModeWavelength extends NewType[Wavelength]:
   extension (w: ModeWavelength)
