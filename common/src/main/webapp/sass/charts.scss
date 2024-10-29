@@ -14,6 +14,14 @@ See https://github.com/highcharts/highcharts/issues/13320 */
     stroke-width: 1.5px;
   }
 
+  .highcharts-title {
+    fill: var(--plot-text-color);
+  }
+
+  .highcharts-subtitle {
+    fill: var(--plot-text-color);
+  }
+
   .highcharts-tooltip-box {
     /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
     stroke: var(--plot-tooltip-border-color);
