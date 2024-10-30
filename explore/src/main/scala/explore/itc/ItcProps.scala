@@ -10,7 +10,7 @@ import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import explore.events.ItcMessage
-import explore.model.BasicConfigAndItc
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
@@ -18,10 +18,8 @@ import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.reusability.given
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.GmosSpectroscopyOverrides
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
+import explore.modes.InstrumentOverrides
 import japgolly.scalajs.react.Reusability
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessValue
@@ -39,7 +37,7 @@ import scala.collection.immutable.SortedMap
 
 case class ItcProps(
   observation:    Observation,
-  selectedConfig: Option[BasicConfigAndItc], // selected row in spectroscopy modes table
+  selectedConfig: Option[InstrumentConfigAndItcResult], // selected row in spectroscopy modes table
   at:             TargetList
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
@@ -55,15 +53,15 @@ case class ItcProps(
   // The remote configuration is read in a different query than the itc results
   // This will work even in the case the user has overriden some parameters
   // When we use the remote configuration we don't need the exposure time.
-  private val remoteConfig: Option[BasicConfigAndItc] =
+  private val remoteConfig: Option[InstrumentConfigAndItcResult] =
     observation
-      .toInstrumentRow(at)
+      .toInstrumentConfig(at)
       .map: row =>
-        BasicConfigAndItc(row, none)
+        InstrumentConfigAndItcResult(row, none)
 
   // The user may select a configuration on the modes tables, we'd prefer than but if not
   // we can try with the remote confiiguration provided by the database
-  val finalConfig: Option[BasicConfigAndItc] =
+  val finalConfig: Option[InstrumentConfigAndItcResult] =
     selectedConfig.orElse(remoteConfig)
 
   val signalToNoise: Option[SignalToNoise] =
@@ -74,14 +72,26 @@ case class ItcProps(
 
   private val wavelength: Option[CentralWavelength] =
     finalConfig
-      .map(_.configuration)
+      .map(_.instrumentConfig)
       .flatMap:
-        case GmosNorthSpectroscopyRow(_, _, _, Some(GmosSpectroscopyOverrides(cw, _, _))) => cw.some
-        case GmosSouthSpectroscopyRow(_, _, _, Some(GmosSpectroscopyOverrides(cw, _, _))) => cw.some
-        case _                                                                            => none
+        case InstrumentConfig.GmosNorthSpectroscopy(
+              _,
+              _,
+              _,
+              Some(InstrumentOverrides.GmosSpectroscopy(cw, _, _))
+            ) =>
+          cw.some
+        case InstrumentConfig.GmosSouthSpectroscopy(
+              _,
+              _,
+              _,
+              Some(InstrumentOverrides.GmosSpectroscopy(cw, _, _))
+            ) =>
+          cw.some
+        case _ => none
 
-  private val instrumentRow: Option[InstrumentRow] =
-    finalConfig.map(_.configuration)
+  private val instrumentConfig: Option[InstrumentConfig] =
+    finalConfig.map(_.instrumentConfig)
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =
     asterismIds.itcTargets(allTargets).filter(_.canQueryITC).toNel
@@ -89,7 +99,7 @@ case class ItcProps(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps: List[Option[?]] =
-    List(itcTargets, finalConfig, wavelength, instrumentRow, signalToNoise)
+    List(itcTargets, finalConfig, wavelength, instrumentConfig, signalToNoise)
 
   val isExecutable: Boolean = queryProps.forall(_.isDefined)
 
@@ -110,19 +120,16 @@ case class ItcProps(
         sn   <- signalToNoise
         snAt <- signalToNoiseAt
         t    <- itcTargets
-        mode <- instrumentRow
-      yield IO.println(
-        s"requesting graphs; wavelength: $w, signalToNoise $sn, signalToNoiseAt $snAt, instrumentRow $mode"
-      ) >>
-        ItcClient[IO]
-          .requestSingle:
-            ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
-          .map:
-            _.toRight(new Throwable("No response from ITC server."))
-          .rethrow
-          .flatTap: result =>
-            IO.println:
-              s"result: ${result.asterismGraphs.values.map(_.toOption.map(_.itcExposureTime))}"
+        mode <- instrumentConfig
+      yield ItcClient[IO]
+        .requestSingle:
+          ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
+        .map:
+          _.toRight(new Throwable("No response from ITC server."))
+        .rethrow
+        .flatTap: result =>
+          IO.println:
+            s"result: ${result.asterismGraphs.values.map(_.toOption.map(_.itcExposureTime))}"
 
     action.getOrElse:
       IO.raiseError:

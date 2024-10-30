@@ -21,7 +21,7 @@ import explore.model.itc.ItcTarget
 import explore.model.itc.ItcTargetProblem
 import explore.model.itc.OverridenExposureTime
 import explore.modes.*
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import explore.modes.ModeAO
 import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
@@ -82,28 +82,28 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[GmosCcdMode] = generatePickler
 
-  given Pickler[GmosSpectroscopyOverrides] = generatePickler
+  given Pickler[InstrumentOverrides.GmosSpectroscopy] = generatePickler
 
-  given Pickler[GmosNorthSpectroscopyRow] = generatePickler
+  given Pickler[InstrumentConfig.GmosNorthSpectroscopy] = generatePickler
 
-  given Pickler[GmosSouthSpectroscopyRow] = generatePickler
+  given Pickler[InstrumentConfig.GmosSouthSpectroscopy] = generatePickler
 
-  given Pickler[Flamingos2SpectroscopyRow] = generatePickler
+  given Pickler[InstrumentConfig.Flamingos2Spectroscopy] = generatePickler
 
-  given Pickler[GpiSpectroscopyRow] = generatePickler
+  given Pickler[InstrumentConfig.GpiSpectroscopy] = generatePickler
 
-  given Pickler[GnirsSpectroscopyRow] = generatePickler
+  given Pickler[InstrumentConfig.GnirsSpectroscopy] = generatePickler
 
-  given Pickler[GenericSpectroscopyRow] = generatePickler
+  given Pickler[InstrumentConfig.GenericSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentRow] =
-    compositePickler[InstrumentRow]
-      .addConcreteType[GmosNorthSpectroscopyRow]
-      .addConcreteType[GmosSouthSpectroscopyRow]
-      .addConcreteType[Flamingos2SpectroscopyRow]
-      .addConcreteType[GpiSpectroscopyRow]
-      .addConcreteType[GnirsSpectroscopyRow]
-      .addConcreteType[GenericSpectroscopyRow]
+  given Pickler[InstrumentConfig] =
+    compositePickler[InstrumentConfig]
+      .addConcreteType[InstrumentConfig.GmosNorthSpectroscopy]
+      .addConcreteType[InstrumentConfig.GmosSouthSpectroscopy]
+      .addConcreteType[InstrumentConfig.Flamingos2Spectroscopy]
+      .addConcreteType[InstrumentConfig.GpiSpectroscopy]
+      .addConcreteType[InstrumentConfig.GnirsSpectroscopy]
+      .addConcreteType[InstrumentConfig.GenericSpectroscopy]
 
   given Pickler[ModeWavelength] = picklerNewType(ModeWavelength)
 

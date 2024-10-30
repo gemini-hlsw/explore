@@ -10,13 +10,10 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.cats.given
+import explore.givens.given
 import explore.model.syntax.all.*
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.GmosSpectroscopyOverrides
+import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
-import explore.modes.InstrumentRow
 import explore.modes.syntax.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
@@ -151,7 +148,11 @@ case class Observation(
               defaultAmpGain
             )(defaultMode)
 
-          GmosSpectroscopyOverrides(centralWavelength, mode, explicitRoi.getOrElse(defaultRoi))
+          InstrumentOverrides.GmosSpectroscopy(
+            centralWavelength,
+            mode,
+            explicitRoi.getOrElse(defaultRoi)
+          )
       case ObservingMode.GmosSouthLongSlit(
             _,
             grating,
@@ -189,12 +190,16 @@ case class Observation(
             defaultAmpGain
           )(defaultMode)
 
-          GmosSpectroscopyOverrides(centralWavelength, mode, explicitRoi.getOrElse(defaultRoi))
+          InstrumentOverrides.GmosSpectroscopy(
+            centralWavelength,
+            mode,
+            explicitRoi.getOrElse(defaultRoi)
+          )
 
-  def toInstrumentRow(targets: TargetList): Option[InstrumentRow] =
+  def toInstrumentConfig(targets: TargetList): Option[InstrumentConfig] =
     (toModeOverride(targets), observingMode)
       .mapN:
-        case (overrides @ GmosSpectroscopyOverrides(_, _, _),
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
               ObservingMode.GmosNorthLongSlit(
                 _,
                 grating,
@@ -220,8 +225,8 @@ case class Observation(
                 _
               )
             ) =>
-          GmosNorthSpectroscopyRow(grating, fpu, filter, overrides.some).some
-        case (overrides @ GmosSpectroscopyOverrides(_, _, _),
+          InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
               ObservingMode.GmosSouthLongSlit(
                 _,
                 grating,
@@ -247,7 +252,7 @@ case class Observation(
                 _
               )
             ) =>
-          GmosSouthSpectroscopyRow(grating, fpu, filter, overrides.some).some
+          InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
         case _ => none
       .flatten
 

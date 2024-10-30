@@ -18,14 +18,14 @@ import explore.common.ScienceQueries.ScienceRequirementsUndoView
 import explore.common.ScienceQueries.UpdateScienceRequirements
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.BasicConfigAndItc
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.ObsConfiguration
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -45,21 +45,21 @@ import monocle.Iso
 import queries.common.ObsQueriesGQL
 
 case class ConfigurationPanel(
-  userId:          Option[User.Id],
-  programId:       Program.Id,
-  obsId:           Observation.Id,
-  requirements:    UndoSetter[ScienceRequirements],
-  mode:            UndoSetter[Option[ObservingMode]],
-  posAngle:        View[PosAngleConstraint],
-  obsConf:         ObsConfiguration,
-  itcTargets:      List[ItcTarget],
-  baseCoordinates: Option[CoordinatesAtVizTime],
-  selectedConfig:  View[Option[BasicConfigAndItc]],
-  instrumentRow:   Option[InstrumentRow], // configuration selected if reverted
-  modes:           SpectroscopyModesMatrix,
-  sequenceChanged: Callback,
-  readonly:        Boolean,
-  units:           WavelengthUnits
+  userId:                   Option[User.Id],
+  programId:                Program.Id,
+  obsId:                    Observation.Id,
+  requirements:             UndoSetter[ScienceRequirements],
+  mode:                     UndoSetter[Option[ObservingMode]],
+  posAngle:                 View[PosAngleConstraint],
+  obsConf:                  ObsConfiguration,
+  itcTargets:               List[ItcTarget],
+  baseCoordinates:          Option[CoordinatesAtVizTime],
+  selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
+  revertedInstrumentConfig: Option[InstrumentConfig],
+  modes:                    SpectroscopyModesMatrix,
+  sequenceChanged:          Callback,
+  readonly:                 Boolean,
+  units:                    WavelengthUnits
 ) extends ReactFnProps[ConfigurationPanel](ConfigurationPanel.component)
 
 object ConfigurationPanel:
@@ -154,11 +154,11 @@ object ConfigurationPanel:
           modeAligner.view(_.map(_.toInput).orUnassign)
 
         val deleteConfiguration: Callback =
-          optModeView.set(none) >> // Select the reverted config
-            props.instrumentRow
-              .map: row =>
+          optModeView.set(none) >>
+            props.revertedInstrumentConfig
+              .map: row => // Select the reverted config
                 props.selectedConfig.mod(c =>
-                  BasicConfigAndItc(
+                  InstrumentConfigAndItcResult(
                     row,
                     c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
                   ).some

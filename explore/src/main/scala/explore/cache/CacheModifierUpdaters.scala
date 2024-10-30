@@ -8,7 +8,7 @@ import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
 import eu.timepit.refined.auto.autoUnwrap
-import explore.cats.given
+import explore.givens.given
 import explore.model.GroupTree
 import explore.model.GroupUpdate
 import explore.model.Observation

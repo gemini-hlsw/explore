@@ -12,9 +12,7 @@ import cats.syntax.all.*
 import explore.model.Constants
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
@@ -112,9 +110,9 @@ object ITCRequests:
         .map(x => (x.intervalCenter(wavelength), x.instrument))
         // Only handle known modes
         .collect:
-          case (Some(wavelength), m: GmosNorthSpectroscopyRow) =>
+          case (Some(wavelength), m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _)) =>
             ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, asterism, m)
-          case (Some(wavelength), m: GmosSouthSpectroscopyRow) =>
+          case (Some(wavelength), m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _)) =>
             ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, asterism, m)
 
     parTraverseN(

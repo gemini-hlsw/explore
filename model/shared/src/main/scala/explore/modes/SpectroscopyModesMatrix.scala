@@ -3,9 +3,9 @@
 
 package explore.modes
 
-import _root_.cats.data.NonEmptyList
 import cats.Eq
 import cats.Order
+import cats.data.NonEmptyList
 import cats.derived.*
 import cats.implicits.*
 import coulomb.*
@@ -38,131 +38,6 @@ import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
-
-sealed trait InstrumentRow derives Eq {
-  def instrument: Instrument
-
-  type Grating
-  val grating: Grating
-
-  type FPU
-  val fpu: FPU
-
-  type Filter
-  val filter: Filter
-
-  val site: Site
-
-  def hasFilter: Boolean
-
-  type Override
-  def modeOverrides: Option[Override] = None
-
-  // override def toString(): String = s"Mode KKK: ${instrument.shortName}, $grating, $filter, $fpu"
-}
-
-sealed trait InstrumentOverrides derives Eq
-case class GmosSpectroscopyOverrides(
-  centralWavelength: CentralWavelength,
-  ccdMode:           GmosCcdMode,
-  roi:               GmosRoi
-) extends InstrumentOverrides derives Eq
-
-object InstrumentOverrides
-
-case class GmosNorthSpectroscopyRow(
-  grating:                    GmosNorthGrating,
-  fpu:                        GmosNorthFpu,
-  filter:                     Option[GmosNorthFilter],
-  override val modeOverrides: Option[GmosSpectroscopyOverrides]
-) extends InstrumentRow {
-  type Grating  = GmosNorthGrating
-  type Filter   = Option[GmosNorthFilter]
-  type FPU      = GmosNorthFpu
-  type Override = GmosSpectroscopyOverrides
-  val instrument                  = Instrument.GmosNorth
-  val site                        = Site.GN
-  val hasFilter                   = filter.isDefined
-  override def toString(): String =
-    s"Mode GN: ${instrument.shortName}, $grating, $filter, $fpu, OVER: $modeOverrides"
-}
-
-case class GmosSouthSpectroscopyRow(
-  grating:                    GmosSouthGrating,
-  fpu:                        GmosSouthFpu,
-  filter:                     Option[GmosSouthFilter],
-  override val modeOverrides: Option[GmosSpectroscopyOverrides]
-) extends InstrumentRow {
-  type Grating  = GmosSouthGrating
-  type Filter   = Option[GmosSouthFilter]
-  type FPU      = GmosSouthFpu
-  type Override = GmosSpectroscopyOverrides
-  val instrument                  = Instrument.GmosSouth
-  val site                        = Site.GS
-  val hasFilter                   = filter.isDefined
-  override def toString(): String =
-    s"Mode GS: ${instrument.shortName}, $grating, $filter, $fpu, OVER: $modeOverrides"
-}
-
-case class Flamingos2SpectroscopyRow(grating: F2Disperser, filter: F2Filter) extends InstrumentRow {
-  type Grating  = F2Disperser
-  type Filter   = F2Filter
-  type FPU      = Unit
-  type Override = Unit
-  val fpu        = ()
-  val instrument = Instrument.Flamingos2
-  val site       = Site.GS
-  val hasFilter  = true
-}
-
-case class GpiSpectroscopyRow(grating: GpiDisperser, filter: GpiFilter) extends InstrumentRow {
-  type Grating  = GpiDisperser
-  type Filter   = GpiFilter
-  type FPU      = Unit
-  type Override = Unit
-  val fpu        = ()
-  val instrument = Instrument.Gpi
-  val site       = Site.GN
-  val hasFilter  = true
-}
-
-case class GnirsSpectroscopyRow(grating: GnirsDisperser, filter: GnirsFilter)
-    extends InstrumentRow {
-  type Grating  = GnirsDisperser
-  type Filter   = GnirsFilter
-  type FPU      = Unit
-  type Override = Unit
-  val fpu        = ()
-  val instrument = Instrument.Gnirs
-  val site       = Site.GN
-  val hasFilter  = true
-}
-
-// Used for Instruments not fully defined
-case class GenericSpectroscopyRow(i: Instrument, grating: String, filter: NonEmptyString)
-    extends InstrumentRow {
-  type Grating  = String
-  type Filter   = NonEmptyString
-  type FPU      = Unit
-  type Override = Unit
-  val fpu        = ()
-  val instrument = i
-  val site       = Site.GN
-  val hasFilter  = true
-}
-
-object InstrumentRow {
-
-  val instrument: Getter[InstrumentRow, Instrument] =
-    Getter[InstrumentRow, Instrument](_.instrument)
-
-  def grating: Getter[InstrumentRow, InstrumentRow#Grating] =
-    Getter[InstrumentRow, InstrumentRow#Grating](_.grating)
-
-  def filter: Getter[InstrumentRow, InstrumentRow#Filter] =
-    Getter[InstrumentRow, InstrumentRow#Filter](_.filter)
-
-}
 
 trait ModeCommonWavelengths {
   val λmin: ModeWavelength
@@ -204,7 +79,7 @@ type SlitWidth = SlitWidth.Type
 
 case class SpectroscopyModeRow(
   id:         Option[Int], // we number the modes for the UI
-  instrument: InstrumentRow,
+  instrument: InstrumentConfig,
   config:     NonEmptyString,
   focalPlane: FocalPlane,
   capability: Option[SpectroscopyCapabilities],
@@ -238,31 +113,35 @@ case class SpectroscopyModeRow(
     imageQuality: ImageQuality
   ): Option[SpectroscopyModeRow] =
     intervalCenter(wavelength).flatMap: cw =>
-      val instrumentRow: Option[InstrumentRow] =
+      val instrumentConfig: Option[InstrumentConfig] =
         instrument.instrument match
           case Instrument.GmosNorth | Instrument.GmosSouth =>
             instrument match
-              case i @ GmosNorthSpectroscopyRow(grating, fpu, _, None) =>
+              case i @ InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, None) =>
                 i.copy(modeOverrides =
-                  GmosSpectroscopyOverrides(
-                    cw,
-                    GmosCcdMode.defaultGmosNorth(profiles, fpu, grating, imageQuality),
-                    DefaultRoi
-                  ).some
+                  InstrumentOverrides
+                    .GmosSpectroscopy(
+                      cw,
+                      GmosCcdMode.defaultGmosNorth(profiles, fpu, grating, imageQuality),
+                      DefaultRoi
+                    )
+                    .some
                 ).some
-              case i @ GmosSouthSpectroscopyRow(grating, fpu, _, None) =>
+              case i @ InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, None) =>
                 i.copy(modeOverrides =
-                  GmosSpectroscopyOverrides(
-                    cw,
-                    GmosCcdMode.defaultGmosSouth(profiles, fpu, grating, imageQuality),
-                    DefaultRoi
-                  ).some
+                  InstrumentOverrides
+                    .GmosSpectroscopy(
+                      cw,
+                      GmosCcdMode.defaultGmosSouth(profiles, fpu, grating, imageQuality),
+                      DefaultRoi
+                    )
+                    .some
                 ).some
-              case i                                                   =>
+              case i                                                                 =>
                 i.some
           case _                                           => none
 
-      instrumentRow.map: i =>
+      instrumentConfig.map: i =>
         copy(instrument = i)
 }
 
@@ -270,11 +149,11 @@ object SpectroscopyModeRow {
 
   given ValueConversion[NonNegBigDecimal, BigDecimal] = _.value
 
-  val instrumentRow: Lens[SpectroscopyModeRow, InstrumentRow] =
+  val instrumentConfig: Lens[SpectroscopyModeRow, InstrumentConfig] =
     GenLens[SpectroscopyModeRow](_.instrument)
 
   val instrument: Getter[SpectroscopyModeRow, Instrument] =
-    instrumentRow.andThen(InstrumentRow.instrument)
+    instrumentConfig.andThen(InstrumentConfig.instrument)
 
   val config: Lens[SpectroscopyModeRow, NonEmptyString] =
     GenLens[SpectroscopyModeRow](_.config)
@@ -288,14 +167,14 @@ object SpectroscopyModeRow {
   val slitLength: Lens[SpectroscopyModeRow, SlitLength] =
     GenLens[SpectroscopyModeRow](_.slitLength)
 
-  def grating: Getter[SpectroscopyModeRow, InstrumentRow#Grating] =
-    instrumentRow.andThen(InstrumentRow.grating)
+  def grating: Getter[SpectroscopyModeRow, InstrumentConfig#Grating] =
+    instrumentConfig.andThen(InstrumentConfig.grating)
 
   def fpu: Lens[SpectroscopyModeRow, FocalPlane] =
     GenLens[SpectroscopyModeRow](_.focalPlane)
 
-  def filter: Getter[SpectroscopyModeRow, InstrumentRow#Filter] =
-    instrumentRow.andThen(InstrumentRow.filter)
+  def filter: Getter[SpectroscopyModeRow, InstrumentConfig#Filter] =
+    instrumentConfig.andThen(InstrumentConfig.filter)
 
   import lucuma.core.math.units.*
 
@@ -303,19 +182,19 @@ object SpectroscopyModeRow {
     Getter(_.resolution)
 
   // decoders for instruments are used locally as they are not lawful
-  private given Decoder[GmosNorthSpectroscopyRow] = c =>
+  private given Decoder[InstrumentConfig.GmosNorthSpectroscopy] = c =>
     for {
       grating <- c.downField("grating").as[GmosNorthGrating]
       fpu     <- c.downField("fpu").as[GmosNorthFpu]
       filter  <- c.downField("filter").as[Option[GmosNorthFilter]]
-    } yield GmosNorthSpectroscopyRow(grating, fpu, filter, none)
+    } yield InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, none)
 
-  private given Decoder[GmosSouthSpectroscopyRow] = c =>
+  private given Decoder[InstrumentConfig.GmosSouthSpectroscopy] = c =>
     for {
       grating <- c.downField("grating").as[GmosSouthGrating]
       fpu     <- c.downField("fpu").as[GmosSouthFpu]
       filter  <- c.downField("filter").as[Option[GmosSouthFilter]]
-    } yield GmosSouthSpectroscopyRow(grating, fpu, filter, none)
+    } yield InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, none)
 
   given Decoder[SpectroscopyModeRow] = c =>
     for {
@@ -331,8 +210,8 @@ object SpectroscopyModeRow {
       resolution <- c.downField("resolution").as[PosInt]
       slitWidth  <- c.downField("slitWidth").as[Angle]
       slitLength <- c.downField("slitLength").as[Angle]
-      gmosNorth  <- c.downField("gmosNorth").as[Option[GmosNorthSpectroscopyRow]]
-      gmosSouth  <- c.downField("gmosSouth").as[Option[GmosSouthSpectroscopyRow]]
+      gmosNorth  <- c.downField("gmosNorth").as[Option[InstrumentConfig.GmosNorthSpectroscopy]]
+      gmosSouth  <- c.downField("gmosSouth").as[Option[InstrumentConfig.GmosSouthSpectroscopy]]
     } yield gmosNorth
       .orElse(gmosSouth)
       .map { i =>

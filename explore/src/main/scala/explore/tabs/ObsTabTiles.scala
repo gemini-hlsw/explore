@@ -106,7 +106,6 @@ case class ObsTabTiles(
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     programSummaries.targetObservations
   val obsExecution: Pot[Execution]                                  = programSummaries.obsExecutionPots.getPot(obsId)
-  // val allTargets: TargetList                                        = programSummaries.targets
   val obsTargets: TargetList                                        = programSummaries.obsTargets.get(obsId).getOrElse(SortedMap.empty)
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
@@ -137,13 +136,6 @@ object ObsTabTiles:
           .toList
       )
     )
-
-  private def itcQueryProps(
-    obs:            Observation,
-    selectedConfig: Option[BasicConfigAndItc],
-    targetList:     TargetList
-  ): ItcProps =
-    ItcProps(obs, selectedConfig, targetList /*, obs.toModeOverride(targetList)*/ )
 
   private case class Offsets(
     science:     Option[NonEmptyList[Offset]],
@@ -178,13 +170,12 @@ object ObsTabTiles:
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
       // the configuration the user has selected from the spectroscopy modes table, if any
-      .useStateView(none[BasicConfigAndItc])
+      .useStateView(none[InstrumentConfigAndItcResult])
       .useStateWithReuseBy: (props, _, _, _, selectedConfig) => // itcQueryProps
-        // println(props.obsTargets)
-        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets)
+        ItcProps(props.observation.get, selectedConfig.get, props.obsTargets)
       .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults
       .useAsyncEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
-        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets)
+        ItcProps(props.observation.get, selectedConfig.get, props.obsTargets)
       ): (props, ctx, _, _, _, oldItcProps, itcGraphResults) =>
         itcProps =>
           import ctx.given
@@ -511,7 +502,7 @@ object ObsTabTiles:
                 targetCoords,
                 obsConf,
                 selectedConfig,
-                props.observation.get.toInstrumentRow(props.obsTargets),
+                props.observation.get.toInstrumentConfig(props.obsTargets),
                 props.modes,
                 props.obsTargets,
                 sequenceChanged.mod:

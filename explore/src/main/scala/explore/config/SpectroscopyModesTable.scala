@@ -21,7 +21,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.AppContext
-import explore.model.BasicConfigAndItc
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.Progress
 import explore.model.ScienceRequirements
 import explore.model.WorkerClients.*
@@ -74,7 +74,7 @@ import scalajs.js.JSConverters.*
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
-  selectedConfig:           View[Option[BasicConfigAndItc]],
+  selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
   spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
@@ -151,7 +151,7 @@ private object SpectroscopyModesTable:
   private val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.value).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
-  private def formatGrating(grating: InstrumentRow#Grating): String = grating match
+  private def formatGrating(grating: InstrumentConfig#Grating): String = grating match
     case f: GmosSouthGrating => f.shortName
     case f: GmosNorthGrating => f.shortName
     case f: F2Disperser      => f.shortName
@@ -159,7 +159,7 @@ private object SpectroscopyModesTable:
     case f: GnirsDisperser   => f.shortName
     case r                   => r.toString
 
-  private def formatFilter(filter: InstrumentRow#Filter): String = filter match
+  private def formatFilter(filter: InstrumentConfig#Filter): String = filter match
     case Some(f: GmosSouthFilter) => f.shortName
     case Some(f: GmosNorthFilter) => f.shortName
     case f: F2Filter              => f.shortName
@@ -169,9 +169,9 @@ private object SpectroscopyModesTable:
 
   // I think these are valid Orderings because they should be consistent with ==
   // They could probably be Orders, as well, but only Ordering is actually needed here.
-  private given Ordering[InstrumentRow#Grating] = Ordering.by(_.toString)
-  private given Ordering[InstrumentRow#Filter]  = Ordering.by(_.toString)
-  private given Ordering[TimeSpan | Unit]       = Ordering.by(_.toOption)
+  private given Ordering[InstrumentConfig#Grating] = Ordering.by(_.toString)
+  private given Ordering[InstrumentConfig#Filter]  = Ordering.by(_.toString)
+  private given Ordering[TimeSpan | Unit]          = Ordering.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -292,40 +292,6 @@ private object SpectroscopyModesTable:
         .setColumnSize(FixedSize(66.toPx))
         .sortable
     )
-
-  // extension (row: SpectroscopyModeRow)
-  //   private def rowToConf(cw: Option[Wavelength]): Option[BasicConfiguration] =
-  //     cw.flatMap(row.intervalCenter)
-  //       .flatMap: cc =>
-  //         row.instrument match
-  //           case GmosNorthSpectroscopyRow(grating, fpu, filter, modeOverrides)
-  //               if row.focalPlane === FocalPlane.SingleSlit =>
-  //             BasicConfiguration
-  //               .GmosNorthLongSlit(
-  //                 grating = grating,
-  //                 filter = filter,
-  //                 fpu = fpu,
-  //                 centralWavelength = cc
-  //               )
-  //               .some
-  //           case GmosSouthSpectroscopyRow(grating, fpu, filter, _)
-  //               if row.focalPlane === FocalPlane.SingleSlit =>
-  //             BasicConfiguration
-  //               .GmosSouthLongSlit(
-  //                 grating = grating,
-  //                 filter = filter,
-  //                 fpu = fpu,
-  //                 centralWavelength = cc
-  //               )
-  //               .some
-  //           case _ => none
-
-  // extension (row: SpectroscopyModeRowWithResult)
-  //   private def rowToConfAndItc(cw: Option[Wavelength]): Option[BasicConfigAndItc] =
-  //     row.entry.rowToConf(cw).map(c => BasicConfigAndItc(c, row.result.some))
-
-  //   private def equalsConf(conf: BasicConfiguration, cw: Option[Wavelength]): Boolean =
-  //     row.entry.rowToConf(cw).contains_(conf)
 
   extension (row: SpectroscopyModeRow)
     private def enabledRow: Boolean =
@@ -458,7 +424,7 @@ private object SpectroscopyModesTable:
         props.selectedConfig.get
           .flatMap: c =>
             rows.value.find: row =>
-              c.configuration === row.entry.instrument
+              c.instrumentConfig === row.entry.instrument
           .map(_.entry)
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
@@ -475,9 +441,9 @@ private object SpectroscopyModesTable:
           _ =>
             val optRow: Option[SpectroscopyModeRowWithResult] =
               selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
-            val conf: Option[BasicConfigAndItc]               =
+            val conf: Option[InstrumentConfigAndItcResult]    =
               optRow.map: row =>
-                BasicConfigAndItc(row.entry.instrument, row.result.some)
+                InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
             if (props.selectedConfig.get =!= conf)
               props.selectedConfig.set(conf)
             else Callback.empty
@@ -531,12 +497,13 @@ private object SpectroscopyModesTable:
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
                             cache.contains:
-                              ItcRequestParams(w,
-                                               sn,
-                                               snAt,
-                                               constraints,
-                                               asterism,
-                                               row.entry.instrument
+                              ItcRequestParams(
+                                w,
+                                sn,
+                                snAt,
+                                constraints,
+                                asterism,
+                                row.entry.instrument
                               )
                           case _                                           => true
 
@@ -612,9 +579,11 @@ private object SpectroscopyModesTable:
 
           def toggleRow(
             row: SpectroscopyModeRowWithResult
-          ): Option[BasicConfigAndItc] =
-            Option.when(props.selectedConfig.get.forall(_.configuration =!= row.entry.instrument)):
-              BasicConfigAndItc(row.entry.instrument, row.result.some)
+          ): Option[InstrumentConfigAndItcResult] =
+            Option.when(
+              props.selectedConfig.get.forall(_.instrumentConfig =!= row.entry.instrument)
+            ):
+              InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
 
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
@@ -688,7 +657,7 @@ private object SpectroscopyModesTable:
                     ExploreStyles.TableRowSelected
                       .when:
                         props.selectedConfig.get
-                          .exists(_.configuration === row.original.entry.instrument)
+                          .exists(_.instrumentConfig === row.original.entry.instrument)
                     ,
                     (
                       ^.onClick --> (

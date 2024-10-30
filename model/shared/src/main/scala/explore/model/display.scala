@@ -7,9 +7,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcQueryProblem
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import lucuma.core.enums.*
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.ObservationWorkflowState
@@ -241,13 +239,14 @@ trait DisplayImplicits:
       case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
         s"GMOS-S ${grating.shortName} ${fpu.shortName}"
 
-  extension (instrumentRow: InstrumentRow)
-    def configurationSummary: Option[String] = instrumentRow match
-      case GmosNorthSpectroscopyRow(grating, fpu, _, _) =>
-        s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-      case GmosSouthSpectroscopyRow(grating, fpu, _, _) =>
-        s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-      case _                                            =>
-        none
+  extension (revertedInstrumentConfig: InstrumentConfig)
+    def configurationSummary: Option[String] =
+      revertedInstrumentConfig match
+        case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
+          s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
+        case InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
+          s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
+        case _                                                          =>
+          none
 
 object display extends DisplayImplicits

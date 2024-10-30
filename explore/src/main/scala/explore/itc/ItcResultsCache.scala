@@ -35,7 +35,7 @@ case class ItcResultsCache(
   def signalToNoiseAt(w: Option[Wavelength]): EitherNec[ItcQueryProblem, Wavelength] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblem.MissingSignalToNoiseAt))
 
-  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, InstrumentRow] =
+  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, InstrumentConfig] =
     Either.fromOption(
       ItcResultsCache.enabledRow(r).option(r.instrument),
       NonEmptyChain.of(ItcQueryProblem.UnsupportedMode)
