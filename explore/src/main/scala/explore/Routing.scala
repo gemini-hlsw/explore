@@ -169,6 +169,9 @@ object Routing:
       yield ProgramTabContents(
         routingInfo.programId,
         programDetails,
+        programSummaries.get.configurationRequests,
+        programSummaries.get.obs4ConfigRequests,
+        programSummaries.get.targets,
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
         cfp.semester,

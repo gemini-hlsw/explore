@@ -230,7 +230,8 @@ trait DisplayImplicits:
     case ProgramUserRole.SupportPrimary   => "Principal Support"
     case ProgramUserRole.SupportSecondary => "Additional Support"
 
-  given Display[ObservationWorkflowState] = Display.byShortName(_.tag.capitalize)
+  given Display[ConfigurationRequestStatus] = Display.byShortName(_.tag.capitalize)
+  given Display[ObservationWorkflowState]   = Display.byShortName(_.tag.capitalize)
 
   extension (configuration: BasicConfiguration)
     def configurationSummary: String = configuration match

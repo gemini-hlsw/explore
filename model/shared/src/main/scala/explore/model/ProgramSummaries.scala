@@ -115,6 +115,15 @@ case class ProgramSummaries(
   lazy val allocatedScienceBands: SortedSet[ScienceBand] =
     optProgramDetails.foldMap(_.allocations.scienceBands)
 
+  lazy val obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]] =
+    configurationRequests
+      .map((crId, cr) =>
+        val obs = observations.toList
+          .filter(_.configuration.fold(false)(cr.configuration.subsumes))
+        (crId, obs)
+      )
+      .toMap
+
   import cats.instances.all.given
 
   def getObsClone(
