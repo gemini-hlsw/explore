@@ -28,7 +28,14 @@ object ObsQueriesGQL:
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
     val document = s"""
-      fragment stepData on GmosNorthStep {
+      fragment stepDataGN on GmosNorthStep {
+        id
+        telescopeConfig {
+          offset $OffsetSubquery
+        }
+      }
+
+      fragment stepDataGS on GmosSouthStep {
         id
         telescopeConfig {
           offset $OffsetSubquery
@@ -44,24 +51,24 @@ object ObsQueriesGQL:
                 acquisition {
                   nextAtom {
                     steps {
-                      ...stepData
+                      ...stepDataGS
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepData
+                      ...stepDataGS
                     }
                   }
                 }
                 science {
                   nextAtom {
                     steps {
-                      ...stepData
+                      ...stepDataGS
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepData
+                      ...stepDataGS
                     }
                   }
                 }
@@ -70,24 +77,24 @@ object ObsQueriesGQL:
                 acquisition {
                   nextAtom {
                     steps {
-                      ...stepData
+                      ...stepDataGN
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepData
+                      ...stepDataGN
                     }
                   }
                 }
                 science {
                   nextAtom {
                     steps {
-                      ...stepData
+                      ...stepDataGN
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepData
+                      ...stepDataGN
                     }
                   }
                 }
