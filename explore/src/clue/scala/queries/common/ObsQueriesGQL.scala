@@ -30,19 +30,15 @@ object ObsQueriesGQL:
     val document = s"""
       fragment stepDataGN on GmosNorthStep {
         id
-        stepConfig {
-          ... on Science {
-            offset $OffsetSubquery
-          }
+        telescopeConfig {
+          offset $OffsetSubquery
         }
       }
 
       fragment stepDataGS on GmosSouthStep {
         id
-        stepConfig {
-          ... on Science {
-            offset $OffsetSubquery
-          }
+        telescopeConfig {
+          offset $OffsetSubquery
         }
       }
 
