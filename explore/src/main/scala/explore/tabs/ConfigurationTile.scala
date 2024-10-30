@@ -10,13 +10,14 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationPanel
 import explore.model.AsterismIds
-import explore.model.BasicConfigAndItc
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.ObsConfiguration
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.enums.WavelengthUnits
+import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.Callback
@@ -31,21 +32,22 @@ import queries.schemas.itc.syntax.*
 
 object ConfigurationTile:
   def configurationTile(
-    userId:             Option[User.Id],
-    programId:          Program.Id,
-    obsId:              Observation.Id,
-    requirements:       UndoSetter[ScienceRequirements],
-    mode:               UndoSetter[Option[ObservingMode]],
-    posAngleConstraint: View[PosAngleConstraint],
-    scienceTargetIds:   AsterismIds,
-    baseCoordinates:    Option[CoordinatesAtVizTime],
-    obsConf:            ObsConfiguration,
-    selectedConfig:     View[Option[BasicConfigAndItc]],
-    modes:              SpectroscopyModesMatrix,
-    allTargets:         TargetList,
-    sequenceChanged:    Callback,
-    readonly:           Boolean,
-    units:              WavelengthUnits
+    userId:                   Option[User.Id],
+    programId:                Program.Id,
+    obsId:                    Observation.Id,
+    requirements:             UndoSetter[ScienceRequirements],
+    mode:                     UndoSetter[Option[ObservingMode]],
+    posAngleConstraint:       View[PosAngleConstraint],
+    scienceTargetIds:         AsterismIds,
+    baseCoordinates:          Option[CoordinatesAtVizTime],
+    obsConf:                  ObsConfiguration,
+    selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
+    revertedInstrumentConfig: Option[InstrumentConfig], // configuration selected if reverted
+    modes:                    SpectroscopyModesMatrix,
+    allTargets:               TargetList,
+    sequenceChanged:          Callback,
+    readonly:                 Boolean,
+    units:                    WavelengthUnits
   )(using Logger[IO]) =
     Tile(
       ObsTabTileIds.ConfigurationId.id,
@@ -63,6 +65,7 @@ object ConfigurationTile:
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
         selectedConfig,
+        revertedInstrumentConfig,
         modes,
         sequenceChanged,
         readonly,

@@ -13,8 +13,8 @@ import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
+import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
-import explore.modes.InstrumentRow
 import explore.undo.UndoStacks
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.ReactCats.*
@@ -101,7 +101,7 @@ object reusability:
   given Reusability[AngularSize]                        = Reusability.byEq
   given Reusability[CatalogTargetResult]                = Reusability.byEq
   given Reusability[BasicConfiguration]                 = Reusability.byEq
-  given Reusability[BasicConfigAndItc]                  = Reusability.byEq
+  given Reusability[InstrumentConfigAndItcResult]       = Reusability.byEq
   given Reusability[GuideStarCandidate]                 = Reusability.by(_.name.value)
   given Reusability[AgsPosition]                        = Reusability.byEq
   given Reusability[AgsParams]                          = Reusability.byEq
@@ -110,7 +110,7 @@ object reusability:
   given Reusability[ObsConfiguration]                   = Reusability.byEq
   given Reusability[Existence]                          = Reusability.byEq
   given Reusability[ItcExposureTime]                    = Reusability.byEq
-  given Reusability[InstrumentRow]                      = Reusability.byEq
+  given Reusability[InstrumentConfig]                   = Reusability.byEq
   given Reusability[CentralWavelength]                  = Reusability.byEq
   given Reusability[ObjectTracking]                     = Reusability.byEq
   given Reusability[Asterism]                           = Reusability.byEq[Asterism]

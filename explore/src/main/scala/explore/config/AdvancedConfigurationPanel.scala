@@ -21,15 +21,13 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationFormats.*
 import explore.model.AppContext
-import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.InstrumentConfig
 import explore.modes.ModeCommonWavelengths
 import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
@@ -82,9 +80,8 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def calibrationRole: Option[CalibrationRole]
   def observingMode: Aligner[T, Input]
   def spectroscopyRequirements: View[ScienceRequirements.Spectroscopy]
-  def deleteConfig: Callback
+  def revertConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
-  def selectedConfig: View[Option[BasicConfigAndItc]]
   def sequenceChanged: Callback
   def readonly: Boolean
   def units: WavelengthUnits
@@ -232,11 +229,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     reqsWavelength.flatMap(cw =>
       (mode, row.instrument) match
         case (m: ObservingMode.GmosNorthLongSlit,
-              GmosNorthSpectroscopyRow(rGrating, rFpu, rFilter, _)
+              InstrumentConfig.GmosNorthSpectroscopy(rGrating, rFpu, rFilter, _)
             ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
         case (m: ObservingMode.GmosSouthLongSlit,
-              GmosSouthSpectroscopyRow(rGrating, rFpu, rFilter, _)
+              InstrumentConfig.GmosSouthSpectroscopy(rGrating, rFpu, rFilter, _)
             ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
         case _ => none
@@ -726,13 +723,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "Revert Configuration",
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
-              onClick = props.selectedConfig.mod(c =>
-                BasicConfigAndItc(
-                  props.observingMode.get.toBasicConfiguration,
-                  c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
-                ).some
-              )
-                >> props.deleteConfig
+              onClick = props.revertConfig
             ).compact.small
               .unless(isCustomized(props.observingMode)),
             Button(
@@ -795,9 +786,8 @@ object AdvancedConfigurationPanel {
     calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
-    deleteConfig:             Callback,
+    revertConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
-    selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
@@ -998,9 +988,8 @@ object AdvancedConfigurationPanel {
     calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
-    deleteConfig:             Callback,
+    revertConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
-    selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits

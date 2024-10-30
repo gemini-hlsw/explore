@@ -11,7 +11,7 @@ import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.ItcTargetProblem
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
@@ -45,7 +45,7 @@ object ItcMessage extends ItcPicklers:
     signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     asterism:        NonEmptyList[ItcTarget],
-    modes:           InstrumentRow
+    modes:           InstrumentConfig
   ) extends Request:
     type ResponseType = ItcAsterismGraphResults
 

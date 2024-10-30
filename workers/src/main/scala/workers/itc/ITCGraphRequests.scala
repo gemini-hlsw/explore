@@ -9,9 +9,7 @@ import cats.effect.*
 import cats.syntax.all.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
@@ -37,13 +35,13 @@ object ITCGraphRequests:
     signalToNoiseAt: Wavelength,
     constraints:     ConstraintSet,
     targets:         NonEmptyList[ItcTarget],
-    mode:            InstrumentRow,
+    mode:            InstrumentConfig,
     cache:           Cache[F],
     callback:        ItcAsterismGraphResults => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
-      case m @ GmosNorthSpectroscopyRow(_, _, _, _) =>
+      case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
         ItcGraphRequestParams(
           wavelength,
           signalToNoise,
@@ -52,7 +50,7 @@ object ITCGraphRequests:
           targets,
           m
         ).some
-      case m @ GmosSouthSpectroscopyRow(_, _, _, _) =>
+      case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
         ItcGraphRequestParams(
           wavelength,
           signalToNoise,
@@ -61,7 +59,7 @@ object ITCGraphRequests:
           targets,
           m
         ).some
-      case _                                        =>
+      case _                                                      =>
         none
 
     def doRequest(request: ItcGraphRequestParams): F[ItcAsterismGraphResults] =

@@ -4,7 +4,7 @@
 package explore.model.itc
 
 import cats.data.*
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
@@ -16,7 +16,7 @@ case class ItcRequestParams(
   signalToNoiseAt: Wavelength,
   constraints:     ConstraintSet,
   asterism:        NonEmptyList[ItcTarget],
-  mode:            InstrumentRow
+  mode:            InstrumentConfig
 )
 
 case class ItcGraphRequestParams(
@@ -25,5 +25,5 @@ case class ItcGraphRequestParams(
   signalToNoiseAt: Wavelength,
   constraints:     ConstraintSet,
   asterism:        NonEmptyList[ItcTarget],
-  mode:            InstrumentRow
+  mode:            InstrumentConfig
 )

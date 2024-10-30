@@ -10,8 +10,8 @@ import crystal.react.hooks.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.BasicConfigAndItc
 import explore.model.ImagingConfigurationOptions
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
@@ -38,7 +38,7 @@ case class BasicConfigurationPanel(
   userId:           Option[User.Id],
   obsId:            Observation.Id,
   spectroscopyView: ViewOpt[Spectroscopy],
-  selectedConfig:   View[Option[BasicConfigAndItc]],
+  selectedConfig:   View[Option[InstrumentConfigAndItcResult]],
   constraints:      ConstraintSet,
   itcTargets:       List[ItcTarget],
   baseCoordinates:  Option[CoordinatesAtVizTime],
@@ -73,7 +73,7 @@ private object BasicConfigurationPanel:
             .map(_.wavelength)
             .fold("Wavelength is required for creating a configuration.".some)(_ =>
               props.selectedConfig.get match {
-                case Some(BasicConfigAndItc(_, itc)) =>
+                case Some(InstrumentConfigAndItcResult(_, itc)) =>
                   itc match {
                     case Some(Right(r)) if r.isPending => "Waiting for ITC result...".some
                     case Some(Right(r)) if r.isSuccess => none

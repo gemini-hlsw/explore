@@ -8,37 +8,34 @@ import cats.syntax.all.*
 import explore.model.AsterismIds
 import explore.model.TargetList
 import explore.model.itc.ItcTarget
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
-import explore.modes.InstrumentRow
+import explore.modes.InstrumentConfig
 import explore.optics.all.*
 import lucuma.core.enums.GmosRoi
 import lucuma.core.math.RadialVelocity
 import lucuma.core.model.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
-import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.itc.client.GmosFpu
 import lucuma.itc.client.InstrumentMode
 import lucuma.itc.client.TargetInput
 
 trait syntax:
 
-  extension (row: InstrumentRow)
+  extension (row: InstrumentConfig)
     def toItcClientMode: Option[InstrumentMode] =
       row match
-        case GmosNorthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
-          val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-          val ccd: Option[GmosCcdMode] = modeOverrides.flatMap(_.ccdMode)
+        case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, modeOverrides) =>
+          val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
+          val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
           InstrumentMode
             .GmosNorthSpectroscopy(grating, filter, GmosFpu.North(fpu.asRight), ccd, roi)
             .some
-        case GmosSouthSpectroscopyRow(grating, fpu, filter, modeOverrides) =>
-          val roi: Option[GmosRoi]     = modeOverrides.flatMap(_.roi).orElse(DefaultRoi.some)
-          val ccd: Option[GmosCcdMode] = modeOverrides.flatMap(_.ccdMode)
+        case InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, modeOverrides) =>
+          val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
+          val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
           InstrumentMode
             .GmosSouthSpectroscopy(grating, filter, GmosFpu.South(fpu.asRight), ccd, roi)
             .some
-        case _                                                             => None
+        case _                                                                           => None
 
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations

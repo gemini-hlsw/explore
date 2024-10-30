@@ -10,14 +10,17 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.givens.given
 import explore.model.syntax.all.*
-import explore.modes.GmosSpectroscopyOverrides
+import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
+import explore.modes.syntax.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.enums.CalibrationRole
-import lucuma.core.enums.GmosAmpCount
+import lucuma.core.enums.GmosAmpGain
+import lucuma.core.enums.GmosAmpReadMode
 import lucuma.core.enums.GmosXBinning
 import lucuma.core.enums.GmosYBinning
 import lucuma.core.enums.ObservationValidationCode
@@ -35,7 +38,6 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.gmos.GmosCcdMode
-import lucuma.core.model.sequence.gmos.longslit.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
@@ -87,16 +89,24 @@ case class Observation(
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
-  // For multiple targets, we take the smallest binning for each axis.
-  // https://docs.google.com/document/d/1P8_pXLRVomUSvofyVkAniOyGROcAtiJ7EMYt9wWXB0o/edit?disco=AAAA32SmtD4
-  private def asterismBinning(
-    bs: NonEmptyList[(GmosXBinning, GmosYBinning)]
-  ): (GmosXBinning, GmosYBinning) =
-    (bs.map(_._1).minimumBy(_.count), bs.map(_._2).minimumBy(_.count))
-
   private def profiles(targets: TargetList): Option[NonEmptyList[SourceProfile]] =
     NonEmptyList.fromList:
       scienceTargetIds.toList.map(targets.get).flattenOption.map(_.sourceProfile)
+
+  private def applyGmosCcdModesOverrides(
+    explicitXBinning:    Option[GmosXBinning],
+    explicitYBinning:    Option[GmosYBinning],
+    explicitAmpReadMode: Option[GmosAmpReadMode],
+    defaultAmpReadMode:  GmosAmpReadMode,
+    explicitAmpGain:     Option[GmosAmpGain],
+    defaultAmpGain:      GmosAmpGain
+  ): GmosCcdMode => GmosCcdMode =
+    List(
+      explicitXBinning.foldMap(GmosCcdMode.xBin.replace),
+      explicitYBinning.foldMap(GmosCcdMode.yBin.replace),
+      GmosCcdMode.ampReadMode.replace(explicitAmpReadMode.getOrElse(defaultAmpReadMode)),
+      GmosCcdMode.ampGain.replace(explicitAmpGain.getOrElse(defaultAmpGain))
+    ).reduce(_ >>> _)
 
   def toModeOverride(targets: TargetList): Option[InstrumentOverrides] =
     observingMode.flatMap:
@@ -117,7 +127,7 @@ case class Observation(
             explicitAmpReadMode,
             defaultAmpGain,
             explicitAmpGain,
-            _,
+            defaultRoi,
             explicitRoi,
             _,
             _,
@@ -125,20 +135,23 @@ case class Observation(
             _
           ) =>
         profiles(targets).map: ps =>
-          val (defaultXBinning, defaultYBinning) =
-            if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
-            else asterismBinning(ps.map(northBinning(fpu, _, constraints.imageQuality, grating)))
+          val defaultMode: GmosCcdMode =
+            GmosCcdMode.defaultGmosNorth(ps, fpu, grating, constraints.imageQuality)
 
-          GmosSpectroscopyOverrides(
+          val mode: GmosCcdMode =
+            applyGmosCcdModesOverrides(
+              explicitXBinning,
+              explicitYBinning,
+              explicitAmpReadMode,
+              defaultAmpReadMode,
+              explicitAmpGain,
+              defaultAmpGain
+            )(defaultMode)
+
+          InstrumentOverrides.GmosSpectroscopy(
             centralWavelength,
-            GmosCcdMode(
-              explicitXBinning.getOrElse(defaultXBinning),
-              explicitYBinning.getOrElse(defaultYBinning),
-              GmosAmpCount.Twelve,
-              explicitAmpGain.getOrElse(defaultAmpGain),
-              explicitAmpReadMode.getOrElse(defaultAmpReadMode)
-            ).some,
-            explicitRoi
+            mode,
+            explicitRoi.getOrElse(defaultRoi)
           )
       case ObservingMode.GmosSouthLongSlit(
             _,
@@ -157,7 +170,7 @@ case class Observation(
             explicitAmpReadMode,
             defaultAmpGain,
             explicitAmpGain,
-            _,
+            defaultRoi,
             explicitRoi,
             _,
             _,
@@ -165,21 +178,83 @@ case class Observation(
             _
           ) =>
         profiles(targets).map: ps =>
-          val (defaultXBinning, defaultYBinning) =
-            if (fpu.isIFU) (GmosXBinning.One, GmosYBinning.One)
-            else asterismBinning(ps.map(southBinning(fpu, _, constraints.imageQuality, grating)))
+          val defaultMode: GmosCcdMode =
+            GmosCcdMode.defaultGmosSouth(ps, fpu, grating, constraints.imageQuality)
 
-          GmosSpectroscopyOverrides(
+          val mode: GmosCcdMode = applyGmosCcdModesOverrides(
+            explicitXBinning,
+            explicitYBinning,
+            explicitAmpReadMode,
+            defaultAmpReadMode,
+            explicitAmpGain,
+            defaultAmpGain
+          )(defaultMode)
+
+          InstrumentOverrides.GmosSpectroscopy(
             centralWavelength,
-            GmosCcdMode(
-              explicitXBinning.getOrElse(defaultXBinning),
-              explicitYBinning.getOrElse(defaultYBinning),
-              GmosAmpCount.Twelve,
-              explicitAmpGain.getOrElse(defaultAmpGain),
-              explicitAmpReadMode.getOrElse(defaultAmpReadMode)
-            ).some,
-            explicitRoi
+            mode,
+            explicitRoi.getOrElse(defaultRoi)
           )
+
+  def toInstrumentConfig(targets: TargetList): Option[InstrumentConfig] =
+    (toModeOverride(targets), observingMode)
+      .mapN:
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
+              ObservingMode.GmosNorthLongSlit(
+                _,
+                grating,
+                _,
+                filter,
+                _,
+                fpu,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _
+              )
+            ) =>
+          InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
+              ObservingMode.GmosSouthLongSlit(
+                _,
+                grating,
+                _,
+                filter,
+                _,
+                fpu,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _
+              )
+            ) =>
+          InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
+        case _ => none
+      .flatten
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"

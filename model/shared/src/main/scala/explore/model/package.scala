@@ -55,9 +55,6 @@ object AsterismIds:
 type AsterismGroupList          = SortedMap[ObsIdSet, AsterismIds]
 type TargetList                 = SortedMap[Target.Id, Target]
 type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]
-// KeyedIndexedList is only useful is manual order is going to matter.
-// For the moment I'm keeping it because it seems it will matter at some point.
-// Otherwise, we should change to a SortedMap.
 type ObservationList            = KeyedIndexedList[Observation.Id, Observation]
 type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
 type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
