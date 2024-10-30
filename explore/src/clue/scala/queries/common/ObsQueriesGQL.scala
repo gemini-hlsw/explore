@@ -28,21 +28,10 @@ object ObsQueriesGQL:
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
     val document = s"""
-      fragment stepDataGN on GmosNorthStep {
+      fragment stepData on GmosNorthStep {
         id
-        stepConfig {
-          ... on Science {
-            offset $OffsetSubquery
-          }
-        }
-      }
-
-      fragment stepDataGS on GmosSouthStep {
-        id
-        stepConfig {
-          ... on Science {
-            offset $OffsetSubquery
-          }
+        telescopeConfig {
+          offset $OffsetSubquery
         }
       }
 
@@ -55,24 +44,24 @@ object ObsQueriesGQL:
                 acquisition {
                   nextAtom {
                     steps {
-                      ...stepDataGS
+                      ...stepData
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepDataGS
+                      ...stepData
                     }
                   }
                 }
                 science {
                   nextAtom {
                     steps {
-                      ...stepDataGS
+                      ...stepData
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepDataGS
+                      ...stepData
                     }
                   }
                 }
@@ -81,24 +70,24 @@ object ObsQueriesGQL:
                 acquisition {
                   nextAtom {
                     steps {
-                      ...stepDataGN
+                      ...stepData
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepDataGN
+                      ...stepData
                     }
                   }
                 }
                 science {
                   nextAtom {
                     steps {
-                      ...stepDataGN
+                      ...stepData
                     }
                   }
                   possibleFuture {
                     steps {
-                      ...stepDataGN
+                      ...stepData
                     }
                   }
                 }
