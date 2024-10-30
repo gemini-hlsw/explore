@@ -71,7 +71,7 @@ object ITCRequests:
       params: ItcRequestParams
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
       Logger[F]
-        .info(
+        .debug(
           s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.asterism.length}"
         ) *>
         params.mode.toItcClientMode

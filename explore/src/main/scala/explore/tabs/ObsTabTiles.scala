@@ -36,7 +36,6 @@ import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
-import explore.model.itc.ItcAsterismGraphResults
 import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
@@ -171,22 +170,13 @@ object ObsTabTiles:
       .useStateView[AgsState](AgsState.Idle)
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[InstrumentConfigAndItcResult])
-      .useStateWithReuseBy: (props, _, _, _, selectedConfig) => // itcQueryProps
+      .localValBy: (props, _, _, _, selectedConfig) => // itcProps
         ItcProps(props.observation.get, selectedConfig.get, props.obsTargets)
-      .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults
-      .useAsyncEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
-        ItcProps(props.observation.get, selectedConfig.get, props.obsTargets)
-      ): (props, ctx, _, _, _, oldItcProps, itcGraphResults) =>
-        itcProps =>
+      .useEffectResultWithDepsBy((_, _, _, _, _, itcProps) => itcProps): (_, ctx, _, _, _, _) =>
+        itcProps => // Compute ITC graph
           import ctx.given
-
-          oldItcProps.setStateAsync(itcProps) >>
-            itcGraphResults.setStateAsync(Pot.pending) >>
-            itcProps.requestGraphs.attemptPot
-              .flatMap: result =>
-                itcGraphResults.setStateAsync(result)
-      // Signal that the sequence has changed
-      .useStateView(().ready)
+          itcProps.requestGraphs
+      .useStateView(().ready) // Signal that the sequence has changed
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
       ): (_, _, _, _, _, _, _, _) =>
@@ -351,8 +341,8 @@ object ObsTabTiles:
                 props.vault.userId,
                 props.obsId,
                 props.obsTargets,
-                itcProps.value,
-                itcGraphResults.value,
+                itcProps,
+                itcGraphResults,
                 props.globalPreferences
               )
 
