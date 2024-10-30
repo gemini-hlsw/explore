@@ -12,18 +12,22 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.ConfigurationRequestList
 import explore.model.ExploreGridLayouts
+import explore.model.Observation
 import explore.model.ProgramDetails
 import explore.model.ProgramTabTileIds
 import explore.model.ProgramTimes
+import explore.model.TargetList
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
-import explore.programs.ProgramChangeRequestsTile
+import explore.programs.ProgramConfigRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 import lucuma.core.model.Semester
 import lucuma.react.common.ReactFnProps
@@ -33,12 +37,15 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programId:       Program.Id,
-  programDetails:  View[ProgramDetails],
-  userVault:       Option[UserVault],
-  programTimes:    Pot[ProgramTimes],
-  semester:        Semester,
-  userPreferences: UserPreferences
+  programId:          Program.Id,
+  programDetails:     View[ProgramDetails],
+  configRequests:     ConfigurationRequestList,
+  obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]],
+  targets:            TargetList,
+  userVault:          Option[UserVault],
+  programTimes:       Pot[ProgramTimes],
+  semester:           Semester,
+  userPreferences:    UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 
 object ProgramTabContents:
@@ -76,11 +83,18 @@ object ProgramTabContents:
             "Notes"
           )(_ => ProgramNotesTile())
 
-        val changeRequestsTile =
+        val configurationRequestsTile =
           Tile(
             ProgramTabTileIds.ChangeRequestsId.id,
-            "Change Requests"
-          )(_ => ProgramChangeRequestsTile())
+            s"Requested Coordinates + Configurations + Constraints (${props.configRequests.size})"
+          )(_ =>
+            ProgramConfigRequestsTile(
+              props.programId,
+              props.configRequests,
+              props.obs4ConfigRequests,
+              props.targets
+            )
+          )
 
         <.div(ExploreStyles.MultiPanelTile)(
           TileController(
@@ -91,7 +105,7 @@ object ProgramTabContents:
             List(
               detailsTile,
               notesTile,
-              changeRequestsTile
+              configurationRequestsTile
             ),
             GridLayoutSection.ProgramsLayout
           )

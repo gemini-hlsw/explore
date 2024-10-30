@@ -34,6 +34,8 @@ import lucuma.core.enums.GmosSouthGrating
 import lucuma.core.math.Offset
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.WavelengthDither
+import lucuma.core.model.Configuration
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.TimingWindow
@@ -117,6 +119,8 @@ object reusability:
   given Reusability[TargetWithOptId]                    = Reusability.byEq
   given Reusability[GlobalPreferences]                  = Reusability.byEq
   given Reusability[SelectedPanel]                      = Reusability.byEq
+  given Reusability[Configuration]                      = Reusability.byEq
+  given Reusability[ConfigurationRequest]               = Reusability.byEq
   given Reusability[TimingWindow]                       = Reusability.byEq
   given [D: Eq]: Reusability[Visit[D]]                  = Reusability.byEq
   given [D: Eq]: Reusability[StepRecord[D]]             = Reusability.byEq
