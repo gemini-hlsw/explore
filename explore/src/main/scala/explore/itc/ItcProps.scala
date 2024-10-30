@@ -127,9 +127,6 @@ case class ItcProps(
         .map:
           _.toRight(new Throwable("No response from ITC server."))
         .rethrow
-        .flatTap: result =>
-          IO.println:
-            s"result: ${result.asterismGraphs.values.map(_.toOption.map(_.itcExposureTime))}"
 
     action.getOrElse:
       IO.raiseError:
