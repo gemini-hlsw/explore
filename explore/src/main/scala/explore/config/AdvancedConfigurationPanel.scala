@@ -80,7 +80,7 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def calibrationRole: Option[CalibrationRole]
   def observingMode: Aligner[T, Input]
   def spectroscopyRequirements: View[ScienceRequirements.Spectroscopy]
-  def deleteConfig: Callback
+  def revertConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
   def sequenceChanged: Callback
   def readonly: Boolean
@@ -723,7 +723,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "Revert Configuration",
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
-              onClick = props.deleteConfig
+              onClick = props.revertConfig
             ).compact.small
               .unless(isCustomized(props.observingMode)),
             Button(
@@ -786,7 +786,7 @@ object AdvancedConfigurationPanel {
     calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
-    deleteConfig:             Callback,
+    revertConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     sequenceChanged:          Callback,
     readonly:                 Boolean,
@@ -988,7 +988,7 @@ object AdvancedConfigurationPanel {
     calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
-    deleteConfig:             Callback,
+    revertConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
     sequenceChanged:          Callback,
     readonly:                 Boolean,

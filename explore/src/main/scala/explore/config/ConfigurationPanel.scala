@@ -153,16 +153,15 @@ object ConfigurationPanel:
         val optModeView: View[Option[ObservingMode]] =
           modeAligner.view(_.map(_.toInput).orUnassign)
 
-        val deleteConfiguration: Callback =
+        val revertConfiguration: Callback =
           optModeView.set(none) >>
             props.revertedInstrumentConfig
               .map: row => // Select the reverted config
-                props.selectedConfig.mod(c =>
+                props.selectedConfig.mod: c =>
                   InstrumentConfigAndItcResult(
                     row,
                     c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
                   ).some
-                )
               .orEmpty
 
         val optModeAligner = modeAligner.toOption
@@ -244,7 +243,7 @@ object ConfigurationPanel:
                       props.obsConf.calibrationRole,
                       northAligner,
                       specView,
-                      deleteConfiguration,
+                      revertConfiguration,
                       props.modes,
                       props.sequenceChanged,
                       props.readonly,
@@ -260,7 +259,7 @@ object ConfigurationPanel:
                       props.obsConf.calibrationRole,
                       southAligner,
                       specView,
-                      deleteConfiguration,
+                      revertConfiguration,
                       props.modes,
                       props.sequenceChanged,
                       props.readonly,
