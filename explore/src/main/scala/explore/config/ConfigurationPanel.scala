@@ -25,6 +25,7 @@ import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
+import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -54,6 +55,7 @@ case class ConfigurationPanel(
   itcTargets:      List[ItcTarget],
   baseCoordinates: Option[CoordinatesAtVizTime],
   selectedConfig:  View[Option[BasicConfigAndItc]],
+  instrumentRow:   Option[InstrumentRow], // configuration selected if reverted
   modes:           SpectroscopyModesMatrix,
   sequenceChanged: Callback,
   readonly:        Boolean,
@@ -151,7 +153,17 @@ object ConfigurationPanel:
         val optModeView: View[Option[ObservingMode]] =
           modeAligner.view(_.map(_.toInput).orUnassign)
 
-        val deleteConfiguration = optModeView.set(none)
+        val deleteConfiguration: Callback =
+          optModeView.set(none) >> // Select the reverted config
+            props.instrumentRow
+              .map: row =>
+                props.selectedConfig.mod(c =>
+                  BasicConfigAndItc(
+                    row,
+                    c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
+                  ).some
+                )
+              .orEmpty
 
         val optModeAligner = modeAligner.toOption
 
@@ -213,7 +225,7 @@ object ConfigurationPanel:
                     props.obsConf.calibrationRole,
                     createConfiguration(
                       props.obsId,
-                      props.selectedConfig.get.map(_.configuration),
+                      props.selectedConfig.get.flatMap(_.toBasicConfiguration),
                       optModeView
                     ),
                     props.modes,
@@ -234,7 +246,6 @@ object ConfigurationPanel:
                       specView,
                       deleteConfiguration,
                       props.modes,
-                      props.selectedConfig,
                       props.sequenceChanged,
                       props.readonly,
                       props.units
@@ -251,7 +262,6 @@ object ConfigurationPanel:
                       specView,
                       deleteConfiguration,
                       props.modes,
-                      props.selectedConfig,
                       props.sequenceChanged,
                       props.readonly,
                       props.units

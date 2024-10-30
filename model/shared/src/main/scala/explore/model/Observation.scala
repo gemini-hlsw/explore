@@ -10,15 +10,20 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.cats.given
 import explore.model.syntax.all.*
-import explore.modes.syntax.*
+import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
 import explore.modes.GmosSpectroscopyOverrides
 import explore.modes.InstrumentOverrides
-import explore.cats.given
+import explore.modes.InstrumentRow
+import explore.modes.syntax.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.GmosAmpGain
+import lucuma.core.enums.GmosAmpReadMode
 import lucuma.core.enums.GmosXBinning
 import lucuma.core.enums.GmosYBinning
 import lucuma.core.enums.ObservationValidationCode
@@ -51,8 +56,6 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import lucuma.core.enums.GmosAmpReadMode
-import lucuma.core.enums.GmosAmpGain
 
 case class Observation(
   id:                  Observation.Id,
@@ -187,6 +190,66 @@ case class Observation(
           )(defaultMode)
 
           GmosSpectroscopyOverrides(centralWavelength, mode, explicitRoi.getOrElse(defaultRoi))
+
+  def toInstrumentRow(targets: TargetList): Option[InstrumentRow] =
+    (toModeOverride(targets), observingMode)
+      .mapN:
+        case (overrides @ GmosSpectroscopyOverrides(_, _, _),
+              ObservingMode.GmosNorthLongSlit(
+                _,
+                grating,
+                _,
+                filter,
+                _,
+                fpu,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _
+              )
+            ) =>
+          GmosNorthSpectroscopyRow(grating, fpu, filter, overrides.some).some
+        case (overrides @ GmosSpectroscopyOverrides(_, _, _),
+              ObservingMode.GmosSouthLongSlit(
+                _,
+                grating,
+                _,
+                filter,
+                _,
+                fpu,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _
+              )
+            ) =>
+          GmosSouthSpectroscopyRow(grating, fpu, filter, overrides.some).some
+        case _ => none
+      .flatten
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"

@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -74,10 +75,11 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ObsQueries
 import queries.schemas.itc.syntax.*
+import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
+import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
@@ -104,12 +106,12 @@ case class ObsTabTiles(
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     programSummaries.targetObservations
   val obsExecution: Pot[Execution]                                  = programSummaries.obsExecutionPots.getPot(obsId)
-  val allTargets: TargetList                                        = programSummaries.targets
-  val obsTargets                                                    = programSummaries.obsTargets.get(obsId).orEmpty
+  // val allTargets: TargetList                                        = programSummaries.targets
+  val obsTargets: TargetList                                        = programSummaries.obsTargets.get(obsId).getOrElse(SortedMap.empty)
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
     programSummaries.obsAttachmentAssignments
   val asterismTracking: Option[ObjectTracking]                      =
-    observation.get.asterismTracking(allTargets)
+    observation.get.asterismTracking(obsTargets)
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -139,15 +141,9 @@ object ObsTabTiles:
   private def itcQueryProps(
     obs:            Observation,
     selectedConfig: Option[BasicConfigAndItc],
-    obsTargets:     AsterismIds,
     targetList:     TargetList
   ): ItcProps =
-    ItcProps(
-      obs,
-      selectedConfig,
-      obs.toModeOverride(targetList),
-      obsTargets.itcTargets(targetList).filter(_.canQueryITC).toNel
-    )
+    ItcProps(obs, selectedConfig, targetList /*, obs.toModeOverride(targetList)*/ )
 
   private case class Offsets(
     science:     Option[NonEmptyList[Offset]],
@@ -184,11 +180,11 @@ object ObsTabTiles:
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[BasicConfigAndItc])
       .useStateWithReuseBy: (props, _, _, _, selectedConfig) => // itcQueryProps
-        println(props.obsTargets)
-        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets, props.allTargets)
+        // println(props.obsTargets)
+        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets)
       .useState(Pot.pending[ItcAsterismGraphResults]) // itcGraphResults
       .useAsyncEffectWithDepsBy((props, _, _, _, selectedConfig, _, _) =>
-        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets, props.allTargets)
+        itcQueryProps(props.observation.get, selectedConfig.get, props.obsTargets)
       ): (props, ctx, _, _, _, oldItcProps, itcGraphResults) =>
         itcProps =>
           import ctx.given
@@ -282,9 +278,7 @@ object ObsTabTiles:
 
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
               NonEmptyList.fromList:
-                props.observation.get.scienceTargetIds.toList
-                  .map(id => props.allTargets.get(id).map(t => TargetWithId(id, t)))
-                  .flattenOption
+                props.obsTargets.toList.map((tid, t) => TargetWithId(tid, t))
 
             // asterism base coordinates at viz time or current time
             val targetCoords: Option[CoordinatesAtVizTime] =
@@ -365,7 +359,7 @@ object ObsTabTiles:
               ItcTile.itcTile(
                 props.vault.userId,
                 props.obsId,
-                props.allTargets,
+                props.obsTargets,
                 itcProps.value,
                 itcGraphResults.value,
                 props.globalPreferences
@@ -505,7 +499,7 @@ object ObsTabTiles:
             val timingWindowsTile =
               TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled, false)
 
-            val configurationTile =
+            val configurationTile: Tile[?] =
               ConfigurationTile.configurationTile(
                 props.vault.userId,
                 props.programId,
@@ -517,12 +511,13 @@ object ObsTabTiles:
                 targetCoords,
                 obsConf,
                 selectedConfig,
+                props.observation.get.toInstrumentRow(props.obsTargets),
                 props.modes,
-                props.allTargets,
-                sequenceChanged.mod {
+                props.obsTargets,
+                sequenceChanged.mod:
                   case Ready(x) => Pot.pending
                   case x        => x
-                },
+                ,
                 props.isDisabled,
                 props.globalPreferences.get.wavelengthUnits
               )

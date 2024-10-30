@@ -3,6 +3,7 @@
 
 package explore.modes
 
+import _root_.cats.data.NonEmptyList
 import cats.Eq
 import cats.Order
 import cats.derived.*
@@ -15,6 +16,7 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
 import explore.model.syntax.all.*
+import explore.modes.syntax.*
 import io.circe.Decoder
 import io.circe.refined.*
 import lucuma.core.enums.*
@@ -25,6 +27,8 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.odb.json.angle.decoder.given
@@ -34,10 +38,6 @@ import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
 import spire.math.Rational
-import explore.modes.syntax.*
-import _root_.cats.data.NonEmptyList
-import lucuma.core.model.SourceProfile
-import lucuma.core.model.sequence.gmos.GmosCcdMode
 
 sealed trait InstrumentRow derives Eq {
   def instrument: Instrument

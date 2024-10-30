@@ -3,18 +3,18 @@
 
 package explore.modes
 
-import lucuma.core.model.sequence.gmos.GmosCcdMode
 import cats.data.NonEmptyList
-import lucuma.core.enums.GmosXBinning
-import lucuma.core.enums.GmosYBinning
 import cats.syntax.all.*
-import lucuma.core.model.SourceProfile
 import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.model.sequence.gmos.longslit.*
-import lucuma.core.enums.ImageQuality
 import lucuma.core.enums.GmosNorthGrating
 import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.enums.GmosSouthGrating
+import lucuma.core.enums.GmosXBinning
+import lucuma.core.enums.GmosYBinning
+import lucuma.core.enums.ImageQuality
+import lucuma.core.model.SourceProfile
+import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.model.sequence.gmos.longslit.*
 
 object syntax:
   // TODO Actually move to lucuma-core, to GmosCcdMode

@@ -17,6 +17,7 @@ import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.enums.WavelengthUnits
+import explore.modes.InstrumentRow
 import explore.modes.SpectroscopyModesMatrix
 import explore.undo.*
 import japgolly.scalajs.react.Callback
@@ -41,6 +42,7 @@ object ConfigurationTile:
     baseCoordinates:    Option[CoordinatesAtVizTime],
     obsConf:            ObsConfiguration,
     selectedConfig:     View[Option[BasicConfigAndItc]],
+    instrumentRow:      Option[InstrumentRow], // configuration selected if reverted
     modes:              SpectroscopyModesMatrix,
     allTargets:         TargetList,
     sequenceChanged:    Callback,
@@ -63,6 +65,7 @@ object ConfigurationTile:
         scienceTargetIds.itcTargets(allTargets),
         baseCoordinates,
         selectedConfig,
+        instrumentRow,
         modes,
         sequenceChanged,
         readonly,

@@ -103,7 +103,6 @@ object ItcPanelBody:
                     _.left.toOption.map(_.message)
               .orElse(targetErrors)
 
-          pprint.pprintln(selectedResult.map(_.itcExposureTime))
           <.div(
             ExploreStyles.ItcPlotSection,
             ExploreStyles.ItcPlotDetailsHidden.unless(detailsView.get.value)

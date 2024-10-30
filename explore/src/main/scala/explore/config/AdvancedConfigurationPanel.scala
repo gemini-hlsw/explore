@@ -21,7 +21,6 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationFormats.*
 import explore.model.AppContext
-import explore.model.BasicConfigAndItc
 import explore.model.ExploreModelValidators
 import explore.model.Observation
 import explore.model.ScienceRequirements
@@ -84,7 +83,6 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def spectroscopyRequirements: View[ScienceRequirements.Spectroscopy]
   def deleteConfig: Callback
   def confMatrix: SpectroscopyModesMatrix
-  def selectedConfig: View[Option[BasicConfigAndItc]]
   def sequenceChanged: Callback
   def readonly: Boolean
   def units: WavelengthUnits
@@ -726,13 +724,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               label = "Revert Configuration",
               icon = Icons.ListIcon,
               severity = Button.Severity.Secondary,
-              onClick = props.selectedConfig.mod(c =>
-                BasicConfigAndItc(
-                  props.observingMode.get.toBasicConfiguration,
-                  c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
-                ).some
-              )
-                >> props.deleteConfig
+              onClick = props.deleteConfig
             ).compact.small
               .unless(isCustomized(props.observingMode)),
             Button(
@@ -797,7 +789,6 @@ object AdvancedConfigurationPanel {
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
-    selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
@@ -1000,7 +991,6 @@ object AdvancedConfigurationPanel {
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     deleteConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
-    selectedConfig:           View[Option[BasicConfigAndItc]],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits

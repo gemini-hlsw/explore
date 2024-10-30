@@ -55,7 +55,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.model.BasicConfiguration
 import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
 import lucuma.ui.primereact.*
@@ -100,7 +99,7 @@ private object SpectroscopyModesTable:
     entry:                SpectroscopyModeRow,
     result:               EitherNec[ItcTargetProblem, ItcResult],
     wavelengthInterval:   Option[BoundedInterval[Wavelength]],
-    configurationSummary: String
+    configurationSummary: Option[String]
   ):
     lazy val rowId: RowId = RowId(entry.id.orEmpty.toString)
 
@@ -458,8 +457,8 @@ private object SpectroscopyModesTable:
       .useStateBy: (props, _, _, rows, _, _, _, _, _) => // selectedRow
         props.selectedConfig.get
           .flatMap: c =>
-            rows.value.find:
-              _.equalsConf(c.configuration, props.spectroscopyRequirements.wavelength)
+            rows.value.find: row =>
+              c.configuration === row.entry.instrument
           .map(_.entry)
       // selectedIndex
       // The selected index needs to be the index into the sorted data, because that is what
@@ -477,7 +476,8 @@ private object SpectroscopyModesTable:
             val optRow: Option[SpectroscopyModeRowWithResult] =
               selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
             val conf: Option[BasicConfigAndItc]               =
-              optRow.flatMap(_.rowToConfAndItc(props.spectroscopyRequirements.wavelength))
+              optRow.map: row =>
+                BasicConfigAndItc(row.entry.instrument, row.result.some)
             if (props.selectedConfig.get =!= conf)
               props.selectedConfig.set(conf)
             else Callback.empty
@@ -612,10 +612,9 @@ private object SpectroscopyModesTable:
 
           def toggleRow(
             row: SpectroscopyModeRowWithResult
-          ): Option[explore.model.BasicConfigAndItc] =
-            row
-              .rowToConfAndItc(props.spectroscopyRequirements.wavelength)
-              .filterNot(conf => props.selectedConfig.get.contains_(conf))
+          ): Option[BasicConfigAndItc] =
+            Option.when(props.selectedConfig.get.forall(_.configuration =!= row.entry.instrument)):
+              BasicConfigAndItc(row.entry.instrument, row.result.some)
 
           def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
             selectedIndex.value.whenDefined(idx =>
@@ -687,14 +686,10 @@ private object SpectroscopyModesTable:
                   TagMod(
                     ^.disabled := !row.original.entry.enabledRow,
                     ExploreStyles.TableRowSelected
-                      .when(
-                        props.selectedConfig.get.exists(c =>
-                          row.original.equalsConf(
-                            c.configuration,
-                            props.spectroscopyRequirements.wavelength
-                          )
-                        )
-                      ),
+                      .when:
+                        props.selectedConfig.get
+                          .exists(_.configuration === row.original.entry.instrument)
+                    ,
                     (
                       ^.onClick --> (
                         props.selectedConfig.set(toggleRow(row.original)) >>

@@ -7,6 +7,9 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcQueryProblem
+import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.InstrumentRow
 import lucuma.core.enums.*
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.ObservationWorkflowState
@@ -25,11 +28,8 @@ import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
-import explore.modes.GmosNorthSpectroscopyRow
-import explore.modes.GmosSouthSpectroscopyRow
 
 import java.text.DecimalFormat
-import explore.modes.InstrumentRow
 
 trait DisplayImplicits:
   given Display[Site] =
@@ -242,12 +242,12 @@ trait DisplayImplicits:
         s"GMOS-S ${grating.shortName} ${fpu.shortName}"
 
   extension (instrumentRow: InstrumentRow)
-    def configurationSummary: String = instrumentRow match
+    def configurationSummary: Option[String] = instrumentRow match
       case GmosNorthSpectroscopyRow(grating, fpu, _, _) =>
-        s"GMOS-N ${grating.shortName} ${fpu.shortName}"
+        s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
       case GmosSouthSpectroscopyRow(grating, fpu, _, _) =>
-        s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+        s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
       case _                                            =>
-        "UNSUPPORTED"
+        none
 
 object display extends DisplayImplicits

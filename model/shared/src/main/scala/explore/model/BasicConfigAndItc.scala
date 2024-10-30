@@ -6,16 +6,27 @@ package explore.model
 import cats.Eq
 import cats.data.EitherNec
 import cats.derived.*
+import cats.syntax.all.*
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTargetProblem
+import explore.modes.GmosNorthSpectroscopyRow
+import explore.modes.GmosSouthSpectroscopyRow
+import explore.modes.InstrumentRow
+import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import monocle.Lens
-import explore.modes.InstrumentRow
 
 case class BasicConfigAndItc(
   configuration: InstrumentRow,
   itcResult:     Option[EitherNec[ItcTargetProblem, ItcResult]]
-) derives Eq
+) derives Eq:
+  def toBasicConfiguration: Option[BasicConfiguration] =
+    configuration match
+      case GmosNorthSpectroscopyRow(grating, fpu, filter, Some(cw, _, _)) =>
+        BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cw).some
+      case GmosSouthSpectroscopyRow(grating, fpu, filter, Some(cw, _, _)) =>
+        BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cw).some
+      case _                                                              => none
 
 object BasicConfigAndItc:
   val configuration: Lens[BasicConfigAndItc, InstrumentRow] =
