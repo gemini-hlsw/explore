@@ -60,7 +60,7 @@ object SiderealTargetEditorTile:
               target,
               obsAndTargets,
               Asterism.one(TargetWithId(targetId, target.get)),
-              vizTime = none,
+              obsTime = none,
               obsConf = none,
               searching = searching,
               obsInfo = obsInfo,

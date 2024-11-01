@@ -243,12 +243,11 @@ object ObsTabTiles:
             val posAngleConstraintView: View[PosAngleConstraint] =
               props.observation.model
                 .zoom(Observation.posAngleConstraint)
-                .withOnMod(pa =>
+                .withOnMod: pa =>
                   ObsQueries
                     .updatePosAngle[IO](List(props.obsId), pa)
                     .switching(agsState.async, AgsState.Saving, AgsState.Idle)
                     .runAsync
-                )
 
             val asterismIds: View[AsterismIds] =
               props.observation.model.zoom(Observation.scienceTargetIds)

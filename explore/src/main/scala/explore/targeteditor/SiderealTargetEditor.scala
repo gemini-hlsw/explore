@@ -67,7 +67,7 @@ case class SiderealTargetEditor(
   target:             UndoSetter[Target.Sidereal],
   obsAndTargets:      UndoSetter[ObservationsAndTargets],
   asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
-  vizTime:            Option[Instant],
+  obsTime:            Option[Instant],
   obsConf:            Option[ObsConfiguration],
   searching:          View[Set[Target.Id]],
   obsInfo:            TargetEditObsInfo,
@@ -98,27 +98,24 @@ object SiderealTargetEditor:
   ): IO[Unit] =
     TargetQueriesGQL
       .CloneTargetMutation[IO]
-      .execute(
+      .execute:
         CloneTargetInput(
           targetId = targetId,
           REPLACE_IN = obsIds.toList.assign,
           SET = input.SET.assign
         )
-      )
       .map(_.cloneTarget.newTarget)
-      .flatMap { clone =>
+      .flatMap: clone =>
         (TargetCloneAction
           .cloneTarget(programId, targetId, clone, obsIds, onClone)
           .set(obsAndTargets)(clone.target.some) >>
           // If we do the first `onClone` here, the UI works correctly.
           onClone(OnCloneParameters(targetId, clone.id, obsIds, true))).toAsync
-      }
       .switching(cloning.async)
-      .handleErrorWith(t =>
+      .handleErrorWith: t =>
         val msg = s"Error cloning target [$targetId]"
         Logger[IO].error(t)(msg) >>
           ToastCtx[IO].showToast(msg, Message.Severity.Error)
-      )
 
   private def remoteOnMod(
     targetId: Target.Id,
@@ -171,43 +168,43 @@ object SiderealTargetEditor:
       .useContext(AppContext.ctx)
       .useStateView(false)          // cloning
       .useStateView(none[ObsIdSet]) // obs ids to clone to.
-      // If vizTime is not set, change it to now
-      .useEffectKeepResultWithDepsBy((p, _, _, _) => p.vizTime) { (_, _, _, _) => vizTime =>
-        IO(vizTime.getOrElse(Instant.now()))
-      }
+      // If obsTime is not set, change it to now
+      .useEffectKeepResultWithDepsBy((p, _, _, _) => p.obsTime): (_, _, _, _) =>
+        obsTime => IO(obsTime.getOrElse(Instant.now()))
       // select the aligner to use based on whether a clone will be created or not.
       .useMemoBy((props, _, _, toCloneTo, _) =>
         (props.programId, props.target.get, props.asterism.focus.id, toCloneTo.get)
-      ) { (props, ctx, cloning, _, _) => (pid, target, tid, toCloneTo) =>
-        import ctx.given
-        toCloneTo.fold(
-          Aligner(
-            props.target,
-            UpdateTargetsInput(
-              WHERE = tid.toWhereTarget.assign,
-              SET = TargetPropertiesInput()
-            ),
-            // Invalidate the sequence if the target changes
-            u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
-          )
-        ) { obsIds =>
-          val view = View(target, (mod, cb) => cb(target, mod(target)))
-          Aligner(
-            noopUndoSetter(view),
-            // noopUndoSetter(noUndoTargetView),
-            UpdateTargetsInput(SET = TargetPropertiesInput()),
-            u =>
-              props.invalidateSequence.to[IO] *> cloneTarget(pid,
-                                                             tid,
-                                                             obsIds,
-                                                             cloning,
-                                                             props.obsAndTargets,
-                                                             props.onClone
-              )(u)
-          )
-        }
-      }
-      .render { (props, ctx, cloning, obsToCloneTo, vizTime, siderealTargetAligner) =>
+      ): (props, ctx, cloning, _, _) =>
+        (pid, target, tid, toCloneTo) =>
+          import ctx.given
+
+          toCloneTo.fold(
+            Aligner(
+              props.target,
+              UpdateTargetsInput(
+                WHERE = tid.toWhereTarget.assign,
+                SET = TargetPropertiesInput()
+              ),
+              // Invalidate the sequence if the target changes
+              u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
+            )
+          ): obsIds =>
+            val view = View(target, (mod, cb) => cb(target, mod(target)))
+            Aligner(
+              noopUndoSetter(view),
+              // noopUndoSetter(noUndoTargetView),
+              UpdateTargetsInput(SET = TargetPropertiesInput()),
+              u =>
+                props.invalidateSequence.to[IO] *> cloneTarget(
+                  pid,
+                  tid,
+                  obsIds,
+                  cloning,
+                  props.obsAndTargets,
+                  props.onClone
+                )(u)
+            )
+      .render: (props, ctx, cloning, obsToCloneTo, obsTime, siderealTargetAligner) =>
         import ctx.given
 
         val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)
@@ -321,7 +318,7 @@ object SiderealTargetEditor:
         React.Fragment(
           TargetCloneSelector(props.obsInfo, obsToCloneTo),
           <.div(ExploreStyles.TargetGrid)(
-            vizTime.renderPot(vt =>
+            obsTime.renderPot(vt =>
               AladinCell(
                 props.userId,
                 oid,
@@ -425,4 +422,3 @@ object SiderealTargetEditor:
             )
           )
         )
-      }
