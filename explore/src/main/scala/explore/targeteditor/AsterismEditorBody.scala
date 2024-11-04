@@ -232,9 +232,9 @@ object AsterismEditorTitle extends AsterismModifier:
                         props.obsDurationView,
                         props.pendingTime,
                         props.obsIds.size > 1
-          ),
-          ColumnSelectorInTitle(
-            TargetTable.columnNames.get,
-            props.tileState.zoom(AsterismTileState.table).get
           )
+          // ColumnSelectorInTitle(
+          //   TargetTable.columnNames.get,
+          //   props.tileState.zoom(AsterismTileState.table).get
+          // )
         )

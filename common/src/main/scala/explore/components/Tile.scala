@@ -135,31 +135,27 @@ object Tile:
             ^.key := "tile-${p.id.value}"
           )(
             // Tile title
-            <.div(ExploreStyles.TileTitle)(
-              ^.key := s"tileTitle-${p.id.value}",
+            <.div(ExploreStyles.TileTitle, ^.key := s"tileTitle-${p.id.value}")(
               // Title and optional back button
-              <.div(
-                ExploreStyles.TileTitleMenu |+| p.tileTitleClass,
+              <.div(ExploreStyles.TileTitleMenu |+| p.tileTitleClass)(
                 p.back.map(b => <.div(ExploreStyles.TileButton, b)),
                 <.div(ExploreStyles.TileTitleText |+| ExploreStyles.TileDraggable, p.title)
               ),
               // Title controls
-              <.div(
-                ExploreStyles.TileTitleControlArea,
-                <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
-                      p.tileTitle(sharedState, p.sizeState)
-                )
-              ),
+              // <.div(ExploreStyles.TileTitleControlArea)(
+              //   <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
+              p.tileTitle(sharedState, p.sizeState),
+              //   )
+              // ),
               // Size control buttons
-              <.div(ExploreStyles.TileControlButtons,
-                    minimizeButton.when(p.showMinimize).unless(p.fullSize),
-                    maximizeButton.when(p.showMaximize).unless(p.fullSize)
+              <.div(ExploreStyles.TileControlButtons)(
+                minimizeButton.when(p.showMinimize).unless(p.fullSize),
+                maximizeButton.when(p.showMaximize).unless(p.fullSize)
               )
             ),
             // Tile body
-            <.div(^.key := s"tileBody-${p.id.value}",
-                  ExploreStyles.TileBody |+| p.bodyClass,
-                  p.tileBody(sharedState)
+            <.div(^.key := s"tileBody-${p.id.value}", ExploreStyles.TileBody |+| p.bodyClass)(
+              p.tileBody(sharedState)
             )
               .unless(p.sizeState === TileSizeState.Minimized)
           )

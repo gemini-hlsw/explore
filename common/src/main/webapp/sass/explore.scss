@@ -606,11 +606,20 @@ thead tr th.sticky-header {
 
     flex-shrink: 1;
   }
+
+  .explore-tile-title-control-area {
+    flex-grow: 1;
+  }
+
+  & > * {
+    flex: 1 1 0;
+  }
 }
 
 .explore-tile-title-menu {
   @include lucumaUICommon.text-ellipsis;
 
+  flex: 0 0 min-content;
   cursor: move;
   padding: 0.5em;
   letter-spacing: 2px;
@@ -619,21 +628,23 @@ thead tr th.sticky-header {
   align-items: center;
 }
 
-.explore-tile-control {
-  display: flex;
-}
+// .explore-tile-control {
+//   display: flex;
+// }
 
-.explore-tile-title-strip {
-  flex-grow: 1;
-  flex-shrink: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-}
+// .explore-tile-title-strip {
+//   flex-grow: 1;
+//   flex-shrink: 1;
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+// }
 
 .explore-tile-control-buttons {
   justify-self: end;
-  max-width: max-content;
+  // max-width: max-content;
+  // flex-shrink: 1;
+  flex: 0;
 }
 
 .justified-end-tile-control {
@@ -1044,7 +1055,6 @@ thead tr th.sticky-header {
 
   .explore-tile-title-control-area {
     min-width: 60%;
-    flex-grow: 1;
 
     .explore-tile-control {
       justify-content: space-between;

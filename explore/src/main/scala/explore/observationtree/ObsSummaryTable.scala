@@ -62,19 +62,88 @@ import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
 import java.util.UUID
+import scala.collection.immutable.TreeSeqMap
+import monocle.Lens
+import monocle.Focus
 
 object ObsSummaryTable:
+  private val ObservationIdColumnId = ColumnId("observation_id")
+  private val GroupColumnId         = ColumnId("group")
+  // private val ValidationCheckColumnId = ColumnId("validation_check")
+  private val StateColumnId         = ColumnId("state")
+  private val ScienceBandColumnId   = ColumnId("science_band")
+  // private val CompletionColumnId    = ColumnId("completion")
+  private val ExpanderColumnId      = ColumnId("expander")
+  private val TargetTypeColumnId    = ColumnId("target_type")
+  private val TargetColumnId        = ColumnId("target")
+  private val ConstraintsColumnId   = ColumnId("constraints")
+  // private val FindingChartColumnId  = ColumnId("finding_chart")
+  private val ConfigurationColumnId = ColumnId("configuration")
+  private val DurationColumnId      = ColumnId("duration")
+
+  // private val PriorityColumnId      = ColumnId("priority")
+  private val RAColumnId  = ColumnId("ra")
+  private val DecColumnId = ColumnId("dec")
+  // private val TimingWindowsColumnId = ColumnId("timing_windows")
+  private val SEDColumnId = ColumnId("sed")
+  // private val ChargedTimeColumnId = ColumnId("charged_time")
+
+  private val ColumnNames: TreeSeqMap[ColumnId, String] =
+    TreeSeqMap(
+      ExpanderColumnId      -> " ",
+      ObservationIdColumnId -> "Observation Id",
+      TargetTypeColumnId    -> "Target Type",
+      TargetColumnId        -> "Targets",
+      GroupColumnId         -> "Group",
+      StateColumnId         -> "State",
+      ScienceBandColumnId   -> "Science Band",
+      RAColumnId            -> "RA",
+      DecColumnId           -> "Dec",
+      SEDColumnId           -> "SED",
+      ConstraintsColumnId   -> "Constraints",
+      ConfigurationColumnId -> "Configuration",
+      DurationColumnId      -> "Duration"
+      // ValidationCheckColumnId -> " ",
+      // CompletionColumnId    -> "Completion",
+      // FindingChartColumnId -> "Finding Chart",
+      // Default hidden columns
+      // PriorityColumnId      -> "Priority",
+      // TimingWindowsColumnId -> "Scheduling Windows",
+      // ChargedTimeColumnId -> "ChargedTime"
+    )
+
+  private val ColumnsExcludedFromVisibility: Set[ColumnId] =
+    Set(ExpanderColumnId)
+
+  private val ColumnHeaderOverrides: Set[ColumnId] =
+    Set(TargetTypeColumnId)
+
+  // Columns to be shown in the column visibility selector. We exclude
+  // the science band because we set that visibility below.
+  private val SelectableColumnNames: List[(ColumnId, String)] =
+    ColumnNames.filterNot((k, _) => ColumnsExcludedFromVisibility.contains(k)).toList
+
+  private val DefaultColVisibility: ColumnVisibility =
+    ColumnVisibility(
+      RAColumnId  -> Visibility.Hidden,
+      DecColumnId -> Visibility.Hidden,
+      SEDColumnId -> Visibility.Hidden
+      // PriorityColumnId      -> Visibility.Hidden,
+      // TimingWindowsColumnId -> Visibility.Hidden,
+      // ChargedTimeColumnId -> Visibility.Hidden
+    )
 
   case class Body(
-    userId:          Option[User.Id],
-    programId:       Program.Id,
-    observations:    UndoSetter[ObservationList],
-    selectedObsIds:  View[List[Observation.Id]],
-    groupTree:       View[GroupTree],
-    obsExecutions:   ObservationExecutionMap,
-    allTargets:      TargetList,
-    showScienceBand: Boolean,
-    tileState:       View[Option[Table[Expandable[ObsSummaryRow], Nothing]]]
+    userId:                   Option[User.Id],
+    programId:                Program.Id,
+    observations:             UndoSetter[ObservationList],
+    selectedObsIds:           View[List[Observation.Id]],
+    groupTree:                View[GroupTree],
+    obsExecutions:            ObservationExecutionMap,
+    allTargets:               TargetList,
+    showScienceBand:          Boolean,
+    columnVisibility:         ColumnVisibility,
+    setToggleAllRowsSelected: (Boolean => Callback) => Callback
   ) extends ReactFnProps(Body.component)
 
   object Body:
@@ -87,74 +156,16 @@ object ObsSummaryTable:
 
     private val ColDef = ColumnDef[Expandable[ObsSummaryRow]]
 
-    private val ObservationIdColumnId = ColumnId("observation_id")
-    private val GroupColumnId         = ColumnId("group")
-    // private val ValidationCheckColumnId = ColumnId("validation_check")
-    private val StateColumnId         = ColumnId("state")
-    private val ScienceBandColumnId   = ColumnId("science_band")
-    private val CompletionColumnId    = ColumnId("completion")
-    private val ExpanderColumnId      = ColumnId("expander")
-    private val TargetTypeColumnId    = ColumnId("target_type")
-    private val TargetColumnId        = ColumnId("target")
-    private val ConstraintsColumnId   = ColumnId("constraints")
-    private val FindingChartColumnId  = ColumnId("finding_chart")
-    private val ConfigurationColumnId = ColumnId("configuration")
-    private val DurationColumnId      = ColumnId("duration")
-
-    private val PriorityColumnId      = ColumnId("priority")
-    private val RAColumnId            = ColumnId("ra")
-    private val DecColumnId           = ColumnId("dec")
-    private val TimingWindowsColumnId = ColumnId("timing_windows")
-    private val SEDColumnId           = ColumnId("sed")
-    private val ChargedTimeColumnId   = ColumnId("charged_time")
-
-    val ColumnNames: Map[ColumnId, String] = Map(
-      // Default columns
-      ObservationIdColumnId -> "Observation Id",
-      GroupColumnId         -> "Group",
-      // ValidationCheckColumnId -> " ",
-      StateColumnId         -> "State",
-      ScienceBandColumnId   -> "Science Band",
-      CompletionColumnId    -> "Completion",
-      ExpanderColumnId      -> " ",
-      TargetTypeColumnId    -> " ",
-      TargetColumnId        -> "Target",
-      ConstraintsColumnId   -> "Constraints",
-      FindingChartColumnId  -> "Finding Chart",
-      ConfigurationColumnId -> "Configuration",
-      DurationColumnId      -> "Duration",
-
-      // Default hidden columns
-      PriorityColumnId      -> "Priority",
-      RAColumnId            -> "RA",
-      DecColumnId           -> "Dec",
-      TimingWindowsColumnId -> "Scheduling Windows",
-      SEDColumnId           -> "SED",
-      ChargedTimeColumnId   -> "ChargedTime"
-    )
-
-    private val ColumnsExcludedFromVisibility = Set(ScienceBandColumnId)
-
-    // Columns to be shown in the column visibility selector. We exclude
-    // the science band because we set that visibility below.
-    val SelectableColumnNames: Map[ColumnId, String] =
-      ColumnNames.filterNot((k, _) => ColumnsExcludedFromVisibility.contains(k))
-
-    private val DefaultColVisibility: ColumnVisibility = ColumnVisibility(
-      PriorityColumnId      -> Visibility.Hidden,
-      RAColumnId            -> Visibility.Hidden,
-      DecColumnId           -> Visibility.Hidden,
-      TimingWindowsColumnId -> Visibility.Hidden,
-      SEDColumnId           -> Visibility.Hidden,
-      ChargedTimeColumnId   -> Visibility.Hidden
-    )
-
     // For columns that only have data in the base observation row.
     private def obsColumn[V](
       id:       ColumnId,
       accessor: ObsRow => V
     ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
-      ColDef(id, v => v.value.fold(_ => none, accessor(_).some), ColumnNames(id))
+      ColDef(
+        id,
+        v => v.value.fold(_ => none, accessor(_).some),
+        if (ColumnHeaderOverrides.contains(id)) " " else ColumnNames(id)
+      )
 
     extension [A](name: String | (A, TargetWithId))
       def sortableValue =
@@ -203,7 +214,7 @@ object ObsSummaryTable:
 
           List(
             ColDef(
-              ColumnId("expander"),
+              ExpanderColumnId,
               cell = cell =>
                 if (cell.row.getCanExpand())
                   <.span(
@@ -360,7 +371,8 @@ object ObsSummaryTable:
             ,
             enableMultiRowSelection = true,
             state = PartialTableState(
-              rowSelection = obsIds2RowSelection(props.selectedObsIds.get)
+              rowSelection = obsIds2RowSelection(props.selectedObsIds.get),
+              columnVisibility = props.columnVisibility
             ),
             onRowSelectionChange = (u: Updater[RowSelection]) =>
               u match
@@ -379,7 +391,8 @@ object ObsSummaryTable:
             ColumnsExcludedFromVisibility
           )
         )
-      .useEffectOnMountBy((props, _, _, _, table) => props.tileState.set(table.some))
+      .useEffectOnMountBy: (props, _, _, _, table) =>
+        props.setToggleAllRowsSelected(table.toggleAllRowsSelected)
       .useEffectWithDepsBy((props, _, _, _, _) => props.showScienceBand): (_, _, _, _, table) =>
         showScienceBand =>
           table
@@ -488,26 +501,43 @@ object ObsSummaryTable:
         .flatMap(bt => vizTime.fold(bt.baseCoordinates.some)(v => bt.at(v).map(_.value)))
   }
 
-  case class Title(table: Option[Table[Expandable[ObsSummaryRow], Nothing]])
-      extends ReactFnProps(Title.component)
+  case class SharedState(
+    columnVisibility:      ColumnVisibility,
+    toggleAllRowsSelected: Option[Boolean => Callback]
+  )
+  object SharedState:
+    val Initial: SharedState = SharedState(DefaultColVisibility, None)
+
+    val columnVisibility: Lens[SharedState, ColumnVisibility]                 =
+      Focus[SharedState](_.columnVisibility)
+    val toggleAllRowsSelected: Lens[SharedState, Option[Boolean => Callback]] =
+      Focus[SharedState](_.toggleAllRowsSelected)
+
+  case class Title(
+    columnVisibility:      View[ColumnVisibility],
+    toggleAllRowsSelected: Option[Boolean => Callback]
+  ) extends ReactFnProps(Title.component)
 
   object Title:
     private type Props = Title
 
     private val component = ScalaFnComponent[Props]: props =>
-      props.table.map: table =>
-        React.Fragment(
-          Button(
-            size = Button.Size.Small,
-            icon = Icons.CheckDouble,
-            label = "All",
-            onClick = table.toggleAllRowsSelected(true)
-          ).compact,
-          Button(
-            size = Button.Size.Small,
-            icon = Icons.SquareXMark,
-            label = "None",
-            onClick = table.toggleAllRowsSelected(false)
-          ).compact,
-          ColumnSelectorInTitle(Body.SelectableColumnNames.get, props.table)
-        )
+      React.Fragment(
+        // <.span, // Push all/none buttons to center
+        props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
+          <.span(^.textAlign.center)(
+            Button(
+              size = Button.Size.Small,
+              icon = Icons.CheckDouble,
+              label = "All",
+              onClick = toggleAllRowsSelected(true)
+            ).compact,
+            Button(
+              size = Button.Size.Small,
+              icon = Icons.SquareXMark,
+              label = "None",
+              onClick = toggleAllRowsSelected(false)
+            ).compact
+          ),
+        ColumnSelectorInTitle(SelectableColumnNames, props.columnVisibility)
+      )

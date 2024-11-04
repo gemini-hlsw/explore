@@ -50,8 +50,6 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.react.table.Expandable
-import lucuma.react.table.Table
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -151,11 +149,12 @@ object ObsTabContents extends TwoPanels:
           ExploreClipboard.get
             .flatMap:
               case LocalClipboard.CopiedObservations(obsIdSet) =>
-                cloneObs(props.programId,
-                         obsIdSet.idSet.toList,
-                         activeGroup,
-                         observations,
-                         ctx
+                cloneObs(
+                  props.programId,
+                  obsIdSet.idSet.toList,
+                  activeGroup,
+                  observations,
+                  ctx
                 ).void
                   .withToast(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
               case _                                           => IO.unit
@@ -273,23 +272,29 @@ object ObsTabContents extends TwoPanels:
             Tile(
               ObsSummaryTabTileIds.SummaryId.id,
               s"Observations Summary (${props.observations.get.toList.filterNot(_.isCalibration).length})",
-              none[Table[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]],
+              ObsSummaryTable.SharedState.Initial,
               backButton.some,
               canMinimize = false,
               canMaximize = false
             )(
-              ObsSummaryTable.Body(
-                props.vault.userId,
-                props.programId,
-                props.observations,
-                selectedObsIds,
-                props.groups.model,
-                props.obsExecutions,
-                props.targets.get,
-                props.programSummaries.get.allocatedScienceBands.size > 1,
-                _
-              ),
-              (s, _) => ObsSummaryTable.Title(s.get)
+              s =>
+                ObsSummaryTable.Body(
+                  props.vault.userId,
+                  props.programId,
+                  props.observations,
+                  selectedObsIds,
+                  props.groups.model,
+                  props.obsExecutions,
+                  props.targets.get,
+                  props.programSummaries.get.allocatedScienceBands.size > 1,
+                  s.get.columnVisibility,
+                  cb => s.zoom(ObsSummaryTable.SharedState.toggleAllRowsSelected).set(cb.some)
+                ),
+              (s, _) =>
+                ObsSummaryTable.Title(
+                  s.zoom(ObsSummaryTable.SharedState.columnVisibility),
+                  s.get.toggleAllRowsSelected
+                )
             )
 
           val plotData: PlotData =

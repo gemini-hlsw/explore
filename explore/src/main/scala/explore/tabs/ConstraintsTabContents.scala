@@ -221,7 +221,8 @@ object ConstraintsTabContents extends TwoPanels:
                     props.expandedIds,
                     tableView.set.compose(_.some)
                   ),
-                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s.get)
+                (s, _) => <.div
+                // ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s.get)
               )
             } { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
