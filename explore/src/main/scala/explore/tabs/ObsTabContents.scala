@@ -272,7 +272,7 @@ object ObsTabContents extends TwoPanels:
             Tile(
               ObsSummaryTabTileIds.SummaryId.id,
               s"Observations Summary (${props.observations.get.toList.filterNot(_.isCalibration).length})",
-              ObsSummaryTable.SharedState.Initial,
+              ObsSummaryTable.TileState.Initial,
               backButton.some,
               canMinimize = false,
               canMaximize = false
@@ -288,11 +288,11 @@ object ObsTabContents extends TwoPanels:
                   props.targets.get,
                   props.programSummaries.get.allocatedScienceBands.size > 1,
                   s.get.columnVisibility,
-                  cb => s.zoom(ObsSummaryTable.SharedState.toggleAllRowsSelected).set(cb.some)
+                  cb => s.zoom(ObsSummaryTable.TileState.toggleAllRowsSelected).set(cb.some)
                 ),
               (s, _) =>
                 ObsSummaryTable.Title(
-                  s.zoom(ObsSummaryTable.SharedState.columnVisibility),
+                  s.zoom(ObsSummaryTable.TileState.columnVisibility),
                   s.get.toggleAllRowsSelected
                 )
             )

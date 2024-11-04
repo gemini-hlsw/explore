@@ -69,23 +69,22 @@ import monocle.Focus
 object ObsSummaryTable:
   private val ObservationIdColumnId = ColumnId("observation_id")
   private val GroupColumnId         = ColumnId("group")
-  // private val ValidationCheckColumnId = ColumnId("validation_check")
   private val StateColumnId         = ColumnId("state")
   private val ScienceBandColumnId   = ColumnId("science_band")
-  // private val CompletionColumnId    = ColumnId("completion")
   private val ExpanderColumnId      = ColumnId("expander")
   private val TargetTypeColumnId    = ColumnId("target_type")
   private val TargetColumnId        = ColumnId("target")
   private val ConstraintsColumnId   = ColumnId("constraints")
-  // private val FindingChartColumnId  = ColumnId("finding_chart")
   private val ConfigurationColumnId = ColumnId("configuration")
   private val DurationColumnId      = ColumnId("duration")
-
+  private val RAColumnId            = ColumnId("ra")
+  private val DecColumnId           = ColumnId("dec")
+  private val SEDColumnId           = ColumnId("sed")
+  // private val ValidationCheckColumnId = ColumnId("validation_check")
+  // private val CompletionColumnId    = ColumnId("completion")
+  // private val FindingChartColumnId  = ColumnId("finding_chart")
   // private val PriorityColumnId      = ColumnId("priority")
-  private val RAColumnId  = ColumnId("ra")
-  private val DecColumnId = ColumnId("dec")
   // private val TimingWindowsColumnId = ColumnId("timing_windows")
-  private val SEDColumnId = ColumnId("sed")
   // private val ChargedTimeColumnId = ColumnId("charged_time")
 
   private val ColumnNames: TreeSeqMap[ColumnId, String] =
@@ -501,17 +500,18 @@ object ObsSummaryTable:
         .flatMap(bt => vizTime.fold(bt.baseCoordinates.some)(v => bt.at(v).map(_.value)))
   }
 
-  case class SharedState(
+  case class TileState(
     columnVisibility:      ColumnVisibility,
     toggleAllRowsSelected: Option[Boolean => Callback]
   )
-  object SharedState:
-    val Initial: SharedState = SharedState(DefaultColVisibility, None)
 
-    val columnVisibility: Lens[SharedState, ColumnVisibility]                 =
-      Focus[SharedState](_.columnVisibility)
-    val toggleAllRowsSelected: Lens[SharedState, Option[Boolean => Callback]] =
-      Focus[SharedState](_.toggleAllRowsSelected)
+  object TileState:
+    val Initial: TileState = TileState(DefaultColVisibility, None)
+
+    val columnVisibility: Lens[TileState, ColumnVisibility]                 =
+      Focus[TileState](_.columnVisibility)
+    val toggleAllRowsSelected: Lens[TileState, Option[Boolean => Callback]] =
+      Focus[TileState](_.toggleAllRowsSelected)
 
   case class Title(
     columnVisibility:      View[ColumnVisibility],

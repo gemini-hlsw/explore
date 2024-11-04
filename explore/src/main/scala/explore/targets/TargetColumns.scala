@@ -36,6 +36,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.react.given
 import monocle.std.option.*
+import scala.collection.immutable.TreeSeqMap
 
 object TargetColumns:
   val TypeColumnId: ColumnId       = ColumnId("type")
@@ -57,30 +58,32 @@ object TargetColumns:
 
   def bandColumnId(band: Band): ColumnId = ColumnId(s"${band.tag}mag")
 
-  val BaseColNames: Map[ColumnId, String] = Map(
-    TypeColumnId      -> " ",
-    NameColumnId      -> "Name",
-    CatalogName       -> "Catalog",
-    CatalogId         -> "Catalog Id",
-    CatalogObjectType -> "Catalog Type"
-  )
+  val BaseColNames: TreeSeqMap[ColumnId, String] =
+    TreeSeqMap(
+      TypeColumnId      -> " ",
+      NameColumnId      -> "Name",
+      CatalogName       -> "Catalog",
+      CatalogId         -> "Catalog Id",
+      CatalogObjectType -> "Catalog Type"
+    )
 
-  val SiderealColNames: Map[ColumnId, String] = Map(
-    TypeColumnId       -> "Type",
-    RAColumnId         -> "RA",
-    DecColumnId        -> "Dec",
-    EpochColumnId      -> "Epoch",
-    PMRAColumnId       -> "µ RA",
-    PMDecColumnId      -> "µ Dec",
-    RVColumnId         -> "RV",
-    ZColumnId          -> "z",
-    CZColumnId         -> "cz",
-    ParallaxColumnId   -> "Parallax",
-    MorphologyColumnId -> "Morphology",
-    SEDColumnId        -> "SED"
-  ) ++ Band.all.map(b => bandColumnId(b) -> b.shortName).toMap
+  val SiderealColNames: TreeSeqMap[ColumnId, String] =
+    TreeSeqMap(
+      TypeColumnId       -> "Type",
+      RAColumnId         -> "RA",
+      DecColumnId        -> "Dec",
+      EpochColumnId      -> "Epoch",
+      PMRAColumnId       -> "µ RA",
+      PMDecColumnId      -> "µ Dec",
+      RVColumnId         -> "RV",
+      ZColumnId          -> "z",
+      CZColumnId         -> "cz",
+      ParallaxColumnId   -> "Parallax",
+      MorphologyColumnId -> "Morphology",
+      SEDColumnId        -> "SED"
+    ) ++ Band.all.map(b => bandColumnId(b) -> b.shortName).toMap
 
-  val AllColNames: Map[ColumnId, String] = BaseColNames ++ SiderealColNames
+  val AllColNames: TreeSeqMap[ColumnId, String] = BaseColNames ++ SiderealColNames
 
   val DefaultVisibility: ColumnVisibility =
     ColumnVisibility(

@@ -619,7 +619,6 @@ thead tr th.sticky-header {
 .explore-tile-title-menu {
   @include lucumaUICommon.text-ellipsis;
 
-  flex: 0 0 min-content;
   cursor: move;
   padding: 0.5em;
   letter-spacing: 2px;
@@ -824,7 +823,6 @@ thead tr th.sticky-header {
 
 .explore-obs-instant-tile-title {
   justify-content: center;
-  flex-grow: 0;
   font-size: smaller;
 
   @include small-tile-title;
@@ -1056,9 +1054,9 @@ thead tr th.sticky-header {
   .explore-tile-title-control-area {
     min-width: 60%;
 
-    .explore-tile-control {
-      justify-content: space-between;
-    }
+    // .explore-tile-control {
+    //   justify-content: space-between;
+    // }
 
     .explore-title-select-columns {
       display: none;
@@ -1319,9 +1317,9 @@ $search-preview-margin: 5px;
   padding-top: 1em;
 }
 
-.explore-tile-control:has(.explore-sequence-tile-title) {
-  justify-self: stretch;
-}
+// .explore-tile-control:has(.explore-sequence-tile-title) {
+//   justify-self: stretch;
+// }
 
 .explore-sequence-tile-title {
   display: flex;

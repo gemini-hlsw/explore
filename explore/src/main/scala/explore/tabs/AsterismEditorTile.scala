@@ -18,9 +18,9 @@ import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.enums.TileSizeState
-import explore.targeteditor.AsterismEditorBody
+import explore.targeteditor.Body
 import explore.targeteditor.AsterismEditorTitle
-import explore.targeteditor.AsterismTileState
+import explore.targeteditor.TileState
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -62,7 +62,7 @@ object AsterismEditorTile:
     readonly:           Boolean,
     sequenceChanged:    Callback = Callback.empty,
     backButton:         Option[VdomNode] = None
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[AsterismTileState] = {
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[TileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
     val vizTimeView =

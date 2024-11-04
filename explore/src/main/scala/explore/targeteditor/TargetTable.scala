@@ -58,7 +58,7 @@ case class TargetTable(
   vizTime:          Option[Instant],
   fullScreen:       AladinFullScreen,
   readOnly:         Boolean,
-  shareTable:       Table[SiderealTargetWithId, TargetTable.TableMeta] => Callback
+  columnVisibility: ColumnVisibility
 ) extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
@@ -74,11 +74,9 @@ object TargetTable extends AsterismModifier:
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
-  val columnNames: Map[ColumnId, String] = Map(
-    DeleteColumnId -> " "
-  ) ++ TargetColumns.AllColNames
+  val ColumnNames: Map[ColumnId, String] = Map(DeleteColumnId -> " ") ++ TargetColumns.AllColNames
 
-  private val columnClasses: Map[ColumnId, Css] = Map(
+  private val ColumnClasses: Map[ColumnId, Css] = Map(
     DeleteColumnId             -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryDelete),
     TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType),
     TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName)
@@ -161,17 +159,17 @@ object TargetTable extends AsterismModifier:
             enableColumnResizing = true,
             columnResizeMode = ColumnResizeMode.OnChange,
             initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility),
+            state = PartialTableState(columnVisibility = props.columnVisibility),
             meta = TableMeta(props.obsIds, props.obsAndTargets, props.onAsterismUpdate)
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)
         )
-      .useEffectOnMountBy((props, _, _, _, _, table) => props.shareTable(table))
       .useStateView(AreAdding(false))
       .render: (props, ctx, _, _, rows, table, adding) =>
         import ctx.given
 
         React.Fragment(
-          if (rows.isEmpty) {
+          if (rows.isEmpty)
             <.div(ExploreStyles.HVCenter)(
               targetSelectionPopup(
                 "Add a target",
@@ -183,7 +181,7 @@ object TargetTable extends AsterismModifier:
                 buttonClass = LucumaPrimeStyles.Massive
               )
             )
-          } else {
+          else
             <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
               PrimeTable(
                 table,
@@ -191,7 +189,7 @@ object TargetTable extends AsterismModifier:
                 compact = Compact.Very,
                 tableMod = ExploreStyles.ExploreTable,
                 headerCellMod = headerCell =>
-                  columnClasses
+                  ColumnClasses
                     .get(headerCell.column.id)
                     .orEmpty |+| ExploreStyles.StickyHeader,
                 rowMod = row =>
@@ -200,8 +198,7 @@ object TargetTable extends AsterismModifier:
                       .when_(props.selectedTarget.get.exists(_ === row.original.id)),
                     ^.onClick --> props.selectedTarget.set(row.original.id.some)
                   ),
-                cellMod = cell => columnClasses.get(cell.column.id).orEmpty
+                cellMod = cell => ColumnClasses.get(cell.column.id).orEmpty
               )
             )
-          }
         )
