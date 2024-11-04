@@ -176,11 +176,16 @@ object ObsBadge:
           renderEnumProgress(obs.workflow.state)
         )
 
-        val validationTooltip = <.div(
-          obs.workflow.validationErrors
-            .toTagMod(ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_)))))
-        )
-        val validationIcon    = Tooltip.Fragment(content = validationTooltip)(<.span(Icons.ErrorIcon))
+        val validationTooltip =
+          if (obs.hasConfigurationRequestError)
+            <.span(obs.workflow.validationErrors.head.messages.head)
+          else
+            <.div(
+              obs.workflow.validationErrors
+                .toTagMod(ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_)))))
+            )
+
+        val validationIcon = Tooltip.Fragment(content = validationTooltip)(<.span(Icons.ErrorIcon))
 
         React.Fragment(
           <.div(
@@ -213,7 +218,7 @@ object ObsBadge:
                       clazz = ExploreStyles.ObsStateSelect,
                       panelClass = ExploreStyles.ObsStateSelectPanel,
                       disabled = props.isDisabled,
-                      disabledItems = obs.disabledStates
+                      exclude = obs.disabledStates
                     )
                   )(
                     // don't select the observation when changing the status
