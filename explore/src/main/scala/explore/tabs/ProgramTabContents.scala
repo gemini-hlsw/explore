@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.option.*
 import crystal.Pot
@@ -15,6 +16,7 @@ import explore.model.AppContext
 import explore.model.ConfigurationRequestList
 import explore.model.ExploreGridLayouts
 import explore.model.Observation
+import explore.model.ObservationList
 import explore.model.ProgramDetails
 import explore.model.ProgramTabTileIds
 import explore.model.ProgramTimes
@@ -25,8 +27,10 @@ import explore.model.layout.LayoutsMap
 import explore.programs.ProgramConfigRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
+import explore.programs.ProgramUnrequestedConfigsTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 import lucuma.core.model.Semester
@@ -37,15 +41,17 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programId:          Program.Id,
-  programDetails:     View[ProgramDetails],
-  configRequests:     ConfigurationRequestList,
-  obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]],
-  targets:            TargetList,
-  userVault:          Option[UserVault],
-  programTimes:       Pot[ProgramTimes],
-  semester:           Semester,
-  userPreferences:    UserPreferences
+  programId:              Program.Id,
+  programDetails:         View[ProgramDetails],
+  configRequests:         View[ConfigurationRequestList],
+  observations:           View[ObservationList],
+  obs4ConfigRequests:     Map[ConfigurationRequest.Id, List[Observation]],
+  configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]],
+  targets:                TargetList,
+  userVault:              Option[UserVault],
+  programTimes:           Pot[ProgramTimes],
+  semester:               Semester,
+  userPreferences:        UserPreferences
 ) extends ReactFnProps(ProgramTabContents.component)
 
 object ProgramTabContents:
@@ -86,14 +92,31 @@ object ProgramTabContents:
         val configurationRequestsTile =
           Tile(
             ProgramTabTileIds.ChangeRequestsId.id,
-            s"Requested Coordinates + Configurations + Constraints (${props.configRequests.size})"
+            s"Requested Coordinates + Configurations + Constraints (${props.configRequests.get.size})"
           )(_ =>
             ProgramConfigRequestsTile(
               props.programId,
-              props.configRequests,
+              props.configRequests.get,
               props.obs4ConfigRequests,
               props.targets
             )
+          )
+
+        val unrequestedConfigsTile =
+          Tile(
+            ProgramTabTileIds.UnrequestedConfigsId.id,
+            s"Unrequested Coordinates + Configurations + Constraints (${props.configsWithoutRequests.size})",
+            initialState = ProgramUnrequestedConfigsTable.TileState.Empty
+          )(
+            ProgramUnrequestedConfigsTable.Body(
+              props.programId,
+              props.configRequests,
+              props.configsWithoutRequests,
+              props.targets,
+              _
+            ),
+            (s, _) =>
+              ProgramUnrequestedConfigsTable.Title(props.configRequests, props.observations, s.get)
           )
 
         <.div(ExploreStyles.MultiPanelTile)(
@@ -105,7 +128,8 @@ object ProgramTabContents:
             List(
               detailsTile,
               notesTile,
-              configurationRequestsTile
+              configurationRequestsTile,
+              unrequestedConfigsTile
             ),
             GridLayoutSection.ProgramsLayout
           )

@@ -271,24 +271,27 @@ case class Observation(
     ExecutedStates.contains(workflow.state) ||
       workflow.validTransitions.exists(ExecutedStates.contains)
 
-  inline def configurationApplies(config: Configuration): Boolean =
-    configuration.fold(false)(config.subsumes)
+  inline def newConfigurationRequestApplies(config: Configuration): Boolean =
+    (hasNotRequestedCode || hasDeniedValidationCode) &&
+      configuration.fold(false)(config.subsumes)
+
+  inline def hasValidationCode(code: ObservationValidationCode): Boolean =
+    workflow.validationErrors.exists(_.code === code)
 
   // If an observation has a ConfigurationRequest* error, it is the only error they will have
-  inline def hasNeedsApprovalError: Boolean =
-    workflow.validationErrors.exists(ov =>
-      ov.code === ObservationValidationCode.ConfigurationRequestNotRequested
+  inline def hasNotRequestedCode: Boolean =
+    hasValidationCode(ObservationValidationCode.ConfigurationRequestNotRequested)
+
+  inline def hasDeniedValidationCode: Boolean =
+    hasValidationCode(ObservationValidationCode.ConfigurationRequestDenied)
+
+  inline def updateToPending: Observation =
+    Observation.validationErrors.replace(List(ObservationValidation.configurationRequestPending))(
+      this
     )
 
-  inline def updateNeedsApprovalToPending: Observation =
-    if (hasNeedsApprovalError)
-      Observation.validationErrors.replace(List(ObservationValidation.configurationRequestPending))(
-        this
-      )
-    else this
-
   def updateToPendingIfConfigurationApplies(config: Configuration): Observation =
-    if (configurationApplies(config)) updateNeedsApprovalToPending
+    if (newConfigurationRequestApplies(config)) updateToPending
     else this
 
   def asterismTracking(allTargets: TargetList): Option[ObjectTracking] =

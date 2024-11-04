@@ -100,7 +100,7 @@ object ObservationValidationsTableBody {
         row
           .forObsOption(row =>
             val obs = row.obs
-            if (obs.hasNeedsApprovalError)
+            if (obs.hasNotRequestedCode)
               obs.configuration.flatMap(config =>
                 Button(
                   "Request Approval",

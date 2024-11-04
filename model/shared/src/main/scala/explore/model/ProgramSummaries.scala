@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
@@ -11,6 +12,7 @@ import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
 import lucuma.core.enums.ScienceBand
+import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
@@ -124,7 +126,16 @@ case class ProgramSummaries(
       )
       .toMap
 
-  import cats.instances.all.given
+  lazy val configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]] =
+    val l = observations.toList
+      .filter: o =>
+        o.configuration.fold(false): config =>
+          o.hasNotRequestedCode ||
+            (o.hasDeniedValidationCode &&
+              configurationRequests.forall((_, v) => v.configuration =!= config))
+    l.foldRight(Map.empty[Configuration, NonEmptyList[Observation]])((o, m) =>
+      m.updatedWith(o.configuration.get)(_.fold(NonEmptyList.one(o))(nel => nel :+ o).some)
+    )
 
   def getObsClone(
     originalId:        Observation.Id,
