@@ -186,55 +186,20 @@ object ObsSummaryTable:
             ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
 
           def targetLink(obsId: Observation.Id, tWId: TargetWithId): VdomNode =
-            <.a(
-              ^.href := ctx.pageUrl(
-                AppTab.Observations,
-                props.programId,
-                Focused.singleObs(obsId, tWId.id.some)
-              ),
-              ^.onClick ==> (e =>
-                e.preventDefaultCB >> e.stopPropagationCB >>
-                  ctx.pushPage(
-                    AppTab.Observations,
-                    props.programId,
-                    Focused.singleObs(obsId, tWId.id.some)
-                  )
-              )
-            )(tWId.target.name.value)
+            val text = tWId.target.name.value
+            ctx.routingLink(
+              AppTab.Observations,
+              props.programId,
+              Focused.singleObs(obsId, tWId.id.some),
+              text
+            )
 
           def obsLink(obsId: Observation.Id): VdomNode =
-            <.a(
-              ^.href := ctx.pageUrl(
-                AppTab.Observations,
-                props.programId,
-                Focused.singleObs(obsId)
-              ),
-              ^.onClick ==> { (e: ReactMouseEvent) =>
-                e.preventDefaultCB >> e.stopPropagationCB >>
-                  ctx.pushPage(
-                    AppTab.Observations,
-                    props.programId,
-                    Focused.singleObs(obsId)
-                  )
-              }
-            )(obsId.toString)
+            ctx.obsIdRoutingLink(props.programId, obsId)
 
           def groupLink(group: Group): VdomNode =
-            <.a(
-              ^.href := ctx.pageUrl(
-                AppTab.Observations,
-                props.programId,
-                Focused.group(group.id)
-              ),
-              ^.onClick ==> { (e: ReactMouseEvent) =>
-                e.preventDefaultCB >> e.stopPropagationCB >>
-                  ctx.pushPage(
-                    AppTab.Observations,
-                    props.programId,
-                    Focused.group(group.id)
-                  )
-              }
-            )(group.name.map(_.toString).getOrElse(group.id.toString))
+            val text = group.name.map(_.toString).getOrElse(group.id.toString)
+            ctx.routingLink(AppTab.Observations, props.programId, Focused.group(group.id), text)
 
           List(
             ColDef(

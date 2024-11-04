@@ -169,8 +169,10 @@ object Routing:
       yield ProgramTabContents(
         routingInfo.programId,
         programDetails,
-        programSummaries.get.configurationRequests,
+        programSummaries.model.zoom(ProgramSummaries.configurationRequests),
+        programSummaries.model.zoom(ProgramSummaries.observations),
         programSummaries.get.obs4ConfigRequests,
+        programSummaries.get.configsWithoutRequests,
         programSummaries.get.targets,
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
