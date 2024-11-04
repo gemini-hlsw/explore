@@ -266,6 +266,8 @@ case class Observation(
       ObservationWorkflowState
     ].all.toSet -- workflow.validTransitions.toSet - workflow.state
 
+  val isInactive = workflow.state === ObservationWorkflowState.Inactive
+
   inline def isCalibration: Boolean = calibrationRole.isDefined
   inline def isExecuted: Boolean    =
     ExecutedStates.contains(workflow.state) ||
@@ -275,15 +277,25 @@ case class Observation(
     (hasNotRequestedCode || hasDeniedValidationCode) &&
       configuration.fold(false)(config.subsumes)
 
+  inline def hasValidationErrors: Boolean =
+    !workflow.validationErrors.isEmpty
+
   inline def hasValidationCode(code: ObservationValidationCode): Boolean =
     workflow.validationErrors.exists(_.code === code)
 
   // If an observation has a ConfigurationRequest* error, it is the only error they will have
+  inline def hasPendingRequestCode: Boolean =
+    hasValidationCode(ObservationValidationCode.ConfigurationRequestPending)
+
   inline def hasNotRequestedCode: Boolean =
     hasValidationCode(ObservationValidationCode.ConfigurationRequestNotRequested)
 
   inline def hasDeniedValidationCode: Boolean =
     hasValidationCode(ObservationValidationCode.ConfigurationRequestDenied)
+
+  // if it has any of the ConfigurationRequest* errors. We filter these out of the validations table.
+  inline def hasConfigurationRequestError: Boolean =
+    hasPendingRequestCode || hasNotRequestedCode || hasDeniedValidationCode
 
   inline def updateToPending: Observation =
     Observation.validationErrors.replace(List(ObservationValidation.configurationRequestPending))(
