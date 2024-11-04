@@ -6,7 +6,6 @@ package explore.validations
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
-import crystal.react.syntax.effect.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -34,7 +33,6 @@ import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
-import queries.schemas.odb.ObsQueries
 
 import scala.scalajs.js
 
@@ -59,7 +57,6 @@ object ObservationValidationsTableBody {
   private val ObservationStateColumnId  = ColumnId("observation_state")
   private val ValidationCodeColumnId    = ColumnId("validation_code")
   private val ValidationMessageColumnId = ColumnId("validation_message")
-  private val ActionsColumnId           = ColumnId("actions")
 
   private val columnNames: Map[ColumnId, String] = Map(
     ObservationIdColumnId     -> "Observation Id",
@@ -86,8 +83,6 @@ object ObservationValidationsTableBody {
     .useContext(AppContext.ctx)
     // columns
     .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
-      import ctx.given
-
       def obsUrl(obsId: Observation.Id): String    =
         ctx.pageUrl(AppTab.Observations, props.programId, Focused.singleObs(obsId))
       def goToObs(obsId: Observation.Id): Callback =
@@ -95,24 +90,6 @@ object ObservationValidationsTableBody {
 
       def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing]): Callback =
         row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
-
-      def requestApprovalButton(row: ValidationsTableRow): Option[Button] =
-        row
-          .forObsOption(row =>
-            val obs = row.obs
-            if (obs.hasNotRequestedCode)
-              obs.configuration.flatMap(config =>
-                Button(
-                  "Request Approval",
-                  onClick = props.observations.mod(
-                    // this also gets rid of any buttons on "affected" observations
-                    _.mapValues(_.id, _.updateToPendingIfConfigurationApplies(config))
-                  ) >>
-                    ObsQueries.createConfigurationRequest[IO](row.id).void.runAsync
-                ).tiny.compact.some
-              )
-            else none
-          )
 
       List(
         ColDef(
@@ -148,16 +125,15 @@ object ObservationValidationsTableBody {
           ValidationMessageColumnId,
           cell = cell => cell.row.original.value.message(cell.row.getIsExpanded()),
           header = columnNames(ValidationMessageColumnId)
-        ),
-        ColDef(
-          ActionsColumnId,
-          cell = cell => requestApprovalButton(cell.row.original.value)
-        ).setMaxSize(111.toPx)
+        )
       )
     }
     // Rows
     .useMemoBy((props, _, _) => props.observations.get.toList)((_, _, _) =>
-      _.filterNot(_.workflow.validationErrors.isEmpty)
+      // We don't want to show inactive observations here, nor ones related to configuration requests
+      _.filter(obs =>
+        !obs.isInactive && obs.hasValidationErrors && !obs.hasConfigurationRequestError
+      )
         .map(obs =>
           Expandable(
             ObsRow(obs),
