@@ -19,7 +19,9 @@ import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.feature.Context
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
+import lucuma.core.model.Observation
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.schemas.ObservationDB
@@ -52,6 +54,27 @@ case class AppContext[F[_]](
 
   def replacePage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
     setPageVia(appTab, programId, focused, SetRouteVia.HistoryReplace)
+
+  def routingLink(
+    appTab:    AppTab,
+    programId: Program.Id,
+    focused:   Focused,
+    text:      String,
+    via:       SetRouteVia = SetRouteVia.HistoryPush
+  ): VdomNode =
+    <.a(^.href := pageUrl(appTab, programId, focused),
+        ^.onClick ==> (e =>
+          e.preventDefaultCB >> e.stopPropagationCB >>
+            setPageVia(appTab, programId, focused, via)
+        )
+    )(text)
+
+  def obsIdRoutingLink(
+    programId: Program.Id,
+    obsId:     Observation.Id,
+    via:       SetRouteVia = SetRouteVia.HistoryPush
+  ): VdomNode =
+    routingLink(AppTab.Observations, programId, Focused.singleObs(obsId), obsId.show)
 
   given WebSocketJSClient[F, ObservationDB]     = clients.odb
   given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB

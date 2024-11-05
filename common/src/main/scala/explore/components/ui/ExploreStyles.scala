@@ -429,6 +429,9 @@ object ExploreStyles:
   val TargetSearchPreviewPlaceholder: Css = Css("explore-target-search-preview-placeholder")
   val TargetSearchResults: Css            = Css("explore-target-search-results")
 
+  // Configuration Request Editor Popup
+  val ConfigurationRequestEditorPopup: Css = Css("explore-config-request-editor")
+
   // Aladin Target classes
   val ScienceTarget: Css           = Css("science-target")
   val ScienceSelectedTarget: Css   = Css("science-selected-target")

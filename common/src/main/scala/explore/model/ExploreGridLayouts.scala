@@ -305,9 +305,10 @@ object ExploreGridLayouts:
   end observationList
 
   object programs:
-    private lazy val DetailsHeight: NonNegInt        = 6.refined
-    private lazy val NotesHeight: NonNegInt          = 6.refined
-    private lazy val ChangeRequestsHeight: NonNegInt = 6.refined
+    private lazy val DetailsHeight: NonNegInt            = 6.refined
+    private lazy val NotesHeight: NonNegInt              = 6.refined
+    private lazy val ChangeRequestsHeight: NonNegInt     = 6.refined
+    private lazy val UnrequestedConfigsHeight: NonNegInt = 6.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -331,6 +332,13 @@ object ExploreGridLayouts:
           y = (DetailsHeight |+| NotesHeight).value,
           w = DefaultWidth.value,
           h = ChangeRequestsHeight.value
+        ),
+        LayoutItem(
+          i = ProgramTabTileIds.UnrequestedConfigsId.id.value,
+          x = 0,
+          y = (DetailsHeight |+| NotesHeight |+| ChangeRequestsHeight).value,
+          w = DefaultWidth.value,
+          h = UnrequestedConfigsHeight.value
         )
       )
     )
