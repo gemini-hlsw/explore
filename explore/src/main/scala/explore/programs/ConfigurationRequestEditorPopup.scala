@@ -45,7 +45,7 @@ object ConfigurationRequestEditorPopup:
       val notice =
         """Please briefly describe and justify the requested changes to the approved
           |coordinates + instrument configurations + constraints. These changes will
-          |be approved by the Head of Science Operations at the site of the observations.
+          |be reviewed by the Head of Science Operations at the site of the observations.
         """.stripMargin.linesIterator.mkString(" ")
 
       val footer = React.Fragment(

@@ -34,6 +34,7 @@ import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 import lucuma.core.model.Semester
+import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
@@ -63,6 +64,8 @@ object ProgramTabContents:
     .useResizeDetector()
     .render: (props, _, resize) =>
       props.userVault.map: userVault =>
+        val userId: Option[User.Id] = userVault.user.id.some
+
         val defaultLayouts: LayoutsMap =
           ExploreGridLayouts.sectionLayout(GridLayoutSection.ProgramsLayout)
 
@@ -95,6 +98,7 @@ object ProgramTabContents:
             s"Requested Coordinates + Configurations + Constraints (${props.configRequests.get.size})"
           )(_ =>
             ProgramConfigRequestsTile(
+              userId,
               props.programId,
               props.configRequests.get,
               props.obs4ConfigRequests,
@@ -109,6 +113,7 @@ object ProgramTabContents:
             initialState = ProgramUnrequestedConfigsTable.TileState.Empty
           )(
             ProgramUnrequestedConfigsTable.Body(
+              userId,
               props.programId,
               props.configRequests,
               props.configsWithoutRequests,
@@ -121,7 +126,7 @@ object ProgramTabContents:
 
         <.div(ExploreStyles.MultiPanelTile)(
           TileController(
-            userVault.user.id.some,
+            userId,
             resize.width.getOrElse(1),
             defaultLayouts,
             layouts,

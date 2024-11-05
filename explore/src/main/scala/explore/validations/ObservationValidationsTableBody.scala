@@ -7,12 +7,14 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
+import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.model.enums.TableId
 import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
@@ -22,6 +24,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
@@ -33,6 +36,7 @@ import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 
 import scala.scalajs.js
 
@@ -40,6 +44,7 @@ object ObservationValidationsTableTileState extends NewType[Boolean => Callback]
 type ObservationValidationsTableTileState = ObservationValidationsTableTileState.Type
 
 case class ObservationValidationsTableBody(
+  userId:       Option[User.Id],
   programId:    Program.Id,
   observations: View[ObservationList],
   tileState:    View[ObservationValidationsTableTileState]
@@ -151,14 +156,23 @@ object ObservationValidationsTableBody {
           )
         )
     )
-    .useReactTableBy((_, _, cols, rows) =>
-      TableOptions(
-        cols,
-        rows,
-        enableExpanding = true,
-        initialState = TableState(expanded = Expanded.AllRows),
-        getSubRows = (row, _) => row.subRows,
-        getRowId = (row, _, _) => RowId(row.value.rowId)
+    .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+      import ctx.given
+
+      TableOptionsWithStateStore(
+        TableOptions(
+          cols,
+          rows,
+          enableExpanding = true,
+          initialState = TableState(expanded = Expanded.AllRows),
+          getSubRows = (row, _) => row.subRows,
+          getRowId = (row, _, _) => RowId(row.value.rowId)
+        ),
+        TableStore(
+          props.userId,
+          TableId.ObservationValidations,
+          cols
+        )
       )
     )
     .useEffectOnMountBy((p, _, _, _, table) =>

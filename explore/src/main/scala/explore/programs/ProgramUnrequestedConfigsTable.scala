@@ -11,6 +11,7 @@ import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.syntax.all.*
 import explore.Icons
+import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConfigurationRequestList
@@ -18,12 +19,14 @@ import explore.model.IsActive
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.TargetList
+import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Configuration
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.hooks.*
@@ -34,6 +37,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Lens
 import queries.schemas.odb.ObsQueries
@@ -69,6 +73,7 @@ object ProgramUnrequestedConfigsTable:
     val selected = Focus[TileState](_.selected)
 
   case class Body(
+    userId:                 Option[User.Id],
     programId:              Program.Id,
     configRequests:         View[ConfigurationRequestList],
     configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]],
@@ -94,7 +99,9 @@ object ProgramUnrequestedConfigsTable:
               columnBuilder.obsListColumn(_.obsIds, props.programId, ctx))
       .useMemoBy((props, _, _) => (props.configsWithoutRequests, props.targets)): (_, _, _) =>
         (configs, targets) => configs.toList.map((c, os) => Row(c, os, targets))
-      .useReactTableBy: (props, _, columns, rows) =>
+      .useReactTableWithStateStoreBy: (props, ctx, columns, rows) =>
+        import ctx.given
+
         def rowSelection2RowIds: RowSelection => List[RowId] = selection =>
           selection.value
             .filter(_._2)
@@ -105,23 +112,30 @@ object ProgramUnrequestedConfigsTable:
           RowSelection:
             rowIds.map(_ -> true).toMap
 
-        TableOptions(
-          columns,
-          rows,
-          getRowId = (row, _, _) => RowId(row.id),
-          enableMultiRowSelection = true,
-          state = PartialTableState(
-            rowSelection = rowIds2RowSelection(props.tileState.get.selected)
+        TableOptionsWithStateStore(
+          TableOptions(
+            columns,
+            rows,
+            getRowId = (row, _, _) => RowId(row.id),
+            enableMultiRowSelection = true,
+            state = PartialTableState(
+              rowSelection = rowIds2RowSelection(props.tileState.get.selected)
+            ),
+            onRowSelectionChange = (u: Updater[RowSelection]) =>
+              u match
+                case Updater.Set(selection) =>
+                  props.tileState.zoom(TileState.selected).set(rowSelection2RowIds(selection))
+                case Updater.Mod(f)         =>
+                  props.tileState
+                    .zoom(TileState.selected)
+                    .mod: rowIds =>
+                      rowSelection2RowIds(f(rowIds2RowSelection(rowIds)))
           ),
-          onRowSelectionChange = (u: Updater[RowSelection]) =>
-            u match
-              case Updater.Set(selection) =>
-                props.tileState.zoom(TileState.selected).set(rowSelection2RowIds(selection))
-              case Updater.Mod(f)         =>
-                props.tileState
-                  .zoom(TileState.selected)
-                  .mod: rowIds =>
-                    rowSelection2RowIds(f(rowIds2RowSelection(rowIds)))
+          TableStore(
+            props.userId,
+            TableId.UnrequestedConfigs,
+            columns
+          )
         )
       .useEffectOnMountBy((props, _, _, _, table) =>
         props.tileState.zoom(TileState.table).set(table.some)

@@ -5,17 +5,20 @@ package explore.programs
 
 import cats.Order.given
 import explore.Icons
+import explore.common.UserPreferencesQueries.TableStore
 import explore.model.AppContext
 import explore.model.ConfigurationRequestList
 import explore.model.Observation
 import explore.model.TargetList
 import explore.model.display.given
+import explore.model.enums.TableId
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ConfigurationRequestStatus
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Tooltip
@@ -29,10 +32,12 @@ import lucuma.ui.LucumaStyles
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
+import lucuma.ui.table.hooks.*
 
 import scala.collection.immutable.SortedSet
 
 case class ProgramConfigRequestsTile(
+  userId:             Option[User.Id],
   programId:          Program.Id,
   configRequests:     ConfigurationRequestList,
   obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]],
@@ -109,12 +114,20 @@ object ProgramConfigRequestsTile:
       (props.configRequests, props.obs4ConfigRequests, props.targets)
     ): (_, _, _) =>
       (requests, obsMap, targets) => requests.map((_, r) => Row(r, obsMap, targets)).toList
-    // TODO: Save state
-    .useReactTableBy: (props, _, columns, rows) =>
-      TableOptions(
-        columns,
-        rows,
-        getRowId = (row, _, _2) => RowId(row.request.id.toString)
+    .useReactTableWithStateStoreBy: (props, ctx, columns, rows) =>
+      import ctx.given
+
+      TableOptionsWithStateStore(
+        TableOptions(
+          columns,
+          rows,
+          getRowId = (row, _, _2) => RowId(row.request.id.toString)
+        ),
+        TableStore(
+          props.userId,
+          TableId.RequestedConfigs,
+          columns
+        )
       )
     .useResizeDetector()
     .render { (props, _, _, _, table, resizer) =>
