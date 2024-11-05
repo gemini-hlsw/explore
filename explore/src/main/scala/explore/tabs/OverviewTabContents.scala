@@ -26,6 +26,7 @@ import explore.validations.ObservationValidationsTableTitle
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.ui.sso.UserVault
@@ -39,7 +40,8 @@ case class OverviewTabContents(
   observations:             View[ObservationList],
   layout:                   LayoutsMap,
   readonly:                 Boolean
-) extends ReactFnProps(OverviewTabContents.component)
+) extends ReactFnProps(OverviewTabContents.component):
+  val userId: Option[User.Id] = userVault.map(_.user.id)
 
 object OverviewTabContents {
   private type Props = OverviewTabContents
@@ -56,7 +58,8 @@ object OverviewTabContents {
           ObsTabTileIds.WarningsAndErrorsId.id,
           "Warnings And Errors",
           ObservationValidationsTableTileState(_ => Callback.empty)
-        )(ObservationValidationsTableBody(props.programId, props.observations, _),
+        )(
+          ObservationValidationsTableBody(props.userId, props.programId, props.observations, _),
           ObservationValidationsTableTitle.apply
         )
 
@@ -87,7 +90,7 @@ object OverviewTabContents {
 
         <.div(
           TileController(
-            props.userVault.map(_.user.id),
+            props.userId,
             resize.width.getOrElse(1),
             defaultLayouts,
             props.layout,
