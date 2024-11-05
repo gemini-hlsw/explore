@@ -32,10 +32,11 @@ trait CacheModifierUpdaters {
   protected def modifyTargets(targetEdit: TargetEdit): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.targets
       .modify: targets =>
-        if (targetEdit.meta.existence === Existence.Present)
-          targets.updated(targetEdit.value.id, targetEdit.value.target)
-        else
-          targets.removed(targetEdit.value.id)
+        if (targetEdit.meta.exists(_.existence === Existence.Present))
+          targetEdit.value
+            .map(t => targets.updated(targetEdit.targetId, t.target))
+            .getOrElse(targets.removed(targetEdit.targetId))
+        else targets.removed(targetEdit.targetId)
 
   protected def modifyObservations(
     observationEdit: ObservationEdit

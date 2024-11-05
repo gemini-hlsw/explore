@@ -75,7 +75,7 @@ object TargetQueriesGQL:
     val document = """
       subscription($targetId: TargetId!) {
         targetEdit(input: {targetId: $targetId}) {
-          id
+          targetId
         }
       }
     """
@@ -85,6 +85,7 @@ object TargetQueriesGQL:
     val document = s"""
       subscription($$input: TargetEditInput!) {
         targetEdit(input: $$input) {
+          targetId
           value $TargetWithIdSubquery
           meta:value {
             existence
