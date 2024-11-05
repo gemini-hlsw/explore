@@ -26,7 +26,7 @@ object Versions {
   val lucumaITC              = "0.22.6"
   val lucumaReact            = "0.71.3"
   val lucumaRefined          = "0.1.3"
-  val lucumaSchemas          = "0.106.0"
+  val lucumaSchemas          = "0.107.0"
   val lucumaOdbSchema        = "0.16.1"
   val lucumaSSO              = "0.6.27"
   val lucumaUI               = "0.121.0"
