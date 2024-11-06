@@ -2458,6 +2458,12 @@ input[type='file'].explore-fileupload {
     right: 0.2em;
     left: 0.2em;
   }
+
+  // margin at the bottom to allow space for the browser link preview
+  // SC-3885
+  & > div:last-child {
+    margin-bottom: 30px;
+  }
 }
 
 .obs-tree-wrapper {
@@ -2498,6 +2504,12 @@ input[type='file'].explore-fileupload {
     padding: 0;
     border: none;
     overflow-y: auto;
+
+    // margin at the bottom to allow space for the browser link preview
+    // SC-3885
+    &:last-child {
+      margin-bottom: 30px;
+    }
   }
 
   .obs-tree-group-leaf {
