@@ -11,6 +11,7 @@ import cats.implicits.*
 import crystal.Pot
 import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
+import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
@@ -121,7 +122,11 @@ case class ProgramSummaries(
     configurationRequests
       .map((crId, cr) =>
         val obs = observations.toList
-          .filter(_.configuration.fold(false)(cr.configuration.subsumes))
+          .filter(o =>
+            // keep inactive ones here.
+            o.calibrationRole.isEmpty &&
+              o.configuration.fold(false)(cr.configuration.subsumes)
+          )
         (crId, obs)
       )
       .toMap
@@ -129,10 +134,13 @@ case class ProgramSummaries(
   lazy val configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]] =
     val l = observations.toList
       .filter: o =>
-        o.configuration.fold(false): config =>
-          o.hasNotRequestedCode ||
-            (o.hasDeniedValidationCode &&
-              configurationRequests.forall((_, v) => v.configuration =!= config))
+        o.workflow.state =!= ObservationWorkflowState.Inactive &&
+          o.calibrationRole.isEmpty &&
+          o.configuration.fold(false): config =>
+            o.hasNotRequestedCode ||
+              // Not explicitly denied
+              (o.hasDeniedValidationCode &&
+                configurationRequests.forall((_, v) => v.configuration =!= config))
     l.foldRight(Map.empty[Configuration, NonEmptyList[Observation]])((o, m) =>
       m.updatedWith(o.configuration.get)(_.fold(NonEmptyList.one(o))(nel => nel :+ o).some)
     )

@@ -34,8 +34,6 @@ import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 
-import scala.collection.immutable.SortedSet
-
 case class ProgramConfigRequestsTile(
   userId:             Option[User.Id],
   programId:          Program.Id,
@@ -51,9 +49,9 @@ object ProgramConfigRequestsTile:
   given Reusability[Map[ConfigurationRequest.Id, List[Observation]]] = Reusability.map
 
   private case class Row(
-    request:    ConfigurationRequest,
-    obsIds:     SortedSet[Observation.Id],
-    targetName: String
+    request:      ConfigurationRequest,
+    observations: List[Observation],
+    targetName:   String
   )
 
   private object Row:
@@ -63,9 +61,8 @@ object ProgramConfigRequestsTile:
       targets:            TargetList
     ): Row =
       val obses      = obs4ConfigRequests.get(request.id).getOrElse(List.empty)
-      val obsIds     = SortedSet.from(obses.map(_.id))
       val targetName = ConfigurationTableColumnBuilder.targetName(obses, targets)
-      Row(request, obsIds, targetName)
+      Row(request, obses, targetName)
 
   private val ColDef        = ColumnDef[Row]
   private val columnBuilder = ConfigurationTableColumnBuilder(ColDef)
@@ -104,7 +101,7 @@ object ProgramConfigRequestsTile:
           columnBuilder.configurationColumns(_.request.configuration) ++
           List(
             columnBuilder
-              .obsListColumn(_.obsIds, props.programId, ctx),
+              .obsListColumn(_.observations, props.programId, ctx),
             rowColumn(StatusColumnId, _.request.status)
               .setCell(c => stateIcon(c.value))
               .setSize(80.toPx)

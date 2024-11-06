@@ -22,8 +22,6 @@ import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.ui.syntax.table.*
 
-import scala.collection.immutable.SortedSet
-
 case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, TM]):
   import ConfigurationTableColumnBuilder.*
 
@@ -68,15 +66,20 @@ case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, T
     )
 
   def obsListColumn(
-    accessor:  D => SortedSet[Observation.Id],
+    accessor:  D => List[Observation],
     programId: Program.Id,
     ctx:       AppContext[IO]
   ) =
     colDef(ObservationsColumnId, accessor, ColumnNames(ObservationsColumnId))
       .setCell(c =>
         <.span(
-          c.value.toList
-            .map(obsId => ctx.obsIdRoutingLink(programId, obsId))
+          c.value
+            .sortBy(_.id)
+            .map(obs =>
+              if (obs.isInactive)
+                ctx.obsIdRoutingLink(programId, obs.id, contents = <.s(obs.id.show).some)
+              else ctx.obsIdRoutingLink(programId, obs.id)
+            )
             .mkReactFragment(", ")
         )
       )
