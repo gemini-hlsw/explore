@@ -33,17 +33,15 @@ object ObsActions:
     // need to also optimistically update the list of valid transistions
     access = obsWithId(obsId).composeOptionLens(Observation.unlawfulWorkflowState)
   )(
-    onSet =
-    (_, status) => IO.unit
-    // Update when we have a mutation for workflow state
-    // UpdateObservationMutation[IO]
-    //   .execute(
-    //     UpdateObservationsInput(
-    //       WHERE = obsId.toWhereObservation.assign,
-    //       SET = ObservationPropertiesInput(status = status.orIgnore)
-    //     )
-    //   )
-    //   .void
+    onSet = (_, state) =>
+      state
+        .foldMap(st =>
+          SetObservationWorkflowStateMutation[IO]
+            .execute(
+              SetObservationWorkflowStateInput(obsId, st)
+            )
+            .void
+        )
   )
 
   def obsEditSubtitle(obsId: Observation.Id)(using
