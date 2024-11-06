@@ -158,6 +158,16 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
+  trait SetObservationWorkflowStateMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation ($$input: SetObservationWorkflowStateInput!){
+        setObservationWorkflowState(input: $$input) {
+          state
+        }
+      }
+    """
+
+  @GraphQL
   trait CloneObservationMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation ($$input: CloneObservationInput!){
