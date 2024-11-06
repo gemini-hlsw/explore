@@ -59,7 +59,7 @@ case class AppContext[F[_]](
     appTab:    AppTab,
     programId: Program.Id,
     focused:   Focused,
-    text:      String,
+    contents:  VdomNode,
     via:       SetRouteVia = SetRouteVia.HistoryPush
   ): VdomNode =
     <.a(^.href := pageUrl(appTab, programId, focused),
@@ -67,14 +67,16 @@ case class AppContext[F[_]](
           e.preventDefaultCB >> e.stopPropagationCB >>
             setPageVia(appTab, programId, focused, via)
         )
-    )(text)
+    )(contents)
 
   def obsIdRoutingLink(
     programId: Program.Id,
     obsId:     Observation.Id,
-    via:       SetRouteVia = SetRouteVia.HistoryPush
+    via:       SetRouteVia = SetRouteVia.HistoryPush,
+    contents:  Option[VdomNode] = None
   ): VdomNode =
-    routingLink(AppTab.Observations, programId, Focused.singleObs(obsId), obsId.show)
+    val finalContents: VdomNode = contents.getOrElse(obsId.show)
+    routingLink(AppTab.Observations, programId, Focused.singleObs(obsId), finalContents)
 
   given WebSocketJSClient[F, ObservationDB]     = clients.odb
   given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB

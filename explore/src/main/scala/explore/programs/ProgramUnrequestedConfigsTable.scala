@@ -3,7 +3,6 @@
 
 package explore.programs
 
-import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -42,12 +41,10 @@ import monocle.Focus
 import monocle.Lens
 import queries.schemas.odb.ObsQueries
 
-import scala.collection.immutable.SortedSet
-
 object ProgramUnrequestedConfigsTable:
   case class Row(
     configuration: Configuration,
-    obsIds:        SortedSet[Observation.Id],
+    observations:  NonEmptyList[Observation],
     targetName:    String
   ):
     val id = configuration.toString
@@ -58,9 +55,8 @@ object ProgramUnrequestedConfigsTable:
       observations:  NonEmptyList[Observation],
       targets:       TargetList
     ): Row =
-      val obsIds     = SortedSet.from(observations.map(_.id).toList)
       val targetName = ConfigurationTableColumnBuilder.targetName(observations.toList, targets)
-      Row(configuration, obsIds, targetName)
+      Row(configuration, observations, targetName)
 
   case class TileState(table: Option[Table[Row, Nothing]], selected: List[RowId]):
     def selectedRows: List[Row] =
@@ -96,7 +92,7 @@ object ProgramUnrequestedConfigsTable:
         _ =>
           columnBuilder.targetColumn(_.targetName) ::
             (columnBuilder.configurationColumns(_.configuration) :+
-              columnBuilder.obsListColumn(_.obsIds, props.programId, ctx))
+              columnBuilder.obsListColumn(_.observations.toList, props.programId, ctx))
       .useMemoBy((props, _, _) => (props.configsWithoutRequests, props.targets)): (_, _, _) =>
         (configs, targets) => configs.toList.map((c, os) => Row(c, os, targets))
       .useReactTableWithStateStoreBy: (props, ctx, columns, rows) =>
@@ -178,7 +174,7 @@ object ProgramUnrequestedConfigsTable:
 
         def submitOne(row: Row): IO[Unit] =
           ObsQueries
-            .createConfigurationRequest[IO](row.obsIds.head)
+            .createConfigurationRequest[IO](row.observations.head.id)
             .flatMap: request =>
               (props.configRequests.mod(_.updated(request.id, request)) >>
                 props.observations.mod(
