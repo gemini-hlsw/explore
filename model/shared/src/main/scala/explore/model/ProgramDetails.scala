@@ -16,14 +16,15 @@ import monocle.Lens
 import monocle.Optional
 
 case class ProgramDetails(
-  programType:    ProgramType,
-  proposal:       Option[Proposal],
-  proposalStatus: ProposalStatus,
-  pi:             Option[ProgramUserWithRole],
-  users:          List[ProgramUserWithRole],
-  invitations:    List[UserInvitation],
-  reference:      Option[ProgramReference],
-  allocations:    CategoryAllocationList
+  programType:       ProgramType,
+  proposal:          Option[Proposal],
+  proposalStatus:    ProposalStatus,
+  pi:                Option[ProgramUserWithRole],
+  users:             List[ProgramUserWithRole],
+  invitations:       List[UserInvitation],
+  reference:         Option[ProgramReference],
+  allocations:       CategoryAllocationList,
+  proprietaryMonths: Int
 ) derives Eq:
   val allUsers: List[ProgramUserWithRole] = pi.fold(users)(_ :: users)
 
@@ -51,5 +52,6 @@ object ProgramDetails:
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]
-    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as)
+      pm <- c.downField("goa").downField("proprietaryMonths").as[Int]
+    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as, pm)
   )

@@ -21,5 +21,8 @@ object ProgramDetailsSubquery
       reference $ProgramReferenceSubquery
       userInvitations $ProgramInvitationsSubquery
       allocations $AllocationSubquery
+      goa {
+        proprietaryMonths
+      }
     }
   """
