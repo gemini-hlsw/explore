@@ -37,6 +37,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.layout.*
+import explore.findercharts.FinderChartsTile
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.schedulingWindows.SchedulingWindowsTile
@@ -309,7 +310,7 @@ object ObsTabTiles:
                 case PosAngleConstraint.ParallacticOverride(angle) => angle.some
 
             val finderChartsTile =
-              FinderChartsTile.finderChartsTile(
+              FinderChartsTile(
                 props.programId,
                 props.obsId,
                 attachmentsView,
