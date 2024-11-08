@@ -12,6 +12,7 @@ import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
+import explore.config.ConfigurationTile
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
@@ -484,7 +485,7 @@ object ObsTabTiles:
               SchedulingWindowsTile(schedulingWindows, props.isDisabled, false)
 
             val configurationTile: Tile[?] =
-              ConfigurationTile.configurationTile(
+              ConfigurationTile(
                 props.vault.userId,
                 props.programId,
                 props.obsId,
