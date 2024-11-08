@@ -187,7 +187,8 @@ object AsterismEditor:
     obsDurationView:  View[Option[TimeSpan]],
     pendingTime:      Option[TimeSpan],
     columnVisibility: View[ColumnVisibility],
-    obsEditInfo:      Option[ObsIdSetEditInfo]
+    obsEditInfo:      Option[ObsIdSetEditInfo],
+    isMinimized:      Boolean
   ) extends ReactFnProps(Title.component)
 
   object Title extends AsterismModifier:
@@ -201,26 +202,31 @@ object AsterismEditor:
         .render: (props, ctx, adding) =>
           import ctx.given
 
-          <.span(
+          React.Fragment(
             // only pass in the unexecuted observations. Will be readonly if there aren't any
-            (props.obsEditInfo, props.obsEditInfo.map(_.unExecuted.getOrElse(props.obsIds))).mapN:
-              (obsEditInfo, unexecutedObs) =>
-                targetSelectionPopup(
-                  "Add",
-                  props.programId,
-                  unexecutedObs,
-                  props.obsAndTargets,
-                  adding,
-                  props.onAsterismUpdate,
-                  props.readonly || obsEditInfo.allAreExecuted,
-                  ExploreStyles.AddTargetButton
-                )
-            ,
+            <.span(
+              (props.obsEditInfo, props.obsEditInfo.map(_.unExecuted.getOrElse(props.obsIds)))
+                .mapN: (obsEditInfo, unexecutedObs) =>
+                  targetSelectionPopup(
+                    "Add",
+                    props.programId,
+                    unexecutedObs,
+                    props.obsAndTargets,
+                    adding,
+                    props.onAsterismUpdate,
+                    props.readonly || obsEditInfo.allAreExecuted,
+                    ExploreStyles.AddTargetButton
+                  )
+                .unless(props.isMinimized)
+            ),
             ObsTimeEditor(
               props.obsTimeView,
               props.obsDurationView,
               props.pendingTime,
               props.obsIds.size > 1
             ),
-            ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
+            <.span(^.textAlign.right)(
+              ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
+                .unless(props.isMinimized)
+            )
           )
