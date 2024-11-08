@@ -72,8 +72,8 @@ object SchedulingWindowsTile:
       canMaximize = !fullSize,
       canMinimize = !fullSize
     )(
-      Body(timingWindows, readOnly, _),
-      Title(timingWindows, readOnly, _, _)
+      tileState => Body(timingWindows, readOnly, tileState.set),
+      (tileState, tileSize) => Title(timingWindows, readOnly, tileState.get, tileSize)
     )
 
   object TileState extends NewType[RowSelection => Callback]:
@@ -81,9 +81,9 @@ object SchedulingWindowsTile:
   type TileState = TileState.Type
 
   private case class Body(
-    windows:   View[List[TimingWindow]],
-    readOnly:  Boolean,
-    tileState: View[TileState]
+    windows:      View[List[TimingWindow]],
+    readOnly:     Boolean,
+    setTileState: TileState => Callback
   ) extends ReactFnProps(Body.component)
 
   private object Body:
@@ -170,7 +170,7 @@ object SchedulingWindowsTile:
           )
         .useEffectOnMountBy: (p, _, _, _, table) =>
           val cb = (a: RowSelection) => table.setRowSelection(a)
-          p.tileState.set(TileState(cb))
+          p.setTileState(TileState(cb))
         .render: (props, resize, dbActive, rows, table) =>
           val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
 
@@ -440,7 +440,7 @@ object SchedulingWindowsTile:
   private case class Title(
     windows:   View[List[TimingWindow]],
     readonly:  Boolean,
-    tileState: View[TileState],
+    tileState: TileState,
     tileSize:  TileSizeState
   ) extends ReactFnProps(Title.component)
 
@@ -462,7 +462,7 @@ object SchedulingWindowsTile:
                   start = Timestamp.unsafeFromInstantTruncated(Instant.now),
                   end = none
                 )
-              ) >> props.tileState.get.value(
+              ) >> props.tileState.value(
                 RowSelection(RowId(props.windows.get.size.toString) -> true)
               )
             ).tiny.compact

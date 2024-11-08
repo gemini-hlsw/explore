@@ -77,6 +77,7 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries
+import explore.itc.ItcTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -337,7 +338,7 @@ object ObsTabTiles:
               )
 
             val itcTile =
-              ItcTile.itcTile(
+              ItcTile(
                 props.vault.userId,
                 props.obsId,
                 props.obsTargets,

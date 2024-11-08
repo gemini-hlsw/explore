@@ -741,8 +741,8 @@ thead tr th.sticky-header {
 }
 
 .explore-itc-tile-title {
-  flex-grow: 1;
   display: grid;
+  justify-content: center;
   gap: 0 0.5em;
   font-size: smaller;
   grid-template-columns: repeat(3, minmax(min-content, 1fr));
@@ -763,8 +763,6 @@ thead tr th.sticky-header {
 
 @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
   .explore-itc-tile-title {
-    display: grid;
-    justify-content: end;
     grid-template-rows: 1fr;
     grid-template-columns: repeat(6, min-content);
 
