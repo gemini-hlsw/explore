@@ -63,6 +63,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
+import explore.targeteditor.AsterismEditorTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
@@ -543,7 +544,7 @@ object TargetTabContents extends TwoPanels:
                 )
 
             val asterismEditorTile =
-              AsterismEditorTile.asterismEditorTile(
+              AsterismEditorTile(
                 props.userId,
                 TargetTabTileIds.AsterismEditor.id,
                 props.programId,

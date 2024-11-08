@@ -76,6 +76,7 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries
+import explore.targeteditor.AsterismEditorTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -425,7 +426,7 @@ object ObsTabTiles:
               setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
 
             val targetTile =
-              AsterismEditorTile.asterismEditorTile(
+              AsterismEditorTile(
                 props.vault.userId,
                 ObsTabTileIds.TargetId.id,
                 props.programId,

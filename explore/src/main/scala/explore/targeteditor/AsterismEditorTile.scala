@@ -43,10 +43,97 @@ import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 import explore.model.enums.TileSizeState
+import explore.components.Tile
+import lucuma.schemas.model.BasicConfiguration
+import clue.FetchClient
+import cats.effect.IO
+import lucuma.schemas.ObservationDB
+import queries.schemas.odb.ObsQueries
+import org.typelevel.log4cats.Logger
 
 import java.time.Instant
 
-object AsterismEditor:
+object AsterismEditorTile:
+  def apply(
+    userId:             Option[User.Id],
+    tileId:             Tile.TileId,
+    programId:          Program.Id,
+    obsIds:             ObsIdSet,
+    obsAndTargets:      UndoSetter[ObservationsAndTargets],
+    configuration:      Option[BasicConfiguration],
+    obsTime:            View[Option[Instant]],
+    obsDuration:        View[Option[TimeSpan]],
+    obsConf:            ObsConfiguration,
+    pendingTime:        Option[TimeSpan], // estimated remaining execution time.
+    currentTarget:      Option[Target.Id],
+    setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
+    onCloneTarget:      OnCloneParameters => Callback,
+    onAsterismUpdate:   OnAsterismUpdateParams => Callback,
+    obsInfo:            Target.Id => TargetEditObsInfo,
+    searching:          View[Set[Target.Id]],
+    title:              String,
+    globalPreferences:  View[GlobalPreferences],
+    guideStarSelection: View[GuideStarSelection],
+    readonly:           Boolean,
+    sequenceChanged:    Callback = Callback.empty,
+    backButton:         Option[VdomNode] = None
+  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[TileState] = {
+    // Save the time here. this works for the obs and target tabs
+    // It's OK to save the viz time for executed observations, I think.
+    val obsTimeView: View[Option[Instant]] =
+      obsTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
+
+    val obsDurationView: View[Option[TimeSpan]] =
+      obsDuration.withOnMod: t =>
+        ObsQueries.updateVisualizationDuration[IO](obsIds.toList, t).runAsync
+
+    Tile(
+      tileId,
+      title,
+      TileState.Initial,
+      back = backButton,
+      bodyClass = ExploreStyles.TargetTileBody,
+      controllerClass = ExploreStyles.TargetTileController
+    )(
+      tileState =>
+        userId.map: uid =>
+          Body(
+            programId,
+            uid,
+            obsIds,
+            obsAndTargets,
+            obsTime,
+            obsConf,
+            currentTarget,
+            setTarget,
+            onCloneTarget,
+            onAsterismUpdate,
+            obsInfo,
+            searching,
+            globalPreferences,
+            guideStarSelection,
+            readonly,
+            sequenceChanged,
+            tileState.get.columnVisibility,
+            tileState.zoom(TileState.obsEditInfo)
+          ),
+      (tileState, tileSize) =>
+        Title(
+          programId,
+          obsIds,
+          obsAndTargets,
+          onAsterismUpdate,
+          readonly,
+          obsTimeView,
+          obsDurationView,
+          pendingTime,
+          tileState.zoom(TileState.columnVisibility),
+          tileState.get.obsEditInfo,
+          tileSize
+        )
+    )
+  }
+
   case class TileState(
     columnVisibility: ColumnVisibility,
     obsEditInfo:      Option[ObsIdSetEditInfo]
@@ -60,7 +147,7 @@ object AsterismEditor:
     val obsEditInfo: Lens[TileState, Option[ObsIdSetEditInfo]] =
       Focus[TileState](_.obsEditInfo)
 
-  case class Body(
+  private case class Body(
     programId:          Program.Id,
     userId:             User.Id,
     obsIds:             ObsIdSet,
@@ -82,7 +169,7 @@ object AsterismEditor:
   ) extends ReactFnProps(Body.component):
     val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
-  object Body extends AsterismModifier:
+  private object Body extends AsterismModifier:
     private type Props = Body
 
     private val component =
@@ -178,7 +265,7 @@ object AsterismEditor:
                   <.div("Non-sidereal targets not supported")
           )
 
-  case class Title(
+  private case class Title(
     programId:        Program.Id,
     obsIds:           ObsIdSet,
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
@@ -192,7 +279,7 @@ object AsterismEditor:
     tileSize:         TileSizeState
   ) extends ReactFnProps(Title.component)
 
-  object Title extends AsterismModifier:
+  private object Title extends AsterismModifier:
     private type Props = Title
 
     private val component =
