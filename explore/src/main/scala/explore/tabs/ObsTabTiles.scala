@@ -23,7 +23,7 @@ import explore.config.ConfigurationTile
 import explore.config.sequence.SequenceTile
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.FinderChartsTile
-import explore.itc.ItcProps
+import explore.itc.ItcGraphQuerier
 import explore.itc.ItcTile
 import explore.model.*
 import explore.model.AppContext
@@ -174,12 +174,13 @@ object ObsTabTiles:
       .useStateView[AgsState](AgsState.Idle)
       // the configuration the user has selected from the spectroscopy modes table, if any
       .useStateView(none[InstrumentConfigAndItcResult])
-      .localValBy: (props, _, _, _, selectedConfig) => // itcProps
-        ItcProps(props.observation.get, selectedConfig.get, props.obsTargets)
-      .useEffectResultWithDepsBy((_, _, _, _, _, itcProps) => itcProps): (_, ctx, _, _, _, _) =>
-        itcProps => // Compute ITC graph
-          import ctx.given
-          itcProps.requestGraphs
+      .localValBy: (props, _, _, _, selectedConfig) => // itcGraphQuerier
+        ItcGraphQuerier(props.observation.get, selectedConfig.get, props.obsTargets)
+      .useEffectResultWithDepsBy((_, _, _, _, _, itcGraphQuerier) => itcGraphQuerier):
+        (_, ctx, _, _, _, _) =>
+          itcGraphQuerier => // Compute ITC graph
+            import ctx.given
+            itcGraphQuerier.requestGraphs
       .useStateView(().ready) // Signal that the sequence has changed
       .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>
         p.observation.model.get.observationTime
@@ -227,7 +228,7 @@ object ObsTabTiles:
           sequenceOffsets,
           agsState,
           selectedConfig,
-          itcProps,
+          itcGraphQuerier,
           itcGraphResults,
           sequenceChanged,
           vizTimeOrNowPot,
@@ -345,7 +346,7 @@ object ObsTabTiles:
                 props.vault.userId,
                 props.obsId,
                 props.obsTargets,
-                itcProps,
+                itcGraphQuerier,
                 itcGraphResults,
                 props.globalPreferences
               )

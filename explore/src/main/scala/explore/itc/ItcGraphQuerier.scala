@@ -35,7 +35,7 @@ import workers.WorkerClient
 
 import scala.collection.immutable.SortedMap
 
-case class ItcProps(
+case class ItcGraphQuerier(
   observation:    Observation,
   selectedConfig: Option[InstrumentConfigAndItcResult], // selected row in spectroscopy modes table
   at:             TargetList
@@ -98,10 +98,16 @@ case class ItcProps(
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
-  private val queryProps: List[Option[?]] =
-    List(itcTargets, finalConfig, wavelength, instrumentConfig, signalToNoise)
+  private val queryProps =
+    (wavelength,
+     signalToNoise,
+     signalToNoiseAt,
+     constraints.some,
+     itcTargets,
+     instrumentConfig
+    ).tupled
 
-  val isExecutable: Boolean = queryProps.forall(_.isDefined)
+  val isExecutable: Boolean = queryProps.isDefined
 
   def targetBrightness(target: ItcTarget): Option[(Band, BrightnessValue, Units)] =
     for
@@ -115,31 +121,18 @@ case class ItcProps(
     WorkerClient[IO, ItcMessage.Request]
   ): IO[ItcAsterismGraphResults] =
     val action: Option[IO[ItcAsterismGraphResults]] =
-      for
-        w    <- wavelength
-        sn   <- signalToNoise
-        snAt <- signalToNoiseAt
-        t    <- itcTargets
-        mode <- instrumentConfig
-      yield ItcClient[IO]
-        .requestSingle:
-          ItcMessage.GraphQuery(w, sn, snAt, constraints, t, mode)
-        .map:
-          _.toRight(new Throwable("No response from ITC server."))
-        .rethrow
+      queryProps.map: (w, sn, snAt, c, t, mode) =>
+        ItcClient[IO]
+          .requestSingle:
+            ItcMessage.GraphQuery(w, sn, snAt, c, t, mode)
+          .map:
+            _.toRight(new Throwable("No response from ITC server."))
+          .rethrow
 
     action.getOrElse:
       IO.raiseError:
         new Throwable("Not enough information to calculate the ITC graph or no mode selected.")
 
-object ItcProps:
-  given Reusability[ItcProps] =
-    Reusability.by: p =>
-      (p.observation.scienceTargetIds.toList.sorted,
-       p.observation.constraints,
-       p.observation.scienceRequirements,
-       p.observation.wavelength,
-       p.observation.basicConfiguration,
-       p.selectedConfig,
-       p.at
-      )
+object ItcGraphQuerier:
+  given Reusability[ItcGraphQuerier] =
+    Reusability.by(_.queryProps)
