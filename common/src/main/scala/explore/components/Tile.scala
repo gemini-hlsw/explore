@@ -141,12 +141,7 @@ object Tile:
                 p.back.map(b => <.div(ExploreStyles.TileButton, b)),
                 <.div(ExploreStyles.TileTitleText |+| ExploreStyles.TileDraggable, p.title)
               ),
-              // Title controls
-              // <.div(ExploreStyles.TileTitleControlArea)(
-              //   <.div(ExploreStyles.TileTitleStrip |+| ExploreStyles.TileControl,
               p.tileTitle(sharedState, p.sizeState),
-              //   )
-              // ),
               // Size control buttons
               <.div(ExploreStyles.TileControlButtons)(
                 minimizeButton.when(p.showMinimize).unless(p.fullSize),

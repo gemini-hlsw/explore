@@ -101,18 +101,15 @@ object FinderChartsTile:
       ScalaFnComponent
         .withHooks[Props]
         .useContext(AppContext.ctx)
-        .useMemoBy((p, _) => p.authToken)((_, ctx) =>
+        .useMemoBy((p, _) => p.authToken): (_, ctx) =>
           token => OdbRestClient[IO](ctx.environment, token)
-        )
         // Current transformation
         .useStateView(Transformation.Default)
         .useStateView[UrlMap](Map.empty)
         // added attachment, FIXME once we can upload and assign in one step
-        .useState(
-          none[ObsAtt.Id]
-        )
+        .useState(none[ObsAtt.Id])
         // If added associate with the observation
-        .useEffectWithDepsBy((_, _, _, _, _, added) => added.value)(
+        .useEffectWithDepsBy((_, _, _, _, _, added) => added.value):
           (props, _, _, transform, _, added) =>
             _ =>
               // Associate the newly added attachment with the observation and select it
@@ -122,10 +119,9 @@ object FinderChartsTile:
                 ) *> props.selected.set(newlyAdded.some) *> added
                   .setState(none)
               }.getOrEmpty
-        )
         .useEffectWithDepsBy((props, _, _, _, _, _) =>
           (props.authToken, props.obsAttachments.get, props.obsAttachmentIds.get)
-        )((props, _, client, _, urlMap, _) =>
+        ): (props, _, client, _, urlMap, _) =>
           (_, obsAttachments, obsAttachmentIds) =>
             val allCurrentKeys =
               validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
@@ -146,59 +142,60 @@ object FinderChartsTile:
               else Callback.empty
 
             updateUrlMap *> getUrls *> defaultSelected.to[IO]
-        )
         // Read preferences
-        .useEffectWithDepsBy((props, _, _, _, _, _) => (props.oid, props.selected.get)) {
-          (props, ctx, _, transform, _, _) => (oid, aid) =>
-            import ctx.given
+        .useEffectWithDepsBy((props, _, _, _, _, _) => (props.oid, props.selected.get)):
+          (props, ctx, _, transform, _, _) =>
+            (oid, aid) =>
+              import ctx.given
 
-            aid
-              .map(aid =>
-                FinderChartPreferences
-                  .queryWithDefault[IO](oid, aid)
-                  .flatMap { t =>
-                    transform.set(t).to[IO]
-                  }
-                  .runAsyncAndForget
-              )
-              .getOrEmpty
-        }
+              aid
+                .map(aid =>
+                  FinderChartPreferences
+                    .queryWithDefault[IO](oid, aid)
+                    .flatMap { t =>
+                      transform.set(t).to[IO]
+                    }
+                    .runAsyncAndForget
+                )
+                .getOrEmpty
         // Write preferences
-        .useEffectWithDepsBy((props, _, _, transform, _, _) => transform.get) {
-          (props, ctx, _, transform, _, _) => transform =>
-            import ctx.given
+        .useEffectWithDepsBy((props, _, _, transform, _, _) => transform.get):
+          (props, ctx, _, transform, _, _) =>
+            transform =>
+              import ctx.given
 
-            props.selected.get
-              .map(aid =>
-                FinderChartPreferences
-                  .updateTransformation[IO](props.oid, aid, transform)
-                  .runAsyncAndForget
-              )
-              .getOrEmpty
-        }
+              props.selected.get
+                .map(aid =>
+                  FinderChartPreferences
+                    .updateTransformation[IO](props.oid, aid, transform)
+                    .runAsyncAndForget
+                )
+                .getOrEmpty
         .useStateView(Action.None)
-        .render { (props, ctx, client, ops, urls, added, action) =>
+        .render: (props, ctx, client, ops, urls, added, action) =>
           val transforms = ops.get.calcTransform
+
           <.div(
             ExploreStyles.FinderChartsBackground,
             ^.onClick ==> { e =>
               props.chartSelector.set(ChartSelector.Closed).when_(props.chartSelector.get.value)
-            },
+            }
+          )(
             <.div(
               SolarProgress(ExploreStyles.FinderChartsLoadProgress)
                 .unless(action.get === Action.None)
             ),
             ControlOverlay(props.parallacticAngle, ops),
-            if (props.chartSelector.get.value) {
-              FinderChartLinker(props.programId,
-                                client,
-                                props.selected,
-                                props.obsAttachmentIds,
-                                props.obsAttachments.get
+            if (props.chartSelector.get.value)
+              FinderChartLinker(
+                props.programId,
+                client,
+                props.selected,
+                props.obsAttachmentIds,
+                props.obsAttachments.get
               )
-            } else EmptyVdom,
-            <.div(
-              ExploreStyles.FinderChartsBody,
+            else EmptyVdom,
+            <.div(ExploreStyles.FinderChartsBody)(
               props.selected.get.map { attId =>
                 urls.get.find { case ((i, _), _) => i === attId }.map { url =>
                   url._2.renderPot(url =>
@@ -213,7 +210,6 @@ object FinderChartsTile:
               }
             )
           )
-        }
 
   private case class Title(
     programId:        Program.Id,
