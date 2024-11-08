@@ -44,7 +44,7 @@ object ItcTile:
     uid:               Option[User.Id],
     oid:               Observation.Id,
     allTargets:        TargetList,
-    itcProps:          ItcProps,
+    itcGraphQuerier:   ItcGraphQuerier,
     itcGraphResults:   Pot[ItcAsterismGraphResults],
     globalPreferences: View[GlobalPreferences]
   ) =
@@ -60,7 +60,7 @@ object ItcTile:
           Body(
             _,
             oid,
-            itcProps,
+            itcGraphQuerier,
             itcGraphResults,
             globalPreferences,
             s
@@ -68,7 +68,7 @@ object ItcTile:
         ),
       (s, _) =>
         Title(
-          itcProps,
+          itcGraphQuerier,
           itcGraphResults,
           s
         )
@@ -81,7 +81,7 @@ object ItcTile:
   private case class Body(
     uid:               User.Id,
     oid:               Observation.Id,
-    itcProps:          ItcProps,
+    itcGraphQuerier:   ItcGraphQuerier,
     itcGraphResults:   Pot[ItcAsterismGraphResults],
     globalPreferences: View[GlobalPreferences],
     tileState:         View[TileState]
@@ -126,7 +126,7 @@ object ItcTile:
               yield c
 
             val isModeSelected: Boolean =
-              props.itcProps.selectedConfig.isDefined || selectedResult.isDefined
+              props.itcGraphQuerier.selectedConfig.isDefined || selectedResult.isDefined
 
             val targetErrors: Option[String] =
               if graphResults.asterismGraphs.isEmpty then "No target available".some
@@ -156,7 +156,7 @@ object ItcTile:
               ExploreStyles.ItcPlotDetailsHidden.unless(detailsView.get.value)
             )(
               ItcSpectroscopyPlotDescription(
-                selectedTarget.flatMap(props.itcProps.targetBrightness),
+                selectedTarget.flatMap(props.itcGraphQuerier.targetBrightness),
                 selectedResult.map(_.itcExposureTime),
                 selectedResult.map(_.ccds),
                 selectedResult.map(_.finalSNRatio),
@@ -168,14 +168,14 @@ object ItcTile:
                 error,
                 graphTypeView.get,
                 selectedTarget.map(_.name.value),
-                props.itcProps.signalToNoiseAt,
+                props.itcGraphQuerier.signalToNoiseAt,
                 detailsView.get
               ),
               ItcPlotControl(graphTypeView, detailsView)
             )
 
   private case class Title(
-    itcPanelProps:   ItcProps,
+    itcGraphQuerier: ItcGraphQuerier,
     itcGraphResults: Pot[ItcAsterismGraphResults],
     tileState:       View[TileState]
   ) extends ReactFnProps(Title.component):
@@ -192,7 +192,7 @@ object ItcTile:
           props => itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
         .render: props =>
           def newSelected(p: Int): Option[ItcTarget] =
-            props.itcPanelProps.targets.lift(p)
+            props.itcGraphQuerier.targets.lift(p)
 
           val selectedResult: Pot[ItcGraphResult] =
             props.selectedTarget.get.toPot
@@ -200,9 +200,9 @@ object ItcTile:
                 props.itcGraphResults.flatMap(_.asterismGraphs.get(t).flatMap(_.toOption).toPot)
 
           val selectedTarget = props.selectedTarget
-          val existTargets   = props.itcPanelProps.targets.nonEmpty && selectedTarget.get.isDefined
+          val existTargets   = props.itcGraphQuerier.targets.nonEmpty && selectedTarget.get.isDefined
 
-          val itcTargets          = props.itcPanelProps.itcTargets.foldMap(_.toList)
+          val itcTargets          = props.itcGraphQuerier.itcTargets.foldMap(_.toList)
           val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)
           val itcTargetsWithIndex = itcTargets.zipWithIndex
 
@@ -215,7 +215,7 @@ object ItcTile:
           def snSection(title: String, fn: ItcGraphResult => VdomNode) =
             React.Fragment(
               <.label(title),
-              if (existTargets && props.itcPanelProps.isExecutable)
+              if (existTargets && props.itcGraphQuerier.isExecutable)
                 selectedResult.renderPot(
                   fn,
                   Icons.Spinner.withSpin(true),
