@@ -13,10 +13,12 @@ import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsAttachment
 import explore.model.ObsAttachmentList
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.Transformation
 import explore.model.reusability.given
@@ -28,13 +30,11 @@ import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.components.SolarProgress
+import lucuma.ui.react.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import monocle.Focus
-import explore.components.Tile
-import explore.model.ObsTabTileIds
-import lucuma.ui.react.given
 
 import scala.collection.immutable.SortedSet
 

@@ -15,6 +15,7 @@ import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ColumnSelectorInTitle
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
@@ -22,6 +23,7 @@ import explore.model.Execution
 import explore.model.Focused
 import explore.model.Group
 import explore.model.GroupTree
+import explore.model.ObsSummaryTabTileIds
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.TargetList
@@ -61,12 +63,10 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Lens
 import queries.schemas.odb.ObsQueries.ObservationList
-import explore.components.Tile
 
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.TreeSeqMap
-import explore.model.ObsSummaryTabTileIds
 
 object ObsSummaryTile:
   def apply(
@@ -83,7 +83,7 @@ object ObsSummaryTile:
     Tile(
       ObsSummaryTabTileIds.SummaryId.id,
       s"Observations Summary (${observations.get.toList.filterNot(_.isCalibration).length})",
-      ObsSummaryTile.TileState.Initial,
+      TileState.Initial,
       backButton.some,
       canMinimize = false,
       canMaximize = false
@@ -99,11 +99,11 @@ object ObsSummaryTile:
           allTargets,
           showScienceBand,
           s.get.columnVisibility,
-          cb => s.zoom(ObsSummaryTile.TileState.toggleAllRowsSelected).set(cb.some)
+          cb => s.zoom(TileState.toggleAllRowsSelected).set(cb.some)
         ),
       (s, _) =>
         Title(
-          s.zoom(ObsSummaryTile.TileState.columnVisibility),
+          s.zoom(TileState.columnVisibility),
           s.get.toggleAllRowsSelected
         )
     )
@@ -564,7 +564,6 @@ object ObsSummaryTile:
 
     private val component = ScalaFnComponent[Props]: props =>
       React.Fragment(
-        // <.span, // Push all/none buttons to center
         props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
           <.span(^.textAlign.center)(
             Button(

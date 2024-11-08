@@ -8,10 +8,12 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ElevationPlotScheduling
@@ -45,10 +47,8 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableIcons
 import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
-import explore.components.Tile
 
 import java.time.*
-import eu.timepit.refined.types.string.NonEmptyString
 
 object ElevationPlotTile:
   def apply(

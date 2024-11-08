@@ -12,7 +12,6 @@ import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.config.ConfigurationTile
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
@@ -20,9 +19,12 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
+import explore.config.ConfigurationTile
 import explore.config.sequence.SequenceTile
 import explore.constraints.ConstraintsPanel
+import explore.findercharts.FinderChartsTile
 import explore.itc.ItcProps
+import explore.itc.ItcTile
 import explore.model.*
 import explore.model.AppContext
 import explore.model.GuideStarSelection.*
@@ -38,14 +40,14 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.layout.*
-import explore.findercharts.FinderChartsTile
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
+import explore.plots.ElevationPlotTile
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
 import explore.schedulingWindows.SchedulingWindowsTile
 import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
-import explore.plots.ObjectPlotData
-import explore.plots.PlotData
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -79,8 +81,6 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries
-import explore.itc.ItcTile
-import explore.plots.ElevationPlotTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap

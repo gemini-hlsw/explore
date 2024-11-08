@@ -9,13 +9,17 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.*
+import crystal.react.View
 import crystal.react.given
 import crystal.react.hooks.*
 import explore.*
 import explore.components.HelpIcon
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.AsterismIds
 import explore.model.Execution
+import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.reusability.given
 import explore.syntax.ui.*
@@ -39,14 +43,6 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL.*
-import crystal.Pot
-import crystal.react.View
-import explore.components.Tile
-import explore.model.AsterismIds
-import explore.model.Execution
-import explore.model.ObsTabTileIds
-import explore.model.Observation
-import lucuma.core.model.Program
 
 object SequenceTile:
   def apply(
