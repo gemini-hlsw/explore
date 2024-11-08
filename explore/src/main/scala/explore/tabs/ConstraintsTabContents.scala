@@ -33,8 +33,7 @@ import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.timingwindows.TimingWindowsTile
-import explore.timingwindows.TimingWindowsTileState
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -264,8 +263,8 @@ object ConstraintsTabContents extends TwoPanels:
                     )
                 )
 
-              val timingWindowsTile: Tile[TimingWindowsTileState] =
-                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly, false)
+              val timingWindowsTile: Tile[SchedulingWindowsTile.TileState] =
+                SchedulingWindowsTile(timingWindows, props.readonly, false)
 
               TileController(
                 props.userId,

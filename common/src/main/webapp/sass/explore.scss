@@ -625,6 +625,7 @@ thead tr th.sticky-header {
   min-width: 100px;
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
 }
 
 // .explore-tile-control {
@@ -646,10 +647,9 @@ thead tr th.sticky-header {
   flex: 0;
 }
 
-.justified-end-tile-control {
-  flex-grow: 1;
+.explore-tile-title-constraint-selector {
   display: flex;
-  justify-content: end;
+  justify-content: center;
 }
 
 .p-button.p-button-text.explore-tile-state-button {
@@ -3313,6 +3313,7 @@ a.explore-upgrade-link {
 
 .finder-charts-selector-section {
   display: flex;
+  justify-content: center;
 
   .p-dropdown {
     min-width: 5ch;

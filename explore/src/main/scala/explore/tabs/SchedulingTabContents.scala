@@ -29,7 +29,7 @@ import explore.model.reusability.given
 import explore.observationtree.SchedulingGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.timingwindows.TimingWindowsTile
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -52,6 +52,7 @@ import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
+import explore.schedulingWindows.SchedulingWindowsTile
 
 case class SchedulingTabContents(
   programId:        Program.Id,
@@ -214,16 +215,15 @@ object SchedulingTabContents extends TwoPanels:
                     )
                 )
 
-              val timingWindowsTile =
-                TimingWindowsTile
-                  .timingWindowsPanel(timingWindows, props.readonly, true)
+              val schedulingWindowsTile =
+                SchedulingWindowsTile(timingWindows, props.readonly, true)
 
               TileController(
                 props.userId,
                 resize.width.getOrElse(1),
                 ExploreGridLayouts.sectionLayout(GridLayoutSection.SchedulingLayout),
                 props.userPreferences.schedulingTabLayout,
-                List(timingWindowsTile),
+                List(schedulingWindowsTile),
                 GridLayoutSection.SchedulingLayout,
                 None
               )

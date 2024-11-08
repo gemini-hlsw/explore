@@ -15,6 +15,7 @@ import explore.findercharts.FinderChartsTitle
 import explore.model.ObsAttachmentList
 import explore.model.ObsTabTileIds
 import explore.model.Observation
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.ObsAttachment as ObsAtt
@@ -32,7 +33,7 @@ object FinderChartsTile:
     authToken:        Option[NonEmptyString],
     obsAttachments:   View[ObsAttachmentList],
     parallacticAngle: Option[Angle],
-    readOnly:         Boolean
+    readonly:         Boolean
   ) =
     Tile(
       ObsTabTileIds.FinderChartsId.id,
@@ -40,23 +41,22 @@ object FinderChartsTile:
       FinderChartsTileState(ChartSelector.Closed, None),
       bodyClass = ExploreStyles.FinderChartsTile
     )(
-      s =>
+      tileState =>
         authToken
-          .map[VdomNode](t =>
-            FinderChartsBody(programId,
-                             oid,
-                             t,
-                             obsAttachmentIds,
-                             obsAttachments,
-                             parallacticAngle,
-                             readOnly,
-                             s
+          .map[VdomNode]: t =>
+            FinderChartsBody(
+              programId,
+              oid,
+              t,
+              obsAttachmentIds,
+              obsAttachments,
+              parallacticAngle,
+              readonly,
+              tileState
             )
-          )
           .orEmpty,
-      (s, _) =>
+      (tileState, _) =>
         authToken
-          .map[VdomNode](t =>
-            FinderChartsTitle(programId, t, obsAttachmentIds, obsAttachments, readOnly)(s)
-          )
+          .map[VdomNode]: t =>
+            FinderChartsTitle(programId, t, obsAttachmentIds, obsAttachments, readonly)(tileState)
     )

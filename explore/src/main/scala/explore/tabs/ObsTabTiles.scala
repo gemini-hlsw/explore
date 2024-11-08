@@ -42,7 +42,7 @@ import explore.observationtree.obsEditAttachments
 import explore.syntax.ui.*
 import explore.targeteditor.plots.ObjectPlotData
 import explore.targeteditor.plots.PlotData
-import explore.timingwindows.TimingWindowsTile
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -120,8 +120,7 @@ object ObsTabTiles:
     allConstraintSets: Set[ConstraintSet],
     isDisabled:        Boolean
   )(using FetchClient[IO, ObservationDB]): VdomNode =
-    <.div(
-      ExploreStyles.JustifiedEndTileControl,
+    <.div(ExploreStyles.TileTitleConstraintSelector)(
       Dropdown[ConstraintSet](
         value = constraintSet.get,
         disabled = isDisabled,
@@ -349,7 +348,7 @@ object ObsTabTiles:
             val constraints: View[ConstraintSet] =
               props.observation.model.zoom(Observation.constraints)
 
-            val timingWindows: View[List[TimingWindow]] =
+            val schedulingWindows: View[List[TimingWindow]] =
               TimingWindowsQueries.viewWithRemoteMod(
                 ObsIdSet.one(props.obsId),
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
@@ -393,7 +392,7 @@ object ObsTabTiles:
                   props.observation.get.observingMode.map(_.siteFor),
                   vizTimeView.get,
                   obsDuration.map(_.toDuration),
-                  timingWindows.get,
+                  schedulingWindows.get,
                   props.globalPreferences.get,
                   "No target selected"
                 )
@@ -477,8 +476,8 @@ object ObsTabTiles:
                 (_, _) => constraintsSelector
               )
 
-            val timingWindowsTile =
-              TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled, false)
+            val schedulingWindowsTile =
+              SchedulingWindowsTile(schedulingWindows, props.isDisabled, false)
 
             val configurationTile: Tile[?] =
               ConfigurationTile.configurationTile(
@@ -514,7 +513,7 @@ object ObsTabTiles:
                 if (!props.vault.isGuest) finderChartsTile.some else none,
                 skyPlotTile,
                 constraintsTile.some,
-                timingWindowsTile.some,
+                schedulingWindowsTile.some,
                 configurationTile.some,
                 sequenceTile.some,
                 itcTile.some

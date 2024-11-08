@@ -69,9 +69,8 @@ object AsterismEditorTile:
       vizTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
 
     val obsDurationView: View[Option[TimeSpan]] =
-      vizDuration.withOnMod(t =>
+      vizDuration.withOnMod: t =>
         ObsQueries.updateVisualizationDuration[IO](obsIds.toList, t).runAsync
-      )
 
     Tile(
       tileId,
@@ -103,7 +102,7 @@ object AsterismEditorTile:
             tileState.get.columnVisibility,
             tileState.zoom(AsterismEditor.TileState.obsEditInfo)
           ),
-      (tileState, tileSizeState) =>
+      (tileState, tileSize) =>
         AsterismEditor.Title(
           programId,
           obsIds,
@@ -115,7 +114,7 @@ object AsterismEditorTile:
           pendingTime,
           tileState.zoom(AsterismEditor.TileState.columnVisibility),
           tileState.get.obsEditInfo,
-          tileSizeState.isMinimized
+          tileSize
         )
     )
   }

@@ -42,6 +42,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
+import explore.model.enums.TileSizeState
 
 import java.time.Instant
 
@@ -188,7 +189,7 @@ object AsterismEditor:
     pendingTime:      Option[TimeSpan],
     columnVisibility: View[ColumnVisibility],
     obsEditInfo:      Option[ObsIdSetEditInfo],
-    isMinimized:      Boolean
+    tileSize:         TileSizeState
   ) extends ReactFnProps(Title.component)
 
   object Title extends AsterismModifier:
@@ -217,7 +218,7 @@ object AsterismEditor:
                     props.readonly || obsEditInfo.allAreExecuted,
                     ExploreStyles.AddTargetButton
                   )
-                .unless(props.isMinimized)
+                .unless(props.tileSize.isMinimized)
             ),
             ObsTimeEditor(
               props.obsTimeView,
@@ -227,6 +228,6 @@ object AsterismEditor:
             ),
             <.span(^.textAlign.right)(
               ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
-                .unless(props.isMinimized)
+                .unless(props.tileSize.isMinimized)
             )
           )
