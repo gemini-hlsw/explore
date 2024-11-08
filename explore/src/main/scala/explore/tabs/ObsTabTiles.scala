@@ -19,7 +19,7 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.config.sequence.SequenceEditorTile
+import explore.config.sequence.SequenceTile
 import explore.constraints.ConstraintsPanel
 import explore.itc.ItcProps
 import explore.model.*
@@ -328,7 +328,7 @@ object ObsTabTiles:
             val notesTile = NotesTile.notesTile(props.obsId, notesView)
 
             val sequenceTile =
-              SequenceEditorTile.sequenceTile(
+              SequenceTile(
                 props.programId,
                 props.obsId,
                 props.obsExecution,
