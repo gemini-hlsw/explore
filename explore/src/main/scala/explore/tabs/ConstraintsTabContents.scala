@@ -17,7 +17,7 @@ import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsSummaryTableBody
+import explore.constraints.ConstraintsSummaryTile
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
@@ -48,8 +48,6 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.react.table.Table
-import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
 import monocle.Iso
@@ -202,27 +200,15 @@ object ConstraintsTabContents extends TwoPanels:
             .flatMap: ids =>
               findConstraintGroup(ids, props.programSummaries.get.constraintGroups)
                 .map(cg => (ids, cg))
-            .fold[VdomNode] {
-              Tile(
-                "constraints".refined,
-                "Constraints Summary",
-                none[Table[ConstraintGroup, Nothing]],
-                backButton.some,
-                canMinimize = false,
-                canMaximize = false
-              )(
-                tableView =>
-                  ConstraintsSummaryTableBody(
-                    props.userId,
-                    props.programId,
-                    props.programSummaries.get.constraintGroups,
-                    props.expandedIds,
-                    tableView.set.compose(_.some)
-                  ),
-                (s, _) => <.div
-                // ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s.get)
+            .fold[VdomNode](
+              ConstraintsSummaryTile(
+                props.userId,
+                props.programId,
+                props.programSummaries.get.constraintGroups,
+                props.expandedIds,
+                backButton
               )
-            } { case (idsToEdit, constraintGroup) =>
+            ) { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
@@ -262,7 +248,7 @@ object ConstraintsTabContents extends TwoPanels:
                     )
                 )
 
-              val timingWindowsTile: Tile[SchedulingWindowsTile.TileState] =
+              val schedulingWindowsTile: Tile[SchedulingWindowsTile.TileState] =
                 SchedulingWindowsTile(timingWindows, props.readonly, false)
 
               TileController(
@@ -270,7 +256,7 @@ object ConstraintsTabContents extends TwoPanels:
                 resize.width.getOrElse(1),
                 ExploreGridLayouts.sectionLayout(GridLayoutSection.ConstraintsLayout),
                 props.userPreferences.constraintsTabLayout,
-                List(constraintsTile, timingWindowsTile),
+                List(constraintsTile, schedulingWindowsTile),
                 GridLayoutSection.ConstraintsLayout,
                 None
               )

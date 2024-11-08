@@ -107,6 +107,18 @@ object TargetSummaryTile:
     val columnVisibility      = Focus[TileState](_.columnVisibility)
     val toggleAllRowsSelected = Focus[TileState](_.toggleAllRowsSelected)
 
+  private val IdColumnId: ColumnId           = ColumnId("id")
+  private val CountColumnId: ColumnId        = ColumnId("count")
+  private val ObservationsColumnId: ColumnId = ColumnId("observations")
+
+  private val ColNames: TreeSeqMap[ColumnId, String] =
+    TreeSeqMap(IdColumnId -> "Id") ++
+      TargetColumns.AllColNames ++
+      TreeSeqMap(
+        CountColumnId        -> "Count",
+        ObservationsColumnId -> "Observations"
+      )
+
   private case class Body(
     userId:                   Option[User.Id],
     programId:                Program.Id,
@@ -127,10 +139,6 @@ object TargetSummaryTile:
 
     private val ColDef = ColumnDef[TargetWithId]
 
-    private val IdColumnId: ColumnId           = ColumnId("id")
-    private val CountColumnId: ColumnId        = ColumnId("count")
-    private val ObservationsColumnId: ColumnId = ColumnId("observations")
-
     private object IsImportOpen extends NewType[Boolean]
 
     private val ColumnClasses: Map[ColumnId, Css] = Map(
@@ -138,16 +146,6 @@ object TargetSummaryTile:
       TargetColumns.TypeColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryType),
       TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName)
     )
-
-    val ColNames: TreeSeqMap[ColumnId, String] =
-      TreeSeqMap(
-        IdColumnId -> "Id"
-      ) ++
-        TargetColumns.AllColNames ++
-        TreeSeqMap(
-          CountColumnId        -> "Count",
-          ObservationsColumnId -> "Observations"
-        )
 
     private val ScrollOptions =
       rawVirtual.mod
@@ -230,7 +228,7 @@ object TargetSummaryTile:
             targets.toList
               .filterNot((id, _) => isCalibrationTarget(id))
               .map((id, target) => TargetWithId(id, target))
-        .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
+        .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
           import ctx.given
 
           def targetIds2RowSelection: List[Target.Id] => RowSelection = targetIds =>
@@ -270,7 +268,6 @@ object TargetSummaryTile:
             ),
             TableStore(props.userId, TableId.TargetsSummary, cols)
           )
-        )
         .useEffectOnMountBy: (props, _, _, _, table) =>
           props.setToggleAllRowsSelected(table.toggleAllRowsSelected)
         .useRef(none[HTMLTableVirtualizer])
@@ -375,5 +372,5 @@ object TargetSummaryTile:
                   )
               )
             ),
-            ColumnSelectorInTitle(Body.ColNames.toList, props.columnVisibility)
+            ColumnSelectorInTitle(ColNames.toList, props.columnVisibility)
           )

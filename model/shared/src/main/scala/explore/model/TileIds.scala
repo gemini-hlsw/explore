@@ -60,3 +60,6 @@ enum TargetTabTileIds(val id: NonEmptyString):
   case Summary        extends TargetTabTileIds("targetSummary".refined)
   case AsterismEditor extends TargetTabTileIds("targetEditor".refined)
   case ElevationPlot  extends TargetTabTileIds("targetPlot".refined)
+
+enum ConstraintTabTileIds(val id: NonEmptyString):
+  case Summary extends ConstraintTabTileIds("constraints".refined)
