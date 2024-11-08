@@ -269,32 +269,16 @@ object ObsTabContents extends TwoPanels:
             makeBackButton(props.programId, AppTab.Observations, twoPanelState, ctx)
 
           val obsSummaryTableTile: Tile[?] =
-            Tile(
-              ObsSummaryTabTileIds.SummaryId.id,
-              s"Observations Summary (${props.observations.get.toList.filterNot(_.isCalibration).length})",
-              ObsSummaryTable.TileState.Initial,
-              backButton.some,
-              canMinimize = false,
-              canMaximize = false
-            )(
-              s =>
-                ObsSummaryTable.Body(
-                  props.vault.userId,
-                  props.programId,
-                  props.observations,
-                  selectedObsIds,
-                  props.groups.model,
-                  props.obsExecutions,
-                  props.targets.get,
-                  props.programSummaries.get.allocatedScienceBands.size > 1,
-                  s.get.columnVisibility,
-                  cb => s.zoom(ObsSummaryTable.TileState.toggleAllRowsSelected).set(cb.some)
-                ),
-              (s, _) =>
-                ObsSummaryTable.Title(
-                  s.zoom(ObsSummaryTable.TileState.columnVisibility),
-                  s.get.toggleAllRowsSelected
-                )
+            ObsSummaryTile(
+              props.vault.userId,
+              props.programId,
+              props.observations,
+              selectedObsIds,
+              props.groups.model,
+              props.obsExecutions,
+              props.targets.get,
+              props.programSummaries.get.allocatedScienceBands.size > 1,
+              backButton
             )
 
           val plotData: PlotData =

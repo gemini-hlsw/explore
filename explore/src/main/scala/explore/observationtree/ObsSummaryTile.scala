@@ -61,12 +61,53 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Lens
 import queries.schemas.odb.ObsQueries.ObservationList
+import explore.components.Tile
 
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.TreeSeqMap
+import explore.model.ObsSummaryTabTileIds
 
-object ObsSummaryTable:
+object ObsSummaryTile:
+  def apply(
+    userId:          Option[User.Id],
+    programId:       Program.Id,
+    observations:    UndoSetter[ObservationList],
+    selectedObsIds:  View[List[Observation.Id]],
+    groupTree:       View[GroupTree],
+    obsExecutions:   ObservationExecutionMap,
+    allTargets:      TargetList,
+    showScienceBand: Boolean,
+    backButton:      VdomNode
+  ): Tile[TileState] =
+    Tile(
+      ObsSummaryTabTileIds.SummaryId.id,
+      s"Observations Summary (${observations.get.toList.filterNot(_.isCalibration).length})",
+      ObsSummaryTile.TileState.Initial,
+      backButton.some,
+      canMinimize = false,
+      canMaximize = false
+    )(
+      s =>
+        Body(
+          userId,
+          programId,
+          observations,
+          selectedObsIds,
+          groupTree,
+          obsExecutions,
+          allTargets,
+          showScienceBand,
+          s.get.columnVisibility,
+          cb => s.zoom(ObsSummaryTile.TileState.toggleAllRowsSelected).set(cb.some)
+        ),
+      (s, _) =>
+        Title(
+          s.zoom(ObsSummaryTile.TileState.columnVisibility),
+          s.get.toggleAllRowsSelected
+        )
+    )
+
   private val ObservationIdColumnId = ColumnId("observation_id")
   private val GroupColumnId         = ColumnId("group")
   private val StateColumnId         = ColumnId("state")
@@ -132,7 +173,7 @@ object ObsSummaryTable:
       // ChargedTimeColumnId -> Visibility.Hidden
     )
 
-  case class Body(
+  private case class Body(
     userId:                   Option[User.Id],
     programId:                Program.Id,
     observations:             UndoSetter[ObservationList],
@@ -145,7 +186,7 @@ object ObsSummaryTable:
     setToggleAllRowsSelected: (Boolean => Callback) => Callback
   ) extends ReactFnProps(Body.component)
 
-  object Body:
+  private object Body:
     import ObsSummaryRow.*
 
     private type Props = Body
@@ -513,12 +554,12 @@ object ObsSummaryTable:
     val toggleAllRowsSelected: Lens[TileState, Option[Boolean => Callback]] =
       Focus[TileState](_.toggleAllRowsSelected)
 
-  case class Title(
+  private case class Title(
     columnVisibility:      View[ColumnVisibility],
     toggleAllRowsSelected: Option[Boolean => Callback]
   ) extends ReactFnProps(Title.component)
 
-  object Title:
+  private object Title:
     private type Props = Title
 
     private val component = ScalaFnComponent[Props]: props =>

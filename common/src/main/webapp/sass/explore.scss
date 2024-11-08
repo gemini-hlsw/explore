@@ -701,6 +701,7 @@ thead tr th.sticky-header {
 // Table toolbar
 // -----
 .explore-table-selection-toolbar {
+  justify-content: center;
   display: flex;
   gap: 0.5em;
   align-items: baseline;
