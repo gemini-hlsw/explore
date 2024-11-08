@@ -3,30 +3,30 @@
 
 package explore.components
 
+import crystal.react.View
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.ColumnId
-import lucuma.react.table.Table
+import lucuma.react.table.ColumnVisibility
 import lucuma.ui.table.ColumnSelector
 
-case class ColumnSelectorInTitle[T, TM](
-  columnNames: ColumnId => Option[String],
-  table:       Option[Table[T, TM]]
+case class ColumnSelectorInTitle(
+  allColumns:       List[(ColumnId, String)],
+  columnVisibility: View[ColumnVisibility]
 ) extends ReactFnProps(ColumnSelectorInTitle.component)
 
 object ColumnSelectorInTitle:
-  private type Props[A, B] = ColumnSelectorInTitle[A, B]
+  private type Props = ColumnSelectorInTitle
 
-  private def componentBuilder[A, B] =
-    ScalaFnComponent[Props[A, B]]: props =>
-      React.Fragment(
-        <.span, // Push column selector to right
-        <.span(ExploreStyles.TitleSelectColumns)(
-          props.table.map:
-            ColumnSelector(_, props.columnNames, ExploreStyles.SelectColumns)
+  private val component =
+    ScalaFnComponent[Props]: props =>
+      <.span(ExploreStyles.TitleSelectColumns)(
+        ColumnSelector(
+          props.allColumns,
+          props.columnVisibility.get,
+          colId => props.columnVisibility.mod(_.toggled(colId)),
+          ExploreStyles.SelectColumns
         )
       )
-
-  private val component = componentBuilder[Any, Any]

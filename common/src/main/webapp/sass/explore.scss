@@ -606,6 +606,10 @@ thead tr th.sticky-header {
 
     flex-shrink: 1;
   }
+
+  & > * {
+    flex: 1 1 0;
+  }
 }
 
 .explore-tile-title-menu {
@@ -617,29 +621,17 @@ thead tr th.sticky-header {
   min-width: 100px;
   display: flex;
   align-items: center;
-}
-
-.explore-tile-control {
-  display: flex;
-}
-
-.explore-tile-title-strip {
-  flex-grow: 1;
-  flex-shrink: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
+  flex: 0 0 auto;
 }
 
 .explore-tile-control-buttons {
   justify-self: end;
-  max-width: max-content;
+  flex: 0;
 }
 
-.justified-end-tile-control {
-  flex-grow: 1;
+.explore-tile-title-constraint-selector {
   display: flex;
-  justify-content: end;
+  justify-content: center;
 }
 
 .p-button.p-button-text.explore-tile-state-button {
@@ -691,6 +683,7 @@ thead tr th.sticky-header {
 // Table toolbar
 // -----
 .explore-table-selection-toolbar {
+  justify-content: center;
   display: flex;
   gap: 0.5em;
   align-items: baseline;
@@ -731,8 +724,8 @@ thead tr th.sticky-header {
 }
 
 .explore-itc-tile-title {
-  flex-grow: 1;
   display: grid;
+  justify-content: center;
   gap: 0 0.5em;
   font-size: smaller;
   grid-template-columns: repeat(3, minmax(min-content, 1fr));
@@ -753,8 +746,6 @@ thead tr th.sticky-header {
 
 @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
   .explore-itc-tile-title {
-    display: grid;
-    justify-content: end;
     grid-template-rows: 1fr;
     grid-template-columns: repeat(6, min-content);
 
@@ -813,7 +804,6 @@ thead tr th.sticky-header {
 
 .explore-obs-instant-tile-title {
   justify-content: center;
-  flex-grow: 0;
   font-size: smaller;
 
   @include small-tile-title;
@@ -1044,11 +1034,6 @@ thead tr th.sticky-header {
 
   .explore-tile-title-control-area {
     min-width: 60%;
-    flex-grow: 1;
-
-    .explore-tile-control {
-      justify-content: space-between;
-    }
 
     .explore-title-select-columns {
       display: none;
@@ -1309,18 +1294,10 @@ $search-preview-margin: 5px;
   padding-top: 1em;
 }
 
-.explore-tile-control:has(.explore-sequence-tile-title) {
-  justify-self: stretch;
-}
-
 .explore-sequence-tile-title {
   display: flex;
+  justify-content: center;
   gap: 1rem;
-
-  // Hide the info icon on small screens
-  > :first-child {
-    display: none;
-  }
 
   .explore-sequence-tile-title-item {
     font-weight: bold;
@@ -3180,12 +3157,8 @@ div.spectroscopy-table-emptymessage {
 
   .explore-proposal-attachments-tile {
     .explore-tile-title {
-      .explore-tile-title-control-area {
-        margin-right: auto;
-
-        a {
-          color: var(--site-text-color);
-        }
+      a {
+        color: var(--site-text-color);
       }
     }
   }
@@ -3305,6 +3278,7 @@ a.explore-upgrade-link {
 
 .finder-charts-selector-section {
   display: flex;
+  justify-content: center;
 
   .p-dropdown {
     min-width: 5ch;

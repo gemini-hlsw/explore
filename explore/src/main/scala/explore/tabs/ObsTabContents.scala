@@ -29,11 +29,12 @@ import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.*
+import explore.plots.ElevationPlotTile
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
-import explore.targeteditor.plots.ObjectPlotData
-import explore.targeteditor.plots.PlotData
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -50,8 +51,6 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.react.table.Expandable
-import lucuma.react.table.Table
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -151,11 +150,12 @@ object ObsTabContents extends TwoPanels:
           ExploreClipboard.get
             .flatMap:
               case LocalClipboard.CopiedObservations(obsIdSet) =>
-                cloneObs(props.programId,
-                         obsIdSet.idSet.toList,
-                         activeGroup,
-                         observations,
-                         ctx
+                cloneObs(
+                  props.programId,
+                  obsIdSet.idSet.toList,
+                  activeGroup,
+                  observations,
+                  ctx
                 ).void
                   .withToast(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
               case _                                           => IO.unit
@@ -270,26 +270,16 @@ object ObsTabContents extends TwoPanels:
             makeBackButton(props.programId, AppTab.Observations, twoPanelState, ctx)
 
           val obsSummaryTableTile: Tile[?] =
-            Tile(
-              ObsSummaryTabTileIds.SummaryId.id,
-              s"Observations Summary (${props.observations.get.toList.filterNot(_.isCalibration).length})",
-              none[Table[Expandable[ObsSummaryTable.ObsSummaryRow], Nothing]],
-              backButton.some,
-              canMinimize = false,
-              canMaximize = false
-            )(
-              ObsSummaryTable.Body(
-                props.vault.userId,
-                props.programId,
-                props.observations,
-                selectedObsIds,
-                props.groups.model,
-                props.obsExecutions,
-                props.targets.get,
-                props.programSummaries.get.allocatedScienceBands.size > 1,
-                _
-              ),
-              (s, _) => ObsSummaryTable.Title(s.get)
+            ObsSummaryTile(
+              props.vault.userId,
+              props.programId,
+              props.observations,
+              selectedObsIds,
+              props.groups.model,
+              props.obsExecutions,
+              props.targets.get,
+              props.programSummaries.get.allocatedScienceBands.size > 1,
+              backButton
             )
 
           val plotData: PlotData =
@@ -312,7 +302,7 @@ object ObsTabContents extends TwoPanels:
                 .toMap
 
           val skyPlotTile: Tile[?] =
-            ElevationPlotTile.elevationPlotTile(
+            ElevationPlotTile(
               props.vault.userId,
               ObsSummaryTabTileIds.PlotId.id,
               plotData,

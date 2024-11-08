@@ -11,6 +11,9 @@ import lucuma.react.aladin.Fov
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
 
+object AreAdding extends NewType[Boolean]
+type AreAdding = AreAdding.Type
+
 extension (options: AsterismVisualOptions) inline def fov: Fov = Fov(options.fovRA, options.fovDec)
 
 extension (fov: Fov)

@@ -19,9 +19,12 @@ import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.config.sequence.SequenceEditorTile
+import explore.config.ConfigurationTile
+import explore.config.sequence.SequenceTile
 import explore.constraints.ConstraintsPanel
+import explore.findercharts.FinderChartsTile
 import explore.itc.ItcProps
+import explore.itc.ItcTile
 import explore.model.*
 import explore.model.AppContext
 import explore.model.GuideStarSelection.*
@@ -39,10 +42,12 @@ import explore.model.extensions.*
 import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
+import explore.plots.ElevationPlotTile
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.syntax.ui.*
-import explore.targeteditor.plots.ObjectPlotData
-import explore.targeteditor.plots.PlotData
-import explore.timingwindows.TimingWindowsTile
+import explore.targeteditor.AsterismEditorTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -120,8 +125,7 @@ object ObsTabTiles:
     allConstraintSets: Set[ConstraintSet],
     isDisabled:        Boolean
   )(using FetchClient[IO, ObservationDB]): VdomNode =
-    <.div(
-      ExploreStyles.JustifiedEndTileControl,
+    <.div(ExploreStyles.TileTitleConstraintSelector)(
       Dropdown[ConstraintSet](
         value = constraintSet.get,
         disabled = isDisabled,
@@ -307,7 +311,7 @@ object ObsTabTiles:
                 case PosAngleConstraint.ParallacticOverride(angle) => angle.some
 
             val finderChartsTile =
-              FinderChartsTile.finderChartsTile(
+              FinderChartsTile(
                 props.programId,
                 props.obsId,
                 attachmentsView,
@@ -328,7 +332,7 @@ object ObsTabTiles:
             val notesTile = NotesTile.notesTile(props.obsId, notesView)
 
             val sequenceTile =
-              SequenceEditorTile.sequenceTile(
+              SequenceTile(
                 props.programId,
                 props.obsId,
                 props.obsExecution,
@@ -337,7 +341,7 @@ object ObsTabTiles:
               )
 
             val itcTile =
-              ItcTile.itcTile(
+              ItcTile(
                 props.vault.userId,
                 props.obsId,
                 props.obsTargets,
@@ -349,7 +353,7 @@ object ObsTabTiles:
             val constraints: View[ConstraintSet] =
               props.observation.model.zoom(Observation.constraints)
 
-            val timingWindows: View[List[TimingWindow]] =
+            val schedulingWindows: View[List[TimingWindow]] =
               TimingWindowsQueries.viewWithRemoteMod(
                 ObsIdSet.one(props.obsId),
                 props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
@@ -386,14 +390,14 @@ object ObsTabTiles:
 
             val skyPlotTile: Option[Tile[?]] =
               plotData.map:
-                ElevationPlotTile.elevationPlotTile(
+                ElevationPlotTile(
                   props.vault.userId,
                   ObsTabTileIds.PlotId.id,
                   _,
                   props.observation.get.observingMode.map(_.siteFor),
                   vizTimeView.get,
                   obsDuration.map(_.toDuration),
-                  timingWindows.get,
+                  schedulingWindows.get,
                   props.globalPreferences.get,
                   "No target selected"
                 )
@@ -426,7 +430,7 @@ object ObsTabTiles:
               setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
 
             val targetTile =
-              AsterismEditorTile.asterismEditorTile(
+              AsterismEditorTile(
                 props.vault.userId,
                 ObsTabTileIds.TargetId.id,
                 props.programId,
@@ -477,11 +481,11 @@ object ObsTabTiles:
                 (_, _) => constraintsSelector
               )
 
-            val timingWindowsTile =
-              TimingWindowsTile.timingWindowsPanel(timingWindows, props.isDisabled, false)
+            val schedulingWindowsTile =
+              SchedulingWindowsTile(schedulingWindows, props.isDisabled, false)
 
             val configurationTile: Tile[?] =
-              ConfigurationTile.configurationTile(
+              ConfigurationTile(
                 props.vault.userId,
                 props.programId,
                 props.obsId,
@@ -514,7 +518,7 @@ object ObsTabTiles:
                 if (!props.vault.isGuest) finderChartsTile.some else none,
                 skyPlotTile,
                 constraintsTile.some,
-                timingWindowsTile.some,
+                schedulingWindowsTile.some,
                 configurationTile.some,
                 sequenceTile.some,
                 itcTile.some

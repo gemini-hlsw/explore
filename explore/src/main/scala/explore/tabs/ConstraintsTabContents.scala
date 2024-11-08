@@ -13,12 +13,11 @@ import crystal.react.reuse.*
 import explore.*
 import explore.actions.ObservationPasteIntoConstraintSetAction
 import explore.common.TimingWindowsQueries
-import explore.components.ColumnSelectorInTitle
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
-import explore.constraints.ConstraintsSummaryTableBody
+import explore.constraints.ConstraintsSummaryTile
 import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
@@ -31,10 +30,9 @@ import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.timingwindows.TimingWindowsTile
-import explore.timingwindows.TimingWindowsTileState
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -50,8 +48,6 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.react.table.Table
-import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
 import monocle.Iso
@@ -204,26 +200,15 @@ object ConstraintsTabContents extends TwoPanels:
             .flatMap: ids =>
               findConstraintGroup(ids, props.programSummaries.get.constraintGroups)
                 .map(cg => (ids, cg))
-            .fold[VdomNode] {
-              Tile(
-                "constraints".refined,
-                "Constraints Summary",
-                none[Table[ConstraintGroup, Nothing]],
-                backButton.some,
-                canMinimize = false,
-                canMaximize = false
-              )(
-                tableView =>
-                  ConstraintsSummaryTableBody(
-                    props.userId,
-                    props.programId,
-                    props.programSummaries.get.constraintGroups,
-                    props.expandedIds,
-                    tableView.set.compose(_.some)
-                  ),
-                (s, _) => ColumnSelectorInTitle(ConstraintsSummaryTableBody.columnNames.get, s.get)
+            .fold[VdomNode](
+              ConstraintsSummaryTile(
+                props.userId,
+                props.programId,
+                props.programSummaries.get.constraintGroups,
+                props.expandedIds,
+                backButton
               )
-            } { case (idsToEdit, constraintGroup) =>
+            ) { case (idsToEdit, constraintGroup) =>
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
@@ -263,15 +248,15 @@ object ConstraintsTabContents extends TwoPanels:
                     )
                 )
 
-              val timingWindowsTile: Tile[TimingWindowsTileState] =
-                TimingWindowsTile.timingWindowsPanel(timingWindows, props.readonly, false)
+              val schedulingWindowsTile: Tile[SchedulingWindowsTile.TileState] =
+                SchedulingWindowsTile(timingWindows, props.readonly, false)
 
               TileController(
                 props.userId,
                 resize.width.getOrElse(1),
                 ExploreGridLayouts.sectionLayout(GridLayoutSection.ConstraintsLayout),
                 props.userPreferences.constraintsTabLayout,
-                List(constraintsTile, timingWindowsTile),
+                List(constraintsTile, schedulingWindowsTile),
                 GridLayoutSection.ConstraintsLayout,
                 None
               )

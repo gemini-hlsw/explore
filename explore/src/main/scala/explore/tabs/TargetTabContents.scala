@@ -31,14 +31,14 @@ import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
+import explore.plots.ElevationPlotTile
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.targeteditor.plots.ObjectPlotData
-import explore.targeteditor.plots.PlotData
+import explore.targeteditor.AsterismEditorTile
 import explore.targets.TargetPasteAction
-import explore.targets.TargetSummaryBody
-import explore.targets.TargetSummaryTileState
-import explore.targets.TargetSummaryTitle
+import explore.targets.TargetSummaryTile
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -332,13 +332,8 @@ object TargetTabContents extends TwoPanels:
           /**
            * Render the summary table.
            */
-          val renderSummary: Tile[TargetSummaryTileState] = Tile(
-            ObsTabTileIds.TargetSummaryId.id,
-            s"Target Summary (${props.targets.get.size})",
-            TargetSummaryTileState(Nil, none),
-            backButton.some
-          )(
-            TargetSummaryBody(
+          val renderSummary: Tile[TargetSummaryTile.TileState] =
+            TargetSummaryTile(
               props.userId,
               props.programId,
               props.targets.model,
@@ -348,10 +343,9 @@ object TargetTabContents extends TwoPanels:
               selectedTargetIds,
               props.focusedSummaryTargetId,
               focusTargetId,
-              _
-            ),
-            (s, _) => TargetSummaryTitle(props.programId, props.readonly, s)
-          )
+              props.readonly,
+              backButton
+            )
 
           val plotData: PlotData =
             PlotData:
@@ -543,7 +537,7 @@ object TargetTabContents extends TwoPanels:
                 )
 
             val asterismEditorTile =
-              AsterismEditorTile.asterismEditorTile(
+              AsterismEditorTile(
                 props.userId,
                 TargetTabTileIds.AsterismEditor.id,
                 props.programId,
@@ -580,7 +574,7 @@ object TargetTabContents extends TwoPanels:
               )
 
             val skyPlotTile: Tile[?] =
-              ElevationPlotTile.elevationPlotTile(
+              ElevationPlotTile(
                 props.userId,
                 TargetTabTileIds.ElevationPlot.id,
                 plotData,
@@ -635,7 +629,7 @@ object TargetTabContents extends TwoPanels:
           }
 
           val skyPlotTile: Tile[?] =
-            ElevationPlotTile.elevationPlotTile(
+            ElevationPlotTile(
               props.userId,
               TargetTabTileIds.ElevationPlot.id,
               plotData,
