@@ -32,11 +32,10 @@ object ItcSpectroscopyPlotDescription {
   type Props = ItcSpectroscopyPlotDescription
 
   val component = ScalaFnComponent[Props] { props =>
-    val finalSN: String  = props.finalSN.fold("-")(u => formatSN(u.value))
-    val singleSN: String = props.singleSN.fold("-")(u => formatSN(u.value))
-    val brightness       = props.brightness.fold("-") { case (band, value, units) =>
-      f"${band.shortName}: $value%.2f  $units"
-    }
+    val finalSN: String    = props.finalSN.fold("-")(u => formatSN(u.value))
+    val singleSN: String   = props.singleSN.fold("-")(u => formatSN(u.value))
+    val brightness: String =
+      props.brightness.fold("-")((band, value, units) => f"${band.shortName}: $value%.2f  $units")
 
     <.div(
       ExploreStyles.ItcPlotDescription,
