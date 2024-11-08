@@ -36,6 +36,7 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.react.given
 import monocle.std.option.*
+
 import scala.collection.immutable.TreeSeqMap
 
 object TargetColumns:

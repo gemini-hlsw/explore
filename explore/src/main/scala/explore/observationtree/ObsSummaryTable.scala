@@ -58,13 +58,13 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
+import monocle.Focus
+import monocle.Lens
 import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.TreeSeqMap
-import monocle.Lens
-import monocle.Focus
 
 object ObsSummaryTable:
   private val ObservationIdColumnId = ColumnId("observation_id")

@@ -27,9 +27,9 @@ import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
 import explore.observationtree.SchedulingGroupObsList
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.schedulingWindows.SchedulingWindowsTile
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -52,7 +52,6 @@ import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
-import explore.schedulingWindows.SchedulingWindowsTile
 
 case class SchedulingTabContents(
   programId:        Program.Id,

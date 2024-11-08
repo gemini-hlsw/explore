@@ -3,10 +3,13 @@
 
 package explore.targeteditor
 
+import cats.effect.IO
 import cats.syntax.all.*
+import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.ColumnSelectorInTitle
+import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
@@ -22,6 +25,7 @@ import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
+import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import explore.targets.TargetColumns
 import explore.undo.UndoSetter
@@ -31,25 +35,18 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.ColumnVisibility
-import lucuma.react.table.Table
-import lucuma.schemas.model.SiderealTargetWithId
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import explore.model.enums.TileSizeState
-import explore.components.Tile
-import lucuma.schemas.model.BasicConfiguration
-import clue.FetchClient
-import cats.effect.IO
-import lucuma.schemas.ObservationDB
-import queries.schemas.odb.ObsQueries
 import org.typelevel.log4cats.Logger
+import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 

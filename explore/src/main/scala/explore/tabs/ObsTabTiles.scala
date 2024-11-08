@@ -39,10 +39,11 @@ import explore.model.extensions.*
 import explore.model.layout.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.syntax.ui.*
+import explore.targeteditor.AsterismEditorTile
 import explore.targeteditor.plots.ObjectPlotData
 import explore.targeteditor.plots.PlotData
-import explore.schedulingWindows.SchedulingWindowsTile
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -76,7 +77,6 @@ import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries
-import explore.targeteditor.AsterismEditorTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap

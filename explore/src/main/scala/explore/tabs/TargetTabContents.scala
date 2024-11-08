@@ -33,6 +33,7 @@ import explore.model.syntax.all.*
 import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.targeteditor.AsterismEditorTile
 import explore.targeteditor.plots.ObjectPlotData
 import explore.targeteditor.plots.PlotData
 import explore.targets.TargetPasteAction
@@ -63,7 +64,6 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
-import explore.targeteditor.AsterismEditorTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet

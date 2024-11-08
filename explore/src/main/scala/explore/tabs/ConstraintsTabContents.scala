@@ -13,7 +13,6 @@ import crystal.react.reuse.*
 import explore.*
 import explore.actions.ObservationPasteIntoConstraintSetAction
 import explore.common.TimingWindowsQueries
-import explore.components.ColumnSelectorInTitle
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
@@ -31,9 +30,9 @@ import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
 import explore.observationtree.ConstraintGroupObsList
+import explore.schedulingWindows.SchedulingWindowsTile
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.schedulingWindows.SchedulingWindowsTile
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
