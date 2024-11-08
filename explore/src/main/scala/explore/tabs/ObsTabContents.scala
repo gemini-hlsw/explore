@@ -32,8 +32,8 @@ import explore.observationtree.*
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
-import explore.targeteditor.plots.ObjectPlotData
-import explore.targeteditor.plots.PlotData
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -56,6 +56,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import explore.plots.ElevationPlotTile
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -301,7 +302,7 @@ object ObsTabContents extends TwoPanels:
                 .toMap
 
           val skyPlotTile: Tile[?] =
-            ElevationPlotTile.elevationPlotTile(
+            ElevationPlotTile(
               props.vault.userId,
               ObsSummaryTabTileIds.PlotId.id,
               plotData,

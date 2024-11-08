@@ -34,8 +34,8 @@ import explore.observationtree.AsterismGroupObsList
 import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.targeteditor.AsterismEditorTile
-import explore.targeteditor.plots.ObjectPlotData
-import explore.targeteditor.plots.PlotData
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryBody
 import explore.targets.TargetSummaryTileState
@@ -64,6 +64,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
+import explore.plots.ElevationPlotTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
@@ -581,7 +582,7 @@ object TargetTabContents extends TwoPanels:
               )
 
             val skyPlotTile: Tile[?] =
-              ElevationPlotTile.elevationPlotTile(
+              ElevationPlotTile(
                 props.userId,
                 TargetTabTileIds.ElevationPlot.id,
                 plotData,
@@ -636,7 +637,7 @@ object TargetTabContents extends TwoPanels:
           }
 
           val skyPlotTile: Tile[?] =
-            ElevationPlotTile.elevationPlotTile(
+            ElevationPlotTile(
               props.userId,
               TargetTabTileIds.ElevationPlot.id,
               plotData,

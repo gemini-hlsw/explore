@@ -42,8 +42,8 @@ import explore.observationtree.obsEditAttachments
 import explore.schedulingWindows.SchedulingWindowsTile
 import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
-import explore.targeteditor.plots.ObjectPlotData
-import explore.targeteditor.plots.PlotData
+import explore.plots.ObjectPlotData
+import explore.plots.PlotData
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -78,6 +78,7 @@ import queries.common.ObsQueriesGQL.*
 import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries
 import explore.itc.ItcTile
+import explore.plots.ElevationPlotTile
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -387,7 +388,7 @@ object ObsTabTiles:
 
             val skyPlotTile: Option[Tile[?]] =
               plotData.map:
-                ElevationPlotTile.elevationPlotTile(
+                ElevationPlotTile(
                   props.vault.userId,
                   ObsTabTileIds.PlotId.id,
                   _,
