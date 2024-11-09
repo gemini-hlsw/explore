@@ -52,6 +52,6 @@ object ProgramDetails:
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]
-      pm <- c.downField("goa").downField("proprietaryMonths").as[Int]
-    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as, pm)
+      // pm <- c.downField("goa").downField("proprietaryMonths").as[Int]
+    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as, 2)
   )
