@@ -284,15 +284,16 @@ object AladinCell extends ModelOptics with AladinCommon:
               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
             yield ()
       // Reset selection if pos angle changes except for manual selection changes
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.obsConf.flatMap(_.posAngleConstraint)):
-        (p, ctx, candidates, _, _, _, _) =>
-          _ =>
-            (p.obsConf
-              .flatMap(_.agsState)
-              .foldMap(
-                _.set(AgsState.Calculating)
-              ) *> p.guideStarSelection.set(GuideStarSelection.Default))
-              .whenA(p.needsAGS && candidates.toOption.flatten.nonEmpty)
+      .useEffectWithDepsBy((props, _, _, _, _, _, _) =>
+        props.obsConf.flatMap(_.posAngleConstraint)
+      ): (props, ctx, candidates, _, _, _, _) =>
+        _ =>
+          (props.obsConf
+            .flatMap(_.agsState)
+            .foldMap(
+              _.set(AgsState.Calculating)
+            ) *> props.guideStarSelection.set(GuideStarSelection.Default))
+            .whenA(props.needsAGS && candidates.toOption.flatten.nonEmpty)
       // Request ags calculation
       .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
         (p.asterism.baseTracking,

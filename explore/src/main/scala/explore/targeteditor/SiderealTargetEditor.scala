@@ -28,7 +28,6 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
-import explore.model.reusability.siderealTargetReusability
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -81,8 +80,6 @@ case class SiderealTargetEditor(
 
 object SiderealTargetEditor:
   private type Props = SiderealTargetEditor
-
-  private given Reusability[Instant] = siderealTargetReusability
 
   private def cloneTarget(
     programId:     Program.Id,
@@ -169,7 +166,7 @@ object SiderealTargetEditor:
       .useStateView(false)          // cloning
       .useStateView(none[ObsIdSet]) // obs ids to clone to.
       // If obsTime is not set, change it to now
-      .useEffectKeepResultWithDepsBy((p, _, _, _) => p.obsTime): (_, _, _, _) =>
+      .useEffectKeepResultWithDepsBy((props, _, _, _) => props.obsTime): (_, _, _, _) =>
         obsTime => IO(obsTime.getOrElse(Instant.now()))
       // select the aligner to use based on whether a clone will be created or not.
       .useMemoBy((props, _, _, toCloneTo, _) =>
@@ -318,12 +315,12 @@ object SiderealTargetEditor:
         React.Fragment(
           TargetCloneSelector(props.obsInfo, obsToCloneTo),
           <.div(ExploreStyles.TargetGrid)(
-            obsTime.renderPot(vt =>
+            obsTime.renderPot(ot =>
               AladinCell(
                 props.userId,
                 oid,
                 props.asterism,
-                vt,
+                ot,
                 props.obsConf,
                 props.fullScreen,
                 props.globalPreferences,
