@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop-react-beautiful-dnd-migration": "1.2.2",
+    "@atlaskit/pragmatic-drag-and-drop-react-beautiful-dnd-migration": "1.2.4",
     "@cquiroz/aladin-lite": "0.7.7",
     "@floating-ui/react": "^0.26.24",
     "@fontsource/lato": "^5.1.0",
