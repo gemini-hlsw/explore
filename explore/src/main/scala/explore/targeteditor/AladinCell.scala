@@ -36,6 +36,8 @@ import explore.optics.ModelOptics
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.*
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -56,8 +58,6 @@ import queries.schemas.UserPreferencesDB
 
 import java.time.Instant
 import scala.concurrent.duration.*
-import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosSouthFpu
 
 case class AladinCell(
   uid:                User.Id,
