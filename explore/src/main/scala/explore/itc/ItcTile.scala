@@ -28,6 +28,10 @@ import explore.model.itc.ItcTarget
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Band
+import lucuma.core.math.BrightnessValue
+import lucuma.core.math.dimensional.Units
+import lucuma.core.model.SourceProfile
 import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.itc.GraphType
@@ -125,6 +129,21 @@ object ItcTile:
                 c <- r.toOption
               yield c
 
+            val selectedTargetBrightness: Option[(Band, BrightnessValue, Units)] =
+              for
+                t   <- selectedTarget
+                sp   = t.input.sourceProfile
+                r   <- selectedResult
+                band = r.timeAndGraphs.integrationTime.band
+                b   <- SourceProfile.integratedBrightnesses
+                         .getOption(sp)
+                         .flatMap(_.get(band))
+                         .orElse:
+                           SourceProfile.surfaceBrightnesses
+                             .getOption(sp)
+                             .flatMap(_.get(band))
+              yield (band, b.value, b.units)
+
             val isModeSelected: Boolean =
               props.itcGraphQuerier.selectedConfig.isDefined || selectedResult.isDefined
 
@@ -156,7 +175,7 @@ object ItcTile:
               ExploreStyles.ItcPlotDetailsHidden.unless(detailsView.get.value)
             )(
               ItcSpectroscopyPlotDescription(
-                selectedTarget.flatMap(props.itcGraphQuerier.targetBrightness),
+                selectedTargetBrightness,
                 selectedResult.map(_.itcExposureTime),
                 selectedResult.map(_.ccds),
                 selectedResult.map(_.finalSNRatio),

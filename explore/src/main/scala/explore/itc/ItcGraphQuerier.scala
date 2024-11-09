@@ -21,12 +21,8 @@ import explore.model.reusability.given
 import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
 import japgolly.scalajs.react.Reusability
-import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessValue
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
-import lucuma.core.math.dimensional.Units
-import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.schemas.model.CentralWavelength
 import lucuma.ui.reusability.given
@@ -108,13 +104,6 @@ case class ItcGraphQuerier(
     ).tupled
 
   val isExecutable: Boolean = queryProps.isDefined
-
-  def targetBrightness(target: ItcTarget): Option[(Band, BrightnessValue, Units)] =
-    for
-      w <- wavelength
-      t <- itcTargets.flatMap(_.find(_ === target))
-      b <- t.sourceProfile.nearestBand(w.value)
-    yield b
 
   // Returns graphs for each target and the brightest target
   def requestGraphs(using
