@@ -56,8 +56,8 @@ object ElevationPlotTile:
     tileId:            NonEmptyString,
     plotData:          PlotData,
     site:              Option[Site],
-    vizTime:           Option[Instant],
-    pendingTime:       Option[Duration],
+    obsTime:           Option[Instant],
+    obsDuration:       Option[Duration],
     timingWindows:     List[TimingWindow] = List.empty,
     globalPreferences: GlobalPreferences,
     emptyMessage:      String
@@ -73,8 +73,8 @@ object ElevationPlotTile:
             uid,
             plotData,
             site,
-            vizTime,
-            pendingTime,
+            obsTime,
+            obsDuration,
             timingWindows,
             globalPreferences,
             emptyMessage
@@ -90,8 +90,8 @@ object ElevationPlotTile:
     userId:            User.Id,
     plotData:          PlotData,
     site:              Option[Site],
-    visualizationTime: Option[Instant],
-    pendingTime:       Option[Duration],
+    obsTime:           Option[Instant],
+    obsDuration:       Option[Duration],
     timingWindows:     List[TimingWindow],
     globalPreferences: GlobalPreferences,
     emptyMessage:      String
@@ -109,7 +109,7 @@ object ElevationPlotTile:
           ObjectPlotOptions
             .default(
               props.site,
-              props.visualizationTime,
+              props.obsTime,
               props.plotData.value.headOption.map(_._2.tracking)
             )
             .copy(
@@ -135,8 +135,8 @@ object ElevationPlotTile:
         .useEffectWithDepsBy((props, _, _) => props.site): (props, _, options) =>
           _.map(options.zoom(ObjectPlotOptions.site).set).orEmpty
         // If visualization time changes, switch to it.
-        .useEffectWithDepsBy((props, _, _) => props.visualizationTime): (props, _, options) =>
-          _.map(vt => options.mod(_.withDateAndSemesterOf(vt))).orEmpty
+        .useEffectWithDepsBy((props, _, _) => props.obsTime): (props, _, options) =>
+          _.map(ot => options.mod(_.withDateAndSemesterOf(ot))).orEmpty
         .render: (props, ctx, elevationPlotOptions) =>
           import ctx.given
 
@@ -199,7 +199,8 @@ object ElevationPlotTile:
                     props.plotData,
                     dateView.get.atStartOfDay.toInstant(ZoneOffset.UTC),
                     windowsNetExcludeIntervals,
-                    props.pendingTime,
+                    props.obsTime,
+                    props.obsDuration,
                     options,
                     props.emptyMessage
                   )

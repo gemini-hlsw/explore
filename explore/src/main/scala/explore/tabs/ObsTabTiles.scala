@@ -243,12 +243,11 @@ object ObsTabTiles:
             val posAngleConstraintView: View[PosAngleConstraint] =
               props.observation.model
                 .zoom(Observation.posAngleConstraint)
-                .withOnMod(pa =>
+                .withOnMod: pa =>
                   ObsQueries
                     .updatePosAngle[IO](List(props.obsId), pa)
                     .switching(agsState.async, AgsState.Saving, AgsState.Idle)
                     .runAsync
-                )
 
             val asterismIds: View[AsterismIds] =
               props.observation.model.zoom(Observation.scienceTargetIds)
@@ -256,10 +255,10 @@ object ObsTabTiles:
             val basicConfiguration: Option[BasicConfiguration] =
               props.observation.get.observingMode.map(_.toBasicConfiguration)
 
-            val vizTimeView: View[Option[Instant]] =
+            val obsTimeView: View[Option[Instant]] =
               props.observation.model.zoom(Observation.observationTime)
 
-            val vizDurationView: View[Option[TimeSpan]] =
+            val obsDurationView: View[Option[TimeSpan]] =
               props.observation.model.zoom(Observation.observationDuration)
 
             val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
@@ -396,7 +395,7 @@ object ObsTabTiles:
                   ObsTabTileIds.PlotId.id,
                   _,
                   props.observation.get.observingMode.map(_.siteFor),
-                  vizTimeView.get,
+                  obsTimeView.get,
                   obsDuration.map(_.toDuration),
                   schedulingWindows.get,
                   props.globalPreferences.get,
@@ -438,8 +437,8 @@ object ObsTabTiles:
                 ObsIdSet.one(props.obsId),
                 props.obsAndTargets,
                 basicConfiguration,
-                vizTimeView,
-                vizDurationView,
+                obsTimeView,
+                obsDurationView,
                 obsConf,
                 pendingTime,
                 props.focusedTarget,

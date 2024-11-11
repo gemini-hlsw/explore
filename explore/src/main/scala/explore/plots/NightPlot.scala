@@ -45,7 +45,8 @@ case class NightPlot(
   plotData:         PlotData,
   coordsTime:       Instant,
   excludeIntervals: List[BoundedInterval[Instant]],
-  pendingTime:      Option[Duration],
+  obsTime:          Option[Instant],
+  obsDuration:      Option[Duration],
   options:          View[ObjectPlotOptions],
   emptyMessage:     String
 ) extends ReactFnProps(NightPlot.component)
@@ -160,13 +161,12 @@ object NightPlot:
         (props.plotData,
          props.options.get,
          chartAndMoonData,
-         props.pendingTime,
+         props.obsTime,
+         props.obsDuration,
          props.excludeIntervals
         )
       ): (_, observingNight, bounds, _) =>
-        (plotData, opts, chartAndMoonData, pendingTime, excludeIntervals) =>
-          val start: Instant = bounds._1
-
+        (plotData, opts, chartAndMoonData, obsTime, obsDuration, excludeIntervals) =>
           val isSingleTargetPlot: Boolean = plotData.value.size === 1
 
           val chartData: MapView[ObjectPlotData.Id, ObjectPlotData.SeriesData] =
@@ -271,13 +271,14 @@ object NightPlot:
               if isSingleTargetPlot then "Target is below horizon"
               else "All targets are below horizon"
 
+          // Fill out observation time
           val zones: Option[js.Array[SeriesZonesOptionsObject]] =
-            pendingTime.map: pt =>
+            (obsTime, obsDuration).mapN: (t, d) =>
               js.Array(
                 SeriesZonesOptionsObject()
-                  .setValue(start.toEpochMilli.toDouble),
+                  .setValue(t.toEpochMilli.toDouble),
                 SeriesZonesOptionsObject()
-                  .setValue(start.plus(pt).toEpochMilli.toDouble)
+                  .setValue(t.plus(d).toEpochMilli.toDouble)
                   .setClassName("elevation-plot-visualization-period")
               )
 
