@@ -44,6 +44,7 @@ import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import monocle.Focus
+import monocle.Iso
 import org.scalajs.dom.File as DOMFile
 
 import scala.collection.immutable.SortedSet
@@ -81,7 +82,7 @@ object TargetSummaryTile:
           focusedTargetId,
           focusTargetId,
           tileState.get.filesToImport.size,
-          tileState.get.columnVisibility,
+          tileState.zoom(TileState.columnVisibility),
           tileState.zoom(TileState.toggleAllRowsSelected).set.compose(_.some)
         ),
       (tileState, _) =>
@@ -130,7 +131,7 @@ object TargetSummaryTile:
     focusedTargetId:          Option[Target.Id],
     focusTargetId:            Option[Target.Id] => Callback,
     filesToImportCount:       Int,
-    columnVisibility:         ColumnVisibility,
+    columnVisibility:         View[ColumnVisibility],
     setToggleAllRowsSelected: (Boolean => Callback) => Callback
   ) extends ReactFnProps(Body.component)
 
@@ -231,18 +232,20 @@ object TargetSummaryTile:
         .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
           import ctx.given
 
-          def targetIds2RowSelection: List[Target.Id] => RowSelection = targetIds =>
-            RowSelection(
-              targetIds.map(targetId => RowId(targetId.toString) -> true).toMap
+          val targetIds2RowSelection: Iso[List[Target.Id], RowSelection] =
+            Iso[List[Target.Id], RowSelection](targetIds =>
+              RowSelection:
+                targetIds.map(targetId => RowId(targetId.toString) -> true).toMap
+            )(selection =>
+              selection.value
+                .filter(_._2)
+                .keys
+                .toList
+                .map(rowId => Target.Id.parse(rowId.value))
+                .flattenOption
             )
 
-          def rowSelection2TargetIds: RowSelection => List[Target.Id] = selection =>
-            selection.value
-              .filter(_._2)
-              .keys
-              .toList
-              .map(rowId => Target.Id.parse(rowId.value))
-              .flattenOption
+          val rowSelection: View[RowSelection] = props.selectedTargetIds.as(targetIds2RowSelection)
 
           TableOptionsWithStateStore(
             TableOptions(
@@ -254,17 +257,12 @@ object TargetSummaryTile:
               columnResizeMode = ColumnResizeMode.OnChange,
               enableMultiRowSelection = true,
               state = PartialTableState(
-                columnVisibility = props.columnVisibility,
-                rowSelection = targetIds2RowSelection(props.selectedTargetIds.get)
+                columnVisibility = props.columnVisibility.get,
+                rowSelection = rowSelection.get
               ),
-              onRowSelectionChange = (u: Updater[RowSelection]) =>
-                (u match
-                  case Updater.Set(selection) =>
-                    props.selectedTargetIds.set(rowSelection2TargetIds(selection))
-                  case Updater.Mod(f)         =>
-                    props.selectedTargetIds.mod: targetIds =>
-                      rowSelection2TargetIds(f(targetIds2RowSelection(targetIds)))
-                ) >> props.focusTargetId(none) // Unselect edited target if rows are selected.
+              onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod),
+              onRowSelectionChange =
+                stateInViewHandler(rowSelection.mod(_) >> props.focusTargetId(none))
             ),
             TableStore(props.userId, TableId.TargetsSummary, cols)
           )

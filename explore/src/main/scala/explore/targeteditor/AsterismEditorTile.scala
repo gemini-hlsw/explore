@@ -111,7 +111,7 @@ object AsterismEditorTile:
             guideStarSelection,
             readonly,
             sequenceChanged,
-            tileState.get.columnVisibility,
+            tileState.zoom(TileState.columnVisibility),
             tileState.zoom(TileState.obsEditInfo)
           ),
       (tileState, tileSize) =>
@@ -161,7 +161,7 @@ object AsterismEditorTile:
     guideStarSelection: View[GuideStarSelection],
     readonly:           Boolean,
     sequenceChanged:    Callback,
-    columnVisibility:   ColumnVisibility,
+    columnVisibility:   View[ColumnVisibility],
     obsEditInfo:        View[Option[ObsIdSetEditInfo]]
   ) extends ReactFnProps(Body.component):
     val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)

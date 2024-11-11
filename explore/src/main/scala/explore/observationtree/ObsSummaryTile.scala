@@ -61,6 +61,7 @@ import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import monocle.Focus
+import monocle.Iso
 import monocle.Lens
 import queries.schemas.odb.ObsQueries.ObservationList
 
@@ -98,7 +99,7 @@ object ObsSummaryTile:
           obsExecutions,
           allTargets,
           showScienceBand,
-          s.get.columnVisibility,
+          s.zoom(TileState.columnVisibility).withOnMod(Callback.log(_)),
           cb => s.zoom(TileState.toggleAllRowsSelected).set(cb.some)
         ),
       (s, _) =>
@@ -182,7 +183,7 @@ object ObsSummaryTile:
     obsExecutions:            ObservationExecutionMap,
     allTargets:               TargetList,
     showScienceBand:          Boolean,
-    columnVisibility:         ColumnVisibility,
+    columnVisibility:         View[ColumnVisibility],
     setToggleAllRowsSelected: (Boolean => Callback) => Callback
   ) extends ReactFnProps(Body.component)
 
@@ -384,17 +385,20 @@ object ObsSummaryTile:
       .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
         import ctx.given
 
-        def obsIds2RowSelection: List[Observation.Id] => RowSelection = obsIds =>
-          RowSelection:
-            obsIds.map(obsId => RowId(obsId.toString) -> true).toMap
+        val obsIds2RowSelection: Iso[List[Observation.Id], RowSelection] =
+          Iso[List[Observation.Id], RowSelection](obsIds =>
+            RowSelection:
+              obsIds.map(obsId => RowId(obsId.toString) -> true).toMap
+          )(selection =>
+            selection.value
+              .filter(_._2)
+              .keys
+              .toList
+              .map(rowId => Observation.Id.parse(rowId.value))
+              .flattenOption
+          )
 
-        def rowSelection2ObsIds: RowSelection => List[Observation.Id] = selection =>
-          selection.value
-            .filter(_._2)
-            .keys
-            .toList
-            .map(rowId => Observation.Id.parse(rowId.value))
-            .flattenOption
+        val rowSelection: View[RowSelection] = props.selectedObsIds.as(obsIds2RowSelection)
 
         TableOptionsWithStateStore(
           TableOptions(
@@ -411,18 +415,11 @@ object ObsSummaryTile:
             ,
             enableMultiRowSelection = true,
             state = PartialTableState(
-              rowSelection = obsIds2RowSelection(props.selectedObsIds.get),
-              columnVisibility = props.columnVisibility
+              rowSelection = rowSelection.get,
+              columnVisibility = props.columnVisibility.get
             ),
-            onRowSelectionChange = (u: Updater[RowSelection]) =>
-              u match
-                case Updater.Set(selection) =>
-                  props.selectedObsIds.set(rowSelection2ObsIds(selection))
-                case Updater.Mod(f)         =>
-                  props.selectedObsIds.mod: targetIds =>
-                    rowSelection2ObsIds(f(obsIds2RowSelection(targetIds)))
-            ,
-            initialState = TableState(columnVisibility = DefaultColVisibility)
+            onRowSelectionChange = stateInViewHandler(rowSelection.mod),
+            onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod)
           ),
           TableStore(
             props.userId,
@@ -463,7 +460,8 @@ object ObsSummaryTile:
                   props.selectedObsIds.get.contains_(row.original.value.obs.id)
               ,
               ExploreStyles.TableRowSelectedEnd.when:
-                row.original.value.isLastAsterismTargetOf.exists(props.selectedObsIds.get.contains_)
+                row.original.value.isLastAsterismTargetOf
+                  .exists(props.selectedObsIds.get.contains_)
               ,
               ^.onClick ==> table
                 .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
@@ -489,6 +487,7 @@ object ObsSummaryTile:
             ).tiny.compact
           )
         )
+  end Body
 
   // 24 October 2024 - scalafix failing to parse with fewer braces
   // Helper ADT for table rows type

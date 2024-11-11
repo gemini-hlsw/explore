@@ -14,6 +14,7 @@ import clue.data.syntax.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.*
 import explore.DefaultErrorPolicy
+import explore.givens.given
 import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.AsterismVisualOptions
@@ -438,30 +439,26 @@ object UserPreferencesQueries:
       extends TableStateStore[F]:
     def load(): F[TableState => TableState] =
       userId
-        .traverse { uid =>
+        .traverse: uid =>
           TableColumnPreferencesQuery[F]
             .query(
               userId = uid.show.assign,
               tableId = tableId.assign
             )
-            .recoverWith(t =>
+            .recoverWith: t =>
               Logger[F]
                 .error(t)(s"Error loading table preferences for [$tableId]")
                 .as(TableColumnPreferencesQuery.Data(Nil))
-            )
-            .map(prefs =>
+            .map: prefs =>
               (tableState: TableState) =>
                 tableState
-                  .setColumnVisibility(
+                  .setColumnVisibility:
                     prefs.lucumaTableColumnPreferences.applyVisibility(
                       tableState.columnVisibility,
                       excludeFromVisibility
                     )
-                  )
                   .setSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
-            )
-        }
-        .map(_.getOrElse(identity))
+        .map(_.orEmpty)
 
     def save(state: TableState): F[Unit] =
       userId.traverse { uid =>
