@@ -19,7 +19,6 @@ import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.enums.Visible
 import explore.model.reusability.given
-import explore.model.reusability.siderealTargetReusability
 import explore.visualization.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability.*
@@ -50,7 +49,7 @@ import scala.concurrent.duration.*
 
 case class AladinContainer(
   asterism:               Asterism,
-  vizTime:                Instant,
+  obsTime:                Instant,
   obsConf:                Option[ObsConfiguration],
   globalPreferences:      GlobalPreferences,
   options:                AsterismVisualOptions,
@@ -59,7 +58,9 @@ case class AladinContainer(
   updateViewOffset:       Offset => Callback,
   selectedGuideStar:      Option[AgsAnalysis],
   guideStarCandidates:    List[AgsAnalysis]
-) extends ReactFnProps(AladinContainer.component)
+) extends ReactFnProps(AladinContainer.component):
+  val siderealDiscretizedObsTime: SiderealDiscretizedObsTime =
+    SiderealDiscretizedObsTime(obsTime, obsConf.flatMap(_.posAngleConstraint))
 
 object AladinContainer extends AladinCommon {
 
@@ -77,8 +78,6 @@ object AladinContainer extends AladinCommon {
 
   private given Reusability[List[AgsAnalysis]] = Reusability.by(_.length)
 
-  private given Reusability[Instant] = siderealTargetReusability
-
   private val AladinComp = Aladin.component
 
   private def speedCss(gs: GuideSpeed): Css =
@@ -92,14 +91,14 @@ object AladinContainer extends AladinCommon {
 
   private def baseAndScience(p: Props) = {
     val base: CoordinatesAtVizTime = p.asterism.baseTracking
-      .at(p.vizTime)
+      .at(p.obsTime)
       .getOrElse(CoordinatesAtVizTime(p.asterism.baseTracking.baseCoordinates))
 
     val science = p.asterism.toSidereal
       .map(t =>
         (t.id === p.asterism.focus.id,
          t.target.name,
-         t.target.tracking.at(p.vizTime),
+         t.target.tracking.at(p.obsTime),
          t.target.tracking.baseCoordinates
         )
       )
@@ -114,8 +113,8 @@ object AladinContainer extends AladinCommon {
       // View coordinates base coordinates with pm correction + user panning
       .useStateBy: (p, baseCoordinates) =>
         baseCoordinates.value._1.value.offsetBy(Angle.Angle0, p.options.viewOffset)
-      // Update coordinates if asterism or vizTime changes
-      .useEffectWithDepsBy((p, _, _) => (p.asterism, p.vizTime)):
+      // Update coordinates if asterism or obsTime changes
+      .useEffectWithDepsBy((props, _, _) => (props.asterism, props.obsTime)):
         (p, baseCoordinates, currentPos) =>
           _ =>
             val (base, science) = baseAndScience(p)
@@ -170,7 +169,7 @@ object AladinContainer extends AladinCommon {
          props.globalPreferences.showCatalog,
          props.globalPreferences.fullScreen,
          props.options.fovRA,
-         props.vizTime,
+         props.siderealDiscretizedObsTime,
          props.obsConf.flatMap(_.configuration),
          props.selectedGuideStar,
          allCoordinates
@@ -181,7 +180,7 @@ object AladinContainer extends AladinCommon {
           visible,
           _,
           fovRA,
-          obsInstant,
+          siderealDiscretizedObsTime,
           configuration,
           selectedGS,
           allCoordinates
@@ -221,8 +220,8 @@ object AladinContainer extends AladinCommon {
                     case m                                                    =>
                       ExploreStyles.VignettedGS
 
-                  (tracking.at(targetEpochInstant), tracking.at(obsInstant)).mapN {
-                    (source, dest) =>
+                  (tracking.at(targetEpochInstant), tracking.at(siderealDiscretizedObsTime.obsTime))
+                    .mapN { (source, dest) =>
                       if (candidates.length < 500) {
                         List[SVGTarget](
                           if (selectedGS.forall(_.target.id === g.target.id)) {
@@ -255,7 +254,7 @@ object AladinContainer extends AladinCommon {
                           }
                         )
                       }
-                  }
+                    }
                 }
                 .flatten
             }

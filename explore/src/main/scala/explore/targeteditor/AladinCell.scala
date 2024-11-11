@@ -31,7 +31,6 @@ import explore.model.boopickle.CatalogPicklers.given
 import explore.model.enums.AgsState
 import explore.model.enums.Visible
 import explore.model.reusability.given
-import explore.model.reusability.siderealTargetReusability
 import explore.optics.ModelOptics
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -71,6 +70,9 @@ case class AladinCell(
 ) extends ReactFnProps(AladinCell.component):
   val needsAGS: Boolean =
     obsConf.exists(_.needGuideStar)
+
+  val siderealDiscretizedObsTime: SiderealDiscretizedObsTime =
+    SiderealDiscretizedObsTime(obsTime, obsConf.flatMap(_.posAngleConstraint))
 
   val anglesToTest: Option[NonEmptyList[Angle]] =
     for
@@ -146,8 +148,6 @@ object AladinCell extends ModelOptics with AladinCommon:
   import GuideStarSelection.*
 
   private type Props = AladinCell
-
-  private given Reusability[Instant] = siderealTargetReusability
 
   // only compare candidates by id
   private given Reusability[GuideStarCandidate] = Reusability.by(_.id)
@@ -225,23 +225,27 @@ object AladinCell extends ModelOptics with AladinCommon:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       // Request guide star candidates if obsTime changes more than a month or the base moves
-      .useEffectKeepResultWithDepsBy((p, _) => (p.obsTime, p.asterism.baseTracking)):
-        (props, ctx) =>
-          (obsTime, baseTracking) =>
-            import ctx.given
+      .useEffectResultWithDepsBy((props, _) =>
+        (props.siderealDiscretizedObsTime, props.asterism.baseTracking)
+      ): (props, ctx) =>
+        (siderealDiscretizedObsTime, baseTracking) =>
+          import ctx.given
 
-            if (props.needsAGS)
-              (for
-                _          <- props.obsConf
-                                .flatMap(_.agsState)
-                                .foldMap(_.async.set(AgsState.LoadingCandidates))
-                candidates <- CatalogClient[IO]
-                                .requestSingle:
-                                  CatalogMessage.GSRequest(baseTracking, obsTime)
-              yield candidates)
-                .guarantee:
-                  props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
-            else none.pure
+          if (props.needsAGS)
+            (for
+              _          <- props.obsConf
+                              .flatMap(_.agsState)
+                              .foldMap(_.async.set(AgsState.LoadingCandidates))
+              candidates <- CatalogClient[IO]
+                              .requestSingle:
+                                CatalogMessage.GSRequest(
+                                  baseTracking,
+                                  siderealDiscretizedObsTime.obsTime
+                                )
+            yield candidates)
+              .guarantee:
+                props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
+          else none.pure
       // Analysis results
       .useSerialState(List.empty[AgsAnalysis])
       // Reference to root
@@ -249,7 +253,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // target options, will be read from the user preferences
       .useStateView(Pot.pending[AsterismVisualOptions])
       // Load target preferences
-      .useEffectWithDepsBy((p, _, _, _, _, _) => (p.uid, p.asterism.ids)):
+      .useEffectWithDepsBy((props, _, _, _, _, _) => (props.uid, props.asterism.ids)):
         (props, ctx, _, _, root, options) =>
           _ =>
             import ctx.given
@@ -271,7 +275,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // mouse coordinates, starts on the base
       .useStateBy((props, _, _, _, _, _) => props.asterism.baseTracking.baseCoordinates)
       // Reset offset and gs if asterism change
-      .useEffectWithDepsBy((p, _, _, _, _, _, _) => p.asterism):
+      .useEffectWithDepsBy((props, _, _, _, _, _, _) => props.asterism):
         (props, ctx, _, analysis, _, options, mouseCoords) =>
           _ =>
             val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
@@ -295,15 +299,15 @@ object AladinCell extends ModelOptics with AladinCommon:
             ) *> props.guideStarSelection.set(GuideStarSelection.Default))
             .whenA(props.needsAGS && candidates.toOption.flatten.nonEmpty)
       // Request ags calculation
-      .useEffectWithDepsBy((p, _, candidates, _, _, _, _) =>
-        (p.asterism.baseTracking,
-         p.asterism.focus.id,
-         p.positions,
-         p.obsConf.flatMap(_.posAngleConstraint),
-         p.obsConf.flatMap(_.constraints),
-         p.obsConf.flatMap(_.wavelength),
-         p.obsTime,
-         p.obsConf.flatMap(_.configuration),
+      .useEffectWithDepsBy((props, _, candidates, _, _, _, _) =>
+        (props.asterism.baseTracking,
+         props.asterism.focus.id,
+         props.positions,
+         props.obsConf.flatMap(_.posAngleConstraint),
+         props.obsConf.flatMap(_.constraints),
+         props.obsConf.flatMap(_.wavelength),
+         props.obsTime,
+         props.obsConf.flatMap(_.configuration),
          candidates.toOption.flatten
         )
       ): (props, ctx, _, ags, _, _, _) =>

@@ -14,9 +14,8 @@ case class PAProperties(
   guideStarSelection: View[GuideStarSelection],
   agsState:           View[AgsState],
   constraint:         View[PosAngleConstraint]
-) {
+):
   val selectedPA = guideStarSelection.get.selectedAngle
-}
 
 object PAProperties:
   given Eq[PAProperties] =

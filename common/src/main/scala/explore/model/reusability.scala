@@ -46,9 +46,6 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
 
-import java.time.Duration
-import java.time.Instant
-
 /**
  * Reusability instances for model classes
  */
@@ -272,12 +269,3 @@ object reusability:
         ) =>
       summon[Reusability[ObservingMode.GmosSouthLongSlit]].test(x, y)
     case _ => false
-
-  // We want to re render only when the obsTime changes at least a month
-  // We keep the candidates data pm corrected for the obs time
-  // If it changes over a month we'll request the data again and recalculate
-  // This way we avoid recalculating pm for example if only pos angle or
-  // conditions change
-  val siderealTargetReusability: Reusability[Instant] = Reusability[Instant] {
-    Duration.between(_, _).toDays().abs < 30L
-  }
