@@ -38,6 +38,7 @@ import lucuma.ui.syntax.table.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
 import monocle.Focus
+import monocle.Iso
 import monocle.Lens
 import queries.schemas.odb.ObsQueries
 
@@ -98,15 +99,19 @@ object ProgramUnrequestedConfigsTable:
       .useReactTableWithStateStoreBy: (props, ctx, columns, rows) =>
         import ctx.given
 
-        def rowSelection2RowIds: RowSelection => List[RowId] = selection =>
-          selection.value
-            .filter(_._2)
-            .keys
-            .toList
+        val rowIds2RowSelection: Iso[List[RowId], RowSelection] =
+          Iso[List[RowId], RowSelection](rowIds =>
+            RowSelection:
+              rowIds.map(_ -> true).toMap
+          )(selection =>
+            selection.value
+              .filter(_._2)
+              .keys
+              .toList
+          )
 
-        def rowIds2RowSelection: List[RowId] => RowSelection = rowIds =>
-          RowSelection:
-            rowIds.map(_ -> true).toMap
+        val rowSelection: View[RowSelection] =
+          props.tileState.zoom(TileState.selected).as(rowIds2RowSelection)
 
         TableOptionsWithStateStore(
           TableOptions(
@@ -115,17 +120,9 @@ object ProgramUnrequestedConfigsTable:
             getRowId = (row, _, _) => RowId(row.id),
             enableMultiRowSelection = true,
             state = PartialTableState(
-              rowSelection = rowIds2RowSelection(props.tileState.get.selected)
+              rowSelection = rowSelection.get
             ),
-            onRowSelectionChange = (u: Updater[RowSelection]) =>
-              u match
-                case Updater.Set(selection) =>
-                  props.tileState.zoom(TileState.selected).set(rowSelection2RowIds(selection))
-                case Updater.Mod(f)         =>
-                  props.tileState
-                    .zoom(TileState.selected)
-                    .mod: rowIds =>
-                      rowSelection2RowIds(f(rowIds2RowSelection(rowIds)))
+            onRowSelectionChange = stateInViewHandler(rowSelection.mod)
           ),
           TableStore(
             props.userId,

@@ -58,7 +58,7 @@ case class TargetTable(
   vizTime:          Option[Instant],
   fullScreen:       AladinFullScreen,
   readOnly:         Boolean,
-  columnVisibility: ColumnVisibility
+  columnVisibility: View[ColumnVisibility]
 ) extends ReactFnProps(TargetTable.component)
 
 object TargetTable extends AsterismModifier:
@@ -158,8 +158,8 @@ object TargetTable extends AsterismModifier:
             enableSorting = true,
             enableColumnResizing = true,
             columnResizeMode = ColumnResizeMode.OnChange,
-            initialState = TableState(columnVisibility = TargetColumns.DefaultVisibility),
-            state = PartialTableState(columnVisibility = props.columnVisibility),
+            state = PartialTableState(columnVisibility = props.columnVisibility.get),
+            onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod),
             meta = TableMeta(props.obsIds, props.obsAndTargets, props.onAsterismUpdate)
           ),
           TableStore(props.userId, TableId.AsterismTargets, cols)

@@ -56,7 +56,8 @@ object ConstraintsSummaryTile:
       canMinimize = false,
       canMaximize = false
     )(
-      tileState => Body(userId, programId, constraintList, expandedIds, tileState.get.value),
+      tileState =>
+        Body(userId, programId, constraintList, expandedIds, tileState.zoom(TileState.value)),
       (tileState, _) =>
         ColumnSelectorInTitle(SelectableColumnNames.toList, tileState.zoom(TileState.value))
     )
@@ -106,7 +107,7 @@ object ConstraintsSummaryTile:
     programId:        Program.Id,
     constraintList:   ConstraintGroupList,
     expandedIds:      View[SortedSet[ObsIdSet]],
-    columnVisibility: ColumnVisibility
+    columnVisibility: View[ColumnVisibility]
   ) extends ReactFnProps(Body.component)
 
   private object Body:
@@ -256,7 +257,8 @@ object ConstraintsSummaryTile:
               enableSorting = true,
               enableColumnResizing = true,
               columnResizeMode = ColumnResizeMode.OnChange,
-              state = PartialTableState(columnVisibility = props.columnVisibility)
+              state = PartialTableState(columnVisibility = props.columnVisibility.get),
+              onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod)
             ),
             TableStore(props.userId, TableId.ConstraintsSummary, cols)
           )
