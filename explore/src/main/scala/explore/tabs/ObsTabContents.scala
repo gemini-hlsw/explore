@@ -78,22 +78,22 @@ case class ObsTabContents(
   searching:        View[Set[Target.Id]],
   expandedGroups:   View[Set[Group.Id]]
 ) extends ReactFnProps(ObsTabContents.component):
-  private val focusedObs: Option[Observation.Id]                           = focused.obsSet.map(_.head)
-  private val focusedTarget: Option[Target.Id]                             = focused.target
-  private val focusedGroup: Option[Group.Id]                               = focused.group
-  private val observations: UndoSetter[ObservationList]                    =
+  private val focusedObs: Option[Observation.Id]         = focused.obsSet.map(_.head)
+  private val focusedTarget: Option[Target.Id]           = focused.target
+  private val focusedGroup: Option[Group.Id]             = focused.group
+  private val observations: UndoSetter[ObservationList]  =
     programSummaries.zoom(ProgramSummaries.observations)
-  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
-  private val systemGroups: GroupTree                                      = programSummaries.get.systemGroups
-  private val activeGroup: Option[Group.Id]                                = focusedGroup.orElse:
-    focusedObs.flatMap(groups.get.obsGroupId)
-  private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
-  private val groupTimeRanges: GroupTimeRangeMap                           = programSummaries.get.groupTimeRangePots
-  private val targets: UndoSetter[TargetList]                              = programSummaries.zoom(ProgramSummaries.targets)
-  private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
-    observations.get.toIndexedList.map((o, idx) => (o.id, idx))
-  private val readonly: Boolean                                            = programSummaries.get.proposalIsSubmitted
-  private val globalPreferences: View[GlobalPreferences]                   =
+  private val groups: UndoSetter[GroupList]              = programSummaries.zoom(ProgramSummaries.groups)
+  // private val systemGroups: GroupTree                                      = programSummaries.get.systemGroups
+  private val activeGroup: Option[Group.Id]              = focusedGroup.orElse:
+    focusedObs.flatMap(observations.get.get(_)).flatMap(_.groupId)
+  private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
+  private val groupTimeRanges: GroupTimeRangeMap         = programSummaries.get.groupTimeRangePots
+  private val targets: UndoSetter[TargetList]            = programSummaries.zoom(ProgramSummaries.targets)
+  // private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
+  //   observations.get.toIndexedList.map((o, idx) => (o.id, idx))
+  private val readonly: Boolean                          = programSummaries.get.proposalIsSubmitted
+  private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
 
 object ObsTabContents extends TwoPanels:

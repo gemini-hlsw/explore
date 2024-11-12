@@ -21,7 +21,7 @@ import scala.collection.immutable.SortedSet
 
 object ObservationInsertAction {
   private def getter(obsId: Observation.Id): ProgramSummaries => Option[Observation] =
-    _.observations.getValue(obsId)
+    _.observations.get(obsId)
 
   private def setter(obsId: Observation.Id)(
     optObs: Option[Observation]

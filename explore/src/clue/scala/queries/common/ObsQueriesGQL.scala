@@ -18,9 +18,6 @@ object ObsQueriesGQL:
       mutation($$createObservation: CreateObservationInput!) {
         createObservation(input: $$createObservation) {
           observation $ObservationSubquery
-          meta:observation {
-            groupIndex
-          }
         }
       }
     """

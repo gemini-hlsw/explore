@@ -25,6 +25,7 @@ import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import queries.schemas.odb.ObsQueries.*
+import explore.model.ObservationList
 
 object ObsActions:
   def obsEditState(obsId: Observation.Id)(using
@@ -103,25 +104,25 @@ object ObsActions:
         }
     )
 
-  private def singleObsGetter(
-    obsId: Observation.Id
-  ): ObservationList => Option[(Observation, NonNegInt)] =
-    _.getValueAndIndex(obsId)
+  // private def singleObsGetter(
+  //   obsId: Observation.Id
+  // ): ObservationList => Option[(Observation, NonNegInt)] =
+  //   _.getValueAndIndex(obsId)
 
   private def obsListGetter(
     obsIds: List[Observation.Id]
-  ): ObservationList => List[Option[(Observation, NonNegInt)]] =
-    obsList => obsIds.map(obsId => singleObsGetter(obsId)(obsList))
+  ): ObservationList => List[Option[Observation]] =
+    obsList => obsIds.map(obsList.get)
 
   private def singleObsSetter(obsId: Observation.Id)(
-    obsOpt: Option[(Observation, NonNegInt)]
+    obsOpt: Option[Observation]
   ): ObservationList => ObservationList =
     obsList =>
-      obsOpt.fold(obsList.removed(obsId)): (obs, idx) =>
-        obsList.inserted(obsId, obs, idx)
+      obsOpt.fold(obsList - obsId): obs =>
+        obsList + (obsId -> obs)
 
   private def obsListSetter(obsIds: List[Observation.Id])(
-    obsOpts: List[Option[(Observation, NonNegInt)]]
+    obsOpts: List[Option[Observation]]
   ): ObservationList => ObservationList =
     obsList =>
 
@@ -142,14 +143,14 @@ object ObsActions:
     postMessage: String => IO[Unit] = _ => IO.unit
   )(using
     FetchClient[IO, ObservationDB]
-  ): Action[ObservationList, List[Option[obsListMod.ElemWithIndex]]] =
+  ): Action[ObservationList, List[Option[Observation]]] =
     Action(getter = obsListGetter(obsIds), setter = obsListSetter(obsIds))(
-      onSet = (_, elemWithIndexListOpt) =>
-        elemWithIndexListOpt.sequence.fold(
+      onSet = (_, elemListOpt) =>
+        elemListOpt.sequence.fold(
           ObsQueries.deleteObservations[IO](obsIds) >>
             postMessage(s"Deleted ${obsIds.length} observation(s)")
         )(obsList => // Not much to do here, the observation must be created before we get here
-          obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
+          obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)
         ),
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.sequence.fold(
@@ -158,6 +159,6 @@ object ObsActions:
         )(obsList =>
           ObsQueries.undeleteObservations[IO](obsIds) >>
             postMessage(s"Restored ${obsIds.length} observation(s)") >>
-            obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
+            obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)
         )
     )

@@ -50,6 +50,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
+import lucuma.ui.reusability.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
@@ -136,7 +137,7 @@ object ConstraintsTabContents extends TwoPanels:
                   selObsSet
                     .flatMap: focusedObsIdSet =>
                       observations // All focused obs have the same constraints, so we can use head
-                        .getValue(focusedObsIdSet.idSet.head)
+                        .get(focusedObsIdSet.idSet.head)
                         .map(_.constraints)
 
                 val obsAndConstraints: List[(Observation.Id, ConstraintSet)] =
@@ -212,7 +213,7 @@ object ConstraintsTabContents extends TwoPanels:
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-                .andThen(KeyedIndexedList.value)
+              // .andThen(KeyedIndexedList.value)
 
               val csTraversal = obsTraversal.andThen(Observation.constraints)
 

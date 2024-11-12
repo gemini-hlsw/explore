@@ -37,6 +37,9 @@ import lucuma.schemas.odb.input.*
 import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
+import explore.model.ObservationList
+import monocle.Iso
+import lucuma.ui.reusability.given
 
 val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 
@@ -78,18 +81,20 @@ def cloneObs(
             focusObs = obsId => focusObs(programId, obsId.some, ctx),
             postMessage = ToastCtx[IO].showToast(_)
           )
-          .mod(observations): obsList =>
-            obsList
-              .zip(newObsList)
-              // Just place the new obs at the end of the group, which is where the server clones it.
-              .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
+          .set(observations): // obsList =>
+            newObsList.map(_.some)
+            // obsList
+            //   .zip(newObsList)
+            //   // Just place the new obs at the end of the group, which is where the server clones it.
+            //   .map((oldObs, newObs) => (_ + (newObs))(oldObs))
+            //   // .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
           .toAsync
       .guarantee(after)
 
-private def obsWithId(obsId: Observation.Id): GetAdjust[ObservationList, Option[Observation]] =
-  obsListMod
-    .withKey(obsId)
-    .composeOptionLens(Focus[(Observation, NonNegInt)](_._1))
+import monocle.Lens
+
+private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
+  Iso.id[ObservationList].at(obsId)
 
 def obsEditAttachments(
   obsId:         Observation.Id,
@@ -120,25 +125,27 @@ def insertObs(
   import ctx.given
 
   createObservation[IO](programId, parentId)
-    .flatMap: (obs, groupIndex) =>
-      ((ObsActions
+    .flatMap: obs =>
+      ObsActions
         .obsExistence(
           List(obs.id),
           focusObs = obsId => focusObs(programId, obsId.some, ctx),
           postMessage = ToastCtx[IO].showToast(_)
         )
-        .mod(observations): obsList =>
-          obsList
-            .zip(List(obs))
-            // Just place the new obs at the end of the group, which is where the server clones it.
-            .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs)))
-      >> groupTree.mod:
-        _.inserted(
-          obs.id.asLeft,
-          Node(ServerIndexed(obs.id.asLeft, groupIndex)),
-          Index(parentId.map(_.asRight), NonNegInt.MaxValue)
-        )
-      ).toAsync
+        .set(observations): // obsList =>
+          List(obs.some)
+        .toAsync
+    // obsList
+    //   .zip(List(obs))
+    //   // Just place the new obs at the end of the group, which is where the server clones it.
+    //   .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs)))
+    // >> groupTree.mod:
+    //   _.inserted(
+    //     obs.id.asLeft,
+    //     Node(ServerIndexed(obs.id.asLeft, groupIndex)),
+    //     Index(parentId.map(_.asRight), NonNegInt.MaxValue)
+    //   )
+    // ).toAsync
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 
 private def findGrouping(

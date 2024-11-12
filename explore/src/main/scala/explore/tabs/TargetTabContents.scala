@@ -101,7 +101,7 @@ case class TargetTabContents(
         obsIds.toList
           .map: obsId =>
             programSummaries.get.observations
-              .getValue(obsId)
+              .get(obsId)
               .flatMap(_.observingMode.map(_.siteFor))
           .flattenOption
 
@@ -212,7 +212,7 @@ object TargetTabContents extends TwoPanels:
                       copiedObsIdSet.idSet.toList.map: obsId =>
                         (obsId,
                          props.observations // All focused obs have the same asterism, so we can use head
-                           .getValue(focusedObsIdSet.idSet.head)
+                           .get(focusedObsIdSet.idSet.head)
                            .foldMap(_.scienceTargetIds)
                            .toList
                         )
@@ -381,7 +381,7 @@ object TargetTabContents extends TwoPanels:
             val getObsTime: ProgramSummaries => Option[Instant] = a =>
               for
                 id <- idsToEdit.single
-                o  <- a.observations.getValue(id)
+                o  <- a.observations.get(id)
                 t  <- o.observationTime
               yield t
 
@@ -392,7 +392,6 @@ object TargetTabContents extends TwoPanels:
                 .map: i =>
                   ProgramSummaries.observations
                     .filterIndex((id: Observation.Id) => id === i)
-                    .andThen(KeyedIndexedList.value)
                     .andThen(Observation.observationTime)
                     .modify(mod)(ps)
                 .getOrElse(ps)
@@ -403,7 +402,7 @@ object TargetTabContents extends TwoPanels:
             val getObsDuration: ProgramSummaries => Option[TimeSpan] = a =>
               for
                 id <- idsToEdit.single
-                o  <- a.observations.getValue(id)
+                o  <- a.observations.get(id)
                 t  <- o.observationDuration
               yield t
 
@@ -414,7 +413,6 @@ object TargetTabContents extends TwoPanels:
                 .map: i =>
                   ProgramSummaries.observations
                     .filterIndex((id: Observation.Id) => id === i)
-                    .andThen(KeyedIndexedList.value)
                     .andThen(Observation.observationDuration)
                     .modify(mod)(ps)
                 .getOrElse(ps)

@@ -159,10 +159,9 @@ object SchedulingGroupObsList:
 
     val traversal = Iso
       .id[ObservationList]
-      .filterIndex((id: Observation.Id) =>
+      .filterIndex: (id: Observation.Id) =>
         oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
-      )
-      .andThen(KeyedIndexedList.value)
+      // .andThen(KeyedIndexedList.value)
       .andThen(Observation.timingWindows)
 
     val twUndoCtx =
@@ -233,7 +232,7 @@ object SchedulingGroupObsList:
             .flatMap(obsIds =>
               if (obsIds.size === 1)
                 props.observations.get
-                  .getValue(obsIds.head)
+                  .get(obsIds.head)
                   .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
                 <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
@@ -283,7 +282,7 @@ object SchedulingGroupObsList:
         }
 
       def renderGroup(obsIds: ObsIdSet, timingWindows: List[TimingWindow]): VdomNode = {
-        val cgObs         = obsIds.toList.map(id => props.observations.get.getValue(id)).flatten
+        val cgObs         = obsIds.toList.map(id => props.observations.get.get(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 

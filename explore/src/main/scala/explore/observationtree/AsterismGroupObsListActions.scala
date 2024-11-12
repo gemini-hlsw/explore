@@ -34,7 +34,6 @@ object AsterismGroupObsListActions {
       Iso
         .id[ObservationList]
         .filterIndex((id: Observation.Id) => draggedIds.contains(id))
-        .andThen(KeyedIndexedList.value)
         .andThen(Observation.scienceTargetIds)
 
     Action(getter = traversal.getAll.andThen(_.head), setter = traversal.replace)(

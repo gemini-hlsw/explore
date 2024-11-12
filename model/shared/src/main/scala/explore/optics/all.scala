@@ -83,21 +83,47 @@ object all extends ModelOptics {
 
   implicit class GetAdjustOptionOps[S, A](val getAdjust: GetAdjust[S, Option[A]]) extends AnyVal {
     def composeOptionLens[B](other: Lens[A, B]): GetAdjust[S, Option[B]] =
-      GetAdjust(getAdjust.getter.composeOptionLens(other),
-                getAdjust.adjuster.composeOptionLens(other)
+      GetAdjust(
+        getAdjust.getter.composeOptionLens(other),
+        getAdjust.adjuster.composeOptionLens(other)
       )
 
     def composeOptionGetAdjust[B](other: GetAdjust[A, B]): GetAdjust[S, Option[B]] =
-      GetAdjust(getAdjust.getter.composeOptionGetter(other.getter),
-                getAdjust.adjuster.composeOptionGetAdjust(other)
+      GetAdjust(
+        getAdjust.getter.composeOptionGetter(other.getter),
+        getAdjust.adjuster.composeOptionGetAdjust(other)
       )
 
     def composeOptionOptionLens[B](other: Lens[A, Option[B]]): GetAdjust[S, Option[B]] =
       composeOptionOptionGetAdjust(other.asGetAdjust)
 
     def composeOptionOptionGetAdjust[B](other: GetAdjust[A, Option[B]]): GetAdjust[S, Option[B]] =
-      GetAdjust(getAdjust.getter.composeOptionOptionGetter(other.getter),
-                getAdjust.adjuster.composeOptionOptionGetAdjust(other)
+      GetAdjust(
+        getAdjust.getter.composeOptionOptionGetter(other.getter),
+        getAdjust.adjuster.composeOptionOptionGetAdjust(other)
+      )
+  }
+
+  implicit class LensOptionOps[S, A](val lens: Lens[S, Option[A]]) extends AnyVal {
+    def composeOptionLens[B](other: Lens[A, B]): GetAdjust[S, Option[B]] =
+      GetAdjust(
+        lens.getter.composeOptionLens(other),
+        lens.asAdjuster.composeOptionLens(other)
+      )
+
+    // def composeOptionGetAdjust[B](other: GetAdjust[A, B]): GetAdjust[S, Option[B]] =
+    //   GetAdjust(
+    //     getAdjust.getter.composeOptionGetter(other.getter),
+    //     getAdjust.adjuster.composeOptionGetAdjust(other)
+    //   )
+
+    def composeOptionOptionLens[B](other: Lens[A, Option[B]]): GetAdjust[S, Option[B]] =
+      composeOptionOptionGetAdjust(other.asGetAdjust)
+
+    def composeOptionOptionGetAdjust[B](other: GetAdjust[A, Option[B]]): GetAdjust[S, Option[B]] =
+      GetAdjust(
+        lens.getter.composeOptionOptionGetter(other.getter),
+        lens.asAdjuster.composeOptionOptionGetAdjust(other)
       )
   }
 

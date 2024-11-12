@@ -22,7 +22,7 @@ object ObservationPasteIntoSchedulingGroupAction:
   private def obsListGetter(
     obsList: List[(Observation.Id, List[TimingWindow])]
   ): ProgramSummaries => Option[List[Observation]] = programSummaries =>
-    obsList.map((obsId, _) => programSummaries.observations.getValue(obsId)).sequence
+    obsList.map((obsId, _) => programSummaries.observations.get(obsId)).sequence
 
   private def obsListSetter(obsList: List[(Observation.Id, List[TimingWindow])])(
     otwol: Option[List[Observation]]

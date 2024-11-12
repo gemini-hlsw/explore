@@ -9,7 +9,6 @@ import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
 import crystal.Pot
-import explore.data.KeyedIndexedList
 import explore.model.syntax.all.*
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
@@ -53,8 +52,8 @@ case class ProgramSummaries(
 
   lazy val asterismGroups: AsterismGroupList =
     SortedMap.from:
-      observations.toList
-        .map(obs => obs.id -> obs.scienceTargetIds)
+      observations.view
+        .mapValues(_.scienceTargetIds)
         .groupMap(_._2)(_._1)
         .map: (targets, observations) =>
           ObsIdSet(NonEmptySet.of(observations.head, observations.tail.toList*)) -> SortedSet
@@ -62,25 +61,24 @@ case class ProgramSummaries(
 
   lazy val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     observations.toList
-      .flatMap(obs => obs.scienceTargetIds.map(targetId => targetId -> obs.id))
+      .flatMap((obsId, obs) => obs.scienceTargetIds.map(targetId => targetId -> obsId))
       .groupMap(_._1)(_._2)
       .view
       .mapValues(obsIds => SortedSet.from(obsIds))
       .toMap
 
   lazy val obsTargets: Map[Observation.Id, TargetList] =
-    observations.toList
-      .map: obs =>
-        obs.id ->
-          SortedMap.from:
-            obs.scienceTargetIds.toList
-              .map(tid => targets.get(tid).map(t => tid -> t))
-              .flattenOption
+    observations.view
+      .mapValues: obs =>
+        SortedMap.from:
+          obs.scienceTargetIds.toList
+            .map(tid => targets.get(tid).map(t => tid -> t))
+            .flattenOption
       .toMap
 
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     observations.toList
-      .flatMap(obs => obs.attachmentIds.map(_ -> obs.id))
+      .flatMap((obsId, obs) => obs.attachmentIds.map(_ -> obsId))
       .groupMap(_._1)(_._2)
       .view
       .mapValues(obsIds => SortedSet.from(obsIds))
@@ -95,18 +93,20 @@ case class ProgramSummaries(
   lazy val constraintGroups: ConstraintGroupList =
     SortedMap.from:
       observations.toList
-        .groupMap(_.constraints)(_.id)
+        .map((obsId, obs) => obs.constraints -> obsId)
+        .groupMap(_._1)(_._2)
         .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> c)
 
   lazy val schedulingGroups: SchedulingGroupList =
     SortedMap.from(
       observations.toList
-        .groupMap(_.timingWindows.sorted)(_.id)
+        .map((obsId, obs) => obs.timingWindows.sorted -> obsId)
+        .groupMap(_._1)(_._2)
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
     )
 
   lazy val calibrationObservations: Set[Observation.Id] =
-    observations.toList.filter(_.isCalibration).map(_.id).toSet
+    observations.values.filter(_.isCalibration).map(_.id).toSet
 
   lazy val programOrProposalReference: Option[String] =
     ProgramSummaries.programReference
@@ -119,19 +119,18 @@ case class ProgramSummaries(
 
   lazy val obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]] =
     configurationRequests
-      .map((crId, cr) =>
-        val obs = observations.toList
-          .filter(o =>
-            // keep inactive ones here.
-            o.calibrationRole.isEmpty &&
-              o.configuration.fold(false)(cr.configuration.subsumes)
-          )
-        (crId, obs)
-      )
+      .map: (crId, cr) =>
+        val obsList: List[Observation] =
+          observations.values.toList
+            .filter: obs =>
+              // keep inactive ones here.
+              obs.calibrationRole.isEmpty &&
+                obs.configuration.fold(false)(cr.configuration.subsumes)
+        (crId, obsList)
       .toMap
 
   lazy val configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]] =
-    val l = observations.toList
+    val l = observations.values.toList
       .filter: o =>
         o.workflow.state =!= ObservationWorkflowState.Inactive &&
           o.calibrationRole.isEmpty &&
@@ -152,7 +151,7 @@ case class ProgramSummaries(
     withTimingWindows: Option[List[TimingWindow]] = none
   ): Option[Observation] =
     observations
-      .getValue(originalId)
+      .get(originalId)
       .map:
         Observation.id.replace(clonedId) >>>
           withTargets
@@ -166,9 +165,7 @@ case class ProgramSummaries(
             .getOrElse(identity)
 
   def insertObs(observation: Observation): ProgramSummaries =
-    ProgramSummaries.observations.modify(
-      _.inserted(observation.id, observation, observations.length)
-    )(this)
+    ProgramSummaries.observations.modify(_ + (observation.id -> observation))(this)
 
   def removeObs(obsId: Observation.Id): ProgramSummaries =
     ProgramSummaries.observations.modify(_.removed(obsId))(this)
@@ -178,10 +175,9 @@ case class ProgramSummaries(
     clone:      TargetWithId,
     obsIds:     ObsIdSet
   ): ProgramSummaries =
-    val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
-      list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - originalId + clone.id))
-    )
-    val ts  = targets + (clone.id -> clone.target)
+    val obs: ObservationList = obsIds.idSet.foldLeft(observations): (map, obsId) =>
+      map.updatedWith(obsId)(_.map(Observation.scienceTargetIds.modify(_ - originalId + clone.id)))
+    val ts: TargetList       = targets + (clone.id -> clone.target)
     copy(observations = obs, targets = ts)
 
   def unCloneTargetForObservations(
@@ -189,11 +185,18 @@ case class ProgramSummaries(
     cloneId:    Target.Id,
     obsIds:     ObsIdSet
   ): ProgramSummaries =
-    val obs = obsIds.idSet.foldLeft(observations)((list, obsId) =>
-      list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ + originalId - cloneId))
-    )
-    val ts  = targets - cloneId
+    val obs: ObservationList = obsIds.idSet.foldLeft(observations): (map, obsId) =>
+      map.updatedWith(obsId)(_.map(Observation.scienceTargetIds.modify(_ + originalId - cloneId)))
+    val ts: TargetList       = targets - cloneId
     copy(observations = obs, targets = ts)
+
+  def parentGroups(id: Either[Observation.Id, Group.Id]): List[Group.Id] =
+    id.fold(
+      observations.get(_).flatMap(_.groupId),
+      groups.get(_).flatMap(_.parentId)
+    ).map: groupId =>
+      groupId +: parentGroups(groupId.asRight)
+    .orEmpty
 
 object ProgramSummaries:
   val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]       =
@@ -247,8 +250,10 @@ object ProgramSummaries:
     ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
-      KeyedIndexedList.fromList(obsList, Observation.id.get),
-      KeyedIndexedList.fromList(groupList, Group.id.get),
+      obsList.toSortedMap(_.id),
+      groupList.toSortedMap(_.id),
+      // KeyedIndexedList.fromList(obsList, Observation.id.get),
+      // KeyedIndexedList.fromList(groupList, Group.id.get),
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,
       programs.toSortedMap(_.id),

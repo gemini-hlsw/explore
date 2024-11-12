@@ -26,6 +26,7 @@ import explore.model.GroupTree
 import explore.model.GroupTree.syntax.*
 import explore.model.ObsIdSet
 import explore.model.Observation
+import explore.model.ObservationList
 import explore.model.ObservationExecutionMap
 import explore.model.ServerIndexed
 import explore.model.enums.AppTab
@@ -132,7 +133,7 @@ object ObsList:
       def createNode(node: GroupTree.Node): Option[Node[GroupTree.Value]] =
         val isSystemGroup: Boolean    = node.value.elem.toOption.exists(_.system)
         val isCalibrationObs: Boolean = node.value.elem.left.toOption
-          .flatMap(obsId => allObservations.getValue(obsId))
+          .flatMap(obsId => allObservations.get(obsId))
           .exists(_.isCalibration)
 
         // Keep only observation nodes for existing observations.
@@ -182,7 +183,7 @@ object ObsList:
                   focusObs(props.programId, none, ctx) >> optIndex.setState(none)
                 case (Some(oidx), None) =>
                   // focused obs no longer exists, but we have a previous index.
-                  val newIdx = math.min(oidx.value, obsList.length.value - 1)
+                  val newIdx = math.min(oidx.value, obsList.size.value - 1)
                   obsList.toList
                     .get(newIdx.toLong)
                     .fold(
@@ -300,7 +301,7 @@ object ObsList:
           nodeValue.elem match
             case Left(obsId)  =>
               props.observations.get
-                .getValue(obsId)
+                .get(obsId)
                 .map: obs =>
                   val selected: Boolean = props.focusedObs.contains_(obsId)
 
@@ -408,7 +409,7 @@ object ObsList:
                           props.programId,
                           // Set the focused group as the new obs parent if it is selected
                           props.focusedGroup,
-                          props.observations.get.length,
+                          props.observations.get.size,
                           props.observations,
                           props.groups.model,
                           adding,

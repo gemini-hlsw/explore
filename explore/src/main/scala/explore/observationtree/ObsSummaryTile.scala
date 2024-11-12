@@ -63,11 +63,11 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.TreeSeqMap
+import explore.model.ObservationList
 
 object ObsSummaryTile:
   def apply(
@@ -83,7 +83,7 @@ object ObsSummaryTile:
   ): Tile[TileState] =
     Tile(
       ObsSummaryTabTileIds.SummaryId.id,
-      s"Observations Summary (${observations.get.toList.filterNot(_.isCalibration).length})",
+      s"Observations Summary (${observations.get.values.toList.filterNot(_.isCalibration).length})",
       TileState.Initial,
       backButton.some,
       canMinimize = false,
@@ -355,7 +355,11 @@ object ObsSummaryTile:
             // TODO: ChargedTimeColumnId
           )
       .useMemoBy((props, _, _) => // Rows
-        (props.observations.get.toList, props.allTargets, props.groupTree.get, props.obsExecutions)
+        (props.observations.get.values.toList,
+         props.allTargets,
+         props.groupTree.get,
+         props.obsExecutions
+        )
       ): (_, _, _) =>
         (obsList, allTargets, groupTree, obsExecutions) =>
           obsList

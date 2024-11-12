@@ -25,6 +25,7 @@ import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.P
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 import explore.model.GroupList
+import explore.model.ProgramTimeRange
 
 /**
  * Functions to modify cache through subscription updates
@@ -62,11 +63,12 @@ trait CacheModifierUpdaters {
           ProgramSummaries.observations
             .modify: observations =>
               if (isPresentInServer)
-                observations.inserted(
-                  obsId,
-                  value,
-                  observations.getIndex(obsId).getOrElse(observations.length)
-                )
+                observations + (obsId -> value)
+              // observations.inserted(
+              //   obsId,
+              //   value,
+              //   observations.getIndex(obsId).getOrElse(observations.length)
+              // )
               else observations.removed(obsId)
 
         // // TODO: this won't be needed anymore when groups are also updated through events of observation updates.
@@ -84,7 +86,7 @@ trait CacheModifierUpdaters {
             else oem.removed(obsId)
 
         ifPresentInServerOrLocally:
-          obsUpdate >>> groupsUpdate >>> programTimesReset >>> obsExecutionReset
+          obsUpdate >>> /* groupsUpdate >>>*/ programTimesReset >>> obsExecutionReset
       .getOrElse {
         identity
         // if (observationEdit.editType === DeletedCal)
@@ -128,7 +130,8 @@ trait CacheModifierUpdaters {
                   case DeletedCal =>
                     _.removed(groupId)
                   case _          =>
-                    _.inserted(groupId, payload.value.elem)
+                    _ + (groupId -> payload.value.elem)
+                  // _.inserted(groupId, payload.value.elem)
                   // val findIndexFn: GroupTree.Node => Boolean =
                   //   _.value.parentIndex >= payload.value.parentIndex
                   // _.upserted(
@@ -221,10 +224,11 @@ trait CacheModifierUpdaters {
     id: Either[Observation.Id, Group.Id]
   ): ProgramSummaries => ProgramSummaries =
     programSummaries =>
-      val groupTimeRangePots = programSummaries.groups
-        .parentKeys(id)
-        .flatMap(_.toOption.tupleRight(Pot.pending))
-        .toMap
+      val groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
+        programSummaries
+          .parentGroups(id)
+          .map(_ -> Pot.pending)
+          .toMap
       ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
         programSummaries
       )

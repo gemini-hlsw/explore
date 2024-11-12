@@ -36,7 +36,7 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries:
-  type ObservationList = KeyedIndexedList[Observation.Id, Observation]
+  // type ObservationList = KeyedIndexedList[Observation.Id, Observation]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
@@ -155,7 +155,7 @@ object ObsQueries:
   def createObservation[F[_]: Async](
     programId: Program.Id,
     parentId:  Option[Group.Id]
-  )(using FetchClient[F, ObservationDB]): F[(Observation, NonNegShort)] =
+  )(using FetchClient[F, ObservationDB]): F[Observation] =
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
@@ -166,7 +166,7 @@ object ObsQueries:
         )
       )
       .map: result =>
-        (result.createObservation.observation, result.createObservation.meta.groupIndex)
+        result.createObservation.observation
 
   def createObservationWithTargets[F[_]: Async](
     programId: Program.Id,

@@ -134,28 +134,25 @@ object ObservationValidationsTableBody {
       )
     }
     // Rows
-    .useMemoBy((props, _, _) => props.observations.get.toList)((_, _, _) =>
+    .useMemoBy((props, _, _) => props.observations.get.values.toList): (_, _, _) =>
       // We don't want to show inactive observations here, nor ones related to configuration requests
-      _.filter(obs =>
+      _.filter: obs =>
         !obs.isInactive && obs.hasValidationErrors && !obs.hasConfigurationRequestError
-      )
-        .map(obs =>
-          Expandable(
-            ObsRow(obs),
-            if (obs.workflow.validationErrors.size > 1)
-              // only include the tails for messages and validations. The head will be shown in the "parent" row.
-              messagesTailRows(obs.id, obs.workflow.validationErrors.head) ++
-                obs.workflow.validationErrors.tail
-                  .map(v =>
-                    Expandable(
-                      ValidationRow(obs.id, v),
-                      messagesTailRows(obs.id, v)
-                    )
+      .map: obs =>
+        Expandable(
+          ObsRow(obs),
+          if (obs.workflow.validationErrors.size > 1)
+            // only include the tails for messages and validations. The head will be shown in the "parent" row.
+            messagesTailRows(obs.id, obs.workflow.validationErrors.head) ++
+              obs.workflow.validationErrors.tail
+                .map(v =>
+                  Expandable(
+                    ValidationRow(obs.id, v),
+                    messagesTailRows(obs.id, v)
                   )
-            else Nil
-          )
+                )
+          else Nil
         )
-    )
     .useReactTableWithStateStoreBy((props, ctx, cols, rows) =>
       import ctx.given
 
