@@ -16,7 +16,6 @@ import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
@@ -36,8 +35,8 @@ case class ProgramSummaries(
   optProgramDetails:     Option[ProgramDetails],
   targets:               TargetList,
   observations:          ObservationList,
-  groups:                GroupTree,
-  systemGroups:          GroupTree,
+  groups:                GroupList,
+  // systemGroups:          GroupList,
   obsAttachments:        ObsAttachmentList,
   proposalAttachments:   List[ProposalAttachment],
   programs:              ProgramInfoList,
@@ -204,8 +203,8 @@ object ProgramSummaries:
   val targets: Lens[ProgramSummaries, TargetList]                             = Focus[ProgramSummaries](_.targets)
   val observations: Lens[ProgramSummaries, ObservationList]                   =
     Focus[ProgramSummaries](_.observations)
-  val groups: Lens[ProgramSummaries, GroupTree]                               = Focus[ProgramSummaries](_.groups)
-  val systemGroups: Lens[ProgramSummaries, GroupTree]                         = Focus[ProgramSummaries](_.systemGroups)
+  val groups: Lens[ProgramSummaries, GroupList]                               = Focus[ProgramSummaries](_.groups)
+  // val systemGroups: Lens[ProgramSummaries, GroupList]                         = Focus[ProgramSummaries](_.systemGroups)
   val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]               =
     Focus[ProgramSummaries](_.obsAttachments)
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]]   =
@@ -235,8 +234,8 @@ object ProgramSummaries:
     optProgramDetails:   Option[ProgramDetails],
     targetList:          List[TargetWithId],
     obsList:             List[Observation],
-    groups:              GroupTree,
-    systemGroups:        GroupTree,
+    groupList:           List[Group],
+    // systemGroups:        GroupTree,
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
     programs:            List[ProgramInfo],
@@ -249,8 +248,7 @@ object ProgramSummaries:
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
       KeyedIndexedList.fromList(obsList, Observation.id.get),
-      groups,
-      systemGroups,
+      KeyedIndexedList.fromList(groupList, Group.id.get),
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,
       programs.toSortedMap(_.id),

@@ -23,7 +23,9 @@ case class Group(
   minimumInterval: Option[TimeSpan],
   maximumInterval: Option[TimeSpan],
   ordered:         Boolean,
-  system:          Boolean
+  system:          Boolean,
+  parentId:        Option[Group.Id],
+  parentIndex:     NonNegShort
 ) derives Eq,
       Decoder:
   def isAnd: Boolean = minimumRequired.isEmpty
@@ -39,3 +41,5 @@ object Group:
   val minimumRequired: Lens[Group, Option[NonNegShort]] = Focus[Group](_.minimumRequired)
   val ordered: Lens[Group, Boolean]                     = Focus[Group](_.ordered)
   val system: Lens[Group, Boolean]                      = Focus[Group](_.system)
+  val parentId: Lens[Group, Option[Group.Id]]           = Focus[Group](_.parentId)
+  val parentIndex: Lens[Group, NonNegShort]             = Focus[Group](_.parentIndex)

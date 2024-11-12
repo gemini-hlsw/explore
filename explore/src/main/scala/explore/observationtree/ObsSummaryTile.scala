@@ -99,7 +99,7 @@ object ObsSummaryTile:
           obsExecutions,
           allTargets,
           showScienceBand,
-          s.zoom(TileState.columnVisibility).withOnMod(Callback.log(_)),
+          s.zoom(TileState.columnVisibility),
           cb => s.zoom(TileState.toggleAllRowsSelected).set(cb.some)
         ),
       (s, _) =>

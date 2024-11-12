@@ -10,7 +10,6 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.data.KeyedIndexedList
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
@@ -55,7 +54,8 @@ object AsterismIds:
 type AsterismGroupList          = SortedMap[ObsIdSet, AsterismIds]
 type TargetList                 = SortedMap[Target.Id, Target]
 type TargetWithObsList          = SortedMap[Target.Id, TargetWithObs]
-type ObservationList            = KeyedIndexedList[Observation.Id, Observation]
+type ObservationList            = SortedMap[Observation.Id, Observation]
+type GroupList                  = SortedMap[Group.Id, Group]
 type ConstraintGroupList        = SortedMap[ObsIdSet, ConstraintSet]
 type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
 type ObsAttachmentList          = SortedMap[ObsAtt.Id, ObsAttachment]

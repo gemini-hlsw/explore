@@ -129,21 +129,23 @@ object ObsList:
     allObservations: ObservationList
   ): Iso[GroupTree, List[Node[GroupTree.Value]]] =
     Iso[GroupTree, List[Node[GroupTree.Value]]](groupTree =>
-      def createNode(node: GroupTree.Node): Node[GroupTree.Value] =
+      def createNode(node: GroupTree.Node): Option[Node[GroupTree.Value]] =
         val isSystemGroup: Boolean    = node.value.elem.toOption.exists(_.system)
         val isCalibrationObs: Boolean = node.value.elem.left.toOption
           .flatMap(obsId => allObservations.getValue(obsId))
           .exists(_.isCalibration)
 
-        Tree.Node(
-          Tree.Id(node.value.id.fold(_.toString, _.toString)),
-          node.value,
-          draggable = !isCalibrationObs && !isSystemGroup,
-          droppable = !isCalibrationObs && !isSystemGroup,
-          children = node.children.map(createNode)
-        )
+        // Keep only observation nodes for existing observations.
+        Option.when(node.value.elem.fold(allObservations.contains(_), _ => true)):
+          Tree.Node(
+            Tree.Id(node.value.id.fold(_.toString, _.toString)),
+            node.value,
+            draggable = !isCalibrationObs && !isSystemGroup,
+            droppable = !isCalibrationObs && !isSystemGroup,
+            children = node.children.map(createNode).flattenOption
+          )
 
-      groupTree.toTree.children.map(createNode)
+      groupTree.toTree.children.map(createNode).flattenOption
     )(nodes =>
       def nodeToTree(node: Node[GroupTree.Value]): GroupTree.Node =
         ExploreNode(node.data, children = node.children.map(nodeToTree).toList)
@@ -200,7 +202,14 @@ object ObsList:
       .useStateView(AddingObservation(false)) // adding new observation
       // treeNodes
       .useMemoBy((props, _, _, _) => (props.groups.model.reuseByValue, props.observations.get)):
-        (_, _, _, _) => (groups, observations) => groups.as(groupTreeNodeIsoBuilder(observations))
+        (_, _, _, _) =>
+          (groups, observations) =>
+            println("REBUILDING TREE NODES")
+            println("GROUPS: " + pprint(groups.get))
+            println("OBSERVATIONS: " + pprint(observations))
+            val x = groups.as(groupTreeNodeIsoBuilder(observations))
+            println("NODES: " + pprint(x.get))
+            x
       // systemTreeNodes
       .useMemoBy((props, _, _, _, _) => (props.systemGroups, props.observations.get)):
         (_, _, _, _, _) =>
@@ -349,6 +358,13 @@ object ObsList:
               val isEmpty = props.groups.get
                 .getNodeAndIndexByKey(group.id.asRight)
                 .exists(_._1.children.isEmpty)
+
+              println(
+                props.groups.get
+                  .getNodeAndIndexByKey(group.id.asRight)
+                  .map(_._1.children)
+              )
+
               GroupBadge(
                 group,
                 selected = props.focusedGroup.contains_(group.id),

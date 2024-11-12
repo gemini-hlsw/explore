@@ -52,7 +52,9 @@ object ProgramQueriesGQL:
     val document: String = s"""
       query ($$programId: ProgramId!) {
         program(programId: $$programId) {
-          allGroupElements $GroupElementsSubQuery
+          allGroupElements {
+            group $GroupSubQuery
+          }
         }
       }
     """

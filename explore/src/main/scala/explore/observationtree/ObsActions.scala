@@ -124,9 +124,17 @@ object ObsActions:
     obsOpts: List[Option[(Observation, NonNegInt)]]
   ): ObservationList => ObservationList =
     obsList =>
-      obsIds.zip(obsOpts).foldLeft(obsList) { case (acc, (obsId, obsOpt)) =>
-        singleObsSetter(obsId)(obsOpt)(acc)
-      }
+
+      println(s"old: $obsList")
+
+      val n =
+        obsIds.zip(obsOpts).foldLeft(obsList) { case (acc, (obsId, obsOpt)) =>
+          singleObsSetter(obsId)(obsOpt)(acc)
+        }
+
+      println(s"new: $n")
+
+      n
 
   def obsExistence(
     obsIds:      List[Observation.Id],

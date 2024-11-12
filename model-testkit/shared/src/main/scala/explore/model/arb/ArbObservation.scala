@@ -39,6 +39,9 @@ import org.scalacheck.Cogen
 import java.time.Instant
 import scala.collection.immutable.SortedSet
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.model.Group
+import eu.timepit.refined.types.numeric.NonNegShort
+import eu.timepit.refined.scalacheck.numeric.given
 
 trait ArbObservation:
   import ArbTime.given
@@ -68,6 +71,8 @@ trait ArbObservation:
         scienceBand         <- arbitrary[Option[ScienceBand]]
         configuration       <- arbitrary[Option[Configuration]]
         workflow            <- arbitrary[ObservationWorkflow]
+        groupId             <- arbitrary[Option[Group.Id]]
+        groupIndex          <- arbitrary[NonNegShort]
       yield Observation(
         id,
         title,
@@ -87,7 +92,9 @@ trait ArbObservation:
         calibrationRole,
         scienceBand,
         configuration,
-        workflow
+        workflow,
+        groupId,
+        groupIndex
       )
     )
 
@@ -110,7 +117,9 @@ trait ArbObservation:
        Option[CalibrationRole],
        Option[ScienceBand],
        Option[Configuration],
-       ObservationWorkflow
+       ObservationWorkflow,
+       Option[Group.Id],
+       Short
       )
     ]
       .contramap(o =>
@@ -131,7 +140,9 @@ trait ArbObservation:
          o.calibrationRole,
          o.scienceBand,
          o.configuration,
-         o.workflow
+         o.workflow,
+         o.groupId,
+         o.groupIndex.value
         )
       )
 

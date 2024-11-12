@@ -49,5 +49,7 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           scienceBand
           configuration $ConfigurationSubquery
           workflow $ObservationWorkflowSubquery
+          groupId
+          groupIndex
         }
       """
