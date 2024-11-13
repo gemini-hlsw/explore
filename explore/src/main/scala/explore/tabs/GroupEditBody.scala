@@ -175,7 +175,7 @@ object GroupEditBody:
               .flatMap(s => NonNegShort.from(s.toShort).toOption)
             minRequiredV.set(newMin)
         ),
-        s" of ${props.elementsLength} observations"
+        s" of ${props.elementsLength} observations/subgroups"
       )
 
       val orderForm = <.div(

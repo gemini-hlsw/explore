@@ -21,11 +21,13 @@ import lucuma.core.model.*
 import lucuma.react.common.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
+import explore.model.GroupList
+import monocle.Iso
 
 case class ObsGroupTiles(
   userId:            Option[User.Id],
-  groupId:           Group.Id,
-  groups:            UndoSetter[GroupTree],
+  group:             UndoSetter[Group],
+  childCount:        Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   resize:            UseResizeDetectorReturn,
   defaultLayouts:    LayoutsMap,
@@ -34,85 +36,53 @@ case class ObsGroupTiles(
 ) extends ReactFnProps(ObsGroupTiles.component)
 
 object ObsGroupTiles:
-
   private type Props = ObsGroupTiles
 
   val component = ScalaFnComponent
     .withHooks[Props]
     .render: props =>
-
-      val tiles =
-        if !props.groups.get.contains(props.groupId.asRight) then List.empty
-        else
-          val groupTreeKey = props.groupId.asRight
-          // First zoom to the node, to get the number of child elements
-          // We can safely .get here because we know the key is in the tree and that the value is a Grouping
-          val node         = props.groups
-            .zoom(
-              _.getNodeAndIndexByKey(groupTreeKey).get,
-              modF =>
-                groups =>
-                  groups
-                    .getNodeAndIndexByKey(groupTreeKey)
-                    .map(modF)
-                    .map((newValue, newIndex) =>
-                      groups.upserted(groupTreeKey, newValue.value, newIndex)
-                    )
-                    .getOrElse(groups)
+      val editTile: Tile[?] =
+        Tile(
+          GroupEditTileIds.GroupEditId.id,
+          s"${
+              if props.group.get.system then props.group.get.name.foldMap(_.value)
+              else if props.group.get.isAnd then "AND"
+              else "OR"
+            } Group",
+          props.backButton.some,
+          tileTitleClass = ExploreStyles.GroupEditTitle
+        )(
+          _ =>
+            GroupEditBody(
+              props.group,
+              props.childCount,
+              props.timeEstimateRange,
+              props.group.get.system
             )
+              .withKey(props.group.get.id.toString)
+              .toUnmounted,
+          (_, _) => GroupEditTitle(props.group, props.childCount, props.timeEstimateRange)
+        )
 
-          // Then zoom to the Grouping itself
-          val group: UndoSetter[Group] =
-            node.zoom(
-              _._1.value.elem.toOption.get,
-              modF =>
-                _.leftMap: node =>
-                  node.copy(value = node.value.copy(elem = node.value.elem.map(modF)))
-            )
-
-          val editTile = Tile(
-            GroupEditTileIds.GroupEditId.id,
-            s"${
-                if group.get.system then group.get.name.foldMap(_.value)
-                else if group.get.isAnd then "AND"
-                else "OR"
-              } Group",
-            props.backButton.some,
-            tileTitleClass = ExploreStyles.GroupEditTitle
-          )(
-            _ =>
-              GroupEditBody(
-                group,
-                node.get._1.children.length,
-                props.timeEstimateRange,
-                group.get.system
-              )
-                .withKey(props.groupId.toString)
-                .toUnmounted,
-            (_, _) => GroupEditTitle(group, node.get._1.children.length, props.timeEstimateRange)
+      val notesTile = Tile(
+        GroupEditTileIds.GroupNotesId.id,
+        s"Note for Observer"
+      )(_ =>
+        <.div(
+          ExploreStyles.NotesTile,
+          <.div(
+            ExploreStyles.ObserverNotes,
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
           )
-
-          val notesTile = Tile(
-            GroupEditTileIds.GroupNotesId.id,
-            s"Note for Observer"
-          )(_ =>
-            <.div(
-              ExploreStyles.NotesTile,
-              <.div(
-                ExploreStyles.ObserverNotes,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-              )
-            )
-          )
-
-          List(editTile, notesTile)
+        )
+      )
 
       TileController(
         props.userId,
         props.resize.width.orEmpty,
         props.defaultLayouts,
         props.layouts,
-        tiles,
+        List(editTile, notesTile),
         GridLayoutSection.GroupEditLayout,
         props.backButton.some
       )

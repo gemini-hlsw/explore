@@ -162,47 +162,47 @@ object ObsTabContents extends TwoPanels:
             .runAsync
             .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
-        (copyCallback, pasteCallback, props.focusedObs, props.observationIdsWithIndices)
+        (copyCallback, pasteCallback, props.focusedObs /*, props.observationIdsWithIndices*/ )
       ): (props, ctx, _, _, _, _, _, _, _) =>
-        (copyCallback, pasteCallback, obs, obsIdsWithIndices) =>
-          val obsPos: Option[NonNegInt] =
-            obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
+        (copyCallback, pasteCallback, obs /*, obsIdsWithIndices*/ ) =>
+          // val obsPos: Option[NonNegInt] =
+          //   obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
 
           def callbacks: ShortcutCallbacks = {
             case CopyAlt1 | CopyAlt2 => copyCallback
 
             case PasteAlt1 | PasteAlt2 => pasteCallback
 
-            case Down =>
-              obsPos
-                .filter(_.value < obsIdsWithIndices.length)
-                .flatMap: p =>
-                  val next = if (props.focusedObs.isEmpty) 0 else p.value + 1
-                  obsIdsWithIndices
-                    .lift(next)
-                    .map: (obsId, _) =>
-                      ctx.setPageVia(
-                        AppTab.Observations,
-                        props.programId,
-                        Focused.singleObs(obsId),
-                        SetRouteVia.HistoryPush
-                      )
-                .getOrEmpty
+            // case Down =>
+            //   obsPos
+            //     .filter(_.value < obsIdsWithIndices.length)
+            //     .flatMap: p =>
+            //       val next = if (props.focusedObs.isEmpty) 0 else p.value + 1
+            //       obsIdsWithIndices
+            //         .lift(next)
+            //         .map: (obsId, _) =>
+            //           ctx.setPageVia(
+            //             AppTab.Observations,
+            //             props.programId,
+            //             Focused.singleObs(obsId),
+            //             SetRouteVia.HistoryPush
+            //           )
+            //     .getOrEmpty
 
-            case Up =>
-              obsPos
-                .filter(_.value > 0)
-                .flatMap: p =>
-                  obsIdsWithIndices
-                    .lift(p.value - 1)
-                    .map: (obsId, _) =>
-                      ctx.setPageVia(
-                        AppTab.Observations,
-                        props.programId,
-                        Focused.singleObs(obsId),
-                        SetRouteVia.HistoryPush
-                      )
-                .getOrEmpty
+            // case Up =>
+            //   obsPos
+            //     .filter(_.value > 0)
+            //     .flatMap: p =>
+            //       obsIdsWithIndices
+            //         .lift(p.value - 1)
+            //         .map: (obsId, _) =>
+            //           ctx.setPageVia(
+            //             AppTab.Observations,
+            //             props.programId,
+            //             Focused.singleObs(obsId),
+            //             SetRouteVia.HistoryPush
+            //           )
+            //     .getOrEmpty
 
             case GoToSummary =>
               ctx.setPageVia(
@@ -243,7 +243,6 @@ object ObsTabContents extends TwoPanels:
                 selectedObsIds.get,
                 twoPanelState.set(SelectedPanel.Summary),
                 props.groups,
-                props.systemGroups,
                 props.expandedGroups,
                 deckShown,
                 copyCallback,
@@ -286,7 +285,7 @@ object ObsTabContents extends TwoPanels:
             PlotData:
               selectedOrFocusedObsIds
                 .foldMap(_.idSet.toList)
-                .map(props.observations.get.getValue(_))
+                .map(props.observations.get.get(_))
                 .flattenOption
                 .map: obs =>
                   obs
@@ -325,7 +324,8 @@ object ObsTabContents extends TwoPanels:
             )
 
           def obsEditorTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode = {
-            val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
+            val indexValue =
+              Iso.id[ObservationList].index(obsId) // .andThen(KeyedIndexedList.value)
 
             props.observations.model
               .zoom(indexValue)
@@ -356,16 +356,19 @@ object ObsTabContents extends TwoPanels:
           }
 
           def groupEditorTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
-            ObsGroupTiles(
-              props.vault.userId,
-              groupId,
-              props.groups,
-              props.groupTimeRanges.getPot(groupId),
-              resize,
-              ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
-              props.userPreferences.get.groupEditLayout,
-              backButton
-            )
+            props.groups
+              .zoom(Iso.id[GroupList].index(groupId))
+              .map: group =>
+                ObsGroupTiles(
+                  props.vault.userId,
+                  group,
+                  props.programSummaries.get.groupsChildren.get(groupId.some).map(_.length).orEmpty,
+                  props.groupTimeRanges.getPot(groupId),
+                  resize,
+                  ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
+                  props.userPreferences.get.groupEditLayout,
+                  backButton
+                )
 
           def rightSide(resize: UseResizeDetectorReturn): VdomNode =
             (props.focusedObs, props.focusedGroup) match

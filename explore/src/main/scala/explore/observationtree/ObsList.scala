@@ -64,6 +64,7 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 
 import ObsQueries.*
+import explore.model.GroupList
 
 case class ObsList(
   observations:          UndoSetter[ObservationList],
@@ -75,8 +76,8 @@ case class ObsList(
   focusedGroup:          Option[Group.Id],
   selectedObsIds:        List[Observation.Id],   // obs list selected in table
   setSummaryPanel:       Callback,
-  groups:                UndoSetter[GroupTree],
-  systemGroups:          GroupTree,
+  groups:                UndoSetter[GroupList],
+  // systemGroups:          GroupTree,
   expandedGroups:        View[Set[Group.Id]],
   deckShown:             View[DeckShown],
   copyCallback:          Callback,
@@ -88,8 +89,8 @@ case class ObsList(
   private val selectedObsIdSet: Option[ObsIdSet] =
     focusedObs.map(ObsIdSet.one(_)).orElse(ObsIdSet.fromList(selectedObsIds))
 
-  private val activeGroup: Option[Group.Id] = focusedGroup.orElse:
-    focusedObs.flatMap(groups.get.obsGroupId)
+  private val activeGroup: Option[Group.Id] =
+    focusedGroup.orElse(focusedObs.flatMap(_.groupId))
 
   private val copyDisabled: Boolean   = selectedObsIdSet.isEmpty
   private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty

@@ -92,6 +92,7 @@ def cloneObs(
       .guarantee(after)
 
 import monocle.Lens
+import explore.model.GroupList
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)
@@ -118,7 +119,7 @@ def insertObs(
   parentId:     Option[Group.Id],
   pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
-  groupTree:    View[GroupTree],
+  // groups:       View[GroupList],
   adding:       View[AddingObservation],
   ctx:          AppContext[IO]
 ): IO[Unit] =

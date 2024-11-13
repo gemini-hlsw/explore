@@ -63,6 +63,7 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
+import explore.model.GroupList
 
 import java.time.Instant
 import java.util.UUID
@@ -75,7 +76,7 @@ object ObsSummaryTile:
     programId:       Program.Id,
     observations:    UndoSetter[ObservationList],
     selectedObsIds:  View[List[Observation.Id]],
-    groupTree:       View[GroupTree],
+    groups:          View[GroupList],
     obsExecutions:   ObservationExecutionMap,
     allTargets:      TargetList,
     showScienceBand: Boolean,
@@ -95,7 +96,7 @@ object ObsSummaryTile:
           programId,
           observations,
           selectedObsIds,
-          groupTree,
+          groups,
           obsExecutions,
           allTargets,
           showScienceBand,
@@ -179,7 +180,7 @@ object ObsSummaryTile:
     programId:                Program.Id,
     observations:             UndoSetter[ObservationList],
     selectedObsIds:           View[List[Observation.Id]],
-    groupTree:                View[GroupTree],
+    groups:                   View[GroupList],
     obsExecutions:            ObservationExecutionMap,
     allTargets:               TargetList,
     showScienceBand:          Boolean,
@@ -357,11 +358,11 @@ object ObsSummaryTile:
       .useMemoBy((props, _, _) => // Rows
         (props.observations.get.values.toList,
          props.allTargets,
-         props.groupTree.get,
+         props.groups.get,
          props.obsExecutions
         )
       ): (_, _, _) =>
-        (obsList, allTargets, groupTree, obsExecutions) =>
+        (obsList, allTargets, groups, obsExecutions) =>
           obsList
             .filterNot(_.isCalibration)
             .map: obs =>
@@ -375,9 +376,10 @@ object ObsSummaryTile:
                   obs,
                   targets.headOption,
                   asterism,
-                  groupTree
-                    .parentValue(obs.id.asLeft)
-                    .flatMap(_.value.elem.toOption),
+                  obs.groupId.flatMap(groups.get),
+                  // groupTree
+                  //   .parentValue(obs.id.asLeft)
+                  //   .flatMap(_.value.elem.toOption),
                   obsExecutions.getPot(obs.id)
                 ),
                 // Only expand if there are multiple targets
@@ -484,7 +486,7 @@ object ObsSummaryTile:
                 none,
                 0.refined,
                 props.observations,
-                props.groupTree,
+                // props.groups,
                 adding,
                 ctx
               ).runAsyncAndForget

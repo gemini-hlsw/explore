@@ -26,6 +26,7 @@ import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
+import eu.timepit.refined.cats.given
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -197,6 +198,26 @@ case class ProgramSummaries(
     ).map: groupId =>
       groupId +: parentGroups(groupId.asRight)
     .orEmpty
+
+  lazy val groupsChildren: Map[Option[Group.Id], List[Either[Observation, Group]]] =
+    val groupsByParent: List[(Option[Group.Id], Either[Observation, Group])] =
+      groups.values.toList
+        .map: group =>
+          group.parentId -> group.asRight
+
+    val obsByParent: List[(Option[Group.Id], Either[Observation, Group])] =
+      observations.values.toList
+        .map: obs =>
+          obs.groupId -> obs.asLeft
+
+    (groupsByParent ++ obsByParent)
+      .groupMap(_._1)(_._2)
+      .view
+      .mapValues:
+        _.sortBy:
+          _.fold(_.groupIndex, _.parentIndex)
+      .toMap
+  end groupsChildren
 
 object ProgramSummaries:
   val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]       =
