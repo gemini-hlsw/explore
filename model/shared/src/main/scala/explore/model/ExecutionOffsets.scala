@@ -12,9 +12,7 @@ import lucuma.odb.json.offset.decoder.given
 
 case class StepConfigOffset(offset: Option[Offset]) derives Decoder
 
-case class StepOffset(stepConfig: StepConfigOffset) derives Decoder
-
-case class AtomOffset(steps: List[StepOffset]) derives Decoder
+case class AtomOffset(steps: List[StepConfigOffset]) derives Decoder
 
 case class ExecutionSequence(
   nextAtom:       AtomOffset,
@@ -23,12 +21,12 @@ case class ExecutionSequence(
 
 case class ExecutionOffsets(science: ExecutionSequence, acquisition: Option[ExecutionSequence]):
   def allScienceOffsets: List[Offset] =
-    science.nextAtom.steps.flatMap(_.stepConfig.offset) ++
-      science.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset))
+    science.nextAtom.steps.flatMap(_.offset) ++
+      science.possibleFuture.flatMap(_.steps.flatMap(_.offset))
 
   def allAcquisitionOffsets: List[Offset] =
-    acquisition.foldMap(_.nextAtom.steps.flatMap(_.stepConfig.offset)) ++
-      acquisition.foldMap(_.possibleFuture.flatMap(_.steps.flatMap(_.stepConfig.offset)))
+    acquisition.foldMap(_.nextAtom.steps.flatMap(_.offset)) ++
+      acquisition.foldMap(_.possibleFuture.flatMap(_.steps.flatMap(_.offset)))
 
 object ExecutionOffsets:
   private type OffsetTuple = (ExecutionSequence, Option[ExecutionSequence])
