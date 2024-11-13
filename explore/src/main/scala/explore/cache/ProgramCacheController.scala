@@ -275,7 +275,7 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramQueriesGQL.GroupEditSubscription.Data
           ] =
-            _.filter(_.groupEdit.payload.exists(_.existence === Existence.Present))
+            _.filter(_.groupEdit.meta.exists(_.existence === Existence.Present))
 
           val obsTimesUpdates: Pipe[
             IO,
@@ -292,10 +292,10 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
-            _.groupEdit.payload.map(_.value.elem.id),
-            _.groupEdit.payload
-              .map: payload =>
-                updateGroupTimeRange(payload.value.elem.id) <* queryProgramTimes
+            _.groupEdit.value.map(_.id),
+            _.groupEdit.value
+              .map: group =>
+                updateGroupTimeRange(group.id) <* queryProgramTimes
               .getOrElse(IO(identity))
           )
 

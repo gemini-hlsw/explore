@@ -24,6 +24,7 @@ import explore.model.enums.AppTab
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
 import explore.undo.Undoer
+import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -31,6 +32,7 @@ import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.syntax.display.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -92,15 +94,17 @@ case class ObsTree(
       case more => s"$more observations"
   private def groupText(groupId: Group.Id): String             = s"group $groupId"
 
-  private val copyText: Option[String]     = selectedObsIdSet.map(observationsText)
-  private val selectedText: Option[String] =
-    clipboardObsContents.map: obdIdSet =>
-      obdIdSet.idSet.size match
-        case 1    => s"observation ${obdIdSet.idSet.head}"
-        case more => s"$more observations"
-  private val pasteText: Option[String]    =
-    selectedText.map(_ + activeGroup.map(gid => s" into ${groupText(gid)}").orEmpty)
-  private val deleteText: Option[String]   =
+  private val copyText: Option[String]                               = selectedObsIdSet.map(observationsText)
+  private def selectedText(obsIds: Iterable[Observation.Id]): String =
+    obsIds.size match
+      case 1    => s"observation ${obsIds.head}"
+      case more => s"$more observations"
+  private val pasteText: Option[String]                              =
+    clipboardObsContents
+      .map(_.idSet.toSortedSet)
+      .map(selectedText)
+      .map(_ + activeGroup.map(gid => s" into ${groupText(gid)}").orEmpty)
+  private val deleteText: Option[String]                             =
     selectedObsIdSet.map(observationsText).orElse(focusedGroup.map(groupText))
 
   private def createNode(
@@ -140,37 +144,6 @@ object ObsTree:
     Iso[Set[Group.Id], Set[Tree.Id]](_.map(gId => Tree.Id(gId.toString)))(
       _.flatMap(v => Group.Id.parse(v.value))
     )
-
-  // /**
-  //  * Iso between GroupTree and primereact.Tree nodes
-  //  */
-  // private def groupTreeNodeIsoBuilder(
-  //   allObservations: ObservationList
-  // ): Iso[GroupTree, List[Node[GroupTree.Value]]] =
-  //   Iso[GroupTree, List[Node[GroupTree.Value]]](groupTree =>
-  //     def createNode(node: GroupTree.Node): Option[Node[GroupTree.Value]] =
-  //       val isSystemGroup: Boolean    = node.value.elem.toOption.exists(_.system)
-  //       val isCalibrationObs: Boolean = node.value.elem.left.toOption
-  //         .flatMap(obsId => allObservations.get(obsId))
-  //         .exists(_.isCalibration)
-
-  //       // Keep only observation nodes for existing observations.
-  //       Option.when(node.value.elem.fold(allObservations.contains(_), _ => true)):
-  //         Tree.Node(
-  //           Tree.Id(node.value.id.fold(_.toString, _.toString)),
-  //           node.value,
-  //           draggable = !isCalibrationObs && !isSystemGroup,
-  //           droppable = !isCalibrationObs && !isSystemGroup,
-  //           children = node.children.map(createNode).flattenOption
-  //         )
-
-  //     groupTree.toTree.children.map(createNode).flattenOption
-  //   )(nodes =>
-  //     def nodeToTree(node: Node[GroupTree.Value]): GroupTree.Node =
-  //       ExploreNode(node.data, children = node.children.map(nodeToTree).toList)
-
-  //     KeyedIndexedTree.fromTree(ExploreTree(nodes.map(nodeToTree)), _.id)
-  //   )
 
   private def scrollIfNeeded(targetObs: Observation.Id) =
     Callback {
@@ -218,19 +191,6 @@ object ObsTree:
             .as(focusGroup(props.programId, none, ctx))
             .getOrEmpty
       .useStateView(AddingObservation(false)) // adding new observation
-      // treeNodes
-      // .useMemoBy((props, _, _) => (props.groups.model.reuseByValue, props.observations.get)):
-      //   (_, _, _) =>
-      //     (groups, observations) =>
-      //       println("REBUILDING TREE NODES")
-      //       println("GROUPS: " + pprint(groups.get))
-      //       println("OBSERVATIONS: " + pprint(observations))
-      //       val x = groups.as(groupTreeNodeIsoBuilder(observations))
-      //       println("NODES: " + pprint(x.get))
-      //       x
-      // // systemTreeNodes
-      // .useMemoBy((props, _, _, _) => (props.systemGroups, props.observations.get)): (_, _, _, _) =>
-      //   (systemGroups, observations) => groupTreeNodeIsoBuilder(observations).get(systemGroups)
       // Scroll to newly created/selected observation
       .useEffectWithDepsBy((props, _, _) => props.focusedObs): (_, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
@@ -291,7 +251,7 @@ object ObsTree:
         val deleteObsList: List[Observation.Id] => Callback =
           selectedObsIds =>
             ConfirmDialog.confirmDialog(
-              message = <.div(s"This action will delete ${props.selectedText.orEmpty}."),
+              message = <.div(s"This action will delete ${props.selectedText(selectedObsIds)}."),
               header = "Observations delete",
               acceptLabel = "Yes, delete",
               position = DialogPosition.Top,
@@ -303,14 +263,14 @@ object ObsTree:
               icon = Icons.SkullCrossBones(^.color.red)
             )
 
-        val deleteGroup: Group.Id => Callback = gid => Callback.empty
-        // ObsActions
-        //   .groupExistence(
-        //     gid,
-        //     g => focusGroup(props.programId, g.some, ctx)
-        //   )
-        //   .mod(props.groups)(groupTreeMod.delete)
-        //   .showToastCB(s"Deleted group ${gid.shortName}")
+        val deleteGroup: Group.Id => Callback = groupId =>
+          ObsActions
+            .groupExistence(
+              groupId,
+              gid => focusGroup(props.programId, gid.some, ctx)
+            )
+            .set(props.groups)(none)
+            .showToastCB(s"Deleted group ${groupId.shortName}")
 
         def renderItem(
           nodeValue: Either[Observation, Group],
@@ -318,9 +278,6 @@ object ObsTree:
         ): VdomNode =
           nodeValue match
             case Left(obs)    =>
-              // props.observations.get
-              //   .get(obsId)
-              //   .map: obs =>
               val selected: Boolean = props.focusedObs.contains_(obs.id)
 
               <.a(
@@ -353,18 +310,16 @@ object ObsTree:
                     .compose((_: Option[NonEmptyString]).some)
                     .some,
                   deleteCB = deleteObsList(List(obs.id)),
-                  // cloneCB = cloneObs(
-                  //   props.programId,
-                  //   List(obsId),
-                  //   props.groups.get.obsGroupId(obsId), // Clone to the same group
-                  //   props.observations,
-                  //   ctx,
-                  //   adding.async.set(AddingObservation(true)),
-                  //   adding.async.set(AddingObservation(false))
-                  // )
-                  //   .withToast(s"Duplicating obs ${obsId}")
-                  //   .runAsync
-                  //   .some,
+                  cloneCB = cloneObs(
+                    props.programId,
+                    List(obs.id),
+                    obs.groupId, // Clone to the same group
+                    props.observations,
+                    ctx
+                  ).switching(adding.async, AddingObservation(_))
+                    .withToast(s"Duplicating obs ${obs.id}")
+                    .runAsync
+                    .some,
                   setScienceBandCB = (
                     (b: ScienceBand) =>
                       ObsActions.obsScienceBand(obs.id).set(props.observations)(b.some)
@@ -376,15 +331,6 @@ object ObsTree:
             case Right(group) =>
               val isEmpty: Boolean =
                 props.groupsChildren.get(group.id.some).forall(_.isEmpty)
-              // props.groups.get
-              //   .getNodeAndIndexByKey(group.id.asRight)
-              //   .exists(_._1.children.isEmpty)
-
-              // println(
-              //   props.groups.get
-              //     .getNodeAndIndexByKey(group.id.asRight)
-              //     .map(_._1.children)
-              // )
 
               GroupBadge(
                 group,

@@ -7,7 +7,6 @@ import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
 import explore.givens.given
-import explore.model.GroupUpdate
 import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
@@ -19,6 +18,7 @@ import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdi
 import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription.Data.ConfigurationRequestEdit
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
+import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 import explore.model.GroupList
 import explore.model.ProgramTimeRange
@@ -92,13 +92,13 @@ trait CacheModifierUpdaters {
         // else identity
       }
 
-  protected def modifyGroups(groupUpdate: GroupUpdate): ProgramSummaries => ProgramSummaries =
-    groupUpdate.payload // We ignore updates on deleted groups.
+  protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
+    groupEdit.value // We ignore updates on deleted groups.
       // 24 October 2024 - scalafix failing to parse with fewer braces
-      .map { payload =>
-        val groupId: Group.Id          = payload.value.elem.id
+      .map { group =>
+        val groupId: Group.Id          = group.id
         val isPresentInServer: Boolean =
-          groupUpdate.payload.exists(_.existence === Existence.Present)
+          groupEdit.meta.exists(_.existence === Existence.Present)
 
         // The server sends updates for deleted groups. We want to filter those out,
         // but still process deletions for groups we already have.
@@ -122,11 +122,9 @@ trait CacheModifierUpdaters {
               if (!isPresentInServer)
                 _.removed(groupId)
               else
-                groupUpdate.editType match
-                  case DeletedCal =>
-                    _.removed(groupId)
-                  case _          =>
-                    _ + (groupId -> payload.value.elem)
+                groupEdit.editType match
+                  case DeletedCal => _ - groupId
+                  case _          => _ + (groupId -> group)
                   // _.inserted(groupId, payload.value.elem)
                   // val findIndexFn: GroupTree.Node => Boolean =
                   //   _.value.parentIndex >= payload.value.parentIndex

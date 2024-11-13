@@ -70,6 +70,5 @@ object GroupQueriesGQL:
       mutation($$input: CreateGroupInput!) {
         createGroup(input: $$input) {
           group $GroupSubQuery
-          meta:group { parentIndex }
         }
       }"""

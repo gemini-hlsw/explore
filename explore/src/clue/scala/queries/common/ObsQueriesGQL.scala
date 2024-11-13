@@ -9,7 +9,6 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
 // gql: import lucuma.odb.json.configurationrequest.query.given
-// gql: import io.circe.refined.given
 
 object ObsQueriesGQL:
   @GraphQL
@@ -123,9 +122,7 @@ object ObsQueriesGQL:
     val document = """
       mutation ($input: UpdateObservationsInput!){
         updateObservations(input: $input) {
-          observations {
-            id
-          }
+          observations { id }
         }
       }
     """
@@ -135,9 +132,7 @@ object ObsQueriesGQL:
     val document = """
       mutation ($input: UpdateObservationsTimesInput!){
         updateObservationsTimes(input: $input) {
-          observations {
-            id
-          }
+          observations { id }
         }
       }
     """
@@ -190,11 +185,7 @@ object ObsQueriesGQL:
         observationEdit(input: $$input) {
           observationId
           value $ObservationSubquery
-          meta:value {
-            groupId
-            groupIndex
-            existence
-          }
+          meta:value { existence }
           editType
         }
       }

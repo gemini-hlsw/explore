@@ -11,17 +11,11 @@ import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
-import explore.data.tree.KeyedIndexedTree.Index
-import explore.data.tree.Node
 import explore.model.AppContext
 import explore.model.Focused
-import explore.model.GroupTree
 import explore.model.Observation
-import explore.model.ServerIndexed
 import explore.model.enums.AppTab
 import explore.syntax.ui.*
-import explore.undo.KIListMod
-import explore.undo.KITreeMod
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
@@ -37,11 +31,12 @@ import queries.schemas.odb.ObsQueries.*
 import explore.model.ObservationList
 import monocle.Iso
 import monocle.Lens
+import explore.model.GroupList
 
-val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
+// val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 
-val groupTreeMod: KITreeMod[GroupTree.Value, GroupTree.Key] =
-  KITreeMod[GroupTree.Value, GroupTree.Key](GroupTree.key)
+// val groupTreeMod: KITreeMod[GroupTree.Value, GroupTree.Key] =
+//   KITreeMod[GroupTree.Value, GroupTree.Key](GroupTree.key)
 
 def focusObs[F[_]](
   programId: Program.Id,
@@ -62,31 +57,31 @@ def cloneObs(
   obsIds:       List[Observation.Id],
   newGroupId:   Option[Group.Id],
   observations: UndoSetter[ObservationList],
-  ctx:          AppContext[IO],
-  before:       IO[Unit] = IO.unit,
-  after:        IO[Unit] = IO.unit
+  ctx:          AppContext[IO]
+  // before:       IO[Unit] = IO.unit,
+  // after:        IO[Unit] = IO.unit
 ): IO[Unit] =
   import ctx.given
 
-  before >>
-    obsIds
-      .traverse(cloneObservation[IO](_, newGroupId))
-      .flatMap: newObsList =>
-        ObsActions
-          .obsExistence(
-            newObsList.map(_.id),
-            focusObs = obsId => focusObs(programId, obsId.some, ctx),
-            postMessage = ToastCtx[IO].showToast(_)
-          )
-          .set(observations): // obsList =>
-            newObsList.map(_.some)
-            // obsList
-            //   .zip(newObsList)
-            //   // Just place the new obs at the end of the group, which is where the server clones it.
-            //   .map((oldObs, newObs) => (_ + (newObs))(oldObs))
-            //   // .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
-          .toAsync
-      .guarantee(after)
+  // before >>
+  obsIds
+    .traverse(cloneObservation[IO](_, newGroupId))
+    .flatMap: newObsList =>
+      ObsActions
+        .obsExistence(
+          newObsList.map(_.id),
+          focusObs = obsId => focusObs(programId, obsId.some, ctx),
+          postMessage = ToastCtx[IO].showToast(_)
+        )
+        .set(observations): // obsList =>
+          newObsList.map(_.some)
+          // obsList
+          //   .zip(newObsList)
+          //   // Just place the new obs at the end of the group, which is where the server clones it.
+          //   .map((oldObs, newObs) => (_ + (newObs))(oldObs))
+          //   // .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
+        .toAsync
+  // .guarantee(after)
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)
@@ -143,15 +138,15 @@ def insertObs(
     // ).toAsync
     .switching(adding.zoom(AddingObservation.value.asLens).async)
 
-private def findGrouping(
-  groupId: Group.Id
-): GroupTree => Option[(GroupTree.Node, GroupTree.Index)] =
-  _.getNodeAndIndexByKey(groupId.asRight)
+// private def findGrouping(
+//   groupId: Group.Id
+// ): GroupTree => Option[(GroupTree.Node, GroupTree.Index)] =
+//   _.getNodeAndIndexByKey(groupId.asRight)
 
 def insertGroup(
   programId: Program.Id,
   parentId:  Option[Group.Id],
-  groups:    UndoSetter[GroupTree],
+  groups:    UndoSetter[GroupList],
   adding:    View[AddingObservation],
   ctx:       AppContext[IO]
 ): IO[Unit] =
@@ -159,13 +154,10 @@ def insertGroup(
 
   GroupQueries
     .createGroup[IO](programId, parentId)
-    .flatMap: (group, parentIndex) =>
+    .flatMap: group =>
       ObsActions
         .groupExistence(group.id, g => focusGroup(programId, g.some, ctx))
-        .set(groups):
-          (Node(ServerIndexed(group.asRight, parentIndex)),
-           Index(parentId.map(_.asRight), NonNegInt.MaxValue)
-          ).some
+        .set(groups)(group.some)
         .toAsync
     .void
     .switching(adding.zoom(AddingObservation.value.asLens).async)

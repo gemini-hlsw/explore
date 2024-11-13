@@ -11,19 +11,20 @@ import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
-import explore.model.GroupTree
+import explore.model.Group
 import explore.model.Observation
 import explore.optics.all.*
 import explore.undo.Action
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ScienceBand
-import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
 import explore.model.ObservationList
+import explore.model.GroupList
+import monocle.Iso
 
 object ObsActions:
   def obsEditState(obsId: Observation.Id)(using
@@ -79,25 +80,28 @@ object ObsActions:
     setGroup: Group.Id => Callback
   )(using
     FetchClient[IO, ObservationDB]
-  ): Action[GroupTree, Option[(GroupTree.Node, GroupTree.Index)]] =
+  ): Action[GroupList, Option[Group]] =
     Action(
-      getter = findGrouping(groupId),
-      setter = maybeGroup =>
-        groupList =>
-          maybeGroup match
-            case None              => groupList.removed(groupId.asRight)
-            case Some((node, idx)) =>
-              val group = node.value
-              groupList.upserted(groupId.asRight, group, idx)
+      Iso
+        .id[GroupList]
+        .at(groupId)
+        // getter = findGrouping(groupId),
+        // setter = maybeGroup =>
+        //   groupList =>
+        //     maybeGroup match
+        //       case None              => groupList.removed(groupId.asRight)
+        //       case Some((node, idx)) =>
+        //         val group = node.value
+        //         groupList.upserted(groupId.asRight, group, idx)
     )(
-      onSet = (_, node) =>
-        node.fold {
+      onSet = (_, groupOpt) =>
+        groupOpt.fold {
           GroupQueries.deleteGroup[IO](groupId)
-        } { case (_, _) => setGroup(groupId).toAsync },
-      onRestore = (_, node) =>
-        node.fold {
+        }(_ => setGroup(groupId).toAsync),
+      onRestore = (_, groupOpt) =>
+        groupOpt.fold {
           GroupQueries.deleteGroup[IO](groupId)
-        } { case (_, _) =>
+        } { _ =>
           GroupQueries.undeleteGroup[IO](groupId) >> setGroup(groupId).toAsync
         }
     )
