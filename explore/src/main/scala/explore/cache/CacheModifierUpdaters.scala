@@ -3,17 +3,13 @@
 
 package explore.cache
 
-import cats.Endo
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
-import eu.timepit.refined.auto.autoUnwrap
 import explore.givens.given
-import explore.model.GroupTree
 import explore.model.GroupUpdate
 import explore.model.Observation
 import explore.model.ProgramSummaries
-import explore.model.ServerIndexed
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType

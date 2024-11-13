@@ -10,7 +10,6 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.Group
 import explore.model.GroupEditTileIds
-import explore.model.GroupTree
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
@@ -21,8 +20,6 @@ import lucuma.core.model.*
 import lucuma.react.common.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
-import explore.model.GroupList
-import monocle.Iso
 
 case class ObsGroupTiles(
   userId:            Option[User.Id],

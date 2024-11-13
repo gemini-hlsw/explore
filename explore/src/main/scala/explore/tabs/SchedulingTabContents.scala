@@ -16,7 +16,6 @@ import explore.common.TimingWindowsQueries
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.Observation

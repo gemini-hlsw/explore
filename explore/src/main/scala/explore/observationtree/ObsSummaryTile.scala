@@ -22,7 +22,6 @@ import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Focused
 import explore.model.Group
-import explore.model.GroupTree
 import explore.model.ObsSummaryTabTileIds
 import explore.model.Observation
 import explore.model.ObservationExecutionMap

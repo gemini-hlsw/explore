@@ -11,7 +11,6 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import explore.DefaultErrorPolicy
-import explore.model.GroupTree
 import explore.model.ObsAttachment
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
@@ -40,8 +39,6 @@ import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 
 import scala.concurrent.duration.*
-import explore.model.GroupList
-import explore.data.KeyedIndexedList
 import explore.model.Group
 import explore.model.Execution
 import explore.model.ProgramTimeRange

@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import explore.common.AsterismQueries
-import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
 import explore.model.ObsIdSet

@@ -19,8 +19,6 @@ import explore.model.GroupTree
 import explore.model.Observation
 import explore.model.ServerIndexed
 import explore.model.enums.AppTab
-import explore.optics.GetAdjust
-import explore.optics.all.*
 import explore.syntax.ui.*
 import explore.undo.KIListMod
 import explore.undo.KITreeMod
@@ -34,12 +32,11 @@ import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
-import monocle.Focus
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries.*
 import explore.model.ObservationList
 import monocle.Iso
-import lucuma.ui.reusability.given
+import monocle.Lens
 
 val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
 
@@ -90,9 +87,6 @@ def cloneObs(
             //   // .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
           .toAsync
       .guarantee(after)
-
-import monocle.Lens
-import explore.model.GroupList
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)

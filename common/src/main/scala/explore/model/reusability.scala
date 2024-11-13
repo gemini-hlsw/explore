@@ -74,7 +74,7 @@ object reusability:
   given Reusability[ProgramInfo]             = Reusability.byEq
   given Reusability[ProgramDetails]          = Reusability.byEq
   given Reusability[Execution]               = Reusability.byEq
-  given Reusability[GroupTree]               = Reusability.byEq
+  // given Reusability[GroupTree]               = Reusability.byEq
 
   /**
    */

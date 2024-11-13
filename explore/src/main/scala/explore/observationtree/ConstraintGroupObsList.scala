@@ -12,7 +12,6 @@ import explore.common.ConstraintsQueries
 import explore.components.ActionButtons
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.ConstraintGroupList
 import explore.model.Focused

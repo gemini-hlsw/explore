@@ -17,7 +17,6 @@ import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.GuideStarSelection
@@ -427,7 +426,7 @@ object TargetTabContents extends TwoPanels:
 
             val obsConf = idsToEdit.single match {
               case Some(id) =>
-                props.programSummaries.get.observations.toList
+                props.programSummaries.get.observations.values.toList
                   .collect:
                     case o @ Observation(
                           obsId,

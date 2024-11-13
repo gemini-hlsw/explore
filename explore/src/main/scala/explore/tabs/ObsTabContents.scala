@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.Icons
@@ -16,10 +15,8 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
-import explore.model.GroupTree.syntax.*
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramSummaries
@@ -57,6 +54,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import explore.undo.Undoer
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -232,17 +230,18 @@ object ObsTabContents extends TwoPanels:
         ) =>
           val observationsTree: VdomNode =
             if (deckShown.get === DeckShown.Shown) {
-              ObsList(
-                props.observations,
-                props.obsExecutions,
-                props.programSummaries,
+              ObsTree(
                 props.programId,
+                props.observations,
+                props.groups,
+                props.programSummaries.get.groupsChildren,
+                props.obsExecutions,
+                props.programSummaries: Undoer,
                 props.focusedObs,
                 props.focusedTarget,
                 props.focusedGroup,
                 selectedObsIds.get,
                 twoPanelState.set(SelectedPanel.Summary),
-                props.groups,
                 props.expandedGroups,
                 deckShown,
                 copyCallback,

@@ -179,7 +179,7 @@ object ProgramUnrequestedConfigsTable:
                 props.observations.mod: obsList =>
                   SortedMap
                     .from:
-                      obsList.mapValues:
+                      obsList.view.mapValues:
                         _.updateToPendingIfConfigurationApplies(request.configuration)
               ).to[IO]
 

@@ -34,7 +34,7 @@ object GroupQueriesGQL:
         system
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
-        parentGroupId Only used for identifying root group
+        parentId 
         parentIndex
       }
     """

@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
@@ -24,7 +23,6 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import queries.schemas.odb.ObsQueries.*
 import explore.model.ObservationList
 
 object ObsActions:

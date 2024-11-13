@@ -18,7 +18,6 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTile
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.ConstraintGroupList

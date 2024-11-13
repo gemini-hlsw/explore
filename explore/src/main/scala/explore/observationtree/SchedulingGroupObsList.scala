@@ -13,7 +13,6 @@ import explore.common.TimingWindowsQueries
 import explore.components.ActionButtons
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsIdSet
