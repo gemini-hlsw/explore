@@ -44,11 +44,11 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
-import lucuma.ui.reusability.given
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
@@ -200,7 +200,6 @@ object SchedulingTabContents extends TwoPanels:
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-              // .andThen(KeyedIndexedList.value)
 
               val twTraversal = obsTraversal.andThen(Observation.timingWindows)
 

@@ -35,7 +35,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries:
-  // type ObservationList = KeyedIndexedList[Observation.Id, Observation]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData

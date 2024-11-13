@@ -9,6 +9,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.givens.given
 import explore.model.syntax.all.*
@@ -53,7 +54,6 @@ import org.typelevel.cats.time.*
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
-import eu.timepit.refined.types.numeric.NonNegShort
 
 case class Observation(
   id:                  Observation.Id,

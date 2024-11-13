@@ -70,9 +70,6 @@ object ProgramQueriesGQL:
       }
     """
 
-    // object Data:
-    //   type GroupEdit = GroupUpdate
-
   @GraphQL
   trait ProgramEditAttachmentSubscription extends GraphQLOperation[ObservationDB]:
     val document: String = s"""

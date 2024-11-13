@@ -3,6 +3,7 @@
 
 package explore.programs
 
+import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -41,8 +42,8 @@ import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 import queries.schemas.odb.ObsQueries
+
 import scala.collection.immutable.SortedMap
-import cats.Order.given
 
 object ProgramUnrequestedConfigsTable:
   case class Row(

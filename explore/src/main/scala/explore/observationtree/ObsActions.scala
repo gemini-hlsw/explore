@@ -8,11 +8,14 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.Group
+import explore.model.GroupList
 import explore.model.Observation
+import explore.model.ObservationList
 import explore.optics.all.*
 import explore.undo.Action
 import japgolly.scalajs.react.*
@@ -20,14 +23,11 @@ import lucuma.core.enums.ScienceBand
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import lucuma.ui.optics.*
+import monocle.Iso
+import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import explore.model.ObservationList
-import explore.model.GroupList
-import monocle.Iso
-import eu.timepit.refined.types.numeric.NonNegShort
-import lucuma.ui.optics.*
-import monocle.Lens
 
 object ObsActions:
   private val obsGroupInfo: Lens[Observation, (Option[Group.Id], NonNegShort)] =

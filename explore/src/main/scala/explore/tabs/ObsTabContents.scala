@@ -34,6 +34,7 @@ import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -54,7 +55,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import explore.undo.Undoer
+import monocle.Optional
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -82,7 +83,6 @@ case class ObsTabContents(
   private val observations: UndoSetter[ObservationList]  =
     programSummaries.zoom(ProgramSummaries.observations)
   private val groups: UndoSetter[GroupList]              = programSummaries.zoom(ProgramSummaries.groups)
-  // private val systemGroups: GroupTree                                      = programSummaries.get.systemGroups
   private val activeGroup: Option[Group.Id]              = focusedGroup.orElse:
     focusedObs.flatMap(observations.get.get(_)).flatMap(_.groupId)
   private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
@@ -160,9 +160,9 @@ object ObsTabContents extends TwoPanels:
             .runAsync
             .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
-        (copyCallback, pasteCallback, props.focusedObs /*, props.observationIdsWithIndices*/ )
+        (copyCallback, pasteCallback /*, props.focusedObs , props.observationIdsWithIndices*/ )
       ): (props, ctx, _, _, _, _, _, _, _) =>
-        (copyCallback, pasteCallback, obs /*, obsIdsWithIndices*/ ) =>
+        (copyCallback, pasteCallback /*, obs , obsIdsWithIndices*/ ) =>
           // val obsPos: Option[NonNegInt] =
           //   obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
 
@@ -323,8 +323,8 @@ object ObsTabContents extends TwoPanels:
             )
 
           def obsEditorTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode = {
-            val indexValue =
-              Iso.id[ObservationList].index(obsId) // .andThen(KeyedIndexedList.value)
+            val indexValue: Optional[ObservationList, Observation] =
+              Iso.id[ObservationList].index(obsId)
 
             props.observations.model
               .zoom(indexValue)

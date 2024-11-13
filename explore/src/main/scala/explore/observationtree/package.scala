@@ -12,7 +12,9 @@ import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.GroupList
 import explore.model.Observation
+import explore.model.ObservationList
 import explore.model.enums.AppTab
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
@@ -25,17 +27,10 @@ import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
-import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ObsQueries.*
-import explore.model.ObservationList
 import monocle.Iso
 import monocle.Lens
-import explore.model.GroupList
-
-// val obsListMod = KIListMod[Observation, Observation.Id](Observation.id)
-
-// val groupTreeMod: KITreeMod[GroupTree.Value, GroupTree.Key] =
-//   KITreeMod[GroupTree.Value, GroupTree.Key](GroupTree.key)
+import queries.common.ObsQueriesGQL.*
+import queries.schemas.odb.ObsQueries.*
 
 def focusObs[F[_]](
   programId: Program.Id,
@@ -57,12 +52,9 @@ def cloneObs(
   newGroupId:   Option[Group.Id],
   observations: UndoSetter[ObservationList],
   ctx:          AppContext[IO]
-  // before:       IO[Unit] = IO.unit,
-  // after:        IO[Unit] = IO.unit
 ): IO[Unit] =
   import ctx.given
 
-  // before >>
   obsIds
     .traverse(cloneObservation[IO](_, newGroupId))
     .flatMap: newObsList =>
@@ -72,15 +64,9 @@ def cloneObs(
           focusObs = obsId => focusObs(programId, obsId.some, ctx),
           postMessage = ToastCtx[IO].showToast(_)
         )
-        .set(observations): // obsList =>
+        .set(observations):
           newObsList.map(_.some)
-          // obsList
-          //   .zip(newObsList)
-          //   // Just place the new obs at the end of the group, which is where the server clones it.
-          //   .map((oldObs, newObs) => (_ + (newObs))(oldObs))
-          //   // .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs))
         .toAsync
-  // .guarantee(after)
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)
@@ -105,9 +91,7 @@ type AddingObservation = AddingObservation.Type
 def insertObs(
   programId:    Program.Id,
   parentId:     Option[Group.Id],
-  // pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
-  // groups:       View[GroupList],
   adding:       View[AddingObservation],
   ctx:          AppContext[IO]
 ): IO[Unit] =
@@ -121,26 +105,10 @@ def insertObs(
           focusObs = obsId => focusObs(programId, obsId.some, ctx),
           postMessage = ToastCtx[IO].showToast(_)
         )
-        .set(observations): // obsList =>
+        .set(observations):
           List(obs.some)
         .toAsync
-    // obsList
-    //   .zip(List(obs))
-    //   // Just place the new obs at the end of the group, which is where the server clones it.
-    //   .map((oldObs, newObs) => obsListMod.upsert(newObs, NonNegInt.MaxValue)(oldObs)))
-    // >> groupTree.mod:
-    //   _.inserted(
-    //     obs.id.asLeft,
-    //     Node(ServerIndexed(obs.id.asLeft, groupIndex)),
-    //     Index(parentId.map(_.asRight), NonNegInt.MaxValue)
-    //   )
-    // ).toAsync
     .switching(adding.zoom(AddingObservation.value.asLens).async)
-
-// private def findGrouping(
-//   groupId: Group.Id
-// ): GroupTree => Option[(GroupTree.Node, GroupTree.Index)] =
-//   _.getNodeAndIndexByKey(groupId.asRight)
 
 def insertGroup(
   programId: Program.Id,

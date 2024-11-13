@@ -11,12 +11,15 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import explore.DefaultErrorPolicy
+import explore.model.Execution
+import explore.model.Group
 import explore.model.ObsAttachment
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
+import explore.model.ProgramTimeRange
 import explore.model.ProposalAttachment
 import explore.utils.keyedSwitchEvalMap
 import explore.utils.reduceWithin
@@ -39,9 +42,6 @@ import queries.common.ProgramSummaryQueriesGQL
 import queries.common.TargetQueriesGQL
 
 import scala.concurrent.duration.*
-import explore.model.Group
-import explore.model.Execution
-import explore.model.ProgramTimeRange
 
 case class ProgramCacheController(
   programId:           Program.Id,
@@ -218,9 +218,6 @@ object ProgramCacheController
       // So, if we do it first, it could take a long time.
       Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
         Stream.emits(groups.map(_.id)).evalMap(updateGroupTimeRange) ++
-        // groups.collect { case (Right(id), _, _) => id } ++
-        //   systemGroups.collect { case (Right(id), _, _) => id }
-        // .evalMap(updateGroupTimeRange) ++
         Stream.eval(updateProgramTimes(props.programId))
 
     for

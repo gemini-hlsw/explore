@@ -22,9 +22,11 @@ import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Focused
 import explore.model.Group
+import explore.model.GroupList
 import explore.model.ObsSummaryTabTileIds
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
+import explore.model.ObservationList
 import explore.model.TargetList
 import explore.model.display.given
 import explore.model.enums.AppTab
@@ -61,12 +63,10 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import explore.model.GroupList
 
 import java.time.Instant
 import java.util.UUID
 import scala.collection.immutable.TreeSeqMap
-import explore.model.ObservationList
 
 object ObsSummaryTile:
   def apply(
@@ -375,9 +375,6 @@ object ObsSummaryTile:
                   targets.headOption,
                   asterism,
                   obs.groupId.flatMap(groups.get),
-                  // groupTree
-                  //   .parentValue(obs.id.asLeft)
-                  //   .flatMap(_.value.elem.toOption),
                   obsExecutions.getPot(obs.id)
                 ),
                 // Only expand if there are multiple targets

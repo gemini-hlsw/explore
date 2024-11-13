@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ActionButtons
@@ -16,15 +17,16 @@ import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Group
+import explore.model.GroupList
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.ObservationList
 import explore.model.ObservationExecutionMap
+import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
 import explore.undo.Undoer
-import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -55,8 +57,6 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 
 import ObsQueries.*
-import explore.model.GroupList
-import eu.timepit.refined.types.numeric.NonNegShort
 
 case class ObsTree(
   programId:             Program.Id,

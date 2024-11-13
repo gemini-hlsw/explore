@@ -9,6 +9,7 @@ import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
 import crystal.Pot
+import eu.timepit.refined.cats.given
 import explore.model.syntax.all.*
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
@@ -26,7 +27,6 @@ import lucuma.schemas.model.TargetWithId
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
-import eu.timepit.refined.cats.given
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -36,7 +36,6 @@ case class ProgramSummaries(
   targets:               TargetList,
   observations:          ObservationList,
   groups:                GroupList,
-  // systemGroups:          GroupList,
   obsAttachments:        ObsAttachmentList,
   proposalAttachments:   List[ProposalAttachment],
   programs:              ProgramInfoList,
@@ -228,7 +227,6 @@ object ProgramSummaries:
   val observations: Lens[ProgramSummaries, ObservationList]                   =
     Focus[ProgramSummaries](_.observations)
   val groups: Lens[ProgramSummaries, GroupList]                               = Focus[ProgramSummaries](_.groups)
-  // val systemGroups: Lens[ProgramSummaries, GroupList]                         = Focus[ProgramSummaries](_.systemGroups)
   val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]               =
     Focus[ProgramSummaries](_.obsAttachments)
   val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]]   =
@@ -259,7 +257,6 @@ object ProgramSummaries:
     targetList:          List[TargetWithId],
     obsList:             List[Observation],
     groupList:           List[Group],
-    // systemGroups:        GroupTree,
     obsAttachments:      List[ObsAttachment],
     proposalAttachments: List[ProposalAttachment],
     programs:            List[ProgramInfo],
@@ -273,8 +270,6 @@ object ProgramSummaries:
       targetList.toSortedMap(_.id, _.target),
       obsList.toSortedMap(_.id),
       groupList.toSortedMap(_.id),
-      // KeyedIndexedList.fromList(obsList, Observation.id.get),
-      // KeyedIndexedList.fromList(groupList, Group.id.get),
       obsAttachments.toSortedMap(_.id),
       proposalAttachments,
       programs.toSortedMap(_.id),

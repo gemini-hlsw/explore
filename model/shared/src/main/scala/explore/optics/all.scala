@@ -111,12 +111,6 @@ object all extends ModelOptics {
         lens.asAdjuster.composeOptionLens(other)
       )
 
-    // def composeOptionGetAdjust[B](other: GetAdjust[A, B]): GetAdjust[S, Option[B]] =
-    //   GetAdjust(
-    //     getAdjust.getter.composeOptionGetter(other.getter),
-    //     getAdjust.adjuster.composeOptionGetAdjust(other)
-    //   )
-
     def composeOptionOptionLens[B](other: Lens[A, Option[B]]): GetAdjust[S, Option[B]] =
       composeOptionOptionGetAdjust(other.asGetAdjust)
 

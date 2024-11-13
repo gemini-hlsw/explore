@@ -7,8 +7,10 @@ import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
 import explore.givens.given
+import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ProgramSummaries
+import explore.model.ProgramTimeRange
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
@@ -16,12 +18,10 @@ import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription.Data.ConfigurationRequestEdit
+import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
 import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
-import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
-import explore.model.GroupList
-import explore.model.ProgramTimeRange
 
 /**
  * Functions to modify cache through subscription updates
@@ -60,18 +60,8 @@ trait CacheModifierUpdaters {
             .modify: observations =>
               if (isPresentInServer)
                 observations + (obsId -> value)
-              // observations.inserted(
-              //   obsId,
-              //   value,
-              //   observations.getIndex(obsId).getOrElse(observations.length)
-              // )
-              else observations.removed(obsId)
-
-        // // TODO: this won't be needed anymore when groups are also updated through events of observation updates.
-        // val groupsUpdate: ProgramSummaries => ProgramSummaries =
-        //   if (isPresentInServer)
-        //     updateGroupsMappingForObsEdit(observationEdit)
-        //   else identity
+              else
+                observations - obsId
 
         val programTimesReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.programTimesPot.replace(Pot.pending)
@@ -82,15 +72,8 @@ trait CacheModifierUpdaters {
             else oem.removed(obsId)
 
         ifPresentInServerOrLocally:
-          obsUpdate >>> /* groupsUpdate >>>*/ programTimesReset >>> obsExecutionReset
-      .getOrElse {
-        identity
-        // if (observationEdit.editType === DeletedCal)
-        //   ProgramSummaries.groups
-        //     .modify: groupList =>
-        //       groupList.removed(observationEdit.observationId.asLeft)
-        // else identity
-      }
+          obsUpdate >>> programTimesReset >>> obsExecutionReset
+      .orEmpty
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     groupEdit.value // We ignore updates on deleted groups.
@@ -110,12 +93,6 @@ trait CacheModifierUpdaters {
             if isPresentInServer || isPresentLocally then mod(programSummaries)
             else programSummaries
 
-        // val groupMod: Endo[GroupTree] => Endo[ProgramSummaries] =
-        // if (groupUpdate.payload.exists(_.value.elem.system))
-        //   ProgramSummaries.systemGroups.modify
-        // else
-        // ProgramSummaries.groups.modify
-
         val updateGroup: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groups.modify: groupList =>
             val mod: GroupList => GroupList =
@@ -125,15 +102,6 @@ trait CacheModifierUpdaters {
                 groupEdit.editType match
                   case DeletedCal => _ - groupId
                   case _          => _ + (groupId -> group)
-                  // _.inserted(groupId, payload.value.elem)
-                  // val findIndexFn: GroupTree.Node => Boolean =
-                  //   _.value.parentIndex >= payload.value.parentIndex
-                  // _.upserted(
-                  //   groupId.asRight,
-                  //   payload.value.map(_.asRight),
-                  //   payload.parentGroupId.map(_.asRight),
-                  //   findIndexFn
-                  // )
             mod(groupList)
 
         val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
@@ -168,48 +136,6 @@ trait CacheModifierUpdaters {
       ProgramSummaries.configurationRequests
         .modify: crs =>
           crs.updated(cr.id, cr)
-
-  // /**
-  //  * Update the groups for an observation edit. When an observation is updated, we also need to
-  //  * update the groups it belongs to.
-  //  */
-  // private def updateGroupsMappingForObsEdit(
-  //   observationEdit: ObservationEdit
-  // ): ProgramSummaries => ProgramSummaries =
-  //   val obsId: Observation.Id = observationEdit.observationId
-  //   (observationEdit.value, observationEdit.meta)
-  //     .mapN: (newObservation, meta) =>
-
-  //       val findIndexFn: GroupTree.Node => Boolean =
-  //         _.value.parentIndex >= meta.groupIndex
-
-  //       val isInSystemGroup: ProgramSummaries => Boolean = meta.groupId match {
-  //         case Some(g) =>
-  //           ProgramSummaries.systemGroups.exist(_.contains(g.asRight))
-  //         case None    => _ => false
-  //       }
-
-  //       val groupMod: Endo[GroupTree] => Endo[ProgramSummaries] =
-  //         modGroup =>
-  //           programSummaries =>
-  //             if (isInSystemGroup(programSummaries))
-  //               ProgramSummaries.systemGroups.modify(modGroup)(programSummaries)
-  //             else
-  //               ProgramSummaries.groups.modify(modGroup)(programSummaries)
-
-  //       groupMod:
-  //         _.upserted(
-  //           obsId.asLeft,
-  //           ServerIndexed(obsId.asLeft, meta.groupIndex),
-  //           meta.groupId.map(_.asRight),
-  //           findIndexFn
-  //         )
-  //     .getOrElse:
-  //       ProgramSummaries.systemGroups
-  //         .modify: groupTree =>
-  //           if (observationEdit.editType === EditType.DeletedCal)
-  //             groupTree.removed(obsId.asLeft)
-  //           else groupTree
 
   /**
    * Reset the time range pots for all parent groups of the given id
