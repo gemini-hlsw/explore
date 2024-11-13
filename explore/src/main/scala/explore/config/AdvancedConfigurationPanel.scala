@@ -133,11 +133,17 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     Logger[IO]
   ): View[Fpu]
 
-  @inline protected def explicitBinning(aligner: AA)(using
+  @inline protected def explicitXBinning(aligner: AA)(using
     MonadError[IO, Throwable],
     Effect.Dispatch[IO],
     Logger[IO]
-  ): View[Option[(XBinning, YBinning)]]
+  ): View[Option[XBinning]]
+
+  @inline protected def explicitYBinning(aligner: AA)(using
+    MonadError[IO, Throwable],
+    Effect.Dispatch[IO],
+    Logger[IO]
+  ): View[Option[YBinning]]
 
   @inline protected def explicitReadModeGain(aligner: AA)(using
     MonadError[IO, Throwable],
@@ -169,7 +175,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val initialFilterLens: Lens[T, Option[Filter]]
   @inline protected val initialFpuLens: Lens[T, Fpu]
   @inline protected val initialCentralWavelengthLens: Lens[T, Wavelength]
-  @inline protected val defaultBinningLens: Lens[T, (XBinning, YBinning)]
+  @inline protected val defaultXBinningLens: Lens[T, XBinning]
+  @inline protected val defaultYBinningLens: Lens[T, YBinning]
   @inline protected val defaultReadModeGainLens: Lens[T, (ReadMode, Gain)]
   @inline protected val defaultRoiLens: Lens[T, Roi]
   @inline protected val defaultWavelengthDithersLens: Lens[T, NonEmptyList[WavelengthDither]]
@@ -179,11 +186,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val obsoleteFilters: Set[Filter]
   @inline protected val obsoleteRois: Set[Roi]
 
-  protected given Display[(XBinning, YBinning)] =
-    Display.by(
-      { case (x, y) => s"${x.shortName} x ${y.shortName}" },
-      { case (x, y) => s"${x.longName} x ${y.longName}" }
-    )
+  @inline protected def resolvedReadModeGainGetter: T => (ReadMode, Gain)
 
   protected given Display[(ReadMode, Gain)] =
     Display.by( // Shortname is in lower case for some reason
@@ -246,13 +249,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): Option[ModeData] =
     rows.collectFirstSome(row => findMatrixDataFromRow(mode, reqsWavelength, row))
 
-  // If the view contains `none`, `get` returns the default value. When setting,
-  // if the new value is the default value, set it to none.
   extension [A: Eq](view: View[Option[A]])
-    private def withDefault(default: A): View[Option[A]] =
-      view.zoom(_.orElse(default.some))(f =>
-        b => f(b).flatMap(newB => if (newB === default) none else newB.some)
+    // If the view contains `none`, `get` returns the defaultDisplay value. When setting,
+    // if the new value is the defaultSet value, set it to none.
+    private def withDefault(defaultSet: A, defaultDisplay: A): View[Option[A]] =
+      view.zoom(_.orElse(defaultDisplay.some))(f =>
+        b => f(b).flatMap(newB => if (newB === defaultSet) none else newB.some)
       )
+
+    private def withDefault(default: A): View[Option[A]] =
+      withDefault(default, default)
 
   private def customized(original: String, toRevert: Callback): VdomNode =
     <.span(
@@ -448,9 +454,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ModeCommonWavelengths.wavelengthInterval(centralWavelengthView.get)
           )
 
-        val defaultBinning      = defaultBinningLens.get(props.observingMode.get)
-        val defaultReadModeGain = defaultReadModeGainLens.get(props.observingMode.get)
-        val defaultRoi          = defaultRoiLens.get(props.observingMode.get)
+        val defaultXBinning      = defaultXBinningLens.get(props.observingMode.get)
+        val defaultYBinning      = defaultYBinningLens.get(props.observingMode.get)
+        val defaultReadModeGain  = defaultReadModeGainLens.get(props.observingMode.get)
+        val defaultRoi           = defaultRoiLens.get(props.observingMode.get)
+        val resolvedReadModeGain = resolvedReadModeGainGetter(props.observingMode.get)
 
         val validDithers = modeData.value
           .map(mode =>
@@ -681,11 +689,21 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               "Binning",
               HelpIcon("configuration/binning.md".refined)
             ),
-            customizableEnumSelectOptional(
-              id = "explicitXBin".refined,
-              view = explicitBinning(props.observingMode).withDefault(defaultBinning),
-              original = defaultBinning.some,
-              disabled = disableAdvancedEdit
+            <.div(
+              ExploreStyles.AdvancedConfigurationBinning,
+              customizableEnumSelectOptional(
+                id = "explicitXBin".refined,
+                view = explicitXBinning(props.observingMode).withDefault(defaultXBinning),
+                original = defaultXBinning.some,
+                disabled = disableAdvancedEdit
+              ),
+              FormLabel(htmlFor = "explicitYBin".refined)("x"),
+              customizableEnumSelectOptional(
+                id = "explicitYBin".refined,
+                view = explicitYBinning(props.observingMode).withDefault(defaultYBinning),
+                original = defaultYBinning.some,
+                disabled = disableAdvancedEdit
+              )
             ),
             FormLabel(htmlFor = "explicitReadMode".refined)(
               "Read Mode",
@@ -693,7 +711,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             customizableEnumSelectOptional(
               id = "explicitReadMode".refined,
-              view = explicitReadModeGain(props.observingMode).withDefault(defaultReadModeGain),
+              view = explicitReadModeGain(props.observingMode)
+                .withDefault(defaultReadModeGain, resolvedReadModeGain),
               original = defaultReadModeGain.some,
               disabled = disableAdvancedEdit
             ),
@@ -873,30 +892,27 @@ object AdvancedConfigurationPanel {
     //   )
     //   .view(_.map(_.toInput).orUnassign)
 
-    private val explicitXBin =
-      ObservingMode.GmosNorthLongSlit.explicitXBin
-
-    private val explicitYBin =
-      ObservingMode.GmosNorthLongSlit.explicitYBin
-
-    private def binningAligner(
-      aligner: AA
-    ): Aligner[Option[(GmosXBinning, GmosYBinning)], GmosNorthLongSlitInput] =
-      aligner
-        .zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin), f => i => f(i))
-
-    @inline override protected def explicitBinning(aligner: AA)(using
+    @inline override protected def explicitXBinning(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
       Logger[IO]
-    ): View[Option[(GmosXBinning, GmosYBinning)]] =
-      binningAligner(aligner)
-        .viewMod { oxy =>
-          val xy = oxy.unzip
-          GmosNorthLongSlitInput.explicitXBin
-            .replace(xy._1.orUnassign)
-            .andThen(GmosNorthLongSlitInput.explicitYBin.replace(xy._2.orUnassign))
-        }
+    ): View[Option[GmosXBinning]] = aligner
+      .zoom(
+        ObservingMode.GmosNorthLongSlit.explicitXBin,
+        GmosNorthLongSlitInput.explicitXBin.modify
+      )
+      .view(_.orUnassign)
+
+    @inline override protected def explicitYBinning(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[Option[GmosYBinning]] = aligner
+      .zoom(
+        ObservingMode.GmosNorthLongSlit.explicitYBin,
+        GmosNorthLongSlitInput.explicitYBin.modify
+      )
+      .view(_.orUnassign)
 
     private val explicitReadMode =
       ObservingMode.GmosNorthLongSlit.explicitAmpReadMode
@@ -970,11 +986,22 @@ object AdvancedConfigurationPanel {
       (ObservingMode.GmosNorthLongSlit.defaultAmpReadMode,
        ObservingMode.GmosNorthLongSlit.defaultAmpGain
       ).disjointZip
+    @inline protected val defaultXBinningLens                   = ObservingMode.GmosNorthLongSlit.defaultXBin
+    @inline protected val defaultYBinningLens                   = ObservingMode.GmosNorthLongSlit.defaultYBin
     @inline protected val defaultRoiLens                        = ObservingMode.GmosNorthLongSlit.defaultRoi
     @inline override protected val defaultWavelengthDithersLens =
       ObservingMode.GmosNorthLongSlit.defaultWavelengthDithers
     @inline override protected val defaultSpatialOffsetsLens    =
       ObservingMode.GmosNorthLongSlit.defaultSpatialOffsets
+
+    @inline override protected def resolvedReadModeGainGetter = mode =>
+      val readMode = ObservingMode.GmosNorthLongSlit.explicitAmpReadMode
+        .get(mode)
+        .getOrElse(ObservingMode.GmosNorthLongSlit.defaultAmpReadMode.get(mode))
+      val ampGain  = ObservingMode.GmosNorthLongSlit.explicitAmpGain
+        .get(mode)
+        .getOrElse(ObservingMode.GmosNorthLongSlit.defaultAmpGain.get(mode))
+      (readMode, ampGain)
 
     @inline override protected val obsoleteGratings = GmosNorthGrating.all.filter(_.obsolete).toSet
     @inline override protected val obsoleteFilters  = GmosNorthFilter.all.filter(_.obsolete).toSet
@@ -1075,29 +1102,27 @@ object AdvancedConfigurationPanel {
     //   )
     //   .view(_.map(_.toInput).orUnassign)
 
-    private val explicitXBin =
-      ObservingMode.GmosSouthLongSlit.explicitXBin
-    private val explicitYBin =
-      ObservingMode.GmosSouthLongSlit.explicitYBin
-
-    private def binningAligner(
-      aligner: AA
-    ): Aligner[Option[(GmosXBinning, GmosYBinning)], GmosSouthLongSlitInput] =
-      aligner
-        .zoom(unsafeDisjointOptionZip(explicitXBin, explicitYBin), f => i => f(i))
-
-    @inline override protected def explicitBinning(aligner: AA)(using
+    @inline override protected def explicitXBinning(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
       Logger[IO]
-    ): View[Option[(GmosXBinning, GmosYBinning)]] =
-      binningAligner(aligner)
-        .viewMod { oxy =>
-          val xy = oxy.unzip
-          GmosSouthLongSlitInput.explicitXBin
-            .replace(xy._1.orUnassign)
-            .andThen(GmosSouthLongSlitInput.explicitYBin.replace(xy._2.orUnassign))
-        }
+    ): View[Option[GmosXBinning]] = aligner
+      .zoom(
+        ObservingMode.GmosSouthLongSlit.explicitXBin,
+        GmosSouthLongSlitInput.explicitXBin.modify
+      )
+      .view(_.orUnassign)
+
+    @inline override protected def explicitYBinning(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[Option[GmosYBinning]] = aligner
+      .zoom(
+        ObservingMode.GmosSouthLongSlit.explicitYBin,
+        GmosSouthLongSlitInput.explicitYBin.modify
+      )
+      .view(_.orUnassign)
 
     private val explicitReadMode =
       ObservingMode.GmosSouthLongSlit.explicitAmpReadMode
@@ -1171,6 +1196,8 @@ object AdvancedConfigurationPanel {
       (ObservingMode.GmosSouthLongSlit.defaultXBin,
        ObservingMode.GmosSouthLongSlit.defaultYBin
       ).disjointZip
+    @inline protected val defaultXBinningLens                   = ObservingMode.GmosSouthLongSlit.defaultXBin
+    @inline protected val defaultYBinningLens                   = ObservingMode.GmosSouthLongSlit.defaultYBin
     @inline protected val defaultReadModeGainLens               =
       (ObservingMode.GmosSouthLongSlit.defaultAmpReadMode,
        ObservingMode.GmosSouthLongSlit.defaultAmpGain
@@ -1180,6 +1207,15 @@ object AdvancedConfigurationPanel {
       ObservingMode.GmosSouthLongSlit.defaultWavelengthDithers
     @inline override protected val defaultSpatialOffsetsLens    =
       ObservingMode.GmosSouthLongSlit.defaultSpatialOffsets
+
+    @inline override protected def resolvedReadModeGainGetter = mode =>
+      val readMode = ObservingMode.GmosSouthLongSlit.explicitAmpReadMode
+        .get(mode)
+        .getOrElse(ObservingMode.GmosSouthLongSlit.defaultAmpReadMode.get(mode))
+      val ampGain  = ObservingMode.GmosSouthLongSlit.explicitAmpGain
+        .get(mode)
+        .getOrElse(ObservingMode.GmosSouthLongSlit.defaultAmpGain.get(mode))
+      (readMode, ampGain)
 
     @inline override protected val obsoleteGratings = GmosSouthGrating.all.filter(_.obsolete).toSet
     @inline override protected val obsoleteFilters  = GmosSouthFilter.all.filter(_.obsolete).toSet
