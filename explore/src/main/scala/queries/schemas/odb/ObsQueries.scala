@@ -266,13 +266,13 @@ object ObsQueries:
   def moveObservation[F[_]: Async](
     obsId:      Observation.Id,
     groupId:    Option[Group.Id],
-    groupIndex: Option[NonNegShort]
+    groupIndex: NonNegShort
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateObservationsInput(
       WHERE = obsId.toWhereObservation.assign,
       SET = ObservationPropertiesInput(
         groupId = groupId.orUnassign,
-        groupIndex = groupIndex.orIgnore
+        groupIndex = groupIndex.assign
       )
     )
     UpdateObservationMutation[F].execute(input).void

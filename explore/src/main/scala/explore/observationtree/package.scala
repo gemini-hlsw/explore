@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.AppContext
@@ -106,7 +105,7 @@ type AddingObservation = AddingObservation.Type
 def insertObs(
   programId:    Program.Id,
   parentId:     Option[Group.Id],
-  pos:          NonNegInt,
+  // pos:          NonNegInt,
   observations: UndoSetter[ObservationList],
   // groups:       View[GroupList],
   adding:       View[AddingObservation],

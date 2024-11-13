@@ -30,13 +30,13 @@ object GroupQueries:
   def moveGroup[F[_]: Async](
     groupId:          Group.Id,
     parentGroup:      Option[Group.Id],
-    parentGroupIndex: Option[NonNegShort]
+    parentGroupIndex: NonNegShort
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateGroupsInput(
       WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
       SET = GroupPropertiesInput(
         parentGroup = parentGroup.orUnassign,
-        parentGroupIndex = parentGroupIndex.orIgnore
+        parentGroupIndex = parentGroupIndex.assign
       )
     )
     UpdateGroupsMutation[F].execute(input).void

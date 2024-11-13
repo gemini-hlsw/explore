@@ -56,6 +56,7 @@ import scala.scalajs.js
 
 import ObsQueries.*
 import explore.model.GroupList
+import eu.timepit.refined.types.numeric.NonNegShort
 
 case class ObsTree(
   programId:             Program.Id,
@@ -69,7 +70,6 @@ case class ObsTree(
   focusedGroup:          Option[Group.Id],
   selectedObsIds:        List[Observation.Id],   // obs list selected in table
   setSummaryPanel:       Callback,
-  // systemGroups:          GroupTree,
   expandedGroups:        View[Set[Group.Id]],
   deckShown:             View[DeckShown],
   copyCallback:          Callback,
@@ -208,45 +208,39 @@ object ObsTree:
 
         val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
 
-        // def onDragDrop(e: Tree.DragDropEvent[GroupTree.Value]): Callback =
-        //   if (e.dropNode.exists(node => node.data.elem.isLeft))
-        //     Callback.empty
-        //   else {
-        //     val dragNode: ServerIndexed[Either[Observation.Id, Group]] = e.dragNode.data
-        //     val dropNodeId: Option[Group.Id]                           = e.dropNode.flatMap(_.data.id.toOption)
+        def onDragDrop(e: Tree.DragDropEvent[Either[Observation, Group]]): Callback =
+          if (e.dropNode.exists(node => node.data.isLeft))
+            Callback.empty
+          else {
+            val dragNode: Either[Observation, Group] = e.dragNode.data
+            val dropNodeId: Option[Group.Id]         = e.dropNode.flatMap(_.data.toOption.map(_.id))
 
-        //     val dropIndex: NonNegShort =
-        //       NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
+            val dropIndex: NonNegShort =
+              NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
 
-        //     val newParentGroupIndex: NonNegShort =
-        //       if dropIndex.value == 0 then dropIndex
-        //       else
-        //         val groupTree: GroupTree = props.groups.get
+            val newParentGroupIndex: NonNegShort =
+              if dropIndex.value == 0 then dropIndex
+              else
+                props.groupsChildren
+                  .get(dropNodeId)
+                  .flatMap(_.lift(dropIndex.value.toInt))
+                  .map(_.fold(_.groupIndex, _.parentIndex))
+                  .getOrElse(NonNegShort.unsafeFrom(Short.MaxValue))
 
-        //         val newSiblings: List[GroupTree.Node] = dropNodeId
-        //           .flatMap: groupId =>
-        //             groupTree.getNodeAndIndexByKey(groupId.asRight)
-        //           .map(_._1.children)
-        //           .getOrElse(groupTree.rootChildren)
-
-        //         // Get the parentIndex of the previous node and add one.
-        //         newSiblings
-        //           .get(dropIndex.value.toInt - 1)
-        //           .map: previousNode =>
-        //             NonNegShort.unsafeFrom((previousNode.value.parentIndex.value + 1).toShort)
-        //           .getOrElse(NonNegShort.unsafeFrom(0))
-
-        //     dragNode.id
-        //       .fold(
-        //         obsId =>
-        //           ObsQueries.moveObservation[IO](obsId, dropNodeId, newParentGroupIndex.some),
-        //         groupId => GroupQueries.moveGroup[IO](groupId, dropNodeId, newParentGroupIndex.some)
-        //       )
-        //       .runAsync >>
-        //       treeNodes.value.set(e.value.toList) >>
-        //       // Open the group we moved to
-        //       dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
-        //   }
+            dragNode
+              .fold(
+                obs =>
+                  ObsActions
+                    .obsGroupInfo(obs.id)
+                    .set(props.observations)((dropNodeId, newParentGroupIndex).some),
+                group =>
+                  ObsActions
+                    .groupParentInfo(group.id)
+                    .set(props.groups)((dropNodeId, newParentGroupIndex).some)
+              ) >>
+              // Open the group we moved to
+              dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
+          }
 
         val deleteObsList: List[Observation.Id] => Callback =
           selectedObsIds =>
@@ -348,13 +342,12 @@ object ObsTree:
                 readonly = props.readonly || group.system
               )
 
-        // val expandFocusedGroup: Callback = props.expandedGroups.mod(_ ++ props.focusedGroup)
+        val expandFocusedGroup: Callback = props.expandedGroups.mod(_ ++ props.focusedGroup)
 
-        // val isSystemGroupFocused: Boolean =
-        //   props.focusedGroup
-        //     .flatMap: groupId =>
-        //       props.groups.get.getNodeAndIndexByKey(groupId.asRight)
-        //     .exists(_._1.value.elem.toOption.exists(_.system))
+        val isSystemGroupFocused: Boolean =
+          props.activeGroup
+            .flatMap(props.groups.get.get(_))
+            .exists(_.system)
 
         val tree: VdomNode =
           if (props.deckShown.get === DeckShown.Shown) {
@@ -362,44 +355,41 @@ object ObsTree:
               <.div(ExploreStyles.TreeToolbar)(
                 React
                   .Fragment(
-                    // <.span(
-                    //   Button(
-                    //     severity = Button.Severity.Success,
-                    //     icon = Icons.New,
-                    //     label = "Obs",
-                    //     disabled = adding.get.value || isSystemGroupFocused,
-                    //     loading = adding.get.value,
-                    //     tooltip = "Add a new Observation",
-                    //     tooltipOptions = ToolbarTooltipOptions.Default,
-                    //     onClick = insertObs(
-                    //       props.programId,
-                    //       // Set the focused group as the new obs parent if it is selected
-                    //       props.focusedGroup,
-                    //       props.observations.get.size,
-                    //       props.observations,
-                    //       props.groups.model,
-                    //       adding,
-                    //       ctx
-                    //     ).runAsync *> expandFocusedGroup
-                    //   ).mini.compact,
-                    //   Button(
-                    //     severity = Button.Severity.Success,
-                    //     icon = Icons.New,
-                    //     label = "Group",
-                    //     disabled = adding.get.value || isSystemGroupFocused,
-                    //     loading = adding.get.value,
-                    //     tooltip = "Add a new Group",
-                    //     tooltipOptions = ToolbarTooltipOptions.Default,
-                    //     onClick = insertGroup(
-                    //       props.programId,
-                    //       // Set the focused group as the new group parent if it is selected
-                    //       props.focusedGroup,
-                    //       props.groups,
-                    //       adding,
-                    //       ctx
-                    //     ).runAsync *> expandFocusedGroup
-                    //   ).mini.compact
-                    // ),
+                    <.span(
+                      Button(
+                        severity = Button.Severity.Success,
+                        icon = Icons.New,
+                        label = "Obs",
+                        disabled = adding.get.value || isSystemGroupFocused,
+                        loading = adding.get.value,
+                        tooltip = "Add a new Observation",
+                        tooltipOptions = ToolbarTooltipOptions.Default,
+                        onClick = insertObs(
+                          props.programId,
+                          props.activeGroup, // Set the active group as the new obs parent if it is selected
+                          props.observations,
+                          adding,
+                          ctx
+                        ).runAsync *> expandFocusedGroup
+                      ).mini.compact,
+                      Button(
+                        severity = Button.Severity.Success,
+                        icon = Icons.New,
+                        label = "Group",
+                        disabled = adding.get.value || isSystemGroupFocused,
+                        loading = adding.get.value,
+                        tooltip = "Add a new Group",
+                        tooltipOptions = ToolbarTooltipOptions.Default,
+                        onClick = insertGroup(
+                          props.programId,
+                          // Set the focused group as the new group parent if it is selected
+                          props.focusedGroup,
+                          props.groups,
+                          adding,
+                          ctx
+                        ).runAsync *> expandFocusedGroup
+                      ).mini.compact
+                    ),
                     UndoButtons(props.undoer, size = PlSize.Mini, disabled = adding.get.value),
                     ActionButtons(
                       ActionButtons.ButtonProps(
@@ -449,8 +439,8 @@ object ObsTree:
                   renderItem,
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set,
-                  dragDropScope = if (props.readonly) js.undefined else "obs-tree"
-                  // onDragDrop = if (props.readonly) js.undefined else onDragDrop
+                  dragDropScope = if (props.readonly) js.undefined else "obs-tree",
+                  onDragDrop = if (props.readonly) js.undefined else onDragDrop
                 ),
                 Tree(
                   props.systemTreeNodes,

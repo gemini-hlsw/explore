@@ -51,7 +51,6 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
-import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
@@ -480,15 +479,8 @@ object ObsSummaryTile:
               loading = adding.get.value,
               label = "Add an observation",
               clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick = insertObs(
-                props.programId,
-                none,
-                0.refined,
-                props.observations,
-                // props.groups,
-                adding,
-                ctx
-              ).runAsyncAndForget
+              onClick =
+                insertObs(props.programId, none, props.observations, adding, ctx).runAsyncAndForget
             ).tiny.compact
           )
         )

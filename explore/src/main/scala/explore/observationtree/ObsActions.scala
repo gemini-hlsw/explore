@@ -25,8 +25,47 @@ import queries.schemas.odb.ObsQueries
 import explore.model.ObservationList
 import explore.model.GroupList
 import monocle.Iso
+import eu.timepit.refined.types.numeric.NonNegShort
+import lucuma.ui.optics.*
+import monocle.Lens
 
 object ObsActions:
+  private val obsGroupInfo: Lens[Observation, (Option[Group.Id], NonNegShort)] =
+    (Observation.groupId, Observation.groupIndex).disjointZip
+
+  def obsGroupInfo(
+    obsId: Observation.Id
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): Action[ObservationList, Option[(Option[Group.Id], NonNegShort)]] =
+    Action(
+      access = obsWithId(obsId).composeOptionLens(obsGroupInfo)
+    )(
+      onSet = (_, groupInfo) =>
+        groupInfo
+          .map: (groupId, index) =>
+            ObsQueries.moveObservation[IO](obsId, groupId, index).void
+          .orEmpty
+    )
+
+  private val groupParentInfo: Lens[Group, (Option[Group.Id], NonNegShort)] =
+    (Group.parentId, Group.parentIndex).disjointZip
+
+  def groupParentInfo(
+    groupId: Group.Id
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): Action[GroupList, Option[(Option[Group.Id], NonNegShort)]] =
+    Action(
+      access = Iso.id[GroupList].at(groupId).composeOptionLens(groupParentInfo)
+    )(
+      onSet = (_, parentInfo) =>
+        parentInfo
+          .map: (parentId, index) =>
+            GroupQueries.moveGroup[IO](groupId, parentId, index).void
+          .orEmpty
+    )
+
   def obsEditState(obsId: Observation.Id)(using
     FetchClient[IO, ObservationDB]
   ) = Action(
@@ -82,17 +121,7 @@ object ObsActions:
     FetchClient[IO, ObservationDB]
   ): Action[GroupList, Option[Group]] =
     Action(
-      Iso
-        .id[GroupList]
-        .at(groupId)
-        // getter = findGrouping(groupId),
-        // setter = maybeGroup =>
-        //   groupList =>
-        //     maybeGroup match
-        //       case None              => groupList.removed(groupId.asRight)
-        //       case Some((node, idx)) =>
-        //         val group = node.value
-        //         groupList.upserted(groupId.asRight, group, idx)
+      Iso.id[GroupList].at(groupId)
     )(
       onSet = (_, groupOpt) =>
         groupOpt.fold {
@@ -105,11 +134,6 @@ object ObsActions:
           GroupQueries.undeleteGroup[IO](groupId) >> setGroup(groupId).toAsync
         }
     )
-
-  // private def singleObsGetter(
-  //   obsId: Observation.Id
-  // ): ObservationList => Option[(Observation, NonNegInt)] =
-  //   _.getValueAndIndex(obsId)
 
   private def obsListGetter(
     obsIds: List[Observation.Id]
@@ -127,17 +151,9 @@ object ObsActions:
     obsOpts: List[Option[Observation]]
   ): ObservationList => ObservationList =
     obsList =>
-
-      println(s"old: $obsList")
-
-      val n =
-        obsIds.zip(obsOpts).foldLeft(obsList) { case (acc, (obsId, obsOpt)) =>
-          singleObsSetter(obsId)(obsOpt)(acc)
-        }
-
-      println(s"new: $n")
-
-      n
+      obsIds.zip(obsOpts).foldLeft(obsList) { case (acc, (obsId, obsOpt)) =>
+        singleObsSetter(obsId)(obsOpt)(acc)
+      }
 
   def obsExistence(
     obsIds:      List[Observation.Id],
