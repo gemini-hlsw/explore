@@ -12,6 +12,7 @@ import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.AppContext
 import explore.model.Focused
+import explore.model.Group
 import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ObservationList
@@ -20,7 +21,6 @@ import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
-import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
@@ -70,6 +70,9 @@ def cloneObs(
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)
+
+private def groupWithId(groupId: Group.Id): Lens[GroupList, Option[Group]] =
+  Iso.id[GroupList].at(groupId)
 
 def obsEditAttachments(
   obsId:         Observation.Id,

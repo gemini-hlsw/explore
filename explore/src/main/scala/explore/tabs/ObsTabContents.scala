@@ -199,6 +199,7 @@ object ObsTabContents extends TwoPanels:
                 props.observations,
                 props.groups,
                 props.programSummaries.get.groupsChildren,
+                props.programSummaries.get.parentGroups(_),
                 props.obsExecutions,
                 props.programSummaries: Undoer,
                 props.focusedObs,

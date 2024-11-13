@@ -14,6 +14,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model.Constants
+import explore.optics.GetAdjust
 import explore.utils.*
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.callback.Callback
@@ -117,3 +118,7 @@ extension (tac: TimeAccountingCategory)
 extension (vault: Option[UserVault])
   def userId: Option[User.Id] = vault.map(_.user).map(_.id)
   def isGuest: Boolean        = vault.map(_.user).map(_.role === GuestRole).getOrElse(true)
+
+extension [F[_], A](view: ViewF[F, A])
+  def zoom[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =
+    view.zoom(getAdjust.get)(getAdjust.mod)

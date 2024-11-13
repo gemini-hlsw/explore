@@ -18,13 +18,13 @@ import explore.model.Observation
 import explore.model.ObservationList
 import explore.optics.all.*
 import explore.undo.Action
+import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ScienceBand
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*
-import monocle.Iso
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
@@ -44,7 +44,9 @@ object ObsActions:
       onSet = (_, groupInfo) =>
         groupInfo
           .map: (groupId, index) =>
-            ObsQueries.moveObservation[IO](obsId, groupId, index).void
+            ObsQueries
+              .moveObservation[IO](obsId, groupId, index)
+              .void
           .orEmpty
     )
 
@@ -57,12 +59,14 @@ object ObsActions:
     FetchClient[IO, ObservationDB]
   ): Action[GroupList, Option[(Option[Group.Id], NonNegShort)]] =
     Action(
-      access = Iso.id[GroupList].at(groupId).composeOptionLens(groupParentInfo)
+      access = groupWithId(groupId).composeOptionLens(groupParentInfo)
     )(
       onSet = (_, parentInfo) =>
         parentInfo
           .map: (parentId, index) =>
-            GroupQueries.moveGroup[IO](groupId, parentId, index).void
+            GroupQueries
+              .moveGroup[IO](groupId, parentId, index |- 1)
+              .void
           .orEmpty
     )
 
@@ -74,13 +78,11 @@ object ObsActions:
   )(
     onSet = (_, state) =>
       state
-        .foldMap(st =>
+        .foldMap: st =>
           SetObservationWorkflowStateMutation[IO]
-            .execute(
+            .execute:
               SetObservationWorkflowStateInput(obsId, st)
-            )
             .void
-        )
   )
 
   def obsEditSubtitle(obsId: Observation.Id)(using
@@ -121,7 +123,7 @@ object ObsActions:
     FetchClient[IO, ObservationDB]
   ): Action[GroupList, Option[Group]] =
     Action(
-      Iso.id[GroupList].at(groupId)
+      groupWithId(groupId)
     )(
       onSet = (_, groupOpt) =>
         groupOpt.fold {

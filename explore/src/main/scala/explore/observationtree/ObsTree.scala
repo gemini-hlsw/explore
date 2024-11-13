@@ -63,6 +63,7 @@ case class ObsTree(
   observations:          UndoSetter[ObservationList],
   groups:                UndoSetter[GroupList],
   groupsChildren:        Map[Option[Group.Id], List[Either[Observation, Group]]],
+  parentGroups:          Either[Observation.Id, Group.Id] => List[Group.Id],
   obsExecutionTimes:     ObservationExecutionMap,
   undoer:                Undoer,
   focusedObs:            Option[Observation.Id], // obs explicitly selected for editing
@@ -83,6 +84,20 @@ case class ObsTree(
 
   private val activeGroup: Option[Group.Id] =
     focusedGroup.orElse(focusedObs.flatMap(observations.get.get(_)).flatMap(_.groupId))
+
+  private val focusedObsOrGroup: Option[Either[Observation.Id, Group.Id]] =
+    focusedObs.map(_.asLeft).orElse(focusedGroup.map(_.asRight))
+
+  private def groupInfo(
+    elem: Either[Observation.Id, Group.Id]
+  ): Option[(Option[Group.Id], NonNegShort)] =
+    elem.fold(
+      observations.get.get(_).map(obs => (obs.groupId, obs.groupIndex)),
+      groups.get.get(_).map(group => (group.parentId, group.parentIndex))
+    )
+
+  private val focusedGroupInfo: Option[(Option[Group.Id], NonNegShort)] =
+    focusedObsOrGroup.flatMap(groupInfo)
 
   private val copyDisabled: Boolean   = selectedObsIdSet.isEmpty
   private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
@@ -126,12 +141,12 @@ case class ObsTree(
     )
 
   // Root elements are already sorted by index
-  val rootElements: List[Either[Observation, Group]] = groupsChildren.get(none).orEmpty
+  private val rootElements: List[Either[Observation, Group]] = groupsChildren.get(none).orEmpty
 
-  val treeNodes: List[Node[Either[Observation, Group]]] =
+  private val treeNodes: List[Node[Either[Observation, Group]]] =
     rootElements.filter(_.fold(_ => true, !_.system)).map(createNode(_, isSystem = false))
 
-  val systemTreeNodes: List[Node[Either[Observation, Group]]] =
+  private val systemTreeNodes: List[Node[Either[Observation, Group]]] =
     rootElements.filter(_.fold(_ => false, _.system)).map(createNode(_, isSystem = true))
 
 object ObsTree:
@@ -160,50 +175,47 @@ object ObsTree:
     ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      // .useState(none[NonNegInt])              // optIndex: Saved index into the observation list
-      // .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.observations.get)): // set the index of the focused obs
-      //   (props, ctx, optIndex) =>
-      //     (focusedObs, obsList) =>
-      //       focusedObs.fold(optIndex.setState(none)): obsId =>
-      //         // there is a focused obsId, look for it in the list
-      //         val foundIdx = obsList.getIndex(obsId)
-      //         (optIndex.value, foundIdx) match
-      //           case (_, Some(fidx)) =>
-      //             optIndex.setState(fidx.some) // focused obs is in list
-      //           case (None, None)       =>
-      //             focusObs(props.programId, none, ctx) >> optIndex.setState(none)
-      //           case (Some(oidx), None) =>
-      //             // focused obs no longer exists, but we have a previous index.
-      //             val newIdx = math.min(oidx.value, obsList.size.value - 1)
-      //             obsList.toList
-      //               .get(newIdx.toLong)
-      //               .fold(
-      //                 optIndex.setState(none) >> focusObs(props.programId, none, ctx)
-      //               )(obsSumm =>
-      //                 optIndex.setState(NonNegInt.from(newIdx).toOption) >>
-      //                   focusObs(props.programId, obsSumm.id.some, ctx)
-      //               )
-      .useEffectWithDepsBy((props, _) => (props.focusedGroup, props.groups.get)): (props, ctx) =>
-        (focusedGroup, groups) =>
-          // If the focused group is not in the tree, reset the focused group
-          focusedGroup
-            .filter(groupId => !groups.contains(groupId))
-            .as(focusGroup(props.programId, none, ctx))
-            .getOrEmpty
+      .useRefBy: (props, _) => // groupInfo: Saved index into the observation tree
+        props.focusedGroupInfo
+      .useEffectWithDepsBy((props, _, _) => // refocus if current focus ceases to exist
+        (props.focusedObsOrGroup, props.observations.get, props.groups.get)
+      ): (props, ctx, prevGroupInfo) =>
+        (focusedObsOrGroup, obsList, groupList) =>
+          focusedObsOrGroup.fold(prevGroupInfo.set(none)): elemId =>
+            (prevGroupInfo.value, elemId.fold(obsList.contains(_), groupList.contains(_))) match
+              case (_, true)           =>
+                prevGroupInfo.set(props.focusedGroupInfo)
+              case (Some(prev), false) => // Previously focused element no longer exists
+                val prevGroup: Option[Group.Id]                    = prev._1
+                val prevIndex: NonNegShort                         = prev._2
+                val newElement: Option[Either[Observation, Group]] =
+                  props.groupsChildren
+                    .get(prevGroup)
+                    .flatMap:
+                      _.get(math.max(0, prevIndex.value - 1))
+                    .orElse:
+                      prevGroup.flatMap(groupList.get(_).map(_.asRight))
+
+                prevGroupInfo.set:
+                  newElement.flatMap(e => props.groupInfo(e.bimap(_.id, _.id)))
+                >>
+                  newElement
+                    .fold(focusObs(props.programId, none, ctx)):
+                      _.fold(
+                        obs => focusObs(props.programId, obs.id.some, ctx),
+                        group => focusGroup(props.programId, group.id.some, ctx)
+                      )
+              case _                   => Callback.empty
       .useStateView(AddingObservation(false)) // adding new observation
       // Scroll to newly created/selected observation
-      .useEffectWithDepsBy((props, _, _) => props.focusedObs): (_, _, _) =>
+      .useEffectWithDepsBy((props, _, _, _) => props.focusedObs): (_, _, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
       // Open the group (and all super-groups) of the focused observation
-      // .useEffectWithDepsBy((props, _, _) => (props.focusedObs, props.groups.get)): (props, _, _) =>
-      //   case (None, _)             => Callback.empty
-      //   case (Some(obsId), groups) =>
-      //     val groupsToAddFocus = groups
-      //       .parentKeys(obsId.asLeft)
-      //       .flatMap(_.toOption)
-
-      //     props.expandedGroups.mod(_ ++ groupsToAddFocus).when_(groupsToAddFocus.nonEmpty)
-      .render: (props, ctx, adding) =>
+      .useEffectWithDepsBy((props, _, _, _) => props.activeGroup): (props, _, _, _) =>
+        _.map: activeGroupId =>
+          props.expandedGroups.mod(_ ++ props.parentGroups(activeGroupId.asRight) + activeGroupId)
+        .orEmpty
+      .render: (props, ctx, _, adding) =>
         import ctx.given
 
         val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
@@ -218,14 +230,18 @@ object ObsTree:
             val dropIndex: NonNegShort =
               NonNegShort.from(e.dropIndex.toShort).getOrElse(NonNegShort.unsafeFrom(0))
 
+            val dropNodeChildren: Option[List[Either[Observation, Group]]] =
+              props.groupsChildren
+                .get(dropNodeId)
+                .map(_.filter(_ =!= dragNode))
+
             val newParentGroupIndex: NonNegShort =
               if dropIndex.value == 0 then dropIndex
               else
-                props.groupsChildren
-                  .get(dropNodeId)
-                  .flatMap(_.lift(dropIndex.value.toInt))
-                  .map(_.fold(_.groupIndex, _.parentIndex))
-                  .getOrElse(NonNegShort.unsafeFrom(Short.MaxValue))
+                dropNodeChildren
+                  .flatMap(_.lift(dropIndex.value.toInt - 1))
+                  .map(_.fold(_.groupIndex, _.parentIndex) +| 1)
+                  .getOrElse(NonNegShort.unsafeFrom(0))
 
             dragNode
               .fold(
@@ -237,8 +253,7 @@ object ObsTree:
                   ObsActions
                     .groupParentInfo(group.id)
                     .set(props.groups)((dropNodeId, newParentGroupIndex).some)
-              ) >>
-              // Open the group we moved to
+              ) >> // Open the group we moved to
               dropNodeId.map(id => props.expandedGroups.mod(_ + id)).getOrEmpty
           }
 
@@ -329,9 +344,9 @@ object ObsTree:
               GroupBadge(
                 group,
                 selected = props.focusedGroup.contains_(group.id),
-                onClickCB = linkOverride(
+                onClickCB = linkOverride:
                   focusGroup(props.programId, group.id.some, ctx)
-                ),
+                ,
                 href = ctx.pageUrl(
                   AppTab.Observations,
                   props.programId,
