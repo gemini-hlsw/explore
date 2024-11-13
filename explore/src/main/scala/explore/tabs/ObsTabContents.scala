@@ -88,8 +88,6 @@ case class ObsTabContents(
   private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
   private val groupTimeRanges: GroupTimeRangeMap         = programSummaries.get.groupTimeRangePots
   private val targets: UndoSetter[TargetList]            = programSummaries.zoom(ProgramSummaries.targets)
-  // private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
-  //   observations.get.toIndexedList.map((o, idx) => (o.id, idx))
   private val readonly: Boolean                          = programSummaries.get.proposalIsSubmitted
   private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
@@ -160,47 +158,13 @@ object ObsTabContents extends TwoPanels:
             .runAsync
             .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
-        (copyCallback, pasteCallback /*, props.focusedObs , props.observationIdsWithIndices*/ )
+        (copyCallback, pasteCallback)
       ): (props, ctx, _, _, _, _, _, _, _) =>
-        (copyCallback, pasteCallback /*, obs , obsIdsWithIndices*/ ) =>
-          // val obsPos: Option[NonNegInt] =
-          //   obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
-
+        (copyCallback, pasteCallback) =>
           def callbacks: ShortcutCallbacks = {
             case CopyAlt1 | CopyAlt2 => copyCallback
 
             case PasteAlt1 | PasteAlt2 => pasteCallback
-
-            // case Down =>
-            //   obsPos
-            //     .filter(_.value < obsIdsWithIndices.length)
-            //     .flatMap: p =>
-            //       val next = if (props.focusedObs.isEmpty) 0 else p.value + 1
-            //       obsIdsWithIndices
-            //         .lift(next)
-            //         .map: (obsId, _) =>
-            //           ctx.setPageVia(
-            //             AppTab.Observations,
-            //             props.programId,
-            //             Focused.singleObs(obsId),
-            //             SetRouteVia.HistoryPush
-            //           )
-            //     .getOrEmpty
-
-            // case Up =>
-            //   obsPos
-            //     .filter(_.value > 0)
-            //     .flatMap: p =>
-            //       obsIdsWithIndices
-            //         .lift(p.value - 1)
-            //         .map: (obsId, _) =>
-            //           ctx.setPageVia(
-            //             AppTab.Observations,
-            //             props.programId,
-            //             Focused.singleObs(obsId),
-            //             SetRouteVia.HistoryPush
-            //           )
-            //     .getOrEmpty
 
             case GoToSummary =>
               ctx.setPageVia(
