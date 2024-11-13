@@ -346,6 +346,7 @@ object ExploreStyles:
   val AdvancedConfigurationCol2: Css    = Css("explore-advanced-configuration-col2")
   val AdvancedConfigurationCol3: Css    = Css("explore-advanced-configuration-col3")
   val AdvancedConfigurationButtons: Css = Css("explore-advanced-configuration-buttons")
+  val AdvancedConfigurationBinning: Css = Css("explore-advanced-configuration-binning")
   val ConfigurationFilter: Css          = Css("explore-configuration-filter") |+| Css("field")
   val ExploreTable: Css                 = Css("explore-table")
   val ExploreTableEmpty: Css            = Css("explore-table-emptymessage")

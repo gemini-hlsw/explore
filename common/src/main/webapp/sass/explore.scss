@@ -1734,6 +1734,21 @@ svg.fa-triangle-exclamation.explore-error-icon {
   grid-area: col3;
 }
 
+.explore-advanced-configuration-binning {
+  display: flex;
+  place-items: baseline stretch;
+  grid-gap: 0.5em;
+  width: 100%;
+
+  div:first-child {
+    flex-grow: 1;
+  }
+
+  div:last-child {
+    flex-grow: 1;
+  }
+}
+
 // ------
 // Constraints
 // ------
