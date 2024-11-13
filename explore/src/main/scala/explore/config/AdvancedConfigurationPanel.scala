@@ -301,7 +301,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     disabled:        Boolean,
     exclude:         Set[A] = Set.empty[A],
     showClear:       Boolean = false,
-    resetToOriginal: Boolean = false // resets to `none` on false
+    resetToOriginal: Boolean = false, // resets to `none` on false
+    dropdownMods:    TagMod = TagMod.empty
   ) =
     val originalText = original.map(_.shortName).getOrElse("None")
     <.span(
@@ -313,7 +314,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         exclude = exclude,
         disabled = disabled,
         showClear = showClear
-      ),
+      )(dropdownMods),
       <.span(PrimeStyles.InputGroupAddon,
              customized(originalText, view.set(if (resetToOriginal) original else none))
       )
@@ -685,7 +686,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             //   )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
-            FormLabel(htmlFor = "explicitXBin".refined)(
+            // Provide better accessibility by using aria-label directly
+            // on the dropdowns so X and Y binning are correctly labeled.
+            <.label(
+              LucumaPrimeStyles.FormFieldLabel,
               "Binning",
               HelpIcon("configuration/binning.md".refined)
             ),
@@ -695,14 +699,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 id = "explicitXBin".refined,
                 view = explicitXBinning(props.observingMode).withDefault(defaultXBinning),
                 original = defaultXBinning.some,
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                dropdownMods = ^.aria.label := "X Binning"
               ),
-              FormLabel(htmlFor = "explicitYBin".refined)("x"),
+              <.label("x"),
               customizableEnumSelectOptional(
                 id = "explicitYBin".refined,
                 view = explicitYBinning(props.observingMode).withDefault(defaultYBinning),
                 original = defaultYBinning.some,
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                dropdownMods = ^.aria.label := "Y Binning"
               )
             ),
             FormLabel(htmlFor = "explicitReadMode".refined)(
