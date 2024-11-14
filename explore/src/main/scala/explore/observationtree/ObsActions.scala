@@ -18,7 +18,6 @@ import explore.model.Observation
 import explore.model.ObservationList
 import explore.optics.all.*
 import explore.undo.Action
-import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ScienceBand
 import lucuma.schemas.ObservationDB
@@ -65,7 +64,7 @@ object ObsActions:
         parentInfo
           .map: (parentId, index) =>
             GroupQueries
-              .moveGroup[IO](groupId, parentId, index |- 1)
+              .moveGroup[IO](groupId, parentId, index)
               .void
           .orEmpty
     )

@@ -240,7 +240,7 @@ object ObsTree:
               else
                 dropNodeChildren
                   .flatMap(_.lift(dropIndex.value.toInt - 1))
-                  .map(_.fold(_.groupIndex, _.parentIndex) +| 1)
+                  .map(_.fold(_.groupIndex, _.parentIndex) |+| 1)
                   .getOrElse(NonNegShort.unsafeFrom(0))
 
             dragNode

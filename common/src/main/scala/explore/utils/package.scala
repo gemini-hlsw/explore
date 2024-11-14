@@ -312,14 +312,12 @@ def timeDisplay(name: String, time: TimeSpan, sep: String = ": ") =
   <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep), TimeSpanView(time))
 
 extension (s: NonNegShort)
-  def +|(i: Int): NonNegShort =
+  def |+|(i: Int): NonNegShort =
     NonNegShort.unsafeFrom:
       val int = s.value + i
       if int > Short.MaxValue then Short.MaxValue
+      else if int < 0 then 0
       else int.toShort
 
-  def |-(i: Int): NonNegShort =
-    NonNegShort.unsafeFrom:
-      val int = s.value - i
-      if int < 0 then 0
-      else int.toShort
+  def |-|(i: Int): NonNegShort =
+    s |+| -i

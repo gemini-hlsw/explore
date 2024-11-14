@@ -132,7 +132,6 @@ object ConstraintGroupObsList:
       .id[ObservationList]
       .filterIndex: (id: Observation.Id) =>
         oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
-      // .andThen(KeyedIndexedList.value)
       .andThen(Observation.constraints)
 
     val constraintSet =
