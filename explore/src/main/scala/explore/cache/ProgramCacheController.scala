@@ -21,8 +21,7 @@ import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProgramTimeRange
 import explore.model.ProposalAttachment
-import explore.utils.keyedSwitchEvalMap
-import explore.utils.reduceWithin
+import explore.utils.*
 import fs2.Pipe
 import fs2.Stream
 import fs2.concurrent.Channel
@@ -36,6 +35,7 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.ConfigurationRequestEditInput
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
+import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
 import queries.common.ProgramQueriesGQL
 import queries.common.ProgramSummaryQueriesGQL
@@ -46,12 +46,13 @@ import scala.concurrent.duration.*
 case class ProgramCacheController(
   programId:           Program.Id,
   modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
-)(using client: StreamingClient[IO, ObservationDB])
+)(using client: StreamingClient[IO, ObservationDB], logger: Logger[IO])
 // Do not remove the explicit type parameter below, it confuses the compiler.
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
   val modState                             = modProgramSummaries
   given StreamingClient[IO, ObservationDB] = client
+  given Logger[IO]                         = logger
 
 object ProgramCacheController
     extends CacheControllerComponent[ProgramSummaries, ProgramCacheController]
@@ -118,6 +119,7 @@ object ProgramCacheController
         .ProgramDetailsQuery[IO]
         .query(props.programId)
         .map(_.program)
+        .logTime("ProgramDetailsQuery")
 
     val targets: IO[List[TargetWithId]] =
       drain[TargetWithId, Target.Id, ProgramSummaryQueriesGQL.AllProgramTargets.Data](
@@ -128,7 +130,7 @@ object ProgramCacheController
         _.targets.matches,
         _.targets.hasMore,
         _.id
-      )
+      ).logTime("AllProgramTargets")
 
     val observations: IO[List[Observation]] =
       drain[Observation, Observation.Id, ProgramSummaryQueriesGQL.AllProgramObservations.Data](
@@ -142,7 +144,7 @@ object ProgramCacheController
         _.observations.matches,
         _.observations.hasMore,
         _.id
-      )
+      ).logTime("AllProgramObservations")
 
     val configurationRequests: IO[List[ConfigurationRequest]] =
       drain[ConfigurationRequest,
@@ -156,13 +158,14 @@ object ProgramCacheController
         _.program.foldMap(_.configurationRequests.matches),
         _.program.fold(false)(_.configurationRequests.hasMore),
         _.id
-      )
+      ).logTime("AllProgramConfigurationRequests")
 
     val groups: IO[List[Group]] =
       ProgramQueriesGQL
         .ProgramGroupsQuery[IO]
         .query(props.programId)
         .map(_.program.toList.flatMap(_.allGroupElements.map(_.group).flattenOption))
+        .logTime("ProgramGroupsQuery")
 
     val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
       ProgramSummaryQueriesGQL
@@ -171,6 +174,7 @@ object ProgramCacheController
         .map:
           _.program.fold(List.empty, List.empty): p =>
             (p.obsAttachments, p.proposalAttachments)
+        .logTime("AllProgramAttachments")
 
     val programs: IO[List[ProgramInfo]] =
       drain[ProgramInfo, Program.Id, ProgramSummaryQueriesGQL.AllPrograms.Data](
@@ -182,6 +186,7 @@ object ProgramCacheController
         _.programs.hasMore,
         _.id
       )
+        .logTime("AllPrograms")
 
     def initializeSummaries(
       observations: List[Observation],
@@ -191,7 +196,7 @@ object ProgramCacheController
         observations.map(o => (o.id, Pot.pending)).toMap
       val groupPots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
         groups.map(g => g.id -> Pot.pending).toMap
-      (optProgramDetails, targets, attachments, programs, configurationRequests).mapN {
+      (optProgramDetails, targets, attachments, programs, configurationRequests).mapN:
         case (pd, ts, (oas, pas), ps, crs) =>
           ProgramSummaries
             .fromLists(
@@ -207,7 +212,6 @@ object ProgramCacheController
               groupPots,
               crs
             )
-      }
 
     def combineTimesUpdates(
       observations: List[Observation],

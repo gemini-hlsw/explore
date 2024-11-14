@@ -5,6 +5,7 @@ package explore.utils
 
 import cats.Applicative
 import cats.Endo
+import cats.FlatMap
 import cats.Semigroup
 import cats.effect.*
 import cats.effect.Temporal
@@ -42,6 +43,7 @@ import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
 import org.http4s.Uri
 import org.scalajs.dom
+import org.typelevel.log4cats.Logger
 
 import java.time.Instant
 import java.time.ZoneOffset
@@ -321,3 +323,8 @@ extension (s: NonNegShort)
 
   def |-|(i: Int): NonNegShort =
     s |+| -i
+
+extension [F[_], A](effect: F[A])
+  def logTime(name: String)(using Clock[F], FlatMap[F], Logger[F]): F[A] =
+    effect.timed.flatMap: (d, a) =>
+      Logger[F].debug(s"***** $name took ${d.toSeconds}s (${d.toMillis}ms)").as(a)
