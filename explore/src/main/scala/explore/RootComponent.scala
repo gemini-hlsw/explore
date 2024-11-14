@@ -38,20 +38,21 @@ object RootComponent:
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewBy(_.initialModel)
-      .useThrottlingStateView(none[ProgramSummaries], 2.seconds)
+      .useThrottlingStateView(none[ProgramSummaries], 5.seconds)
       .render: (props, rootModel, programSummariesPot) =>
         AppContext.ctx.provide(props.ctx):
           React.Fragment(
-            props.ctx.tracing.map(c =>
+            props.ctx.tracing.map: c =>
               val attr = rootModel.get.vault.map(ResourceAttributes.fromUserVault)
               Observability(
-                HoneycombOptions(c.key,
-                                 c.serviceName,
-                                 instrumentations = instrumentations,
-                                 resourceAttributes = attr.orUndefined
+                HoneycombOptions(
+                  c.key,
+                  c.serviceName,
+                  instrumentations = instrumentations,
+                  resourceAttributes = attr.orUndefined
                 )
               )
-            ),
+            ,
             HelpContext.Provider:
               programSummariesPot.renderPot: programSummaries =>
                 props.router(RootModelViews(rootModel, programSummaries))
