@@ -12,7 +12,6 @@ import explore.common.ConstraintsQueries
 import explore.components.ActionButtons
 import explore.components.ui.ExploreStyles
 import explore.components.undo.UndoButtons
-import explore.data.KeyedIndexedList
 import explore.model.AppContext
 import explore.model.ConstraintGroupList
 import explore.model.Focused
@@ -80,7 +79,7 @@ case class ConstraintGroupObsList(
   private val pasteIntoText: Option[String] =
     focusedObsSet.flatMap: obsIdSet =>
       observations.get
-        .getValue(obsIdSet.head) // All focused obs have the same constraints, so we can use head
+        .get(obsIdSet.head) // All focused obs have the same constraints, so we can use head
         .map(obs => constraintSetText(obs.constraints))
   private val pasteText: Option[String]     =
     Option
@@ -131,10 +130,8 @@ object ConstraintGroupObsList:
 
     val traversal = Iso
       .id[ObservationList]
-      .filterIndex((id: Observation.Id) =>
+      .filterIndex: (id: Observation.Id) =>
         oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
-      )
-      .andThen(KeyedIndexedList.value)
       .andThen(Observation.constraints)
 
     val constraintSet =
@@ -207,7 +204,7 @@ object ConstraintGroupObsList:
             .flatMap(obsIds =>
               if (obsIds.size === 1)
                 props.observations.get
-                  .getValue(obsIds.head)
+                  .get(obsIds.head)
                   .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
                 <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
@@ -257,7 +254,7 @@ object ConstraintGroupObsList:
             )
 
       def renderGroup(obsIds: ObsIdSet, constraintSet: ConstraintSet): VdomNode = {
-        val cgObs         = obsIds.toList.map(id => props.observations.get.getValue(id)).flatten
+        val cgObs         = obsIds.toList.map(id => props.observations.get.get(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 

@@ -21,5 +21,5 @@ object ObsIdSetEditInfo:
     val executed    = observations.executedOf(editing)
     // These are all ids with the same asterism
     val asterismIds =
-      observations.getValue(editing.head).fold(AsterismIds.empty)(_.scienceTargetIds)
+      observations.get(editing.head).fold(AsterismIds.empty)(_.scienceTargetIds)
     ObsIdSetEditInfo(editing, executed, asterismIds)

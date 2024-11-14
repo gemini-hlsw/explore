@@ -30,13 +30,13 @@ object GroupQueries:
   def moveGroup[F[_]: Async](
     groupId:          Group.Id,
     parentGroup:      Option[Group.Id],
-    parentGroupIndex: Option[NonNegShort]
+    parentGroupIndex: NonNegShort
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateGroupsInput(
       WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
       SET = GroupPropertiesInput(
         parentGroup = parentGroup.orUnassign,
-        parentGroupIndex = parentGroupIndex.orIgnore
+        parentGroupIndex = parentGroupIndex.assign
       )
     )
     UpdateGroupsMutation[F].execute(input).void
@@ -59,7 +59,7 @@ object GroupQueries:
 
   def createGroup[F[_]: Async](programId: Program.Id, parentId: Option[Group.Id])(using
     FetchClient[F, ObservationDB]
-  ): F[(Group, NonNegShort)] =
+  ): F[Group] =
     CreateGroupMutation[F]
       .execute:
         CreateGroupInput(
@@ -67,7 +67,7 @@ object GroupQueries:
           SET = parentId.map(gId => GroupPropertiesInput(parentGroup = gId.assign)).orIgnore
         )
       .map: result =>
-        (result.createGroup.group, result.createGroup.meta.parentIndex)
+        result.createGroup.group
 
   def deleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
     updateGroup(groupId, GroupPropertiesInput(existence = Existence.Deleted.assign))

@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import explore.common.AsterismQueries
-import explore.data.KeyedIndexedList
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
 import explore.model.ObsIdSet
@@ -51,7 +50,6 @@ object TargetPasteAction {
 
       ProgramSummaries.observations
         .andThen(Iso.id[ObservationList].filterIndex(obsIds.idSet.contains))
-        .andThen(KeyedIndexedList.value)
         .andThen(Observation.scienceTargetIds)
         .replace(newTargetIds)(ps)
     )

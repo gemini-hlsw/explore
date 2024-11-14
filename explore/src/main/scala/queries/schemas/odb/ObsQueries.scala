@@ -11,7 +11,6 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.data.KeyedIndexedList
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.Observation
@@ -36,7 +35,6 @@ import java.time.Instant
 import scala.collection.immutable.SortedMap
 
 object ObsQueries:
-  type ObservationList = KeyedIndexedList[Observation.Id, Observation]
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
   private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
@@ -155,7 +153,7 @@ object ObsQueries:
   def createObservation[F[_]: Async](
     programId: Program.Id,
     parentId:  Option[Group.Id]
-  )(using FetchClient[F, ObservationDB]): F[(Observation, NonNegShort)] =
+  )(using FetchClient[F, ObservationDB]): F[Observation] =
     ProgramCreateObservation[F]
       .execute(
         CreateObservationInput(
@@ -166,7 +164,7 @@ object ObsQueries:
         )
       )
       .map: result =>
-        (result.createObservation.observation, result.createObservation.meta.groupIndex)
+        result.createObservation.observation
 
   def createObservationWithTargets[F[_]: Async](
     programId: Program.Id,
@@ -267,13 +265,13 @@ object ObsQueries:
   def moveObservation[F[_]: Async](
     obsId:      Observation.Id,
     groupId:    Option[Group.Id],
-    groupIndex: Option[NonNegShort]
+    groupIndex: NonNegShort
   )(using FetchClient[F, ObservationDB]) =
     val input = UpdateObservationsInput(
       WHERE = obsId.toWhereObservation.assign,
       SET = ObservationPropertiesInput(
         groupId = groupId.orUnassign,
-        groupIndex = groupIndex.orIgnore
+        groupIndex = groupIndex.assign
       )
     )
     UpdateObservationMutation[F].execute(input).void

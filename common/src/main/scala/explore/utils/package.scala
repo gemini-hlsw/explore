@@ -14,6 +14,7 @@ import clue.data.*
 import clue.data.syntax.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.numeric.NonNegLong
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.components.ui.ExploreStyles
@@ -309,3 +310,14 @@ def keyedSwitchEvalMap[F[_]: Concurrent, I, O, K](
 
 def timeDisplay(name: String, time: TimeSpan, sep: String = ": ") =
   <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep), TimeSpanView(time))
+
+extension (s: NonNegShort)
+  def |+|(i: Int): NonNegShort =
+    NonNegShort.unsafeFrom:
+      val int = s.value + i
+      if int > Short.MaxValue then Short.MaxValue
+      else if int < 0 then 0
+      else int.toShort
+
+  def |-|(i: Int): NonNegShort =
+    s |+| -i

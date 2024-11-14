@@ -18,7 +18,6 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTile
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.ConstraintGroupList
@@ -49,6 +48,7 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
@@ -136,7 +136,7 @@ object ConstraintsTabContents extends TwoPanels:
                   selObsSet
                     .flatMap: focusedObsIdSet =>
                       observations // All focused obs have the same constraints, so we can use head
-                        .getValue(focusedObsIdSet.idSet.head)
+                        .get(focusedObsIdSet.idSet.head)
                         .map(_.constraints)
 
                 val obsAndConstraints: List[(Observation.Id, ConstraintSet)] =
@@ -212,7 +212,6 @@ object ConstraintsTabContents extends TwoPanels:
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-                .andThen(KeyedIndexedList.value)
 
               val csTraversal = obsTraversal.andThen(Observation.constraints)
 

@@ -8,25 +8,67 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
-import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
-import explore.model.GroupTree
+import explore.model.Group
+import explore.model.GroupList
 import explore.model.Observation
+import explore.model.ObservationList
 import explore.optics.all.*
 import explore.undo.Action
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ScienceBand
-import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import lucuma.ui.optics.*
+import monocle.Lens
 import queries.common.ObsQueriesGQL.*
 import queries.schemas.odb.ObsQueries
-import queries.schemas.odb.ObsQueries.*
 
 object ObsActions:
+  private val obsGroupInfo: Lens[Observation, (Option[Group.Id], NonNegShort)] =
+    (Observation.groupId, Observation.groupIndex).disjointZip
+
+  def obsGroupInfo(
+    obsId: Observation.Id
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): Action[ObservationList, Option[(Option[Group.Id], NonNegShort)]] =
+    Action(
+      access = obsWithId(obsId).composeOptionLens(obsGroupInfo)
+    )(
+      onSet = (_, groupInfo) =>
+        groupInfo
+          .map: (groupId, index) =>
+            ObsQueries
+              .moveObservation[IO](obsId, groupId, index)
+              .void
+          .orEmpty
+    )
+
+  private val groupParentInfo: Lens[Group, (Option[Group.Id], NonNegShort)] =
+    (Group.parentId, Group.parentIndex).disjointZip
+
+  def groupParentInfo(
+    groupId: Group.Id
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): Action[GroupList, Option[(Option[Group.Id], NonNegShort)]] =
+    Action(
+      access = groupWithId(groupId).composeOptionLens(groupParentInfo)
+    )(
+      onSet = (_, parentInfo) =>
+        parentInfo
+          .map: (parentId, index) =>
+            GroupQueries
+              .moveGroup[IO](groupId, parentId, index)
+              .void
+          .orEmpty
+    )
+
   def obsEditState(obsId: Observation.Id)(using
     FetchClient[IO, ObservationDB]
   ) = Action(
@@ -35,13 +77,11 @@ object ObsActions:
   )(
     onSet = (_, state) =>
       state
-        .foldMap(st =>
+        .foldMap: st =>
           SetObservationWorkflowStateMutation[IO]
-            .execute(
+            .execute:
               SetObservationWorkflowStateInput(obsId, st)
-            )
             .void
-        )
   )
 
   def obsEditSubtitle(obsId: Observation.Id)(using
@@ -80,48 +120,36 @@ object ObsActions:
     setGroup: Group.Id => Callback
   )(using
     FetchClient[IO, ObservationDB]
-  ): Action[GroupTree, Option[(GroupTree.Node, GroupTree.Index)]] =
+  ): Action[GroupList, Option[Group]] =
     Action(
-      getter = findGrouping(groupId),
-      setter = maybeGroup =>
-        groupList =>
-          maybeGroup match
-            case None              => groupList.removed(groupId.asRight)
-            case Some((node, idx)) =>
-              val group = node.value
-              groupList.upserted(groupId.asRight, group, idx)
+      groupWithId(groupId)
     )(
-      onSet = (_, node) =>
-        node.fold {
+      onSet = (_, groupOpt) =>
+        groupOpt.fold {
           GroupQueries.deleteGroup[IO](groupId)
-        } { case (_, _) => setGroup(groupId).toAsync },
-      onRestore = (_, node) =>
-        node.fold {
+        }(_ => setGroup(groupId).toAsync),
+      onRestore = (_, groupOpt) =>
+        groupOpt.fold {
           GroupQueries.deleteGroup[IO](groupId)
-        } { case (_, _) =>
+        } { _ =>
           GroupQueries.undeleteGroup[IO](groupId) >> setGroup(groupId).toAsync
         }
     )
 
-  private def singleObsGetter(
-    obsId: Observation.Id
-  ): ObservationList => Option[(Observation, NonNegInt)] =
-    _.getValueAndIndex(obsId)
-
   private def obsListGetter(
     obsIds: List[Observation.Id]
-  ): ObservationList => List[Option[(Observation, NonNegInt)]] =
-    obsList => obsIds.map(obsId => singleObsGetter(obsId)(obsList))
+  ): ObservationList => List[Option[Observation]] =
+    obsList => obsIds.map(obsList.get)
 
   private def singleObsSetter(obsId: Observation.Id)(
-    obsOpt: Option[(Observation, NonNegInt)]
+    obsOpt: Option[Observation]
   ): ObservationList => ObservationList =
     obsList =>
-      obsOpt.fold(obsList.removed(obsId)): (obs, idx) =>
-        obsList.inserted(obsId, obs, idx)
+      obsOpt.fold(obsList - obsId): obs =>
+        obsList + (obsId -> obs)
 
   private def obsListSetter(obsIds: List[Observation.Id])(
-    obsOpts: List[Option[(Observation, NonNegInt)]]
+    obsOpts: List[Option[Observation]]
   ): ObservationList => ObservationList =
     obsList =>
       obsIds.zip(obsOpts).foldLeft(obsList) { case (acc, (obsId, obsOpt)) =>
@@ -134,14 +162,14 @@ object ObsActions:
     postMessage: String => IO[Unit] = _ => IO.unit
   )(using
     FetchClient[IO, ObservationDB]
-  ): Action[ObservationList, List[Option[obsListMod.ElemWithIndex]]] =
+  ): Action[ObservationList, List[Option[Observation]]] =
     Action(getter = obsListGetter(obsIds), setter = obsListSetter(obsIds))(
-      onSet = (_, elemWithIndexListOpt) =>
-        elemWithIndexListOpt.sequence.fold(
+      onSet = (_, elemListOpt) =>
+        elemListOpt.sequence.fold(
           ObsQueries.deleteObservations[IO](obsIds) >>
             postMessage(s"Deleted ${obsIds.length} observation(s)")
         )(obsList => // Not much to do here, the observation must be created before we get here
-          obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
+          obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)
         ),
       onRestore = (_, elemWithIndexOpt) =>
         elemWithIndexOpt.sequence.fold(
@@ -150,6 +178,6 @@ object ObsActions:
         )(obsList =>
           ObsQueries.undeleteObservations[IO](obsIds) >>
             postMessage(s"Restored ${obsIds.length} observation(s)") >>
-            obsList.headOption.map(_._1).foldMap(obs => focusObs(obs.id).toAsync)
+            obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)
         )
     )

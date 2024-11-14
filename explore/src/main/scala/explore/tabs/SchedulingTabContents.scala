@@ -16,7 +16,6 @@ import explore.common.TimingWindowsQueries
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
 import explore.model.Observation
@@ -45,6 +44,7 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import org.typelevel.log4cats.Logger
@@ -132,7 +132,7 @@ object SchedulingTabContents extends TwoPanels:
                   selObsSet
                     .flatMap: focusedObsIdSet =>
                       observations // All focused obs have the same constraints, so we can use head
-                        .getValue(focusedObsIdSet.idSet.head)
+                        .get(focusedObsIdSet.idSet.head)
                         .map(_.timingWindows)
 
                 val obsAndConstraints: List[(Observation.Id, List[TimingWindow])] =
@@ -200,7 +200,6 @@ object SchedulingTabContents extends TwoPanels:
               val obsTraversal = Iso
                 .id[ObservationList]
                 .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
-                .andThen(KeyedIndexedList.value)
 
               val twTraversal = obsTraversal.andThen(Observation.timingWindows)
 

@@ -11,13 +11,15 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import explore.DefaultErrorPolicy
-import explore.model.GroupTree
+import explore.model.Execution
+import explore.model.Group
 import explore.model.ObsAttachment
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
+import explore.model.ProgramTimeRange
 import explore.model.ProposalAttachment
 import explore.utils.keyedSwitchEvalMap
 import explore.utils.reduceWithin
@@ -26,7 +28,6 @@ import fs2.Stream
 import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import lucuma.core.model.ConfigurationRequest
-import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
@@ -157,13 +158,11 @@ object ProgramCacheController
         _.id
       )
 
-    // (Regular group tree, system group tree)
-    val groups: IO[(GroupTree, GroupTree)] =
+    val groups: IO[List[Group]] =
       ProgramQueriesGQL
         .ProgramGroupsQuery[IO]
         .query(props.programId)
-        .map(_.program.toList.flatMap(_.allGroupElements))
-        .map(GroupTree.fromList)
+        .map(_.program.toList.flatMap(_.allGroupElements.map(_.group).flattenOption))
 
     val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
       ProgramSummaryQueriesGQL
@@ -186,12 +185,12 @@ object ProgramCacheController
 
     def initializeSummaries(
       observations: List[Observation],
-      groups:       GroupTree,
-      systemGroups: GroupTree
+      groups:       List[Group]
     ): IO[ProgramSummaries] =
-      val obsPots   = observations.map(o => (o.id, Pot.pending)).toMap
-      val groupPots =
-        groups.collect { case (Right(gId), _, _) => gId -> Pot.pending }.toMap
+      val obsPots: Map[Observation.Id, Pot[Execution]]            =
+        observations.map(o => (o.id, Pot.pending)).toMap
+      val groupPots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
+        groups.map(g => g.id -> Pot.pending).toMap
       (optProgramDetails, targets, attachments, programs, configurationRequests).mapN {
         case (pd, ts, (oas, pas), ps, crs) =>
           ProgramSummaries
@@ -200,7 +199,6 @@ object ProgramCacheController
               ts,
               observations,
               groups,
-              systemGroups,
               oas,
               pas,
               ps,
@@ -213,24 +211,19 @@ object ProgramCacheController
 
     def combineTimesUpdates(
       observations: List[Observation],
-      groups:       GroupTree,
-      systemGroups: GroupTree
+      groups:       List[Group]
     ): Stream[IO, ProgramSummaries => ProgramSummaries] =
       // We want to update all the observations first, followed by the groups,
       // and then the program, because the program requires all of the observation times be calculated.
       // So, if we do it first, it could take a long time.
       Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
-        Stream
-          .emits:
-            groups.collect { case (Right(id), _, _) => id } ++
-              systemGroups.collect { case (Right(id), _, _) => id }
-          .evalMap(updateGroupTimeRange) ++
+        Stream.emits(groups.map(_.id)).evalMap(updateGroupTimeRange) ++
         Stream.eval(updateProgramTimes(props.programId))
 
     for
-      (obs, (groups, systemGroups)) <- (observations, groups).parTupled
-      summaries                     <- initializeSummaries(obs, groups, systemGroups)
-    yield (summaries, combineTimesUpdates(obs, groups, systemGroups))
+      (obs, groups) <- (observations, groups).parTupled
+      summaries     <- initializeSummaries(obs, groups)
+    yield (summaries, combineTimesUpdates(obs, groups))
   }
 
   override protected val updateStream
@@ -279,7 +272,7 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramQueriesGQL.GroupEditSubscription.Data
           ] =
-            _.filter(_.groupEdit.payload.exists(_.existence === Existence.Present))
+            _.filter(_.groupEdit.meta.exists(_.existence === Existence.Present))
 
           val obsTimesUpdates: Pipe[
             IO,
@@ -296,10 +289,10 @@ object ProgramCacheController
             ProgramQueriesGQL.GroupEditSubscription.Data,
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
-            _.groupEdit.payload.map(_.value.elem.id),
-            _.groupEdit.payload
-              .map: payload =>
-                updateGroupTimeRange(payload.value.elem.id) <* queryProgramTimes
+            _.groupEdit.value.map(_.id),
+            _.groupEdit.value
+              .map: group =>
+                updateGroupTimeRange(group.id) <* queryProgramTimes
               .getOrElse(IO(identity))
           )
 

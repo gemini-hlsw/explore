@@ -125,7 +125,7 @@ case class AsterismGroupObsList(
         targets => targetsText(targets.idSet.toSortedSet).some,
         observations =>
           props.observations.get // All focused obs have the same asterism, so we can use head
-            .getValue(observations.idSet.head)
+            .get(observations.idSet.head)
             .map(obs => targetsText(obs.scienceTargetIds))
       )
 
@@ -332,7 +332,7 @@ object AsterismGroupObsList:
           div.some
         }(obsId =>
           observations
-            .getValue(obsId)
+            .get(obsId)
             .map(summ => props.renderObsBadge(summ, ObsBadge.Layout.TargetsTab))
         )
 
@@ -418,7 +418,7 @@ object AsterismGroupObsList:
 
       def renderAsterismGroup(asterismGroup: AsterismGroup, names: List[String]): VdomNode = {
         val obsIds        = asterismGroup.obsIds
-        val cgObs         = obsIds.toList.map(id => observations.getValue(id)).flatten
+        val cgObs         = obsIds.toList.map(id => observations.get(id)).flatten
         // if this group or something in it is selected
         val groupSelected = props.focusedObsSet.exists(_.subsetOf(obsIds))
 

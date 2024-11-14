@@ -9,6 +9,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.givens.given
 import explore.model.syntax.all.*
@@ -73,7 +74,9 @@ case class Observation(
   calibrationRole:     Option[CalibrationRole],
   scienceBand:         Option[ScienceBand],
   configuration:       Option[Configuration],
-  workflow:            ObservationWorkflow
+  workflow:            ObservationWorkflow,
+  groupId:             Option[Group.Id],
+  groupIndex:          NonNegShort
 ) derives Eq:
   lazy val basicConfiguration: Option[BasicConfiguration] =
     observingMode.map(_.toBasicConfiguration)
@@ -340,6 +343,8 @@ object Observation:
   val workflowState            = workflow.andThen(ObservationWorkflow.state)
   val workflowValidTransitions = workflow.andThen(ObservationWorkflow.validTransitions)
   val validationErrors         = workflow.andThen(ObservationWorkflow.validationErrors)
+  val groupId                  = Focus[Observation](_.groupId)
+  val groupIndex               = Focus[Observation](_.groupIndex)
 
   // unlawful because it also updates the list of valid transitions, but
   // is needed for optimistically setting the state in the ObsBadge
@@ -386,6 +391,8 @@ object Observation:
       scienceBand         <- c.get[Option[ScienceBand]]("scienceBand")
       configuration       <- c.get[Configuration]("configuration").fold(_ => none.asRight, _.some.asRight)
       workflow            <- c.get[ObservationWorkflow]("workflow")
+      groupId             <- c.get[Option[Group.Id]]("groupId")
+      groupIndex          <- c.get[NonNegShort]("groupIndex")
     } yield Observation(
       id,
       title,
@@ -405,6 +412,8 @@ object Observation:
       calibrationRole,
       scienceBand,
       configuration,
-      workflow
+      workflow,
+      groupId,
+      groupIndex
     )
   )

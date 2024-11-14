@@ -22,10 +22,11 @@ import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Focused
 import explore.model.Group
-import explore.model.GroupTree
+import explore.model.GroupList
 import explore.model.ObsSummaryTabTileIds
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
+import explore.model.ObservationList
 import explore.model.TargetList
 import explore.model.display.given
 import explore.model.enums.AppTab
@@ -52,7 +53,6 @@ import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
-import lucuma.refined.*
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
@@ -63,7 +63,6 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import queries.schemas.odb.ObsQueries.ObservationList
 
 import java.time.Instant
 import java.util.UUID
@@ -75,7 +74,7 @@ object ObsSummaryTile:
     programId:       Program.Id,
     observations:    UndoSetter[ObservationList],
     selectedObsIds:  View[List[Observation.Id]],
-    groupTree:       View[GroupTree],
+    groups:          View[GroupList],
     obsExecutions:   ObservationExecutionMap,
     allTargets:      TargetList,
     showScienceBand: Boolean,
@@ -83,7 +82,7 @@ object ObsSummaryTile:
   ): Tile[TileState] =
     Tile(
       ObsSummaryTabTileIds.SummaryId.id,
-      s"Observations Summary (${observations.get.toList.filterNot(_.isCalibration).length})",
+      s"Observations Summary (${observations.get.values.toList.filterNot(_.isCalibration).length})",
       TileState.Initial,
       backButton.some,
       canMinimize = false,
@@ -95,11 +94,11 @@ object ObsSummaryTile:
           programId,
           observations,
           selectedObsIds,
-          groupTree,
+          groups,
           obsExecutions,
           allTargets,
           showScienceBand,
-          s.zoom(TileState.columnVisibility).withOnMod(Callback.log(_)),
+          s.zoom(TileState.columnVisibility),
           cb => s.zoom(TileState.toggleAllRowsSelected).set(cb.some)
         ),
       (s, _) =>
@@ -179,7 +178,7 @@ object ObsSummaryTile:
     programId:                Program.Id,
     observations:             UndoSetter[ObservationList],
     selectedObsIds:           View[List[Observation.Id]],
-    groupTree:                View[GroupTree],
+    groups:                   View[GroupList],
     obsExecutions:            ObservationExecutionMap,
     allTargets:               TargetList,
     showScienceBand:          Boolean,
@@ -355,9 +354,13 @@ object ObsSummaryTile:
             // TODO: ChargedTimeColumnId
           )
       .useMemoBy((props, _, _) => // Rows
-        (props.observations.get.toList, props.allTargets, props.groupTree.get, props.obsExecutions)
+        (props.observations.get.values.toList,
+         props.allTargets,
+         props.groups.get,
+         props.obsExecutions
+        )
       ): (_, _, _) =>
-        (obsList, allTargets, groupTree, obsExecutions) =>
+        (obsList, allTargets, groups, obsExecutions) =>
           obsList
             .filterNot(_.isCalibration)
             .map: obs =>
@@ -371,9 +374,7 @@ object ObsSummaryTile:
                   obs,
                   targets.headOption,
                   asterism,
-                  groupTree
-                    .parentValue(obs.id.asLeft)
-                    .flatMap(_.value.elem.toOption),
+                  obs.groupId.flatMap(groups.get),
                   obsExecutions.getPot(obs.id)
                 ),
                 // Only expand if there are multiple targets
@@ -475,15 +476,8 @@ object ObsSummaryTile:
               loading = adding.get.value,
               label = "Add an observation",
               clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick = insertObs(
-                props.programId,
-                none,
-                0.refined,
-                props.observations,
-                props.groupTree,
-                adding,
-                ctx
-              ).runAsyncAndForget
+              onClick =
+                insertObs(props.programId, none, props.observations, adding, ctx).runAsyncAndForget
             ).tiny.compact
           )
         )

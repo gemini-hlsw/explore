@@ -7,7 +7,6 @@ import cats.effect.IO
 import clue.FetchClient
 import crystal.react.*
 import explore.common.AsterismQueries
-import explore.data.KeyedIndexedList
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationList
@@ -34,7 +33,6 @@ object AsterismGroupObsListActions {
       Iso
         .id[ObservationList]
         .filterIndex((id: Observation.Id) => draggedIds.contains(id))
-        .andThen(KeyedIndexedList.value)
         .andThen(Observation.scienceTargetIds)
 
     Action(getter = traversal.getAll.andThen(_.head), setter = traversal.replace)(

@@ -3,6 +3,7 @@
 
 package explore.programs
 
+import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
@@ -41,6 +42,8 @@ import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 import queries.schemas.odb.ObsQueries
+
+import scala.collection.immutable.SortedMap
 
 object ProgramUnrequestedConfigsTable:
   case class Row(
@@ -174,9 +177,12 @@ object ProgramUnrequestedConfigsTable:
             .createConfigurationRequest[IO](row.observations.head.id)
             .flatMap: request =>
               (props.configRequests.mod(_.updated(request.id, request)) >>
-                props.observations.mod(
-                  _.mapValues(_.id, _.updateToPendingIfConfigurationApplies(request.configuration))
-                )).to[IO]
+                props.observations.mod: obsList =>
+                  SortedMap
+                    .from:
+                      obsList.view.mapValues:
+                        _.updateToPendingIfConfigurationApplies(request.configuration)
+              ).to[IO]
 
         props.tileState.table.map: table =>
           def submitRequests(msg: String): Callback =

@@ -32,8 +32,10 @@ object TargetCloneAction {
       clone:      TargetWithId,
       obsIds:     ObsIdSet
     ): ObservationsAndTargets =
-      val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
-        list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ - originalId + clone.id))
+      val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((map, obsId) =>
+        map.updatedWith(obsId)(
+          _.map(Observation.scienceTargetIds.modify(_ - originalId + clone.id))
+        )
       )
       val ts  = obsAndTargets._2 + (clone.id -> clone.target)
       (obs, ts)
@@ -42,8 +44,8 @@ object TargetCloneAction {
       cloneId:    Target.Id,
       obsIds:     ObsIdSet
     ): ObservationsAndTargets =
-      val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((list, obsId) =>
-        list.updatedValueWith(obsId, Observation.scienceTargetIds.modify(_ + originalId - cloneId))
+      val obs = obsIds.idSet.foldLeft(obsAndTargets._1)((map, obsId) =>
+        map.updatedWith(obsId)(_.map(Observation.scienceTargetIds.modify(_ + originalId - cloneId)))
       )
       val ts =
         // determine if the observation has been assigned to additional observations since the cloning.

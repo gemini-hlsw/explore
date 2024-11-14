@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.Icons
@@ -16,10 +15,8 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
-import explore.data.KeyedIndexedList
 import explore.model.*
 import explore.model.AppContext
-import explore.model.GroupTree.syntax.*
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramSummaries
@@ -37,6 +34,7 @@ import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.undo.UndoContext
 import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -57,6 +55,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import monocle.Optional
 
 object DeckShown extends NewType[Boolean]:
   inline def Shown: DeckShown  = DeckShown(true)
@@ -78,22 +77,19 @@ case class ObsTabContents(
   searching:        View[Set[Target.Id]],
   expandedGroups:   View[Set[Group.Id]]
 ) extends ReactFnProps(ObsTabContents.component):
-  private val focusedObs: Option[Observation.Id]                           = focused.obsSet.map(_.head)
-  private val focusedTarget: Option[Target.Id]                             = focused.target
-  private val focusedGroup: Option[Group.Id]                               = focused.group
-  private val observations: UndoSetter[ObservationList]                    =
+  private val focusedObs: Option[Observation.Id]         = focused.obsSet.map(_.head)
+  private val focusedTarget: Option[Target.Id]           = focused.target
+  private val focusedGroup: Option[Group.Id]             = focused.group
+  private val observations: UndoSetter[ObservationList]  =
     programSummaries.zoom(ProgramSummaries.observations)
-  private val groups: UndoSetter[GroupTree]                                = programSummaries.zoom(ProgramSummaries.groups)
-  private val systemGroups: GroupTree                                      = programSummaries.get.systemGroups
-  private val activeGroup: Option[Group.Id]                                = focusedGroup.orElse:
-    focusedObs.flatMap(groups.get.obsGroupId)
-  private val obsExecutions: ObservationExecutionMap                       = programSummaries.get.obsExecutionPots
-  private val groupTimeRanges: GroupTimeRangeMap                           = programSummaries.get.groupTimeRangePots
-  private val targets: UndoSetter[TargetList]                              = programSummaries.zoom(ProgramSummaries.targets)
-  private val observationIdsWithIndices: List[(Observation.Id, NonNegInt)] =
-    observations.get.toIndexedList.map((o, idx) => (o.id, idx))
-  private val readonly: Boolean                                            = programSummaries.get.proposalIsSubmitted
-  private val globalPreferences: View[GlobalPreferences]                   =
+  private val groups: UndoSetter[GroupList]              = programSummaries.zoom(ProgramSummaries.groups)
+  private val activeGroup: Option[Group.Id]              = focusedGroup.orElse:
+    focusedObs.flatMap(observations.get.get(_)).flatMap(_.groupId)
+  private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
+  private val groupTimeRanges: GroupTimeRangeMap         = programSummaries.get.groupTimeRangePots
+  private val targets: UndoSetter[TargetList]            = programSummaries.zoom(ProgramSummaries.targets)
+  private val readonly: Boolean                          = programSummaries.get.proposalIsSubmitted
+  private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
 
 object ObsTabContents extends TwoPanels:
@@ -162,47 +158,13 @@ object ObsTabContents extends TwoPanels:
             .runAsync
             .unless_(readonly)
       .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
-        (copyCallback, pasteCallback, props.focusedObs, props.observationIdsWithIndices)
+        (copyCallback, pasteCallback)
       ): (props, ctx, _, _, _, _, _, _, _) =>
-        (copyCallback, pasteCallback, obs, obsIdsWithIndices) =>
-          val obsPos: Option[NonNegInt] =
-            obsIdsWithIndices.find(a => obs.forall(_ === a._1)).map(_._2)
-
+        (copyCallback, pasteCallback) =>
           def callbacks: ShortcutCallbacks = {
             case CopyAlt1 | CopyAlt2 => copyCallback
 
             case PasteAlt1 | PasteAlt2 => pasteCallback
-
-            case Down =>
-              obsPos
-                .filter(_.value < obsIdsWithIndices.length)
-                .flatMap: p =>
-                  val next = if (props.focusedObs.isEmpty) 0 else p.value + 1
-                  obsIdsWithIndices
-                    .lift(next)
-                    .map: (obsId, _) =>
-                      ctx.setPageVia(
-                        AppTab.Observations,
-                        props.programId,
-                        Focused.singleObs(obsId),
-                        SetRouteVia.HistoryPush
-                      )
-                .getOrEmpty
-
-            case Up =>
-              obsPos
-                .filter(_.value > 0)
-                .flatMap: p =>
-                  obsIdsWithIndices
-                    .lift(p.value - 1)
-                    .map: (obsId, _) =>
-                      ctx.setPageVia(
-                        AppTab.Observations,
-                        props.programId,
-                        Focused.singleObs(obsId),
-                        SetRouteVia.HistoryPush
-                      )
-                .getOrEmpty
 
             case GoToSummary =>
               ctx.setPageVia(
@@ -232,18 +194,19 @@ object ObsTabContents extends TwoPanels:
         ) =>
           val observationsTree: VdomNode =
             if (deckShown.get === DeckShown.Shown) {
-              ObsList(
-                props.observations,
-                props.obsExecutions,
-                props.programSummaries,
+              ObsTree(
                 props.programId,
+                props.observations,
+                props.groups,
+                props.programSummaries.get.groupsChildren,
+                props.programSummaries.get.parentGroups(_),
+                props.obsExecutions,
+                props.programSummaries: Undoer,
                 props.focusedObs,
                 props.focusedTarget,
                 props.focusedGroup,
                 selectedObsIds.get,
                 twoPanelState.set(SelectedPanel.Summary),
-                props.groups,
-                props.systemGroups,
                 props.expandedGroups,
                 deckShown,
                 copyCallback,
@@ -286,7 +249,7 @@ object ObsTabContents extends TwoPanels:
             PlotData:
               selectedOrFocusedObsIds
                 .foldMap(_.idSet.toList)
-                .map(props.observations.get.getValue(_))
+                .map(props.observations.get.get(_))
                 .flattenOption
                 .map: obs =>
                   obs
@@ -325,7 +288,8 @@ object ObsTabContents extends TwoPanels:
             )
 
           def obsEditorTiles(obsId: Observation.Id, resize: UseResizeDetectorReturn): VdomNode = {
-            val indexValue = Iso.id[ObservationList].index(obsId).andThen(KeyedIndexedList.value)
+            val indexValue: Optional[ObservationList, Observation] =
+              Iso.id[ObservationList].index(obsId)
 
             props.observations.model
               .zoom(indexValue)
@@ -356,16 +320,19 @@ object ObsTabContents extends TwoPanels:
           }
 
           def groupEditorTiles(groupId: Group.Id, resize: UseResizeDetectorReturn): VdomNode =
-            ObsGroupTiles(
-              props.vault.userId,
-              groupId,
-              props.groups,
-              props.groupTimeRanges.getPot(groupId),
-              resize,
-              ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
-              props.userPreferences.get.groupEditLayout,
-              backButton
-            )
+            props.groups
+              .zoom(Iso.id[GroupList].index(groupId))
+              .map: group =>
+                ObsGroupTiles(
+                  props.vault.userId,
+                  group,
+                  props.programSummaries.get.groupsChildren.get(groupId.some).map(_.length).orEmpty,
+                  props.groupTimeRanges.getPot(groupId),
+                  resize,
+                  ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
+                  props.userPreferences.get.groupEditLayout,
+                  backButton
+                )
 
           def rightSide(resize: UseResizeDetectorReturn): VdomNode =
             (props.focusedObs, props.focusedGroup) match

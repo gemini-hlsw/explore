@@ -23,7 +23,7 @@ object AsterismActions:
   extension (obsAndTargets: ObservationsAndTargets)
     private def asterismHasTarget(targetId: Target.Id, obsIds: ObsIdSet): Boolean =
       // since we're dealing with asterisms, if the target is in one observation in obsIds, it should be in all
-      obsAndTargets._1.getValue(obsIds.head).fold(false)(_.scienceTargetIds.contains(targetId))
+      obsAndTargets._1.get(obsIds.head).fold(false)(_.scienceTargetIds.contains(targetId))
     // If the target was created, but has been assigned to another observation (unlikely), perhaps by another
     // user or in another session, then we won't delete it
     private def shouldDelete(targetId: Target.Id, obsIds: ObsIdSet, createdTarget: Boolean) =
