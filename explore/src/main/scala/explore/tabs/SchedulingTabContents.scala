@@ -47,6 +47,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
+import monocle.Traversal
 import org.typelevel.log4cats.Logger
 import queries.schemas.odb.ObsQueries
 
@@ -190,28 +191,30 @@ object SchedulingTabContents extends TwoPanels:
 
         val rightSide = (_: UseResizeDetectorReturn) =>
           props.focusedObsSet
-            .flatMap(ids =>
+            .flatMap: ids =>
               findSchedulingGroup(ids, props.programSummaries.get.schedulingGroups)
                 .map(cg => (ids, cg))
-            )
             .fold[VdomNode] {
               <.div("Nothing selected")
             } { case (idsToEdit, schedulingGroup) =>
-              val obsTraversal = Iso
-                .id[ObservationList]
-                .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+              val obsTraversal: Traversal[ObservationList, Observation] =
+                Iso
+                  .id[ObservationList]
+                  .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
 
-              val twTraversal = obsTraversal.andThen(Observation.timingWindows)
+              val twTraversal: Traversal[ObservationList, List[TimingWindow]] =
+                obsTraversal.andThen(Observation.timingWindows)
 
               val timingWindows: View[List[TimingWindow]] =
-                TimingWindowsQueries.viewWithRemoteMod(
-                  idsToEdit,
-                  observations
-                    .undoableView[List[TimingWindow]](
-                      twTraversal.getAll.andThen(_.head),
-                      twTraversal.modify
-                    )
-                )
+                TimingWindowsQueries
+                  .viewWithRemoteMod(
+                    idsToEdit,
+                    observations
+                      .undoableView[List[TimingWindow]](
+                        twTraversal.getAll.andThen(_.head),
+                        twTraversal.modify
+                      )
+                  )
 
               val schedulingWindowsTile =
                 SchedulingWindowsTile(timingWindows, props.readonly, true)
