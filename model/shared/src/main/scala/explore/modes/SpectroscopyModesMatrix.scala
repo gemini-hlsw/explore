@@ -16,7 +16,6 @@ import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
 import explore.model.syntax.all.*
-import explore.modes.syntax.*
 import io.circe.Decoder
 import io.circe.refined.*
 import lucuma.core.enums.*
@@ -122,7 +121,7 @@ case class SpectroscopyModeRow(
                   InstrumentOverrides
                     .GmosSpectroscopy(
                       cw,
-                      GmosCcdMode.defaultGmosNorth(profiles, fpu, grating, imageQuality),
+                      GmosCcdMode.Default.Longslit.gmosNorth(profiles, fpu, grating, imageQuality),
                       DefaultRoi
                     )
                     .some
@@ -132,7 +131,7 @@ case class SpectroscopyModeRow(
                   InstrumentOverrides
                     .GmosSpectroscopy(
                       cw,
-                      GmosCcdMode.defaultGmosSouth(profiles, fpu, grating, imageQuality),
+                      GmosCcdMode.Default.Longslit.gmosSouth(profiles, fpu, grating, imageQuality),
                       DefaultRoi
                     )
                     .some
