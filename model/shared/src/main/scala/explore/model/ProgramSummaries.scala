@@ -98,12 +98,11 @@ case class ProgramSummaries(
         .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> c)
 
   lazy val schedulingGroups: SchedulingGroupList =
-    SortedMap.from(
+    SortedMap.from:
       observations.toList
         .map((obsId, obs) => obs.timingWindows.sorted -> obsId)
         .groupMap(_._1)(_._2)
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
-    )
 
   lazy val calibrationObservations: Set[Observation.Id] =
     observations.values.filter(_.isCalibration).map(_.id).toSet

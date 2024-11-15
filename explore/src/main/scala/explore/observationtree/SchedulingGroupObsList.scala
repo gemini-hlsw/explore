@@ -40,6 +40,7 @@ import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.floatingui.syntax.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.render.*
 import lucuma.ui.utils.Render
 import monocle.Iso
@@ -183,30 +184,31 @@ object SchedulingGroupObsList:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useState(false) // dragging
-    .useEffectOnMountBy: (props, ctx, _) =>
-      val expandedIds = props.expandedIds
+    .useEffectWithDepsBy((props, ctx, _) => props.schedulingGroups): (props, ctx, _) =>
+      schedulingGroups =>
+        val expandedIds: View[SortedSet[ObsIdSet]] = props.expandedIds
 
-      val selectedGroupObsIds =
-        props.focusedObsSet
-          .flatMap(idSet => props.schedulingGroups.find { case (key, _) => idSet.subsetOf(key) })
-          .map(_._1)
+        val selectedGroupObsIds: Option[ObsIdSet] =
+          props.focusedObsSet
+            .flatMap(idSet => schedulingGroups.find { case (key, _) => idSet.subsetOf(key) })
+            .map(_._1)
 
-      // Unfocus the group with observations doesn't exist
-      val unfocus =
-        if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
-          ctx.replacePage(AppTab.Scheduling, props.programId, Focused.None)
-        else Callback.empty
+        // Unfocus the group with observations that doesn't exist
+        val unfocus: Callback =
+          if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
+            ctx.replacePage(AppTab.Scheduling, props.programId, Focused.None)
+          else Callback.empty
 
-      val expandSelected = selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
+        val expandSelected: Callback =
+          selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
 
-      val cleanupExpandedIds =
-        expandedIds.mod(_.filter(ids => props.schedulingGroups.contains(ids)))
+        val cleanupExpandedIds: Callback =
+          expandedIds.mod:
+            _.map: obsIdSet =>
+              schedulingGroups.keys.find(_.intersect(obsIdSet).nonEmpty)
+            .collect { case Some(obsIdSet) => obsIdSet }
 
-      for {
-        _ <- unfocus
-        _ <- expandSelected
-        _ <- cleanupExpandedIds
-      } yield ()
+        unfocus >> expandSelected >> cleanupExpandedIds
     .render: (props, ctx, dragging) =>
       import ctx.given
 
