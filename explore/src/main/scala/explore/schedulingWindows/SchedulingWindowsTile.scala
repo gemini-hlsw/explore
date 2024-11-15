@@ -3,6 +3,7 @@
 
 package explore.schedulingWindows
 
+import cats.Endo
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.react.*
@@ -89,17 +90,19 @@ object SchedulingWindowsTile:
   private object Body:
     private type Props = Body
 
-    private val ColDef = ColumnDef[(TimingWindow, Int)]
+    private val ColDef = ColumnDef.WithTableMeta[(TimingWindow, Int), TableMeta]
 
-    private given Render[TimingWindowInclusion] = Render.by(twt =>
-      <.span(twt match
+    // Update function depends on current observation selection, so we cannot memoize it in the column definition
+    private case class TableMeta(updateWindows: Endo[List[TimingWindow]] => Callback)
+
+    private given Render[TimingWindowInclusion] = Render.by: swt =>
+      <.span(swt match
         case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
         case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude
-      )(twt.shortName)
-    )
+      )(swt.shortName)
 
-    private given Render[TimingWindow] = Render.by {
-      case tw @ TimingWindow(inclusion, start, Some(TimingWindowEnd.At(endAt)))           =>
+    private given Render[TimingWindow] = Render.by:
+      case TimingWindow(inclusion, start, Some(TimingWindowEnd.At(endAt)))           =>
         React.Fragment(
           inclusion.renderVdom,
           " ",
@@ -107,16 +110,16 @@ object SchedulingWindowsTile:
           " through ",
           <.b(endAt.formatUtcWithZone)
         )
-      case tw @ TimingWindow(inclusion, start, Some(after @ TimingWindowEnd.After(_, _))) =>
-        React.Fragment(inclusion.renderVdom,
-                       " ",
-                       <.b(start.formatUtcWithZone),
-                       " ",
-                       after.renderVdom
+      case TimingWindow(inclusion, start, Some(after @ TimingWindowEnd.After(_, _))) =>
+        React.Fragment(
+          inclusion.renderVdom,
+          " ",
+          <.b(start.formatUtcWithZone),
+          " ",
+          after.renderVdom
         )
-      case tw @ TimingWindow(inclusion, start, None)                                      =>
+      case TimingWindow(inclusion, start, None)                                      =>
         React.Fragment(inclusion.renderVdom, " ", <.b(start.formatUtcWithZone), " forever")
-    }
 
     private val DeleteColWidth: Int   = 20
     private val WindowColId: ColumnId = ColumnId("TimingWindow")
@@ -126,7 +129,7 @@ object SchedulingWindowsTile:
       ScalaFnComponent
         .withHooks[Props]
         .useResizeDetector()
-        .useMemoBy((_, _) => ()): (props, _) => // cols
+        .useMemoBy((_, _) => ()): (_, _) => // cols
           _ =>
             List(
               ColDef(
@@ -142,14 +145,16 @@ object SchedulingWindowsTile:
                 DeleteColId,
                 _._2,
                 size = DeleteColWidth.toPx
-              ).setCell(c =>
+              ).setCell: cell =>
                 Button(
                   text = true,
                   onClickE = e =>
                     e.stopPropagationCB >>
-                      props.windows.mod(tws => tws.take(c.value) ++ tws.drop(c.value + 1))
+                      cell.table.options.meta
+                        .map:
+                          _.updateWindows(sws => sws.take(cell.value) ++ sws.drop(cell.value + 1))
+                        .orEmpty
                 ).compact.small(Icons.Trash)
-              )
             )
         .useMemoBy((props, _, _) => props.windows.get): // rows
           (_, _, _) => _.zipWithIndex.sorted
@@ -166,7 +171,8 @@ object SchedulingWindowsTile:
               columnVisibility = ColumnVisibility(
                 DeleteColId -> Visibility.fromVisible(!props.readOnly)
               )
-            )
+            ),
+            meta = TableMeta(props.windows.mod)
           )
         .useEffectOnMountBy: (p, _, _, _, table) =>
           val cb = (a: RowSelection) => table.setRowSelection(a)
