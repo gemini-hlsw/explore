@@ -15,7 +15,6 @@ import explore.givens.given
 import explore.model.syntax.all.*
 import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
-import explore.modes.syntax.*
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
@@ -139,7 +138,7 @@ case class Observation(
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
-            GmosCcdMode.defaultGmosNorth(ps, fpu, grating, constraints.imageQuality)
+            GmosCcdMode.Default.Longslit.gmosNorth(ps, fpu, grating, constraints.imageQuality)
 
           val mode: GmosCcdMode =
             applyGmosCcdModesOverrides(
@@ -182,7 +181,7 @@ case class Observation(
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
-            GmosCcdMode.defaultGmosSouth(ps, fpu, grating, constraints.imageQuality)
+            GmosCcdMode.Default.Longslit.gmosSouth(ps, fpu, grating, constraints.imageQuality)
 
           val mode: GmosCcdMode = applyGmosCcdModesOverrides(
             explicitXBinning,
