@@ -15,7 +15,7 @@
     "@opentelemetry/auto-instrumentations-web": "^0.42.0",
     "@react-hook/size": "^2.1.2",
     "@tanstack/react-table": "^8.20.5",
-    "@tanstack/react-virtual": "v3.10.8",
+    "@tanstack/react-virtual": "v3.10.9",
     "highcharts": "11.4.8",
     "loglevel": "1.9.2",
     "primeicons": "^7.0.0",
