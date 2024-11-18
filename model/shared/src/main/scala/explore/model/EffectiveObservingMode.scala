@@ -3,6 +3,7 @@
 
 package explore.model
 
+import clue.data.syntax.*
 import cats.syntax.option.*
 import lucuma.schemas.model.CentralWavelength
 import lucuma.core.enums.GmosXBinning
@@ -23,6 +24,10 @@ import cats.Eq
 import cats.derived.*
 import lucuma.core.util.Display
 import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.ObservationDB.Types.ObservingModeInput
+import lucuma.schemas.ObservationDB.Types.GmosNorthLongSlitInput
+import lucuma.schemas.odb.input.*
+import lucuma.schemas.ObservationDB.Types.GmosSouthLongSlitInput
 
 // Observing mode with explicit values merged over defaults. Used for grouping observations by configuration.
 enum EffectiveObservingMode derives Eq:
@@ -52,6 +57,64 @@ enum EffectiveObservingMode derives Eq:
     wavelengthDithers: NonEmptyList[WavelengthDither],
     spatialOffsets:    NonEmptyList[Offset.Q]
   ) extends EffectiveObservingMode
+
+  def toInput: ObservingModeInput = this match
+    case GmosNorthLongSlit(
+          grating,
+          filter,
+          fpu,
+          centralWavelength,
+          xBin,
+          yBin,
+          ampReadMode,
+          ampGain,
+          roi,
+          wavelengthDithers,
+          spatialOffsets
+        ) =>
+      ObservingModeInput(
+        gmosNorthLongSlit = GmosNorthLongSlitInput(
+          grating = grating.assign,
+          filter = filter.orUnassign,
+          fpu = fpu.assign,
+          centralWavelength = centralWavelength.value.toInput.assign,
+          explicitXBin = xBin.assign,
+          explicitYBin = yBin.assign,
+          explicitAmpReadMode = ampReadMode.assign,
+          explicitAmpGain = ampGain.assign,
+          explicitRoi = roi.assign,
+          explicitWavelengthDithers = wavelengthDithers.map(_.toInput).toList.assign,
+          explicitSpatialOffsets = spatialOffsets.map(_.toInput).toList.assign
+        ).assign
+      )
+    case GmosSouthLongSlit(
+          grating,
+          filter,
+          fpu,
+          centralWavelength,
+          xBin,
+          yBin,
+          ampReadMode,
+          ampGain,
+          roi,
+          wavelengthDithers,
+          spatialOffsets
+        ) =>
+      ObservingModeInput(
+        gmosSouthLongSlit = GmosSouthLongSlitInput(
+          grating = grating.assign,
+          filter = filter.orUnassign,
+          fpu = fpu.assign,
+          centralWavelength = centralWavelength.value.toInput.assign,
+          explicitXBin = xBin.assign,
+          explicitYBin = yBin.assign,
+          explicitAmpReadMode = ampReadMode.assign,
+          explicitAmpGain = ampGain.assign,
+          explicitRoi = roi.assign,
+          explicitWavelengthDithers = wavelengthDithers.map(_.toInput).toList.assign,
+          explicitSpatialOffsets = spatialOffsets.map(_.toInput).toList.assign
+        ).assign
+      )
 
 object EffectiveObservingMode:
   def fromObservingMode(observingMode: ObservingMode): EffectiveObservingMode =
@@ -130,8 +193,6 @@ object EffectiveObservingMode:
           explicitWavelengthDithers.getOrElse(defaultWavelengthDithers),
           explicitSpatialOffsets.getOrElse(defaultSpatialOffsets)
         )
-
-      // TODO FORMAT ANGLES, WAVELENGHTS AND OFFSETS
 
   given Display[EffectiveObservingMode] = Display.byShortName:
     case GmosNorthLongSlit(

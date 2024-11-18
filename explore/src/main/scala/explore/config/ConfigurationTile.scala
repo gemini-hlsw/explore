@@ -45,7 +45,6 @@ import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
@@ -101,8 +100,24 @@ object ConfigurationTile:
           readonly,
           units
         ),
-      (_, _) => Title(observingModeGroups, readonly)
+      (_, _) => Title(obsId, mode.model, observingModeGroups, readonly)
     )
+
+  private def createConfiguration(
+    obsId:            Observation.Id,
+    input:            Option[ObservingModeInput],
+    setObservingMode: Option[ObservingMode] => IO[Unit]
+  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
+    ObsQueriesGQL
+      .CreateConfigurationMutation[IO]
+      .execute:
+        UpdateObservationsInput(
+          WHERE = obsId.toWhereObservation.assign,
+          SET = ObservationPropertiesInput(observingMode = input.orUnassign)
+        )
+      .flatMap: data =>
+        setObservingMode:
+          data.updateObservations.observations.headOption.flatMap(_.observingMode)
 
   private case class Body(
     userId:                   Option[User.Id],
@@ -167,28 +182,6 @@ object ConfigurationTile:
           val bAssign = ib.orAssign(ifNotAssigned)
           bAssign.map(f)
         })
-
-    // TODO: We probably want a mutation that returns the configuration so that we can update locally
-    private def createConfiguration(
-      obsId:         Observation.Id,
-      config:        Option[BasicConfiguration],
-      observingMode: View[Option[ObservingMode]]
-    )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-      config.foldMap(c =>
-        ObsQueriesGQL
-          .CreateConfigurationMutation[IO]
-          .execute(
-            UpdateObservationsInput(
-              WHERE = obsId.toWhereObservation.assign,
-              SET = ObservationPropertiesInput(observingMode = c.toInput.assign)
-            )
-          )
-          .flatMap(data =>
-            observingMode
-              .set(data.updateObservations.observations.headOption.flatMap(_.observingMode))
-              .toAsync
-          )
-      )
 
     private val component =
       ScalaFnComponent
@@ -284,11 +277,12 @@ object ConfigurationTile:
                       props.itcTargets,
                       props.baseCoordinates,
                       props.obsConf.calibrationRole,
-                      createConfiguration(
-                        props.obsId,
-                        props.selectedConfig.get.flatMap(_.toBasicConfiguration),
-                        optModeView
-                      ),
+                      props.selectedConfig.get
+                        .flatMap(_.toBasicConfiguration)
+                        .map(_.toInput)
+                        .map: input =>
+                          createConfiguration(props.obsId, input.some, optModeView.async.set)
+                        .orEmpty,
                       props.modes,
                       props.readonly,
                       props.units
@@ -333,30 +327,37 @@ object ConfigurationTile:
           )
         }
 
-  private case class Title(observingModeGroups: ObservingModeGroupList, readonly: Boolean)
-      extends ReactFnProps(Title.component)
+  private case class Title(
+    obsId:               Observation.Id,
+    observingMode:       View[Option[ObservingMode]],
+    observingModeGroups: ObservingModeGroupList,
+    readonly:            Boolean
+  ) extends ReactFnProps(Title.component)
 
   private object Title:
     private type Props = Title
 
-    private val component = ScalaFnComponent[Props]: props =>
-      <.div(ExploreStyles.TileTitleConfigSelector)(
-        DropdownOptional[EffectiveObservingMode](
-          value = none,
-          // disabled = isDisabled,
-          // onChange = (cs: ConstraintSet) =>
-          //   constraintSet.set(cs) >>
-          //     ObsQueries
-          //       .updateObservationConstraintSet[IO](List(observationId), cs)
-          //       .runAsyncAndForget,
-          options = props.observingModeGroups.values
-            .map:
-              _.map: om =>
-                new SelectItem[EffectiveObservingMode](
-                  value = om,
-                  label = om.shortName
-                )
-            .toList
-            .flattenOption
-        ).unless(props.readonly)
-      )
+    private val component = ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .render: (props, ctx) =>
+        import ctx.given
+
+        <.div(ExploreStyles.TileTitleConfigSelector)(
+          DropdownOptional[EffectiveObservingMode](
+            value = props.observingMode.get.map(EffectiveObservingMode.fromObservingMode),
+            placeholder = "Select observing mode...",
+            onChange = (om: Option[EffectiveObservingMode]) =>
+              createConfiguration(
+                props.obsId,
+                om.map(_.toInput),
+                props.observingMode.async.set
+              ).runAsync,
+            options = props.observingModeGroups.values
+              .map:
+                _.map: om =>
+                  new SelectItem[EffectiveObservingMode](value = om, label = om.shortName)
+              .toList
+              .flattenOption
+          ).unless(props.readonly)
+        )

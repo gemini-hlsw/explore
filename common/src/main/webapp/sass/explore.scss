@@ -637,7 +637,10 @@ thead tr th.sticky-header {
 .explore-tile-title-config-selector {
   display: flex;
   justify-content: center;
-  width: 50em;
+
+  .p-component.p-dropdown {
+    width: 50em;
+  }
 }
 
 .p-button.p-button-text.explore-tile-state-button {
