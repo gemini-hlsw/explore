@@ -108,7 +108,7 @@ case class ProgramSummaries(
     SortedMap.from:
       observations.toList
         .filterNot((_, obs) => obs.isCalibration)
-        .map((obsId, obs) => obs.effectiveObservingMode -> obsId)
+        .map((obsId, obs) => obs.observingModeSummary -> obsId)
         .groupMap(_._1)(_._2)
         .map((mode, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> mode)
 

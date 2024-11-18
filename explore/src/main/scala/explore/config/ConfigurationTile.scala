@@ -11,7 +11,7 @@ import clue.data.Input
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
-import crystal.react.View
+import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.DefaultErrorPolicy
@@ -33,6 +33,7 @@ import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
+import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Callback
@@ -52,7 +53,7 @@ import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
 import queries.schemas.itc.syntax.*
-import explore.model.EffectiveObservingMode
+import explore.model.ObservingModeSummary
 import explore.model.ObservingModeGroupList
 import lucuma.react.primereact.DropdownOptional
 import lucuma.react.primereact.SelectItem
@@ -340,23 +341,27 @@ object ConfigurationTile:
     private val component = ScalaFnComponent
       .withHooks[Props]
       .useContext(AppContext.ctx)
-      .render: (props, ctx) =>
+      .useStateView(false) // isChanging
+      .render: (props, ctx, isChanging) =>
         import ctx.given
 
         <.div(ExploreStyles.TileTitleConfigSelector)(
-          DropdownOptional[EffectiveObservingMode](
-            value = props.observingMode.get.map(EffectiveObservingMode.fromObservingMode),
-            placeholder = "Select observing mode...",
-            onChange = (om: Option[EffectiveObservingMode]) =>
+          DropdownOptional[ObservingModeSummary](
+            value = props.observingMode.get.map(ObservingModeSummary.fromObservingMode),
+            placeholder = "Choose existing observing mode...",
+            disabled = isChanging.get,
+            // loading = isChanging.get,
+            showClear = true,
+            onChange = (om: Option[ObservingModeSummary]) =>
               createConfiguration(
                 props.obsId,
                 om.map(_.toInput),
                 props.observingMode.async.set
-              ).runAsync,
+              ).switching(isChanging.async).runAsync,
             options = props.observingModeGroups.values
               .map:
                 _.map: om =>
-                  new SelectItem[EffectiveObservingMode](value = om, label = om.shortName)
+                  new SelectItem[ObservingModeSummary](value = om, label = om.shortName)
               .toList
               .flattenOption
           ).unless(props.readonly)

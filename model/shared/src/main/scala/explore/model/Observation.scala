@@ -91,8 +91,8 @@ case class Observation(
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
-  lazy val effectiveObservingMode: Option[EffectiveObservingMode] =
-    observingMode.map(EffectiveObservingMode.fromObservingMode)
+  lazy val observingModeSummary: Option[ObservingModeSummary] =
+    observingMode.map(ObservingModeSummary.fromObservingMode)
 
   private def profiles(targets: TargetList): Option[NonEmptyList[SourceProfile]] =
     NonEmptyList.fromList:
@@ -197,38 +197,14 @@ case class Observation(
           )
 
   def toInstrumentConfig(targets: TargetList): Option[InstrumentConfig] =
-    (toModeOverride(targets), effectiveObservingMode)
+    (toModeOverride(targets), observingModeSummary)
       .mapN:
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              EffectiveObservingMode.GmosNorthLongSlit(
-                grating,
-                filter,
-                fpu,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _
-              )
+              ObservingModeSummary.GmosNorthLongSlit(grating, filter, fpu, _, _, _)
             ) =>
           InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              EffectiveObservingMode.GmosSouthLongSlit(
-                grating,
-                filter,
-                fpu,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _
-              )
+              ObservingModeSummary.GmosSouthLongSlit(grating, filter, fpu, _, _, _)
             ) =>
           InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
         case _ => none
