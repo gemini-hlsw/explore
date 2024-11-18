@@ -26,6 +26,8 @@ import explore.model.InstrumentConfigAndItcResult
 import explore.model.ObsConfiguration
 import explore.model.ObsTabTileIds
 import explore.model.Observation
+import explore.model.ObservingModeGroupList
+import explore.model.ObservingModeSummary
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.TargetList
@@ -44,6 +46,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.DropdownOptional
+import lucuma.react.primereact.SelectItem
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
@@ -53,10 +57,6 @@ import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
 import queries.schemas.itc.syntax.*
-import explore.model.ObservingModeSummary
-import explore.model.ObservingModeGroupList
-import lucuma.react.primereact.DropdownOptional
-import lucuma.react.primereact.SelectItem
 
 object ConfigurationTile:
   def apply(
