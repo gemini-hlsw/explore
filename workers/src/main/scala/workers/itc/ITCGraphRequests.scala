@@ -25,6 +25,8 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
 
+import scala.scalajs.js.JavaScriptException
+
 object ITCGraphRequests:
   private val significantFigures =
     SignificantFiguresInput(6.refined, 6.refined, 3.refined)
@@ -114,6 +116,25 @@ object ITCGraphRequests:
                 asterismGraphs,
                 graphsResult.brightestIndex.flatMap(request.asterism.get)
               )
+            .handleError {
+              case JavaScriptException(a) if a.toString.startsWith("TypeError") =>
+                // This happens when the server is unreachable
+                ItcAsterismGraphResults(
+                  request.asterism
+                    .map((_, ItcQueryProblem.GenericError("ITC Server Unreachable").asLeft))
+                    .toList
+                    .toMap,
+                  none
+                )
+              case a                                                            =>
+                ItcAsterismGraphResults(
+                  request.asterism
+                    .map((_, ItcQueryProblem.GenericError(a.getMessage).asLeft))
+                    .toList
+                    .toMap,
+                  none
+                )
+            }
         .getOrElse(ItcAsterismGraphResults(Map.empty, none).pure[F])
 
     // We cache unexpanded results, exactly as received from server.
