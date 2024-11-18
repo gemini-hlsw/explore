@@ -91,6 +91,9 @@ case class Observation(
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
+  lazy val effectiveObservingMode: Option[EffectiveObservingMode] =
+    observingMode.map(EffectiveObservingMode.fromObservingMode)
+
   private def profiles(targets: TargetList): Option[NonEmptyList[SourceProfile]] =
     NonEmptyList.fromList:
       scienceTargetIds.toList.map(targets.get).flattenOption.map(_.sourceProfile)
@@ -99,17 +102,16 @@ case class Observation(
     explicitXBinning:    Option[GmosXBinning],
     explicitYBinning:    Option[GmosYBinning],
     explicitAmpReadMode: Option[GmosAmpReadMode],
-    defaultAmpReadMode:  GmosAmpReadMode,
-    explicitAmpGain:     Option[GmosAmpGain],
-    defaultAmpGain:      GmosAmpGain
+    explicitAmpGain:     Option[GmosAmpGain]
   ): GmosCcdMode => GmosCcdMode =
     List(
       explicitXBinning.foldMap(GmosCcdMode.xBin.replace),
       explicitYBinning.foldMap(GmosCcdMode.yBin.replace),
-      GmosCcdMode.ampReadMode.replace(explicitAmpReadMode.getOrElse(defaultAmpReadMode)),
-      GmosCcdMode.ampGain.replace(explicitAmpGain.getOrElse(defaultAmpGain))
+      explicitAmpReadMode.foldMap(GmosCcdMode.ampReadMode.replace),
+      explicitAmpGain.foldMap(GmosCcdMode.ampGain.replace)
     ).reduce(_ >>> _)
 
+  // Computes mode parameters locally, for quick invocation of ITC.
   def toModeOverride(targets: TargetList): Option[InstrumentOverrides] =
     observingMode.flatMap:
       case ObservingMode.GmosNorthLongSlit(
@@ -125,9 +127,9 @@ case class Observation(
             explicitXBinning,
             _,
             explicitYBinning,
-            defaultAmpReadMode,
+            _,
             explicitAmpReadMode,
-            defaultAmpGain,
+            _,
             explicitAmpGain,
             defaultRoi,
             explicitRoi,
@@ -145,9 +147,7 @@ case class Observation(
               explicitXBinning,
               explicitYBinning,
               explicitAmpReadMode,
-              defaultAmpReadMode,
-              explicitAmpGain,
-              defaultAmpGain
+              explicitAmpGain
             )(defaultMode)
 
           InstrumentOverrides.GmosSpectroscopy(
@@ -168,9 +168,9 @@ case class Observation(
             explicitXBinning,
             _,
             explicitYBinning,
-            defaultAmpReadMode,
+            _,
             explicitAmpReadMode,
-            defaultAmpGain,
+            _,
             explicitAmpGain,
             defaultRoi,
             explicitRoi,
@@ -187,9 +187,7 @@ case class Observation(
             explicitXBinning,
             explicitYBinning,
             explicitAmpReadMode,
-            defaultAmpReadMode,
-            explicitAmpGain,
-            defaultAmpGain
+            explicitAmpGain
           )(defaultMode)
 
           InstrumentOverrides.GmosSpectroscopy(
@@ -199,24 +197,13 @@ case class Observation(
           )
 
   def toInstrumentConfig(targets: TargetList): Option[InstrumentConfig] =
-    (toModeOverride(targets), observingMode)
+    (toModeOverride(targets), effectiveObservingMode)
       .mapN:
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              ObservingMode.GmosNorthLongSlit(
-                _,
+              EffectiveObservingMode.GmosNorthLongSlit(
                 grating,
-                _,
                 filter,
-                _,
                 fpu,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
                 _,
                 _,
                 _,
@@ -229,21 +216,10 @@ case class Observation(
             ) =>
           InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              ObservingMode.GmosSouthLongSlit(
-                _,
+              EffectiveObservingMode.GmosSouthLongSlit(
                 grating,
-                _,
                 filter,
-                _,
                 fpu,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _,
                 _,
                 _,
                 _,
