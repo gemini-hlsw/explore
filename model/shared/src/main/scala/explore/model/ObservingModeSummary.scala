@@ -3,25 +3,25 @@
 
 package explore.model
 
-import clue.data.syntax.*
-import cats.syntax.option.*
-import lucuma.schemas.model.CentralWavelength
-import lucuma.core.enums.GmosAmpReadMode
-import lucuma.core.enums.GmosRoi
-import lucuma.core.enums.GmosNorthGrating
-import lucuma.core.enums.GmosNorthFilter
-import lucuma.core.enums.GmosNorthFpu
-import lucuma.core.enums.GmosSouthGrating
-import lucuma.core.enums.GmosSouthFilter
-import lucuma.core.enums.GmosSouthFpu
 import cats.Eq
 import cats.derived.*
+import cats.syntax.option.*
+import clue.data.syntax.*
+import lucuma.core.enums.GmosAmpReadMode
+import lucuma.core.enums.GmosNorthFilter
+import lucuma.core.enums.GmosNorthFpu
+import lucuma.core.enums.GmosNorthGrating
+import lucuma.core.enums.GmosRoi
+import lucuma.core.enums.GmosSouthFilter
+import lucuma.core.enums.GmosSouthFpu
+import lucuma.core.enums.GmosSouthGrating
 import lucuma.core.util.Display
-import lucuma.schemas.model.ObservingMode
-import lucuma.schemas.ObservationDB.Types.ObservingModeInput
 import lucuma.schemas.ObservationDB.Types.GmosNorthLongSlitInput
-import lucuma.schemas.odb.input.*
 import lucuma.schemas.ObservationDB.Types.GmosSouthLongSlitInput
+import lucuma.schemas.ObservationDB.Types.ObservingModeInput
+import lucuma.schemas.model.CentralWavelength
+import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.odb.input.*
 
 // Observing mode with explicit values merged over defaults. Used for grouping observations by configuration.
 enum ObservingModeSummary derives Eq:
