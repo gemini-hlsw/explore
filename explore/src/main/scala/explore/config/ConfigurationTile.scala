@@ -350,7 +350,7 @@ object ConfigurationTile:
             value = props.observingMode.get.map(ObservingModeSummary.fromObservingMode),
             placeholder = "Choose existing observing mode...",
             disabled = isChanging.get,
-            // loading = isChanging.get,
+            loading = isChanging.get,
             showClear = true,
             onChange = (om: Option[ObservingModeSummary]) =>
               createConfiguration(
