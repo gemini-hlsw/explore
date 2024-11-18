@@ -634,6 +634,12 @@ thead tr th.sticky-header {
   justify-content: center;
 }
 
+.explore-tile-title-config-selector {
+  display: flex;
+  justify-content: center;
+  width: 50em;
+}
+
 .p-button.p-button-text.explore-tile-state-button {
   color: var(--site-text-color);
   filter: brightness(70%);

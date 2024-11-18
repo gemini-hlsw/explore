@@ -19,6 +19,7 @@ object ExploreStyles:
   val TileTitleMenu: Css               = Css("explore-tile-title-menu")
   val TileDraggable: Css               = Css("explore-tile-draggable")
   val TileTitleConstraintSelector: Css = Css("explore-tile-title-constraint-selector")
+  val TileTitleConfigSelector: Css     = Css("explore-tile-title-config-selector")
   val TileControlButtons: Css          = Css("explore-tile-control-buttons")
   val TileBackButton: Css              = Css("tile-back-button")
   val TileBody: Css                    = Css("explore-tile-body")

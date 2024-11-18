@@ -41,6 +41,7 @@ import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
@@ -52,6 +53,10 @@ import monocle.Iso
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
 import queries.schemas.itc.syntax.*
+import explore.model.EffectiveObservingMode
+import explore.model.ObservingModeGroupList
+import lucuma.react.primereact.DropdownOptional
+import lucuma.react.primereact.SelectItem
 
 object ConfigurationTile:
   def apply(
@@ -68,6 +73,7 @@ object ConfigurationTile:
     revertedInstrumentConfig: Option[InstrumentConfig], // configuration selected if reverted
     modes:                    SpectroscopyModesMatrix,
     allTargets:               TargetList,
+    observingModeGroups:      ObservingModeGroupList,
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
@@ -76,24 +82,26 @@ object ConfigurationTile:
       ObsTabTileIds.ConfigurationId.id,
       "Configuration",
       bodyClass = ExploreStyles.ConfigurationTileBody
-    )(_ =>
-      Body(
-        userId,
-        programId,
-        obsId,
-        requirements,
-        mode,
-        posAngleConstraint,
-        obsConf,
-        scienceTargetIds.itcTargets(allTargets),
-        baseCoordinates,
-        selectedConfig,
-        revertedInstrumentConfig,
-        modes,
-        sequenceChanged,
-        readonly,
-        units
-      )
+    )(
+      _ =>
+        Body(
+          userId,
+          programId,
+          obsId,
+          requirements,
+          mode,
+          posAngleConstraint,
+          obsConf,
+          scienceTargetIds.itcTargets(allTargets),
+          baseCoordinates,
+          selectedConfig,
+          revertedInstrumentConfig,
+          modes,
+          sequenceChanged,
+          readonly,
+          units
+        ),
+      (_, _) => Title(observingModeGroups, readonly)
     )
 
   private case class Body(
@@ -112,7 +120,7 @@ object ConfigurationTile:
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
-  ) extends ReactFnProps[Body](Body.component)
+  ) extends ReactFnProps(Body.component)
 
   private object Body:
     private type Props = Body
@@ -323,5 +331,32 @@ object ConfigurationTile:
                 )
             )
           )
-
         }
+
+  private case class Title(observingModeGroups: ObservingModeGroupList, readonly: Boolean)
+      extends ReactFnProps(Title.component)
+
+  private object Title:
+    private type Props = Title
+
+    private val component = ScalaFnComponent[Props]: props =>
+      <.div(ExploreStyles.TileTitleConfigSelector)(
+        DropdownOptional[EffectiveObservingMode](
+          value = none,
+          // disabled = isDisabled,
+          // onChange = (cs: ConstraintSet) =>
+          //   constraintSet.set(cs) >>
+          //     ObsQueries
+          //       .updateObservationConstraintSet[IO](List(observationId), cs)
+          //       .runAsyncAndForget,
+          options = props.observingModeGroups.values
+            .map:
+              _.map: om =>
+                new SelectItem[EffectiveObservingMode](
+                  value = om,
+                  label = om.shortName
+                )
+            .toList
+            .flattenOption
+        ).unless(props.readonly)
+      )
