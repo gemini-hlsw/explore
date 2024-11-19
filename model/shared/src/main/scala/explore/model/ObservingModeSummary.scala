@@ -3,9 +3,8 @@
 
 package explore.model
 
-import cats.Eq
-import cats.derived.*
-import cats.syntax.option.*
+import cats.kernel.Order
+import cats.syntax.order.*
 import clue.data.syntax.*
 import lucuma.core.enums.GmosAmpReadMode
 import lucuma.core.enums.GmosNorthFilter
@@ -24,7 +23,7 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 
 // Observing mode with explicit values merged over defaults. Used for grouping observations by configuration.
-enum ObservingModeSummary derives Eq:
+enum ObservingModeSummary:
   case GmosNorthLongSlit(
     grating:           GmosNorthGrating,
     filter:            Option[GmosNorthFilter],
@@ -78,20 +77,20 @@ object ObservingModeSummary:
             fpu,
             _,
             centralWavelength,
-            defaultXBinning,
-            explicitXBinning,
-            defaultYBinning,
-            explicitYBinning,
+            _,
+            _,
+            _,
+            _,
             defaultAmpReadMode,
             explicitAmpReadMode,
-            defaultAmpGain,
-            explicitAmpGain,
+            _,
+            _,
             defaultRoi,
             explicitRoi,
-            defaultWavelengthDithers,
-            explicitWavelengthDithers,
-            defaultSpatialOffsets,
-            explicitSpatialOffsets
+            _,
+            _,
+            _,
+            _
           ) =>
         GmosNorthLongSlit(
           grating,
@@ -110,20 +109,20 @@ object ObservingModeSummary:
             fpu,
             _,
             centralWavelength,
-            defaultXBinning,
-            explicitXBinning,
-            defaultYBinning,
-            explicitYBinning,
+            _,
+            _,
+            _,
+            _,
             defaultAmpReadMode,
             explicitAmpReadMode,
-            defaultAmpGain,
-            explicitAmpGain,
+            _,
+            _,
             defaultRoi,
             explicitRoi,
-            defaultWavelengthDithers,
-            explicitWavelengthDithers,
-            defaultSpatialOffsets,
-            explicitSpatialOffsets
+            _,
+            _,
+            _,
+            _
           ) =>
         GmosSouthLongSlit(
           grating,
@@ -141,3 +140,19 @@ object ObservingModeSummary:
     case GmosSouthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
       s"GMOS-S Longslit ${grating.shortName} ${filter.map(_.shortName).getOrElse("None")} ${fpu.shortName} " +
         s"${centralWavelength.value.toNanometers}nm ${ampReadMode.shortName} ${roi.shortName}"
+
+  object GmosNorthLongSlit:
+    given Order[GmosNorthLongSlit] =
+      Order.by(x => (x.grating, x.filter, x.fpu, x.centralWavelength, x.ampReadMode, x.roi))
+
+  object GmosSouthLongSlit:
+    given Order[GmosSouthLongSlit] =
+      Order.by(x => (x.grating, x.filter, x.fpu, x.centralWavelength, x.ampReadMode, x.roi))
+
+  given Order[ObservingModeSummary] = Order.from:
+    case (a @ GmosNorthLongSlit(_, _, _, _, _, _), b @ GmosNorthLongSlit(_, _, _, _, _, _)) =>
+      a.compare(b)
+    case (a @ GmosSouthLongSlit(_, _, _, _, _, _), b @ GmosSouthLongSlit(_, _, _, _, _, _)) =>
+      a.compare(b)
+    case (GmosNorthLongSlit(_, _, _, _, _, _), _)                                           => -1
+    case _                                                                                  => 1

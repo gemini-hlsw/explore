@@ -3,6 +3,7 @@
 
 package explore.config
 
+import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -358,11 +359,10 @@ object ConfigurationTile:
                 om.map(_.toInput),
                 props.observingMode.async.set
               ).switching(isChanging.async).runAsync,
-            options = props.observingModeGroups.values
+            options = props.observingModeGroups.values.toList.sorted
               .map:
                 _.map: om =>
                   new SelectItem[ObservingModeSummary](value = om, label = om.shortName)
-              .toList
               .flattenOption
           ).unless(props.readonly)
         )
