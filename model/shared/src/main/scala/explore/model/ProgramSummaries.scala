@@ -104,6 +104,14 @@ case class ProgramSummaries(
         .groupMap(_._1)(_._2)
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
 
+  lazy val observingModeGroups: ObservingModeGroupList =
+    SortedMap.from:
+      observations.toList
+        .filterNot((_, obs) => obs.isCalibration)
+        .map((obsId, obs) => obs.observingModeSummary -> obsId)
+        .groupMap(_._1)(_._2)
+        .map((mode, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> mode)
+
   lazy val calibrationObservations: Set[Observation.Id] =
     observations.values.filter(_.isCalibration).map(_.id).toSet
 

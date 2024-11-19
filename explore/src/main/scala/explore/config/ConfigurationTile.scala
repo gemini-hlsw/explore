@@ -3,6 +3,7 @@
 
 package explore.config
 
+import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -11,7 +12,7 @@ import clue.data.Input
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
-import crystal.react.View
+import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.DefaultErrorPolicy
@@ -26,6 +27,8 @@ import explore.model.InstrumentConfigAndItcResult
 import explore.model.ObsConfiguration
 import explore.model.ObsTabTileIds
 import explore.model.Observation
+import explore.model.ObservingModeGroupList
+import explore.model.ObservingModeSummary
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.TargetList
@@ -33,6 +36,7 @@ import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
 import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
+import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Callback
@@ -41,10 +45,12 @@ import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.DropdownOptional
+import lucuma.react.primereact.SelectItem
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
@@ -68,6 +74,7 @@ object ConfigurationTile:
     revertedInstrumentConfig: Option[InstrumentConfig], // configuration selected if reverted
     modes:                    SpectroscopyModesMatrix,
     allTargets:               TargetList,
+    observingModeGroups:      ObservingModeGroupList,
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
@@ -76,25 +83,43 @@ object ConfigurationTile:
       ObsTabTileIds.ConfigurationId.id,
       "Configuration",
       bodyClass = ExploreStyles.ConfigurationTileBody
-    )(_ =>
-      Body(
-        userId,
-        programId,
-        obsId,
-        requirements,
-        mode,
-        posAngleConstraint,
-        obsConf,
-        scienceTargetIds.itcTargets(allTargets),
-        baseCoordinates,
-        selectedConfig,
-        revertedInstrumentConfig,
-        modes,
-        sequenceChanged,
-        readonly,
-        units
-      )
+    )(
+      _ =>
+        Body(
+          userId,
+          programId,
+          obsId,
+          requirements,
+          mode,
+          posAngleConstraint,
+          obsConf,
+          scienceTargetIds.itcTargets(allTargets),
+          baseCoordinates,
+          selectedConfig,
+          revertedInstrumentConfig,
+          modes,
+          sequenceChanged,
+          readonly,
+          units
+        ),
+      (_, _) => Title(obsId, mode.model, observingModeGroups, readonly)
     )
+
+  private def createConfiguration(
+    obsId:            Observation.Id,
+    input:            Option[ObservingModeInput],
+    setObservingMode: Option[ObservingMode] => IO[Unit]
+  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
+    ObsQueriesGQL
+      .CreateConfigurationMutation[IO]
+      .execute:
+        UpdateObservationsInput(
+          WHERE = obsId.toWhereObservation.assign,
+          SET = ObservationPropertiesInput(observingMode = input.orUnassign)
+        )
+      .flatMap: data =>
+        setObservingMode:
+          data.updateObservations.observations.headOption.flatMap(_.observingMode)
 
   private case class Body(
     userId:                   Option[User.Id],
@@ -112,7 +137,7 @@ object ConfigurationTile:
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
-  ) extends ReactFnProps[Body](Body.component)
+  ) extends ReactFnProps(Body.component)
 
   private object Body:
     private type Props = Body
@@ -159,28 +184,6 @@ object ConfigurationTile:
           val bAssign = ib.orAssign(ifNotAssigned)
           bAssign.map(f)
         })
-
-    // TODO: We probably want a mutation that returns the configuration so that we can update locally
-    private def createConfiguration(
-      obsId:         Observation.Id,
-      config:        Option[BasicConfiguration],
-      observingMode: View[Option[ObservingMode]]
-    )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-      config.foldMap(c =>
-        ObsQueriesGQL
-          .CreateConfigurationMutation[IO]
-          .execute(
-            UpdateObservationsInput(
-              WHERE = obsId.toWhereObservation.assign,
-              SET = ObservationPropertiesInput(observingMode = c.toInput.assign)
-            )
-          )
-          .flatMap(data =>
-            observingMode
-              .set(data.updateObservations.observations.headOption.flatMap(_.observingMode))
-              .toAsync
-          )
-      )
 
     private val component =
       ScalaFnComponent
@@ -276,11 +279,12 @@ object ConfigurationTile:
                       props.itcTargets,
                       props.baseCoordinates,
                       props.obsConf.calibrationRole,
-                      createConfiguration(
-                        props.obsId,
-                        props.selectedConfig.get.flatMap(_.toBasicConfiguration),
-                        optModeView
-                      ),
+                      props.selectedConfig.get
+                        .flatMap(_.toBasicConfiguration)
+                        .map(_.toInput)
+                        .map: input =>
+                          createConfiguration(props.obsId, input.some, optModeView.async.set)
+                        .orEmpty,
                       props.modes,
                       props.readonly,
                       props.units
@@ -323,5 +327,42 @@ object ConfigurationTile:
                 )
             )
           )
-
         }
+
+  private case class Title(
+    obsId:               Observation.Id,
+    observingMode:       View[Option[ObservingMode]],
+    observingModeGroups: ObservingModeGroupList,
+    readonly:            Boolean
+  ) extends ReactFnProps(Title.component)
+
+  private object Title:
+    private type Props = Title
+
+    private val component = ScalaFnComponent
+      .withHooks[Props]
+      .useContext(AppContext.ctx)
+      .useStateView(false) // isChanging
+      .render: (props, ctx, isChanging) =>
+        import ctx.given
+
+        <.div(ExploreStyles.TileTitleConfigSelector)(
+          DropdownOptional[ObservingModeSummary](
+            value = props.observingMode.get.map(ObservingModeSummary.fromObservingMode),
+            placeholder = "Choose existing observing mode...",
+            disabled = isChanging.get,
+            loading = isChanging.get,
+            showClear = true,
+            onChange = (om: Option[ObservingModeSummary]) =>
+              createConfiguration(
+                props.obsId,
+                om.map(_.toInput),
+                props.observingMode.async.set
+              ).switching(isChanging.async).runAsync,
+            options = props.observingModeGroups.values.toList.sorted
+              .map:
+                _.map: om =>
+                  new SelectItem[ObservingModeSummary](value = om, label = om.shortName)
+              .flattenOption
+          ).unless(props.readonly)
+        )

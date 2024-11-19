@@ -499,6 +499,7 @@ object ObsTabTiles:
                 props.observation.get.toInstrumentConfig(props.obsTargets),
                 props.modes,
                 props.obsTargets,
+                props.programSummaries.observingModeGroups,
                 sequenceChanged.mod:
                   case Ready(x) => Pot.pending
                   case x        => x
