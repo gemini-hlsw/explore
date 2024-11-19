@@ -43,6 +43,7 @@ object SequenceDigestSubquery
           total $TimeSpanSubquery
         }
         offsets $OffsetSubquery
+        executionState
       }
   """
 }
