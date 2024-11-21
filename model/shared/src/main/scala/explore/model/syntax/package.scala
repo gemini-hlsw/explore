@@ -18,6 +18,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.util.Timestamp
+import lucuma.schemas.model.BasicConfiguration
 
 import java.time.Instant
 import java.time.ZoneOffset
@@ -130,3 +131,14 @@ object all:
       case _                        => true
 
   extension (cr: Option[CalibrationRole]) def needsITC: Boolean = cr.fold(true)(_.needsITC)
+
+  extension (bc: BasicConfiguration)
+    // Currently, everything is long slit and defaults to Average Parallactic.
+    // But as we get new modes, Shortcut 3360 states:
+    // Slit spectroscopy ->  Average Parallactic
+    // MOS -> Fixed
+    // Imaging -> Unconstrained
+    // IFU -> 180 Flip
+    def defaultPosAngleConstrait: PosAngleOptions = bc match
+      case BasicConfiguration.GmosNorthLongSlit(_, _, _, _) => PosAngleOptions.AverageParallactic
+      case BasicConfiguration.GmosSouthLongSlit(_, _, _, _) => PosAngleOptions.AverageParallactic

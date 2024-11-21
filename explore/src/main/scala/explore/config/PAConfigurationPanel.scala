@@ -79,10 +79,10 @@ object PAConfigurationPanel:
           .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
       val selectedAngle = props.posAngleView.get match
-        case PosAngleConstraint.Unbounded          =>
+        case PosAngleConstraint.Unbounded                                          =>
           props.selectedPA
             .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
-        case PosAngleConstraint.AverageParallactic =>
+        case PosAngleConstraint.AverageParallactic                                 =>
           props.averagePA
             .map(a =>
               <.div(
@@ -93,7 +93,10 @@ object PAConfigurationPanel:
               )
             )
             .orElse(<.label("Not Visible").some)
-        case _                                     => None
+        case PosAngleConstraint.AllowFlip(af) if props.selectedPA.exists(_ =!= af) =>
+          props.selectedPA
+            .map(a => <.label(f"Flipped to ${a.toDoubleDegrees}%.0f °"))
+        case _                                                                     => None
 
       def posAngleEditor(pa: View[Angle]) =
         <.div(

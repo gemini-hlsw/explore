@@ -41,7 +41,6 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.aladin.Fov
@@ -208,18 +207,6 @@ object AladinCell extends ModelOptics with AladinCommon:
     (offsetChangeInAladin, offsetOnCenter)
   }
 
-  private def flipAngle(props: Props): Option[AgsAnalysis] => Callback =
-    case Some(AgsAnalysis.Usable(_, _, _, _, pos)) =>
-      val angle = pos.head._1
-      props.obsConf.flatMap(_.posAngleConstraint) match
-        case Some(PosAngleConstraint.AllowFlip(a)) if a =!= angle =>
-          props.obsConf
-            .flatMap(_.posAngleConstraintView)
-            .map(_.set(PosAngleConstraint.AllowFlip(a.flip)))
-            .getOrEmpty
-        case _                                                    => Callback.empty
-    case _                                         => Callback.empty
-
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -348,11 +335,6 @@ object AladinCell extends ModelOptics with AladinCommon:
                   (for
                     // Store the analysis
                     _ <- r.map(ags.setState).getOrEmpty
-                    // If we need to flip change the constraint
-                    _ <- r
-                           .map(_.headOption)
-                           .map(flipAngle(props))
-                           .orEmpty
                     // set the selected index to the first entry
                     _ <-
                       val index      = 0.some.filter(_ => r.exists(_.nonEmpty))
@@ -404,9 +386,6 @@ object AladinCell extends ModelOptics with AladinCommon:
         ) =>
           import ctx.given
 
-          // If the selected GS changes do a flip when necessary
-          val selectedGSIndex = props.guideStarSelection
-
           val fovView =
             options.zoom(Pot.readyPrism.andThen(fovLens))
 
@@ -447,7 +426,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val (offsetChangeInAladin, offsetOnCenter) = offsetViews(props, options)(ctx)
 
-          val guideStar = selectedGSIndex.get.analysis
+          val guideStar = props.guideStarSelection.get.analysis
 
           val renderCell: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>
@@ -487,7 +466,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                     <.div(
                       ExploreStyles.AgsOverlay,
                       AgsOverlay(
-                        selectedGSIndex,
+                        props.guideStarSelection,
                         agsResults.value.filter(_.isUsable),
                         agsState.get,
                         props.modeSelected,

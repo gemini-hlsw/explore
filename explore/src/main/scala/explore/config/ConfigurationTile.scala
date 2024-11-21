@@ -29,11 +29,15 @@ import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.ObservingModeGroupList
 import explore.model.ObservingModeSummary
+import explore.model.PosAngleConstraintAndObsMode
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.TargetList
+import explore.model.enums.AgsState
+import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
+import explore.model.syntax.all.*
 import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
@@ -41,6 +45,7 @@ import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.Angle
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -65,8 +70,8 @@ object ConfigurationTile:
     programId:                Program.Id,
     obsId:                    Observation.Id,
     requirements:             UndoSetter[ScienceRequirements],
-    mode:                     UndoSetter[Option[ObservingMode]],
-    posAngleConstraint:       View[PosAngleConstraint],
+    pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
+    agsState:                 View[AgsState],
     scienceTargetIds:         AsterismIds,
     baseCoordinates:          Option[CoordinatesAtVizTime],
     obsConf:                  ObsConfiguration,
@@ -90,8 +95,8 @@ object ConfigurationTile:
           programId,
           obsId,
           requirements,
-          mode,
-          posAngleConstraint,
+          pacAndMode,
+          agsState,
           obsConf,
           scienceTargetIds.itcTargets(allTargets),
           baseCoordinates,
@@ -102,32 +107,123 @@ object ConfigurationTile:
           readonly,
           units
         ),
-      (_, _) => Title(obsId, mode.model, observingModeGroups, readonly)
+      (_, _) =>
+        Title(obsId,
+              pacAndMode,
+              observingModeGroups,
+              selectedConfig,
+              revertedInstrumentConfig,
+              readonly
+        )
     )
 
-  private def createConfiguration(
-    obsId:            Observation.Id,
-    input:            Option[ObservingModeInput],
-    setObservingMode: Option[ObservingMode] => IO[Unit]
-  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-    ObsQueriesGQL
-      .CreateConfigurationMutation[IO]
-      .execute:
-        UpdateObservationsInput(
+  private def pacAndModeAction(
+    obsId: Observation.Id
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): Action[PosAngleConstraintAndObsMode, PosAngleConstraintAndObsMode] =
+    Action[PosAngleConstraintAndObsMode, PosAngleConstraintAndObsMode](
+      getter = identity,
+      setter = x => _ => x
+    )(
+      onSet = (_, _) => IO.unit, // Nothing to do, creation is done before this
+      onRestore = (_, pm) =>
+        val (pac, oMode) = pm
+        val input        = UpdateObservationsInput(
           WHERE = obsId.toWhereObservation.assign,
-          SET = ObservationPropertiesInput(observingMode = input.orUnassign)
+          SET = ObservationPropertiesInput(
+            observingMode = oMode.map(_.toInput).orUnassign,
+            posAngleConstraint = pac.toInput.assign
+          )
         )
-      .flatMap: data =>
-        setObservingMode:
-          data.updateObservations.observations.headOption.flatMap(_.observingMode)
+        ObsQueriesGQL.UpdateObservationMutation[IO].execute(input).void
+    )
+  private def modeAction(
+    obsId: Observation.Id
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): Action[Option[ObservingMode], Option[ObservingMode]] =
+    Action[Option[ObservingMode], Option[ObservingMode]](
+      getter = identity,
+      setter = x => _ => x
+    )(
+      onSet = (_, _) => IO.unit, // Nothing to do, creation is done before this
+      onRestore = (_, oMode) =>
+        val input = UpdateObservationsInput(
+          WHERE = obsId.toWhereObservation.assign,
+          SET = ObservationPropertiesInput(observingMode = oMode.map(_.toInput).orUnassign)
+        )
+        ObsQueriesGQL.UpdateObservationMutation[IO].execute(input).void
+    )
+
+  private def remoteUpdate(
+    input: UpdateObservationsInput
+  )(using FetchClient[IO, ObservationDB]): IO[Option[ObservingMode]] =
+    ObsQueriesGQL
+      .UpdateConfigurationMutation[IO]
+      .execute(input)
+      .map(_.updateObservations.observations.headOption.flatMap(_.observingMode))
+
+  private def updateConfiguration(
+    obsId:                    Observation.Id,
+    pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
+    input:                    ObservingModeInput,
+    defaultPosAngleConstrait: PosAngleOptions
+  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
+    val obsInput   = UpdateObservationsInput(
+      WHERE = obsId.toWhereObservation.assign,
+      SET = ObservationPropertiesInput(observingMode = input.assign)
+    )
+    val currentPac = pacAndMode.get._1
+    if (defaultPosAngleConstrait != currentPac.toPosAngleOptions)
+      val angle    =
+        PosAngleConstraint.angle.getOption(currentPac).getOrElse(Angle.Angle0)
+      val newPac   = defaultPosAngleConstrait.toPosAngle(angle)
+      val newInput = UpdateObservationsInput.SET
+        .andThen(ObservationPropertiesInput.posAngleConstraint)
+        .replace(newPac.toInput.assign)(obsInput)
+      remoteUpdate(newInput)
+        .flatMap: om =>
+          pacAndModeAction(obsId)
+            .set(pacAndMode)((newPac, om))
+            .toAsync
+    else
+      remoteUpdate(obsInput)
+        .flatMap: om =>
+          modeAction(obsId)
+            .set(pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode))(
+              om
+            )
+            .toAsync
+
+  private def revertConfiguration(
+    obsId:                    Observation.Id,
+    mode:                     UndoSetter[Option[ObservingMode]],
+    revertedInstrumentConfig: Option[InstrumentConfig],
+    selectedConfig:           View[Option[InstrumentConfigAndItcResult]]
+  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
+    val obsInput = UpdateObservationsInput(
+      WHERE = obsId.toWhereObservation.assign,
+      SET = ObservationPropertiesInput(observingMode = Input.unassign)
+    )
+    remoteUpdate(obsInput) >>
+      (modeAction(obsId).set(mode)(none) >>
+        revertedInstrumentConfig
+          .map: row => // Select the reverted config
+            selectedConfig.mod: c =>
+              InstrumentConfigAndItcResult(
+                row,
+                c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
+              ).some
+          .orEmpty).toAsync
 
   private case class Body(
     userId:                   Option[User.Id],
     programId:                Program.Id,
     obsId:                    Observation.Id,
     requirements:             UndoSetter[ScienceRequirements],
-    mode:                     UndoSetter[Option[ObservingMode]],
-    posAngle:                 View[PosAngleConstraint],
+    pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
+    agsState:                 View[AgsState],
     obsConf:                  ObsConfiguration,
     itcTargets:               List[ItcTarget],
     baseCoordinates:          Option[CoordinatesAtVizTime],
@@ -137,7 +233,11 @@ object ConfigurationTile:
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
-  ) extends ReactFnProps(Body.component)
+  ) extends ReactFnProps(Body.component):
+    val mode: UndoSetter[Option[ObservingMode]]  =
+      pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode)
+    val posAngle: UndoSetter[PosAngleConstraint] =
+      pacAndMode.zoom(PosAngleConstraintAndObsMode.posAngleConstraint)
 
   private object Body:
     private type Props = Body
@@ -192,6 +292,29 @@ object ConfigurationTile:
         .render { (props, ctx) =>
           import ctx.given
 
+          val posAngleConstraintAligner
+            : Aligner[PosAngleConstraint, Input[PosAngleConstraintInput]] =
+            Aligner(
+              props.posAngle,
+              UpdateObservationsInput(
+                WHERE = props.obsId.toWhereObservation.assign,
+                SET = ObservationPropertiesInput()
+              ),
+              ObsQueriesGQL
+                .UpdateObservationMutation[IO]
+                .execute(_)
+                .void
+                .switching(props.agsState.async, AgsState.Saving, AgsState.Idle)
+            ).zoom(
+              Iso.id,
+              UpdateObservationsInput.SET
+                .andThen(ObservationPropertiesInput.posAngleConstraint)
+                .modify
+            )
+
+          val posAngleConstraintView: View[PosAngleConstraint] =
+            posAngleConstraintAligner.view(_.toInput.assign)
+
           val modeAligner: Aligner[Option[ObservingMode], Input[ObservingModeInput]] =
             Aligner(
               props.mode,
@@ -208,16 +331,13 @@ object ConfigurationTile:
           val optModeView: View[Option[ObservingMode]] =
             modeAligner.view(_.map(_.toInput).orUnassign)
 
-          val revertConfiguration: Callback =
-            optModeView.set(none) >>
-              props.revertedInstrumentConfig
-                .map: row => // Select the reverted config
-                  props.selectedConfig.mod: c =>
-                    InstrumentConfigAndItcResult(
-                      row,
-                      c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
-                    ).some
-                .orEmpty
+          val revertConfig: Callback =
+            revertConfiguration(
+              props.obsId,
+              props.mode,
+              props.revertedInstrumentConfig,
+              props.selectedConfig
+            ).runAsyncAndForget
 
           val optModeAligner = modeAligner.toOption
 
@@ -260,7 +380,7 @@ object ConfigurationTile:
                   PAConfigurationPanel(
                     props.programId,
                     props.obsId,
-                    props.posAngle,
+                    posAngleConstraintView,
                     props.obsConf.selectedPA,
                     props.obsConf.averagePA,
                     agsState,
@@ -281,9 +401,12 @@ object ConfigurationTile:
                       props.obsConf.calibrationRole,
                       props.selectedConfig.get
                         .flatMap(_.toBasicConfiguration)
-                        .map(_.toInput)
-                        .map: input =>
-                          createConfiguration(props.obsId, input.some, optModeView.async.set)
+                        .map: bc =>
+                          updateConfiguration(props.obsId,
+                                              props.pacAndMode,
+                                              bc.toInput,
+                                              bc.defaultPosAngleConstrait
+                          )
                         .orEmpty,
                       props.modes,
                       props.readonly,
@@ -301,7 +424,7 @@ object ConfigurationTile:
                         props.obsConf.calibrationRole,
                         northAligner,
                         specView,
-                        revertConfiguration,
+                        revertConfig,
                         props.modes,
                         props.sequenceChanged,
                         props.readonly,
@@ -317,7 +440,7 @@ object ConfigurationTile:
                         props.obsConf.calibrationRole,
                         southAligner,
                         specView,
-                        revertConfiguration,
+                        revertConfig,
                         props.modes,
                         props.sequenceChanged,
                         props.readonly,
@@ -330,11 +453,16 @@ object ConfigurationTile:
         }
 
   private case class Title(
-    obsId:               Observation.Id,
-    observingMode:       View[Option[ObservingMode]],
-    observingModeGroups: ObservingModeGroupList,
-    readonly:            Boolean
-  ) extends ReactFnProps(Title.component)
+    obsId:                    Observation.Id,
+    pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
+    observingModeGroups:      ObservingModeGroupList,
+    selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
+    revertedInstrumentConfig: Option[InstrumentConfig],
+    readonly:                 Boolean
+  ) extends ReactFnProps(Title.component):
+    val observingMode                           = pacAndMode.get._2
+    val mode: UndoSetter[Option[ObservingMode]] =
+      pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode)
 
   private object Title:
     private type Props = Title
@@ -346,19 +474,29 @@ object ConfigurationTile:
       .render: (props, ctx, isChanging) =>
         import ctx.given
 
+        val revertConfig: Callback =
+          revertConfiguration(
+            props.obsId,
+            props.mode,
+            props.revertedInstrumentConfig,
+            props.selectedConfig
+          ).runAsyncAndForget
+
         <.div(ExploreStyles.TileTitleConfigSelector)(
           DropdownOptional[ObservingModeSummary](
-            value = props.observingMode.get.map(ObservingModeSummary.fromObservingMode),
+            value = props.observingMode.map(ObservingModeSummary.fromObservingMode),
             placeholder = "Choose existing observing mode...",
             disabled = isChanging.get,
             loading = isChanging.get,
             showClear = true,
             onChange = (om: Option[ObservingModeSummary]) =>
-              createConfiguration(
-                props.obsId,
-                om.map(_.toInput),
-                props.observingMode.async.set
-              ).switching(isChanging.async).runAsync,
+              om.fold(revertConfig)(m =>
+                updateConfiguration(props.obsId,
+                                    props.pacAndMode,
+                                    m.toInput,
+                                    m.defaultPosAngleConstrait
+                ).switching(isChanging.async).runAsync
+              ),
             options = props.observingModeGroups.values.toList.sorted
               .map:
                 _.map: om =>
