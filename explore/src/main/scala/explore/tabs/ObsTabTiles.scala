@@ -483,7 +483,6 @@ object ObsTabTiles:
                 props.observation.zoom(Observation.scienceRequirements),
                 props.observation
                   .zoom((Observation.posAngleConstraint, Observation.observingMode).disjointZip),
-                agsState,
                 props.observation.get.scienceTargetIds,
                 targetCoords,
                 obsConf,

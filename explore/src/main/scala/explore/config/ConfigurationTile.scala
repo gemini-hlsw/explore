@@ -33,7 +33,6 @@ import explore.model.PosAngleConstraintAndObsMode
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.TargetList
-import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
@@ -71,7 +70,6 @@ object ConfigurationTile:
     obsId:                    Observation.Id,
     requirements:             UndoSetter[ScienceRequirements],
     pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
-    agsState:                 View[AgsState],
     scienceTargetIds:         AsterismIds,
     baseCoordinates:          Option[CoordinatesAtVizTime],
     obsConf:                  ObsConfiguration,
@@ -96,7 +94,6 @@ object ConfigurationTile:
           obsId,
           requirements,
           pacAndMode,
-          agsState,
           obsConf,
           scienceTargetIds.itcTargets(allTargets),
           baseCoordinates,
@@ -223,7 +220,6 @@ object ConfigurationTile:
     obsId:                    Observation.Id,
     requirements:             UndoSetter[ScienceRequirements],
     pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
-    agsState:                 View[AgsState],
     obsConf:                  ObsConfiguration,
     itcTargets:               List[ItcTarget],
     baseCoordinates:          Option[CoordinatesAtVizTime],
@@ -304,7 +300,6 @@ object ConfigurationTile:
                 .UpdateObservationMutation[IO]
                 .execute(_)
                 .void
-                .switching(props.agsState.async, AgsState.Saving, AgsState.Idle)
             ).zoom(
               Iso.id,
               UpdateObservationsInput.SET
