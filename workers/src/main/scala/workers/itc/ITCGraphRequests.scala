@@ -20,7 +20,6 @@ import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsInput
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsParameters
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsResult
 import lucuma.refined.*
-import lucuma.schemas.model.CentralWavelength
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
@@ -32,14 +31,13 @@ object ITCGraphRequests:
     SignificantFiguresInput(6.refined, 6.refined, 3.refined)
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:      CentralWavelength,
-    signalToNoise:   SignalToNoise,
-    signalToNoiseAt: Wavelength,
-    constraints:     ConstraintSet,
-    targets:         NonEmptyList[ItcTarget],
-    mode:            InstrumentConfig,
-    cache:           Cache[F],
-    callback:        ItcAsterismGraphResults => F[Unit]
+    wavelength:    Wavelength,
+    signalToNoise: SignalToNoise,
+    constraints:   ConstraintSet,
+    targets:       NonEmptyList[ItcTarget],
+    mode:          InstrumentConfig,
+    cache:         Cache[F],
+    callback:      ItcAsterismGraphResults => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -47,7 +45,6 @@ object ITCGraphRequests:
         ItcGraphRequestParams(
           wavelength,
           signalToNoise,
-          signalToNoiseAt,
           constraints,
           targets,
           m
@@ -56,7 +53,6 @@ object ITCGraphRequests:
         ItcGraphRequestParams(
           wavelength,
           signalToNoise,
-          signalToNoiseAt,
           constraints,
           targets,
           m
@@ -71,9 +67,8 @@ object ITCGraphRequests:
             .spectroscopyIntegrationTimeAndGraphs(
               SpectroscopyIntegrationTimeAndGraphsInput(
                 SpectroscopyIntegrationTimeAndGraphsParameters(
-                  wavelength = request.wavelength.value,
+                  atWavelength = request.atWavelength,
                   signalToNoise = request.signalToNoise,
-                  signalToNoiseAt = request.signalToNoiseAt.some,
                   constraints = request.constraints,
                   mode = mode,
                   significantFigures = significantFigures.some
@@ -154,14 +149,12 @@ object ITCGraphRequests:
       )
 
     itcRowsParams
-      .traverse { request =>
+      .traverse: request =>
         Logger[F].debug(
           s"ITC: Request for mode ${request.mode} and target count: ${request.asterism.length}"
         ) *>
           cache
             .eval(cacheableRequest)
             .apply(request)
-      }
-      .flatMap {
+      .flatMap:
         _.traverse(callback).void
-      }

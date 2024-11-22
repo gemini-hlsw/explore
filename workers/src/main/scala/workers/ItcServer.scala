@@ -62,8 +62,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
               signalToNoise,
               constraint,
               targets,
-              rows,
-              signalToNoiseAt
+              rows
             ) =>
           Logger[IO].debug(s"ITC query ${rows.length}") >>
             itcClient.get >>= (implicit client =>
@@ -74,7 +73,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 constraint,
                 targets,
                 rows,
-                signalToNoiseAt,
                 cache,
                 r => invocation.respond(r)
               )
@@ -83,7 +81,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
         case ItcMessage.GraphQuery(
               wavelength,
               signalToNoise,
-              signalToNoiseAt,
               constraint,
               targets,
               mode
@@ -94,7 +91,6 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
               .queryItc[IO](
                 wavelength,
                 signalToNoise,
-                signalToNoiseAt,
                 constraint,
                 targets,
                 mode,

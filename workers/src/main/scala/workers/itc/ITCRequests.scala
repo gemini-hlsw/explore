@@ -42,14 +42,13 @@ object ITCRequests:
       ga.parTraverse(a => s.permit.use(_ => f(a)))
 
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:      Wavelength,
-    signalToNoise:   SignalToNoise,
-    constraints:     ConstraintSet,
-    asterism:        NonEmptyList[ItcTarget],
-    modes:           List[SpectroscopyModeRow],
-    signalToNoiseAt: Wavelength,
-    cache:           Cache[F],
-    callback:        Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
+    wavelength:    Wavelength,
+    signalToNoise: SignalToNoise,
+    constraints:   ConstraintSet,
+    asterism:      NonEmptyList[ItcTarget],
+    modes:         List[SpectroscopyModeRow],
+    cache:         Cache[F],
+    callback:      Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
     def itcResults(r: IntegrationTimeResult): EitherNec[ItcTargetProblem, ItcResult] =
       // Convert to usable types
@@ -72,7 +71,7 @@ object ITCRequests:
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
       Logger[F]
         .debug(
-          s"ITC: Request for mode: ${params.mode}, centralWavelength: ${params.wavelength} and target count: ${params.asterism.length}"
+          s"ITC: Request for mode: ${params.mode}, atWavelength: ${params.atWavelength} and target count: ${params.asterism.length}"
         ) *>
         params.mode.toItcClientMode
           .traverse: mode =>
@@ -80,9 +79,8 @@ object ITCRequests:
               .spectroscopy(
                 SpectroscopyIntegrationTimeInput(
                   SpectroscopyIntegrationTimeParameters(
-                    wavelength = params.wavelength.value,
+                    atWavelength = params.atWavelength,
                     signalToNoise = params.signalToNoise,
-                    signalToNoiseAt = params.signalToNoiseAt.some,
                     constraints = params.constraints,
                     mode = mode
                   ),
@@ -107,13 +105,13 @@ object ITCRequests:
 
     val itcRowsParams: List[ItcRequestParams] =
       modes
-        .map(x => (x.intervalCenter(wavelength), x.instrument))
+        .map(_.instrument)
         // Only handle known modes
         .collect:
-          case (Some(wavelength), m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _)) =>
-            ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, asterism, m)
-          case (Some(wavelength), m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _)) =>
-            ItcRequestParams(wavelength, signalToNoise, signalToNoiseAt, constraints, asterism, m)
+          case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
+            ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
+          case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
+            ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
 
     parTraverseN(
       Constants.MaxConcurrentItcRequests.toLong,

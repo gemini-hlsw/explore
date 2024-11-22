@@ -16,7 +16,6 @@ import explore.modes.SpectroscopyModeRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.schemas.model.CentralWavelength
 import org.http4s.Uri
 import workers.WorkerRequest
 
@@ -30,22 +29,20 @@ object ItcMessage extends ItcPicklers:
     type ResponseType = Unit
 
   case class Query(
-    wavelength:      Wavelength,
-    signalToNoise:   SignalToNoise,
-    constraints:     ConstraintSet,
-    asterism:        NonEmptyList[ItcTarget],
-    modes:           List[SpectroscopyModeRow],
-    signalToNoiseAt: Wavelength
+    wavelength:    Wavelength,
+    signalToNoise: SignalToNoise,
+    constraints:   ConstraintSet,
+    asterism:      NonEmptyList[ItcTarget],
+    modes:         List[SpectroscopyModeRow]
   ) extends Request:
     type ResponseType = Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 
   case class GraphQuery(
-    wavelength:      CentralWavelength,
-    signalToNoise:   SignalToNoise,
-    signalToNoiseAt: Wavelength,
-    constraints:     ConstraintSet,
-    asterism:        NonEmptyList[ItcTarget],
-    modes:           InstrumentConfig
+    wavelength:    Wavelength,
+    signalToNoise: SignalToNoise,
+    constraints:   ConstraintSet,
+    asterism:      NonEmptyList[ItcTarget],
+    modes:         InstrumentConfig
   ) extends Request:
     type ResponseType = ItcAsterismGraphResults
 

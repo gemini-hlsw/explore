@@ -11,24 +11,13 @@ import lucuma.core.enums.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.schemas.model.CentralWavelength
 import monocle.Focus
 import mouse.boolean.*
-// import lucuma.core.model.SourceProfile
 
 // Simple cache of the remotely calculated values
 case class ItcResultsCache(
   cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 ) {
-  def wavelength(
-    w: Option[Wavelength],
-    r: SpectroscopyModeRow
-  ): EitherNec[ItcQueryProblem, CentralWavelength] =
-    Either.fromOption(
-      w.flatMap(r.intervalCenter),
-      NonEmptyChain.of(ItcQueryProblem.MissingWavelength)
-    )
-
   def signalToNoise(w: Option[SignalToNoise]): EitherNec[ItcQueryProblem, SignalToNoise] =
     Either.fromOption(w, NonEmptyChain.of(ItcQueryProblem.MissingSignalToNoise))
 
@@ -66,18 +55,17 @@ case class ItcResultsCache(
 
   // Read the cache value or a default
   def forRow(
-    w:    Option[Wavelength],
     sn:   Option[SignalToNoise],
     snAt: Option[Wavelength],
     c:    ConstraintSet,
     a:    Option[NonEmptyList[ItcTarget]],
     r:    SpectroscopyModeRow
   ): EitherNec[ItcTargetProblem, ItcResult] =
-    (wavelength(w, r), signalToNoise(sn), signalToNoiseAt(snAt), mode(r), targets(a)).parTupled
+    (signalToNoise(sn), signalToNoiseAt(snAt), mode(r), targets(a)).parTupled
       .leftMap(_.map(ItcTargetProblem(none, _)))
-      .map: (w, sn, snAt, im, a) =>
+      .map: (sn, snAt, im, a) =>
         cache
-          .get(ItcRequestParams(w, sn, snAt, c, a, im))
+          .get(ItcRequestParams(snAt, sn, c, a, im))
           .getOrElse(ItcResult.Pending.rightNec[ItcTargetProblem])
       .flatten
 
