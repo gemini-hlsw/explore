@@ -8,22 +8,19 @@ import explore.modes.InstrumentConfig
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
-import lucuma.schemas.model.CentralWavelength
 
 case class ItcRequestParams(
-  wavelength:      CentralWavelength,
-  signalToNoise:   SignalToNoise,
-  signalToNoiseAt: Wavelength,
-  constraints:     ConstraintSet,
-  asterism:        NonEmptyList[ItcTarget],
-  mode:            InstrumentConfig
+  atWavelength:  Wavelength,
+  signalToNoise: SignalToNoise,
+  constraints:   ConstraintSet,
+  asterism:      NonEmptyList[ItcTarget],
+  mode:          InstrumentConfig
 )
 
 case class ItcGraphRequestParams(
-  wavelength:      CentralWavelength,
-  signalToNoise:   SignalToNoise,
-  signalToNoiseAt: Wavelength,
-  constraints:     ConstraintSet,
-  asterism:        NonEmptyList[ItcTarget],
-  mode:            InstrumentConfig
+  atWavelength:  Wavelength,
+  signalToNoise: SignalToNoise,
+  constraints:   ConstraintSet,
+  asterism:      NonEmptyList[ItcTarget],
+  mode:          InstrumentConfig
 )

@@ -55,6 +55,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.schemas.model.CentralWavelength
 import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
 import lucuma.ui.primereact.*
@@ -353,7 +354,6 @@ private object SpectroscopyModesTable:
               SpectroscopyModeRowWithResult(
                 row,
                 itcResults.forRow(
-                  s.wavelength,
                   s.signalToNoise,
                   s.signalToNoiseAt,
                   constraints,
@@ -452,7 +452,6 @@ private object SpectroscopyModesTable:
       // Recalculate ITC values if the wv or sn change or if the rows get modified
       .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
         (
-          props.spectroscopyRequirements.wavelength,
           props.spectroscopyRequirements.signalToNoise,
           props.spectroscopyRequirements.signalToNoiseAt,
           props.constraints,
@@ -476,7 +475,6 @@ private object SpectroscopyModesTable:
           _
         ) =>
           (
-            wavelength,
             signalToNoise,
             signalToNoiseAt,
             constraints,
@@ -485,22 +483,23 @@ private object SpectroscopyModesTable:
           ) =>
             import ctx.given
 
-            (wavelength, signalToNoise, signalToNoiseAt, asterism)
-              .mapN: (w, sn, snAt, asterism) =>
-                val modes =
+            (signalToNoise, signalToNoiseAt, asterism)
+              .mapN: (sn, snAt, asterism) =>
+                val modes: List[SpectroscopyModeRowWithResult] =
                   sortedRows
                     .filterNot: row => // Discard modes already in the cache
-                      val cache = itcResults.value.cache
-                      val cw    = row.entry.intervalCenter(w)
+                      val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
+                        itcResults.value.cache
+                      val cw: Option[CentralWavelength]                                        =
+                        row.entry.intervalCenter(snAt)
 
                       cw.exists: w =>
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
                             cache.contains:
                               ItcRequestParams(
-                                w,
+                                w.value,
                                 sn,
-                                snAt,
                                 constraints,
                                 asterism,
                                 row.entry.instrument
@@ -514,7 +513,7 @@ private object SpectroscopyModesTable:
                     request <-
                       ItcClient[IO]
                         .request:
-                          ItcMessage.Query(w, sn, constraints, asterism, modes.map(_.entry), snAt)
+                          ItcMessage.Query(snAt, sn, constraints, asterism, modes.map(_.entry))
                         .map:
                           // Avoid rerendering on every single result, it's slow.
                           _.groupWithin(100, 500.millis)

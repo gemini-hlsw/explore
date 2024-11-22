@@ -12,6 +12,7 @@ import explore.modes.InstrumentConfig
 import explore.optics.all.*
 import lucuma.core.enums.GmosRoi
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Wavelength
 import lucuma.core.model.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.itc.client.GmosFpu
@@ -26,15 +27,21 @@ trait syntax:
         case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, modeOverrides) =>
           val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
           val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
-          InstrumentMode
-            .GmosNorthSpectroscopy(grating, filter, GmosFpu.North(fpu.asRight), ccd, roi)
-            .some
+          modeOverrides
+            .map(_.centralWavelength.value)
+            .flatMap: (cw: Wavelength) =>
+              InstrumentMode
+                .GmosNorthSpectroscopy(cw, grating, filter, GmosFpu.North(fpu.asRight), ccd, roi)
+                .some
         case InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, modeOverrides) =>
           val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
           val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
-          InstrumentMode
-            .GmosSouthSpectroscopy(grating, filter, GmosFpu.South(fpu.asRight), ccd, roi)
-            .some
+          modeOverrides
+            .map(_.centralWavelength.value)
+            .flatMap: (cw: Wavelength) =>
+              InstrumentMode
+                .GmosSouthSpectroscopy(cw, grating, filter, GmosFpu.South(fpu.asRight), ccd, roi)
+                .some
         case _                                                                           => None
 
   // We may consider adjusting this to consider small variations of RV identical for the

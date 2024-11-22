@@ -19,12 +19,10 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.InstrumentConfig
-import explore.modes.InstrumentOverrides
 import japgolly.scalajs.react.Reusability
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Target
-import lucuma.schemas.model.CentralWavelength
 import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
@@ -66,26 +64,6 @@ case class ItcGraphQuerier(
   val signalToNoiseAt: Option[Wavelength] =
     spectroscopyRequirements.flatMap(_.signalToNoiseAt)
 
-  private val wavelength: Option[CentralWavelength] =
-    finalConfig
-      .map(_.instrumentConfig)
-      .flatMap:
-        case InstrumentConfig.GmosNorthSpectroscopy(
-              _,
-              _,
-              _,
-              Some(InstrumentOverrides.GmosSpectroscopy(cw, _, _))
-            ) =>
-          cw.some
-        case InstrumentConfig.GmosSouthSpectroscopy(
-              _,
-              _,
-              _,
-              Some(InstrumentOverrides.GmosSpectroscopy(cw, _, _))
-            ) =>
-          cw.some
-        case _ => none
-
   private val instrumentConfig: Option[InstrumentConfig] =
     finalConfig.map(_.instrumentConfig)
 
@@ -95,13 +73,7 @@ case class ItcGraphQuerier(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps =
-    (wavelength,
-     signalToNoise,
-     signalToNoiseAt,
-     constraints.some,
-     itcTargets,
-     instrumentConfig
-    ).tupled
+    (signalToNoise, signalToNoiseAt, constraints.some, itcTargets, instrumentConfig).tupled
 
   val isExecutable: Boolean = queryProps.isDefined
 
@@ -110,10 +82,10 @@ case class ItcGraphQuerier(
     WorkerClient[IO, ItcMessage.Request]
   ): IO[ItcAsterismGraphResults] =
     val action: Option[IO[ItcAsterismGraphResults]] =
-      queryProps.map: (w, sn, snAt, c, t, mode) =>
+      queryProps.map: (sn, snAt, c, t, mode) =>
         ItcClient[IO]
           .requestSingle:
-            ItcMessage.GraphQuery(w, sn, snAt, c, t, mode)
+            ItcMessage.GraphQuery(snAt, sn, c, t, mode)
           .map:
             _.toRight(new Throwable("No response from ITC server."))
           .rethrow
