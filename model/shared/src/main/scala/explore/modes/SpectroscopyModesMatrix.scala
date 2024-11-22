@@ -197,7 +197,6 @@ object SpectroscopyModeRow {
 
   given Decoder[SpectroscopyModeRow] = c =>
     for {
-      instrument <- c.downField("instrument").as[Instrument]
       name       <- c.downField("name").as[NonEmptyString]
       focalPlane <- c.downField("focalPlane").as[FocalPlane]
       capability <- c.downField("capability").as[Option[SpectroscopyCapabilities]]

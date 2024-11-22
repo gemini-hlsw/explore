@@ -15,6 +15,7 @@ import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObsAttachment as ObsAtt
+import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.SourceProfile
@@ -23,6 +24,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.util.NewType
 import lucuma.refined.*
+import lucuma.schemas.model.ObservingMode
 import monocle.Focus
 import monocle.Lens
 
@@ -70,6 +72,14 @@ object ObservationsAndTargets:
   val observations: Lens[ObservationsAndTargets, ObservationList] =
     Focus[ObservationsAndTargets](_._1)
   val targets: Lens[ObservationsAndTargets, TargetList]           = Focus[ObservationsAndTargets](_._2)
+
+type PosAngleConstraintAndObsMode = (PosAngleConstraint, Option[ObservingMode])
+
+object PosAngleConstraintAndObsMode:
+  val posAngleConstraint: Lens[PosAngleConstraintAndObsMode, PosAngleConstraint] =
+    Focus[PosAngleConstraintAndObsMode](_._1)
+  val observingMode: Lens[PosAngleConstraintAndObsMode, Option[ObservingMode]]   =
+    Focus[PosAngleConstraintAndObsMode](_._2)
 
 object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
 type ObservationExecutionMap = ObservationExecutionMap.Type

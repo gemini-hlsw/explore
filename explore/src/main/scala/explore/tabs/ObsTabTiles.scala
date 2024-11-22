@@ -74,12 +74,12 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
+import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.itc.syntax.*
 import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
@@ -115,6 +115,7 @@ case class ObsTabTiles(
     programSummaries.obsAttachmentAssignments
   val asterismTracking: Option[ObjectTracking]                      =
     observation.get.asterismTracking(obsTargets)
+  val posAngleConstraint: PosAngleConstraint                        = observation.get.posAngleConstraint
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -238,16 +239,6 @@ object ObsTabTiles:
           import ctx.given
 
           vizTimeOrNowPot.renderPot: vizTimeOrNow =>
-            // This view is shared between AGS and the configuration editor
-            // when PA changes it gets saved to the db
-            val posAngleConstraintView: View[PosAngleConstraint] =
-              props.observation.model
-                .zoom(Observation.posAngleConstraint)
-                .withOnMod: pa =>
-                  ObsQueries
-                    .updatePosAngle[IO](List(props.obsId), pa)
-                    .switching(agsState.async, AgsState.Saving, AgsState.Idle)
-                    .runAsync
 
             val asterismIds: View[AsterismIds] =
               props.observation.model.zoom(Observation.scienceTargetIds)
@@ -281,12 +272,12 @@ object ObsTabTiles:
                 .orElse(pendingTime)
 
             val paProps: PAProperties =
-              PAProperties(props.obsId, guideStarSelection, agsState, posAngleConstraintView)
+              PAProperties(props.obsId, guideStarSelection, agsState, props.posAngleConstraint)
 
             val averagePA: Option[AveragePABasis] =
               (basicConfiguration.map(_.siteFor), asterismAsNel, obsDuration)
                 .mapN: (site, asterism, duration) =>
-                  posAngleConstraintView.get match
+                  props.posAngleConstraint match
                     case PosAngleConstraint.AverageParallactic =>
                       // See also `anglesToTestAt` in AladinCell.scala.
                       averageParallacticAngle(
@@ -303,7 +294,7 @@ object ObsTabTiles:
             // For AverageParllactic constraint, use the average PA (if any), otherwise
             // use the angle specified in the constraint
             val pa: Option[Angle] =
-              posAngleConstraintView.get match
+              props.posAngleConstraint match
                 case PosAngleConstraint.Unbounded                  => paProps.selectedPA
                 case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
                 case PosAngleConstraint.Fixed(angle)               => angle.some
@@ -490,8 +481,8 @@ object ObsTabTiles:
                 props.programId,
                 props.obsId,
                 props.observation.zoom(Observation.scienceRequirements),
-                props.observation.zoom(Observation.observingMode),
-                posAngleConstraintView,
+                props.observation
+                  .zoom((Observation.posAngleConstraint, Observation.observingMode).disjointZip),
                 props.observation.get.scienceTargetIds,
                 targetCoords,
                 obsConf,

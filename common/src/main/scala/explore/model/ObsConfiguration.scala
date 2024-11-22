@@ -47,10 +47,7 @@ case class ObsConfiguration(
         averagePA.map(_.averagePA).orElse(Angle.Angle0.some)
       case _                                               => none
 
-  def posAngleConstraintView: Option[View[PosAngleConstraint]] =
-    posAngleProperties.map(_.constraint)
-
-  def posAngleConstraint: Option[PosAngleConstraint] = posAngleConstraintView.map(_.get)
+  def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint)
 
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)

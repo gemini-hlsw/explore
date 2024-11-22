@@ -6,6 +6,7 @@ package explore.model
 import cats.kernel.Order
 import cats.syntax.order.*
 import clue.data.syntax.*
+import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.GmosAmpReadMode
 import lucuma.core.enums.GmosNorthFilter
 import lucuma.core.enums.GmosNorthFpu
@@ -40,6 +41,16 @@ enum ObservingModeSummary:
     ampReadMode:       GmosAmpReadMode,
     roi:               GmosRoi
   ) extends ObservingModeSummary
+
+  // Currently, everything is long slit and defaults to Average Parallactic.
+  // But as we get new modes, Shortcut 3360 states:
+  // Slit spectroscopy ->  Average Parallactic
+  // MOS -> Fixed
+  // Imaging -> Unconstrained
+  // IFU -> 180 Flip
+  def defaultPosAngleConstrait: PosAngleOptions = this match
+    case GmosNorthLongSlit(_, _, _, _, _, _) => PosAngleOptions.AverageParallactic
+    case GmosSouthLongSlit(_, _, _, _, _, _) => PosAngleOptions.AverageParallactic
 
   def toInput: ObservingModeInput = this match
     case GmosNorthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
