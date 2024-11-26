@@ -301,16 +301,21 @@ object ObsTabTiles:
                 case PosAngleConstraint.AllowFlip(angle)           => angle.some
                 case PosAngleConstraint.ParallacticOverride(angle) => angle.some
 
+            // Only show finder charts and notes tiles if the proposal has been
+            // accepted. Need to have hidden dummies in their place to not mess
+            // up the stored layouts.
             val finderChartsTile =
-              FinderChartsTile(
-                props.programId,
-                props.obsId,
-                attachmentsView,
-                props.vault.map(_.token),
-                props.obsAttachments,
-                pa,
-                props.isDisabled
-              )
+              if (props.programSummaries.proposalIsAccepted)
+                FinderChartsTile(
+                  props.programId,
+                  props.obsId,
+                  attachmentsView,
+                  props.vault.map(_.token),
+                  props.obsAttachments,
+                  pa,
+                  props.isDisabled
+                )
+              else Tile(ObsTabTileIds.FinderChartsId.id, "", hidden = true)(_ => EmptyVdom)
 
             val notesView: View[Option[NonEmptyString]] =
               props.observation.model
@@ -320,7 +325,10 @@ object ObsTabTiles:
                     .updateNotes[IO](List(props.obsId), notes)
                     .runAsync
 
-            val notesTile = NotesTile.notesTile(props.obsId, notesView)
+            val notesTile =
+              if (props.programSummaries.proposalIsAccepted)
+                NotesTile.notesTile(props.obsId, notesView)
+              else Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
 
             val sequenceTile =
               SequenceTile(
