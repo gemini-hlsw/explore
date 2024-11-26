@@ -46,6 +46,8 @@ case class ProgramSummaries(
 ) derives Eq:
   lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
+  lazy val proposalIsAccepted  =
+    optProgramDetails.exists(_.proposalStatus === ProposalStatus.Accepted)
 
   lazy val proposalId: Option[ProposalReference] =
     optProgramDetails.flatMap(_.proposal.flatMap(_.reference))

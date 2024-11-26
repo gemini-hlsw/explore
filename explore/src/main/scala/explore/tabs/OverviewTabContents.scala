@@ -19,7 +19,6 @@ import explore.model.ObsTabTileIds
 import explore.model.ObservationList
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
-import explore.syntax.ui.*
 import explore.validations.ObservationValidationsTableBody
 import explore.validations.ObservationValidationsTableTileState
 import explore.validations.ObservationValidationsTableTitle
@@ -39,6 +38,7 @@ case class OverviewTabContents(
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
   observations:             View[ObservationList],
   layout:                   LayoutsMap,
+  proposalIsAccepted:       Boolean,
   readonly:                 Boolean
 ) extends ReactFnProps(OverviewTabContents.component):
   val userId: Option[User.Id] = userVault.map(_.user.id)
@@ -64,29 +64,34 @@ object OverviewTabContents {
         )
 
         val obsAttachmentsTile = props.userVault
-          .map(vault =>
-            Tile(
-              ObsTabTileIds.ObsAttachmentsId.id,
-              "Observation Attachments",
-              ObsAttachmentsTableTileState()
-            )(
-              ObsAttachmentsTableBody(props.programId,
-                                      vault.token,
-                                      props.obsAttachmentAssignments,
-                                      props.obsAttachments,
-                                      props.readonly,
-                                      _
-              ),
-              (s, _) =>
-                ObsAttachmentsTableTitle(props.programId,
-                                         vault.token,
-                                         props.obsAttachments,
-                                         props.readonly,
-                                         s
-                )
-            )
+          .flatMap(vault =>
+            if (props.proposalIsAccepted)
+              Tile(
+                ObsTabTileIds.ObsAttachmentsId.id,
+                "Observation Attachments",
+                ObsAttachmentsTableTileState()
+              )(
+                ObsAttachmentsTableBody(props.programId,
+                                        vault.token,
+                                        props.obsAttachmentAssignments,
+                                        props.obsAttachments,
+                                        props.readonly,
+                                        _
+                ),
+                (s, _) =>
+                  ObsAttachmentsTableTitle(props.programId,
+                                           vault.token,
+                                           props.obsAttachments,
+                                           props.readonly,
+                                           s
+                  )
+              ).some
+            else None
           )
-          .filterNot(_ => props.userVault.isGuest)
+          // provide a hidden dummy tile to not mess up the saved layouts.
+          .getOrElse(
+            Tile(ObsTabTileIds.ObsAttachmentsId.id, "", hidden = true)(_ => EmptyVdom)
+          )
 
         <.div(
           TileController(
@@ -95,9 +100,9 @@ object OverviewTabContents {
             defaultLayouts,
             props.layout,
             List(
-              warningsAndErrorsTile.some,
+              warningsAndErrorsTile,
               obsAttachmentsTile
-            ).flattenOption,
+            ),
             GridLayoutSection.OverviewLayout
           )
         ).withRef(resize.ref)
