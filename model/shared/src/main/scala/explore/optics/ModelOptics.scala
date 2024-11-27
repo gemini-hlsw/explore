@@ -3,14 +3,18 @@
 
 package explore.optics
 
+import cats.Order.given
 import coulomb.*
 import coulomb.policy.spire.standard.given
 import coulomb.syntax.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.BrightnessUnits.LineWidthQuantity
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Constants.*
+import lucuma.core.math.LineFluxValue
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Measure
 import lucuma.core.math.units.*
 import lucuma.core.model.SourceProfile
@@ -46,19 +50,35 @@ trait ModelOptics {
    * Getter for any kind of brightness measures of a `SourceProfile`, as long as it has a
    * `SpectralDefinition.BandNormalized`
    */
-  val SourceProfileBrightnesses
+  val BandNormalizedBrightnesses
     : Getter[SourceProfile, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
-    Getter { sourceProfile =>
+    Getter: sourceProfile =>
       SourceProfile.integratedBrightnesses
         .getOption(sourceProfile)
         .orElse(SourceProfile.surfaceBrightnesses.getOption(sourceProfile))
-    }
 
   /**
    * Getter for any kind of brightness measures of a `Target`, as long as it has a
    * `SpectralDefinition.BandNormalized`
    */
-  val TargetBrightnesses: Getter[Target, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
-    Target.sourceProfile.asGetter.andThen(SourceProfileBrightnesses)
+  val BandNormalizedTargetBrightnesses
+    : Getter[Target, Option[SortedMap[Band, Measure[BrightnessValue]]]] =
+    Target.sourceProfile.asGetter.andThen(BandNormalizedBrightnesses)
 
+  /**
+   * Getter for any kind of brightness measures of a `SourceProfile`, as long as it has a
+   * `SpectralDefinition.EmissionLines`
+   */
+  val EmissionLinesBrightnesses: Getter[SourceProfile, Option[
+    SortedMap[Wavelength, (LineWidthQuantity, Measure[LineFluxValue])]
+  ]] =
+    Getter: sourceProfile =>
+      SourceProfile.integratedWavelengthLines
+        .getOption(sourceProfile)
+        .orElse(SourceProfile.surfaceWavelengthLines.getOption(sourceProfile))
+        .map: m =>
+          SortedMap.from:
+            m.view
+              .mapValues[(LineWidthQuantity, Measure[LineFluxValue])]: l =>
+                (l.lineWidth, l.lineFlux)
 }

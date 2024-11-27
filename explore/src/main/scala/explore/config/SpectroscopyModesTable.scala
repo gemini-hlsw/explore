@@ -333,7 +333,7 @@ private object SpectroscopyModesTable:
             val profiles: NonEmptyList[SourceProfile] =
               a.map(_.sourceProfile)
 
-            val rows: List[SpectroscopyModeRow]          =
+            val rows: List[SpectroscopyModeRow] =
               matrix
                 .filtered(
                   focalPlane = s.focalPlane,
@@ -344,6 +344,7 @@ private object SpectroscopyModesTable:
                   range = s.wavelengthCoverage,
                   declination = dec
                 )
+
             val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
             // Computes the mode overrides for the current parameters
             val fixedModeRows: List[SpectroscopyModeRow] =

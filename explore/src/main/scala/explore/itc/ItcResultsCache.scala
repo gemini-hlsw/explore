@@ -38,7 +38,13 @@ case class ItcResultsCache(
       .flatMap: a =>
         Either.fromOption(
           a.some.filter: // All targets must have brightness defined.
-            _.forall(t => SourceProfileBrightnesses.get(t.sourceProfile).exists(_.nonEmpty))
+            _.forall: t =>
+              BandNormalizedBrightnesses
+                .get(t.sourceProfile)
+                .exists(_.nonEmpty) ||
+                EmissionLinesBrightnesses
+                  .get(t.sourceProfile)
+                  .exists(_.nonEmpty)
           ,
           NonEmptyChain.of(ItcQueryProblem.MissingBrightness)
         )
