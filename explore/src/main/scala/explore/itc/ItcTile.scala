@@ -29,8 +29,9 @@ import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
-import lucuma.core.math.BrightnessValue
-import lucuma.core.math.dimensional.Units
+import lucuma.core.math.LineWidthValue
+import lucuma.core.math.Wavelength
+import lucuma.core.model.EmissionLine
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.User
 import lucuma.core.util.NewType
@@ -129,20 +130,43 @@ object ItcTile:
                 c <- r.toOption
               yield c
 
-            val selectedTargetBrightness: Option[(Band, BrightnessValue, Units)] =
+            def bandValues(sp: SourceProfile)(band: Band): Option[BrightnessValues.ForBand] =
+              SourceProfile.integratedBrightnesses
+                .getOption(sp)
+                .flatMap(_.get(band))
+                .orElse:
+                  SourceProfile.surfaceBrightnesses
+                    .getOption(sp)
+                    .flatMap(_.get(band))
+                .map: b =>
+                  BrightnessValues.ForBand(band, b.value, b.units)
+
+            def emissionLineValues(
+              sp: SourceProfile
+            )(wavelength: Wavelength): Option[BrightnessValues.ForEmissionLine] =
+              SourceProfile.integratedWavelengthLines
+                .getOption(sp)
+                .flatMap(_.get(wavelength))
+                .orElse:
+                  SourceProfile.surfaceWavelengthLines
+                    .getOption(sp)
+                    .flatMap(_.get(wavelength))
+                .map: e =>
+                  BrightnessValues.ForEmissionLine(
+                    wavelength,
+                    e.lineWidth.value,
+                    e.lineFlux.value,
+                    e.lineFlux.units
+                  )
+
+            val selectedTargetBrightness: Option[BrightnessValues] =
               for
-                t   <- selectedTarget
-                sp   = t.input.sourceProfile
-                r   <- selectedResult
-                band = r.timeAndGraphs.integrationTime.band
-                b   <- SourceProfile.integratedBrightnesses
-                         .getOption(sp)
-                         .flatMap(_.get(band))
-                         .orElse:
-                           SourceProfile.surfaceBrightnesses
-                             .getOption(sp)
-                             .flatMap(_.get(band))
-              yield (band, b.value, b.units)
+                t         <- selectedTarget
+                sp         = t.input.sourceProfile
+                r         <- selectedResult
+                bandOrLine = r.timeAndGraphs.integrationTime.bandOrLine
+                values    <- bandOrLine.fold(bandValues(sp), emissionLineValues(sp))
+              yield values
 
             val isModeSelected: Boolean =
               props.itcGraphQuerier.selectedConfig.isDefined || selectedResult.isDefined

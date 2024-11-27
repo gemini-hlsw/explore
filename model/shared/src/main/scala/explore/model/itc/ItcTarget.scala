@@ -35,8 +35,8 @@ case class ItcTarget(name: NonEmptyString, input: TargetInput) derives Eq:
 
   private def canQuerySD[A](sd: SpectralDefinition[A]): Boolean =
     sd match
-      case BandNormalized(sed, _) => sed.isDefined
-      case EmissionLines(_, _)    => false // No emission line support yet
+      case BandNormalized(sed, bands) => sed.isDefined && bands.nonEmpty
+      case EmissionLines(lines, _)    => lines.nonEmpty
 
   def canQueryITC: Boolean = input.sourceProfile match
     case SourceProfile.Point(sd)       => canQuerySD(sd)

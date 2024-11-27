@@ -7,7 +7,14 @@ import cats.data.NonEmptyChain
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Band
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.math.BrightnessValue
+import lucuma.core.math.LineFluxValue
+import lucuma.core.math.LineWidthValue
+import lucuma.core.math.Wavelength
+import lucuma.core.math.dimensional.Units
+import lucuma.core.syntax.display.*
 import lucuma.itc.ItcCcd
 import lucuma.react.fa.*
 import lucuma.react.floatingui.syntax.*
@@ -23,8 +30,24 @@ extension (role: Option[CalibrationRole])
       )
     ).withTooltip("Required for ITC")
 
-def formatCcds(
+protected def formatCcds(
   ccds:      Option[NonEmptyChain[ItcCcd]],
   extractor: NonEmptyChain[ItcCcd] => String
 ): String =
   ccds.fold("-")(extractor)
+
+protected enum BrightnessValues:
+  case ForBand(band: Band, value: BrightnessValue, units: Units)
+  case ForEmissionLine(
+    wavelength: Wavelength,
+    lineWidth:  LineWidthValue,
+    lineFlux:   LineFluxValue,
+    units:      Units
+  )
+
+  override def toString: String =
+    this match
+      case ForBand(band, value, units)                             =>
+        f"${band.shortName}: $value%.2f  $units"
+      case ForEmissionLine(wavelength, lineWidth, lineFlux, units) =>
+        f"${wavelength.toNanometers}%.0f nm: $lineWidth%.2f km/s, ${lineFlux.shortName} $units"
