@@ -29,6 +29,7 @@ import lucuma.core.util.Enumerated
 import lucuma.react.primereact.Message
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
+import org.http4s.headers.Authorization
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
@@ -56,7 +57,10 @@ extension [F[_]: MonadThrow](c: Logger[F])
 extension (vault: UserVault)
   def addAuthorizationHeaderTo(request: FetchJSRequest): FetchJSRequest =
     // DOM Headers are mutable
-    request.headers.set("Authorization", vault.authorizationHeader)
+    request.headers.set(
+      Authorization.name.toString,
+      vault.authorizationHeader.credentials.renderString
+    )
     request
 
 extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
