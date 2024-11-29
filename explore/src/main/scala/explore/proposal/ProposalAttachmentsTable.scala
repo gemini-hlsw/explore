@@ -132,6 +132,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                         <.div(
                           <.label(
                             tableLabelButtonClasses,
+                            ExploreStyles.WarningLabel,
                             ^.htmlFor := s"attachment-upload-$attType",
                             Icons.FileArrowUp
                           ).withTooltip(

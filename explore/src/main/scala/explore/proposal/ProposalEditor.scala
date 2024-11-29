@@ -168,7 +168,9 @@ object ProposalEditor:
             FormInputTextAreaView(
               id = "abstract".refined,
               value = abstractView.as(OptionNonEmptyStringIso)
-            )(^.disabled := props.readonly)
+            )(^.disabled        := props.readonly,
+              ^.cls := ExploreStyles.WarningInput.when_(abstractView.get.isEmpty).htmlClass
+            )
           )
 
         val attachmentsTile =
