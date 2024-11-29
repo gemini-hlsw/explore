@@ -6,6 +6,7 @@ package explore.users
 import crystal.react.View
 import crystal.react.hooks.*
 import explore.Icons
+import explore.components.ui.ExploreStyles
 import explore.model.UserInvitation
 import explore.model.display.given
 import japgolly.scalajs.react.*
@@ -34,7 +35,8 @@ object InviteUserButton:
       .useOverlayPanelRef
       .useStateView(CreateInviteStatus.Idle)
       .render: (props, overlayRef, createInviteStatus) =>
-        React.Fragment(
+        <.div(
+          ExploreStyles.InviteUserButton,
           InviteUserPopup(
             props.programId,
             props.role,

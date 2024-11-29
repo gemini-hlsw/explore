@@ -315,7 +315,8 @@ object ProposalDetailsBody:
           // Title input
           FormInputTextView(
             id = "title".refined,
-            inputClass = Css("inverse"),
+            inputClass = Css("inverse") |+| ExploreStyles.WarningLabel,
+            groupClass = ExploreStyles.WarningInput.when_(titleView.get.isEmpty),
             value = titleView,
             validFormat = InputValidSplitEpi.nonEmptyString.optional,
             label = "Title",
@@ -329,7 +330,8 @@ object ProposalDetailsBody:
             options = categoryOptions,
             onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
             disabled = props.readonly,
-            modifiers = List(^.id := "category")
+            modifiers = List(^.id := "category"),
+            clazz = ExploreStyles.WarningInput.when_(categoryView.get.isEmpty)
           ),
           minimumPct1View.map(mv =>
             <.div(
@@ -411,7 +413,8 @@ object ProposalDetailsBody:
               )
             }.orEmpty,
             disabled = props.readonly,
-            modifiers = List(^.id := "cfp")
+            modifiers = List(^.id := "cfp"),
+            clazz = ExploreStyles.WarningInput.when_(categoryView.get.isEmpty)
           ),
           // Proposal type selector, visible when cfp is selected and has more than one subtpye
           FormDropdown(

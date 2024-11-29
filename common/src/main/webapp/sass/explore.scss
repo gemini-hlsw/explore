@@ -382,6 +382,10 @@ span.fa-layers-text.required-for-itc-text {
   transform: scale(0.6) translate(-1em, -2.4em) rotate(30deg);
 }
 
+textarea.p-inputtextarea.explore-warning-input,
+label.explore-warning-label,
+div.p-dropdown.explore-warning-input,
+div.p-form-field.explore-warning-input,
 div.field.explore-warning-input,
 div.inline.field.explore-warning-input {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
@@ -2123,6 +2127,10 @@ img.partner-split-flag {
 // User invite
 .p-overlaypanel.compact-overlay-panel .p-overlaypanel-content {
   padding: 0;
+}
+
+.invite-user-button {
+  flex: 1 1 0;
 }
 
 .invite-user-popup {

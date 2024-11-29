@@ -243,7 +243,8 @@ object ExploreStyles:
   val CompactOverlayPanel: Css       = Css("compact-overlay-panel")
 
   // User invite
-  val InviteUserPopup: Css = Css("invite-user-popup")
+  val InviteUserPopup: Css  = Css("invite-user-popup")
+  val InviteUserButton: Css = Css("invite-user-button")
 
   // Semantic UI form overrides and extensions
   val Grid: Css                   = Css("explore-grid")
