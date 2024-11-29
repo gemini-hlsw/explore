@@ -46,6 +46,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
+import lucuma.ui.LucumaStyles
 
 case class ProposalTabContents(
   programId:         Program.Id,
@@ -95,7 +96,7 @@ object ProposalTabContents:
         props.userVault.map(_.user).collect { case StandardUser(_, _, _, _) => () }.isDefined
 
       if (props.programDetails.get.programType =!= ProgramType.Science)
-        <.div(ExploreStyles.HVCenter)(
+        <.div(LucumaStyles.HVCenter)(
           Message(
             text = "Only Science Program Types can have proposals.",
             severity = Message.Severity.Info
@@ -137,7 +138,7 @@ object ProposalTabContents:
           )
           .getOrElse(
             if (isStdUser)
-              <.div(ExploreStyles.HVCenter)(
+              <.div(LucumaStyles.HVCenter)(
                 Button(
                   label = "Create a Proposal",
                   icon = Icons.FileCirclePlus.withClass(LoginStyles.LoginOrcidIcon),
@@ -150,7 +151,7 @@ object ProposalTabContents:
                 ).big
               )
             else
-              <.div(ExploreStyles.HVCenter)(
+              <.div(LucumaStyles.HVCenter)(
                 Button(
                   label = "Login with ORCID to create a Proposal",
                   icon = Image(src = Resources.OrcidLogo, clazz = LoginStyles.LoginOrcidIcon),

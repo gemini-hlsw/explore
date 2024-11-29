@@ -33,6 +33,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tag
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.LucumaIcons
 
 case class BasicConfigurationPanel(
   userId:           Option[User.Id],
@@ -86,7 +87,7 @@ private object BasicConfigurationPanel:
 
         val buttonIcon: FontAwesomeIcon =
           if (creating.get.value) Icons.Spinner.withSpin(true)
-          else Icons.Gears
+          else LucumaIcons.Gears
 
         <.div(ExploreStyles.BasicConfigurationGrid)(
           <.div(

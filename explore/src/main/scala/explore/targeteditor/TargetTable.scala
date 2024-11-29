@@ -43,6 +43,7 @@ import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
+import lucuma.ui.LucumaStyles
 
 import java.time.Instant
 
@@ -170,7 +171,7 @@ object TargetTable extends AsterismModifier:
 
         React.Fragment(
           if (rows.isEmpty)
-            <.div(ExploreStyles.HVCenter)(
+            <.div(LucumaStyles.HVCenter)(
               targetSelectionPopup(
                 "Add a target",
                 props.programId,

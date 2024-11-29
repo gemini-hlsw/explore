@@ -63,6 +63,7 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
+import lucuma.ui.LucumaStyles
 
 import java.time.Instant
 import java.util.UUID
@@ -467,8 +468,7 @@ object ObsSummaryTile:
               ^.onClick ==> table
                 .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
             ),
-          emptyMessage = <.span(
-            ExploreStyles.HVCenter,
+          emptyMessage = <.span(LucumaStyles.HVCenter)(
             Button(
               severity = Button.Severity.Success,
               icon = Icons.New,

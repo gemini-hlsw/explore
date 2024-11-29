@@ -47,6 +47,7 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableIcons
 import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
+import lucuma.ui.LucumaStyles
 
 import java.time.*
 
@@ -81,7 +82,7 @@ object ElevationPlotTile:
           ): VdomNode
         .getOrElse:
           <.div(
-            ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+            ExploreStyles.FullHeightWidth |+| LucumaStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
             <.div("Select a target")
           )
     )

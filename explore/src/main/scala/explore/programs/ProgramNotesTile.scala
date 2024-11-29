@@ -3,18 +3,14 @@
 
 package explore.programs
 
-import explore.UnderConstruction
+import lucuma.ui.components.UnderConstruction
 import japgolly.scalajs.react.*
 import lucuma.react.common.ReactFnProps
 
 case class ProgramNotesTile() extends ReactFnProps(ProgramNotesTile.component)
 
 object ProgramNotesTile:
-
   private type Props = ProgramNotesTile
 
-  val component = ScalaFnComponent
-    .withHooks[Props]
-    .render { props =>
-      UnderConstruction()
-    }
+  private val component = ScalaFnComponent[Props]: _ =>
+    UnderConstruction()
