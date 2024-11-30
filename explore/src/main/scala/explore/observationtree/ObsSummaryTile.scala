@@ -54,6 +54,7 @@ import lucuma.react.table.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.LucumaStyles
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -63,7 +64,6 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import lucuma.ui.LucumaStyles
 
 import java.time.Instant
 import java.util.UUID

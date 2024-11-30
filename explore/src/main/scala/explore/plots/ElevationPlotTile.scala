@@ -38,6 +38,7 @@ import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.ToggleButton
 import lucuma.refined.*
+import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.SelectButtonEnumView
@@ -47,7 +48,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.TableIcons
 import org.typelevel.cats.time.given
 import spire.math.extras.interval.IntervalSeq
-import lucuma.ui.LucumaStyles
 
 import java.time.*
 

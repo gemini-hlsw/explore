@@ -31,9 +31,9 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tag
+import lucuma.ui.LucumaIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.LucumaIcons
 
 case class BasicConfigurationPanel(
   userId:           Option[User.Id],

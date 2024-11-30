@@ -39,6 +39,7 @@ import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.enums.ProposalStatus
+import lucuma.ui.LucumaStyles
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
@@ -46,7 +47,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
-import lucuma.ui.LucumaStyles
 
 case class ProposalTabContents(
   programId:         Program.Id,

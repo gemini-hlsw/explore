@@ -37,13 +37,13 @@ import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*
-import lucuma.ui.LucumaStyles
 
 import java.time.Instant
 

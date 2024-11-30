@@ -3,9 +3,9 @@
 
 package explore.programs
 
-import lucuma.ui.components.UnderConstruction
 import japgolly.scalajs.react.*
 import lucuma.react.common.ReactFnProps
+import lucuma.ui.components.UnderConstruction
 
 case class ProgramNotesTile() extends ReactFnProps(ProgramNotesTile.component)
 
