@@ -251,7 +251,7 @@ object TargetSelectionPopup:
               <.span(ExploreStyles.TargetSearchTop)(
                 <.form(ExploreStyles.TargetSearchInput)(
                   FormInputTextView(
-                    id = "name".refined,
+                    id = "target-search-name".refined,
                     placeholder = "Name",
                     value = inputValue,
                     preAddons =
