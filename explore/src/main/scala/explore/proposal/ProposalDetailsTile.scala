@@ -315,7 +315,7 @@ object ProposalDetailsBody:
           // Title input
           FormInputTextView(
             id = "title".refined,
-            inputClass = Css("inverse") |+| ExploreStyles.WarningLabel,
+            inputClass = Css("inverse"),
             groupClass = ExploreStyles.WarningInput.when_(titleView.get.isEmpty),
             value = titleView,
             validFormat = InputValidSplitEpi.nonEmptyString.optional,
@@ -414,7 +414,7 @@ object ProposalDetailsBody:
             }.orEmpty,
             disabled = props.readonly,
             modifiers = List(^.id := "cfp"),
-            clazz = ExploreStyles.WarningInput.when_(categoryView.get.isEmpty)
+            clazz = ExploreStyles.WarningInput.when_(callId.isEmpty)
           ),
           // Proposal type selector, visible when cfp is selected and has more than one subtpye
           FormDropdown(
