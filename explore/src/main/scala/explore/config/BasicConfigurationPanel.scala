@@ -31,6 +31,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tag
+import lucuma.ui.LucumaIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 
@@ -86,7 +87,7 @@ private object BasicConfigurationPanel:
 
         val buttonIcon: FontAwesomeIcon =
           if (creating.get.value) Icons.Spinner.withSpin(true)
-          else Icons.Gears
+          else LucumaIcons.Gears
 
         <.div(ExploreStyles.BasicConfigurationGrid)(
           <.div(

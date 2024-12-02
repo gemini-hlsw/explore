@@ -38,6 +38,7 @@ import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.ToggleButton
 import lucuma.refined.*
+import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.SelectButtonEnumView
@@ -81,7 +82,7 @@ object ElevationPlotTile:
           ): VdomNode
         .getOrElse:
           <.div(
-            ExploreStyles.FullHeightWidth |+| ExploreStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
+            ExploreStyles.FullHeightWidth |+| LucumaStyles.HVCenter |+| ExploreStyles.EmptyTreeContent,
             <.div("Select a target")
           )
     )

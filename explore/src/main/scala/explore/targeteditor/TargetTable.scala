@@ -37,6 +37,7 @@ import lucuma.react.table.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.*
@@ -170,7 +171,7 @@ object TargetTable extends AsterismModifier:
 
         React.Fragment(
           if (rows.isEmpty)
-            <.div(ExploreStyles.HVCenter)(
+            <.div(LucumaStyles.HVCenter)(
               targetSelectionPopup(
                 "Add a target",
                 props.programId,

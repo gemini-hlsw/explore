@@ -47,10 +47,6 @@ object Icons {
   val faArrowsRepeat: FAIcon = js.native
 
   @js.native
-  @JSImport("@fortawesome/pro-duotone-svg-icons", "faGears")
-  val faGears: FAIcon = js.native
-
-  @js.native
   @JSImport("@fortawesome/pro-solid-svg-icons", "faArrowRotateLeft")
   val faUndo: FAIcon = js.native
 
@@ -367,7 +363,6 @@ object Icons {
     faArrowRightToLine,
     faArrowUp,
     faArrowsRepeat,
-    faGears,
     faBars,
     faBarCodeRead,
     faClockRotateLeft,
@@ -459,7 +454,6 @@ object Icons {
   val BarCodeRead            = FontAwesomeIcon(faBarCodeRead)
   val ClockRotateLeft        = FontAwesomeIcon(faClockRotateLeft)
   val StarExclamation        = FontAwesomeIcon(faStarExclamation)
-  val Gears                  = FontAwesomeIcon(faGears)
   val Undo                   = FontAwesomeIcon(faUndo)
   val Redo                   = FontAwesomeIcon(faRedo)
   val New                    = FontAwesomeIcon(faPlus)

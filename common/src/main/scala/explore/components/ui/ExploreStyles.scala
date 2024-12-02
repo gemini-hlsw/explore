@@ -61,7 +61,6 @@ object ExploreStyles:
   val SinglePanelTile: Css    = Css("single-panel-tile")
   val MultiPanelTile: Css     = Css("multi-panel-tile")
 
-  val HVCenter: Css        = Css("horizontal-vertical-center")
   val FullHeightWidth: Css = Css("full-height-width")
 
   val ObsTree: Css                  = Css("obs-tree")

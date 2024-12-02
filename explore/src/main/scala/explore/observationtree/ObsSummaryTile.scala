@@ -54,6 +54,7 @@ import lucuma.react.table.*
 import lucuma.react.table.ColumnDef
 import lucuma.react.table.ColumnId
 import lucuma.schemas.model.TargetWithId
+import lucuma.ui.LucumaStyles
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
@@ -467,8 +468,7 @@ object ObsSummaryTile:
               ^.onClick ==> table
                 .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
             ),
-          emptyMessage = <.span(
-            ExploreStyles.HVCenter,
+          emptyMessage = <.span(LucumaStyles.HVCenter)(
             Button(
               severity = Button.Severity.Success,
               icon = Icons.New,
