@@ -73,7 +73,10 @@ trait CacheModifierUpdaters {
 
         ifPresentInServerOrLocally:
           obsUpdate >>> programTimesReset >>> obsExecutionReset
-      .orEmpty
+      .getOrElse:
+        if (observationEdit.editType === EditType.DeletedCal)
+          ProgramSummaries.observations.modify(_ - obsId)
+        else identity
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     groupEdit.value // We ignore updates on deleted groups.
