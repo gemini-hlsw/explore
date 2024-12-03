@@ -56,8 +56,10 @@ object InvitationQueriesGQL:
         redeemUserInvitation(input: { key: $$key }) {
           invitation {
             issuer {
-              orcidGivenName
-              orcidFamilyName
+              profile {
+                givenName
+                familyName
+              }
             }
             program {
               id

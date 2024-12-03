@@ -232,7 +232,8 @@ object UserPreferencesContent:
         user.renderPot(
           ssoUser => {
             val id   = ssoUser.user.id
-            val name = s"${ssoUser.user.givenName.orEmpty} ${ssoUser.user.familyName.orEmpty}"
+            val name =
+              s"${ssoUser.user.profile.givenName.orEmpty} ${ssoUser.user.profile.familyName.orEmpty}"
             val role = ssoUser.role.`type`.shortName
 
             val allRoles = ssoUser.user.roles

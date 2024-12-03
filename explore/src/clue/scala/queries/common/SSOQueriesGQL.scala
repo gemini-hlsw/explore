@@ -20,8 +20,10 @@ object SSOQueriesGQL:
         }
         user {
           id
-          givenName
-          familyName
+          profile {
+            givenName
+            familyName
+          }
           roles {
             id
             type

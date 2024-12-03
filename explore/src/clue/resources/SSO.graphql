@@ -1,41 +1,56 @@
+
 type Query {
   user: User!
   role: Role!
 }
 
 type Mutation {
+
   "Create and return an API key for the specified role, if owned by the current user."
   createApiKey(role: RoleId!): String!
 
   "Delete the specified API key, if owned by the current user. Returns the constant value `true`."
   deleteApiKey(id: ApiKeyId!): Boolean!
+
+  """
+  Creates a user associated with the given orcid, or returns the existing user
+  if it already exists. Staff access is required for this operation.
+  """
+  canonicalizePreAuthUser(orcidId: OrcidId!): User!
+
 }
 
 type Subscription {
+
   "A subscription that yields revoked API key identifiers."
   apiKeyRevocation: ApiKeyId!
+
 }
 
 type User {
-  id: UserId!
-  orcidId: OrcidId!
-  givenName: String
+  id:       UserId!
+  orcidId:  OrcidId!
+  profile:  UserProfile!
+  roles:    [Role!]!
+  apiKeys:  [ApiKey!]!
+}
+
+type UserProfile {
+  givenName:  String
   familyName: String
   creditName: String
-  email: String
-  roles: [Role!]!
-  apiKeys: [ApiKey!]!
+  email:      String
 }
 
 type Role {
-  id: RoleId!
-  type: RoleType!
+  id:      RoleId!
+  type:    RoleType!
   partner: Partner
-  user: User!
+  user:    User!
 }
 
 type ApiKey {
-  id: ApiKeyId!
+  id:   ApiKeyId!
   user: User!
   role: Role!
 }
@@ -45,18 +60,5 @@ scalar OrcidId
 scalar RoleId
 scalar ApiKeyId
 
-enum RoleType {
-  PI
-  NGO
-  STAFF
-  ADMIN
-}
-enum Partner {
-  AR
-  BR
-  CA
-  CL
-  KR
-  UH
-  US
-}
+enum RoleType { PI NGO STAFF ADMIN }
+enum Partner { AR BR CA CL KR UH US }

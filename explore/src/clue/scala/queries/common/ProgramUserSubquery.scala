@@ -14,9 +14,11 @@ object ProgramUserSubquery extends GraphQLSubquery.Typed[ObservationDB, ProgramU
     {
       id
       orcidId
-      orcidGivenName
-      orcidCreditName
-      orcidFamilyName
-      orcidEmail
+      profile {
+        givenName
+        creditName
+        familyName
+        email
+      }
     }
   """

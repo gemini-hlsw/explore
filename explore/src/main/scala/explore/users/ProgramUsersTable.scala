@@ -165,7 +165,7 @@ object ProgramUsersTable:
 
             partnerSelector(pl, usersView.set, meta.readOnly || meta.isActive.get.value)
       ),
-      column(Column.Email, _.get.user.profile.foldMap(_.primaryEmail).getOrElse("-")),
+      column(Column.Email, _.get.user.profile.foldMap(_.email).getOrElse("-")),
       ColDef(
         Column.EducationalStatus.id,
         _.zoom(ProgramUserWithRole.educationalStatus),
@@ -228,7 +228,7 @@ object ProgramUsersTable:
               onChange = view.set
             )
       ),
-      column(Column.OrcidId, _.get.user.profile.foldMap(_.orcidId.value)),
+      column(Column.OrcidId, _.get.user.orcidId.foldMap(_.value)),
       column(Column.Role, _.get.role.shortName),
       ColDef(
         Column.Unlink.id,
