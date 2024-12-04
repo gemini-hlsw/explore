@@ -2411,7 +2411,11 @@ input[type='file'].explore-fileupload {
 
   @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     width: exploreCommon.$tree-section-width;
+  }
+}
 
+.main-body {
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
     border: {
       right: solid 1px var(--under-tab-border-color);
       left: solid 1px var(--under-tab-border-color);
