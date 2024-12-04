@@ -26,6 +26,7 @@ import lucuma.core.enums.GmosYBinning
 import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
+import lucuma.core.enums.Site
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
@@ -89,6 +90,8 @@ case class Observation(
         s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
       case _                                                              =>
         none
+
+  val site: Option[Site] = observingMode.map(_.siteFor)
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
