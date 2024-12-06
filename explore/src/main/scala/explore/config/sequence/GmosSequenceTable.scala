@@ -45,7 +45,11 @@ sealed trait GmosSequenceTable[S, D]:
   )(sequence: ExecutionSequence[D]): List[SequenceRow.FutureStep[D]] =
     SequenceRow.FutureStep
       .fromAtoms(
-        sequence.nextAtom +: sequence.possibleFuture,
+        sequence.nextAtom +: (
+          obsClass match // For acquisition, we ignore possibleFuture
+            case ObserveClass.Science => sequence.possibleFuture
+            case _                    => List.empty
+        ),
         i => // Only show S/N for science or acq if FPU is None
           snPerClass
             .get(obsClass)
