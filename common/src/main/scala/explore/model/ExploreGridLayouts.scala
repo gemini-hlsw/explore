@@ -451,13 +451,6 @@ object ExploreGridLayouts:
           y = 0,
           w = DefaultWidth.value,
           h = GroupEditHeight.value
-        ),
-        LayoutItem(
-          i = GroupEditTileIds.GroupNotesId.id.value,
-          x = 0,
-          y = GroupEditHeight.value,
-          w = DefaultWidth.value,
-          h = NotesHeight.value
         )
       )
     )

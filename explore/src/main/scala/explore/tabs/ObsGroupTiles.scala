@@ -61,25 +61,12 @@ object ObsGroupTiles:
           (_, _) => GroupEditTitle(props.group, props.childCount, props.timeEstimateRange)
         )
 
-      val notesTile = Tile(
-        GroupEditTileIds.GroupNotesId.id,
-        s"Note for Observer"
-      )(_ =>
-        <.div(
-          ExploreStyles.NotesTile,
-          <.div(
-            ExploreStyles.ObserverNotes,
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus maximus hendrerit lacinia. Etiam dapibus blandit ipsum sed rhoncus."
-          )
-        )
-      )
-
       TileController(
         props.userId,
         props.resize.width.orEmpty,
         props.defaultLayouts,
         props.layouts,
-        List(editTile, notesTile),
+        List(editTile),
         GridLayoutSection.GroupEditLayout,
         props.backButton.some
       )

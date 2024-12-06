@@ -50,11 +50,10 @@ enum ProposalTabTileIds:
     case AttachmentsId => "proposalAttachments".refined
 
 enum GroupEditTileIds:
-  case GroupEditId, GroupNotesId
+  case GroupEditId
 
   def id: NonEmptyString = this match
-    case GroupEditId  => "groupEdit".refined
-    case GroupNotesId => "groupNotes".refined
+    case GroupEditId => "groupEdit".refined
 
 enum TargetTabTileIds(val id: NonEmptyString):
   case Summary        extends TargetTabTileIds("targetSummary".refined)
