@@ -238,7 +238,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Reference to root
       .useMemo(())(_ => domRoot)
       // target options, will be read from the user preferences
-      .useStateView(Pot.pending[AsterismVisualOptions])
+      .useStateView(pending[AsterismVisualOptions])
       // Load target preferences
       .useEffectWithDepsBy((props, _, _, _, _, _) => (props.uid, props.asterism.ids)):
         (props, ctx, _, _, root, options) =>

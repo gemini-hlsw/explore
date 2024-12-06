@@ -4,8 +4,9 @@
 package explore
 
 import cats.effect.IO
-import cats.syntax.option.*
+import crystal.Pot
 import crystal.react.hooks.*
+import crystal.syntax.*
 import explore.model.AppContext
 import explore.model.Page
 import explore.model.ProgramSummaries
@@ -38,7 +39,7 @@ object RootComponent:
     ScalaFnComponent
       .withHooks[Props]
       .useStateViewBy(_.initialModel)
-      .useThrottlingStateView(none[ProgramSummaries], 5.seconds)
+      .useThrottlingStateView(pending[ProgramSummaries], 5.seconds)
       .render: (props, rootModel, programSummariesPot) =>
         AppContext.ctx.provide(props.ctx):
           React.Fragment(

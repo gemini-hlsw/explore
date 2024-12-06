@@ -10,6 +10,7 @@ import clue.ErrorPolicy
 import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
+import crystal.syntax.*
 import explore.DefaultErrorPolicy
 import explore.model.Execution
 import explore.model.Group
@@ -45,7 +46,7 @@ import scala.concurrent.duration.*
 
 case class ProgramCacheController(
   programId:           Program.Id,
-  modProgramSummaries: (Option[ProgramSummaries] => Option[ProgramSummaries]) => IO[Unit]
+  modProgramSummaries: (Pot[ProgramSummaries] => Pot[ProgramSummaries]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB], logger: Logger[IO])
 // Do not remove the explicit type parameter below, it confuses the compiler.
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
@@ -193,9 +194,9 @@ object ProgramCacheController
       groups:       List[Group]
     ): IO[ProgramSummaries] =
       val obsPots: Map[Observation.Id, Pot[Execution]]            =
-        observations.map(o => (o.id, Pot.pending)).toMap
+        observations.map(o => (o.id, pending)).toMap
       val groupPots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
-        groups.map(g => g.id -> Pot.pending).toMap
+        groups.map(g => g.id -> pending).toMap
       (optProgramDetails, targets, attachments, programs, configurationRequests).mapN:
         case (pd, ts, (oas, pas), ps, crs) =>
           ProgramSummaries
@@ -207,7 +208,7 @@ object ProgramCacheController
               oas,
               pas,
               ps,
-              Pot.pending,
+              pending,
               obsPots,
               groupPots,
               crs

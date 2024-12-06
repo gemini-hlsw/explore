@@ -11,6 +11,7 @@ import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import crystal.react.reuse.*
+import crystal.syntax.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
@@ -173,7 +174,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
             val updateUrlMap =
               urlMap.mod { umap =>
                 val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
-                newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
+                newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
               }.toAsync
             val getUrls      =
               newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))

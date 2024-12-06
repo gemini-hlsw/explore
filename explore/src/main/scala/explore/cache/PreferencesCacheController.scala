@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
+import crystal.Pot
 import explore.DefaultErrorPolicy
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.common.UserPreferencesQueries.GridLayouts
@@ -25,7 +26,7 @@ import queries.schemas.UserPreferencesDB
 
 case class PreferencesCacheController(
   userId:            User.Id,
-  modUserPrefrences: (Option[UserPreferences] => Option[UserPreferences]) => IO[Unit]
+  modUserPrefrences: (Pot[UserPreferences] => Pot[UserPreferences]) => IO[Unit]
 )(using client: StreamingClient[IO, UserPreferencesDB])
     extends ReactFnProps[PreferencesCacheController](PreferencesCacheController.component)
     with CacheControllerComponent.Props[UserPreferences]:

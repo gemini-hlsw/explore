@@ -7,11 +7,14 @@ import cats.effect.Resource
 import cats.effect.kernel.Deferred
 import cats.effect.std.Queue
 import cats.syntax.all.*
+import crystal.Pot
 import crystal.react.hooks.*
+import crystal.syntax.*
 import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.syntax.effect.*
 
 trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   private type F[T] = DefaultA[T]
@@ -26,15 +29,16 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   val component =
     ScalaFnComponent
       .withHooks[P]
-      .useEffectResultOnMountBy: props => // TODO Could we actually useEffectStreamResource?
+      // TODO We should useEffectStreamResource, so that the update stream stops when the component is unmounted (changing program).
+      .useEffectResultOnMountBy: props =>
         for
-          _                            <- props.modState(_ => none) // Initialize on mount.
-          latch                        <- Deferred[F, Queue[F, S => S]]
+          _          <- props.modState(_ => pending) // Initialize on mount.
+          latch      <- Deferred[F, Queue[F, S => S]]
           // Start the update fiber. We want subscriptions to start before initial query.
           // This way we don't miss updates.
           // The update fiber will only update the cache once it is initialized (via latch).
           // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-          _                            <-
+          _          <-
             updateStream(props)
               .evalTap:
                 _.evalTap: mod =>
@@ -42,17 +46,24 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
                 .compile.drain
               .useForever
               .start
-          (initialValue, delayedInits) <- initial(props)
-          _                            <- props.modState((_: Option[S]) => initialValue.some)
-          queue                        <- Queue.unbounded[F, S => S]
-          _                            <- latch.complete(queue)
-          _                            <-
-            delayedInits
-              .evalMap: mod =>
-                queue.offer(mod)
-              .compile
-              .drain
-              .start
+          initResult <- initial(props).attemptPot.map:
+                          _.adaptError: t =>
+                            new RuntimeException(s"InitializationError: ${t.getMessage}", t)
+          _          <- props.modState(_ => initResult.map(_._1))
+          queue      <- Queue.unbounded[F, S => S]
+          _          <- latch.complete(queue)
+          _          <-
+            initResult.toOption
+              .map(_._2)
+              .map: delayedInits =>
+                delayedInits
+                  .evalMap: mod =>
+                    queue.offer(mod)
+                  .compile
+                  .drain
+                  .start // TODO Change to background when we switch to Resource
+                  .void
+              .orEmpty
         yield queue
       .useStreamBy((_, queue) => queue.isReady): (props, queue) =>
         _ =>
@@ -60,8 +71,9 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
             .map(q => Stream.fromQueueUnterminated(q))
             .orEmpty
             .evalTap(f => props.modState(_.map(f)))
-      .render((_, _, _) => EmptyVdom)
+      .render: (_, initialPot, updateStreamPotOption) =>
+        EmptyVdom
 
 object CacheControllerComponent:
   trait Props[S]:
-    val modState: (Option[S] => Option[S]) => DefaultA[Unit]
+    val modState: (Pot[S] => Pot[S]) => DefaultA[Unit]

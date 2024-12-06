@@ -7,6 +7,8 @@ import cats.Eq
 import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
+import crystal.Pot
+import crystal.syntax.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.modes.SpectroscopyModesMatrix
@@ -29,9 +31,9 @@ case class RootModel(
   expandedIds:          ExpandedIds = ExpandedIds(),
   searchingTarget:      Set[Target.Id] = HashSet.empty,
   userSelectionMessage: Option[NonEmptyString] = none,
-  userPreferences:      Option[UserPreferences] = none,
-  spectroscopyModes:    Option[SpectroscopyModesMatrix] = none,
-  cfps:                 Option[List[CallForProposal]] = none,
+  userPreferences:      Pot[UserPreferences] = pending,
+  spectroscopyModes:    Pot[SpectroscopyModesMatrix] = pending,
+  cfps:                 Pot[List[CallForProposal]] = pending,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq
