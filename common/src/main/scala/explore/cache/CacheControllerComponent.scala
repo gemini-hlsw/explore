@@ -30,55 +30,56 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
     ScalaFnComponent
       .withHooks[P]
       // TODO We should useEffectStreamResource, so that the update stream stops when the component is unmounted (changing program).
-      .useEffectResultOnMountBy: props =>
+      .useResourceOnMountBy: props =>
         for
-          _          <- props.modState(_ => pending) // Initialize on mount.
-          latch      <- Deferred[F, Queue[F, Either[Throwable, S => S]]]
+          _          <- Resource.eval(props.modState(_ => pending)) // Initialize on mount.
           // Start the update fiber. We want subscriptions to start before initial query.
           // This way we don't miss updates.
           // The update fiber will only update the cache once it is initialized (via latch).
           // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-          _          <-
-            updateStream(props)
-              .map(_.attempt)
-              .evalTap:
-                _.evalTap: mod =>
-                  latch.get.flatMap(_.offer(mod))
-                .compile.drain
-              .useForever
-              .start                                   // OUCH, this doesn't cancel in case of changing program!!!
-          initResult <- initial(props).attemptPot.map:
-                          _.adaptError: t =>
-                            new RuntimeException(s"Initialization Error: ${t.getMessage}", t)
-          _          <- props.modState(_ => initResult.map(_._1))
-          queue      <-
-            Queue
-              .unbounded[F, Either[Throwable, S => S]] // TODO change to either[throwable, s => s]
-          _          <- latch.complete(queue)
-          _          <-
-            initResult.toOption
-              .map(_._2)
-              .map: delayedInits =>
-                delayedInits.attempt
-                  .evalMap: mod =>
-                    queue.offer(mod)
-                  .compile
-                  .drain
-                  .start // TODO Change to background when we switch to Resource
-                  .void
-              .orEmpty
+          latch      <- Resource.eval(Deferred[F, Queue[F, Either[Throwable, S => S]]])
+          // Next is the update fiber. It will start getting updates immediately,
+          // but will wait until the cache is initialized to start applying them.
+          // Will run until the component is unmounted.
+          _          <- updateStream(props)
+                          .map(_.attempt)
+                          .evalTap:
+                            _.evalTap: mod =>
+                              latch.get.flatMap(_.offer(mod))
+                            .compile.drain
+                          .useForever
+                          .background
+          // initResult is (initValue, delayedInitsStream)
+          initResult <- Resource.eval:
+                          initial(props).attemptPot.map:
+                            _.adaptError: t =>
+                              new RuntimeException(s"Initialization Error: ${t.getMessage}", t)
+          // Apply initial value.
+          _          <- Resource.eval(props.modState(_ => initResult.map(_._1)))
+          // Build and release update queue.
+          queue      <- Resource.eval(Queue.unbounded[F, Either[Throwable, S => S]])
+          _          <- Resource.eval(latch.complete(queue))
+          // Apply delayed inits.
+          _          <- initResult.toOption
+                          .map(_._2)
+                          .map: delayedInits =>
+                            delayedInits.attempt
+                              .evalMap: mod =>
+                                queue.offer(mod)
+                              .compile
+                              .drain
+                          .orEmpty
+                          .background
         yield queue
-      .useEffectStreamWithDepsBy((_, queue) => queue.isReady):
-        (props, queue) => // todo change to streameffect
-          _ =>
-            queue.toOption
-              .map(q => Stream.fromQueueUnterminated(q))
-              .orEmpty
-              .evalMap: elem =>
-                props.modState: oldValue =>
-                  elem match
-                    case Left(t)  => Pot.Error(t)
-                    case Right(f) => oldValue.map(f)
+      .useEffectStreamWhenDepsReadyBy((_, queue) => queue): (props, _) =>
+        queue =>
+          Stream
+            .fromQueueUnterminated(queue)
+            .evalMap: elem =>
+              props.modState: oldValue =>
+                elem match
+                  case Left(t)  => Pot.Error(t)
+                  case Right(f) => oldValue.map(f)
       .render: (_, _) =>
         EmptyVdom
 
