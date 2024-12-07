@@ -5,12 +5,10 @@ package explore.cache
 
 import cats.effect.Resource
 import cats.effect.kernel.Deferred
-import cats.effect.std.Queue
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.hooks.*
 import crystal.syntax.*
-import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -29,24 +27,31 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   val component =
     ScalaFnComponent
       .withHooks[P]
-      // TODO We should useEffectStreamResource, so that the update stream stops when the component is unmounted (changing program).
-      .useResourceOnMountBy: props =>
+      .useCallbackBy: props => // applyStreamUpdates: Apply updates from an update stream.
+        (stream: fs2.Stream[F, Either[Throwable, S => S]]) =>
+          stream
+            .evalMap: modElem =>
+              props.modState: oldValue =>
+                modElem.fold(
+                  t => Pot.Error(new RuntimeException(s"Update Error: ${t.getMessage}", t)),
+                  f => oldValue.map(f)
+                )
+            .compile
+            .drain
+      .useResourceOnMountBy: (props, applyStreamUpdates) =>
         for
           _          <- Resource.eval(props.modState(_ => pending)) // Initialize on mount.
           // Start the update fiber. We want subscriptions to start before initial query.
           // This way we don't miss updates.
-          // The update fiber will only update the cache once it is initialized (via latch).
+          // The update fiber will only update once the cache is initialized (via latch).
           // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-          latch      <- Resource.eval(Deferred[F, Queue[F, Either[Throwable, S => S]]])
+          latch      <- Resource.eval(Deferred[F, Unit])
           // Next is the update fiber. It will start getting updates immediately,
           // but will wait until the cache is initialized to start applying them.
           // Will run until the component is unmounted.
           _          <- updateStream(props)
                           .map(_.attempt)
-                          .evalTap:
-                            _.evalTap: mod =>
-                              latch.get.flatMap(_.offer(mod))
-                            .compile.drain
+                          .map(applyStreamUpdates)
                           .useForever
                           .background
           // initResult is (initValue, delayedInitsStream)
@@ -57,30 +62,15 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
           // Apply initial value.
           _          <- Resource.eval(props.modState(_ => initResult.map(_._1)))
           // Build and release update queue.
-          queue      <- Resource.eval(Queue.unbounded[F, Either[Throwable, S => S]])
-          _          <- Resource.eval(latch.complete(queue))
+          _          <- Resource.eval(latch.complete(()))
           // Apply delayed inits.
           _          <- initResult.toOption
-                          .map(_._2)
-                          .map: delayedInits =>
-                            delayedInits.attempt
-                              .evalMap: mod =>
-                                queue.offer(mod)
-                              .compile
-                              .drain
+                          .map(_._2.attempt)
+                          .map(applyStreamUpdates)
                           .orEmpty
                           .background
-        yield queue
-      .useEffectStreamWhenDepsReadyBy((_, queue) => queue): (props, _) =>
-        queue =>
-          Stream
-            .fromQueueUnterminated(queue)
-            .evalMap: elem =>
-              props.modState: oldValue =>
-                elem match
-                  case Left(t)  => Pot.Error(t)
-                  case Right(f) => oldValue.map(f)
-      .render: (_, _) =>
+        yield ()
+      .render: (_, _, _) =>
         EmptyVdom
 
 object CacheControllerComponent:
