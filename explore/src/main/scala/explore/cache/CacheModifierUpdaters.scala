@@ -122,11 +122,8 @@ trait CacheModifierUpdaters {
   protected def modifyAttachments(
     programEdit: AttachmentProgramEdit
   ): ProgramSummaries => ProgramSummaries = {
-    val obsAttachments      = programEdit.value.obsAttachments.toSortedMap(_.id)
-    val proposalAttachments = programEdit.value.proposalAttachments
-    ProgramSummaries.obsAttachments
-      .replace(obsAttachments)
-      .compose(ProgramSummaries.proposalAttachments.replace(proposalAttachments))
+    val attachments = programEdit.value.attachments.toSortedMap(_.id)
+    ProgramSummaries.attachments.replace(attachments)
   }
 
   protected def modifyPrograms(programEdit: ProgramEdit): ProgramSummaries => ProgramSummaries =

@@ -3,12 +3,16 @@
 
 package explore.model.syntax
 
+import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.*
 import explore.model.enums.PosAngleOptions
+import lucuma.core.enums.AttachmentPurpose
+import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
@@ -17,6 +21,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.schemas.model.BasicConfiguration
 
@@ -43,6 +48,15 @@ object all:
       case PosAngleConstraint.AverageParallactic     => PosAngleOptions.AverageParallactic
       case PosAngleConstraint.ParallacticOverride(_) => PosAngleOptions.ParallacticOverride
       case PosAngleConstraint.Unbounded              => PosAngleOptions.Unconstrained
+
+  extension (at: AttachmentType)
+    def accept: String = at.fileExtensions.toList.sorted.map("." + _.value).mkString(",")
+
+  extension (eat: Enumerated[AttachmentType])
+    def forPurpose(purpose: AttachmentPurpose): List[AttachmentType]    =
+      eat.all.filter(_.purpose === purpose)
+    def notForPurpose(purpose: AttachmentPurpose): List[AttachmentType] =
+      eat.all.filterNot(_.purpose === purpose)
 
   extension (self: AsterismGroupList)
     // find the first group which contains the entirety of obsIds
@@ -90,6 +104,18 @@ object all:
 
     def findWithSchedulingGroup(schedulingGroup: List[TimingWindow]): Option[SchedulingGroup] =
       self.find { case (_, sg) => sg === schedulingGroup }.map(SchedulingGroup.fromTuple)
+
+  extension (self: AttachmentList)
+    def listForPurpose(purpose: AttachmentPurpose): List[Attachment]  =
+      self.map(_._2).filter(_.isForPurpose(purpose)).toList
+    def proposalList: List[Attachment]                                =
+      listForPurpose(AttachmentPurpose.Proposal)
+    def observationList: List[Attachment]                             =
+      listForPurpose(AttachmentPurpose.Observation)
+    def listForType(attachmentType: AttachmentType): List[Attachment] =
+      self.map(_._2).filter(_.attachmentType === attachmentType).toList
+    def finderList: List[Attachment]                                  =
+      listForType(AttachmentType.Finder)
 
   extension [A](list: Iterable[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =

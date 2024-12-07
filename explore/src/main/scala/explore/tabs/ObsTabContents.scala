@@ -304,7 +304,7 @@ object ObsTabContents extends TwoPanels:
                   props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
                   props.programSummaries
                     .zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip),
-                  props.programSummaries.model.zoom(ProgramSummaries.obsAttachments),
+                  props.programSummaries.model.zoom(ProgramSummaries.attachments),
                   props.programSummaries.get,
                   props.focusedTarget,
                   props.searching,

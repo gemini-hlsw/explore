@@ -28,7 +28,7 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           }
           constraintSet $ConstraintSetSubquery
           timingWindows $TimingWindowSubquery
-          obsAttachments {
+          attachments {
             id
           }
           scienceRequirements {

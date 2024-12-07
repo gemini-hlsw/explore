@@ -12,9 +12,9 @@ import explore.attachments.ObsAttachmentsTableTitle
 import explore.components.Tile
 import explore.components.TileController
 import explore.model.AppContext
+import explore.model.AttachmentList
 import explore.model.ExploreGridLayouts
 import explore.model.ObsAttachmentAssignmentMap
-import explore.model.ObsAttachmentList
 import explore.model.ObsTabTileIds
 import explore.model.ObservationList
 import explore.model.enums.GridLayoutSection
@@ -34,7 +34,7 @@ import lucuma.ui.syntax.all.given
 case class OverviewTabContents(
   programId:                Program.Id,
   userVault:                Option[UserVault],
-  obsAttachments:           View[ObsAttachmentList],
+  attachments:              View[AttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
   observations:             View[ObservationList],
   layout:                   LayoutsMap,
@@ -74,14 +74,14 @@ object OverviewTabContents {
                 ObsAttachmentsTableBody(props.programId,
                                         vault.token,
                                         props.obsAttachmentAssignments,
-                                        props.obsAttachments,
+                                        props.attachments,
                                         props.readonly,
                                         _
                 ),
                 (s, _) =>
                   ObsAttachmentsTableTitle(props.programId,
                                            vault.token,
-                                           props.obsAttachments,
+                                           props.attachments,
                                            props.readonly,
                                            s
                   )

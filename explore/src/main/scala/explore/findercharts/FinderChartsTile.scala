@@ -9,15 +9,15 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.attachments.Action
+import explore.attachments.*
 import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ObsAttachment
-import explore.model.ObsAttachmentList
+import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.Transformation
@@ -26,7 +26,6 @@ import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
-import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.components.SolarProgress
@@ -42,9 +41,9 @@ object FinderChartsTile:
   def apply(
     programId:        Program.Id,
     oid:              Observation.Id,
-    obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
+    attachmentIds:    View[SortedSet[Attachment.Id]],
     authToken:        Option[NonEmptyString],
-    obsAttachments:   View[ObsAttachmentList],
+    attachments:      View[AttachmentList],
     parallacticAngle: Option[Angle],
     readonly:         Boolean
   ) =
@@ -61,8 +60,8 @@ object FinderChartsTile:
               programId,
               oid,
               t,
-              obsAttachmentIds,
-              obsAttachments,
+              attachmentIds,
+              attachments,
               parallacticAngle,
               readonly,
               tileState
@@ -71,10 +70,10 @@ object FinderChartsTile:
       (tileState, _) =>
         authToken
           .map[VdomNode]: t =>
-            Title(programId, t, obsAttachmentIds, obsAttachments, readonly)(tileState)
+            Title(programId, t, attachmentIds, attachments, readonly)(tileState)
     )
 
-  case class TileState(chartSelector: ChartSelector, selected: Option[ObsAtt.Id])
+  case class TileState(chartSelector: ChartSelector, selected: Option[Attachment.Id])
 
   object TileState:
     val chartSelector = Focus[TileState](_.chartSelector)
@@ -84,8 +83,8 @@ object FinderChartsTile:
     programId:        Program.Id,
     oid:              Observation.Id,
     authToken:        NonEmptyString,
-    obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
-    obsAttachments:   View[ObsAttachmentList],
+    attachmentIds:    View[SortedSet[Attachment.Id]],
+    attachments:      View[AttachmentList],
     parallacticAngle: Option[Angle],
     readOnly:         Boolean,
     state:            View[TileState]
@@ -107,20 +106,20 @@ object FinderChartsTile:
         .useStateView(Transformation.Default)
         .useStateView[UrlMap](Map.empty)
         // added attachment, FIXME once we can upload and assign in one step
-        .useState(none[ObsAtt.Id])
+        .useState(none[Attachment.Id])
         // If added associate with the observation
         .useEffectWithDepsBy((_, _, _, _, _, added) => added.value):
           (props, _, _, transform, _, added) =>
             _ =>
               // Associate the newly added attachment with the observation and select it
               added.value.map { newlyAdded =>
-                props.obsAttachmentIds.mod(_ + newlyAdded) *> transform.set(
+                props.attachmentIds.mod(_ + newlyAdded) *> transform.set(
                   Transformation.Default
                 ) *> props.selected.set(newlyAdded.some) *> added
                   .setState(none)
               }.getOrEmpty
         .useEffectWithDepsBy((props, _, _, _, _, _) =>
-          (props.authToken, props.obsAttachments.get, props.obsAttachmentIds.get)
+          (props.authToken, props.attachments.get, props.attachmentIds.get)
         ): (props, _, client, _, urlMap, _) =>
           (_, obsAttachments, obsAttachmentIds) =>
             val allCurrentKeys =
@@ -191,8 +190,8 @@ object FinderChartsTile:
                 props.programId,
                 client,
                 props.selected,
-                props.obsAttachmentIds,
-                props.obsAttachments.get
+                props.attachmentIds,
+                props.attachments.get
               )
             else EmptyVdom,
             <.div(ExploreStyles.FinderChartsBody)(
@@ -212,11 +211,11 @@ object FinderChartsTile:
           )
 
   private case class Title(
-    programId:        Program.Id,
-    authToken:        NonEmptyString,
-    obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
-    obsAttachments:   View[ObsAttachmentList],
-    readOnly:         Boolean
+    programId:     Program.Id,
+    authToken:     NonEmptyString,
+    attachmentIds: View[SortedSet[Attachment.Id]],
+    attachments:   View[AttachmentList],
+    readOnly:      Boolean
   )(val state: View[TileState])
       extends ReactFnProps(Title.component):
     val chartSelector = state.zoom(TileState.chartSelector)
@@ -233,12 +232,12 @@ object FinderChartsTile:
           token => OdbRestClient[IO](ctx.environment, token)
         .useStateView(Action.None)
         // added attachment, FIXME once we can upload and assign in one step
-        .useState(none[ObsAtt.Id])
+        .useState(none[Attachment.Id])
         .render: (props, ctx, restClient, action, added) =>
           attachmentSelector(
             props.programId,
-            props.obsAttachmentIds,
-            props.obsAttachments,
+            props.attachmentIds,
+            props.attachments,
             ctx,
             restClient,
             props.selected,

@@ -17,14 +17,18 @@ import explore.Icons
 import explore.attachments.Action
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.Constants
-import explore.model.ProposalAttachment
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import explore.utils.*
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.AttachmentPurpose
+import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
@@ -36,7 +40,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
-import lucuma.schemas.enums.ProposalAttachmentType
 import lucuma.ui.react.given
 import lucuma.ui.reusability.given
 import lucuma.ui.table.*
@@ -45,36 +48,35 @@ import org.typelevel.log4cats.Logger
 case class ProposalAttachmentsTable(
   programId:   Program.Id,
   authToken:   NonEmptyString,
-  attachments: View[List[ProposalAttachment]],
+  attachments: View[AttachmentList],
   readOnly:    Boolean
 ) extends ReactFnProps(ProposalAttachmentsTable.component)
 
 object ProposalAttachmentsTable extends ProposalAttachmentUtils {
   private type Props = ProposalAttachmentsTable
 
-  private type Row = Either[ProposalAttachmentType, ProposalAttachment]
+  private type Row = Either[AttachmentType, Attachment]
 
   extension (row: Row)
-    def attachmentType: ProposalAttachmentType = row.fold(identity, _.attachmentType)
-    def fileName: String                       = row.foldMap(_.fileName.value)
-    def fileSize: Option[NonNegLong]           = row.flatMap(pa => NonNegLong.from(pa.fileSize)).toOption
-    def updatedAt: Option[Timestamp]           = row.toOption.map(_.updatedAt)
+    def attachmentType: AttachmentType = row.fold(identity, _.attachmentType)
+    def fileName: String               = row.foldMap(_.fileName.value)
+    def fileSize: Option[NonNegLong]   = row.flatMap(pa => NonNegLong.from(pa.fileSize)).toOption
+    def updatedAt: Option[Timestamp]   = row.toOption.map(_.updatedAt)
 
-  private type UrlMapKey = (ProposalAttachmentType, Timestamp)
+  private type UrlMapKey = (Attachment.Id, Timestamp)
   private type UrlMap    = Map[UrlMapKey, Pot[String]]
 
   private case class TableMeta(action: View[Action], urlMap: UrlMap)
 
   private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
 
-  extension (pa: ProposalAttachment)
-    private def toMapKey: UrlMapKey = (pa.attachmentType, pa.updatedAt)
+  extension (a: Attachment) private def toMapKey: UrlMapKey = (a.id, a.updatedAt)
 
   def deletePrompt(
     programId:      Program.Id,
-    modAttachments: Endo[List[ProposalAttachment]] => Callback,
+    modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
-    att:            ProposalAttachment
+    att:            Attachment
   )(
     e:              ReactMouseEvent
   )(using Logger[IO], ToastCtx[IO]): Callback =
@@ -84,7 +86,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
         s"Delete attachment? This action is not undoable.",
         acceptLabel = "Delete",
         rejectLabel = "Cancel",
-        accept = deleteAttachment(programId, modAttachments, client, att.attachmentType).runAsync
+        accept = deleteAttachment(programId, modAttachments, client, att.id).runAsync
       )
       .show
 
@@ -96,7 +98,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
         token => OdbRestClient[IO](ctx.environment, token)
       .useStateView(Action.None)
       .useStateView[UrlMap](Map.empty)
-      .useEffectWithDepsBy((props, _, _, _, _) => props.attachments.get):
+      .useEffectWithDepsBy((props, _, _, _, _) => props.attachments.get.proposalList):
         (props, _, client, _, urlMap) =>
           attachments =>
             val allCurrentKeys = attachments.map(_.toMapKey).toSet
@@ -151,7 +153,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                             ),
                             ^.id     := s"attachment-upload-$attType",
                             ^.name   := "file",
-                            ^.accept := ProposalAttachmentType.accept
+                            ^.accept := attType.accept
                           ).unless(readOnly)
                         ),
                       thisAtt =>
@@ -189,7 +191,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                             ),
                             ^.id     := s"attachment-replace-$attType",
                             ^.name   := "file",
-                            ^.accept := ProposalAttachmentType.accept
+                            ^.accept := attType.accept
                           ).unless(readOnly),
                           meta.urlMap
                             .get(thisAtt.toMapKey)
@@ -216,10 +218,10 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
       // Rows
       .useMemoBy((props, _, _, _, _, _) => props.attachments.reuseByValue): (_, _, _, _, _, _) =>
         vl =>
-          val pas = vl.get
-          Enumerated[ProposalAttachmentType].all.map(pat =>
-            pas.find(_.attachmentType === pat).toRight(pat)
-          )
+          val pas = vl.get.proposalList
+          Enumerated[AttachmentType]
+            .forPurpose(AttachmentPurpose.Proposal)
+            .map(pat => pas.find(_.attachmentType === pat).toRight(pat))
       .useReactTableBy: (props, _, _, action, urlMap, cols, rows) =>
         TableOptions(
           cols,

@@ -214,7 +214,7 @@ object ObsQueries:
               onTargets.map(tids => TargetEnvironmentInput(asterism = tids.assign)).orIgnore,
             constraintSet = onConstraintSet.map(_.toInput).orIgnore,
             timingWindows = onTimingWindows.map(_.map(_.toInput)).orIgnore,
-            obsAttachments = List.empty.assign // Always clean observation attachments
+            attachments = List.empty.assign // Always clean observation attachments
           ).assign
         )
       .map(_.cloneObservation.newObservation)

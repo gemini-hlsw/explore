@@ -11,13 +11,14 @@ import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ObsAttachment
-import explore.model.ObsAttachmentList
+import explore.model.Attachment
+import explore.model.AttachmentList
+import explore.model.syntax.all.*
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ObsAttachment as ObsAtt
+import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.react.floatingui.Placement
@@ -25,7 +26,6 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
-import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 
@@ -33,11 +33,11 @@ import scala.collection.immutable.SortedSet
 
 trait FinderChartsAttachmentUtils:
   def validAttachments(
-    allAttachments:   ObsAttachmentList,
-    obsAttachmentIds: SortedSet[ObsAtt.Id]
-  ): ObsAttachmentList =
+    allAttachments:   AttachmentList,
+    obsAttachmentIds: SortedSet[Attachment.Id]
+  ): AttachmentList =
     allAttachments.filter { case (_, attachment) =>
-      (attachment.attachmentType === ObsAttachmentType.Finder) && obsAttachmentIds
+      (attachment.attachmentType === AttachmentType.Finder) && obsAttachmentIds
         .contains(attachment.id)
     }
 
@@ -53,9 +53,9 @@ object ChartSelector extends NewType[Boolean]:
 type ChartSelector = ChartSelector.Type
 
 def finderChartsSelector(
-  obsAttachments:   ObsAttachmentList,
-  obsAttachmentIds: SortedSet[ObsAtt.Id],
-  selected:         View[Option[ObsAtt.Id]]
+  obsAttachments:   AttachmentList,
+  obsAttachmentIds: SortedSet[Attachment.Id],
+  selected:         View[Option[Attachment.Id]]
 ): VdomNode =
   FormDropdownOptional(
     id = "attachment-selector".refined,
@@ -64,22 +64,22 @@ def finderChartsSelector(
       .validAttachments(obsAttachments, obsAttachmentIds)
       .map(_._2)
       .map { attachment =>
-        new SelectItem[ObsAttachment](value = attachment, label = attachment.fileName.value)
+        new SelectItem[Attachment](value = attachment, label = attachment.fileName.value)
       }
       .toList,
     value = obsAttachments.find(i => selected.get.exists(_ === i._2.id)).map(_._2),
-    onChange = (att: Option[ObsAttachment]) => selected.set(att.map(_.id))
+    onChange = (att: Option[Attachment]) => selected.set(att.map(_.id))
   )
 
 def attachmentSelector(
   programId:        Program.Id,
-  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
-  obsAttachments:   View[ObsAttachmentList],
+  obsAttachmentIds: View[SortedSet[Attachment.Id]],
+  obsAttachments:   View[AttachmentList],
   ctx:              AppContext[IO],
   client:           OdbRestClient[IO],
-  selected:         View[Option[ObsAtt.Id]],
+  selected:         View[Option[Attachment.Id]],
   action:           View[Action],
-  added:            UseState[Option[ObsAtt.Id]],
+  added:            UseState[Option[Attachment.Id]],
   chartSelector:    View[ChartSelector],
   readOnly:         Boolean
 ): VdomNode = {
@@ -90,7 +90,7 @@ def attachmentSelector(
       ObsAttachmentUtils.onInsertFileSelected(
         programId,
         obsAttachments,
-        ObsAttachmentType.Finder,
+        AttachmentType.Finder,
         client,
         action,
         id => obsAttachmentIds.mod(_ + id) *> added.setState(id.some) *> selected.set(id.some)
@@ -119,7 +119,7 @@ def attachmentSelector(
       ^.onChange ==> addNewFinderChart,
       ^.id     := "attachment-upload",
       ^.name   := "file",
-      ^.accept := ObsAttachmentType.Finder.accept
+      ^.accept := AttachmentType.Finder.accept
     ).when(!readOnly),
     finderChartsSelector(obsAttachments.get, obsAttachmentIds.get, selected)
   )

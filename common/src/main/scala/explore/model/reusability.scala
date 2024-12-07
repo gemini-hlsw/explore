@@ -69,8 +69,7 @@ object reusability:
   given Reusability[ConstraintGroup]         = Reusability.byEq
   given Reusability[Observation]             = Reusability.byEq
   given Reusability[ExploreLocalPreferences] = Reusability.byEq
-  given Reusability[ObsAttachment]           = Reusability.byEq
-  given Reusability[ProposalAttachment]      = Reusability.byEq
+  given Reusability[Attachment]              = Reusability.byEq
   given Reusability[ProgramInfo]             = Reusability.byEq
   given Reusability[ProgramDetails]          = Reusability.byEq
   given Reusability[Execution]               = Reusability.byEq

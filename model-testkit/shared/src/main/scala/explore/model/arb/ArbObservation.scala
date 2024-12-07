@@ -12,9 +12,9 @@ import lucuma.core.arb.ArbTime
 import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.given
+import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PosAngleConstraint
@@ -59,7 +59,7 @@ trait ArbObservation:
         selectedGSName      <- arbitrary[Option[NonEmptyString]]
         constraints         <- arbitrary[ConstraintSet]
         timingWindows       <- arbitrary[List[TimingWindow]]
-        attachmentIds       <- arbitrary[Set[ObsAttachment.Id]]
+        attachmentIds       <- arbitrary[Set[Attachment.Id]]
         scienceRequirements <- arbitrary[ScienceRequirements]
         observingMode       <- arbitrary[Option[ObservingMode]]
         vizTime             <- arbitrary[Option[Instant]]
@@ -108,6 +108,7 @@ trait ArbObservation:
        Option[String],
        ConstraintSet,
        List[TimingWindow],
+       SortedSet[Attachment.Id],
        ScienceRequirements,
        Option[ObservingMode],
        Option[Instant],
@@ -131,6 +132,7 @@ trait ArbObservation:
          o.selectedGSName.map(_.value),
          o.constraints,
          o.timingWindows,
+         o.attachmentIds,
          o.scienceRequirements,
          o.observingMode,
          o.observationTime,

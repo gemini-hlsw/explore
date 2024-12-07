@@ -16,7 +16,6 @@ import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
@@ -36,8 +35,7 @@ case class ProgramSummaries(
   targets:               TargetList,
   observations:          ObservationList,
   groups:                GroupList,
-  obsAttachments:        ObsAttachmentList,
-  proposalAttachments:   List[ProposalAttachment],
+  attachments:           AttachmentList,
   programs:              ProgramInfoList,
   programTimesPot:       Pot[ProgramTimes],
   obsExecutionPots:      ObservationExecutionMap,
@@ -236,10 +234,7 @@ object ProgramSummaries:
   val observations: Lens[ProgramSummaries, ObservationList]                   =
     Focus[ProgramSummaries](_.observations)
   val groups: Lens[ProgramSummaries, GroupList]                               = Focus[ProgramSummaries](_.groups)
-  val obsAttachments: Lens[ProgramSummaries, ObsAttachmentList]               =
-    Focus[ProgramSummaries](_.obsAttachments)
-  val proposalAttachments: Lens[ProgramSummaries, List[ProposalAttachment]]   =
-    Focus[ProgramSummaries](_.proposalAttachments)
+  val attachments: Lens[ProgramSummaries, AttachmentList]                     = Focus[ProgramSummaries](_.attachments)
   val programs: Lens[ProgramSummaries, ProgramInfoList]                       = Focus[ProgramSummaries](_.programs)
   val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]              =
     Focus[ProgramSummaries](_.programTimesPot)
@@ -262,25 +257,23 @@ object ProgramSummaries:
       .andThen(ProgramDetails.piPartner.some)
 
   def fromLists(
-    optProgramDetails:   Option[ProgramDetails],
-    targetList:          List[TargetWithId],
-    obsList:             List[Observation],
-    groupList:           List[Group],
-    obsAttachments:      List[ObsAttachment],
-    proposalAttachments: List[ProposalAttachment],
-    programs:            List[ProgramInfo],
-    programTimesPot:     Pot[ProgramTimes],
-    obsExecutionPots:    Map[Observation.Id, Pot[Execution]],
-    groupTimeRangePots:  Map[Group.Id, Pot[Option[ProgramTimeRange]]],
-    configRequests:      List[ConfigurationRequest]
+    optProgramDetails:  Option[ProgramDetails],
+    targetList:         List[TargetWithId],
+    obsList:            List[Observation],
+    groupList:          List[Group],
+    attachments:        List[Attachment],
+    programs:           List[ProgramInfo],
+    programTimesPot:    Pot[ProgramTimes],
+    obsExecutionPots:   Map[Observation.Id, Pot[Execution]],
+    groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]],
+    configRequests:     List[ConfigurationRequest]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
       obsList.toSortedMap(_.id),
       groupList.toSortedMap(_.id),
-      obsAttachments.toSortedMap(_.id),
-      proposalAttachments,
+      attachments.toSortedMap(_.id),
       programs.toSortedMap(_.id),
       programTimesPot,
       ObservationExecutionMap(obsExecutionPots),

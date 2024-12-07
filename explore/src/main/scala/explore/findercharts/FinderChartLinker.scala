@@ -14,12 +14,12 @@ import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ObsAttachment
-import explore.model.ObsAttachmentList
+import explore.model.Attachment
+import explore.model.AttachmentList
+import explore.model.syntax.all.*
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ObsAttachment as ObsAtt
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Checkbox
@@ -34,22 +34,22 @@ import org.scalajs.dom.*
 import scala.collection.immutable.SortedSet
 
 case class FinderChartLinker(
-  programId:        Program.Id,
-  client:           OdbRestClient[IO],
-  selected:         View[Option[ObsAtt.Id]],
-  obsAttachmentIds: View[SortedSet[ObsAtt.Id]],
-  obsAttachments:   ObsAttachmentList
+  programId:     Program.Id,
+  client:        OdbRestClient[IO],
+  selected:      View[Option[Attachment.Id]],
+  attachmentIds: View[SortedSet[Attachment.Id]],
+  attachments:   AttachmentList
 ) extends ReactFnProps[FinderChartLinker](FinderChartLinker.component)
 
 object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentUtils:
   private type Props = FinderChartLinker
 
   private case class TableMeta(
-    selected:         View[Option[ObsAtt.Id]],
-    obsAttachmentIds: View[SortedSet[ObsAtt.Id]]
+    selected:      View[Option[Attachment.Id]],
+    attachmentIds: View[SortedSet[Attachment.Id]]
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[ObsAttachment, TableMeta]
+  private val ColDef = ColumnDef.WithTableMeta[Attachment, TableMeta]
 
   private val component =
     ScalaFnComponent
@@ -58,8 +58,8 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
       .useStateView(Action.None)
       .useMemoBy((_, _, _) => ()): (_, _, action) =>
         _ =>
-          def column[V](id: ColumnId, accessor: ObsAttachment => V)
-            : ColumnDef.Single.WithTableMeta[ObsAttachment, V, TableMeta] =
+          def column[V](id: ColumnId, accessor: Attachment => V)
+            : ColumnDef.Single.WithTableMeta[Attachment, V, TableMeta] =
             ColDef(id, v => accessor(v), columnNames(id))
 
           List(
@@ -68,12 +68,12 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                 cell.table.options.meta
                   .map: meta =>
                     Checkbox(
-                      meta.obsAttachmentIds.get.contains(cell.value),
+                      meta.attachmentIds.get.contains(cell.value),
                       onChangeE = { (e: Boolean, ev: ReactEventFrom[Element]) =>
                         (for {
                           _ <- ev.preventDefaultCB *> ev.stopPropagationCB
                           _ <- action.set(Action.Unlink)
-                          _ <- meta.obsAttachmentIds.mod(_ - cell.value).unless_(e)
+                          _ <- meta.attachmentIds.mod(_ - cell.value).unless_(e)
                           _ <- meta.selected
                                  .set(none)
                                  .when_(e && meta.selected.get.contains(cell.value))
@@ -82,25 +82,25 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                           // It is a bit dirty but we can't reach the table from here to set the selection
                           _ <-
                             meta.selected.set(Option(cell.value)).delayMs(200).toCallback.when_(e)
-                          _ <- meta.obsAttachmentIds.mod(_ + cell.value).when_(e)
+                          _ <- meta.attachmentIds.mod(_ + cell.value).when_(e)
                         } yield ()).finallyRun(action.set(Action.None))
                       }
                     )
               .setEnableSorting(false),
-            column(FileNameColumnId, ObsAttachment.fileName.get)
+            column(FileNameColumnId, Attachment.fileName.get)
               .setCell(_.value.value)
               .sortableBy(_.value.toUpperCase)
           )
       // Rows
-      .useMemoBy((props, _, _, _) => (props.obsAttachmentIds.reuseByValue, props.obsAttachments)):
-        (_, _, _, _) => (_, obsAttachments) => obsAttachments.map(_._2).toList
+      .useMemoBy((props, _, _, _) => (props.attachmentIds.reuseByValue, props.attachments)):
+        (_, _, _, _) => (_, attachments) => attachments.finderList
       .useReactTableBy: (props, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
           enableRowSelection = true,
           getRowId = (row, _, _) => RowId(row.id.show),
-          meta = TableMeta(props.selected, props.obsAttachmentIds)
+          meta = TableMeta(props.selected, props.attachmentIds)
         )
       .useEffectWithDepsBy((p, _, _, _, _, _) => p.selected.reuseByValue): (p, _, _, _, _, table) =>
         _ =>
@@ -136,7 +136,7 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                 ExploreStyles.TableRowSelected.when_(row.getIsSelected()),
                 ^.onClick ==> { e =>
                   val selectedId =
-                    ObsAtt.Id.parse(row.id.value).filter(p.obsAttachmentIds.get.contains)
+                    Attachment.Id.parse(row.id.value).filter(p.attachmentIds.get.contains)
                   for {
                     _ <- e.preventDefaultCB *> e.stopPropagationCB
                     _ <- p.selected.set(selectedId)

@@ -19,12 +19,13 @@ import explore.Icons
 import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.Constants
 import explore.model.Focused
-import explore.model.ObsAttachment
 import explore.model.ObsAttachmentAssignmentMap
-import explore.model.ObsAttachmentList
 import explore.model.Observation
+import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
@@ -34,7 +35,8 @@ import fs2.dom
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ObsAttachment as ObsAtt
+import lucuma.core.enums.AttachmentPurpose
+import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
@@ -48,7 +50,6 @@ import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
@@ -69,7 +70,7 @@ case class ObsAttachmentsTableBody(
   pid:                      Program.Id,
   authToken:                NonEmptyString,
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  obsAttachments:           View[ObsAttachmentList],
+  attachments:              View[AttachmentList],
   readOnly:                 Boolean,
   tileState:                View[ObsAttachmentsTableTileState]
 ) extends ReactFnProps(ObsAttachmentsTableBody.component):
@@ -85,7 +86,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
     readOnly:    Boolean
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[View[ObsAttachment], TableMeta]
+  private val ColDef = ColumnDef.WithTableMeta[View[Attachment], TableMeta]
 
   given Reusability[UrlMap]                     = Reusability.map
   given Reusability[ObsAttachmentAssignmentMap] = Reusability.map
@@ -93,7 +94,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
   def updateAttachment(
     props:  Props,
     client: OdbRestClient[IO],
-    oa:     ObsAttachment,
+    oa:     Attachment,
     files:  List[DomFile]
   )(using
     ToastCtx[IO]
@@ -103,21 +104,23 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
         checkFileSize(f) {
           val name = NonEmptyString.unsafeFrom(f.name)
           client
-            .updateObsAttachment(props.pid,
-                                 oa.id,
-                                 name,
-                                 oa.description,
-                                 dom.readReadableStream(IO(f.stream()))
+            .updateAttachment(
+              props.pid,
+              oa.id,
+              name,
+              oa.description,
+              dom.readReadableStream(IO(f.stream()))
             ) *>
             IO.now()
               .flatMap { now =>
-                props.obsAttachments
+                props.attachments
                   .mod(
                     _.updatedWith(oa.id)(
                       _.map(
-                        _.copy(fileName = name,
-                               updatedAt = Timestamp.unsafeFromInstantTruncated(now),
-                               checked = false
+                        _.copy(
+                          fileName = name,
+                          updatedAt = Timestamp.unsafeFromInstantTruncated(now),
+                          checked = false
                         )
                       )
                     )
@@ -132,15 +135,15 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
   def deleteAttachment(
     props:  Props,
     client: OdbRestClient[IO],
-    aid:    ObsAtt.Id
+    aid:    Attachment.Id
   )(using ToastCtx[IO]): IO[Unit] =
-    props.obsAttachments.mod(_.removed(aid)).toAsync *>
-      client.deleteObsAttachment(props.pid, aid).toastErrors
+    props.attachments.mod(_.removed(aid)).toAsync *>
+      client.deleteAttachment(props.pid, aid).toastErrors
 
   def deletePrompt(
     props:  Props,
     client: OdbRestClient[IO],
-    oa:     ObsAttachment,
+    oa:     Attachment,
     obsIds: SortedSet[Observation.Id]
   )(
     e:      ReactMouseEvent
@@ -165,11 +168,10 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
       .useMemoBy((p, _) => p.authToken): (_, ctx) => // client
         token => OdbRestClient[IO](ctx.environment, token) // This could be in the shared state
       .useStateView[UrlMap](Map.empty) // urlMap
-      .useEffectWithDepsBy((props, _, _, _) => props.obsAttachments.get):
-        (props, _, client, urlMap) =>
-          obsAttachments =>
-            val allCurrentKeys = obsAttachments.values.map(_.toMapKey).toSet
-            val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
+      .useEffectWithDepsBy((props, _, _, _) => props.attachments.get): (props, _, client, urlMap) =>
+        attachments =>
+          val allCurrentKeys = attachments.observationList.map(_.toMapKey).toSet
+          val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
             val updateUrlMap =
               urlMap.mod { umap =>
@@ -179,14 +181,14 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
             val getUrls      =
               newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
-            updateUrlMap *> getUrls
+          updateUrlMap *> getUrls
       // Columns
       .useMemoBy((_, _, _, _) => ()): (props, ctx, _, _) =>
         _ =>
           import ctx.given
 
-          def column[V](id: ColumnId, accessor: ObsAttachment => V)
-            : ColumnDef.Single.WithTableMeta[View[ObsAttachment], V, TableMeta] =
+          def column[V](id: ColumnId, accessor: Attachment => V)
+            : ColumnDef.Single.WithTableMeta[View[Attachment], V, TableMeta] =
             ColDef(id, v => accessor(v.get), columnNames(id))
 
           def goToObs(obsId: Observation.Id): Callback =
@@ -199,8 +201,8 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
             column(ActionsColumnId, identity)
               .setCell: cell =>
                 cell.table.options.meta.map: meta =>
-                  val thisOa: ObsAttachment = cell.value
-                  val id: ObsAtt.Id         = thisOa.id
+                  val thisOa: Attachment = cell.value
+                  val id: Attachment.Id  = thisOa.id
 
                   def onUpdateFileSelected(e: ReactEventFromInput): Callback =
                     val files = e.target.files.toList
@@ -250,22 +252,22 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
                           <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
                   )
               .setEnableSorting(false),
-            column(FileNameColumnId, ObsAttachment.fileName.get)
+            column(FileNameColumnId, Attachment.fileName.get)
               .setCell(_.value.value)
               .sortableBy(_.value.toUpperCase),
-            column(AttachmentTypeColumnId, ObsAttachment.attachmentType.get)
+            column(AttachmentTypeColumnId, Attachment.attachmentType.get)
               .setCell(_.value.shortName),
-            column(SizeColumnId, ObsAttachment.fileSize.get)
+            column(SizeColumnId, Attachment.fileSize.get)
               .setCell(cell =>
                 // The fileSize will always be > 0, the api should be changed to reflect this
                 NonNegLong.from(cell.value).toOption.map(_.toHumanReadableByteCount).orEmpty
               ),
-            column(LastUpdateColumnId, ObsAttachment.updatedAt.get)
+            column(LastUpdateColumnId, Attachment.updatedAt.get)
               .setCell(cell =>
                 Constants.GppDateFormatter
                   .format(cell.value.toLocalDateTime)
               ),
-            column(ObservationsColumnId, ObsAttachment.id.get)
+            column(ObservationsColumnId, Attachment.id.get)
               .setCell: cell =>
                 cell.table.options.meta.map: meta =>
                   <.span(
@@ -287,10 +289,10 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
               DescriptionColumnId,
               _.withOnMod(oa =>
                 ProgramQueries
-                  .updateObsAttachmentDescription[IO](oa.id, oa.description)
+                  .updateAttachmentDescription[IO](oa.id, oa.description)
                   .runAsync
               )
-                .zoom(ObsAttachment.description),
+                .zoom(Attachment.description),
               columnNames(DescriptionColumnId),
               cell =>
                 cell.table.options.meta.map: meta =>
@@ -318,18 +320,20 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
                     value = cell.value
                       .withOnMod(oa =>
                         ProgramQueries
-                          .updateObsAttachmentChecked[IO](oa.id, oa.checked)
+                          .updateAttachmentChecked[IO](oa.id, oa.checked)
                           .runAsync
                       )
-                      .zoom(ObsAttachment.checked),
+                      .zoom(Attachment.checked),
                     label = "",
                     disabled = meta.readOnly
                   )
             ).sortableBy(_.get.checked)
           )
       // Rows
-      .useMemoBy((props, _, _, _, _) => props.obsAttachments.reuseByValue): (_, _, _, _, _) =>
-        _.value.toListOfViews.map(_._2)
+      .useMemoBy((props, _, _, _, _) => props.attachments.reuseByValue): (_, _, _, _, _) =>
+        _.value.toListOfViews
+          .map(_._2)
+          .filter(_.get.isForPurpose(AttachmentPurpose.Observation))
       .useReactTableBy: (props, _, client, urlMap, cols, rows) =>
         TableOptions(
           cols,
@@ -361,11 +365,11 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
         )
 
 case class ObsAttachmentsTableTitle(
-  pid:            Program.Id,
-  authToken:      NonEmptyString,
-  obsAttachments: View[ObsAttachmentList],
-  readOnly:       Boolean,
-  tileState:      View[ObsAttachmentsTableTileState]
+  pid:         Program.Id,
+  authToken:   NonEmptyString,
+  attachments: View[AttachmentList],
+  readOnly:    Boolean,
+  tileState:   View[ObsAttachmentsTableTileState]
 ) extends ReactFnProps(ObsAttachmentsTableTitle.component):
   val action = tileState.zoom(ObsAttachmentsTableTileState.value.asLens)
 
@@ -378,8 +382,12 @@ object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
       .useContext(AppContext.ctx)
       .useMemoBy((p, _) => p.authToken): (_, ctx) => // client
         token => OdbRestClient[IO](ctx.environment, token)
-      .useStateView(Enumerated[ObsAttachmentType].all.head)
-      .render: (props, ctx, client, newAttType) =>
+      .useStateView(
+        Enumerated[AttachmentType].forPurpose(AttachmentPurpose.Observation).head
+      )
+      .useMemoBy((_, _, _, _) => ()): (_, _, _, _) =>
+        _ => Enumerated[AttachmentType].notForPurpose(AttachmentPurpose.Observation).toSet
+      .render: (props, ctx, client, newAttType, excludedTypes) =>
         import ctx.given
 
         if (props.readOnly) EmptyVdom
@@ -389,6 +397,7 @@ object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
             EnumDropdownView(
               id = "attachment-type".refined,
               value = newAttType,
+              exclude = excludedTypes,
               clazz = ExploreStyles.FlatFormField |+| ExploreStyles.AttachmentsTableTypeSelect
             ),
             <.label(
@@ -404,7 +413,7 @@ object ObsAttachmentsTableTitle extends ObsAttachmentUtils:
               ^.tpe    := "file",
               ^.onChange ==> onInsertFileSelected(
                 props.pid,
-                props.obsAttachments,
+                props.attachments,
                 newAttType.get,
                 client,
                 props.action
