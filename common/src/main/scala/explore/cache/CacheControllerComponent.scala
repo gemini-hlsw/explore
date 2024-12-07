@@ -45,12 +45,12 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
                   latch.get.flatMap(_.offer(mod))
                 .compile.drain
               .useForever
-              .start
+              .start // OUCH, this doesn't cancel in case of changing program!!!
           initResult <- initial(props).attemptPot.map:
                           _.adaptError: t =>
                             new RuntimeException(s"InitializationError: ${t.getMessage}", t)
           _          <- props.modState(_ => initResult.map(_._1))
-          queue      <- Queue.unbounded[F, S => S]
+          queue      <- Queue.unbounded[F, S => S]   // TODO change to either[throwable, s => s]
           _          <- latch.complete(queue)
           _          <-
             initResult.toOption
@@ -65,13 +65,14 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
                   .void
               .orEmpty
         yield queue
-      .useStreamBy((_, queue) => queue.isReady): (props, queue) =>
-        _ =>
-          queue.toOption
-            .map(q => Stream.fromQueueUnterminated(q))
-            .orEmpty
-            .evalTap(f => props.modState(_.map(f)))
-      .render: (_, initialPot, updateStreamPotOption) =>
+      .useEffectStreamWithDepsBy((_, queue) => queue.isReady):
+        (props, queue) => // todo change to streameffect
+          _ =>
+            queue.toOption
+              .map(q => Stream.fromQueueUnterminated(q))
+              .orEmpty
+              .evalMap(f => props.modState(_.map(f)))
+      .render: (_, _) =>
         EmptyVdom
 
 object CacheControllerComponent:
