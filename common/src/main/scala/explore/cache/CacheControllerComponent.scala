@@ -33,30 +33,33 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
       .useEffectResultOnMountBy: props =>
         for
           _          <- props.modState(_ => pending) // Initialize on mount.
-          latch      <- Deferred[F, Queue[F, S => S]]
+          latch      <- Deferred[F, Queue[F, Either[Throwable, S => S]]]
           // Start the update fiber. We want subscriptions to start before initial query.
           // This way we don't miss updates.
           // The update fiber will only update the cache once it is initialized (via latch).
           // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
           _          <-
             updateStream(props)
+              .map(_.attempt)
               .evalTap:
                 _.evalTap: mod =>
                   latch.get.flatMap(_.offer(mod))
                 .compile.drain
               .useForever
-              .start // OUCH, this doesn't cancel in case of changing program!!!
+              .start                                   // OUCH, this doesn't cancel in case of changing program!!!
           initResult <- initial(props).attemptPot.map:
                           _.adaptError: t =>
-                            new RuntimeException(s"InitializationError: ${t.getMessage}", t)
+                            new RuntimeException(s"Initialization Error: ${t.getMessage}", t)
           _          <- props.modState(_ => initResult.map(_._1))
-          queue      <- Queue.unbounded[F, S => S]   // TODO change to either[throwable, s => s]
+          queue      <-
+            Queue
+              .unbounded[F, Either[Throwable, S => S]] // TODO change to either[throwable, s => s]
           _          <- latch.complete(queue)
           _          <-
             initResult.toOption
               .map(_._2)
               .map: delayedInits =>
-                delayedInits
+                delayedInits.attempt
                   .evalMap: mod =>
                     queue.offer(mod)
                   .compile
@@ -71,7 +74,11 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
             queue.toOption
               .map(q => Stream.fromQueueUnterminated(q))
               .orEmpty
-              .evalMap(f => props.modState(_.map(f)))
+              .evalMap: elem =>
+                props.modState: oldValue =>
+                  elem match
+                    case Left(t)  => Pot.Error(t)
+                    case Right(f) => oldValue.map(f)
       .render: (_, _) =>
         EmptyVdom
 
