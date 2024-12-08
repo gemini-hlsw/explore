@@ -292,7 +292,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          props.positions,
          props.obsConf.flatMap(_.posAngleConstraint),
          props.obsConf.flatMap(_.constraints),
-         props.obsConf.flatMap(_.wavelength),
+         props.obsConf.flatMap(_.centralWavelength),
          props.obsTime,
          props.obsConf.flatMap(_.configuration),
          candidates.toOption.flatten
