@@ -13,7 +13,7 @@ case class ProgramInvitation(givenName: String, familyName: String, pid: Program
 object ProgramInvitation:
   given Decoder[ProgramInvitation] = c =>
     for {
-      gn <- c.downField("issuer").get[String]("orcidGivenName")
-      fn <- c.downField("issuer").get[String]("orcidFamilyName")
+      gn <- c.downField("issuer").downField("profile").get[String]("givenName")
+      fn <- c.downField("issuer").downField("profile").get[String]("familyName")
       pi <- c.downField("program").get[Program.Id]("id")
     } yield ProgramInvitation(gn, fn, pi)
