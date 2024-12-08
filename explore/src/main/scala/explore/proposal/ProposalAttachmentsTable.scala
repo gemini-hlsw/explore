@@ -10,6 +10,7 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
+import crystal.syntax.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -104,7 +105,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
             val updateUrlMap =
               urlMap.mod { umap =>
                 val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
-                newPas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
+                newPas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
               }.toAsync
             val getUrls      =
               newPas.traverse_(key =>

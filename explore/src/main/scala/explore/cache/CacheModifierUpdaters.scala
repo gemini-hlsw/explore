@@ -6,6 +6,7 @@ package explore.cache
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.syntax.*
 import explore.givens.given
 import explore.model.GroupList
 import explore.model.Observation
@@ -64,7 +65,7 @@ trait CacheModifierUpdaters {
                 observations - obsId
 
         val programTimesReset: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.programTimesPot.replace(Pot.pending)
+          ProgramSummaries.programTimesPot.replace(pending)
 
         val obsExecutionReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.obsExecutionPots.modify: oem =>
@@ -150,7 +151,7 @@ trait CacheModifierUpdaters {
       val groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
         programSummaries
           .parentGroups(id)
-          .map(_ -> Pot.pending)
+          .map(_ -> pending)
           .toMap
       ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
         programSummaries

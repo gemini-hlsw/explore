@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
+import crystal.Pot
 import explore.DefaultErrorPolicy
 import explore.modes.SpectroscopyModesMatrix
 import fs2.Stream
@@ -16,7 +17,7 @@ import lucuma.schemas.ObservationDB
 import queries.common.ModesQueriesGQL
 
 case class ModesCacheController(
-  modModes: (Option[SpectroscopyModesMatrix] => Option[SpectroscopyModesMatrix]) => IO[Unit]
+  modModes: (Pot[SpectroscopyModesMatrix] => Pot[SpectroscopyModesMatrix]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[ModesCacheController](ModesCacheController.component)
     with CacheControllerComponent.Props[SpectroscopyModesMatrix]:

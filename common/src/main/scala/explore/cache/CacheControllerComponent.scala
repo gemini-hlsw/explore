@@ -5,13 +5,14 @@ package explore.cache
 
 import cats.effect.Resource
 import cats.effect.kernel.Deferred
-import cats.effect.std.Queue
 import cats.syntax.all.*
+import crystal.Pot
 import crystal.react.hooks.*
-import fs2.Stream
+import crystal.syntax.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ui.syntax.effect.*
 
 trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   private type F[T] = DefaultA[T]
@@ -26,42 +27,52 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   val component =
     ScalaFnComponent
       .withHooks[P]
-      .useEffectResultOnMountBy: props => // TODO Could we actually useEffectStreamResource?
+      .useCallbackBy: props => // applyStreamUpdates: Apply updates from an update stream.
+        (stream: fs2.Stream[F, Either[Throwable, S => S]]) =>
+          stream
+            .evalMap: modElem =>
+              props.modState: oldValue =>
+                modElem.fold(
+                  t => Pot.Error(new RuntimeException(s"Update Error: ${t.getMessage}", t)),
+                  f => oldValue.map(f)
+                )
+            .compile
+            .drain
+      .useResourceOnMountBy: (props, applyStreamUpdates) =>
         for
-          _                            <- props.modState(_ => none) // Initialize on mount.
-          latch                        <- Deferred[F, Queue[F, S => S]]
+          _          <- Resource.eval(props.modState(_ => pending)) // Initialize on mount.
           // Start the update fiber. We want subscriptions to start before initial query.
           // This way we don't miss updates.
-          // The update fiber will only update the cache once it is initialized (via latch).
+          // The update fiber will only update once the cache is initialized (via latch).
           // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-          _                            <-
-            updateStream(props)
-              .evalTap:
-                _.evalTap: mod =>
-                  latch.get.flatMap(_.offer(mod))
-                .compile.drain
-              .useForever
-              .start
-          (initialValue, delayedInits) <- initial(props)
-          _                            <- props.modState((_: Option[S]) => initialValue.some)
-          queue                        <- Queue.unbounded[F, S => S]
-          _                            <- latch.complete(queue)
-          _                            <-
-            delayedInits
-              .evalMap: mod =>
-                queue.offer(mod)
-              .compile
-              .drain
-              .start
-        yield queue
-      .useStreamBy((_, queue) => queue.isReady): (props, queue) =>
-        _ =>
-          queue.toOption
-            .map(q => Stream.fromQueueUnterminated(q))
-            .orEmpty
-            .evalTap(f => props.modState(_.map(f)))
-      .render((_, _, _) => EmptyVdom)
+          latch      <- Resource.eval(Deferred[F, Unit])
+          // Next is the update fiber. It will start getting updates immediately,
+          // but will wait until the cache is initialized to start applying them.
+          // Will run until the component is unmounted.
+          _          <- updateStream(props)
+                          .map(_.attempt)
+                          .map(applyStreamUpdates)
+                          .useForever
+                          .background
+          // initResult is (initValue, delayedInitsStream)
+          initResult <- Resource.eval:
+                          initial(props).attemptPot.map:
+                            _.adaptError: t =>
+                              new RuntimeException(s"Initialization Error: ${t.getMessage}", t)
+          // Apply initial value.
+          _          <- Resource.eval(props.modState(_ => initResult.map(_._1)))
+          // Build and release update queue.
+          _          <- Resource.eval(latch.complete(()))
+          // Apply delayed inits.
+          _          <- initResult.toOption
+                          .map(_._2.attempt)
+                          .map(applyStreamUpdates)
+                          .orEmpty
+                          .background
+        yield ()
+      .render: (_, _, _) =>
+        EmptyVdom
 
 object CacheControllerComponent:
   trait Props[S]:
-    val modState: (Option[S] => Option[S]) => DefaultA[Unit]
+    val modState: (Pot[S] => Pot[S]) => DefaultA[Unit]

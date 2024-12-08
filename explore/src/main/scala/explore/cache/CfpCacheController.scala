@@ -7,6 +7,7 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
+import crystal.Pot
 import explore.DefaultErrorPolicy
 import explore.model.CallForProposal
 import fs2.Stream
@@ -16,7 +17,7 @@ import lucuma.schemas.ObservationDB
 import queries.common.CallsQueriesGQL.ReadOpenCFPs
 
 case class CfpCacheController(
-  modCalls: (Option[List[CallForProposal]] => Option[List[CallForProposal]]) => IO[Unit]
+  modCalls: (Pot[List[CallForProposal]] => Pot[List[CallForProposal]]) => IO[Unit]
 )(using client: StreamingClient[IO, ObservationDB])
     extends ReactFnProps[CfpCacheController](CfpCacheController.component)
     with CacheControllerComponent.Props[List[CallForProposal]]:

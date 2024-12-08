@@ -6,6 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -47,7 +48,6 @@ import lucuma.ui.hooks.*
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import monocle.Iso
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
 
@@ -68,7 +68,7 @@ object ExploreLayout:
       .useContext(HelpContext.ctx)
       .useContext(AppContext.ctx)
       .useEffectWithDepsBy((p, _, _) =>
-        p.model.programSummariesValue.flatMap(_.programOrProposalReference)
+        p.model.programSummariesValue.toOption.flatMap(_.programOrProposalReference)
       ): (_, _, _) =>
         // Set the title of the page to the program reference
         // scalajs-react suggest to use setTitle for this but we'd need to put the
@@ -190,7 +190,7 @@ object ExploreLayout:
 
             val (showProgsPopup, msg, isSubmitted, proposalReference)
               : (Boolean, Option[String], Boolean, Option[ProposalReference]) =
-              props.model.programSummariesValue.fold((false, none, false, none)): pss =>
+              props.model.programSummariesValue.toOption.fold((false, none, false, none)): pss =>
                 routingInfo.optProgramId.fold((true, none, false, none)): id =>
                   if (pss.programs.get(id).exists(!_.deleted))
                     (false, none, pss.proposalIsSubmitted, pss.proposalId)
@@ -202,10 +202,10 @@ object ExploreLayout:
                     )
 
             val deadline: Option[Timestamp] =
-              props.model.programSummariesValue
+              props.model.programSummariesValue.toOption
                 .flatMap: programSummaries =>
                   (ProgramSummaries.proposal.getOption(programSummaries).flatten,
-                   RootModel.cfps.get(view.get)
+                   RootModel.cfps.get(view.get).toOption
                   ).mapN: (p, c) =>
                     val piP = ProgramSummaries.piPartner.getOption(programSummaries)
                     p.deadline(c, piP)
@@ -251,19 +251,21 @@ object ExploreLayout:
                       view.zoom(RootModel.userPreferences).async.mod
                     ).withKey(cacheKey),
                     props.model.rootModel
-                      .zoom(
-                        RootModel.userPreferences.some.andThen(UserPreferences.globalPreferences)
-                      )
+                      .zoom:
+                        RootModel.userPreferences
+                          .andThen(Pot.readyPrism)
+                          .andThen(UserPreferences.globalPreferences)
                       .asView
                       .map(prefs =>
                         TopBar(
                           vault,
                           routingInfo.optProgramId,
-                          props.model.programSummariesValue.flatMap(_.programOrProposalReference),
+                          props.model.programSummariesValue.toOption
+                            .flatMap(_.programOrProposalReference),
                           view.zoom(RootModel.localPreferences).get,
                           view.zoom(RootModel.undoStacks),
                           props.model.programSummaries.throttlerView
-                            .zoom(Iso.id[Option[ProgramSummaries]].some)
+                            .zoom(Pot.readyPrism)
                             .zoom(ProgramSummaries.programs),
                           theme,
                           onLogout >> view.zoom(RootModel.vault).set(none).toAsync,
@@ -277,7 +279,7 @@ object ExploreLayout:
                   ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
                   _.separatorAfter,
                   tab =>
-                    props.model.programSummariesValue
+                    props.model.programSummariesValue.toOption
                       .flatMap(_.optProgramDetails)
                       .forall: program =>
                         // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
@@ -289,7 +291,7 @@ object ExploreLayout:
                   ProgramsPopup(
                     currentProgramId = none,
                     props.model.programSummaries.throttlerView
-                      .zoom(Iso.id[Option[ProgramSummaries]].some)
+                      .zoom(Pot.readyPrism)
                       .zoom(ProgramSummaries.programs),
                     undoStacks = view.zoom(RootModel.undoStacks),
                     onLogout = (onLogout >>

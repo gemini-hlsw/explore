@@ -5,9 +5,9 @@ package explore.findercharts
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
+import crystal.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.attachments.Action
 import explore.attachments.ObsAttachmentUtils
@@ -131,7 +131,7 @@ object FinderChartsTile:
             val updateUrlMap =
               urlMap.mod { umap =>
                 val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
-                newOas.foldRight(filteredMap)((key, m) => m.updated(key, Pot.pending))
+                newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
               }.toAsync
 
             val getUrls =

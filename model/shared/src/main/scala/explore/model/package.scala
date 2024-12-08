@@ -6,6 +6,7 @@ package explore.model
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.syntax.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
@@ -90,11 +91,11 @@ type GroupTimeRangeMap = GroupTimeRangeMap.Type
 trait PotMap[K, V] extends NewType[Map[K, Pot[V]]]:
   extension (t: Type)
     def getPot(k: K): Pot[V]                       =
-      t.value.get(k).getOrElse(Pot.pending)
+      t.value.get(k).getOrElse(pending)
     def updated(k: K, pot: Pot[V]): this.Type      =
       apply(t.value.updated(k, pot))
     def withUpdatePending(k: K): this.Type         =
-      updated(k, Pot.pending)
+      updated(k, pending)
     def allUpdated(map: Map[K, Pot[V]]): this.Type =
       apply(t.value ++ map)
     def removed(k: K): this.Type                   =

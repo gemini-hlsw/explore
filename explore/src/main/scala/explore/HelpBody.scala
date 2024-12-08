@@ -7,6 +7,7 @@ import cats.effect.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
+import crystal.syntax.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
@@ -59,7 +60,7 @@ object HelpBody:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useContext(HelpContext.ctx)
-      .useStateView(Pot.pending[String])
+      .useStateView(pending[String])
       .useEffectOnMountBy: (props, ctx, _, state) =>
         load(props.url, ctx.httpClient).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
       .render: (props, _, helpCtx, state) =>

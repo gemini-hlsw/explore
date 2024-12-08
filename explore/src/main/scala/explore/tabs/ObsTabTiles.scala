@@ -451,7 +451,7 @@ object ObsTabTiles:
                 guideStarSelection,
                 props.isDisabled,
                 // Any target changes invalidate the sequence
-                sequenceChanged.set(Pot.pending)
+                sequenceChanged.set(pending)
               )
 
             val constraintsSelector: VdomNode =
@@ -500,7 +500,7 @@ object ObsTabTiles:
                 props.obsTargets,
                 props.programSummaries.observingModeGroups,
                 sequenceChanged.mod:
-                  case Ready(x) => Pot.pending
+                  case Ready(x) => pending
                   case x        => x
                 ,
                 props.isDisabled,
