@@ -26,7 +26,7 @@ case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],
   posAngleProperties: Option[PAProperties],
   constraints:        Option[ConstraintSet],
-  wavelength:         Option[Wavelength],
+  centralWavelength:  Option[Wavelength],
   scienceOffsets:     Option[NonEmptyList[Offset]],
   acquisitionOffsets: Option[NonEmptyList[Offset]],
   averagePA:          Option[AveragePABasis],
