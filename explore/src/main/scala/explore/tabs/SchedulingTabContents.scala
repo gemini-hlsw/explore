@@ -44,6 +44,7 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.schemas.ObservationDB
+import lucuma.ui.LucumaStyles
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
@@ -195,7 +196,9 @@ object SchedulingTabContents extends TwoPanels:
               findSchedulingGroup(ids, props.programSummaries.get.schedulingGroups)
                 .map(cg => (ids, cg))
             .fold[VdomNode] {
-              <.div("Nothing selected")
+              <.div(LucumaStyles.HVCenter)(
+                <.div("Select a scheduling group from the list.")
+              )
             } { case (idsToEdit, schedulingGroup) =>
               val obsTraversal: Traversal[ObservationList, Observation] =
                 Iso
