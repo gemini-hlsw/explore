@@ -73,6 +73,7 @@ import lucuma.react.resizeDetector.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
@@ -150,7 +151,7 @@ object ObsTabTiles:
 
   // TODO Move to core
   extension (om: ObservingMode)
-    def centralWavelength: Option[Wavelength] =
+    def centralWavelength: Option[CentralWavelength] =
       ObservingMode.gmosNorthLongSlit
         .andThen(ObservingMode.GmosNorthLongSlit.centralWavelength)
         .getOption(om)
@@ -159,7 +160,6 @@ object ObsTabTiles:
             .andThen(ObservingMode.GmosSouthLongSlit.centralWavelength)
             .getOption(om)
         )
-        .map(_.value)
 
   private val component =
     ScalaFnComponent
@@ -378,7 +378,7 @@ object ObsTabTiles:
                 basicConfiguration,
                 paProps.some,
                 constraints.get.some,
-                props.observation.get.observingMode.flatMap(_.centralWavelength),
+                props.observation.get.observingMode.flatMap(_.centralWavelength.map(_.value)),
                 sequenceOffsets.toOption.flatMap(_.science),
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,
