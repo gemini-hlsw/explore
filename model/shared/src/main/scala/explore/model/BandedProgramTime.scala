@@ -8,8 +8,8 @@ import cats.derived.*
 import io.circe.Decoder
 import lucuma.core.enums.ScienceBand
 
-final case class BandedProgramTime(
-  band: ScienceBand,
+case class BandedProgramTime(
+  band: Option[ScienceBand],
   time: ProgramTime
 ) derives Eq,
       Decoder
