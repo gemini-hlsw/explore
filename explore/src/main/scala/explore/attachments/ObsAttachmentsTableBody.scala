@@ -173,13 +173,13 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
           val allCurrentKeys = attachments.observationList.map(_.toMapKey).toSet
           val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
-            val updateUrlMap =
-              urlMap.mod { umap =>
-                val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
-                newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
-              }.toAsync
-            val getUrls      =
-              newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
+          val updateUrlMap =
+            urlMap.mod { umap =>
+              val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
+              newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
+            }.toAsync
+          val getUrls      =
+            newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
 
           updateUrlMap *> getUrls
       // Columns
