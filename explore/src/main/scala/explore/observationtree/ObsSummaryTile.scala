@@ -11,6 +11,7 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.syntax.pot.given
+import eu.timepit.refined.cats.given
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
@@ -267,34 +268,37 @@ object ObsSummaryTile:
                 else "",
               enableResizing = false
             ).setSize(35.toPx),
-            obsColumn(ObservationIdColumnId, _.obs.id).setCell:
-              _.value.map(obsLink)
-            ,
+            obsColumn(ObservationIdColumnId, _.obs.id)
+              .setCell:
+                _.value.map(obsLink)
+              .sortable,
             // TODO: TargetTypeColumnId
             obsColumn(TargetTypeColumnId, _ => ())
               .setCell(_ => Icons.Star.withFixedWidth())
-              .setSize(35.toPx),
+              .setSize(35.toPx)
+              .sortable,
             mixedColumn(
               TargetColumnId,
               r => r.obs.title,
               r => (r.obs.id, r.targetWithId)
             )
-              .setCell { c =>
-                c.value match {
+              .setCell:
+                _.value match
                   case s: String => <.span(s)
                   case (a, b)    => targetLink(a, b)
-                }
-              }
               .sortableBy(_.sortableValue),
             obsColumn(GroupColumnId, _.group)
               .setCell:
                 _.value.flatten.map(groupLink)
-            ,
+              .sortableBy(_.flatMap(_.flatMap(_.name))),
             // TODO: ValidationCheckColumnId
-            obsColumn(StateColumnId, _.obs.workflow.state).setCell(_.value.map(_.toString).orEmpty),
-            obsColumn(ScienceBandColumnId, _.obs.scienceBand).setCell(
-              _.value.flatten.fold("Not set")(_.shortName)
-            ),
+            obsColumn(StateColumnId, _.obs.workflow.state)
+              .setCell(_.value.map(_.toString).orEmpty)
+              .sortable,
+            obsColumn(ScienceBandColumnId, _.obs.scienceBand)
+              .setCell:
+                _.value.flatten.fold("Not set")(_.shortName)
+              .sortable,
             // TODO: CompletionColumnId
             mixedColumn(
               RAColumnId,
@@ -343,14 +347,15 @@ object ObsSummaryTile:
               .sortableBy(_.map(_._2)),
             // TODO: FindingChartColumnId
             obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty)
-              .setCell(_.value.orEmpty),
+              .setCell(_.value.orEmpty)
+              .sortable,
             obsColumn(
               DurationColumnId,
               _.execution.map(_.programTimeEstimate)
-            ).setCell { cell =>
-              cell.value.map:
+            ).setCell:
+              _.value.map:
                 _.orSpinner(_.map(HoursMinutesAbbreviation.format).orEmpty)
-            }.sortableBy(_.sortableValue)
+            .sortableBy(_.sortableValue)
             // TODO: PriorityColumnId
             // TODO: ChargedTimeColumnId
           )
@@ -415,6 +420,7 @@ object ObsSummaryTile:
                   _.obs.id.toString
                 )
             ,
+            enableSorting = true,
             enableMultiRowSelection = true,
             state = PartialTableState(
               rowSelection = rowSelection.get,

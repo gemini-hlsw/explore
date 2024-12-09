@@ -145,7 +145,7 @@ object ProgramUsersTable:
     import ctx.given
 
     List(
-      column(Column.Name, _.get.name),
+      column(Column.Name, _.get.name).sortable,
       ColDef(
         Column.Partner.id,
         _.zoom(ProgramUserWithRole.partnerLink),
@@ -164,8 +164,8 @@ object ProgramUsersTable:
                 case p                                 => Some(p)
 
             partnerSelector(pl, usersView.set, meta.readOnly || meta.isActive.get.value)
-      ),
-      column(Column.Email, _.get.user.profile.foldMap(_.email).getOrElse("-")),
+      ).sortableBy(_.get.toString),
+      column(Column.Email, _.get.user.profile.foldMap(_.email).getOrElse("-")).sortable,
       ColDef(
         Column.EducationalStatus.id,
         _.zoom(ProgramUserWithRole.educationalStatus),
@@ -189,7 +189,7 @@ object ProgramUsersTable:
               disabled = meta.readOnly || meta.isActive.get.value,
               clazz = ExploreStyles.PartnerSelector
             )
-      ),
+      ).sortableBy(_.get.toString),
       ColDef(
         Column.Thesis.id,
         _.zoom(ProgramUserWithRole.thesis),
@@ -200,12 +200,13 @@ object ProgramUsersTable:
           c.table.options.meta.map: meta =>
             val view = c.value
               .withOnMod(th => updateUserThesis[IO](meta.programId, userId, th).runAsyncAndForget)
-            Checkbox(id = "thesis",
-                     checked = view.get.getOrElse(false),
-                     disabled = meta.readOnly || meta.isActive.get.value,
-                     onChange = r => view.set(r.some)
+            Checkbox(
+              id = "thesis",
+              checked = view.get.getOrElse(false),
+              disabled = meta.readOnly || meta.isActive.get.value,
+              onChange = r => view.set(r.some)
             )
-      ),
+      ).sortableBy(_.get),
       ColDef(
         Column.Gender.id,
         _.zoom(ProgramUserWithRole.gender),
@@ -227,14 +228,13 @@ object ProgramUsersTable:
               clazz = ExploreStyles.PartnerSelector,
               onChange = view.set
             )
-      ),
-      column(Column.OrcidId, _.get.user.orcidId.foldMap(_.value)),
-      column(Column.Role, _.get.role.shortName),
+      ).sortableBy(_.get.toString),
+      column(Column.OrcidId, _.get.user.orcidId.foldMap(_.value)).sortable,
+      column(Column.Role, _.get.role.shortName).sortable,
       ColDef(
         Column.Unlink.id,
         _.get,
         "",
-        enableSorting = false,
         enableResizing = false,
         cell = cell =>
           cell.table.options.meta.map: meta =>
@@ -279,6 +279,7 @@ object ProgramUsersTable:
           cols,
           rows,
           getRowId = (row, _, _) => RowId(row.get.user.id.toString),
+          enableSorting = true,
           meta = TableMeta(props.programId, props.users, props.readonly, isActive),
           state = PartialTableState(
             columnVisibility = ColumnVisibility(
