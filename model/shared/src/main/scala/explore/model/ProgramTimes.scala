@@ -8,7 +8,7 @@ import cats.derived.*
 import io.circe.Decoder
 import lucuma.core.util.TimeSpan
 
-final case class ProgramTimes(
+case class ProgramTimes(
   timeEstimateRange: Option[ProgramTimeRange],
   timeCharge:        List[BandedProgramTime]
 ) derives Eq,
