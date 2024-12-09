@@ -11,25 +11,26 @@ import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.attachments.Action
 import explore.attachments.AttachmentUtils
-import explore.model.ProposalAttachment
+import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.OdbRestClient
 import explore.utils.ToastCtx
 import fs2.dom
 import japgolly.scalajs.react.*
+import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.Timestamp
-import lucuma.schemas.enums.ProposalAttachmentType
 import org.scalajs.dom.File as DomFile
 import org.typelevel.log4cats.Logger
 
 trait ProposalAttachmentUtils extends AttachmentUtils:
   def insertAttachment(
     programId:      Program.Id,
-    modAttachments: Endo[List[ProposalAttachment]] => Callback,
+    modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
-    attType:        ProposalAttachmentType,
+    attType:        AttachmentType,
     files:          List[DomFile]
   )(using ToastCtx[IO]): IO[Unit] =
     files.headOption
@@ -37,22 +38,28 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
         checkFileSize(f) {
           val name = NonEmptyString.unsafeFrom(f.name)
           client
-            .insertProposalAttachment(
+            .insertAttachment(
               programId,
               attType,
               name,
+              none,
               dom.readReadableStream(IO(f.stream()))
             )
             .toastErrors
-            .flatMap(_ =>
+            .flatMap(id =>
               IO.now().flatMap { now =>
-                modAttachments(l =>
-                  ProposalAttachment(
-                    attType,
-                    name,
-                    f.size.toLong,
-                    Timestamp.unsafeFromInstantTruncated(now)
-                  ) :: l
+                modAttachments(
+                  _.updated(id,
+                            Attachment(
+                              id,
+                              attType,
+                              name,
+                              none,
+                              false,
+                              f.size.toLong,
+                              Timestamp.unsafeFromInstantTruncated(now)
+                            )
+                  )
                 ).toAsync
               }
             )
@@ -62,9 +69,9 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
 
   def updateAttachment(
     programId:      Program.Id,
-    modAttachments: Endo[List[ProposalAttachment]] => Callback,
+    modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
-    att:            ProposalAttachment,
+    att:            Attachment,
     files:          List[DomFile]
   )(using
     ToastCtx[IO]
@@ -74,22 +81,20 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
         checkFileSize(f) {
           val name = NonEmptyString.unsafeFrom(f.name)
           client
-            .updateProposalAttachment(
+            .updateAttachment(
               programId,
-              att.attachmentType,
+              att.id,
               name,
+              none,
               dom.readReadableStream(IO(f.stream()))
             ) *>
             IO.now()
               .flatMap { now =>
                 modAttachments(
-                  _.map(pa =>
-                    if (pa.attachmentType === att.attachmentType)
-                      pa.copy(
-                        fileName = name,
-                        updatedAt = Timestamp.unsafeFromInstantTruncated(now)
-                      )
-                    else pa
+                  _.updatedWith(att.id)(
+                    _.map(
+                      _.copy(fileName = name, updatedAt = Timestamp.unsafeFromInstantTruncated(now))
+                    )
                   )
                 ).toAsync
               }
@@ -100,27 +105,27 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
 
   def deleteAttachment(
     programId:      Program.Id,
-    modAttachments: Endo[List[ProposalAttachment]] => Callback,
+    modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
-    attType:        ProposalAttachmentType
+    attId:          Attachment.Id
   )(using ToastCtx[IO]): IO[Unit] =
-    modAttachments(_.filterNot(_.attachmentType === attType)).toAsync *>
-      client.deleteProposalAttachment(programId, attType).toastErrors
+    modAttachments(_.removed(attId)).toAsync *>
+      client.deleteAttachment(programId, attId).toastErrors
 
   def getAttachmentUrl(
     programId: Program.Id,
-    attType:   ProposalAttachmentType,
+    attId:     Attachment.Id,
     client:    OdbRestClient[IO]
   ): IO[Pot[String]] =
-    client.getProposalAttachmentUrl(programId, attType).attempt.map {
+    client.getAttachmentUrl(programId, attId).attempt.map {
       case Right(url) => Pot(url)
       case Left(t)    => Pot.error(t)
     }
 
   def onInsertFileSelected(
     programId:      Program.Id,
-    modAttachments: Endo[List[ProposalAttachment]] => Callback,
-    attType:        ProposalAttachmentType,
+    modAttachments: Endo[AttachmentList] => Callback,
+    attType:        AttachmentType,
     client:         OdbRestClient[IO],
     action:         View[Action]
   )(e: ReactEventFromInput)(using ToastCtx[IO], Logger[IO]): Callback =
@@ -132,8 +137,8 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
 
   def onUpdateFileSelected(
     programId:      Program.Id,
-    modAttachments: Endo[List[ProposalAttachment]] => Callback,
-    thisAtt:        ProposalAttachment,
+    modAttachments: Endo[AttachmentList] => Callback,
+    thisAtt:        Attachment,
     client:         OdbRestClient[IO],
     action:         View[Action]
   )(e: ReactEventFromInput)(using ToastCtx[IO], Logger[IO]): Callback =

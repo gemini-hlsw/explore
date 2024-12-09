@@ -54,8 +54,7 @@ object ProgramSummaryQueriesGQL {
     val document: String = s"""
       query($$programId: ProgramId!) {
         program(programId: $$programId) {
-          obsAttachments $ObsAttachmentSubquery
-          proposalAttachments $ProposalAttachmentSubquery
+          attachments $AttachmentSubquery
         }
       }
     """

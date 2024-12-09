@@ -27,10 +27,10 @@ import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
+import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ObjectTracking
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PosAngleConstraint
@@ -63,7 +63,7 @@ case class Observation(
   selectedGSName:      Option[NonEmptyString],
   constraints:         ConstraintSet,
   timingWindows:       List[TimingWindow],
-  attachmentIds:       SortedSet[ObsAttachment.Id],
+  attachmentIds:       SortedSet[Attachment.Id],
   scienceRequirements: ScienceRequirements,
   observingMode:       Option[ObservingMode],
   observationTime:     Option[Instant],
@@ -314,7 +314,7 @@ object Observation:
   private object TargetIdWrapper:
     given Decoder[TargetIdWrapper] = deriveDecoder
 
-  private case class AttachmentIdWrapper(id: ObsAttachment.Id)
+  private case class AttachmentIdWrapper(id: Attachment.Id)
   private object AttachmentIdWrapper:
     given Decoder[AttachmentIdWrapper] = deriveDecoder
 
@@ -329,7 +329,7 @@ object Observation:
                                .as[Option[NonEmptyString]]
       constraints         <- c.get[ConstraintSet]("constraintSet")
       timingWindows       <- c.get[List[TimingWindow]]("timingWindows")
-      attachmentIds       <- c.get[List[AttachmentIdWrapper]]("obsAttachments")
+      attachmentIds       <- c.get[List[AttachmentIdWrapper]]("attachments")
       scienceRequirements <- c.get[ScienceRequirements]("scienceRequirements")
       observingMode       <- c.get[Option[ObservingMode]]("observingMode")
       observationTime     <- c.get[Option[Timestamp]]("observationTime")

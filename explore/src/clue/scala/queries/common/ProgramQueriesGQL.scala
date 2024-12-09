@@ -35,11 +35,11 @@ object ProgramQueriesGQL:
     """
 
   @GraphQL
-  trait UpdateObsAttachmentMutation extends GraphQLOperation[ObservationDB]:
+  trait UpdateAttachmentMutation extends GraphQLOperation[ObservationDB]:
     val document: String = """
-    mutation($input: UpdateObsAttachmentsInput!) {
-      updateObsAttachments(input: $input) {
-        obsAttachments {
+    mutation($input: UpdateAttachmentsInput!) {
+      updateAttachments(input: $input) {
+        attachments {
           id
         }
       }
@@ -76,8 +76,7 @@ object ProgramQueriesGQL:
       subscription($$input: ProgramEditInput!) {
         programEdit(input: $$input) {
           value {
-            obsAttachments $ObsAttachmentSubquery
-            proposalAttachments $ProposalAttachmentSubquery
+            attachments $AttachmentSubquery
           }
         }
       }

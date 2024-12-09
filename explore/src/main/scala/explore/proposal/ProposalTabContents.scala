@@ -14,12 +14,12 @@ import explore.Icons
 import explore.common.ProposalQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.AttachmentList
 import explore.model.CallForProposal
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUserWithRole
 import explore.model.Proposal
-import explore.model.ProposalAttachment
 import explore.model.UserInvitation
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
@@ -54,7 +54,7 @@ case class ProposalTabContents(
   programDetails:    View[ProgramDetails],
   cfps:              List[CallForProposal],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  attachments:       View[List[ProposalAttachment]],
+  attachments:       View[AttachmentList],
   undoStacks:        View[UndoStacks[IO, Proposal]],
   layout:            LayoutsMap
 ) extends ReactFnProps(ProposalTabContents.component)

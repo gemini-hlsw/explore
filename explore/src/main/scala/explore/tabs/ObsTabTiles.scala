@@ -95,7 +95,7 @@ case class ObsTabTiles(
   backButton:        VdomNode,
   observation:       UndoSetter[Observation],
   obsAndTargets:     UndoSetter[ObservationsAndTargets],
-  obsAttachments:    View[ObsAttachmentList],
+  attachments:       View[AttachmentList],
   programSummaries:  ProgramSummaries,
   focusedTarget:     Option[Target.Id],
   searching:         View[Set[Target.Id]],
@@ -325,7 +325,7 @@ object ObsTabTiles:
                   props.obsId,
                   attachmentsView,
                   props.vault.map(_.token),
-                  props.obsAttachments,
+                  props.attachments,
                   pa,
                   props.isDisabled
                 )

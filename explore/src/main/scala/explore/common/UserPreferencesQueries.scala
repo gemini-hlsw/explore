@@ -18,6 +18,7 @@ import explore.givens.given
 import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
 import explore.model.AsterismVisualOptions
+import explore.model.Attachment
 import explore.model.ChartOp
 import explore.model.ColorsInverted
 import explore.model.GlobalPreferences
@@ -35,7 +36,6 @@ import explore.model.itc.PlotDetails
 import explore.model.layout.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
@@ -333,7 +333,7 @@ object UserPreferencesQueries:
     // Gets the prefs for the itc plot
     def queryWithDefault[F[_]: ApplicativeThrow](
       oid: Observation.Id,
-      aid: ObsAttachment.Id
+      aid: Attachment.Id
     )(using FetchClient[F, UserPreferencesDB]): F[Transformation] =
       FinderChartTransformationQuery[F]
         .query(aid.show, oid.show)
@@ -354,7 +354,7 @@ object UserPreferencesQueries:
 
     def updateTransformation[F[_]: ApplicativeThrow](
       oid:       Observation.Id,
-      aid:       ObsAttachment.Id,
+      aid:       Attachment.Id,
       transform: Transformation
     )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
       FinderChartUpsert[F]

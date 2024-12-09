@@ -11,6 +11,7 @@ import crystal.react.*
 import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.AppContext
+import explore.model.Attachment
 import explore.model.Focused
 import explore.model.Group
 import explore.model.GroupList
@@ -21,7 +22,6 @@ import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
-import lucuma.core.model.ObsAttachment
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.schemas.ObservationDB
@@ -76,7 +76,7 @@ private def groupWithId(groupId: Group.Id): Lens[GroupList, Option[Group]] =
 
 def obsEditAttachments(
   obsId:         Observation.Id,
-  attachmentIds: Set[ObsAttachment.Id]
+  attachmentIds: Set[Attachment.Id]
 )(using
   FetchClient[IO, ObservationDB]
 ): IO[Unit] =
@@ -84,7 +84,7 @@ def obsEditAttachments(
     .execute:
       UpdateObservationsInput(
         WHERE = obsId.toWhereObservation.assign,
-        SET = ObservationPropertiesInput(obsAttachments = attachmentIds.toList.assign)
+        SET = ObservationPropertiesInput(attachments = attachmentIds.toList.assign)
       )
     .void
 

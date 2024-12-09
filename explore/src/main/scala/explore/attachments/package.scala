@@ -11,25 +11,31 @@ import crystal.Pot
 import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ObsAttachment
-import explore.model.ObsAttachmentList
+import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.*
 import explore.utils.OdbRestClient
 import fs2.dom
 import japgolly.scalajs.react.*
-import lucuma.core.model.ObsAttachment as ObsAtt
+import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.Timestamp
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.table.ColumnId
 import lucuma.refined.*
-import lucuma.schemas.enums.ObsAttachmentType
 import lucuma.ui.primereact.LucumaPrimeStyles
 import org.scalajs.dom.File as DomFile
 import org.typelevel.log4cats.Logger
+
+enum Action(val msg: String) derives Eq:
+  case None     extends Action("")
+  case Insert   extends Action("Uploading Attachment")
+  case Replace  extends Action("Uploading Replacment")
+  case Download extends Action("Downloading Attachment")
+  case Unlink   extends Action("Unlinking Attachment")
 
 trait AttachmentUtils:
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
@@ -74,26 +80,19 @@ trait AttachmentUtils:
 
   val tableLabelButtonClasses = LabelButtonClasses |+| PrimeStyles.ButtonSecondary
 
-enum Action(val msg: String) derives Eq:
-  case None     extends Action("")
-  case Insert   extends Action("Uploading Attachment")
-  case Replace  extends Action("Uploading Replacment")
-  case Download extends Action("Downloading Attachment")
-  case Unlink   extends Action("Unlinking Attachment")
-
 trait ObsAttachmentUtils extends AttachmentUtils:
-  type UrlMapKey = (ObsAtt.Id, Timestamp)
+  type UrlMapKey = (Attachment.Id, Timestamp)
   type UrlMap    = Map[UrlMapKey, Pot[String]]
 
-  extension (oa: ObsAttachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
+  extension (oa: Attachment) def toMapKey: UrlMapKey = (oa.id, oa.updatedAt)
 
   def insertAttachment(
-    programId:      Program.Id,
-    obsAttachments: View[ObsAttachmentList],
-    client:         OdbRestClient[IO],
-    attType:        ObsAttachmentType,
-    files:          List[DomFile],
-    onSuccess:      ObsAtt.Id => Callback
+    programId:   Program.Id,
+    attachments: View[AttachmentList],
+    client:      OdbRestClient[IO],
+    attType:     AttachmentType,
+    files:       List[DomFile],
+    onSuccess:   Attachment.Id => Callback
   )(using
     ToastCtx[IO]
   ): IO[Unit] =
@@ -102,20 +101,20 @@ trait ObsAttachmentUtils extends AttachmentUtils:
         checkFileSize(f) {
           val name = NonEmptyString.unsafeFrom(f.name)
           client
-            .insertObsAttachment(programId,
-                                 attType,
-                                 name,
-                                 None,
-                                 dom.readReadableStream(IO(f.stream()))
+            .insertAttachment(programId,
+                              attType,
+                              name,
+                              None,
+                              dom.readReadableStream(IO(f.stream()))
             )
             .toastErrors
             .flatMap(id =>
               IO.now().flatMap { now =>
                 (onSuccess(id) *>
-                  obsAttachments
+                  attachments
                     .mod(
                       _.updated(id,
-                                ObsAttachment(
+                                Attachment(
                                   id,
                                   attType,
                                   name,
@@ -134,11 +133,11 @@ trait ObsAttachmentUtils extends AttachmentUtils:
 
   def onInsertFileSelected(
     programId:      Program.Id,
-    obsAttachments: View[ObsAttachmentList],
-    newAttType:     ObsAttachmentType,
+    obsAttachments: View[AttachmentList],
+    newAttType:     AttachmentType,
     client:         OdbRestClient[IO],
     action:         View[Action],
-    onSuccess:      ObsAtt.Id => Callback = _ => Callback.empty
+    onSuccess:      Attachment.Id => Callback = _ => Callback.empty
   )(e: ReactEventFromInput)(using
     ToastCtx[IO],
     Logger[IO]
@@ -157,7 +156,7 @@ trait ObsAttachmentUtils extends AttachmentUtils:
     urlMap: View[UrlMap]
   ): IO[Unit] =
     client
-      .getObsAttachmentUrl(pid, mapKey._1)
+      .getAttachmentUrl(pid, mapKey._1)
       .attempt
       .map {
         case Right(url) => Pot(url)

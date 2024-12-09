@@ -10,7 +10,7 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
-import lucuma.core.model.ObsAttachment
+import lucuma.core.model.Attachment
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
 import lucuma.core.model.User
@@ -67,28 +67,28 @@ object ProgramQueries:
       )
       .void
 
-  def updateObsAttachmentDescription[F[_]: Async](
-    oid:  ObsAttachment.Id,
+  def updateAttachmentDescription[F[_]: Async](
+    oid:  Attachment.Id,
     desc: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    UpdateObsAttachmentMutation[F]
+    UpdateAttachmentMutation[F]
       .execute(
-        UpdateObsAttachmentsInput(
-          WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
-          SET = ObsAttachmentPropertiesInput(description = desc.orUnassign)
+        UpdateAttachmentsInput(
+          WHERE = WhereAttachment(id = WhereOrderAttachmentId(EQ = oid.assign).assign).assign,
+          SET = AttachmentPropertiesInput(description = desc.orUnassign)
         )
       )
       .void
 
-  def updateObsAttachmentChecked[F[_]: Async](
-    oid:     ObsAttachment.Id,
+  def updateAttachmentChecked[F[_]: Async](
+    oid:     Attachment.Id,
     checked: Boolean
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    UpdateObsAttachmentMutation[F]
+    UpdateAttachmentMutation[F]
       .execute(
-        UpdateObsAttachmentsInput(
-          WHERE = WhereObsAttachment(id = WhereOrderObsAttachmentId(EQ = oid.assign).assign).assign,
-          SET = ObsAttachmentPropertiesInput(checked = checked.assign)
+        UpdateAttachmentsInput(
+          WHERE = WhereAttachment(id = WhereOrderAttachmentId(EQ = oid.assign).assign).assign,
+          SET = AttachmentPropertiesInput(checked = checked.assign)
         )
       )
       .void

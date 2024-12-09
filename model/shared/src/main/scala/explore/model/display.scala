@@ -9,9 +9,6 @@ import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcQueryProblem
 import explore.modes.InstrumentConfig
 import lucuma.core.enums.*
-import lucuma.core.enums.EducationalStatus
-import lucuma.core.enums.ObservationWorkflowState
-import lucuma.core.enums.RoleType
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.BrightnessValue
@@ -30,6 +27,9 @@ import lucuma.schemas.model.BasicConfiguration
 import java.text.DecimalFormat
 
 trait DisplayImplicits:
+  given Display[AttachmentType] =
+    Display.by(_.shortName, _.longName)
+
   given Display[Site] =
     Display.byShortName(_.shortName)
 

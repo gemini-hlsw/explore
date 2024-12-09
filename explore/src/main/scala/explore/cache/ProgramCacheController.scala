@@ -12,16 +12,15 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.syntax.*
 import explore.DefaultErrorPolicy
+import explore.model.Attachment
 import explore.model.Execution
 import explore.model.Group
-import explore.model.ObsAttachment
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProgramTimeRange
-import explore.model.ProposalAttachment
 import explore.utils.*
 import fs2.Pipe
 import fs2.Stream
@@ -168,13 +167,12 @@ object ProgramCacheController
         .map(_.program.toList.flatMap(_.allGroupElements.map(_.group).flattenOption))
         .logTime("ProgramGroupsQuery")
 
-    val attachments: IO[(List[ObsAttachment], List[ProposalAttachment])] =
+    val attachments: IO[List[Attachment]] =
       ProgramSummaryQueriesGQL
         .AllProgramAttachments[IO]
         .query(props.programId)
         .map:
-          _.program.fold(List.empty, List.empty): p =>
-            (p.obsAttachments, p.proposalAttachments)
+          _.program.fold(List.empty)(_.attachments)
         .logTime("AllProgramAttachments")
 
     val programs: IO[List[ProgramInfo]] =
@@ -198,15 +196,14 @@ object ProgramCacheController
       val groupPots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
         groups.map(g => g.id -> pending).toMap
       (optProgramDetails, targets, attachments, programs, configurationRequests).mapN:
-        case (pd, ts, (oas, pas), ps, crs) =>
+        case (pd, ts, as, ps, crs) =>
           ProgramSummaries
             .fromLists(
               pd,
               ts,
               observations,
               groups,
-              oas,
-              pas,
+              as,
               ps,
               pending,
               obsPots,
