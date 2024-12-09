@@ -48,30 +48,6 @@ trait OdbRestClient[F[_]] {
   ): F[Unit]
 
   def deleteAttachment(programId: Program.Id, attachmentId: Attachment.Id): F[Unit]
-
-  // def getProposalAttachmentUrl(
-  //   programId:      Program.Id,
-  //   attachmentType: ProposalAttachmentType
-  // ): F[String]
-
-  // def insertProposalAttachment(
-  //   programId:      Program.Id,
-  //   attachmentType: ProposalAttachmentType,
-  //   fileName:       NonEmptyString,
-  //   data:           Stream[F, Byte]
-  // ): F[Unit]
-
-  // def updateProposalAttachment(
-  //   programId:      Program.Id,
-  //   attachmentType: ProposalAttachmentType,
-  //   fileName:       NonEmptyString,
-  //   data:           Stream[F, Byte]
-  // ): F[Unit]
-
-  // def deleteProposalAttachment(
-  //   programId:      Program.Id,
-  //   attachmentType: ProposalAttachmentType
-  // ): F[Unit]
 }
 
 object OdbRestClient {
