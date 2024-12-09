@@ -30,7 +30,6 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.RedeemInvitationMutation
 
 enum RedeemInviteProcess(private val tag: String) derives Enumerated:
@@ -55,7 +54,7 @@ object RedeemInvitationsPopup:
     .useState(IsOpen(true))
     .useStateView[IsActive](IsActive(false))
     .useStateView(RedeemInviteProcess.Idle)
-    .useStateView("")
+    .useStateView("") // key
     .useStateView(IsKeyValid(false))
     .useStateView(ErrorMsg(none))
     .useStateView(none[ProgramInvitation])
@@ -87,8 +86,7 @@ object RedeemInvitationsPopup:
                 .to[IO]
             case e                            =>
               val msg = s"Error redeeming invitation with key $key"
-              Logger[IO].error(e)(msg) *>
-                (process.set(RedeemInviteProcess.Error) *> errorMsg.set(ErrorMsg(msg.some))).to[IO]
+              (process.set(RedeemInviteProcess.Error) *> errorMsg.set(ErrorMsg(msg.some))).to[IO]
           }
           .void
 
@@ -103,7 +101,7 @@ object RedeemInvitationsPopup:
           icon = Icons.PaperPlaneTop,
           loading = process.get === RedeemInviteProcess.Running,
           disabled = !isKeyValid.get.value || process.get === RedeemInviteProcess.Done,
-          onClick = redeem(key.get.trim).runAsync,
+          onClick = process.set(RedeemInviteProcess.Running) *> redeem(key.get.trim).runAsync,
           label = "Redeem"
         ).compact.unless(process.get === RedeemInviteProcess.Done),
         result.get.map(r =>
@@ -130,7 +128,7 @@ object RedeemInvitationsPopup:
         dismissableMask = props.onClose.isDefined,
         resizable = false,
         clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ApiKeysPopup,
-        header = "Reedem invitation.",
+        header = "Redeem invitation.",
         footer = footer
       )(
         React.Fragment(
