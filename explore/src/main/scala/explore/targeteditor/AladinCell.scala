@@ -292,7 +292,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          props.positions,
          props.obsConf.flatMap(_.posAngleConstraint),
          props.obsConf.flatMap(_.constraints),
-         props.obsConf.flatMap(_.wavelength),
+         props.obsConf.flatMap(_.centralWavelength),
          props.obsTime,
          props.obsConf.flatMap(_.configuration),
          candidates.toOption.flatten
@@ -303,7 +303,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               positions,
               _,
               Some(constraints),
-              Some(wavelength),
+              Some(centralWavelength),
               vizTime,
               observingMode,
               candidates
@@ -323,7 +323,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                   AgsMessage.AgsRequest(
                     props.asterism.focus.id,
                     constraints,
-                    wavelength,
+                    centralWavelength.value,
                     base.value,
                     props.sciencePositionsAt(vizTime),
                     positions,

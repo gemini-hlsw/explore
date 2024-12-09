@@ -30,6 +30,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
 import lucuma.core.util.arb.ArbTimeSpan.given
+import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.arb.ArbObservingMode
 import org.scalacheck.Arbitrary
@@ -64,7 +65,7 @@ trait ArbObservation:
         vizTime             <- arbitrary[Option[Instant]]
         vizDuration         <- arbitrary[Option[TimeSpan]]
         posAngleConstraint  <- arbitrary[PosAngleConstraint]
-        wavelength          <- arbitrary[Option[Wavelength]]
+        centralWavelength   <- arbitrary[Option[Wavelength]].map(_.map(CentralWavelength.apply))
         validations         <- arbitrary[List[ObservationValidation]]
         observerNotes       <- arbitrary[Option[NonEmptyString]]
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
@@ -87,7 +88,7 @@ trait ArbObservation:
         vizTime,
         vizDuration,
         posAngleConstraint,
-        wavelength,
+        centralWavelength,
         observerNotes,
         calibrationRole,
         scienceBand,
@@ -135,7 +136,7 @@ trait ArbObservation:
          o.observationTime,
          o.observationDuration,
          o.posAngleConstraint,
-         o.wavelength,
+         o.centralWavelength.map(_.value),
          o.observerNotes.map(_.value),
          o.calibrationRole,
          o.scienceBand,
