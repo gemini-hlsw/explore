@@ -55,7 +55,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
-import lucuma.core.math.Wavelength
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
@@ -378,7 +377,7 @@ object ObsTabTiles:
                 basicConfiguration,
                 paProps.some,
                 constraints.get.some,
-                props.observation.get.observingMode.flatMap(_.centralWavelength.map(_.value)),
+                props.observation.get.observingMode.flatMap(_.centralWavelength),
                 sequenceOffsets.toOption.flatMap(_.science),
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,

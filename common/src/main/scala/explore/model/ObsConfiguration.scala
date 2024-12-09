@@ -18,6 +18,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.CentralWavelength
 import org.typelevel.cats.time.instances.duration.*
 
 import java.time.Duration
@@ -26,7 +27,7 @@ case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],
   posAngleProperties: Option[PAProperties],
   constraints:        Option[ConstraintSet],
-  centralWavelength:  Option[Wavelength],
+  centralWavelength:  Option[CentralWavelength],
   scienceOffsets:     Option[NonEmptyList[Offset]],
   acquisitionOffsets: Option[NonEmptyList[Offset]],
   averagePA:          Option[AveragePABasis],
