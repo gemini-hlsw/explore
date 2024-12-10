@@ -40,35 +40,32 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
             .drain
       .useResourceOnMountBy: (props, applyStreamUpdates) =>
         for
-          _          <- Resource.eval(props.modState(_ => pending)) // Initialize on mount.
+          _               <- Resource.eval(props.modState(_ => pending)) // Initialize on mount.
           // Start the update fiber. We want subscriptions to start before initial query.
           // This way we don't miss updates.
           // The update fiber will only update once the cache is initialized (via latch).
           // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
-          latch      <- Resource.eval(Deferred[F, Unit])
+          latch           <- Resource.eval(Deferred[F, Unit])
           // Next is the update fiber. It will start getting updates immediately,
           // but will wait until the cache is initialized to start applying them.
           // Will run until the component is unmounted.
-          _          <- updateStream(props)
-                          .map(_.attempt)
-                          .map(applyStreamUpdates)
-                          .useForever
-                          .background
+          updateStreamPot <- updateStream(props).map(_.attempt)
+          _               <- applyStreamUpdates(updateStreamPot).background
           // initResult is (initValue, delayedInitsStream)
-          initResult <- Resource.eval:
-                          initial(props).attemptPot.map:
-                            _.adaptError: t =>
-                              new RuntimeException(s"Initialization Error: ${t.getMessage}", t)
+          initResult      <- Resource.eval:
+                               initial(props).attemptPot.map:
+                                 _.adaptError: t =>
+                                   new RuntimeException(s"Initialization Error: ${t.getMessage}", t)
           // Apply initial value.
-          _          <- Resource.eval(props.modState(_ => initResult.map(_._1)))
+          _               <- Resource.eval(props.modState(_ => initResult.map(_._1)))
           // Build and release update queue.
-          _          <- Resource.eval(latch.complete(()))
+          _               <- Resource.eval(latch.complete(()))
           // Apply delayed inits.
-          _          <- initResult.toOption
-                          .map(_._2.attempt)
-                          .map(applyStreamUpdates)
-                          .orEmpty
-                          .background
+          _               <- initResult.toOption
+                               .map(_._2.attempt)
+                               .map(applyStreamUpdates)
+                               .orEmpty
+                               .background
         yield ()
       .render: (_, _, _) =>
         EmptyVdom
