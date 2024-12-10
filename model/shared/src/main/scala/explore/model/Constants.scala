@@ -62,7 +62,7 @@ trait Constants:
 
   val Calculating        = "Calculating..."
   val NoGuideStarMessage = "No guidestar available"
-  val NoDuration         = "Not enough parameters to calculate"
+  val NoDuration         = "No duration available"
   val MissingMode        = "Mode not selected"
   val MissingCandidates  = "No catalog stars available"
   val BadTimingWindow    = "Review the dates on this timing window."

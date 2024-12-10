@@ -5,43 +5,30 @@ package explore.model
 
 import cats.syntax.all.*
 import io.circe.Decoder
-import io.circe.DecodingFailure
-import lucuma.core.enums.Instrument
 import lucuma.core.math.Offset
 import lucuma.odb.json.offset.decoder.given
 
-case class StepConfigOffset(offset: Option[Offset]) derives Decoder
+case class StepConfigOffset(offsets: List[Offset]) derives Decoder
 
-case class AtomOffset(steps: List[StepConfigOffset]) derives Decoder
+case class ExecutionDigestOffsets(
+  acquistion: Option[StepConfigOffset],
+  science:    Option[StepConfigOffset]
+)
 
-case class ExecutionSequence(
-  nextAtom:       AtomOffset,
-  possibleFuture: List[AtomOffset]
-) derives Decoder
+object ExecutionDigestOffsets:
+  given Decoder[ExecutionDigestOffsets] = c =>
+    for
+      acquisition <- c.downField("acquisition").as[Option[StepConfigOffset]]
+      science     <- c.downField("science").as[Option[StepConfigOffset]]
+    yield ExecutionDigestOffsets(acquisition, science)
 
-case class ExecutionOffsets(science: ExecutionSequence, acquisition: Option[ExecutionSequence]):
-  def allScienceOffsets: List[Offset] =
-    science.nextAtom.steps.flatMap(_.offset) ++
-      science.possibleFuture.flatMap(_.steps.flatMap(_.offset))
+case class ExecutionOffsets(digest: Option[ExecutionDigestOffsets]):
+  def acquisitionOffsets: List[Offset] =
+    digest.foldMap(_.acquistion.foldMap(_.offsets))
 
-  def allAcquisitionOffsets: List[Offset] =
-    acquisition.foldMap(_.nextAtom.steps.flatMap(_.offset)) ++
-      acquisition.foldMap(_.possibleFuture.flatMap(_.steps.flatMap(_.offset)))
+  def scienceOffsets: List[Offset] =
+    digest.foldMap(_.science.foldMap(_.offsets))
 
 object ExecutionOffsets:
-  private type OffsetTuple = (ExecutionSequence, Option[ExecutionSequence])
-  given Decoder[OffsetTuple] = Decoder.instance: c =>
-    for
-      science     <- c.downField("science").as[ExecutionSequence]
-      acquisition <- c.downField("acquisition").as[Option[ExecutionSequence]]
-    yield (science, acquisition)
-
-  given Decoder[ExecutionOffsets] = Decoder.instance: c =>
-    c.downField("instrument")
-      .as[Instrument]
-      .flatMap:
-        case Instrument.GmosNorth => c.downField("gmosNorth").as[OffsetTuple]
-        case Instrument.GmosSouth => c.downField("gmosSouth").as[OffsetTuple]
-        case _                    => DecodingFailure("Only Gmos supported", c.history).asLeft
-      .map: t =>
-        ExecutionOffsets(t._1, t._2)
+  given Decoder[ExecutionOffsets] = c =>
+    c.downField("digest").as[Option[ExecutionDigestOffsets]].map(ExecutionOffsets.apply)
