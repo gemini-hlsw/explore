@@ -24,76 +24,15 @@ object ObsQueriesGQL:
   @GraphQL
   trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
     val document = s"""
-      fragment stepDataGN on GmosNorthStep {
-        id
-        telescopeConfig {
-          offset $OffsetSubquery
-        }
-      }
-
-      fragment stepDataGS on GmosSouthStep {
-        id
-        telescopeConfig {
-          offset $OffsetSubquery
-        }
-      }
-
       query($$obsId: ObservationId!) {
         observation(observationId: $$obsId) {
           execution {
-            config {
-              instrument
-              gmosSouth {
-                acquisition {
-                  nextAtom {
-                    steps {
-                      ...stepDataGS
-                    }
-                  }
-                  possibleFuture {
-                    steps {
-                      ...stepDataGS
-                    }
-                  }
-                }
-                science {
-                  nextAtom {
-                    steps {
-                      ...stepDataGS
-                    }
-                  }
-                  possibleFuture {
-                    steps {
-                      ...stepDataGS
-                    }
-                  }
-                }
+            digest {
+              acquisition {
+                offsets $OffsetSubquery
               }
-              gmosNorth {
-                acquisition {
-                  nextAtom {
-                    steps {
-                      ...stepDataGN
-                    }
-                  }
-                  possibleFuture {
-                    steps {
-                      ...stepDataGN
-                    }
-                  }
-                }
-                science {
-                  nextAtom {
-                    steps {
-                      ...stepDataGN
-                    }
-                  }
-                  possibleFuture {
-                    steps {
-                      ...stepDataGN
-                    }
-                  }
-                }
+              science {
+                offsets $OffsetSubquery
               }
             }
           }
@@ -103,8 +42,7 @@ object ObsQueriesGQL:
 
     object Data:
       object Observation:
-        object Execution:
-          type Config = explore.model.ExecutionOffsets
+        type Execution = explore.model.ExecutionOffsets
 
   @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:
@@ -173,7 +111,7 @@ object ObsQueriesGQL:
   trait CreateConfigurationRequestMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation($$input: CreateConfigurationRequestInput!) {
-        createConfigurationRequest(input: $$input) 
+        createConfigurationRequest(input: $$input)
           $ConfigurationRequestSubquery
       }
     """
