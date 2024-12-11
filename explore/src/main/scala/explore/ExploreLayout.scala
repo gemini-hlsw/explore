@@ -77,29 +77,43 @@ object ExploreLayout:
           Callback(document.title = s"Explore - ${r}")
       .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
         (props, help, ctx) => _ =>
-          val routingInfo          = RoutingInfo.from(props.resolution.page)
-          def goToTab(tab: AppTab) =
-            ctx.setPageVia(tab, routingInfo.programId, routingInfo.focused, SetRouteVia.HistoryPush)
+          RoutingInfo
+            .from(props.resolution.page)
+            .map: routingInfo =>
+              def goToTab(tab: AppTab) =
+                ctx.setPageVia(
+                  tab,
+                  routingInfo.programId,
+                  routingInfo.focused,
+                  SetRouteVia.HistoryPush
+                )
 
-          val callbacks: ShortcutCallbacks = {
-            case GoToObs                         =>
-              goToTab(AppTab.Observations)
-            case GoToTargets                     =>
-              goToTab(AppTab.Targets)
-            case GoToProposals                   =>
-              goToTab(AppTab.Proposal)
-            case GoToConstraints                 =>
-              goToTab(AppTab.Constraints)
-            case GoToOverview                    =>
-              goToTab(AppTab.Overview)
-            case ShortcutsHelp1 | ShortcutsHelp2 =>
-              help.displayedHelp.set(Some("shortcuts.md".refined))
-          }
-          UseHotkeysProps(
-            (ShortcutsHelpKeys :::
-              List(GoToObs, GoToTargets, GoToProposals, GoToConstraints, GoToOverview)).toHotKeys,
-            callbacks
-          )
+              val callbacks: ShortcutCallbacks =
+                case GoToObs                         =>
+                  goToTab(AppTab.Observations)
+                case GoToTargets                     =>
+                  goToTab(AppTab.Targets)
+                case GoToProposals                   =>
+                  goToTab(AppTab.Proposal)
+                case GoToConstraints                 =>
+                  goToTab(AppTab.Constraints)
+                case GoToOverview                    =>
+                  goToTab(AppTab.Overview)
+                case ShortcutsHelp1 | ShortcutsHelp2 =>
+                  help.displayedHelp.set(Some("shortcuts.md".refined))
+
+              UseHotkeysProps(
+                (ShortcutsHelpKeys :::
+                  List(
+                    GoToObs,
+                    GoToTargets,
+                    GoToProposals,
+                    GoToConstraints,
+                    GoToOverview
+                  )).toHotKeys,
+                callbacks
+              )
+            .getOrElse(UseHotkeysProps(List.empty, Callback.empty))
       }
       .useToastRef
       .useEffectWithDepsBy((_, _, _, toastRef) => toastRef)((_, _, ctx, _) =>
@@ -172,138 +186,144 @@ object ExploreLayout:
             _.value.toString,
             ExploreEvent.LogoutEvent(_)
           )(onLogout =>
-            val routingInfo = RoutingInfo.from(props.resolution.page)
-
-            val routingInfoView: View[RoutingInfo] =
-              View(
-                routingInfo,
-                (mod, cb) =>
-                  val oldRoute = routingInfo
-                  val newRoute = mod(routingInfo)
-                  ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >>
-                    cb(oldRoute, newRoute)
-              )
-
-            val helpView: View[Option[NonEmptyString]] = helpCtx.displayedHelp
-
-            given Display[AppTab] = _.title
-
-            val (showProgsPopup, msg, isSubmitted, proposalReference)
-              : (Boolean, Option[String], Boolean, Option[ProposalReference]) =
-              props.model.programSummariesValue.toOption.fold((false, none, false, none)): pss =>
-                routingInfo.optProgramId.fold((true, none, false, none)): id =>
-                  if (pss.programs.get(id).exists(!_.deleted))
-                    (false, none, pss.proposalIsSubmitted, pss.proposalId)
-                  else
-                    (true,
-                     s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
-                     false,
-                     none
-                    )
-
-            val deadline: Option[Timestamp] =
-              props.model.programSummariesValue.toOption
-                .flatMap: programSummaries =>
-                  (ProgramSummaries.proposal.getOption(programSummaries).flatten,
-                   RootModel.cfps.get(view.get).toOption
-                  ).mapN: (p, c) =>
-                    val piP = ProgramSummaries.piPartner.getOption(programSummaries)
-                    p.deadline(c, piP)
-                  .flatten
-
-            val cacheKey: String =
-              userVault.get
-                .map(_.user)
-                .foldMap(u => s"${routingInfo.programId}-${u.id}-${u.role.name}")
-
-            React.Fragment(
-              ConfirmDialog(),
-              Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
-              Sidebar(
-                position = Sidebar.Position.Right,
-                size = Sidebar.Size.Medium,
-                visible = helpView.get.isDefined,
-                clazz = ExploreStyles.HelpSidebar,
-                showCloseIcon = false,
-                onHide = helpView.set(none).when_(helpView.get.isDefined)
-              )(
-                <.div(
-                  helpView.get
-                    .map(h => HelpBody(helpCtx, h))
-                    .when(helpView.get.isDefined)
-                )
-              ),
-              <.div(LayoutStyles.MainGrid)(
-                ModesCacheController(view.zoom(RootModel.spectroscopyModes).async.mod),
-                CfpCacheController(view.zoom(RootModel.cfps).async.mod),
-                // This might use the `RoutingInfo.dummyProgramId` if the URL had no
-                // program id in it. But, that's OK, because the list of user
-                // programs will still load and they will be redirected to the program
-                // selection popup.
-                ProgramCacheController(
-                  routingInfo.programId,
-                  props.model.programSummaries.throttledView.mod
-                ).withKey(cacheKey),
-                userVault.mapValue: (vault: View[UserVault]) =>
-                  React.Fragment(
-                    PreferencesCacheController(
-                      vault.get.user.id,
-                      view.zoom(RootModel.userPreferences).async.mod
-                    ).withKey(cacheKey),
-                    props.model.rootModel
-                      .zoom:
-                        RootModel.userPreferences
-                          .andThen(Pot.readyPrism)
-                          .andThen(UserPreferences.globalPreferences)
-                      .asView
-                      .map(prefs =>
-                        TopBar(
-                          vault,
-                          routingInfo.optProgramId,
-                          props.model.programSummariesValue.toOption
-                            .flatMap(_.programOrProposalReference),
-                          view.zoom(RootModel.localPreferences).get,
-                          view.zoom(RootModel.undoStacks),
-                          props.model.programSummaries.throttlerView
-                            .zoom(Pot.readyPrism)
-                            .zoom(ProgramSummaries.programs),
-                          theme,
-                          onLogout >> view.zoom(RootModel.vault).set(none).toAsync,
-                          prefs
-                        )
-                      )
-                  ),
-                SideTabs(
-                  "side-tabs".refined,
-                  routingInfoView.zoom(RoutingInfo.appTab),
-                  ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
-                  _.separatorAfter,
-                  tab =>
-                    props.model.programSummariesValue.toOption
-                      .flatMap(_.optProgramDetails)
-                      .forall: program =>
-                        // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                        (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                          program.programType === ProgramType.Science &&
-                          (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
-                ),
-                if (showProgsPopup)
-                  ProgramsPopup(
-                    currentProgramId = none,
-                    props.model.programSummaries.throttlerView
-                      .zoom(Pot.readyPrism)
-                      .zoom(ProgramSummaries.programs),
-                    undoStacks = view.zoom(RootModel.undoStacks),
-                    onLogout = (onLogout >>
-                      view.zoom(RootModel.vault).set(none).toAsync).some,
-                    message = msg
-                  ): VdomElement
-                else
-                  <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
-                    props.resolution.renderP(props.model),
-                    TagMod.when(isSubmitted)(SubmittedProposalMessage(proposalReference, deadline))
+            RoutingInfo
+              .from(props.resolution.page)
+              .map { routingInfo =>
+                val routingInfoView: View[RoutingInfo] =
+                  View(
+                    routingInfo,
+                    (mod, cb) =>
+                      val oldRoute = routingInfo
+                      val newRoute = mod(routingInfo)
+                      ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >>
+                        cb(oldRoute, newRoute)
                   )
-              )
-            )
+
+                val helpView: View[Option[NonEmptyString]] = helpCtx.displayedHelp
+
+                given Display[AppTab] = _.title
+
+                val (showProgsPopup, msg, isSubmitted, proposalReference)
+                  : (Boolean, Option[String], Boolean, Option[ProposalReference]) =
+                  props.model.programSummariesValue.toOption.fold((false, none, false, none)):
+                    pss =>
+                      routingInfo.optProgramId.fold((true, none, false, none)): id =>
+                        if (pss.programs.get(id).exists(!_.deleted))
+                          (false, none, pss.proposalIsSubmitted, pss.proposalId)
+                        else
+                          (true,
+                           s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
+                           false,
+                           none
+                          )
+
+                val deadline: Option[Timestamp] =
+                  props.model.programSummariesValue.toOption
+                    .flatMap: programSummaries =>
+                      (ProgramSummaries.proposal.getOption(programSummaries).flatten,
+                       RootModel.cfps.get(view.get).toOption
+                      ).mapN: (p, c) =>
+                        val piP = ProgramSummaries.piPartner.getOption(programSummaries)
+                        p.deadline(c, piP)
+                      .flatten
+
+                val cacheKey: String =
+                  userVault.get
+                    .map(_.user)
+                    .foldMap(u => s"${routingInfo.programId}-${u.id}-${u.role.name}")
+
+                React.Fragment(
+                  ConfirmDialog(),
+                  Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
+                  Sidebar(
+                    position = Sidebar.Position.Right,
+                    size = Sidebar.Size.Medium,
+                    visible = helpView.get.isDefined,
+                    clazz = ExploreStyles.HelpSidebar,
+                    showCloseIcon = false,
+                    onHide = helpView.set(none).when_(helpView.get.isDefined)
+                  )(
+                    <.div(
+                      helpView.get
+                        .map(h => HelpBody(helpCtx, h))
+                        .when(helpView.get.isDefined)
+                    )
+                  ),
+                  <.div(LayoutStyles.MainGrid)(
+                    ModesCacheController(view.zoom(RootModel.spectroscopyModes).async.mod),
+                    CfpCacheController(view.zoom(RootModel.cfps).async.mod),
+                    // This might use the `RoutingInfo.dummyProgramId` if the URL had no
+                    // program id in it. But, that's OK, because the list of user
+                    // programs will still load and they will be redirected to the program
+                    // selection popup.
+                    ProgramCacheController(
+                      routingInfo.programId,
+                      props.model.programSummaries.throttledView.mod
+                    ).withKey(cacheKey),
+                    userVault.mapValue: (vault: View[UserVault]) =>
+                      React.Fragment(
+                        PreferencesCacheController(
+                          vault.get.user.id,
+                          view.zoom(RootModel.userPreferences).async.mod
+                        ).withKey(cacheKey),
+                        props.model.rootModel
+                          .zoom:
+                            RootModel.userPreferences
+                              .andThen(Pot.readyPrism)
+                              .andThen(UserPreferences.globalPreferences)
+                          .asView
+                          .map(prefs =>
+                            TopBar(
+                              vault,
+                              routingInfo.optProgramId,
+                              props.model.programSummariesValue.toOption
+                                .flatMap(_.programOrProposalReference),
+                              view.zoom(RootModel.localPreferences).get,
+                              view.zoom(RootModel.undoStacks),
+                              props.model.programSummaries.throttlerView
+                                .zoom(Pot.readyPrism)
+                                .zoom(ProgramSummaries.programs),
+                              theme,
+                              onLogout >> view.zoom(RootModel.vault).set(none).toAsync,
+                              prefs
+                            )
+                          )
+                      ),
+                    SideTabs(
+                      "side-tabs".refined,
+                      routingInfoView.zoom(RoutingInfo.appTab),
+                      ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
+                      _.separatorAfter,
+                      tab =>
+                        props.model.programSummariesValue.toOption
+                          .flatMap(_.optProgramDetails)
+                          .forall: program =>
+                            // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                            (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                              program.programType === ProgramType.Science &&
+                              (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                    ),
+                    if (showProgsPopup)
+                      ProgramsPopup(
+                        currentProgramId = none,
+                        props.model.programSummaries.throttlerView
+                          .zoom(Pot.readyPrism)
+                          .zoom(ProgramSummaries.programs),
+                        undoStacks = view.zoom(RootModel.undoStacks),
+                        onLogout = (onLogout >>
+                          view.zoom(RootModel.vault).set(none).toAsync).some,
+                        message = msg
+                      ): VdomElement
+                    else
+                      <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
+                        props.resolution.renderP(props.model),
+                        TagMod
+                          .when(isSubmitted)(SubmittedProposalMessage(proposalReference, deadline))
+                      )
+                  )
+                )
+              }
+              .getOrElse:
+                props.resolution.renderP(props.model)
           )
         )

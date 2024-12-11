@@ -27,7 +27,7 @@ object RoutingInfo {
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
   private val dummyProgramId = Program.Id(Long.MaxValue.refined)
 
-  def from(page: Page): RoutingInfo = page match
+  private val fromPage: PartialFunction[Page, RoutingInfo] =
     case NoProgramPage                         => RoutingInfo(AppTab.Overview, none, Focused.None)
     case ProgramPage(p)                        => RoutingInfo(AppTab.Program, p.some, Focused.None)
     case HomePage(p)                           => RoutingInfo(AppTab.Overview, p.some, Focused.None)
@@ -50,6 +50,8 @@ object RoutingInfo {
     case SchedulingBasePage(p)                 => RoutingInfo(AppTab.Scheduling, p.some, Focused.None)
     case SchedulingObsPage(p, obsIds)          =>
       RoutingInfo(AppTab.Scheduling, p.some, Focused.obsSet(obsIds))
+
+  val from: Page => Option[RoutingInfo] = fromPage.lift
 
   def getPage(
     tab:       AppTab,

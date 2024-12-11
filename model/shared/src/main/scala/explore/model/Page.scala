@@ -11,6 +11,7 @@ import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import monocle.Iso
+import lucuma.core.model.ObservationReference
 
 enum Page derives Eq:
   case NoProgramPage                                                                    extends Page
@@ -30,6 +31,7 @@ enum Page derives Eq:
   case ConstraintsObsPage(programId: Program.Id, obsId: ObsIdSet)                       extends Page
   case SchedulingBasePage(programId: Program.Id)                                        extends Page
   case SchedulingObsPage(programId: Program.Id, obsId: ObsIdSet)                        extends Page
+  case ObservationReferenceResolverPage(obsRef: ObservationReference)                   extends Page
 
 object Page:
   object HomePage:
@@ -111,3 +113,9 @@ object Page:
       Iso[(Program.Id, NonEmptySet[Observation.Id]), SchedulingObsPage] { case (p, o) =>
         Page.SchedulingObsPage(p, ObsIdSet(o))
       }(p => (p.programId, p.obsId.idSet))
+
+  object ObservationReferenceResolverPage:
+    val iso: Iso[ObservationReference, ObservationReferenceResolverPage] =
+      Iso[ObservationReference, ObservationReferenceResolverPage](
+        Page.ObservationReferenceResolverPage(_)
+      )(_.obsRef)
