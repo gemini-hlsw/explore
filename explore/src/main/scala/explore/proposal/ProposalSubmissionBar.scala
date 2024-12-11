@@ -43,7 +43,7 @@ case class ProposalSubmissionBar(
   proposalStatus: View[ProposalStatus],
   deadline:       Option[Timestamp],
   callId:         Option[CallForProposals.Id],
-  isStdUser:      Boolean
+  canSubmit:      Boolean
 ) extends ReactFnProps(ProposalSubmissionBar.component)
 
 object ProposalSubmissionBar:
@@ -137,7 +137,7 @@ object ProposalSubmissionBar:
                     )
                 )
                 .when:
-                  props.isStdUser && props.proposalStatus.get === ProposalStatus.NotSubmitted
+                  props.canSubmit && props.proposalStatus.get === ProposalStatus.NotSubmitted
               ,
               Button(
                 "Retract Proposal",
@@ -146,7 +146,7 @@ object ProposalSubmissionBar:
                 disabled = isUpdatingStatus.get.value || isDueDeadline
               ).compact.tiny
                 .when:
-                  props.isStdUser && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
+                  props.canSubmit && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
               ,
               errorMessage.get
                 .map(r => Message(text = r, severity = Message.Severity.Error))

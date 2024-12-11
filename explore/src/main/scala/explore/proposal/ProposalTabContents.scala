@@ -56,7 +56,8 @@ case class ProposalTabContents(
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   attachments:       View[AttachmentList],
   undoStacks:        View[UndoStacks[IO, Proposal]],
-  layout:            LayoutsMap
+  layout:            LayoutsMap,
+  userIsReadonlyCoi: Boolean
 ) extends ReactFnProps(ProposalTabContents.component)
 
 object ProposalTabContents:
@@ -82,8 +83,10 @@ object ProposalTabContents:
   private val component = ScalaFnComponent
     .withHooks[Props]
     .useContext(AppContext.ctx)
-    .useMemoBy((props, _) => props.programDetails.get.proposalStatus): (_, _) =>
-      p => p === ProposalStatus.Submitted || p === ProposalStatus.Accepted
+    .useMemoBy((props, _) => (props.programDetails.get.proposalStatus, props.userIsReadonlyCoi)):
+      (_, _) =>
+        (status, roCoi) =>
+          status === ProposalStatus.Submitted || status === ProposalStatus.Accepted || roCoi
     .render: (props, ctx, readonly) =>
       import ctx.given
 
@@ -132,7 +135,7 @@ object ProposalTabContents:
                 props.programDetails.zoom(ProgramDetails.proposalStatus),
                 deadline,
                 proposalView.get.callId,
-                isStdUser
+                isStdUser && !props.userIsReadonlyCoi
               )
             )
           )
