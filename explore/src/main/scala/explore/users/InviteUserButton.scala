@@ -3,6 +3,7 @@
 
 package explore.users
 
+import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.hooks.*
 import explore.Icons
@@ -16,6 +17,8 @@ import lucuma.core.model.Program
 import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.Tooltip
+import lucuma.react.primereact.TooltipOptions
 import lucuma.react.primereact.hooks.all.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
@@ -35,6 +38,12 @@ object InviteUserButton:
       .useOverlayPanelRef
       .useStateView(CreateInviteStatus.Idle)
       .render: (props, overlayRef, createInviteStatus) =>
+        val ttOptions =
+          TooltipOptions(position =
+            if (props.role === ProgramUserRole.Coi) Tooltip.Position.Right
+            else Tooltip.Position.Left
+          )
+
         <.div(
           ExploreStyles.InviteUserButton,
           InviteUserPopup(
@@ -50,6 +59,7 @@ object InviteUserButton:
             loading = createInviteStatus.get == CreateInviteStatus.Running,
             icon = Icons.UserPlus,
             tooltip = s"Create ${props.role.shortName} invitation",
+            tooltipOptions = ttOptions,
             onClickE = overlayRef.toggle
           ).tiny.compact
         )

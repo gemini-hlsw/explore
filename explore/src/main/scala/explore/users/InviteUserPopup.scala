@@ -63,7 +63,8 @@ object InviteUserPopup:
       .useStateView(none[EmailAddress])
       .useState(false)
       .useStateView(none[String])
-      .render: (props, ctx, emailView, validEmail, key) =>
+      .useStateView(true) // default to readonly CoIs.
+      .render: (props, ctx, emailView, validEmail, key, readonlyCoI) =>
         import ctx.given
 
         val createInviteStatus: View[CreateInviteStatus] = props.createInviteStatus
@@ -72,11 +73,15 @@ object InviteUserPopup:
           email:   EmailAddress,
           viewKey: View[Option[String]]
         ): IO[Unit] =
+          val role =
+            if (props.role === ProgramUserRole.Coi && readonlyCoI.get)
+              ProgramUserRole.CoiRO
+            else props.role
           (props.createInviteStatus.set(CreateInviteStatus.Running).to[IO] *>
             CreateInviteMutation[IO].execute(
               props.programId,
               email.value.value,
-              props.role
+              role
             )).attempt
             .flatMap:
               case Left(e)  =>
@@ -102,7 +107,16 @@ object InviteUserPopup:
                   disabled = createInviteStatus.get === CreateInviteStatus.Running,
                   validFormat = MailValidator.optional,
                   onValidChange = v => validEmail.setState(v)
-                )(^.autoComplete := "off")
+                )(^.autoComplete := "off"),
+                <.div(
+                  LucumaPrimeStyles.FormField,
+                  CheckboxView(
+                    id = "readonly-coi".refined,
+                    value = readonlyCoI,
+                    label = "Invite as Observer (readonly)",
+                    clazz = LucumaPrimeStyles.FormField
+                  )
+                ).when(props.role === ProgramUserRole.Coi)
               ),
               <.div(LucumaPrimeStyles.FormColumn)(
                 <.label(

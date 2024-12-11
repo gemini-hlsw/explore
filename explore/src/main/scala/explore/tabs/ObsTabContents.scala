@@ -75,7 +75,8 @@ case class ObsTabContents(
   modes:            SpectroscopyModesMatrix,
   focused:          Focused,
   searching:        View[Set[Target.Id]],
-  expandedGroups:   View[Set[Group.Id]]
+  expandedGroups:   View[Set[Group.Id]],
+  readonly:         Boolean
 ) extends ReactFnProps(ObsTabContents.component):
   private val focusedObs: Option[Observation.Id]         = focused.obsSet.map(_.head)
   private val focusedTarget: Option[Target.Id]           = focused.target
@@ -88,7 +89,6 @@ case class ObsTabContents(
   private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
   private val groupTimeRanges: GroupTimeRangeMap         = programSummaries.get.groupTimeRangePots
   private val targets: UndoSetter[TargetList]            = programSummaries.zoom(ProgramSummaries.targets)
-  private val readonly: Boolean                          = programSummaries.get.proposalIsSubmitted
   private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
 
