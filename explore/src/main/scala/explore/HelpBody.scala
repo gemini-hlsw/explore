@@ -6,11 +6,11 @@ package explore
 import cats.effect.*
 import crystal.Pot
 import crystal.react.*
-import crystal.react.hooks.*
 import crystal.syntax.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
+import explore.monadicHooks.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -55,15 +55,18 @@ object HelpBody:
 
   val themeAttr = VdomAttr("data-theme")
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useContext(HelpContext.ctx)
-      .useStateView(pending[String])
-      .useEffectOnMountBy: (props, ctx, _, state) =>
-        load(props.url, ctx.httpClient).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
-      .render: (props, _, helpCtx, state) =>
+  import cats.syntax.all.*
+  import explore.monadicHooks.given
+
+  private val component = ScalaFnComponent
+    .withFnHooks[Props]: props =>
+      for
+        ctx     <- useContext(AppContext.ctx)
+        helpCtx <- useContext(HelpContext.ctx)
+        state   <- useStateView(pending[String])
+        _       <- useEffectOnMount:
+                     load(props.url, ctx.httpClient).flatMap(v => state.set(Pot.fromTry(v)).toAsync)
+      yield
         val imageConv = (s: Uri) => s.host.fold(props.baseUrl.addPath(s.path))(_ => s)
 
         val helpView = helpCtx.displayedHelp
@@ -73,8 +76,7 @@ object HelpBody:
         }
 
         React.Fragment(
-          <.div(
-            ExploreStyles.HelpTitle,
+          <.div(ExploreStyles.HelpTitle)(
             <.h4("Help"),
             <.div(
               <.a(
@@ -86,9 +88,10 @@ object HelpBody:
                 ^.href   := editUrl.toString(),
                 ^.target := "_blank"
               ),
-              Button(icon = Icons.Close,
-                     severity = Button.Severity.Secondary,
-                     onClick = helpView.set(None)
+              Button(
+                icon = Icons.Close,
+                severity = Button.Severity.Secondary,
+                onClick = helpView.set(None)
               ).mini.compact
             )
           ),
@@ -107,8 +110,7 @@ object HelpBody:
               case Pot.Pending                                  =>
                 <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
               case Pot.Error(o) if o.getMessage.contains("404") =>
-                <.div(
-                  ExploreStyles.HelpMarkdownBody,
+                <.div(ExploreStyles.HelpMarkdownBody)(
                   "Not found, maybe you want to create it ",
                   <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
                 )
