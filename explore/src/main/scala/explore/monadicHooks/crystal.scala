@@ -3,9 +3,20 @@
 
 package explore.monadicHooks
 
-import crystal.react.hooks.UseStateView
+import crystal.react.hooks.*
 import crystal.react.View
+import japgolly.scalajs.react.Reusable
+import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 
-// Crystal
+/**
+ * Provides a context in which to run a single effect at a time. When a new effect is submitted, the
+ * previous one is canceled. Also cancels the effect on unmount.
+ *
+ * A submitted effect can be explicitly canceled too.
+ */
+inline def useSingleEffect: HookResult[Reusable[UseSingleEffect[DefaultA]]] =
+  UseSingleEffect.hook.toHookResult
+
+/** Creates component state as a View */
 inline def useStateView[A]: A => HookResult[View[A]] =
   UseStateView.hook.toHookResult
