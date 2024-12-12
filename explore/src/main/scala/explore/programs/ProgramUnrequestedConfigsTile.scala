@@ -45,7 +45,7 @@ import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedMap
 
-object ProgramUnrequestedConfigsTable:
+object ProgramUnrequestedConfigsTile:
   case class Row(
     configuration: Configuration,
     observations:  NonEmptyList[Observation],
@@ -159,6 +159,7 @@ object ProgramUnrequestedConfigsTable:
   case class Title(
     configRequests: View[ConfigurationRequestList],
     observations:   View[ObservationList],
+    readonly:       Boolean,
     tileState:      TileState
   ) extends ReactFnProps(Title.component)
 
@@ -194,26 +195,28 @@ object ProgramUnrequestedConfigsTable:
               ) >>
               table.toggleAllRowsSelected(false)
 
-          React.Fragment(
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.CheckDouble,
-              label = "All",
-              onClick = table.toggleAllRowsSelected(true)
-            ).compact,
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.SquareXMark,
-              label = "None",
-              onClick = table.toggleAllRowsSelected(false)
-            ).compact,
-            ConfigurationRequestEditorPopup(
-              onSubmit = submitRequests,
-              trigger = Button(
-                size = Button.Size.Small,
-                icon = Icons.PaperPlaneTop,
-                label = "Request Approval",
-                disabled = props.tileState.selected.isEmpty || isActive.get.value
-              ).compact
-            )
-          )
+          Option
+            .unless(props.readonly):
+              <.div(ExploreStyles.TableSelectionToolbar)(
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.CheckDouble,
+                  label = "All",
+                  onClick = table.toggleAllRowsSelected(true)
+                ).compact,
+                Button(
+                  size = Button.Size.Small,
+                  icon = Icons.SquareXMark,
+                  label = "None",
+                  onClick = table.toggleAllRowsSelected(false)
+                ).compact,
+                ConfigurationRequestEditorPopup(
+                  onSubmit = submitRequests,
+                  trigger = Button(
+                    size = Button.Size.Small,
+                    icon = Icons.PaperPlaneTop,
+                    label = "Request Approval",
+                    disabled = props.tileState.selected.isEmpty || isActive.get.value
+                  ).compact
+                )
+              )

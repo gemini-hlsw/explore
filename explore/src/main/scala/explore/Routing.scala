@@ -178,7 +178,8 @@ object Routing:
         model.rootModel.zoom(RootModel.vault).get,
         programSummaries.get.programTimesPot,
         cfp.semester,
-        userPreferences(model.rootModel)
+        userPreferences(model.rootModel),
+        model.userIsReadonlyCoi
       )
 
   // The programs popup will be shown
