@@ -43,7 +43,14 @@ inline def useStateViewWithReuse[A: ClassTag: Reusability]: A => HookResult[Reus
 inline def useSerialStateView[A]: A => HookResult[ReuseView[A]] =
   UseSerialStateView.hook.toHookResult
 
-// ... useAsyncEffect and friends
+/**
+ * Run async effect and cancel previously running instances, thus avoiding race conditions. Allows
+ * returning a cleanup effect.
+ */
+// inline def useAsyncEffect[G](effect: G)(using EffectWithCleanup[G, DefaultA]): HookResult[Unit] =
+// HookResult:
+//   UseAsyncEffect.hook(WithDeps(NeverReuse, effect)) // ... urgh protected things...
+// useAsyncEffectWithDepsBy(_ => NeverReuse)(ctx => (_: Reuse[Unit]) => effect(ctx))
 
 // Custom hook example
 import cats.syntax.all.*
