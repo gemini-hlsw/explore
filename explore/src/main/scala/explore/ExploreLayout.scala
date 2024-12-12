@@ -114,15 +114,13 @@ object ExploreLayout:
             .getOrElse(UseHotkeysProps(List.empty, Callback.empty))
       }
       .useToastRef
-      .useEffectWithDepsBy((_, _, _, toastRef) => toastRef)((_, _, ctx, _) =>
+      .useEffectWithDepsBy((_, _, _, toastRef) => toastRef): (_, _, ctx, _) =>
         import ctx.given
 
         toastRef =>
           toastRef.ref.get
-            .flatMap(
+            .flatMap:
               _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
-            )
-      )
       .useStreamOnMountBy: (_, _, ctx, toastRef) =>
         ctx.broadcastChannel.messages.evalTap(
           // This is coming from the js world, we can't match the type
@@ -169,6 +167,7 @@ object ExploreLayout:
         val userVault = view.zoom(RootModel.vault)
 
         React.Fragment(
+          Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
           IfLogged[ExploreEvent](
             "Explore".refined,
             ExploreStyles.LoginTitle,
@@ -232,7 +231,6 @@ object ExploreLayout:
 
                 React.Fragment(
                   ConfirmDialog(),
-                  Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
                   Sidebar(
                     position = Sidebar.Position.Right,
                     size = Sidebar.Size.Medium,

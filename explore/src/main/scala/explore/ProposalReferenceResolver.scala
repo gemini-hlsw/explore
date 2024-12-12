@@ -16,6 +16,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ProposalReference
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Message.Severity
 import lucuma.ui.syntax.pot.*
 import queries.common.ProgramQueriesGQL.ResolveProposalReference
 
@@ -39,8 +40,9 @@ object ProposalReferenceResolver:
               .map: p =>
                 ctx.pushPage((AppTab.Proposal, p.id, Focused.None).some).to[IO]
               .getOrElse:
-                ToastCtx[IO].showToast:
-                  s"Proposal reference ${props.proposalRef.label} does not exist"
-                >> ctx.pushPage(none).to[IO]
+                ToastCtx[IO].showToast(
+                  s"Proposal reference ${props.proposalRef.label} does not exist",
+                  Severity.Error
+                ) >> ctx.pushPage(none).to[IO]
       .render: (props, _, result) =>
         result.renderPot(_ => EmptyVdom)
