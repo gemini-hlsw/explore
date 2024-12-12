@@ -8,6 +8,7 @@ import japgolly.scalajs.react.feature.Context
 import crystal.react.hooks.UseStateView
 import crystal.react.View
 import cats.effect.IO
+import japgolly.scalajs.react.Reusability
 
 def useContext[A](ctx: Context[A]): HookResult[A] = HookResult:
   UseContext.unsafeCreate(ctx)
@@ -20,3 +21,10 @@ def useStateView[A](initial: A): HookResult[View[A]] = HookResult:
 
 def useEffectOnMount(effect: IO[Unit]): HookResult[Unit] = HookResult:
   UseEffect.unsafeCreateOnMount(effect)
+
+def useEffectWithDeps[D: Reusability](deps: => D)(effect: D => IO[Unit]): HookResult[Unit] =
+  HookResult:
+    ReusableEffect.useEffect(deps)(effect).unsafeInit(())
+
+def useMemo[D: Reusability, A](deps: => D)(create: D => A): HookResult[A] = HookResult:
+  UseMemo(deps)(create).unsafeInit(())
