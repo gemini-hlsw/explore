@@ -129,3 +129,15 @@ object ProgramQueriesGQL:
         }
       }
       """
+
+  @GraphQL
+  trait UpdateConfigurationRequestsMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: UpdateConfigurationRequestsInput!) {
+        updateConfigurationRequests(input: $$input) {
+          requests {
+            id
+          }
+        }
+      }
+      """

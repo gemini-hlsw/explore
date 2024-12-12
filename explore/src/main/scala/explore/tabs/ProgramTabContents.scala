@@ -27,7 +27,7 @@ import explore.model.layout.LayoutsMap
 import explore.programs.ProgramConfigRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
-import explore.programs.ProgramUnrequestedConfigsTable
+import explore.programs.ProgramUnrequestedConfigsTile
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Configuration
@@ -52,7 +52,8 @@ case class ProgramTabContents(
   userVault:              Option[UserVault],
   programTimes:           Pot[ProgramTimes],
   semester:               Semester,
-  userPreferences:        UserPreferences
+  userPreferences:        UserPreferences,
+  userIsReadonlyCoi:      Boolean
 ) extends ReactFnProps(ProgramTabContents.component)
 
 object ProgramTabContents:
@@ -95,24 +96,28 @@ object ProgramTabContents:
         val configurationRequestsTile =
           Tile(
             ProgramTabTileIds.ChangeRequestsId.id,
-            s"Requested Coordinates + Configurations + Constraints (${props.configRequests.get.size})"
-          )(_ =>
-            ProgramConfigRequestsTile(
+            s"Requested Coordinates + Configurations + Constraints (${props.configRequests.get.size})",
+            initialState = ProgramConfigRequestsTile.TileState.Empty
+          )(
+            ProgramConfigRequestsTile.Body(
               userId,
               props.programId,
               props.configRequests.get,
               props.obs4ConfigRequests,
-              props.targets
-            )
+              props.targets,
+              _
+            ),
+            (s, _) =>
+              ProgramConfigRequestsTile.Title(props.configRequests, props.userIsReadonlyCoi, s.get)
           )
 
         val unrequestedConfigsTile =
           Tile(
             ProgramTabTileIds.UnrequestedConfigsId.id,
             s"Unrequested Coordinates + Configurations + Constraints (${props.configsWithoutRequests.size})",
-            initialState = ProgramUnrequestedConfigsTable.TileState.Empty
+            initialState = ProgramUnrequestedConfigsTile.TileState.Empty
           )(
-            ProgramUnrequestedConfigsTable.Body(
+            ProgramUnrequestedConfigsTile.Body(
               userId,
               props.programId,
               props.configRequests,
@@ -121,7 +126,8 @@ object ProgramTabContents:
               _
             ),
             (s, _) =>
-              ProgramUnrequestedConfigsTable.Title(props.configRequests, props.observations, s.get)
+              ProgramUnrequestedConfigsTile
+                .Title(props.configRequests, props.observations, props.userIsReadonlyCoi, s.get)
           )
 
         <.div(ExploreStyles.MultiPanelTile)(

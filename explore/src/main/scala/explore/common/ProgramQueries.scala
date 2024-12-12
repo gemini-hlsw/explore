@@ -10,7 +10,9 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
+import lucuma.core.enums.ConfigurationRequestStatus
 import lucuma.core.model.Attachment
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
 import lucuma.core.model.User
@@ -93,17 +95,6 @@ object ProgramQueries:
       )
       .void
 
-  // TODO: move to lucuma-schemas
-  extension (pl: Option[PartnerLink])
-    def toInput: PartnerLinkInput =
-      pl match
-        case Some(PartnerLink.HasPartner(p)) =>
-          PartnerLinkInput(PartnerLinkType.HasPartner.assign, p.assign)
-        case Some(PartnerLink.HasNonPartner) =>
-          PartnerLinkInput(PartnerLinkType.HasNonPartner.assign, none.orUnassign)
-        case _                               =>
-          PartnerLinkInput(PartnerLinkType.HasUnspecifiedPartner.assign, none.orUnassign)
-
   def updateProgramUsers[F[_]: Async](
     pid: Program.Id,
     uid: User.Id,
@@ -148,3 +139,18 @@ object ProgramQueries:
     g:   Option[Gender]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(pid, uid, ProgramUserPropertiesInput(gender = g.orUnassign))
+
+  def updateConfigurationRequestStatus[F[_]: Async](
+    rids:      List[ConfigurationRequest.Id],
+    newStatus: ConfigurationRequestStatus
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    UpdateConfigurationRequestsMutation[F]
+      .execute(
+        UpdateConfigurationRequestsInput(
+          WHERE = rids.toWhereConfigurationRequest.assign,
+          SET = ConfigurationRequestProperties(
+            status = newStatus.assign
+          )
+        )
+      )
+      .void
