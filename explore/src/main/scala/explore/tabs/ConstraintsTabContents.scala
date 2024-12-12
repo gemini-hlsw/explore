@@ -164,9 +164,7 @@ object ConstraintsTabContents extends TwoPanels:
             case PasteAlt1 | PasteAlt2 => pasteCallback
             case GoToSummary           =>
               ctx.setPageVia(
-                AppTab.Constraints,
-                props.programId,
-                Focused.None,
+                (AppTab.Constraints, props.programId, Focused.None).some,
                 SetRouteVia.HistoryPush
               )
 

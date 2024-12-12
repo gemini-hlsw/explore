@@ -168,9 +168,7 @@ object ObsTabContents extends TwoPanels:
 
             case GoToSummary =>
               ctx.setPageVia(
-                AppTab.Observations,
-                props.programId,
-                Focused.None,
+                (AppTab.Observations, props.programId, Focused.None).some,
                 SetRouteVia.HistoryPush
               )
           }

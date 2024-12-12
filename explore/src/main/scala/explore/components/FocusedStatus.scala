@@ -32,5 +32,5 @@ object FocusedStatus:
           <.div(
             s"Target: ${props.focused.target.foldMap(_.show)}, obs: ${props.focused.obsSet.foldMap(_.show)}"
           ),
-          <.div(ctx.pageUrl(props.tab, props.programId, props.focused))
+          <.div(ctx.pageUrl((props.tab, props.programId, props.focused).some))
         )

@@ -82,9 +82,7 @@ object ExploreLayout:
             .map: routingInfo =>
               def goToTab(tab: AppTab) =
                 ctx.setPageVia(
-                  tab,
-                  routingInfo.programId,
-                  routingInfo.focused,
+                  (tab, routingInfo.programId, routingInfo.focused).some,
                   SetRouteVia.HistoryPush
                 )
 
@@ -195,7 +193,7 @@ object ExploreLayout:
                     (mod, cb) =>
                       val oldRoute = routingInfo
                       val newRoute = mod(routingInfo)
-                      ctx.pushPage(newRoute.appTab, newRoute.programId, newRoute.focused) >>
+                      ctx.pushPage((newRoute.appTab, newRoute.programId, newRoute.focused).some) >>
                         cb(oldRoute, newRoute)
                   )
 
@@ -292,7 +290,7 @@ object ExploreLayout:
                     SideTabs(
                       "side-tabs".refined,
                       routingInfoView.zoom(RoutingInfo.appTab),
-                      ctx.pageUrl(_, routingInfo.programId, routingInfo.focused),
+                      tab => ctx.pageUrl((tab, routingInfo.programId, routingInfo.focused).some),
                       _.separatorAfter,
                       tab =>
                         props.model.programSummariesValue.toOption

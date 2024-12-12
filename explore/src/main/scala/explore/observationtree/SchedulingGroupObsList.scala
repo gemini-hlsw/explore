@@ -196,7 +196,7 @@ object SchedulingGroupObsList:
         // Unfocus the group with observations that doesn't exist
         val unfocus: Callback =
           if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
-            ctx.replacePage(AppTab.Scheduling, props.programId, Focused.None)
+            ctx.replacePage((AppTab.Scheduling, props.programId, Focused.None).some)
           else Callback.empty
 
         val expandSelected: Callback =
@@ -244,7 +244,7 @@ object SchedulingGroupObsList:
         props.focusedObsSet.exists(_.contains(obsId))
 
       def setObsSet(obsIdSet: Option[ObsIdSet]): Callback =
-        ctx.pushPage(AppTab.Scheduling, props.programId, Focused(obsIdSet))
+        ctx.pushPage((AppTab.Scheduling, props.programId, Focused(obsIdSet)).some)
 
       def setObs(obsId: Observation.Id): Callback =
         setObsSet(ObsIdSet.one(obsId).some)

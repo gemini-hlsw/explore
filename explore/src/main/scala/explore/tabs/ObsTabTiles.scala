@@ -426,9 +426,10 @@ object ObsTabTiles:
             ): Callback =
               // Set the route base on the selected target
               ctx.setPageVia(
-                AppTab.Observations,
-                props.programId,
-                Focused(ObsIdSet.one(props.obsId).some, tid),
+                (AppTab.Observations,
+                 props.programId,
+                 Focused(ObsIdSet.one(props.obsId).some, tid)
+                ).some,
                 via
               )
 

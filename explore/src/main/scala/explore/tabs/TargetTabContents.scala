@@ -200,7 +200,8 @@ object TargetTabContents extends TwoPanels:
           import ctx.given
 
           val selectObsIds: ObsIdSet => IO[Unit] =
-            obsIds => ctx.pushPage(AppTab.Targets, props.programId, Focused.obsSet(obsIds)).toAsync
+            obsIds =>
+              ctx.pushPage((AppTab.Targets, props.programId, Focused.obsSet(obsIds)).some).toAsync
 
           ExploreClipboard.get
             .flatMap {
@@ -260,7 +261,7 @@ object TargetTabContents extends TwoPanels:
           val callbacks: ShortcutCallbacks =
             case CopyAlt1 | CopyAlt2   => copyCallback
             case PasteAlt1 | PasteAlt2 => pasteCallback
-            case GoToSummary           => ctx.pushPage(AppTab.Targets, props.programId, Focused.None)
+            case GoToSummary           => ctx.pushPage((AppTab.Targets, props.programId, Focused.None).some)
 
           UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       .useStateView(AladinFullScreen.Normal) // full screen aladin
@@ -289,7 +290,7 @@ object TargetTabContents extends TwoPanels:
             agl.find((agObsIds, _) => obsIds.subsetOf(agObsIds)).map(AsterismGroup.fromTuple)
 
           def setPage(focused: Focused): Callback =
-            ctx.pushPage(AppTab.Targets, props.programId, focused)
+            ctx.pushPage((AppTab.Targets, props.programId, focused).some)
 
           def selectObservationAndTarget(expandedIds: View[SortedSet[ObsIdSet]])(
             obsId:    Observation.Id,
@@ -465,7 +466,7 @@ object TargetTabContents extends TwoPanels:
               tid: Option[Target.Id],
               via: SetRouteVia
             ): Callback =
-              ctx.setPageVia(AppTab.Targets, props.programId, Focused(oids, tid), via)
+              ctx.setPageVia((AppTab.Targets, props.programId, Focused(oids, tid)).some, via)
 
             def onCloneTarget4Asterism(params: OnCloneParameters): Callback =
               // props.programSummaries.get will always contain the original groups. On creating,
@@ -605,7 +606,8 @@ object TargetTabContents extends TwoPanels:
               // It's not perfect, but we'll go to whatever url has the "new" id. This means
               // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
               selectedTargetIds.set(List(params.idToAdd)) >>
-                ctx.replacePage(AppTab.Targets, props.programId, Focused.target(params.idToAdd))
+                ctx.replacePage:
+                  (AppTab.Targets, props.programId, Focused.target(params.idToAdd)).some
 
             props.targets
               .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))

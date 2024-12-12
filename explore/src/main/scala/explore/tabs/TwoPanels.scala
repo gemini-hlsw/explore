@@ -39,7 +39,7 @@ trait TwoPanels {
       severity = Button.Severity.Secondary,
       text = true,
       clazz = ExploreStyles.TileBackButton,
-      onClick = ctx.pushPage(appTab, programId, Focused.None) >>
+      onClick = ctx.pushPage((appTab, programId, Focused.None).some) >>
         pv.set(SelectedPanel.Tree)
     ).mini.compact
 

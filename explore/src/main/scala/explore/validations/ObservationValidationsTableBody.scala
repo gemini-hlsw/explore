@@ -89,9 +89,9 @@ object ObservationValidationsTableBody {
     // columns
     .useMemoBy((_, _) => ()) { (props, ctx) => _ =>
       def obsUrl(obsId: Observation.Id): String    =
-        ctx.pageUrl(AppTab.Observations, props.programId, Focused.singleObs(obsId))
+        ctx.pageUrl((AppTab.Observations, props.programId, Focused.singleObs(obsId)).some)
       def goToObs(obsId: Observation.Id): Callback =
-        ctx.pushPage(AppTab.Observations, props.programId, Focused.singleObs(obsId))
+        ctx.pushPage((AppTab.Observations, props.programId, Focused.singleObs(obsId)).some)
 
       def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing]): Callback =
         row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void

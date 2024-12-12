@@ -131,16 +131,16 @@ object ConstraintsSummaryTile:
                 ColDef(id, accessor, ColumnNames(id))
 
               def goToObsSet(obsIdSet: ObsIdSet): Callback =
-                ctx.pushPage(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
+                ctx.pushPage((AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some)
 
               def obsSetUrl(obsIdSet: ObsIdSet): String =
-                ctx.pageUrl(AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet))
+                ctx.pageUrl((AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some)
 
               def goToObs(obsId: Observation.Id): Callback =
-                ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(obsId))
+                ctx.pushPage((AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some)
 
               def obsUrl(obsId: Observation.Id): String =
-                ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(obsId))
+                ctx.pageUrl((AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some)
 
               List(
                 column(EditColumnId, ConstraintGroup.obsIds.get)

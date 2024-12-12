@@ -4,12 +4,14 @@
 package explore
 
 import cats.effect.IO
+import cats.syntax.option.*
 import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.enums.AppTab
+import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ProposalReference
@@ -35,9 +37,10 @@ object ProposalReferenceResolver:
           .flatMap: data =>
             data.program
               .map: p =>
-                ctx.pushPage(AppTab.Proposal, p.id, Focused.None).to[IO]
+                ctx.pushPage((AppTab.Proposal, p.id, Focused.None).some).to[IO]
               .getOrElse:
-                IO.raiseError:
-                  RuntimeException(s"Proposal reference ${props.proposalRef.label} does not exist")
+                ToastCtx[IO].showToast:
+                  s"Proposal reference ${props.proposalRef.label} does not exist"
+                >> ctx.pushPage(none).to[IO]
       .render: (props, _, result) =>
         result.renderPot(_ => EmptyVdom)

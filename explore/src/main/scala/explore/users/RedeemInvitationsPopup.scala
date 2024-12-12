@@ -108,7 +108,7 @@ object RedeemInvitationsPopup:
           Button(
             icon = Icons.ArrowUp,
             onClick = isOpen.setState(IsOpen(false)) *>
-              ctx.setPageVia(AppTab.Program, r.pid, Focused.None, SetRouteVia.HistoryPush),
+              ctx.setPageVia((AppTab.Program, r.pid, Focused.None).some, SetRouteVia.HistoryPush),
             label = s"Open program ${r.pid}"
           ).compact
         ),
