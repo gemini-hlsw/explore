@@ -8,6 +8,7 @@ import cats.data.NonEmptySet
 import cats.syntax.all.*
 import crystal.*
 import crystal.react.View
+import eu.timepit.refined.types.numeric.PosInt
 import explore.model.*
 import explore.model.Observation
 import explore.model.Page
@@ -21,12 +22,18 @@ import explore.undo.UndoContext
 import japgolly.scalajs.react.React
 import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
+import japgolly.scalajs.react.extra.router.StaticDsl.Route
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Instrument
 import lucuma.core.model.Group
+import lucuma.core.model.ObservationReference
 import lucuma.core.model.Program
+import lucuma.core.model.ProgramReference
+import lucuma.core.model.ProposalReference
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
+import lucuma.react.router.syntax.*
 import lucuma.ui.react.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -34,12 +41,6 @@ import lucuma.ui.syntax.all.given
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 import scala.util.Random
-import lucuma.core.model.ObservationReference
-import japgolly.scalajs.react.extra.router.StaticDsl.Route
-import lucuma.react.router.syntax.*
-import lucuma.core.model.ProgramReference
-import lucuma.core.enums.Instrument
-import eu.timepit.refined.types.numeric.PosInt
 
 object Routing:
 
@@ -236,11 +237,18 @@ object Routing:
 
           | dynamicRouteCT(
             Route.forStringFormat:
+              ProposalReference.fromString.andThen(ProposalReferenceResolverPage.iso)
+          ) ~> dynRenderP { case (p, _) => ProposalReferenceResolver(p.proposalRef) }
+
+          | dynamicRouteCT(
+            Route.forStringFormat:
+              ProgramReference.fromString.andThen(ProgramReferenceResolverPage.iso)
+          ) ~> dynRenderP { case (p, _) => ProgramReferenceResolver(p.programRef) }
+
+          | dynamicRouteCT(
+            Route.forStringFormat:
               ObservationReference.fromString.andThen(ObservationReferenceResolverPage.iso)
-          )
-          ~> dynRenderP { case (p, _) =>
-            ObsReferenceResolver(p.obsRef)
-          }
+          ) ~> dynRenderP { case (p, _) => ObsReferenceResolver(p.obsRef) }
 
           | dynamicRouteCT((root / id[Program.Id]).xmapL(HomePage.iso)) ~> dynRenderP {
             case (p, m) => overviewTab(p, m)

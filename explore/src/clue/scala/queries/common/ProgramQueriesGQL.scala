@@ -141,3 +141,23 @@ object ProgramQueriesGQL:
         }
       }
       """
+
+  @GraphQL
+  trait ResolveProgramReference extends GraphQLOperation[ObservationDB]:
+    val document = """
+      query($input: ProgramReferenceLabel) {
+        program(programReference: $input) {
+          id
+        }
+      }
+    """
+
+  @GraphQL
+  trait ResolveProposalReference extends GraphQLOperation[ObservationDB]:
+    val document = """
+      query($input: ProposalReferenceLabel) {
+        program(proposalReference: $input) {
+          id
+        }
+      }
+    """

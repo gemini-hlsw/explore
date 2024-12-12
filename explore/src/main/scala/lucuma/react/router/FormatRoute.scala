@@ -3,17 +3,18 @@
 
 package lucuma.react.router
 
-import japgolly.scalajs.react.extra.router.StaticDsl.Route
 import japgolly.scalajs.react.extra.router.Path
+import japgolly.scalajs.react.extra.router.StaticDsl.Route
 import lucuma.core.optics.Format
 import monocle.Iso
+
+object optics:
+  val pathIso: Iso[Path, String] = Iso[Path, String](_.value.stripPrefix("/"))(s => Path(s"/$s"))
 
 object syntax:
   extension [A, B](iso: Iso[A, B])
     def andThen[C](format: Format[B, C]): Format[A, C] =
       format.imapA(iso.reverseGet, iso.get)
-
-  val pathIso: Iso[Path, String] = Iso[Path, String](_.value.stripPrefix("/"))(s => Path(s"/$s"))
 
   extension (routeModule: Route.type)
     def forStringFormat[A](format: Format[String, A]): Route[A] =

@@ -12,16 +12,16 @@ import explore.model.Focused
 import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.ObservationReference
+import lucuma.core.model.ProgramReference
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.pot.*
-import queries.common.ObsQueriesGQL.ResolveObsReference
+import queries.common.ProgramQueriesGQL.ResolveProgramReference
 
-case class ObsReferenceResolver(obsRef: ObservationReference)
-    extends ReactFnProps(ObsReferenceResolver.component)
+case class ProgramReferenceResolver(programRef: ProgramReference)
+    extends ReactFnProps(ProgramReferenceResolver.component)
 
-object ObsReferenceResolver:
-  private type Props = ObsReferenceResolver
+object ProgramReferenceResolver:
+  private type Props = ProgramReferenceResolver
 
   private val component =
     ScalaFnComponent
@@ -30,14 +30,14 @@ object ObsReferenceResolver:
       .useEffectResultOnMountBy: (props, ctx) =>
         import ctx.given
 
-        ResolveObsReference[IO]
-          .query(props.obsRef.assign)
+        ResolveProgramReference[IO]
+          .query(props.programRef.assign)
           .flatMap: data =>
-            data.observation
-              .map: o =>
-                ctx.pushPage(AppTab.Observations, o.program.id, Focused.singleObs(o.id)).to[IO]
+            data.program
+              .map: p =>
+                ctx.pushPage(AppTab.Overview, p.id, Focused.None).to[IO]
               .getOrElse:
                 IO.raiseError:
-                  RuntimeException(s"Observation reference ${props.obsRef.label} does not exist")
+                  RuntimeException(s"Program reference ${props.programRef.label} does not exist")
       .render: (props, _, result) =>
         result.renderPot(_ => EmptyVdom)
