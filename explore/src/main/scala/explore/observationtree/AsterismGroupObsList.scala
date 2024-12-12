@@ -190,7 +190,7 @@ object AsterismGroupObsList:
       // if focused is empty, we're looking at the target summary table and don't want to
       // switch to editing because of drag and drop
       if (props.focused.isEmpty) Callback.empty
-      else ctx.pushPage(AppTab.Targets, props.programId, Focused(obsIds.some))
+      else ctx.pushPage((AppTab.Targets, props.programId, Focused(obsIds.some)).some)
 
     oData.foldMap: (destIds, destAstIds, draggedIds, srcIds) =>
       if (destIds.intersects(draggedIds)) Callback.empty
@@ -256,7 +256,7 @@ object AsterismGroupObsList:
     .useStateView(AddingTargetOrObs(false))
     .useEffectOnMountBy: (props, ctx, _, _) =>
       def replacePage(focused: Focused): Callback =
-        ctx.replacePage(AppTab.Targets, props.programId, focused)
+        ctx.replacePage((AppTab.Targets, props.programId, focused).some)
 
       val obsMissing: Boolean =
         props.focused.obsSet.nonEmpty && props.selectedAsterismGroup.isEmpty
@@ -316,7 +316,7 @@ object AsterismGroupObsList:
         props.focused.obsSet.exists(_.contains(obsId))
 
       def setFocused(focused: Focused): Callback =
-        ctx.pushPage(AppTab.Targets, props.programId, focused)
+        ctx.pushPage((AppTab.Targets, props.programId, focused).some)
 
       def selectObsOrSummary(oObsId: Option[Observation.Id]): Callback =
         oObsId.fold(setFocused(Focused.None))(obsId => setFocused(Focused.singleObs(obsId)))
@@ -467,7 +467,7 @@ object AsterismGroupObsList:
                 .orEmpty
             )(
               ^.cursor.pointer,
-              ^.href := ctx.pageUrl(AppTab.Targets, props.programId, clickFocus),
+              ^.href := ctx.pageUrl((AppTab.Targets, props.programId, clickFocus).some),
               ^.onClick ==> { (e: ReactEvent) =>
                 e.preventDefaultCB *> e.stopPropagationCB *> setFocused(clickFocus)
               }
@@ -571,7 +571,7 @@ object AsterismGroupObsList:
             Button(
               severity = Button.Severity.Secondary,
               onClick =
-                ctx.pushPage(AppTab.Targets, props.programId, props.focused.withoutObsSet) *>
+                ctx.pushPage((AppTab.Targets, props.programId, props.focused.withoutObsSet).some) *>
                   props.focusTargetId(None) *>
                   props.selectSummaryTargets(props.focused.target.toList),
               clazz = ExploreStyles.ButtonSummary

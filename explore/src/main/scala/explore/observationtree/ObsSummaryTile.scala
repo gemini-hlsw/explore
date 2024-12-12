@@ -233,17 +233,17 @@ object ObsSummaryTile:
       .useMemoBy((_, _) => ()): (props, ctx) => // Columns
         _ =>
           def constraintUrl(constraintId: Observation.Id): String =
-            ctx.pageUrl(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+            ctx.pageUrl((AppTab.Constraints, props.programId, Focused.singleObs(constraintId)).some)
 
           def goToConstraint(constraintId: Observation.Id): Callback =
-            ctx.pushPage(AppTab.Constraints, props.programId, Focused.singleObs(constraintId))
+            ctx.pushPage(
+              (AppTab.Constraints, props.programId, Focused.singleObs(constraintId)).some
+            )
 
           def targetLink(obsId: Observation.Id, tWId: TargetWithId): VdomNode =
             val text = tWId.target.name.value
             ctx.routingLink(
-              AppTab.Observations,
-              props.programId,
-              Focused.singleObs(obsId, tWId.id.some),
+              (AppTab.Observations, props.programId, Focused.singleObs(obsId, tWId.id.some)).some,
               text
             )
 
@@ -252,7 +252,10 @@ object ObsSummaryTile:
 
           def groupLink(group: Group): VdomNode =
             val text = group.name.map(_.toString).getOrElse(group.id.toString)
-            ctx.routingLink(AppTab.Observations, props.programId, Focused.group(group.id), text)
+            ctx.routingLink(
+              (AppTab.Observations, props.programId, Focused.group(group.id)).some,
+              text
+            )
 
           List(
             ColDef(

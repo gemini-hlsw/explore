@@ -37,14 +37,16 @@ def focusObs[F[_]](
   obsId:     Option[Observation.Id],
   ctx:       AppContext[F]
 ): Callback =
-  ctx.pushPage(AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_)))
+  ctx.pushPage:
+    (AppTab.Observations, programId, obsId.fold(Focused.None)(Focused.singleObs(_))).some
 
 def focusGroup[F[_]](
   programId: Program.Id,
   groupId:   Option[Group.Id],
   ctx:       AppContext[F]
 ): Callback =
-  ctx.pushPage(AppTab.Observations, programId, groupId.fold(Focused.None)(Focused.group(_)))
+  ctx.pushPage:
+    (AppTab.Observations, programId, groupId.fold(Focused.None)(Focused.group(_))).some
 
 def cloneObs(
   programId:    Program.Id,

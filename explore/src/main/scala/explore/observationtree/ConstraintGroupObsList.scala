@@ -168,7 +168,7 @@ object ConstraintGroupObsList:
       // Unfocus the group with observations doesn't exist
       val unfocus =
         if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
-          ctx.replacePage(AppTab.Constraints, props.programId, Focused.None)
+          ctx.replacePage((AppTab.Constraints, props.programId, Focused.None).some)
         else Callback.empty
 
       val expandSelected = selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
@@ -216,7 +216,7 @@ object ConstraintGroupObsList:
         props.focusedObsSet.exists(_.contains(obsId))
 
       def setObsSet(obsIdSet: Option[ObsIdSet]): Callback =
-        ctx.pushPage(AppTab.Constraints, props.programId, Focused(obsIdSet))
+        ctx.pushPage((AppTab.Constraints, props.programId, Focused(obsIdSet)).some)
 
       def setObs(obsId: Observation.Id): Callback =
         setObsSet(ObsIdSet.one(obsId).some)

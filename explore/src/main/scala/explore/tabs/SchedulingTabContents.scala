@@ -162,9 +162,7 @@ object SchedulingTabContents extends TwoPanels:
             case PasteAlt1 | PasteAlt2 => pasteCallback
             case GoToSummary           =>
               ctx.setPageVia(
-                AppTab.Scheduling,
-                props.programId,
-                Focused.None,
+                (AppTab.Scheduling, props.programId, Focused.None).some,
                 SetRouteVia.HistoryPush
               )
 

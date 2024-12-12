@@ -135,16 +135,14 @@ object ExploreMain {
       val (router, routerCtl) =
         RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)
 
-      def pageUrl(tab: AppTab, programId: Program.Id, focused: model.Focused): String =
-        routerCtl.urlFor(RoutingInfo.getPage(tab, programId, focused)).value
+      def pageUrl(location: Option[(AppTab, Program.Id, Focused)]): String =
+        routerCtl.urlFor(RoutingInfo.getPage(location)).value
 
       def setPageVia(
-        tab:       AppTab,
-        programId: Program.Id,
-        focused:   Focused,
-        via:       SetRouteVia
+        location: Option[(AppTab, Program.Id, Focused)],
+        via:      SetRouteVia
       ) =
-        routerCtl.set(RoutingInfo.getPage(tab, programId, focused), via)
+        routerCtl.set(RoutingInfo.getPage(location), via)
 
       for {
         host                 <- IO(dom.window.location.host)

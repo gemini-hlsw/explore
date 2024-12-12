@@ -166,7 +166,9 @@ object TargetSummaryTile:
               ColDef(id, row => accessor(row), ColNames(id))
 
             def obsUrl(targetId: Target.Id, obsId: Observation.Id): String =
-              ctx.pageUrl(AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some))
+              ctx.pageUrl(
+                (AppTab.Targets, props.programId, Focused.singleObs(obsId, targetId.some)).some
+              )
 
             List(
               ColDef(
@@ -176,9 +178,7 @@ object TargetSummaryTile:
                 cell =>
                   <.a(
                     ^.href := ctx.pageUrl(
-                      AppTab.Targets,
-                      props.programId,
-                      Focused.target(cell.value)
+                      (AppTab.Targets, props.programId, Focused.target(cell.value)).some
                     ),
                     ^.onClick ==> (e =>
                       e.preventDefaultCB >> e.stopPropagationCB >>

@@ -117,7 +117,7 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
-  trait ProgramObservationsDelta extends GraphQLOperation[ObservationDB] {
+  trait ProgramObservationsDelta extends GraphQLOperation[ObservationDB]:
     val document = s"""
       subscription($$input: ObservationEditInput!) {
         observationEdit(input: $$input) {
@@ -128,4 +128,14 @@ object ObsQueriesGQL:
         }
       }
     """
-  }
+
+  @GraphQL
+  trait ResolveObsReference extends GraphQLOperation[ObservationDB]:
+    val document = """
+      query($input: ObservationReferenceLabel) {
+        observation(observationReference: $input) {
+          id
+          program { id }
+        }
+      }
+    """

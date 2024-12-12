@@ -39,8 +39,8 @@ case class AppContext[F[_]](
   sso:              SSOClient[F],
   tracing:          Option[TracingConfig],
   httpClient:       Client[F],
-  pageUrl:          (AppTab, Program.Id, Focused) => String,
-  setPageVia:       (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
+  pageUrl:          Option[(AppTab, Program.Id, Focused)] => String,
+  setPageVia:       (Option[(AppTab, Program.Id, Focused)], SetRouteVia) => Callback,
   environment:      ExecutionEnvironment,
   broadcastChannel: BroadcastChannel[F, ExploreEvent],
   toastRef:         Deferred[F, ToastRef]
@@ -49,24 +49,23 @@ case class AppContext[F[_]](
   val logger:       Logger[F],
   val P:            Parallel[F]
 ):
-  def pushPage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
-    setPageVia(appTab, programId, focused, SetRouteVia.HistoryPush)
+  def pushPage(location: Option[(AppTab, Program.Id, Focused)]): Callback =
+    setPageVia(location, SetRouteVia.HistoryPush)
 
-  def replacePage(appTab: AppTab, programId: Program.Id, focused: Focused): Callback =
-    setPageVia(appTab, programId, focused, SetRouteVia.HistoryReplace)
+  def replacePage(location: Option[(AppTab, Program.Id, Focused)]): Callback =
+    setPageVia(location, SetRouteVia.HistoryReplace)
 
   def routingLink(
-    appTab:    AppTab,
-    programId: Program.Id,
-    focused:   Focused,
-    contents:  VdomNode,
-    via:       SetRouteVia = SetRouteVia.HistoryPush
+    location: Option[(AppTab, Program.Id, Focused)],
+    contents: VdomNode,
+    via:      SetRouteVia = SetRouteVia.HistoryPush
   ): VdomNode =
-    <.a(^.href := pageUrl(appTab, programId, focused),
-        ^.onClick ==> (e =>
-          e.preventDefaultCB >> e.stopPropagationCB >>
-            setPageVia(appTab, programId, focused, via)
-        )
+    <.a(
+      ^.href := pageUrl(location),
+      ^.onClick ==> (e =>
+        e.preventDefaultCB >> e.stopPropagationCB >>
+          setPageVia(location, via)
+      )
     )(contents)
 
   def obsIdRoutingLink(
@@ -76,7 +75,7 @@ case class AppContext[F[_]](
     contents:  Option[VdomNode] = None
   ): VdomNode =
     val finalContents: VdomNode = contents.getOrElse(obsId.show)
-    routingLink(AppTab.Observations, programId, Focused.singleObs(obsId), finalContents)
+    routingLink((AppTab.Observations, programId, Focused.singleObs(obsId)).some, finalContents)
 
   given WebSocketJSClient[F, ObservationDB]     = clients.odb
   given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB
@@ -97,8 +96,8 @@ object AppContext:
   def from[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
     config:               AppConfig,
     reconnectionStrategy: ReconnectionStrategy,
-    pageUrl:              (AppTab, Program.Id, Focused) => String,
-    setPageVia:           (AppTab, Program.Id, Focused, SetRouteVia) => Callback,
+    pageUrl:              Option[(AppTab, Program.Id, Focused)] => String,
+    setPageVia:           (Option[(AppTab, Program.Id, Focused)], SetRouteVia) => Callback,
     workerClients:        WorkerClients[F],
     httpClient:           Client[F],
     broadcastChannel:     BroadcastChannel[F, ExploreEvent],
