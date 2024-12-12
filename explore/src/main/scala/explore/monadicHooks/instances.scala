@@ -11,17 +11,20 @@ import cats.effect.IO
 import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.Reusable
 
-def useContext[A](ctx: Context[A]): HookResult[A] = HookResult:
-  UseContext.unsafeCreate(ctx)
+def useContext[A](ctx: Context[A]): HookResult[A] =
+  HookResult:
+    UseContext.unsafeCreate(ctx)
 
-def useState[A](initial: A): HookResult[UseState[A]] = HookResult:
-  UseState.unsafeCreate(initial)
+def useState[A](initial: A): HookResult[UseState[A]] =
+  HookResult:
+    UseState.unsafeCreate(initial)
 
 def useStateView[A]: A => HookResult[View[A]] =
   UseStateView.hook.lift
 
-def useEffectOnMount(effect: IO[Unit]): HookResult[Unit] = HookResult:
-  UseEffect.unsafeCreateOnMount(effect)
+def useEffectOnMount(effect: IO[Unit]): HookResult[Unit] =
+  HookResult:
+    UseEffect.unsafeCreateOnMount(effect)
 
 def useEffectWithDeps[D: Reusability](deps: => D)(effect: D => IO[Unit]): HookResult[Unit] =
   HookResult:
