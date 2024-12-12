@@ -33,8 +33,8 @@ import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
 import lucuma.core.model.Target
 import lucuma.core.util.Gid
-import lucuma.react.router.syntax.*
 import lucuma.ui.react.given
+import lucuma.ui.router.syntax.*
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
