@@ -10,6 +10,7 @@ import crystal.syntax.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
+import explore.monadicHooks.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -22,7 +23,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import org.http4s.*
 import org.http4s.client.Client
-import explore.monadicHooks.*
 
 import scala.util.Try
 

@@ -3,8 +3,8 @@
 
 package explore.monadicHooks
 
-import crystal.react.hooks.*
 import crystal.react.View
+import crystal.react.hooks.*
 import japgolly.scalajs.react.Reusable
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 
@@ -20,3 +20,18 @@ inline def useSingleEffect: HookResult[Reusable[UseSingleEffect[DefaultA]]] =
 /** Creates component state as a View */
 inline def useStateView[A]: A => HookResult[View[A]] =
   UseStateView.hook.toHookResult
+
+// Custom hook example
+import cats.syntax.all.*
+import japgolly.scalajs.react.Callback
+
+/**
+ * Custom hook that keeps a counter and provides a function that adds to it and reports the new
+ * value to the console.
+ */
+inline def useAddReporter(initial: Int): HookResult[Reusable[Int => Callback]] =
+  for
+    state <- useState(initial)
+    cb    <- useCallback: (i: Int) =>
+               state.modState(_ + i) >> Callback.log(s"New value ${state.value + i}")
+  yield cb

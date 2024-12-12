@@ -23,12 +23,15 @@ import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.monadicHooks.*
+import explore.monadicHooks.given
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
 import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
@@ -52,15 +55,11 @@ import monocle.Iso
 import org.scalajs.dom
 import org.scalajs.dom.Element
 import queries.schemas.odb.ObsQueries
-import explore.monadicHooks.*
-import explore.monadicHooks.given
-import cats.syntax.all.*
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
 
 import ObsQueries.*
-import japgolly.scalajs.react.hooks.Hooks.UseRef
 
 case class ObsTree(
   programId:             Program.Id,
@@ -182,7 +181,7 @@ object ObsTree:
         inline def refocus(
           prevGroupInfo: UseRef[Option[(Option[Group.Id], NonNegShort)]],
           ctx:           AppContext[IO]
-        ) =
+        ): HookResult[Unit] =
           useEffectWithDeps((props.focusedObsOrGroup, props.observations.get, props.groups.get)):
             (focusedObsOrGroup, obsList, groupList) =>
               focusedObsOrGroup.fold(prevGroupInfo.set(none)): elemId =>

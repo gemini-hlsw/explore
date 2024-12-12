@@ -3,11 +3,13 @@
 
 package explore.monadicHooks
 
-import japgolly.scalajs.react.hooks.Hooks.*
-import japgolly.scalajs.react.feature.Context
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.feature.Context
+import japgolly.scalajs.react.hooks.Hooks.*
 import japgolly.scalajs.react.vdom.*
+
 import scala.reflect.ClassTag
+
 import scalajs.js
 
 /**
