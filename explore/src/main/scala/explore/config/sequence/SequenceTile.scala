@@ -121,20 +121,6 @@ object SequenceTile:
           SequenceQuery[IO]
             .query(props.obsId)
             .map(SequenceData.fromOdbResponse)
-            .adaptError:
-              case t @ clue.ResponseException(errors, _) =>
-                errors
-                  .collectFirstSome: error =>
-                    for
-                      extensions   <- error.extensions
-                      odbErrorJson <- extensions.get("odb_error")
-                      odbErrorJObj <- odbErrorJson.asObject
-                      tagJson      <- odbErrorJObj("odb_error.tag")
-                      tag          <- tagJson.asString if tag == "sequence_unavailable"
-                    yield new RuntimeException(
-                      "No sequence available, you may need to setup a configuration"
-                    )
-                  .getOrElse(t)
             .attemptPot
             .resetOnResourceSignals:
               for
