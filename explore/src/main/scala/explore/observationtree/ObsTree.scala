@@ -303,9 +303,10 @@ object ObsTree:
                 <.a(
                   ^.id        := s"obs-list-${obs.id.toString}",
                   ^.href      := ctx.pageUrl(
-                    AppTab.Observations,
-                    props.programId,
-                    Focused.singleObs(obs.id, props.focusedTarget)
+                    (AppTab.Observations,
+                     props.programId,
+                     Focused.singleObs(obs.id, props.focusedTarget)
+                    ).some
                   ),
                   // Disable link dragging to enable tree node dragging
                   ^.draggable := false,
@@ -359,9 +360,11 @@ object ObsTree:
                     focusGroup(props.programId, group.id.some, ctx)
                   ,
                   href = ctx.pageUrl(
-                    AppTab.Observations,
-                    props.programId,
-                    Focused.group(group.id)
+                    (
+                      AppTab.Observations,
+                      props.programId,
+                      Focused.group(group.id)
+                    ).some
                   ),
                   deleteCB = deleteGroup(group.id),
                   isEmpty = isEmpty,
