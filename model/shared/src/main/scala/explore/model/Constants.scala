@@ -20,8 +20,8 @@ trait Constants:
   val GridColCount             = 12
   // 4 arcmin
   val PreviewFov: Angle        = Angle.fromMicroarcseconds(240000000L)
-  // 1 arcmin
-  val InitialFov: Angle        = Angle.fromMicroarcseconds(60000000L)
+  // 10 arcmin
+  val InitialFov: Angle        = Angle.fromMicroarcseconds(600000000L)
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
 
