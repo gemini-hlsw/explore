@@ -6,11 +6,11 @@ package explore
 import cats.effect.*
 import crystal.Pot
 import crystal.react.*
+import crystal.react.hooks.*
 import crystal.syntax.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
-import explore.monadicHooks.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -55,11 +55,8 @@ object HelpBody:
 
   val themeAttr = VdomAttr("data-theme")
 
-  import cats.syntax.all.*
-  import explore.monadicHooks.given
-
   private val component = ScalaFnComponent
-    .withFnHooks[Props]: props =>
+    .withHooks[Props]: props =>
       for
         ctx     <- useContext(AppContext.ctx)
         helpCtx <- useContext(HelpContext.ctx)

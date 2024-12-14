@@ -23,8 +23,6 @@ import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.enums.AppTab
-import explore.monadicHooks.*
-import explore.monadicHooks.given
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
@@ -176,7 +174,7 @@ object ObsTree:
 
   private val component =
     ScalaFnComponent
-      .withFnHooks[Props]: props =>
+      .withHooks[Props]: props =>
         // refocus if current focus ceases to exist
         inline def refocus(
           prevGroupInfo: UseRef[Option[(Option[Group.Id], NonNegShort)]],
