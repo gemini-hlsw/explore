@@ -6,6 +6,8 @@ package explore.model.arb
 import eu.timepit.refined.scalacheck.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.model.arb.ArbSemester.given
+import lucuma.core.model.arb.ArbCallCoordinatesLimits.given
+import lucuma.core.util.arb.ArbDateInterval.given
 import lucuma.core.util.arb.ArbEnumerated
 import lucuma.core.util.arb.ArbGid.given
 import lucuma.core.util.arb.ArbTimestamp.given
@@ -20,6 +22,8 @@ import lucuma.core.enums.Partner
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
 import lucuma.core.util.Timestamp
+import lucuma.core.model.CallCoordinatesLimits
+import lucuma.core.util.DateInterval
 
 trait ArbCallForProposal {
   import ArbEnumerated.given
@@ -44,7 +48,9 @@ trait ArbCallForProposal {
         cfpType  <- arbitrary[CallForProposalsType]
         partners <- arbitrary[List[CallPartner]]
         deadline <- arbitrary[Option[Timestamp]]
-      } yield CallForProposal(id, semester, title, cfpType, partners, deadline)
+        limits   <- arbitrary[CallCoordinatesLimits]
+        active   <- arbitrary[DateInterval]
+      } yield CallForProposal(id, semester, title, cfpType, partners, deadline, limits, active)
     }
 
   given Cogen[CallForProposal] =
@@ -54,9 +60,20 @@ trait ArbCallForProposal {
        NonEmptyString,
        CallForProposalsType,
        Option[Timestamp],
-       List[CallPartner]
+       List[CallPartner],
+       CallCoordinatesLimits,
+       DateInterval
       )
-    ].contramap(p => (p.id, p.semester, p.title, p.cfpType, p.nonPartnerDeadline, p.partners))
+    ].contramap: p =>
+      (p.id,
+       p.semester,
+       p.title,
+       p.cfpType,
+       p.nonPartnerDeadline,
+       p.partners,
+       p.coordinateLimits,
+       p.active
+      )
 }
 
 object ArbCallForProposal extends ArbCallForProposal

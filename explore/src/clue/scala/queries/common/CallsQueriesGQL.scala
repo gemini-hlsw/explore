@@ -19,9 +19,17 @@ object CallsQueriesGQL:
             title
             cfpType: type
             nonPartnerDeadline
+            active {
+              start
+              end
+            }
             partners {
               partner
               submissionDeadline
+            }
+            coordinateLimits {
+              north $SiteCoordinatesLimitsSubquery
+              south $SiteCoordinatesLimitsSubquery
             }
           }
         }

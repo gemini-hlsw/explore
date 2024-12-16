@@ -172,6 +172,7 @@ object Routing:
                 model.rootModel.zoom(RootModel.cfps).get.toOption.orEmpty,
                 programSummaries.model.get.programTimesPot.map(_.timeEstimateRange),
                 programSummaries.model.zoom(ProgramSummaries.attachments),
+                programSummaries.model.get.scienceObsTargets,
                 model.rootModel.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
                 userPreferences(model.rootModel).proposalTabLayout,
                 model.userIsReadonlyCoi

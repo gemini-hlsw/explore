@@ -12,11 +12,15 @@ import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.enums.CallForProposalsType
 import lucuma.core.enums.Partner
+import lucuma.core.model.CallCoordinatesLimits
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Semester
+import lucuma.core.util.DateInterval
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.odb.json.limits.decoder.given
+import lucuma.odb.json.time.decoder.given
 import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Lens
@@ -33,12 +37,14 @@ case class CallForProposal(
   title:              NonEmptyString,
   cfpType:            CallForProposalsType,
   partners:           List[CallPartner],
-  nonPartnerDeadline: Option[Timestamp]
+  nonPartnerDeadline: Option[Timestamp],
+  coordinateLimits:   CallCoordinatesLimits,
+  active:             DateInterval
 ) derives Eq,
       Decoder:
 
   def deadline(piPartner: Option[PartnerLink]): Option[Timestamp] =
-    piPartner.flatMap {
+    piPartner.flatMap:
       _.fold(
         None,
         nonPartnerDeadline,
@@ -47,7 +53,6 @@ case class CallForProposal(
             .find(p => piPartner.flatMap(_.partnerOption).exists(_ === p.partner))
             .flatMap(_.submissionDeadline)
       )
-    }
 
 object CallForProposal:
   val id: Lens[CallForProposal, CallForProposals.Id] =

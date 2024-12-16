@@ -11,6 +11,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
@@ -63,6 +64,7 @@ type SchedulingGroupList        = SortedMap[ObsIdSet, List[TimingWindow]]
 type ObservingModeGroupList     = SortedMap[ObsIdSet, Option[ObservingModeSummary]]
 type AttachmentList             = SortedMap[Attachment.Id, Attachment]
 type ObsAttachmentAssignmentMap = Map[Attachment.Id, SortedSet[Observation.Id]]
+type ObsSiteAndTargets          = Map[Observation.Id, (Site, TargetList)]
 type ProgramInfoList            = SortedMap[Program.Id, ProgramInfo]
 type ConfigurationRequestList   = SortedMap[ConfigurationRequest.Id, ConfigurationRequest]
 
