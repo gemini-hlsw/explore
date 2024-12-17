@@ -134,8 +134,10 @@ jobs:
       - name: Install sbt
         uses: sbt/setup-sbt@v1
 
-      - name: Checkout current branch (fast)
+      - name: Checkout current branch (full)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
@@ -206,8 +208,10 @@ jobs:
       - name: Install sbt
         uses: sbt/setup-sbt@v1
 
-      - name: Checkout current branch (fast)
+      - name: Checkout current branch (full)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java (temurin@17)
         id: setup-java-temurin-17
