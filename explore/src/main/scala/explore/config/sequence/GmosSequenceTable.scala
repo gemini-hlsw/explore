@@ -23,7 +23,7 @@ import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.Visit
-import lucuma.schemas.model.enums.AtomExecutionState
+import lucuma.schemas.model.enums.StepExecutionState
 import lucuma.ui.reusability.given
 import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
@@ -40,7 +40,7 @@ sealed trait GmosSequenceTable[S, D]:
   def config: ExecutionConfig[S, D]
   def snPerClass: Map[ObserveClass, SignalToNoise]
 
-  private def steps(
+  private def futureSteps(
     obsClass: ObserveClass
   )(sequence: ExecutionSequence[D]): List[SequenceRow.FutureStep[D]] =
     SequenceRow.FutureStep
@@ -64,17 +64,27 @@ sealed trait GmosSequenceTable[S, D]:
                 case _                            => false
       )
 
-  private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Int)] =
-    // If the last atom of the last visit is incomplete, we assume it is executing.
-    // TODO: Also check that the last atom's original id is the same as nextAtom (when ODB provides this info).
+  private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Option[Step.Id])] =
+    // If the last step of the last atom of the last visit is Ongoing, the sequence is executing.
+    // TODO: For extra safety, we could also check that the last atom's original id is the same as
+    // nextAtom. ODB provides this but we are not querying it at the moment.
     visits.lastOption
-      .filter(_.atoms.lastOption.exists(_.executionState =!= AtomExecutionState.Completed))
-      .map(visit => (visit.id, visit.atoms.last.sequenceType, visit.atoms.last.steps.length))
+      .filter:
+        _.atoms.lastOption.exists:
+          _.steps.lastOption.exists:
+            _.executionState === StepExecutionState.Ongoing
+      // We omit the Ongoing step from the visits.
+      .map(visit =>
+        (visit.id,
+         visit.atoms.last.sequenceType,
+         visit.atoms.lastOption.flatMap(_.steps.lastOption).map(_.id)
+        )
+      )
 
   protected[sequence] lazy val currentVisitId: Option[Visit.Id]              = currentVisitData.map(_._1)
   protected[sequence] lazy val currentAtomSequenceType: Option[SequenceType] =
     currentVisitData.map(_._2)
-  protected[sequence] lazy val currentAtomExecutedSteps: Option[Int]         = currentVisitData.map(_._3)
+  protected[sequence] lazy val currentStepId: Option[Step.Id]                = currentVisitData.flatMap(_._3)
 
   // Hide acquisition when science is executing.
   protected[sequence] lazy val isAcquisitionDisplayed: Boolean =
@@ -83,21 +93,13 @@ sealed trait GmosSequenceTable[S, D]:
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
     config.acquisition // If we are executing Science, don't show any future acquisition rows.
       .filter(_ => isAcquisitionDisplayed)
-      .map(steps(ObserveClass.Acquisition))
+      .map(futureSteps(ObserveClass.Acquisition))
       .orEmpty
-      .drop:
-        currentAtomExecutedSteps
-          .filter(_ => isAcquisitionDisplayed)
-          .orEmpty
 
   protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
     config.science
-      .map(steps(ObserveClass.Science))
+      .map(futureSteps(ObserveClass.Science))
       .orEmpty
-      .drop:
-        currentAtomExecutedSteps
-          .filter(_ => currentAtomSequenceType.contains_(SequenceType.Science))
-          .orEmpty
 
 case class GmosNorthSequenceTable(
   visits:     List[Visit.GmosNorth],
@@ -178,8 +180,9 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
         _ =>
           import ctx.given
           columns(ctx.httpClient)
-      .useMemoBy((props, _, _) => props.visits): (_, _, _) => // (visitRows, nextIndex)
-        visitsSequences(_, none)
+      .useMemoBy((props, _, _) => (props.visits, props.currentStepId)):
+        (_, _, _) => // (visitRows, nextIndex)
+          visitsSequences(_, _)
       .useMemoBy((props, _, _, visitsData) =>
         (visitsData, props.acquisitionRows, props.scienceRows, props.currentVisitId)
       ): (_, _, _, _) =>
