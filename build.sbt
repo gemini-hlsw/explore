@@ -242,11 +242,6 @@ fixCSS := {
     throw new Exception("Error in CSS fix")
 }
 
-val SetupSbt = WorkflowStep.Use(
-  UseRef.Public("sbt", "setup-sbt", "v1"),
-  name = Some("Install sbt")
-)
-
 val pushCond                 = "github.event_name == 'push'"
 val prCond                   = "github.event_name == 'pull_request'"
 val masterCond               = "github.ref == 'refs/heads/master'"
@@ -362,9 +357,7 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "full",
     "full",
-    SetupSbt ::
-      WorkflowStep.Checkout ::
-      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
+    githubWorkflowJobSetup.value.toList :::
       setupNodeNpmInstall :::
       sbtStage ::
       npmBuild ::
@@ -384,9 +377,7 @@ ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
     "lint",
     "Run linters",
-    SetupSbt ::
-      WorkflowStep.Checkout ::
-      WorkflowStep.SetupJava(githubWorkflowJavaVersions.value.toList.take(1)) :::
+    githubWorkflowJobSetup.value.toList :::
       setupNodeNpmInstall :::
       lucumaCssStep ::
       setupVars("dark") ::
