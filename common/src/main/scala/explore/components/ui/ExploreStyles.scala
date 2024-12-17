@@ -374,10 +374,10 @@ object ExploreStyles:
   val SequencesPanel        = Css("explore-sequences-panel")
   val SequencesPanelError   = Css("explore-sequences-panel-error")
   val CellHideBorder        = Css("explore-table-cell-hide-border")
+  val SequenceRowDone       = Css("explore-sequence-row-done")
   val SequenceBracketCell   = Css("explore-sequence-bracket-cell")
   val SequenceTileTitle     = Css("explore-sequence-tile-title")
   val SequenceTileTitleItem = Css("explore-sequence-tile-title-item")
-  val VisitSection          = Css("explore-visit-section")
 
   val ButtonCopy: Css            = Css("explore-button-copy")
   val ButtonsUndo: Css           = Css("explore-buttons-undo")
