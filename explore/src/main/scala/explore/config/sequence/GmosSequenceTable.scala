@@ -229,7 +229,7 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
           estimateSize = index =>
             table.getRowModel().rows.get(index).map(_.original.value) match
               case Some(Left(_)) =>
-                20.toPx // Header
+                25.toPx // Header
               case Some(Right(SequenceIndexedRow(SequenceRow.FutureStep(_, _, _, _), _)))      =>
                 25.toPx
               case Some(Right(SequenceIndexedRow(SequenceRow.Executed.ExecutedStep(_, _), _))) =>
