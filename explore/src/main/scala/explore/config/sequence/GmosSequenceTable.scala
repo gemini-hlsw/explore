@@ -226,7 +226,16 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
 
         PrimeAutoHeightVirtualizedTable(
           table,
-          estimateSize = _ => 25.toPx,
+          estimateSize = index =>
+            table.getRowModel().rows.get(index).map(_.original.value) match
+              case Some(Left(_)) =>
+                20.toPx // Header
+              case Some(Right(SequenceIndexedRow(SequenceRow.FutureStep(_, _, _, _), _)))      =>
+                25.toPx
+              case Some(Right(SequenceIndexedRow(SequenceRow.Executed.ExecutedStep(_, _), _))) =>
+                60.toPx
+              case _                                                                           =>
+                0.toPx,
           overscan = 8,
           containerRef = resize.ref,
           compact = Compact.Very,
