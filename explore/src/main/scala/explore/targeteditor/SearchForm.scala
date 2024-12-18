@@ -29,7 +29,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
-import org.scalajs.dom.HTMLButtonElement
 
 import scalajs.js.timers
 import scalajs.js.JSConverters.*
@@ -55,22 +54,19 @@ object SearchForm:
       .useEffectWithDepsBy((props, _, _, _, _) => props.targetName.get)((_, _, term, enabled, _) =>
         name => term.set(name) >> enabled.setState(true)
       )
-      .useEffectWithDepsBy((props, _, _, _, _) => props.id)((props, _, _, _, _) =>
-        _ => // Auto-select name field on new targets.
-          // Accessing dom elements by id is not ideal in React, but passing a ref to the <input> element of a
-          // Form.Input is a bit convoluted. We should reevaluate when and if we switch to another component library.
-          // TODO REEVALUATE NOW!
-          CallbackTo(
-            Option(dom.document.getElementById("search"))
-              .foldMap(node =>
-                Callback(timers.setTimeout(0)(node.asInstanceOf[dom.HTMLInputElement].select()))
+      .useRefToVdom[dom.HTMLButtonElement]
+      .useRefToVdom[dom.HTMLInputElement]
+      .useEffectWithDepsBy((props, _, _, _, _, _, inputRef) => (props.id, inputRef))(
+        (props, _, _, _, _, _, _) =>
+          // Auto select name field on new targets
+          (_, inputRef) =>
+            inputRef.get
+              .flatMap(
+                _.foldMap(i => Callback(timers.setTimeout(50)(i.select())))
               )
-          ).flatten
-            .when(props.targetName.get === NewTargetName)
-            .void
+              .when_(props.targetName.get === NewTargetName)
       )
-      .useRefToVdom[HTMLButtonElement]
-      .render: (props, ctx, term, enabled, error, buttonRef) =>
+      .render: (props, ctx, term, enabled, error, buttonRef, inputRef) =>
         import ctx.given
 
         val searchComplete: Callback = props.searching.mod(_ - props.id)
@@ -123,4 +119,4 @@ object SearchForm:
           onTextChange = (_: String) => error.setState(none),
           onValidChange = valid => enabled.setState(valid),
           placeholder = "Name"
-        ).withMods(^.onKeyPress ==> onKeyPress)
+        ).withMods(^.onKeyPress ==> onKeyPress, ^.untypedRef := inputRef)
