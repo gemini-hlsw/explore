@@ -250,7 +250,8 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
             .map: s =>
               TagMod(
                 s match
-                  case SequenceRow.Executed.ExecutedStep(_, _) => SequenceStyles.RowHasExtra
+                  case SequenceRow.Executed.ExecutedStep(_, _) =>
+                    SequenceStyles.RowHasExtra |+| ExploreStyles.SequenceRowDone
                   case _                                       => TagMod.empty,
                 if (LinkingInfo.developmentMode)
                   s.id.toOption.map(^.title := _.toString).whenDefined

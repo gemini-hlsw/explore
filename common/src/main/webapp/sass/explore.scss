@@ -1337,6 +1337,11 @@ $search-preview-margin: 5px;
       }
     }
   }
+
+  .p-datatable-tbody > tr.explore-sequence-row-done {
+    color: var(--disabled-row-color);
+    background: var(--disabled-row-background);
+  }
 }
 
 // -------------
