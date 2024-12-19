@@ -2014,6 +2014,11 @@ svg.fa-triangle-exclamation.explore-error-icon {
 // ------
 // Proposals and Partner Splits
 // ------
+
+.explore-abstract-too-long {
+  color: var(--error-background-color);
+}
+
 .partner-splits-grid {
   --gap: 0.5em;
 

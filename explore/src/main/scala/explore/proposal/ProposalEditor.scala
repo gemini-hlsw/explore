@@ -5,7 +5,7 @@ package explore.proposal
 
 import cats.data.NonEmptySet
 import cats.effect.IO
-import cats.syntax.option.*
+import cats.syntax.all.*
 import clue.*
 import clue.data.Input
 import clue.data.syntax.*
@@ -69,6 +69,16 @@ case class ProposalEditor(
 object ProposalEditor:
   private type Props = ProposalEditor
 
+  private val BaseWordLimit = 200
+  private val HardWordLimit = 2 * BaseWordLimit
+
+  extension (s: String)
+    inline def wordCount: Int =
+      val trim = s.trim
+      if (trim.isEmpty) 0
+      else
+        trim.split("\\s+", HardWordLimit + 1).length // add a limit to restrict the performance hit
+
   private val component =
     ScalaFnComponent
       .withHooks[Props]
@@ -99,8 +109,14 @@ object ProposalEditor:
       //       setClass >> setType >> setHours >> setPct2
       //     }
       // )
+      .useStateBy((props, _) => props.proposal.get.abstrakt.map(_.value).foldMap(_.wordCount))
+      .useEffectWithDepsBy((props, _, abstractCounter) => props.proposal.get.abstrakt.map(_.value))(
+        (_, _, abstractCounter) =>
+          case Some(t) => abstractCounter.setState(t.wordCount)
+          case None    => abstractCounter.setState(0)
+      )
       .useResizeDetector()
-      .render: (props, ctx, resize) =>
+      .render: (props, ctx, abstractCounter, resize) =>
         import ctx.given
 
         val undoCtx: UndoContext[Proposal] = UndoContext(props.undoStacks, props.proposal)
@@ -118,7 +134,8 @@ object ProposalEditor:
         val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
           aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
 
-        val abstractView: View[Option[NonEmptyString]] = abstractAligner.view(_.orUnassign)
+        val abstractView: View[Option[NonEmptyString]] = abstractAligner
+          .view(_.orUnassign)
 
         val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
@@ -159,15 +176,30 @@ object ProposalEditor:
                 .orEmpty
           )
 
+        val absTitle: VdomNode =
+          if (abstractCounter.value < 1) "Abstract"
+          else if (abstractCounter.value >= HardWordLimit)
+            React.Fragment(
+              "Abstract ",
+              <.span(ExploreStyles.AbstractTitleTooLong, s"($HardWordLimit or more words)")
+            )
+          else if (abstractCounter.value >= BaseWordLimit)
+            React.Fragment(
+              "Abstract ",
+              <.span(ExploreStyles.AbstractTitleTooLong, s"(${abstractCounter.value} words)")
+            )
+          else s"Abstract (${abstractCounter.value} words)"
+
         val abstractTile =
           Tile(
             ProposalTabTileIds.AbstractId.id,
-            "Abstract",
+            absTitle,
             bodyClass = ExploreStyles.ProposalAbstract
           )(_ =>
             FormInputTextAreaView(
               id = "abstract".refined,
-              value = abstractView.as(OptionNonEmptyStringIso)
+              value = abstractView.as(OptionNonEmptyStringIso),
+              onTextChange = t => abstractCounter.setState(t.wordCount).rateLimitMs(1000).void
             )(^.disabled        := props.readonly,
               ^.cls := ExploreStyles.WarningInput.when_(abstractView.get.isEmpty).htmlClass
             )

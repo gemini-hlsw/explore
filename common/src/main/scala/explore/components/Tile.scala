@@ -59,7 +59,7 @@ import lucuma.ui.syntax.all.given
  */
 case class Tile[A](
   id:                Tile.TileId,
-  title:             String,
+  title:             VdomNode,
   initialState:      A = (),
   back:              Option[VdomNode] = None,
   canMinimize:       Boolean = true,
