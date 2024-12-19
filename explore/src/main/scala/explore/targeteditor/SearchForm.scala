@@ -30,7 +30,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom
 
-import scalajs.js.timers
 import scalajs.js.JSConverters.*
 
 case class SearchForm(
@@ -62,7 +61,7 @@ object SearchForm:
           (_, inputRef) =>
             inputRef.get
               .flatMap(
-                _.foldMap(i => Callback(timers.setTimeout(50)(i.select())))
+                _.foldMap(i => Callback(i.select()).delayMs(50).toCallback)
               )
               .when_(props.targetName.get === NewTargetName)
       )
