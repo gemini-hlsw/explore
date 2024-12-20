@@ -84,15 +84,13 @@ object PAConfigurationPanel:
             .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
         case PosAngleConstraint.AverageParallactic                                 =>
           props.averagePA
-            .map(a =>
-              <.div(
-                ExploreStyles.AveragePA,
+            .map: a =>
+              <.div(ExploreStyles.AveragePA)(
                 <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
                 <.label(a.when.toString),
                 <.label(TimeSpanView(a.duration))
               )
-            )
-            .orElse(<.label("Not Visible").some)
+            .orElse(<.label("Not Visible or observation complete").some)
         case PosAngleConstraint.AllowFlip(af) if props.selectedPA.exists(_ =!= af) =>
           props.selectedPA
             .map(a => <.label(f"Flipped to ${a.toDoubleDegrees}%.0f °"))

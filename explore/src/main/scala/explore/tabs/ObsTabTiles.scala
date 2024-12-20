@@ -289,7 +289,10 @@ object ObsTabTiles:
               PAProperties(props.obsId, guideStarSelection, agsState, props.posAngleConstraint)
 
             val averagePA: Option[AveragePABasis] =
-              (basicConfiguration.map(_.siteFor), asterismAsNel, obsDuration)
+              (basicConfiguration.map(_.siteFor),
+               asterismAsNel,
+               obsDuration.filter(_ > TimeSpan.Zero)
+              )
                 .mapN: (site, asterism, duration) =>
                   props.posAngleConstraint match
                     case PosAngleConstraint.AverageParallactic =>
