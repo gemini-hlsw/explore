@@ -3,9 +3,7 @@
 
 package explore.tabs
 
-import cats.derived.*
 import cats.effect.IO
-import cats.kernel.Eq
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.Pot
@@ -53,7 +51,7 @@ case class GroupEditBody(
 object GroupEditBody:
   private type Props = GroupEditBody
 
-  private enum GroupEditType(val tag: String) derives Enumerated, Eq:
+  private enum GroupEditType(val tag: String) derives Enumerated:
     case And extends GroupEditType("And")
     case Or  extends GroupEditType("Or")
 

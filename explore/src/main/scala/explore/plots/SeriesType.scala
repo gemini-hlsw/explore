@@ -3,8 +3,6 @@
 
 package explore.plots
 
-import cats.Eq
-import cats.derived.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.react.highcharts.Chart
@@ -16,8 +14,7 @@ enum SeriesType(
   val yAxis:     Int,
   val threshold: Int,
   val data:      ObjectPlotData.SeriesData => js.Array[Chart.Data]
-) derives Eq,
-      Enumerated:
+) derives Enumerated:
   val tag: String = name
 
   case Elevation
