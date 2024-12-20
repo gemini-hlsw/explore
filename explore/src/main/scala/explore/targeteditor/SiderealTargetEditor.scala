@@ -337,7 +337,8 @@ object SiderealTargetEditor:
                 nameView,
                 allView.set,
                 props.searching,
-                props.readonly || props.obsInfo.isReadonly
+                props.readonly || props.obsInfo.isReadonly,
+                cloning.get
               ),
               FormInputTextView(
                 id = "ra".refined,

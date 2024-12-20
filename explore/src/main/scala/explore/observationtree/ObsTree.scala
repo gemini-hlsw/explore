@@ -6,7 +6,6 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
-import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -77,6 +76,7 @@ case class ObsTree(
   pasteCallback:         Callback,
   clipboardObsContents:  Option[ObsIdSet],
   allocatedScienceBands: SortedSet[ScienceBand],
+  addingObservation:     View[AddingObservation],
   readonly:              Boolean
 ) extends ReactFnProps(ObsTree.component):
   private val selectedObsIdSet: Option[ObsIdSet] =
@@ -206,18 +206,18 @@ object ObsTree:
                         group => focusGroup(props.programId, group.id.some, ctx)
                       )
               case _                   => Callback.empty
-      .useStateView(AddingObservation(false)) // adding new observation
       // Scroll to newly created/selected observation
-      .useEffectWithDepsBy((props, _, _, _) => props.focusedObs): (_, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _) => props.focusedObs): (_, _, _) =>
         focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
       // Open the group (and all super-groups) of the focused observation
-      .useEffectWithDepsBy((props, _, _, _) => props.activeGroup): (props, _, _, _) =>
+      .useEffectWithDepsBy((props, _, _) => props.activeGroup): (props, _, _) =>
         _.map: activeGroupId =>
           props.expandedGroups.mod(_ ++ props.parentGroups(activeGroupId.asRight) + activeGroupId)
         .orEmpty
-      .render: (props, ctx, _, adding) =>
+      .render: (props, ctx, _) =>
         import ctx.given
 
+        val adding: View[AddingObservation]    = props.addingObservation
         val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
 
         def onDragDrop(e: Tree.DragDropEvent[Either[Observation, Group]]): Callback =

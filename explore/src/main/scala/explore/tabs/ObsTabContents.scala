@@ -177,6 +177,7 @@ object ObsTabContents extends TwoPanels:
             callbacks
           )
       .useStateView(DeckShown.Shown)
+      .useStateView(AddingObservation(false))   // adding new observation or duplicating
       .render:
         (
           props,
@@ -188,7 +189,8 @@ object ObsTabContents extends TwoPanels:
           selectedOrFocusedObsIds, // Mixes focused obs and selected obs in table
           copyCallback,
           pasteCallback,
-          deckShown
+          deckShown,
+          addingObservation
         ) =>
           val observationsTree: VdomNode =
             if (deckShown.get === DeckShown.Shown) {
@@ -211,6 +213,7 @@ object ObsTabContents extends TwoPanels:
                 pasteCallback,
                 shadowClipboardObs.value,
                 props.programSummaries.get.allocatedScienceBands,
+                addingObservation,
                 props.readonly
               )
             } else
@@ -312,7 +315,7 @@ object ObsTabContents extends TwoPanels:
                   props.userPreferences.get.observationsTabLayout,
                   resize,
                   props.globalPreferences,
-                  props.readonly
+                  props.readonly || addingObservation.get.value
                 ).withKey(s"${obsId.show}")
               )
           }
