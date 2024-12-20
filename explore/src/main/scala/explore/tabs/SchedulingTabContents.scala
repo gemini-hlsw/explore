@@ -14,7 +14,6 @@ import explore.*
 import explore.actions.ObservationPasteIntoSchedulingGroupAction
 import explore.common.TimingWindowsQueries
 import explore.components.FocusedStatus
-import explore.components.Tile
 import explore.components.TileController
 import explore.model.*
 import explore.model.AppContext
