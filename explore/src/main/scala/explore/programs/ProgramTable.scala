@@ -40,7 +40,6 @@ case class ProgramTable(
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean,
   onClose:          Option[Callback],
-  onLogout:         Option[IO[Unit]],
   virtualizerRef:   UseRef[Option[HTMLTableVirtualizer]]
 ) extends ReactFnProps(ProgramTable.component)
 
