@@ -40,13 +40,18 @@ case class ProgramTable(
   selectProgram:    Program.Id => Callback,
   isRequired:       Boolean,
   onClose:          Option[Callback],
+  newProgramId:     Option[Program.Id],
   virtualizerRef:   UseRef[Option[HTMLTableVirtualizer]]
 ) extends ReactFnProps(ProgramTable.component)
 
 object ProgramTable:
   private type Props = ProgramTable
 
-  private case class TableMeta(currentProgramId: Option[Program.Id], programCount: Int)
+  private case class TableMeta(
+    currentProgramId: Option[Program.Id],
+    newProgramId:     Option[Program.Id],
+    programCount:     Int
+  )
 
   private val ColDef = ColumnDef.WithTableMeta[View[ProgramInfo], TableMeta]
 
@@ -138,6 +143,9 @@ object ProgramTable:
               EditableLabel
                 .fromView(
                   value = cell.value,
+                  forceEditing = cell.table.options.meta
+                    .flatMap(_.newProgramId)
+                    .contains_(cell.row.original.get.id),
                   addButtonLabel = ("Add program name": VdomNode).reuseAlways,
                   textClass = ExploreStyles.ProgramName,
                   inputClass = ExploreStyles.ProgramNameInput,
@@ -158,7 +166,7 @@ object ProgramTable:
         rows,
         enableSorting = true,
         enableColumnResizing = false,
-        meta = TableMeta(props.currentProgramId, props.programInfos.size)
+        meta = TableMeta(props.currentProgramId, props.newProgramId, props.programInfos.size)
       )
     .render: (props, ctx, _, _, table) =>
       PrimeAutoHeightVirtualizedTable(
