@@ -318,7 +318,7 @@ object ExploreLayout:
                           ),
                           <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
                             props.resolution.renderP(props.model),
-                            TagMod:
+                            TagMod.when(isSubmitted):
                               SubmittedProposalMessage(proposalReference, deadline)
                           )
                         )
