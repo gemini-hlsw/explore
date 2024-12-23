@@ -44,13 +44,17 @@ sealed abstract class TxnDsl[M <: TxnMode] {
   final def objectStore[K, V](s: ObjectStoreDef.Sync[K, V]): Txn[M, ObjectStore[K, V]] =
     TxnStep.GetStore(s)
 
-  @inline final def objectStore[K, V](s: ObjectStoreDef.Async[K, V]): Txn[M, ObjectStore[K, s.Value]] =
+  @inline final def objectStore[K, V](
+    s: ObjectStoreDef.Async[K, V]
+  ): Txn[M, ObjectStore[K, s.Value]] =
     objectStore(s.sync)
 
   @inline final def sequence[G[_], A](txns: G[Txn[M, A]])(implicit G: Traverse[G]): Txn[M, G[A]] =
     traverse(txns)(identityFn)
 
-  @inline final def sequenceIterable[F[x] <: Iterable[x], A](txns: => F[Txn[M, A]])(implicit cbf: BuildFrom[F[Txn[M, A]], A, F[A]]): Txn[M, F[A]] =
+  @inline final def sequenceIterable[F[x] <: Iterable[x], A](txns: => F[Txn[M, A]])(implicit
+    cbf: BuildFrom[F[Txn[M, A]], A, F[A]]
+  ): Txn[M, F[A]] =
     traverseIterable(txns)(identityFn)
 
   @inline final def sequenceIterable_(txns: => Iterable[Txn[M, Any]]): Txn[M, Unit] =
@@ -62,13 +66,17 @@ sealed abstract class TxnDsl[M <: TxnMode] {
   @inline final def sequenceOption_(o: Option[Txn[M, Any]]): Txn[M, Unit] =
     traverseOption_(o)(identityFn)
 
-  final def traverse[G[_], A, B](ga: G[A])(f: A => Txn[M, B])(implicit G: Traverse[G]): Txn[M, G[B]] =
+  final def traverse[G[_], A, B](ga: G[A])(f: A => Txn[M, B])(implicit
+    G: Traverse[G]
+  ): Txn[M, G[B]] =
     G.traverse(ga)(f.andThen(_.step))
 
-  final def traverseIterable[F[x] <: Iterable[x], A, B](fa: => F[A])(f: A => Txn[M, B])(implicit cbf: BuildFrom[F[A], B, F[B]]): Txn[M, F[B]] =
+  final def traverseIterable[F[x] <: Iterable[x], A, B](
+    fa: => F[A]
+  )(f: A => Txn[M, B])(implicit cbf: BuildFrom[F[A], B, F[B]]): Txn[M, F[B]] =
     suspend {
       val as = fa
-      val b = cbf.newBuilder(as)
+      val b  = cbf.newBuilder(as)
       if (as.isEmpty)
         pure(b.result())
       else
@@ -121,12 +129,12 @@ sealed abstract class TxnDsl[M <: TxnMode] {
 object TxnDsl {
 
   object RO extends TxnDsl[RO] {
-    override implicit def catsInstance: Txn.CatsInstance[RO] = Txn.catsInstance(this)
+    override implicit def catsInstance: Txn.CatsInstance[RO]                         = Txn.catsInstance(this)
     override protected implicit def autoWrapStepRO[B](s: TxnStep[RO, B]): Txn[RO, B] = Txn(s)
   }
 
   object RW extends TxnDsl[RW] {
-    override implicit def catsInstance: Txn.CatsInstance[RW] = Txn.catsInstance(this)
+    override implicit def catsInstance: Txn.CatsInstance[RW]                         = Txn.catsInstance(this)
     override protected implicit def autoWrapStepRO[B](s: TxnStep[RO, B]): Txn[RO, B] = Txn(s)
   }
 }

@@ -22,8 +22,8 @@ trait BinaryJs {
 
   final def base64ToByteBuffer(base64: String): ByteBuffer = {
     val binstr = window.atob(base64)
-    val buf = new Int8Array(binstr.length)
-    var i = 0
+    val buf    = new Int8Array(binstr.length)
+    var i      = 0
     binstr.foreach { ch =>
       buf(i) = ch.toByte
       i += 1
@@ -33,8 +33,9 @@ trait BinaryJs {
 
   final def blobToArrayBuffer(blob: Blob): ArrayBuffer = {
     var arrayBuffer: ArrayBuffer = null
-    val fileReader = new FileReader()
-    fileReader.onload = e => arrayBuffer = e.target.asInstanceOf[js.Dynamic].result.asInstanceOf[ArrayBuffer]
+    val fileReader               = new FileReader()
+    fileReader.onload = e =>
+      arrayBuffer = e.target.asInstanceOf[js.Dynamic].result.asInstanceOf[ArrayBuffer]
     fileReader.readAsArrayBuffer(blob)
     assert(arrayBuffer != null)
     arrayBuffer
@@ -51,7 +52,7 @@ trait BinaryJs {
     if (bb.hasTypedArray())
       bb.typedArray()
     else if (bb.hasArray) {
-      var array = bb.array()
+      var array  = bb.array()
       val offset = bb.arrayOffset()
       if (limit != array.length)
         array = array.slice(offset, offset + limit)
