@@ -25,6 +25,7 @@ import scalajs.js.JSConverters.*
 case class EditableLabel(
   value:                Option[NonEmptyString],
   mod:                  Option[NonEmptyString] => Callback,
+  forceEditing:         Boolean = false,
   editOnClick:          Boolean = false,
   textClass:            Css = Css.Empty,
   inputClass:           Css = Css.Empty,
@@ -40,11 +41,12 @@ case class EditableLabel(
   readonly:             Boolean = false
 ) extends ReactFnProps(EditableLabel.component)
 
-object EditableLabel {
-  type Props = EditableLabel
+object EditableLabel:
+  private type Props = EditableLabel
 
   def fromView(
     value:                View[Option[NonEmptyString]],
+    forceEditing:         Boolean = false,
     editOnClick:          Boolean = false,
     textClass:            Css = Css.Empty,
     inputClass:           Css = Css.Empty,
@@ -62,6 +64,7 @@ object EditableLabel {
     EditableLabel(
       value.get,
       value.set,
+      forceEditing,
       editOnClick,
       textClass,
       inputClass,
@@ -77,20 +80,23 @@ object EditableLabel {
       readonly
     )
 
-  type Editing = Editing.Type
-  object Editing extends NewType[Boolean]:
-    inline def NotEditing = Editing(false)
-    inline def InEdition  = Editing(true)
+  private type Editing = Editing.Type
+  private object Editing extends NewType[Boolean]:
+    inline def NotEditing                = Editing(false)
+    inline def InEdition                 = Editing(true)
+    def fromBoolean(b: Boolean): Editing = Editing(b)
 
   import Editing.*
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useState(NotEditing) // editing
-      .useState("")         // displayValue
+      .useStateBy(props => Editing.fromBoolean(props.forceEditing)) // editing
+      .useEffectWithDepsBy((props, _) => props.forceEditing): (_, editing) =>
+        forceEditing => if forceEditing then editing.setState(InEdition) else Callback.empty
+      .useState("")                                                 // displayValue
       .useId
-      .render { (props, editing, displayValue, id) =>
+      .render: (props, editing, displayValue, id) =>
         def editCB(e: ReactMouseEvent): Callback =
           e.stopPropagationCB >> e.preventDefaultCB >>
             displayValue.setState(props.value.map(_.value).orEmpty) >>
@@ -181,6 +187,3 @@ object EditableLabel {
               rightButton.unless(props.readonly)
             )
           )
-      }
-
-}

@@ -3,6 +3,7 @@
 
 package explore.programs
 
+import cats.Endo
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
@@ -78,15 +79,17 @@ object ProgramsPopup:
       .setAlign(rawVirtual.mod.ScrollAlignment.start) // force to go as far as possible
 
   private def addProgram(
-    programs: View[ProgramInfoList],
-    adding:   View[IsAdding]
+    programsMod:     Endo[ProgramInfoList] => Callback,
+    adding:          View[IsAdding],
+    setNewProgramId: Program.Id => Callback
   )(using
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): IO[Unit] =
     ProgramQueries
       .createProgram[IO](none)
-      .flatMap(pi => programs.async.mod(_.updated(pi.id, pi)))
+      .flatTap(pi => programsMod(_.updated(pi.id, pi)).to[IO])
+      .flatMap(pi => setNewProgramId(pi.id).to[IO])
       .switching(adding.async, IsAdding(_))
 
   private val component = ScalaFnComponent
@@ -95,29 +98,33 @@ object ProgramsPopup:
     .useStateView(IsOpen(true))
     .useStateView(IsAdding(false))    // Adding new program
     .useStateView(ShowDeleted(false)) // Show deleted
+    .useStateView(none[Program.Id])   // Recently added program
     .useRef(none[HTMLTableVirtualizer])
-    .render: (props, ctx, isOpen, isAdding, showDeleted, virtualizerRef) =>
+    .render: (props, ctx, isOpen, isAdding, showDeleted, newProgramId, virtualizerRef) =>
       import ctx.given
 
-      val onHide = props.onClose.map(oc => isOpen.set(IsOpen(false)) >> oc)
+      val onHide: Callback =
+        props.onClose.map(oc => isOpen.set(IsOpen(false)) >> oc).orEmpty >> newProgramId.set(none)
 
       val closeButton =
-        props.onClose.fold(none)(cb =>
+        props.onClose.fold(none): cb =>
           Button(
             label = "Cancel",
             icon = Icons.Close,
             severity = Button.Severity.Danger,
             onClick = cb
           ).small.compact.some
-        )
 
       val programInfosViewOpt: Option[View[ProgramInfoList]] =
         props.programInfos.toOptionView
 
+      val doSelectProgram: Program.Id => Callback =
+        selectProgram(props.onClose, props.undoStacks, ctx)
+
       val programInfoViewListOpt: Option[List[View[ProgramInfo]]] =
         programInfosViewOpt.map:
           _.toListOfViews
-            .map(_._2)
+            .map(_._2.withOnMod(pi => newProgramId.set(none) >> doSelectProgram(pi.id)))
             .filter(vpi => showDeleted.get.value || !vpi.get.deleted)
             .sortBy(_.get.id)
 
@@ -133,7 +140,7 @@ object ProgramsPopup:
 
       Dialog(
         visible = isOpen.get.value,
-        onHide = onHide.orEmpty,
+        onHide = onHide,
         position = DialogPosition.Top,
         closeOnEscape = props.onClose.isDefined,
         closable = props.onClose.isDefined,
@@ -150,7 +157,11 @@ object ProgramsPopup:
               severity = Button.Severity.Success,
               disabled = isAdding.get.value,
               loading = isAdding.get.value,
-              onClick = addProgram(pis, isAddingWithScroll).runAsync
+              onClick = addProgram(
+                pis.mod,
+                isAddingWithScroll,
+                programId => newProgramId.set(programId.some)
+              ).runAsync
             ).small.compact,
             CheckboxView(
               id = "show-deleted".refined,
@@ -165,9 +176,10 @@ object ProgramsPopup:
             ProgramTable(
               props.currentProgramId,
               pis,
-              selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
+              selectProgram = doSelectProgram,
               props.onClose.isEmpty,
-              onHide,
+              onHide.some,
+              newProgramId.get,
               virtualizerRef
             ),
         props.message.map(msg =>
