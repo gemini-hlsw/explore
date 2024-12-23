@@ -42,5 +42,4 @@ object Versions {
   val scalaCollectionContrib = "0.4.0"
   val scalaJsDom             = "2.8.0"
   val scalaJsReact           = "3.0.0-beta7"
-  val webAppUtil             = "2.0.0-RC12"
 }

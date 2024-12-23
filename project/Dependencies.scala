@@ -335,10 +335,4 @@ object Dependencies {
     )(scalaJsReact)
   )
 
-  val ScalaWebAppUtil = Def.setting(
-    deps(
-      "com.github.japgolly.webapp-util" %%% "core",
-      "com.github.japgolly.webapp-util" %%% "core-boopickle"
-    )(webAppUtil)
-  )
 }

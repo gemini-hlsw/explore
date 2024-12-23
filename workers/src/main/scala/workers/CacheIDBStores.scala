@@ -9,6 +9,7 @@ import explore.model.boopickle.CatalogPicklers.given
 import japgolly.scalajs.react.callback.*
 import japgolly.webapputil.binary.*
 import japgolly.webapputil.boopickle.*
+import japgolly.webapputil.boopickle.BinaryFormatExt.Implicits.*
 import japgolly.webapputil.indexeddb.*
 import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
 import lucuma.ags.GuideStarCandidate
