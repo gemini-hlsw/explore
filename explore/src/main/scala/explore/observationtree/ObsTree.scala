@@ -6,6 +6,7 @@ package explore.observationtree
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
+import crystal.react.hooks.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -28,6 +29,7 @@ import explore.undo.UndoSetter
 import explore.undo.Undoer
 import explore.utils.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
@@ -172,52 +174,59 @@ object ObsTree:
     }
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useRefBy: (props, _) => // groupInfo: Saved index into the observation tree
-        props.focusedGroupInfo
-      .useEffectWithDepsBy((props, _, _) => // refocus if current focus ceases to exist
-        (props.focusedObsOrGroup, props.observations.get, props.groups.get)
-      ): (props, ctx, prevGroupInfo) =>
-        (focusedObsOrGroup, obsList, groupList) =>
-          focusedObsOrGroup.fold(prevGroupInfo.set(none)): elemId =>
-            (prevGroupInfo.value, elemId.fold(obsList.contains(_), groupList.contains(_))) match
-              case (_, true)           =>
-                prevGroupInfo.set(props.focusedGroupInfo)
-              case (Some(prev), false) => // Previously focused element no longer exists
-                val prevGroup: Option[Group.Id]                    = prev._1
-                val prevIndex: NonNegShort                         = prev._2
-                val newElement: Option[Either[Observation, Group]] =
-                  props.groupsChildren
-                    .get(prevGroup)
-                    .flatMap:
-                      _.get(math.max(0, prevIndex.value - 1))
-                    .orElse:
-                      prevGroup.flatMap(groupList.get(_).map(_.asRight))
+    ScalaFnComponent[Props]: props =>
+      // refocus if current focus ceases to exist
+      inline def refocus(
+        prevGroupInfo: UseRef[Option[(Option[Group.Id], NonNegShort)]],
+        ctx:           AppContext[IO]
+      ): HookResult[Unit] =
+        useEffectWithDeps((props.focusedObsOrGroup, props.observations.get, props.groups.get)):
+          (focusedObsOrGroup, obsList, groupList) =>
+            focusedObsOrGroup.fold(prevGroupInfo.set(none)): elemId =>
+              (prevGroupInfo.value, elemId.fold(obsList.contains(_), groupList.contains(_))) match
+                case (_, true)           =>
+                  prevGroupInfo.set(props.focusedGroupInfo)
+                case (Some(prev), false) => // Previously focused element no longer exists
+                  val prevGroup: Option[Group.Id]                    = prev._1
+                  val prevIndex: NonNegShort                         = prev._2
+                  val newElement: Option[Either[Observation, Group]] =
+                    props.groupsChildren
+                      .get(prevGroup)
+                      .flatMap:
+                        _.get(math.max(0, prevIndex.value - 1))
+                      .orElse:
+                        prevGroup.flatMap(groupList.get(_).map(_.asRight))
 
-                prevGroupInfo.set:
-                  newElement.flatMap(e => props.groupInfo(e.bimap(_.id, _.id)))
-                >>
-                  newElement
-                    .fold(focusObs(props.programId, none, ctx)):
-                      _.fold(
-                        obs => focusObs(props.programId, obs.id.some, ctx),
-                        group => focusGroup(props.programId, group.id.some, ctx)
-                      )
-              case _                   => Callback.empty
-      // Scroll to newly created/selected observation
-      .useEffectWithDepsBy((props, _, _) => props.focusedObs): (_, _, _) =>
-        focusedObs => focusedObs.map(scrollIfNeeded).getOrEmpty
-      // Open the group (and all super-groups) of the focused observation
-      .useEffectWithDepsBy((props, _, _) => props.activeGroup): (props, _, _) =>
-        _.map: activeGroupId =>
-          props.expandedGroups.mod(_ ++ props.parentGroups(activeGroupId.asRight) + activeGroupId)
-        .orEmpty
-      .render: (props, ctx, _) =>
+                  prevGroupInfo.set:
+                    newElement.flatMap(e => props.groupInfo(e.bimap(_.id, _.id)))
+                  >>
+                    newElement
+                      .fold(focusObs(props.programId, none, ctx)):
+                        _.fold(
+                          obs => focusObs(props.programId, obs.id.some, ctx),
+                          group => focusGroup(props.programId, group.id.some, ctx)
+                        )
+                case _                   => Callback.empty
+
+      for
+        ctx           <- useContext(AppContext.ctx)
+        // Saved index into the observation tree
+        prevGroupInfo <- useRef(props.focusedGroupInfo)
+        // refocus if current focus ceases to exist
+        _             <- refocus(prevGroupInfo, ctx)
+        adding        <- useStateView(AddingObservation(false))
+        // Scroll to newly created/selected observation
+        _             <- useEffectWithDeps(props.focusedObs): focusedObs =>
+                           focusedObs.map(scrollIfNeeded).getOrEmpty
+        // Open the group (and all super-groups) of the focused observation
+        _             <- useEffectWithDeps(props.activeGroup):
+                           _.map: activeGroupId =>
+                             props.expandedGroups.mod:
+                               _ ++ props.parentGroups(activeGroupId.asRight) + activeGroupId
+                           .orEmpty
+      yield
         import ctx.given
 
-        val adding: View[AddingObservation]    = props.addingObservation
         val expandedGroups: View[Set[Tree.Id]] = props.expandedGroups.as(groupTreeIdLens)
 
         def onDragDrop(e: Tree.DragDropEvent[Either[Observation, Group]]): Callback =
