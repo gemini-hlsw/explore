@@ -4,9 +4,8 @@
 package japgolly.webapputil.indexeddb
 
 import org.scalajs.dom.IDBKey
-import scala.scalajs.js.|
 
-final class IndexedDbKey private(val asJs: IDBKey) extends AnyVal {
+final class IndexedDbKey private (val asJs: IDBKey) extends AnyVal {
   @inline def value = asJs.asInstanceOf[IndexedDbKey.Typed]
 }
 

@@ -12,6 +12,7 @@ import japgolly.webapputil.boopickle.*
 import japgolly.webapputil.indexeddb.*
 import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
 import lucuma.ags.GuideStarCandidate
+import japgolly.webapputil.boopickle.BinaryFormatExt.Implicits.*
 
 import scala.annotation.nowarn
 import scala.scalajs.js

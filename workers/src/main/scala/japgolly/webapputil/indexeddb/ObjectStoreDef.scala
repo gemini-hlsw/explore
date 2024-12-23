@@ -4,8 +4,8 @@
 package japgolly.webapputil.indexeddb
 
 import japgolly.scalajs.react.{AsyncCallback, CallbackTo}
-import japgolly.univeq.UnivEq
 import org.scalajs.dom.IDBValue
+import cats.Eq
 
 sealed trait ObjectStoreDef[K, V] {
   val name: String
@@ -13,14 +13,13 @@ sealed trait ObjectStoreDef[K, V] {
 
   final type Key = K
 
-  def sync: ObjectStoreDef.Sync[K, _]
+  def sync: ObjectStoreDef.Sync[K, ?]
 }
 
 object ObjectStoreDef {
 
-  final case class Sync[K, V](name      : String,
-                              keyCodec  : KeyCodec[K],
-                              valueCodec: ValueCodec[V]) extends ObjectStoreDef[K, V] {
+  final case class Sync[K, V](name: String, keyCodec: KeyCodec[K], valueCodec: ValueCodec[V])
+      extends ObjectStoreDef[K, V] {
 
     type Value = V
 
@@ -30,12 +29,11 @@ object ObjectStoreDef {
 
   // ===================================================================================================================
 
-  final case class Async[K, V](name      : String,
-                               keyCodec  : KeyCodec[K],
-                               valueCodec: ValueCodec.Async[V]) extends ObjectStoreDef[K, V] { self =>
+  final case class Async[K, V](name: String, keyCodec: KeyCodec[K], valueCodec: ValueCodec.Async[V])
+      extends ObjectStoreDef[K, V] { self =>
 
     type Value = Async.Value {
-      type KeyType = K
+      type KeyType   = K
       type ValueType = V
       val store: self.type
     }
@@ -45,16 +43,16 @@ object ObjectStoreDef {
 
     def value(v: IDBValue): Value =
       new Async.Value {
-        override type KeyType = K
+        override type KeyType   = K
         override type ValueType = V
         override val store: self.type = self
-        override val value = v
+        override val value            = v
       }
 
     override val sync: Sync[K, Value] = {
       val syncValueCodec = ValueCodec[Value](
         encode = v => CallbackTo.pure(v.value),
-        decode = v => CallbackTo.pure(value(v)),
+        decode = v => CallbackTo.pure(value(v))
       )
       Sync(name, keyCodec, syncValueCodec)
     }
@@ -82,7 +80,7 @@ object ObjectStoreDef {
     }
 
     object Value {
-      implicit def univEq[V <: Value]: UnivEq[V] = UnivEq.force
+      implicit def univEq[V <: Value]: Eq[V] = Eq.fromUniversalEquals
     }
   }
 

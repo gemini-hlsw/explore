@@ -6,7 +6,6 @@ package japgolly.webapputil.indexeddb
 import cats.kernel.Eq
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.util.Util.{identity => identityFn}
-import japgolly.univeq.UnivEqCats._
 import japgolly.webapputil.indexeddb.TxnMode._
 import org.scalajs.dom._
 import scala.annotation.elidable
@@ -32,7 +31,7 @@ final class IndexedDb(raw: IDBFactory) {
         // r.onblocked = callbacks.blocked.toJsFn1
 
         r.onupgradeneeded = e => {
-          val db = new DatabaseInVersionChange(r.result)
+          val db   = new DatabaseInVersionChange(r.result)
           val args = versionChange(db, e)
           callbacks.upgradeNeeded(args).runNow()
         }
@@ -43,7 +42,7 @@ final class IndexedDb(raw: IDBFactory) {
       asyncRequest(create()) { r =>
         val rawDb = r.result
 
-        rawDb.onversionchange = e => {
+        rawDb.onversionchange = e =>
           try {
             val args = versionChange(new DatabaseInVersionChange(rawDb), e)
             callbacks.versionChange(args).runNow()
@@ -57,11 +56,8 @@ final class IndexedDb(raw: IDBFactory) {
             // https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/onclose
             callbacks.closed.runNow()
           }
-        }
 
-        rawDb.onclose = _ => {
-          callbacks.closed.runNow()
-        }
+        rawDb.onclose = _ => callbacks.closed.runNow()
 
         new Database(rawDb, onClose = callbacks.closed)
       }
@@ -79,9 +75,9 @@ object IndexedDb {
     new IndexedDb(raw)
 
   def global(): Option[IndexedDb] =
-    try {
+    try
       window.indexedDB.toOption.map(apply)
-    } catch {
+    catch {
       case _: Throwable => None
     }
 
@@ -94,21 +90,25 @@ object IndexedDb {
 
   type OpenResult = OpenCallbacks => AsyncCallback[Database]
 
-  /** Callbacks to install when opening a DB.
+  /**
+   * Callbacks to install when opening a DB.
    *
    * Note 1: On `versionChange`, the DB connection will be closed automatically.
    *
-   * Note 2: There's no `blocked` handler because we currently don't allow blocking. To quote the idb spec:
-   *         if "there are open connections that don’t close in response to a versionchange event, the request will be
-   *         blocked until all they close".
+   * Note 2: There's no `blocked` handler because we currently don't allow blocking. To quote the
+   * idb spec: if "there are open connections that don’t close in response to a versionchange event,
+   * the request will be blocked until all they close".
    */
-  final case class OpenCallbacks(upgradeNeeded: VersionChange => Callback,
-                                 versionChange: VersionChange => Callback = _ => Callback.empty,
-                                 closed       : Callback                  = Callback.empty)
+  final case class OpenCallbacks(
+    upgradeNeeded: VersionChange => Callback,
+    versionChange: VersionChange => Callback = _ => Callback.empty,
+    closed:        Callback = Callback.empty
+  )
 
-  final case class Error(event: ErrorEvent) extends RuntimeException(
-    event.asInstanceOf[js.Dynamic].message.asInstanceOf[js.UndefOr[String]].getOrElse(null)
-  ) {
+  final case class Error(event: ErrorEvent)
+      extends RuntimeException(
+        event.asInstanceOf[js.Dynamic].message.asInstanceOf[js.UndefOr[String]].getOrElse(null)
+      ) {
 
     // Note: allowing .message to be undefined is presumably only required due to use of fake-indexeddb in tests
     val msg: String =
@@ -118,17 +118,21 @@ object IndexedDb {
     override def toString =
       s"IndexedDb.Error($msg)"
 
-    def isStoredDatabaseHigherThanRequested: Boolean = {
+    def isStoredDatabaseHigherThanRequested: Boolean =
       // Chrome: The requested version (1) is less than the existing version (2).
       // Firefox: The operation failed because the stored database is a higher version than the version requested.
       msg.contains("version") && (msg.contains("higher") || msg.contains("less than"))
-    }
   }
 
-  final case class VersionChange(db: DatabaseInVersionChange, oldVersion: Int, newVersion: Option[Int]) {
+  final case class VersionChange(
+    db:         DatabaseInVersionChange,
+    oldVersion: Int,
+    newVersion: Option[Int]
+  ) {
     def createObjectStore[K, V](defn: ObjectStoreDef[K, V], createdInDbVer: Int): Callback =
       Callback.when(oldVersion < createdInDbVer && newVersion.exists(_ >= createdInDbVer))(
-        db.createObjectStore(defn))
+        db.createObjectStore(defn)
+      )
   }
 
   final class DatabaseInVersionChange(raw: IDBDatabase) {
@@ -153,7 +157,7 @@ object IndexedDb {
       actuallyClose >> onClose
     }
 
-    def compareAndSet(stores: ObjectStoreDef[_, _]*): CasDsl1 =
+    def compareAndSet(stores: ObjectStoreDef[?, ?]*): CasDsl1 =
       new CasDsl1(this, stores)
 
     def transactionRO: RunTxnDsl1[RO] =
@@ -173,11 +177,15 @@ object IndexedDb {
       transactionRW(store)(_.objectStore(store).flatMap(_.add(key, value)))
 
     /** Note: insert only */
-    def addWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def addWhenDefined[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       AsyncCallback.traverseOption_(value)(add(store)(key, _))
 
     /** Note: insert only */
-    def addWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def addWhenDefined[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       AsyncCallback.traverseOption_(value)(add(store)(key, _))
 
     def clear[K, V](store: ObjectStoreDef[K, V]): AsyncCallback[Unit] =
@@ -210,25 +218,33 @@ object IndexedDb {
       transactionRW(store)(_.objectStore(store).flatMap(_.put(key, value)))
 
     /** aka upsert or delete */
-    def putOrDelete[K, V](store: ObjectStoreDef.Async[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putOrDelete[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value match {
         case Some(v) => put(store)(key, v)
         case None    => delete(store)(key)
       }
 
     /** aka upsert or delete */
-    def putOrDelete[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putOrDelete[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value match {
         case Some(v) => put(store)(key, v)
         case None    => delete(store)(key)
       }
 
     /** aka upsert */
-    def putWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putWhenDefined[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       AsyncCallback.traverseOption_(value)(put(store)(key, _))
 
     /** aka upsert */
-    def putWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putWhenDefined[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       AsyncCallback.traverseOption_(value)(put(store)(key, _))
   } // class Database
 
@@ -268,7 +284,7 @@ object IndexedDb {
         case Some(v1) =>
           val v2 = f(v1)
           put(key, v2).map(_ => Some(v2))
-        case None =>
+        case None     =>
           TxnDslRW.none
       }
 
@@ -302,25 +318,31 @@ object IndexedDb {
 
   final class AtomicAsyncDsl[K, V](db: Database, store: ObjectStoreDef.Async[K, V]) {
 
-    /** Performs an async modification on a store value.
-      *
-      * This only modifies an existing value. Use [[modifyAsyncOption()]] to upsert and/or delete values.
-      *
-      * This uses [[compareAndSet()]] for atomicity and thread-safety.
-      *
-      * @return If the value exists, this returns the previous and updated values
-      */
+    /**
+     * Performs an async modification on a store value.
+     *
+     * This only modifies an existing value. Use [[modifyAsyncOption()]] to upsert and/or delete
+     * values.
+     *
+     * This uses [[compareAndSet()]] for atomicity and thread-safety.
+     *
+     * @return
+     *   If the value exists, this returns the previous and updated values
+     */
     def modify(key: K)(f: V => V): AsyncCallback[Option[(V, V)]] =
       modifyAsync(key)(v => AsyncCallback.pure(f(v)))
 
-    /** Performs an async modification on a store value.
-      *
-      * This only modifies an existing value. Use [[modifyAsyncOption()]] to upsert and/or delete values.
-      *
-      * This uses [[compareAndSet()]] for atomicity and thread-safety.
-      *
-      * @return If the value exists, this returns the previous and updated values
-      */
+    /**
+     * Performs an async modification on a store value.
+     *
+     * This only modifies an existing value. Use [[modifyAsyncOption()]] to upsert and/or delete
+     * values.
+     *
+     * This uses [[compareAndSet()]] for atomicity and thread-safety.
+     *
+     * @return
+     *   If the value exists, this returns the previous and updated values
+     */
     def modifyAsync(key: K)(f: V => AsyncCallback[V]): AsyncCallback[Option[(V, V)]] =
       db
         .compareAndSet(store)
@@ -328,35 +350,50 @@ object IndexedDb {
         .mapAsync(AsyncCallback.traverseOption(_)(v1 => f(v1).map((v1, _))))
         .putResultWhenDefinedBy(store)(key, _.map(_._2))
 
-    /** Performs an async modification on an optional store value.
-      *
-      * This uses [[compareAndSet()]] for atomicity and thread-safety.
-      *
-      * @return The previous and updated values
-      */
+    /**
+     * Performs an async modification on an optional store value.
+     *
+     * This uses [[compareAndSet()]] for atomicity and thread-safety.
+     *
+     * @return
+     *   The previous and updated values
+     */
     def modifyOption(key: K)(f: Option[V] => Option[V]): AsyncCallback[(Option[V], Option[V])] =
       modifyOptionAsync(key)(v => AsyncCallback.pure(f(v)))
 
-    /** Performs an async modification on an optional store value.
-      *
-      * This uses [[compareAndSet()]] for atomicity and thread-safety.
-      *
-      * @return The previous and updated values
-      */
-    def modifyOptionAsync(key: K)(f: Option[V] => AsyncCallback[Option[V]]): AsyncCallback[(Option[V], Option[V])] =
+    /**
+     * Performs an async modification on an optional store value.
+     *
+     * This uses [[compareAndSet()]] for atomicity and thread-safety.
+     *
+     * @return
+     *   The previous and updated values
+     */
+    def modifyOptionAsync(
+      key: K
+    )(f: Option[V] => AsyncCallback[Option[V]]): AsyncCallback[(Option[V], Option[V])] =
       db
         .compareAndSet(store)
         .getValueAsync(store)(key)
-        .mapAsync { o1 => f(o1).map((o1, _)) }
+        .mapAsync(o1 => f(o1).map((o1, _)))
         .putOrDeleteResultBy(store)(key, _._2)
   }
 
-  final class RunTxnDsl1[M <: TxnMode] private[IndexedDb](raw: IDBDatabase, txnDsl: TxnDsl[M], mode: IDBTransactionMode) {
-    def apply(stores: ObjectStoreDef[_, _]*): RunTxnDsl2[M] =
+  final class RunTxnDsl1[M <: TxnMode] private[IndexedDb] (
+    raw:    IDBDatabase,
+    txnDsl: TxnDsl[M],
+    mode:   IDBTransactionMode
+  ) {
+    def apply(stores: ObjectStoreDef[?, ?]*): RunTxnDsl2[M] =
       new RunTxnDsl2(raw, txnDsl, mode, mkStoreArray(stores))
   }
 
-  final class RunTxnDsl2[M <: TxnMode] private[IndexedDb](raw: IDBDatabase, txnDsl: TxnDsl[M], mode: IDBTransactionMode, stores: js.Array[String]) {
+  final class RunTxnDsl2[M <: TxnMode] private[IndexedDb] (
+    raw:    IDBDatabase,
+    txnDsl: TxnDsl[M],
+    mode:   IDBTransactionMode,
+    stores: js.Array[String]
+  ) {
 
     def apply[A](f: TxnDsl[M] => Txn[M, A]): AsyncCallback[A] = {
       val x = CallbackTo.pure(f(txnDsl))
@@ -368,9 +405,7 @@ object IndexedDb {
       @inline def startRawTxn(complete: Try[Unit] => Callback) = {
         val txn = raw.transaction(stores, mode)
 
-        txn.onerror = event => {
-          complete(Failure(Error(event))).runNow()
-        }
+        txn.onerror = event => complete(Failure(Error(event))).runNow()
 
         txn.oncomplete = complete(success_).toJsFn1
 
@@ -383,9 +418,9 @@ object IndexedDb {
         (awaitTxnCompletion, complete) <- AsyncCallback.promise[Unit].asAsyncCallback
 
         result <- AsyncCallback.suspend {
-          val txn = startRawTxn(complete)
-          interpretTxn(txn, dsl)
-        }
+                    val txn = startRawTxn(complete)
+                    interpretTxn(txn, dsl)
+                  }
 
         _ <- awaitTxnCompletion
 
@@ -401,7 +436,7 @@ object IndexedDb {
       dsl(txnDsl).flatMap(txnA => apply(_ => txnA))
   }
 
-  final class CasDsl1(db: Database, stores: Seq[ObjectStoreDef[_, _]]) {
+  final class CasDsl1(db: Database, stores: Seq[ObjectStoreDef[?, ?]]) {
 
     def get[A](f: TxnDsl[RO] => Txn[RO, A])(implicit e: Eq[A]) =
       getAndCompareBy(f)(e.eqv)
@@ -413,22 +448,32 @@ object IndexedDb {
       new CasDsl2[A](db, stores, f(TxnDslRO), eql)
 
     /** Note: CAS comparison is on the raw IDB value, i.e. the result prior to async decoding */
-    def getValueAsync[K, V](store: ObjectStoreDef.Async[K, V])(key: K): CasDsl3[Option[store.Value], Option[V]] =
+    def getValueAsync[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K): CasDsl3[Option[store.Value], Option[V]] =
       get(_.objectStore(store).flatMap(_.get(key)))
         .mapAsync(AsyncCallback.traverseOption(_)(_.decode))
 
     /** Note: CAS comparison is on `Option[V]`, i.e. the decoded result */
-    def getValueSync[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit e: Eq[Option[V]]): CasDsl2[Option[V]] =
+    def getValueSync[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit
+      e: Eq[Option[V]]
+    ): CasDsl2[Option[V]] =
       get(_.objectStore(store).flatMap(_.get(key)))
 
-    def getAllKeys[K, V](store: ObjectStoreDef[K, V])(implicit e: Eq[Vector[K]]): CasDsl2[Vector[K]] =
+    def getAllKeys[K, V](store: ObjectStoreDef[K, V])(implicit
+      e: Eq[Vector[K]]
+    ): CasDsl2[Vector[K]] =
       get(_.objectStore(store.sync).flatMap(_.getAllKeys))
 
-    def getAllValuesAsync[K, V](store: ObjectStoreDef.Async[K, V]): CasDsl3[Vector[store.Value], Vector[V]] =
+    def getAllValuesAsync[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    ): CasDsl3[Vector[store.Value], Vector[V]] =
       get(_.objectStore(store).flatMap(_.getAllValues))
         .mapAsync(AsyncCallback.traverse(_)(_.decode))
 
-    def getAllValuesSync[K, V](store: ObjectStoreDef.Sync[K, V])(implicit e: Eq[Vector[V]]): CasDsl2[Vector[V]] =
+    def getAllValuesSync[K, V](store: ObjectStoreDef.Sync[K, V])(implicit
+      e: Eq[Vector[V]]
+    ): CasDsl2[Vector[V]] =
       get(_.objectStore(store.sync).flatMap(_.getAllValues))
   }
 
@@ -442,7 +487,12 @@ object IndexedDb {
       mapAsync(f(_).asAsyncCallback)
   }
 
-  final class CasDsl2[A](db: Database, stores: Seq[ObjectStoreDef[_, _]], get: Txn[RO, A], eql: (A, A) => Boolean) extends CasDsl23[A, A] {
+  final class CasDsl2[A](
+    db:     Database,
+    stores: Seq[ObjectStoreDef[?, ?]],
+    get:    Txn[RO, A],
+    eql:    (A, A) => Boolean
+  ) extends CasDsl23[A, A] {
 
     private def next = mapAsync(AsyncCallback.pure)
 
@@ -450,17 +500,23 @@ object IndexedDb {
       new CasDsl3[A, C](db, stores, get, eql, f)
 
     def set[C](set: TxnDsl[RW] => A => Txn[RW, C]): AsyncCallback[C] =
-      next.set { dsl => (a, _) => set(dsl)(a) }
+      next.set(dsl => (a, _) => set(dsl)(a))
   }
 
-  final class CasDsl3[A, B](db: Database, stores: Seq[ObjectStoreDef[_, _]], get: Txn[RO, A], eql: (A, A) => Boolean, prep: A => AsyncCallback[B]) extends CasDsl23[A, B] {
+  final class CasDsl3[A, B](
+    db:     Database,
+    stores: Seq[ObjectStoreDef[?, ?]],
+    get:    Txn[RO, A],
+    eql:    (A, A) => Boolean,
+    prep:   A => AsyncCallback[B]
+  ) extends CasDsl23[A, B] {
 
     override def mapAsync[C](f: B => AsyncCallback[C]) =
       new CasDsl3[A, C](db, stores, get, eql, prep(_).flatMap(f))
 
     def set[C](set: TxnDsl[RW] => (A, B) => Txn[RW, C]): AsyncCallback[C] = {
-      val txnRO = db.transactionRO(stores: _*)
-      val txnRW = db.transactionRW(stores: _*)
+      val txnRO = db.transactionRO(stores*)
+      val txnRW = db.transactionRW(stores*)
 
       def loopTxn(a: A, b: B): AsyncCallback[Either[A, C]] =
         txnRW { dsl =>
@@ -501,53 +557,67 @@ object IndexedDb {
 
     /** Note: insert only */
     def addResultBy[K, V](store: ObjectStoreDef.Async[K, V])(key: K, f: B => V): AsyncCallback[B] =
-      mapAsync { b => store.encode(f(b)).map((b, _)) }
-      .addResultBy(store.sync)(key, _._2)
-      .map(_._1)
+      mapAsync(b => store.encode(f(b)).map((b, _)))
+        .addResultBy(store.sync)(key, _._2)
+        .map(_._1)
 
     /** Note: insert only */
     def addResultBy[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, f: B => V): AsyncCallback[B] =
-      set(dsl => (_, b) =>
-        for {
-          s <- dsl.objectStore(store)
-          _ <- s.add(key, f(b))
-        } yield b
+      set(dsl =>
+        (_, b) =>
+          for {
+            s <- dsl.objectStore(store)
+            _ <- s.add(key, f(b))
+          } yield b
       )
 
     /** Note: insert only */
-    @inline def addResultWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K)(implicit ev: B => Option[V]): AsyncCallback[B] =
+    @inline def addResultWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K)(implicit
+      ev: B => Option[V]
+    ): AsyncCallback[B] =
       addResultWhenDefinedBy(store)(key, ev)
 
     /** Note: insert only */
-    @inline def addResultWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit ev: B => Option[V]): AsyncCallback[B] =
+    @inline def addResultWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit
+      ev: B => Option[V]
+    ): AsyncCallback[B] =
       addResultWhenDefinedBy(store)(key, ev)
 
     /** Note: insert only */
-    def addResultWhenDefinedBy[K, V](store: ObjectStoreDef.Async[K, V])(key: K, f: B => Option[V]): AsyncCallback[B] =
-      mapAsync { b => AsyncCallback.traverseOption(f(b))(store.encode(_)).map((b, _)) }
-      .addResultWhenDefinedBy(store.sync)(key, _._2)
-      .map(_._1)
+    def addResultWhenDefinedBy[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, f: B => Option[V]): AsyncCallback[B] =
+      mapAsync(b => AsyncCallback.traverseOption(f(b))(store.encode(_)).map((b, _)))
+        .addResultWhenDefinedBy(store.sync)(key, _._2)
+        .map(_._1)
 
     /** Note: insert only */
-    def addResultWhenDefinedBy[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, f: B => Option[V]): AsyncCallback[B] =
-      set(dsl => (_, b) =>
-        f(b) match {
-          case Some(v) =>
-            for {
-              s <- dsl.objectStore(store)
-              _ <- s.add(key, v)
-            } yield b
-          case None =>
-            dsl.pure(b)
-        }
+    def addResultWhenDefinedBy[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, f: B => Option[V]): AsyncCallback[B] =
+      set(dsl =>
+        (_, b) =>
+          f(b) match {
+            case Some(v) =>
+              for {
+                s <- dsl.objectStore(store)
+                _ <- s.add(key, v)
+              } yield b
+            case None    =>
+              dsl.pure(b)
+          }
       )
 
     /** Note: insert only */
-    def addWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def addWhenDefined[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value.fold(AsyncCallback.unit)(add(store)(key, _))
 
     /** Note: insert only */
-    def addWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def addWhenDefined[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value.fold(AsyncCallback.unit)(add(store)(key, _))
 
     def clear[K, V](store: ObjectStoreDef[K, V]): AsyncCallback[Unit] =
@@ -565,40 +635,53 @@ object IndexedDb {
       setConst(_.objectStore(store).flatMap(_.put(key, value)))
 
     /** aka upsert or delete */
-    def putOrDelete[K, V](store: ObjectStoreDef.Async[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putOrDelete[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value match {
         case Some(v) => put(store)(key, v)
         case None    => delete(store)(key)
       }
 
     /** aka upsert or delete */
-    def putOrDelete[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putOrDelete[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value match {
         case Some(v) => put(store)(key, v)
         case None    => delete(store)(key)
       }
 
     /** Note: upsert */
-    @inline def putOrDeleteResult[K, V](store: ObjectStoreDef.Async[K, V])(key: K)(implicit ev: B => Option[V]): AsyncCallback[B] =
+    @inline def putOrDeleteResult[K, V](store: ObjectStoreDef.Async[K, V])(key: K)(implicit
+      ev: B => Option[V]
+    ): AsyncCallback[B] =
       putOrDeleteResultBy(store)(key, ev)
 
     /** Note: upsert */
-    @inline def putOrDeleteResult[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit ev: B => Option[V]): AsyncCallback[B] =
+    @inline def putOrDeleteResult[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit
+      ev: B => Option[V]
+    ): AsyncCallback[B] =
       putOrDeleteResultBy(store)(key, ev)
 
     /** Note: upsert */
-    def putOrDeleteResultBy[K, V](store: ObjectStoreDef.Async[K, V])(key: K, f: B => Option[V]): AsyncCallback[B] =
-      mapAsync { b => AsyncCallback.traverseOption(f(b))(store.encode(_)).map((b, _)) }
-      .putOrDeleteResultBy(store.sync)(key, _._2)
-      .map(_._1)
+    def putOrDeleteResultBy[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, f: B => Option[V]): AsyncCallback[B] =
+      mapAsync(b => AsyncCallback.traverseOption(f(b))(store.encode(_)).map((b, _)))
+        .putOrDeleteResultBy(store.sync)(key, _._2)
+        .map(_._1)
 
     /** Note: upsert */
-    def putOrDeleteResultBy[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, f: B => Option[V]): AsyncCallback[B] =
-      set(dsl => (_, b) =>
-        for {
-          s <- dsl.objectStore(store)
-          _ <- s.putOrDelete(key, f(b))
-        } yield b
+    def putOrDeleteResultBy[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, f: B => Option[V]): AsyncCallback[B] =
+      set(dsl =>
+        (_, b) =>
+          for {
+            s <- dsl.objectStore(store)
+            _ <- s.putOrDelete(key, f(b))
+          } yield b
       )
 
     /** Note: upsert */
@@ -617,52 +700,66 @@ object IndexedDb {
           enc <- store.encode(v)
         } yield (b, enc)
       }
-      .putResultBy(store.sync)(key, _._2)
-      .map(_._1)
+        .putResultBy(store.sync)(key, _._2)
+        .map(_._1)
 
     /** Note: upsert */
     def putResultBy[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, f: B => V): AsyncCallback[B] =
-      set(dsl => (_, b) =>
-        for {
-          s <- dsl.objectStore(store)
-          _ <- s.put(key, f(b))
-        } yield b
+      set(dsl =>
+        (_, b) =>
+          for {
+            s <- dsl.objectStore(store)
+            _ <- s.put(key, f(b))
+          } yield b
       )
 
     /** Note: upsert */
-    @inline def putResultWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K)(implicit ev: B => Option[V]): AsyncCallback[B] =
+    @inline def putResultWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K)(implicit
+      ev: B => Option[V]
+    ): AsyncCallback[B] =
       putResultWhenDefinedBy(store)(key, ev)
 
     /** Note: upsert */
-    @inline def putResultWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit ev: B => Option[V]): AsyncCallback[B] =
+    @inline def putResultWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K)(implicit
+      ev: B => Option[V]
+    ): AsyncCallback[B] =
       putResultWhenDefinedBy(store)(key, ev)
 
     /** Note: upsert */
-    def putResultWhenDefinedBy[K, V](store: ObjectStoreDef.Async[K, V])(key: K, f: B => Option[V]): AsyncCallback[B] =
-      mapAsync { b => AsyncCallback.traverseOption(f(b))(store.encode(_)).map((b, _)) }
-      .putResultWhenDefinedBy(store.sync)(key, _._2)
-      .map(_._1)
+    def putResultWhenDefinedBy[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, f: B => Option[V]): AsyncCallback[B] =
+      mapAsync(b => AsyncCallback.traverseOption(f(b))(store.encode(_)).map((b, _)))
+        .putResultWhenDefinedBy(store.sync)(key, _._2)
+        .map(_._1)
 
     /** Note: upsert */
-    def putResultWhenDefinedBy[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, f: B => Option[V]): AsyncCallback[B] =
-      set(dsl => (_, b) =>
-        f(b) match {
-          case Some(v) =>
-            for {
-              s <- dsl.objectStore(store)
-              _ <- s.put(key, v)
-            } yield b
-          case None =>
-            dsl.pure(b)
-        }
+    def putResultWhenDefinedBy[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, f: B => Option[V]): AsyncCallback[B] =
+      set(dsl =>
+        (_, b) =>
+          f(b) match {
+            case Some(v) =>
+              for {
+                s <- dsl.objectStore(store)
+                _ <- s.put(key, v)
+              } yield b
+            case None    =>
+              dsl.pure(b)
+          }
       )
 
     /** Note: upsert */
-    def putWhenDefined[K, V](store: ObjectStoreDef.Async[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putWhenDefined[K, V](
+      store: ObjectStoreDef.Async[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value.fold(AsyncCallback.unit)(put(store)(key, _))
 
     /** Note: upsert */
-    def putWhenDefined[K, V](store: ObjectStoreDef.Sync[K, V])(key: K, value: Option[V]): AsyncCallback[Unit] =
+    def putWhenDefined[K, V](
+      store: ObjectStoreDef.Sync[K, V]
+    )(key: K, value: Option[V]): AsyncCallback[Unit] =
       value.fold(AsyncCallback.unit)(put(store)(key, _))
 
     def setConst[C](set: TxnDsl[RW] => Txn[RW, C]): AsyncCallback[C] =
@@ -674,20 +771,16 @@ object IndexedDb {
 
     val success_ = Success(())
 
-    def asyncRequest_[R <: IDBRequest[Any, _]](act: => R): AsyncCallback[Unit] =
+    def asyncRequest_[R <: IDBRequest[Any, ?]](act: => R): AsyncCallback[Unit] =
       asyncRequest(act)(_ => ())
 
-    def asyncRequest[R <: IDBRequest[Any, _], A](act: => R)(onSuccess: R => A): AsyncCallback[A] =
+    def asyncRequest[R <: IDBRequest[Any, ?], A](act: => R)(onSuccess: R => A): AsyncCallback[A] =
       AsyncCallback.promise[A].asAsyncCallback.flatMap { case (promise, complete) =>
         val raw = act
 
-        raw.onerror = event => {
-          complete(Failure(Error(event))).runNow()
-        }
+        raw.onerror = event => complete(Failure(Error(event))).runNow()
 
-        raw.onsuccess = _ => {
-          complete(Try(onSuccess(raw))).runNow()
-        }
+        raw.onsuccess = _ => complete(Try(onSuccess(raw))).runNow()
 
         promise
       }
@@ -695,7 +788,7 @@ object IndexedDb {
     def versionChange(db: DatabaseInVersionChange, e: IDBVersionChangeEvent): VersionChange =
       VersionChange(db, e.oldVersion.toInt, e.newVersionOption.map(_.toInt))
 
-    def mkStoreArray(stores: Seq[ObjectStoreDef[_, _]]): js.Array[String] = {
+    def mkStoreArray(stores: Seq[ObjectStoreDef[?, ?]]): js.Array[String] = {
       val a = new js.Array[String]
       stores.foreach(s => a.push(s.name))
       a
@@ -707,10 +800,10 @@ object IndexedDb {
 
         val stores = js.Dynamic.literal().asInstanceOf[js.Dictionary[IDBObjectStore]]
 
-        def getStore(s: ObjectStore[_, _]) =
+        def getStore(s: ObjectStore[?, ?]) =
           AsyncCallback.delay(stores.get(s.defn.name).get)
 
-        def interpret[B](step: TxnStep[TxnMode, B]): AsyncCallback[B] = {
+        def interpret[B](step: TxnStep[TxnMode, B]): AsyncCallback[B] =
           step match {
 
             case FlatMap(fa, f) =>
@@ -764,7 +857,9 @@ object IndexedDb {
                   val rawKeys = req.result
                   Vector.tabulate(rawKeys.length) { i =>
                     val rawKey = rawKeys(i)
-                    keyCodec.decode(IndexedDbKey.fromJs(rawKey)).runNow() // safe in asyncRequest onSuccess
+                    keyCodec
+                      .decode(IndexedDbKey.fromJs(rawKey))
+                      .runNow() // safe in asyncRequest onSuccess
                   }
                 }
               }
@@ -790,7 +885,6 @@ object IndexedDb {
               AsyncCallback.tailrec(z)(a => interpret(f(a)))
 
           }
-        }
 
         interpret(dsl.step)
       }

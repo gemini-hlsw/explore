@@ -11,29 +11,27 @@ import scala.reflect.ClassTag
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer
 
-final case class ValueCodec[A](encode: A => CallbackTo[IDBValue],
-                               decode: IDBValue => CallbackTo[A]) {
+final case class ValueCodec[A](
+  encode: A => CallbackTo[IDBValue],
+  decode: IDBValue => CallbackTo[A]
+) {
 
   def xmap[B](onDecode: A => B)(onEncode: B => A): ValueCodec[B] =
     // Delegating because decoding can fail and must be wrapped to be pure
-    xmapSync(
-      a => CallbackTo(onDecode(a)))(
-      b => CallbackTo(onEncode(b)))
+    xmapSync(a => CallbackTo(onDecode(a)))(b => CallbackTo(onEncode(b)))
 
   def xmapSync[B](onDecode: A => CallbackTo[B])(onEncode: B => CallbackTo[A]): ValueCodec[B] =
-    ValueCodec[B](
-      encode = onEncode(_).flatMap(encode),
-      decode = decode(_).flatMap(onDecode))
+    ValueCodec[B](encode = onEncode(_).flatMap(encode), decode = decode(_).flatMap(onDecode))
 
   def async: ValueCodec.Async[A] =
-    ValueCodec.Async(
-      encode = encode.andThen(_.asAsyncCallback),
-      decode = decode.andThen(_.asAsyncCallback))
+    ValueCodec.Async(encode = encode.andThen(_.asAsyncCallback),
+                     decode = decode.andThen(_.asAsyncCallback)
+    )
 
   type ThisIsBinary = ValueCodec[A] =:= ValueCodec[BinaryData]
 
-  def compress(c: Compression)(implicit ev: ThisIsBinary): ValueCodec[BinaryData] =
-    ev(this).xmap(c.decompressOrThrow)(c.compress)
+  // def compress(c: Compression)(implicit ev: ThisIsBinary): ValueCodec[BinaryData] =
+  //   ev(this).xmap(c.decompressOrThrow)(c.compress)
 }
 
 object ValueCodec {
@@ -59,12 +57,14 @@ object ValueCodec {
   def primative[A: ClassTag](name: String): ValueCodec[A] =
     apply(
       encode = a => CallbackTo.pure(a),
-      decode = d => CallbackTo(
-        (d: Any) match {
-          case a: A => a
-          case x    => throw new js.JavaScriptException(s"Invalid IDB value found. $name expected, got: $x")
-        }
-      )
+      decode = d =>
+        CallbackTo(
+          (d: Any) match {
+            case a: A => a
+            case x    =>
+              throw new js.JavaScriptException(s"Invalid IDB value found. $name expected, got: $x")
+          }
+        )
     )
 
   lazy val string: ValueCodec[String] =
@@ -75,19 +75,17 @@ object ValueCodec {
 
   // ===================================================================================================================
 
-  final case class Async[A](encode: A => AsyncCallback[IDBValue],
-                            decode: IDBValue => AsyncCallback[A]) {
+  final case class Async[A](
+    encode: A => AsyncCallback[IDBValue],
+    decode: IDBValue => AsyncCallback[A]
+  ) {
 
     def xmap[B](onDecode: A => B)(onEncode: B => A): Async[B] =
       // Delegating because decoding can fail and must be wrapped to be pure
-      xmapAsync(
-        a => AsyncCallback.delay(onDecode(a)))(
-        b => AsyncCallback.delay(onEncode(b)))
+      xmapAsync(a => AsyncCallback.delay(onDecode(a)))(b => AsyncCallback.delay(onEncode(b)))
 
     def xmapAsync[B](onDecode: A => AsyncCallback[B])(onEncode: B => AsyncCallback[A]): Async[B] =
-      Async[B](
-        encode = onEncode(_).flatMap(encode),
-        decode = decode(_).flatMap(onDecode))
+      Async[B](encode = onEncode(_).flatMap(encode), decode = decode(_).flatMap(onDecode))
 
     type ThisIsBinary = Async[A] =:= Async[BinaryData]
 
