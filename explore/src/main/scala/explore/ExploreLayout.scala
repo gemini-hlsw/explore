@@ -9,6 +9,7 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
+import crystal.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.cache.CfpCacheController
 import explore.cache.ModesCacheController
@@ -47,6 +48,7 @@ import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
+import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
@@ -200,22 +202,24 @@ object ExploreLayout:
 
                 given Display[AppTab] = _.title
 
-                val (showProgsPopup, msg, isSubmitted, proposalReference)
-                  : (Boolean, Option[String], Boolean, Option[ProposalReference]) =
-                  props.model.programSummariesValue.toOption.fold((false, none, false, none)):
-                    pss =>
-                      routingInfo.optProgramId.fold((true, none, false, none)): id =>
-                        if (pss.programs.get(id).exists(!_.deleted))
-                          (false, none, pss.proposalIsSubmitted, pss.proposalId)
-                        else
-                          (true,
-                           s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
-                           false,
-                           none
-                          )
+                val programSummaries: Pot[ProgramSummaries] =
+                  props.model.programSummariesValue
+
+                val (showProgsPopupPot, msg, isSubmitted, proposalReference)
+                  : (Pot[Boolean], Option[String], Boolean, Option[ProposalReference]) =
+                  programSummaries.toOption.fold((pending, none, false, none)): pss =>
+                    routingInfo.optProgramId.fold((true.ready, none, false, none)): id =>
+                      if (pss.programs.get(id).exists(!_.deleted))
+                        (false.ready, none, pss.proposalIsSubmitted, pss.proposalId)
+                      else
+                        (true.ready,
+                         s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
+                         false,
+                         none
+                        )
 
                 val deadline: Option[Timestamp] =
-                  props.model.programSummariesValue.toOption
+                  programSummaries.toOption
                     .flatMap: programSummaries =>
                       (ProgramSummaries.proposal.getOption(programSummaries).flatten,
                        RootModel.cfps.get(view.get).toOption
@@ -272,7 +276,7 @@ object ExploreLayout:
                             TopBar(
                               vault,
                               routingInfo.optProgramId,
-                              props.model.programSummariesValue.toOption
+                              programSummaries.toOption
                                 .flatMap(_.programOrProposalReference),
                               view.zoom(RootModel.localPreferences).get,
                               view.zoom(RootModel.undoStacks),
@@ -285,37 +289,39 @@ object ExploreLayout:
                             )
                           )
                       ),
-                    SideTabs(
-                      "side-tabs".refined,
-                      routingInfoView.zoom(RoutingInfo.appTab),
-                      tab => ctx.pageUrl((tab, routingInfo.programId, routingInfo.focused).some),
-                      _.separatorAfter,
-                      tab =>
-                        props.model.programSummariesValue.toOption
-                          .flatMap(_.optProgramDetails)
-                          .forall: program =>
-                            // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                            (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                              program.programType === ProgramType.Science &&
-                              (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
-                    ),
-                    if (showProgsPopup)
-                      ProgramsPopup(
-                        currentProgramId = none,
-                        props.model.programSummaries.throttlerView
-                          .zoom(Pot.readyPrism)
-                          .zoom(ProgramSummaries.programs),
-                        undoStacks = view.zoom(RootModel.undoStacks),
-                        onLogout = (onLogout >>
-                          view.zoom(RootModel.vault).set(none).toAsync).some,
-                        message = msg
-                      ): VdomElement
-                    else
-                      <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
-                        props.resolution.renderP(props.model),
-                        TagMod
-                          .when(isSubmitted)(SubmittedProposalMessage(proposalReference, deadline))
-                      )
+                    showProgsPopupPot.renderPot: showProgsPopup =>
+                      if (showProgsPopup)
+                        ProgramsPopup(
+                          currentProgramId = none,
+                          props.model.programSummaries.throttlerView
+                            .zoom(Pot.readyPrism)
+                            .zoom(ProgramSummaries.programs),
+                          undoStacks = view.zoom(RootModel.undoStacks),
+                          message = msg
+                        ): VdomElement
+                      else
+                        React.Fragment(
+                          SideTabs(
+                            "side-tabs".refined,
+                            routingInfoView.zoom(RoutingInfo.appTab),
+                            tab =>
+                              ctx.pageUrl((tab, routingInfo.programId, routingInfo.focused).some),
+                            _.separatorAfter,
+                            tab =>
+                              programSummaries.toOption
+                                .flatMap(_.optProgramDetails)
+                                .forall: program =>
+                                  // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                                  (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                                    program.programType === ProgramType.Science &&
+                                    (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                          ),
+                          <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
+                            props.resolution.renderP(props.model),
+                            TagMod:
+                              SubmittedProposalMessage(proposalReference, deadline)
+                          )
+                        )
                   )
                 )
               }

@@ -104,18 +104,21 @@ object TopBar:
                 props.preferences.copy(level = l)
               ) *> IO(window.location.reload())).runAsync
 
-          val firstItems = List(
+          val firstItems =
             MenuItem.Item(
               label = "About Explore",
               icon = Icons.Info,
               command = isAboutOpen.set(IsAboutOpen(true))
-            ),
-            MenuItem.Item(
-              label = "Manage Programs",
-              icon = Icons.ListCheck,
-              command = isProgramsOpen.setState(IsProgramOpen(true))
-            )
-          )
+            ) +:
+              (if (props.programId.isDefined)
+                 List(
+                   MenuItem.Item(
+                     label = "Manage Programs",
+                     icon = Icons.ListCheck,
+                     command = isProgramsOpen.setState(IsProgramOpen(true))
+                   )
+                 )
+               else List.empty)
 
           val lastItems = List(
             MenuItem.Separator.some,

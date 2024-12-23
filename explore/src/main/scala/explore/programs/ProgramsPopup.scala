@@ -48,7 +48,6 @@ case class ProgramsPopup(
   programInfos:     ViewOpt[ProgramInfoList],
   undoStacks:       View[UndoStacks[IO, ProgramSummaries]],
   onClose:          Option[Callback] = none,
-  onLogout:         Option[IO[Unit]] = none,
   message:          Option[String] = none
 ) extends ReactFnProps(ProgramsPopup.component)
 
@@ -112,16 +111,6 @@ object ProgramsPopup:
           ).small.compact.some
         )
 
-      val logoutButton =
-        props.onLogout.fold(none)(io =>
-          Button(
-            label = "Logout",
-            icon = Icons.Logout,
-            severity = Button.Severity.Danger,
-            onClick = (ctx.sso.logout >> io).runAsync
-          ).small.compact.some
-        )
-
       val programInfosViewOpt: Option[View[ProgramInfoList]] =
         props.programInfos.toOptionView
 
@@ -148,6 +137,7 @@ object ProgramsPopup:
         position = DialogPosition.Top,
         closeOnEscape = props.onClose.isDefined,
         closable = props.onClose.isDefined,
+        modal = props.onClose.isDefined,
         dismissableMask = props.onClose.isDefined,
         resizable = false,
         clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ProgramsPopup,
@@ -167,8 +157,7 @@ object ProgramsPopup:
               value = showDeleted.zoom(ShowDeleted.value.asLens),
               label = "Show deleted"
             ),
-            closeButton,
-            logoutButton
+            closeButton
           )
       )(
         programInfoViewListOpt.toPot
@@ -179,7 +168,6 @@ object ProgramsPopup:
               selectProgram = selectProgram(props.onClose, props.undoStacks, ctx),
               props.onClose.isEmpty,
               onHide,
-              props.onLogout,
               virtualizerRef
             ),
         props.message.map(msg =>
