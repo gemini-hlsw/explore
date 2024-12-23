@@ -4,23 +4,19 @@
 package japgolly.webapputil.boopickle
 
 import boopickle.Decoder
-import boopickle.DefaultBasic._
+import boopickle.DefaultBasic.*
+import cats.Eq
 import cats.data.Ior
-// import japgolly.microlibs.nonempty._
-// import japgolly.microlibs.recursion._
-// import japgolly.microlibs.stdlib_ext.StdlibExt._
-// import japgolly.microlibs.utils.SafeBool
-// import japgolly.univeq.UnivEq
+import cats.data.NonEmptySet
+import cats.data.NonEmptyVector
 import japgolly.webapputil.binary.BinaryData
 import japgolly.webapputil.general.ErrorMsg
+
 import java.nio.ByteBuffer
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
-import scala.reflect.ClassTag
-import cats.Eq
-import cats.data.NonEmptyVector
-import cats.data.NonEmptySet
 import scala.collection.immutable.SortedSet
+import scala.reflect.ClassTag
 
 object PicklerUtil {
 

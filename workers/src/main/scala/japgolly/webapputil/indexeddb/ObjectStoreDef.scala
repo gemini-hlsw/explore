@@ -3,9 +3,10 @@
 
 package japgolly.webapputil.indexeddb
 
-import japgolly.scalajs.react.{AsyncCallback, CallbackTo}
-import org.scalajs.dom.IDBValue
 import cats.Eq
+import japgolly.scalajs.react.AsyncCallback
+import japgolly.scalajs.react.CallbackTo
+import org.scalajs.dom.IDBValue
 
 sealed trait ObjectStoreDef[K, V] {
   val name: String

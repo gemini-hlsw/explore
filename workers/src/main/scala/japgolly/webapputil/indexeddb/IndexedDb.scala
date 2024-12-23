@@ -4,13 +4,16 @@
 package japgolly.webapputil.indexeddb
 
 import cats.kernel.Eq
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.util.Util.{identity => identityFn}
-import japgolly.webapputil.indexeddb.TxnMode._
-import org.scalajs.dom._
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.util.Util.identity as identityFn
+import japgolly.webapputil.indexeddb.TxnMode.*
+import org.scalajs.dom.*
+
 import scala.annotation.elidable
 import scala.scalajs.js
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 final class IndexedDb(raw: IDBFactory) {
   import IndexedDb._

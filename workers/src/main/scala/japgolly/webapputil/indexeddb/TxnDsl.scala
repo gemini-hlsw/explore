@@ -4,10 +4,11 @@
 package japgolly.webapputil.indexeddb
 
 import cats.Traverse
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.util.Util.{identity => identityFn}
+import japgolly.scalajs.react.*
+import japgolly.scalajs.react.util.Util.identity as identityFn
 import japgolly.webapputil.indexeddb.IndexedDb.ObjectStore
-import japgolly.webapputil.indexeddb.TxnMode._
+import japgolly.webapputil.indexeddb.TxnMode.*
+
 import scala.collection.BuildFrom
 
 sealed abstract class TxnDsl[M <: TxnMode] {

@@ -3,12 +3,15 @@
 
 package japgolly.webapputil.binary
 
+import org.scalajs.dom.Blob
+import org.scalajs.dom.FileReader
+import org.scalajs.dom.window
+
 import java.nio.ByteBuffer
-import org.scalajs.dom.{Blob, FileReader, window}
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.typedarray.TypedArrayBufferOps._
-import scala.scalajs.js.typedarray._
+import scala.scalajs.js.JSConverters.*
+import scala.scalajs.js.typedarray.*
+import scala.scalajs.js.typedarray.TypedArrayBufferOps.*
 
 object BinaryJs extends BinaryJs
 

@@ -4,7 +4,7 @@
 package japgolly.webapputil.indexeddb
 
 import cats.Monad
-import japgolly.webapputil.indexeddb.TxnMode._
+import japgolly.webapputil.indexeddb.TxnMode.*
 
 /**
  * Embedded language for safely working with(in) an IndexedDB transaction.

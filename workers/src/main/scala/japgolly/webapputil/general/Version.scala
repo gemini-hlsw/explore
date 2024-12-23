@@ -5,6 +5,7 @@ package japgolly.webapputil.general
 
 import cats.Eq
 import cats.syntax.option.*
+
 import scala.collection.mutable
 
 final case class Version(major: Version.Major, minor: Version.Minor) {

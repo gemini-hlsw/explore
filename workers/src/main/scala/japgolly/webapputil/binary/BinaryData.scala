@@ -3,14 +3,16 @@
 
 package japgolly.webapputil.binary
 
+import cats.Eq
 import japgolly.webapputil.general.ErrorMsg
+
 import java.io.OutputStream
-import java.lang.{StringBuilder => JStringBuilder}
+import java.lang.StringBuilder as JStringBuilder
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.{Arrays, Base64}
+import java.util.Arrays
+import java.util.Base64
 import scala.collection.immutable.ArraySeq
-import cats.Eq
 
 object BinaryData extends BinaryData_PlatformSpecific_Object {
 

@@ -3,10 +3,12 @@
 
 package japgolly.webapputil.indexeddb
 
-import japgolly.scalajs.react.{AsyncCallback, CallbackTo}
-import japgolly.webapputil.binary._
-import java.util.UUID
+import japgolly.scalajs.react.AsyncCallback
+import japgolly.scalajs.react.CallbackTo
+import japgolly.webapputil.binary.*
 import org.scalajs.dom.IDBValue
+
+import java.util.UUID
 import scala.reflect.ClassTag
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.ArrayBuffer

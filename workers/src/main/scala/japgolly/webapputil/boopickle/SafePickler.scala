@@ -3,11 +3,14 @@
 
 package japgolly.webapputil.boopickle
 
+import boopickle.PickleState
+import boopickle.Pickler
+import boopickle.UnpickleState
 import cats.syntax.eq.*
-import boopickle.{PickleState, Pickler, UnpickleState}
 import japgolly.webapputil.binary.BinaryData
 import japgolly.webapputil.general.Version
 import japgolly.webapputil.general.Version.ordering.mkOrderingOps
+
 import scala.annotation.elidable
 import scala.util.control.NonFatal
 

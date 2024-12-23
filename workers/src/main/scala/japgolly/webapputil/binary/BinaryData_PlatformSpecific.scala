@@ -10,9 +10,11 @@ package japgolly.webapputil.binary
 // **********
 
 import org.scalajs.dom.Blob
+
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
-import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
+import scala.scalajs.js.JSConverters.*
+import scala.scalajs.js.typedarray.ArrayBuffer
+import scala.scalajs.js.typedarray.Uint8Array
 
 trait BinaryData_PlatformSpecific_Object { self: BinaryData.type =>
 

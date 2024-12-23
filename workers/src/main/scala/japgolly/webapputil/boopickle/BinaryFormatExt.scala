@@ -3,9 +3,12 @@
 
 package japgolly.webapputil.boopickle
 
-import boopickle.{PickleImpl, Pickler, UnpickleImpl}
+import boopickle.PickleImpl
+import boopickle.Pickler
+import boopickle.UnpickleImpl
 import japgolly.scalajs.react.callback.AsyncCallback
-import japgolly.webapputil.binary._
+import japgolly.webapputil.binary.*
+
 import java.nio.ByteBuffer
 import scala.scalajs.js
 

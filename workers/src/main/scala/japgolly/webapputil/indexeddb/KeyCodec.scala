@@ -4,6 +4,7 @@
 package japgolly.webapputil.indexeddb
 
 import japgolly.scalajs.react.CallbackTo
+
 import java.util.UUID
 import scala.reflect.ClassTag
 import scala.scalajs.js

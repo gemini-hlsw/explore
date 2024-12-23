@@ -3,7 +3,8 @@
 
 package japgolly.webapputil.boopickle
 
-import boopickle.{PickleState, UnpickleState}
+import boopickle.PickleState
+import boopickle.UnpickleState
 import japgolly.webapputil.general.Version
 
 object SafePicklerUtil {
