@@ -11,6 +11,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
 import explore.model.layout.LayoutsMap
+import lucuma.core.enums.CalibrationRole
 import lucuma.react.gridlayout.BreakpointName
 import lucuma.react.gridlayout.Layout
 import lucuma.react.gridlayout.LayoutItem
@@ -263,10 +264,29 @@ object ExploreGridLayouts:
       )
     )
 
-    lazy val specPhotoMedium    = layoutMedium
     lazy val twilightRemovedIds =
-      List(ObsTabTileIds.FinderChartsId, ObsTabTileIds.ItcId, ObsTabTileIds.NotesId).map(_.id.value)
-    lazy val twilightMedium     = layoutMedium.asList.filterNot(l => twilightRemovedIds.contains(l.i))
+      List(ObsTabTileIds.FinderChartsId,
+           ObsTabTileIds.ItcId,
+           ObsTabTileIds.NotesId,
+           ObsTabTileIds.TimingWindowsId
+      ).map(_.id.value)
+
+    lazy val twilightMedium      =
+      layoutMedium.asList
+        .filterNot(l => twilightRemovedIds.contains(l.i))
+    lazy val specPhotoRemovedIds =
+      List(ObsTabTileIds.FinderChartsId, ObsTabTileIds.NotesId, ObsTabTileIds.TimingWindowsId).map(
+        _.id.value
+      )
+    lazy val specPhotoMedium     =
+      layoutMedium.asList
+        .filterNot(l => specPhotoRemovedIds.contains(l.i))
+
+    def removedTiles(role: Option[CalibrationRole]) =
+      role match
+        case Some(CalibrationRole.Twilight)           => twilightRemovedIds
+        case Some(CalibrationRole.SpectroPhotometric) => specPhotoRemovedIds
+        case _                                        => Nil
 
     lazy val defaultObsLayouts: LayoutsMap =
       defineStdLayouts(
@@ -279,8 +299,8 @@ object ExploreGridLayouts:
     lazy val specPhotoObsLayouts: LayoutsMap =
       defineStdLayouts(
         Map(
-          (BreakpointName.lg, specPhotoMedium),
-          (BreakpointName.md, specPhotoMedium)
+          (BreakpointName.lg, Layout(specPhotoMedium)),
+          (BreakpointName.md, Layout(specPhotoMedium))
         )
       ).withMinWidth
 

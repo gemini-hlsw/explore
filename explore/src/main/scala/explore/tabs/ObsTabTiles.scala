@@ -52,6 +52,7 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
@@ -86,7 +87,6 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import lucuma.core.enums.CalibrationRole
 
 case class ObsTabTiles(
   vault:             Option[UserVault],
@@ -552,38 +552,23 @@ object ObsTabTiles:
                 props.globalPreferences.get.wavelengthUnits
               )
 
+            val alltiles =
+              List(
+                notesTile.some,
+                targetTile.some,
+                if (!props.vault.isGuest) finderChartsTile.some else none,
+                skyPlotTile,
+                constraintsTile.some,
+                schedulingWindowsTile.some,
+                configurationTile.some,
+                sequenceTile.some,
+                itcTile.some
+              ).flattenOption
+
+            val removedIds = ExploreGridLayouts.observations.removedTiles(props.calibrationRole)
+
             val tiles =
-              props.observation.zoom(Observation.calibrationRole).get match {
-                case Some(CalibrationRole.SpectroPhotometric) =>
-                  List(
-                    targetTile.some,
-                    skyPlotTile,
-                    constraintsTile.some,
-                    configurationTile.some,
-                    sequenceTile.some,
-                    itcTile.some
-                  ).flattenOption
-                case Some(CalibrationRole.Twilight)           =>
-                  List(
-                    targetTile.some,
-                    skyPlotTile,
-                    constraintsTile.some,
-                    configurationTile.some,
-                    sequenceTile.some
-                  ).flattenOption
-                case _                                        =>
-                  List(
-                    notesTile.some,
-                    targetTile.some,
-                    if (!props.vault.isGuest) finderChartsTile.some else none,
-                    skyPlotTile,
-                    constraintsTile.some,
-                    schedulingWindowsTile.some,
-                    configurationTile.some,
-                    sequenceTile.some,
-                    itcTile.some
-                  ).flattenOption
-              }
+              alltiles.filterNot(t => removedIds.contains(t.id))
 
             TileController(
               props.vault.userId,
