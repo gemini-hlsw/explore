@@ -311,9 +311,8 @@ object ObsTabContents extends TwoPanels:
                   props.searching,
                   // We need this as a separate view so it doesn't get in the way of undo and can be easily updated by AGS
                   obsView.zoom(Observation.selectedGSName),
-                  ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsLayout),
-                  props.userPreferences.get.observationsTabLayout,
                   resize,
+                  props.userPreferences.get,
                   props.globalPreferences,
                   props.readonly || addingObservation.get.value
                 ).withKey(s"${obsId.show}")

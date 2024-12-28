@@ -24,15 +24,17 @@ import scala.collection.immutable.SortedMap
 object ExploreGridLayouts:
 
   def sectionLayout: GridLayoutSection => LayoutsMap = _ match {
-    case GridLayoutSection.ProgramsLayout        => programs.defaultProgramsLayouts
-    case GridLayoutSection.ConstraintsLayout     => constraints.defaultConstraintsLayouts
-    case GridLayoutSection.SchedulingLayout      => scheduling.defaultSchedulingLayouts
-    case GridLayoutSection.TargetLayout          => targets.defaultTargetLayouts
-    case GridLayoutSection.ObservationsLayout    => observations.defaultObsLayouts
-    case GridLayoutSection.ObservationListLayout => observationList.defaultObsListLayouts
-    case GridLayoutSection.OverviewLayout        => overview.defaultOverviewLayouts
-    case GridLayoutSection.ProposalLayout        => proposal.defaultProposalLayouts
-    case GridLayoutSection.GroupEditLayout       => groupEdit.defaultGroupEditLayouts
+    case GridLayoutSection.ProgramsLayout              => programs.defaultProgramsLayouts
+    case GridLayoutSection.ConstraintsLayout           => constraints.defaultConstraintsLayouts
+    case GridLayoutSection.SchedulingLayout            => scheduling.defaultSchedulingLayouts
+    case GridLayoutSection.TargetLayout                => targets.defaultTargetLayouts
+    case GridLayoutSection.ObservationsLayout          => observations.defaultObsLayouts
+    case GridLayoutSection.ObservationsSpecPhotoLayout => observations.specPhotoObsLayouts
+    case GridLayoutSection.ObservationsTwilightLayout  => observations.twilightObsLayouts
+    case GridLayoutSection.ObservationListLayout       => observationList.defaultObsListLayouts
+    case GridLayoutSection.OverviewLayout              => overview.defaultOverviewLayouts
+    case GridLayoutSection.ProposalLayout              => proposal.defaultProposalLayouts
+    case GridLayoutSection.GroupEditLayout             => groupEdit.defaultGroupEditLayouts
   }
 
   extension (l: LayoutsMap)
@@ -261,11 +263,32 @@ object ExploreGridLayouts:
       )
     )
 
+    lazy val specPhotoMedium    = layoutMedium
+    lazy val twilightRemovedIds =
+      List(ObsTabTileIds.FinderChartsId, ObsTabTileIds.ItcId, ObsTabTileIds.NotesId).map(_.id.value)
+    lazy val twilightMedium     = layoutMedium.asList.filterNot(l => twilightRemovedIds.contains(l.i))
+
     lazy val defaultObsLayouts: LayoutsMap =
       defineStdLayouts(
         Map(
           (BreakpointName.lg, layoutMedium),
           (BreakpointName.md, layoutMedium)
+        )
+      ).withMinWidth
+
+    lazy val specPhotoObsLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg, specPhotoMedium),
+          (BreakpointName.md, specPhotoMedium)
+        )
+      ).withMinWidth
+
+    lazy val twilightObsLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg, Layout(twilightMedium)),
+          (BreakpointName.md, Layout(twilightMedium))
         )
       ).withMinWidth
   end observations
