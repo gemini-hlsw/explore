@@ -2,10 +2,10 @@ table:
   name: lucumaObservation
   schema: public
 array_relationships:
-- name: exploreFinderCharts
-  using:
-    foreign_key_constraint_on:
-      column: observationId
-      table:
-        name: exploreFinderChart
-        schema: public
+  - name: exploreFinderCharts
+    using:
+      foreign_key_constraint_on:
+        column: observationId
+        table:
+          name: exploreFinderChart
+          schema: public
