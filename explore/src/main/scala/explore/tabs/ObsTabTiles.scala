@@ -52,6 +52,7 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
@@ -99,9 +100,8 @@ case class ObsTabTiles(
   focusedTarget:     Option[Target.Id],
   searching:         View[Set[Target.Id]],
   selectedGSName:    View[Option[NonEmptyString]],
-  defaultLayouts:    LayoutsMap,
-  layouts:           LayoutsMap,
   resize:            UseResizeDetectorReturn,
+  userPreferences:   UserPreferences,
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
@@ -117,6 +117,7 @@ case class ObsTabTiles(
   val asterismTracking: Option[ObjectTracking]                      =
     observation.get.asterismTracking(obsTargets)
   val posAngleConstraint: PosAngleConstraint                        = observation.get.posAngleConstraint
+  val calibrationRole: Option[CalibrationRole]                      = observation.zoom(Observation.calibrationRole).get
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -146,6 +147,27 @@ object ObsTabTiles:
     science:     Option[NonEmptyList[Offset]],
     acquisition: Option[NonEmptyList[Offset]]
   )
+
+  def roleLayout(
+    userPreferences: UserPreferences,
+    calibrationRole: Option[CalibrationRole]
+  ): (GridLayoutSection, LayoutsMap, LayoutsMap) =
+    def result(section: GridLayoutSection) =
+      (section,
+       ExploreGridLayouts.sectionLayout(section),
+       UserPreferences.gridLayouts
+         .index(section)
+         .getOption(userPreferences)
+         .getOrElse(ExploreGridLayouts.sectionLayout(section))
+      )
+
+    calibrationRole match
+      case Some(CalibrationRole.SpectroPhotometric) =>
+        result(GridLayoutSection.ObservationsSpecPhotoLayout)
+      case Some(CalibrationRole.Twilight)           =>
+        result(GridLayoutSection.ObservationsTwilightLayout)
+      case _                                        =>
+        result(GridLayoutSection.ObservationsLayout)
 
   // TODO Move to core
   extension (om: ObservingMode)
@@ -235,6 +257,12 @@ object ObsTabTiles:
               Callback.empty
           }
         }
+      .useStateBy((p, _, _, _, _, _, _, _, _, _, _) =>
+        roleLayout(p.userPreferences, p.calibrationRole)
+      )
+      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _) => p.calibrationRole):
+        (p, _, _, _, _, _, _, _, _, _, _, l) =>
+          role => l.setState(roleLayout(p.userPreferences, role))
       .render:
         (
           props,
@@ -247,9 +275,11 @@ object ObsTabTiles:
           sequenceChanged,
           vizTimeOrNowPot,
           _,
-          guideStarSelection
+          guideStarSelection,
+          roleLayouts
         ) =>
           import ctx.given
+          val (section, defaultLayout, layout) = roleLayouts.value
 
           vizTimeOrNowPot.renderPot: vizTimeOrNow =>
 
@@ -522,11 +552,7 @@ object ObsTabTiles:
                 props.globalPreferences.get.wavelengthUnits
               )
 
-            TileController(
-              props.vault.userId,
-              props.resize.width.getOrElse(0),
-              props.defaultLayouts,
-              props.layouts,
+            val alltiles =
               List(
                 notesTile.some,
                 targetTile.some,
@@ -537,7 +563,19 @@ object ObsTabTiles:
                 configurationTile.some,
                 sequenceTile.some,
                 itcTile.some
-              ).flattenOption,
-              GridLayoutSection.ObservationsLayout,
+              ).flattenOption
+
+            val removedIds = ExploreGridLayouts.observations.removedTiles(props.calibrationRole)
+
+            val tiles =
+              alltiles.filterNot(t => removedIds.contains(t.id))
+
+            TileController(
+              props.vault.userId,
+              props.resize.width.getOrElse(0),
+              defaultLayout,
+              layout,
+              tiles,
+              section,
               props.backButton.some
             )

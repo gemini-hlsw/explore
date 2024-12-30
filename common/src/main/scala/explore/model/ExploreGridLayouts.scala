@@ -11,6 +11,7 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
 import explore.model.layout.LayoutsMap
+import lucuma.core.enums.CalibrationRole
 import lucuma.react.gridlayout.BreakpointName
 import lucuma.react.gridlayout.Layout
 import lucuma.react.gridlayout.LayoutItem
@@ -24,15 +25,17 @@ import scala.collection.immutable.SortedMap
 object ExploreGridLayouts:
 
   def sectionLayout: GridLayoutSection => LayoutsMap = _ match {
-    case GridLayoutSection.ProgramsLayout        => programs.defaultProgramsLayouts
-    case GridLayoutSection.ConstraintsLayout     => constraints.defaultConstraintsLayouts
-    case GridLayoutSection.SchedulingLayout      => scheduling.defaultSchedulingLayouts
-    case GridLayoutSection.TargetLayout          => targets.defaultTargetLayouts
-    case GridLayoutSection.ObservationsLayout    => observations.defaultObsLayouts
-    case GridLayoutSection.ObservationListLayout => observationList.defaultObsListLayouts
-    case GridLayoutSection.OverviewLayout        => overview.defaultOverviewLayouts
-    case GridLayoutSection.ProposalLayout        => proposal.defaultProposalLayouts
-    case GridLayoutSection.GroupEditLayout       => groupEdit.defaultGroupEditLayouts
+    case GridLayoutSection.ProgramsLayout              => programs.defaultProgramsLayouts
+    case GridLayoutSection.ConstraintsLayout           => constraints.defaultConstraintsLayouts
+    case GridLayoutSection.SchedulingLayout            => scheduling.defaultSchedulingLayouts
+    case GridLayoutSection.TargetLayout                => targets.defaultTargetLayouts
+    case GridLayoutSection.ObservationsLayout          => observations.defaultObsLayouts
+    case GridLayoutSection.ObservationsSpecPhotoLayout => observations.specPhotoObsLayouts
+    case GridLayoutSection.ObservationsTwilightLayout  => observations.twilightObsLayouts
+    case GridLayoutSection.ObservationListLayout       => observationList.defaultObsListLayouts
+    case GridLayoutSection.OverviewLayout              => overview.defaultOverviewLayouts
+    case GridLayoutSection.ProposalLayout              => proposal.defaultProposalLayouts
+    case GridLayoutSection.GroupEditLayout             => groupEdit.defaultGroupEditLayouts
   }
 
   extension (l: LayoutsMap)
@@ -261,11 +264,51 @@ object ExploreGridLayouts:
       )
     )
 
+    lazy val twilightRemovedIds =
+      List(ObsTabTileIds.FinderChartsId,
+           ObsTabTileIds.ItcId,
+           ObsTabTileIds.NotesId,
+           ObsTabTileIds.TimingWindowsId
+      ).map(_.id.value)
+
+    lazy val twilightMedium      =
+      layoutMedium.asList
+        .filterNot(l => twilightRemovedIds.contains(l.i))
+    lazy val specPhotoRemovedIds =
+      List(ObsTabTileIds.FinderChartsId, ObsTabTileIds.NotesId, ObsTabTileIds.TimingWindowsId).map(
+        _.id.value
+      )
+    lazy val specPhotoMedium     =
+      layoutMedium.asList
+        .filterNot(l => specPhotoRemovedIds.contains(l.i))
+
+    def removedTiles(role: Option[CalibrationRole]) =
+      role match
+        case Some(CalibrationRole.Twilight)           => twilightRemovedIds
+        case Some(CalibrationRole.SpectroPhotometric) => specPhotoRemovedIds
+        case _                                        => Nil
+
     lazy val defaultObsLayouts: LayoutsMap =
       defineStdLayouts(
         Map(
           (BreakpointName.lg, layoutMedium),
           (BreakpointName.md, layoutMedium)
+        )
+      ).withMinWidth
+
+    lazy val specPhotoObsLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg, Layout(specPhotoMedium)),
+          (BreakpointName.md, Layout(specPhotoMedium))
+        )
+      ).withMinWidth
+
+    lazy val twilightObsLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg, Layout(twilightMedium)),
+          (BreakpointName.md, Layout(twilightMedium))
         )
       ).withMinWidth
   end observations
