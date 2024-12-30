@@ -99,8 +99,22 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
       case _            => modS(base).assign
 
 extension [F[_]: Sync: ToastCtx](f: F[Unit])
-  def withToast(text: String, severity: Message.Severity = Message.Severity.Info): F[Unit] =
-    f <* ToastCtx[F].showToast(text, severity)
+  def withToast(
+    text:     String,
+    severity: Message.Severity = Message.Severity.Info,
+    sticky:   Boolean = false
+  ): F[Unit] =
+    f <* ToastCtx[F].showToast(text, severity, sticky)
+
+  def withToastBefore(
+    text:     String,
+    severity: Message.Severity = Message.Severity.Info,
+    sticky:   Boolean = false
+  ): F[Unit] =
+    ToastCtx[F].showToast(text, severity, sticky) *> f
+
+  def clearToastsAfter: F[Unit] =
+    f <* ToastCtx[F].clear()
 
 extension (toastRef: ToastRef)
   def upgradePrompt(text: VdomNode, callback: Callback): Callback =
