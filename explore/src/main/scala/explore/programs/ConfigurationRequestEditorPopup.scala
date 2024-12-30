@@ -34,12 +34,16 @@ object ConfigurationRequestEditorPopup:
 
   private type PopupState = PopupState.Type
 
-  val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useStateView(PopupState.Closed)
-    .useStateView("") // message
-    .render: (props, ctx, popupState, message) =>
+  val component = ScalaFnComponent[Props]: props =>
+    for {
+      ctx        <- useContext(AppContext.ctx)
+      popupState <- useStateView(PopupState.Closed)
+      message    <- useStateView("")
+      isEmpty    <- useStateView(true)
+      isBlank    <- useStateView(true)
+      _          <- useEffectWithDeps(message.get): msg =>
+                      isEmpty.set(msg.isEmpty) >> isBlank.set(msg.isBlank)
+    } yield
       val close = popupState.set(PopupState.Closed)
 
       val notice =
@@ -52,7 +56,7 @@ object ConfigurationRequestEditorPopup:
         Button(
           label = "Clear Text",
           icon = Icons.Eraser,
-          disabled = message.get.isEmpty,
+          disabled = isEmpty.get,
           onClick = message.set("")
         ).small,
         Button(
@@ -64,7 +68,7 @@ object ConfigurationRequestEditorPopup:
         Button(
           label = "Submit",
           icon = Icons.PaperPlaneTop,
-          disabled = message.get.isBlank,
+          disabled = isBlank.get,
           onClick = close >> props.onSubmit(message.get)
         ).small
       )
@@ -87,7 +91,8 @@ object ConfigurationRequestEditorPopup:
             Divider(),
             FormInputTextAreaView(
               id = "message_text_area".refined,
-              value = message
+              value = message,
+              onTextChange = s => isBlank.set(s.isBlank) >> isEmpty.set(s.isEmpty)
             )
           )
         )
