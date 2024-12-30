@@ -6,28 +6,108 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
-import lucuma.core.model.OrcidId
-import lucuma.core.model.User
+import lucuma.core.data.EmailAddress
+import lucuma.core.enums.EducationalStatus
+import lucuma.core.enums.Gender
+import lucuma.core.enums.ProgramUserRole
+import lucuma.core.model.PartnerLink
 import lucuma.core.model.UserProfile
+import lucuma.odb.json.partnerlink.given
 import lucuma.sso.client.codec.userProfile.given
+import monocle.Focus
+import monocle.Lens
 
-// Case class for the 'pi' and `users` in the Program. These must be
-// actual users, not service users.
 case class ProgramUser(
-  id:      User.Id,
-  orcidId: Option[OrcidId],
-  profile: Option[UserProfile]
+  id:                ProgramUser.Id,
+  user:              Option[User],
+  partnerLink:       Option[PartnerLink],
+  role:              ProgramUserRole,
+  educationalStatus: Option[EducationalStatus],
+  thesis:            Option[Boolean],
+  gender:            Option[Gender],
+  fallbackProfile:   UserProfile,
+  invitations:       List[UserInvitation]
 ) derives Eq:
-  lazy val name: String = profile.fold("Guest User")(_.displayName.orEmpty)
+  val name: String          =
+    user.fold(fallbackProfile.displayName.orEmpty)(_.name)
+  val email: Option[String] =
+    user.flatMap(_.profile.flatMap(_.email)).orElse(fallbackProfile.email)
 
-  lazy val nameWithEmail: String =
-    name + profile.flatMap(_.email).foldMap(email => s" ($email)")
+  // should only ever be one non-revoked invitation
+  val activeInvitation: Option[UserInvitation] =
+    invitations.find(!_.isRevoked)
+
+  lazy val status: ProgramUser.Status =
+    user match
+      case Some(_) => ProgramUser.Status.Confirmed
+      case None    =>
+        activeInvitation match
+          case None      => ProgramUser.Status.NotInvited
+          case Some(inv) => ProgramUser.Status.Invited(inv.deliveryStatus)
 
 object ProgramUser:
+  type Id = lucuma.core.model.ProgramUser.Id
+  val Id = lucuma.core.model.ProgramUser.Id
+
+  sealed abstract class Status(val message: String) derives Eq:
+    val isInvited = this match
+      case Status.Invited(_) => true
+      case _                 => false
+
+  object Status:
+    object Confirmed                                                  extends Status("Confirmed")
+    object NotInvited                                                 extends Status("Not Invited")
+    case class Invited(deliveryStatus: UserInvitation.DeliveryStatus) extends Status("Invited")
+
+  val id: Lens[ProgramUser, Id] = Focus[ProgramUser](_.id)
+
+  val user: Lens[ProgramUser, Option[User]] = Focus[ProgramUser](_.user)
+
+  val partnerLink: Lens[ProgramUser, Option[PartnerLink]] =
+    Focus[ProgramUser](_.partnerLink)
+
+  val educationalStatus: Lens[ProgramUser, Option[EducationalStatus]] =
+    Focus[ProgramUser](_.educationalStatus)
+
+  val thesis: Lens[ProgramUser, Option[Boolean]] =
+    Focus[ProgramUser](_.thesis)
+
+  val gender: Lens[ProgramUser, Option[Gender]] =
+    Focus[ProgramUser](_.gender)
+
+  val fallbackProfile: Lens[ProgramUser, UserProfile] =
+    Focus[ProgramUser](_.fallbackProfile)
+
+  val invitations: Lens[ProgramUser, List[UserInvitation]] =
+    Focus[ProgramUser](_.invitations)
+
+  private val profileCreditNameNES: Lens[UserProfile, Option[NonEmptyString]] =
+    Lens[UserProfile, Option[NonEmptyString]](
+      _.creditName.flatMap(NonEmptyString.from(_).toOption)
+    )(ones => UserProfile.creditName.replace(ones.map(_.value)))
+
+  private val profileEmailAddress: Lens[UserProfile, Option[EmailAddress]] =
+    Lens[UserProfile, Option[EmailAddress]](
+      _.email.flatMap(EmailAddress.from(_).toOption)
+    )(oe => UserProfile.email.replace(oe.map(_.value.value)))
+
+  val fallbackCreditName: Lens[ProgramUser, Option[NonEmptyString]] =
+    fallbackProfile.andThen(profileCreditNameNES)
+
+  val fallbackEmail: Lens[ProgramUser, Option[EmailAddress]] =
+    fallbackProfile.andThen(profileEmailAddress)
+
   given Decoder[ProgramUser] = c =>
     for {
-      id      <- c.downField("id").as[User.Id]
-      orcidId <- c.downField("orcidId").as[Option[OrcidId]]
-      profile <- c.downField("profile").as[Option[UserProfile]]
-    } yield ProgramUser(id, orcidId, profile)
+      id   <- c.downField("id").as[Id]
+      u    <- c.downField("user").as[Option[User]]
+      pl   <- c.downField("partnerLink").as[Option[PartnerLink]]
+      role <- c.downField("role").as[ProgramUserRole]
+      es   <- c.downField("educationalStatus").as[Option[EducationalStatus]]
+      th   <- c.downField("thesis").as[Option[Boolean]]
+      g    <- c.downField("gender").as[Option[Gender]]
+      fb   <- c.downField("fallbackProfile").as[UserProfile]
+      in   <- c.downField("invitations").as[List[UserInvitation]]
+    } yield ProgramUser(id, u, pl, role, es, th, g, fb, in)

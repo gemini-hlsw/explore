@@ -147,6 +147,10 @@ object Icons {
   val faUserGroupSimple: FAIcon = js.native
 
   @js.native
+  @JSImport("@fortawesome/pro-duotone-svg-icons", "faUserMagnifyingGlass")
+  val faUserMagnifyingGlass: FAIcon = js.native
+
+  @js.native
   @JSImport("@fortawesome/pro-duotone-svg-icons", "faUserPlus")
   val faUserPlus: FAIcon = js.native
 
@@ -390,6 +394,7 @@ object Icons {
     faTimes,
     faUserGears,
     faUserGroupSimple,
+    faUserMagnifyingGlass,
     faUserPlus,
     faExclamationTriangle,
     faExclamationDiamond,
@@ -480,6 +485,7 @@ object Icons {
   val ExclamationDiamond     = FontAwesomeIcon(faExclamationDiamond)
   val UserGears              = FontAwesomeIcon(faUserGears)
   val UserGroupSimple        = FontAwesomeIcon(faUserGroupSimple)
+  val UserMagnifyingGlass    = FontAwesomeIcon(faUserMagnifyingGlass)
   val UserPlus               = FontAwesomeIcon(faUserPlus)
   val Logout                 = FontAwesomeIcon(faSignOutAlt)
   val SkullCrossBones        = FontAwesomeIcon(faSkullCrossbones)
@@ -531,6 +537,7 @@ object Icons {
   val CloudArrowUp           = FontAwesomeIcon(faCloudArrowUp)
   val ArrowUpRightFromSquare = FontAwesomeIcon(faArrowUpRightFromSquare)
 
-  val MissingInfoIcon = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
-  val ErrorIcon       = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)
+  val MissingInfoIcon  = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
+  val ErrorIcon        = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)
+  val SuccessCheckmark = Checkmark.withClass(ExploreStyles.SuccessIcon)
 }

@@ -19,7 +19,7 @@ case class RootModelViews(
   lazy val optUserProgramRole: Option[ProgramUserRole]  =
     val users      = programSummariesValue.toOption.flatMap(_.optProgramDetails).map(_.users)
     val thisUserId = rootModel.get.vault.map(_.user.id)
-    (thisUserId, users).flatMapN((id, us) => us.find(_.user.id === id)).map(_.role)
+    (thisUserId, users).flatMapN((id, us) => us.find(_.user.exists(_.id === id))).map(_.role)
   lazy val userIsReadonlyCoi                            = optUserProgramRole.exists(_ === ProgramUserRole.CoiRO)
 
 object RootModelViews:

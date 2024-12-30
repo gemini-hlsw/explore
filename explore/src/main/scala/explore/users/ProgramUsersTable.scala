@@ -8,37 +8,46 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.cats.given
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ProgramQueries.*
 import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model.AppContext
+import explore.model.ExploreModelValidators
 import explore.model.IsActive
-import explore.model.ProgramUserWithRole
+import explore.model.ProgramUser
+import explore.model.ProgramUser.Status.*
+import explore.model.User
 import explore.model.UserInvitation
+import explore.model.UserInvitation.DeliveryStatus.*
 import explore.model.display.given
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Gender
-import lucuma.core.enums.InvitationStatus
 import lucuma.core.enums.Partner
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.PartnerLink
-import lucuma.core.model.Program
-import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
+import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
+import lucuma.react.fa.FontAwesomeIcon
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Checkbox
+import lucuma.react.primereact.OverlayPanelRef
 import lucuma.react.primereact.SelectItem
+import lucuma.react.primereact.TooltipOptions
+import lucuma.react.primereact.hooks.all.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB.Types.UnlinkUserInput
+import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.react.given
@@ -46,12 +55,11 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 import monocle.function.Each.*
-import queries.common.ProposalQueriesGQL.UnlinkUser
+import queries.common.InvitationQueriesGQL.RevokeInvitationMutation
+import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
 case class ProgramUsersTable(
-  programId:     Program.Id,
-  users:         View[List[ProgramUserWithRole]],
-  invitations:   View[List[UserInvitation]],
+  users:         View[List[ProgramUser]],
   filterRoles:   NonEmptySet[ProgramUserRole],
   readonly:      Boolean,
   hiddenColumns: Set[ProgramUsersTable.Column] = Set.empty
@@ -61,13 +69,15 @@ object ProgramUsersTable:
   private type Props = ProgramUsersTable
 
   private case class TableMeta(
-    programId: Program.Id,
-    users:     View[List[ProgramUserWithRole]],
-    readOnly:  Boolean,
-    isActive:  View[IsActive]
+    users:              View[List[ProgramUser]],
+    readOnly:           Boolean,
+    isActive:           View[IsActive],
+    overlayPanelRef:    OverlayPanelRef,
+    createInviteStatus: View[CreateInviteStatus],
+    currentProgUser:    View[Option[View[ProgramUser]]]
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[View[ProgramUserWithRole], TableMeta]
+  private val ColDef = ColumnDef.WithTableMeta[View[ProgramUser], TableMeta]
 
   enum Column(
     protected[ProgramUsersTable] val tag:    String,
@@ -83,12 +93,13 @@ object ProgramUsersTable:
     case Gender            extends Column("gender", "Gender")
     case OrcidId           extends Column("orcid-id", "ORCID")
     case Role              extends Column("role", "Role")
-    case Unlink            extends Column("unlink", "")
+    case Status            extends Column("status", "Status")
+    case Actions           extends Column("actions", "")
 
   private def column[V](
     column:   Column,
-    accessor: View[ProgramUserWithRole] => V
-  ): ColumnDef.Single.WithTableMeta[View[ProgramUserWithRole], V, TableMeta] =
+    accessor: View[ProgramUser] => V
+  ): ColumnDef.Single.WithTableMeta[View[ProgramUser], V, TableMeta] =
     ColDef(column.id, accessor, column.header)
 
   val partnerLinkOptions: List[PartnerLink] =
@@ -136,28 +147,161 @@ object ProgramUsersTable:
     )
 
   def userWithRole(userId: User.Id) =
-    each[List[ProgramUserWithRole], ProgramUserWithRole]
-      .filter(_.user.id === userId)
+    each[List[ProgramUser], ProgramUser]
+      .filter(_.user.exists(_.id === userId))
 
-  private def columns(
+  private def deleteUserButton(
+    programUserId: ProgramUser.Id,
+    users:         View[List[ProgramUser]],
+    isActive:      View[IsActive],
+    readOnly:      Boolean
+  )(using ctx: AppContext[IO]): VdomNode =
+    import ctx.given
+
+    val action =
+      DeleteProgramUser[IO].execute(programUserId.toDeleteInput) *>
+        users.mod(_.filterNot(_.id === programUserId)).to[IO]
+
+    val delete = deleteConfirmation(
+      s"This action will remove the user from this proposal. This action cannot be reversed.",
+      "Remove user",
+      "Yes",
+      action.void,
+      isActive
+    )
+    Button(
+      icon = Icons.Trash,
+      severity = Button.Severity.Secondary,
+      disabled = readOnly || isActive.get.value,
+      onClick = delete,
+      tooltip = "Remove user from proposal",
+      tooltipOptions = TooltipOptions.Left
+    ).mini.compact
+
+  private def inviteUserButton(
+    programUser: View[ProgramUser],
+    tableMeta:   TableMeta
+  ): VdomNode =
+    Button(
+      severity = Button.Severity.Secondary,
+      disabled =
+        tableMeta.readOnly || tableMeta.isActive.get.value || tableMeta.createInviteStatus.get == CreateInviteStatus.Running,
+      icon = Icons.PaperPlaneTop,
+      tooltip = s"Send invitation",
+      tooltipOptions = TooltipOptions.Left,
+      onClickE = e =>
+        tableMeta.currentProgUser.set(programUser.some) >>
+          tableMeta.overlayPanelRef.toggle(e)
+    ).mini.compact
+
+  private def revokeInvitationButton(
+    programUser: View[ProgramUser],
+    invitation:  UserInvitation,
+    isActive:    View[IsActive],
+    readOnly:    Boolean
+  )(using ctx: AppContext[IO]): VdomNode =
+    import ctx.given
+
+    val action: IO[Unit] =
+      RevokeInvitationMutation[IO].execute(invitation.id) *>
+        programUser.zoom(ProgramUser.invitations).mod(_.filterNot(_.id === invitation.id)).to[IO]
+
+    val revoke: Callback =
+      deleteConfirmation(
+        s"This action will revoke the invitation to ${invitation.email}. This action cannot be reversed.",
+        "Revoke invitation",
+        "Yes, revoke",
+        action.void,
+        isActive
+      )
+
+    Button(
+      icon = Icons.Ban,
+      severity = Button.Severity.Secondary,
+      disabled = readOnly || isActive.get.value,
+      onClick = revoke,
+      tooltip = s"Revoke invitation",
+      tooltipOptions = TooltipOptions.Left
+    ).mini.compact
+
+  private def statusIcon(status: ProgramUser.Status): TagMod =
+    status match
+      case Confirmed               => TagMod.empty
+      case NotInvited              => TagMod.empty
+      case Invited(deliveryStatus) =>
+        deliveryStatus match
+          case Success(message)    => <.span(Icons.SuccessCheckmark).withTooltip(message)
+          case InProgress(message) => <.span(Icons.Info).withTooltip(message)
+          case Failed(message)     => <.span(Icons.ErrorIcon).withTooltip(message)
+
+  private def columns(using
     ctx: AppContext[IO]
-  ): List[ColumnDef.WithTableMeta[View[ProgramUserWithRole], ?, TableMeta]] =
+  ): List[ColumnDef.WithTableMeta[View[ProgramUser], ?, TableMeta]] =
     import ctx.given
 
     List(
-      column(Column.Name, _.get.name).sortable,
+      ColDef(
+        Column.Name.id,
+        identity,
+        Column.Name.header,
+        cell = c =>
+          c.table.options.meta.map: meta =>
+            val pu: ProgramUser               = c.value.get
+            val programUserId: ProgramUser.Id = pu.id
+            // We'll allow editing the name if there is no REAL user
+            // AND the fallback display name is the same as the credit name.
+            // In explore, we'll always set the credit name, but a user could have
+            // updated the fallback profile via the API, and we won't mess with that.
+            if (pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName)
+              val view = c.value
+                .zoom(ProgramUser.fallbackCreditName)
+                .withOnMod(ones =>
+                  updateUserFallbackName[IO](programUserId, ones.map(_.value)).runAsync
+                )
+              FormInputTextView(
+                id = NonEmptyString.unsafeFrom(s"${programUserId}-name"),
+                value = view,
+                disabled = meta.readOnly,
+                validFormat = InputValidSplitEpi.nonEmptyString.optional
+              ): VdomNode
+            else pu.name: VdomNode
+      ).sortableBy(_.get.name),
+      ColDef(
+        Column.Email.id,
+        identity,
+        Column.Email.header,
+        cell = c =>
+          c.table.options.meta.map: meta =>
+            val pu: ProgramUser               = c.value.get
+            val programUserId: ProgramUser.Id = pu.id
+            // We'll allow editing the email if there is no REAL user
+            // or the real email address is empty
+            if (pu.user.flatMap(_.profile).flatMap(_.email).isEmpty)
+              val view = c.value
+                .zoom(ProgramUser.fallbackEmail)
+                .withOnMod(oe =>
+                  updateUserFallbackEmail[IO](programUserId, oe.map(_.value.value)).runAsync
+                )
+              FormInputTextView(
+                id = NonEmptyString.unsafeFrom(s"${programUserId}-email"),
+                value = view,
+                disabled = meta.readOnly,
+                validFormat = ExploreModelValidators.MailValidator.optional
+              ): VdomNode
+            else pu.email.getOrElse("-"): VdomNode
+      ).sortableBy(_.get.email),
       ColDef(
         Column.Partner.id,
-        _.zoom(ProgramUserWithRole.partnerLink),
+        _.zoom(ProgramUser.partnerLink),
         enableSorting = true,
         enableResizing = true,
         cell = c =>
           c.table.options.meta.map: meta =>
-            val cell: View[ProgramUserWithRole]      = c.row.original
-            val userId: User.Id                      = cell.get.user.id
+            val cell: View[ProgramUser]              = c.row.original
+            val programUserId: ProgramUser.Id        = cell.get.id
             val usersView: View[Option[PartnerLink]] =
               c.value.withOnMod: pl =>
-                updateProgramPartner[IO](meta.programId, userId, pl).runAsyncAndForget
+                updateProgramPartner[IO](programUserId, pl).runAsync
             val pl: Option[PartnerLink]              =
               cell.get.partnerLink.flatMap:
                 case PartnerLink.HasUnspecifiedPartner => None
@@ -165,19 +309,18 @@ object ProgramUsersTable:
 
             partnerSelector(pl, usersView.set, meta.readOnly || meta.isActive.get.value)
       ).sortableBy(_.get.toString),
-      column(Column.Email, _.get.user.profile.foldMap(_.email).getOrElse("-")).sortable,
       ColDef(
         Column.EducationalStatus.id,
-        _.zoom(ProgramUserWithRole.educationalStatus),
+        _.zoom(ProgramUser.educationalStatus),
         enableSorting = true,
         enableResizing = true,
         cell = c =>
-          val cell   = c.row.original
-          val userId = cell.get.user.id
+          val cell                          = c.row.original
+          val programUserId: ProgramUser.Id = cell.get.id
           c.table.options.meta.map: meta =>
             val view: View[Option[EducationalStatus]] =
               c.value.withOnMod: es =>
-                updateUserES[IO](meta.programId, userId, es).runAsyncAndForget
+                updateUserES[IO](programUserId, es).runAsync
 
             EnumDropdownOptionalView(
               id = "es".refined,
@@ -192,31 +335,33 @@ object ProgramUsersTable:
       ).sortableBy(_.get.toString),
       ColDef(
         Column.Thesis.id,
-        _.zoom(ProgramUserWithRole.thesis),
+        _.zoom(ProgramUser.thesis),
         cell = c =>
-          val cell   = c.row.original
-          val userId = cell.get.user.id
+          val cell                          = c.row.original
+          val programUserId: ProgramUser.Id = cell.get.id
 
           c.table.options.meta.map: meta =>
             val view = c.value
-              .withOnMod(th => updateUserThesis[IO](meta.programId, userId, th).runAsyncAndForget)
+              .withOnMod(th => updateUserThesis[IO](programUserId, th).runAsync)
             Checkbox(
               id = "thesis",
               checked = view.get.getOrElse(false),
               disabled = meta.readOnly || meta.isActive.get.value,
               onChange = r => view.set(r.some)
             )
+        ,
+        size = 80.toPx
       ).sortableBy(_.get),
       ColDef(
         Column.Gender.id,
-        _.zoom(ProgramUserWithRole.gender),
+        _.zoom(ProgramUser.gender),
         cell = c =>
-          val cell   = c.row.original
-          val userId = cell.get.user.id
+          val cell                          = c.row.original
+          val programUserId: ProgramUser.Id = cell.get.id
 
           c.table.options.meta.map: meta =>
             val view = c.value
-              .withOnMod(th => updateUserGender[IO](meta.programId, userId, th).runAsyncAndForget)
+              .withOnMod(th => updateUserGender[IO](programUserId, th).runAsync)
             EnumOptionalDropdown[Gender](
               id = "gender".refined,
               value = view.get,
@@ -229,84 +374,95 @@ object ProgramUsersTable:
               onChange = view.set
             )
       ).sortableBy(_.get.toString),
-      column(Column.OrcidId, _.get.user.orcidId.foldMap(_.value)).sortable,
+      column(Column.OrcidId, _.get.user.flatMap(_.orcidId).foldMap(_.value)).sortable,
+      // TODO: Make editable between COI and Readonly COI, if user is not this one
       column(Column.Role, _.get.role.shortName).sortable,
       ColDef(
-        Column.Unlink.id,
-        _.get,
+        Column.Status.id,
+        _.get.status,
+        Column.Status.header,
+        cell = c =>
+          val status = c.value
+          val icon   = statusIcon(status)
+          <.span(icon, " ", status.message)
+      ).sortableBy(_.message),
+      ColDef(
+        Column.Actions.id,
+        identity,
         "",
         enableResizing = false,
         cell = cell =>
           cell.table.options.meta.map: meta =>
-            val userId = cell.value.user.id
-            val action =
-              UnlinkUser[IO].execute(UnlinkUserInput(meta.programId, userId)) *>
-                meta.users.mod(_.filterNot(_.user.id === userId)).to[IO]
+            val programUserView = cell.value
+            val programUserId   = programUserView.get.id
+            val role            = programUserView.get.role
+            val status          = programUserView.get.status
 
-            val unlink = deleteConfirmation(
-              s"This action will remove the user from this proposal. This action cannot be reversed.",
-              "Remove user",
-              "Yes",
-              action.void,
-              meta.isActive
-            )
-
-            <.div(ExploreStyles.ApiKeyDelete)(
-              Button(
-                icon = Icons.Trash,
-                severity = Button.Severity.Secondary,
-                disabled = meta.readOnly || meta.isActive.get.value,
-                onClick = unlink
-              ).mini.compact
-                .unless(cell.value.role === ProgramUserRole.Pi) // don't allow removing the PI
+            <.span(
+              deleteUserButton(programUserId, meta.users, meta.isActive, meta.readOnly)
+                .unless(role === ProgramUserRole.Pi), // don't allow removing the PI
+              inviteUserButton(programUserView, meta)
+                .when(status === ProgramUser.Status.NotInvited),
+              programUserView.get.activeInvitation
+                .map(invitation =>
+                  revokeInvitationButton(programUserView, invitation, meta.isActive, meta.readOnly)
+                    .when(status.isInvited)
+                )
+                .orEmpty
             )
         ,
-        size = 35.toPx
+        size = 85.toPx
       )
     )
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStateView(IsActive(false))
-      .useMemoBy((_, _, _) => ()): (_, ctx, _) => // cols
-        _ => columns(ctx)
-      .useMemoBy((props, _, _, _) => props.users.reuseByValue): (props, _, _, _) => // rows
-        _.toListOfViews.filter(row => props.filterRoles.contains_(row.get.role))
-      .useReactTableBy: (props, _, isActive, cols, rows) =>
-        TableOptions(
-          cols,
-          rows,
-          getRowId = (row, _, _) => RowId(row.get.user.id.toString),
-          enableSorting = true,
-          meta = TableMeta(props.programId, props.users, props.readonly, isActive),
-          state = PartialTableState(
-            columnVisibility = ColumnVisibility(
-              (props.hiddenColumns.map(_.id -> Visibility.Hidden) +
-                (Column.Unlink.id -> Visibility.fromVisible(!props.readonly))).toMap
-            )
-          )
+    ScalaFnComponent[Props](props =>
+      for {
+        ctx                <- useContext(AppContext.ctx)
+        isActive           <- useStateView(IsActive(false))
+        cols               <- useMemo(()): _ =>
+                                columns(using ctx)
+        rows               <- useMemo(props.users.reuseByValue)(
+                                _.toListOfViews.filter(row => props.filterRoles.contains_(row.get.role))
+                              )
+        overlayPanelRef    <- useOverlayPanelRef
+        currentProgUser    <- useStateView(none[View[ProgramUser]])
+        _                  <- useEffectWithDeps(rows): rows =>
+                                // we need to set it when possible so the invite user popup
+                                // gets in the DOM. It will be re-set on button click
+                                currentProgUser.set(rows.headOption)
+        createInviteStatus <- useStateView(CreateInviteStatus.Idle)
+        table              <- useReactTable(
+                                TableOptions(
+                                  cols,
+                                  rows,
+                                  getRowId = (row, _, _) => RowId(row.get.id.toString),
+                                  enableSorting = true,
+                                  meta = TableMeta(
+                                    props.users,
+                                    props.readonly,
+                                    isActive,
+                                    overlayPanelRef,
+                                    createInviteStatus,
+                                    currentProgUser
+                                  ),
+                                  state = PartialTableState(
+                                    columnVisibility = ColumnVisibility(
+                                      (props.hiddenColumns.map(_.id -> Visibility.Hidden) +
+                                        (Column.Actions.id -> Visibility.fromVisible(!props.readonly))).toMap
+                                    )
+                                  )
+                                )
+                              )
+      } yield React.Fragment(
+        PrimeTable(
+          table,
+          striped = true,
+          compact = Compact.Very,
+          emptyMessage = "No users defined"
+        ),
+        currentProgUser.get.map(progUser =>
+          InviteUserPopup(progUser, createInviteStatus, overlayPanelRef) // : VdomNode
         )
-      .render: (props, _, _, _, _, table) =>
-        val arePendingInvitations: Boolean = props.invitations.get
-          .filter: i =>
-            i.status === InvitationStatus.Pending && props.filterRoles.contains_(i.role)
-          .nonEmpty
-
-        React.Fragment(
-          PrimeTable(
-            table,
-            striped = true,
-            compact = Compact.Very,
-            emptyMessage = "No users defined"
-          ),
-          Option
-            .when[VdomNode](arePendingInvitations)(
-              React.Fragment(
-                <.label("Pending invitations"),
-                ProgramUserInvitations(props.invitations, props.filterRoles, props.readonly)
-              )
-            )
-            .orEmpty
-        )
+      )
+    )

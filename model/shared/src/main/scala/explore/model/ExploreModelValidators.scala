@@ -13,6 +13,8 @@ import eu.timepit.refined.types.numeric.NonNegBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.HourRange
 import explore.model.display.given
+import lucuma.core.data.EmailAddress
+import lucuma.core.data.EmailPred
 import lucuma.core.math.Angle
 import lucuma.core.math.Axis
 import lucuma.core.math.BrightnessValue
@@ -203,3 +205,7 @@ object ExploreModelValidators:
           _ => NonEmptyChain("Invalid declination velocity".refined[NonEmpty])
         )
     )
+
+  val MailValidator: InputValidSplitEpi[EmailAddress] =
+    // Scala doesn't like type aliases with refined types?
+    InputValidSplitEpi.refinedString[EmailPred].asInstanceOf[InputValidSplitEpi[EmailAddress]]

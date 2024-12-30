@@ -9,16 +9,22 @@ import explore.model.ProgramUser
 import lucuma.schemas.ObservationDB
 
 @GraphQL
-object ProgramUserSubquery extends GraphQLSubquery.Typed[ObservationDB, ProgramUser]("User"):
-  override val subquery: String = """
+object ProgramUserSubquery extends GraphQLSubquery.Typed[ObservationDB, ProgramUser]("ProgramUser"):
+  override val subquery: String = s"""
     {
       id
-      orcidId
-      profile {
-        givenName
-        creditName
-        familyName
-        email
+      user $UserSubquery
+      partnerLink {
+        linkType
+        ... on HasPartner {
+          partner
+        }
       }
+      role
+      educationalStatus
+      thesis
+      gender
+      fallbackProfile $UserProfileSubquery
+      invitations $UserInvitationSubquery
     }
   """

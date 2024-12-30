@@ -10,12 +10,12 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
+import explore.model.ProgramUser
 import lucuma.core.enums.ConfigurationRequestStatus
 import lucuma.core.model.Attachment
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
-import lucuma.core.model.User
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -96,49 +96,57 @@ object ProgramQueries:
       .void
 
   def updateProgramUsers[F[_]: Async](
-    pid: Program.Id,
-    uid: User.Id,
-    set: ProgramUserPropertiesInput
+    puid: ProgramUser.Id,
+    set:  ProgramUserPropertiesInput
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     ProgramUsersMutation[F]
       .execute(
         UpdateProgramUsersInput(
-          WHERE = WhereProgramUser(
-            program = WhereProgram(id = WhereOrderProgramId(EQ = pid.assign).assign).assign,
-            user = WhereUser(id = WhereOrderUserId(EQ = uid.assign).assign).assign
-          ).assign,
+          WHERE = puid.toWhereProgramUser.assign,
           SET = set
         )
       )
       .void
 
-  def updateProgramPartner[F[_]: Async](
-    pid: Program.Id,
-    uid: User.Id,
-    pl:  Option[PartnerLink]
+  def updateUserFallbackName[F[_]: Async](
+    puid:       ProgramUser.Id,
+    creditName: Option[String]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
+    val fallbackInput = UserProfileInput(creditName = creditName.orUnassign)
+    val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
+    updateProgramUsers(puid, input)
+
+  def updateUserFallbackEmail[F[_]: Async](
+    puid:  ProgramUser.Id,
+    email: Option[String]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    val fallbackInput = UserProfileInput(email = email.orUnassign)
+    val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
+    updateProgramUsers(puid, input)
+
+  def updateProgramPartner[F[_]: Async](
+    puid: ProgramUser.Id,
+    pl:   Option[PartnerLink]
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateProgramUsers(puid, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
 
   def updateUserES[F[_]: Async](
-    pid: Program.Id,
-    uid: User.Id,
-    es:  Option[EducationalStatus]
+    puid: ProgramUser.Id,
+    es:   Option[EducationalStatus]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
+    updateProgramUsers(puid, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
 
   def updateUserThesis[F[_]: Async](
-    pid: Program.Id,
-    uid: User.Id,
-    th:  Option[Boolean]
+    puid: ProgramUser.Id,
+    th:   Option[Boolean]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(thesis = th.orUnassign))
+    updateProgramUsers(puid, ProgramUserPropertiesInput(thesis = th.orUnassign))
 
   def updateUserGender[F[_]: Async](
-    pid: Program.Id,
-    uid: User.Id,
-    g:   Option[Gender]
+    puid: ProgramUser.Id,
+    g:    Option[Gender]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
-    updateProgramUsers(pid, uid, ProgramUserPropertiesInput(gender = g.orUnassign))
+    updateProgramUsers(puid, ProgramUserPropertiesInput(gender = g.orUnassign))
 
   def updateConfigurationRequestStatus[F[_]: Async](
     rids:      List[ConfigurationRequest.Id],
