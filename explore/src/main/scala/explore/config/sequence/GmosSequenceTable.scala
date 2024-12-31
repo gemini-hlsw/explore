@@ -86,19 +86,19 @@ sealed trait GmosSequenceTable[S, D]:
     currentVisitData.map(_._2)
   protected[sequence] lazy val currentStepId: Option[Step.Id]                = currentVisitData.flatMap(_._3)
 
-  // Hide acquisition when science is executing.
+  protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
+    config.science
+      .map(futureSteps(ObserveClass.Science))
+      .orEmpty
+
+  // Hide acquisition when science is executing or when sequence is complete.
   protected[sequence] lazy val isAcquisitionDisplayed: Boolean =
-    !currentAtomSequenceType.contains_(SequenceType.Science)
+    !currentAtomSequenceType.contains_(SequenceType.Science) && scienceRows.nonEmpty
 
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
     config.acquisition // If we are executing Science, don't show any future acquisition rows.
       .filter(_ => isAcquisitionDisplayed)
       .map(futureSteps(ObserveClass.Acquisition))
-      .orEmpty
-
-  protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
-    config.science
-      .map(futureSteps(ObserveClass.Science))
       .orEmpty
 
 case class GmosNorthSequenceTable(
