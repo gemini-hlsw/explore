@@ -140,12 +140,12 @@ case class ProgramSummaries(
   lazy val obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]] =
     configurationRequests
       .map: (crId, cr) =>
-        val obsList: List[Observation] =
-          observations.values.toList
-            .filter: obs =>
-              // keep inactive ones here.
-              obs.calibrationRole.isEmpty &&
-                obs.configuration.fold(false)(cr.configuration.subsumes)
+        val obsList = cr.applicableObservations
+          .map(observations.get)
+          .flattenOption
+          // keep inactive, but filter out calibrations - the API should
+          // should stop including calibration observations, but until then...
+          .filter(_.calibrationRole.isEmpty)
         (crId, obsList)
       .toMap
 
@@ -258,7 +258,7 @@ object ProgramSummaries:
     programTimesPot:    Pot[ProgramTimes],
     obsExecutionPots:   Map[Observation.Id, Pot[Execution]],
     groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]],
-    configRequests:     List[ConfigurationRequest]
+    configRequests:     List[ConfigurationRequestWithObsIds]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,

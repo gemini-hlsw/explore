@@ -91,6 +91,20 @@ object ProgramSummaryQueriesGQL {
   }
 
   @GraphQL
+  trait ObservationsWorkflowQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$where: WhereObservation!) {
+        observations(WHERE: $$where) {
+          matches {
+            id
+            workflow $ObservationWorkflowSubquery
+          }
+        }
+      }
+    """
+  }
+
+  @GraphQL
   trait ObservationExecutionQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
       query($$id: ObservationId!) {
