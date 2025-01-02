@@ -6,7 +6,10 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.given
+import eu.timepit.refined.types.numeric.NonNegInt
 import io.circe.Decoder
+import io.circe.refined.given
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
@@ -24,7 +27,7 @@ case class ProgramDetails(
   invitations:       List[UserInvitation],
   reference:         Option[ProgramReference],
   allocations:       CategoryAllocationList,
-  proprietaryMonths: Int
+  proprietaryMonths: NonNegInt
 ) derives Eq:
   val allUsers: List[ProgramUserWithRole] = pi.fold(users)(_ :: users)
 
@@ -52,6 +55,6 @@ object ProgramDetails:
       r  <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]
-      // pm <- c.downField("goa").downField("proprietaryMonths").as[Int]
-    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as, 2)
+      pm <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
+    } yield ProgramDetails(t, p, ps, pi, us, in, r.flatten, as, pm)
   )

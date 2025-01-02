@@ -49,7 +49,7 @@ object ProgramDetailsTile:
         FormInfo(Constants.GppDateFormatter.format(props.semester.end.localDate), "End"),
         // Thesis should be set True if any of the investigators will use the proposal as part of their thesis (3390)
         FormInfo(if (thesis) "Yes" else "No", "Thesis"),
-        FormInfo(s"${details.proprietaryMonths} months", "Propietary")
+        FormInfo(s"${details.proprietaryMonths} months", "Proprietary")
       ),
       <.div(
         TimeAwardTable(details.allocations),
