@@ -81,7 +81,7 @@ object ProposalEditor:
       ctx             <- useContext(AppContext.ctx)
       abstractCounter <-
         useState(props.proposal.get.abstrakt.map(_.value).foldMap(_.wordCount))
-      _               <- useEffectWithDeps(props.proposal.get.abstrakt.map(_.value)) { // _ =>
+      _               <- useEffectWithDeps(props.proposal.get.abstrakt.map(_.value)) {
                            case Some(t) => abstractCounter.setState(t.wordCount)
                            case None    => abstractCounter.setState(0)
                          }

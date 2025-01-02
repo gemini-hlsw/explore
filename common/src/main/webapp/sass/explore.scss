@@ -1404,8 +1404,8 @@ svg.fa-triangle-exclamation.explore-error-icon {
 }
 
 svg.fa-check.explore-success-icon {
-  // taken from the primereact success button color. Move to lucuma-ui?
-  color: #4caf50;
+  // taken from the primereact success button color where it is #4caf50. Move to lucuma-ui?
+  color: hsl(122deg 39% 49%);
 }
 
 .aladin-status-current-coordinates {
