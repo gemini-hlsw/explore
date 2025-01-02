@@ -8,12 +8,12 @@ import cats.derived.*
 import io.circe.*
 import lucuma.core.model.Program
 
-case class ProgramInvitation(givenName: String, familyName: String, pid: Program.Id) derives Eq
+case class RedeemInvitationResult(givenName: String, familyName: String, pid: Program.Id) derives Eq
 
-object ProgramInvitation:
-  given Decoder[ProgramInvitation] = c =>
+object RedeemInvitationResult:
+  given Decoder[RedeemInvitationResult] = c =>
     for {
       gn <- c.downField("issuer").downField("profile").get[String]("givenName")
       fn <- c.downField("issuer").downField("profile").get[String]("familyName")
-      pi <- c.downField("program").get[Program.Id]("id")
-    } yield ProgramInvitation(gn, fn, pi)
+      pi <- c.downField("programUser").downField("program").get[Program.Id]("id")
+    } yield RedeemInvitationResult(gn, fn, pi)

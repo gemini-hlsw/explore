@@ -14,7 +14,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.IsActive
-import explore.model.ProgramInvitation
+import explore.model.RedeemInvitationResult
 import explore.model.enums.AppTab
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -39,26 +39,24 @@ enum RedeemInviteProcess(private val tag: String) derives Enumerated:
   case Done    extends RedeemInviteProcess("done")
 
 case class RedeemInvitationsPopup(vault: UserVault, onClose: Option[Callback] = none)
-    extends ReactFnProps(RedeemInvitationsPopup.component)
+    extends ReactFnProps(RedeemInvitationsPopup.Component)
 
 object RedeemInvitationsPopup:
-  private type Props = RedeemInvitationsPopup
-
   private object IsOpen     extends NewType[Boolean]
   private object ErrorMsg   extends NewType[Option[String]]
   private object IsKeyValid extends NewType[Boolean]
 
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useState(IsOpen(true))
-    .useStateView[IsActive](IsActive(false))
-    .useStateView(RedeemInviteProcess.Idle)
-    .useStateView("") // key
-    .useStateView(IsKeyValid(false))
-    .useStateView(ErrorMsg(none))
-    .useStateView(none[ProgramInvitation])
-    .render: (props, ctx, isOpen, active, process, key, isKeyValid, errorMsg, result) =>
+  private val Component = ScalaFnComponent[RedeemInvitationsPopup]: props =>
+    for {
+      ctx        <- useContext(AppContext.ctx)
+      isOpen     <- useState(IsOpen(true))
+      active     <- useStateView[IsActive](IsActive(false))
+      process    <- useStateView(RedeemInviteProcess.Idle)
+      key        <- useStateView("")
+      isKeyValid <- useStateView(IsKeyValid(false))
+      errorMsg   <- useStateView(ErrorMsg(none))
+      result     <- useStateView(none[RedeemInvitationResult])
+    } yield
       import ctx.given
 
       val onHide = props.onClose.map(oc => isOpen.setState(IsOpen(false)) >> oc)

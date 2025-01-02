@@ -6,9 +6,8 @@ package explore.programs
 import cats.data.NonEmptySet
 import crystal.react.View
 import explore.components.ui.ExploreStyles
-import explore.model.ProgramUserWithRole
-import explore.model.UserInvitation
-import explore.users.InviteUserButton
+import explore.model.ProgramUser
+import explore.users.AddProgramUserButton
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -18,8 +17,7 @@ import lucuma.react.common.ReactFnProps
 
 case class SupportUsers(
   programId:   Program.Id,
-  users:       View[List[ProgramUserWithRole]],
-  invitations: View[List[UserInvitation]],
+  users:       View[List[ProgramUser]],
   title:       String,
   supportRole: SupportUsers.SupportRole,
   readonly:    Boolean
@@ -36,13 +34,14 @@ object SupportUsers:
     <.div(ExploreStyles.ProgramDetailsUsers)(
       <.label(
         props.title,
-        InviteUserButton(props.programId, props.supportRole.role, props.invitations)
-          .unless(props.readonly)
+        AddProgramUserButton(
+          props.programId,
+          props.supportRole.role,
+          props.users
+        ).unless(props.readonly)
       ),
       ProgramUsersTable(
-        props.programId,
         props.users,
-        props.invitations,
         NonEmptySet.one(props.supportRole.role),
         props.readonly,
         hiddenColumns = Set(

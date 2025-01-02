@@ -9,13 +9,12 @@ import explore.model.UserInvitation
 import lucuma.schemas.ObservationDB
 
 @GraphQL
-object ProgramInvitationsSubquery
-    extends GraphQLSubquery.Typed[ObservationDB, UserInvitation]("CoIInvitation"):
+object UserInvitationSubquery
+    extends GraphQLSubquery.Typed[ObservationDB, UserInvitation]("UserInvitation"):
   override val subquery: String = """
     {
       id
       recipientEmail
-      role
       status
       email {
         status

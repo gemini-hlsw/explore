@@ -5,24 +5,15 @@ package queries.common
 
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
-import explore.model.ProgramUserWithRole
+import explore.model.User
 import lucuma.schemas.ObservationDB
 
 @GraphQL
-object ProgramUserWithRoleSubquery
-    extends GraphQLSubquery.Typed[ObservationDB, ProgramUserWithRole]("ProgramUser"):
+object UserSubquery extends GraphQLSubquery.Typed[ObservationDB, User]("User"):
   override val subquery: String = s"""
     {
-      user $ProgramUserSubquery
-      partnerLink {
-        linkType
-        ... on HasPartner {
-          partner
-        }
-      }
-      role
-      educationalStatus
-      thesis
-      gender
+      id
+      orcidId
+      profile $UserProfileSubquery
     }
   """

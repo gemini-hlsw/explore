@@ -10,8 +10,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.Constants
 import explore.model.ProgramDetails
 import explore.model.ProgramTimes
-import explore.model.ProgramUserWithRole
-import explore.model.UserInvitation
+import explore.model.ProgramUser
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Access
@@ -35,12 +34,10 @@ object ProgramDetailsTile:
   private val EditSupportAccesses: Set[Access] = Set(Access.Admin, Access.Staff)
 
   private val component = ScalaFnComponent[Props]: props =>
-    val details: ProgramDetails                 = props.programDetails.get
-    val thesis: Boolean                         = details.allUsers.exists(_.thesis.exists(_ === true))
-    val users: View[List[ProgramUserWithRole]]  = props.programDetails.zoom(ProgramDetails.allUsers)
-    val invitations: View[List[UserInvitation]] =
-      props.programDetails.zoom(ProgramDetails.invitations)
-    val readonly: Boolean                       = !EditSupportAccesses.contains_(props.currentUserAccess)
+    val details: ProgramDetails        = props.programDetails.get
+    val thesis: Boolean                = details.allUsers.exists(_.thesis.exists(_ === true))
+    val users: View[List[ProgramUser]] = props.programDetails.zoom(ProgramDetails.allUsers)
+    val readonly: Boolean              = !EditSupportAccesses.contains_(props.currentUserAccess)
 
     <.div(ExploreStyles.ProgramDetailsTile)(
       <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(
@@ -59,7 +56,6 @@ object ProgramDetailsTile:
         SupportUsers(
           props.programId,
           users,
-          invitations,
           "Principal Support",
           SupportUsers.SupportRole.Primary,
           readonly
@@ -67,7 +63,6 @@ object ProgramDetailsTile:
         SupportUsers(
           props.programId,
           users,
-          invitations,
           "Additional Support",
           SupportUsers.SupportRole.Secondary,
           readonly

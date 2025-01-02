@@ -49,6 +49,27 @@ object ProposalQueriesGQL:
     """
 
   @GraphQL
+  trait AddProgramUser extends GraphQLOperation[ObservationDB]:
+    val document: String = s"""
+      mutation($$input: AddProgramUserInput!) {
+        addProgramUser(input: $$input) {
+          programUser $ProgramUserSubquery
+        }
+      }
+    """
+
+  @GraphQL
+  trait DeleteProgramUser extends GraphQLOperation[ObservationDB]:
+    val document: String = s"""
+      mutation($$input: DeleteProgramUserInput!) {
+        deleteProgramUser(input: $$input) {
+          result
+        }
+      }
+    """
+
+  // TODO: Do we need this?
+  @GraphQL
   trait UnlinkUser extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       mutation ($$input: UnlinkUserInput!) {

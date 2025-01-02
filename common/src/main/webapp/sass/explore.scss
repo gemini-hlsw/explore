@@ -1403,6 +1403,11 @@ svg.fa-triangle-exclamation.explore-error-icon {
   color: var(--negative-icon-color);
 }
 
+svg.fa-check.explore-success-icon {
+  // taken from the primereact success button color where it is #4caf50. Move to lucuma-ui?
+  color: hsl(122deg 39% 49%);
+}
+
 .aladin-status-current-coordinates {
   @include aladin-toolbar-labels;
 
@@ -2127,12 +2132,12 @@ img.partner-split-flag {
   }
 }
 
-// User invite
+// Program User create/invite
 .p-overlaypanel.compact-overlay-panel .p-overlaypanel-content {
   padding: 0;
 }
 
-.invite-user-button {
+.add-program-user-button {
   flex: 1 1 0;
 }
 

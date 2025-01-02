@@ -20,10 +20,9 @@ import explore.model.CallForProposal
 import explore.model.ObsSiteAndTargets
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
-import explore.model.ProgramUserWithRole
+import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.TargetList
-import explore.model.UserInvitation
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
 import explore.undo.*
@@ -91,19 +90,17 @@ object ProposalTabContents:
         .void
         .runAsync
 
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useMemoBy((props, _) => (props.programDetails.get.proposalStatus, props.userIsReadonlyCoi)):
-      (_, _) =>
-        (status, roCoi) =>
-          status === ProposalStatus.Submitted || status === ProposalStatus.Accepted || roCoi
-    .render: (props, ctx, readonly) =>
+  private val component = ScalaFnComponent[Props]: props =>
+    for {
+      ctx      <- useContext(AppContext.ctx)
+      readonly <-
+        useMemo((props.programDetails.get.proposalStatus, props.userIsReadonlyCoi)):
+          (status, roCoi) =>
+            status === ProposalStatus.Submitted || status === ProposalStatus.Accepted || roCoi
+    } yield
       import ctx.given
 
-      val invitations: View[List[UserInvitation]] =
-        props.programDetails.zoom(ProgramDetails.invitations)
-      val users: View[List[ProgramUserWithRole]]  =
+      val users: View[List[ProgramUser]] =
         props.programDetails.zoom(ProgramDetails.allUsers)
 
       val isStdUser: Boolean =
@@ -158,7 +155,6 @@ object ProposalTabContents:
                 props.undoStacks,
                 props.timeEstimateRange,
                 users,
-                invitations,
                 props.attachments,
                 props.userVault.map(_.token),
                 props.cfps,

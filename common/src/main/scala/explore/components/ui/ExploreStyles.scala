@@ -242,9 +242,9 @@ object ExploreStyles:
   val PartnerSplitsEditorDialog: Css = Css("partner-splits-editor-dialog")
   val CompactOverlayPanel: Css       = Css("compact-overlay-panel")
 
-  // User invite
-  val InviteUserPopup: Css  = Css("invite-user-popup")
-  val InviteUserButton: Css = Css("invite-user-button")
+  // Program user create/invite
+  val AddProgramUserButton: Css = Css("add-program-user-button")
+  val InviteUserPopup: Css      = Css("invite-user-popup")
 
   // Semantic UI form overrides and extensions
   val Grid: Css                   = Css("explore-grid")
@@ -296,6 +296,7 @@ object ExploreStyles:
   val WarningIcon: Css        = Css("explore-warning-icon")
   val WarningInput: Css       = Css("explore-warning-input")
   val ErrorIcon: Css          = Css("explore-error-icon")
+  val SuccessIcon: Css        = Css("explore-success-icon")
   val IndentLabel: Css        = Css("explore-indent-label")
   val RequiredForItcText: Css = Css("required-for-itc-text")
 
