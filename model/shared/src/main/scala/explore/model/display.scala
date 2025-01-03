@@ -223,12 +223,21 @@ trait DisplayImplicits:
     case Gender.Other        => "Other"
     case Gender.NotSpecified => "Not Specified"
 
-  given Display[ProgramUserRole] = Display.byShortName:
-    case ProgramUserRole.Pi               => "PI"
-    case ProgramUserRole.Coi              => "CoI"
-    case ProgramUserRole.CoiRO            => "Observer"
-    case ProgramUserRole.SupportPrimary   => "Principal Support"
-    case ProgramUserRole.SupportSecondary => "Additional Support"
+  extension (pur: ProgramUserRole)
+    private def shortName = pur match
+      case ProgramUserRole.Pi               => "PI"
+      case ProgramUserRole.Coi              => "CoI (full-access)"
+      case ProgramUserRole.CoiRO            => "CoI (read-only)"
+      case ProgramUserRole.SupportPrimary   => "Principal Support"
+      case ProgramUserRole.SupportSecondary => "Additional Support"
+    private def longName  = pur match
+      case ProgramUserRole.Pi               => "Principal Investigator"
+      case ProgramUserRole.Coi              => "Full-Access Co-Investigator"
+      case ProgramUserRole.CoiRO            => "Read-Only Co-Investigator"
+      case ProgramUserRole.SupportPrimary   => "Principal Support"
+      case ProgramUserRole.SupportSecondary => "Additional Support"
+
+  given Display[ProgramUserRole] = Display.by(_.shortName, _.longName)
 
   given Display[ConfigurationRequestStatus] = Display.byShortName(_.tag.capitalize)
   given Display[ObservationWorkflowState]   = Display.byShortName(_.tag.capitalize)
