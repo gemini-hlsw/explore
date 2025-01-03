@@ -82,8 +82,7 @@ object ProgramTabContents:
               props.programId,
               props.programDetails,
               props.programTimes,
-              props.semester,
-              userVault.user.role.access
+              props.semester
             )
           )
 
