@@ -59,7 +59,7 @@ object AddProgramUserButton
           severity = Button.Severity.Secondary,
           loading = isActive.get.value,
           icon = props.icon,
-          tooltip = s"Create ${props.role.shortName} User",
+          tooltip = s"Add ${props.role.longName}",
           tooltipOptions = ttOptions,
           onClick = addProgramUser.runAsync
         ).tiny.compact
