@@ -7,7 +7,6 @@ import cats.data.NonEmptySet
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.model.ProgramUser
-import explore.users.AddProgramUserButton
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -19,8 +18,7 @@ case class SupportUsers(
   programId:   Program.Id,
   users:       View[List[ProgramUser]],
   title:       String,
-  supportRole: SupportUsers.SupportRole,
-  readonly:    Boolean
+  supportRole: SupportUsers.SupportRole
 ) extends ReactFnProps(SupportUsers.component)
 
 object SupportUsers:
@@ -33,24 +31,20 @@ object SupportUsers:
   private val component = ScalaFnComponent[Props]: props =>
     <.div(ExploreStyles.ProgramDetailsUsers)(
       <.label(
-        props.title,
-        AddProgramUserButton(
-          props.programId,
-          props.supportRole.role,
-          props.users
-        ).unless(props.readonly)
+        props.title
       ),
       ProgramUsersTable(
         props.users,
         NonEmptySet.one(props.supportRole.role),
-        props.readonly,
+        readonly = true,
         hiddenColumns = Set(
           ProgramUsersTable.Column.Partner,
           ProgramUsersTable.Column.EducationalStatus,
           ProgramUsersTable.Column.Thesis,
           ProgramUsersTable.Column.Gender,
           ProgramUsersTable.Column.Role,
-          ProgramUsersTable.Column.OrcidId
+          ProgramUsersTable.Column.OrcidId,
+          ProgramUsersTable.Column.Status
         )
       )
     )

@@ -4,7 +4,6 @@
 package explore.users
 
 import cats.effect.IO
-import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
@@ -42,11 +41,6 @@ object AddProgramUserButton
       } yield
         import ctx.given
 
-        val ttOptions =
-          if (props.role === ProgramUserRole.Coi || props.role === ProgramUserRole.CoiRO)
-            TooltipOptions.Right
-          else TooltipOptions.Left
-
         def addProgramUser: IO[Unit] =
           val input = AddProgramUserInput(programId = props.programId, role = props.role)
           AddProgramUser[IO]
@@ -60,7 +54,6 @@ object AddProgramUserButton
           loading = isActive.get.value,
           icon = props.icon,
           tooltip = s"Add ${props.role.longName}",
-          tooltipOptions = ttOptions,
           onClick = addProgramUser.runAsync
         ).tiny.compact
     )

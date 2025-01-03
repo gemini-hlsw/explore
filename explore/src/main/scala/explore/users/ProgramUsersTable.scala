@@ -252,7 +252,9 @@ object ProgramUsersTable:
             // AND the fallback display name is the same as the credit name.
             // In explore, we'll always set the credit name, but a user could have
             // updated the fallback profile via the API, and we won't mess with that.
-            if (pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName)
+            if (
+              !meta.readOnly && pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName
+            )
               val view = c.value
                 .zoom(ProgramUser.fallbackCreditName)
                 .withOnMod(ones =>
@@ -261,7 +263,7 @@ object ProgramUsersTable:
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"${programUserId}-name"),
                 value = view,
-                disabled = meta.readOnly,
+                disabled = meta.isActive.get.value,
                 validFormat = InputValidSplitEpi.nonEmptyString.optional
               ): VdomNode
             else pu.name: VdomNode
@@ -276,7 +278,7 @@ object ProgramUsersTable:
             val programUserId: ProgramUser.Id = pu.id
             // We'll allow editing the email if there is no REAL user
             // or the real email address is empty
-            if (pu.user.flatMap(_.profile).flatMap(_.email).isEmpty)
+            if (!meta.readOnly && pu.user.flatMap(_.profile).flatMap(_.email).isEmpty)
               val view = c.value
                 .zoom(ProgramUser.fallbackEmail)
                 .withOnMod(oe =>
@@ -285,7 +287,7 @@ object ProgramUsersTable:
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"${programUserId}-email"),
                 value = view,
-                disabled = meta.readOnly,
+                disabled = meta.isActive.get.value,
                 validFormat = ExploreModelValidators.MailValidator.optional
               ): VdomNode
             else pu.email.getOrElse("-"): VdomNode
