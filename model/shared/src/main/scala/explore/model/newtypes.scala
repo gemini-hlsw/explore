@@ -16,3 +16,9 @@ type AladinFullScreen = AladinFullScreen.Type
 
 object IsActive extends NewType[Boolean]
 type IsActive = IsActive.Type
+
+object PopupState extends NewType[Boolean]:
+  inline def Open: PopupState   = PopupState(true)
+  inline def Closed: PopupState = PopupState(false)
+
+type PopupState = PopupState.Type

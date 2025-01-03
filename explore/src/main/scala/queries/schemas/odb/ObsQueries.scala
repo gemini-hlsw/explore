@@ -287,7 +287,11 @@ object ObsQueries:
     SetGuideTargetName[F].execute(input).void
 
   def createConfigurationRequest[F[_]: Async](
-    obsId: Observation.Id
+    obsId:         Observation.Id,
+    justification: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[ConfigurationRequestWithObsIds] =
-    val input = CreateConfigurationRequestInput(obsId.assign)
+    val input = CreateConfigurationRequestInput(
+      observationId = obsId.assign,
+      SET = ConfigurationRequestProperties(justification = justification.orIgnore).assign
+    )
     CreateConfigurationRequestMutation[F].execute(input).map(_._1)

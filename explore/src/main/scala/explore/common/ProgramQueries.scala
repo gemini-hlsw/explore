@@ -148,16 +148,20 @@ object ProgramQueries:
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(gender = g.orUnassign))
 
+  // Note: If justification is none, it is ignored, not un-set. We
+  // (currently, at least) do not allow unsetting justifications in explore.
   def updateConfigurationRequestStatus[F[_]: Async](
-    rids:      List[ConfigurationRequest.Id],
-    newStatus: ConfigurationRequestStatus
+    rids:          List[ConfigurationRequest.Id],
+    newStatus:     ConfigurationRequestStatus,
+    justification: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateConfigurationRequestsMutation[F]
       .execute(
         UpdateConfigurationRequestsInput(
           WHERE = rids.toWhereConfigurationRequest.assign,
           SET = ConfigurationRequestProperties(
-            status = newStatus.assign
+            status = newStatus.assign,
+            justification = justification.orIgnore
           )
         )
       )

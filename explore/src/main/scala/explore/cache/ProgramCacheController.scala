@@ -264,7 +264,7 @@ object ProgramCacheController
             else
               ProgramSummaryQueriesGQL
                 .ObservationsWorkflowQuery[IO]
-                .query(obsIds.toWhereObservation) // (ErrorPolicy.IgnoreOnData)
+                .query(obsIds.toWhereObservation)
                 .map:
                   _.observations.matches
                     .map(m =>

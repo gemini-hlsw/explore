@@ -9,8 +9,6 @@ import lucuma.schemas.ObservationDB
 
 import GroupQueriesGQL.*
 
-// gql: import lucuma.odb.json.configurationrequest.query.given
-
 object ProgramQueriesGQL:
   @GraphQL
   trait CreateProgramMutation extends GraphQLOperation[ObservationDB]:

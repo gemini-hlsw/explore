@@ -4,38 +4,50 @@
 package explore.programs
 
 import cats.syntax.all.*
+import crystal.react.View
 import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.PopupState
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.Divider
+import lucuma.react.primereact.Message
 import lucuma.refined.*
+import lucuma.ui.components.CopyControl
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 
 case class ConfigurationRequestEditorPopup(
-  trigger:  Button,
-  onSubmit: String => Callback
+  trigger:         Button,
+  initialMessages: List[String],
+  onSubmit:        NonEmptyString => Callback
 ) extends ReactFnProps(ConfigurationRequestEditorPopup)
 
 object ConfigurationRequestEditorPopup
     extends ReactFnComponent[ConfigurationRequestEditorPopup](props =>
       for {
-        ctx        <- useContext(AppContext.ctx)
-        popupState <- useStateView(PopupState.Closed)
-        message    <- useStateView("")
-        isEmpty    <- useStateView(true)
-        isBlank    <- useStateView(true)
-        _          <- useEffectWithDeps(message.get): msg =>
-                        isEmpty.set(msg.isEmpty) >> isBlank.set(msg.isBlank)
+        ctx             <- useContext(AppContext.ctx)
+        popupState      <- useStateView(PopupState.Closed)
+        message         <- useStateView("")
+        showMultipleMsg <- useStateView(false)
+        _               <- useEffectWithDeps(props.initialMessages): initial =>
+                             val (newMsg, show) = initial.distinct match
+                               case Nil         => ("", false)
+                               case head :: Nil => (head, false)
+                               case _           => ("", true)
+                             message.set(newMsg) >> showMultipleMsg.set(show)
+        isEmpty         <- useStateView(true)
+        isBlank         <- useStateView(true)
+        _               <- useEffectWithDeps(message.get): msg =>
+                             isEmpty.set(msg.isEmpty) >> isBlank.set(msg.isBlank)
       } yield
         val close = popupState.set(PopupState.Closed)
 
@@ -45,6 +57,9 @@ object ConfigurationRequestEditorPopup
           |be reviewed by the Head of Science Operations at the site of the observations.
         """.stripMargin.linesIterator.mkString(" ")
 
+        val multipleMsg =
+          "There are multiple current justification messages. Select requests individually to retain current messages."
+
         val footer = React.Fragment(
           Button(
             label = "Clear Text",
@@ -52,6 +67,9 @@ object ConfigurationRequestEditorPopup
             disabled = isEmpty.get,
             onClick = message.set("")
           ).small,
+          if (isBlank.get) EmptyVdom
+          else
+            CopyControl("", message.get),
           Button(
             label = "Cancel",
             icon = Icons.Close,
@@ -62,7 +80,7 @@ object ConfigurationRequestEditorPopup
             label = "Submit",
             icon = Icons.PaperPlaneTop,
             disabled = isBlank.get,
-            onClick = close >> props.onSubmit(message.get)
+            onClick = close >> NonEmptyString.from(message.get).toOption.foldMap(props.onSubmit)
           ).small
         )
 
@@ -81,7 +99,12 @@ object ConfigurationRequestEditorPopup
             footer = footer
           )(
             <.div(
-              notice,
+              <.div(notice),
+              Message(
+                text = multipleMsg,
+                severity = Message.Severity.Info,
+                icon = Icons.Info
+              ).when(showMultipleMsg.get),
               Divider(),
               FormInputTextAreaView(
                 id = "message_text_area".refined,
@@ -92,9 +115,3 @@ object ConfigurationRequestEditorPopup
           )
         )
     )
-
-private object PopupState extends NewType[Boolean]:
-  inline def Open: PopupState   = PopupState(true)
-  inline def Closed: PopupState = PopupState(false)
-
-private type PopupState = PopupState.Type

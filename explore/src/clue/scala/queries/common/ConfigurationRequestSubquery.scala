@@ -18,6 +18,7 @@ object ConfigurationRequestSubquery
       id
       status
       configuration $ConfigurationSubquery
+      justification
       applicableObservations
     }
   """

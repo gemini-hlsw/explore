@@ -8,8 +8,6 @@ import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
 
-// gql: import lucuma.odb.json.configurationrequest.query.given
-
 object ObsQueriesGQL:
   @GraphQL
   trait ProgramCreateObservation extends GraphQLOperation[ObservationDB]:
