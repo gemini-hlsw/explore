@@ -44,8 +44,8 @@ case class ItcGraphQuerier(
   private val constraints = observation.constraints
   private val asterismIds = observation.scienceTargetIds
 
-  // The remote configuration is read in a different query than the itc results
-  // This will work even in the case the user has overriden some parameters
+  // The remote configuration is read in a different query than the itc results.
+  // This will work even in the case the user has overriden some parameters.
   // When we use the remote configuration we don't need the exposure time.
   private val remoteConfig: Option[InstrumentConfigAndItcResult] =
     observation
@@ -53,10 +53,10 @@ case class ItcGraphQuerier(
       .map: row =>
         InstrumentConfigAndItcResult(row, none)
 
-  // The user may select a configuration on the modes tables, we'd prefer than but if not
-  // we can try with the remote confiiguration provided by the database
+  // If the observation has an assigned configuration, we use that one.
+  // Otherwise, we use the one selected in the table.
   val finalConfig: Option[InstrumentConfigAndItcResult] =
-    selectedConfig.orElse(remoteConfig)
+    remoteConfig.orElse(selectedConfig)
 
   val signalToNoise: Option[SignalToNoise] =
     spectroscopyRequirements.flatMap(_.signalToNoise)

@@ -46,7 +46,7 @@ trait ConfigurationFormats:
     .fromInputValidWedge(ExploreModelValidators.wavelengthMicroValidWedge)
     .allow(s => s === "0" || s === "0.")
   lazy val wvMicroChangeAuditor          = wvMicroBaseAuditor
-    .decimal(3.refined)
+    .decimal(4.refined)
     .optional
   lazy val snAtWvMicroChangeAuditor      = wvMicroBaseAuditor
     .decimal(4.refined)
