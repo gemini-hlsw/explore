@@ -6,7 +6,6 @@ package explore.tabs
 import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -54,14 +53,11 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.*
 import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 import scala.collection.immutable.SortedSet
@@ -114,39 +110,6 @@ case class TargetTabContents(
 
 object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
-
-  private def applyObs(
-    obsIds:           List[(Observation.Id, List[Target.Id])],
-    programSummaries: UndoSetter[ProgramSummaries],
-    expandedIds:      View[SortedSet[ObsIdSet]]
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    // Show toast here?
-    // Disable buttons!
-    // Move all this into ObservationPasteIntoAsterismAction???
-    IO.println(s"CLONING!!! $obsIds") >>
-      obsIds
-        .traverse: (obsId, targetIds) =>
-          ObsQueries
-            .applyObservation[IO](obsId, onTargets = targetIds.some)
-            // .map(o => programSummaries.get.getObsClone(obsId, o.id, withTargets = targetIds.some))
-            .map(obs => (obs, targetIds))
-        // .map(_.map(obs => (obs, targetIds)))
-        .flatTap: olist =>
-          IO.println(s"Cloned observations: ${olist.map(o => (o._1.id, o._1.title))}")
-        .flatMap: obsWithTargetList =>
-          // olist.sequence
-          // .foldMap: obsWithTargetList =>
-          val newIds: List[(Observation.Id, List[Target.Id])] =
-            obsWithTargetList.map((obs, tids) => (obs.id, tids))
-
-          val observations: List[Observation] =
-            obsWithTargetList.map(_._1)
-
-          ObservationPasteIntoAsterismAction(newIds, expandedIds.async.mod)
-            .set(programSummaries)(observations.some)
-            .toAsync
-        .void
-    // In any case, restore buttons here, update toast...
 
   private val component =
     ScalaFnComponent
@@ -231,11 +194,12 @@ object TargetTabContents extends TwoPanels:
                       yield (oid, List(tid))
 
                 IO.whenA(obsAndTargets.nonEmpty): // Apply the obs to selected targets on the tree
-                  applyObs(
-                    obsAndTargets,
-                    props.programSummaries,
-                    props.expandedIds
-                  ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
+                  ObservationPasteIntoAsterismAction(obsAndTargets, props.expandedIds.async.mod)(
+                    props.programSummaries
+                  ).withToastDuring(
+                    s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into ${selTargetIds.length} target(s)",
+                    s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into ${selTargetIds.length} target(s)".some
+                  )
 
               case LocalClipboard.CopiedTargets(tids) =>
                 props.focused.obsSet

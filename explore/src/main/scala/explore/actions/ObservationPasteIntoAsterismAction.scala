@@ -21,31 +21,39 @@ import scala.collection.immutable.SortedSet
 
 object ObservationPasteIntoAsterismAction:
   private def obsListGetter(
-    obsList: List[(Observation.Id, List[Target.Id])]
-  ): ProgramSummaries => Option[List[Observation]] = programSummaries =>
-    obsList.map((obsId, _) => programSummaries.observations.get(obsId)).sequence
+    obsList: List[Observation.Id]
+  ): ProgramSummaries => Option[List[Observation]] =
+    programSummaries => obsList.map(programSummaries.observations.get(_)).sequence
 
-  private def obsListSetter(obsList: List[(Observation.Id, List[Target.Id])])(
+  private def obsListSetter(obsList: List[Observation.Id])(
     otwol: Option[List[Observation]]
-  ): ProgramSummaries => ProgramSummaries = programSummaries =>
-    otwol.fold {
-      // the Option[List]] is empty, so we're deleting.
-      obsList.foldLeft(programSummaries) { case (grps, (obsId, _)) => grps.removeObs(obsId) }
-    } {
-      // we insert the ones we received back into the programSummaries
-      _.foldLeft(programSummaries)((grps, obsSumm) => grps.insertObs(obsSumm))
-    }
+  ): ProgramSummaries => ProgramSummaries =
+    programSummaries =>
+      otwol.fold {
+        // the Option[List]] is empty, so we're deleting.
+        obsList.foldLeft(programSummaries) { case (grps, obsId) => grps.removeObs(obsId) }
+      } {
+        // we insert the ones we received back into the programSummaries
+        _.foldLeft(programSummaries)((grps, obsSumm) => grps.insertObs(obsSumm))
+      }
 
   private def updateExpanded(
-    obsList:          List[(Observation.Id, List[Target.Id])],
+    obsList:          List[Observation.Id],
     programSummaries: ProgramSummaries,
     adding:           Boolean
   )(
     expandedIds:      SortedSet[ObsIdSet]
   ) =
+    val obsWithTargetList: List[(Observation.Id, List[Target.Id])] =
+      obsList.flatMap: obsId =>
+        programSummaries.observations
+          .get(obsId)
+          .map: obs =>
+            (obsId, obs.scienceTargetIds.toList)
+
     // We'll just expand any affected asterisms
     val newGroups: List[(List[Target.Id], List[Observation.Id])] =
-      obsList.groupMap(_._2)(_._1).toList
+      obsWithTargetList.groupMap(_._2)(_._1).toList
 
     newGroups.foldLeft(expandedIds) { case (eids, (tid, obsIds)) =>
       // this is safe because it was created by groupMap
@@ -65,16 +73,24 @@ object ObservationPasteIntoAsterismAction:
     modExpandedIds: Endo[SortedSet[ObsIdSet]] => IO[Unit]
   )(using
     c:              FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[List[Observation]]] =
-    Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
-      onSet = (programSummaries, _) => modExpandedIds(updateExpanded(ids, programSummaries, true)),
-      onRestore = (programSummaries, olObsSumm) =>
-        val obsIds = ids.map(_._1)
-        olObsSumm.fold(
-          modExpandedIds(updateExpanded(ids, programSummaries, false)) >>
-            ObsQueries.deleteObservations[IO](obsIds)
-        )(_ =>
-          modExpandedIds(updateExpanded(ids, programSummaries, true)) >>
-            ObsQueries.undeleteObservations[IO](obsIds)
-        )
+  ): AsyncAction[ProgramSummaries, List[Observation.Id], Option[List[Observation]]] =
+    AsyncAction(
+      asyncGet = ids
+        .traverse: (obsId, targetIds) =>
+          ObsQueries
+            .applyObservation[IO](obsId, onTargets = targetIds.some)
+        .map(obsList => (obsList.map(_.id), obsList.some)),
+      getter = obsListGetter,
+      setter = obsListSetter,
+      onSet = newObsIds =>
+        (programSummaries, _) => modExpandedIds(updateExpanded(newObsIds, programSummaries, true)),
+      onRestore = newObsIds =>
+        (programSummaries, olObsSumm) =>
+          olObsSumm.fold(
+            modExpandedIds(updateExpanded(newObsIds, programSummaries, false)) >>
+              ObsQueries.deleteObservations[IO](newObsIds)
+          )(_ =>
+            modExpandedIds(updateExpanded(newObsIds, programSummaries, true)) >>
+              ObsQueries.undeleteObservations[IO](newObsIds)
+          )
     )
