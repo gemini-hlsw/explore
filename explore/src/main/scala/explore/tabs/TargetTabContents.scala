@@ -120,25 +120,33 @@ object TargetTabContents extends TwoPanels:
     programSummaries: UndoSetter[ProgramSummaries],
     expandedIds:      View[SortedSet[ObsIdSet]]
   )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    obsIds
-      .traverse: (obsId, targetIds) =>
-        ObsQueries
-          .applyObservation[IO](obsId, onTargets = targetIds.some)
-          .map(o => programSummaries.get.getObsClone(obsId, o.id, withTargets = targetIds.some))
-          .map(_.map(obs => (obs, targetIds)))
-      .flatMap: olist =>
-        olist.sequence
-          .foldMap: obsWithTargetList =>
-            val newIds: List[(Observation.Id, List[Target.Id])] =
-              obsWithTargetList.map((obs, tids) => (obs.id, tids))
+    // Show toast here?
+    // Disable buttons!
+    // Move all this into ObservationPasteIntoAsterismAction???
+    IO.println(s"CLONING!!! $obsIds") >>
+      obsIds
+        .traverse: (obsId, targetIds) =>
+          ObsQueries
+            .applyObservation[IO](obsId, onTargets = targetIds.some)
+            // .map(o => programSummaries.get.getObsClone(obsId, o.id, withTargets = targetIds.some))
+            .map(obs => (obs, targetIds))
+        // .map(_.map(obs => (obs, targetIds)))
+        .flatTap: olist =>
+          IO.println(s"Cloned observations: ${olist.map(o => (o._1.id, o._1.title))}")
+        .flatMap: obsWithTargetList =>
+          // olist.sequence
+          // .foldMap: obsWithTargetList =>
+          val newIds: List[(Observation.Id, List[Target.Id])] =
+            obsWithTargetList.map((obs, tids) => (obs.id, tids))
 
-            val observations: List[Observation] =
-              obsWithTargetList.map(_._1)
+          val observations: List[Observation] =
+            obsWithTargetList.map(_._1)
 
-            ObservationPasteIntoAsterismAction(newIds, expandedIds.async.mod)
-              .set(programSummaries)(observations.some)
-              .toAsync
-      .void
+          ObservationPasteIntoAsterismAction(newIds, expandedIds.async.mod)
+            .set(programSummaries)(observations.some)
+            .toAsync
+        .void
+    // In any case, restore buttons here, update toast...
 
   private val component =
     ScalaFnComponent
