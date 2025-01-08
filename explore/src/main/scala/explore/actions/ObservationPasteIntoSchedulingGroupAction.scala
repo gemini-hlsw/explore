@@ -19,32 +19,23 @@ import queries.schemas.odb.ObsQueries
 import scala.collection.immutable.SortedSet
 
 object ObservationPasteIntoSchedulingGroupAction:
-  private def obsListGetter(
-    obsList: List[(Observation.Id, List[TimingWindow])]
-  ): ProgramSummaries => Option[List[Observation]] = programSummaries =>
-    obsList.map((obsId, _) => programSummaries.observations.get(obsId)).sequence
-
-  private def obsListSetter(obsList: List[(Observation.Id, List[TimingWindow])])(
-    otwol: Option[List[Observation]]
-  ): ProgramSummaries => ProgramSummaries = programSummaries =>
-    otwol.fold {
-      // the Option[List]] is empty, so we're deleting.
-      obsList.foldLeft(programSummaries) { case (grps, (obsId, _)) => grps.removeObs(obsId) }
-    } {
-      // we insert the ones we received back into the programSummaries
-      _.foldLeft(programSummaries)((grps, obsSumm) => grps.insertObs(obsSumm))
-    }
-
   private def updateExpandedSchedulingGroups(
-    obsList:          List[(Observation.Id, List[TimingWindow])],
+    obsList:          List[Observation.Id],
     programSummaries: ProgramSummaries,
     adding:           Boolean
   )(
     expandedIds:      SortedSet[ObsIdSet]
   ) =
+    val obsWithSchedulingGroups: List[(Observation.Id, List[TimingWindow])] =
+      obsList.flatMap: obsId =>
+        programSummaries.observations
+          .get(obsId)
+          .map: obs =>
+            (obsId, obs.timingWindows)
+
     // We'll just expand any affected asterisms
     val newGroups: List[(List[TimingWindow], List[Observation.Id])] =
-      obsList.groupMap(_._2)(_._1).toList
+      obsWithSchedulingGroups.groupMap(_._2)(_._1).toList
 
     newGroups.foldLeft(expandedIds) { case (eids, (sg, obsIds)) =>
       // this is safe because it was created by groupMap
@@ -64,17 +55,25 @@ object ObservationPasteIntoSchedulingGroupAction:
     modExpandedIds: Endo[SortedSet[ObsIdSet]] => IO[Unit]
   )(using
     c:              FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[List[Observation]]] =
-    Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
-      onSet = (programSummaries, _) =>
-        modExpandedIds(updateExpandedSchedulingGroups(ids, programSummaries, true)),
-      onRestore = (programSummaries, olObsSumm) =>
-        val obsIds = ids.map(_._1)
-        olObsSumm.fold(
-          modExpandedIds(updateExpandedSchedulingGroups(ids, programSummaries, false)) >>
-            ObsQueries.deleteObservations[IO](obsIds)
-        )(_ =>
-          modExpandedIds(updateExpandedSchedulingGroups(ids, programSummaries, true)) >>
-            ObsQueries.undeleteObservations[IO](obsIds)
-        )
+  ): AsyncAction[ProgramSummaries, List[Observation.Id], Option[List[Observation]]] =
+    AsyncAction(
+      asyncGet = ids
+        .traverse: (obsId, timingWindows) =>
+          ObsQueries
+            .applyObservation[IO](obsId, onTimingWindows = timingWindows.some)
+        .map(obsList => (obsList.map(_.id), obsList.some)),
+      getter = obsListGetter,
+      setter = obsListSetter,
+      onSet = newObsIds =>
+        (programSummaries, _) =>
+          modExpandedIds(updateExpandedSchedulingGroups(newObsIds, programSummaries, true)),
+      onRestore = newObsIds =>
+        (programSummaries, olObsSumm) =>
+          olObsSumm.fold(
+            modExpandedIds(updateExpandedSchedulingGroups(newObsIds, programSummaries, false)) >>
+              ObsQueries.deleteObservations[IO](newObsIds)
+          )(_ =>
+            modExpandedIds(updateExpandedSchedulingGroups(newObsIds, programSummaries, true)) >>
+              ObsQueries.undeleteObservations[IO](newObsIds)
+          )
     )

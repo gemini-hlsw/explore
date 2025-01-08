@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -42,14 +41,11 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.schemas.ObservationDB
 import lucuma.ui.LucumaStyles
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import monocle.Traversal
-import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
@@ -68,28 +64,6 @@ case class SchedulingTabContents(
 
 object SchedulingTabContents extends TwoPanels:
   private type Props = SchedulingTabContents
-
-  private def applyObs(
-    obsIds:           List[(Observation.Id, List[TimingWindow])],
-    programSummaries: UndoSetter[ProgramSummaries],
-    expandedIds:      View[SortedSet[ObsIdSet]]
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    obsIds
-      .traverse: (obsId, timingWindows) =>
-        ObsQueries
-          .applyObservation[IO](obsId, onTimingWindows = timingWindows.some)
-          .map(obs => (obs, timingWindows))
-      .flatMap: obsWithConstraintSetList =>
-        val newIds: List[(Observation.Id, List[TimingWindow])] =
-          obsWithConstraintSetList.map((obs, cs) => (obs.id, cs))
-
-        val observations: List[Observation] =
-          obsWithConstraintSetList.map(_._1)
-
-        ObservationPasteIntoSchedulingGroupAction(newIds, expandedIds.async.mod)
-          .set(programSummaries)(observations.some)
-          .toAsync
-      .void
 
   private val component =
     ScalaFnComponent
@@ -140,14 +114,14 @@ object SchedulingTabContents extends TwoPanels:
                     .orEmpty
 
                 IO.whenA(obsAndConstraints.nonEmpty):
-                  applyObs(
+                  ObservationPasteIntoSchedulingGroupAction(
                     obsAndConstraints,
-                    props.programSummaries,
-                    props.expandedIds
-                  ).withToastDuring(
-                    s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group",
-                    s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group".some
-                  )
+                    props.expandedIds.async.mod
+                  )(props.programSummaries)
+                    .withToastDuring(
+                      s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group",
+                      s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group".some
+                    )
               case _                                                 => IO.unit
             .runAsync
             .unless_(readonly)
