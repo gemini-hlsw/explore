@@ -81,21 +81,17 @@ object ConstraintsTabContents extends TwoPanels:
       .traverse: (obsId, constraintSet) =>
         ObsQueries
           .applyObservation[IO](obsId, onConstraintSet = constraintSet.some)
-          .map: o =>
-            programSummaries.get.getObsClone(obsId, o.id, withConstraintSet = constraintSet.some)
-          .map(_.map(obs => (obs, constraintSet)))
-      .flatMap: olist =>
-        olist.sequence
-          .foldMap: obsWithConstraintSetList =>
-            val newIds: List[(Observation.Id, ConstraintSet)] =
-              obsWithConstraintSetList.map((obs, cs) => (obs.id, cs))
+          .map(obs => (obs, constraintSet))
+      .flatMap: obsWithConstraintSetList =>
+        val newIds: List[(Observation.Id, ConstraintSet)] =
+          obsWithConstraintSetList.map((obs, cs) => (obs.id, cs))
 
-            val observations: List[Observation] =
-              obsWithConstraintSetList.map(_._1)
+        val observations: List[Observation] =
+          obsWithConstraintSetList.map(_._1)
 
-            ObservationPasteIntoConstraintSetAction(newIds, expandedIds.async.mod)
-              .set(programSummaries)(observations.some)
-              .toAsync
+        ObservationPasteIntoConstraintSetAction(newIds, expandedIds.async.mod)
+          .set(programSummaries)(observations.some)
+          .toAsync
       .void
 
   private val component =
@@ -151,7 +147,10 @@ object ConstraintsTabContents extends TwoPanels:
                     obsAndConstraints,
                     props.programSummaries,
                     props.expandedIds
-                  ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
+                  ).withToastDuring(
+                    s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active constraint set",
+                    s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active constraint set".some
+                  )
               case _                                                 => IO.unit
             .runAsync
             .unless_(readonly)

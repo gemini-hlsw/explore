@@ -78,21 +78,17 @@ object SchedulingTabContents extends TwoPanels:
       .traverse: (obsId, timingWindows) =>
         ObsQueries
           .applyObservation[IO](obsId, onTimingWindows = timingWindows.some)
-          .map: o =>
-            programSummaries.get.getObsClone(obsId, o.id, withTimingWindows = timingWindows.some)
-          .map(_.map(obs => (obs, timingWindows)))
-      .flatMap: olist =>
-        olist.sequence
-          .foldMap: obsWithConstraintSetList =>
-            val newIds: List[(Observation.Id, List[TimingWindow])] =
-              obsWithConstraintSetList.map((obs, cs) => (obs.id, cs))
+          .map(obs => (obs, timingWindows))
+      .flatMap: obsWithConstraintSetList =>
+        val newIds: List[(Observation.Id, List[TimingWindow])] =
+          obsWithConstraintSetList.map((obs, cs) => (obs.id, cs))
 
-            val observations: List[Observation] =
-              obsWithConstraintSetList.map(_._1)
+        val observations: List[Observation] =
+          obsWithConstraintSetList.map(_._1)
 
-            ObservationPasteIntoSchedulingGroupAction(newIds, expandedIds.async.mod)
-              .set(programSummaries)(observations.some)
-              .toAsync
+        ObservationPasteIntoSchedulingGroupAction(newIds, expandedIds.async.mod)
+          .set(programSummaries)(observations.some)
+          .toAsync
       .void
 
   private val component =
@@ -148,7 +144,10 @@ object SchedulingTabContents extends TwoPanels:
                     obsAndConstraints,
                     props.programSummaries,
                     props.expandedIds
-                  ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
+                  ).withToastDuring(
+                    s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group",
+                    s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group".some
+                  )
               case _                                                 => IO.unit
             .runAsync
             .unless_(readonly)
