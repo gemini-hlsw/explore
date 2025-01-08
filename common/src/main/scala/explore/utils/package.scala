@@ -6,9 +6,11 @@ package explore.utils
 import cats.Applicative
 import cats.Endo
 import cats.FlatMap
+import cats.Monoid
 import cats.Semigroup
 import cats.effect.*
 import cats.effect.Temporal
+import cats.effect.std.UUIDGen
 import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
@@ -112,6 +114,13 @@ extension [F[_]: Sync: ToastCtx](f: F[Unit])
     sticky:   Boolean = false
   ): F[Unit] =
     ToastCtx[F].showToast(text, severity, sticky) *> f
+
+  def withToastDuring(
+    text:         String,
+    completeText: Option[String] = none,
+    errorText:    Option[String] = none
+  )(using UUIDGen[F], Monoid[F[Unit]]): F[Unit] =
+    ToastCtx[F].showToastDuring(text, completeText, errorText).use(_ => f)
 
   def clearToastsAfter: F[Unit] =
     f <* ToastCtx[F].clear()

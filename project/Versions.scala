@@ -29,7 +29,7 @@ object Versions {
   val lucumaSchemas          = "0.111.0"
   val lucumaOdbSchema        = "0.17.3"
   val lucumaSSO              = "0.7.2"
-  val lucumaUI               = "0.128.0"
+  val lucumaUI               = "0.128.1"
   val monocle                = "3.3.0"
   val mouse                  = "1.3.2"
   val mUnit                  = "1.0.4"
@@ -41,5 +41,5 @@ object Versions {
   val sbtLucuma              = "0.12.4"
   val scalaCollectionContrib = "0.4.0"
   val scalaJsDom             = "2.8.0"
-  val scalaJsReact           = "3.0.0-beta8"
+  val scalaJsReact           = "3.0.0-beta10"
 }
