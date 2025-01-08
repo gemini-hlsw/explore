@@ -64,6 +64,25 @@ You then pass an `UndoContext[M]` to its `set` and `mod` methods:
 
 This approach allows you to invert the logic and have a clean wrapper of the 4 parameters without the need for an `UndoContext`. This is especially useful for complex operations, like insertions and deletions in lists.
 
+## `AsyncAction`
+
+`AsyncAction[M, K, A]` wraps the same 4 parameters as an `Action[M, A]`, plus an async effect which will actually return the value of `A` to set in the model. This is particularly useful when creating new objects (or cloning) and we need to invoke the DB before being able to insert them in the local model.
+
+The remote invocation can also return a `K`, which can be used to build the 4 parameters. In an insertion, `K` should be the id(s) of the new object(s), and `A` an `Option` containing the actual objects or `None` to delete them.
+
+Therefore, `AsyncAction` signature looks like this:
+
+```scala
+case class AsyncAction[M, K, A](
+  asyncGet:  DefaultA[(K, A)],
+  getter:    K => M => A,
+  setter:    K => A => M => M,
+  onSet:     K => (M, A) => DefaultA[Unit],
+  onRestore: K => (M, A) => DefaultA[Unit]
+):
+  def apply(undoSetter: UndoSetter[M]): DefaultA[Unit]
+```
+
 ## `Aligner`
 
 ### Motivation
