@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -47,12 +46,9 @@ import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
@@ -71,32 +67,6 @@ case class ConstraintsTabContents(
 
 object ConstraintsTabContents extends TwoPanels:
   private type Props = ConstraintsTabContents
-
-  private def applyObs(
-    obsIds:           List[(Observation.Id, ConstraintSet)],
-    programSummaries: UndoSetter[ProgramSummaries],
-    expandedIds:      View[SortedSet[ObsIdSet]]
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): IO[Unit] =
-    obsIds
-      .traverse: (obsId, constraintSet) =>
-        ObsQueries
-          .applyObservation[IO](obsId, onConstraintSet = constraintSet.some)
-          .map: o =>
-            programSummaries.get.getObsClone(obsId, o.id, withConstraintSet = constraintSet.some)
-          .map(_.map(obs => (obs, constraintSet)))
-      .flatMap: olist =>
-        olist.sequence
-          .foldMap: obsWithConstraintSetList =>
-            val newIds: List[(Observation.Id, ConstraintSet)] =
-              obsWithConstraintSetList.map((obs, cs) => (obs.id, cs))
-
-            val observations: List[Observation] =
-              obsWithConstraintSetList.map(_._1)
-
-            ObservationPasteIntoConstraintSetAction(newIds, expandedIds.async.mod)
-              .set(programSummaries)(observations.some)
-              .toAsync
-      .void
 
   private val component =
     ScalaFnComponent
@@ -147,11 +117,14 @@ object ConstraintsTabContents extends TwoPanels:
                     .orEmpty
 
                 IO.whenA(obsAndConstraints.nonEmpty):
-                  applyObs(
+                  ObservationPasteIntoConstraintSetAction(
                     obsAndConstraints,
-                    props.programSummaries,
-                    props.expandedIds
-                  ).withToast(s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")}")
+                    props.expandedIds.async.mod
+                  )(props.programSummaries)
+                    .withToastDuring(
+                      s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active constraint set",
+                      s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active constraint set".some
+                    )
               case _                                                 => IO.unit
             .runAsync
             .unless_(readonly)

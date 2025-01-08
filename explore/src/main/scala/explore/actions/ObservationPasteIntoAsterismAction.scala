@@ -20,23 +20,6 @@ import queries.schemas.odb.ObsQueries
 import scala.collection.immutable.SortedSet
 
 object ObservationPasteIntoAsterismAction:
-  private def obsListGetter(
-    obsList: List[Observation.Id]
-  ): ProgramSummaries => Option[List[Observation]] =
-    programSummaries => obsList.map(programSummaries.observations.get(_)).sequence
-
-  private def obsListSetter(obsList: List[Observation.Id])(
-    otwol: Option[List[Observation]]
-  ): ProgramSummaries => ProgramSummaries =
-    programSummaries =>
-      otwol.fold {
-        // the Option[List]] is empty, so we're deleting.
-        obsList.foldLeft(programSummaries) { case (grps, obsId) => grps.removeObs(obsId) }
-      } {
-        // we insert the ones we received back into the programSummaries
-        _.foldLeft(programSummaries)((grps, obsSumm) => grps.insertObs(obsSumm))
-      }
-
   private def updateExpanded(
     obsList:          List[Observation.Id],
     programSummaries: ProgramSummaries,

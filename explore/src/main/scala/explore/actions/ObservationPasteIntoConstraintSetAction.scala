@@ -19,32 +19,23 @@ import queries.schemas.odb.ObsQueries
 import scala.collection.immutable.SortedSet
 
 object ObservationPasteIntoConstraintSetAction:
-  private def obsListGetter(
-    obsList: List[(Observation.Id, ConstraintSet)]
-  ): ProgramSummaries => Option[List[Observation]] = programSummaries =>
-    obsList.map((obsId, _) => programSummaries.observations.get(obsId)).sequence
-
-  private def obsListSetter(obsList: List[(Observation.Id, ConstraintSet)])(
-    otwol: Option[List[Observation]]
-  ): ProgramSummaries => ProgramSummaries = programSummaries =>
-    otwol.fold {
-      // the Option[List]] is empty, so we're deleting.
-      obsList.foldLeft(programSummaries) { case (grps, (obsId, _)) => grps.removeObs(obsId) }
-    } {
-      // we insert the ones we received back into the programSummaries
-      _.foldLeft(programSummaries)((grps, obsSumm) => grps.insertObs(obsSumm))
-    }
-
   private def updateExpandedAsterisms(
-    obsList:          List[(Observation.Id, ConstraintSet)],
+    obsList:          List[Observation.Id],
     programSummaries: ProgramSummaries,
     adding:           Boolean
   )(
     expandedIds:      SortedSet[ObsIdSet]
   ) =
+    val obsWithConstraintSet: List[(Observation.Id, ConstraintSet)] =
+      obsList.flatMap: obsId =>
+        programSummaries.observations
+          .get(obsId)
+          .map: obs =>
+            (obsId, obs.constraints)
+
     // We'll just expand any affected asterisms
     val newGroups: List[(ConstraintSet, List[Observation.Id])] =
-      obsList.groupMap(_._2)(_._1).toList
+      obsWithConstraintSet.groupMap(_._2)(_._1).toList
 
     newGroups.foldLeft(expandedIds) { case (eids, (cs, obsIds)) =>
       // this is safe because it was created by groupMap
@@ -64,17 +55,25 @@ object ObservationPasteIntoConstraintSetAction:
     modExpandedIds: Endo[SortedSet[ObsIdSet]] => IO[Unit]
   )(using
     c:              FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[List[Observation]]] =
-    Action(getter = obsListGetter(ids), setter = obsListSetter(ids))(
-      onSet = (programSummaries, _) =>
-        modExpandedIds(updateExpandedAsterisms(ids, programSummaries, true)),
-      onRestore = (programSummaries, olObsSumm) =>
-        val obsIds = ids.map(_._1)
-        olObsSumm.fold(
-          modExpandedIds(updateExpandedAsterisms(ids, programSummaries, false)) >>
-            ObsQueries.deleteObservations[IO](obsIds)
-        )(_ =>
-          modExpandedIds(updateExpandedAsterisms(ids, programSummaries, true)) >>
-            ObsQueries.undeleteObservations[IO](obsIds)
-        )
+  ): AsyncAction[ProgramSummaries, List[Observation.Id], Option[List[Observation]]] =
+    AsyncAction(
+      asyncGet = ids
+        .traverse: (obsId, constraintSet) =>
+          ObsQueries
+            .applyObservation[IO](obsId, onConstraintSet = constraintSet.some)
+        .map(obsList => (obsList.map(_.id), obsList.some)),
+      getter = obsListGetter,
+      setter = obsListSetter,
+      onSet = newObsIds =>
+        (programSummaries, _) =>
+          modExpandedIds(updateExpandedAsterisms(newObsIds, programSummaries, true)),
+      onRestore = newObsIds =>
+        (programSummaries, olObsSumm) =>
+          olObsSumm.fold(
+            modExpandedIds(updateExpandedAsterisms(newObsIds, programSummaries, false)) >>
+              ObsQueries.deleteObservations[IO](newObsIds)
+          )(_ =>
+            modExpandedIds(updateExpandedAsterisms(newObsIds, programSummaries, true)) >>
+              ObsQueries.undeleteObservations[IO](newObsIds)
+          )
     )

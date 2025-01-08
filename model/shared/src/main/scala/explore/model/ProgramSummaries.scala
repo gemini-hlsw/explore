@@ -16,7 +16,6 @@ import lucuma.core.enums.ScienceBand
 import lucuma.core.enums.Site
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
-import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
@@ -163,27 +162,6 @@ case class ProgramSummaries(
     l.foldRight(Map.empty[Configuration, NonEmptyList[Observation]])((o, m) =>
       m.updatedWith(o.configuration.get)(_.fold(NonEmptyList.one(o))(nel => nel :+ o).some)
     )
-
-  def getObsClone(
-    originalId:        Observation.Id,
-    clonedId:          Observation.Id,
-    withTargets:       Option[List[Target.Id]] = none,
-    withConstraintSet: Option[ConstraintSet] = none,
-    withTimingWindows: Option[List[TimingWindow]] = none
-  ): Option[Observation] =
-    observations
-      .get(originalId)
-      .map:
-        Observation.id.replace(clonedId) >>>
-          withTargets
-            .map(tids => Observation.scienceTargetIds.replace(SortedSet.from(tids)))
-            .getOrElse(identity) >>>
-          withConstraintSet
-            .map(cs => Observation.constraints.replace(cs))
-            .getOrElse(identity) >>>
-          withTimingWindows
-            .map(tws => Observation.timingWindows.replace(tws))
-            .getOrElse(identity)
 
   def insertObs(observation: Observation): ProgramSummaries =
     ProgramSummaries.observations.modify(_ + (observation.id -> observation))(this)
