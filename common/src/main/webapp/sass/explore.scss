@@ -2011,8 +2011,15 @@ svg.fa-check.explore-success-icon {
     height: 9rem;
   }
 
-  .p-dialog-footer .p-button:first-child {
-    float: left;
+  .p-dialog-footer {
+    .p-button:first-child {
+      float: left;
+    }
+
+    .lucuma-copy-control-icon {
+      float: left;
+      font-size: inherit;
+    }
   }
 }
 

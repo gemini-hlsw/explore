@@ -13,6 +13,7 @@ import crystal.Pot
 import crystal.syntax.*
 import explore.DefaultErrorPolicy
 import explore.model.Attachment
+import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Execution
 import explore.model.Group
 import explore.model.Observation
@@ -146,8 +147,8 @@ object ProgramCacheController
         _.id
       ).logTime("AllProgramObservations")
 
-    val configurationRequests: IO[List[ConfigurationRequest]] =
-      drain[ConfigurationRequest,
+    val configurationRequests: IO[List[ConfigurationRequestWithObsIds]] =
+      drain[ConfigurationRequestWithObsIds,
             ConfigurationRequest.Id,
             ProgramSummaryQueriesGQL.AllProgramConfigurationRequests.Data
       ](
@@ -256,11 +257,23 @@ object ProgramCacheController
               .subscribe[IO](props.programId.toTargetEditInput)
               .map(_.map(data => modifyTargets(data.targetEdit)))
 
-          val updateConfigurationRequests
-            : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ProgramQueriesGQL.ConfigurationRequestSubscription
-              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
-              .map(_.map(data => modifyConfigurationRequests(data.configurationRequestEdit)))
+          def updateObservationsWorkflows(
+            obsIds: List[Observation.Id]
+          )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
+            if (obsIds.isEmpty) IO.pure(identity)
+            else
+              ProgramSummaryQueriesGQL
+                .ObservationsWorkflowQuery[IO]
+                .query(obsIds.toWhereObservation)
+                .map:
+                  _.observations.matches
+                    .map(m =>
+                      ProgramSummaries.observations
+                        .modify(
+                          _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
+                        )
+                    )
+                    .foldLeft(identity[ProgramSummaries])(_ andThen _)
 
           val onlyExistingObs: Pipe[
             IO,
@@ -284,6 +297,25 @@ object ProgramCacheController
             _.observationEdit.observationId,
             data =>
               updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
+          )
+
+          extension (data: ProgramQueriesGQL.ConfigurationRequestSubscription.Data)
+            private def obsIdList: List[Observation.Id] =
+              data.configurationRequestEdit.configurationRequest.toList
+                .flatMap(_.applicableObservations)
+
+          // We'll request updates to all the workflows at once. Since this
+          // is being updated due to the configuration request change, the workflows
+          // "shouldn't" be expensive and we're unlikely to need to cancel
+          // unless the same configuration request is edited so using the set
+          // of ids as a key should be OK.
+          val obsWorkflowUpdates: Pipe[
+            IO,
+            ProgramQueriesGQL.ConfigurationRequestSubscription.Data,
+            ProgramSummaries => ProgramSummaries
+          ] = keyedSwitchEvalMap(
+            _.obsIdList.toSet,
+            data => updateObservationsWorkflows(data.obsIdList)
           )
 
           val groupTimeRangeUpdate: Pipe[
@@ -317,6 +349,16 @@ object ProgramCacheController
                 _.broadcastThrough(
                   _.map(data => modifyGroups(data.groupEdit)),
                   onlyExistingGroups.andThen(groupTimeRangeUpdate)
+                )
+
+          val updateConfigurationRequests
+            : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+            ProgramQueriesGQL.ConfigurationRequestSubscription
+              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
+              .map:
+                _.broadcastThrough(
+                  _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
+                  obsWorkflowUpdates
                 )
 
           // Right now the programEdit subsription isn't fine grained enough to

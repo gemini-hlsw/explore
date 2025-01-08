@@ -5,13 +5,12 @@ package queries.common
 
 import clue.GraphQLSubquery
 import clue.annotation.GraphQL
-import lucuma.core.model.ConfigurationRequest
-import lucuma.odb.json.configurationrequest.query.given
+import explore.model.ConfigurationRequestWithObsIds
 import lucuma.schemas.ObservationDB
 
 @GraphQL
 object ConfigurationRequestSubquery
-    extends GraphQLSubquery.Typed[ObservationDB, ConfigurationRequest](
+    extends GraphQLSubquery.Typed[ObservationDB, ConfigurationRequestWithObsIds](
       "ConfigurationRequest"
     ):
   override val subquery: String = s"""
@@ -19,5 +18,7 @@ object ConfigurationRequestSubquery
       id
       status
       configuration $ConfigurationSubquery
+      justification
+      applicableObservations
     }
   """

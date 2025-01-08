@@ -19,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
 import explore.model.EmptySiderealTarget
+import explore.model.PopupState
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -62,12 +63,6 @@ object SearchingState extends NewType[Boolean]:
   inline def Idle: SearchingState      = SearchingState(false)
 
 type SearchingState = SearchingState.Type
-
-object PopupState extends NewType[Boolean]:
-  inline def Open: PopupState   = PopupState(true)
-  inline def Closed: PopupState = PopupState(false)
-
-type PopupState = PopupState.Type
 
 object TargetSelectionPopup:
   private type Props = TargetSelectionPopup

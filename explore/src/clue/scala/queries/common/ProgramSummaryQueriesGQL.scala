@@ -7,7 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
-// gql: import lucuma.odb.json.configurationrequest.query.given
 // gql: import lucuma.schemas.decoders.given
 
 object ProgramSummaryQueriesGQL {
@@ -86,6 +85,20 @@ object ProgramSummaryQueriesGQL {
     val document: String = s"""
       query($$programId: ProgramId!) {
         program(programId: $$programId) $ProgramTimesSubquery
+      }
+    """
+  }
+
+  @GraphQL
+  trait ObservationsWorkflowQuery extends GraphQLOperation[ObservationDB] {
+    val document: String = s"""
+      query($$where: WhereObservation!) {
+        observations(WHERE: $$where) {
+          matches {
+            id
+            workflow $ObservationWorkflowSubquery
+          }
+        }
       }
     """
   }

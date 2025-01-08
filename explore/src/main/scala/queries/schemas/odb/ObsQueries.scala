@@ -11,10 +11,10 @@ import clue.data.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.ConfigurationRequestWithObsIds
 import explore.model.ConstraintGroup
 import explore.model.ObsIdSet
 import explore.model.Observation
-import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Group
@@ -287,7 +287,11 @@ object ObsQueries:
     SetGuideTargetName[F].execute(input).void
 
   def createConfigurationRequest[F[_]: Async](
-    obsId: Observation.Id
-  )(using FetchClient[F, ObservationDB]): F[ConfigurationRequest] =
-    val input = CreateConfigurationRequestInput(obsId.assign)
+    obsId:         Observation.Id,
+    justification: Option[NonEmptyString]
+  )(using FetchClient[F, ObservationDB]): F[ConfigurationRequestWithObsIds] =
+    val input = CreateConfigurationRequestInput(
+      observationId = obsId.assign,
+      SET = ConfigurationRequestProperties(justification = justification.orIgnore).assign
+    )
     CreateConfigurationRequestMutation[F].execute(input).map(_._1)
