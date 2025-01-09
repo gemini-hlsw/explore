@@ -250,16 +250,24 @@ object ProgramCacheController
           def updateObservationsWorkflows(
             whereObservation: WhereObservation
           )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
-            ProgramSummaryQueriesGQL
-              .ObservationsWorkflowQuery[IO]
-              .query(whereObservation)
-              .map:
-                _.observations.matches
-                  .map: m =>
-                    ProgramSummaries.observations
-                      .modify:
-                        _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
-                  .combineAll
+            drain[
+              ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data.Observations.Matches,
+              Observation.Id,
+              ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data
+            ](
+              offset =>
+                ProgramSummaryQueriesGQL
+                  .ObservationsWorkflowQuery[IO]
+                  .query(whereObservation, offset.orUnassign),
+              _.observations.matches,
+              _.observations.hasMore,
+              _.id
+            ).map:
+              _.map: m =>
+                ProgramSummaries.observations
+                  .modify:
+                    _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
+              .combineAll
 
           // Changing the proposal's CfP can change the validations for observations,
           // eg: coordinates bounds, so we requery them all.
