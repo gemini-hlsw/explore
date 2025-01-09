@@ -9,6 +9,8 @@ import cats.syntax.all.*
 import clue.ErrorPolicy
 import clue.StreamingClient
 import clue.data.syntax.*
+import clue.model.GraphQLErrors
+import clue.model.GraphQLResponse
 import crystal.Pot
 import crystal.syntax.*
 import explore.DefaultErrorPolicy
@@ -299,6 +301,15 @@ object ProgramCacheController
               updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
           )
 
+          def logGraphQLErrors(errors: GraphQLErrors): IO[Unit] =
+            val msg = errors.map(_.message).toList.mkString(": ")
+            Logger[IO].error(s"Error in subscription: $msg")
+
+          def logAndIgnoreErrors[D]: Pipe[IO, GraphQLResponse[D], D] =
+            _.evalTap(_.errors.foldMap(logGraphQLErrors))
+              .map(_.data)
+              .flattenOption
+
           extension (data: ProgramQueriesGQL.ConfigurationRequestSubscription.Data)
             private def obsIdList: List[Observation.Id] =
               data.configurationRequestEdit.configurationRequest.toList
@@ -354,12 +365,16 @@ object ProgramCacheController
           val updateConfigurationRequests
             : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ConfigurationRequestSubscription
-              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
+              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))(using
+                summon,
+                ErrorPolicy.ReturnAlways
+              )
               .map:
-                _.broadcastThrough(
-                  _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
-                  obsWorkflowUpdates
-                )
+                _.through(logAndIgnoreErrors)
+                  .broadcastThrough(
+                    _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
+                    obsWorkflowUpdates
+                  )
 
           // Right now the programEdit subsription isn't fine grained enough to
           // differentiate what got updated, so we alway update all the attachments.
