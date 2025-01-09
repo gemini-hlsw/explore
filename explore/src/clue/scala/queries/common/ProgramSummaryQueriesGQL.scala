@@ -92,12 +92,13 @@ object ProgramSummaryQueriesGQL {
   @GraphQL
   trait ObservationsWorkflowQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
-      query($$where: WhereObservation!) {
-        observations(WHERE: $$where) {
+      query($$where: WhereObservation!, $$offset: ObservationId) {
+        observations(WHERE: $$where, OFFSET: $$offset) {
           matches {
             id
             workflow $ObservationWorkflowSubquery
           }
+          hasMore
         }
       }
     """

@@ -12,6 +12,7 @@ import clue.data.syntax.*
 import crystal.Pot
 import crystal.syntax.*
 import explore.DefaultErrorPolicy
+import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Execution
@@ -34,6 +35,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.ConfigurationRequestEditInput
+import lucuma.schemas.ObservationDB.Types.WhereObservation
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
@@ -245,35 +247,53 @@ object ProgramCacheController
             programUpdateChannel.stream
               .switchMap(_ => Stream.eval(updateProgramTimes(props.programId)))
 
+          def updateObservationsWorkflows(
+            whereObservation: WhereObservation
+          )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
+            drain[
+              ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data.Observations.Matches,
+              Observation.Id,
+              ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data
+            ](
+              offset =>
+                ProgramSummaryQueriesGQL
+                  .ObservationsWorkflowQuery[IO]
+                  .query(whereObservation, offset.orUnassign),
+              _.observations.matches,
+              _.observations.hasMore,
+              _.id
+            ).map:
+              _.map: m =>
+                ProgramSummaries.observations
+                  .modify:
+                    _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
+              .combineAll
+
+          // Changing the proposal's CfP can change the validations for observations,
+          // eg: coordinates bounds, so we requery them all.
+          // https://app.shortcut.com/lucuma/story/4412/update-warnings-without-page-reload
+          val allObservationsValidationsUpdate: Pipe[
+            IO,
+            ProgramQueriesGQL.ProgramEditDetailsSubscription.Data,
+            ProgramSummaries => ProgramSummaries
+          ] =
+            _.map(_.programEdit.value.proposal.flatMap(_.callId)).changes.void
+              .evalMap(_ => updateObservationsWorkflows(props.programId.toWhereObservation))
+
           val updateProgramDetails: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditDetailsSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
               .map:
-                _.map: data => // Replace program.
-                  ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some)
+                _.broadcastThrough(
+                  _.map: data => // Replace program.
+                    ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some),
+                  allObservationsValidationsUpdate
+                )
 
           val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             TargetQueriesGQL.ProgramTargetsDelta
               .subscribe[IO](props.programId.toTargetEditInput)
               .map(_.map(data => modifyTargets(data.targetEdit)))
-
-          def updateObservationsWorkflows(
-            obsIds: List[Observation.Id]
-          )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
-            if (obsIds.isEmpty) IO.pure(identity)
-            else
-              ProgramSummaryQueriesGQL
-                .ObservationsWorkflowQuery[IO]
-                .query(obsIds.toWhereObservation)
-                .map:
-                  _.observations.matches
-                    .map(m =>
-                      ProgramSummaries.observations
-                        .modify(
-                          _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
-                        )
-                    )
-                    .foldLeft(identity[ProgramSummaries])(_ andThen _)
 
           val onlyExistingObs: Pipe[
             IO,
@@ -315,7 +335,10 @@ object ProgramCacheController
             ProgramSummaries => ProgramSummaries
           ] = keyedSwitchEvalMap(
             _.obsIdList.toSet,
-            data => updateObservationsWorkflows(data.obsIdList)
+            _.obsIdList match
+              case Nil             => IO.pure(identity)
+              case nonEmptyObsList =>
+                updateObservationsWorkflows(nonEmptyObsList.toWhereObservation)
           )
 
           val groupTimeRangeUpdate: Pipe[
@@ -372,7 +395,8 @@ object ProgramCacheController
           val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramInfoDelta
               .subscribe[IO]()
-              .map(_.map(data => modifyPrograms(data.programEdit)))
+              .map:
+                _.map(data => modifyPrograms(data.programEdit))
 
           // TODO Handle errors, disable transparent resubscription upon connection loss.
           List(
