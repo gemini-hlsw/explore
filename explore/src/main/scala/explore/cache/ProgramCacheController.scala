@@ -7,10 +7,9 @@ import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
 import clue.ErrorPolicy
+import clue.ResponseException
 import clue.StreamingClient
 import clue.data.syntax.*
-import clue.model.GraphQLErrors
-import clue.model.GraphQLResponse
 import crystal.Pot
 import crystal.syntax.*
 import explore.DefaultErrorPolicy
@@ -234,10 +233,17 @@ object ProgramCacheController
   override protected val updateStream
     : ProgramCacheController => Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] = {
     props =>
-      // programUpdateChannel is just a sigal queue to trigger a (switchable) program times update.
+      // programUpdateChannel is just a signal queue to trigger a (switchable) program times update.
       Resource.make(Channel.unbounded[IO, Unit])(_.close.void).flatMap { programUpdateChannel =>
         try {
           import props.given
+
+          def onSubsError[D](field: String): ResponseException[D] => IO[Unit] =
+            e =>
+              if (e.data.isEmpty)
+                Logger[IO]
+                  .error(e)(s"Error getting updated $field from server.")
+              else IO.unit // ignore errors if we still got data
 
           // Signal a program times update.
           val queryProgramTimes: IO[Unit] =
@@ -249,14 +255,14 @@ object ProgramCacheController
 
           val updateProgramDetails: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditDetailsSubscription
-              .subscribe[IO](props.programId.toProgramEditInput)
+              .subscribe[IO](onSubsError("program details"))(props.programId.toProgramEditInput)
               .map:
                 _.map: data => // Replace program.
                   ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some)
 
           val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             TargetQueriesGQL.ProgramTargetsDelta
-              .subscribe[IO](props.programId.toTargetEditInput)
+              .subscribe[IO](onSubsError("target information"))(props.programId.toTargetEditInput)
               .map(_.map(data => modifyTargets(data.targetEdit)))
 
           def updateObservationsWorkflows(
@@ -301,15 +307,6 @@ object ProgramCacheController
               updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
           )
 
-          def logGraphQLErrors(errors: GraphQLErrors): IO[Unit] =
-            val msg = errors.map(_.message).toList.mkString(": ")
-            Logger[IO].error(s"Error in subscription: $msg")
-
-          def logAndIgnoreErrors[D]: Pipe[IO, GraphQLResponse[D], D] =
-            _.evalTap(_.errors.foldMap(logGraphQLErrors))
-              .map(_.data)
-              .flattenOption
-
           extension (data: ProgramQueriesGQL.ConfigurationRequestSubscription.Data)
             private def obsIdList: List[Observation.Id] =
               data.configurationRequestEdit.configurationRequest.toList
@@ -343,9 +340,8 @@ object ProgramCacheController
 
           val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ObsQueriesGQL.ProgramObservationsDelta
-              .subscribe[IO](props.programId.toObservationEditInput)(using
-                summon,
-                ErrorPolicy.IgnoreOnData
+              .subscribe[IO](onSubsError("observation information"))(
+                props.programId.toObservationEditInput
               )
               .map:
                 _.broadcastThrough(
@@ -355,7 +351,9 @@ object ProgramCacheController
 
           val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.GroupEditSubscription
-              .subscribe[IO](props.programId.toProgramEditInput)
+              .subscribe[IO](onSubsError("observation group information"))(
+                props.programId.toProgramEditInput
+              )
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyGroups(data.groupEdit)),
@@ -365,28 +363,28 @@ object ProgramCacheController
           val updateConfigurationRequests
             : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ConfigurationRequestSubscription
-              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))(using
-                summon,
-                ErrorPolicy.ReturnAlways
+              .subscribe[IO](onSubsError("configuration request information"))(
+                ConfigurationRequestEditInput(props.programId.assign)
               )
               .map:
-                _.through(logAndIgnoreErrors)
-                  .broadcastThrough(
-                    _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
-                    obsWorkflowUpdates
-                  )
+                _.broadcastThrough(
+                  _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
+                  obsWorkflowUpdates
+                )
 
           // Right now the programEdit subsription isn't fine grained enough to
           // differentiate what got updated, so we alway update all the attachments.
           // Hopefully this will change in the future.
           val updateAttachments: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditAttachmentSubscription
-              .subscribe[IO](props.programId.toProgramEditInput)
+              .subscribe[IO](onSubsError("attachment information"))(
+                props.programId.toProgramEditInput
+              )
               .map(_.map(data => modifyAttachments(data.programEdit)))
 
           val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramInfoDelta
-              .subscribe[IO]()
+              .subscribe[IO](onSubsError("program summary list"))()
               .map(_.map(data => modifyPrograms(data.programEdit)))
 
           // TODO Handle errors, disable transparent resubscription upon connection loss.
