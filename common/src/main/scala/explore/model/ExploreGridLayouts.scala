@@ -32,6 +32,7 @@ object ExploreGridLayouts:
     case GridLayoutSection.ObservationsLayout          => observations.defaultObsLayouts
     case GridLayoutSection.ObservationsSpecPhotoLayout => observations.specPhotoObsLayouts
     case GridLayoutSection.ObservationsTwilightLayout  => observations.twilightObsLayouts
+    case GridLayoutSection.ObservationsSequenceLayout  => observations.sequenceObsLayouts
     case GridLayoutSection.ObservationListLayout       => observationList.defaultObsListLayouts
     case GridLayoutSection.OverviewLayout              => overview.defaultOverviewLayouts
     case GridLayoutSection.ProposalLayout              => proposal.defaultProposalLayouts
@@ -252,14 +253,6 @@ object ExploreGridLayouts:
           w = DefaultWidth.value,
           h = ItcMaxHeight.value,
           i = ObsTabTileIds.ItcId.id.value
-        ),
-        LayoutItem(
-          x = 0,
-          y =
-            (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| ItcMaxHeight).value,
-          w = DefaultWidth.value,
-          h = SequenceMaxHeight.value,
-          i = ObsTabTileIds.SequenceId.id.value
         )
       )
     )
@@ -281,6 +274,19 @@ object ExploreGridLayouts:
     lazy val specPhotoMedium     =
       layoutMedium.asList
         .filterNot(l => specPhotoRemovedIds.contains(l.i))
+
+    lazy val sequenceMedium: Layout = Layout(
+      List(
+        LayoutItem(
+          x = 0,
+          y =
+            (NotesMaxHeight |+| TargetHeight |+| FinderChartHeight |+| SkyPlotHeight |+| ConstraintsMaxHeight |+| TimingWindowsMaxHeight |+| ConfigurationMaxHeight |+| ItcMaxHeight).value,
+          w = DefaultWidth.value,
+          h = SequenceMaxHeight.value,
+          i = ObsTabTileIds.SequenceId.id.value
+        )
+      )
+    )
 
     def removedTiles(role: Option[CalibrationRole]) =
       role match
@@ -311,6 +317,14 @@ object ExploreGridLayouts:
           (BreakpointName.md, Layout(twilightMedium))
         )
       ).withMinWidth
+
+    lazy val sequenceObsLayouts: LayoutsMap =
+      defineStdLayouts(
+        Map(
+          (BreakpointName.lg, sequenceMedium),
+          (BreakpointName.md, sequenceMedium)
+        )
+      )
   end observations
 
   object observationList:

@@ -10,6 +10,7 @@ enum GridLayoutSection(val value: String) derives Enumerated:
   case ObservationsLayout          extends GridLayoutSection("observations")
   case ObservationsSpecPhotoLayout extends GridLayoutSection("observations_specphoto")
   case ObservationsTwilightLayout  extends GridLayoutSection("observations_twilight")
+  case ObservationsSequenceLayout  extends GridLayoutSection("observations_sequence")
   case ObservationListLayout       extends GridLayoutSection("observation_list")
   case TargetLayout                extends GridLayoutSection("targets")
   case ConstraintsLayout           extends GridLayoutSection("constraints")
