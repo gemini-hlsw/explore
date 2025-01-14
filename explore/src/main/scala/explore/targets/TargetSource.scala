@@ -8,8 +8,8 @@ import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.syntax.all.*
 import clue.FetchClient
+import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.common.SimbadSearch
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
@@ -19,7 +19,7 @@ import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
+import queries.common.TargetQueriesGQL // TODO How can we avoid this???
 
 sealed trait TargetSource[F[_]]:
   def name: String
@@ -39,13 +39,13 @@ object TargetSource:
         TargetQueriesGQL
           .TargetNameQuery[F]
           .query(programId)
-          .map { data =>
+          .raiseGraphQLErrors
+          .map: data =>
             data.targetGroup.matches
               .map(mtch => TargetSearchResult(mtch.target.toOptId, none))
               // TODO Remove the filter when the API has a name pattern query
               .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
               .distinct
-          }
       )
 
     override def toString: String = programId.toString

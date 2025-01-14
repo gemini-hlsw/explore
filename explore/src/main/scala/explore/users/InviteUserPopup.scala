@@ -68,7 +68,7 @@ object InviteUserPopup:
           CreateInviteMutation[IO].execute(
             props.programUserId,
             email.value.value
-          )).attempt
+          )).raiseGraphQLErrors.attempt
           .flatMap:
             case Left(e)  =>
               Logger[IO].error(e)("Error creating invitation") *>

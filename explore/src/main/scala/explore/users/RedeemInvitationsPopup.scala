@@ -68,6 +68,7 @@ object RedeemInvitationsPopup:
       def redeem(key: String): IO[Unit] =
         RedeemInvitationMutation[IO]
           .execute(key)
+          .raiseGraphQLErrors
           .flatMap(l =>
             (process.set(RedeemInviteProcess.Done) *>
               errorMsg.set(ErrorMsg(none)) *>

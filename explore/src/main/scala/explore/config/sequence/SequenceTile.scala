@@ -105,7 +105,8 @@ object SequenceTile:
 
           ObservationVisits[IO]
             .query(props.obsId)
-            .map(_.flatMap(_.observation.flatMap(_.execution)))
+            .raiseGraphQLErrors
+            .map(_.observation.flatMap(_.execution))
             .attemptPot
             .resetOnResourceSignals:
               ObsQueriesGQL.ObservationEditSubscription
@@ -120,6 +121,7 @@ object SequenceTile:
 
           SequenceQuery[IO]
             .query(props.obsId)
+            .raiseGraphQLErrors
             .map(SequenceData.fromOdbResponse)
             .attemptPot
             .resetOnResourceSignals:

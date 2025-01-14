@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import explore.DefaultErrorPolicy
 import explore.common.TargetQueries
 import explore.model.EmptySiderealTarget
 import explore.model.ProgramSummaries

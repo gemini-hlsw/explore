@@ -15,7 +15,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
-import explore.DefaultErrorPolicy
 import explore.common.Aligner
 import explore.common.ScienceQueries.ScienceRequirementsUndoView
 import explore.common.ScienceQueries.UpdateScienceRequirements
@@ -159,6 +158,7 @@ object ConfigurationTile:
     ObsQueriesGQL
       .UpdateConfigurationMutation[IO]
       .execute(input)
+      .raiseGraphQLErrors
       .map(_.updateObservations.observations.headOption.flatMap(_.observingMode))
 
   private def updateConfiguration(

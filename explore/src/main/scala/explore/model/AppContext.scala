@@ -88,8 +88,6 @@ case class AppContext[F[_]](
 
   given ToastCtx[F] = new ToastCtx(toastRef)
 
-  export explore.DefaultErrorPolicy
-
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value
 

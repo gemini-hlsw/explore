@@ -10,7 +10,6 @@ import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
-import explore.DefaultErrorPolicy
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.syntax.ui.*
@@ -51,6 +50,7 @@ object ScienceQueries:
                 )
               )
             )
+            .raiseGraphQLErrors
             .void
             .toastErrors
             .runAsync

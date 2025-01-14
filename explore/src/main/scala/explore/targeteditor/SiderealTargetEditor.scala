@@ -12,7 +12,6 @@ import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.*
-import explore.DefaultErrorPolicy
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -101,6 +100,7 @@ object SiderealTargetEditor:
           REPLACE_IN = obsIds.toList.assign,
           SET = input.SET.assign
         )
+      .raiseGraphQLErrors
       .map(_.cloneTarget.newTarget)
       .flatMap: clone =>
         (TargetCloneAction

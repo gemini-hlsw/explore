@@ -7,7 +7,7 @@ import cats.effect.Sync
 import cats.syntax.all.given
 import clue.FetchClient
 import clue.data.syntax.*
-import explore.DefaultErrorPolicy
+import clue.syntax.*
 import explore.utils.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -29,6 +29,7 @@ object TargetQueries:
     TargetQueriesGQL
       .CreateTargetMutation[F]
       .execute(target.toCreateTargetInput(programId))
+      .raiseGraphQLErrors
       .map(_.createTarget.target.id)
       .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
 
@@ -39,7 +40,7 @@ object TargetQueries:
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     TargetQueriesGQL
       .UpdateTargetsMutation[F]
-      .execute(
+      .execute:
         UpdateTargetsInput(
           WHERE = targetId.toWhereTarget
             .copy(program = programId.toWhereProgram.assign)
@@ -47,5 +48,5 @@ object TargetQueries:
           SET = TargetPropertiesInput(existence = existence.assign),
           includeDeleted = true.assign
         )
-      )
+      .raiseGraphQLErrors
       .void

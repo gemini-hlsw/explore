@@ -11,7 +11,6 @@ import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.DefaultErrorPolicy
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Proposal

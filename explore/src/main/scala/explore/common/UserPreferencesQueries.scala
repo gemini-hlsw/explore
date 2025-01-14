@@ -11,9 +11,9 @@ import cats.data.OptionT
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import clue.syntax.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.*
-import explore.DefaultErrorPolicy
 import explore.givens.given
 import explore.model.AladinFullScreen
 import explore.model.AladinMouseScroll
@@ -60,11 +60,12 @@ object UserPreferencesQueries:
   val TableColumnPreferences = TableColumnPreferencesQuery.Data
 
   object GlobalUserPreferences:
-    def loadPreferences[F[_]: ApplicativeThrow](
+    def loadPreferences[F[_]: MonadThrow](
       userId: User.Id
     )(using FetchClient[F, UserPreferencesDB]): F[GlobalPreferences] =
       UserPreferencesQuery[F]
         .query(userId.show)
+        .raiseGraphQLErrors
         .map(_.lucumaUserPreferencesByPk)
         .handleError(_ => none)
         .map(_.getOrElse(GlobalPreferences.Default))
@@ -150,17 +151,19 @@ object UserPreferencesQueries:
         r   <-
           OptionT
             .liftF[F, Map[GridLayoutSection, SortedMap[BreakpointName, (Int, Int, Layout)]]] {
-              UserGridLayoutQuery[F].query(uid.show).map { r =>
-                r.lucumaGridLayoutPositions match {
-                  case l if l.isEmpty => Map.empty
-                  case l              =>
-                    l.groupBy(_.section).map { case (s, l) =>
-                      s -> SortedMap.from(
-                        l.groupBy(_.breakpointName).map(positions2LayoutMap)
-                      )
-                    }
-                }
-              }
+              UserGridLayoutQuery[F]
+                .query(uid.show)
+                .raiseGraphQLErrors
+                .map: r =>
+                  r.lucumaGridLayoutPositions match {
+                    case l if l.isEmpty => Map.empty
+                    case l              =>
+                      l.groupBy(_.section).map { case (s, l) =>
+                        s -> SortedMap.from(
+                          l.groupBy(_.breakpointName).map(positions2LayoutMap)
+                        )
+                      }
+                  }
             }
             .handleErrorWith(_ => OptionT.none)
       } yield r).value
@@ -225,6 +228,7 @@ object UserPreferencesQueries:
       val targetIds = tids.toList.map(_.show)
       AsterismPreferencesQuery[F]
         .query(uid.show, targetIds.assign)
+        .raiseGraphQLErrors
         .flatMap { r =>
           val asterismPrefsResult = r.exploreAsterismPreferences
 
@@ -280,7 +284,7 @@ object UserPreferencesQueries:
         }
     }
 
-    def updateAladinPreferences[F[_]: ApplicativeThrow](
+    def updateAladinPreferences[F[_]: MonadThrow](
       prefsId:    Option[Int],
       uid:        User.Id,
       targetId:   NonEmptyList[Target.Id],
@@ -325,20 +329,22 @@ object UserPreferencesQueries:
             ExploreAsterismPreferencesUpdateColumn.ViewOffsetQ.some.filter(_ => offset.isDefined)
           ).flattenOption.assign
         )
+        .raiseGraphQLErrors
         .map(_.insertExploreAsterismPreferencesOne.map(_.id))
         .attempt
         .map(_.getOrElse(None))
 
   object FinderChartPreferences:
     // Gets the prefs for the itc plot
-    def queryWithDefault[F[_]: ApplicativeThrow](
+    def queryWithDefault[F[_]: MonadThrow](
       oid: Observation.Id,
       aid: Attachment.Id
     )(using FetchClient[F, UserPreferencesDB]): F[Transformation] =
       FinderChartTransformationQuery[F]
         .query(aid.show, oid.show)
-        .map { r =>
-          r.exploreFinderChartByPk.map(r =>
+        .raiseGraphQLErrors
+        .map: r =>
+          r.exploreFinderChartByPk.map: r =>
             Transformation(
               ChartOp.Rotate(r.rotate),
               ChartOp.ScaleX(r.scaleX.toDouble / 100),
@@ -347,8 +353,6 @@ object UserPreferencesQueries:
               ChartOp.FlipY(r.flipY),
               ColorsInverted.fromBoolean(r.inverted)
             )
-          )
-        }
         .handleError(_ => none)
         .map(_.getOrElse(Transformation.Default))
 
@@ -445,6 +449,7 @@ object UserPreferencesQueries:
               userId = uid.show.assign,
               tableId = tableId.assign
             )
+            .raiseGraphQLErrors
             .recoverWith: t =>
               Logger[F]
                 .error(t)(s"Error loading table preferences for [$tableId]")
