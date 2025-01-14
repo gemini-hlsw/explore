@@ -79,12 +79,12 @@ object ProposalTabContents:
     val proposal = Proposal.Default
     programDetails.zoom(ProgramDetails.proposal).set(proposal.some) >>
       CreateProposalMutation[IO]
-        .execute(
+        .execute:
           CreateProposalInput(
             programId = programId,
             SET = proposal.toInput
           )
-        )
+        .raiseGraphQLErrors
         .toastErrors
         .void
         .runAsync

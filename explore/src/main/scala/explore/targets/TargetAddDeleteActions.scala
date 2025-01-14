@@ -46,14 +46,14 @@ object TargetAddDeleteActions {
   ): IO[Unit] =
     TargetQueriesGQL
       .UpdateTargetsMutation[IO]
-      .execute(
+      .execute:
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
             .copy(program = programId.toWhereProgram.assign)
             .assign,
           SET = TargetPropertiesInput(existence = Existence.Deleted.assign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
@@ -61,7 +61,7 @@ object TargetAddDeleteActions {
   ): IO[Unit] =
     TargetQueriesGQL
       .UpdateTargetsMutation[IO]
-      .execute(
+      .execute:
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
             .copy(program = programId.toWhereProgram.assign)
@@ -69,7 +69,7 @@ object TargetAddDeleteActions {
           SET = TargetPropertiesInput(existence = Existence.Present.assign),
           includeDeleted = true.assign
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def insertTarget(

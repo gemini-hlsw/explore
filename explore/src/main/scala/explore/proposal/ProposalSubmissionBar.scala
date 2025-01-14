@@ -66,12 +66,12 @@ object ProposalSubmissionBar:
       _ <- SetProposalStatus[IO]
              .execute:
                SetProposalStatusInput(programId = programId.assign, status = newStatus)
-             .onError:
+             .raiseGraphQLErrors
+             .handleErrorWith:
                case ResponseException(errors, _) =>
                  setErrorMessage(errors.head.message.some)
                case e                            =>
                  setErrorMessage(Some(e.getMessage.toString))
-             .void
       _ <- setLocalProposalStatus(newStatus)
     } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
 

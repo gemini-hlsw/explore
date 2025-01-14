@@ -87,6 +87,7 @@ def obsEditAttachments(
         WHERE = obsId.toWhereObservation.assign,
         SET = ObservationPropertiesInput(attachments = attachmentIds.toList.assign)
       )
+    .raiseGraphQLErrors
     .void
 
 object AddingObservation extends NewType[Boolean]
