@@ -10,7 +10,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
 import explore.actions.ObservationInsertAction
-import explore.common.TargetQueries
 import explore.components.ActionButtons
 import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
@@ -18,7 +17,6 @@ import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
-import explore.model.EmptySiderealTarget
 import explore.model.Focused
 import explore.model.LocalClipboard
 import explore.model.ObsIdSet
@@ -213,19 +211,14 @@ object AsterismGroupObsList:
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
   )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    TargetQueries
-      .insertTarget[IO](programId, EmptySiderealTarget)
-      .flatMap: targetId =>
-        TargetAddDeleteActions
-          .insertTarget(
-            targetId,
-            programId,
-            selectTargetOrSummary(_).toAsync,
-            ToastCtx[IO].showToast(_)
-          )
-          .set(undoCtx)(EmptySiderealTarget.some)
-          .toAsync
+    TargetAddDeleteActions
+      .insertTarget(
+        programId,
+        selectTargetOrSummary(_).toAsync,
+        ToastCtx[IO].showToast(_)
+      )(undoCtx)
       .switching(adding.async, AddingTargetOrObs(_))
+      .withToastDuring("Creating target")
 
   private def insertObs(
     programId:          Program.Id,
