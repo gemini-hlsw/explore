@@ -6,15 +6,27 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+import lucuma.core.enums.Instrument
+import lucuma.core.syntax.string.*
 import explore.modes.SpectroscopyModeRow
 
 object ModesQueriesGQL:
+  val supportedInstruments =
+    List(Instrument.GmosNorth, Instrument.GmosSouth)
+      .map(_.tag.toScreamingSnakeCase)
+      .mkString("[", ", ", "]")
 
   @GraphQL
   trait SpectroscopyModes extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       query() {
-        spectroscopyConfigOptions() {
+        spectroscopyConfigOptions(
+          WHERE: {
+            instrument: {
+              IN: $$supportedInstruments
+            }
+          }
+        ) {
           name
           instrument
           focalPlane
