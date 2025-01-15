@@ -2,7 +2,7 @@ object Versions {
   val boopickle              = "1.5.0"
   val cats                   = "2.12.0"
   val catsEffect             = "3.5.7"
-  val catsRetry              = "3.1.3"
+  val catsRetry              = "4.0.0"
   val catsTime               = "0.5.1"
   val circe                  = "0.14.10"
   val circeGolden            = "0.3.0"
