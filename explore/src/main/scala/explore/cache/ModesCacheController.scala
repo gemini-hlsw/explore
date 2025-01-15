@@ -12,6 +12,7 @@ import explore.DefaultErrorPolicy
 import explore.modes.SpectroscopyModesMatrix
 import fs2.Stream
 import japgolly.scalajs.react.*
+import lucuma.core.enums.Instrument
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import queries.common.ModesQueriesGQL
@@ -26,6 +27,8 @@ case class ModesCacheController(
 
 object ModesCacheController
     extends CacheControllerComponent[SpectroscopyModesMatrix, ModesCacheController]:
+  val supportedInstruments =
+    List(Instrument.GmosNorth, Instrument.GmosSouth)
 
   override protected val updateStream
     : ModesCacheController => Resource[IO, Stream[IO,
@@ -40,7 +43,7 @@ object ModesCacheController
 
     ModesQueriesGQL
       .SpectroscopyModes[IO]
-      .query()
+      .query(supportedInstruments)
       .map(u =>
         val modes = u.spectroscopyConfigOptions.zipWithIndex.map { case (s, i) =>
           s.copy(id = i.some)
