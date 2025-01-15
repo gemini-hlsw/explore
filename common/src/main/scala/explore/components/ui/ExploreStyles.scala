@@ -373,13 +373,14 @@ object ExploreStyles:
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
 
   // Sequence Viewer
-  val SequencesPanel        = Css("explore-sequences-panel")
-  val SequencesPanelError   = Css("explore-sequences-panel-error")
-  val CellHideBorder        = Css("explore-table-cell-hide-border")
-  val SequenceRowDone       = Css("explore-sequence-row-done")
-  val SequenceBracketCell   = Css("explore-sequence-bracket-cell")
-  val SequenceTileTitle     = Css("explore-sequence-tile-title")
-  val SequenceTileTitleItem = Css("explore-sequence-tile-title-item")
+  val SequencesPanel         = Css("explore-sequences-panel")
+  val SequencesPanelError    = Css("explore-sequences-panel-error")
+  val CellHideBorder         = Css("explore-table-cell-hide-border")
+  val SequenceRowDone        = Css("explore-sequence-row-done")
+  val SequenceBracketCell    = Css("explore-sequence-bracket-cell")
+  val SequenceTileController = Css("explore-sequence-tile-controller")
+  val SequenceTileTitle      = Css("explore-sequence-tile-title")
+  val SequenceTileTitleItem  = Css("explore-sequence-tile-title-item")
 
   val ButtonCopy: Css            = Css("explore-button-copy")
   val ButtonsUndo: Css           = Css("explore-buttons-undo")

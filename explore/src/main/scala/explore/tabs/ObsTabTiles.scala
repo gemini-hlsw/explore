@@ -561,7 +561,6 @@ object ObsTabTiles:
                 constraintsTile.some,
                 schedulingWindowsTile.some,
                 configurationTile.some,
-                sequenceTile.some,
                 itcTile.some
               ).flattenOption
 
@@ -570,12 +569,24 @@ object ObsTabTiles:
             val tiles =
               alltiles.filterNot(t => removedIds.contains(t.id))
 
-            TileController(
-              props.vault.userId,
-              props.resize.width.getOrElse(0),
-              defaultLayout,
-              layout,
-              tiles,
-              section,
-              props.backButton.some
+            React.Fragment(
+              TileController(
+                props.vault.userId,
+                props.resize.width.getOrElse(0),
+                defaultLayout,
+                layout,
+                tiles,
+                section,
+                props.backButton.some
+              ),
+              TileController(
+                props.vault.userId,
+                props.resize.width.getOrElse(0),
+                ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsSequenceLayout),
+                props.userPreferences.sequenceTileLayout,
+                List(sequenceTile),
+                GridLayoutSection.ObservationsSequenceLayout,
+                backButton = none,
+                clazz = ExploreStyles.SequenceTileController.some
+              )
             )
