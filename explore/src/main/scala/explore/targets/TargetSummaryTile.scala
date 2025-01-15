@@ -91,6 +91,7 @@ object TargetSummaryTile:
           readonly,
           tileState.zoom(TileState.filesToImport),
           tileState.zoom(TileState.columnVisibility),
+          focusTargetId,
           tileState.get.toggleAllRowsSelected
         )
     )
@@ -182,6 +183,7 @@ object TargetSummaryTile:
                     ),
                     ^.onClick ==> (e =>
                       e.preventDefaultCB >> e.stopPropagationCB >>
+                        Callback.log("onClick") >>
                         props.focusTargetId(cell.value.some)
                     )
                   )(
@@ -261,8 +263,16 @@ object TargetSummaryTile:
                 rowSelection = rowSelection.get
               ),
               onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod),
-              onRowSelectionChange =
-                stateInViewHandler(rowSelection.mod(_) >> props.focusTargetId(none))
+              onRowSelectionChange = stateInViewHandler(
+                rowSelection
+                  .withOnMod: rs =>
+                    // We'll only unfocus if something is selected. Otherwise this is
+                    // called on initial load and prevents direct navigation to a url for
+                    // a target, and also doesn't allow focusing of a newly created target
+                    // while an observation is selected. See https://app.shortcut.com/lucuma/story/4425/select-newly-created-target
+                    props.focusTargetId(none).unless_(rs.value.isEmpty)
+                  .mod(_)
+              )
             ),
             TableStore(props.userId, TableId.TargetsSummary, cols)
           )
@@ -317,6 +327,7 @@ object TargetSummaryTile:
     readonly:              Boolean,
     filesToImport:         View[List[DOMFile]],
     columnVisibility:      View[ColumnVisibility],
+    focusTargetId:         Option[Target.Id] => Callback,
     toggleAllRowsSelected: Option[Boolean => Callback]
   ) extends ReactFnProps(Title.component)
 
@@ -365,7 +376,7 @@ object TargetSummaryTile:
                       size = Button.Size.Small,
                       icon = Icons.SquareXMark,
                       label = "None",
-                      onClick = toggleAllRowsSelected(false)
+                      onClick = props.focusTargetId(none) >> toggleAllRowsSelected(false)
                     ).compact
                   )
               )

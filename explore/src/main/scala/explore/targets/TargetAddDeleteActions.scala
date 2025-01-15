@@ -8,8 +8,11 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import explore.DefaultErrorPolicy
+import explore.common.TargetQueries
+import explore.model.EmptySiderealTarget
 import explore.model.ProgramSummaries
 import explore.undo.*
+import explore.utils.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -71,30 +74,34 @@ object TargetAddDeleteActions {
       .void
 
   def insertTarget(
-    targetId:    Target.Id,
     programId:   Program.Id,
     setPage:     Option[Target.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    c:           FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, Option[Target]] =
-    Action[ProgramSummaries, Option[Target]](
-      getter = singleTargetGetter(targetId),
-      setter = singleTargetSetter(targetId)
-    )(
+    FetchClient[IO, ObservationDB],
+    ToastCtx[IO]
+  ): AsyncAction[ProgramSummaries, Target.Id, Option[Target]] =
+    AsyncAction[ProgramSummaries, Target.Id, Option[Target]](
+      asyncGet = TargetQueries
+        .insertTarget[IO](programId, EmptySiderealTarget)
+        .map((_, EmptySiderealTarget.some)),
+      getter = singleTargetGetter,
+      setter = singleTargetSetter,
       // DB creation is performed beforehand, in order to get id
-      onSet = (_, otwo) =>
-        otwo.fold(remoteDeleteTargets(List(targetId), programId) >> setPage(none))(_ =>
-          setPage(targetId.some)
-        ),
-      onRestore = (_, otwo) =>
-        otwo.fold(
-          remoteDeleteTargets(List(targetId), programId) >> setPage(none) >>
-            postMessage(s"Re-deleted target '$targetId'")
-        ) { _ =>
-          remoteUndeleteTargets(List(targetId), programId) >> setPage(targetId.some) >>
-            postMessage(s"Restored target '$targetId'")
-        }
+      onSet = targetId =>
+        (_, otwo) =>
+          otwo.fold(remoteDeleteTargets(List(targetId), programId) >> setPage(none))(_ =>
+            setPage(targetId.some)
+          ),
+      onRestore = targetId =>
+        (_, otwo) =>
+          otwo.fold(
+            remoteDeleteTargets(List(targetId), programId) >> setPage(none) >>
+              postMessage(s"Re-deleted target '$targetId'")
+          ) { _ =>
+            remoteUndeleteTargets(List(targetId), programId) >> setPage(targetId.some) >>
+              postMessage(s"Restored target '$targetId'")
+          }
     )
 
   def deleteTargets(
