@@ -183,7 +183,6 @@ object TargetSummaryTile:
                     ),
                     ^.onClick ==> (e =>
                       e.preventDefaultCB >> e.stopPropagationCB >>
-                        Callback.log("onClick") >>
                         props.focusTargetId(cell.value.some)
                     )
                   )(
