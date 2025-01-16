@@ -8,6 +8,8 @@ import crystal.Pot
 import crystal.react.ThrottlingView
 import crystal.react.View
 import lucuma.core.enums.ProgramUserRole
+import lucuma.core.model.Access
+import lucuma.core.model.Role
 import monocle.Focus
 import monocle.Lens
 
@@ -16,11 +18,17 @@ case class RootModelViews(
   programSummaries: ThrottlingView[Pot[ProgramSummaries]]
 ):
   lazy val programSummariesValue: Pot[ProgramSummaries] = programSummaries.throttlerView.get
-  lazy val optUserProgramRole: Option[ProgramUserRole]  =
+
+  lazy val optUserProgramRole: Option[ProgramUserRole] =
     val users      = programSummariesValue.toOption.flatMap(_.optProgramDetails).map(_.users)
     val thisUserId = rootModel.get.vault.map(_.user.id)
     (thisUserId, users).flatMapN((id, us) => us.find(_.user.exists(_.id === id))).map(_.role)
-  lazy val userIsReadonlyCoi                            = optUserProgramRole.exists(_ === ProgramUserRole.CoiRO)
+
+  lazy val userIsReadonlyCoi =
+    val role: Option[Role] = rootModel.get.vault.map(_.user.role)
+    !role.exists(_.access === Access.Staff) && optUserProgramRole.exists(
+      _ === ProgramUserRole.CoiRO
+    )
 
 object RootModelViews:
   val rootModel: Lens[RootModelViews, View[RootModel]]                              =
