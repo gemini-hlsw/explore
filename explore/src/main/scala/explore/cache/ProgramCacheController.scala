@@ -290,7 +290,7 @@ object ProgramCacheController
           val updateProgramDetails: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditDetailsSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
-              .logGraphQLErrors
+              .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
               .map:
                 _.broadcastThrough(
                   _.map: data => // Replace program.
@@ -301,7 +301,7 @@ object ProgramCacheController
           val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             TargetQueriesGQL.ProgramTargetsDelta
               .subscribe[IO](props.programId.toTargetEditInput)
-              .logGraphQLErrors
+              .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
               .map(_.map(data => modifyTargets(data.targetEdit)))
 
           val onlyExistingObs: Pipe[
@@ -375,7 +375,7 @@ object ProgramCacheController
           val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.GroupEditSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
-              .logGraphQLErrors
+              .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyGroups(data.groupEdit)),
@@ -386,7 +386,7 @@ object ProgramCacheController
             : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ConfigurationRequestSubscription
               .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
-              .logGraphQLErrors
+              .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
@@ -399,13 +399,13 @@ object ProgramCacheController
           val updateAttachments: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditAttachmentSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
-              .logGraphQLErrors
+              .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
               .map(_.map(data => modifyAttachments(data.programEdit)))
 
           val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramInfoDelta
               .subscribe[IO]()
-              .logGraphQLErrors
+              .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
               .map:
                 _.map(data => modifyPrograms(data.programEdit))
 

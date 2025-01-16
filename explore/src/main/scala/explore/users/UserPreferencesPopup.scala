@@ -6,7 +6,7 @@ package explore.users
 import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import clue.js.FetchJSClient
+import clue.js.FetchJsClient
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
@@ -114,7 +114,7 @@ object UserPreferencesContent:
     newKey:    View[NewKey],
     vault:     UserVault
   )(using
-    FetchJSClient[IO, SSO],
+    FetchJsClient[IO, SSO],
     Logger[IO]
   ) =
     (for {

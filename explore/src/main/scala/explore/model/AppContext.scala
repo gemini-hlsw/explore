@@ -77,9 +77,9 @@ case class AppContext[F[_]](
     val finalContents: VdomNode = contents.getOrElse(obsId.show)
     routingLink((AppTab.Observations, programId, Focused.singleObs(obsId)).some, finalContents)
 
-  given WebSocketJSClient[F, ObservationDB]     = clients.odb
-  given WebSocketJSClient[F, UserPreferencesDB] = clients.preferencesDB
-  given FetchJSClient[F, SSO]                   = clients.sso
+  given WebSocketJsClient[F, ObservationDB]     = clients.odb
+  given WebSocketJsClient[F, UserPreferencesDB] = clients.preferencesDB
+  given FetchJsClient[F, SSO]                   = clients.sso
 
   given itcWorker: WorkerClient[F, ItcMessage.Request]         = workerClients.itc
   given catalogWorker: WorkerClient[F, CatalogMessage.Request] = workerClients.catalog
@@ -91,7 +91,7 @@ case class AppContext[F[_]](
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value
 
-  def from[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
+  def from[F[_]: Async: FetchJsBackend: WebSocketJsBackend: Parallel: Logger](
     config:               AppConfig,
     reconnectionStrategy: ReconnectionStrategy,
     pageUrl:              Option[(AppTab, Program.Id, Focused)] => String,

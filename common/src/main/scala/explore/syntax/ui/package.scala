@@ -7,7 +7,7 @@ import cats.*
 import cats.effect.MonadCancelThrow
 import cats.syntax.all.*
 import clue.ResponseException
-import clue.js.FetchJSRequest
+import clue.js.FetchJsRequest
 import crystal.*
 import crystal.react.*
 import explore.Icons
@@ -55,7 +55,7 @@ extension [F[_]: MonadThrow](c: Logger[F])
     c.info(_root_.pprint.apply(a).render).runAsyncAndForget
 
 extension (vault: UserVault)
-  def addAuthorizationHeaderTo(request: FetchJSRequest): FetchJSRequest =
+  def addAuthorizationHeaderTo(request: FetchJsRequest): FetchJsRequest =
     // DOM Headers are mutable
     request.headers.set(
       Authorization.name.toString,

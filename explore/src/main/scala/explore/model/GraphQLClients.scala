@@ -16,9 +16,9 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.*
 
 case class GraphQLClients[F[_]: Async: Parallel] protected (
-  odb:           WebSocketJSClient[F, ObservationDB],
-  preferencesDB: WebSocketJSClient[F, UserPreferencesDB],
-  sso:           FetchJSClient[F, SSO]
+  odb:           WebSocketJsClient[F, ObservationDB],
+  preferencesDB: WebSocketJsClient[F, UserPreferencesDB],
+  sso:           FetchJsClient[F, SSO]
 ):
   def init(payload: F[Map[String, Json]]): F[Unit] =
     (preferencesDB.connect(), odb.connect(payload)).parTupled.void
@@ -30,7 +30,7 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
     ).sequence.void
 
 object GraphQLClients:
-  def build[F[_]: Async: FetchJSBackend: WebSocketJSBackend: Parallel: Logger](
+  def build[F[_]: Async: FetchJsBackend: WebSocketJsBackend: Parallel: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
     itcURI:               Uri,
@@ -39,9 +39,9 @@ object GraphQLClients:
   ): F[GraphQLClients[F]] =
     for {
       odbClient   <-
-        WebSocketJSClient.of[F, ObservationDB](odbURI.toString, "ODB", reconnectionStrategy)
+        WebSocketJsClient.of[F, ObservationDB](odbURI.toString, "ODB", reconnectionStrategy)
       prefsClient <-
-        WebSocketJSClient.of[F, UserPreferencesDB](prefsURI.toString, "PREFS", reconnectionStrategy)
+        WebSocketJsClient.of[F, UserPreferencesDB](prefsURI.toString, "PREFS", reconnectionStrategy)
       ssoClient   <-
-        FetchJSClient.of[F, SSO](s"${ssoURI.toString}/graphql", "SSO")
+        FetchJsClient.of[F, SSO](s"${ssoURI.toString}/graphql", "SSO")
     } yield GraphQLClients(odbClient, prefsClient, ssoClient)
