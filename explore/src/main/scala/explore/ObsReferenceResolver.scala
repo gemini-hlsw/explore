@@ -32,6 +32,7 @@ object ObsReferenceResolver
 
                     ResolveObsReference[IO]
                       .query(props.obsRef.assign)
+                      .raiseGraphQLErrors
                       .flatMap: data =>
                         data.observation
                           .map: o =>

@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
-import explore.DefaultErrorPolicy
 import explore.model.ObsIdSet
 import explore.syntax.ui.*
 import explore.utils.ToastCtx

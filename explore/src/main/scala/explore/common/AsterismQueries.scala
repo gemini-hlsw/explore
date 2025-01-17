@@ -7,7 +7,6 @@ import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
-import explore.DefaultErrorPolicy
 import explore.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB

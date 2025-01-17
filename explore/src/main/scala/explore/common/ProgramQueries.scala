@@ -7,8 +7,8 @@ import cats.effect.Async
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
+import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.model.ProgramInfo
 import explore.model.ProgramUser
 import lucuma.core.enums.ConfigurationRequestStatus
@@ -27,46 +27,46 @@ object ProgramQueries:
     FetchClient[F, ObservationDB]
   ): F[ProgramInfo] =
     CreateProgramMutation[F]
-      .execute(
+      .execute:
         CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
-      )
+      .raiseGraphQLErrors
       .map(_.createProgram.program)
 
   def deleteProgram[F[_]: Async](id: Program.Id)(using
     FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation[F]
-      .execute(
+      .execute:
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(existence = Existence.Deleted.assign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def undeleteProgram[F[_]: Async](id: Program.Id)(using
     FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation[F]
-      .execute(
+      .execute:
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           includeDeleted = true.assign,
           SET = ProgramPropertiesInput(existence = Existence.Present.assign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(using
     FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateProgramsMutation[F]
-      .execute(
+      .execute:
         UpdateProgramsInput(
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(name = name.orUnassign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def updateAttachmentDescription[F[_]: Async](
@@ -74,12 +74,12 @@ object ProgramQueries:
     desc: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateAttachmentMutation[F]
-      .execute(
+      .execute:
         UpdateAttachmentsInput(
           WHERE = WhereAttachment(id = WhereOrderAttachmentId(EQ = oid.assign).assign).assign,
           SET = AttachmentPropertiesInput(description = desc.orUnassign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def updateAttachmentChecked[F[_]: Async](
@@ -87,12 +87,12 @@ object ProgramQueries:
     checked: Boolean
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateAttachmentMutation[F]
-      .execute(
+      .execute:
         UpdateAttachmentsInput(
           WHERE = WhereAttachment(id = WhereOrderAttachmentId(EQ = oid.assign).assign).assign,
           SET = AttachmentPropertiesInput(checked = checked.assign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def updateProgramUsers[F[_]: Async](
@@ -100,12 +100,12 @@ object ProgramQueries:
     set:  ProgramUserPropertiesInput
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     ProgramUsersMutation[F]
-      .execute(
+      .execute:
         UpdateProgramUsersInput(
           WHERE = puid.toWhereProgramUser.assign,
           SET = set
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def updateUserFallbackName[F[_]: Async](
@@ -156,7 +156,7 @@ object ProgramQueries:
     justification: Option[NonEmptyString]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateConfigurationRequestsMutation[F]
-      .execute(
+      .execute:
         UpdateConfigurationRequestsInput(
           WHERE = rids.toWhereConfigurationRequest.assign,
           SET = ConfigurationRequestProperties(
@@ -164,5 +164,5 @@ object ProgramQueries:
             justification = justification.orIgnore
           )
         )
-      )
+      .raiseGraphQLErrors
       .void

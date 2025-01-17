@@ -190,6 +190,7 @@ object ObsTabTiles:
 
         SequenceOffsets[IO]
           .query(props.obsId)
+          .raiseGraphQLErrors
           .map: data =>
             Offsets(
               science = NonEmptyList.fromList(

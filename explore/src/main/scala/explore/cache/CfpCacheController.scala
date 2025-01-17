@@ -8,7 +8,6 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import crystal.Pot
-import explore.DefaultErrorPolicy
 import explore.model.CallForProposal
 import fs2.Stream
 import japgolly.scalajs.react.*
@@ -40,5 +39,6 @@ object CfpCacheController
 
     ReadOpenCFPs[IO]
       .query()
-      .map(_.map(_.callsForProposals.matches))
+      .raiseGraphQLErrors
+      .map(_.callsForProposals.matches)
       .tupleRight(Stream.empty)

@@ -7,8 +7,8 @@ import cats.effect.Async
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
-import explore.DefaultErrorPolicy
 import explore.model.Group
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
@@ -32,14 +32,17 @@ object GroupQueries:
     parentGroup:      Option[Group.Id],
     parentGroupIndex: NonNegShort
   )(using FetchClient[F, ObservationDB]) =
-    val input = UpdateGroupsInput(
-      WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
-      SET = GroupPropertiesInput(
-        parentGroup = parentGroup.orUnassign,
-        parentGroupIndex = parentGroupIndex.assign
-      )
-    )
-    UpdateGroupsMutation[F].execute(input).void
+    UpdateGroupsMutation[F]
+      .execute:
+        UpdateGroupsInput(
+          WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
+          SET = GroupPropertiesInput(
+            parentGroup = parentGroup.orUnassign,
+            parentGroupIndex = parentGroupIndex.assign
+          )
+        )
+      .raiseGraphQLErrors
+      .void
 
   def updateGroup[F[_]: Async](
     groupId:        Group.Id,
@@ -49,12 +52,12 @@ object GroupQueries:
     FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateGroupsMutation[F]
-      .execute(
+      .execute:
         UpdateGroupsInput(
           WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
           SET = set
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def createGroup[F[_]: Async](programId: Program.Id, parentId: Option[Group.Id])(using
@@ -66,6 +69,7 @@ object GroupQueries:
           programId = programId.assign,
           SET = parentId.map(gId => GroupPropertiesInput(parentGroup = gId.assign)).orIgnore
         )
+      .raiseGraphQLErrors
       .map: result =>
         result.createGroup.group
 
@@ -73,7 +77,8 @@ object GroupQueries:
     updateGroup(groupId, GroupPropertiesInput(existence = Existence.Deleted.assign))
 
   def undeleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
-    updateGroup(groupId,
-                GroupPropertiesInput(existence = Existence.Present.assign),
-                includeDeleted = true
+    updateGroup(
+      groupId,
+      GroupPropertiesInput(existence = Existence.Present.assign),
+      includeDeleted = true
     )

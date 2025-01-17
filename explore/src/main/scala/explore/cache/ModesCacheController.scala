@@ -8,7 +8,7 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import crystal.Pot
-import explore.DefaultErrorPolicy
+import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import fs2.Stream
 import japgolly.scalajs.react.*
@@ -44,10 +44,10 @@ object ModesCacheController
     ModesQueriesGQL
       .SpectroscopyModes[IO]
       .query(supportedInstruments)
-      .map(u =>
-        val modes = u.spectroscopyConfigOptions.zipWithIndex.map { case (s, i) =>
-          s.copy(id = i.some)
-        }
+      .raiseGraphQLErrors
+      .map: u =>
+        val modes: List[SpectroscopyModeRow] =
+          u.spectroscopyConfigOptions.zipWithIndex.map: (s, i) =>
+            s.copy(id = i.some)
         SpectroscopyModesMatrix(modes)
-      )
       .tupleRight(Stream.empty)

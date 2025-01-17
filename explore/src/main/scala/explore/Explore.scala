@@ -11,9 +11,9 @@ import cats.effect.kernel.Deferred
 import cats.effect.std.Dispatcher
 import cats.effect.unsafe.implicits.global
 import cats.syntax.all.*
-import clue.js.FetchJSBackend
+import clue.js.FetchJsBackend
 import clue.js.FetchMethod
-import clue.js.WebSocketJSBackend
+import clue.js.WebSocketJsBackend
 import clue.websocket.ReconnectionStrategy
 import explore.components.ui.ExploreStyles
 import explore.events.*
@@ -129,8 +129,8 @@ object ExploreMain {
       localPreferences: ExploreLocalPreferences,
       bc:               BroadcastChannel[IO, ExploreEvent]
     )(using Logger[IO]): IO[Unit] = {
-      given FetchJSBackend[IO]     = FetchJSBackend[IO](FetchMethod.GET)
-      given WebSocketJSBackend[IO] = WebSocketJSBackend[IO](dispatcher)
+      given FetchJsBackend[IO]     = FetchJsBackend[IO](FetchMethod.GET)
+      given WebSocketJsBackend[IO] = WebSocketJsBackend[IO](dispatcher)
 
       val (router, routerCtl) =
         RouterWithProps.componentAndCtl(BaseUrl.fromWindowOrigin, Routing.config)

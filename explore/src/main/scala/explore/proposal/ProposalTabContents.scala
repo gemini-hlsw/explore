@@ -10,7 +10,6 @@ import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import explore.*
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.ProposalQueries.*
 import explore.components.ui.ExploreStyles
@@ -80,12 +79,12 @@ object ProposalTabContents:
     val proposal = Proposal.Default
     programDetails.zoom(ProgramDetails.proposal).set(proposal.some) >>
       CreateProposalMutation[IO]
-        .execute(
+        .execute:
           CreateProposalInput(
             programId = programId,
             SET = proposal.toInput
           )
-        )
+        .raiseGraphQLErrors
         .toastErrors
         .void
         .runAsync

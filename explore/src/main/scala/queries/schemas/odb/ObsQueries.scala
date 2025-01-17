@@ -5,9 +5,9 @@ package queries.schemas.odb
 
 import cats.effect.Async
 import cats.implicits.*
-import clue.ErrorPolicy
 import clue.FetchClient
 import clue.data.syntax.*
+import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
@@ -37,8 +37,6 @@ import scala.collection.immutable.SortedMap
 object ObsQueries:
   type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
-  private given ErrorPolicy.IgnoreOnData.type = ErrorPolicy.IgnoreOnData
-
   def updateObservationConstraintSet[F[_]: Async](
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
@@ -67,12 +65,12 @@ object ObsQueries:
       ).assign
     )
     UpdateObservationMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      )
+      .raiseGraphQLErrors
       .void
   }
 
@@ -86,12 +84,12 @@ object ObsQueries:
     )
 
     UpdateObservationTimesMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsTimesInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      )
+      .raiseGraphQLErrors
       .void
   }
 
@@ -105,12 +103,12 @@ object ObsQueries:
     )
 
     UpdateObservationTimesMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsTimesInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      )
+      .raiseGraphQLErrors
       .void
   }
 
@@ -123,12 +121,12 @@ object ObsQueries:
       ObservationPropertiesInput(posAngleConstraint = posAngleConstraint.toInput.assign)
 
     UpdateObservationMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      )
+      .raiseGraphQLErrors
       .void
   }
 
@@ -141,12 +139,12 @@ object ObsQueries:
       ObservationPropertiesInput(observerNotes = notes.orUnassign)
 
     UpdateObservationMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      )
+      .raiseGraphQLErrors
       .void
   }
 
@@ -155,14 +153,14 @@ object ObsQueries:
     parentId:  Option[Group.Id]
   )(using FetchClient[F, ObservationDB]): F[Observation] =
     ProgramCreateObservation[F]
-      .execute(
+      .execute:
         CreateObservationInput(
           programId = programId.assign,
           SET = parentId
             .map(gId => ObservationPropertiesInput(groupId = gId.assign))
             .orIgnore
         )
-      )
+      .raiseGraphQLErrors
       .map: result =>
         result.createObservation.observation
 
@@ -173,14 +171,14 @@ object ObsQueries:
     FetchClient[F, ObservationDB]
   ): F[Observation] =
     ProgramCreateObservation[F]
-      .execute(
+      .execute:
         CreateObservationInput(
           programId = programId.assign,
           SET = ObservationPropertiesInput(
             targetEnvironment = TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
           ).assign
         )
-      )
+      .raiseGraphQLErrors
       .map(_.createObservation.observation)
 
   def cloneObservation[F[_]: Async](
@@ -195,6 +193,7 @@ object ObsQueries:
           observationId = obsId.assign,
           SET = ObservationPropertiesInput(groupId = newGroupId.orUnassign).assign
         )
+      .raiseGraphQLErrors
       .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
@@ -217,6 +216,7 @@ object ObsQueries:
             attachments = List.empty.assign // Always clean observation attachments
           ).assign
         )
+      .raiseGraphQLErrors
       .map(_.cloneObservation.newObservation)
 
   def deleteObservation[F[_]: Async](
@@ -233,25 +233,25 @@ object ObsQueries:
     obsIds: List[Observation.Id]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObservationMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = ObservationPropertiesInput(existence = Existence.Deleted.assign)
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   def undeleteObservations[F[_]: Async](
     obsIds: List[Observation.Id]
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     UpdateObservationMutation[F]
-      .execute(
+      .execute:
         UpdateObservationsInput(
           WHERE = obsIds.toWhereObservation.assign,
           SET = ObservationPropertiesInput(existence = Existence.Present.assign),
           includeDeleted = true.assign
         )
-      )
+      .raiseGraphQLErrors
       .void
 
   /**
@@ -294,4 +294,4 @@ object ObsQueries:
       observationId = obsId.assign,
       SET = ConfigurationRequestProperties(justification = justification.orIgnore).assign
     )
-    CreateConfigurationRequestMutation[F].execute(input).map(_._1)
+    CreateConfigurationRequestMutation[F].execute(input).raiseGraphQLErrors.map(_._1)

@@ -35,6 +35,7 @@ object ProposalReferenceResolver:
 
         ResolveProposalReference[IO]
           .query(props.proposalRef.assign)
+          .raiseGraphQLErrors
           .flatMap: data =>
             data.program
               .map: p =>

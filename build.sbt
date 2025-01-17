@@ -201,13 +201,13 @@ lazy val commonJsLibSettings = commonLibSettings ++ Seq(
       FS2Dom.value ++
       Log4Cats.value ++
       ScalaCollectionContrib.value ++
-      ScalaJSReact.value ++
+      ScalaJsReact.value ++
       ScalaJSDom.value ++
       LucumaUI.value ++
       In(Test)(
-        ScalaJSReactTest.value
+        ScalaJsReactTest.value
       ),
-  dependencyOverrides ++= ScalaJSReact.value
+  dependencyOverrides ++= ScalaJsReact.value
 )
 
 lazy val commonModuleTest = Seq(

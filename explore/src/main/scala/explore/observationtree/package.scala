@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
-import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.AppContext
 import explore.model.Attachment
@@ -88,6 +87,7 @@ def obsEditAttachments(
         WHERE = obsId.toWhereObservation.assign,
         SET = ObservationPropertiesInput(attachments = attachmentIds.toList.assign)
       )
+    .raiseGraphQLErrors
     .void
 
 object AddingObservation extends NewType[Boolean]

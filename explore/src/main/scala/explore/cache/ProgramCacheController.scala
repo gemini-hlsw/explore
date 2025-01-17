@@ -6,12 +6,10 @@ package explore.cache
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
-import clue.ErrorPolicy
 import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import crystal.syntax.*
-import explore.DefaultErrorPolicy
 import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
@@ -84,6 +82,7 @@ object ProgramCacheController
     ProgramSummaryQueriesGQL
       .ProgramTimesQuery[IO]
       .query(programId)
+      .raiseGraphQLErrors
       .map:
         _.program.fold(identity[ProgramSummaries]): times =>
           ProgramSummaries.programTimesPot.replace(Pot(times))
@@ -93,7 +92,8 @@ object ProgramCacheController
   )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
     ProgramSummaryQueriesGQL
       .ObservationExecutionQuery[IO]
-      .query(obsId)(ErrorPolicy.IgnoreOnData)
+      .query(obsId)
+      .raiseGraphQLErrorsOnNoData
       .map:
         _.observation
           .map(_.execution)
@@ -106,6 +106,7 @@ object ProgramCacheController
     ProgramSummaryQueriesGQL
       .GroupTimeRangeQuery[IO]
       .query(groupId)
+      .raiseGraphQLErrors
       .map:
         _.group
           .map(_.timeEstimateRange)
@@ -121,6 +122,7 @@ object ProgramCacheController
       ProgramSummaryQueriesGQL
         .ProgramDetailsQuery[IO]
         .query(props.programId)
+        .raiseGraphQLErrors
         .map(_.program)
         .logTime("ProgramDetailsQuery")
 
@@ -129,7 +131,8 @@ object ProgramCacheController
         offset =>
           ProgramSummaryQueriesGQL
             .AllProgramTargets[IO]
-            .query(props.programId.toWhereTarget, offset.orUnassign),
+            .query(props.programId.toWhereTarget, offset.orUnassign)
+            .raiseGraphQLErrors,
         _.targets.matches,
         _.targets.hasMore,
         _.id
@@ -140,10 +143,9 @@ object ProgramCacheController
         offset =>
           ProgramSummaryQueriesGQL
             .AllProgramObservations[IO]
-            .query(props.programId.toWhereObservation, offset.orUnassign)(using
-              // We need this because we currently get errors for things like having no targets
-              ErrorPolicy.IgnoreOnData
-            ),
+            .query(props.programId.toWhereObservation, offset.orUnassign)
+            // We need this because we currently get errors for things like having no targets
+            .raiseGraphQLErrorsOnNoData,
         _.observations.matches,
         _.observations.hasMore,
         _.id
@@ -157,7 +159,8 @@ object ProgramCacheController
         offset =>
           ProgramSummaryQueriesGQL
             .AllProgramConfigurationRequests[IO]
-            .query(props.programId, offset.orUnassign),
+            .query(props.programId, offset.orUnassign)
+            .raiseGraphQLErrors,
         _.program.foldMap(_.configurationRequests.matches),
         _.program.fold(false)(_.configurationRequests.hasMore),
         _.id
@@ -167,6 +170,7 @@ object ProgramCacheController
       ProgramQueriesGQL
         .ProgramGroupsQuery[IO]
         .query(props.programId)
+        .raiseGraphQLErrors
         .map(_.program.toList.flatMap(_.allGroupElements.map(_.group).flattenOption))
         .logTime("ProgramGroupsQuery")
 
@@ -174,6 +178,7 @@ object ProgramCacheController
       ProgramSummaryQueriesGQL
         .AllProgramAttachments[IO]
         .query(props.programId)
+        .raiseGraphQLErrors
         .map:
           _.program.fold(List.empty)(_.attachments)
         .logTime("AllProgramAttachments")
@@ -183,7 +188,8 @@ object ProgramCacheController
         offset =>
           ProgramSummaryQueriesGQL
             .AllPrograms[IO]
-            .query(offset.orUnassign),
+            .query(offset.orUnassign)
+            .raiseGraphQLErrors,
         _.programs.matches,
         _.programs.hasMore,
         _.id
@@ -258,7 +264,8 @@ object ProgramCacheController
               offset =>
                 ProgramSummaryQueriesGQL
                   .ObservationsWorkflowQuery[IO]
-                  .query(whereObservation, offset.orUnassign),
+                  .query(whereObservation, offset.orUnassign)
+                  .raiseGraphQLErrors,
               _.observations.matches,
               _.observations.hasMore,
               _.id
@@ -283,6 +290,7 @@ object ProgramCacheController
           val updateProgramDetails: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditDetailsSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
+              .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
               .map:
                 _.broadcastThrough(
                   _.map: data => // Replace program.
@@ -293,6 +301,7 @@ object ProgramCacheController
           val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             TargetQueriesGQL.ProgramTargetsDelta
               .subscribe[IO](props.programId.toTargetEditInput)
+              .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
               .map(_.map(data => modifyTargets(data.targetEdit)))
 
           val onlyExistingObs: Pipe[
@@ -355,10 +364,8 @@ object ProgramCacheController
 
           val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ObsQueriesGQL.ProgramObservationsDelta
-              .subscribe[IO](props.programId.toObservationEditInput)(using
-                summon,
-                ErrorPolicy.IgnoreOnData
-              )
+              .subscribe[IO](props.programId.toObservationEditInput)
+              .handleGraphQLErrors(IO.println(_))
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyObservations(data.observationEdit)),
@@ -368,6 +375,7 @@ object ProgramCacheController
           val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.GroupEditSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
+              .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyGroups(data.groupEdit)),
@@ -378,6 +386,7 @@ object ProgramCacheController
             : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ConfigurationRequestSubscription
               .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
+              .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
               .map:
                 _.broadcastThrough(
                   _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
@@ -390,11 +399,13 @@ object ProgramCacheController
           val updateAttachments: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramEditAttachmentSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
+              .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
               .map(_.map(data => modifyAttachments(data.programEdit)))
 
           val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramInfoDelta
               .subscribe[IO]()
+              .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
               .map:
                 _.map(data => modifyPrograms(data.programEdit))
 

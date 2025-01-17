@@ -8,7 +8,6 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import crystal.Pot
-import explore.DefaultErrorPolicy
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.common.UserPreferencesQueries.GridLayouts
 import explore.model.ExploreGridLayouts
@@ -63,21 +62,19 @@ object PreferencesCacheController
     val updateLayouts: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
       UserGridLayoutUpdates
         .subscribe[IO](props.userId.show)
-        .map(
-          _.map(data =>
+        .ignoreGraphQLErrors
+        .map:
+          _.map: data =>
             UserPreferences.gridLayouts
               .modify(GridLayouts.updateLayouts(data.lucumaGridLayoutPositions))
-          )
-        )
 
     val updateGlobalPreferences: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
       UserPreferencesUpdates
         .subscribe[IO](props.userId.show)
-        .map(
-          _.map(data =>
+        .ignoreGraphQLErrors
+        .map:
+          _.map: data =>
             UserPreferences.globalPreferences
               .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
-          )
-        )
 
     List(updateLayouts, updateGlobalPreferences).sequence.map(_.reduceLeft(_.merge(_)))

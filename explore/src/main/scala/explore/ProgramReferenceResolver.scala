@@ -35,6 +35,7 @@ object ProgramReferenceResolver:
 
         ResolveProgramReference[IO]
           .query(props.programRef.assign)
+          .raiseGraphQLErrors
           .flatMap: data =>
             data.program
               .map: p =>

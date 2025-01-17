@@ -7,8 +7,8 @@ import cats.*
 import cats.effect.*
 import cats.syntax.all.*
 import clue.FetchClient
+import clue.syntax.*
 import crystal.react.*
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -78,25 +78,22 @@ object TargetImportPopup:
   )(using FetchClient[F, ObservationDB], ToastCtx[F]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
-      .through(
+      .through:
         TargetImport.csv2targetsAndLookup(client, uri"https://lucuma-cors-proxy.herokuapp.com".some)
-      )
-      .evalMap {
+      .evalMap:
         case Left(a)       =>
           stateUpdate(State.targetErrors.modify(e => e :++ a.toList.map(_.displayValue)))
         case Right(target) =>
           TargetQueriesGQL
             .CreateTargetMutation[F]
             .execute(target.toCreateTargetInput(programId))
+            .raiseGraphQLErrors
             .map(_.some)
-            .flatTap(_ =>
+            .flatTap: _ =>
               stateUpdate(l => l.copy(current = target.some, loaded = (target :: l.loaded).reverse))
-            )
             .void
-      }
-      .handleErrorWith(e =>
+      .handleErrorWith: e =>
         Stream.eval(stateUpdate(State.genericError.replace(e.getMessage().some)))
-      )
 
   private val component =
     ScalaFnComponent

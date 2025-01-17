@@ -10,7 +10,6 @@ import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.DefaultErrorPolicy
 import explore.common.GroupQueries
 import explore.model.Group
 import explore.model.GroupList
@@ -81,6 +80,7 @@ object ObsActions:
           SetObservationWorkflowStateMutation[IO]
             .execute:
               SetObservationWorkflowStateInput(obsId, st)
+            .raiseGraphQLErrors
             .void
   )
 
@@ -96,6 +96,7 @@ object ObsActions:
             WHERE = obsId.toWhereObservation.assign,
             SET = ObservationPropertiesInput(subtitle = subtitleOpt.flatten.orUnassign)
           )
+        .raiseGraphQLErrors
         .void
   )
 
@@ -112,6 +113,7 @@ object ObsActions:
               WHERE = obsId.toWhereObservation.assign,
               SET = ObservationPropertiesInput(scienceBand = scienceBand.orUnassign)
             )
+          .raiseGraphQLErrors
           .void
     )
 

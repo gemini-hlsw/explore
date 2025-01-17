@@ -9,7 +9,6 @@ import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
-import explore.DefaultErrorPolicy
 import explore.model.ObsIdSet
 import explore.syntax.ui.*
 import explore.undo.UndoSetter

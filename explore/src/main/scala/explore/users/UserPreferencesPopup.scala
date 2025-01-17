@@ -6,10 +6,9 @@ package explore.users
 import cats.effect.IO
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import clue.js.FetchJSClient
+import clue.js.FetchJsClient
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.DefaultErrorPolicy
 import explore.Icons
 import explore.common.UserPreferencesQueries.GridLayouts
 import explore.common.UserPreferencesQueries.WavelengthUnitsPreference
@@ -115,11 +114,13 @@ object UserPreferencesContent:
     newKey:    View[NewKey],
     vault:     UserVault
   )(using
-    FetchJSClient[IO, SSO],
+    FetchJsClient[IO, SSO],
     Logger[IO]
   ) =
     (for {
-      newKeyResult <- NewApiKey[IO].execute(keyRoleId, modParams = vault.addAuthorizationHeaderTo)
+      newKeyResult <- NewApiKey[IO]
+                        .execute(keyRoleId, modParams = vault.addAuthorizationHeaderTo)
+                        .raiseGraphQLErrors
       _            <- newKey.set(NewKey(newKeyResult.createApiKey.some)).toAsync
     } yield ()).switching(active.async, IsActive(_))
 
@@ -130,7 +131,7 @@ object UserPreferencesContent:
     .useEffectResultWithDepsBy((_, ctx, isActive) => isActive.get): (props, ctx, _) =>
       _ =>
         import ctx.given
-        UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo)
+        UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo).raiseGraphQLErrors
     .useStateView(NewKey(none)) // id fo the new role id to create
     .useMemoBy((_, _, _, _, _) => ()): (props, ctx, isActive, _, newKey) => // Columns
       _ =>

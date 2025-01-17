@@ -45,6 +45,7 @@ object AddProgramUserButton
           val input = AddProgramUserInput(programId = props.programId, role = props.role)
           AddProgramUser[IO]
             .execute(input)
+            .raiseGraphQLErrors
             .map(_.addProgramUser.programUser)
             .flatMap(pu => props.users.mod(_ :+ pu).to[IO])
             .switching(isActive.async, IsActive(_))
