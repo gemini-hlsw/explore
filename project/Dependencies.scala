@@ -320,7 +320,7 @@ object Dependencies {
     )(scalaJsDom)
   )
 
-  val ScalaJSReact = Def.setting(
+  val ScalaJsReact = Def.setting(
     deps(
       "com.github.japgolly.scalajs-react" %%% "core-bundle-cb_io",
       "com.github.japgolly.scalajs-react" %%% "extra",
@@ -329,7 +329,7 @@ object Dependencies {
     )(scalaJsReact)
   )
 
-  val ScalaJSReactTest = Def.setting(
+  val ScalaJsReactTest = Def.setting(
     deps(
       "com.github.japgolly.scalajs-react" %%% "test"
     )(scalaJsReact)
