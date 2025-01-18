@@ -45,7 +45,7 @@
     "stylelint-color-format": "^1.1.0",
     "stylelint-config-standard-scss": "^11.1.0",
     "unplugin-fonts": "^1.1.1",
-    "vite": "4.5.5",
+    "vite": "6.0.7",
     "vite-plugin-env-compatible": "^2.0.1",
     "vite-plugin-mkcert": "^1.17.6",
     "vite-plugin-pwa": "^0.21.0"
