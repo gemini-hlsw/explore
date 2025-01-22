@@ -124,7 +124,7 @@ jobs:
 
   full:
     name: full
-    if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
+    if: ((github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -186,7 +186,7 @@ jobs:
         uses: lironer/bundlemon-action@v1
 
       - name: Deploy staging app to Firebase
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EXPLORE_GEMINI }}
@@ -197,7 +197,7 @@ jobs:
 
   lint:
     name: Run linters
-    if: ((github.ref == 'refs/heads/master' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini') && github.actor != 'dependabot[bot]')
+    if: ((github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini') && github.actor != 'dependabot[bot]')
     strategy:
       matrix:
         os: [ubuntu-latest]
