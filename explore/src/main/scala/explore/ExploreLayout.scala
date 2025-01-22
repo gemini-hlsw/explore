@@ -23,6 +23,7 @@ import explore.model.enums.AppTab
 import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
@@ -287,41 +288,47 @@ object ExploreLayout:
                               onLogout >> view.zoom(RootModel.vault).set(none).toAsync,
                               prefs
                             )
-                          )
-                      ),
-                    showProgsPopupPot.renderPot: showProgsPopup =>
-                      if (showProgsPopup)
-                        ProgramsPopup(
-                          currentProgramId = none,
-                          props.model.programSummaries.throttlerView
-                            .zoom(Pot.readyPrism)
-                            .zoom(ProgramSummaries.programs),
-                          undoStacks = view.zoom(RootModel.undoStacks),
-                          message = msg
-                        ): VdomElement
-                      else
-                        React.Fragment(
-                          SideTabs(
-                            "side-tabs".refined,
-                            routingInfoView.zoom(RoutingInfo.appTab),
-                            tab =>
-                              ctx.pageUrl((tab, routingInfo.programId, routingInfo.focused).some),
-                            _.separatorAfter,
-                            tab =>
-                              programSummaries.toOption
-                                .flatMap(_.optProgramDetails)
-                                .forall: program =>
-                                  // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                                  (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                                    program.programType === ProgramType.Science &&
-                                    (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
                           ),
-                          <.div(LayoutStyles.MainBody, LayoutStyles.WithMessage.when(isSubmitted))(
-                            props.resolution.renderP(props.model),
-                            TagMod.when(isSubmitted):
-                              SubmittedProposalMessage(proposalReference, deadline)
-                          )
-                        )
+                        showProgsPopupPot.renderPot: showProgsPopup =>
+                          if (showProgsPopup)
+                            ProgramsPopup(
+                              currentProgramId = none,
+                              vault.get.user.id,
+                              vault.get.isStaff,
+                              props.model.programSummaries.throttlerView
+                                .zoom(Pot.readyPrism)
+                                .zoom(ProgramSummaries.programs),
+                              undoStacks = view.zoom(RootModel.undoStacks),
+                              message = msg
+                            ): VdomElement
+                          else
+                            React.Fragment(
+                              SideTabs(
+                                "side-tabs".refined,
+                                routingInfoView.zoom(RoutingInfo.appTab),
+                                tab =>
+                                  ctx.pageUrl(
+                                    (tab, routingInfo.programId, routingInfo.focused).some
+                                  ),
+                                _.separatorAfter,
+                                tab =>
+                                  programSummaries.toOption
+                                    .flatMap(_.optProgramDetails)
+                                    .forall: program =>
+                                      // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                                      (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                                        program.programType === ProgramType.Science &&
+                                        (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                              ),
+                              <.div(LayoutStyles.MainBody,
+                                    LayoutStyles.WithMessage.when(isSubmitted)
+                              )(
+                                props.resolution.renderP(props.model),
+                                TagMod.when(isSubmitted):
+                                  SubmittedProposalMessage(proposalReference, deadline)
+                              )
+                            )
+                      )
                   )
                 )
               }

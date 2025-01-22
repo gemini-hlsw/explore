@@ -14,6 +14,21 @@ object ProgramInfoSubquery extends GraphQLSubquery.Typed[ObservationDB, ProgramI
     {
       id
       name
+      pi $ProgramUserSubquery,
+      users {
+        user {
+          id
+        }
+        role
+      }
+      type
+      reference $ProgramReferenceSubquery
+      proposal {
+        reference {
+          label
+        }
+      }
+      proposalStatus
       existence
     }
   """

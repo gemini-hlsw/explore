@@ -64,7 +64,7 @@ case class ProposalTabContents(
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   attachments:       View[AttachmentList],
   obsTargets:        ObsSiteAndTargets,
-  undoStacks:        View[UndoStacks[IO, Proposal]],
+  undoStacks:        View[UndoStacks[IO, ProgramDetails]],
   layout:            LayoutsMap,
   userIsReadonlyCoi: Boolean
 ) extends ReactFnProps(ProposalTabContents.component)
@@ -99,6 +99,9 @@ object ProposalTabContents:
     } yield
       import ctx.given
 
+      val undoCtx: UndoContext[ProgramDetails] =
+        UndoContext(props.undoStacks, props.programDetails)
+
       val users: View[List[ProgramUser]] =
         props.programDetails.zoom(ProgramDetails.allUsers)
 
@@ -120,23 +123,23 @@ object ProposalTabContents:
           )
         )
       else
-        props.programDetails
-          .zoom(ProgramDetails.proposal)
-          .mapValue((proposalView: View[Proposal]) =>
+        undoCtx
+          .zoom(ProgramDetails.proposal.some)
+          .map((proposal: UndoSetter[Proposal]) =>
             val piPartner =
               props.programDetails.zoom(ProgramDetails.piPartner.some).get
 
             val interval: Option[DateInterval] =
               props.cfps
-                .find(c => proposalView.get.callId.exists(_ === c.id))
+                .find(c => proposal.get.callId.exists(_ === c.id))
                 .map(_.active)
 
             val deadline: Option[Timestamp] =
-              proposalView.get.deadline(props.cfps, piPartner)
+              proposal.get.deadline(props.cfps, piPartner)
 
             val limits: Option[CallCoordinatesLimits] =
               props.cfps
-                .find(c => proposalView.get.callId.exists(_ === c.id))
+                .find(c => proposal.get.callId.exists(_ === c.id))
                 .map(_.coordinateLimits)
 
             val outOfLimitsTargets = props.obsTargets.count { case (_, (site, tl)) =>
@@ -150,8 +153,8 @@ object ProposalTabContents:
               ProposalEditor(
                 props.programId,
                 props.userVault.map(_.user.id),
-                proposalView,
-                props.undoStacks,
+                undoCtx,
+                proposal,
                 props.timeEstimateRange,
                 users,
                 props.attachments,
@@ -164,7 +167,7 @@ object ProposalTabContents:
                 props.programId,
                 props.programDetails.zoom(ProgramDetails.proposalStatus),
                 deadline,
-                proposalView.get.callId,
+                proposal.get.callId,
                 isStdUser && !props.userIsReadonlyCoi || outOfLimitsTargets > 0
               )
             )

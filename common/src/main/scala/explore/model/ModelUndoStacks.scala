@@ -8,7 +8,7 @@ import explore.undo.UndoStacks
 import monocle.Focus
 
 case class ModelUndoStacks[F[_]](
-  forProposal: UndoStacks[F, Proposal] = UndoStacks.empty[F, Proposal]
+  forProposal: UndoStacks[F, ProgramDetails] = UndoStacks.empty[F, ProgramDetails]
 )
 
 object ModelUndoStacks:

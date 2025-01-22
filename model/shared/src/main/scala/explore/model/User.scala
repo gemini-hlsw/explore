@@ -12,13 +12,15 @@ import lucuma.core.model.UserProfile
 import lucuma.sso.client.codec.userProfile.given
 
 // Case class for the 'pi' and `users` in the Program. These must be
-// actual users, not service users.
+// actual users, not service users. But, can be guests.
 case class User(
   id:      User.Id,
   orcidId: Option[OrcidId],
-  profile: Option[UserProfile] // TODO: Can this be non-optional? ie. does it include guests?
+  profile: Option[UserProfile]
 ) derives Eq:
   lazy val name: String = profile.fold("Guest User")(_.displayName.orEmpty)
+
+  lazy val lastName: String = profile.flatMap(p => p.familyName.orElse(p.displayName)).orEmpty
 
   lazy val nameWithEmail: String =
     name + profile.flatMap(_.email).foldMap(email => s" ($email)")

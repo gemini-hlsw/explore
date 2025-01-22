@@ -27,6 +27,7 @@ import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.core.model.User
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -46,6 +47,8 @@ import org.typelevel.log4cats.Logger
 
 case class ProgramsPopup(
   currentProgramId: Option[Program.Id],
+  userId:           User.Id,
+  isStaff:          Boolean,
   programInfos:     ViewOpt[ProgramInfoList],
   undoStacks:       View[UndoStacks[IO, ProgramSummaries]],
   onClose:          Option[Callback] = none,
@@ -124,7 +127,7 @@ object ProgramsPopup:
       val programInfoViewListOpt: Option[List[View[ProgramInfo]]] =
         programInfosViewOpt.map:
           _.toListOfViews
-            .map(_._2.withOnMod(pi => newProgramId.set(none) >> doSelectProgram(pi.id)))
+            .map(_._2.withOnMod(pi => newProgramId.set(none)))
             .filter(vpi => showDeleted.get.value || !vpi.get.deleted)
             .sortBy(_.get.id)
 
@@ -146,8 +149,8 @@ object ProgramsPopup:
         closable = props.onClose.isDefined,
         modal = props.onClose.isDefined,
         dismissableMask = props.onClose.isDefined,
-        resizable = false,
-        clazz = LucumaPrimeStyles.Dialog.Small |+| ExploreStyles.ProgramsPopup,
+        resizable = true,
+        clazz = LucumaPrimeStyles.Dialog.Large |+| ExploreStyles.ProgramsPopup,
         header = "Programs",
         footer = programInfosViewOpt.map: pis =>
           React.Fragment(
@@ -175,6 +178,8 @@ object ProgramsPopup:
           .renderPot: pis =>
             ProgramTable(
               props.currentProgramId,
+              props.userId,
+              props.isStaff,
               pis,
               selectProgram = doSelectProgram,
               props.onClose.isEmpty,
