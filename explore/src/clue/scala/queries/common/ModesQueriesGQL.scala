@@ -55,6 +55,11 @@ object ModesQueriesGQL:
             grating
             filter
           }
+          flamingos2 {
+            disperser
+            filter
+            fpu
+          }
         }
       }
     """
