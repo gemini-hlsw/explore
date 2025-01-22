@@ -243,8 +243,8 @@ fixCSS := {
 
 val pushCond                 = "github.event_name == 'push'"
 val prCond                   = "github.event_name == 'pull_request'"
-val masterCond               = "github.ref == 'refs/heads/master'"
-val notMasterCond            = "github.ref != 'refs/heads/master'"
+val mainCond                 = "github.ref == 'refs/heads/main'"
+val notMainCond              = "github.ref != 'refs/heads/main'"
 val geminiRepoCond           = "startsWith(github.repository, 'gemini')"
 val notDependabotCond        = "github.actor != 'dependabot[bot]'"
 def allConds(conds: String*) = conds.mkString("(", " && ", ")")
@@ -324,7 +324,7 @@ lazy val firebaseDeployReview = firebaseDeploy(
 
 lazy val firebaseDeployDev = firebaseDeploy(
   "Deploy staging app to Firebase",
-  masterCond,
+  mainCond,
   live = true
 )
 
@@ -369,7 +369,7 @@ ThisBuild / githubWorkflowAddedJobs +=
     sbtStepPreamble = Nil,
     scalas = Nil,
     javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond))
+    cond = Some(allConds(anyConds(mainCond, prCond), geminiRepoCond))
   )
 
 ThisBuild / githubWorkflowAddedJobs +=
@@ -386,5 +386,5 @@ ThisBuild / githubWorkflowAddedJobs +=
       Nil,
     scalas = List(scalaVersion.value),
     javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(anyConds(masterCond, prCond), geminiRepoCond, notDependabotCond))
+    cond = Some(allConds(anyConds(mainCond, prCond), geminiRepoCond, notDependabotCond))
   )
