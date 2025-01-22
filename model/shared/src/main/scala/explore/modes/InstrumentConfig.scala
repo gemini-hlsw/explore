@@ -13,6 +13,7 @@ import lucuma.core.enums.*
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
@@ -22,6 +23,8 @@ sealed trait InstrumentConfig derives Eq:
 
   type Grating
   val grating: Grating
+  def gratingDisplay: Display[Grating]
+  def gratingStr: String = gratingDisplay.shortName(grating)
 
   type FPU
   val fpu: FPU
@@ -47,9 +50,11 @@ object InstrumentConfig:
     type Filter   = Option[GmosNorthFilter]
     type FPU      = GmosNorthFpu
     type Override = InstrumentOverrides.GmosSpectroscopy
-    val instrument = Instrument.GmosNorth
-    val site       = Site.GN
-    val hasFilter  = filter.isDefined
+
+    val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val instrument                       = Instrument.GmosNorth
+    val site                             = Site.GN
+    val hasFilter                        = filter.isDefined
   }
 
   case class GmosSouthSpectroscopy(
@@ -62,21 +67,23 @@ object InstrumentConfig:
     type Filter   = Option[GmosSouthFilter]
     type FPU      = GmosSouthFpu
     type Override = InstrumentOverrides.GmosSpectroscopy
-    val instrument = Instrument.GmosSouth
-    val site       = Site.GS
-    val hasFilter  = filter.isDefined
+    val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val instrument                       = Instrument.GmosSouth
+    val site                             = Site.GS
+    val hasFilter                        = filter.isDefined
   }
 
-  case class Flamingos2Spectroscopy(grating: F2Disperser, filter: F2Filter) extends InstrumentConfig
-      derives Eq {
-    type Grating  = F2Disperser
+  case class Flamingos2Spectroscopy(grating: Option[F2Disperser], filter: F2Filter, fpu: F2Fpu)
+      extends InstrumentConfig derives Eq {
+    type Grating  = Option[F2Disperser]
     type Filter   = F2Filter
-    type FPU      = Unit
+    type FPU      = F2Fpu
     type Override = Unit
-    val fpu        = ()
-    val instrument = Instrument.Flamingos2
-    val site       = Site.GS
-    val hasFilter  = true
+    val gratingDisplay: Display[Grating] =
+      Display.byShortName(_.map(_.shortName).getOrElse("None"))
+    val instrument                       = Instrument.Flamingos2
+    val site                             = Site.GS
+    val hasFilter                        = true
   }
 
   case class GpiSpectroscopy(grating: GpiDisperser, filter: GpiFilter) extends InstrumentConfig
@@ -85,10 +92,11 @@ object InstrumentConfig:
     type Filter   = GpiFilter
     type FPU      = Unit
     type Override = Unit
-    val fpu        = ()
-    val instrument = Instrument.Gpi
-    val site       = Site.GN
-    val hasFilter  = true
+    val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val fpu                              = ()
+    val instrument                       = Instrument.Gpi
+    val site                             = Site.GN
+    val hasFilter                        = true
   }
 
   case class GnirsSpectroscopy(grating: GnirsDisperser, filter: GnirsFilter)
@@ -97,10 +105,11 @@ object InstrumentConfig:
     type Filter   = GnirsFilter
     type FPU      = Unit
     type Override = Unit
-    val fpu        = ()
-    val instrument = Instrument.Gnirs
-    val site       = Site.GN
-    val hasFilter  = true
+    val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val fpu                              = ()
+    val instrument                       = Instrument.Gnirs
+    val site                             = Site.GN
+    val hasFilter                        = true
   }
 
   // Used for Instruments not fully defined
@@ -110,10 +119,11 @@ object InstrumentConfig:
     type Filter   = NonEmptyString
     type FPU      = Unit
     type Override = Unit
-    val fpu        = ()
-    val instrument = i
-    val site       = Site.GN
-    val hasFilter  = true
+    val gratingDisplay: Display[Grating] = Display.byShortName(identity)
+    val fpu                              = ()
+    val instrument                       = i
+    val site                             = Site.GN
+    val hasFilter                        = true
   }
 
   val instrument: Getter[InstrumentConfig, Instrument] =

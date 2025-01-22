@@ -114,7 +114,7 @@ case class SpectroscopyModeRow(
     intervalCenter(wavelength).flatMap: cw =>
       val instrumentConfig: Option[InstrumentConfig] =
         instrument.instrument match
-          case Instrument.GmosNorth | Instrument.GmosSouth =>
+          case Instrument.GmosNorth | Instrument.GmosSouth | Instrument.Flamingos2 =>
             instrument match
               case i @ InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, None) =>
                 i.copy(modeOverrides =
@@ -136,9 +136,11 @@ case class SpectroscopyModeRow(
                     )
                     .some
                 ).some
+              case i @ InstrumentConfig.Flamingos2Spectroscopy(_, _, _)              =>
+                i.some
               case i                                                                 =>
                 i.some
-          case _                                           => none
+          case _                                                                   => none
 
       instrumentConfig.map: i =>
         copy(instrument = i)
@@ -195,6 +197,13 @@ object SpectroscopyModeRow {
       filter  <- c.downField("filter").as[Option[GmosSouthFilter]]
     } yield InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, none)
 
+  private given Decoder[InstrumentConfig.Flamingos2Spectroscopy] = c =>
+    for {
+      disperser <- c.downField("disperser").as[Option[F2Disperser]]
+      filter    <- c.downField("filter").as[F2Filter]
+      fpu       <- c.downField("fpu").as[F2Fpu]
+    } yield InstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)
+
   given Decoder[SpectroscopyModeRow] = c =>
     for {
       name       <- c.downField("name").as[NonEmptyString]
@@ -210,8 +219,10 @@ object SpectroscopyModeRow {
       slitLength <- c.downField("slitLength").as[Angle]
       gmosNorth  <- c.downField("gmosNorth").as[Option[InstrumentConfig.GmosNorthSpectroscopy]]
       gmosSouth  <- c.downField("gmosSouth").as[Option[InstrumentConfig.GmosSouthSpectroscopy]]
+      flamingos2 <- c.downField("flamingos2").as[Option[InstrumentConfig.Flamingos2Spectroscopy]]
     } yield gmosNorth
       .orElse(gmosSouth)
+      .orElse(flamingos2)
       .map { i =>
         SpectroscopyModeRow(
           none,
