@@ -517,7 +517,7 @@ object ObsTabTiles:
                 ObsTabTileIds.ConstraintsId.id,
                 "Constraints"
               )(
-                renderInTitle =>
+                _ =>
                   ConstraintsPanel(
                     ObsIdSet.one(props.obsId),
                     props.observation.zoom(Observation.constraints),

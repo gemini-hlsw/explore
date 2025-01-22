@@ -1781,10 +1781,13 @@ svg.fa-check.explore-success-icon {
 
   --column-wide-span: 3;
 
-  grid-template-columns: [label1] max-content [field1] minmax(20ch, 3fr) [label2] max-content [field2] minmax(
-      20ch,
-      3fr
-    );
+  grid-template-columns:
+    [label1] max-content
+    [field1] minmax(20ch, 3fr)
+    [likelihood1] min-content
+    [label2] max-content
+    [field2] minmax(20ch, 3fr)
+    [likelihood2] min-content;
 
   .elevation-range-picker {
     width: 9em;
@@ -1804,6 +1807,12 @@ svg.fa-check.explore-success-icon {
     align-items: baseline;
     justify-self: stretch;
     grid-column: 2 / span var(--column-wide-span);
+  }
+
+  .constraints-likelihood {
+    font-size: smaller;
+    align-self: center;
+    opacity: 0.5;
   }
 }
 
