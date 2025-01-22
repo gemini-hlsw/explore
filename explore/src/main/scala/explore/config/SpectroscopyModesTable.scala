@@ -152,14 +152,6 @@ private object SpectroscopyModesTable:
   private val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.value).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
-  private def formatGrating(grating: InstrumentConfig#Grating): String = grating match
-    case f: GmosSouthGrating => f.shortName
-    case f: GmosNorthGrating => f.shortName
-    case f: F2Disperser      => f.shortName
-    case f: GpiDisperser     => f.shortName
-    case f: GnirsDisperser   => f.shortName
-    case r                   => r.toString
-
   private def formatFilter(filter: InstrumentConfig#Filter): String = filter match
     case Some(f: GmosSouthFilter) => f.shortName
     case Some(f: GmosNorthFilter) => f.shortName
@@ -170,9 +162,8 @@ private object SpectroscopyModesTable:
 
   // I think these are valid Orderings because they should be consistent with ==
   // They could probably be Orders, as well, but only Ordering is actually needed here.
-  private given Ordering[InstrumentConfig#Grating] = Ordering.by(_.toString)
-  private given Ordering[InstrumentConfig#Filter]  = Ordering.by(_.toString)
-  private given Ordering[TimeSpan | Unit]          = Ordering.by(_.toOption)
+  private given Ordering[InstrumentConfig#Filter] = Ordering.by(_.toString)
+  private given Ordering[TimeSpan | Unit]         = Ordering.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -268,10 +259,10 @@ private object SpectroscopyModesTable:
         .setCell(cell => formatSlitLength(cell.value.value))
         .setColumnSize(FixedSize(105.toPx))
         .sortable,
-      column(GratingColumnId, row => SpectroscopyModeRow.grating.get(row.entry))
-        .setCell(cell => formatGrating(cell.value))
+      column(GratingColumnId, row => SpectroscopyModeRow.instrumentConfig.get(row.entry))
+        .setCell(_.value.gratingStr)
         .setColumnSize(FixedSize(96.toPx))
-        .sortable,
+        .sortableBy(_.gratingStr),
       column(FilterColumnId, row => SpectroscopyModeRow.filter.get(row.entry))
         .setCell(cell => formatFilter(cell.value))
         .setColumnSize(FixedSize(69.toPx))
@@ -333,7 +324,7 @@ private object SpectroscopyModesTable:
             val profiles: NonEmptyList[SourceProfile] =
               a.map(_.sourceProfile)
 
-            val rows: List[SpectroscopyModeRow] =
+            val rows: List[SpectroscopyModeRow]          =
               matrix
                 .filtered(
                   focalPlane = s.focalPlane,
@@ -344,13 +335,13 @@ private object SpectroscopyModesTable:
                   range = s.wavelengthCoverage,
                   declination = dec
                 )
-
             val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
             // Computes the mode overrides for the current parameters
             val fixedModeRows: List[SpectroscopyModeRow] =
               sortedRows
                 .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
                 .flattenOption
+
             fixedModeRows.map: row =>
               SpectroscopyModeRowWithResult(
                 row,

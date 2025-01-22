@@ -27,8 +27,9 @@ case class ModesCacheController(
 
 object ModesCacheController
     extends CacheControllerComponent[SpectroscopyModesMatrix, ModesCacheController]:
-  val supportedInstruments =
-    List(Instrument.GmosNorth, Instrument.GmosSouth)
+
+  val SupportedInstruments =
+    List(Instrument.GmosNorth, Instrument.GmosSouth, Instrument.Flamingos2)
 
   override protected val updateStream
     : ModesCacheController => Resource[IO, Stream[IO,
@@ -43,7 +44,7 @@ object ModesCacheController
 
     ModesQueriesGQL
       .SpectroscopyModes[IO]
-      .query(supportedInstruments)
+      .query(SupportedInstruments)
       .raiseGraphQLErrors
       .map: u =>
         val modes: List[SpectroscopyModeRow] =

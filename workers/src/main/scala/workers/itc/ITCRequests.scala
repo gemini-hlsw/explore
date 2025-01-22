@@ -112,6 +112,8 @@ object ITCRequests:
             ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
           case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
             ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
+          case m @ InstrumentConfig.Flamingos2Spectroscopy(_, _, _)   =>
+            ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
 
     parTraverseN(
       Constants.MaxConcurrentItcRequests.toLong,
