@@ -1779,7 +1779,7 @@ svg.fa-check.explore-success-icon {
   align-items: baseline;
   gap: 0.3em 0.5em;
 
-  --column-wide-span: 3;
+  --column-wide-span: 5;
 
   grid-template-columns:
     [label1] max-content
@@ -1814,12 +1814,20 @@ svg.fa-check.explore-success-icon {
     align-self: center;
     opacity: 0.5;
   }
+
+  .constraints-set-likelihood {
+    display: flex;
+    margin-top: 1em;
+    gap: 0.3em;
+    justify-items: baseline;
+    grid-column: 1 / span var(--column-wide-span);
+  }
 }
 
 // on small tiles, we want to stack the form fields
 @container tile (max-width: #{exploreCommon.$tile-small-cutoff}) {
   .constraints-grid {
-    --column-wide-span: 1;
+    --column-wide-span: 2;
 
     grid-template-columns: max-content 1fr;
 

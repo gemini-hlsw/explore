@@ -8,6 +8,7 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import coulomb.policy.spire.standard.given
 import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
@@ -39,7 +40,9 @@ import explore.model.enums.AgsState
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
+import explore.model.formats.formatPercentile
 import explore.model.layout.*
+import explore.model.syntax.all.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
 import explore.plots.ElevationPlotTile
@@ -52,12 +55,15 @@ import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.conditions.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.IntCentiPercent
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
@@ -73,7 +79,6 @@ import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
-import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*
@@ -105,19 +110,55 @@ case class ObsTabTiles(
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
-  val obsId: Observation.Id                                         = observation.get.id
-  val isDisabled: Boolean                                           = readonly || observation.get.isCalibration
-  val allConstraintSets: Set[ConstraintSet]                         = programSummaries.constraintGroups.map(_._2).toSet
+  val obsId: Observation.Id = observation.get.id
+
+  val isDisabled: Boolean = readonly || observation.get.isCalibration
+
+  val allConstraintSets: Set[ConstraintSet] = programSummaries.constraintGroups.map(_._2).toSet
+
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     programSummaries.targetObservations
-  val obsExecution: Pot[Execution]                                  = programSummaries.obsExecutionPots.getPot(obsId)
-  val obsTargets: TargetList                                        = programSummaries.obsTargets.get(obsId).getOrElse(SortedMap.empty)
-  val obsAttachmentAssignments: ObsAttachmentAssignmentMap          =
+
+  val obsExecution: Pot[Execution] = programSummaries.obsExecutionPots.getPot(obsId)
+
+  val obsTargets: TargetList = programSummaries.obsTargets.get(obsId).getOrElse(SortedMap.empty)
+
+  val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     programSummaries.obsAttachmentAssignments
-  val asterismTracking: Option[ObjectTracking]                      =
+  val asterismTracking: Option[ObjectTracking]             =
     observation.get.asterismTracking(obsTargets)
-  val posAngleConstraint: PosAngleConstraint                        = observation.get.posAngleConstraint
-  val calibrationRole: Option[CalibrationRole]                      = observation.zoom(Observation.calibrationRole).get
+
+  val posAngleConstraint: PosAngleConstraint = observation.get.posAngleConstraint
+
+  val calibrationRole: Option[CalibrationRole] = observation.zoom(Observation.calibrationRole).get
+
+  val constraintSet = observation.zoom(Observation.constraints)
+
+  val centralWavelength: Option[CentralWavelength] =
+    observation.get.observingMode.flatMap(_.centralWavelength)
+
+  val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
+    NonEmptyList.fromList:
+      obsTargets.toList.map((tid, t) => TargetWithId(tid, t))
+
+  def targetCoords(obsTime: Instant): Option[CoordinatesAtVizTime] =
+    asterismAsNel
+      .flatMap(asterismNel => asterismNel.baseTracking.at(obsTime))
+
+  def site: Option[Site] = observation.get.observingMode.map(_.siteFor)
+
+  def obsConditionsLikelihood(obsTime: Instant): Option[IntCentiPercent] =
+    (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
+      conditionsLikelihood(
+        constraintSet.get.skyBackground,
+        constraintSet.get.cloudExtinction,
+        constraintSet.get.waterVapor,
+        constraintSet.get.imageQuality.toArcSeconds.toValue[BigDecimal],
+        cw.value,
+        dec,
+        site
+      )
+    )
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -168,18 +209,6 @@ object ObsTabTiles:
         result(GridLayoutSection.ObservationsTwilightLayout)
       case _                                        =>
         result(GridLayoutSection.ObservationsLayout)
-
-  // TODO Move to core
-  extension (om: ObservingMode)
-    def centralWavelength: Option[CentralWavelength] =
-      ObservingMode.gmosNorthLongSlit
-        .andThen(ObservingMode.GmosNorthLongSlit.centralWavelength)
-        .getOption(om)
-        .orElse(
-          ObservingMode.gmosSouthLongSlit
-            .andThen(ObservingMode.GmosSouthLongSlit.centralWavelength)
-            .getOption(om)
-        )
 
   private val component =
     ScalaFnComponent
@@ -296,15 +325,6 @@ object ObsTabTiles:
             val obsDurationView: View[Option[TimeSpan]] =
               props.observation.model.zoom(Observation.observationDuration)
 
-            val asterismAsNel: Option[NonEmptyList[TargetWithId]] =
-              NonEmptyList.fromList:
-                props.obsTargets.toList.map((tid, t) => TargetWithId(tid, t))
-
-            // asterism base coordinates at viz time or current time
-            val targetCoords: Option[CoordinatesAtVizTime] =
-              asterismAsNel
-                .flatMap(asterismNel => asterismNel.baseTracking.at(vizTimeOrNow))
-
             val attachmentsView =
               props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
                 obsEditAttachments(props.obsId, ids).runAsync
@@ -320,7 +340,7 @@ object ObsTabTiles:
 
             val averagePA: Option[AveragePABasis] =
               (basicConfiguration.map(_.siteFor),
-               asterismAsNel,
+               props.asterismAsNel,
                obsDuration.filter(_ > TimeSpan.Zero)
               )
                 .mapN: (site, asterism, duration) =>
@@ -396,9 +416,6 @@ object ObsTabTiles:
                 props.globalPreferences
               )
 
-            val constraints: View[ConstraintSet] =
-              props.observation.model.zoom(Observation.constraints)
-
             val schedulingWindows: View[List[TimingWindow]] =
               TimingWindowsQueries.viewWithRemoteMod(
                 ObsIdSet.one(props.obsId),
@@ -409,8 +426,8 @@ object ObsTabTiles:
               ObsConfiguration(
                 basicConfiguration,
                 paProps.some,
-                constraints.get.some,
-                props.observation.get.observingMode.flatMap(_.centralWavelength),
+                props.constraintSet.get.some,
+                props.centralWavelength,
                 sequenceOffsets.toOption.flatMap(_.science),
                 sequenceOffsets.toOption.flatMap(_.acquisition),
                 averagePA,
@@ -512,14 +529,18 @@ object ObsTabTiles:
             // so that the constraints selector dropdown always appears in front of any other tiles. If more
             // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
             // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
-            val constraintsTile =
+
+            val conditionsLikelihood = props.obsConditionsLikelihood(vizTimeOrNow)
+            val constraintsTile      =
               Tile(
                 ObsTabTileIds.ConstraintsId.id,
-                "Constraints"
+                s"Constraints ${conditionsLikelihood.foldMap(formatPercentile)}"
               )(
                 _ =>
                   ConstraintsPanel(
                     ObsIdSet.one(props.obsId),
+                    conditionsLikelihood,
+                    props.centralWavelength,
                     props.observation.zoom(Observation.constraints),
                     props.isDisabled
                   ),
@@ -538,7 +559,7 @@ object ObsTabTiles:
                 props.observation
                   .zoom((Observation.posAngleConstraint, Observation.observingMode).disjointZip),
                 props.observation.get.scienceTargetIds,
-                targetCoords,
+                props.targetCoords(vizTimeOrNow),
                 obsConf,
                 selectedConfig,
                 props.observation.get.toInstrumentConfig(props.obsTargets),

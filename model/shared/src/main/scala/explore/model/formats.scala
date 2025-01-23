@@ -10,6 +10,7 @@ import explore.optics.all.*
 import lucuma.core.math.*
 import lucuma.core.math.HourAngle.HMS
 import lucuma.core.math.units.*
+import lucuma.core.model.IntCentiPercent
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
 import lucuma.core.util.TimeSpan
@@ -64,6 +65,9 @@ trait formats:
     Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
            _.toMicrometers.value.value.toString
     )
+
+  def formatPercentile(v: IntCentiPercent): String =
+    f"(${v.toPercent}%.1f%%)"
 
   private def formatHMS(hms: HMS): String =
     f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"

@@ -4,8 +4,10 @@
 package explore.constraints
 
 import cats.syntax.all.*
+import coulomb.policy.spire.standard.given
 import crystal.react.View
 import eu.timepit.refined.cats.*
+import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ConstraintsQueries
 import explore.common.ConstraintsQueries.*
@@ -14,24 +16,30 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
 import explore.model.ObsIdSet
+import explore.model.formats.formatPercentile
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.conditions.*
+import lucuma.core.math.Wavelength
+import lucuma.core.model.AirMassPredicate
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.IntCentiPercent
 import lucuma.core.model.validation.ModelValidators
-import lucuma.core.conditions.*
 import lucuma.core.util.Display
-import lucuma.react.common.style.*
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.CentralWavelength
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
+import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
@@ -39,9 +47,11 @@ import lucuma.ui.utils.given
 import monocle.Lens
 
 case class ConstraintsPanel(
-  obsIds:   ObsIdSet,
-  undoCtx:  UndoSetter[ConstraintSet],
-  readonly: Boolean
+  obsIds:                  ObsIdSet,
+  obsConditionsLikelihood: Option[IntCentiPercent],
+  centralWavelength:       Option[CentralWavelength],
+  undoCtx:                 UndoSetter[ConstraintSet],
+  readonly:                Boolean
 ) extends ReactFnProps(ConstraintsPanel.component):
   val constraintSet: ConstraintSet = undoCtx.get
 
@@ -150,6 +160,19 @@ object ConstraintsPanel:
               )
         )
 
+      val am        = refineV[AirMassPredicate](airMassView.get.max.value).toOption
+      val iqPercent = (props.centralWavelength, am)
+        .mapN((cw, am) =>
+          formatPercentile(
+            percentileImageQuality(
+              props.constraintSet.imageQuality.toArcSeconds.toValue[BigDecimal],
+              cw.value,
+              am
+            )
+          )
+        )
+        .getOrElse("(-)")
+
       React.Fragment(
         <.div(ExploreStyles.ConstraintsGrid)(
           selectEnum(
@@ -160,7 +183,7 @@ object ConstraintsPanel:
           ),
           <.div(
             ExploreStyles.ConstraintsLikelihood,
-            s"(${percentileImageQuality(props.constraintSet.imageQuality.toArcSeconds.toValue[BigDecimal, null, null).toPercent}%)"
+            iqPercent
           ),
           selectEnum(
             "Cloud Extinction".refined,
@@ -169,7 +192,7 @@ object ConstraintsPanel:
             UpdateConstraintSet.cloudExtinction
           ),
           <.div(ExploreStyles.ConstraintsLikelihood,
-                s"(${percentileCloudCoverage(props.constraintSet.cloudExtinction).toPercent}%)"
+                formatPercentile(percentileCloudCoverage(props.constraintSet.cloudExtinction))
           ),
           selectEnum(
             "Water Vapor".refined,
@@ -178,7 +201,7 @@ object ConstraintsPanel:
             UpdateConstraintSet.waterVapor
           ),
           <.div(ExploreStyles.ConstraintsLikelihood,
-                s"(${percentileWaterVapor(props.constraintSet.waterVapor).toPercent}%)"
+                formatPercentile(percentileWaterVapor(props.constraintSet.waterVapor))
           ),
           selectEnum(
             "Sky Background".refined,
@@ -187,7 +210,7 @@ object ConstraintsPanel:
             UpdateConstraintSet.skyBackground
           ),
           <.div(ExploreStyles.ConstraintsLikelihood,
-                s"(${percentileSkyBackground(props.constraintSet.skyBackground).toPercent}%)"
+                formatPercentile(percentileSkyBackground(props.constraintSet.skyBackground))
           ),
           FormLabel("ertype".refined)(
             "Elevation Range",
@@ -264,6 +287,14 @@ object ConstraintsPanel:
                 <.label("Hours")
               )
               .when(elevationRangeOptions.value.rangeType === HourAngle)
+          ),
+          <.label(
+            LucumaPrimeStyles.FormFieldLabel |+| ExploreStyles.ConstraintsSetLikelihood,
+            "Likelihood of selected conditions",
+            <.span(
+              ExploreStyles.ConstraintsLikelihood,
+              props.obsConditionsLikelihood.map(formatPercentile).getOrElse("(-)")
+            )
           )
         )
       )

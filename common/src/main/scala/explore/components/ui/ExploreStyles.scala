@@ -281,6 +281,7 @@ object ExploreStyles:
   val ConstraintsNameField           = Css("constraints-name-field")
   val ConstraintsElevationRangeGroup = Css("constraints-elevation-range")
   val ConstraintsLikelihood          = Css("constraints-likelihood")
+  val ConstraintsSetLikelihood       = Css("constraints-set-likelihood")
   val ElevationRangePicker           = Css("elevation-range-picker")
   val ElevationRangeEntry            = Css("elevation-range-entry")
 

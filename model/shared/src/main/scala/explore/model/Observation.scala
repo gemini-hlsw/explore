@@ -282,6 +282,7 @@ object Observation:
   val scienceTargetIds         = Focus[Observation](_.scienceTargetIds)
   val selectedGSName           = Focus[Observation](_.selectedGSName)
   val constraints              = Focus[Observation](_.constraints)
+  val centralWavelength        = Focus[Observation](_.centralWavelength)
   val timingWindows            = Focus[Observation](_.timingWindows)
   val attachmentIds            = Focus[Observation](_.attachmentIds)
   val scienceRequirements      = Focus[Observation](_.scienceRequirements)

@@ -24,6 +24,8 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.CentralWavelength
+import lucuma.schemas.model.ObservingMode
 
 import java.time.Instant
 import java.time.ZoneOffset
@@ -168,3 +170,14 @@ object all:
     def defaultPosAngleConstrait: PosAngleOptions = bc match
       case BasicConfiguration.GmosNorthLongSlit(_, _, _, _) => PosAngleOptions.AverageParallactic
       case BasicConfiguration.GmosSouthLongSlit(_, _, _, _) => PosAngleOptions.AverageParallactic
+
+  extension (om: ObservingMode)
+    def centralWavelength: Option[CentralWavelength] =
+      ObservingMode.gmosNorthLongSlit
+        .andThen(ObservingMode.GmosNorthLongSlit.centralWavelength)
+        .getOption(om)
+        .orElse(
+          ObservingMode.gmosSouthLongSlit
+            .andThen(ObservingMode.GmosSouthLongSlit.centralWavelength)
+            .getOption(om)
+        )
