@@ -4,10 +4,8 @@
 package explore.constraints
 
 import cats.syntax.all.*
-import coulomb.policy.spire.standard.given
 import crystal.react.View
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.ConstraintsQueries
 import explore.common.ConstraintsQueries.*
@@ -21,8 +19,6 @@ import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.conditions.*
-import lucuma.core.math.Wavelength
-import lucuma.core.model.AirMassPredicate
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.IntCentiPercent
@@ -48,6 +44,7 @@ import monocle.Lens
 
 case class ConstraintsPanel(
   obsIds:                  ObsIdSet,
+  obsIQLikelihood:         Option[IntCentiPercent],
   obsConditionsLikelihood: Option[IntCentiPercent],
   centralWavelength:       Option[CentralWavelength],
   undoCtx:                 UndoSetter[ConstraintSet],
@@ -160,19 +157,6 @@ object ConstraintsPanel:
               )
         )
 
-      val am        = refineV[AirMassPredicate](airMassView.get.max.value).toOption
-      val iqPercent = (props.centralWavelength, am)
-        .mapN((cw, am) =>
-          formatPercentile(
-            percentileImageQuality(
-              props.constraintSet.imageQuality.toArcSeconds.toValue[BigDecimal],
-              cw.value,
-              am
-            )
-          )
-        )
-        .getOrElse("(-)")
-
       React.Fragment(
         <.div(ExploreStyles.ConstraintsGrid)(
           selectEnum(
@@ -183,7 +167,7 @@ object ConstraintsPanel:
           ),
           <.div(
             ExploreStyles.ConstraintsLikelihood,
-            iqPercent
+            props.obsIQLikelihood.map(formatPercentile).getOrElse("(-)")
           ),
           selectEnum(
             "Cloud Extinction".refined,

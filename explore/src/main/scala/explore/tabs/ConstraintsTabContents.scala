@@ -198,7 +198,7 @@ object ConstraintsTabContents extends TwoPanels:
                   ObsTabTileIds.ConstraintsId.id,
                   constraintsTitle,
                   backButton.some
-                )(_ => ConstraintsPanel(idsToEdit, none, none, constraintSet, props.readonly))
+                )(_ => ConstraintsPanel(idsToEdit, none, none, none, constraintSet, props.readonly))
 
               val twTraversal = obsTraversal.andThen(Observation.timingWindows)
 

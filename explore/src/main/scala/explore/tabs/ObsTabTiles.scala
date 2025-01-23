@@ -147,6 +147,14 @@ case class ObsTabTiles(
 
   def site: Option[Site] = observation.get.observingMode.map(_.siteFor)
 
+  def obsIQLikelihood(obsTime: Instant): Option[IntCentiPercent] =
+    (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
+      percentileImageQuality(constraintSet.get.imageQuality.toArcSeconds.toValue[BigDecimal],
+                             cw.value,
+                             minimumAirmass(dec, site)
+      )
+    )
+
   def obsConditionsLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
       conditionsLikelihood(
@@ -303,7 +311,7 @@ object ObsTabTiles:
           itcGraphQuerier,
           itcGraphResults,
           sequenceChanged,
-          vizTimeOrNowPot,
+          obsTimeOrNowPot,
           _,
           guideStarSelection,
           roleLayouts
@@ -311,7 +319,7 @@ object ObsTabTiles:
           import ctx.given
           val (section, defaultLayout, layout) = roleLayouts.value
 
-          vizTimeOrNowPot.renderPot: vizTimeOrNow =>
+          obsTimeOrNowPot.renderPot: obsTimeOrNow =>
 
             val asterismIds: View[AsterismIds] =
               props.observation.model.zoom(Observation.scienceTargetIds)
@@ -350,9 +358,9 @@ object ObsTabTiles:
                       averageParallacticAngle(
                         site.place,
                         asterism.baseTracking,
-                        vizTimeOrNow,
+                        obsTimeOrNow,
                         duration
-                      ).map(AveragePABasis(vizTimeOrNow, duration, _))
+                      ).map(AveragePABasis(obsTimeOrNow, duration, _))
                     case _                                     => none
                 .flatten
 
@@ -530,7 +538,7 @@ object ObsTabTiles:
             // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
             // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
 
-            val conditionsLikelihood = props.obsConditionsLikelihood(vizTimeOrNow)
+            val conditionsLikelihood = props.obsConditionsLikelihood(obsTimeOrNow)
             val constraintsTile      =
               Tile(
                 ObsTabTileIds.ConstraintsId.id,
@@ -539,6 +547,7 @@ object ObsTabTiles:
                 _ =>
                   ConstraintsPanel(
                     ObsIdSet.one(props.obsId),
+                    props.obsIQLikelihood(obsTimeOrNow),
                     conditionsLikelihood,
                     props.centralWavelength,
                     props.observation.zoom(Observation.constraints),
@@ -559,7 +568,7 @@ object ObsTabTiles:
                 props.observation
                   .zoom((Observation.posAngleConstraint, Observation.observingMode).disjointZip),
                 props.observation.get.scienceTargetIds,
-                props.targetCoords(vizTimeOrNow),
+                props.targetCoords(obsTimeOrNow),
                 obsConf,
                 selectedConfig,
                 props.observation.get.toInstrumentConfig(props.obsTargets),
