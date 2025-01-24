@@ -16,8 +16,8 @@ import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
-import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.enums.ProposalStatus
 import monocle.Focus
 import monocle.Lens
 
