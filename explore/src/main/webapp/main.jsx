@@ -9,7 +9,6 @@ import '/lucuma-css/lucuma-ui-variables-dark.scss';
 import '/lucuma-css/lucuma-ui-variables-light.scss';
 import '/lucuma-css/solar-system.scss';
 import '/lucuma-css/moon.scss';
-import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import '/common/css/react-resizable.css';
 import '/common/css/react-grid-layout.css';
