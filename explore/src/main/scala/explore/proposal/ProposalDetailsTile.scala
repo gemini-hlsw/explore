@@ -28,6 +28,7 @@ import explore.model.CallForProposal
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.PartnerSplit
+import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
 import explore.model.Proposal
 import explore.model.ProposalType
@@ -65,12 +66,13 @@ import org.typelevel.log4cats.Logger
 import spire.std.any.*
 
 case class ProposalDetailsBody(
-  proposal:          View[Proposal],
-  aligner:           Aligner[Proposal, ProposalPropertiesInput],
+  detailsAligner:    Aligner[ProgramDetails, ProgramPropertiesInput],
+  proposalAligner:   Aligner[Proposal, ProposalPropertiesInput],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   cfps:              List[CallForProposal],
   readonly:          Boolean
-) extends ReactFnProps(ProposalDetailsBody.component)
+) extends ReactFnProps(ProposalDetailsBody.component):
+  val proposal: Proposal = proposalAligner.get
 
 object ProposalDetailsBody:
   private type Props = ProposalDetailsBody
@@ -160,18 +162,18 @@ object ProposalDetailsBody:
     splitsList: View[List[PartnerSplit]]
   )(using Logger[IO]): VdomNode = {
     val proposalCfpView: View[Proposal] =
-      props.aligner.viewMod { p =>
+      props.proposalAligner.viewMod { p =>
         ProposalPropertiesInput.callId.replace(p.callId.orUnassign) >>>
           ProposalPropertiesInput.`type`.replace(p.proposalType.map(_.toInput).orUnassign)
       }
 
     val titleAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-      props.aligner.zoom(Proposal.title, ProposalPropertiesInput.title.modify)
+      props.detailsAligner.zoom(ProgramDetails.name, ProgramPropertiesInput.name.modify)
 
     val titleView = titleAligner.view(_.orUnassign)
 
-    val callId: Option[CallForProposals.Id] = props.aligner.get.callId
-    val scienceSubtype                      = props.aligner.get.proposalType.map(_.scienceSubtype)
+    val callId: Option[CallForProposals.Id] = props.proposalAligner.get.callId
+    val scienceSubtype                      = props.proposalAligner.get.proposalType.map(_.scienceSubtype)
 
     val selectedCfp   = callId.flatMap(id => props.cfps.find(_.id === id))
     val isCfpSelected = selectedCfp.isDefined
@@ -179,12 +181,12 @@ object ProposalDetailsBody:
     val hasSubtypes   = subtypes.exists(_.size > 1)
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
-      props.aligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
+      props.proposalAligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
 
     val categoryView: View[Option[TacCategory]] = categoryAligner.view(_.orUnassign)
 
     val proposalTypeAligner: Aligner[Option[ProposalType], Input[ProposalTypeInput]] =
-      props.aligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
+      props.proposalAligner.zoom(Proposal.proposalType, ProposalPropertiesInput.`type`.modify)
 
     val proposalTypeView: View[Option[ProposalType]] =
       proposalTypeAligner.view(_.map(_.toInput).orUnassign)
@@ -222,7 +224,7 @@ object ProposalDetailsBody:
     val areTimesSame = minExecutionPot.toOption === maxExecutionPot.toOption
 
     val (maxTimeLabel, minTimeLabel) =
-      props.aligner.get.proposalType match {
+      props.proposalAligner.get.proposalType match {
         case Some(ProposalType.LargeProgram(_, _, _, _, _)) => ("Semester Max", "Semester Min")
         case _                                              => ("Max Time", "Min Time")
       }
@@ -451,9 +453,8 @@ object ProposalDetailsBody:
       // total time - we need `Hours` for editing and also to preserve if
       // the user switches between classes with and without total time.
       .useStateViewBy: (props, _) =>
-        props.proposal
-          .zoom(Proposal.proposalType.some.andThen(ProposalType.totalTime))
-          .get
+        props.proposal.proposalType
+          .flatMap(ProposalType.totalTime.getOption)
           .map(toHours)
           .getOrElse(Hours.unsafeFrom(0))
       // .useStateViewBy((props, _, _, _) =>
@@ -466,13 +467,13 @@ object ProposalDetailsBody:
       .useStateView(Visible.Hidden)           // show partner splits modal
       .useStateView(List.empty[PartnerSplit]) // partner splits modal
       // Update the partner splits when a new callId is set
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.proposal.get.callId, props.cfps)):
+      .useEffectWithDepsBy((props, _, _, _, _) => (props.proposal.callId, props.cfps)):
         (props, _, _, _, ps) =>
           (callId, cfps) =>
             callId.foldMap(cid =>
               val currentSplits    = Proposal.proposalType.some
                 .andThen(ProposalType.partnerSplits)
-                .getOption(props.proposal.get)
+                .getOption(props.proposal)
               val cfpPartners      = cfps
                 .find(_.id === cid)
                 .foldMap(_.partners.map(_.partner))
@@ -519,7 +520,7 @@ object ProposalDetailsBody:
             splitsList
           )(using ctx.logger)
 
-case class ProposalDetailsTitle(undoCtx: UndoContext[Proposal], tileSize: TileSizeState)
+case class ProposalDetailsTitle(undoer: Undoer, tileSize: TileSizeState, readonly: Boolean)
     extends ReactFnProps(ProposalDetailsTitle.component)
 
 object ProposalDetailsTitle:
@@ -528,4 +529,5 @@ object ProposalDetailsTitle:
   private val component =
     ScalaFnComponent[Props]: props =>
       if (props.tileSize === TileSizeState.Minimized) EmptyVdom
-      else <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.undoCtx))
+      else
+        <.div(ExploreStyles.TitleUndoButtons)(UndoButtons(props.undoer, disabled = props.readonly))

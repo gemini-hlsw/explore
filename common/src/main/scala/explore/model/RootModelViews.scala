@@ -8,8 +8,6 @@ import crystal.Pot
 import crystal.react.ThrottlingView
 import crystal.react.View
 import lucuma.core.enums.ProgramUserRole
-import lucuma.core.model.Access
-import lucuma.core.model.Role
 import monocle.Focus
 import monocle.Lens
 
@@ -19,16 +17,22 @@ case class RootModelViews(
 ):
   lazy val programSummariesValue: Pot[ProgramSummaries] = programSummaries.throttlerView.get
 
-  lazy val optUserProgramRole: Option[ProgramUserRole] =
+  // Can be both some sort of Support AND COI. So, can have multiple roles
+  lazy val userProgramRoles: List[ProgramUserRole] =
     val users      = programSummariesValue.toOption.flatMap(_.optProgramDetails).map(_.users)
     val thisUserId = rootModel.get.vault.map(_.user.id)
-    (thisUserId, users).flatMapN((id, us) => us.find(_.user.exists(_.id === id))).map(_.role)
+    (thisUserId, users)
+      .mapN((id, us) => us.filter(_.user.exists(_.id === id)).map(_.role))
+      .orEmpty
+
+  def hasRole(role: ProgramUserRole): Boolean =
+    userProgramRoles.exists(_ === role)
 
   lazy val userIsReadonlyCoi =
-    val role: Option[Role] = rootModel.get.vault.map(_.user.role)
-    !role.exists(_.access === Access.Staff) && optUserProgramRole.exists(
-      _ === ProgramUserRole.CoiRO
-    )
+    val isStaff = rootModel.get.isStaff
+    !isStaff && hasRole(ProgramUserRole.CoiRO) && !(hasRole(
+      ProgramUserRole.SupportPrimary
+    ) || hasRole(ProgramUserRole.SupportSecondary))
 
 object RootModelViews:
   val rootModel: Lens[RootModelViews, View[RootModel]]                              =

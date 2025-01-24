@@ -445,7 +445,7 @@ object ExploreGridLayouts:
   end overview
 
   object proposal:
-    private lazy val DetailsHeight: NonNegInt     = 7.refined
+    private lazy val DetailsHeight: NonNegInt     = 8.refined
     private lazy val UsersHeight: NonNegInt       = 6.refined
     private lazy val AbstractHeight: NonNegInt    = 8.refined
     private lazy val AttachmentsHeight: NonNegInt = 8.refined

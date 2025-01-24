@@ -6,10 +6,7 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
-import eu.timepit.refined.cats.given
-import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
-import io.circe.refined.*
 import lucuma.core.enums.TacCategory
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.PartnerLink
@@ -24,9 +21,7 @@ import java.time.LocalDateTime
 
 case class Proposal(
   callId:       Option[CallForProposals.Id],
-  title:        Option[NonEmptyString],
   category:     Option[TacCategory],
-  abstrakt:     Option[NonEmptyString],
   proposalType: Option[ProposalType],
   reference:    Option[ProposalReference]
 ) derives Eq:
@@ -36,12 +31,8 @@ case class Proposal(
 object Proposal:
   val callId: Lens[Proposal, Option[CallForProposals.Id]]  =
     Focus[Proposal](_.callId)
-  val title: Lens[Proposal, Option[NonEmptyString]]        =
-    Focus[Proposal](_.title)
   val category: Lens[Proposal, Option[TacCategory]]        =
     Focus[Proposal](_.category)
-  val abstrakt: Lens[Proposal, Option[NonEmptyString]]     =
-    Focus[Proposal](_.abstrakt)
   val proposalType: Lens[Proposal, Option[ProposalType]]   =
     Focus[Proposal](_.proposalType)
   val callWithType: Lens[Proposal, Option[ProposalType]]   =
@@ -53,18 +44,16 @@ object Proposal:
     for {
       callId   <-
         c.downField("call").downField("id").success.traverse(_.as[Option[CallForProposals.Id]])
-      title    <- c.downField("title").as[Option[NonEmptyString]]
       category <- c.downField("category").as[Option[TacCategory]]
-      abstrakt <- c.downField("abstract").as[Option[NonEmptyString]]
       pte      <- c.downField("type").as[Option[ProposalType]]
       r        <-
         c.downField("reference")
           .downField("label")
           .success
           .traverse(_.as[Option[ProposalReference]])
-    } yield Proposal(callId.flatten, title, category, abstrakt, pte, r.flatten)
+    } yield Proposal(callId.flatten, category, pte, r.flatten)
 
-  val Default = Proposal(None, None, None, None, None, None)
+  val Default = Proposal(None, None, None, None)
 
   def deadlineAndTimeLeft(now: Timestamp, deadline: Timestamp): (String, Option[String]) = {
     val deadlineLDT: LocalDateTime = deadline.toLocalDateTime

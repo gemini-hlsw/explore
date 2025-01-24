@@ -17,6 +17,7 @@ import explore.model.GlobalPreferences
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
 import explore.programs.ProgramsPopup
+import explore.syntax.ui.*
 import explore.undo.UndoStacks
 import explore.users.RedeemInvitationsPopup
 import explore.users.UserPreferencesPopup
@@ -229,6 +230,8 @@ object TopBar:
             if (isProgramsOpen.value.value)
               ProgramsPopup(
                 props.programId,
+                user.id,
+                props.vault.get.isStaff,
                 props.programInfos,
                 props.undoStacks,
                 isProgramsOpen.setState(IsProgramOpen(false)).some

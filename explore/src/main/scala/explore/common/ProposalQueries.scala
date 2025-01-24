@@ -114,9 +114,7 @@ trait ProposalQueries:
     def toInput: ProposalPropertiesInput =
       ProposalPropertiesInput(
         callId = proposal.callId.orUnassign,
-        title = proposal.title.orUnassign,
         category = proposal.category.orUnassign,
-        `abstract` = proposal.abstrakt.orUnassign,
         `type` = proposal.proposalType.map(_.toInput).orUnassign
       )
 

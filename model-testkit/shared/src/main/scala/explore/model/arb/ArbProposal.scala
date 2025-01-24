@@ -3,8 +3,6 @@
 
 package explore.model.arb
 
-import eu.timepit.refined.scalacheck.all.*
-import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.TacCategory
 import explore.model.Proposal
 import lucuma.core.util.arb.ArbEnumerated.given
@@ -25,24 +23,20 @@ trait ArbProposal:
     Arbitrary {
       for {
         callId       <- arbitrary[Option[CallForProposals.Id]]
-        title        <- arbitrary[Option[NonEmptyString]]
         category     <- arbitrary[Option[TacCategory]]
-        abstrakt     <- arbitrary[Option[NonEmptyString]]
         proposalType <- arbitrary[Option[ProposalType]]
         reference    <- arbitrary[Option[ProposalReference]]
-      } yield Proposal(callId, title, category, abstrakt, proposalType, reference)
+      } yield Proposal(callId, category, proposalType, reference)
     }
 
   given Cogen[Proposal] =
     Cogen[
       (
         Option[CallForProposals.Id],
-        Option[NonEmptyString],
         Option[TacCategory],
-        Option[NonEmptyString],
         Option[ProposalType],
         Option[ProposalReference]
       )
-    ].contramap(p => (p.callId, p.title, p.category, p.abstrakt, p.proposalType, p.reference))
+    ].contramap(p => (p.callId, p.category, p.proposalType, p.reference))
 
 object ArbProposal extends ArbProposal

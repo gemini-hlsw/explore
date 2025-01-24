@@ -7,8 +7,6 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 
-// gql: import io.circe.refined.*
-
 object ProposalQueriesGQL:
   @GraphQL
   trait CreateProposalMutation extends GraphQLOperation[ObservationDB]:
@@ -16,7 +14,7 @@ object ProposalQueriesGQL:
       mutation($$input: CreateProposalInput!) {
         createProposal(input: $$input) {
           proposal {
-            title
+            category
           }
         }
       }

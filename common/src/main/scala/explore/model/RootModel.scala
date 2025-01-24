@@ -12,6 +12,7 @@ import crystal.syntax.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.modes.SpectroscopyModesMatrix
+import explore.syntax.ui.*
 import explore.undo.UndoStacks
 import lucuma.core.model.GuestUser
 import lucuma.core.model.ServiceUser
@@ -36,7 +37,8 @@ case class RootModel(
   cfps:                 Pot[List[CallForProposal]] = pending,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
-) derives Eq
+) derives Eq:
+  lazy val isStaff = vault.isStaff
 
 object RootModel:
   val vault                = Focus[RootModel](_.vault)

@@ -57,17 +57,19 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
+  def updateProgram[F[_]: Async](input: UpdateProgramsInput)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    UpdateProgramsMutation[F].execute(input).raiseGraphQLErrors.void
+
   def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(using
     FetchClient[F, ObservationDB]
   ): F[Unit] =
-    UpdateProgramsMutation[F]
-      .execute:
-        UpdateProgramsInput(
-          WHERE = id.toWhereProgram.assign,
-          SET = ProgramPropertiesInput(name = name.orUnassign)
-        )
-      .raiseGraphQLErrors
-      .void
+    updateProgram:
+      UpdateProgramsInput(
+        WHERE = id.toWhereProgram.assign,
+        SET = ProgramPropertiesInput(name = name.orUnassign)
+      )
 
   def updateAttachmentDescription[F[_]: Async](
     oid:  Attachment.Id,

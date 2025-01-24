@@ -34,6 +34,10 @@ case class ProgramUser(
     user.fold(fallbackProfile.displayName.orEmpty)(_.name)
   val email: Option[String] =
     user.flatMap(_.profile.flatMap(_.email)).orElse(fallbackProfile.email)
+  // Try to get only a last name and fallback to display name. If there is a User, we'll
+  // assume it has one of the names we can use.
+  lazy val lastName: String =
+    user.fold(fallbackProfile.familyName.orElse(fallbackProfile.displayName).orEmpty)(_.lastName)
 
   // should only ever be one non-revoked invitation
   val activeInvitation: Option[UserInvitation] =

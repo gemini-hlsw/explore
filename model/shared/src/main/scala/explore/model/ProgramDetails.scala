@@ -8,6 +8,7 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.enums.ProgramType
@@ -19,6 +20,8 @@ import monocle.Lens
 import monocle.Optional
 
 case class ProgramDetails(
+  name:              Option[NonEmptyString],
+  description:       Option[NonEmptyString],
   programType:       ProgramType,
   proposal:          Option[Proposal],
   proposalStatus:    ProposalStatus,
@@ -31,6 +34,9 @@ case class ProgramDetails(
   val allUsers: List[ProgramUser] = pi.fold(users)(_ :: users)
 
 object ProgramDetails:
+  val name: Lens[ProgramDetails, Option[NonEmptyString]]        = Focus[ProgramDetails](_.name)
+  val description: Lens[ProgramDetails, Option[NonEmptyString]] =
+    Focus[ProgramDetails](_.description)
   val proposal: Lens[ProgramDetails, Option[Proposal]]          = Focus[ProgramDetails](_.proposal)
   val proposalStatus: Lens[ProgramDetails, ProposalStatus]      = Focus[ProgramDetails](_.proposalStatus)
   val allUsers: Lens[ProgramDetails, List[ProgramUser]]         =
@@ -44,6 +50,8 @@ object ProgramDetails:
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {
+      n  <- c.downField("name").as[Option[NonEmptyString]]
+      d  <- c.downField("description").as[Option[NonEmptyString]]
       t  <- c.get[ProgramType]("type")
       p  <- c.get[Option[Proposal]]("proposal")
       ps <- c.get[ProposalStatus]("proposalStatus")
@@ -53,5 +61,5 @@ object ProgramDetails:
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]
       pm <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
-    } yield ProgramDetails(t, p, ps, pi, us, r.flatten, as, pm)
+    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, pm)
   )

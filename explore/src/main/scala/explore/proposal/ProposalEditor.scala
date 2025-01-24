@@ -14,6 +14,7 @@ import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
+import explore.common.ProgramQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.*
@@ -22,6 +23,7 @@ import explore.model.AttachmentList
 import explore.model.CallForProposal
 import explore.model.Constants
 import explore.model.ExploreGridLayouts
+import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUser
 import explore.model.Proposal
@@ -42,6 +44,7 @@ import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -53,8 +56,8 @@ import queries.common.ProposalQueriesGQL
 case class ProposalEditor(
   programId:         Program.Id,
   optUserId:         Option[User.Id],
-  proposal:          View[Proposal],
-  undoStacks:        View[UndoStacks[IO, Proposal]],
+  undoCtx:           UndoContext[ProgramDetails],
+  proposal:          UndoSetter[Proposal],
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   users:             View[List[ProgramUser]],
   attachments:       View[AttachmentList],
@@ -80,8 +83,8 @@ object ProposalEditor:
     for {
       ctx             <- useContext(AppContext.ctx)
       abstractCounter <-
-        useState(props.proposal.get.abstrakt.map(_.value).foldMap(_.wordCount))
-      _               <- useEffectWithDeps(props.proposal.get.abstrakt.map(_.value)) {
+        useState(props.undoCtx.get.description.map(_.value).foldMap(_.wordCount))
+      _               <- useEffectWithDeps(props.undoCtx.get.description.map(_.value)) {
                            case Some(t) => abstractCounter.setState(t.wordCount)
                            case None    => abstractCounter.setState(0)
                          }
@@ -89,11 +92,19 @@ object ProposalEditor:
     } yield
       import ctx.given
 
-      val undoCtx: UndoContext[Proposal] = UndoContext(props.undoStacks, props.proposal)
-
-      val aligner: Aligner[Proposal, ProposalPropertiesInput] =
+      val detailsAligner: Aligner[ProgramDetails, ProgramPropertiesInput] =
         Aligner(
-          undoCtx,
+          props.undoCtx,
+          UpdateProgramsInput(
+            WHERE = props.programId.toWhereProgram.assign,
+            SET = ProgramPropertiesInput()
+          ),
+          ProgramQueries.updateProgram[IO](_)
+        ).zoom(Iso.id[ProgramDetails].asLens, UpdateProgramsInput.SET.modify)
+
+      val proposalAligner: Aligner[Proposal, ProposalPropertiesInput] =
+        Aligner(
+          props.proposal,
           UpdateProposalInput(
             programId = props.programId.assign,
             SET = ProposalPropertiesInput()
@@ -102,7 +113,7 @@ object ProposalEditor:
         ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
       val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-        aligner.zoom(Proposal.abstrakt, ProposalPropertiesInput.`abstract`.modify)
+        detailsAligner.zoom(ProgramDetails.description, ProgramPropertiesInput.description.modify)
 
       val abstractView: View[Option[NonEmptyString]] = abstractAligner
         .view(_.orUnassign)
@@ -113,13 +124,13 @@ object ProposalEditor:
         Tile(ProposalTabTileIds.DetailsId.id, "Details")(
           _ =>
             ProposalDetailsBody(
-              props.proposal,
-              aligner,
+              detailsAligner,
+              proposalAligner,
               props.timeEstimateRange,
               props.cfps,
               props.readonly
             ),
-          (_, s) => ProposalDetailsTitle(undoCtx, s)
+          (_, s) => ProposalDetailsTitle(props.undoCtx, s, props.readonly)
         )
 
       val usersTile =
