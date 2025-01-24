@@ -6,6 +6,7 @@ package explore.plots
 import cats.*
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.Constants
 import explore.model.ElevationPlotScheduling
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -38,6 +39,9 @@ case class ObjectPlotOptions(
     val (date, semester) = ObjectPlotOptions.dateAndSemesterOf(observationTime.some, site)
     copy(date = date, semester = semester)
 
+  private val tz =
+    timeDisplay.fold(Constants.UTC, Constants.UTC, site.timezone)
+
   def minInstant: Instant =
     range match
       case PlotRange.Night    =>
@@ -45,6 +49,13 @@ case class ObjectPlotOptions(
           .fromSiteAndLocalDate(site, date)
           .twilightBoundedUnsafe(TwilightType.Official)
           .start
+      case PlotRange.FullDay  =>
+        ObservingNight
+          .fromSiteAndLocalDate(site, date)
+          .toLocalDate
+          .atStartOfDay()
+          .atZone(tz)
+          .toInstant
       case PlotRange.Semester => semester.start.atSite(site).toInstant
 
   def maxInstant: Instant =
@@ -54,6 +65,14 @@ case class ObjectPlotOptions(
           .fromSiteAndLocalDate(site, date)
           .twilightBoundedUnsafe(TwilightType.Official)
           .`end`
+      case PlotRange.FullDay  =>
+        ObservingNight
+          .fromSiteAndLocalDate(site, date)
+          .toLocalDate
+          .plusDays(1)
+          .atStartOfDay()
+          .atZone(tz)
+          .toInstant
       case PlotRange.Semester => semester.`end`.atSite(site).toInstant
 
   def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)

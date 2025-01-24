@@ -138,11 +138,8 @@ object NightPlot:
       .localValBy: props =>
         ObservingNight.fromSiteAndLocalDate(props.options.get.site, props.options.get.date)
       .localValBy: (props, observingNight) =>
-        val tbOfficialNight: TwilightBoundedNight =
-          observingNight.twilightBoundedUnsafe(TwilightType.Official)
-
-        val start: Instant = tbOfficialNight.start
-        val end: Instant   = tbOfficialNight.end
+        val start = props.options.get.minInstant
+        val end   = props.options.get.maxInstant
 
         (start, end)
       .useMemoBy((props, _, bounds) => (props.options.get.site, props.plotData, bounds)):

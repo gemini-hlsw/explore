@@ -9,7 +9,7 @@ import lucuma.core.util.Enumerated
 /**
  * Enum to indicate a plot's time system
  */
-enum TimeDisplay(val tag: String):
+enum TimeDisplay(val tag: String) derives Enumerated:
   case UT       extends TimeDisplay("ut")
   case Sidereal extends TimeDisplay("sidereal")
   case Site     extends TimeDisplay("site")
@@ -22,10 +22,6 @@ enum TimeDisplay(val tag: String):
     }
 
 object TimeDisplay:
-
-  /** @group Typeclass Instances */
-  given Enumerated[TimeDisplay] =
-    Enumerated.from(UT, Sidereal, Site).withTag(_.tag)
 
   given Display[TimeDisplay] = Display.byShortName {
     case TimeDisplay.UT => TimeDisplay.UT.tag.toUpperCase
