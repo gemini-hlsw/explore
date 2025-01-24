@@ -9,22 +9,17 @@ import lucuma.core.util.Enumerated
 /**
  * Enum to indicate if a plot has a Night/Semester range
  */
-enum PlotRange(val tag: String):
+enum PlotRange(val tag: String) derives Enumerated:
   case Night    extends PlotRange("night")
+  case FullDay  extends PlotRange("fullday")
   case Semester extends PlotRange("semester")
 
-  def fold[A](night: => A, semester: => A): A =
+  def fold[A](night: => A, fullDay: => A, semester: => A): A =
     this match {
       case PlotRange.Night    => night
+      case PlotRange.FullDay  => fullDay
       case PlotRange.Semester => semester
     }
 
-  def flip: PlotRange = fold(PlotRange.Semester, PlotRange.Night)
-
 object PlotRange:
-
-  /** @group Typeclass Instances */
-  given Enumerated[PlotRange] =
-    Enumerated.from(Night, Semester).withTag(_.tag)
-
-  given Display[PlotRange] = Display.byShortName(_.tag.capitalize)
+  given Display[PlotRange] = Display.byShortName(_.fold("Night", "24h", "Semester"))
