@@ -3214,24 +3214,25 @@ div.spectroscopy-table-emptymessage {
     }
   }
 
-  .explore-proposal-abstract {
-    .pl-form-field {
-      height: 100%;
-      padding: 0.5em;
-
-      textarea {
-        height: 100%;
-        width: 100%;
-        resize: none;
-      }
-    }
-  }
-
   .explore-proposal-attachments-tile {
     .explore-tile-title {
       a {
         color: var(--site-text-color);
       }
+    }
+  }
+}
+
+.explore-program-description,
+.explore-proposal-abstract {
+  .pl-form-field {
+    height: 100%;
+    padding: 0.5em;
+
+    textarea {
+      height: 100%;
+      width: 100%;
+      resize: none;
     }
   }
 }
