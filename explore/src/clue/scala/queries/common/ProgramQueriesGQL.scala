@@ -129,6 +129,18 @@ object ProgramQueriesGQL:
       """
 
   @GraphQL
+  trait ChangeProgramUserRoleMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: ChangeProgramUserRoleInput!) {
+        changeProgramUserRole(input: $$input) {
+          programUser {
+            role
+          }
+        }
+      }
+    """
+
+  @GraphQL
   trait UpdateConfigurationRequestsMutation extends GraphQLOperation[ObservationDB]:
     val document = s"""
       mutation($$input: UpdateConfigurationRequestsInput!) {

@@ -244,6 +244,9 @@ object ProgramUsersTable:
           case InProgress(message) => <.span(Icons.Info).withTooltip(message)
           case Failed(message)     => <.span(Icons.ErrorIcon).withTooltip(message)
 
+  private val CoIRoles: Set[ProgramUserRole]    = Set(ProgramUserRole.Coi, ProgramUserRole.CoiRO)
+  private val NonCoIRoles: Set[ProgramUserRole] = Enumerated[ProgramUserRole].all.toSet -- CoIRoles
+
   private def columns(using
     ctx: AppContext[IO]
   ): List[ColumnDef.WithTableMeta[View[ProgramUser], ?, TableMeta]] =
@@ -338,7 +341,7 @@ object ProgramUsersTable:
             val canEdit                               = meta.currentUserCanEdit(cell.get)
 
             EnumDropdownOptionalView(
-              id = "es".refined,
+              id = NonEmptyString.unsafeFrom(s"$programUserId-es"),
               value = view,
               showClear = true,
               itemTemplate = _.value.shortName,
@@ -361,7 +364,7 @@ object ProgramUsersTable:
             val canEdit = meta.currentUserCanEdit(cell.get)
 
             Checkbox(
-              id = "thesis",
+              id = s"$programUserId-thesis",
               checked = view.get.getOrElse(false),
               disabled = !canEdit || meta.isActive.get.value,
               onChange = r => view.set(r.some)
@@ -382,7 +385,7 @@ object ProgramUsersTable:
             val canEdit = meta.currentUserCanEdit(cell.get)
 
             EnumOptionalDropdown[Gender](
-              id = "gender".refined,
+              id = NonEmptyString.unsafeFrom(s"$programUserId-gender"),
               value = view.get,
               showClear = true,
               itemTemplate = _.value.shortName,
@@ -395,7 +398,27 @@ object ProgramUsersTable:
       ).sortableBy(_.get.toString),
       column(Column.OrcidId, _.get.user.flatMap(_.orcidId).foldMap(_.value)).sortable,
       // TODO: Make editable between COI and Readonly COI, if user is not this one
-      column(Column.Role, _.get.role.shortName).sortable,
+      // column(Column.Role, _.get.role.shortName).sortable,
+      ColDef(
+        Column.Role.id,
+        _.zoom(ProgramUser.role),
+        Column.Role.header,
+        cell = c =>
+          val currentRole = c.value.get
+          c.table.options.meta.map: meta =>
+            if (meta.proposalOrUserIsReadonly || !CoIRoles.contains(currentRole))
+              currentRole.shortName: VdomNode
+            else
+              val programUserId = c.row.original.get.id
+              val view          =
+                c.value.withOnMod(role => changeProgramUserRole[IO](programUserId, role).runAsync)
+              EnumDropdownView(
+                id = NonEmptyString.unsafeFrom(s"$programUserId-role"),
+                value = view,
+                exclude = NonCoIRoles,
+                clazz = ExploreStyles.PartnerSelector
+              ): VdomNode
+      ).sortableBy(_.get.shortName),
       ColDef(
         Column.Status.id,
         _.get.status,

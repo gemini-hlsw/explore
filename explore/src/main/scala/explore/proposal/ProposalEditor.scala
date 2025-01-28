@@ -31,7 +31,7 @@ import explore.model.ProposalTabTileIds
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
-import explore.users.AddProgramUserButton
+import explore.users.AddReadonlyCoiButton
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -153,12 +153,7 @@ object ProposalEditor:
               .unless[VdomNode](props.proposalOrUserIsReadonly):
                 <.div(
                   ExploreStyles.AddProgramUserButton,
-                  AddProgramUserButton(props.programId,
-                                       ProgramUserRole.CoiRO,
-                                       props.users,
-                                       icon = Icons.UserMagnifyingGlass
-                  ),
-                  AddProgramUserButton(props.programId, ProgramUserRole.Coi, props.users)
+                  AddReadonlyCoiButton(props.programId, props.users)
                 )
               .orEmpty
         )

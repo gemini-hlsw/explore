@@ -150,6 +150,15 @@ object ProgramQueries:
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(gender = g.orUnassign))
 
+  def changeProgramUserRole[F[_]: Async](puid: ProgramUser.Id, role: ProgramUserRole)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    ChangeProgramUserRoleMutation[F]
+      .execute:
+        ChangeProgramUserRoleInput(programUserId = puid, newRole = role)
+      .raiseGraphQLErrors
+      .void
+
   // Note: If justification is none, it is ignored, not un-set. We
   // (currently, at least) do not allow unsetting justifications in explore.
   def updateConfigurationRequestStatus[F[_]: Async](
