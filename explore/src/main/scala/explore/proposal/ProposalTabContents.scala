@@ -49,7 +49,6 @@ import lucuma.ui.LucumaStyles
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
-import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
@@ -91,13 +90,13 @@ object ProposalTabContents:
 
   private val component = ScalaFnComponent[Props]: props =>
     for {
-      ctx      <- useContext(AppContext.ctx)
-      readonly <-
-        useMemo((props.programDetails.get.proposalStatus, props.userIsReadonlyCoi)):
-          (status, roCoi) =>
-            status === ProposalStatus.Submitted || status === ProposalStatus.Accepted || roCoi
+      ctx <- useContext(AppContext.ctx)
     } yield
       import ctx.given
+
+      val proposalStatus     = props.programDetails.get.proposalStatus
+      val proposalIsReadonly =
+        proposalStatus === ProposalStatus.Submitted || proposalStatus === ProposalStatus.Accepted
 
       val undoCtx: UndoContext[ProgramDetails] =
         UndoContext(props.undoStacks, props.programDetails)
@@ -161,7 +160,8 @@ object ProposalTabContents:
                 props.userVault.map(_.token),
                 props.cfps,
                 props.layout,
-                readonly
+                proposalIsReadonly,
+                props.userIsReadonlyCoi
               ),
               ProposalSubmissionBar(
                 props.programId,

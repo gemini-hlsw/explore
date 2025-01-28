@@ -59,23 +59,33 @@ import queries.common.InvitationQueriesGQL.RevokeInvitationMutation
 import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
 case class ProgramUsersTable(
-  users:         View[List[ProgramUser]],
-  filterRoles:   NonEmptySet[ProgramUserRole],
-  readonly:      Boolean,
-  hiddenColumns: Set[ProgramUsersTable.Column] = Set.empty
-) extends ReactFnProps(ProgramUsersTable.component)
+  userId:             Option[User.Id],
+  users:              View[List[ProgramUser]],
+  filterRoles:        NonEmptySet[ProgramUserRole],
+  proposalIsReadonly: Boolean,
+  userIsReadonlyCoi:  Boolean,
+  hiddenColumns:      Set[ProgramUsersTable.Column] = Set.empty
+) extends ReactFnProps(ProgramUsersTable.component):
+  val proposalOrUserIsReadonly: Boolean = proposalIsReadonly || userIsReadonlyCoi
 
 object ProgramUsersTable:
   private type Props = ProgramUsersTable
 
   private case class TableMeta(
+    userId:             Option[User.Id],
     users:              View[List[ProgramUser]],
-    readOnly:           Boolean,
+    proposalIsReadonly: Boolean,
+    userIsReadonlyCoi:  Boolean,
     isActive:           View[IsActive],
     overlayPanelRef:    OverlayPanelRef,
     createInviteStatus: View[CreateInviteStatus],
     currentProgUser:    View[Option[View[ProgramUser]]]
-  )
+  ):
+    val proposalOrUserIsReadonly: Boolean            = proposalIsReadonly || userIsReadonlyCoi
+    // for the user specific fields - readonly COIs can edit their own.
+    def currentUserCanEdit(pu: ProgramUser): Boolean =
+      !proposalIsReadonly &&
+        (!userIsReadonlyCoi || (userId, pu.user).mapN((uid, p) => uid === p.id).getOrElse(false))
 
   private val ColDef = ColumnDef.WithTableMeta[View[ProgramUser], TableMeta]
 
@@ -185,7 +195,7 @@ object ProgramUsersTable:
     Button(
       severity = Button.Severity.Secondary,
       disabled =
-        tableMeta.readOnly || tableMeta.isActive.get.value || tableMeta.createInviteStatus.get == CreateInviteStatus.Running,
+        tableMeta.proposalOrUserIsReadonly || tableMeta.isActive.get.value || tableMeta.createInviteStatus.get == CreateInviteStatus.Running,
       icon = Icons.PaperPlaneTop,
       tooltip = s"Send invitation",
       tooltipOptions = TooltipOptions.Left,
@@ -253,7 +263,7 @@ object ProgramUsersTable:
             // In explore, we'll always set the credit name, but a user could have
             // updated the fallback profile via the API, and we won't mess with that.
             if (
-              !meta.readOnly && pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName
+              !meta.proposalIsReadonly && pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName
             )
               val view = c.value
                 .zoom(ProgramUser.fallbackCreditName)
@@ -276,9 +286,10 @@ object ProgramUsersTable:
           c.table.options.meta.map: meta =>
             val pu: ProgramUser               = c.value.get
             val programUserId: ProgramUser.Id = pu.id
+            val canEdit                       = meta.currentUserCanEdit(pu)
             // We'll allow editing the email if there is no REAL user
             // or the real email address is empty
-            if (!meta.readOnly && pu.user.flatMap(_.profile).flatMap(_.email).isEmpty)
+            if (canEdit && pu.user.flatMap(_.profile).flatMap(_.email).isEmpty)
               val view = c.value
                 .zoom(ProgramUser.fallbackEmail)
                 .withOnMod(oe =>
@@ -308,8 +319,9 @@ object ProgramUsersTable:
               cell.get.partnerLink.flatMap:
                 case PartnerLink.HasUnspecifiedPartner => None
                 case p                                 => Some(p)
+            val canEdit                              = meta.currentUserCanEdit(cell.get)
 
-            partnerSelector(pl, usersView.set, meta.readOnly || meta.isActive.get.value)
+            partnerSelector(pl, usersView.set, !canEdit || meta.isActive.get.value)
       ).sortableBy(_.get.toString),
       ColDef(
         Column.EducationalStatus.id,
@@ -323,6 +335,7 @@ object ProgramUsersTable:
             val view: View[Option[EducationalStatus]] =
               c.value.withOnMod: es =>
                 updateUserES[IO](programUserId, es).runAsync
+            val canEdit                               = meta.currentUserCanEdit(cell.get)
 
             EnumDropdownOptionalView(
               id = "es".refined,
@@ -331,7 +344,7 @@ object ProgramUsersTable:
               itemTemplate = _.value.shortName,
               valueTemplate = _.value.shortName,
               emptyMessageTemplate = "No Selection",
-              disabled = meta.readOnly || meta.isActive.get.value,
+              disabled = !canEdit || meta.isActive.get.value,
               clazz = ExploreStyles.PartnerSelector
             )
       ).sortableBy(_.get.toString),
@@ -343,12 +356,14 @@ object ProgramUsersTable:
           val programUserId: ProgramUser.Id = cell.get.id
 
           c.table.options.meta.map: meta =>
-            val view = c.value
+            val view    = c.value
               .withOnMod(th => updateUserThesis[IO](programUserId, th).runAsync)
+            val canEdit = meta.currentUserCanEdit(cell.get)
+
             Checkbox(
               id = "thesis",
               checked = view.get.getOrElse(false),
-              disabled = meta.readOnly || meta.isActive.get.value,
+              disabled = !canEdit || meta.isActive.get.value,
               onChange = r => view.set(r.some)
             )
         ,
@@ -362,8 +377,10 @@ object ProgramUsersTable:
           val programUserId: ProgramUser.Id = cell.get.id
 
           c.table.options.meta.map: meta =>
-            val view = c.value
+            val view    = c.value
               .withOnMod(th => updateUserGender[IO](programUserId, th).runAsync)
+            val canEdit = meta.currentUserCanEdit(cell.get)
+
             EnumOptionalDropdown[Gender](
               id = "gender".refined,
               value = view.get,
@@ -371,7 +388,7 @@ object ProgramUsersTable:
               itemTemplate = _.value.shortName,
               valueTemplate = _.value.shortName,
               emptyMessageTemplate = "No Selection",
-              disabled = meta.readOnly || meta.isActive.get.value,
+              disabled = !canEdit || meta.isActive.get.value,
               clazz = ExploreStyles.PartnerSelector,
               onChange = view.set
             )
@@ -401,13 +418,23 @@ object ProgramUsersTable:
             val status          = programUserView.get.status
 
             <.span(
-              deleteUserButton(programUserId, meta.users, meta.isActive, meta.readOnly)
+              deleteUserButton(
+                programUserId,
+                meta.users,
+                meta.isActive,
+                meta.proposalOrUserIsReadonly
+              )
                 .unless(role === ProgramUserRole.Pi), // don't allow removing the PI
               inviteUserButton(programUserView, meta)
                 .when(status === ProgramUser.Status.NotInvited),
               programUserView.get.activeInvitation
                 .map(invitation =>
-                  revokeInvitationButton(programUserView, invitation, meta.isActive, meta.readOnly)
+                  revokeInvitationButton(
+                    programUserView,
+                    invitation,
+                    meta.isActive,
+                    meta.proposalOrUserIsReadonly
+                  )
                     .when(status.isInvited)
                 )
                 .orEmpty
@@ -441,8 +468,10 @@ object ProgramUsersTable:
                                   getRowId = (row, _, _) => RowId(row.get.id.toString),
                                   enableSorting = true,
                                   meta = TableMeta(
+                                    props.userId,
                                     props.users,
-                                    props.readonly,
+                                    props.proposalIsReadonly,
+                                    props.userIsReadonlyCoi,
                                     isActive,
                                     overlayPanelRef,
                                     createInviteStatus,
@@ -451,7 +480,9 @@ object ProgramUsersTable:
                                   state = PartialTableState(
                                     columnVisibility = ColumnVisibility(
                                       (props.hiddenColumns.map(_.id -> Visibility.Hidden) +
-                                        (Column.Actions.id -> Visibility.fromVisible(!props.readonly))).toMap
+                                        (Column.Actions.id -> Visibility.fromVisible(
+                                          !props.proposalOrUserIsReadonly
+                                        ))).toMap
                                     )
                                   )
                                 )
