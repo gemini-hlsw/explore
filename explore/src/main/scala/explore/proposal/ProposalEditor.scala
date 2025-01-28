@@ -54,18 +54,20 @@ import monocle.Iso
 import queries.common.ProposalQueriesGQL
 
 case class ProposalEditor(
-  programId:         Program.Id,
-  optUserId:         Option[User.Id],
-  undoCtx:           UndoContext[ProgramDetails],
-  proposal:          UndoSetter[Proposal],
-  timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  users:             View[List[ProgramUser]],
-  attachments:       View[AttachmentList],
-  authToken:         Option[NonEmptyString],
-  cfps:              List[CallForProposal],
-  layout:            LayoutsMap,
-  readonly:          Boolean
-) extends ReactFnProps(ProposalEditor.Component)
+  programId:          Program.Id,
+  optUserId:          Option[User.Id],
+  undoCtx:            UndoContext[ProgramDetails],
+  proposal:           UndoSetter[Proposal],
+  timeEstimateRange:  Pot[Option[ProgramTimeRange]],
+  users:              View[List[ProgramUser]],
+  attachments:        View[AttachmentList],
+  authToken:          Option[NonEmptyString],
+  cfps:               List[CallForProposal],
+  layout:             LayoutsMap,
+  proposalIsReadonly: Boolean,
+  userIsReadonlyCoi:  Boolean
+) extends ReactFnProps(ProposalEditor.Component):
+  val proposalOrUserIsReadonly: Boolean = proposalIsReadonly || userIsReadonlyCoi
 
 object ProposalEditor:
 
@@ -128,9 +130,9 @@ object ProposalEditor:
               proposalAligner,
               props.timeEstimateRange,
               props.cfps,
-              props.readonly
+              props.proposalOrUserIsReadonly
             ),
-          (_, s) => ProposalDetailsTitle(props.undoCtx, s, props.readonly)
+          (_, s) => ProposalDetailsTitle(props.undoCtx, s, props.proposalOrUserIsReadonly)
         )
 
       val usersTile =
@@ -140,13 +142,15 @@ object ProposalEditor:
         )(
           _ =>
             ProgramUsersTable(
+              props.optUserId,
               props.users,
               NonEmptySet.of(ProgramUserRole.Pi, ProgramUserRole.Coi, ProgramUserRole.CoiRO),
-              props.readonly
+              props.proposalIsReadonly,
+              props.userIsReadonlyCoi
             ),
           (_, _) =>
             Option
-              .unless[VdomNode](props.readonly):
+              .unless[VdomNode](props.proposalOrUserIsReadonly):
                 <.div(
                   ExploreStyles.AddProgramUserButton,
                   AddProgramUserButton(props.programId,
@@ -183,19 +187,25 @@ object ProposalEditor:
             id = "abstract".refined,
             value = abstractView.as(OptionNonEmptyStringIso),
             onTextChange = t => abstractCounter.setState(t.wordCount).rateLimitMs(1000).void
-          )(^.disabled        := props.readonly,
+          )(^.disabled        := props.proposalOrUserIsReadonly,
             ^.cls := ExploreStyles.WarningInput.when_(abstractView.get.isEmpty).htmlClass
           )
         )
 
       val attachmentsTile =
-        Tile(ProposalTabTileIds.AttachmentsId.id,
-             "Attachments",
-             tileClass = ExploreStyles.ProposalAttachmentsTile
+        Tile(
+          ProposalTabTileIds.AttachmentsId.id,
+          "Attachments",
+          tileClass = ExploreStyles.ProposalAttachmentsTile
         )(
           _ =>
             props.authToken.map(token =>
-              ProposalAttachmentsTable(props.programId, token, props.attachments, props.readonly)
+              ProposalAttachmentsTable(
+                props.programId,
+                token,
+                props.attachments,
+                props.proposalOrUserIsReadonly
+              )
             ),
           (_, _) =>
             <.a(^.href           := Constants.P1TemplatesUrl,

@@ -34,9 +34,11 @@ object SupportUsers:
         props.title
       ),
       ProgramUsersTable(
+        None,                      // user id is not needed as it is used to determine if a readonly CoI can edit their info
         props.users,
         NonEmptySet.one(props.supportRole.role),
-        readonly = true,
+        proposalIsReadonly = true, // the support users are not editable at all
+        userIsReadonlyCoi = true,  // the support users are not editable at all
         hiddenColumns = Set(
           ProgramUsersTable.Column.Partner,
           ProgramUsersTable.Column.EducationalStatus,
