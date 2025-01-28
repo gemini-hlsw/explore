@@ -398,7 +398,6 @@ object ProgramUsersTable:
       ).sortableBy(_.get.toString),
       column(Column.OrcidId, _.get.user.flatMap(_.orcidId).foldMap(_.value)).sortable,
       // TODO: Make editable between COI and Readonly COI, if user is not this one
-      // column(Column.Role, _.get.role.shortName).sortable,
       ColDef(
         Column.Role.id,
         _.zoom(ProgramUser.role),
