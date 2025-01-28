@@ -72,6 +72,8 @@ object ProgramUser:
   val partnerLink: Lens[ProgramUser, Option[PartnerLink]] =
     Focus[ProgramUser](_.partnerLink)
 
+  val role: Lens[ProgramUser, ProgramUserRole] = Focus[ProgramUser](_.role)
+
   val educationalStatus: Lens[ProgramUser, Option[EducationalStatus]] =
     Focus[ProgramUser](_.educationalStatus)
 

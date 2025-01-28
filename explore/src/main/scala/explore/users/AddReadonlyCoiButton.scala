@@ -10,13 +10,11 @@ import explore.Icons
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.ProgramUser
-import explore.model.display.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
-import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
@@ -26,15 +24,13 @@ import lucuma.schemas.ObservationDB.Types.AddProgramUserInput
 import lucuma.ui.primereact.*
 import queries.common.ProposalQueriesGQL.*
 
-case class AddProgramUserButton(
+case class AddReadonlyCoiButton(
   programId: Program.Id,
-  role:      ProgramUserRole,
-  users:     View[List[ProgramUser]],
-  icon:      FontAwesomeIcon = Icons.UserPlus
-) extends ReactFnProps(AddProgramUserButton)
+  users:     View[List[ProgramUser]]
+) extends ReactFnProps(AddReadonlyCoiButton)
 
-object AddProgramUserButton
-    extends ReactFnComponent[AddProgramUserButton](props =>
+object AddReadonlyCoiButton
+    extends ReactFnComponent[AddReadonlyCoiButton](props =>
       for {
         ctx      <- useContext(AppContext.ctx)
         isActive <- useStateView(IsActive(false))
@@ -42,7 +38,7 @@ object AddProgramUserButton
         import ctx.given
 
         def addProgramUser: IO[Unit] =
-          val input = AddProgramUserInput(programId = props.programId, role = props.role)
+          val input = AddProgramUserInput(programId = props.programId, role = ProgramUserRole.CoiRO)
           AddProgramUser[IO]
             .execute(input)
             .raiseGraphQLErrors
@@ -53,8 +49,8 @@ object AddProgramUserButton
         Button(
           severity = Button.Severity.Secondary,
           loading = isActive.get.value,
-          icon = props.icon,
-          tooltip = s"Add ${props.role.longName}",
+          icon = Icons.UserPlus,
+          tooltip = "Add Co-Investigator",
           onClick = addProgramUser.runAsync
         ).tiny.compact
     )
