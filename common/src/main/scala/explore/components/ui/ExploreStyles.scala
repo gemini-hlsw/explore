@@ -229,6 +229,8 @@ object ExploreStyles:
   val ProposalDeadline: Css        = Css("explore-proposal-deadline")
   val ProposalAttachmentsTile: Css = Css("explore-proposal-attachments-tile")
 
+  val ProgramDescription: Css = Css("explore-program-description")
+
   val PartnerSplitsMissing: Css        = Css("partner-splits-missing")
   val PartnerSplitsGrid: Css           = Css("partner-splits-grid")
   val PartnerSplitsGridMinPctItem: Css = Css("partner-splits-grid-min-pct-item")

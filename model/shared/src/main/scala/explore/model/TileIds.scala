@@ -8,21 +8,19 @@ import lucuma.refined.*
 
 enum ObsTabTileIds:
   case NotesId, TargetSummaryId, TargetId, PlotId, ConstraintsId, ConfigurationId, ItcId,
-    TimingWindowsId, WarningsAndErrorsId, ObsAttachmentsId, FinderChartsId, SequenceId
+    TimingWindowsId, FinderChartsId, SequenceId
 
   def id: NonEmptyString = this match
-    case NotesId             => "notes".refined
-    case TargetSummaryId     => "targetSummary".refined
-    case TargetId            => "target".refined
-    case PlotId              => "elevationPlot".refined
-    case ConstraintsId       => "constraints".refined
-    case ConfigurationId     => "configuration".refined
-    case ItcId               => "itc".refined
-    case TimingWindowsId     => "timingWindows".refined
-    case WarningsAndErrorsId => "warningsAndErrors".refined
-    case ObsAttachmentsId    => "obsAttachments".refined
-    case FinderChartsId      => "finderCharts".refined
-    case SequenceId          => "sequence".refined
+    case NotesId         => "notes".refined
+    case TargetSummaryId => "targetSummary".refined
+    case TargetId        => "target".refined
+    case PlotId          => "elevationPlot".refined
+    case ConstraintsId   => "constraints".refined
+    case ConfigurationId => "configuration".refined
+    case ItcId           => "itc".refined
+    case TimingWindowsId => "timingWindows".refined
+    case FinderChartsId  => "finderCharts".refined
+    case SequenceId      => "sequence".refined
 
 enum ObsSummaryTabTileIds:
   case SummaryId, PlotId
@@ -62,3 +60,8 @@ enum TargetTabTileIds(val id: NonEmptyString):
 
 enum ConstraintTabTileIds(val id: NonEmptyString):
   case Summary extends ConstraintTabTileIds("constraints".refined)
+
+enum OverviewTabTileIds(val id: NonEmptyString):
+  case WarningsAndErrorsId extends OverviewTabTileIds("warningsAndErrors".refined)
+  case ObsAttachmentsId    extends OverviewTabTileIds("obsAttachments".refined)
+  case DescriptionId       extends OverviewTabTileIds("programDescription".refined)

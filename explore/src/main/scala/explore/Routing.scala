@@ -64,16 +64,22 @@ object Routing:
       .from(page)
       .map: routingInfo =>
         withProgramSummaries(model): programSummaries =>
-          OverviewTabContents(
-            routingInfo.programId,
-            model.rootModel.zoom(RootModel.vault).get,
-            programSummaries.model.zoom(ProgramSummaries.attachments),
-            programSummaries.model.get.obsAttachmentAssignments,
-            programSummaries.model.zoom(ProgramSummaries.observations),
-            userPreferences(model.rootModel).overviewTabLayout,
-            programSummaries.get.proposalIsAccepted,
-            programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
-          )
+          // if we got this far, we will have program details
+          programSummaries
+            .zoom(ProgramSummaries.optProgramDetails.some)
+            .map: detailsUndoSetter =>
+              OverviewTabContents(
+                routingInfo.programId,
+                model.rootModel.zoom(RootModel.vault).get,
+                programSummaries,
+                programSummaries.model.zoom(ProgramSummaries.attachments),
+                programSummaries.model.get.obsAttachmentAssignments,
+                programSummaries.model.zoom(ProgramSummaries.observations),
+                detailsUndoSetter,
+                userPreferences(model.rootModel).overviewTabLayout,
+                programSummaries.get.proposalIsAccepted,
+                programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
+              )
       .orEmpty
 
   private def targetTab(page: Page, model: RootModelViews): VdomElement =
