@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
@@ -16,12 +15,10 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.AttachmentList
 import explore.model.CallForProposal
-import explore.model.ObsSiteAndTargets
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
 import explore.model.ProgramUser
 import explore.model.Proposal
-import explore.model.TargetList
 import explore.model.layout.LayoutsMap
 import explore.syntax.ui.*
 import explore.undo.*
@@ -29,14 +26,9 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
-import lucuma.core.math.Coordinates
-import lucuma.core.model.CallCoordinatesLimits
-import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Program
 import lucuma.core.model.StandardUser
 import lucuma.core.model.User
-import lucuma.core.util.DateInterval
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -53,19 +45,17 @@ import lucuma.ui.sso.UserVault
 import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
 
-import java.time.Instant
-
 case class ProposalTabContents(
-  programId:         Program.Id,
-  userVault:         Option[UserVault],
-  programDetails:    View[ProgramDetails],
-  cfps:              List[CallForProposal],
-  timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  attachments:       View[AttachmentList],
-  obsTargets:        ObsSiteAndTargets,
-  undoStacks:        View[UndoStacks[IO, ProgramDetails]],
-  layout:            LayoutsMap,
-  userIsReadonlyCoi: Boolean
+  programId:            Program.Id,
+  userVault:            Option[UserVault],
+  programDetails:       View[ProgramDetails],
+  cfps:                 List[CallForProposal],
+  timeEstimateRange:    Pot[Option[ProgramTimeRange]],
+  attachments:          View[AttachmentList],
+  undoStacks:           View[UndoStacks[IO, ProgramDetails]],
+  layout:               LayoutsMap,
+  userIsReadonlyCoi:    Boolean,
+  hasProposalObsErrors: Boolean
 ) extends ReactFnProps(ProposalTabContents.component)
 
 object ProposalTabContents:
@@ -107,13 +97,6 @@ object ProposalTabContents:
       val isStdUser: Boolean =
         props.userVault.map(_.user).collect { case StandardUser(_, _, _, _) => () }.isDefined
 
-      def coordinatesAt(asterism: TargetList, when: Instant): Option[CoordinatesAtVizTime] =
-        for
-          ast      <- NonEmptyList.fromList(asterism.values.toList)
-          tracking  = ObjectTracking.fromAsterism(ast)
-          coordsAt <- tracking.at(when)
-        yield coordsAt
-
       if (props.programDetails.get.programType =!= ProgramType.Science)
         <.div(LucumaStyles.HVCenter)(
           Message(
@@ -128,25 +111,8 @@ object ProposalTabContents:
             val piPartner =
               props.programDetails.zoom(ProgramDetails.piPartner.some).get
 
-            val interval: Option[DateInterval] =
-              props.cfps
-                .find(c => proposal.get.callId.exists(_ === c.id))
-                .map(_.active)
-
             val deadline: Option[Timestamp] =
               proposal.get.deadline(props.cfps, piPartner)
-
-            val limits: Option[CallCoordinatesLimits] =
-              props.cfps
-                .find(c => proposal.get.callId.exists(_ === c.id))
-                .map(_.coordinateLimits)
-
-            val outOfLimitsTargets = props.obsTargets.count { case (_, (site, tl)) =>
-              val midpoint = interval.map(site.midpoint)
-              midpoint.flatMap(coordinatesAt(tl, _)).exists { c =>
-                !limits.exists(_.siteLimits(site).inLimits(c.value))
-              }
-            }
 
             <.div(ExploreStyles.ProposalTab)(
               ProposalEditor(
@@ -168,7 +134,8 @@ object ProposalTabContents:
                 props.programDetails.zoom(ProgramDetails.proposalStatus),
                 deadline,
                 proposal.get.callId,
-                isStdUser && !props.userIsReadonlyCoi || outOfLimitsTargets > 0
+                isStdUser && !props.userIsReadonlyCoi,
+                props.hasProposalObsErrors
               )
             )
           )

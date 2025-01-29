@@ -11,9 +11,9 @@ import cats.implicits.*
 import crystal.Pot
 import eu.timepit.refined.cats.given
 import explore.model.syntax.all.*
+import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
-import lucuma.core.enums.Site
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
@@ -76,18 +76,12 @@ case class ProgramSummaries(
             .flattenOption
       .toMap
 
-  lazy val scienceObsTargets: ObsSiteAndTargets =
-    observations.view
-      .filterNot(_._2.isCalibration)
-      .filter(_._2.site.isDefined)
-      .mapValues: obs =>
-        obs.site -> SortedMap.from:
-          obs.scienceTargetIds.toList
-            .map(tid => targets.get(tid).map(t => tid -> t))
-            .flattenOption
-      .collect:
-        case (id, (Some(site), obsTargets)) => id -> (site, obsTargets)
-      .toMap
+  lazy val hasProposalObsErrors: Boolean =
+    observations.values.exists: obs =>
+      obs.workflow.state =!= ObservationWorkflowState.Inactive &&
+        obs.workflow.validationErrors.exists(
+          _.code === ObservationValidationCode.CallForProposalsError
+        )
 
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     observations.toList

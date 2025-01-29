@@ -3,10 +3,10 @@
 
 package explore.proposal
 
+import cats.data.Ior
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import clue.ResponseException
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
@@ -42,12 +42,11 @@ case class ProposalSubmissionBar(
   proposalStatus: View[ProposalStatus],
   deadline:       Option[Timestamp],
   callId:         Option[CallForProposals.Id],
-  canSubmit:      Boolean
+  canSubmit:      Boolean,
+  hasObsErrors:   Boolean
 ) extends ReactFnProps(ProposalSubmissionBar.component)
 
 object ProposalSubmissionBar:
-  private type Props = ProposalSubmissionBar
-
   private object IsUpdatingStatus extends NewType[Boolean]
   private type IsUpdatingStatus = IsUpdatingStatus.Type
 
@@ -62,92 +61,97 @@ object ProposalSubmissionBar:
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): Callback =
-    (for {
-      _ <- SetProposalStatus[IO]
-             .execute:
-               SetProposalStatusInput(programId = programId.assign, status = newStatus)
-             .raiseGraphQLErrors
-             .handleErrorWith:
-               case ResponseException(errors, _) =>
-                 setErrorMessage(errors.head.message.some)
-               case e                            =>
-                 setErrorMessage(Some(e.getMessage.toString))
-      _ <- setLocalProposalStatus(newStatus)
-    } yield ()).switching(isUpdatingStatus.async, IsUpdatingStatus(_)).runAsync
+    SetProposalStatus[IO]
+      .execute:
+        SetProposalStatusInput(programId = programId.assign, status = newStatus)
+      .map(_.result)
+      .flatMap {
+        // only set the error message if there is no data.
+        case Ior.Left(a) => setErrorMessage(a.map(_.message).mkString_(": ").some)
+        // only set the proposal if there is data..
+        case _           => setLocalProposalStatus(newStatus)
+      }
+      .switching(isUpdatingStatus.async, IsUpdatingStatus(_))
+      .runAsync
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStateView(IsUpdatingStatus(false))
-      .useStateView(none[String]) // Submission error message
-      .useLayoutEffectWithDepsBy((props, _, _, _) => props.callId): (_, _, _, e) =>
-        _ => e.set(none)          // Reset error message on CfP change
-      .useStreamOnMount:
-        Stream
-          .fixedRateStartImmediately[IO](1.second)
-          .evalMap: _ =>
-            IO.realTime.map: finiteDuration =>
-              Timestamp.ofEpochMilli(finiteDuration.toMillis)
-      .render: (props, ctx, isUpdatingStatus, errorMessage, nowPot) =>
-        import ctx.given
+  private val component = ScalaFnComponent[ProposalSubmissionBar]: props =>
+    for {
+      ctx              <- useContext(AppContext.ctx)
+      isUpdatingStatus <- useStateView(IsUpdatingStatus(false))
+      errorMessage     <- useStateView(none[String]) // Submission error message
+      _                <- useLayoutEffectWithDeps((props.proposalStatus.get, props.callId, props.hasObsErrors)):
+                            (ps, _, he) =>
+                              if (he && ps === ProposalStatus.NotSubmitted)
+                                errorMessage.set(
+                                  "One or more observations has an error. See Overview tab for details.".some
+                                )
+                              else errorMessage.set(none) // Reset error message on CfP change
+      nowPot           <- useStreamOnMount:
+                            Stream
+                              .fixedRateStartImmediately[IO](1.second)
+                              .evalMap: _ =>
+                                IO.realTime.map: finiteDuration =>
+                                  Timestamp.ofEpochMilli(finiteDuration.toMillis)
+    } yield
+      import ctx.given
 
-        val updateStatus: ProposalStatus => Callback =
-          doUpdateStatus(
-            props.programId,
-            isUpdatingStatus,
-            props.proposalStatus.async.set,
-            errorMessage.async.set
-          )
+      val updateStatus: ProposalStatus => Callback =
+        doUpdateStatus(
+          props.programId,
+          isUpdatingStatus,
+          props.proposalStatus.async.set,
+          errorMessage.async.set
+        )
 
-        nowPot.toOption.flatten.map: now =>
-          val isDueDeadline: Boolean = props.deadline.forall(_ < now)
+      nowPot.toOption.flatten.map: now =>
+        val isDueDeadline: Boolean = props.deadline.forall(_ < now)
 
-          Toolbar(left =
-            <.div(ExploreStyles.ProposalSubmissionBar)(
-              Tag(
-                value = props.proposalStatus.get.name,
-                severity =
-                  if (props.proposalStatus.get === ProposalStatus.Accepted) Tag.Severity.Success
-                  else Tag.Severity.Danger
-              )
-                .when(props.proposalStatus.get > ProposalStatus.Submitted),
-              // TODO: Validate proposal before allowing submission
-              React
-                .Fragment(
-                  Button(
-                    label = "Submit Proposal",
-                    onClick = updateStatus(ProposalStatus.Submitted),
-                    disabled = isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline
-                  ).compact.tiny,
-                  props.deadline.map: deadline =>
-                    val (deadlineStr, left): (String, Option[String]) =
-                      Proposal.deadlineAndTimeLeft(now, deadline)
-                    val text: String                                  =
-                      left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
-                    val severity: Message.Severity                    =
-                      left.fold(Message.Severity.Error)(_ => Message.Severity.Info)
-
-                    <.span(ExploreStyles.ProposalDeadline)(
-                      Message(
-                        text = s"Deadline: $text",
-                        severity = severity
-                      )
-                    )
-                )
-                .when:
-                  props.canSubmit && props.proposalStatus.get === ProposalStatus.NotSubmitted
-              ,
-              Button(
-                "Retract Proposal",
-                severity = Button.Severity.Warning,
-                onClick = updateStatus(ProposalStatus.NotSubmitted),
-                disabled = isUpdatingStatus.get.value || isDueDeadline
-              ).compact.tiny
-                .when:
-                  props.canSubmit && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
-              ,
-              errorMessage.get
-                .map(r => Message(text = r, severity = Message.Severity.Error))
+        Toolbar(left =
+          <.div(ExploreStyles.ProposalSubmissionBar)(
+            Tag(
+              value = props.proposalStatus.get.name,
+              severity =
+                if (props.proposalStatus.get === ProposalStatus.Accepted) Tag.Severity.Success
+                else Tag.Severity.Danger
             )
+              .when(props.proposalStatus.get > ProposalStatus.Submitted),
+            // TODO: Validate proposal before allowing submission
+            React
+              .Fragment(
+                Button(
+                  label = "Submit Proposal",
+                  onClick = updateStatus(ProposalStatus.Submitted),
+                  disabled =
+                    isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline || props.hasObsErrors
+                ).compact.tiny,
+                props.deadline.map: deadline =>
+                  val (deadlineStr, left): (String, Option[String]) =
+                    Proposal.deadlineAndTimeLeft(now, deadline)
+                  val text: String                                  =
+                    left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
+                  val severity: Message.Severity                    =
+                    left.fold(Message.Severity.Error)(_ => Message.Severity.Info)
+
+                  <.span(ExploreStyles.ProposalDeadline)(
+                    Message(
+                      text = s"Deadline: $text",
+                      severity = severity
+                    )
+                  )
+              )
+              .when:
+                props.canSubmit && props.proposalStatus.get === ProposalStatus.NotSubmitted
+            ,
+            Button(
+              "Retract Proposal",
+              severity = Button.Severity.Warning,
+              onClick = updateStatus(ProposalStatus.NotSubmitted),
+              disabled = isUpdatingStatus.get.value || isDueDeadline
+            ).compact.tiny
+              .when:
+                props.canSubmit && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
+            ,
+            errorMessage.get
+              .map(r => Message(text = r, severity = Message.Severity.Error))
           )
+        )
