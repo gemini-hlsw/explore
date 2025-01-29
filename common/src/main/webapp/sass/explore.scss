@@ -3384,11 +3384,16 @@ a.explore-upgrade-link {
     flex: 1 1 0;
     padding: 1em;
 
-    &.program-details-left {
+    &.program-details-left,
+    .program-details-right {
       display: grid;
       grid-template-columns: [label] auto [value] 1fr;
-      gap: 0.25em 1em;
+      gap: 0.25em 3em;
       grid-auto-rows: max-content;
+    }
+
+    .program-details-right {
+      margin-top: 3rem;
     }
 
     label {

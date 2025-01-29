@@ -24,6 +24,7 @@ object ProgramDetailsSubquery
       allocations $AllocationSubquery
       goa {
         proprietaryMonths
+        shouldNotify
       }
     }
   """

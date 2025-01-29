@@ -71,6 +71,17 @@ object ProgramQueries:
         SET = ProgramPropertiesInput(name = name.orUnassign)
       )
 
+  def updateGoaShouldNotify[F[_]: Async](id: Program.Id, shouldNotify: Boolean)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    updateProgram:
+      UpdateProgramsInput(
+        WHERE = id.toWhereProgram.assign,
+        SET = ProgramPropertiesInput(
+          goa = GoaPropertiesInput(shouldNotify = shouldNotify.assign).assign
+        )
+      )
+
   def updateAttachmentDescription[F[_]: Async](
     oid:  Attachment.Id,
     desc: Option[NonEmptyString]
