@@ -49,13 +49,14 @@ import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.react.given
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.common.ProposalQueriesGQL
 
 case class ProposalEditor(
   programId:          Program.Id,
-  optUserId:          Option[User.Id],
+  userVault:          Option[UserVault],
   undoCtx:            UndoContext[ProgramDetails],
   proposal:           UndoSetter[Proposal],
   timeEstimateRange:  Pot[Option[ProgramTimeRange]],
@@ -67,6 +68,7 @@ case class ProposalEditor(
   proposalIsReadonly: Boolean,
   userIsReadonlyCoi:  Boolean
 ) extends ReactFnProps(ProposalEditor.Component):
+  val optUserId: Option[User.Id]        = userVault.map(_.user.id)
   val proposalOrUserIsReadonly: Boolean = proposalIsReadonly || userIsReadonlyCoi
 
 object ProposalEditor:
@@ -142,7 +144,7 @@ object ProposalEditor:
         )(
           _ =>
             ProgramUsersTable(
-              props.optUserId,
+              props.userVault,
               props.users,
               NonEmptySet.of(ProgramUserRole.Pi, ProgramUserRole.Coi, ProgramUserRole.CoiRO),
               props.proposalIsReadonly,

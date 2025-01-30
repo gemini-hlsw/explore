@@ -25,6 +25,7 @@ import explore.model.UserInvitation
 import explore.model.UserInvitation.DeliveryStatus.*
 import explore.model.display.given
 import explore.model.reusability.given
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.EducationalStatus
@@ -51,6 +52,7 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.react.given
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
@@ -59,7 +61,7 @@ import queries.common.InvitationQueriesGQL.RevokeInvitationMutation
 import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
 case class ProgramUsersTable(
-  userId:             Option[User.Id],
+  userVault:          Option[UserVault],
   users:              View[List[ProgramUser]],
   filterRoles:        NonEmptySet[ProgramUserRole],
   proposalIsReadonly: Boolean,
@@ -72,7 +74,7 @@ object ProgramUsersTable:
   private type Props = ProgramUsersTable
 
   private case class TableMeta(
-    userId:             Option[User.Id],
+    userVault:          Option[UserVault],
     users:              View[List[ProgramUser]],
     proposalIsReadonly: Boolean,
     userIsReadonlyCoi:  Boolean,
@@ -81,11 +83,17 @@ object ProgramUsersTable:
     createInviteStatus: View[CreateInviteStatus],
     currentProgUser:    View[Option[View[ProgramUser]]]
   ):
+    val userId: Option[User.Id]                      = userVault.map(_.user.id)
     val proposalOrUserIsReadonly: Boolean            = proposalIsReadonly || userIsReadonlyCoi
     // for the user specific fields - readonly COIs can edit their own.
     def currentUserCanEdit(pu: ProgramUser): Boolean =
       !proposalIsReadonly &&
         (!userIsReadonlyCoi || (userId, pu.user).mapN((uid, p) => uid === p.id).getOrElse(false))
+    val userIsPi: Boolean                            = userId.fold(false)(id =>
+      users.get.exists(pu => pu.user.exists(_.id === id) && pu.role === ProgramUserRole.Pi)
+    )
+    val userCanChangeCoiAccess: Boolean              =
+      !proposalIsReadonly && (userVault.isStaff || userIsPi)
 
   private val ColDef = ColumnDef.WithTableMeta[View[ProgramUser], TableMeta]
 
@@ -155,10 +163,6 @@ object ProgramUsersTable:
       value = value,
       onChange = set
     )
-
-  def userWithRole(userId: User.Id) =
-    each[List[ProgramUser], ProgramUser]
-      .filter(_.user.exists(_.id === userId))
 
   private def deleteUserButton(
     programUserId: ProgramUser.Id,
@@ -405,9 +409,7 @@ object ProgramUsersTable:
         cell = c =>
           val currentRole = c.value.get
           c.table.options.meta.map: meta =>
-            if (meta.proposalOrUserIsReadonly || !CoIRoles.contains(currentRole))
-              currentRole.shortName: VdomNode
-            else
+            if (meta.userCanChangeCoiAccess && CoIRoles.contains(currentRole))
               val programUserId = c.row.original.get.id
               val view          =
                 c.value.withOnMod(role => changeProgramUserRole[IO](programUserId, role).runAsync)
@@ -417,6 +419,7 @@ object ProgramUsersTable:
                 exclude = NonCoIRoles,
                 clazz = ExploreStyles.PartnerSelector
               ): VdomNode
+            else currentRole.shortName: VdomNode
       ).sortableBy(_.get.shortName),
       ColDef(
         Column.Status.id,
@@ -490,7 +493,7 @@ object ProgramUsersTable:
                                   getRowId = (row, _, _) => RowId(row.get.id.toString),
                                   enableSorting = true,
                                   meta = TableMeta(
-                                    props.userId,
+                                    props.userVault,
                                     props.users,
                                     props.proposalIsReadonly,
                                     props.userIsReadonlyCoi,
