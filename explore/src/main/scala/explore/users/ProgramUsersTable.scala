@@ -164,10 +164,6 @@ object ProgramUsersTable:
       onChange = set
     )
 
-  // def userWithRole(userId: User.Id) =
-  //   each[List[ProgramUser], ProgramUser]
-  //     .filter(_.user.exists(_.id === userId))
-
   private def deleteUserButton(
     programUserId: ProgramUser.Id,
     users:         View[List[ProgramUser]],
