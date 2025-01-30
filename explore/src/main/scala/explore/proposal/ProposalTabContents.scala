@@ -151,7 +151,7 @@ object ProposalTabContents:
             <.div(ExploreStyles.ProposalTab)(
               ProposalEditor(
                 props.programId,
-                props.userVault.map(_.user.id),
+                props.userVault,
                 undoCtx,
                 proposal,
                 props.timeEstimateRange,
