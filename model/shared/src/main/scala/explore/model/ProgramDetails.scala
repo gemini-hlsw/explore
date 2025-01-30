@@ -29,7 +29,8 @@ case class ProgramDetails(
   users:             List[ProgramUser],
   reference:         Option[ProgramReference],
   allocations:       CategoryAllocationList,
-  proprietaryMonths: NonNegInt
+  proprietaryMonths: NonNegInt,
+  shouldNotify:      Boolean
 ) derives Eq:
   val allUsers: List[ProgramUser] = pi.fold(users)(_ :: users)
 
@@ -47,6 +48,7 @@ object ProgramDetails:
   val pi: Lens[ProgramDetails, Option[ProgramUser]]             = Focus[ProgramDetails](_.pi)
   val piPartner: Optional[ProgramDetails, Option[PartnerLink]]  =
     pi.some.andThen(ProgramUser.partnerLink)
+  val shouldNotify: Lens[ProgramDetails, Boolean]               = Focus[ProgramDetails](_.shouldNotify)
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {
@@ -61,5 +63,6 @@ object ProgramDetails:
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
       as <- c.downField("allocations").as[CategoryAllocationList]
       pm <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
-    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, pm)
+      sn <- c.downField("goa").downField("shouldNotify").as[Boolean]
+    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, pm, sn)
   )

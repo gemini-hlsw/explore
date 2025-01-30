@@ -508,6 +508,7 @@ object ExploreStyles:
   val ProgramDetailsTile: Css     = Css("program-details-tile")
   val ProgramDetailsInfoArea: Css = Css("program-details-info-area")
   val ProgramDetailsLeft: Css     = Css("program-details-left")
+  val ProgramDetailsRight: Css    = Css("program-details-right")
   val ProgramTabTable: Css        = Css("program-tab-table")
   val ProgramDetailsUsers: Css    = Css("program-details-users")
 

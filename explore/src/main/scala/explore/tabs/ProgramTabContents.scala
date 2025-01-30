@@ -82,7 +82,8 @@ object ProgramTabContents:
               props.programId,
               props.programDetails,
               props.programTimes,
-              props.semester
+              props.semester,
+              props.userIsReadonlyCoi
             )
           )
 
