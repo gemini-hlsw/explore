@@ -18,8 +18,8 @@ enum ExposureTimeModeType(val label: NonEmptyString) derives Enumerated:
 
 object ExposureTimeModeType:
   def fromExposureTimeMode(etm: ExposureTimeMode): ExposureTimeModeType = etm match {
-    case ExposureTimeMode.SignalToNoiseMode(_)    => SignalToNoise
-    case ExposureTimeMode.FixedExposureMode(_, _) => FixedExposure
+    case ExposureTimeMode.SignalToNoiseMode(_, _)   => SignalToNoise
+    case ExposureTimeMode.TimeAndCountMode(_, _, _) => FixedExposure
   }
 
   given Display[ExposureTimeModeType] = Display.byShortName(_.label.value)
