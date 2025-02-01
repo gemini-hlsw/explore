@@ -4,8 +4,8 @@
 package explore.common
 
 import cats.Endo
-import cats.syntax.all.*
 import cats.effect.IO
+import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*

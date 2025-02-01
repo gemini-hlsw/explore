@@ -4,6 +4,7 @@
 package explore.itc
 
 import cats.data.NonEmptyChain
+import eu.timepit.refined.types.numeric.PosInt
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.math.*
@@ -37,7 +38,8 @@ object ItcSpectroscopyPlotDescription {
       ExploreStyles.ItcPlotDescription,
       <.label("Integration Time:"),
       <.span(props.exposureTime.fold("-") { case ItcExposureTime(_, time, count) =>
-        format(time, count)
+        // Not ideal, it needs a fix on lucuma-ui
+        format(time, PosInt.unsafeFrom(count.value))
       }),
       <.label("S/N per exposure:"),
       <.span(singleSN),

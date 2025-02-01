@@ -7,7 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
-import eu.timepit.refined.types.numeric.PosInt
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
@@ -51,7 +51,7 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
 
 object ItcResult {
   case object Pending extends ItcResult
-  case class Result(exposureTime: TimeSpan, exposures: PosInt, brightestIndex: Option[Int])
+  case class Result(exposureTime: TimeSpan, exposures: NonNegInt, brightestIndex: Option[Int])
       extends ItcResult:
     val duration: TimeSpan        = exposureTime *| exposures.value
     override def toString: String = s"${exposures.value} x ${exposureTime.toMinutes}"
@@ -95,7 +95,7 @@ type OverridenExposureTime = OverridenExposureTime.Type
 case class ItcExposureTime(
   overriden: OverridenExposureTime,
   time:      TimeSpan,
-  count:     PosInt
+  count:     NonNegInt
 ) derives Eq
 
 case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsResult) {
