@@ -35,8 +35,12 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
             spectroscopy {
               wavelength $WavelengthSubquery
               resolution
-              signalToNoise
-              signalToNoiseAt $WavelengthSubquery
+              exposureTimeMode {
+                signalToNoise {
+                  value
+                  at $WavelengthSubquery
+                }
+              }
               wavelengthCoverage $WavelengthDeltaSubquery
               focalPlane
               focalPlaneAngle $AngleSubquery
