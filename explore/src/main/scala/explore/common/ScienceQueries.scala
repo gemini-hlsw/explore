@@ -5,6 +5,7 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
+import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
@@ -84,16 +85,20 @@ object ScienceQueries:
     def spectroscopyRequirements(
       op: ScienceRequirements.Spectroscopy
     ): Endo[ScienceRequirementsInput] = {
+      val mode: Option[ExposureTimeModeInput] =
+        (op.signalToNoise, op.signalToNoiseAt.map(wavelength)).mapN { (sn, snAt) =>
+          ExposureTimeModeInput(
+            signalToNoise = SignalToNoiseExposureTimeModeInput(value = sn, at = snAt).assign
+          )
+        }
+
       val input =
         for {
           _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.signalToNoise      := op.signalToNoise.orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.signalToNoiseAt    := op.signalToNoiseAt
-                 .map(wavelength)
-                 .orUnassign
+          _ <- SpectroscopyScienceRequirementsInput.exposureTimeMode   := mode.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
                  .map(wavelengthDelta)
                  .orUnassign

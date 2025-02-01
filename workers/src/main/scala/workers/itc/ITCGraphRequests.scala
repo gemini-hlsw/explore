@@ -13,6 +13,7 @@ import explore.modes.InstrumentConfig
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.Error
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SignificantFiguresInput
@@ -67,8 +68,8 @@ object ITCGraphRequests:
             .spectroscopyIntegrationTimeAndGraphs(
               SpectroscopyIntegrationTimeAndGraphsInput(
                 SpectroscopyIntegrationTimeAndGraphsParameters(
-                  atWavelength = request.atWavelength,
-                  signalToNoise = request.signalToNoise,
+                  exposureTimeMode =
+                    ExposureTimeMode.SignalToNoiseMode(request.signalToNoise, request.atWavelength),
                   constraints = request.constraints,
                   mode = mode,
                   significantFigures = significantFigures.some

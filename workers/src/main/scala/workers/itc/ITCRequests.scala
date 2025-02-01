@@ -17,6 +17,7 @@ import explore.modes.SpectroscopyModeRow
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.Error
 import lucuma.itc.client.IntegrationTimeResult
 import lucuma.itc.client.ItcClient
@@ -27,7 +28,7 @@ import queries.schemas.itc.syntax.*
 import workers.*
 
 object ITCRequests:
-  val cacheVersion = CacheVersion(15)
+  val cacheVersion = CacheVersion(16)
 
   val itcErrorToQueryProblems: Error => ItcQueryProblem =
     case Error.SourceTooBright(halfWell) => ItcQueryProblem.SourceTooBright(halfWell)
@@ -79,8 +80,8 @@ object ITCRequests:
               .spectroscopy(
                 SpectroscopyIntegrationTimeInput(
                   SpectroscopyIntegrationTimeParameters(
-                    atWavelength = params.atWavelength,
-                    signalToNoise = params.signalToNoise,
+                    exposureTimeMode =
+                      ExposureTimeMode.SignalToNoiseMode(params.signalToNoise, params.atWavelength),
                     constraints = params.constraints,
                     mode = mode
                   ),
