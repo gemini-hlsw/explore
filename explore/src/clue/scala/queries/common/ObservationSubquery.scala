@@ -40,6 +40,11 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
                   value
                   at $WavelengthSubquery
                 }
+                timeAndCount {
+                  time $TimeSpanSubquery
+                  count
+                  at $WavelengthSubquery
+                }
               }
               wavelengthCoverage $WavelengthDeltaSubquery
               focalPlane
