@@ -16,6 +16,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
+import lucuma.core.model.ExposureTimeMode
 import lucuma.odb.json.angle.decoder.given
 import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.decoders.given
@@ -30,8 +31,10 @@ object ScienceRequirements {
   case class Spectroscopy(
     wavelength:         Option[Wavelength],
     resolution:         Option[PosInt],
+    // replace these 2 with exposureTimeMode when the editor supports it.
     signalToNoise:      Option[SignalToNoise],
     signalToNoiseAt:    Option[Wavelength],
+    // exposureTimeMode:   Option[ExposureTimeMode],
     wavelengthCoverage: Option[WavelengthDelta],
     focalPlane:         Option[FocalPlane],
     focalPlaneAngle:    Option[Angle],
@@ -39,10 +42,27 @@ object ScienceRequirements {
   ) extends ScienceRequirements derives Eq
 
   object Spectroscopy {
-    given Decoder[Spectroscopy] = deriveDecoder
+    // We should be able to go back to deriveDecoder when we use exposureTimeMode in Spectroscopy
+    // given Decoder[Spectroscopy] = deriveDecoder
+
+    given Decoder[Spectroscopy] = Decoder.instance: c =>
+      for {
+        wl  <- c.downField("wavelength").as[Option[Wavelength]]
+        res <- c.downField("resolution").as[Option[PosInt]]
+        etm <- c.downField("exposureTimeMode").as[Option[ExposureTimeMode]]
+        cov <- c.downField("wavelengthCoverage").as[Option[WavelengthDelta]]
+        fp  <- c.downField("focalPlane").as[Option[FocalPlane]]
+        fpa <- c.downField("focalPlaneAngle").as[Option[Angle]]
+        cap <- c.downField("capability").as[Option[SpectroscopyCapabilities]]
+      } yield
+        val sn = etm.flatMap(ExposureTimeMode.signalToNoise.getOption)
+        Spectroscopy(wl, res, sn.map(_.value), sn.map(_.at), cov, fp, fpa, cap)
 
     val wavelength: Lens[Spectroscopy, Option[Wavelength]]               = Focus[Spectroscopy](_.wavelength)
     val resolution: Lens[Spectroscopy, Option[PosInt]]                   = Focus[Spectroscopy](_.resolution)
+    // When we fully support ExposureTimeMode, this can replace the following 2
+    // val exposureTimeMode: Lens[Spectroscopy, Option[ExposureTimeMode]] =
+    //   Focus[Spectroscopy](_.exposureTimeMode)
     val signalToNoise: Lens[Spectroscopy, Option[SignalToNoise]]         =
       Focus[Spectroscopy](_.signalToNoise)
     val signalToNoiseAt: Lens[Spectroscopy, Option[Wavelength]]          =
