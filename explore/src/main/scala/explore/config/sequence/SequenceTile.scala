@@ -34,6 +34,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.core.util.TimeSpan
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
 import lucuma.refined.*
@@ -79,8 +80,6 @@ object SequenceTile:
   ) extends ReactFnProps(Body.component)
 
   private object Body:
-    private type Props = Body
-
     private case class SequenceData(
       config:     InstrumentExecutionConfig,
       snPerClass: Map[ObserveClass, SignalToNoise]
@@ -119,100 +118,91 @@ object SequenceTile:
       } yield o.merge(e)
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .useStreamResourceOnMountBy: (props, ctx) => // Query Visits
-          import ctx.given
+      ScalaFnComponent[Body]: props =>
+        for {
+          ctx          <- useContext(AppContext.ctx)
+          visits       <- useStreamResourceOnMount: // Query Visits
+                            import ctx.given
 
-          ObservationVisits[IO]
-            .query(props.obsId)
-            .raiseGraphQLErrors
-            .map(_.observation.flatMap(_.execution))
-            .attemptPot
-            .reRunOnResourceSignals:
-              queryTriggers(props.obsId)
-        .useStreamResourceOnMountBy: (props, ctx, _) => // Query Sequence
-          import ctx.given
+                            ObservationVisits[IO]
+                              .query(props.obsId)
+                              .raiseGraphQLErrors
+                              .map(_.observation.flatMap(_.execution))
+                              .attemptPot
+                              .reRunOnResourceSignals:
+                                queryTriggers(props.obsId)
+          sequenceData <- useStreamResourceOnMount: // Query Sequence
+                            import ctx.given
 
-          // sequence also triggers on target changes
-          val targetChanges = props.targetIds.map: targetId =>
-            TargetQueriesGQL.TargetEditSubscription
-              .subscribe[IO](targetId)
+                            // sequence also triggers on target changes
+                            val targetChanges = props.targetIds.map: targetId =>
+                              TargetQueriesGQL.TargetEditSubscription
+                                .subscribe[IO](targetId)
 
-          SequenceQuery[IO]
-            .query(props.obsId)
-            .raiseGraphQLErrors
-            .map(SequenceData.fromOdbResponse)
-            .attemptPot
-            .reRunOnResourceSignals(queryTriggers(props.obsId), targetChanges*)
-        .useEffectWithDepsBy((_, _, visits, sequenceData) =>
-          (visits.toPot.flatten, sequenceData.toPot.flatten).tupled
-        ): (props, _, _, _) =>
-          dataPot => props.sequenceChanged.set(dataPot.void)
-        .render: (props, _, visits, sequenceData) =>
-          props.sequenceChanged.get
-            .flatMap(_ =>
-              (visits.toPot.flatten, sequenceData.toPot.flatten).tupled
-            ) // tupled for Pot
-            .renderPot(
-              (visitsOpt, sequenceDataOpt) =>
-                // TODO Show visits even if sequence data is not available
-                sequenceDataOpt
-                  .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
-                    case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass) =>
-                      GmosNorthSequenceTable(
-                        visitsOpt.collect { case ExecutionVisits.GmosNorth(visits) =>
-                          visits.toList
-                        }.orEmpty,
-                        config,
-                        snPerClass
-                      )
-                    case SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass) =>
-                      GmosSouthSequenceTable(
-                        visitsOpt.collect { case ExecutionVisits.GmosSouth(visits) =>
-                          visits.toList
-                        }.orEmpty,
-                        config,
-                        snPerClass
-                      )
-                  },
-              errorRender = m =>
-                <.div(ExploreStyles.SequencesPanelError)(
-                  Message(
-                    text = m.getMessage,
-                    severity = Message.Severity.Warning,
-                    icon = Icons.ExclamationTriangle
-                  )
+                            SequenceQuery[IO]
+                              .query(props.obsId)
+                              .raiseGraphQLErrors
+                              .map(SequenceData.fromOdbResponse)
+                              .attemptPot
+                              .reRunOnResourceSignals(queryTriggers(props.obsId), targetChanges*)
+          _            <- useEffectWithDeps((visits.toPot.flatten, sequenceData.toPot.flatten).tupled):
+                            dataPot => props.sequenceChanged.set(dataPot.void)
+        } yield props.sequenceChanged.get
+          .flatMap(_ => (visits.toPot.flatten, sequenceData.toPot.flatten).tupled) // tupled for Pot
+          .renderPot(
+            (visitsOpt, sequenceDataOpt) =>
+              // TODO Show visits even if sequence data is not available
+              sequenceDataOpt
+                .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
+                  case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass) =>
+                    GmosNorthSequenceTable(
+                      visitsOpt.collect { case ExecutionVisits.GmosNorth(visits) =>
+                        visits.toList
+                      }.orEmpty,
+                      config,
+                      snPerClass
+                    )
+                  case SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass) =>
+                    GmosSouthSequenceTable(
+                      visitsOpt.collect { case ExecutionVisits.GmosSouth(visits) =>
+                        visits.toList
+                      }.orEmpty,
+                      config,
+                      snPerClass
+                    )
+                },
+            errorRender = m =>
+              <.div(ExploreStyles.SequencesPanelError)(
+                Message(
+                  text = m.getMessage,
+                  severity = Message.Severity.Warning,
+                  icon = Icons.ExclamationTriangle
                 )
-            )
-
-  private case class Title(obsExecution: Pot[Execution]) extends ReactFnProps(Title.component)
-
-  private object Title:
-    private type Props = Title
-
-    private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .render: props =>
-          <.span(ExploreStyles.SequenceTileTitle)(
-            props.obsExecution.orSpinner: execution =>
-              val programTimeCharge = execution.programTimeCharge.value
-
-              val executed = timeDisplay("Executed", programTimeCharge)
-
-              execution.programTimeEstimate
-                .map: plannedTime =>
-                  val total   = programTimeCharge +| plannedTime
-                  val pending = timeDisplay("Pending", plannedTime)
-                  val planned = timeDisplay("Planned", total)
-
-                  React.Fragment(
-                    HelpIcon("target/main/sequence-times.md".refined),
-                    planned,
-                    executed,
-                    pending
-                  )
-                .getOrElse(executed)
+              )
           )
+
+  private case class Title(obsExecution: Pot[Execution]) extends ReactFnProps(Title)
+
+  private object Title
+      extends ReactFnComponent[Title](props =>
+        <.span(ExploreStyles.SequenceTileTitle)(
+          props.obsExecution.orSpinner: execution =>
+            val programTimeCharge = execution.programTimeCharge.value
+
+            val executed = timeDisplay("Executed", programTimeCharge)
+
+            execution.programTimeEstimate
+              .map: plannedTime =>
+                val total   = programTimeCharge +| plannedTime
+                val pending = timeDisplay("Pending", plannedTime)
+                val planned = timeDisplay("Planned", total)
+
+                React.Fragment(
+                  HelpIcon("target/main/sequence-times.md".refined),
+                  planned,
+                  executed,
+                  pending
+                )
+              .getOrElse(executed)
+        )
+      )
