@@ -29,3 +29,15 @@ object VisitQueriesGQL:
       }
     """
     // ${ExecutionVisitsSubquery.Fragments}
+
+  @GraphQL
+  trait ExecutionEventAddedSubscription extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      subscription($$input: ExecutionEventAddedInput!) {
+        executionEventAdded(input: $$input) {
+          value {
+            id
+          }
+        }
+      }
+    """

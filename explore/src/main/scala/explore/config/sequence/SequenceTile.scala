@@ -7,6 +7,8 @@ import cats.Eq
 import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
+import clue.StreamingClient
+import clue.data.syntax.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.View
@@ -35,6 +37,8 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
 import lucuma.refined.*
+import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types.ExecutionEventAddedInput
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
@@ -42,6 +46,7 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
+import queries.common.VisitQueriesGQL
 import queries.common.VisitQueriesGQL.*
 
 object SequenceTile:
@@ -96,6 +101,23 @@ object SequenceTile:
 
       given Reusability[SequenceData] = Reusability.byEq
 
+    def obsEditSubscription(obsId: Observation.Id)(using StreamingClient[IO, ObservationDB]) =
+      ObsQueriesGQL.ObservationEditSubscription
+        .subscribe[IO]:
+          obsId.toObservationEditInput
+
+    def executionEventAddedSubscription(obsId: Observation.Id)(using
+      StreamingClient[IO, ObservationDB]
+    ) = VisitQueriesGQL.ExecutionEventAddedSubscription.subscribe[IO](
+      ExecutionEventAddedInput(observationId = obsId.assign)
+    )
+
+    def queryTriggers(obsId: Observation.Id)(using StreamingClient[IO, ObservationDB]) =
+      for {
+        o <- obsEditSubscription(obsId)
+        e <- executionEventAddedSubscription(obsId)
+      } yield o.merge(e)
+
     private val component =
       ScalaFnComponent
         .withHooks[Props]
@@ -108,14 +130,13 @@ object SequenceTile:
             .raiseGraphQLErrors
             .map(_.observation.flatMap(_.execution))
             .attemptPot
-            .resetOnResourceSignals:
-              ObsQueriesGQL.ObservationEditSubscription
-                .subscribe[IO]:
-                  props.obsId.toObservationEditInput
+            .reRunOnResourceSignals:
+              queryTriggers(props.obsId)
         .useStreamResourceOnMountBy: (props, ctx, _) => // Query Sequence
           import ctx.given
 
-          val targetChanges = props.targetIds.traverse: targetId =>
+          // sequence also triggers on target changes
+          val targetChanges = props.targetIds.map: targetId =>
             TargetQueriesGQL.TargetEditSubscription
               .subscribe[IO](targetId)
 
@@ -124,12 +145,7 @@ object SequenceTile:
             .raiseGraphQLErrors
             .map(SequenceData.fromOdbResponse)
             .attemptPot
-            .resetOnResourceSignals:
-              for
-                o <- ObsQueriesGQL.ObservationEditSubscription
-                       .subscribe[IO](props.obsId.toObservationEditInput)
-                t <- targetChanges
-              yield o.merge(t.sequence)
+            .reRunOnResourceSignals(queryTriggers(props.obsId), targetChanges*)
         .useEffectWithDepsBy((_, _, visits, sequenceData) =>
           (visits.toPot.flatten, sequenceData.toPot.flatten).tupled
         ): (props, _, _, _) =>
