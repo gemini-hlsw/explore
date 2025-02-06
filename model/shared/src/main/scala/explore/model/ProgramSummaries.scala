@@ -76,12 +76,8 @@ case class ProgramSummaries(
             .flattenOption
       .toMap
 
-  lazy val hasProposalObsErrors: Boolean =
-    observations.values.exists: obs =>
-      obs.workflow.state =!= ObservationWorkflowState.Inactive &&
-        obs.workflow.validationErrors.exists(
-          _.code === ObservationValidationCode.CallForProposalsError
-        )
+  lazy val hasUndefinedObservations: Boolean =
+    observations.values.exists(_.workflow.state === ObservationWorkflowState.Undefined)
 
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     observations.toList

@@ -181,7 +181,7 @@ object Routing:
                 model.rootModel.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
                 userPreferences(model.rootModel).proposalTabLayout,
                 model.userIsReadonlyCoi,
-                programSummaries.get.hasProposalObsErrors
+                programSummaries.get.hasUndefinedObservations
               )
       .orEmpty
 
