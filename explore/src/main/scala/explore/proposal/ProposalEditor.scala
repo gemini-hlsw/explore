@@ -15,6 +15,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
 import explore.common.ProgramQueries
+import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.*
@@ -151,13 +152,14 @@ object ProposalEditor:
               props.userIsReadonlyCoi
             ),
           (_, _) =>
-            Option
-              .unless[VdomNode](props.proposalOrUserIsReadonly):
-                <.div(
-                  ExploreStyles.AddProgramUserButton,
+            <.div(
+              ExploreStyles.AddProgramUserButton,
+              Option
+                .unless[VdomNode](props.proposalOrUserIsReadonly):
                   AddReadonlyCoiButton(props.programId, props.users)
-                )
-              .orEmpty
+                .orEmpty,
+              HelpIcon("proposal/main/investigators.md".refined)
+            )
         )
 
       val absTitle: VdomNode =
