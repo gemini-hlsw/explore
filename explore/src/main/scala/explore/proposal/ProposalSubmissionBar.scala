@@ -38,12 +38,12 @@ import queries.common.ProposalQueriesGQL.SetProposalStatus
 import scala.concurrent.duration.*
 
 case class ProposalSubmissionBar(
-  programId:      Program.Id,
-  proposalStatus: View[ProposalStatus],
-  deadline:       Option[Timestamp],
-  callId:         Option[CallForProposals.Id],
-  canSubmit:      Boolean,
-  hasObsErrors:   Boolean
+  programId:                Program.Id,
+  proposalStatus:           View[ProposalStatus],
+  deadline:                 Option[Timestamp],
+  callId:                   Option[CallForProposals.Id],
+  canSubmit:                Boolean,
+  hasUndefinedObservations: Boolean
 ) extends ReactFnProps(ProposalSubmissionBar.component)
 
 object ProposalSubmissionBar:
@@ -79,13 +79,15 @@ object ProposalSubmissionBar:
       ctx              <- useContext(AppContext.ctx)
       isUpdatingStatus <- useStateView(IsUpdatingStatus(false))
       errorMessage     <- useStateView(none[String]) // Submission error message
-      _                <- useLayoutEffectWithDeps((props.proposalStatus.get, props.callId, props.hasObsErrors)):
-                            (ps, _, he) =>
-                              if (he && ps === ProposalStatus.NotSubmitted)
-                                errorMessage.set(
-                                  "One or more observations has an error. See Overview tab for details.".some
-                                )
-                              else errorMessage.set(none) // Reset error message on CfP change
+      _                <-
+        useLayoutEffectWithDeps(
+          (props.proposalStatus.get, props.callId, props.hasUndefinedObservations)
+        ): (ps, _, he) =>
+          if (he && ps === ProposalStatus.NotSubmitted)
+            errorMessage.set(
+              "Proposal cannot be submitted with undefined observations. Define them or mark them as inactive.".some
+            )
+          else errorMessage.set(none) // Reset error message on CfP change
       nowPot           <- useStreamOnMount:
                             Stream
                               .fixedRateStartImmediately[IO](1.second)
@@ -122,7 +124,7 @@ object ProposalSubmissionBar:
                   label = "Submit Proposal",
                   onClick = updateStatus(ProposalStatus.Submitted),
                   disabled =
-                    isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline || props.hasObsErrors
+                    isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline || props.hasUndefinedObservations
                 ).compact.tiny,
                 props.deadline.map: deadline =>
                   val (deadlineStr, left): (String, Option[String]) =

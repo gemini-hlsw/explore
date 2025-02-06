@@ -46,16 +46,16 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProposalQueriesGQL.*
 
 case class ProposalTabContents(
-  programId:            Program.Id,
-  userVault:            Option[UserVault],
-  programDetails:       View[ProgramDetails],
-  cfps:                 List[CallForProposal],
-  timeEstimateRange:    Pot[Option[ProgramTimeRange]],
-  attachments:          View[AttachmentList],
-  undoStacks:           View[UndoStacks[IO, ProgramDetails]],
-  layout:               LayoutsMap,
-  userIsReadonlyCoi:    Boolean,
-  hasProposalObsErrors: Boolean
+  programId:                Program.Id,
+  userVault:                Option[UserVault],
+  programDetails:           View[ProgramDetails],
+  cfps:                     List[CallForProposal],
+  timeEstimateRange:        Pot[Option[ProgramTimeRange]],
+  attachments:              View[AttachmentList],
+  undoStacks:               View[UndoStacks[IO, ProgramDetails]],
+  layout:                   LayoutsMap,
+  userIsReadonlyCoi:        Boolean,
+  hasUndefinedObservations: Boolean
 ) extends ReactFnProps(ProposalTabContents.component)
 
 object ProposalTabContents:
@@ -135,7 +135,7 @@ object ProposalTabContents:
                 deadline,
                 proposal.get.callId,
                 isStdUser && !props.userIsReadonlyCoi,
-                props.hasProposalObsErrors
+                props.hasUndefinedObservations
               )
             )
           )
