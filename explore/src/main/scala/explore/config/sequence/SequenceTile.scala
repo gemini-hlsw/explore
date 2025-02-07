@@ -77,77 +77,78 @@ object SequenceTile:
     obsId:           Observation.Id,
     targetIds:       List[Target.Id],
     sequenceChanged: View[Pot[Unit]]
-  ) extends ReactFnProps(Body.component)
+  ) extends ReactFnProps(Body)
 
-  private object Body:
-    private case class SequenceData(
-      config:     InstrumentExecutionConfig,
-      snPerClass: Map[ObserveClass, SignalToNoise]
-    ) derives Eq
+  private object Body
+      extends ReactFnComponent[Body](props =>
 
-    private object SequenceData:
-      def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
-        data.observation.flatMap: obs =>
-          obs.execution.config.map: config =>
-            SequenceData(
-              config,
-              Map.empty
-              // (
-              //   ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
-              //   ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
-              // )
-            )
+        case class SequenceData(
+          config:     InstrumentExecutionConfig,
+          snPerClass: Map[ObserveClass, SignalToNoise]
+        ) derives Eq
 
-      given Reusability[SequenceData] = Reusability.byEq
+        object SequenceData:
+          def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
+            data.observation.flatMap: obs =>
+              obs.execution.config.map: config =>
+                SequenceData(
+                  config,
+                  Map.empty
+                  // (
+                  //   ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
+                  //   ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
+                  // )
+                )
 
-    def obsEditSubscription(obsId: Observation.Id)(using StreamingClient[IO, ObservationDB]) =
-      ObsQueriesGQL.ObservationEditSubscription
-        .subscribe[IO]:
-          obsId.toObservationEditInput
+          given Reusability[SequenceData] = Reusability.byEq
+        end SequenceData
 
-    def executionEventAddedSubscription(obsId: Observation.Id)(using
-      StreamingClient[IO, ObservationDB]
-    ) = VisitQueriesGQL.ExecutionEventAddedSubscription.subscribe[IO](
-      ExecutionEventAddedInput(observationId = obsId.assign)
-    )
+        def obsEditSubscription(obsId: Observation.Id)(using StreamingClient[IO, ObservationDB]) =
+          ObsQueriesGQL.ObservationEditSubscription
+            .subscribe[IO]:
+              obsId.toObservationEditInput
 
-    def queryTriggers(obsId: Observation.Id)(using StreamingClient[IO, ObservationDB]) =
-      for {
-        o <- obsEditSubscription(obsId)
-        e <- executionEventAddedSubscription(obsId)
-      } yield o.merge(e)
+        def executionEventAddedSubscription(obsId: Observation.Id)(using
+          StreamingClient[IO, ObservationDB]
+        ) = VisitQueriesGQL.ExecutionEventAddedSubscription.subscribe[IO](
+          ExecutionEventAddedInput(observationId = obsId.assign)
+        )
 
-    private val component =
-      ScalaFnComponent[Body]: props =>
-        for {
+        def queryTriggers(obsId: Observation.Id)(using StreamingClient[IO, ObservationDB]) =
+          (obsEditSubscription(obsId), executionEventAddedSubscription(obsId)).mapN(_ merge _)
+
+        for
           ctx          <- useContext(AppContext.ctx)
-          visits       <- useStreamResourceOnMount: // Query Visits
-                            import ctx.given
+          visits       <-
+            useStreamResourceOnMount: // Query Visits
+              import ctx.given
 
-                            ObservationVisits[IO]
-                              .query(props.obsId)
-                              .raiseGraphQLErrors
-                              .map(_.observation.flatMap(_.execution))
-                              .attemptPot
-                              .reRunOnResourceSignals:
-                                queryTriggers(props.obsId)
-          sequenceData <- useStreamResourceOnMount: // Query Sequence
-                            import ctx.given
+              ObservationVisits[IO]
+                .query(props.obsId)
+                .raiseGraphQLErrors
+                .map(_.observation.flatMap(_.execution))
+                .attemptPot
+                .reRunOnResourceSignals:
+                  queryTriggers(props.obsId)
+          sequenceData <-
+            useStreamResourceOnMount: // Query Sequence
+              import ctx.given
 
-                            // sequence also triggers on target changes
-                            val targetChanges = props.targetIds.map: targetId =>
-                              TargetQueriesGQL.TargetEditSubscription
-                                .subscribe[IO](targetId)
+              // sequence also triggers on target changes
+              val targetChanges = props.targetIds.map: targetId =>
+                TargetQueriesGQL.TargetEditSubscription
+                  .subscribe[IO](targetId)
 
-                            SequenceQuery[IO]
-                              .query(props.obsId)
-                              .raiseGraphQLErrors
-                              .map(SequenceData.fromOdbResponse)
-                              .attemptPot
-                              .reRunOnResourceSignals(queryTriggers(props.obsId), targetChanges*)
-          _            <- useEffectWithDeps((visits.toPot.flatten, sequenceData.toPot.flatten).tupled):
-                            dataPot => props.sequenceChanged.set(dataPot.void)
-        } yield props.sequenceChanged.get
+              SequenceQuery[IO]
+                .query(props.obsId)
+                .raiseGraphQLErrors
+                .map(SequenceData.fromOdbResponse)
+                .attemptPot
+                .reRunOnResourceSignals(queryTriggers(props.obsId), targetChanges*)
+          _            <-
+            useEffectWithDeps((visits.toPot.flatten, sequenceData.toPot.flatten).tupled): dataPot =>
+              props.sequenceChanged.set(dataPot.void)
+        yield props.sequenceChanged.get
           .flatMap(_ => (visits.toPot.flatten, sequenceData.toPot.flatten).tupled) // tupled for Pot
           .renderPot(
             (visitsOpt, sequenceDataOpt) =>
@@ -180,6 +181,7 @@ object SequenceTile:
                 )
               )
           )
+      )
 
   private case class Title(obsExecution: Pot[Execution]) extends ReactFnProps(Title)
 
