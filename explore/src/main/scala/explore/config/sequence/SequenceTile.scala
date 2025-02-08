@@ -48,6 +48,7 @@ import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL
 import queries.common.VisitQueriesGQL.*
 import cats.data.NonEmptyList
+import lucuma.core.enums.StepStage
 
 object SequenceTile:
   def apply(
@@ -77,6 +78,28 @@ object SequenceTile:
     targetIds:       List[Target.Id],
     sequenceChanged: View[Pot[Unit]]
   ) extends ReactFnProps(Body)
+
+  // TODO Move this to some util package
+  import cats.effect.Async
+  import cats.effect.Sync
+  import cats.effect.Resource
+  import fs2.concurrent.Topic
+  import cats.effect.syntax.all.*
+  extension [F[_]: Async, A](stream: fs2.Stream[F, A])
+    /**
+     * Given a `Stream`, starts it in the background and allows the creation of multiple other
+     * `Streams` that mirror its output. Useful when we want multiple `Streams` to consume the same
+     * output.
+     *
+     * When we start the same stream multiple times, we have no guarantee that all the fibers will
+     * read all the elemnts. In particular, if the stream is backed by a queue, the fibers will
+     * steal elements from the queue, and each element will only make it to one of the fibers.
+     */
+    def startSubscriber: Resource[F, Resource[F, fs2.Stream[F, A]]] =
+      for
+        t <- Resource.make(Topic[F, A])(_.close.void)
+        _ <- stream.through(t.publish).compile.drain.background
+      yield Resource.suspend(Sync[F].delay(t.subscribeAwaitUnbounded))
 
   private object Body
       extends ReactFnComponent[Body](props =>
@@ -109,51 +132,46 @@ object SequenceTile:
             useResourceOnMount: // Subscribe to observation edits
               ObsQueriesGQL.ObservationEditSubscription
                 .subscribe[IO](props.obsId.toObservationEditInput)
+                .ignoreGraphQLErrors
                 .map(_.void)
+                .flatMap(startSubscriber)
           targetEditSignal                        <-
             useResourceOnMount: // Subscribe to target edits
               props.targetIds
                 .traverse: targetId =>
                   TargetQueriesGQL.TargetEditSubscription
                     .subscribe[IO](targetId)
+                    .ignoreGraphQLErrors
                 .map(_.combineAll.void)
+                .flatMap(startSubscriber)
           stepExecutedSignal                      <-
             useResourceOnMount: // Subscribe to step executed events
-              VisitQueriesGQL.StepEndedSubscription
+              VisitQueriesGQL.StepSubscription
                 .subscribe[IO](props.obsId)
-                .map(_.void)
+                .ignoreGraphQLErrors
+                .map(_.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep).void)
+                .flatMap(startSubscriber)
           visits                                  <-
-            // Nice to have: useStreamWhenDepsReady
-            useStream((obsEditSignal, stepExecutedSignal).tupled.void): _ => // Query Visits
-              (obsEditSignal, stepExecutedSignal).tupled
-                .map: (oes, ses) =>
-                  val visitsQuery: IO[Pot[Option[ExecutionVisits]]] =
-                    ObservationVisits[IO]
-                      .query(props.obsId)
-                      .raiseGraphQLErrors
-                      .map(_.observation.flatMap(_.execution))
-                      .attemptPot
-
-                  visitsQuery.reRunOnSignals(NonEmptyList.of(oes, ses))
-                .toOption
-                .getOrElse(fs2.Stream.empty)
+            useStreamResourceWhenDepsReady((obsEditSignal, stepExecutedSignal).tupled):
+              (obsEditSignal, stepExecutedSignal) => // Query Visits
+                ObservationVisits[IO]
+                  .query(props.obsId)
+                  .raiseGraphQLErrors
+                  .map(_.observation.flatMap(_.execution))
+                  .attemptPot
+                  .reRunOnResourceSignals:
+                    NonEmptyList.of(obsEditSignal, stepExecutedSignal)
           sequenceData                            <-
-            // Nice to have: useStreamWhenDepsReady
-            useStream((obsEditSignal, targetEditSignal, stepExecutedSignal).tupled.void):
-              _ => // Query Sequence
-                (obsEditSignal, targetEditSignal, stepExecutedSignal).tupled
-                  .map: (oes, tes, ses) =>
-                    val sequenceQuery: IO[Pot[Option[SequenceData]]] =
-                      SequenceQuery[IO]
-                        .query(props.obsId)
-                        .raiseGraphQLErrors
-                        .map(SequenceData.fromOdbResponse)
-                        .attemptPot
-
-                    sequenceQuery
-                      .reRunOnSignals(NonEmptyList.of(oes, tes, ses))
-                  .toOption
-                  .getOrElse(fs2.Stream.empty)
+            useStreamResourceWhenDepsReady(
+              (obsEditSignal, targetEditSignal, stepExecutedSignal).tupled
+            ): (obsEditSignal, targetEditSignal, stepExecutedSignal) => // Query Sequence
+              SequenceQuery[IO]
+                .query(props.obsId)
+                .raiseGraphQLErrors
+                .map(SequenceData.fromOdbResponse)
+                .attemptPot
+                .reRunOnResourceSignals:
+                  NonEmptyList.of(obsEditSignal, targetEditSignal, stepExecutedSignal)
           _                                       <-
             useEffectWithDeps((visits.toPot.flatten, sequenceData.toPot.flatten).tupled): dataPot =>
               props.sequenceChanged.set(dataPot.void)

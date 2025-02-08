@@ -54,3 +54,5 @@ stats.html
 
 # Local development environment
 local.conf.json*
+
+*.worksheet.sc
