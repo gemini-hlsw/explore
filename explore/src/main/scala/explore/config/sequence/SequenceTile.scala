@@ -124,51 +124,57 @@ object SequenceTile:
           given Reusability[SequenceData] = Reusability.byEq
         end SequenceData
 
+        def useLiveSequence(
+          obsId: Observation.Id
+        ): HookResult[Pot[(Option[ExecutionVisits], Option[SequenceData])]] =
+          for
+            ctx                                     <- useContext(AppContext.ctx)
+            given StreamingClient[IO, ObservationDB] = ctx.clients.odb
+            visits                                  <-
+              useEffectResultOnMount:
+                ObservationVisits[IO]
+                  .query(props.obsId)
+                  .raiseGraphQLErrors
+                  .map(_.observation.flatMap(_.execution))
+            sequenceData                            <-
+              useEffectResultOnMount:
+                SequenceQuery[IO]
+                  .query(props.obsId)
+                  .raiseGraphQLErrors
+                  .map(SequenceData.fromOdbResponse)
+            _                                       <-
+              useEffectStreamResourceOnMount: // Subscribe to observation edits
+                ObsQueriesGQL.ObservationEditSubscription
+                  .subscribe[IO](props.obsId.toObservationEditInput)
+                  .raiseFirstNoDataError
+                  .ignoreGraphQLErrors
+                  .map(_.evalMap(_ => sequenceData.refresh.to[IO]))
+            _                                       <-
+              useEffectStreamResourceOnMount: // Subscribe to target edits
+                props.targetIds
+                  .traverse: targetId =>
+                    TargetQueriesGQL.TargetEditSubscription
+                      .subscribe[IO](targetId)
+                      .raiseFirstNoDataError
+                      .ignoreGraphQLErrors
+                  .map(_.combineAll.evalMap(_ => sequenceData.refresh.to[IO]))
+            _                                       <-
+              useEffectStreamResourceOnMount: // Subscribe to step executed events
+                VisitQueriesGQL.StepSubscription
+                  .subscribe[IO](props.obsId)
+                  .raiseFirstNoDataError
+                  .ignoreGraphQLErrors
+                  .map:
+                    _.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep)
+                      .evalMap(_ => (sequenceData.refresh >> visits.refresh).to[IO])
+          yield (visits.value, sequenceData.value).tupled
+
         for
-          ctx                                     <- useContext(AppContext.ctx)
-          given StreamingClient[IO, ObservationDB] = ctx.clients.odb
-          visits                                  <-
-            useEffectResultOnMount:
-              ObservationVisits[IO]
-                .query(props.obsId)
-                .raiseGraphQLErrors
-                .map(_.observation.flatMap(_.execution))
-          sequenceData                            <-
-            useEffectResultOnMount:
-              SequenceQuery[IO]
-                .query(props.obsId)
-                .raiseGraphQLErrors
-                .map(SequenceData.fromOdbResponse)
-          _                                       <-
-            useEffectStreamResourceOnMount: // Subscribe to observation edits
-              ObsQueriesGQL.ObservationEditSubscription
-                .subscribe[IO](props.obsId.toObservationEditInput)
-                .raiseFirstNoDataError
-                .ignoreGraphQLErrors
-                .map(_.evalMap(_ => sequenceData.refresh.to[IO]))
-          _                                       <-
-            useEffectStreamResourceOnMount: // Subscribe to target edits
-              props.targetIds
-                .traverse: targetId =>
-                  TargetQueriesGQL.TargetEditSubscription
-                    .subscribe[IO](targetId)
-                    .raiseFirstNoDataError
-                    .ignoreGraphQLErrors
-                .map(_.combineAll.evalMap(_ => sequenceData.refresh.to[IO]))
-          _                                       <-
-            useEffectStreamResourceOnMount: // Subscribe to step executed events
-              VisitQueriesGQL.StepSubscription
-                .subscribe[IO](props.obsId)
-                .raiseFirstNoDataError
-                .ignoreGraphQLErrors
-                .map:
-                  _.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep)
-                    .evalMap(_ => (sequenceData.refresh >> visits.refresh).to[IO])
-          _                                       <-
-            useEffectWithDeps((visits.value, sequenceData.value).tupled): dataPot =>
-              props.sequenceChanged.set(dataPot.void)
+          sequenceData <- useLiveSequence(props.obsId)
+          _            <- useEffectWithDeps(sequenceData): dataPot =>
+                            props.sequenceChanged.set(dataPot.void)
         yield props.sequenceChanged.get
-          .flatMap(_ => (visits.value, sequenceData.value).tupled) // tupled for Pot
+          .flatMap(_ => sequenceData)
           .renderPot(
             (visitsOpt, sequenceDataOpt) =>
               // TODO Show visits even if sequence data is not available
