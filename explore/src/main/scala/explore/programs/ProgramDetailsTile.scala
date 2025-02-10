@@ -18,19 +18,20 @@ import explore.model.ProgramUser
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.core.model.Semester
 import lucuma.core.syntax.display.*
+import lucuma.core.util.DateInterval
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.FormInfo
 import lucuma.ui.primereact.given
 
+import java.time.LocalDate
+
 case class ProgramDetailsTile(
   programId:         Program.Id,
   programDetails:    View[ProgramDetails],
   programTimes:      Pot[ProgramTimes],
-  semester:          Semester,
   userIsReadonlyCoi: Boolean
 ) extends ReactFnProps(ProgramDetailsTile.component)
 
@@ -41,19 +42,25 @@ object ProgramDetailsTile:
     useContext(AppContext.ctx).map: ctx =>
       import ctx.given
 
-      val details: ProgramDetails        = props.programDetails.get
-      val thesis: Boolean                = details.allUsers.exists(_.thesis.exists(_ === true))
-      val users: View[List[ProgramUser]] = props.programDetails.zoom(ProgramDetails.allUsers)
-      val newDataNotificationView        =
+      val details: ProgramDetails               = props.programDetails.get
+      val thesis: Boolean                       = details.allUsers.exists(_.thesis.exists(_ === true))
+      val users: View[List[ProgramUser]]        = props.programDetails.zoom(ProgramDetails.allUsers)
+      val newDataNotificationView               =
         props.programDetails
           .zoom(ProgramDetails.shouldNotify)
           .withOnMod(b => ProgramQueries.updateGoaShouldNotify[IO](props.programId, b).runAsync)
+      val cfpActivePeriod: Option[DateInterval] = details.proposal.flatMap(_.call).map(_.active)
+
+      // We `should` always have a call for proposal if we get here, but...
+      def dateOrMissing(o: Option[LocalDate], label: String) =
+        val s = o.fold("Missing!")(Constants.GppDateFormatter.format)
+        FormInfo(s, label)
 
       <.div(ExploreStyles.ProgramDetailsTile)(
         <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(
           FormInfo(details.reference.map(_.label).getOrElse("---"), "Reference"),
-          FormInfo(Constants.GppDateFormatter.format(props.semester.start.localDate), "Start"),
-          FormInfo(Constants.GppDateFormatter.format(props.semester.end.localDate), "End"),
+          dateOrMissing(cfpActivePeriod.map(_.start), "Start"),
+          dateOrMissing(cfpActivePeriod.map(_.end), "End"),
           // Thesis should be set True if any of the investigators will use the proposal as part of their thesis (3390)
           FormInfo(if (thesis) "Yes" else "No", "Thesis"),
           FormInfo(s"${details.proprietaryMonths} months", "Proprietary")

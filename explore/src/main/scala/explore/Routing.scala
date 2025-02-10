@@ -194,9 +194,6 @@ object Routing:
             programDetails <-
               programSummaries.model.zoom(ProgramSummaries.optProgramDetails).toOptionView
             proposal       <- programDetails.get.proposal
-            callId         <- proposal.callId
-            cfps           <- model.rootModel.get.cfps.toOption
-            cfp            <- cfps.find(_.id === callId)
           yield ProgramTabContents(
             routingInfo.programId,
             programDetails,
@@ -207,7 +204,6 @@ object Routing:
             programSummaries.get.targets,
             model.rootModel.zoom(RootModel.vault).get,
             programSummaries.get.programTimesPot,
-            cfp.semester,
             userPreferences(model.rootModel),
             model.userIsReadonlyCoi
           )

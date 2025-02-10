@@ -112,7 +112,7 @@ object ProposalTabContents:
               props.programDetails.zoom(ProgramDetails.piPartner.some).get
 
             val deadline: Option[Timestamp] =
-              proposal.get.deadline(props.cfps, piPartner)
+              proposal.get.deadline(piPartner)
 
             <.div(ExploreStyles.ProposalTab)(
               ProposalEditor(
@@ -133,7 +133,7 @@ object ProposalTabContents:
                 props.programId,
                 props.programDetails.zoom(ProgramDetails.proposalStatus),
                 deadline,
-                proposal.get.callId,
+                proposal.get.call.map(_.id),
                 isStdUser && !props.userIsReadonlyCoi,
                 props.hasUndefinedObservations
               )

@@ -33,7 +33,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
-import lucuma.core.model.Semester
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
@@ -51,7 +50,6 @@ case class ProgramTabContents(
   targets:                TargetList,
   userVault:              Option[UserVault],
   programTimes:           Pot[ProgramTimes],
-  semester:               Semester,
   userPreferences:        UserPreferences,
   userIsReadonlyCoi:      Boolean
 ) extends ReactFnProps(ProgramTabContents.component)
@@ -82,7 +80,6 @@ object ProgramTabContents:
               props.programId,
               props.programDetails,
               props.programTimes,
-              props.semester,
               props.userIsReadonlyCoi
             )
           )

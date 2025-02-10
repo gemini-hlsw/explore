@@ -222,12 +222,12 @@ object ExploreLayout:
                 val deadline: Option[Timestamp] =
                   programSummaries.toOption
                     .flatMap: programSummaries =>
-                      (ProgramSummaries.proposal.getOption(programSummaries).flatten,
-                       RootModel.cfps.get(view.get).toOption
-                      ).mapN: (p, c) =>
-                        val piP = ProgramSummaries.piPartner.getOption(programSummaries)
-                        p.deadline(c, piP)
-                      .flatten
+                      ProgramSummaries.proposal
+                        .getOption(programSummaries)
+                        .flatten
+                        .flatMap: p =>
+                          val piP = ProgramSummaries.piPartner.getOption(programSummaries)
+                          p.deadline(piP)
 
                 val cacheKey: String =
                   userVault.get

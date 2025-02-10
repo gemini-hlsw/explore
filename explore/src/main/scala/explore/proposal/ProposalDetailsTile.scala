@@ -162,7 +162,7 @@ object ProposalDetailsBody:
   )(using Logger[IO]): VdomNode = {
     val proposalCfpView: View[Proposal] =
       props.proposalAligner.viewMod { p =>
-        ProposalPropertiesInput.callId.replace(p.callId.orUnassign) >>>
+        ProposalPropertiesInput.callId.replace(p.call.map(_.id).orUnassign) >>>
           ProposalPropertiesInput.`type`.replace(p.proposalType.map(_.toInput).orUnassign)
       }
 
@@ -171,13 +171,20 @@ object ProposalDetailsBody:
 
     val titleView = titleAligner.view(_.orUnassign)
 
-    val callId: Option[CallForProposals.Id] = props.proposalAligner.get.callId
-    val scienceSubtype                      = props.proposalAligner.get.proposalType.map(_.scienceSubtype)
+    val scienceSubtype = props.proposalAligner.get.proposalType.map(_.scienceSubtype)
 
-    val selectedCfp   = callId.flatMap(id => props.cfps.find(_.id === id))
-    val isCfpSelected = selectedCfp.isDefined
-    val subtypes      = selectedCfp.map(_.cfpType.subTypes)
-    val hasSubtypes   = subtypes.exists(_.size > 1)
+    val selectedCfp: Option[CallForProposal] = props.proposalAligner.get.call
+    val isCfpSelected                        = selectedCfp.isDefined
+    val subtypes                             = selectedCfp.map(_.cfpType.subTypes)
+    val hasSubtypes                          = subtypes.exists(_.size > 1)
+
+    // need to include the current cfp as disabled if it doesn't exist in the list of calls
+    val cfpOptions: List[SelectItem[CallForProposal]] =
+      selectedCfp
+        .filterNot(cfp => props.cfps.exists(_.id === cfp.id))
+        .map(cfp => SelectItem(cfp, cfp.title, disabled = true))
+        .toList ++
+        props.cfps.map(cfp => SelectItem(cfp, cfp.title))
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       props.proposalAligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
@@ -405,17 +412,16 @@ object ProposalDetailsBody:
           FormDropdownOptional(
             id = "cfp".refined,
             label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-            value = callId,
-            options = props.cfps.map(r => SelectItem(r.id, r.title)),
-            onChange = _.map { cid =>
-              val call = props.cfps.find(_.id === cid)
+            value = selectedCfp,
+            options = cfpOptions,
+            onChange = _.map { cfp =>
               proposalCfpView.mod(
-                _.copy(callId = cid.some, proposalType = call.map(_.cfpType.defaultType))
+                _.copy(call = cfp.some, proposalType = cfp.cfpType.defaultType.some)
               )
             }.orEmpty,
             disabled = props.readonly,
             modifiers = List(^.id := "cfp"),
-            clazz = ExploreStyles.WarningInput.when_(callId.isEmpty)
+            clazz = ExploreStyles.WarningInput.when_(selectedCfp.isEmpty)
           ),
           // Proposal type selector, visible when cfp is selected and has more than one subtpye
           FormDropdown(
@@ -456,7 +462,7 @@ object ProposalDetailsBody:
                         .getOrElse(Hours.unsafeFrom(0))
       showDialog <- useStateView(Visible.Hidden)           // show partner splits modal
       splitsList <- useStateView(List.empty[PartnerSplit]) // partner splits modal
-      _          <- useEffectWithDeps((props.proposal.callId, props.cfps)):
+      _          <- useEffectWithDeps((props.proposal.call.map(_.id), props.cfps)):
                       // Update the partner splits when a new callId is set
                       (callId, cfps) =>
                         callId.foldMap(cid =>

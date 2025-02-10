@@ -113,7 +113,7 @@ trait ProposalQueries:
   extension (proposal: Proposal)
     def toInput: ProposalPropertiesInput =
       ProposalPropertiesInput(
-        callId = proposal.callId.orUnassign,
+        callId = proposal.call.map(_.id).orUnassign,
         category = proposal.category.orUnassign,
         `type` = proposal.proposalType.map(_.toInput).orUnassign
       )
