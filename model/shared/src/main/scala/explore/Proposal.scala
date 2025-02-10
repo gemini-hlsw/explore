@@ -8,7 +8,6 @@ import cats.derived.*
 import cats.syntax.all.*
 import io.circe.Decoder
 import lucuma.core.enums.TacCategory
-import lucuma.core.model.CallForProposals
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProposalReference
 import lucuma.core.util.Timestamp
@@ -20,17 +19,17 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 case class Proposal(
-  callId:       Option[CallForProposals.Id],
+  call:         Option[CallForProposal],
   category:     Option[TacCategory],
   proposalType: Option[ProposalType],
   reference:    Option[ProposalReference]
 ) derives Eq:
-  def deadline(cfps: List[CallForProposal], piPartner: Option[PartnerLink]): Option[Timestamp] =
-    cfps.find(cfp => callId.exists(_ === cfp.id)).flatMap(_.deadline(piPartner))
+  def deadline(piPartner: Option[PartnerLink]): Option[Timestamp] =
+    call.flatMap(_.deadline(piPartner))
 
 object Proposal:
-  val callId: Lens[Proposal, Option[CallForProposals.Id]]  =
-    Focus[Proposal](_.callId)
+  val call: Lens[Proposal, Option[CallForProposal]]        =
+    Focus[Proposal](_.call)
   val category: Lens[Proposal, Option[TacCategory]]        =
     Focus[Proposal](_.category)
   val proposalType: Lens[Proposal, Option[ProposalType]]   =
@@ -42,8 +41,7 @@ object Proposal:
 
   given Decoder[Proposal] = c =>
     for {
-      callId   <-
-        c.downField("call").downField("id").success.traverse(_.as[Option[CallForProposals.Id]])
+      call     <- c.downField("call").as[Option[CallForProposal]]
       category <- c.downField("category").as[Option[TacCategory]]
       pte      <- c.downField("type").as[Option[ProposalType]]
       r        <-
@@ -51,7 +49,7 @@ object Proposal:
           .downField("label")
           .success
           .traverse(_.as[Option[ProposalReference]])
-    } yield Proposal(callId.flatten, category, pte, r.flatten)
+    } yield Proposal(call, category, pte, r.flatten)
 
   val Default = Proposal(None, None, None, None)
 

@@ -284,7 +284,7 @@ object ProgramCacheController
             ProgramQueriesGQL.ProgramEditDetailsSubscription.Data,
             ProgramSummaries => ProgramSummaries
           ] =
-            _.map(_.programEdit.value.proposal.flatMap(_.callId)).changes.void
+            _.map(_.programEdit.value.proposal.flatMap(_.call.map(_.id))).changes.void
               .evalMap(_ => updateObservationsWorkflows(props.programId.toWhereObservation))
 
           val updateProgramDetails: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =

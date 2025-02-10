@@ -13,25 +13,7 @@ object CallsQueriesGQL:
     val document: String = s"""
       query {
         callsForProposals(WHERE: {isOpen: {EQ: true}}) {
-          matches {
-            id
-            semester
-            title
-            cfpType: type
-            nonPartnerDeadline
-            active {
-              start
-              end
-            }
-            partners {
-              partner
-              submissionDeadline
-            }
-            coordinateLimits {
-              north $SiteCoordinatesLimitsSubquery
-              south $SiteCoordinatesLimitsSubquery
-            }
-          }
+          matches $CallForProposalsSubquery
         }
       }
     """

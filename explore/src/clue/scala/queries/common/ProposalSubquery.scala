@@ -13,9 +13,7 @@ import lucuma.schemas.ObservationDB
 object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("Proposal"):
   override val subquery: String = s"""
     {
-      call {
-        id
-      }
+      call $CallForProposalsSubquery
       category
       reference {
         label

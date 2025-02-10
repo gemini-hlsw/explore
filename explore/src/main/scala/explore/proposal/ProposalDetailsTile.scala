@@ -157,13 +157,12 @@ object ProposalDetailsBody:
   private def renderFn(
     props:      Props,
     totalHours: View[Hours],
-    // minPct2:           View[IntPercent],
     showDialog: View[Visible],
     splitsList: View[List[PartnerSplit]]
   )(using Logger[IO]): VdomNode = {
     val proposalCfpView: View[Proposal] =
       props.proposalAligner.viewMod { p =>
-        ProposalPropertiesInput.callId.replace(p.callId.orUnassign) >>>
+        ProposalPropertiesInput.callId.replace(p.call.map(_.id).orUnassign) >>>
           ProposalPropertiesInput.`type`.replace(p.proposalType.map(_.toInput).orUnassign)
       }
 
@@ -172,13 +171,20 @@ object ProposalDetailsBody:
 
     val titleView = titleAligner.view(_.orUnassign)
 
-    val callId: Option[CallForProposals.Id] = props.proposalAligner.get.callId
-    val scienceSubtype                      = props.proposalAligner.get.proposalType.map(_.scienceSubtype)
+    val scienceSubtype = props.proposalAligner.get.proposalType.map(_.scienceSubtype)
 
-    val selectedCfp   = callId.flatMap(id => props.cfps.find(_.id === id))
-    val isCfpSelected = selectedCfp.isDefined
-    val subtypes      = selectedCfp.map(_.cfpType.subTypes)
-    val hasSubtypes   = subtypes.exists(_.size > 1)
+    val selectedCfp: Option[CallForProposal] = props.proposalAligner.get.call
+    val isCfpSelected                        = selectedCfp.isDefined
+    val subtypes                             = selectedCfp.map(_.cfpType.subTypes)
+    val hasSubtypes                          = subtypes.exists(_.size > 1)
+
+    // need to include the current cfp as disabled if it doesn't exist in the list of calls
+    val cfpOptions: List[SelectItem[CallForProposal]] =
+      selectedCfp
+        .filterNot(cfp => props.cfps.exists(_.id === cfp.id))
+        .map(cfp => SelectItem(cfp, cfp.title, disabled = true))
+        .toList ++
+        props.cfps.map(cfp => SelectItem(cfp, cfp.title))
 
     val categoryAligner: Aligner[Option[TacCategory], Input[TacCategory]] =
       props.proposalAligner.zoom(Proposal.category, ProposalPropertiesInput.category.modify)
@@ -406,17 +412,16 @@ object ProposalDetailsBody:
           FormDropdownOptional(
             id = "cfp".refined,
             label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-            value = callId,
-            options = props.cfps.map(r => SelectItem(r.id, r.title)),
-            onChange = _.map { cid =>
-              val call = props.cfps.find(_.id === cid)
+            value = selectedCfp,
+            options = cfpOptions,
+            onChange = _.map { cfp =>
               proposalCfpView.mod(
-                _.copy(callId = cid.some, proposalType = call.map(_.cfpType.defaultType))
+                _.copy(call = cfp.some, proposalType = cfp.cfpType.defaultType.some)
               )
             }.orEmpty,
             disabled = props.readonly,
             modifiers = List(^.id := "cfp"),
-            clazz = ExploreStyles.WarningInput.when_(callId.isEmpty)
+            clazz = ExploreStyles.WarningInput.when_(selectedCfp.isEmpty)
           ),
           // Proposal type selector, visible when cfp is selected and has more than one subtpye
           FormDropdown(
@@ -446,80 +451,41 @@ object ProposalDetailsBody:
     )
   }
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      // total time - we need `Hours` for editing and also to preserve if
-      // the user switches between classes with and without total time.
-      .useStateViewBy: (props, _) =>
-        props.proposal.proposalType
-          .flatMap(ProposalType.totalTime.getOption)
-          .map(toHours)
-          .getOrElse(Hours.unsafeFrom(0))
-      // .useStateViewBy((props, _, _, _) =>
-      //   // mininum percent total time = need to preserve between class switches
-      //   props.proposal
-      //     .zoom(Proposal.proposalClass.andThen(ProposalClass.minPercentTotalTime))
-      //     .get
-      //     .getOrElse(IntPercent.unsafeFrom(80))
-      // )
-      .useStateView(Visible.Hidden)           // show partner splits modal
-      .useStateView(List.empty[PartnerSplit]) // partner splits modal
-      // Update the partner splits when a new callId is set
-      .useEffectWithDepsBy((props, _, _, _, _) => (props.proposal.callId, props.cfps)):
-        (props, _, _, _, ps) =>
-          (callId, cfps) =>
-            callId.foldMap(cid =>
-              val currentSplits    = Proposal.proposalType.some
-                .andThen(ProposalType.partnerSplits)
-                .getOption(props.proposal)
-              val cfpPartners      = cfps
-                .find(_.id === cid)
-                .foldMap(_.partners.map(_.partner))
-              val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
+  private val component = ScalaFnComponent[Props](props =>
+    for {
+      ctx        <- useContext(AppContext.ctx)
+      totalHours <- useStateView:
+                      // we need `Hours` for editing
+                      props.proposal.proposalType
+                        .flatMap(ProposalType.totalTime.getOption)
+                        .map(toHours)
+                        .getOrElse(Hours.unsafeFrom(0))
+      showDialog <- useStateView(Visible.Hidden)           // show partner splits modal
+      splitsList <- useStateView(List.empty[PartnerSplit]) // partner splits modal
+      _          <- useEffectWithDeps((props.proposal.call.map(_.id), props.cfps)):
+                      // Update the partner splits when a new callId is set
+                      (callId, cfps) =>
+                        callId.foldMap(cid =>
+                          val currentSplits    = Proposal.proposalType.some
+                            .andThen(ProposalType.partnerSplits)
+                            .getOption(props.proposal)
+                          val cfpPartners      = cfps
+                            .find(_.id === cid)
+                            .foldMap(_.partners.map(_.partner))
+                          val proposalPartners = currentSplits.orEmpty.filter(_._2 > 0).map(_.partner)
 
-              if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
-                ps.set(currentSplits.orEmpty)
-              else
-                ps.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
-            )
-      // .useEffectWithDepsBy((props, _, _, _, _, _, _, _, _) => props.proposal.get.proposalClass)(
-      //   // Deal with changes to the ProposalClass.
-      //   (props, _, _, totalHours, minPct2, classType, _, _, oldClass) =>
-      //     newClass => {
-      //       val setClass =
-      //         if (oldClass.get === newClass) Callback.empty
-      //         else props.proposal.zoom(Proposal.proposalClass).set(newClass)
-      //       val newType  = ProposalClassType.fromProposalClass(newClass)
-      //       val setType  = if (classType.get === newType) Callback.empty else classType.set(newType)
-      //       val newHours = ProposalClass.totalTime.getOption(newClass).map(toHours)
-      //       val setHours = newHours
-      //         .flatMap(h => if (h === totalHours.get) none else h.some)
-      //         .foldMap(totalHours.set)
-      //       val newPct2  = ProposalClass.minPercentTotalTime.getOption(newClass)
-      //       val setPct2  =
-      //         newPct2.flatMap(p => if (p === minPct2.get) none else p.some).foldMap(minPct2.set)
-      //       setClass >> setType >> setHours >> setPct2
-      //     }
-      // )
-      .render:
-        (
-          props,
-          ctx,
-          totalHours,
-          // minPct2,
-          showDialog,
-          splitsList
-        ) =>
-          renderFn(
-            props,
-            totalHours,
-            // minPct2,
-            showDialog,
-            splitsList
-          )(using ctx.logger)
-
+                          if (proposalPartners.nonEmpty && proposalPartners.forall(cfpPartners.contains))
+                            splitsList.set(currentSplits.orEmpty)
+                          else
+                            splitsList.set(cfpPartners.map(p => PartnerSplit(p, 0.refined)))
+                        )
+    } yield renderFn(
+      props,
+      totalHours,
+      showDialog,
+      splitsList
+    )(using ctx.logger)
+  )
 case class ProposalDetailsTitle(undoer: Undoer, tileSize: TileSizeState, readonly: Boolean)
     extends ReactFnProps(ProposalDetailsTitle.component)
 

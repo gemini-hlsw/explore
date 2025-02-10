@@ -154,6 +154,10 @@ object ProposalSubmissionBar:
                 props.canSubmit && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
             ,
             errorMessage.get
-              .map(r => Message(text = r, severity = Message.Severity.Error))
+              .map(r =>
+                <.span(ExploreStyles.ProposalDeadline)(
+                  Message(text = r, severity = Message.Severity.Error)
+                )
+              )
           )
         )
