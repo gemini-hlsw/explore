@@ -41,5 +41,5 @@ object Versions {
   val sbtLucuma              = "0.12.6"
   val scalaCollectionContrib = "0.4.0"
   val scalaJsDom             = "2.8.0"
-  val scalaJsReact           = "3.0.0-beta10"
+  val scalaJsReact           = "3.0.0-beta12"
 }
