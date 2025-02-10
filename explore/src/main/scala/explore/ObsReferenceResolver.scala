@@ -45,5 +45,5 @@ object ObsReferenceResolver
                               s"Observation reference ${props.obsRef.label} does not exist.",
                               Severity.Error
                             ) >> ctx.pushPage(none).to[IO]
-      yield result.renderPot(_ => EmptyVdom)
+      yield result.value.renderPot(_ => EmptyVdom)
     )

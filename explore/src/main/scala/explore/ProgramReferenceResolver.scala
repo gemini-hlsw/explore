@@ -46,4 +46,4 @@ object ProgramReferenceResolver:
                   Severity.Error
                 ) >> ctx.pushPage(none).to[IO]
       .render: (props, _, result) =>
-        result.renderPot(_ => EmptyVdom)
+        result.value.renderPot(_ => EmptyVdom)
