@@ -228,6 +228,7 @@ object ExploreStyles:
   val ProposalSubmissionBar: Css   = Css("explore-proposal-submission-line")
   val ProposalDeadline: Css        = Css("explore-proposal-deadline")
   val ProposalAttachmentsTile: Css = Css("explore-proposal-attachments-tile")
+  val CfpData: Css                 = Css("cfp-data")
 
   val ProgramDescription: Css = Css("explore-program-description")
 

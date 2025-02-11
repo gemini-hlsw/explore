@@ -3199,6 +3199,16 @@ div.spectroscopy-table-emptymessage {
     grid-template-columns: repeat(auto-fit, minmax(34em, 1fr));
     column-gap: 0.5dvw;
     padding: 0.3em;
+
+    .cfp-data {
+      width: 100%;
+      margin-top: 1rem;
+      border: 1px solid;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      color: var(--primary-color-text);
+      white-space: pre-wrap;
+    }
   }
 
   .explore-proposal-submission-line {

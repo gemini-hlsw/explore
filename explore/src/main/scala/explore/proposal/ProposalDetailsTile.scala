@@ -25,6 +25,7 @@ import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.CallForProposal
+import explore.model.Constants
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.PartnerSplit
@@ -44,6 +45,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.IntPercent
+import lucuma.core.model.SiteCoordinatesLimits
 import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
@@ -317,6 +319,14 @@ object ProposalDetailsBody:
       )
     }
 
+    extension (limits: SiteCoordinatesLimits)
+      def format: String =
+        val raStart  = limits.raStart.toHourAngle.toDoubleHours
+        val raEnd    = limits.raEnd.toHourAngle.toDoubleHours
+        val decStart = limits.decStart.toAngle.toSignedDoubleDegrees
+        val decEnd   = limits.decEnd.toAngle.toSignedDoubleDegrees
+        f"$raStart%.1f ≤ RA ≤ $raEnd%.1fh    $decStart° ≤ Dec ≤ $decEnd°"
+
     <.form(
       <.div(ExploreStyles.ProposalDetailsGrid)(
         <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
@@ -340,6 +350,17 @@ object ProposalDetailsBody:
             disabled = props.readonly,
             modifiers = List(^.id := "category"),
             clazz = ExploreStyles.WarningInput.when_(categoryView.get.isEmpty)
+          ),
+          activationView.map(activationView =>
+            FormEnumDropdownView(
+              id = "too-activation".refined,
+              value = activationView,
+              label = React.Fragment(
+                "ToO Activation",
+                HelpIcon("proposal/main/too-activation.md".refined)
+              ),
+              disabled = props.readonly
+            )
           ),
           minimumPct1View.map(mv =>
             <.div(
@@ -407,43 +428,58 @@ object ProposalDetailsBody:
             )
           )
         ),
-        <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
-          // Call for proposal selector
-          FormDropdownOptional(
-            id = "cfp".refined,
-            label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
-            value = selectedCfp,
-            options = cfpOptions,
-            onChange = _.map { cfp =>
-              proposalCfpView.mod(
-                _.copy(call = cfp.some, proposalType = cfp.cfpType.defaultType.some)
-              )
-            }.orEmpty,
-            disabled = props.readonly,
-            modifiers = List(^.id := "cfp"),
-            clazz = ExploreStyles.WarningInput.when_(selectedCfp.isEmpty)
-          ),
-          // Proposal type selector, visible when cfp is selected and has more than one subtpye
-          FormDropdown(
-            id = "proposalType".refined,
-            options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
-            label = React.Fragment("Regular Proposal Type",
-                                   HelpIcon("proposal/main/proposal-type.md".refined)
+        <.div(
+          <.div(LucumaPrimeStyles.FormColumnCompact, LucumaPrimeStyles.LinearColumn)(
+            // Call for proposal selector
+            FormDropdownOptional(
+              id = "cfp".refined,
+              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+              value = selectedCfp,
+              options = cfpOptions,
+              onChange = _.map { cfp =>
+                proposalCfpView.mod(
+                  _.copy(call = cfp.some, proposalType = cfp.cfpType.defaultType.some)
+                )
+              }.orEmpty,
+              disabled = props.readonly,
+              modifiers = List(^.id := "cfp"),
+              clazz = ExploreStyles.WarningInput.when_(selectedCfp.isEmpty)
             ),
-            value = proposalTypeView.get.map(_.scienceSubtype).orNull,
-            onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
-            disabled = props.readonly,
-            modifiers = List(^.id := "proposalType")
-          ).when(hasSubtypes),
-          activationView.map(activationView =>
-            FormEnumDropdownView(
-              id = "too-activation".refined,
-              value = activationView,
-              label = React.Fragment(
-                "ToO Activation",
-                HelpIcon("proposal/main/too-activation.md".refined)
+            // Proposal type selector, visible when cfp is selected and has more than one subtpye
+            FormDropdown(
+              id = "proposalType".refined,
+              options = subtypes.foldMap(_.toList).map(st => SelectItem(st, st.shortName)),
+              label = React.Fragment("Regular Proposal Type",
+                                     HelpIcon("proposal/main/proposal-type.md".refined)
               ),
-              disabled = props.readonly
+              value = proposalTypeView.get.map(_.scienceSubtype).orNull,
+              onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
+              disabled = props.readonly,
+              modifiers = List(^.id := "proposalType")
+            ).when(hasSubtypes)
+          ),
+          selectedCfp.map(cfp =>
+            <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.CfpData)(
+              FormInfo(
+                s"${Constants.GppDateFormatter.format(cfp.active.start)} to ${Constants.GppDateFormatter.format(cfp.active.end)}",
+                "Observation Period"
+              ),
+              FormInfo(
+                cfp.partners.map(_.partner.longName).mkString(", "),
+                "Participating Partners"
+              ),
+              FormInfo(
+                cfp.instruments.map(_.longName).mkString(", "),
+                "Available Instruments"
+              ),
+              FormInfo(
+                cfp.coordinateLimits.north.format,
+                "Gemini North"
+              ),
+              FormInfo(
+                cfp.coordinateLimits.south.format,
+                "Gemini South"
+              )
             )
           )
         )

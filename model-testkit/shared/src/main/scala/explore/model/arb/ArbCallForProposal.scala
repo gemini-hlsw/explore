@@ -18,6 +18,7 @@ import org.scalacheck.Cogen.*
 import explore.model.CallForProposal
 import explore.model.CallPartner
 import lucuma.core.enums.CallForProposalsType
+import lucuma.core.enums.Instrument
 import lucuma.core.enums.Partner
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Semester
@@ -48,9 +49,19 @@ trait ArbCallForProposal {
         cfpType  <- arbitrary[CallForProposalsType]
         partners <- arbitrary[List[CallPartner]]
         deadline <- arbitrary[Option[Timestamp]]
+        instr    <- arbitrary[List[Instrument]]
         limits   <- arbitrary[CallCoordinatesLimits]
         active   <- arbitrary[DateInterval]
-      } yield CallForProposal(id, semester, title, cfpType, partners, deadline, limits, active)
+      } yield CallForProposal(id,
+                              semester,
+                              title,
+                              cfpType,
+                              partners,
+                              deadline,
+                              instr,
+                              limits,
+                              active
+      )
     }
 
   given Cogen[CallForProposal] =
@@ -59,8 +70,9 @@ trait ArbCallForProposal {
        Semester,
        NonEmptyString,
        CallForProposalsType,
-       Option[Timestamp],
        List[CallPartner],
+       Option[Timestamp],
+       List[Instrument],
        CallCoordinatesLimits,
        DateInterval
       )
@@ -69,8 +81,9 @@ trait ArbCallForProposal {
        p.semester,
        p.title,
        p.cfpType,
-       p.nonPartnerDeadline,
        p.partners,
+       p.nonPartnerDeadline,
+       p.instruments,
        p.coordinateLimits,
        p.active
       )
