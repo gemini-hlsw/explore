@@ -9,6 +9,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.StreamingClient
 import crystal.Pot
+import crystal.Throttler
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.*
@@ -28,6 +29,8 @@ import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL
 import queries.common.VisitQueriesGQL.*
+
+import scala.concurrent.duration.*
 
 trait SequenceTileHelper:
   protected case class SequenceData(
@@ -75,13 +78,17 @@ trait SequenceTileHelper:
             .query(obsId)
             .raiseGraphQLErrors
             .map(SequenceData.fromOdbResponse)
+      visitThrottler                           = Throttler.unsafe[IO](5.seconds)
+      refreshVisits                           <- useCallback(visitThrottler.submit(visits.refresh.to[IO]))
+      sequenceThrottler                        = Throttler.unsafe[IO](7.seconds)
+      refreshSequence                         <- useCallback(sequenceThrottler.submit(sequenceData.refresh.to[IO]))
       _                                       <-
         useEffectStreamResourceOnMount: // Subscribe to observation edits
           ObsQueriesGQL.ObservationEditSubscription
             .subscribe[IO](obsId.toObservationEditInput)
             .raiseFirstNoDataError
             .ignoreGraphQLErrors
-            .map(_.evalMap(_ => sequenceData.refresh.to[IO]))
+            .map(_.evalMap(_ => refreshSequence))
       _                                       <-
         useEffectStreamResourceOnMount: // Subscribe to target edits
           targetIds
@@ -90,7 +97,7 @@ trait SequenceTileHelper:
                 .subscribe[IO](targetId)
                 .raiseFirstNoDataError
                 .ignoreGraphQLErrors
-            .map(_.combineAll.evalMap(_ => sequenceData.refresh.to[IO]))
+            .map(_.combineAll.evalMap(_ => refreshSequence))
       _                                       <-
         useEffectStreamResourceOnMount: // Subscribe to step executed events
           VisitQueriesGQL.StepSubscription
@@ -99,7 +106,7 @@ trait SequenceTileHelper:
             .ignoreGraphQLErrors
             .map:
               _.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep)
-                .evalMap(_ => (sequenceData.refresh >> visits.refresh).to[IO])
+                .evalMap(_ => (refreshSequence >> refreshVisits).to[IO])
     yield LiveSequence(
       (visits.value, sequenceData.value).tupled,
       visits.isRunning || sequenceData.isRunning
