@@ -325,7 +325,7 @@ object ProposalDetailsBody:
         val raEnd    = limits.raEnd.toHourAngle.toDoubleHours
         val decStart = limits.decStart.toAngle.toSignedDoubleDegrees
         val decEnd   = limits.decEnd.toAngle.toSignedDoubleDegrees
-        f"$raStart%.1f ≤ RA ≤ $raEnd%.1fh    $decStart° ≤ Dec ≤ $decEnd°"
+        f"$raStart%.1fh ≤ RA ≤ $raEnd%.1fh    $decStart%.0f° ≤ Dec ≤ $decEnd%.0f°"
 
     <.form(
       <.div(ExploreStyles.ProposalDetailsGrid)(
