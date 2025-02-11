@@ -43,33 +43,38 @@ object SequenceTile extends SequenceTileHelper:
   ) =
     Tile(
       ObsTabTileIds.SequenceId.id,
-      s"Sequence"
+      "Sequence",
+      initialState = false
     )(
-      _ =>
+      isRefreshing =>
         Body(
           programId,
           obsId,
           asterismIds.toList,
-          sequenceChanged
+          sequenceChanged,
+          isRefreshing.set
         ),
-      (_, _) => Title(obsExecution)
+      (isRefreshing, _) => Title(obsExecution, isRefreshing.get)
     )
 
   private case class Body(
     programId:       Program.Id,
     obsId:           Observation.Id,
     targetIds:       List[Target.Id],
-    sequenceChanged: View[Pot[Unit]]
+    sequenceChanged: View[Pot[Unit]],
+    setIsRefreshing: Boolean => Callback
   ) extends ReactFnProps(Body)
 
   private object Body
       extends ReactFnComponent[Body](props =>
         for
-          sequenceData <- useLiveSequence(props.obsId, props.targetIds)
-          _            <- useEffectWithDeps(sequenceData): dataPot =>
+          liveSequence <- useLiveSequence(props.obsId, props.targetIds)
+          _            <- useEffectWithDeps(liveSequence.data): dataPot =>
                             props.sequenceChanged.set(dataPot.void)
+          _            <- useEffectWithDeps(liveSequence.refreshing):
+                            props.setIsRefreshing(_)
         yield props.sequenceChanged.get
-          .flatMap(_ => sequenceData)
+          .flatMap(_ => liveSequence.data)
           .renderPot(
             (visitsOpt, sequenceDataOpt) =>
               // TODO Show visits even if sequence data is not available
@@ -105,28 +110,31 @@ object SequenceTile extends SequenceTileHelper:
           )
       )
 
-  private case class Title(obsExecution: Pot[Execution]) extends ReactFnProps(Title)
+  private case class Title(obsExecution: Pot[Execution], isRefreshing: Boolean)
+      extends ReactFnProps(Title)
 
   private object Title
       extends ReactFnComponent[Title](props =>
         <.span(ExploreStyles.SequenceTileTitle)(
-          props.obsExecution.orSpinner: execution =>
-            val programTimeCharge = execution.programTimeCharge.value
+          props.obsExecution
+            .filter(_ => !props.isRefreshing)
+            .orSpinner: execution =>
+              val programTimeCharge = execution.programTimeCharge.value
 
-            val executed = timeDisplay("Executed", programTimeCharge)
+              val executed = timeDisplay("Executed", programTimeCharge)
 
-            execution.programTimeEstimate
-              .map: plannedTime =>
-                val total   = programTimeCharge +| plannedTime
-                val pending = timeDisplay("Pending", plannedTime)
-                val planned = timeDisplay("Planned", total)
+              execution.programTimeEstimate
+                .map: plannedTime =>
+                  val total   = programTimeCharge +| plannedTime
+                  val pending = timeDisplay("Pending", plannedTime)
+                  val planned = timeDisplay("Planned", total)
 
-                React.Fragment(
-                  HelpIcon("target/main/sequence-times.md".refined),
-                  planned,
-                  executed,
-                  pending
-                )
-              .getOrElse(executed)
+                  React.Fragment(
+                    HelpIcon("target/main/sequence-times.md".refined),
+                    planned,
+                    executed,
+                    pending
+                  )
+                .getOrElse(executed)
         )
       )

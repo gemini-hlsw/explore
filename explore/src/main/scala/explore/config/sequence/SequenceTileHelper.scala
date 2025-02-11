@@ -51,21 +51,26 @@ trait SequenceTileHelper:
     given Reusability[SequenceData] = Reusability.byEq
   end SequenceData
 
+  protected case class LiveSequence(
+    data:       Pot[(Option[ExecutionVisits], Option[SequenceData])],
+    refreshing: Boolean
+  )
+
   protected def useLiveSequence(
     obsId:     Observation.Id,
     targetIds: List[Target.Id]
-  ): HookResult[Pot[(Option[ExecutionVisits], Option[SequenceData])]] =
+  ): HookResult[LiveSequence] =
     for
       ctx                                     <- useContext(AppContext.ctx)
       given StreamingClient[IO, ObservationDB] = ctx.clients.odb
       visits                                  <-
-        useEffectResultOnMount:
+        useEffectKeepResultOnMount:
           ObservationVisits[IO]
             .query(obsId)
             .raiseGraphQLErrors
             .map(_.observation.flatMap(_.execution))
       sequenceData                            <-
-        useEffectResultOnMount:
+        useEffectKeepResultOnMount:
           SequenceQuery[IO]
             .query(obsId)
             .raiseGraphQLErrors
@@ -95,4 +100,7 @@ trait SequenceTileHelper:
             .map:
               _.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep)
                 .evalMap(_ => (sequenceData.refresh >> visits.refresh).to[IO])
-    yield (visits.value, sequenceData.value).tupled
+    yield LiveSequence(
+      (visits.value, sequenceData.value).tupled,
+      visits.isRunning || sequenceData.isRunning
+    )
