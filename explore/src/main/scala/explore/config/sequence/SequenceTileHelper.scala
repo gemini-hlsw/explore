@@ -16,6 +16,7 @@ import explore.model.AppContext
 import explore.model.Observation
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ObserveClass
+import lucuma.core.enums.StepStage
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
@@ -27,15 +28,14 @@ import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL
 import queries.common.VisitQueriesGQL.*
-import lucuma.core.enums.StepStage
 
 trait SequenceTileHelper:
-  case class SequenceData(
+  protected case class SequenceData(
     config:     InstrumentExecutionConfig,
     snPerClass: Map[ObserveClass, SignalToNoise]
   ) derives Eq
 
-  object SequenceData:
+  protected object SequenceData:
     def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
       data.observation.flatMap: obs =>
         obs.execution.config.map: config =>
@@ -51,7 +51,7 @@ trait SequenceTileHelper:
     given Reusability[SequenceData] = Reusability.byEq
   end SequenceData
 
-  def useLiveSequence(
+  protected def useLiveSequence(
     obsId:     Observation.Id,
     targetIds: List[Target.Id]
   ): HookResult[Pot[(Option[ExecutionVisits], Option[SequenceData])]] =
@@ -96,25 +96,3 @@ trait SequenceTileHelper:
               _.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep)
                 .evalMap(_ => (sequenceData.refresh >> visits.refresh).to[IO])
     yield (visits.value, sequenceData.value).tupled
-
-  // // TODO Move this to some util package
-  // import cats.effect.Async
-  // import cats.effect.Sync
-  // import cats.effect.Resource
-  // import fs2.concurrent.Topic
-  // import cats.effect.syntax.all.*
-  // extension [F[_]: Async, A](stream: fs2.Stream[F, A])
-  // /**
-  //  * Given a `Stream`, starts it in the background and allows the creation of multiple other
-  //  * `Streams` that mirror its output. Useful when we want multiple `Streams` to consume the same
-  //  * output.
-  //  *
-  //  * When we start the same stream multiple times, we have no guarantee that all the fibers will
-  //  * read all the elemnts. In particular, if the stream is backed by a queue, the fibers will
-  //  * steal elements from the queue, and each element will only make it to one of the fibers.
-  //  */
-  // def startPublisher: Resource[F, Resource[F, fs2.Stream[F, A]]] =
-  //   for
-  //     t <- Resource.make(Topic[F, A])(_.close.void)
-  //     _ <- stream.through(t.publish).compile.drain.background
-  //   yield Resource.suspend(Sync[F].delay(t.subscribeAwaitUnbounded))
