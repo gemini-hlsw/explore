@@ -11,6 +11,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.enums.CallForProposalsType
+import lucuma.core.enums.Instrument
 import lucuma.core.enums.Partner
 import lucuma.core.model.CallCoordinatesLimits
 import lucuma.core.model.CallForProposals
@@ -38,6 +39,7 @@ case class CallForProposal(
   cfpType:            CallForProposalsType,
   partners:           List[CallPartner],
   nonPartnerDeadline: Option[Timestamp],
+  instruments:        List[Instrument],
   coordinateLimits:   CallCoordinatesLimits,
   active:             DateInterval
 ) derives Eq,

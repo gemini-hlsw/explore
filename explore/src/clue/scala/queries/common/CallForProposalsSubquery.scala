@@ -26,6 +26,7 @@ object CallForProposalsSubquery
         partner
         submissionDeadline
       }
+      instruments
       coordinateLimits {
         north $SiteCoordinatesLimitsSubquery
         south $SiteCoordinatesLimitsSubquery
