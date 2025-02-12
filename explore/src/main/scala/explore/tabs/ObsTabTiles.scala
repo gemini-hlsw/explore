@@ -319,7 +319,7 @@ object ObsTabTiles:
           import ctx.given
           val (section, defaultLayout, layout) = roleLayouts.value
 
-          obsTimeOrNowPot.renderPot: obsTimeOrNow =>
+          obsTimeOrNowPot.value.renderPot: obsTimeOrNow =>
 
             val asterismIds: View[AsterismIds] =
               props.observation.model.zoom(Observation.scienceTargetIds)
@@ -420,7 +420,7 @@ object ObsTabTiles:
                 props.obsId,
                 props.obsTargets,
                 itcGraphQuerier,
-                itcGraphResults,
+                itcGraphResults.value,
                 props.globalPreferences
               )
 

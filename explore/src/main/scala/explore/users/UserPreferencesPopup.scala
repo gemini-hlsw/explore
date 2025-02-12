@@ -185,7 +185,7 @@ object UserPreferencesContent:
           )
         )
     // Rows
-    .useMemoBy((_, _, _, user, _, _) => user.toOption.foldMap(_.user.apiKeys)):
+    .useMemoBy((_, _, _, user, _, _) => user.value.toOption.foldMap(_.user.apiKeys)):
       (_, _, _, _, _, _) => apiKeys => apiKeys.sortBy(_.id)
     .useReactTableBy: (_, _, _, _, _, cols, rows) =>
       TableOptions(cols, rows, enableSorting = true, enableColumnResizing = false)
@@ -230,7 +230,7 @@ object UserPreferencesContent:
             .runAsyncAndForget
         }
 
-        user.renderPot(
+        user.value.renderPot(
           ssoUser => {
             val id   = ssoUser.user.id
             val name =

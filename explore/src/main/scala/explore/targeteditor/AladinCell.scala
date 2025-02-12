@@ -284,7 +284,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             .foldMap(
               _.set(AgsState.Calculating)
             ) *> props.guideStarSelection.set(GuideStarSelection.Default))
-            .whenA(props.needsAGS && candidates.toOption.flatten.nonEmpty)
+            .whenA(props.needsAGS && candidates.value.toOption.flatten.nonEmpty)
       // Request ags calculation
       .useEffectWithDepsBy((props, _, candidates, _, _, _, _) =>
         (props.asterism.baseTracking,
@@ -295,7 +295,7 @@ object AladinCell extends ModelOptics with AladinCommon:
          props.obsConf.flatMap(_.centralWavelength),
          props.obsTime,
          props.obsConf.flatMap(_.configuration),
-         candidates.toOption.flatten
+         candidates.value.toOption.flatten
         )
       ): (props, ctx, _, ags, _, _, _) =>
         case (tracking,
@@ -471,7 +471,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                         agsState.get,
                         props.modeSelected,
                         props.durationAvailable,
-                        candidates.nonEmpty
+                        candidates.value.nonEmpty
                       )
                     )
               else EmptyVdom

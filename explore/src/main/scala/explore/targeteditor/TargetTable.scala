@@ -136,7 +136,9 @@ object TargetTable extends AsterismModifier:
       // If vizTime is not set, change it to now
       .useEffectKeepResultWithDepsBy((p, _, _) => p.vizTime): (_, _, _) =>
         vizTime => IO(vizTime.getOrElse(Instant.now()))
-      .useMemoBy((props, _, _, vizTime) => (props.targetIds, props.obsAndTargets.get._2, vizTime)): // rows
+      .useMemoBy((props, _, _, vizTime) =>
+        (props.targetIds, props.obsAndTargets.get._2, vizTime.value)
+      ): // rows
         (_, _, _, _) =>
           case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
             targetIds.toList

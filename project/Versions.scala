@@ -8,7 +8,7 @@ object Versions {
   val circeGolden            = "0.3.0"
   val coulomb                = "0.8.0"
   val clue                   = "0.43.1"
-  val crystal                = "0.47.3"
+  val crystal                = "0.47.5"
   val discipline             = "1.7.0"
   val disciplineMUnit        = "2.0.0"
   val fs2                    = "3.11.0"
@@ -41,5 +41,5 @@ object Versions {
   val sbtLucuma              = "0.12.6"
   val scalaCollectionContrib = "0.4.0"
   val scalaJsDom             = "2.8.0"
-  val scalaJsReact           = "3.0.0-beta10"
+  val scalaJsReact           = "3.0.0-beta12"
 }
