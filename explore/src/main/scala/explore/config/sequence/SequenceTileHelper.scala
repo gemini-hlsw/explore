@@ -82,6 +82,7 @@ trait SequenceTileHelper:
       refreshVisits                           <- useCallback(visitThrottler.submit(visits.refresh.to[IO]))
       sequenceThrottler                        = Throttler.unsafe[IO](7.seconds)
       refreshSequence                         <- useCallback(sequenceThrottler.submit(sequenceData.refresh.to[IO]))
+      // Here we don't throttle the subscriptions since we are throttling the refreshes.
       _                                       <-
         useEffectStreamResourceOnMount: // Subscribe to observation edits
           ObsQueriesGQL.ObservationEditSubscription

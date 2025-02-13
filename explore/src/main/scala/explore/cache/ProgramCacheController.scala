@@ -13,6 +13,7 @@ import crystal.syntax.*
 import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
+import explore.model.Constants
 import explore.model.Execution
 import explore.model.Group
 import explore.model.Observation
@@ -292,17 +293,20 @@ object ProgramCacheController
               .subscribe[IO](props.programId.toProgramEditInput)
               .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
               .map:
-                _.broadcastThrough(
-                  _.map: data => // Replace program.
-                    ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some),
-                  allObservationsValidationsUpdate
-                )
+                _.throttle(Constants.SubscriptionThrottle)
+                  .broadcastThrough(
+                    _.map: data => // Replace program.
+                      ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some),
+                    allObservationsValidationsUpdate
+                  )
 
           val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             TargetQueriesGQL.ProgramTargetsDelta
               .subscribe[IO](props.programId.toTargetEditInput)
               .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
-              .map(_.map(data => modifyTargets(data.targetEdit)))
+              .map:
+                _.throttle(Constants.SubscriptionThrottle)
+                  .map(data => modifyTargets(data.targetEdit))
 
           val onlyExistingObs: Pipe[
             IO,
@@ -367,20 +371,22 @@ object ProgramCacheController
               .subscribe[IO](props.programId.toObservationEditInput)
               .handleGraphQLErrors(IO.println(_))
               .map:
-                _.broadcastThrough(
-                  _.map(data => modifyObservations(data.observationEdit)),
-                  onlyExistingObs.andThen(obsTimesUpdates)
-                )
+                _.throttle(Constants.SubscriptionThrottle)
+                  .broadcastThrough(
+                    _.map(data => modifyObservations(data.observationEdit)),
+                    onlyExistingObs.andThen(obsTimesUpdates)
+                  )
 
           val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.GroupEditSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
               .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
               .map:
-                _.broadcastThrough(
-                  _.map(data => modifyGroups(data.groupEdit)),
-                  onlyExistingGroups.andThen(groupTimeRangeUpdate)
-                )
+                _.throttle(Constants.SubscriptionThrottle)
+                  .broadcastThrough(
+                    _.map(data => modifyGroups(data.groupEdit)),
+                    onlyExistingGroups.andThen(groupTimeRangeUpdate)
+                  )
 
           val updateConfigurationRequests
             : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
@@ -388,10 +394,11 @@ object ProgramCacheController
               .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
               .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
               .map:
-                _.broadcastThrough(
-                  _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
-                  obsWorkflowUpdates
-                )
+                _.throttle(Constants.SubscriptionThrottle)
+                  .broadcastThrough(
+                    _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
+                    obsWorkflowUpdates
+                  )
 
           // Right now the programEdit subsription isn't fine grained enough to
           // differentiate what got updated, so we alway update all the attachments.
@@ -400,14 +407,17 @@ object ProgramCacheController
             ProgramQueriesGQL.ProgramEditAttachmentSubscription
               .subscribe[IO](props.programId.toProgramEditInput)
               .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
-              .map(_.map(data => modifyAttachments(data.programEdit)))
+              .map:
+                _.throttle(Constants.SubscriptionThrottle)
+                  .map(data => modifyAttachments(data.programEdit))
 
           val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
             ProgramQueriesGQL.ProgramInfoDelta
               .subscribe[IO]()
               .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
               .map:
-                _.map(data => modifyPrograms(data.programEdit))
+                _.throttle(Constants.SubscriptionThrottle)
+                  .map(data => modifyPrograms(data.programEdit))
 
           // TODO Handle errors, disable transparent resubscription upon connection loss.
           List(

@@ -9,6 +9,7 @@ import lucuma.core.math.Angle
 import java.time.Duration
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import scala.concurrent.duration.*
 
 trait Constants:
   val UTC                      = ZoneOffset.UTC
@@ -68,5 +69,7 @@ trait Constants:
   val BadTimingWindow    = "Review the dates on this timing window."
   val MissingInfoMsg     = "Not enough information to call ITC"
   val P1TemplatesUrl     = "https://www.gemini.edu/observing/phase-i/pit/pit-description#PDF"
+
+  val SubscriptionThrottle: FiniteDuration = 5.seconds
 
 object Constants extends Constants

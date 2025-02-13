@@ -10,12 +10,14 @@ import clue.StreamingClient
 import crystal.Pot
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.common.UserPreferencesQueries.GridLayouts
+import explore.model.Constants
 import explore.model.ExploreGridLayouts
 import explore.model.GlobalPreferences
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
 import explore.model.layout
 import explore.model.layout.LayoutsMap
+import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
@@ -64,17 +66,19 @@ object PreferencesCacheController
         .subscribe[IO](props.userId.show)
         .ignoreGraphQLErrors
         .map:
-          _.map: data =>
-            UserPreferences.gridLayouts
-              .modify(GridLayouts.updateLayouts(data.lucumaGridLayoutPositions))
+          _.throttle(Constants.SubscriptionThrottle)
+            .map: data =>
+              UserPreferences.gridLayouts
+                .modify(GridLayouts.updateLayouts(data.lucumaGridLayoutPositions))
 
     val updateGlobalPreferences: Resource[IO, fs2.Stream[IO, UserPreferences => UserPreferences]] =
       UserPreferencesUpdates
         .subscribe[IO](props.userId.show)
         .ignoreGraphQLErrors
         .map:
-          _.map: data =>
-            UserPreferences.globalPreferences
-              .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
+          _.throttle(Constants.SubscriptionThrottle)
+            .map: data =>
+              UserPreferences.globalPreferences
+                .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
 
     List(updateLayouts, updateGlobalPreferences).sequence.map(_.reduceLeft(_.merge(_)))
