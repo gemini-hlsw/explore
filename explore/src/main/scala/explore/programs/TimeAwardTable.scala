@@ -28,8 +28,6 @@ case class TimeAwardTable(allocations: CategoryAllocationList)
     extends ReactFnProps(TimeAwardTable.component)
 
 object TimeAwardTable:
-  private type Props = TimeAwardTable
-
   private case class Row(category: TimeAccountingCategory, allocations: BandAllocations):
     lazy val categoryTotal: TimeSpan = allocations.value.values.toList.combineAll
 
@@ -66,7 +64,7 @@ object TimeAwardTable:
       "Time Award",
       cell = cell => <.div(cell.value.description, cell.value.renderFlag),
       footer = _ => "Total"
-    ).setSize(90.toPx)
+    ).setSize(200.toPx)
 
   private def bandColDef(band: ScienceBand) =
     ColDef(
@@ -99,20 +97,19 @@ object TimeAwardTable:
       partnerColDef +: Enumerated[ScienceBand].all.map(bandColDef) :+ totalColDef
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useMemoBy(props => props.allocations)(_ => Row.fromCategoryAllocationList)
-      .useReactTableBy: (props, rows) =>
-        TableOptions(
-          columns,
-          rows,
-          getRowId = (row, _, _) => RowId(row._1.tag),
-          meta = TableMeta.fromCategoryAllocationList(props.allocations),
-          enableSorting = false,
-          enableColumnResizing = false
-        )
-      .render: (props, _, table) =>
-        PrimeTable(
-          table,
-          tableMod = ExploreStyles.ProgramTabTable
-        )
+    ScalaFnComponent[TimeAwardTable]: props =>
+      for {
+        rows  <- useMemo(props.allocations)(Row.fromCategoryAllocationList)
+        table <- useReactTable:
+                   TableOptions(
+                     columns,
+                     rows,
+                     getRowId = (row, _, _) => RowId(row._1.tag),
+                     meta = TableMeta.fromCategoryAllocationList(props.allocations),
+                     enableSorting = false,
+                     enableColumnResizing = false
+                   )
+      } yield PrimeTable(
+        table,
+        tableMod = ExploreStyles.ProgramTabTable
+      )

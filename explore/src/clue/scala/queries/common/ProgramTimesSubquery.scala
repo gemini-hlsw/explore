@@ -13,6 +13,7 @@ object ProgramTimesSubquery extends GraphQLSubquery.Typed[ObservationDB, Program
   override val subquery: String = s"""
     {
       timeEstimateRange $ProgramTimeRangeSubquery
+      timeEstimateBanded $BandedProgramTimeSubquery
       timeCharge $BandedProgramTimeSubquery
     }
   """

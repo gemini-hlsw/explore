@@ -9,8 +9,9 @@ import io.circe.Decoder
 import lucuma.core.util.TimeSpan
 
 case class ProgramTimes(
-  timeEstimateRange: Option[ProgramTimeRange],
-  timeCharge:        List[BandedProgramTime]
+  timeEstimateRange:  Option[ProgramTimeRange],
+  timeEstimateBanded: List[BandedProgramTime],
+  timeCharge:         List[BandedProgramTime]
 ) derives Eq,
       Decoder:
   val fullProgramTime: TimeSpan =
