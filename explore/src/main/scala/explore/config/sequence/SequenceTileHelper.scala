@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.StreamingClient
 import crystal.Pot
-import crystal.Throttler
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.*
@@ -68,20 +67,22 @@ trait SequenceTileHelper:
       given StreamingClient[IO, ObservationDB] = ctx.clients.odb
       visits                                  <-
         useEffectKeepResultOnMount:
-          ObservationVisits[IO]
-            .query(obsId)
-            .raiseGraphQLErrors
-            .map(_.observation.flatMap(_.execution))
+          IO.println("Refreshing visits") >>
+            ObservationVisits[IO]
+              .query(obsId)
+              .raiseGraphQLErrors
+              .map(_.observation.flatMap(_.execution))
       sequenceData                            <-
         useEffectKeepResultOnMount:
-          SequenceQuery[IO]
-            .query(obsId)
-            .raiseGraphQLErrors
-            .map(SequenceData.fromOdbResponse)
-      visitThrottler                           = Throttler.unsafe[IO](5.seconds)
-      refreshVisits                           <- useCallback(visitThrottler.submit(visits.refresh.to[IO]))
-      sequenceThrottler                        = Throttler.unsafe[IO](7.seconds)
-      refreshSequence                         <- useCallback(sequenceThrottler.submit(sequenceData.refresh.to[IO]))
+          IO.println("Refreshing sequence") >>
+            SequenceQuery[IO]
+              .query(obsId)
+              .raiseGraphQLErrors
+              .map(SequenceData.fromOdbResponse)
+      refreshVisits                           <-
+        useThrottledCallback(5.seconds)(visits.refresh.to[IO])
+      refreshSequence                         <-
+        useThrottledCallback(7.seconds)(sequenceData.refresh.to[IO])
       _                                       <-
         useEffectStreamResourceOnMount: // Subscribe to observation edits
           ObsQueriesGQL.ObservationEditSubscription

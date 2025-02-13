@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
+import crystal.Throttler
 import crystal.syntax.*
 import explore.givens.given
 import explore.model.Attachment
@@ -241,192 +242,199 @@ object ProgramCacheController
     : ProgramCacheController => Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] = {
     props =>
       // programUpdateChannel is just a sigal queue to trigger a (switchable) program times update.
-      Resource.make(Channel.unbounded[IO, Unit])(_.close.void).flatMap { programUpdateChannel =>
-        try {
-          import props.given
+      (
+        Resource.make(Channel.unbounded[IO, Unit])(_.close.void),
+        Resource.eval(Throttler[IO](5.seconds))
+      )
+        .flatMapN { (programUpdateChannel, programTimesThrottler) =>
+          try {
+            import props.given
 
-          // Signal a program times update.
-          val queryProgramTimes: IO[Unit] =
-            programUpdateChannel.send(()).void
+            // Signal a program times update.
+            val queryProgramTimes: IO[Unit] =
+              programTimesThrottler.submit:
+                programUpdateChannel.send(()).void
 
-          val updateProgramTimesStream: Stream[IO, ProgramSummaries => ProgramSummaries] =
-            programUpdateChannel.stream
-              .switchMap(_ => Stream.eval(updateProgramTimes(props.programId)))
+            val updateProgramTimesStream: Stream[IO, ProgramSummaries => ProgramSummaries] =
+              programUpdateChannel.stream
+                .switchMap(_ => Stream.eval(updateProgramTimes(props.programId)))
 
-          def updateObservationsWorkflows(
-            whereObservation: WhereObservation
-          )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
-            drain[
-              ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data.Observations.Matches,
-              Observation.Id,
-              ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data
-            ](
-              offset =>
-                ProgramSummaryQueriesGQL
-                  .ObservationsWorkflowQuery[IO]
-                  .query(whereObservation, offset.orUnassign)
-                  .raiseGraphQLErrors,
-              _.observations.matches,
-              _.observations.hasMore,
-              _.id
-            ).map:
-              _.map: m =>
-                ProgramSummaries.observations
-                  .modify:
-                    _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
-              .combineAll
+            def updateObservationsWorkflows(
+              whereObservation: WhereObservation
+            )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
+              drain[
+                ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data.Observations.Matches,
+                Observation.Id,
+                ProgramSummaryQueriesGQL.ObservationsWorkflowQuery.Data
+              ](
+                offset =>
+                  ProgramSummaryQueriesGQL
+                    .ObservationsWorkflowQuery[IO]
+                    .query(whereObservation, offset.orUnassign)
+                    .raiseGraphQLErrors,
+                _.observations.matches,
+                _.observations.hasMore,
+                _.id
+              ).map:
+                _.map: m =>
+                  ProgramSummaries.observations
+                    .modify:
+                      _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
+                .combineAll
 
-          // Changing the proposal's CfP can change the validations for observations,
-          // eg: coordinates bounds, so we requery them all.
-          // https://app.shortcut.com/lucuma/story/4412/update-warnings-without-page-reload
-          val allObservationsValidationsUpdate: Pipe[
-            IO,
-            ProgramQueriesGQL.ProgramEditDetailsSubscription.Data,
-            ProgramSummaries => ProgramSummaries
-          ] =
-            _.map(_.programEdit.value.proposal.flatMap(_.call.map(_.id))).changes.void
-              .evalMap(_ => updateObservationsWorkflows(props.programId.toWhereObservation))
+            // Changing the proposal's CfP can change the validations for observations,
+            // eg: coordinates bounds, so we requery them all.
+            // https://app.shortcut.com/lucuma/story/4412/update-warnings-without-page-reload
+            val allObservationsValidationsUpdate: Pipe[
+              IO,
+              ProgramQueriesGQL.ProgramEditDetailsSubscription.Data,
+              ProgramSummaries => ProgramSummaries
+            ] =
+              _.map(_.programEdit.value.proposal.flatMap(_.call.map(_.id))).changes.void
+                .throttle(5.seconds)
+                .evalMap(_ => updateObservationsWorkflows(props.programId.toWhereObservation))
 
-          val updateProgramDetails: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ProgramQueriesGQL.ProgramEditDetailsSubscription
-              .subscribe[IO](props.programId.toProgramEditInput)
-              .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
-              .map:
-                _.broadcastThrough(
-                  _.map: data => // Replace program.
-                    ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some),
-                  allObservationsValidationsUpdate
-                )
+            val updateProgramDetails
+              : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ProgramQueriesGQL.ProgramEditDetailsSubscription
+                .subscribe[IO](props.programId.toProgramEditInput)
+                .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
+                .map:
+                  _.broadcastThrough(
+                    _.map: data => // Replace program.
+                      ProgramSummaries.optProgramDetails.replace(data.programEdit.value.some),
+                    allObservationsValidationsUpdate
+                  )
 
-          val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            TargetQueriesGQL.ProgramTargetsDelta
-              .subscribe[IO](props.programId.toTargetEditInput)
-              .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
-              .map(_.map(data => modifyTargets(data.targetEdit)))
+            val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              TargetQueriesGQL.ProgramTargetsDelta
+                .subscribe[IO](props.programId.toTargetEditInput)
+                .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
+                .map(_.map(data => modifyTargets(data.targetEdit)))
 
-          val onlyExistingObs: Pipe[
-            IO,
-            ObsQueriesGQL.ProgramObservationsDelta.Data,
-            ObsQueriesGQL.ProgramObservationsDelta.Data
-          ] =
-            _.filter(_.observationEdit.meta.exists(_.existence === Existence.Present))
+            val onlyExistingObs: Pipe[
+              IO,
+              ObsQueriesGQL.ProgramObservationsDelta.Data,
+              ObsQueriesGQL.ProgramObservationsDelta.Data
+            ] =
+              _.filter(_.observationEdit.meta.exists(_.existence === Existence.Present))
 
-          val onlyExistingGroups: Pipe[
-            IO,
-            ProgramQueriesGQL.GroupEditSubscription.Data,
-            ProgramQueriesGQL.GroupEditSubscription.Data
-          ] =
-            _.filter(_.groupEdit.meta.exists(_.existence === Existence.Present))
+            val onlyExistingGroups: Pipe[
+              IO,
+              ProgramQueriesGQL.GroupEditSubscription.Data,
+              ProgramQueriesGQL.GroupEditSubscription.Data
+            ] =
+              _.filter(_.groupEdit.meta.exists(_.existence === Existence.Present))
 
-          val obsTimesUpdates: Pipe[
-            IO,
-            ObsQueriesGQL.ProgramObservationsDelta.Data,
-            ProgramSummaries => ProgramSummaries
-          ] = keyedSwitchEvalMap(
-            _.observationEdit.observationId,
-            data =>
-              updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
-          )
+            val obsTimesUpdates: Pipe[
+              IO,
+              ObsQueriesGQL.ProgramObservationsDelta.Data,
+              ProgramSummaries => ProgramSummaries
+            ] = keyedSwitchEvalMap(
+              _.observationEdit.observationId,
+              data =>
+                updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
+            )
 
-          extension (data: ProgramQueriesGQL.ConfigurationRequestSubscription.Data)
-            private def obsIdList: List[Observation.Id] =
-              data.configurationRequestEdit.configurationRequest.toList
-                .flatMap(_.applicableObservations)
+            extension (data: ProgramQueriesGQL.ConfigurationRequestSubscription.Data)
+              private def obsIdList: List[Observation.Id] =
+                data.configurationRequestEdit.configurationRequest.toList
+                  .flatMap(_.applicableObservations)
 
-          // We'll request updates to all the workflows at once. Since this
-          // is being updated due to the configuration request change, the workflows
-          // "shouldn't" be expensive and we're unlikely to need to cancel
-          // unless the same configuration request is edited so using the set
-          // of ids as a key should be OK.
-          val obsWorkflowUpdates: Pipe[
-            IO,
-            ProgramQueriesGQL.ConfigurationRequestSubscription.Data,
-            ProgramSummaries => ProgramSummaries
-          ] = keyedSwitchEvalMap(
-            _.obsIdList.toSet,
-            _.obsIdList match
-              case Nil             => IO.pure(identity)
-              case nonEmptyObsList =>
-                updateObservationsWorkflows(nonEmptyObsList.toWhereObservation)
-          )
+            // We'll request updates to all the workflows at once. Since this
+            // is being updated due to the configuration request change, the workflows
+            // "shouldn't" be expensive and we're unlikely to need to cancel
+            // unless the same configuration request is edited so using the set
+            // of ids as a key should be OK.
+            val obsWorkflowUpdates: Pipe[
+              IO,
+              ProgramQueriesGQL.ConfigurationRequestSubscription.Data,
+              ProgramSummaries => ProgramSummaries
+            ] = keyedSwitchEvalMap(
+              _.obsIdList.toSet,
+              _.obsIdList match
+                case Nil             => IO.pure(identity)
+                case nonEmptyObsList =>
+                  updateObservationsWorkflows(nonEmptyObsList.toWhereObservation)
+            )
 
-          val groupTimeRangeUpdate: Pipe[
-            IO,
-            ProgramQueriesGQL.GroupEditSubscription.Data,
-            ProgramSummaries => ProgramSummaries
-          ] = keyedSwitchEvalMap(
-            _.groupEdit.value.map(_.id),
-            _.groupEdit.value
-              .map: group =>
-                updateGroupTimeRange(group.id) <* queryProgramTimes
-              .getOrElse(IO(identity))
-          )
+            val groupTimeRangeUpdate: Pipe[
+              IO,
+              ProgramQueriesGQL.GroupEditSubscription.Data,
+              ProgramSummaries => ProgramSummaries
+            ] = keyedSwitchEvalMap(
+              _.groupEdit.value.map(_.id),
+              _.groupEdit.value
+                .map: group =>
+                  updateGroupTimeRange(group.id) <* queryProgramTimes
+                .getOrElse(IO(identity))
+            )
 
-          val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ObsQueriesGQL.ProgramObservationsDelta
-              .subscribe[IO](props.programId.toObservationEditInput)
-              .handleGraphQLErrors(IO.println(_))
-              .map:
-                _.broadcastThrough(
-                  _.map(data => modifyObservations(data.observationEdit)),
-                  onlyExistingObs.andThen(obsTimesUpdates)
-                )
+            val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ObsQueriesGQL.ProgramObservationsDelta
+                .subscribe[IO](props.programId.toObservationEditInput)
+                .handleGraphQLErrors(IO.println(_))
+                .map:
+                  _.broadcastThrough(
+                    _.map(data => modifyObservations(data.observationEdit)),
+                    onlyExistingObs.andThen(obsTimesUpdates)
+                  )
 
-          val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ProgramQueriesGQL.GroupEditSubscription
-              .subscribe[IO](props.programId.toProgramEditInput)
-              .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
-              .map:
-                _.broadcastThrough(
-                  _.map(data => modifyGroups(data.groupEdit)),
-                  onlyExistingGroups.andThen(groupTimeRangeUpdate)
-                )
+            val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ProgramQueriesGQL.GroupEditSubscription
+                .subscribe[IO](props.programId.toProgramEditInput)
+                .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
+                .map:
+                  _.broadcastThrough(
+                    _.map(data => modifyGroups(data.groupEdit)),
+                    onlyExistingGroups.andThen(groupTimeRangeUpdate)
+                  )
 
-          val updateConfigurationRequests
-            : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ProgramQueriesGQL.ConfigurationRequestSubscription
-              .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
-              .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
-              .map:
-                _.broadcastThrough(
-                  _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
-                  obsWorkflowUpdates
-                )
+            val updateConfigurationRequests
+              : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ProgramQueriesGQL.ConfigurationRequestSubscription
+                .subscribe[IO](ConfigurationRequestEditInput(props.programId.assign))
+                .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
+                .map:
+                  _.broadcastThrough(
+                    _.map(data => modifyConfigurationRequests(data.configurationRequestEdit)),
+                    obsWorkflowUpdates
+                  )
 
-          // Right now the programEdit subsription isn't fine grained enough to
-          // differentiate what got updated, so we alway update all the attachments.
-          // Hopefully this will change in the future.
-          val updateAttachments: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ProgramQueriesGQL.ProgramEditAttachmentSubscription
-              .subscribe[IO](props.programId.toProgramEditInput)
-              .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
-              .map(_.map(data => modifyAttachments(data.programEdit)))
+            // Right now the programEdit subsription isn't fine grained enough to
+            // differentiate what got updated, so we alway update all the attachments.
+            // Hopefully this will change in the future.
+            val updateAttachments: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ProgramQueriesGQL.ProgramEditAttachmentSubscription
+                .subscribe[IO](props.programId.toProgramEditInput)
+                .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
+                .map(_.map(data => modifyAttachments(data.programEdit)))
 
-          val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-            ProgramQueriesGQL.ProgramInfoDelta
-              .subscribe[IO]()
-              .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
-              .map:
-                _.map(data => modifyPrograms(data.programEdit))
+            val updatePrograms: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ProgramQueriesGQL.ProgramInfoDelta
+                .subscribe[IO]()
+                .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
+                .map:
+                  _.map(data => modifyPrograms(data.programEdit))
 
-          // TODO Handle errors, disable transparent resubscription upon connection loss.
-          List(
-            updateProgramDetails,
-            updateTargets,
-            updateObservations,
-            updateGroups,
-            updateAttachments,
-            updatePrograms,
-            updateConfigurationRequests
-          ).sequence.map: updateStreams =>
-            (updateStreams :+ updateProgramTimesStream)
-              .reduceLeft(_.merge(_))
-              .reduceWithin(150.millis, _ andThen _) // Group updates within 150ms
-        } catch {
-          case t: Throwable =>
-            println("ERROR INITIALIZING ProgramCache!")
-            t.printStackTrace()
-            throw t
+            // TODO Handle errors, disable transparent resubscription upon connection loss.
+            List(
+              updateProgramDetails,
+              updateTargets,
+              updateObservations,
+              updateGroups,
+              updateAttachments,
+              updatePrograms,
+              updateConfigurationRequests
+            ).sequence.map: updateStreams =>
+              (updateStreams :+ updateProgramTimesStream)
+                .reduceLeft(_.merge(_))
+                .reduceWithin(150.millis, _ andThen _) // Group updates within 150ms
+          } catch {
+            case t: Throwable =>
+              println("ERROR INITIALIZING ProgramCache!")
+              t.printStackTrace()
+              throw t
+          }
         }
-      }
   }

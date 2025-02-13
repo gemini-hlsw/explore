@@ -16,12 +16,15 @@ import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
 import explore.model.layout
 import explore.model.layout.LayoutsMap
+import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import queries.common.UserPreferencesQueriesGQL.UserGridLayoutUpdates
 import queries.common.UserPreferencesQueriesGQL.UserPreferencesUpdates
 import queries.schemas.UserPreferencesDB
+
+import scala.concurrent.duration.*
 
 case class PreferencesCacheController(
   userId:            User.Id,
@@ -64,7 +67,7 @@ object PreferencesCacheController
         .subscribe[IO](props.userId.show)
         .ignoreGraphQLErrors
         .map:
-          _.map: data =>
+          _.throttle(5.seconds).map: data =>
             UserPreferences.gridLayouts
               .modify(GridLayouts.updateLayouts(data.lucumaGridLayoutPositions))
 
@@ -73,7 +76,7 @@ object PreferencesCacheController
         .subscribe[IO](props.userId.show)
         .ignoreGraphQLErrors
         .map:
-          _.map: data =>
+          _.throttle(5.seconds).map: data =>
             UserPreferences.globalPreferences
               .modify(_ => data.lucumaUserPreferencesByPk.getOrElse(GlobalPreferences.Default))
 
