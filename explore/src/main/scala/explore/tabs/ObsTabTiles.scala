@@ -52,6 +52,7 @@ import explore.schedulingWindows.SchedulingWindowsTile
 import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
 import explore.undo.UndoSetter
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -92,6 +93,7 @@ import queries.schemas.odb.ObsQueries
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import scala.concurrent.duration.*
 
 case class ObsTabTiles(
   vault:             Option[UserVault],
@@ -149,9 +151,10 @@ case class ObsTabTiles(
 
   def obsIQLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
-      percentileImageQuality(constraintSet.get.imageQuality.toArcSeconds.toValue[BigDecimal],
-                             cw.value,
-                             minimumAirmass(dec, site)
+      percentileImageQuality(
+        constraintSet.get.imageQuality.toArcSeconds.toValue[BigDecimal],
+        cw.value,
+        minimumAirmass(dec, site)
       )
     )
 
@@ -243,7 +246,9 @@ object ObsTabTiles:
             )
           // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
           .reRunOnResourceSignals:
-            ObservationEditSubscription.subscribe[IO](props.obsId.toObservationEditInput)
+            ObservationEditSubscription
+              .subscribe[IO](props.obsId.toObservationEditInput)
+              .map(_.throttle(5.seconds))
       // Ags state
       .useStateView[AgsState](AgsState.Idle)
       // the configuration the user has selected from the spectroscopy modes table, if any
