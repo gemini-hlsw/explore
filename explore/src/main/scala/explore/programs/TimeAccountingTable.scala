@@ -31,12 +31,12 @@ object TimeAccountingTable:
   private type DataMap     = Map[Option[ScienceBand], Either[TimeSpan, BigDecimal]]
 
   extension (e: Either[TimeSpan, BigDecimal])
-    def toCell: VdomNode = e match
+    private def toCell: VdomNode = e match
       case Left(ts)  => TimeSpanView(ts, TimeSpanFormatter.DecimalHours)
       case Right(bd) => f"${bd * 100}%.1f%%"
 
   extension (l: List[BandedProgramTime])
-    def toTimeSpanMap: TimeSpanMap =
+    private def toTimeSpanMap: TimeSpanMap =
       l.map(bpt => bpt.band -> bpt.time.value).toMap
 
   private val DataColumnKeys: List[Option[ScienceBand]] =
