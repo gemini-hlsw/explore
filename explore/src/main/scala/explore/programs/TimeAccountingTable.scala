@@ -3,7 +3,6 @@
 
 package explore.programs
 
-import cats.Monoid
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.BandedProgramTime
@@ -30,8 +29,6 @@ case class TimeAccountingTable(programTimes: ProgramTimes)
 object TimeAccountingTable:
   private type TimeSpanMap = Map[Option[ScienceBand], TimeSpan]
   private type DataMap     = Map[Option[ScienceBand], Either[TimeSpan, BigDecimal]]
-
-  extension [K, V: Monoid](map: Map[K, V]) def getM(key: K): V = map.getOrElse(key, Monoid[V].empty)
 
   extension (e: Either[TimeSpan, BigDecimal])
     def toCell: VdomNode = e match
@@ -62,7 +59,7 @@ object TimeAccountingTable:
 
     private def fromTimeSpanMap(map: TimeSpanMap, label: String): Row =
       val data: DataMap   =
-        DataColumnKeys.map(osb => (osb, map.getM(osb).asLeft)).toMap
+        DataColumnKeys.map(osb => (osb, map.get(osb).orEmpty.asLeft)).toMap
       val total: TimeSpan = calcTotal(map)
       Row(label, data, total.asLeft)
 
@@ -72,7 +69,9 @@ object TimeAccountingTable:
     ): Row =
       val data: DataMap     =
         DataColumnKeys
-          .map(osb => (osb, calcPercent(plannedMap.getM(osb), usedMap.getM(osb)).asRight))
+          .map(osb =>
+            (osb, calcPercent(plannedMap.get(osb).orEmpty, usedMap.get(osb).orEmpty).asRight)
+          )
           .toMap
       val total: BigDecimal =
         calcPercent(calcTotal(plannedMap), calcTotal(usedMap))
@@ -81,7 +80,7 @@ object TimeAccountingTable:
     def remainRow(plannedMap: TimeSpanMap, usedMap: TimeSpanMap): Row =
       val remainMap: Map[Option[ScienceBand], TimeSpan] =
         DataColumnKeys
-          .map(osb => (osb, plannedMap.getM(osb) -| usedMap.getM(osb)))
+          .map(osb => (osb, plannedMap.get(osb).orEmpty -| usedMap.get(osb).orEmpty))
           .toMap
       fromTimeSpanMap(remainMap, "Remain")
 
