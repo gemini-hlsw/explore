@@ -42,11 +42,12 @@ import scala.collection.immutable.TreeSeqMap
 
 object ConstraintsSummaryTile:
   def apply(
-    userId:         Option[User.Id],
-    programId:      Program.Id,
-    constraintList: ConstraintGroupList,
-    expandedIds:    View[SortedSet[ObsIdSet]],
-    backButton:     VdomNode
+    userId:                  Option[User.Id],
+    programId:               Program.Id,
+    constraintList:          ConstraintGroupList,
+    calibrationObservations: Set[Observation.Id],
+    expandedIds:             View[SortedSet[ObsIdSet]],
+    backButton:              VdomNode
   ) =
     Tile(
       ConstraintTabTileIds.Summary.id,
@@ -57,7 +58,13 @@ object ConstraintsSummaryTile:
       canMaximize = false
     )(
       tileState =>
-        Body(userId, programId, constraintList, expandedIds, tileState.zoom(TileState.value)),
+        Body(userId,
+             programId,
+             constraintList,
+             calibrationObservations,
+             expandedIds,
+             tileState.zoom(TileState.value)
+        ),
       (tileState, _) =>
         ColumnSelectorInTitle(SelectableColumnNames.toList, tileState.zoom(TileState.value))
     )
@@ -103,16 +110,15 @@ object ConstraintsSummaryTile:
     )
 
   private case class Body(
-    userId:           Option[User.Id],
-    programId:        Program.Id,
-    constraintList:   ConstraintGroupList,
-    expandedIds:      View[SortedSet[ObsIdSet]],
-    columnVisibility: View[ColumnVisibility]
+    userId:                  Option[User.Id],
+    programId:               Program.Id,
+    constraintList:          ConstraintGroupList,
+    calibrationObservations: Set[Observation.Id],
+    expandedIds:             View[SortedSet[ObsIdSet]],
+    columnVisibility:        View[ColumnVisibility]
   ) extends ReactFnProps(Body.component)
 
   private object Body:
-    private type Props = Body
-
     private val ColDef = ColumnDef[ConstraintGroup]
 
     private val ColumnClasses: Map[ColumnId, Css] = Map(
@@ -120,160 +126,179 @@ object ConstraintsSummaryTile:
     )
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .useMemoBy((_, _) => ()): // Cols never changes, but needs access to props
-          (props, ctx) =>
-            _ =>
-              def column[V](id: ColumnId, accessor: ConstraintGroup => V)
-                : ColumnDef.Single.NoMeta[ConstraintGroup, V] =
-                ColDef(id, accessor, ColumnNames(id))
+      ScalaFnComponent[Body]: props =>
+        for {
+          ctx   <- useContext(AppContext.ctx)
+          cols  <- useMemo(()): // Cols never changes, but needs access to props
+                     _ =>
+                       def column[V](
+                         id:       ColumnId,
+                         accessor: ConstraintGroup => V
+                       ): ColumnDef.Single.NoMeta[ConstraintGroup, V] =
+                         ColDef(id, accessor, ColumnNames(id))
 
-              def goToObsSet(obsIdSet: ObsIdSet): Callback =
-                ctx.pushPage((AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some)
+                       def goToObsSet(obsIdSet: ObsIdSet): Callback =
+                         ctx.pushPage(
+                           (AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some
+                         )
 
-              def obsSetUrl(obsIdSet: ObsIdSet): String =
-                ctx.pageUrl((AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some)
+                       def obsSetUrl(obsIdSet: ObsIdSet): String =
+                         ctx.pageUrl(
+                           (AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some
+                         )
 
-              def goToObs(obsId: Observation.Id): Callback =
-                ctx.pushPage((AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some)
+                       def goToObs(obsId: Observation.Id): Callback =
+                         ctx.pushPage(
+                           (AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some
+                         )
 
-              def obsUrl(obsId: Observation.Id): String =
-                ctx.pageUrl((AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some)
+                       def obsUrl(obsId: Observation.Id): String =
+                         ctx.pageUrl(
+                           (AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some
+                         )
 
-              List(
-                column(EditColumnId, ConstraintGroup.obsIds.get)
-                  .setCell(cell =>
-                    <.a(^.href := obsSetUrl(cell.value),
-                        ^.onClick ==> (_.preventDefaultCB *> goToObsSet(cell.value)),
-                        Icons.Edit
-                    )
-                  )
-                  .setEnableSorting(false),
-                column(
-                  IQColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
-                )
-                  .setCell(_.value.label)
-                  .sortableBy(_.label),
-                column(
-                  CCColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
-                )
-                  .setCell(_.value.label)
-                  .sortableBy(_.label),
-                column(
-                  BGColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
-                )
-                  .setCell(_.value.label)
-                  .sortableBy(_.label),
-                column(
-                  WVColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
-                )
-                  .setCell(_.value.label)
-                  .sortableBy(_.label),
-                column(
-                  MinAMColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                )
-                  .setCell(_.value match
-                    case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
-                    case ElevationRange.HourAngle(_, _) => ""
-                  )
-                  .sortableBy(_ match
-                    case ElevationRange.AirMass(min, _) => min.value
-                    case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
-                  ),
-                column(
-                  MaxAMColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                )
-                  .setCell(_.value match
-                    case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
-                    case ElevationRange.HourAngle(_, _) => ""
-                  )
-                  .sortableBy(_ match
-                    case ElevationRange.AirMass(_, max) => max.value
-                    case ElevationRange.HourAngle(_, _) => ElevationRange.AirMass.MinValue - 1
-                  ),
-                column(
-                  MinHAColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                )
-                  .setCell(_.value match
-                    case ElevationRange.AirMass(_, _)     => ""
-                    case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
-                  )
-                  .sortableBy(_ match
-                    case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
-                    case ElevationRange.HourAngle(min, _) => min.value
-                  ),
-                column(
-                  MaxHAColumnId,
-                  ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                )
-                  .setCell(_.value match
-                    case ElevationRange.AirMass(_, _)     => ""
-                    case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
-                  )
-                  .sortableBy(_ match
-                    case ElevationRange.AirMass(_, _)     => ElevationRange.HourAngle.MinHour - 1
-                    case ElevationRange.HourAngle(_, max) => max.value
-                  ),
-                column(CountColumnId, _.obsIds.length),
-                column(ObservationsColumnId, ConstraintGroup.obsIds.get)
-                  .setCell(cell =>
-                    <.span(
-                      cell.value.toSortedSet.toList
-                        .map(obsId =>
-                          <.a(
-                            ^.href := obsUrl(obsId),
-                            ^.onClick ==> (_.preventDefaultCB
-                              >> goToObs(obsId)
-                              >> props.expandedIds.mod(_ + cell.value)
-                              >> goToObsSet(ObsIdSet.one(obsId))),
-                            obsId.toString
-                          )
-                        )
-                        .mkReactFragment(", ")
-                    )
-                  )
-                  .setEnableSorting(false)
-              )
-        // Memo rows
-        .useMemoBy((props, _, _) => props.constraintList): (_, _, _) =>
-          _.map(ConstraintGroup.fromTuple).toList.sortBy(_.constraintSet.summaryString)
-        .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
-          import ctx.given
+                       List(
+                         column(EditColumnId, ConstraintGroup.obsIds.get)
+                           .setCell(cell =>
+                             <.a(^.href := obsSetUrl(cell.value),
+                                 ^.onClick ==> (_.preventDefaultCB *> goToObsSet(cell.value)),
+                                 Icons.Edit
+                             )
+                           )
+                           .setEnableSorting(false),
+                         column(
+                           IQColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
+                         )
+                           .setCell(_.value.label)
+                           .sortableBy(_.label),
+                         column(
+                           CCColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
+                         )
+                           .setCell(_.value.label)
+                           .sortableBy(_.label),
+                         column(
+                           BGColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
+                         )
+                           .setCell(_.value.label)
+                           .sortableBy(_.label),
+                         column(
+                           WVColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
+                         )
+                           .setCell(_.value.label)
+                           .sortableBy(_.label),
+                         column(
+                           MinAMColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+                         )
+                           .setCell(_.value match
+                             case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
+                             case ElevationRange.HourAngle(_, _) => ""
+                           )
+                           .sortableBy(_ match
+                             case ElevationRange.AirMass(min, _) => min.value
+                             case ElevationRange.HourAngle(_, _) =>
+                               ElevationRange.AirMass.MinValue - 1
+                           ),
+                         column(
+                           MaxAMColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+                         )
+                           .setCell(_.value match
+                             case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
+                             case ElevationRange.HourAngle(_, _) => ""
+                           )
+                           .sortableBy(_ match
+                             case ElevationRange.AirMass(_, max) => max.value
+                             case ElevationRange.HourAngle(_, _) =>
+                               ElevationRange.AirMass.MinValue - 1
+                           ),
+                         column(
+                           MinHAColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+                         )
+                           .setCell(_.value match
+                             case ElevationRange.AirMass(_, _)     => ""
+                             case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
+                           )
+                           .sortableBy(_ match
+                             case ElevationRange.AirMass(_, _)     =>
+                               ElevationRange.HourAngle.MinHour - 1
+                             case ElevationRange.HourAngle(min, _) => min.value
+                           ),
+                         column(
+                           MaxHAColumnId,
+                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+                         )
+                           .setCell(_.value match
+                             case ElevationRange.AirMass(_, _)     => ""
+                             case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
+                           )
+                           .sortableBy(_ match
+                             case ElevationRange.AirMass(_, _)     =>
+                               ElevationRange.HourAngle.MinHour - 1
+                             case ElevationRange.HourAngle(_, max) => max.value
+                           ),
+                         column(CountColumnId, _.obsIds.length),
+                         column(ObservationsColumnId, ConstraintGroup.obsIds.get)
+                           .setCell(cell =>
+                             <.span(
+                               cell.value.toSortedSet.toList
+                                 .map(obsId =>
+                                   <.a(
+                                     ^.href := obsUrl(obsId),
+                                     ^.onClick ==> (_.preventDefaultCB
+                                       >> goToObs(obsId)
+                                       >> props.expandedIds.mod(_ + cell.value)
+                                       >> goToObsSet(ObsIdSet.one(obsId))),
+                                     obsId.toString
+                                   )
+                                 )
+                                 .mkReactFragment(", ")
+                             )
+                           )
+                           .setEnableSorting(false)
+                       )
+          // Memo rows
+          rows  <- useMemo((props.constraintList, props.calibrationObservations)): (cl, calibs) =>
+                     cl
+                       .map: (obsIdSet, cs) =>
+                         (obsIdSet -- calibs)
+                           .map: filtered =>
+                             ConstraintGroup(cs, filtered)
+                       .toList
+                       .flattenOption
+                       .sortBy(_.constraintSet.summaryString)
+          table <- useReactTableWithStateStore:
+                     import ctx.given
 
-          TableOptionsWithStateStore(
-            TableOptions(
-              cols,
-              rows,
-              getRowId = (row, _, _) => RowId(row.constraintSet.toString),
-              enableSorting = true,
-              enableColumnResizing = true,
-              columnResizeMode = ColumnResizeMode.OnChange,
-              state = PartialTableState(columnVisibility = props.columnVisibility.get),
-              onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod)
-            ),
-            TableStore(props.userId, TableId.ConstraintsSummary, cols)
+                     TableOptionsWithStateStore(
+                       TableOptions(
+                         cols,
+                         rows,
+                         getRowId = (row, _, _) => RowId(row.constraintSet.toString),
+                         enableSorting = true,
+                         enableColumnResizing = true,
+                         columnResizeMode = ColumnResizeMode.OnChange,
+                         state = PartialTableState(columnVisibility = props.columnVisibility.get),
+                         onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod)
+                       ),
+                       TableStore(props.userId, TableId.ConstraintsSummary, cols)
+                     )
+        } yield <.div(
+          PrimeTable(
+            table,
+            striped = true,
+            compact = Compact.Very,
+            tableMod = ExploreStyles.ExploreTable,
+            emptyMessage = <.div("No constraints present"),
+            headerCellMod = headerCell =>
+              ColumnClasses
+                .get(headerCell.column.id)
+                .orEmpty |+| ExploreStyles.StickyHeader,
+            cellMod = cell => ColumnClasses.get(cell.column.id).orEmpty
           )
-        .render: (props, _, _, _, table) =>
-          <.div(
-            PrimeTable(
-              table,
-              striped = true,
-              compact = Compact.Very,
-              tableMod = ExploreStyles.ExploreTable,
-              emptyMessage = <.div("No constraints present"),
-              headerCellMod = headerCell =>
-                ColumnClasses
-                  .get(headerCell.column.id)
-                  .orEmpty |+| ExploreStyles.StickyHeader,
-              cellMod = cell => ColumnClasses.get(cell.column.id).orEmpty
-            )
-          )
+        )

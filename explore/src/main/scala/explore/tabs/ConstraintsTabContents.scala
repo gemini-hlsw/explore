@@ -176,6 +176,7 @@ object ConstraintsTabContents extends TwoPanels:
                 props.userId,
                 props.programId,
                 props.programSummaries.get.constraintGroups,
+                props.programSummaries.get.calibrationObservations,
                 props.expandedIds,
                 backButton
               )
