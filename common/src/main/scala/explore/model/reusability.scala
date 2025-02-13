@@ -8,7 +8,6 @@ import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
-import explore.model.IsActive
 import explore.model.enums.AgsState
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
@@ -72,6 +71,7 @@ object reusability:
   given Reusability[ProgramInfo]             = Reusability.byEq
   given Reusability[ProgramDetails]          = Reusability.byEq
   given Reusability[Execution]               = Reusability.byEq
+  given Reusability[BandedProgramTime]       = Reusability.byEq
 
   /**
    */
