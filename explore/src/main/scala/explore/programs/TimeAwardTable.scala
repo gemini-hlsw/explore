@@ -35,17 +35,8 @@ object TimeAwardTable:
     def fromCategoryAllocationList(allocations: CategoryAllocationList): List[Row] =
       allocations.value.toList.map(Row(_, _))
 
-  private case class TableMeta(totalByBand: Map[ScienceBand, TimeSpan]):
-    lazy val grandTotal: TimeSpan = totalByBand.values.toList.combineAll
-
-  private object TableMeta:
-    def fromCategoryAllocationList(allocations: CategoryAllocationList): TableMeta =
-      TableMeta(
-        totalByBand = Enumerated[ScienceBand].all
-          .map: band =>
-            band -> allocations.value.values.flatMap(_.value.get(band)).toList.combineAll
-          .toMap
-      )
+  private case class TableMeta(totalByBand: BandAllocations):
+    lazy val grandTotal: TimeSpan = totalByBand.total
 
   private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
 
@@ -74,7 +65,7 @@ object TimeAwardTable:
       cell = cell => TimeSpanView(cell.value, TimeSpanFormatter.DecimalHours),
       footer = footer =>
         TimeSpanView(
-          footer.table.options.meta.foldMap(_.totalByBand(band)),
+          footer.table.options.meta.foldMap(_.totalByBand.value.get(band).orEmpty),
           TimeSpanFormatter.DecimalHours
         )
     ).setSize(90.toPx)
@@ -105,7 +96,7 @@ object TimeAwardTable:
                      columns,
                      rows,
                      getRowId = (row, _, _) => RowId(row._1.tag),
-                     meta = TableMeta.fromCategoryAllocationList(props.allocations),
+                     meta = TableMeta(props.allocations.totalByBand),
                      enableSorting = false,
                      enableColumnResizing = false
                    )
