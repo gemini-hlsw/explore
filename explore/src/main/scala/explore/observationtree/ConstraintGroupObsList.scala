@@ -46,20 +46,19 @@ import org.typelevel.log4cats.Logger
 import scala.collection.immutable.SortedSet
 
 case class ConstraintGroupObsList(
-  programId:               Program.Id,
-  observations:            UndoSetter[ObservationList],
-  undoer:                  Undoer,
-  constraintGroups:        ConstraintGroupList,
-  calibrationObservations: Set[Observation.Id],
-  obsExecutions:           ObservationExecutionMap,
-  focusedObsSet:           Option[ObsIdSet],
-  setSummaryPanel:         Callback,
-  expandedIds:             View[SortedSet[ObsIdSet]],
-  copyCallback:            Callback,
-  pasteCallback:           Callback,
-  clipboardObsContents:    Option[ObsIdSet],
-  allocatedScienceBands:   SortedSet[ScienceBand],
-  readonly:                Boolean
+  programId:             Program.Id,
+  observations:          UndoSetter[ObservationList],
+  undoer:                Undoer,
+  constraintGroups:      ConstraintGroupList,
+  obsExecutions:         ObservationExecutionMap,
+  focusedObsSet:         Option[ObsIdSet],
+  setSummaryPanel:       Callback,
+  expandedIds:           View[SortedSet[ObsIdSet]],
+  copyCallback:          Callback,
+  pasteCallback:         Callback,
+  clipboardObsContents:  Option[ObsIdSet],
+  allocatedScienceBands: SortedSet[ScienceBand],
+  readonly:              Boolean
 ) extends ReactFnProps[ConstraintGroupObsList](ConstraintGroupObsList.component)
     with ViewCommon:
   private val copyDisabled: Boolean  = focusedObsSet.isEmpty
@@ -185,13 +184,7 @@ object ConstraintGroupObsList:
       import ctx.given
 
       val constraintGroups: List[(ObsIdSet, ConstraintSet)] =
-        props.constraintGroups
-          .map: (obsIdSet, constraintGroups) =>
-            (obsIdSet -- props.calibrationObservations).map: filteredObsIdSet =>
-              (filteredObsIdSet, constraintGroups)
-          .toList
-          .flattenOption
-          .sortBy(_._2.summaryString)
+        props.constraintGroups.toList.sortBy(_._2.summaryString)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(

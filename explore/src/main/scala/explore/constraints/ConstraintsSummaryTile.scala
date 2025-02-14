@@ -42,12 +42,11 @@ import scala.collection.immutable.TreeSeqMap
 
 object ConstraintsSummaryTile:
   def apply(
-    userId:                  Option[User.Id],
-    programId:               Program.Id,
-    constraintList:          ConstraintGroupList,
-    calibrationObservations: Set[Observation.Id],
-    expandedIds:             View[SortedSet[ObsIdSet]],
-    backButton:              VdomNode
+    userId:         Option[User.Id],
+    programId:      Program.Id,
+    constraintList: ConstraintGroupList,
+    expandedIds:    View[SortedSet[ObsIdSet]],
+    backButton:     VdomNode
   ) =
     Tile(
       ConstraintTabTileIds.Summary.id,
@@ -58,13 +57,7 @@ object ConstraintsSummaryTile:
       canMaximize = false
     )(
       tileState =>
-        Body(userId,
-             programId,
-             constraintList,
-             calibrationObservations,
-             expandedIds,
-             tileState.zoom(TileState.value)
-        ),
+        Body(userId, programId, constraintList, expandedIds, tileState.zoom(TileState.value)),
       (tileState, _) =>
         ColumnSelectorInTitle(SelectableColumnNames.toList, tileState.zoom(TileState.value))
     )
@@ -110,12 +103,11 @@ object ConstraintsSummaryTile:
     )
 
   private case class Body(
-    userId:                  Option[User.Id],
-    programId:               Program.Id,
-    constraintList:          ConstraintGroupList,
-    calibrationObservations: Set[Observation.Id],
-    expandedIds:             View[SortedSet[ObsIdSet]],
-    columnVisibility:        View[ColumnVisibility]
+    userId:           Option[User.Id],
+    programId:        Program.Id,
+    constraintList:   ConstraintGroupList,
+    expandedIds:      View[SortedSet[ObsIdSet]],
+    columnVisibility: View[ColumnVisibility]
   ) extends ReactFnProps(Body.component)
 
   private object Body:
@@ -263,15 +255,8 @@ object ConstraintsSummaryTile:
                            .setEnableSorting(false)
                        )
           // Memo rows
-          rows  <- useMemo((props.constraintList, props.calibrationObservations)): (cl, calibs) =>
-                     cl
-                       .map: (obsIdSet, cs) =>
-                         (obsIdSet -- calibs)
-                           .map: filtered =>
-                             ConstraintGroup(cs, filtered)
-                       .toList
-                       .flattenOption
-                       .sortBy(_.constraintSet.summaryString)
+          rows  <- useMemo(props.constraintList):
+                     _.map(ConstraintGroup.fromTuple).toList.sortBy(_.constraintSet.summaryString)
           table <- useReactTableWithStateStore:
                      import ctx.given
 

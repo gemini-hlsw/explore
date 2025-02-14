@@ -93,30 +93,32 @@ case class ProgramSummaries(
       targetId -> TargetWithObs(target, targetObservations.get(targetId).orEmpty)
     )
 
+  lazy val calibrationObservationIds: Set[Observation.Id] =
+    observations.values.filter(_.isCalibration).map(_.id).toSet
+
+  lazy val nonCalibrationObservations: List[Observation] =
+    observations.values.filterNot(_.isCalibration).toList
+
   lazy val constraintGroups: ConstraintGroupList =
     SortedMap.from:
-      observations.toList
-        .map((obsId, obs) => obs.constraints -> obsId)
+      nonCalibrationObservations
+        .map(obs => obs.constraints -> obs.id)
         .groupMap(_._1)(_._2)
         .map((c, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> c)
 
   lazy val schedulingGroups: SchedulingGroupList =
     SortedMap.from:
-      observations.toList
-        .map((obsId, obs) => obs.timingWindows.sorted -> obsId)
+      nonCalibrationObservations
+        .map(obs => obs.timingWindows.sorted -> obs.id)
         .groupMap(_._1)(_._2)
         .map((tws, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> tws.sorted)
 
   lazy val observingModeGroups: ObservingModeGroupList =
     SortedMap.from:
-      observations.toList
-        .filterNot((_, obs) => obs.isCalibration)
-        .map((obsId, obs) => obs.observingModeSummary -> obsId)
+      nonCalibrationObservations
+        .map(obs => obs.observingModeSummary -> obs.id)
         .groupMap(_._1)(_._2)
         .map((mode, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> mode)
-
-  lazy val calibrationObservations: Set[Observation.Id] =
-    observations.values.filter(_.isCalibration).map(_.id).toSet
 
   lazy val programOrProposalReference: Option[String] =
     ProgramSummaries.programReference
@@ -135,7 +137,7 @@ case class ProgramSummaries(
           .flattenOption
           // keep inactive, but filter out calibrations - the API should
           // should stop including calibration observations, but until then...
-          .filter(_.calibrationRole.isEmpty)
+          .filterNot(_.isCalibration)
         (crId, obsList)
       .toMap
 

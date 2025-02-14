@@ -176,7 +176,6 @@ object ConstraintsTabContents extends TwoPanels:
                 props.userId,
                 props.programId,
                 props.programSummaries.get.constraintGroups,
-                props.programSummaries.get.calibrationObservations,
                 props.expandedIds,
                 backButton
               )
@@ -233,7 +232,6 @@ object ConstraintsTabContents extends TwoPanels:
             observations,
             props.programSummaries,
             props.programSummaries.get.constraintGroups,
-            props.programSummaries.get.calibrationObservations,
             props.programSummaries.get.obsExecutionPots,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
