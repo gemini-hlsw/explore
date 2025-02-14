@@ -4,6 +4,7 @@
 package explore.constraints
 
 import cats.Order.*
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
@@ -117,143 +118,148 @@ object ConstraintsSummaryTile:
       EditColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
     )
 
+    private def columns(
+      props: Body,
+      ctx:   AppContext[IO]
+    ): List[ColumnDef.NoMeta[ConstraintGroup, ?]] =
+      def column[V](
+        id:       ColumnId,
+        accessor: ConstraintGroup => V
+      ): ColumnDef.Single.NoMeta[ConstraintGroup, V] =
+        ColDef(id, accessor, ColumnNames(id))
+
+      def goToObsSet(obsIdSet: ObsIdSet): Callback =
+        ctx.pushPage(
+          (AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some
+        )
+
+      def obsSetUrl(obsIdSet: ObsIdSet): String =
+        ctx.pageUrl(
+          (AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some
+        )
+
+      def goToObs(obsId: Observation.Id): Callback =
+        ctx.pushPage(
+          (AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some
+        )
+
+      def obsUrl(obsId: Observation.Id): String =
+        ctx.pageUrl(
+          (AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some
+        )
+
+      List(
+        column(EditColumnId, ConstraintGroup.obsIds.get)
+          .setCell(cell =>
+            <.a(^.href := obsSetUrl(cell.value),
+                ^.onClick ==> (_.preventDefaultCB *> goToObsSet(cell.value)),
+                Icons.Edit
+            )
+          )
+          .setEnableSorting(false),
+        column(
+          IQColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
+        )
+          .setCell(_.value.label)
+          .sortableBy(_.label),
+        column(
+          CCColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
+        )
+          .setCell(_.value.label)
+          .sortableBy(_.label),
+        column(
+          BGColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
+        )
+          .setCell(_.value.label)
+          .sortableBy(_.label),
+        column(
+          WVColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
+        )
+          .setCell(_.value.label)
+          .sortableBy(_.label),
+        column(
+          MinAMColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+        )
+          .setCell(_.value match
+            case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
+            case ElevationRange.HourAngle(_, _) => ""
+          )
+          .sortableBy(_ match
+            case ElevationRange.AirMass(min, _) => min.value
+            case ElevationRange.HourAngle(_, _) =>
+              ElevationRange.AirMass.MinValue - 1
+          ),
+        column(
+          MaxAMColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+        )
+          .setCell(_.value match
+            case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
+            case ElevationRange.HourAngle(_, _) => ""
+          )
+          .sortableBy(_ match
+            case ElevationRange.AirMass(_, max) => max.value
+            case ElevationRange.HourAngle(_, _) =>
+              ElevationRange.AirMass.MinValue - 1
+          ),
+        column(
+          MinHAColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+        )
+          .setCell(_.value match
+            case ElevationRange.AirMass(_, _)     => ""
+            case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
+          )
+          .sortableBy(_ match
+            case ElevationRange.AirMass(_, _)     =>
+              ElevationRange.HourAngle.MinHour - 1
+            case ElevationRange.HourAngle(min, _) => min.value
+          ),
+        column(
+          MaxHAColumnId,
+          ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
+        )
+          .setCell(_.value match
+            case ElevationRange.AirMass(_, _)     => ""
+            case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
+          )
+          .sortableBy(_ match
+            case ElevationRange.AirMass(_, _)     =>
+              ElevationRange.HourAngle.MinHour - 1
+            case ElevationRange.HourAngle(_, max) => max.value
+          ),
+        column(CountColumnId, _.obsIds.length),
+        column(ObservationsColumnId, ConstraintGroup.obsIds.get)
+          .setCell(cell =>
+            <.span(
+              cell.value.toSortedSet.toList
+                .map(obsId =>
+                  <.a(
+                    ^.href := obsUrl(obsId),
+                    ^.onClick ==> (_.preventDefaultCB
+                      >> goToObs(obsId)
+                      >> props.expandedIds.mod(_ + cell.value)
+                      >> goToObsSet(ObsIdSet.one(obsId))),
+                    obsId.toString
+                  )
+                )
+                .mkReactFragment(", ")
+            )
+          )
+          .setEnableSorting(false)
+      )
+
     private val component =
       ScalaFnComponent[Body]: props =>
         for {
           ctx   <- useContext(AppContext.ctx)
           cols  <- useMemo(()): // Cols never changes, but needs access to props
-                     _ =>
-                       def column[V](
-                         id:       ColumnId,
-                         accessor: ConstraintGroup => V
-                       ): ColumnDef.Single.NoMeta[ConstraintGroup, V] =
-                         ColDef(id, accessor, ColumnNames(id))
-
-                       def goToObsSet(obsIdSet: ObsIdSet): Callback =
-                         ctx.pushPage(
-                           (AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some
-                         )
-
-                       def obsSetUrl(obsIdSet: ObsIdSet): String =
-                         ctx.pageUrl(
-                           (AppTab.Constraints, props.programId, Focused.obsSet(obsIdSet)).some
-                         )
-
-                       def goToObs(obsId: Observation.Id): Callback =
-                         ctx.pushPage(
-                           (AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some
-                         )
-
-                       def obsUrl(obsId: Observation.Id): String =
-                         ctx.pageUrl(
-                           (AppTab.Constraints, props.programId, Focused.singleObs(obsId)).some
-                         )
-
-                       List(
-                         column(EditColumnId, ConstraintGroup.obsIds.get)
-                           .setCell(cell =>
-                             <.a(^.href := obsSetUrl(cell.value),
-                                 ^.onClick ==> (_.preventDefaultCB *> goToObsSet(cell.value)),
-                                 Icons.Edit
-                             )
-                           )
-                           .setEnableSorting(false),
-                         column(
-                           IQColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
-                         )
-                           .setCell(_.value.label)
-                           .sortableBy(_.label),
-                         column(
-                           CCColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
-                         )
-                           .setCell(_.value.label)
-                           .sortableBy(_.label),
-                         column(
-                           BGColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
-                         )
-                           .setCell(_.value.label)
-                           .sortableBy(_.label),
-                         column(
-                           WVColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
-                         )
-                           .setCell(_.value.label)
-                           .sortableBy(_.label),
-                         column(
-                           MinAMColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                         )
-                           .setCell(_.value match
-                             case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
-                             case ElevationRange.HourAngle(_, _) => ""
-                           )
-                           .sortableBy(_ match
-                             case ElevationRange.AirMass(min, _) => min.value
-                             case ElevationRange.HourAngle(_, _) =>
-                               ElevationRange.AirMass.MinValue - 1
-                           ),
-                         column(
-                           MaxAMColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                         )
-                           .setCell(_.value match
-                             case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
-                             case ElevationRange.HourAngle(_, _) => ""
-                           )
-                           .sortableBy(_ match
-                             case ElevationRange.AirMass(_, max) => max.value
-                             case ElevationRange.HourAngle(_, _) =>
-                               ElevationRange.AirMass.MinValue - 1
-                           ),
-                         column(
-                           MinHAColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                         )
-                           .setCell(_.value match
-                             case ElevationRange.AirMass(_, _)     => ""
-                             case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
-                           )
-                           .sortableBy(_ match
-                             case ElevationRange.AirMass(_, _)     =>
-                               ElevationRange.HourAngle.MinHour - 1
-                             case ElevationRange.HourAngle(min, _) => min.value
-                           ),
-                         column(
-                           MaxHAColumnId,
-                           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
-                         )
-                           .setCell(_.value match
-                             case ElevationRange.AirMass(_, _)     => ""
-                             case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
-                           )
-                           .sortableBy(_ match
-                             case ElevationRange.AirMass(_, _)     =>
-                               ElevationRange.HourAngle.MinHour - 1
-                             case ElevationRange.HourAngle(_, max) => max.value
-                           ),
-                         column(CountColumnId, _.obsIds.length),
-                         column(ObservationsColumnId, ConstraintGroup.obsIds.get)
-                           .setCell(cell =>
-                             <.span(
-                               cell.value.toSortedSet.toList
-                                 .map(obsId =>
-                                   <.a(
-                                     ^.href := obsUrl(obsId),
-                                     ^.onClick ==> (_.preventDefaultCB
-                                       >> goToObs(obsId)
-                                       >> props.expandedIds.mod(_ + cell.value)
-                                       >> goToObsSet(ObsIdSet.one(obsId))),
-                                     obsId.toString
-                                   )
-                                 )
-                                 .mkReactFragment(", ")
-                             )
-                           )
-                           .setEnableSorting(false)
-                       )
+                     _ => columns(props, ctx)
           // Memo rows
           rows  <- useMemo(props.constraintList):
                      _.map(ConstraintGroup.fromTuple).toList.sortBy(_.constraintSet.summaryString)
