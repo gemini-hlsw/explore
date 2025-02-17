@@ -178,50 +178,48 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
   )
 
   protected[sequence] val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useMemoBy((_, _) => ()): (_, ctx) =>
-        _ =>
-          import ctx.given
-          columns(ctx.httpClient)
-      .useMemoBy((props, _, _) => props.visits): (_, _, _) => // (visitRows, nextIndex)
-        visitsSequences(_, none)
-      .useMemoBy((props, _, _, visitsData) =>
-        (visitsData, props.acquisitionRows, props.scienceRows, props.currentVisitId)
-      ): (_, _, _, _) =>
-        (visitsData, acquisitionRows, scienceRows, currentVisitId) =>
-          val (visitRows, nextScienceIndex): (List[VisitData], StepIndex) = visitsData.value
-          stitchSequence(
-            visitRows,
-            currentVisitId,
-            nextScienceIndex,
-            acquisitionRows,
-            scienceRows
-          )
-      .useResizeDetector()
-      .useDynTableBy: (_, _, _, _, _, resize) =>
-        (DynTableDef, SizePx(resize.width.orEmpty))
-      .useReactTableBy: (props, _, cols, _, rows, _, dynTable) =>
-        TableOptions(
-          cols.map(dynTable.setInitialColWidths),
-          rows,
-          enableSorting = false,
-          enableColumnResizing = true,
-          enableExpanding = true,
-          getRowId = (row, _, _) => getRowId(row),
-          getSubRows = (row, _) => row.subRows,
-          columnResizeMode = ColumnResizeMode.OnChange,
-          initialState = TableState(
-            expanded = CurrentExpandedState
-          ),
-          state = PartialTableState(
-            columnSizing = dynTable.columnSizing,
-            columnVisibility = dynTable.columnVisibility
-          ),
-          onColumnSizingChange = dynTable.onColumnSizingChangeHandler
-        )
-      .render: (_, _, cols, _, _, resize, _, table) =>
+    ScalaFnComponent[Props]: props =>
+      for
+        ctx        <- useContext(AppContext.ctx)
+        cols       <- useMemo(()): _ =>
+                        import ctx.given
+                        columns(ctx.httpClient)
+        visitsData <- useMemo(props.visits):
+                        visitsSequences(_, none)
+        rows       <-
+          useMemo(
+            (visitsData, props.acquisitionRows, props.scienceRows, props.currentVisitId)
+          ): (visitsData, acquisitionRows, scienceRows, currentVisitId) =>
+            val (visitRows, nextScienceIndex): (List[VisitData], StepIndex) = visitsData.value
+            stitchSequence(
+              visitRows,
+              currentVisitId,
+              nextScienceIndex,
+              acquisitionRows,
+              scienceRows
+            )
+        resize     <- useResizeDetector
+        dynTable   <- useDynTable(DynTableDef, SizePx(resize.width.orEmpty))
+        table      <- useReactTable:
+                        TableOptions(
+                          cols.map(dynTable.setInitialColWidths),
+                          rows,
+                          enableSorting = false,
+                          enableColumnResizing = true,
+                          enableExpanding = true,
+                          getRowId = (row, _, _) => getRowId(row),
+                          getSubRows = (row, _) => row.subRows,
+                          columnResizeMode = ColumnResizeMode.OnChange,
+                          initialState = TableState(
+                            expanded = CurrentExpandedState
+                          ),
+                          state = PartialTableState(
+                            columnSizing = dynTable.columnSizing,
+                            columnVisibility = dynTable.columnVisibility
+                          ),
+                          onColumnSizingChange = dynTable.onColumnSizingChangeHandler
+                        )
+      yield
         val extraRowMod: TagMod =
           TagMod(
             SequenceStyles.ExtraRowShown,
