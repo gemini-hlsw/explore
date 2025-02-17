@@ -79,9 +79,6 @@ case class AsterismGroupObsList(
   private val observations: UndoSetter[ObservationList] =
     undoCtx.zoom(ProgramSummaries.observations)
 
-  private val calibrationObservations: Set[Observation.Id] =
-    undoCtx.get.calibrationObservations
-
   override val focusedObsSet: Option[ObsIdSet] = focused.obsSet
 
   private val asterismGroups: AsterismGroupList = programSummaries.get.asterismGroups
@@ -288,11 +285,7 @@ object AsterismGroupObsList:
       val asterismGroups: List[AsterismGroup] =
         props.programSummaries.get.asterismGroups
           .map(AsterismGroup.fromTuple)
-          .map: asterismGroup =>
-            (asterismGroup.obsIds -- props.calibrationObservations).map: filteredObsIds =>
-              AsterismGroup(filteredObsIds, asterismGroup.targetIds)
           .toList
-          .flattenOption
 
       val targetWithObsMap: SortedMap[Target.Id, TargetWithObs] =
         props.programSummaries.get.targetsWithObs

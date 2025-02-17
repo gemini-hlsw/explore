@@ -50,20 +50,19 @@ import org.typelevel.log4cats.Logger
 import scala.collection.immutable.SortedSet
 
 case class SchedulingGroupObsList(
-  programId:               Program.Id,
-  observations:            UndoSetter[ObservationList],
-  undoer:                  Undoer,
-  schedulingGroups:        SchedulingGroupList,
-  calibrationObservations: Set[Observation.Id],
-  obsExecutions:           ObservationExecutionMap,
-  focusedObsSet:           Option[ObsIdSet],
-  setSummaryPanel:         Callback,
-  expandedIds:             View[SortedSet[ObsIdSet]],
-  copyCallback:            Callback,
-  pasteCallback:           Callback,
-  clipboardObsContents:    Option[ObsIdSet],
-  allocatedScienceBands:   SortedSet[ScienceBand],
-  readonly:                Boolean
+  programId:             Program.Id,
+  observations:          UndoSetter[ObservationList],
+  undoer:                Undoer,
+  schedulingGroups:      SchedulingGroupList,
+  obsExecutions:         ObservationExecutionMap,
+  focusedObsSet:         Option[ObsIdSet],
+  setSummaryPanel:       Callback,
+  expandedIds:           View[SortedSet[ObsIdSet]],
+  copyCallback:          Callback,
+  pasteCallback:         Callback,
+  clipboardObsContents:  Option[ObsIdSet],
+  allocatedScienceBands: SortedSet[ScienceBand],
+  readonly:              Boolean
 ) extends ReactFnProps[SchedulingGroupObsList](SchedulingGroupObsList.component)
     with ViewCommon:
   private val copyDisabled: Boolean  = focusedObsSet.isEmpty
@@ -213,13 +212,7 @@ object SchedulingGroupObsList:
       import ctx.given
 
       val schedulingGroups: List[(ObsIdSet, List[TimingWindow])] =
-        props.schedulingGroups
-          .map: (obsIdSet, constraintGroups) =>
-            (obsIdSet -- props.calibrationObservations).map: filteredObsIdSet =>
-              (filteredObsIdSet, constraintGroups)
-          .toList
-          .flattenOption
-          .sortBy(_._2.headOption)
+        props.schedulingGroups.toList.sortBy(_._2.headOption)
 
       val renderClone: Draggable.Render = (provided, snapshot, rubric) =>
         <.div(

@@ -310,7 +310,7 @@ object TargetTabContents extends TwoPanels:
               props.programId,
               props.targets.model,
               props.programSummaries.get.targetObservations,
-              props.programSummaries.get.calibrationObservations,
+              props.programSummaries.get.calibrationObservationIds,
               selectObservationAndTarget(props.expandedIds),
               selectedTargetIds,
               props.focusedSummaryTargetId,
