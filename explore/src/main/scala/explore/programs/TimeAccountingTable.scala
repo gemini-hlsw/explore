@@ -4,8 +4,10 @@
 package explore.programs
 
 import cats.syntax.all.*
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.BandedProgramTime
+import explore.model.CategoryAllocationList
 import explore.model.ProgramTimes
 import explore.model.display.given
 import explore.model.reusability.given
@@ -16,24 +18,31 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
+import lucuma.react.floatingui.syntax.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.refined.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.format.TimeSpanFormatter
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.table.*
 
-case class TimeAccountingTable(programTimes: ProgramTimes)
+case class TimeAccountingTable(programTimes: ProgramTimes, allocations: CategoryAllocationList)
     extends ReactFnProps(TimeAccountingTable.component)
 
 object TimeAccountingTable:
+  given Reusability[Map[ScienceBand, TimeSpan]] = Reusability.map
+
   private type TimeSpanMap = Map[Option[ScienceBand], TimeSpan]
   private type DataMap     = Map[Option[ScienceBand], Either[TimeSpan, BigDecimal]]
 
   extension (e: Either[TimeSpan, BigDecimal])
-    private def toCell: VdomNode = e match
-      case Left(ts)  => TimeSpanView(ts, TimeSpanFormatter.DecimalHours)
-      case Right(bd) => f"${bd * 100}%.1f%%"
+    private def toCell(isRemain: Boolean): VdomNode = e match
+      case Left(ts)  =>
+        <.span(TimeSpanView(ts, TimeSpanFormatter.DecimalHours))
+          .withTooltipWhen(isRemain, "Time Awarded - Time Used")
+      case Right(bd) => <.span(f"${bd * 100}%.1f%%").withTooltip("Time Used / Time Awarded")
 
   extension (l: List[BandedProgramTime])
     private def toTimeSpanMap: TimeSpanMap =
@@ -64,30 +73,34 @@ object TimeAccountingTable:
       Row(label, data, total.asLeft)
 
     private def completionRow(
-      plannedMap: TimeSpanMap,
+      awardedMap: TimeSpanMap,
       usedMap:    TimeSpanMap
     ): Row =
       val data: DataMap     =
         DataColumnKeys
           .map(osb =>
-            (osb, calcPercent(plannedMap.get(osb).orEmpty, usedMap.get(osb).orEmpty).asRight)
+            (osb, calcPercent(awardedMap.get(osb).orEmpty, usedMap.get(osb).orEmpty).asRight)
           )
           .toMap
       val total: BigDecimal =
-        calcPercent(calcTotal(plannedMap), calcTotal(usedMap))
+        calcPercent(calcTotal(awardedMap), calcTotal(usedMap))
       Row("Completion", data, total.asRight)
 
-    def remainRow(plannedMap: TimeSpanMap, usedMap: TimeSpanMap): Row =
+    def remainRow(awardedMap: TimeSpanMap, usedMap: TimeSpanMap): Row =
       val remainMap: Map[Option[ScienceBand], TimeSpan] =
         DataColumnKeys
-          .map(osb => (osb, plannedMap.get(osb).orEmpty -| usedMap.get(osb).orEmpty))
+          .map(osb => (osb, awardedMap.get(osb).orEmpty -| usedMap.get(osb).orEmpty))
           .toMap
       fromTimeSpanMap(remainMap, "Remain")
 
-    def fromProgramTimes(plannedMap: TimeSpanMap, usedMap: TimeSpanMap): List[Row] =
-      val planned: Row    = fromTimeSpanMap(plannedMap, "Planned")
+    def fromProgramTimes(
+      awardedMap: TimeSpanMap,
+      plannedMap: TimeSpanMap,
+      usedMap:    TimeSpanMap
+    ): List[Row] =
+      val planned: Row    = fromTimeSpanMap(plannedMap, "Prepared")
       val used: Row       = fromTimeSpanMap(usedMap, "Used")
-      val completion: Row = completionRow(plannedMap, usedMap)
+      val completion: Row = completionRow(awardedMap, usedMap)
       List(planned, used, completion)
 
   // A Row is also used for the table metadata for creating the footer
@@ -103,7 +116,7 @@ object TimeAccountingTable:
     ColDef(
       LabelColId,
       _.label,
-      "Time Accounting",
+      header = _ => <.span("Time Accounting", HelpIcon("program/time-accounting.md".refined)),
       footer = _ => "Remain"
     ).setSize(200.toPx)
 
@@ -112,8 +125,8 @@ object TimeAccountingTable:
       BandColId(osb),
       _.data(osb),
       header = osb.fold("No Band")(_.shortName),
-      cell = _.value.toCell,
-      footer = _.table.options.meta.fold(EmptyVdom)(_.data(osb).toCell)
+      cell = _.value.toCell(false),
+      footer = _.table.options.meta.fold(EmptyVdom)(_.data(osb).toCell(true))
     ).setSize(90.toPx)
 
   private val TotalColDef =
@@ -121,8 +134,8 @@ object TimeAccountingTable:
       TotalColId,
       _.total,
       "Total",
-      cell = _.value.toCell,
-      footer = _.table.options.meta.fold(EmptyVdom)(_.total.toCell)
+      cell = _.value.toCell(false),
+      footer = _.table.options.meta.fold(EmptyVdom)(_.total.toCell(true))
     ).setSize(90.toPx)
 
   private val Columns: Reusable[List[ColumnDef.WithTableMeta[Row, ?, Row]]] =
@@ -133,10 +146,13 @@ object TimeAccountingTable:
     for {
       plannedMap <- useMemo(props.programTimes.timeEstimateBanded)(_.toTimeSpanMap)
       usedMap    <- useMemo(props.programTimes.timeCharge)(_.toTimeSpanMap)
-      rows       <- useMemo((plannedMap, usedMap)): (planned, used) =>
-                      Row.fromProgramTimes(planned, used)
-      remainRow  <- useMemo((plannedMap, usedMap)): (planned, used) =>
-                      Row.remainRow(planned, used)
+      awardedMap <- useMemo(props.allocations.totalByBand.value.unsorted)(
+                      _.map((sb, ts) => sb.some -> ts).toMap
+                    )
+      rows       <- useMemo((awardedMap, plannedMap, usedMap)): (awarded, planned, used) =>
+                      Row.fromProgramTimes(awarded, planned, used)
+      remainRow  <- useMemo((awardedMap, usedMap)): (awarded, used) =>
+                      Row.remainRow(awarded, used)
       table      <- useReactTable:
                       TableOptions(
                         Columns,

@@ -65,7 +65,7 @@ object ProgramDetailsTile
           ),
           <.div(
             TimeAwardTable(details.allocations),
-            props.programTimes.renderPot(TimeAccountingTable(_))
+            props.programTimes.renderPot(TimeAccountingTable(_, details.allocations))
           ),
           <.div(ExploreStyles.ProgramDetailsInfoArea)(
             SupportUsers(
