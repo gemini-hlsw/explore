@@ -106,8 +106,10 @@ trait SequenceTileHelper:
             .raiseFirstNoDataError
             .ignoreGraphQLErrors
             .map:
-              _.filter(_.executionEventAdded.value.stepStage === StepStage.EndStep)
-                .evalMap(_ => (refreshSequence >> refreshVisits).to[IO])
+              _.filter: data =>
+                List(StepStage.StartStep, StepStage.EndStep)
+                  .contains_(data.executionEventAdded.value.stepStage)
+              .evalMap(_ => (refreshSequence >> refreshVisits).to[IO])
     yield LiveSequence(
       (visits.value, sequenceData.value).tupled,
       visits.isRunning || sequenceData.isRunning
