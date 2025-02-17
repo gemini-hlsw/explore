@@ -23,7 +23,7 @@ import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.Visit
-import lucuma.schemas.model.enums.StepExecutionState
+import lucuma.schemas.model.enums.AtomExecutionState
 import lucuma.ui.reusability.given
 import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
@@ -41,7 +41,8 @@ sealed trait GmosSequenceTable[S, D]:
   def snPerClass: Map[ObserveClass, SignalToNoise]
 
   private def futureSteps(
-    obsClass: ObserveClass
+    obsClass:      ObserveClass,
+    currentStepId: Option[Step.Id] // Will be shown in visits.
   )(sequence: ExecutionSequence[D]): List[SequenceRow.FutureStep[D]] =
     SequenceRow.FutureStep
       .fromAtoms(
@@ -63,32 +64,36 @@ sealed trait GmosSequenceTable[S, D]:
                 case ObserveClass.Science         => true
                 case _                            => false
       )
+      .filterNot(futureStep => currentStepId.contains_(futureStep.stepId))
 
   private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Option[Step.Id])] =
-    // If the last step of the last atom of the last visit is Ongoing, the sequence is executing.
+    // If the last atom of the last visit is Ongoing, the sequence is executing.
     // TODO: For extra safety, we could also check that the last atom's original id is the same as
     // nextAtom. ODB provides this but we are not querying it at the moment.
     visits.lastOption
       .filter:
         _.atoms.lastOption.exists:
-          _.steps.lastOption.exists:
-            _.executionState === StepExecutionState.Ongoing
+          _.executionState === AtomExecutionState.Ongoing
       // We omit the Ongoing step from the visits.
       .map(visit =>
         (visit.id,
          visit.atoms.last.sequenceType,
-         visit.atoms.lastOption.flatMap(_.steps.lastOption).map(_.id)
+         visit.atoms.lastOption
+           .flatMap(_.steps.lastOption)
+           .flatMap(_.generatedId)
         )
       )
 
-  protected[sequence] lazy val currentVisitId: Option[Visit.Id]              = currentVisitData.map(_._1)
+  protected[sequence] lazy val currentVisitId: Option[Visit.Id]              =
+    currentVisitData.map(_._1)
   protected[sequence] lazy val currentAtomSequenceType: Option[SequenceType] =
     currentVisitData.map(_._2)
-  protected[sequence] lazy val currentStepId: Option[Step.Id]                = currentVisitData.flatMap(_._3)
+  protected[sequence] lazy val currentStepId: Option[Step.Id]                =
+    currentVisitData.flatMap(_._3)
 
   protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
     config.science
-      .map(futureSteps(ObserveClass.Science))
+      .map(futureSteps(ObserveClass.Science, currentStepId))
       .orEmpty
 
   // Hide acquisition when science is executing or when sequence is complete.
@@ -98,7 +103,7 @@ sealed trait GmosSequenceTable[S, D]:
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
     config.acquisition // If we are executing Science, don't show any future acquisition rows.
       .filter(_ => isAcquisitionDisplayed)
-      .map(futureSteps(ObserveClass.Acquisition))
+      .map(futureSteps(ObserveClass.Acquisition, currentStepId))
       .orEmpty
 
 case class GmosNorthSequenceTable(
@@ -180,9 +185,8 @@ private sealed trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuild
         _ =>
           import ctx.given
           columns(ctx.httpClient)
-      .useMemoBy((props, _, _) => (props.visits, props.currentStepId)):
-        (_, _, _) => // (visitRows, nextIndex)
-          visitsSequences(_, _)
+      .useMemoBy((props, _, _) => props.visits): (_, _, _) => // (visitRows, nextIndex)
+        visitsSequences(_, none)
       .useMemoBy((props, _, _, visitsData) =>
         (visitsData, props.acquisitionRows, props.scienceRows, props.currentVisitId)
       ): (_, _, _, _) =>
