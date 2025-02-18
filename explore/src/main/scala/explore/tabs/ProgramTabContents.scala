@@ -9,6 +9,7 @@ import cats.syntax.option.*
 import crystal.Pot
 import crystal.react.View
 import explore.*
+import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -20,6 +21,7 @@ import explore.model.ObservationList
 import explore.model.ProgramDetails
 import explore.model.ProgramTabTileIds
 import explore.model.ProgramTimes
+import explore.model.ProgramUser
 import explore.model.TargetList
 import explore.model.UserPreferences
 import explore.model.enums.GridLayoutSection
@@ -28,8 +30,11 @@ import explore.programs.ProgramConfigRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
 import explore.programs.ProgramUnrequestedConfigsTile
+import explore.users.AddProgramUserButton
+import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
@@ -37,6 +42,8 @@ import lucuma.core.model.User
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
+import lucuma.refined.*
+import lucuma.ui.react.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
@@ -51,8 +58,10 @@ case class ProgramTabContents(
   userVault:              Option[UserVault],
   programTimes:           Pot[ProgramTimes],
   userPreferences:        UserPreferences,
-  userIsReadonlyCoi:      Boolean
-) extends ReactFnProps(ProgramTabContents.component)
+  userIsReadonlyCoi:      Boolean,
+  userIsPi:               Boolean
+) extends ReactFnProps(ProgramTabContents.component):
+  val users: View[List[ProgramUser]] = programDetails.zoom(ProgramDetails.allUsers)
 
 object ProgramTabContents:
   private type Props = ProgramTabContents
@@ -82,6 +91,27 @@ object ProgramTabContents:
               props.programTimes,
               props.userIsReadonlyCoi
             )
+          )
+
+        val dataUsersTile =
+          Tile(
+            ProgramTabTileIds.DataUsers.id,
+            "Data Users"
+          )(
+            _ =>
+              ProgramUsersTable(
+                props.users,
+                ProgramUsersTable.Mode.DataUsers(userVault)
+              ),
+            (_, _) =>
+              <.div(
+                ExploreStyles.AddProgramUserButton,
+                Option
+                  .when[VdomNode](props.userIsPi):
+                    AddProgramUserButton(props.programId, ProgramUserRole.External, props.users)
+                  .orEmpty,
+                HelpIcon("program/data-users.md".refined)
+              )
           )
 
         val notesTile =
@@ -135,6 +165,7 @@ object ProgramTabContents:
             layouts,
             List(
               detailsTile,
+              dataUsersTile,
               notesTile,
               configurationRequestsTile,
               unrequestedConfigsTile

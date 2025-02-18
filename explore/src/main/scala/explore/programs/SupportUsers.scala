@@ -3,14 +3,12 @@
 
 package explore.programs
 
-import cats.data.NonEmptySet
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.model.ProgramUser
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 
@@ -24,9 +22,9 @@ case class SupportUsers(
 object SupportUsers:
   private type Props = SupportUsers
 
-  enum SupportRole(protected[SupportUsers] val role: ProgramUserRole):
-    case Primary   extends SupportRole(ProgramUserRole.SupportPrimary)
-    case Secondary extends SupportRole(ProgramUserRole.SupportSecondary)
+  enum SupportRole(protected[SupportUsers] val mode: ProgramUsersTable.Mode):
+    case Primary   extends SupportRole(ProgramUsersTable.Mode.SupportPrimary)
+    case Secondary extends SupportRole(ProgramUsersTable.Mode.SupportSecondary)
 
   private val component = ScalaFnComponent[Props]: props =>
     <.div(ExploreStyles.ProgramDetailsUsers)(
@@ -34,19 +32,7 @@ object SupportUsers:
         props.title
       ),
       ProgramUsersTable(
-        None,                      // user id is not needed as it is used to determine if a readonly CoI can edit their info
         props.users,
-        NonEmptySet.one(props.supportRole.role),
-        proposalIsReadonly = true, // the support users are not editable at all
-        userIsReadonlyCoi = true,  // the support users are not editable at all
-        hiddenColumns = Set(
-          ProgramUsersTable.Column.Partner,
-          ProgramUsersTable.Column.EducationalStatus,
-          ProgramUsersTable.Column.Thesis,
-          ProgramUsersTable.Column.Gender,
-          ProgramUsersTable.Column.Role,
-          ProgramUsersTable.Column.OrcidId,
-          ProgramUsersTable.Column.Status
-        )
+        props.supportRole.mode
       )
     )

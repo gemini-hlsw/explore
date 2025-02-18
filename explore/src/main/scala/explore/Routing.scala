@@ -205,7 +205,8 @@ object Routing:
             model.rootModel.zoom(RootModel.vault).get,
             programSummaries.get.programTimesPot,
             userPreferences(model.rootModel),
-            model.userIsReadonlyCoi
+            model.userIsReadonlyCoi,
+            model.userIsPi
           )
       .orEmpty
 

@@ -363,6 +363,7 @@ object ExploreGridLayouts:
 
   object programs:
     private lazy val DetailsHeight: NonNegInt            = 10.refined
+    private lazy val DataUsersHeight: NonNegInt          = 6.refined
     private lazy val NotesHeight: NonNegInt              = 6.refined
     private lazy val ChangeRequestsHeight: NonNegInt     = 6.refined
     private lazy val UnrequestedConfigsHeight: NonNegInt = 6.refined
@@ -375,6 +376,13 @@ object ExploreGridLayouts:
           y = 0,
           w = DefaultWidth.value,
           h = DetailsHeight.value
+        ),
+        LayoutItem(
+          i = ProgramTabTileIds.DataUsers.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = DataUsersHeight.value
         ),
         LayoutItem(
           i = ProgramTabTileIds.NotesId.id.value,

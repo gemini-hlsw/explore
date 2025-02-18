@@ -155,6 +155,12 @@ object ProgramQueries:
   )(using FetchClient[F, ObservationDB]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(thesis = th.orUnassign))
 
+  def updateUserHasDataAccess[F[_]: Async](
+    puid: ProgramUser.Id,
+    hda:  Boolean
+  )(using FetchClient[F, ObservationDB]): F[Unit] =
+    updateProgramUsers(puid, ProgramUserPropertiesInput(hasDataAccess = hda.assign))
+
   def updateUserGender[F[_]: Async](
     puid: ProgramUser.Id,
     g:    Option[Gender]

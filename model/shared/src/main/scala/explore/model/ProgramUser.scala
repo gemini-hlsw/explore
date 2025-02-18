@@ -28,7 +28,8 @@ case class ProgramUser(
   thesis:            Option[Boolean],
   gender:            Option[Gender],
   fallbackProfile:   UserProfile,
-  invitations:       List[UserInvitation]
+  invitations:       List[UserInvitation],
+  hasDataAccess:     Boolean
 ) derives Eq:
   val name: String          =
     user.fold(fallbackProfile.displayName.orEmpty)(_.name)
@@ -89,6 +90,9 @@ object ProgramUser:
   val invitations: Lens[ProgramUser, List[UserInvitation]] =
     Focus[ProgramUser](_.invitations)
 
+  val hasDataAccess: Lens[ProgramUser, Boolean] =
+    Focus[ProgramUser](_.hasDataAccess)
+
   private val profileCreditNameNES: Lens[UserProfile, Option[NonEmptyString]] =
     Lens[UserProfile, Option[NonEmptyString]](
       _.creditName.flatMap(NonEmptyString.from(_).toOption)
@@ -116,4 +120,5 @@ object ProgramUser:
       g    <- c.downField("gender").as[Option[Gender]]
       fb   <- c.downField("fallbackProfile").as[UserProfile]
       in   <- c.downField("invitations").as[List[UserInvitation]]
-    } yield ProgramUser(id, u, pl, role, es, th, g, fb, in)
+      da   <- c.downField("hasDataAccess").as[Boolean]
+    } yield ProgramUser(id, u, pl, role, es, th, g, fb, in, da)

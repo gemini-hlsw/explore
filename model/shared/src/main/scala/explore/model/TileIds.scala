@@ -30,13 +30,14 @@ enum ObsSummaryTabTileIds:
     case PlotId    => "plot".refined
 
 enum ProgramTabTileIds:
-  case DetailsId, NotesId, ChangeRequestsId, UnrequestedConfigsId
+  case DetailsId, NotesId, ChangeRequestsId, UnrequestedConfigsId, DataUsers
 
   def id: NonEmptyString = this match
     case DetailsId            => "programDetails".refined
     case NotesId              => "programNotes".refined
     case ChangeRequestsId     => "programChangeRequests".refined
     case UnrequestedConfigsId => "unrequestedConfigs".refined
+    case DataUsers            => "dataUsers".refined
 
 enum ProposalTabTileIds:
   case DetailsId, UsersId, AbstractId, AttachmentsId
