@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.data.NonEmptyList
-import cats.effect.IO
 import cats.syntax.option.*
 import crystal.Pot
 import crystal.react.View
@@ -39,6 +38,7 @@ import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
@@ -60,18 +60,15 @@ case class ProgramTabContents(
   userPreferences:        UserPreferences,
   userIsReadonlyCoi:      Boolean,
   userIsPi:               Boolean
-) extends ReactFnProps(ProgramTabContents.component):
+) extends ReactFnProps(ProgramTabContents):
   val users: View[List[ProgramUser]] = programDetails.zoom(ProgramDetails.allUsers)
 
-object ProgramTabContents:
-  private type Props = ProgramTabContents
-
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useResizeDetector()
-    .render: (props, _, resize) =>
-      props.userVault.map: userVault =>
+object ProgramTabContents
+    extends ReactFnComponent[ProgramTabContents](props =>
+      for {
+        ctx    <- useContext(AppContext.ctx)
+        resize <- useResizeDetector
+      } yield props.userVault.map: userVault =>
         val userId: Option[User.Id] = userVault.user.id.some
 
         val defaultLayouts: LayoutsMap =
@@ -173,3 +170,4 @@ object ProgramTabContents:
             GridLayoutSection.ProgramsLayout
           )
         ).withRef(resize.ref)
+    )
