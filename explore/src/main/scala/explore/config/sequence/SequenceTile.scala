@@ -11,6 +11,7 @@ import explore.*
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.config.sequence.byInstrument.*
 import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTileIds
