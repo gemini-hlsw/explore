@@ -11,73 +11,78 @@ import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.schemas.model.Visit
 import lucuma.schemas.model.enums.AtomExecutionState
+import lucuma.schemas.model.enums.StepExecutionState
 import lucuma.ui.sequence.*
 
 private trait GmosSequenceTable[S, D]:
   def visits: List[Visit[D]]
   def config: ExecutionConfig[S, D]
-  def snPerClass: Map[ObserveClass, SignalToNoise]
+  def snPerClass: Map[SequenceType, SignalToNoise]
 
   private def futureSteps(
-    obsClass:      ObserveClass,
-    currentStepId: Option[Step.Id] // Will be shown in visits.
+    seqType:        SequenceType,
+    currentSeqType: Option[SequenceType]
   )(sequence: ExecutionSequence[D]): List[SequenceRow.FutureStep[D]] =
-    SequenceRow.FutureStep
-      .fromAtoms(
-        sequence.nextAtom +: (
-          obsClass match // For acquisition, we ignore possibleFuture
-            case ObserveClass.Science => sequence.possibleFuture
-            case _                    => List.empty
-        ),
-        i => // Only show S/N for science or acq if FPU is None
-          snPerClass
-            .get(obsClass)
-            .filter: _ =>
-              i.observeClass match
-                case a @ ObserveClass.Acquisition =>
-                  i.instrumentConfig match
-                    case DynamicConfig.GmosNorth(_, _, _, _, _, _, None) => true
-                    case DynamicConfig.GmosSouth(_, _, _, _, _, _, None) => true
-                    case _                                               => false
-                case ObserveClass.Science         => true
-                case _                            => false
-      )
-      .filterNot(futureStep => currentStepId.contains_(futureStep.stepId))
+    val allSteps: List[SequenceRow.FutureStep[D]] =
+      SequenceRow.FutureStep
+        .fromAtoms(
+          sequence.nextAtom +: (
+            seqType match // For acquisition, we ignore possibleFuture
+              case SequenceType.Science => sequence.possibleFuture
+              case _                    => List.empty
+          ),
+          i => // Only show S/N for science or acq if FPU is None
+            snPerClass
+              .get(seqType)
+              .filter: _ =>
+                i.observeClass match
+                  case a @ ObserveClass.Acquisition =>
+                    i.instrumentConfig match
+                      case DynamicConfig.GmosNorth(_, _, _, _, _, _, None) => true
+                      case DynamicConfig.GmosSouth(_, _, _, _, _, _, None) => true
+                      case _                                               => false
+                  case ObserveClass.Science         => true
+                  case _                            => false
+        )
+    if (currentSeqType.contains_(seqType)) allSteps.tail
+    else allSteps
+  end futureSteps
 
-  private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Option[Step.Id])] =
+  private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Boolean)] =
     // If the last atom of the last visit is Ongoing, the sequence is executing.
     visits.lastOption
       .filter:
         _.atoms.lastOption.exists:
           _.executionState === AtomExecutionState.Ongoing
-      // We omit the Ongoing step from the visits.
       .map(visit =>
         (visit.id,
          visit.atoms.last.sequenceType,
+         // The sequence is executing if the last step of the last visit is Ongoing.
+         // Note: The last atom could be Ongoing but be paused, in which case there's no executing step.
          visit.atoms.lastOption
            .flatMap(_.steps.lastOption)
-           .flatMap(_.generatedId)
+           .exists(_.executionState === StepExecutionState.Ongoing)
         )
       )
 
-  protected[sequence] lazy val currentVisitId: Option[Visit.Id]              =
+  protected[sequence] lazy val currentVisitId: Option[Visit.Id] =
     currentVisitData.map(_._1)
-  protected[sequence] lazy val currentAtomSequenceType: Option[SequenceType] =
+  private lazy val currentSequenceType: Option[SequenceType]    =
     currentVisitData.map(_._2)
-  protected[sequence] lazy val currentStepId: Option[Step.Id]                =
-    currentVisitData.flatMap(_._3)
+  private lazy val isExecuting: Boolean                         =
+    currentVisitData.exists(_._3)
 
   protected[sequence] lazy val scienceRows: List[SequenceRow[D]] =
     config.science
-      .map(futureSteps(ObserveClass.Science, currentStepId))
+      .map(futureSteps(SequenceType.Science, currentSequenceType.filter(_ => isExecuting)))
       .orEmpty
 
   // Hide acquisition when science is executing or when sequence is complete.
   protected[sequence] lazy val isAcquisitionDisplayed: Boolean =
-    !currentAtomSequenceType.contains_(SequenceType.Science) && scienceRows.nonEmpty
+    !currentSequenceType.contains_(SequenceType.Science) && scienceRows.nonEmpty
 
   protected[sequence] lazy val acquisitionRows: List[SequenceRow[D]] =
     config.acquisition // If we are executing Science, don't show any future acquisition rows.
       .filter(_ => isAcquisitionDisplayed)
-      .map(futureSteps(ObserveClass.Acquisition, currentStepId))
+      .map(futureSteps(SequenceType.Acquisition, currentSequenceType.filter(_ => isExecuting)))
       .orEmpty

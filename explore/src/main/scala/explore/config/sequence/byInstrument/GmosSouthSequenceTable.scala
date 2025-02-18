@@ -5,7 +5,7 @@ package explore.config.sequence.byInstrument
 
 import explore.config.sequence.GmosSequenceTable
 import explore.config.sequence.GmosSequenceTableBuilder
-import lucuma.core.enums.ObserveClass
+import lucuma.core.enums.SequenceType
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
@@ -17,7 +17,7 @@ import lucuma.ui.table.ColumnSize.*
 case class GmosSouthSequenceTable(
   visits:     List[Visit.GmosSouth],
   config:     ExecutionConfig[StaticConfig.GmosSouth, DynamicConfig.GmosSouth],
-  snPerClass: Map[ObserveClass, SignalToNoise]
+  snPerClass: Map[SequenceType, SignalToNoise]
 ) extends ReactFnProps(GmosSouthSequenceTable.component)
     with GmosSequenceTable[StaticConfig.GmosSouth, DynamicConfig.GmosSouth]
 
