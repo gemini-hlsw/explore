@@ -15,7 +15,7 @@ import explore.*
 import explore.model.AppContext
 import explore.model.Observation
 import japgolly.scalajs.react.*
-import lucuma.core.enums.ObserveClass
+import lucuma.core.enums.SequenceType
 import lucuma.core.enums.StepStage
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Target
@@ -34,7 +34,7 @@ import scala.concurrent.duration.*
 trait SequenceTileHelper:
   protected case class SequenceData(
     config:     InstrumentExecutionConfig,
-    snPerClass: Map[ObserveClass, SignalToNoise]
+    snPerClass: Map[SequenceType, SignalToNoise]
   ) derives Eq
 
   protected object SequenceData:
@@ -45,8 +45,8 @@ trait SequenceTileHelper:
             config,
             Map.empty
             // (
-            //   ObserveClass.Science     -> obs.itc.science.selected.signalToNoise,
-            //   ObserveClass.Acquisition -> obs.itc.acquisition.selected.signalToNoise
+            //   SequenceType.Science     -> obs.itc.science.selected.signalToNoise,
+            //   SequenceType.Acquisition -> obs.itc.acquisition.selected.signalToNoise
             // )
           )
 
@@ -67,18 +67,16 @@ trait SequenceTileHelper:
       given StreamingClient[IO, ObservationDB] = ctx.clients.odb
       visits                                  <-
         useEffectKeepResultOnMount:
-          IO.println("Refreshing visits") >>
-            ObservationVisits[IO]
-              .query(obsId)
-              .raiseGraphQLErrors
-              .map(_.observation.flatMap(_.execution))
+          ObservationVisits[IO]
+            .query(obsId)
+            .raiseGraphQLErrors
+            .map(_.observation.flatMap(_.execution))
       sequenceData                            <-
         useEffectKeepResultOnMount:
-          IO.println("Refreshing sequence") >>
-            SequenceQuery[IO]
-              .query(obsId)
-              .raiseGraphQLErrors
-              .map(SequenceData.fromOdbResponse)
+          SequenceQuery[IO]
+            .query(obsId)
+            .raiseGraphQLErrors
+            .map(SequenceData.fromOdbResponse)
       refreshVisits                           <-
         useThrottledCallback(5.seconds)(visits.refresh.to[IO])
       refreshSequence                         <-
