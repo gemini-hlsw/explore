@@ -230,12 +230,14 @@ trait DisplayImplicits:
       case ProgramUserRole.CoiRO            => "CoI (read-only)"
       case ProgramUserRole.SupportPrimary   => "Principal Support"
       case ProgramUserRole.SupportSecondary => "Additional Support"
+      case ProgramUserRole.External         => "Data Only"
     private def longName  = pur match
       case ProgramUserRole.Pi               => "Principal Investigator"
       case ProgramUserRole.Coi              => "Full-Access Co-Investigator"
       case ProgramUserRole.CoiRO            => "Read-Only Co-Investigator"
       case ProgramUserRole.SupportPrimary   => "Principal Support"
       case ProgramUserRole.SupportSecondary => "Additional Support"
+      case ProgramUserRole.External         => "Data Only User"
 
   given Display[ProgramUserRole] = Display.by(_.shortName, _.longName)
 

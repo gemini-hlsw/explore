@@ -10,11 +10,13 @@ import explore.Icons
 import explore.model.AppContext
 import explore.model.IsActive
 import explore.model.ProgramUser
+import explore.model.display.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
+import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
@@ -24,13 +26,14 @@ import lucuma.schemas.ObservationDB.Types.AddProgramUserInput
 import lucuma.ui.primereact.*
 import queries.common.ProposalQueriesGQL.*
 
-case class AddReadonlyCoiButton(
+case class AddProgramUserButton(
   programId: Program.Id,
+  role:      ProgramUserRole,
   users:     View[List[ProgramUser]]
-) extends ReactFnProps(AddReadonlyCoiButton)
+) extends ReactFnProps(AddProgramUserButton)
 
-object AddReadonlyCoiButton
-    extends ReactFnComponent[AddReadonlyCoiButton](props =>
+object AddProgramUserButton
+    extends ReactFnComponent[AddProgramUserButton](props =>
       for {
         ctx      <- useContext(AppContext.ctx)
         isActive <- useStateView(IsActive(false))
@@ -38,7 +41,7 @@ object AddReadonlyCoiButton
         import ctx.given
 
         def addProgramUser: IO[Unit] =
-          val input = AddProgramUserInput(programId = props.programId, role = ProgramUserRole.CoiRO)
+          val input = AddProgramUserInput(programId = props.programId, role = props.role)
           AddProgramUser[IO]
             .execute(input)
             .raiseGraphQLErrors
@@ -50,7 +53,7 @@ object AddReadonlyCoiButton
           severity = Button.Severity.Secondary,
           loading = isActive.get.value,
           icon = Icons.UserPlus,
-          tooltip = "Add Co-Investigator",
+          tooltip = s"Add ${props.role.longName}",
           onClick = addProgramUser.runAsync
         ).tiny.compact
     )

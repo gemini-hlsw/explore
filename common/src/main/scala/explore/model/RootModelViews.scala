@@ -28,11 +28,17 @@ case class RootModelViews(
   def hasRole(role: ProgramUserRole): Boolean =
     userProgramRoles.exists(_ === role)
 
-  lazy val userIsReadonlyCoi =
+  lazy val userIsReadonlyCoi: Boolean =
     val isStaff = rootModel.get.isStaff
     !isStaff && hasRole(ProgramUserRole.CoiRO) && !(hasRole(
       ProgramUserRole.SupportPrimary
     ) || hasRole(ProgramUserRole.SupportSecondary))
+
+  lazy val userIsPi: Boolean =
+    val thisUserId = rootModel.get.vault.map(_.user.id)
+    val pi         =
+      programSummariesValue.toOption.flatMap(_.optProgramDetails).flatMap(_.pi).flatMap(_.user)
+    (thisUserId, pi).mapN(_ === _.id).getOrElse(false)
 
 object RootModelViews:
   val rootModel: Lens[RootModelViews, View[RootModel]]                              =

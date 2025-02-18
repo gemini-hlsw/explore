@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.*
@@ -32,13 +31,14 @@ import explore.model.ProposalTabTileIds
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
-import explore.users.AddReadonlyCoiButton
+import explore.users.AddProgramUserButton
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.resizeDetector.hooks.*
@@ -68,160 +68,165 @@ case class ProposalEditor(
   layout:             LayoutsMap,
   proposalIsReadonly: Boolean,
   userIsReadonlyCoi:  Boolean
-) extends ReactFnProps(ProposalEditor.Component):
+) extends ReactFnProps(ProposalEditor):
   val optUserId: Option[User.Id]        = userVault.map(_.user.id)
   val proposalOrUserIsReadonly: Boolean = proposalIsReadonly || userIsReadonlyCoi
 
-object ProposalEditor:
+object ProposalEditor
+    extends ReactFnComponent[ProposalEditor](props =>
 
-  private val BaseWordLimit = 200
-  private val HardWordLimit = 2 * BaseWordLimit
+      val BaseWordLimit = 200
+      val HardWordLimit = 2 * BaseWordLimit
 
-  extension (s: String)
-    inline def wordCount: Int =
-      val trim = s.trim
-      if (trim.isEmpty) 0
-      else
-        trim.split("\\s+", HardWordLimit + 1).length // add a limit to restrict the performance hit
+      extension (s: String)
+        inline def wordCount: Int =
+          val trim = s.trim
+          if (trim.isEmpty) 0
+          else
+            trim
+              .split("\\s+", HardWordLimit + 1)
+              .length // add a limit to restrict the performance hit
 
-  private val Component = ScalaFnComponent[ProposalEditor](props =>
-    for {
-      ctx             <- useContext(AppContext.ctx)
-      abstractCounter <-
-        useState(props.undoCtx.get.description.map(_.value).foldMap(_.wordCount))
-      _               <- useEffectWithDeps(props.undoCtx.get.description.map(_.value)) {
-                           case Some(t) => abstractCounter.setState(t.wordCount)
-                           case None    => abstractCounter.setState(0)
-                         }
-      resize          <- useResizeDetector
-    } yield
-      import ctx.given
+      for {
+        ctx             <- useContext(AppContext.ctx)
+        abstractCounter <-
+          useState(props.undoCtx.get.description.map(_.value).foldMap(_.wordCount))
+        _               <- useEffectWithDeps(props.undoCtx.get.description.map(_.value)) {
+                             case Some(t) => abstractCounter.setState(t.wordCount)
+                             case None    => abstractCounter.setState(0)
+                           }
+        resize          <- useResizeDetector
+      } yield
+        import ctx.given
+        props.userVault.map: userVault =>
+          val detailsAligner: Aligner[ProgramDetails, ProgramPropertiesInput] =
+            Aligner(
+              props.undoCtx,
+              UpdateProgramsInput(
+                WHERE = props.programId.toWhereProgram.assign,
+                SET = ProgramPropertiesInput()
+              ),
+              ProgramQueries.updateProgram[IO](_)
+            ).zoom(Iso.id[ProgramDetails].asLens, UpdateProgramsInput.SET.modify)
 
-      val detailsAligner: Aligner[ProgramDetails, ProgramPropertiesInput] =
-        Aligner(
-          props.undoCtx,
-          UpdateProgramsInput(
-            WHERE = props.programId.toWhereProgram.assign,
-            SET = ProgramPropertiesInput()
-          ),
-          ProgramQueries.updateProgram[IO](_)
-        ).zoom(Iso.id[ProgramDetails].asLens, UpdateProgramsInput.SET.modify)
+          val proposalAligner: Aligner[Proposal, ProposalPropertiesInput] =
+            Aligner(
+              props.proposal,
+              UpdateProposalInput(
+                programId = props.programId.assign,
+                SET = ProposalPropertiesInput()
+              ),
+              (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
+            ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
-      val proposalAligner: Aligner[Proposal, ProposalPropertiesInput] =
-        Aligner(
-          props.proposal,
-          UpdateProposalInput(
-            programId = props.programId.assign,
-            SET = ProposalPropertiesInput()
-          ),
-          (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
-        ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
-
-      val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
-        detailsAligner.zoom(ProgramDetails.description, ProgramPropertiesInput.description.modify)
-
-      val abstractView: View[Option[NonEmptyString]] = abstractAligner
-        .view(_.orUnassign)
-
-      val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
-
-      val detailsTile =
-        Tile(ProposalTabTileIds.DetailsId.id, "Details")(
-          _ =>
-            ProposalDetailsBody(
-              detailsAligner,
-              proposalAligner,
-              props.timeEstimateRange,
-              props.cfps,
-              props.proposalOrUserIsReadonly
-            ),
-          (_, s) => ProposalDetailsTitle(props.undoCtx, s, props.proposalOrUserIsReadonly)
-        )
-
-      val usersTile =
-        Tile(
-          ProposalTabTileIds.UsersId.id,
-          "Investigators"
-        )(
-          _ =>
-            ProgramUsersTable(
-              props.userVault,
-              props.users,
-              NonEmptySet.of(ProgramUserRole.Pi, ProgramUserRole.Coi, ProgramUserRole.CoiRO),
-              props.proposalIsReadonly,
-              props.userIsReadonlyCoi
-            ),
-          (_, _) =>
-            <.div(
-              ExploreStyles.AddProgramUserButton,
-              Option
-                .unless[VdomNode](props.proposalOrUserIsReadonly):
-                  AddReadonlyCoiButton(props.programId, props.users)
-                .orEmpty,
-              HelpIcon("proposal/main/investigators.md".refined)
+          val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
+            detailsAligner.zoom(ProgramDetails.description,
+                                ProgramPropertiesInput.description.modify
             )
-        )
 
-      val absTitle: VdomNode =
-        if (abstractCounter.value < 1) "Abstract"
-        else if (abstractCounter.value >= HardWordLimit)
-          React.Fragment(
-            "Abstract ",
-            <.span(ExploreStyles.AbstractTitleTooLong, s"($HardWordLimit or more words)")
-          )
-        else if (abstractCounter.value >= BaseWordLimit)
-          React.Fragment(
-            "Abstract ",
-            <.span(ExploreStyles.AbstractTitleTooLong, s"(${abstractCounter.value} words)")
-          )
-        else s"Abstract (${abstractCounter.value} words)"
+          val abstractView: View[Option[NonEmptyString]] = abstractAligner
+            .view(_.orUnassign)
 
-      val abstractTile =
-        Tile(
-          ProposalTabTileIds.AbstractId.id,
-          absTitle,
-          bodyClass = ExploreStyles.ProposalAbstract
-        )(_ =>
-          FormInputTextAreaView(
-            id = "abstract".refined,
-            value = abstractView.as(OptionNonEmptyStringIso),
-            onTextChange = t => abstractCounter.setState(t.wordCount).rateLimitMs(1000).void
-          )(^.disabled        := props.proposalOrUserIsReadonly,
-            ^.cls := ExploreStyles.WarningInput.when_(abstractView.get.isEmpty).htmlClass
-          )
-        )
+          val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
-      val attachmentsTile =
-        Tile(
-          ProposalTabTileIds.AttachmentsId.id,
-          "Attachments",
-          tileClass = ExploreStyles.ProposalAttachmentsTile
-        )(
-          _ =>
-            props.authToken.map(token =>
-              ProposalAttachmentsTable(
-                props.programId,
-                token,
-                props.attachments,
-                props.proposalOrUserIsReadonly
+          val detailsTile =
+            Tile(ProposalTabTileIds.DetailsId.id, "Details")(
+              _ =>
+                ProposalDetailsBody(
+                  detailsAligner,
+                  proposalAligner,
+                  props.timeEstimateRange,
+                  props.cfps,
+                  props.proposalOrUserIsReadonly
+                ),
+              (_, s) => ProposalDetailsTitle(props.undoCtx, s, props.proposalOrUserIsReadonly)
+            )
+
+          val usersTile =
+            Tile(
+              ProposalTabTileIds.UsersId.id,
+              "Investigators"
+            )(
+              _ =>
+                ProgramUsersTable(
+                  props.users,
+                  ProgramUsersTable.Mode.CoIs(
+                    userVault,
+                    props.proposalIsReadonly,
+                    props.userIsReadonlyCoi
+                  )
+                ),
+              (_, _) =>
+                <.div(
+                  ExploreStyles.AddProgramUserButton,
+                  Option
+                    .unless[VdomNode](props.proposalOrUserIsReadonly):
+                      AddProgramUserButton(props.programId, ProgramUserRole.CoiRO, props.users)
+                    .orEmpty,
+                  HelpIcon("proposal/main/investigators.md".refined)
+                )
+            )
+
+          val absTitle: VdomNode =
+            if (abstractCounter.value < 1) "Abstract"
+            else if (abstractCounter.value >= HardWordLimit)
+              React.Fragment(
+                "Abstract ",
+                <.span(ExploreStyles.AbstractTitleTooLong, s"($HardWordLimit or more words)")
               )
-            ),
-          (_, _) =>
-            <.a(^.href           := Constants.P1TemplatesUrl,
-                ^.target := "_blank",
-                Icons.ArrowUpRightFromSquare
-            ).withTooltip("Download templates")
-        )
+            else if (abstractCounter.value >= BaseWordLimit)
+              React.Fragment(
+                "Abstract ",
+                <.span(ExploreStyles.AbstractTitleTooLong, s"(${abstractCounter.value} words)")
+              )
+            else s"Abstract (${abstractCounter.value} words)"
 
-      <.div(ExploreStyles.MultiPanelTile)(
-        TileController(
-          props.optUserId,
-          resize.width.getOrElse(1),
-          defaultLayouts,
-          props.layout,
-          List(detailsTile, usersTile, abstractTile, attachmentsTile),
-          GridLayoutSection.ProposalLayout,
-          storeLayout = true
-        )
-      ).withRef(resize.ref)
-  )
+          val abstractTile =
+            Tile(
+              ProposalTabTileIds.AbstractId.id,
+              absTitle,
+              bodyClass = ExploreStyles.ProposalAbstract
+            )(_ =>
+              FormInputTextAreaView(
+                id = "abstract".refined,
+                value = abstractView.as(OptionNonEmptyStringIso),
+                onTextChange = t => abstractCounter.setState(t.wordCount).rateLimitMs(1000).void
+              )(^.disabled        := props.proposalOrUserIsReadonly,
+                ^.cls := ExploreStyles.WarningInput.when_(abstractView.get.isEmpty).htmlClass
+              )
+            )
+
+          val attachmentsTile =
+            Tile(
+              ProposalTabTileIds.AttachmentsId.id,
+              "Attachments",
+              tileClass = ExploreStyles.ProposalAttachmentsTile
+            )(
+              _ =>
+                props.authToken.map(token =>
+                  ProposalAttachmentsTable(
+                    props.programId,
+                    token,
+                    props.attachments,
+                    props.proposalOrUserIsReadonly
+                  )
+                ),
+              (_, _) =>
+                <.a(^.href           := Constants.P1TemplatesUrl,
+                    ^.target := "_blank",
+                    Icons.ArrowUpRightFromSquare
+                ).withTooltip("Download templates")
+            )
+
+          <.div(ExploreStyles.MultiPanelTile)(
+            TileController(
+              props.optUserId,
+              resize.width.getOrElse(1),
+              defaultLayouts,
+              props.layout,
+              List(detailsTile, usersTile, abstractTile, attachmentsTile),
+              GridLayoutSection.ProposalLayout,
+              storeLayout = true
+            )
+          ).withRef(resize.ref)
+    )
