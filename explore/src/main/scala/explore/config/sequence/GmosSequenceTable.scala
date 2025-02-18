@@ -68,8 +68,6 @@ sealed trait GmosSequenceTable[S, D]:
 
   private lazy val currentVisitData: Option[(Visit.Id, SequenceType, Option[Step.Id])] =
     // If the last atom of the last visit is Ongoing, the sequence is executing.
-    // TODO: For extra safety, we could also check that the last atom's original id is the same as
-    // nextAtom. ODB provides this but we are not querying it at the moment.
     visits.lastOption
       .filter:
         _.atoms.lastOption.exists:
