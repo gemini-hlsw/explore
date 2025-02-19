@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.all.svg.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.sequence.*
 import lucuma.react.SizePx
@@ -32,22 +31,12 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
 
   private lazy val ColDef = ColumnDef[SequenceTableRowType]
 
-  private def drawBracket(rows: Int): VdomElement =
-    svg(^.width := "1px", ^.height := "15px")(
-      use(
-        transform := s"scale(1, ${math.pow(rows.toDouble, 0.9)})",
-        xlinkHref := "/bracket.svg#bracket"
-      )
-    )
-
-  private val HeaderColumnId: ColumnId    = ColumnId("header")
-  private val ExtraRowColumnId: ColumnId  = ColumnId("extraRow")
-  private val AtomStepsColumnId: ColumnId = ColumnId("atomSteps")
+  private val HeaderColumnId: ColumnId   = ColumnId("header")
+  private val ExtraRowColumnId: ColumnId = ColumnId("extraRow")
 
   private lazy val ColumnSizes: Map[ColumnId, ColumnSize] = Map(
-    HeaderColumnId    -> FixedSize(0.toPx),
-    ExtraRowColumnId  -> FixedSize(0.toPx),
-    AtomStepsColumnId -> FixedSize(30.toPx)
+    HeaderColumnId   -> FixedSize(0.toPx),
+    ExtraRowColumnId -> FixedSize(0.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
   private def columns(httpClient: Client[IO])(using
@@ -55,15 +44,6 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
   ): List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
     List(
       SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
-      ColDef(
-        AtomStepsColumnId,
-        _.value.toOption
-          .map(_.step)
-          .collect:
-            case SequenceRow.FutureStep(_, _, firstOf, _) => firstOf,
-        header = " ",
-        cell = _.value.flatMap(_.map(drawBracket))
-      ).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
         ExtraRowColumnId,
         header = "",
@@ -107,32 +87,33 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
             )
         resize     <- useResizeDetector
         dynTable   <- useDynTable(DynTableDef, SizePx(resize.width.orEmpty))
-        table      <- useReactTable:
-                        TableOptions(
-                          cols.map(dynTable.setInitialColWidths),
-                          rows,
-                          enableSorting = false,
-                          enableColumnResizing = true,
-                          enableExpanding = true,
-                          getRowId = (row, _, _) => getRowId(row),
-                          getSubRows = (row, _) => row.subRows,
-                          columnResizeMode = ColumnResizeMode.OnChange,
-                          initialState = TableState(
-                            expanded = CurrentExpandedState
-                          ),
-                          state = PartialTableState(
-                            columnSizing = dynTable.columnSizing,
-                            columnVisibility = dynTable.columnVisibility
-                          ),
-                          onColumnSizingChange = dynTable.onColumnSizingChangeHandler
-                        )
+        table      <-
+          useReactTable:
+            TableOptions(
+              cols.map(dynTable.setInitialColWidths),
+              rows,
+              enableSorting = false,
+              enableColumnResizing = true,
+              enableExpanding = true,
+              getRowId = (row, _, _) => getRowId(row),
+              getSubRows = (row, _) => row.subRows,
+              columnResizeMode = ColumnResizeMode.OnChange,
+              initialState = TableState(
+                expanded = CurrentExpandedState
+              ),
+              state = PartialTableState(
+                columnSizing = dynTable.columnSizing,
+                columnVisibility = dynTable.columnVisibility
+              ),
+              onColumnSizingChange = dynTable.onColumnSizingChangeHandler
+            )
       yield
         val extraRowMod: TagMod =
           TagMod(
             SequenceStyles.ExtraRowShown,
             resize.width
               .map: w =>
-                ^.width := s"${w - ColumnSizes(AtomStepsColumnId).initial.value}px"
+                ^.width := s"${w}px"
               .whenDefined
           )
 
@@ -154,19 +135,22 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
             case id if id == HeaderColumnId   => SequenceStyles.HiddenColTableHeader
             case id if id == ExtraRowColumnId => SequenceStyles.HiddenColTableHeader
             case _                            => TagMod.empty,
-          rowMod = _.original.value.toOption
-            .map(_.step)
-            .map: s =>
+          rowMod = _.original.value.fold(
+            _ => ExploreStyles.SequenceRowHeader,
+            stepRow =>
+              val step: SequenceRow[D] = stepRow.step
               TagMod(
-                s match
-                  case SequenceRow.Executed.ExecutedStep(_, _) =>
+                step match
+                  case SequenceRow.Executed.ExecutedStep(_, _)                       =>
                     SequenceStyles.RowHasExtra |+| ExploreStyles.SequenceRowDone
-                  case _                                       => TagMod.empty,
+                  case SequenceRow.FutureStep(_, _, firstOf, _) if firstOf.isDefined =>
+                    ExploreStyles.SequenceRowFirstInAtom
+                  case _                                                             => TagMod.empty,
                 if (LinkingInfo.developmentMode)
-                  s.id.toOption.map(^.title := _.toString).whenDefined
+                  step.id.toOption.map(^.title := _.toString).whenDefined
                 else TagMod.empty
               )
-            .whenDefined,
+          ),
           cellMod = cell =>
             cell.row.original.value match
               case Left(_)        => // Header
@@ -175,14 +159,10 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
                   case _                          => ^.display.none
               case Right(stepRow) =>
                 cell.column.id match
-                  case id if id == ExtraRowColumnId                           =>
+                  case id if id == ExtraRowColumnId =>
                     stepRow.step match // Extra row is shown in a selected row or in an executed step row.
                       case SequenceRow.Executed.ExecutedStep(_, _) => extraRowMod
                       case _                                       => TagMod.empty
-                  case colId if colId == AtomStepsColumnId                    =>
-                    ExploreStyles.SequenceBracketCell
-                  case colId if colId == SequenceColumns.IndexAndTypeColumnId =>
-                    ExploreStyles.CellHideBorder // Hide border between bracket column and next one
-                  case _ =>
+                  case _                            =>
                     TagMod.empty
         )

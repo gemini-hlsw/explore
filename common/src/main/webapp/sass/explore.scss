@@ -1327,25 +1327,18 @@ $search-preview-margin: 5px;
     z-index: 55;
   }
 
-  .p-datatable-tbody > tr > td {
-    &.explore-table-cell-hide-border {
-      border-left-width: 0;
-    }
-
-    &.explore-sequence-bracket-cell {
-      overflow: visible;
-
-      svg {
-        overflow: visible;
-        fill: var(--text-color);
-      }
-    }
-  }
-
   .p-datatable-tbody > tr.explore-sequence-row-done {
     color: var(--disabled-row-color);
     background: var(--disabled-row-background);
   }
+
+  .p-datatable-tbody > tr.explore-sequence-row-first-in-atom, tr.explore-sequence-row-header {
+      box-shadow: inset 0 2px;
+
+      &:hover {
+        box-shadow: inset 0 2px var(--green-500), inset 0 -1px var(--green-500) !important;
+      }
+    }
 }
 
 // -------------
