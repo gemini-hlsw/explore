@@ -12,6 +12,7 @@ import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.syntax.pot.given
 import eu.timepit.refined.cats.given
+import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
@@ -222,6 +223,19 @@ object ObsSummaryTile:
         def sortableTimeSpan =
           a.flatMap(_.toOption).flatten
 
+      // Function for sorting the observation by observation ref index (if available) or
+      // observation id. If either observation has an index, both should. The Observations
+      // are Optional because of the Rows, but all "top level" rows have an Observation, so
+      // it doesn't matter what we return for the case of None.
+      val identifierSortFn: (Option[Observation], Option[Observation]) => Int = (oo1, oo2) =>
+        (oo1, oo2) match
+          case (Some(o1), Some(o2)) =>
+            (o1.reference, o2.reference)
+              .mapN: (r1, r2) =>
+                Order[PosInt].compare(r1.observationIndex, r2.observationIndex)
+              .getOrElse(Order[Observation.Id].compare(o1.id, o2.id))
+          case _                    => 0
+
       // Column with expanded accessor. For rows that have data in the expanded target row.
       def mixedColumn[V](
         id:               ColumnId,
@@ -245,8 +259,17 @@ object ObsSummaryTile:
           text
         )
 
-      def obsLink(obsId: Observation.Id): VdomNode =
-        ctx.obsIdRoutingLink(pid, obsId)
+      // Displays the link to the observation. If the observation has a reference, the
+      // contents are the reference index, otherwise the observation id is shown.
+      def obsLink(obs: Observation): VdomNode =
+        ctx.obsIdRoutingLink(
+          pid,
+          obs.id,
+          contents = obs.reference.map(o =>
+            // The style sets the width and aligns to the right.
+            <.div(ExploreStyles.ObservationsSummaryIndexCol, "%6d".format(o.observationIndex.value))
+          )
+        )
 
       def groupLink(group: Group): VdomNode =
         val text = group.name.map(_.toString).getOrElse(group.id.toString)
@@ -269,10 +292,10 @@ object ObsSummaryTile:
             else "",
           enableResizing = false
         ).setSize(35.toPx),
-        obsColumn(ObservationIdColumnId, _.obs.id)
+        obsColumn(ObservationIdColumnId, _.obs)
           .setCell:
             _.value.map(obsLink)
-          .sortable,
+          .sortableWith(identifierSortFn),
         // TODO: TargetTypeColumnId
         obsColumn(TargetTypeColumnId, _ => ())
           .setCell(_ => Icons.Star.withFixedWidth())
