@@ -96,8 +96,7 @@ case class ProgramUsersTable(
         Column.Partner,
         Column.EducationalStatus,
         Column.Thesis,
-        Column.Gender,
-        Column.Role
+        Column.Gender
       )
 
 object ProgramUsersTable:
