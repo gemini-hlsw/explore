@@ -60,5 +60,8 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           workflow $ObservationWorkflowSubquery
           groupId
           groupIndex
+          reference {
+            label
+          }
         }
       """
