@@ -1332,13 +1332,16 @@ $search-preview-margin: 5px;
     background: var(--disabled-row-background);
   }
 
-  .p-datatable-tbody > tr.explore-sequence-row-first-in-atom, tr.explore-sequence-row-header {
-      box-shadow: inset 0 2px;
+  .p-datatable-tbody > tr.explore-sequence-row-first-in-atom,
+  tr.explore-sequence-row-header {
+    box-shadow: inset 0 2px;
 
-      &:hover {
-        box-shadow: inset 0 2px var(--green-500), inset 0 -1px var(--green-500) !important;
-      }
+    &:hover {
+      box-shadow:
+        inset 0 2px var(--green-500),
+        inset 0 -1px var(--green-500) !important;
     }
+  }
 }
 
 // -------------
