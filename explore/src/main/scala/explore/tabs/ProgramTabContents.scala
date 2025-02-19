@@ -95,15 +95,15 @@ object ProgramTabContents
         val countOfDataAccess                  =
           props.users.get.count(pu => sharingRoles.contains(pu.role) && pu.hasDataAccess)
 
-        val dataUsersTile =
+        val dataSharingTile =
           Tile(
             ProgramTabTileIds.DataUsers.id,
-            s"Data Users ($countOfDataAccess)"
+            s"Data Sharing ($countOfDataAccess)"
           )(
             _ =>
               ProgramUsersTable(
                 props.users,
-                ProgramUsersTable.Mode.DataUsers(userVault)
+                ProgramUsersTable.Mode.DataSharing(userVault)
               ),
             (_, _) =>
               <.div(
@@ -167,7 +167,7 @@ object ProgramTabContents
             layouts,
             List(
               detailsTile,
-              dataUsersTile,
+              dataSharingTile,
               notesTile,
               configurationRequestsTile,
               unrequestedConfigsTile
