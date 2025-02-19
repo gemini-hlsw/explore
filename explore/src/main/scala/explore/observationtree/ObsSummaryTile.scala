@@ -47,6 +47,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
 import lucuma.core.util.TimeSpan
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
@@ -191,305 +192,307 @@ object ObsSummaryTile:
   private object Body:
     import ObsSummaryRow.*
 
-    private type Props = Body
-
     given Reusability[UUID]                    = Reusability.byEq
     given Reusability[ObservationExecutionMap] = Reusability.by(_.value.toList)
 
     private val ColDef = ColumnDef[Expandable[ObsSummaryRow]]
 
-    // For columns that only have data in the base observation row.
-    private def obsColumn[V](
-      id:       ColumnId,
-      accessor: ObsRow => V
-    ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
-      ColDef(
-        id,
-        v => v.value.fold(_ => none, accessor(_).some),
-        if (ColumnHeaderOverrides.contains(id)) " " else ColumnNames(id)
-      )
-
-    extension [A](name: String | (A, TargetWithId))
-      def sortableValue =
-        name match
-          case s: String => s
-          case (_, b)    => b.target.name.value
-
-    extension (a: Option[Pot[Option[TimeSpan]]])
-      def sortableValue =
-        a.flatMap(_.toOption).flatten
-
-    // Column with expanded accessor. For rows that have data in the expanded target row.
-    private def mixedColumn[V](
-      id:               ColumnId,
-      accessor:         ObsRow => V,
-      expandedAccessor: ExpandedTargetRow => V
-    ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], V] =
-      ColDef(id, v => v.value.fold(expandedAccessor, accessor), ColumnNames(id))
-
-    private val component = ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useMemoBy((_, _) => ()): (props, ctx) => // Columns
-        _ =>
-          def constraintUrl(constraintId: Observation.Id): String =
-            ctx.pageUrl((AppTab.Constraints, props.programId, Focused.singleObs(constraintId)).some)
-
-          def goToConstraint(constraintId: Observation.Id): Callback =
-            ctx.pushPage(
-              (AppTab.Constraints, props.programId, Focused.singleObs(constraintId)).some
-            )
-
-          def targetLink(obsId: Observation.Id, tWId: TargetWithId): VdomNode =
-            val text = tWId.target.name.value
-            ctx.routingLink(
-              (AppTab.Observations, props.programId, Focused.singleObs(obsId, tWId.id.some)).some,
-              text
-            )
-
-          def obsLink(obsId: Observation.Id): VdomNode =
-            ctx.obsIdRoutingLink(props.programId, obsId)
-
-          def groupLink(group: Group): VdomNode =
-            val text = group.name.map(_.toString).getOrElse(group.id.toString)
-            ctx.routingLink(
-              (AppTab.Observations, props.programId, Focused.group(group.id)).some,
-              text
-            )
-
-          List(
-            ColDef(
-              ExpanderColumnId,
-              cell = cell =>
-                if (cell.row.getCanExpand())
-                  <.span(
-                    ^.cursor.pointer,
-                    TableStyles.ExpanderChevron,
-                    TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
-                    ^.onClick ==> (_.stopPropagationCB *> cell.row.getToggleExpandedHandler())
-                  )(TableIcons.ChevronRight.withFixedWidth(true))
-                else "",
-              enableResizing = false
-            ).setSize(35.toPx),
-            obsColumn(ObservationIdColumnId, _.obs.id)
-              .setCell:
-                _.value.map(obsLink)
-              .sortable,
-            // TODO: TargetTypeColumnId
-            obsColumn(TargetTypeColumnId, _ => ())
-              .setCell(_ => Icons.Star.withFixedWidth())
-              .setSize(35.toPx)
-              .sortable,
-            mixedColumn(
-              TargetColumnId,
-              r => r.obs.title,
-              r => (r.obs.id, r.targetWithId)
-            )
-              .setCell:
-                _.value match
-                  case s: String => <.span(s)
-                  case (a, b)    => targetLink(a, b)
-              .sortableBy(_.sortableValue),
-            obsColumn(GroupColumnId, _.group)
-              .setCell:
-                _.value.flatten.map(groupLink)
-              .sortableBy(_.flatMap(_.flatMap(_.name))),
-            // TODO: ValidationCheckColumnId
-            obsColumn(StateColumnId, _.obs.workflow.state)
-              .setCell(_.value.map(_.toString).orEmpty)
-              .sortable,
-            obsColumn(ScienceBandColumnId, _.obs.scienceBand)
-              .setCell:
-                _.value.flatten.fold("Not set")(_.shortName)
-              .sortable,
-            // TODO: CompletionColumnId
-            mixedColumn(
-              RAColumnId,
-              // at visualization time, defaults to base coordinates
-              r => r.coordsAtVizTime.map(_.ra),
-              r => r.coordsAtVizTime.map(_.ra)
-            )
-              .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
-              .sortable,
-            mixedColumn(
-              DecColumnId,
-              // at visualization time, defaults to base coordinates
-              r => r.coordsAtVizTime.map(_.dec),
-              r => r.coordsAtVizTime.map(_.dec)
-            )
-              .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
-              .sortable,
-            // TODO: TimingColumnId
-            // TODO: SEDColumnId
-            ColDef(
-              SEDColumnId,
-              v =>
-                v.value
-                  .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
-                  .flatMap(Target.sidereal.getOption)
-                  .flatMap(t =>
-                    Target.Sidereal.integratedSpectralDefinition
-                      .getOption(t)
-                      .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t))
-                  )
-                  .map(_.shortName),
-              ColumnNames(SEDColumnId)
-            ).setCell(cell =>
-              cell.value
-                .filterNot(_ => cell.row.getCanExpand())
-                .orEmpty
-            ).sortable,
-            obsColumn(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
-              .setCell: cell =>
-                cell.value.map: (id, constraintsSummary) =>
-                  <.a(
-                    ^.href := constraintUrl(id),
-                    ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
-                    constraintsSummary
-                  )
-              .sortableBy(_.map(_._2)),
-            // TODO: FindingChartColumnId
-            obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty)
-              .setCell(_.value.orEmpty)
-              .sortable,
-            obsColumn(
-              DurationColumnId,
-              _.execution.map(_.programTimeEstimate)
-            ).setCell:
-              _.value.map:
-                _.orSpinner(_.map(HoursMinutesAbbreviation.format).orEmpty)
-            .sortableBy(_.sortableValue)
-            // TODO: PriorityColumnId
-            // TODO: ChargedTimeColumnId
-          )
-      .useMemoBy((props, _, _) => // Rows
-        (props.observations.get.values.toList,
-         props.allTargets,
-         props.groups.get,
-         props.obsExecutions
+    def columns(
+      pid: Program.Id,
+      ctx: AppContext[IO]
+    ): List[ColumnDef.NoMeta[Expandable[ObsSummaryRow], ?]] =
+      // For columns that only have data in the base observation row.
+      def obsColumn[V](
+        id:       ColumnId,
+        accessor: ObsRow => V
+      ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
+        ColDef(
+          id,
+          v => v.value.fold(_ => none, accessor(_).some),
+          if (ColumnHeaderOverrides.contains(id)) " " else ColumnNames(id)
         )
-      ): (_, _, _) =>
-        (obsList, allTargets, groups, obsExecutions) =>
-          obsList
-            .filterNot(_.isCalibration)
-            .map: obs =>
-              obs -> obs.scienceTargetIds.toList
-                .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
-                .flattenOption
-            .map: (obs, targets) =>
-              val asterism = Asterism.fromTargets(targets)
-              Expandable(
-                ObsRow(
-                  obs,
-                  targets.headOption,
-                  asterism,
-                  obs.groupId.flatMap(groups.get),
-                  obsExecutions.getPot(obs.id)
-                ),
-                // Only expand if there are multiple targets
-                if (targets.sizeIs > 1)
-                  targets.map: target =>
-                    Expandable(ExpandedTargetRow(obs, target, obs.observationTime))
-                else Nil
+
+      extension [A](name: String | (A, TargetWithId))
+        def sortableValue =
+          name match
+            case s: String => s
+            case (_, b)    => b.target.name.value
+
+      extension (a: Option[Pot[Option[TimeSpan]]])
+        def sortableTimeSpan =
+          a.flatMap(_.toOption).flatten
+
+      // Column with expanded accessor. For rows that have data in the expanded target row.
+      def mixedColumn[V](
+        id:               ColumnId,
+        accessor:         ObsRow => V,
+        expandedAccessor: ExpandedTargetRow => V
+      ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], V] =
+        ColDef(id, v => v.value.fold(expandedAccessor, accessor), ColumnNames(id))
+
+      def constraintUrl(constraintId: Observation.Id): String =
+        ctx.pageUrl((AppTab.Constraints, pid, Focused.singleObs(constraintId)).some)
+
+      def goToConstraint(constraintId: Observation.Id): Callback =
+        ctx.pushPage(
+          (AppTab.Constraints, pid, Focused.singleObs(constraintId)).some
+        )
+
+      def targetLink(obsId: Observation.Id, tWId: TargetWithId): VdomNode =
+        val text = tWId.target.name.value
+        ctx.routingLink(
+          (AppTab.Observations, pid, Focused.singleObs(obsId, tWId.id.some)).some,
+          text
+        )
+
+      def obsLink(obsId: Observation.Id): VdomNode =
+        ctx.obsIdRoutingLink(pid, obsId)
+
+      def groupLink(group: Group): VdomNode =
+        val text = group.name.map(_.toString).getOrElse(group.id.toString)
+        ctx.routingLink(
+          (AppTab.Observations, pid, Focused.group(group.id)).some,
+          text
+        )
+
+      List(
+        ColDef(
+          ExpanderColumnId,
+          cell = cell =>
+            if (cell.row.getCanExpand())
+              <.span(
+                ^.cursor.pointer,
+                TableStyles.ExpanderChevron,
+                TableStyles.ExpanderChevronOpen.when(cell.row.getIsExpanded()),
+                ^.onClick ==> (_.stopPropagationCB *> cell.row.getToggleExpandedHandler())
+              )(TableIcons.ChevronRight.withFixedWidth(true))
+            else "",
+          enableResizing = false
+        ).setSize(35.toPx),
+        obsColumn(ObservationIdColumnId, _.obs.id)
+          .setCell:
+            _.value.map(obsLink)
+          .sortable,
+        // TODO: TargetTypeColumnId
+        obsColumn(TargetTypeColumnId, _ => ())
+          .setCell(_ => Icons.Star.withFixedWidth())
+          .setSize(35.toPx)
+          .sortable,
+        mixedColumn(
+          TargetColumnId,
+          r => r.obs.title,
+          r => (r.obs.id, r.targetWithId)
+        )
+          .setCell:
+            _.value match
+              case s: String => <.span(s)
+              case (a, b)    => targetLink(a, b)
+          .sortableBy(_.sortableValue),
+        obsColumn(GroupColumnId, _.group)
+          .setCell:
+            _.value.flatten.map(groupLink)
+          .sortableBy(_.flatMap(_.flatMap(_.name))),
+        // TODO: ValidationCheckColumnId
+        obsColumn(StateColumnId, _.obs.workflow.state)
+          .setCell(_.value.map(_.toString).orEmpty)
+          .sortable,
+        obsColumn(ScienceBandColumnId, _.obs.scienceBand)
+          .setCell:
+            _.value.flatten.fold("Not set")(_.shortName)
+          .sortable,
+        // TODO: CompletionColumnId
+        mixedColumn(
+          RAColumnId,
+          // at visualization time, defaults to base coordinates
+          r => r.coordsAtVizTime.map(_.ra),
+          r => r.coordsAtVizTime.map(_.ra)
+        )
+          .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
+          .sortable,
+        mixedColumn(
+          DecColumnId,
+          // at visualization time, defaults to base coordinates
+          r => r.coordsAtVizTime.map(_.dec),
+          r => r.coordsAtVizTime.map(_.dec)
+        )
+          .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
+          .sortable,
+        // TODO: TimingColumnId
+        // TODO: SEDColumnId
+        ColDef(
+          SEDColumnId,
+          v =>
+            v.value
+              .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
+              .flatMap(Target.sidereal.getOption)
+              .flatMap(t =>
+                Target.Sidereal.integratedSpectralDefinition
+                  .getOption(t)
+                  .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t))
               )
-      .useReactTableWithStateStoreBy: (props, ctx, cols, rows) =>
-        import ctx.given
+              .map(_.shortName),
+          ColumnNames(SEDColumnId)
+        ).setCell(cell =>
+          cell.value
+            .filterNot(_ => cell.row.getCanExpand())
+            .orEmpty
+        ).sortable,
+        obsColumn(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
+          .setCell: cell =>
+            cell.value.map: (id, constraintsSummary) =>
+              <.a(
+                ^.href := constraintUrl(id),
+                ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
+                constraintsSummary
+              )
+          .sortableBy(_.map(_._2)),
+        // TODO: FindingChartColumnId
+        obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty)
+          .setCell(_.value.orEmpty)
+          .sortable,
+        obsColumn(
+          DurationColumnId,
+          _.execution.map(_.programTimeEstimate)
+        ).setCell:
+          _.value.map:
+            _.orSpinner(_.map(HoursMinutesAbbreviation.format).orEmpty)
+        .sortableBy(_.sortableTimeSpan)
+        // TODO: PriorityColumnId
+        // TODO: ChargedTimeColumnId
+      )
+    end columns
 
-        val obsIds2RowSelection: Iso[List[Observation.Id], RowSelection] =
-          Iso[List[Observation.Id], RowSelection](obsIds =>
-            RowSelection:
-              obsIds.map(obsId => RowId(obsId.toString) -> true).toMap
-          )(selection =>
-            selection.value
-              .filter(_._2)
-              .keys
-              .toList
-              .map(rowId => Observation.Id.parse(rowId.value))
-              .flattenOption
-          )
+    private val component = ScalaFnComponent[Body]: props =>
+      for {
+        ctx     <- useContext(AppContext.ctx)
+        cols    <- useMemo(()):                           // Columns
+                     _ => columns(props.programId, ctx)
+        rows    <- useMemo(
+                     (props.observations.get.values.toList,
+                      props.allTargets,
+                      props.groups.get,
+                      props.obsExecutions
+                     )
+                   ): (obsList, allTargets, groups, obsExecutions) =>
+                     obsList
+                       .filterNot(_.isCalibration)
+                       .map: obs =>
+                         obs -> obs.scienceTargetIds.toList
+                           .map(id => allTargets.get(id).map(t => TargetWithId(id, t)))
+                           .flattenOption
+                       .map: (obs, targets) =>
+                         val asterism = Asterism.fromTargets(targets)
+                         Expandable(
+                           ObsRow(
+                             obs,
+                             targets.headOption,
+                             asterism,
+                             obs.groupId.flatMap(groups.get),
+                             obsExecutions.getPot(obs.id)
+                           ),
+                           // Only expand if there are multiple targets
+                           if (targets.sizeIs > 1)
+                             targets.map: target =>
+                               Expandable(ExpandedTargetRow(obs, target, obs.observationTime))
+                           else Nil
+                         )
+        table   <- useReactTableWithStateStore:
+                     import ctx.given
 
-        val rowSelection: View[RowSelection] = props.selectedObsIds.as(obsIds2RowSelection)
+                     val obsIds2RowSelection: Iso[List[Observation.Id], RowSelection] =
+                       Iso[List[Observation.Id], RowSelection](obsIds =>
+                         RowSelection:
+                           obsIds.map(obsId => RowId(obsId.toString) -> true).toMap
+                       )(selection =>
+                         selection.value
+                           .filter(_._2)
+                           .keys
+                           .toList
+                           .map(rowId => Observation.Id.parse(rowId.value))
+                           .flattenOption
+                       )
 
-        TableOptionsWithStateStore(
-          TableOptions(
-            cols,
-            rows,
-            enableExpanding = true,
-            getSubRows = (row, _) => row.subRows,
-            getRowId = (row, _, _) =>
-              RowId:
-                row.value.fold(
-                  o => o.obs.id.toString + o.targetWithId.id.toString,
-                  _.obs.id.toString
-                )
+                     val rowSelection: View[RowSelection] =
+                       props.selectedObsIds.as(obsIds2RowSelection)
+
+                     TableOptionsWithStateStore(
+                       TableOptions(
+                         cols,
+                         rows,
+                         enableExpanding = true,
+                         getSubRows = (row, _) => row.subRows,
+                         getRowId = (row, _, _) =>
+                           RowId:
+                             row.value.fold(
+                               o => o.obs.id.toString + o.targetWithId.id.toString,
+                               _.obs.id.toString
+                             )
+                         ,
+                         enableSorting = true,
+                         enableMultiRowSelection = true,
+                         state = PartialTableState(
+                           rowSelection = rowSelection.get,
+                           columnVisibility = props.columnVisibility.get
+                         ),
+                         onRowSelectionChange = stateInViewHandler(rowSelection.mod),
+                         onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod)
+                       ),
+                       TableStore(
+                         props.userId,
+                         TableId.ObservationsSummary,
+                         cols,
+                         ColumnsExcludedFromVisibility
+                       )
+                     )
+        _       <- useEffectOnMount:
+                     props.setToggleAllRowsSelected(table.toggleAllRowsSelected)
+        _       <- useEffectWithDeps(props.showScienceBand): showScienceBand =>
+                     table
+                       .getColumn(ScienceBandColumnId.value)
+                       .foldMap(_.toggleVisibility(showScienceBand))
+        resizer <- useResizeDetector
+        adding  <- useStateView(AddingObservation(false)) // adding new observation
+      } yield PrimeAutoHeightVirtualizedTable(
+        table,
+        _ => 32.toPx,
+        striped = true,
+        compact = Compact.Very,
+        innerContainerMod = ^.width := "100%",
+        containerRef = resizer.ref,
+        hoverableRows = rows.nonEmpty,
+        tableMod =
+          ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable |+| ExploreStyles.ExploreSelectableTable,
+        headerCellMod = _ => ExploreStyles.StickyHeader,
+        rowMod = row =>
+          TagMod(
+            ExploreStyles.TableRowSelected
+              .when(row.getIsSelected() && (row.subRows.isEmpty || !row.getIsExpanded())),
+            ExploreStyles.TableRowSelectedStart
+              .when(row.getIsSelected() && row.subRows.nonEmpty && row.getIsExpanded()),
+            ExploreStyles.TableRowSelectedSpan
+              .when:
+                props.selectedObsIds.get.contains_(row.original.value.obs.id)
             ,
-            enableSorting = true,
-            enableMultiRowSelection = true,
-            state = PartialTableState(
-              rowSelection = rowSelection.get,
-              columnVisibility = props.columnVisibility.get
-            ),
-            onRowSelectionChange = stateInViewHandler(rowSelection.mod),
-            onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod)
+            ExploreStyles.TableRowSelectedEnd.when:
+              row.original.value.isLastAsterismTargetOf
+                .exists(props.selectedObsIds.get.contains_)
+            ,
+            ^.onClick ==> table
+              .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
           ),
-          TableStore(
-            props.userId,
-            TableId.ObservationsSummary,
-            cols,
-            ColumnsExcludedFromVisibility
-          )
+        emptyMessage = <.span(LucumaStyles.HVCenter)(
+          Button(
+            severity = Button.Severity.Success,
+            icon = Icons.New,
+            disabled = adding.get.value,
+            loading = adding.get.value,
+            label = "Add an observation",
+            clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
+            onClick =
+              insertObs(props.programId, none, props.observations, adding, ctx).runAsyncAndForget
+          ).tiny.compact
         )
-      .useEffectOnMountBy: (props, _, _, _, table) =>
-        props.setToggleAllRowsSelected(table.toggleAllRowsSelected)
-      .useEffectWithDepsBy((props, _, _, _, _) => props.showScienceBand): (_, _, _, _, table) =>
-        showScienceBand =>
-          table
-            .getColumn(ScienceBandColumnId.value)
-            .foldMap(_.toggleVisibility(showScienceBand))
-      .useResizeDetector()
-      .useStateView(AddingObservation(false)) // adding new observation
-      .render: (props, ctx, _, rows, table, resizer, adding) =>
-        PrimeAutoHeightVirtualizedTable(
-          table,
-          _ => 32.toPx,
-          striped = true,
-          compact = Compact.Very,
-          innerContainerMod = ^.width := "100%",
-          containerRef = resizer.ref,
-          hoverableRows = rows.nonEmpty,
-          tableMod =
-            ExploreStyles.ExploreTable |+| ExploreStyles.ObservationsSummaryTable |+| ExploreStyles.ExploreSelectableTable,
-          headerCellMod = _ => ExploreStyles.StickyHeader,
-          rowMod = row =>
-            TagMod(
-              ExploreStyles.TableRowSelected
-                .when(row.getIsSelected() && (row.subRows.isEmpty || !row.getIsExpanded())),
-              ExploreStyles.TableRowSelectedStart
-                .when(row.getIsSelected() && row.subRows.nonEmpty && row.getIsExpanded()),
-              ExploreStyles.TableRowSelectedSpan
-                .when:
-                  props.selectedObsIds.get.contains_(row.original.value.obs.id)
-              ,
-              ExploreStyles.TableRowSelectedEnd.when:
-                row.original.value.isLastAsterismTargetOf
-                  .exists(props.selectedObsIds.get.contains_)
-              ,
-              ^.onClick ==> table
-                .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
-            ),
-          emptyMessage = <.span(LucumaStyles.HVCenter)(
-            Button(
-              severity = Button.Severity.Success,
-              icon = Icons.New,
-              disabled = adding.get.value,
-              loading = adding.get.value,
-              label = "Add an observation",
-              clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-              onClick =
-                insertObs(props.programId, none, props.observations, adding, ctx).runAsyncAndForget
-            ).tiny.compact
-          )
-        )
+      )
   end Body
 
   // 24 October 2024 - scalafix failing to parse with fewer braces
@@ -559,27 +562,26 @@ object ObsSummaryTile:
   private case class Title(
     columnVisibility:      View[ColumnVisibility],
     toggleAllRowsSelected: Option[Boolean => Callback]
-  ) extends ReactFnProps(Title.component)
+  ) extends ReactFnProps(Title)
 
-  private object Title:
-    private type Props = Title
-
-    private val component = ScalaFnComponent[Props]: props =>
-      React.Fragment(
-        props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
-          <.span(^.textAlign.center)(
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.CheckDouble,
-              label = "All",
-              onClick = toggleAllRowsSelected(true)
-            ).compact,
-            Button(
-              size = Button.Size.Small,
-              icon = Icons.SquareXMark,
-              label = "None",
-              onClick = toggleAllRowsSelected(false)
-            ).compact
-          ),
-        ColumnSelectorInTitle(SelectableColumnNames, props.columnVisibility)
+  private object Title
+      extends ReactFnComponent[Title](props =>
+        React.Fragment(
+          props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
+            <.span(^.textAlign.center)(
+              Button(
+                size = Button.Size.Small,
+                icon = Icons.CheckDouble,
+                label = "All",
+                onClick = toggleAllRowsSelected(true)
+              ).compact,
+              Button(
+                size = Button.Size.Small,
+                icon = Icons.SquareXMark,
+                label = "None",
+                onClick = toggleAllRowsSelected(false)
+              ).compact
+            ),
+          ColumnSelectorInTitle(SelectableColumnNames, props.columnVisibility)
+        )
       )
