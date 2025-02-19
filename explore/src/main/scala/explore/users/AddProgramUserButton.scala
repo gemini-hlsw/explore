@@ -49,11 +49,15 @@ object AddProgramUserButton
             .flatMap(pu => props.users.mod(_ :+ pu).to[IO])
             .switching(isActive.async, IsActive(_))
 
+        val toolTip = props.role match
+          case ProgramUserRole.External => "Share data with a new user"
+          case _                        => s"Add ${props.role.longName}"
+
         Button(
           severity = Button.Severity.Secondary,
           loading = isActive.get.value,
           icon = Icons.UserPlus,
-          tooltip = s"Add ${props.role.longName}",
+          tooltip = toolTip,
           onClick = addProgramUser.runAsync
         ).tiny.compact
     )

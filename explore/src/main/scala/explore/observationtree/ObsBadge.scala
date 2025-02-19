@@ -22,7 +22,6 @@ import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Enumerated
-import lucuma.core.util.Gid
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.LayeredIcon
@@ -82,12 +81,12 @@ object ObsBadge:
     <.progress(^.width := "100%", ^.max := all.length - 1, ^.value := all.indexOf(value))
   }
 
-  private val idIso = Gid[Observation.Id].isoPosLong
-
   private val component = ScalaFnComponent[Props]: props =>
     usePopupMenuRef.map: menuRef =>
       val obs    = props.obs
       val layout = props.layout
+
+      val identifierStr = obs.reference.fold(obs.id.show)(_.observationIndex.toString)
 
       val deleteButton =
         Button(
@@ -145,7 +144,7 @@ object ObsBadge:
             <.div(
               ExploreStyles.ObsBadgeId,
               scienceBandButton.when(props.showScienceBand),
-              s"[${idIso.get(obs.id).value.toHexString}]",
+              s"[$identifierStr]",
               props.cloneCB.whenDefined(_ => duplicateButton),
               deleteButton
             )

@@ -146,11 +146,13 @@ object ObservingModeSummary:
 
   given Display[ObservingModeSummary] = Display.byShortName:
     case GmosNorthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
-      s"GMOS-N Longslit ${grating.shortName} ${filter.map(_.shortName).getOrElse("None")} ${fpu.shortName} " +
-        s"${centralWavelength.value.toNanometers}nm ${ampReadMode.shortName} ${roi.shortName}"
+      val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-N Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
     case GmosSouthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
-      s"GMOS-S Longslit ${grating.shortName} ${filter.map(_.shortName).getOrElse("None")} ${fpu.shortName} " +
-        s"${centralWavelength.value.toNanometers}nm ${ampReadMode.shortName} ${roi.shortName}"
+      val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-S Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
 
   object GmosNorthLongSlit:
     given Order[GmosNorthLongSlit] =

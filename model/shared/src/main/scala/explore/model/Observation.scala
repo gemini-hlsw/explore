@@ -32,6 +32,7 @@ import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ObjectTracking
+import lucuma.core.model.ObservationReference
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PosAngleConstraint
@@ -58,6 +59,7 @@ import scala.collection.immutable.SortedSet
 
 case class Observation(
   id:                  Observation.Id,
+  reference:           Option[ObservationReference],
   title:               String,
   subtitle:            Option[NonEmptyString],
   scienceTargetIds:    AsterismIds,
@@ -84,11 +86,15 @@ case class Observation(
 
   lazy val configurationSummary: Option[String] =
     basicConfiguration match
-      case Some(BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _)) =>
-        s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-      case Some(BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _)) =>
-        s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-      case _                                                              =>
+      case Some(BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cwl)) =>
+        val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
+        val filterStr = filter.fold("None")(_.shortName)
+        s"GMOS-N ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}".some
+      case Some(BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cwl)) =>
+        val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
+        val filterStr = filter.fold("None")(_.shortName)
+        s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}".some
+      case _                                                                     =>
         none
 
   val site: Option[Site] = observingMode.map(_.siteFor)
@@ -277,6 +283,7 @@ object Observation:
   val Id = lucuma.core.model.Observation.Id
 
   val id                       = Focus[Observation](_.id)
+  val reference                = Focus[Observation](_.reference)
   val title                    = Focus[Observation](_.title)
   val subtitle                 = Focus[Observation](_.subtitle)
   val scienceTargetIds         = Focus[Observation](_.scienceTargetIds)
@@ -325,6 +332,10 @@ object Observation:
   given Decoder[Observation] = Decoder.instance(c =>
     for {
       id                  <- c.get[Observation.Id]("id")
+      reference           <- c.downField("reference")
+                               .downField("label")
+                               .success
+                               .traverse(_.as[Option[ObservationReference]])
       title               <- c.get[String]("title")
       subtitle            <- c.get[Option[NonEmptyString]]("subtitle")
       scienceTargetIds    <- c.downField("targetEnvironment").get[List[TargetIdWrapper]]("asterism")
@@ -351,6 +362,7 @@ object Observation:
       groupIndex          <- c.get[NonNegShort]("groupIndex")
     } yield Observation(
       id,
+      reference.flatten,
       title,
       subtitle,
       SortedSet.from(scienceTargetIds.map(_.id)),

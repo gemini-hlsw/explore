@@ -3,6 +3,7 @@
 
 package explore.users
 
+import cats.Order.given
 import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
@@ -60,6 +61,8 @@ import monocle.function.Each.*
 import queries.common.InvitationQueriesGQL.RevokeInvitationMutation
 import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
+import scala.collection.immutable.SortedSet
+
 case class ProgramUsersTable(
   users: View[List[ProgramUser]],
   mode:  ProgramUsersTable.Mode
@@ -72,8 +75,10 @@ case class ProgramUsersTable(
       NonEmptySet.of(ProgramUserRole.Pi, ProgramUserRole.Coi, ProgramUserRole.CoiRO)
     case Mode.SupportPrimary   => NonEmptySet.of(ProgramUserRole.SupportPrimary)
     case Mode.SupportSecondary => NonEmptySet.of(ProgramUserRole.SupportSecondary)
-    case Mode.DataUsers(_)     =>
-      NonEmptySet.of(ProgramUserRole.Coi, ProgramUserRole.CoiRO, ProgramUserRole.External)
+    case Mode.DataSharing(_)   =>
+      NonEmptySet.fromSetUnsafe(
+        SortedSet.from(Enumerated[ProgramUserRole].all) - ProgramUserRole.Pi
+      )
 
   private val hiddenColumns: Set[ProgramUsersTable.Column] = mode match
     case Mode.CoIs(_, proposalIsRo, userIsRoCoi)     =>
@@ -91,13 +96,12 @@ case class ProgramUsersTable(
         Column.DataAccess,
         Column.Actions
       )
-    case Mode.DataUsers(_)                           =>
+    case Mode.DataSharing(_)                         =>
       Set(
         Column.Partner,
         Column.EducationalStatus,
         Column.Thesis,
-        Column.Gender,
-        Column.Role
+        Column.Gender
       )
 
 object ProgramUsersTable:
@@ -105,7 +109,7 @@ object ProgramUsersTable:
     case CoIs(vault: UserVault, proposalIsReadonly: Boolean, userIsReadonlyCoi: Boolean)
     case SupportPrimary
     case SupportSecondary
-    case DataUsers(vault: UserVault)
+    case DataSharing(vault: UserVault)
 
   private case class TableMeta(
     users:              View[List[ProgramUser]],
@@ -118,7 +122,7 @@ object ProgramUsersTable:
     val userId: Option[User.Id] = mode match
       case Mode.CoIs(vault, _, _)                      => vault.user.id.some
       case Mode.SupportPrimary | Mode.SupportSecondary => none
-      case Mode.DataUsers(vault)                       => vault.user.id.some
+      case Mode.DataSharing(vault)                     => vault.user.id.some
 
     val userIsPi: Boolean = userId.fold(false)(id =>
       users.get.exists(pu => pu.user.exists(_.id === id) && pu.role === ProgramUserRole.Pi)
@@ -129,7 +133,7 @@ object ProgramUsersTable:
       case Mode.CoIs(_, proposalIsRo, userIsRoCoi)     =>
         !proposalIsRo && !userIsRoCoi && pu.role =!= ProgramUserRole.Pi
       case Mode.SupportPrimary | Mode.SupportSecondary => false
-      case Mode.DataUsers(_)                           => userIsPi && pu.role === ProgramUserRole.External
+      case Mode.DataSharing(_)                         => userIsPi && pu.role === ProgramUserRole.External
 
     def isCurrentUser(pu: ProgramUser): Boolean =
       (userId, pu.user).mapN((uid, p) => uid === p.id).getOrElse(false)
@@ -139,18 +143,18 @@ object ProgramUsersTable:
       case Mode.CoIs(_, proposalIsRo, userIsRoCoi)     =>
         !proposalIsRo && (!userIsRoCoi || isCurrentUser(pu))
       case Mode.SupportPrimary | Mode.SupportSecondary => false
-      case Mode.DataUsers(_)                           => userIsPi && pu.role === ProgramUserRole.External
+      case Mode.DataSharing(_)                         => userIsPi && pu.role === ProgramUserRole.External
 
     val userCanChangeCoiAccess: Boolean = mode match
       case Mode.CoIs(vault, proposalIsRo, userIsRoCoi) =>
         !proposalIsRo && (vault.isStaff || userIsPi)
       case Mode.SupportPrimary | Mode.SupportSecondary => false
-      case Mode.DataUsers(_)                           => false
+      case Mode.DataSharing(_)                         => false
 
     val canChangeDataAccess: Boolean = mode match
       case Mode.CoIs(_, _, _)                          => false
       case Mode.SupportPrimary | Mode.SupportSecondary => false
-      case Mode.DataUsers(_)                           => userIsPi
+      case Mode.DataSharing(_)                         => userIsPi
 
   private val ColDef = ColumnDef.WithTableMeta[View[ProgramUser], TableMeta]
 
@@ -477,7 +481,7 @@ object ProgramUsersTable:
                 clazz = ExploreStyles.PartnerSelector
               ): VdomNode
             else currentRole.shortName: VdomNode
-      ).sortableBy(_.get.shortName),
+      ).sortableBy(_.get),
       ColDef(
         Column.DataAccess.id,
         _.zoom(ProgramUser.hasDataAccess),
@@ -496,7 +500,7 @@ object ProgramUsersTable:
               disabled = !meta.canChangeDataAccess || meta.isActive.get.value,
               onChange = r => view.set(r)
             )
-      ),
+      ).sortableBy(_.get),
       ColDef(
         Column.Status.id,
         _.get.status,
@@ -550,9 +554,13 @@ object ProgramUsersTable:
         isActive           <- useStateView(IsActive(false))
         cols               <- useMemo(()): _ =>
                                 columns(using ctx)
-        rows               <- useMemo(props.users.reuseByValue)(
-                                _.toListOfViews.filter(row => props.filterRoles.contains_(row.get.role))
-                              )
+        rows               <- useMemo(props.users.reuseByValue): users =>
+                                val rows =
+                                  users.toListOfViews.filter(row => props.filterRoles.contains_(row.get.role))
+                                // for the data sharing table, sort by role so the support roles are last
+                                props.mode match
+                                  case Mode.DataSharing(_) => rows.sortBy(_.get.role)
+                                  case _                   => rows
         overlayPanelRef    <- useOverlayPanelRef
         currentProgUser    <- useStateView(none[View[ProgramUser]])
         _                  <- useEffectWithDeps(rows): rows =>

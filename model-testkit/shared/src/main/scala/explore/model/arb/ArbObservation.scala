@@ -15,6 +15,7 @@ import lucuma.core.math.arb.ArbWavelength.given
 import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ObservationReference
 import lucuma.core.model.ObservationValidation
 import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PosAngleConstraint
@@ -22,6 +23,7 @@ import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.arb.ArbConfiguration.given
 import lucuma.core.model.arb.ArbConstraintSet.given
+import lucuma.core.model.arb.ArbObservationReference.given
 import lucuma.core.model.arb.ArbObservationValidation.given
 import lucuma.core.model.arb.ArbObservationWorkflow.given
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
@@ -53,6 +55,7 @@ trait ArbObservation:
     Arbitrary(
       for
         id                  <- arbitrary[Observation.Id]
+        reference           <- arbitrary[Option[ObservationReference]]
         title               <- arbitrary[String]
         subtitle            <- arbitrary[Option[NonEmptyString]]
         scienceTargetIds    <- arbitrary[Set[Target.Id]]
@@ -76,6 +79,7 @@ trait ArbObservation:
         groupIndex          <- arbitrary[NonNegShort]
       yield Observation(
         id,
+        reference,
         title,
         subtitle,
         SortedSet.from(scienceTargetIds),
@@ -102,6 +106,7 @@ trait ArbObservation:
   given Cogen[Observation] =
     Cogen[
       (Observation.Id,
+       Option[ObservationReference],
        String,
        Option[String],
        List[Target.Id],
@@ -126,6 +131,7 @@ trait ArbObservation:
     ]
       .contramap(o =>
         (o.id,
+         o.reference,
          o.title,
          o.subtitle.map(_.value),
          o.scienceTargetIds.toList,
