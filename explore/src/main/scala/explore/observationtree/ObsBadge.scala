@@ -27,9 +27,9 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.LayeredIcon
 import lucuma.react.fa.TextLayer
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
 import lucuma.react.primereact.hooks.all.*
+import lucuma.react.primereact.tooltip.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.EnumDropdownView
@@ -86,7 +86,9 @@ object ObsBadge:
       val obs    = props.obs
       val layout = props.layout
 
-      val identifierStr = obs.reference.fold(obs.id.show)(_.observationIndex.toString)
+      val identifier: VdomNode = obs.reference.fold(s"[${obs.id.show}]": VdomNode): ref =>
+        <.span(s"[${ref.observationIndex.toString}]")
+          .withTooltip(content = s"${ref.label} (${obs.id})")
 
       val deleteButton =
         Button(
@@ -144,7 +146,7 @@ object ObsBadge:
             <.div(
               ExploreStyles.ObsBadgeId,
               scienceBandButton.when(props.showScienceBand),
-              s"[$identifierStr]",
+              identifier,
               props.cloneCB.whenDefined(_ => duplicateButton),
               deleteButton
             )
@@ -181,7 +183,7 @@ object ObsBadge:
               .toTagMod(ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_)))))
           )
 
-      val validationIcon = Tooltip.Fragment(content = validationTooltip)(<.span(Icons.ErrorIcon))
+      val validationIcon = <.span(Icons.ErrorIcon).withTooltip(content = validationTooltip)
 
       React.Fragment(
         <.div(
