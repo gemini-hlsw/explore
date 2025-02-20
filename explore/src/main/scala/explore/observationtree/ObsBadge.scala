@@ -86,7 +86,10 @@ object ObsBadge:
       val obs    = props.obs
       val layout = props.layout
 
-      val identifierStr = obs.reference.fold(obs.id.show)(_.observationIndex.toString)
+      val identifier: VdomNode = obs.reference.fold(s"[${obs.id.show}]": VdomNode): ref =>
+        Tooltip.Fragment(content = s"${ref.label} (${obs.id})")(
+          <.span(s"[${ref.observationIndex.toString}]")
+        )
 
       val deleteButton =
         Button(
@@ -144,7 +147,7 @@ object ObsBadge:
             <.div(
               ExploreStyles.ObsBadgeId,
               scienceBandButton.when(props.showScienceBand),
-              s"[$identifierStr]",
+              identifier,
               props.cloneCB.whenDefined(_ => duplicateButton),
               deleteButton
             )
