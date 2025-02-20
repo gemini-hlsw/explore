@@ -27,8 +27,8 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.LayeredIcon
 import lucuma.react.fa.TextLayer
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
+import lucuma.react.primereact.tooltip.*
 import lucuma.react.primereact.hooks.all.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
@@ -87,9 +87,8 @@ object ObsBadge:
       val layout = props.layout
 
       val identifier: VdomNode = obs.reference.fold(s"[${obs.id.show}]": VdomNode): ref =>
-        Tooltip.Fragment(content = s"${ref.label} (${obs.id})")(
-          <.span(s"[${ref.observationIndex.toString}]")
-        )
+        <.span(s"[${ref.observationIndex.toString}]")
+          .withTooltip(content = s"${ref.label} (${obs.id})")
 
       val deleteButton =
         Button(
@@ -184,7 +183,7 @@ object ObsBadge:
               .toTagMod(ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_)))))
           )
 
-      val validationIcon = Tooltip.Fragment(content = validationTooltip)(<.span(Icons.ErrorIcon))
+      val validationIcon = <.span(Icons.ErrorIcon).withTooltip(content = validationTooltip)
 
       React.Fragment(
         <.div(
