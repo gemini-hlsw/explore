@@ -4,7 +4,7 @@
 package explore.tabs
 
 import cats.data.NonEmptyList
-import cats.syntax.option.*
+import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import explore.*
@@ -90,10 +90,8 @@ object ProgramTabContents
             )
           )
 
-        val sharingRoles: Set[ProgramUserRole] =
-          Set(ProgramUserRole.Coi, ProgramUserRole.CoiRO, ProgramUserRole.External)
-        val countOfDataAccess                  =
-          props.users.get.count(pu => sharingRoles.contains(pu.role) && pu.hasDataAccess)
+        val countOfDataAccess =
+          props.users.get.count(pu => pu.role =!= ProgramUserRole.Pi && pu.hasDataAccess)
 
         val dataSharingTile =
           Tile(
