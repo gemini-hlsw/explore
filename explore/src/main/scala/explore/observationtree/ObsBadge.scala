@@ -28,8 +28,8 @@ import lucuma.react.fa.LayeredIcon
 import lucuma.react.fa.TextLayer
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.TooltipOptions
-import lucuma.react.primereact.tooltip.*
 import lucuma.react.primereact.hooks.all.*
+import lucuma.react.primereact.tooltip.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.EnumDropdownView
