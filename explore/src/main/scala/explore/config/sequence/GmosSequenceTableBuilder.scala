@@ -15,6 +15,7 @@ import lucuma.react.SizePx
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.schemas.model.enums.StepExecutionState
 import lucuma.ui.reusability.given
 import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
@@ -25,7 +26,6 @@ import org.http4s.client.Client
 import org.typelevel.log4cats.Logger
 
 import scala.scalajs.LinkingInfo
-import lucuma.schemas.model.enums.StepExecutionState
 
 private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
   private type Props = GmosSequenceTable[S, D]
