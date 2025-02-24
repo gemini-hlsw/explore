@@ -15,6 +15,7 @@ import lucuma.react.SizePx
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
+import lucuma.schemas.model.enums.StepExecutionState
 import lucuma.ui.reusability.given
 import lucuma.ui.sequence.*
 import lucuma.ui.syntax.all.given
@@ -51,7 +52,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
           .map(_.step)
           .collect:
             case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
-              renderVisitExtraRow(httpClient)(step)
+              renderVisitExtraRow(httpClient)(step, showOngoingLabel = true)
       ).setColumnSize(ColumnSizes(ExtraRowColumnId))
     ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
@@ -141,8 +142,11 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
               val step: SequenceRow[D] = stepRow.step
               TagMod(
                 step match
-                  case SequenceRow.Executed.ExecutedStep(_, _)                       =>
-                    SequenceStyles.RowHasExtra |+| ExploreStyles.SequenceRowDone
+                  case SequenceRow.Executed.ExecutedStep(step, _)                    =>
+                    SequenceStyles.RowHasExtra |+|
+                      ExploreStyles.SequenceRowDone.unless_(
+                        step.executionState == StepExecutionState.Ongoing
+                      )
                   case SequenceRow.FutureStep(_, _, firstOf, _) if firstOf.isDefined =>
                     ExploreStyles.SequenceRowFirstInAtom
                   case _                                                             => TagMod.empty,
