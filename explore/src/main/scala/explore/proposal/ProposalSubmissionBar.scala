@@ -43,8 +43,10 @@ case class ProposalSubmissionBar(
   deadline:                 Option[Timestamp],
   callId:                   Option[CallForProposals.Id],
   canSubmit:                Boolean,
+  hasDefinedObservations:   Boolean,
   hasUndefinedObservations: Boolean
-) extends ReactFnProps(ProposalSubmissionBar.component)
+) extends ReactFnProps(ProposalSubmissionBar.component):
+  val hasObsError = !hasDefinedObservations || hasUndefinedObservations
 
 object ProposalSubmissionBar:
   private object IsUpdatingStatus extends NewType[Boolean]
@@ -81,9 +83,17 @@ object ProposalSubmissionBar:
       errorMessage     <- useStateView(none[String]) // Submission error message
       _                <-
         useLayoutEffectWithDeps(
-          (props.proposalStatus.get, props.callId, props.hasUndefinedObservations)
-        ): (ps, _, he) =>
-          if (he && ps === ProposalStatus.NotSubmitted)
+          (props.proposalStatus.get,
+           props.callId,
+           props.hasDefinedObservations,
+           props.hasUndefinedObservations
+          )
+        ): (ps, _, hasDef, hasUndef) =>
+          if (!hasDef && ps === ProposalStatus.NotSubmitted)
+            errorMessage.set(
+              "Proposal cannot be submitted without at least one defined observation.".some
+            )
+          else if (hasUndef && ps === ProposalStatus.NotSubmitted)
             errorMessage.set(
               "Proposal cannot be submitted with undefined observations. Define them or mark them as inactive.".some
             )
@@ -124,7 +134,7 @@ object ProposalSubmissionBar:
                   label = "Submit Proposal",
                   onClick = updateStatus(ProposalStatus.Submitted),
                   disabled =
-                    isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline || props.hasUndefinedObservations
+                    isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline || props.hasObsError
                 ).compact.tiny,
                 props.deadline.map: deadline =>
                   val (deadlineStr, left): (String, Option[String]) =

@@ -55,6 +55,7 @@ case class ProposalTabContents(
   undoStacks:               View[UndoStacks[IO, ProgramDetails]],
   layout:                   LayoutsMap,
   userIsReadonlyCoi:        Boolean,
+  hasDefinedObservations:   Boolean,
   hasUndefinedObservations: Boolean
 ) extends ReactFnProps(ProposalTabContents.component)
 
@@ -135,6 +136,7 @@ object ProposalTabContents:
                 deadline,
                 proposal.get.call.map(_.id),
                 isStdUser && !props.userIsReadonlyCoi,
+                props.hasDefinedObservations,
                 props.hasUndefinedObservations
               )
             )

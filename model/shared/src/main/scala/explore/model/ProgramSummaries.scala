@@ -79,6 +79,9 @@ case class ProgramSummaries(
   lazy val hasUndefinedObservations: Boolean =
     observations.values.exists(_.workflow.state === ObservationWorkflowState.Undefined)
 
+  lazy val hasDefinedObservations: Boolean =
+    observations.values.exists(_.workflow.state === ObservationWorkflowState.Defined)
+
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     observations.toList
       .flatMap((obsId, obs) => obs.attachmentIds.map(_ -> obsId))
