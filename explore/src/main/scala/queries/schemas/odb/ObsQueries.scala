@@ -160,7 +160,7 @@ object ObsQueries:
             .map(gId => ObservationPropertiesInput(groupId = gId.assign))
             .orIgnore
         )
-      .raiseGraphQLErrors
+      .raiseGraphQLErrorsOnNoData
       .map: result =>
         result.createObservation.observation
 
@@ -193,7 +193,7 @@ object ObsQueries:
           observationId = obsId.assign,
           SET = ObservationPropertiesInput(groupId = newGroupId.orUnassign).assign
         )
-      .raiseGraphQLErrors
+      .raiseGraphQLErrorsOnNoData
       .map(_.cloneObservation.newObservation)
 
   def applyObservation[F[_]: Async](
