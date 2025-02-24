@@ -19,7 +19,7 @@ import explore.model.ObservationList
 import explore.model.enums.AppTab
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
-import explore.utils.ToastCtx
+import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
@@ -29,7 +29,6 @@ import lucuma.schemas.odb.input.*
 import monocle.Iso
 import monocle.Lens
 import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ObsQueries.*
 
 def focusObs[F[_]](
   programId: Program.Id,
@@ -56,18 +55,13 @@ def cloneObs(
 ): IO[Unit] =
   import ctx.given
 
-  obsIds
-    .traverse(cloneObservation[IO](_, newGroupId))
-    .flatMap: newObsList =>
-      ObsActions
-        .obsExistence(
-          newObsList.map(_.id),
-          focusObs = obsId => focusObs(programId, obsId.some, ctx),
-          postMessage = ToastCtx[IO].showToast(_)
-        )
-        .set(observations):
-          newObsList.map(_.some)
-        .toAsync
+  ObsActions
+    .cloneObservations(
+      obsIds,
+      newGroupId,
+      focusObs = obsId => focusObs(programId, obsId.some, ctx),
+      postMessage = ToastCtx[IO].showToast(_)
+    )(observations)
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)
@@ -102,18 +96,15 @@ def insertObs(
 ): IO[Unit] =
   import ctx.given
 
-  createObservation[IO](programId, parentId)
-    .flatMap: obs =>
-      ObsActions
-        .obsExistence(
-          List(obs.id),
-          focusObs = obsId => focusObs(programId, obsId.some, ctx),
-          postMessage = ToastCtx[IO].showToast(_)
-        )
-        .set(observations):
-          List(obs.some)
-        .toAsync
+  ObsActions
+    .insertObservation(
+      programId,
+      parentId,
+      focusObs = obsId => focusObs(programId, obsId.some, ctx),
+      postMessage = ToastCtx[IO].showToast(_)
+    )(observations)
     .switching(adding.zoom(AddingObservation.value.asLens).async)
+    .withToastDuring("Creating observation")
 
 def insertGroup(
   programId: Program.Id,

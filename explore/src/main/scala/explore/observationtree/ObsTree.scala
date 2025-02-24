@@ -336,8 +336,7 @@ object ObsTree:
                     props.observations,
                     ctx
                   ).switching(adding.async, AddingObservation(_))
-                    .withToastBefore(s"Duplicating obs ${obs.id}", sticky = true)
-                    .clearToastsAfter
+                    .withToastDuring(s"Duplicating obs ${obs.id}")
                     .runAsync
                     .some,
                   setScienceBandCB = (

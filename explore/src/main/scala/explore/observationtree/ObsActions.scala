@@ -17,8 +17,10 @@ import explore.model.Observation
 import explore.model.ObservationList
 import explore.optics.all.*
 import explore.undo.Action
+import explore.undo.AsyncAction
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ScienceBand
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -138,6 +140,9 @@ object ObsActions:
         }
     )
 
+  private def singleObsGetter(obsId: Observation.Id): ObservationList => Option[Observation] =
+    _.get(obsId)
+
   private def obsListGetter(
     obsIds: List[Observation.Id]
   ): ObservationList => List[Option[Observation]] =
@@ -182,4 +187,66 @@ object ObsActions:
             postMessage(s"Restored ${obsIds.length} observation(s)") >>
             obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)
         )
+    )
+
+  def cloneObservations(
+    idsToClone:  List[Observation.Id],
+    newGroupId:  Option[Group.Id],
+    focusObs:    Observation.Id => Callback = _ => Callback.empty,
+    postMessage: String => IO[Unit] = _ => IO.unit
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): AsyncAction[ObservationList, List[Observation.Id], List[Option[Observation]]] =
+    AsyncAction(
+      asyncGet = idsToClone
+        .traverse(ObsQueries.cloneObservation[IO](_, newGroupId))
+        .map(obsList => (obsList.map(_.id), obsList.map(_.some))),
+      getter = obsListGetter,
+      setter = obsListSetter,
+      onSet = obsIds =>
+        (_, elemListOpt) =>
+          elemListOpt.sequence.fold(
+            ObsQueries.deleteObservations[IO](obsIds) >>
+              postMessage(s"Deleted ${obsIds.length} observation(s)")
+          )(obsList => obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)),
+      onRestore = obsIds =>
+        (_, elemListOpt) =>
+          elemListOpt.sequence.fold(
+            ObsQueries.deleteObservations[IO](obsIds) >>
+              postMessage(s"Deleted ${obsIds.length} observation(s)")
+          )(obsList =>
+            ObsQueries.undeleteObservations[IO](obsIds) >>
+              postMessage(s"Restored ${obsIds.length} observation(s)") >>
+              obsList.headOption.foldMap(obs => focusObs(obs.id).toAsync)
+          )
+    )
+
+  def insertObservation(
+    programId:     Program.Id,
+    parentGroupId: Option[Group.Id],
+    focusObs:      Observation.Id => Callback = _ => Callback.empty,
+    postMessage:   String => IO[Unit] = _ => IO.unit
+  )(using
+    FetchClient[IO, ObservationDB]
+  ): AsyncAction[ObservationList, Observation.Id, Option[Observation]] =
+    AsyncAction(
+      asyncGet =
+        ObsQueries.createObservation[IO](programId, parentGroupId).map(o => (o.id, o.some)),
+      getter = singleObsGetter,
+      setter = singleObsSetter,
+      onSet = obsId =>
+        (_, optObs) =>
+          optObs.fold(
+            ObsQueries.deleteObservations[IO](List(obsId)) >>
+              postMessage(s"Deleted observation $obsId")
+          )(_ => focusObs(obsId).toAsync),
+      onRestore = obsId =>
+        (_, optObs) =>
+          optObs.fold(
+            ObsQueries.deleteObservations[IO](List(obsId)) >>
+              postMessage(s"Deleted observation $obsId")
+          )(_ =>
+            ObsQueries.undeleteObservations[IO](List(obsId)) >>
+              postMessage(s"Restored observation $obsId") >> focusObs(obsId).toAsync
+          )
     )

@@ -152,8 +152,7 @@ object ObsTabContents extends TwoPanels:
                   activeGroup,
                   observations,
                   ctx
-                ).void
-                  .withToast(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
+                ).withToastDuring(s"Duplicating obs ${obsIdSet.idSet.mkString_(", ")}")
               case _                                           => IO.unit
             .runAsync
             .unless_(readonly)
