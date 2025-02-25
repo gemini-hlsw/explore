@@ -14,6 +14,8 @@ import io.circe.refined.given
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
+import lucuma.core.util.DateInterval
+import lucuma.odb.json.time.decoder.given
 import lucuma.schemas.enums.ProposalStatus
 import monocle.Focus
 import monocle.Lens
@@ -30,7 +32,8 @@ case class ProgramDetails(
   reference:         Option[ProgramReference],
   allocations:       CategoryAllocationList,
   proprietaryMonths: NonNegInt,
-  shouldNotify:      Boolean
+  shouldNotify:      Boolean,
+  active:            DateInterval
 ) derives Eq:
   val allUsers: List[ProgramUser] = pi.fold(users)(_ :: users)
 
@@ -64,5 +67,6 @@ object ProgramDetails:
       as <- c.downField("allocations").as[CategoryAllocationList]
       pm <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
       sn <- c.downField("goa").downField("shouldNotify").as[Boolean]
-    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, pm, sn)
+      ac <- c.downField("active").as[DateInterval]
+    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, pm, sn, ac)
   )

@@ -18,7 +18,6 @@ import explore.model.ProgramUser
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
-import lucuma.core.util.DateInterval
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
@@ -47,18 +46,11 @@ object ProgramDetailsTile
             .zoom(ProgramDetails.shouldNotify)
             .withOnMod(b => ProgramQueries.updateGoaShouldNotify[IO](props.programId, b).runAsync)
 
-        // Since the program tab is for Accepted proposals only, we should always have a CfP.
-        val cfpActivePeriod: Option[DateInterval] = details.proposal.flatMap(_.call).map(_.active)
-
         <.div(ExploreStyles.ProgramDetailsTile)(
           <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(
             FormInfo(details.reference.map(_.label).getOrElse("---"), "Reference"),
-            cfpActivePeriod.map(di =>
-              React.Fragment(
-                FormInfo(Constants.GppDateFormatter.format(di.start), "Start"),
-                FormInfo(Constants.GppDateFormatter.format(di.end), "End")
-              )
-            ),
+            FormInfo(Constants.GppDateFormatter.format(details.active.start), "Start"),
+            FormInfo(Constants.GppDateFormatter.format(details.active.end), "End"),
             // Thesis should be set True if any of the investigators will use the proposal as part of their thesis (3390)
             FormInfo(if (thesis) "Yes" else "No", "Thesis"),
             FormInfo(s"${details.proprietaryMonths} months", "Proprietary")
