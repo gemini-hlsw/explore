@@ -26,5 +26,9 @@ object ProgramDetailsSubquery
         proprietaryMonths
         shouldNotify
       }
+      active {
+        start
+        end
+      }
     }
   """
