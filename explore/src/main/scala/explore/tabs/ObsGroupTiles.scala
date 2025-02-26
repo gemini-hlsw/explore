@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptySet
 import cats.syntax.all.*
 import crystal.Pot
 import explore.components.Tile
@@ -12,6 +13,7 @@ import explore.model.Group
 import explore.model.GroupEditTileIds
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.GroupWarning
 import explore.model.layout.LayoutsMap
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -24,6 +26,7 @@ import lucuma.react.resizeDetector.UseResizeDetectorReturn
 case class ObsGroupTiles(
   userId:            Option[User.Id],
   group:             UndoSetter[Group],
+  groupWarnings:     Option[NonEmptySet[GroupWarning]],
   childCount:        Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   resize:            UseResizeDetectorReturn,
@@ -52,6 +55,7 @@ object ObsGroupTiles:
           _ =>
             GroupEditBody(
               props.group,
+              props.groupWarnings,
               props.childCount,
               props.timeEstimateRange,
               props.group.get.system

@@ -3,6 +3,7 @@
 
 package explore.observationtree
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
@@ -23,6 +24,7 @@ import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.model.enums.GroupWarning
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
@@ -65,6 +67,7 @@ case class ObsTree(
   groups:                UndoSetter[GroupList],
   groupsChildren:        Map[Option[Group.Id], List[Either[Observation, Group]]],
   parentGroups:          Either[Observation.Id, Group.Id] => List[Group.Id],
+  groupWarnings:         Map[Group.Id, NonEmptySet[GroupWarning]],
   obsExecutionTimes:     ObservationExecutionMap,
   undoer:                Undoer,
   focusedObs:            Option[Observation.Id], // obs explicitly selected for editing
@@ -353,6 +356,7 @@ object ObsTree:
 
               GroupBadge(
                 group,
+                props.groupWarnings.get(group.id),
                 selected = props.focusedGroup.contains_(group.id),
                 onClickCB = linkOverride:
                   focusGroup(props.programId, group.id.some, ctx)

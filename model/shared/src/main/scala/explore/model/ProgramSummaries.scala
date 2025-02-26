@@ -10,6 +10,7 @@ import cats.derived.*
 import cats.implicits.*
 import crystal.Pot
 import eu.timepit.refined.cats.given
+import explore.model.enums.GroupWarning
 import explore.model.syntax.all.*
 import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.enums.ObservationWorkflowState
@@ -212,6 +213,57 @@ case class ProgramSummaries(
       .toMap
   end groupsChildren
 
+  private def allObservationsForGroup(groupId: Group.Id): List[Observation] =
+    groupsChildren
+      .get(groupId.some)
+      .fold(List.empty): children =>
+        children.flatMap {
+          case Left(obs)    => List(obs)
+          case Right(group) => allObservationsForGroup(group.id)
+        }
+
+  lazy val allObservationsForGroups: List[(Group, List[Observation])] =
+    groups.values
+      .filterNot(_.system)
+      .map(group => (group, allObservationsForGroup(group.id)))
+      .toList
+
+  lazy val groupWarnings: Map[Group.Id, NonEmptySet[GroupWarning]] =
+    extension (b:   Boolean)
+      def mkSet(gw: GroupWarning): Set[GroupWarning] = if (b) Set(gw) else Set.empty
+    val ignoreStates: Set[ObservationWorkflowState]  =
+      Set(ObservationWorkflowState.Inactive, ObservationWorkflowState.Undefined)
+
+    allObservationsForGroups
+      .map: (group, obses) =>
+        val undefWarning =
+          obses
+            .exists(_.workflow.state === ObservationWorkflowState.Undefined)
+            .mkSet(GroupWarning.UndefinedObservations)
+        val unapproved   =
+          obses
+            .exists(_.workflow.state === ObservationWorkflowState.Unapproved)
+            .mkSet(GroupWarning.UnapprovedObservations)
+
+        val obs2Check =
+          NonEmptyList.fromList(obses.filterNot(o => ignoreStates.contains(o.workflow.state)))
+
+        val moreWarnings = obs2Check.fold(Set.empty): nel =>
+          val bandMismatch = // for all AND groups
+            (group.isAnd && nel.tail.exists(_.scienceBand =!= nel.head.scienceBand))
+              .mkSet(GroupWarning.BandMismatch)
+          val siteMismatch = // for "consecutive" AND groups
+            // maximum interval starts out as empty
+            (group.isAnd && group.maximumInterval.forall(_.isZero) &&
+              nel.tail.exists(_.site =!= nel.head.site)).mkSet(GroupWarning.SiteMismatch)
+          bandMismatch ++ siteMismatch
+
+        NonEmptySet
+          .fromSet(SortedSet.from(undefWarning ++ unapproved ++ moreWarnings))
+          .map(nes => (group.id, nes))
+      .flattenOption
+      .toMap
+
 object ProgramSummaries:
   val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]       =
     Focus[ProgramSummaries](_.optProgramDetails)
@@ -255,7 +307,7 @@ object ProgramSummaries:
     groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]],
     configRequests:     List[ConfigurationRequestWithObsIds]
   ): ProgramSummaries =
-    ProgramSummaries(
+    val x = ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
       obsList.toSortedMap(_.id),
@@ -267,3 +319,10 @@ object ProgramSummaries:
       GroupTimeRangeMap(groupTimeRangePots),
       configRequests.toSortedMap(_.id)
     )
+    println(
+      s"allObses: ${x.allObservationsForGroups.map((g, os) => (g.id, g.minimumRequired, g.maximumInterval, os.map(_.id)))}"
+    )
+    println(
+      s"groupWarnings: ${x.groupWarnings.map((gid, set) => (gid, set.map(_.longMsg).toList))}"
+    )
+    x

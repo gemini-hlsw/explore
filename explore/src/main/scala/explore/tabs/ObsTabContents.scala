@@ -199,6 +199,7 @@ object ObsTabContents extends TwoPanels:
                 props.groups,
                 props.programSummaries.get.groupsChildren,
                 props.programSummaries.get.parentGroups(_),
+                props.programSummaries.get.groupWarnings,
                 props.obsExecutions,
                 props.programSummaries: Undoer,
                 props.focusedObs,
@@ -325,6 +326,7 @@ object ObsTabContents extends TwoPanels:
                 ObsGroupTiles(
                   props.vault.userId,
                   group,
+                  props.programSummaries.get.groupWarnings.get(group.get.id),
                   props.programSummaries.get.groupsChildren.get(groupId.some).map(_.length).orEmpty,
                   props.groupTimeRanges.getPot(groupId),
                   resize,
