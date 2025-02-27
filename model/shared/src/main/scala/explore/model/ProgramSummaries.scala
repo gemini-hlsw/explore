@@ -10,6 +10,7 @@ import cats.derived.*
 import cats.implicits.*
 import crystal.Pot
 import eu.timepit.refined.cats.given
+import explore.model.enums.GroupWarning
 import explore.model.syntax.all.*
 import lucuma.core.enums.ObservationValidationCode
 import lucuma.core.enums.ObservationWorkflowState
@@ -211,6 +212,63 @@ case class ProgramSummaries(
           _.fold(_.groupIndex, _.parentIndex)
       .toMap
   end groupsChildren
+
+  // Limit how deep we check group warnings. At some point the odb will probably need to limit tree depth,
+  // but it currently doesn not do so. Deep trees will kill time calculation and scheduling...
+  private val maxGroupCheckDepth = 10
+
+  private def allObservationsForGroup(groupId: Group.Id, depth: Int = 0): List[Observation] =
+    groupsChildren
+      .get(groupId.some)
+      .fold(List.empty): children =>
+        children.flatMap {
+          case Left(obs)    => List(obs)
+          case Right(group) =>
+            if (depth < maxGroupCheckDepth) allObservationsForGroup(group.id, depth + 1)
+            else List.empty
+        }
+
+  lazy val allObservationsForGroups: List[(Group, List[Observation])] =
+    groups.values
+      .filterNot(_.system)
+      .map(group => (group, allObservationsForGroup(group.id)))
+      .toList
+
+  lazy val groupWarnings: Map[Group.Id, NonEmptySet[GroupWarning]] =
+    extension (b:   Boolean)
+      def mkSet(gw: GroupWarning): Set[GroupWarning] = if (b) Set(gw) else Set.empty
+    val ignoreStates: Set[ObservationWorkflowState]  =
+      Set(ObservationWorkflowState.Inactive, ObservationWorkflowState.Undefined)
+
+    allObservationsForGroups
+      .map: (group, obses) =>
+        val undefWarning =
+          obses
+            .exists(_.workflow.state === ObservationWorkflowState.Undefined)
+            .mkSet(GroupWarning.UndefinedObservations)
+        val unapproved   =
+          obses
+            .exists(_.workflow.state === ObservationWorkflowState.Unapproved)
+            .mkSet(GroupWarning.UnapprovedObservations)
+
+        val obs2Check =
+          NonEmptyList.fromList(obses.filterNot(o => ignoreStates.contains(o.workflow.state)))
+
+        val moreWarnings = obs2Check.fold(Set.empty): nel =>
+          val bandMismatch = // for all AND groups
+            (group.isAnd && nel.tail.exists(_.scienceBand =!= nel.head.scienceBand))
+              .mkSet(GroupWarning.BandMismatch)
+          val siteMismatch = // for "consecutive" AND groups
+            // maximum interval starts out as empty
+            (group.isAnd && group.maximumInterval.forall(_.isZero) &&
+              nel.tail.exists(_.site =!= nel.head.site)).mkSet(GroupWarning.SiteMismatch)
+          bandMismatch ++ siteMismatch
+
+        NonEmptySet
+          .fromSet(SortedSet.from(undefWarning ++ unapproved ++ moreWarnings))
+          .map(nes => (group.id, nes))
+      .flattenOption
+      .toMap
 
 object ProgramSummaries:
   val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]       =

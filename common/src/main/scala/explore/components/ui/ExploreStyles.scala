@@ -50,7 +50,6 @@ object ExploreStyles:
   val ObsGroupTitleWithWrap: Css = Css("obs-group-title-with-wrap")
   val ObsGroupTitleWithList: Css = Css("obs-group-title-with-list")
   val DeleteButton: Css          = Css("delete-button")
-  val GroupHelp: Css             = Css("group-help")
 
   val MainTitleProgramId: Css = Css("main-title-program-id")
   val ResizeHandle: Css       = Css("resize-handle")
@@ -76,6 +75,8 @@ object ExploreStyles:
   val SelectedObsTreeGroup: Css        = Css("selected-obs-tree-group")
   val UnselectedObsTreeGroup: Css      = Css("unselected-obs-tree-group")
   val ObsTreeGroupHeader: Css          = Css("obs-tree-group-header")
+  val GroupBadgeLeft: Css              = Css("group-badge-left")
+  val GroupBadgeRight: Css             = Css("group-badge-right")
   val ObsTreeItem: Css                 = Css("obs-tree-item")
   val ObsTreeGroupLeaf: Css            = Css("obs-tree-group-leaf")
   val TreeToolbar: Css                 = Css("tree-toolbar")
@@ -117,6 +118,7 @@ object ExploreStyles:
   val GroupForm: Css          = Css("group-form")
   val GroupDelaysForm: Css    = Css("group-delays-form")
   val GroupPlannedTime: Css   = Css("group-planned-time")
+  val GroupWarnings: Css      = Css("group-warnings")
 
   val ApiKeysPopup          = Css("api-keys-popup")
   val ApiKeysTable          = Css("api-keys-table")

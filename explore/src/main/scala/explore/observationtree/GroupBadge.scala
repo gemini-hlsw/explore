@@ -3,12 +3,14 @@
 
 package explore.observationtree
 
+import cats.data.NonEmptySet
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.Group
+import explore.model.enums.GroupWarning
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -20,6 +22,7 @@ import lucuma.ui.primereact.*
 
 case class GroupBadge(
   group:     Group,
+  warnings:  Option[NonEmptySet[GroupWarning]],
   selected:  Boolean,
   onClickCB: ReactMouseEvent => Callback,
   href:      String,
@@ -35,6 +38,15 @@ object GroupBadge:
   private val component = ScalaFnComponent[Props]: props =>
     val group = props.group
     val name  = group.name.foldMap(_.value.toLowerCase())
+
+    val warningIcon = props.warnings.map(nes =>
+      <.span(Icons.MissingInfoIcon)
+        .withTooltip(
+          if (nes.length === 1) nes.head.shortMsg
+          else
+            <.ul(nes.toList.toTagMod(w => <.li(w.shortMsg)))
+        )
+    )
 
     val deleteButton =
       <.span(
@@ -59,12 +71,19 @@ object GroupBadge:
       ^.onClick ==> props.onClickCB,
       ^.href      := props.href
     )(
-      if group.system then "" else if group.isAnd then "AND" else "OR",
-      group.name.map(n => <.em(n.value)),
-      deleteButton,
-      NonEmptyString
-        .from(s"groups/system-$name.md")
-        .toOption
-        .map(HelpIcon(_, ExploreStyles.GroupHelp))
-        .when(group.system)
+      <.div(
+        ExploreStyles.GroupBadgeLeft,
+        if group.system then "" else if group.isAnd then "AND" else "OR",
+        group.name.map(n => <.em(n.value))
+      ),
+      <.div(
+        ExploreStyles.GroupBadgeRight,
+        warningIcon,
+        deleteButton,
+        NonEmptyString
+          .from(s"groups/system-$name.md")
+          .toOption
+          .map(HelpIcon(_))
+          .when(group.system)
+      )
     )

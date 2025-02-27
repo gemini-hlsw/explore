@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
@@ -18,6 +19,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Group
 import explore.model.ProgramTimeRange
+import explore.model.enums.GroupWarning
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -43,6 +45,7 @@ import scala.scalajs.js
 
 case class GroupEditBody(
   group:             UndoSetter[Group],
+  warnings:          Option[NonEmptySet[GroupWarning]],
   elementsLength:    Int,
   timeEstimateRange: Pot[Option[ProgramTimeRange]],
   readonly:          Boolean
@@ -228,7 +231,17 @@ object GroupEditBody:
       React.Fragment(
         <.div(ExploreStyles.GroupEditTile)(
           selectGroupForm,
-          groupTypeSpecificForms
+          groupTypeSpecificForms,
+          props.warnings.map: nes =>
+            <.div(
+              ExploreStyles.GroupWarnings,
+              nes.toList.toTagMod(w =>
+                Message(id = s"${group.id}-${w.shortMsg}",
+                        text = w.longMsg,
+                        severity = Message.Severity.Warning
+                )
+              )
+            )
         )
       )
 

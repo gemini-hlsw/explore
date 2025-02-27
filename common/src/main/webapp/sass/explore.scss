@@ -1587,7 +1587,10 @@ svg.fa-check.explore-success-icon {
 }
 
 .group-edit-tile {
-  margin: 16px;
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   .group-type-select {
     display: flex;
@@ -1662,6 +1665,16 @@ svg.fa-check.explore-success-icon {
     grid-template-columns: repeat(2, auto);
     align-items: center;
     margin-right: auto;
+  }
+
+  .group-warnings {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+
+    .p-inline-message {
+      justify-content: left;
+    }
   }
 }
 
@@ -2560,19 +2573,31 @@ input[type='file'].explore-fileupload {
   .obs-tree-group-leaf {
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     align-items: center;
     gap: 8px;
     width: 100%;
     color: var(--site-text-color);
 
-    .delete-button,
-    :has(.delete-button) {
-      margin-left: auto;
+    .group-badge-left {
+      display: flex;
+      gap: 1rem;
+    }
 
-      &.p-button {
-        // Reduce padding to make the button fit inside the row
-        padding-top: 1px;
-        padding-bottom: 1px;
+    .group-badge-right {
+      justify-self: end;
+      display: flex;
+      align-items: center;
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .p-button {
+        padding: 0;
+        margin: 0;
       }
     }
   }
@@ -3528,8 +3553,4 @@ a.explore-upgrade-link {
   position: absolute;
   top: -20px;
   left: 0;
-}
-
-.group-help {
-  margin-left: auto;
 }
