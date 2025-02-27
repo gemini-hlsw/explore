@@ -213,13 +213,19 @@ case class ProgramSummaries(
       .toMap
   end groupsChildren
 
-  private def allObservationsForGroup(groupId: Group.Id): List[Observation] =
+  // Limit how deep we check group warnings. At some point the odb will probably need to limit tree depth,
+  // but it currently doesn not do so. Deep trees will kill time calculation and scheduling...
+  private val maxGroupCheckDepth = 10
+
+  private def allObservationsForGroup(groupId: Group.Id, depth: Int = 0): List[Observation] =
     groupsChildren
       .get(groupId.some)
       .fold(List.empty): children =>
         children.flatMap {
           case Left(obs)    => List(obs)
-          case Right(group) => allObservationsForGroup(group.id)
+          case Right(group) =>
+            if (depth < maxGroupCheckDepth) allObservationsForGroup(group.id, depth + 1)
+            else List.empty
         }
 
   lazy val allObservationsForGroups: List[(Group, List[Observation])] =
@@ -307,7 +313,7 @@ object ProgramSummaries:
     groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]],
     configRequests:     List[ConfigurationRequestWithObsIds]
   ): ProgramSummaries =
-    val x = ProgramSummaries(
+    ProgramSummaries(
       optProgramDetails,
       targetList.toSortedMap(_.id, _.target),
       obsList.toSortedMap(_.id),
@@ -319,10 +325,3 @@ object ProgramSummaries:
       GroupTimeRangeMap(groupTimeRangePots),
       configRequests.toSortedMap(_.id)
     )
-    println(
-      s"allObses: ${x.allObservationsForGroups.map((g, os) => (g.id, g.minimumRequired, g.maximumInterval, os.map(_.id)))}"
-    )
-    println(
-      s"groupWarnings: ${x.groupWarnings.map((gid, set) => (gid, set.map(_.longMsg).toList))}"
-    )
-    x
