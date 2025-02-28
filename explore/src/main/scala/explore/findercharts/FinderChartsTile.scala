@@ -134,7 +134,7 @@ object FinderChartsTile:
               }.toAsync
 
             val getUrls =
-              newOas.traverse_(key => getAttachmentUrl(props.programId, client, key, urlMap))
+              newOas.traverse_(key => getAttachmentUrl(client, key, urlMap))
 
             val defaultSelected =
               if (allCurrentKeys.size === 1) props.selected.set(allCurrentKeys.headOption.map(_._1))

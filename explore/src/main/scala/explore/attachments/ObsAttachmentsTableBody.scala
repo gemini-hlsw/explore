@@ -105,7 +105,6 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
           val name = NonEmptyString.unsafeFrom(f.name)
           client
             .updateAttachment(
-              props.pid,
               oa.id,
               name,
               oa.description,
@@ -138,7 +137,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
     aid:    Attachment.Id
   )(using ToastCtx[IO]): IO[Unit] =
     props.attachments.mod(_.removed(aid)).toAsync *>
-      client.deleteAttachment(props.pid, aid).toastErrors
+      client.deleteAttachment(aid).toastErrors
 
   def deletePrompt(
     props:  Props,
@@ -168,7 +167,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
       .useMemoBy((p, _) => p.authToken): (_, ctx) => // client
         token => OdbRestClient[IO](ctx.environment, token) // This could be in the shared state
       .useStateView[UrlMap](Map.empty) // urlMap
-      .useEffectWithDepsBy((props, _, _, _) => props.attachments.get): (props, _, client, urlMap) =>
+      .useEffectWithDepsBy((props, _, _, _) => props.attachments.get): (_, _, client, urlMap) =>
         attachments =>
           val allCurrentKeys = attachments.observationList.map(_.toMapKey).toSet
           val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
@@ -179,7 +178,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
               newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
             }.toAsync
           val getUrls      =
-            newOas.traverse_(key => getAttachmentUrl(props.pid, client, key, urlMap))
+            newOas.traverse_(key => getAttachmentUrl(client, key, urlMap))
 
           updateUrlMap *> getUrls
       // Columns

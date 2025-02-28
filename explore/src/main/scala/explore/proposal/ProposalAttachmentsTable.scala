@@ -73,7 +73,6 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
   extension (a: Attachment) private def toMapKey: UrlMapKey = (a.id, a.updatedAt)
 
   def deletePrompt(
-    programId:      Program.Id,
     modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
     att:            Attachment
@@ -86,7 +85,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
         s"Delete attachment? This action is not undoable.",
         acceptLabel = "Delete",
         rejectLabel = "Cancel",
-        accept = deleteAttachment(programId, modAttachments, client, att.id).runAsync
+        accept = deleteAttachment(modAttachments, client, att.id).runAsync
       )
       .show
 
@@ -99,7 +98,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
       .useStateView(Action.None)
       .useStateView[UrlMap](Map.empty)
       .useEffectWithDepsBy((props, _, _, _, _) => props.attachments.get.proposalList):
-        (props, _, client, _, urlMap) =>
+        (_, _, client, _, urlMap) =>
           attachments =>
             val allCurrentKeys = attachments.map(_.toMapKey).toSet
             val newPas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
@@ -111,9 +110,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
               }.toAsync
             val getUrls      =
               newPas.traverse_(key =>
-                getAttachmentUrl(props.programId, key._1, client).flatMap(p =>
-                  urlMap.mod(_.updated(key, p)).toAsync
-                )
+                getAttachmentUrl(key._1, client).flatMap(p => urlMap.mod(_.updated(key, p)).toAsync)
               )
 
             updateUrlMap *> getUrls
@@ -165,7 +162,6 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                             tableLabelButtonClasses,
                             Icons.Trash,
                             ^.onClick ==> deletePrompt(
-                              props.programId,
                               props.attachments.mod,
                               client,
                               thisAtt
@@ -183,7 +179,6 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                             ExploreStyles.FileUpload,
                             ^.tpe    := "file",
                             ^.onChange ==> onUpdateFileSelected(
-                              props.programId,
                               props.attachments.mod,
                               thisAtt,
                               client,

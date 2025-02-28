@@ -150,13 +150,12 @@ trait ObsAttachmentUtils extends AttachmentUtils:
       .when_(files.nonEmpty)
 
   def getAttachmentUrl(
-    pid:    Program.Id,
     client: OdbRestClient[IO],
     mapKey: UrlMapKey,
     urlMap: View[UrlMap]
   ): IO[Unit] =
     client
-      .getAttachmentUrl(pid, mapKey._1)
+      .getAttachmentUrl(mapKey._1)
       .attempt
       .map {
         case Right(url) => Pot(url)
