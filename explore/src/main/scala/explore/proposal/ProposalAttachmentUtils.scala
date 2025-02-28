@@ -68,7 +68,6 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
       .orEmpty
 
   def updateAttachment(
-    programId:      Program.Id,
     modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
     att:            Attachment,
@@ -82,7 +81,6 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
           val name = NonEmptyString.unsafeFrom(f.name)
           client
             .updateAttachment(
-              programId,
               att.id,
               name,
               none,
@@ -104,20 +102,18 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
       .orEmpty
 
   def deleteAttachment(
-    programId:      Program.Id,
     modAttachments: Endo[AttachmentList] => Callback,
     client:         OdbRestClient[IO],
     attId:          Attachment.Id
   )(using ToastCtx[IO]): IO[Unit] =
     modAttachments(_.removed(attId)).toAsync *>
-      client.deleteAttachment(programId, attId).toastErrors
+      client.deleteAttachment(attId).toastErrors
 
   def getAttachmentUrl(
-    programId: Program.Id,
-    attId:     Attachment.Id,
-    client:    OdbRestClient[IO]
+    attId:  Attachment.Id,
+    client: OdbRestClient[IO]
   ): IO[Pot[String]] =
-    client.getAttachmentUrl(programId, attId).attempt.map {
+    client.getAttachmentUrl(attId).attempt.map {
       case Right(url) => Pot(url)
       case Left(t)    => Pot.error(t)
     }
@@ -136,7 +132,6 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
         .runAsync).when_(files.nonEmpty)
 
   def onUpdateFileSelected(
-    programId:      Program.Id,
     modAttachments: Endo[AttachmentList] => Callback,
     thisAtt:        Attachment,
     client:         OdbRestClient[IO],
@@ -144,7 +139,7 @@ trait ProposalAttachmentUtils extends AttachmentUtils:
   )(e: ReactEventFromInput)(using ToastCtx[IO], Logger[IO]): Callback =
     val files = e.target.files.toList
     (Callback(e.target.value = null) *>
-      updateAttachment(programId, modAttachments, client, thisAtt, files)
+      updateAttachment(modAttachments, client, thisAtt, files)
         .switching(action.async, Action.Replace, Action.None)
         .runAsync)
       .when_(files.nonEmpty)

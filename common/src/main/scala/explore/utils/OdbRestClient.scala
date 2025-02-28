@@ -27,9 +27,9 @@ trait OdbRestClient[F[_]] {
   // Allows us to have a reuse - needed for memoization, etc.
   def authToken: NonEmptyString
 
-  def getAttachment(programId: Program.Id, attachmentId: Attachment.Id): F[Stream[F, Byte]]
+  def getAttachment(attachmentId: Attachment.Id): F[Stream[F, Byte]]
 
-  def getAttachmentUrl(programId: Program.Id, attachmentId: Attachment.Id): F[String]
+  def getAttachmentUrl(attachmentId: Attachment.Id): F[String]
 
   def insertAttachment(
     programId:      Program.Id,
@@ -40,14 +40,13 @@ trait OdbRestClient[F[_]] {
   ): F[Attachment.Id]
 
   def updateAttachment(
-    programId:    Program.Id,
     attachmentId: Attachment.Id,
     fileName:     NonEmptyString,
     description:  Option[NonEmptyString],
     data:         Stream[F, Byte]
   ): F[Unit]
 
-  def deleteAttachment(programId: Program.Id, attachmentId: Attachment.Id): F[Unit]
+  def deleteAttachment(attachmentId: Attachment.Id): F[Unit]
 }
 
 object OdbRestClient {
@@ -96,22 +95,21 @@ object OdbRestClient {
       val authToken: NonEmptyString = authToken
 
       def getAttachment(
-        programId:    Program.Id,
         attachmentId: Attachment.Id
       ): F[Stream[F, Byte]] =
         runRequest("Getting Attachment")(baseUri =>
           Request[F](
             method = Method.GET,
-            uri = baseUri / programId.show / attachmentId.show,
+            uri = baseUri / attachmentId.show,
             headers = authHeader
           )
         ).use(r => Async[F].pure(r.body))
 
-      def getAttachmentUrl(programId: Program.Id, attachmentId: Attachment.Id): F[String] =
+      def getAttachmentUrl(attachmentId: Attachment.Id): F[String] =
         runRequest("Getting URL")(baseUri =>
           Request[F](
             method = Method.GET,
-            uri = baseUri / "url" / programId.show / attachmentId.show,
+            uri = baseUri / "url" / attachmentId.show,
             headers = authHeader
           )
         ).use(
@@ -126,7 +124,8 @@ object OdbRestClient {
         data:           Stream[F, Byte]
       ): F[Attachment.Id] =
         runRequest("Adding Attachment") { baseUri =>
-          val uri = (baseUri / programId.show)
+          val uri = baseUri
+            .withQueryParam("programId", programId.show)
             .withQueryParam("fileName", fileName)
             .withQueryParam("attachmentType", attachmentType.tag)
             .withOptionQueryParam("description", description)
@@ -143,14 +142,13 @@ object OdbRestClient {
         )
 
       def updateAttachment(
-        programId:    Program.Id,
         attachmentId: Attachment.Id,
         fileName:     NonEmptyString,
         description:  Option[NonEmptyString],
         data:         Stream[F, Byte]
       ): F[Unit] =
         runRequest("Updating Attachment") { baseUri =>
-          val uri = (baseUri / programId.show / attachmentId.show)
+          val uri = (baseUri / attachmentId.show)
             .withQueryParam("fileName", fileName)
             .withOptionQueryParam("description", description)
           Request[F](
@@ -161,9 +159,9 @@ object OdbRestClient {
           )
         }.use(_ => Async[F].unit)
 
-      def deleteAttachment(programId: Program.Id, attachmentId: Attachment.Id): F[Unit] =
+      def deleteAttachment(attachmentId: Attachment.Id): F[Unit] =
         runRequest("Deleting Attachment") { baseUri =>
-          val uri = baseUri / programId.show / attachmentId.show
+          val uri = baseUri / attachmentId.show
           Request[F](
             method = Method.DELETE,
             uri = uri,
