@@ -22,7 +22,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
-import org.http4s.client.Client
 import org.typelevel.log4cats.Logger
 
 import scala.scalajs.LinkingInfo
@@ -40,9 +39,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
     ExtraRowColumnId -> FixedSize(0.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
-  private def columns(httpClient: Client[IO])(using
-    Logger[IO]
-  ): List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
+  private def columns(using Logger[IO]): List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
     List(
       SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
@@ -52,7 +49,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
           .map(_.step)
           .collect:
             case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
-              renderVisitExtraRow(httpClient)(step, showOngoingLabel = true)
+              renderVisitExtraRow(step, showOngoingLabel = true)
       ).setColumnSize(ColumnSizes(ExtraRowColumnId))
     ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
@@ -71,7 +68,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
         ctx        <- useContext(AppContext.ctx)
         cols       <- useMemo(()): _ =>
                         import ctx.given
-                        columns(ctx.httpClient)
+                        columns
         visitsData <- useMemo(props.visits):
                         visitsSequences(_, none)
         rows       <-
