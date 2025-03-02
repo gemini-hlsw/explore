@@ -99,7 +99,7 @@ trait SequenceTileHelper:
             .map(_.combineAll.evalMap(_ => refreshSequence))
       _                                       <-
         useEffectStreamResourceOnMount: // Subscribe to step executed events
-          VisitQueriesGQL.StepSubscription
+          VisitQueriesGQL.StepEventSubscription
             .subscribe[IO](obsId)
             .raiseFirstNoDataError
             .ignoreGraphQLErrors
@@ -108,6 +108,14 @@ trait SequenceTileHelper:
                 List(StepStage.StartStep, StepStage.EndStep)
                   .contains_(data.executionEventAdded.value.stepStage)
               .evalMap(_ => (refreshSequence >> refreshVisits).to[IO])
+      _                                       <-
+        useEffectStreamResourceOnMount: // Subscribe to dataset edits
+          VisitQueriesGQL.DatasetEditSubscription
+            .subscribe[IO](obsId)
+            .raiseFirstNoDataError
+            .ignoreGraphQLErrors
+            .map:
+              _.evalMap(_ => (refreshSequence >> refreshVisits).to[IO])
     yield LiveSequence(
       (visits.value, sequenceData.value).tupled,
       visits.isRunning || sequenceData.isRunning

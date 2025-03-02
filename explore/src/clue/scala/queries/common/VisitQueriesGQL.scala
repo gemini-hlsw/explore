@@ -31,7 +31,7 @@ object VisitQueriesGQL:
     // ${ExecutionVisitsSubquery.Fragments}
 
   @GraphQL
-  trait StepSubscription extends GraphQLOperation[ObservationDB]:
+  trait StepEventSubscription extends GraphQLOperation[ObservationDB]:
     val document = s"""
       subscription($$obsId: ObservationId!) {
         executionEventAdded(input: { observationId: $$obsId, eventType: { EQ: STEP } }) {
@@ -40,6 +40,16 @@ object VisitQueriesGQL:
               stepStage
             }
           }
+        }
+      }
+    """
+
+  @GraphQL
+  trait DatasetEditSubscription extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      subscription($$obsId: ObservationId!) {
+        datasetEdit(input: { observationId: $$obsId }) {
+          value { id }
         }
       }
     """
