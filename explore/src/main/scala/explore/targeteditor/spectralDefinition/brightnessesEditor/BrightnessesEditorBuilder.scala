@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.spectralDefinition.brightnessesEditor
 
 import cats.Order.*
 import cats.syntax.all.*
@@ -40,12 +40,7 @@ import monocle.Focus
 
 import scala.collection.immutable.SortedMap
 
-sealed trait BrightnessesEditor[T]:
-  def brightnesses: View[SortedMap[Band, BrightnessMeasure[T]]]
-  def expanded: View[IsExpanded]
-  def disabled: Boolean
-
-sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T]](implicit
+private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T]](implicit
   enumUnits: Enumerated[Units Of Brightness[T]]
 ):
   protected case class State(usedBands: Set[Band], newBand: Option[Band])
@@ -207,28 +202,3 @@ sealed abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[T
             )
           )
         )
-
-case class IntegratedBrightnessEditor(
-  brightnesses: View[SortedMap[Band, BrightnessMeasure[Integrated]]],
-  expanded:     View[IsExpanded],
-  disabled:     Boolean
-) extends ReactFnProps[IntegratedBrightnessEditor](IntegratedBrightnessEditor.component)
-    with BrightnessesEditor[Integrated]
-
-object IntegratedBrightnessEditor
-    extends BrightnessesEditorBuilder[Integrated, IntegratedBrightnessEditor]:
-  protected val label                                                          = "Brightness"
-  protected lazy val defaultBandUnits: Band => Units Of Brightness[Integrated] =
-    _.defaultIntegrated.units
-
-case class SurfaceBrightnessEditor(
-  brightnesses: View[SortedMap[Band, BrightnessMeasure[Surface]]],
-  expanded:     View[IsExpanded],
-  disabled:     Boolean
-) extends ReactFnProps[SurfaceBrightnessEditor](SurfaceBrightnessEditor.component)
-    with BrightnessesEditor[Surface]
-
-object SurfaceBrightnessEditor extends BrightnessesEditorBuilder[Surface, SurfaceBrightnessEditor]:
-  protected val label                                                       = "Surface Brightness"
-  protected lazy val defaultBandUnits: Band => Units Of Brightness[Surface] =
-    _.defaultSurface.units

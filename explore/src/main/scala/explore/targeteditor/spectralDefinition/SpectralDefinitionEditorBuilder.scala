@@ -1,7 +1,7 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.targeteditor
+package explore.targeteditor.spectralDefinition
 
 import cats.effect.IO
 import cats.syntax.all.*
@@ -72,20 +72,7 @@ import lucuma.react.primereact.SelectItem
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
-sealed trait SpectralDefinitionEditor[T, S]:
-  def spectralDefinition: Aligner[SpectralDefinition[T], S]
-  def catalogInfo: Option[CatalogInfo]
-  def calibrationRole: Option[CalibrationRole]
-  def brightnessExpanded: View[IsExpanded]
-  def disabled: Boolean
-
-  def toInput: SpectralDefinition[T] => S
-  def sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]]
-  def bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
-  def emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
-  def fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[T]]]
-
-sealed abstract class SpectralDefinitionEditorBuilder[
+private abstract class SpectralDefinitionEditorBuilder[
   T,
   S,
   Props <: SpectralDefinitionEditor[T, S]
@@ -106,7 +93,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
     for
       ctx             <- useContext(AppContext.ctx)
       given Logger[IO] = ctx.logger
-      sed             <- useStateView(props.sedAlignerOpt.map(_.get))
+      sedView         <- useStateView(props.sedAlignerOpt.map(_.get))
                            .map:
                              _.withOnMod: value =>
                                (value, props.sedAlignerOpt)
@@ -115,84 +102,75 @@ sealed abstract class SpectralDefinitionEditorBuilder[
     yield
       val stellarLibrarySpectrumAlignerOpt
         : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.stellarLibrary
-              .andThen(
+              .andThen:
                 UnnormalizedSED.StellarLibrary.librarySpectrum
-              ),
+            ,
             UnnormalizedSedInput.stellarLibrary.modify
           )
-        )
 
       val coolStarTemperatureAlignerOpt
         : Option[Aligner[CoolStarTemperature, Input[CoolStarTemperature]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.coolStarModel.andThen(UnnormalizedSED.CoolStarModel.temperature),
             UnnormalizedSedInput.coolStar.modify
           )
-        )
 
       val galaxySpectrumAlignerOpt: Option[Aligner[GalaxySpectrum, Input[GalaxySpectrum]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.galaxy.andThen(UnnormalizedSED.Galaxy.galaxySpectrum),
             UnnormalizedSedInput.galaxy.modify
           )
-        )
 
       val planetSpectrumAlignerOpt: Option[Aligner[PlanetSpectrum, Input[PlanetSpectrum]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.planet.andThen(UnnormalizedSED.Planet.planetSpectrum),
             UnnormalizedSedInput.planet.modify
           )
-        )
 
       val quasarSpectrumAlignerOpt: Option[Aligner[QuasarSpectrum, Input[QuasarSpectrum]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.quasar.andThen(UnnormalizedSED.Quasar.quasarSpectrum),
             UnnormalizedSedInput.quasar.modify
           )
-        )
 
       val hiiRegionSpectrumAlignerOpt
         : Option[Aligner[HIIRegionSpectrum, Input[HIIRegionSpectrum]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.hiiRegion.andThen(UnnormalizedSED.HIIRegion.hiiRegionSpectrum),
             UnnormalizedSedInput.hiiRegion.modify
           )
-        )
 
       val planetaryNebulaSpectrumAlignerOpt
         : Option[Aligner[PlanetaryNebulaSpectrum, Input[PlanetaryNebulaSpectrum]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
-            UnnormalizedSED.planetaryNebula.andThen(
+            UnnormalizedSED.planetaryNebula.andThen:
               UnnormalizedSED.PlanetaryNebula.planetaryNebulaSpectrum
-            ),
+            ,
             UnnormalizedSedInput.planetaryNebula.modify
           )
-        )
 
       val powerLawIndexAlignerOpt: Option[Aligner[BigDecimal, Input[BigDecimal]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.powerLaw.andThen(UnnormalizedSED.PowerLaw.index),
             UnnormalizedSedInput.powerLaw.modify
           )
-        )
 
       val blackBodyTemperatureAlignerOpt: Option[Aligner[Quantity[PosInt, Kelvin], Input[PosInt]]] =
-        props.sedAlignerOpt.flatMap(
+        props.sedAlignerOpt.flatMap:
           _.zoomOpt(
             UnnormalizedSED.blackBody.andThen(UnnormalizedSED.BlackBody.temperature),
             UnnormalizedSedInput.blackBodyTempK.modify
           )
-        )
 
       def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
         Dropdown(
@@ -211,6 +189,13 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
 
       val sed: Option[SedType[T]] = currentType(props.spectralDefinition.get)
+      // val sed: Option[SedType[T]] = sedView.get.flatMap(unnormalizedSed =>
+      //   currentType(
+      //     props.spectralDefinition.get.copy(
+      //       unnormalizedSED = unnormalizedSed.some
+      //     )
+      //   )
+      // )
 
       React.Fragment(
         props.catalogInfo.flatMap(ci =>
@@ -244,11 +229,11 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             clazz = LucumaPrimeStyles.FormField,
             disabled = props.disabled
           ),
-          <.span(PrimeStyles.InputGroupAddon,
-                 ^.borderRight := 0.px,
-                 props.calibrationRole.renderRequiredForITCIcon
-          )
-            .when(sed.isEmpty)
+          <.span(
+            PrimeStyles.InputGroupAddon,
+            ^.borderRight := 0.px,
+            props.calibrationRole.renderRequiredForITCIcon
+          ).when(sed.isEmpty)
         ),
         stellarLibrarySpectrumAlignerOpt
           .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
@@ -325,200 +310,4 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             )
           )
       )
-}
-
-case class IntegratedSpectralDefinitionEditor(
-  spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
-  catalogInfo:        Option[CatalogInfo],
-  brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
-)(using Logger[IO])
-    extends ReactFnProps[IntegratedSpectralDefinitionEditor](
-      IntegratedSpectralDefinitionEditor.component
-    )
-    with SpectralDefinitionEditor[Integrated, SpectralDefinitionIntegratedInput] {
-  val toInput: SpectralDefinition[Integrated] => SpectralDefinitionIntegratedInput = _.toInput
-
-  private val bandNormalizedAlignerOpt: Option[
-    Aligner[
-      SpectralDefinition.BandNormalized[Integrated],
-      BandNormalizedIntegratedInput
-    ]
-  ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.bandNormalized[Integrated],
-      forceAssign(SpectralDefinitionIntegratedInput.bandNormalized.modify)(
-        BandNormalizedIntegratedInput()
-      )
-    )
-
-  val sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]] =
-    bandNormalizedAlignerOpt.flatMap(
-      _.zoomOpt(
-        SpectralDefinition.BandNormalized.sed[Integrated].some,
-        forceAssign(BandNormalizedIntegratedInput.sed.modify)(
-          UnnormalizedSedInput()
-        )
-      )
-    )
-
-  val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[Integrated]]]] =
-    bandNormalizedAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.BandNormalized.brightnesses[Integrated],
-        BandNormalizedIntegratedInput.brightnesses.modify
-      )
-        .view(_.toInput.assign)
-    )
-
-  private val emissionLinesAlignerOpt: Option[
-    Aligner[SpectralDefinition.EmissionLines[Integrated], EmissionLinesIntegratedInput]
-  ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.emissionLines[Integrated],
-      forceAssign(SpectralDefinitionIntegratedInput.emissionLines.modify)(
-        EmissionLinesIntegratedInput()
-      )
-    )
-
-  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Integrated]]]] =
-    emissionLinesAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.EmissionLines.lines[Integrated],
-        EmissionLinesIntegratedInput.lines.modify
-      )
-        .view(_.toInput.assign)
-    )
-
-  override val fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[Integrated]]] =
-    emissionLinesAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.EmissionLines.fluxDensityContinuum[Integrated],
-        EmissionLinesIntegratedInput.fluxDensityContinuum.modify
-      )
-        .view(_.toInput.assign)
-    )
-}
-
-object IntegratedSpectralDefinitionEditor
-    extends SpectralDefinitionEditorBuilder[
-      Integrated,
-      SpectralDefinitionIntegratedInput,
-      IntegratedSpectralDefinitionEditor
-    ] {
-  override protected val currentType
-    : SpectralDefinition[Integrated] => Option[SedType[Integrated]] =
-    IntegratedSEDType.fromSpectralDefinition
-
-  override protected val disabledItems: HashSet[SedType[Integrated]] =
-    HashSet(IntegratedSEDType.UserDefinedType)
-
-  override protected val brightnessEditor: (
-    View[SortedMap[Band, BrightnessMeasure[Integrated]]],
-    View[IsExpanded],
-    Boolean
-  ) => VdomNode =
-    (brightnessesView, expanded, disabled) =>
-      IntegratedBrightnessEditor(brightnessesView, expanded, disabled)
-
-  override protected val emissionLineEditor: (
-    View[SortedMap[Wavelength, EmissionLine[Integrated]]],
-    View[IsExpanded],
-    Boolean
-  ) => VdomNode =
-    (emissionLinesView, expanded, disabled) =>
-      IntegratedEmissionLineEditor(emissionLinesView, expanded, disabled)
-}
-
-case class SurfaceSpectralDefinitionEditor(
-  spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
-  catalogInfo:        Option[CatalogInfo],
-  brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
-)(using Logger[IO])
-    extends ReactFnProps[SurfaceSpectralDefinitionEditor](
-      SurfaceSpectralDefinitionEditor.component
-    )
-    with SpectralDefinitionEditor[Surface, SpectralDefinitionSurfaceInput] {
-
-  val toInput: SpectralDefinition[Surface] => SpectralDefinitionSurfaceInput = _.toInput
-
-  private val bandNormalizedAlignerOpt: Option[
-    Aligner[SpectralDefinition.BandNormalized[Surface], BandNormalizedSurfaceInput]
-  ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.bandNormalized[Surface],
-      forceAssign(SpectralDefinitionSurfaceInput.bandNormalized.modify)(
-        BandNormalizedSurfaceInput()
-      )
-    )
-
-  val sedAlignerOpt: Option[Aligner[UnnormalizedSED, UnnormalizedSedInput]] =
-    bandNormalizedAlignerOpt.flatMap(
-      _.zoomOpt(
-        SpectralDefinition.BandNormalized.sed[Surface].some,
-        forceAssign(BandNormalizedSurfaceInput.sed.modify)(UnnormalizedSedInput())
-      )
-    )
-
-  val bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[Surface]]]] =
-    bandNormalizedAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.BandNormalized.brightnesses[Surface],
-        BandNormalizedSurfaceInput.brightnesses.modify
-      )
-        .view(_.toInput.assign)
-    )
-
-  private val emissionLinesAlignerOpt: Option[
-    Aligner[SpectralDefinition.EmissionLines[Surface], EmissionLinesSurfaceInput]
-  ] =
-    spectralDefinition.zoomOpt(
-      SpectralDefinition.emissionLines[Surface],
-      forceAssign(SpectralDefinitionSurfaceInput.emissionLines.modify)(
-        EmissionLinesSurfaceInput()
-      )
-    )
-
-  override val emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[Surface]]]] =
-    emissionLinesAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.EmissionLines.lines[Surface],
-        EmissionLinesSurfaceInput.lines.modify
-      ).view(_.toInput.assign)
-    )
-
-  override val fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[Surface]]] =
-    emissionLinesAlignerOpt.map(
-      _.zoom(
-        SpectralDefinition.EmissionLines.fluxDensityContinuum[Surface],
-        EmissionLinesSurfaceInput.fluxDensityContinuum.modify
-      ).view(_.toInput.assign)
-    )
-}
-
-object SurfaceSpectralDefinitionEditor
-    extends SpectralDefinitionEditorBuilder[
-      Surface,
-      SpectralDefinitionSurfaceInput,
-      SurfaceSpectralDefinitionEditor
-    ] {
-  override protected val currentType: SpectralDefinition[Surface] => Option[SedType[Surface]] =
-    SurfaceSEDType.fromSpectralDefinition
-
-  override protected val disabledItems: HashSet[SedType[Surface]] =
-    HashSet(SurfaceSEDType.UserDefinedType)
-
-  override protected val brightnessEditor
-    : (View[SortedMap[Band, BrightnessMeasure[Surface]]], View[IsExpanded], Boolean) => VdomNode =
-    (brightnessesView, expanded, disabled) =>
-      SurfaceBrightnessEditor(brightnessesView, expanded, disabled)
-
-  override protected val emissionLineEditor
-    : (View[SortedMap[Wavelength, EmissionLine[Surface]]], View[IsExpanded], Boolean) => VdomNode =
-    (emissionLinesView, expanded, disabled) =>
-      SurfaceEmissionLineEditor(emissionLinesView, expanded, disabled)
-
 }
