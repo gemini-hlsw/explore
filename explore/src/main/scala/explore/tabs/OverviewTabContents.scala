@@ -84,30 +84,32 @@ object OverviewTabContents
 
         val obsAttachmentsTile = props.userVault
           .flatMap(vault =>
-            if (
-              props.proposalIsAccepted || props.detailsUndoSetter.get.programType =!= ProgramType.Science
-            )
-              Tile(
-                OverviewTabTileIds.ObsAttachmentsId.id,
-                "Observation Attachments",
-                ObsAttachmentsTableTileState()
-              )(
-                ObsAttachmentsTableBody(props.programId,
-                                        vault.token,
-                                        props.obsAttachmentAssignments,
-                                        props.attachments,
-                                        props.readonly,
-                                        _
-                ),
-                (s, _) =>
-                  ObsAttachmentsTableTitle(props.programId,
-                                           vault.token,
-                                           props.attachments,
-                                           props.readonly,
-                                           s
-                  )
-              ).some
-            else None
+            // if (
+            //   props.proposalIsAccepted || props.detailsUndoSetter.get.programType =!= ProgramType.Science
+            // )
+            Tile(
+              OverviewTabTileIds.ObsAttachmentsId.id,
+              "Observation Attachments",
+              ObsAttachmentsTableTileState()
+            )(
+              ObsAttachmentsTableBody(
+                props.programId,
+                vault.token,
+                props.obsAttachmentAssignments,
+                props.attachments,
+                props.readonly,
+                _
+              ),
+              (s, _) =>
+                ObsAttachmentsTableTitle(
+                  props.programId,
+                  vault.token,
+                  props.attachments,
+                  props.readonly,
+                  s
+                )
+            ).some
+            // else None
           )
           // provide a hidden dummy tile to not mess up the saved layouts.
           .getOrElse(

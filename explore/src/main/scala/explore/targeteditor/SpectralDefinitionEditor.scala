@@ -10,6 +10,7 @@ import clue.data.syntax.*
 import coulomb.*
 import coulomb.units.si.Kelvin
 import crystal.react.View
+import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
@@ -23,7 +24,7 @@ import explore.model.AppContext
 import explore.model.display.given
 import explore.model.enums.IntegratedSEDType
 import explore.model.enums.IntegratedSEDType.given
-import explore.model.enums.SEDType
+import explore.model.enums.SedType
 import explore.model.enums.SurfaceSEDType
 import explore.model.enums.SurfaceSEDType.given
 import explore.model.syntax.all.*
@@ -65,6 +66,8 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
+import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.SelectItem
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -87,8 +90,8 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   S,
   Props <: SpectralDefinitionEditor[T, S]
 ](using
-  sedTypeEnum:    Enumerated[SEDType[T]],
-  sedTypeDisplay: Display[SEDType[T]],
+  sedTypeEnum:    Enumerated[SedType[T]],
+  sedTypeDisplay: Display[SedType[T]],
   enumFDCUnits:   Enumerated[Units Of FluxDensityContinuum[T]]
 ) {
   protected def brightnessEditor
@@ -96,15 +99,20 @@ sealed abstract class SpectralDefinitionEditorBuilder[
   protected def emissionLineEditor
     : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
 
-  protected def currentType: SpectralDefinition[T] => Option[SEDType[T]]
-  protected def disabledItems: HashSet[SEDType[T]]
+  protected def currentType: SpectralDefinition[T] => Option[SedType[T]]
+  protected def disabledItems: HashSet[SedType[T]]
 
-  val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .render { (props, ctx) =>
-      import ctx.given
-
+  val component = ScalaFnComponent[Props]: props =>
+    for
+      ctx             <- useContext(AppContext.ctx)
+      given Logger[IO] = ctx.logger
+      sed             <- useStateView(props.sedAlignerOpt.map(_.get))
+                           .map:
+                             _.withOnMod: value =>
+                               (value, props.sedAlignerOpt)
+                                 .mapN((v, aligner) => aligner.view(_.toInput).set(v))
+                                 .getOrEmpty
+    yield
       val stellarLibrarySpectrumAlignerOpt
         : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
         props.sedAlignerOpt.flatMap(
@@ -187,14 +195,22 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         )
 
       def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
-        EnumDropdownView(
+        Dropdown(
           id = id,
-          value = view,
+          value = view.get,
+          options = Enumerated[T].all.map(v =>
+            SelectItem(
+              label = v.shortName,
+              value = v
+              // disabled = disabledItems.contains(v)
+            )
+          ),
+          onChange = view.set(_),
           clazz = LucumaPrimeStyles.FormField,
           disabled = props.disabled
         )
 
-      val sed = currentType(props.spectralDefinition.get)
+      val sed: Option[SedType[T]] = currentType(props.spectralDefinition.get)
 
       React.Fragment(
         props.catalogInfo.flatMap(ci =>
@@ -217,7 +233,7 @@ sealed abstract class SpectralDefinitionEditorBuilder[
         <.div(
           ExploreStyles.SEDTypeDropdown |+| ExploreStyles.WarningInput
             .when_(sed.isEmpty && props.calibrationRole.needsITC),
-          EnumOptionalDropdown[SEDType[T]](
+          EnumOptionalDropdown[SedType[T]](
             id = "sed".refined,
             value = sed,
             onChange = sed =>
@@ -309,8 +325,6 @@ sealed abstract class SpectralDefinitionEditorBuilder[
             )
           )
       )
-    }
-
 }
 
 case class IntegratedSpectralDefinitionEditor(
@@ -394,10 +408,10 @@ object IntegratedSpectralDefinitionEditor
       IntegratedSpectralDefinitionEditor
     ] {
   override protected val currentType
-    : SpectralDefinition[Integrated] => Option[SEDType[Integrated]] =
+    : SpectralDefinition[Integrated] => Option[SedType[Integrated]] =
     IntegratedSEDType.fromSpectralDefinition
 
-  override protected val disabledItems: HashSet[SEDType[Integrated]] =
+  override protected val disabledItems: HashSet[SedType[Integrated]] =
     HashSet(IntegratedSEDType.UserDefinedType)
 
   override protected val brightnessEditor: (
@@ -491,10 +505,10 @@ object SurfaceSpectralDefinitionEditor
       SpectralDefinitionSurfaceInput,
       SurfaceSpectralDefinitionEditor
     ] {
-  override protected val currentType: SpectralDefinition[Surface] => Option[SEDType[Surface]] =
+  override protected val currentType: SpectralDefinition[Surface] => Option[SedType[Surface]] =
     SurfaceSEDType.fromSpectralDefinition
 
-  override protected val disabledItems: HashSet[SEDType[Surface]] =
+  override protected val disabledItems: HashSet[SedType[Surface]] =
     HashSet(SurfaceSEDType.UserDefinedType)
 
   override protected val brightnessEditor
