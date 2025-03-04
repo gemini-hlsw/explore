@@ -28,6 +28,7 @@ import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
+
 import spectralDefinition.{IntegratedSpectralDefinitionEditor, SurfaceSpectralDefinitionEditor}
 
 case class SourceProfileEditor(

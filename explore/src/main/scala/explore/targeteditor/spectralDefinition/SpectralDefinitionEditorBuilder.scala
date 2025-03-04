@@ -22,17 +22,12 @@ import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.AppContext
 import explore.model.display.given
-import explore.model.enums.IntegratedSEDType
-import explore.model.enums.IntegratedSEDType.given
 import explore.model.enums.SedType
-import explore.model.enums.SurfaceSEDType
-import explore.model.enums.SurfaceSEDType.given
 import explore.model.syntax.all.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
-import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.CatalogName
 import lucuma.core.enums.CoolStarTemperature
 import lucuma.core.enums.GalaxySpectrum
@@ -46,7 +41,6 @@ import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.FluxDensityContinuumValueRefinement
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
-import lucuma.core.model.CatalogInfo
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
@@ -55,8 +49,9 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
-import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.PrimeStyles
+import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -66,8 +61,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import org.typelevel.log4cats.Logger
-import lucuma.react.primereact.Dropdown
-import lucuma.react.primereact.SelectItem
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap

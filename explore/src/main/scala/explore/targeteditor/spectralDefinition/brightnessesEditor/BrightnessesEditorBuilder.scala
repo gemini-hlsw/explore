@@ -23,7 +23,6 @@ import lucuma.core.math.BrightnessValue
 import lucuma.core.math.dimensional.*
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
-import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Panel
 import lucuma.react.syntax.*

@@ -22,13 +22,13 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.units.*
+import lucuma.core.model.Attachment
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.*
 import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.Attachment
 
 sealed abstract class SedType[T](
   val name:    String,
