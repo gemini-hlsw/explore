@@ -29,6 +29,8 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
+import spectralDefinition.{IntegratedSpectralDefinitionEditor, SurfaceSpectralDefinitionEditor}
+
 case class SourceProfileEditor(
   sourceProfile:   Aligner[SourceProfile, SourceProfileInput],
   catalogInfo:     Option[CatalogInfo],

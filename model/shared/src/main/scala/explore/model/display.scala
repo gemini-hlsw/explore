@@ -119,6 +119,7 @@ trait DisplayImplicits:
     case PowerLaw(index)                          => s"Power Law ($index)"
     case BlackBody(temperature)                   => s"Black Body (${temperature.value} °K)"
     case UserDefined(_)                           => "User Defined"
+    case UserDefinedAttachment(aid)               => s"User Defined (Attachment $aid)"
 
   given displaySpectralDefinition[T]: Display[SpectralDefinition[T]] = Display.byShortName:
     case SpectralDefinition.BandNormalized(Some(band), _) => band.shortName

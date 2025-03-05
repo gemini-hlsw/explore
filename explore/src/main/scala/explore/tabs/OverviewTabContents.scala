@@ -92,19 +92,21 @@ object OverviewTabContents
                 "Observation Attachments",
                 ObsAttachmentsTableTileState()
               )(
-                ObsAttachmentsTableBody(props.programId,
-                                        vault.token,
-                                        props.obsAttachmentAssignments,
-                                        props.attachments,
-                                        props.readonly,
-                                        _
+                ObsAttachmentsTableBody(
+                  props.programId,
+                  vault.token,
+                  props.obsAttachmentAssignments,
+                  props.attachments,
+                  props.readonly,
+                  _
                 ),
                 (s, _) =>
-                  ObsAttachmentsTableTitle(props.programId,
-                                           vault.token,
-                                           props.attachments,
-                                           props.readonly,
-                                           s
+                  ObsAttachmentsTableTitle(
+                    props.programId,
+                    vault.token,
+                    props.attachments,
+                    props.readonly,
+                    s
                   )
               ).some
             else None

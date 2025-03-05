@@ -21,9 +21,6 @@ extension (fov: Fov)
     (fov.x.toMicroarcseconds - newFov.x.toMicroarcseconds).abs < 1e7 ||
       (fov.y.toMicroarcseconds - newFov.y.toMicroarcseconds).abs < 1e7
 
-object AddDisabled extends NewType[Boolean]
-type AddDisabled = AddDisabled.Type
-
 val domRoot: Option[HTMLElement] =
   Option(document.querySelector(":root")) match
     case Some(r: HTMLElement) => r.some
