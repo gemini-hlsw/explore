@@ -104,18 +104,18 @@ sealed abstract class SedTypeEnum[T](
 
   def fromSpectralDefinition(spectralDefinition: SpectralDefinition[T]): Option[SedType[T]] =
     spectralDefinition match
-      case BandNormalized(Some(StellarLibrary(_)), _)  => StellarLibraryType.some
-      case BandNormalized(Some(CoolStarModel(_)), _)   => CoolStarModelType.some
-      case BandNormalized(Some(Galaxy(_)), _)          => GalaxyType.some
-      case BandNormalized(Some(Planet(_)), _)          => PlanetType.some
-      case BandNormalized(Some(Quasar(_)), _)          => QuasarType.some
-      case BandNormalized(Some(HIIRegion(_)), _)       => HIIRegionType.some
-      case BandNormalized(Some(PlanetaryNebula(_)), _) => PlanetaryNebulaType.some
-      case EmissionLines(_, _)                         => EmissionLineType.some
-      case BandNormalized(Some(PowerLaw(_)), _)        => PowerLawType.some
-      case BandNormalized(Some(BlackBody(_)), _)       => BlackBodyType.some
-      case BandNormalized(Some(UserDefined(_)), _)     => UserDefinedType.some
-      case BandNormalized(_, _)                        => none
+      case BandNormalized(Some(StellarLibrary(_)), _)        => StellarLibraryType.some
+      case BandNormalized(Some(CoolStarModel(_)), _)         => CoolStarModelType.some
+      case BandNormalized(Some(Galaxy(_)), _)                => GalaxyType.some
+      case BandNormalized(Some(Planet(_)), _)                => PlanetType.some
+      case BandNormalized(Some(Quasar(_)), _)                => QuasarType.some
+      case BandNormalized(Some(HIIRegion(_)), _)             => HIIRegionType.some
+      case BandNormalized(Some(PlanetaryNebula(_)), _)       => PlanetaryNebulaType.some
+      case EmissionLines(_, _)                               => EmissionLineType.some
+      case BandNormalized(Some(PowerLaw(_)), _)              => PowerLawType.some
+      case BandNormalized(Some(BlackBody(_)), _)             => BlackBodyType.some
+      case BandNormalized(Some(UserDefinedAttachment(_)), _) => UserDefinedType.some
+      case BandNormalized(_, _)                              => none
 
   protected val enumSedType: Enumerated[SedType[T]] =
     Enumerated

@@ -51,6 +51,7 @@ import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.primereact.PrimeStyles
+import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
@@ -78,32 +79,49 @@ private abstract class SpectralDefinitionEditorBuilder[
     : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
 
   protected def currentType: SpectralDefinition[T] => Option[SedType[T]]
-  protected val userDefinedType: SedType[T]
+  protected def userDefinedType: SedType[T]
 
   protected[spectralDefinition] val component = ScalaFnComponent[Props]: props =>
     for
       ctx                   <- useContext(AppContext.ctx)
       given Logger[IO]       = ctx.logger
-      sedType               <- useStateView(currentType(props.spectralDefinition.get))
-      customSedAttachmentId <- useStateView(none[Attachment.Id])
-      _                     <-
+      currentSedType         = currentType(props.spectralDefinition.get)
+      sedType               <- useStateView(currentSedType)
+      customSedAttachmentId <- useStateView(props.currentCustomSedAttachmentId)
+      _                     <- // keep state updated.
+        useEffectWithDeps(currentSedType, props.currentCustomSedAttachmentId):
+          (newSedType, newAttachmentId) =>
+            sedType.set(newSedType).when_(newSedType =!= sedType.get) >>
+              customSedAttachmentId
+                .set(newAttachmentId)
+                .when_(newAttachmentId =!= customSedAttachmentId.get)
+      _                     <- // Update model when state is fully defined.
         useEffectWithDeps(sedType.get, customSedAttachmentId.get):
-          case (Some(SedType.Immediate(_, convert)), _) =>
+          case (Some(someSedType), Some(attachmentId))
+              if someSedType === userDefinedType && !currentSedType.contains_(
+                someSedType
+              ) && !props.currentCustomSedAttachmentId.contains_(attachmentId) =>
+            props.spectralDefinition
+              .view(props.toInput)
+              .mod:
+                SpectralDefinition.unnormalizedSED
+                  .replace(UnnormalizedSED.UserDefinedAttachment(attachmentId).some)
+          case (Some(sed @ SedType.Immediate(_, convert)), _) if !currentSedType.contains_(sed) =>
             props.spectralDefinition
               .view(props.toInput)
               .mod(convert)
-          case (None, _)                                =>
+          case (None, _) if currentSedType.isDefined                                            =>
             props.spectralDefinition
               .view(props.toInput)
               .mod(SpectralDefinition.unnormalizedSED.replace(none))
-          case _                                        =>
+          case _                                                                                =>
             Callback.empty
     yield
+      val isCustomSed: Boolean =
+        sedType.get.contains_(userDefinedType)
+
       val isFullyDefined: Boolean =
-        (sedType.get, customSedAttachmentId.get) match
-          case (Some(SedType.Immediate(_, _)), _) => true
-          case (Some(userDefinedType), Some(_))   => true
-          case _                                  => false
+        sedType.get.isDefined && (!isCustomSed || customSedAttachmentId.get.isDefined)
 
       val stellarLibrarySpectrumAlignerOpt
         : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
@@ -262,6 +280,16 @@ private abstract class SpectralDefinitionEditorBuilder[
             )
           else EmptyVdom,
           React.Fragment(
+            if (isCustomSed)
+              FormDropdownOptional(
+                id = "customSed".refined,
+                value = customSedAttachmentId.get,
+                options =
+                  props.customSedAttachments.map(a => SelectItem(value = a.id, label = a.fileName)),
+                onChange = v => customSedAttachmentId.set(v),
+                disabled = props.disabled
+              )
+            else EmptyVdom,
             props.bandBrightnessesViewOpt
               .map(bandBrightnessesView =>
                 <.div(ExploreStyles.BrightnessesTableWrapper)(

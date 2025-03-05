@@ -33,3 +33,9 @@ private trait SpectralDefinitionEditor[T, S]:
   def bandBrightnessesViewOpt: Option[View[SortedMap[Band, BrightnessMeasure[T]]]]
   def emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
   def fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[T]]]
+
+  protected[spectralDefinition] def currentCustomSedAttachmentId: Option[Attachment.Id] =
+    SpectralDefinition.unnormalizedSED.some
+      .andThen(UnnormalizedSED.userDefinedAttachment)
+      .andThen(UnnormalizedSED.UserDefinedAttachment.attachmentId)
+      .getOption(spectralDefinition.get)
