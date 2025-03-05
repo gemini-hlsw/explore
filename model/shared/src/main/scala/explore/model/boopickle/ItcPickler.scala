@@ -49,6 +49,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.util.Gid
 import lucuma.core.util.Of
 import lucuma.core.util.TimeSpan
 import lucuma.itc.Error
@@ -73,7 +74,6 @@ import lucuma.itc.client.TargetInput
 import lucuma.itc.client.TargetTimeAndGraphsResult
 
 import scala.collection.immutable.SortedMap
-import lucuma.core.util.Gid
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {

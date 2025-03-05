@@ -44,8 +44,8 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
 
-import scala.math.BigDecimal.RoundingMode
 import scala.collection.immutable.SortedMap
+import scala.math.BigDecimal.RoundingMode
 
 private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](using
   enumUnits: Enumerated[Units Of LineFlux[T]]
