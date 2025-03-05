@@ -73,6 +73,7 @@ import lucuma.itc.client.TargetInput
 import lucuma.itc.client.TargetTimeAndGraphsResult
 
 import scala.collection.immutable.SortedMap
+import lucuma.core.util.Gid
 
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {
@@ -115,6 +116,9 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ModeAO] = picklerNewType(ModeAO)
 
+  given [A: Gid]: Pickler[A] =
+    transformPickler((str: String) => Gid[A].fromString.getOption(str).get)(_.toString)
+
   given Pickler[SpectroscopyModeRow] = generatePickler
 
   given Pickler[SpectroscopyModesMatrix] = generatePickler
@@ -139,6 +143,8 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[UnnormalizedSED.UserDefined] = generatePickler
 
+  given Pickler[UnnormalizedSED.UserDefinedAttachment] = generatePickler
+
   given Pickler[UnnormalizedSED] =
     compositePickler[UnnormalizedSED]
       .addConcreteType[UnnormalizedSED.StellarLibrary]
@@ -151,6 +157,7 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[UnnormalizedSED.PowerLaw]
       .addConcreteType[UnnormalizedSED.BlackBody]
       .addConcreteType[UnnormalizedSED.UserDefined]
+      .addConcreteType[UnnormalizedSED.UserDefinedAttachment]
 
   given taggedMeasurePickler[N: Pickler, T](using Pickler[Units Of T]): Pickler[Measure[N] Of T] =
     transformPickler { (x: (Units Of T, N, Option[N])) =>
