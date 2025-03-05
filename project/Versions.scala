@@ -21,7 +21,7 @@ object Versions {
   val log4Cats               = "2.7.0"
   val log4CatsLogLevel       = "0.3.1"
   val lucumaBC               = "0.4.0"
-  val lucumaCore             = "0.116.1"
+  val lucumaCore             = "0.116.3"
   val lucumaCatalog          = "0.49.2"
   val lucumaITC              = "0.27.0"
   val lucumaReact            = "0.78.2"
