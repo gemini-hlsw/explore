@@ -119,9 +119,6 @@ object IntegratedSpectralDefinitionEditor
     : SpectralDefinition[Integrated] => Option[SedType[Integrated]] =
     IntegratedSEDType.fromSpectralDefinition
 
-  override protected val disabledItems: HashSet[SedType[Integrated]] =
-    HashSet(IntegratedSEDType.UserDefinedType)
-
   override protected val brightnessEditor: (
     View[SortedMap[Band, BrightnessMeasure[Integrated]]],
     View[IsExpanded],

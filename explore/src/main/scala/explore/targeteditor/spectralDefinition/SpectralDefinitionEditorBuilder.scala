@@ -9,6 +9,7 @@ import clue.data.syntax.*
 import coulomb.*
 import coulomb.units.si.Kelvin
 import crystal.react.View
+import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
@@ -60,6 +61,7 @@ import lucuma.ui.utils.*
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
+import lucuma.core.model.Attachment
 
 private abstract class SpectralDefinitionEditorBuilder[
   T,
@@ -76,10 +78,12 @@ private abstract class SpectralDefinitionEditorBuilder[
     : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
 
   protected def currentType: SpectralDefinition[T] => Option[SedType[T]]
-  protected def disabledItems: HashSet[SedType[T]]
 
   val component = ScalaFnComponent[Props]: props =>
-    for ctx <- useContext(AppContext.ctx)
+    for
+      ctx                   <- useContext(AppContext.ctx)
+      sedType               <- useStateView(currentType(props.spectralDefinition.get))
+      customSedAttachmentId <- useStateView(none[Attachment.Id])
     yield
       import ctx.given
 
@@ -201,7 +205,6 @@ private abstract class SpectralDefinitionEditorBuilder[
               props.spectralDefinition
                 .view(props.toInput)
                 .mod(sed.fold(SpectralDefinition.unnormalizedSED.replace(None))(_.convert)),
-            disabledItems = disabledItems,
             clazz = LucumaPrimeStyles.FormField,
             disabled = props.disabled
           ),

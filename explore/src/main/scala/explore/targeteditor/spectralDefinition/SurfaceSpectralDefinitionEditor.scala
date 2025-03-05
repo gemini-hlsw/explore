@@ -112,9 +112,6 @@ object SurfaceSpectralDefinitionEditor
   override protected val currentType: SpectralDefinition[Surface] => Option[SedType[Surface]] =
     SurfaceSEDType.fromSpectralDefinition
 
-  override protected val disabledItems: HashSet[SedType[Surface]] =
-    HashSet(SurfaceSEDType.UserDefinedType)
-
   override protected val brightnessEditor
     : (View[SortedMap[Band, BrightnessMeasure[Surface]]], View[IsExpanded], Boolean) => VdomNode =
     (brightnessesView, expanded, disabled) =>
