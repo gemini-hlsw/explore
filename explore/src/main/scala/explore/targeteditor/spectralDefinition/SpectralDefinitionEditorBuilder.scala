@@ -3,14 +3,12 @@
 
 package explore.targeteditor.spectralDefinition
 
-import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
 import coulomb.*
 import coulomb.units.si.Kelvin
 import crystal.react.View
-import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
@@ -54,13 +52,11 @@ import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
-import org.typelevel.log4cats.Logger
 
 import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
@@ -83,16 +79,10 @@ private abstract class SpectralDefinitionEditorBuilder[
   protected def disabledItems: HashSet[SedType[T]]
 
   val component = ScalaFnComponent[Props]: props =>
-    for
-      ctx             <- useContext(AppContext.ctx)
-      given Logger[IO] = ctx.logger
-      sedView         <- useStateView(props.sedAlignerOpt.map(_.get))
-                           .map:
-                             _.withOnMod: value =>
-                               (value, props.sedAlignerOpt)
-                                 .mapN((v, aligner) => aligner.view(_.toInput).set(v))
-                                 .getOrEmpty
+    for ctx <- useContext(AppContext.ctx)
     yield
+      import ctx.given
+
       val stellarLibrarySpectrumAlignerOpt
         : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
         props.sedAlignerOpt.flatMap:
@@ -182,13 +172,6 @@ private abstract class SpectralDefinitionEditorBuilder[
         )
 
       val sed: Option[SedType[T]] = currentType(props.spectralDefinition.get)
-      // val sed: Option[SedType[T]] = sedView.get.flatMap(unnormalizedSed =>
-      //   currentType(
-      //     props.spectralDefinition.get.copy(
-      //       unnormalizedSED = unnormalizedSed.some
-      //     )
-      //   )
-      // )
 
       React.Fragment(
         props.catalogInfo.flatMap(ci =>
