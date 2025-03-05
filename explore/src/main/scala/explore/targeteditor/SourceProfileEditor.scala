@@ -4,10 +4,12 @@
 package explore.targeteditor
 
 import clue.data.syntax.*
+import crystal.react.View
 import crystal.react.hooks.*
 import explore.common.*
 import explore.components.HelpIcon
 import explore.model.AppContext
+import explore.model.Attachment
 import explore.model.enums.SourceProfileType
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -32,10 +34,11 @@ import lucuma.ui.syntax.all.given
 import spectralDefinition.{IntegratedSpectralDefinitionEditor, SurfaceSpectralDefinitionEditor}
 
 case class SourceProfileEditor(
-  sourceProfile:   Aligner[SourceProfile, SourceProfileInput],
-  catalogInfo:     Option[CatalogInfo],
-  disabled:        Boolean,
-  calibrationRole: Option[CalibrationRole]
+  sourceProfile:        Aligner[SourceProfile, SourceProfileInput],
+  catalogInfo:          Option[CatalogInfo],
+  customSedAttachments: List[Attachment],
+  calibrationRole:      Option[CalibrationRole],
+  disabled:             Boolean
 ) extends ReactFnProps(SourceProfileEditor.component)
 
 object SourceProfileEditor:
@@ -77,6 +80,7 @@ object SourceProfileEditor:
                 pointSpectralDefinitionAccess,
                 props.catalogInfo,
                 brightnessExpanded,
+                props.customSedAttachments,
                 props.disabled,
                 props.calibrationRole
               )
@@ -91,6 +95,7 @@ object SourceProfileEditor:
                 uniformSpectralDefinitionAccess,
                 props.catalogInfo,
                 brightnessExpanded,
+                props.customSedAttachments,
                 props.disabled,
                 props.calibrationRole
               )
@@ -121,6 +126,7 @@ object SourceProfileEditor:
                   ),
                   props.catalogInfo,
                   brightnessExpanded,
+                  props.customSedAttachments,
                   props.disabled,
                   props.calibrationRole
                 )

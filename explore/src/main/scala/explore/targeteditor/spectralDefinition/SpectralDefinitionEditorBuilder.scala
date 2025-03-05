@@ -258,45 +258,47 @@ private abstract class SpectralDefinitionEditorBuilder[
                     units = "°K",
                     disabled = props.disabled
                   )
-                ),
-              props.bandBrightnessesViewOpt
-                .map(bandBrightnessesView =>
-                  <.div(ExploreStyles.BrightnessesTableWrapper)(
-                    brightnessEditor(bandBrightnessesView, props.brightnessExpanded, props.disabled)
-                  )
-                ),
-              props.fluxDensityContinuumOpt
-                .map(fluxDensityContinuum =>
-                  React.Fragment(
-                    FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
-                    <.div(
-                      ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
-                      FormInputTextView(
-                        id = "fluxValue".refined,
-                        value = fluxDensityContinuum.zoom(Measure.valueTagged),
-                        validFormat = InputValidSplitEpi
-                          .refinedBigDecimalWithScientificNotation[
-                            FluxDensityContinuumValueRefinement
-                          ]
-                          .andThen(FluxDensityContinuumValue.value.reverse),
-                        changeAuditor = ChangeAuditor.posScientificNotation(),
-                        disabled = props.disabled
-                      ),
-                      EnumDropdownView(
-                        id = "Units".refined,
-                        value = fluxDensityContinuum.zoom(Measure.unitsTagged),
-                        disabled = props.disabled
-                      )
-                    )
-                  )
-                ),
-              props.emissionLinesViewOpt
-                .map(e =>
-                  <.div(ExploreStyles.BrightnessesTableWrapper)(
-                    emissionLineEditor(e, props.brightnessExpanded, props.disabled)
-                  )
                 )
             )
-          else EmptyVdom
+          else EmptyVdom,
+          React.Fragment(
+            props.bandBrightnessesViewOpt
+              .map(bandBrightnessesView =>
+                <.div(ExploreStyles.BrightnessesTableWrapper)(
+                  brightnessEditor(bandBrightnessesView, props.brightnessExpanded, props.disabled)
+                )
+              ),
+            props.fluxDensityContinuumOpt
+              .map(fluxDensityContinuum =>
+                React.Fragment(
+                  FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
+                  <.div(
+                    ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
+                    FormInputTextView(
+                      id = "fluxValue".refined,
+                      value = fluxDensityContinuum.zoom(Measure.valueTagged),
+                      validFormat = InputValidSplitEpi
+                        .refinedBigDecimalWithScientificNotation[
+                          FluxDensityContinuumValueRefinement
+                        ]
+                        .andThen(FluxDensityContinuumValue.value.reverse),
+                      changeAuditor = ChangeAuditor.posScientificNotation(),
+                      disabled = props.disabled
+                    ),
+                    EnumDropdownView(
+                      id = "Units".refined,
+                      value = fluxDensityContinuum.zoom(Measure.unitsTagged),
+                      disabled = props.disabled
+                    )
+                  )
+                )
+              ),
+            props.emissionLinesViewOpt
+              .map(e =>
+                <.div(ExploreStyles.BrightnessesTableWrapper)(
+                  emissionLineEditor(e, props.brightnessExpanded, props.disabled)
+                )
+              )
+          )
         )
 }

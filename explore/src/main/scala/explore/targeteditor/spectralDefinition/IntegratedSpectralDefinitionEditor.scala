@@ -9,6 +9,7 @@ import clue.data.syntax.*
 import crystal.react.View
 import explore.*
 import explore.common.*
+import explore.model.Attachment
 import explore.model.enums.IntegratedSedType
 import explore.model.enums.IntegratedSedType.given
 import explore.model.enums.SedType
@@ -35,11 +36,12 @@ import brightnessesEditor.IntegratedBrightnessEditor
 import emissionLineEditor.IntegratedEmissionLineEditor
 
 case class IntegratedSpectralDefinitionEditor(
-  spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
-  catalogInfo:        Option[CatalogInfo],
-  brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
+  spectralDefinition:   Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
+  catalogInfo:          Option[CatalogInfo],
+  brightnessExpanded:   View[IsExpanded],
+  customSedAttachments: List[Attachment],
+  disabled:             Boolean,
+  calibrationRole:      Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[IntegratedSpectralDefinitionEditor](
       IntegratedSpectralDefinitionEditor.component

@@ -6,6 +6,7 @@ package explore.targeteditor.spectralDefinition
 import crystal.react.View
 import explore.*
 import explore.common.*
+import explore.model.Attachment
 import explore.utils.*
 import lucuma.core.enums.Band
 import lucuma.core.enums.CalibrationRole
@@ -24,6 +25,7 @@ private trait SpectralDefinitionEditor[T, S]:
   def catalogInfo: Option[CatalogInfo]
   def calibrationRole: Option[CalibrationRole]
   def brightnessExpanded: View[IsExpanded]
+  def customSedAttachments: List[Attachment]
   def disabled: Boolean
 
   def toInput: SpectralDefinition[T] => S

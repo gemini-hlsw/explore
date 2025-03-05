@@ -57,6 +57,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.conditions.*
+import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
@@ -170,6 +171,9 @@ case class ObsTabTiles(
         site
       )
     )
+
+  val customSedAttachments: List[Attachment] =
+    attachments.get.map(_._2).toList.filter(_.attachmentType === AttachmentType.CustomSED)
 
 object ObsTabTiles:
   private type Props = ObsTabTiles
@@ -525,6 +529,7 @@ object ObsTabTiles:
                 "Targets",
                 props.globalPreferences,
                 guideStarSelection,
+                props.customSedAttachments,
                 props.isDisabled,
                 // Any target changes invalidate the sequence
                 sequenceChanged.set(pending)

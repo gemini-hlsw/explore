@@ -9,6 +9,7 @@ import clue.data.syntax.*
 import crystal.react.View
 import explore.*
 import explore.common.*
+import explore.model.Attachment
 import explore.model.enums.SedType
 import explore.model.enums.SurfaceSedType
 import explore.model.enums.SurfaceSedType.given
@@ -35,11 +36,12 @@ import brightnessesEditor.SurfaceBrightnessEditor
 import emissionLineEditor.SurfaceEmissionLineEditor
 
 case class SurfaceSpectralDefinitionEditor(
-  spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
-  catalogInfo:        Option[CatalogInfo],
-  brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
+  spectralDefinition:   Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
+  catalogInfo:          Option[CatalogInfo],
+  brightnessExpanded:   View[IsExpanded],
+  customSedAttachments: List[Attachment],
+  disabled:             Boolean,
+  calibrationRole:      Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component
