@@ -9,8 +9,8 @@ import clue.data.syntax.*
 import crystal.react.View
 import explore.*
 import explore.common.*
-import explore.model.enums.IntegratedSEDType
-import explore.model.enums.IntegratedSEDType.given
+import explore.model.enums.IntegratedSedType
+import explore.model.enums.IntegratedSedType.given
 import explore.model.enums.SedType
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -29,7 +29,6 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 
-import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
 import brightnessesEditor.IntegratedBrightnessEditor
@@ -115,9 +114,12 @@ object IntegratedSpectralDefinitionEditor
       SpectralDefinitionIntegratedInput,
       IntegratedSpectralDefinitionEditor
     ] {
+
   override protected val currentType
     : SpectralDefinition[Integrated] => Option[SedType[Integrated]] =
-    IntegratedSEDType.fromSpectralDefinition
+    IntegratedSedType.fromSpectralDefinition
+
+  override protected val userDefinedType: SedType[Integrated] = IntegratedSedType.UserDefinedType
 
   override protected val brightnessEditor: (
     View[SortedMap[Band, BrightnessMeasure[Integrated]]],

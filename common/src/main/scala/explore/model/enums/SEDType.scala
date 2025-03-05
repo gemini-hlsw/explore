@@ -22,7 +22,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.dimensional.Units.*
 import lucuma.core.math.units.*
-import lucuma.core.model.Attachment
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.*
@@ -30,11 +29,19 @@ import lucuma.refined.*
 
 import scala.collection.immutable.SortedMap
 
-sealed abstract class SedType[T](
-  val name:    String,
-  val convert: SpectralDefinition[T] => SpectralDefinition[T]
-) extends Product
-    with Serializable
+sealed abstract class SedType[T](val name: String) extends Product with Serializable
+
+object SedType {
+  sealed abstract class Immediate[T](
+    name:        String,
+    val convert: SpectralDefinition[T] => SpectralDefinition[T]
+  ) extends SedType[T](name)
+
+  object Immediate {
+    def unapply[T](sed: Immediate[T]) =
+      (sed.name, sed.convert)
+  }
+}
 
 sealed abstract class SedTypeEnum[T](
   defaultContinuumUnits: Units Of FluxDensityContinuum[T]
@@ -49,25 +56,37 @@ sealed abstract class SedTypeEnum[T](
       case BandNormalized(_, bs) => BandNormalized(sed.some, bs)
       case EmissionLines(_, _)   => BandNormalized(sed.some, SortedMap.empty)
 
-  protected sealed abstract class BandNormalizedSED(name: String, sed: UnnormalizedSED)
-      extends SedType[T](name, toBandNormalized(sed))
+  // protected sealed abstract class BandNormalizedSED(name: String) extends SedType[T](name)
+  protected object BandNormalizedSed {
+    sealed abstract class Immediate(
+      name: String,
+      sed:  UnnormalizedSED
+    ) extends SedType.Immediate[T](name, toBandNormalized(sed))
+  }
 
   case object StellarLibraryType
-      extends BandNormalizedSED("Stellar Library", StellarLibrary(StellarLibrarySpectrum.O5V))
+      extends BandNormalizedSed.Immediate(
+        "Stellar Library",
+        StellarLibrary(StellarLibrarySpectrum.O5V)
+      )
   case object CoolStarModelType
-      extends BandNormalizedSED("Cool Star Model", CoolStarModel(CoolStarTemperature.T400K))
-  case object GalaxyType   extends BandNormalizedSED("Galaxy", Galaxy(GalaxySpectrum.Spiral))
-  case object PlanetType   extends BandNormalizedSED("Planet", Planet(PlanetSpectrum.Mars))
-  case object QuasarType   extends BandNormalizedSED("Quasar", Quasar(QuasarSpectrum.QS0))
+      extends BandNormalizedSed.Immediate(
+        "Cool Star Model",
+        CoolStarModel(CoolStarTemperature.T400K)
+      )
+  case object GalaxyType
+      extends BandNormalizedSed.Immediate("Galaxy", Galaxy(GalaxySpectrum.Spiral))
+  case object PlanetType      extends BandNormalizedSed.Immediate("Planet", Planet(PlanetSpectrum.Mars))
+  case object QuasarType      extends BandNormalizedSed.Immediate("Quasar", Quasar(QuasarSpectrum.QS0))
   case object HIIRegionType
-      extends BandNormalizedSED("HII Region", HIIRegion(HIIRegionSpectrum.OrionNebula))
+      extends BandNormalizedSed.Immediate("HII Region", HIIRegion(HIIRegionSpectrum.OrionNebula))
   case object PlanetaryNebulaType
-      extends BandNormalizedSED(
+      extends BandNormalizedSed.Immediate(
         "Planetary Nebula",
         PlanetaryNebula(PlanetaryNebulaSpectrum.NGC7009)
       )
   case object EmissionLineType
-      extends SedType[T](
+      extends SedType.Immediate[T](
         "Emission Line",
         _ =>
           EmissionLines[T](
@@ -75,16 +94,13 @@ sealed abstract class SedTypeEnum[T](
             defaultContinuumUnits.withValueTagged(FluxDensityContinuumValue.unsafeFrom(1))
           )
       )
-  case object PowerLawType extends BandNormalizedSED("Power Law", PowerLaw(BigDecimal(0)))
+  case object PowerLawType    extends BandNormalizedSed.Immediate("Power Law", PowerLaw(BigDecimal(0)))
   case object BlackBodyType
-      extends BandNormalizedSED("Black Body", BlackBody(10000.refined[Positive].withUnit[Kelvin]))
-  case object UserDefinedType
-      extends BandNormalizedSED(
-        "User Defined",
-        UserDefinedAttachment(
-          null.asInstanceOf[Attachment.Id] // TODO change to first available, disable if unavailable
-        )
+      extends BandNormalizedSed.Immediate(
+        "Black Body",
+        BlackBody(10000.refined[Positive].withUnit[Kelvin])
       )
+  case object UserDefinedType extends SedType[T]("User Defined")
 
   def fromSpectralDefinition(spectralDefinition: SpectralDefinition[T]): Option[SedType[T]] =
     spectralDefinition match
@@ -101,7 +117,7 @@ sealed abstract class SedTypeEnum[T](
       case BandNormalized(Some(UserDefined(_)), _)     => UserDefinedType.some
       case BandNormalized(_, _)                        => none
 
-  protected val enumSEDType: Enumerated[SedType[T]] =
+  protected val enumSedType: Enumerated[SedType[T]] =
     Enumerated
       .from[SedType[T]](
         StellarLibraryType,
@@ -118,23 +134,23 @@ sealed abstract class SedTypeEnum[T](
       )
       .withTag(_.name)
 
-  protected val displaySEDType: Display[SedType[T]] = Display.byShortName(_.name)
+  protected val displaySedType: Display[SedType[T]] = Display.byShortName(_.name)
 }
 
-object IntegratedSEDType
+object IntegratedSedType
     extends SedTypeEnum[Integrated](
       summon[TaggedUnit[ErgsPerSecondCentimeter2Angstrom, FluxDensityContinuum[Integrated]]].unit
     ) {
-  given Enumerated[SedType[Integrated]] = enumSEDType
-  given Display[SedType[Integrated]]    = displaySEDType
+  given Enumerated[SedType[Integrated]] = enumSedType
+  given Display[SedType[Integrated]]    = displaySedType
 }
 
-object SurfaceSEDType
+object SurfaceSedType
     extends SedTypeEnum[Surface](
       summon[
         TaggedUnit[ErgsPerSecondCentimeter2AngstromArcsec2, FluxDensityContinuum[Surface]]
       ].unit
     ) {
-  given Enumerated[SedType[Surface]] = enumSEDType
-  given Display[SedType[Surface]]    = displaySEDType
+  given Enumerated[SedType[Surface]] = enumSedType
+  given Display[SedType[Surface]]    = displaySedType
 }

@@ -10,8 +10,8 @@ import crystal.react.View
 import explore.*
 import explore.common.*
 import explore.model.enums.SedType
-import explore.model.enums.SurfaceSEDType
-import explore.model.enums.SurfaceSEDType.given
+import explore.model.enums.SurfaceSedType
+import explore.model.enums.SurfaceSedType.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -29,7 +29,6 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 
-import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
 import brightnessesEditor.SurfaceBrightnessEditor
@@ -110,7 +109,9 @@ object SurfaceSpectralDefinitionEditor
       SurfaceSpectralDefinitionEditor
     ] {
   override protected val currentType: SpectralDefinition[Surface] => Option[SedType[Surface]] =
-    SurfaceSEDType.fromSpectralDefinition
+    SurfaceSedType.fromSpectralDefinition
+
+  override protected val userDefinedType: SedType[Surface] = SurfaceSedType.UserDefinedType
 
   override protected val brightnessEditor
     : (View[SortedMap[Band, BrightnessMeasure[Surface]]], View[IsExpanded], Boolean) => VdomNode =

@@ -3,6 +3,7 @@
 
 package explore.targeteditor.spectralDefinition
 
+import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
@@ -40,6 +41,7 @@ import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.FluxDensityContinuumValueRefinement
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
+import lucuma.core.model.Attachment
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
@@ -48,20 +50,18 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
-import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.PrimeStyles
-import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import org.typelevel.log4cats.Logger
 
-import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
-import lucuma.core.model.Attachment
 
 private abstract class SpectralDefinitionEditorBuilder[
   T,
@@ -78,14 +78,32 @@ private abstract class SpectralDefinitionEditorBuilder[
     : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
 
   protected def currentType: SpectralDefinition[T] => Option[SedType[T]]
+  protected val userDefinedType: SedType[T]
 
-  val component = ScalaFnComponent[Props]: props =>
+  protected[spectralDefinition] val component = ScalaFnComponent[Props]: props =>
     for
       ctx                   <- useContext(AppContext.ctx)
+      given Logger[IO]       = ctx.logger
       sedType               <- useStateView(currentType(props.spectralDefinition.get))
       customSedAttachmentId <- useStateView(none[Attachment.Id])
+      _                     <-
+        useEffectWithDeps(sedType.get, customSedAttachmentId.get):
+          case (Some(SedType.Immediate(_, convert)), _) =>
+            props.spectralDefinition
+              .view(props.toInput)
+              .mod(convert)
+          case (None, _)                                =>
+            props.spectralDefinition
+              .view(props.toInput)
+              .mod(SpectralDefinition.unnormalizedSED.replace(none))
+          case _                                        =>
+            Callback.empty
     yield
-      import ctx.given
+      val isFullyDefined: Boolean =
+        (sedType.get, customSedAttachmentId.get) match
+          case (Some(SedType.Immediate(_, _)), _) => true
+          case (Some(userDefinedType), Some(_))   => true
+          case _                                  => false
 
       val stellarLibrarySpectrumAlignerOpt
         : Option[Aligner[StellarLibrarySpectrum, Input[StellarLibrarySpectrum]]] =
@@ -160,133 +178,125 @@ private abstract class SpectralDefinitionEditorBuilder[
           )
 
       def spectrumRow[T: Enumerated: Display](id: string.NonEmptyString, view: View[T]) =
-        Dropdown(
+        EnumDropdownView(
           id = id,
-          value = view.get,
-          options = Enumerated[T].all.map(v =>
-            SelectItem(
-              label = v.shortName,
-              value = v
-              // disabled = disabledItems.contains(v)
-            )
-          ),
-          onChange = view.set(_),
+          value = view,
           clazz = LucumaPrimeStyles.FormField,
           disabled = props.disabled
         )
 
-      val sed: Option[SedType[T]] = currentType(props.spectralDefinition.get)
-
-      React.Fragment(
-        props.catalogInfo.flatMap(ci =>
-          ci.objectType.map(ot =>
-            FormInputText(
-              id = "catalogInfo".refined,
-              value = ot,
-              label = React.Fragment(
-                ci.catalog match
-                  case CatalogName.Import => "Object Type"
-                  case other              => other.shortName
-                ,
-                HelpIcon("target/main/target-catalog-info.md".refined)
-              ),
-              disabled = true
-            )
-          )
-        ),
-        FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
-        <.div(
-          ExploreStyles.SEDTypeDropdown |+| ExploreStyles.WarningInput
-            .when_(sed.isEmpty && props.calibrationRole.needsITC),
-          EnumOptionalDropdown[SedType[T]](
-            id = "sed".refined,
-            value = sed,
-            onChange = sed =>
-              props.spectralDefinition
-                .view(props.toInput)
-                .mod(sed.fold(SpectralDefinition.unnormalizedSED.replace(None))(_.convert)),
-            clazz = LucumaPrimeStyles.FormField,
-            disabled = props.disabled
-          ),
-          <.span(
-            PrimeStyles.InputGroupAddon,
-            ^.borderRight := 0.px,
-            props.calibrationRole.renderRequiredForITCIcon
-          ).when(sed.isEmpty)
-        ),
-        stellarLibrarySpectrumAlignerOpt
-          .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
-        coolStarTemperatureAlignerOpt
-          .map(rsu => spectrumRow("csTemp".refined, rsu.view(_.assign))),
-        galaxySpectrumAlignerOpt
-          .map(rsu => spectrumRow("gSpectrum".refined, rsu.view(_.assign))),
-        planetSpectrumAlignerOpt
-          .map(rsu => spectrumRow("pSpectrum".refined, rsu.view(_.assign))),
-        quasarSpectrumAlignerOpt
-          .map(rsu => spectrumRow("qSpectrum".refined, rsu.view(_.assign))),
-        hiiRegionSpectrumAlignerOpt
-          .map(rsu => spectrumRow("hiirSpectrum".refined, rsu.view(_.assign))),
-        planetaryNebulaSpectrumAlignerOpt
-          .map(rsu => spectrumRow("pnSpectrum".refined, rsu.view(_.assign))),
-        powerLawIndexAlignerOpt
-          .map(rsu =>
-            FormInputTextView( // Power-law index can be any decimal
-              id = "powerLawIndex".refined,
-              value = rsu.view(_.assign),
-              label = "Index",
-              validFormat = InputValidSplitEpi.bigDecimal,
-              changeAuditor = ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
-              disabled = props.disabled
-            )
-          ),
-        blackBodyTemperatureAlignerOpt
-          .map(rsu =>
-            FormInputTextView( // Temperature is in K, a positive integer
-              id = "bbTempK".refined,
-              value = rsu.view(_.value.assign).stripQuantity,
-              label = "Temperature",
-              validFormat = InputValidSplitEpi.posInt,
-              changeAuditor = ChangeAuditor
-                .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
-                .denyNeg,
-              units = "°K",
-              disabled = props.disabled
-            )
-          ),
-        props.bandBrightnessesViewOpt
-          .map(bandBrightnessesView =>
-            <.div(ExploreStyles.BrightnessesTableWrapper)(
-              brightnessEditor(bandBrightnessesView, props.brightnessExpanded, props.disabled)
-            )
-          ),
-        props.fluxDensityContinuumOpt
-          .map(fluxDensityContinuum =>
-            React.Fragment(
-              FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
-              <.div(
-                ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
-                FormInputTextView(
-                  id = "fluxValue".refined,
-                  value = fluxDensityContinuum.zoom(Measure.valueTagged),
-                  validFormat = InputValidSplitEpi
-                    .refinedBigDecimalWithScientificNotation[FluxDensityContinuumValueRefinement]
-                    .andThen(FluxDensityContinuumValue.value.reverse),
-                  changeAuditor = ChangeAuditor.posScientificNotation(),
-                  disabled = props.disabled
+      React
+        .Fragment(
+          props.catalogInfo.flatMap(ci =>
+            ci.objectType.map(ot =>
+              FormInputText(
+                id = "catalogInfo".refined,
+                value = ot,
+                label = React.Fragment(
+                  ci.catalog match
+                    case CatalogName.Import => "Object Type"
+                    case other              => other.shortName
+                  ,
+                  HelpIcon("target/main/target-catalog-info.md".refined)
                 ),
-                EnumDropdownView(
-                  id = "Units".refined,
-                  value = fluxDensityContinuum.zoom(Measure.unitsTagged),
-                  disabled = props.disabled
-                )
+                disabled = true
               )
             )
           ),
-        props.emissionLinesViewOpt
-          .map(e =>
-            <.div(ExploreStyles.BrightnessesTableWrapper)(
-              emissionLineEditor(e, props.brightnessExpanded, props.disabled)
+          FormLabel(htmlFor = "sed".refined)("SED", HelpIcon("target/main/target-sed.md".refined)),
+          <.div(
+            ExploreStyles.SEDTypeDropdown |+| ExploreStyles.WarningInput
+              .when_(sedType.get.isEmpty && props.calibrationRole.needsITC),
+            EnumDropdownOptionalView(
+              id = "sed".refined,
+              value = sedType,
+              clazz = LucumaPrimeStyles.FormField,
+              disabled = props.disabled
+            ),
+            <.span(PrimeStyles.InputGroupAddon, ^.borderRight := 0.px)(
+              props.calibrationRole.renderRequiredForITCIcon
+            ).when(sedType.get.isEmpty)
+          ),
+          if (isFullyDefined)
+            React.Fragment(
+              stellarLibrarySpectrumAlignerOpt
+                .map(rsu => spectrumRow("slSpectrum".refined, rsu.view(_.assign))),
+              coolStarTemperatureAlignerOpt
+                .map(rsu => spectrumRow("csTemp".refined, rsu.view(_.assign))),
+              galaxySpectrumAlignerOpt
+                .map(rsu => spectrumRow("gSpectrum".refined, rsu.view(_.assign))),
+              planetSpectrumAlignerOpt
+                .map(rsu => spectrumRow("pSpectrum".refined, rsu.view(_.assign))),
+              quasarSpectrumAlignerOpt
+                .map(rsu => spectrumRow("qSpectrum".refined, rsu.view(_.assign))),
+              hiiRegionSpectrumAlignerOpt
+                .map(rsu => spectrumRow("hiirSpectrum".refined, rsu.view(_.assign))),
+              planetaryNebulaSpectrumAlignerOpt
+                .map(rsu => spectrumRow("pnSpectrum".refined, rsu.view(_.assign))),
+              powerLawIndexAlignerOpt
+                .map(rsu =>
+                  FormInputTextView( // Power-law index can be any decimal
+                    id = "powerLawIndex".refined,
+                    value = rsu.view(_.assign),
+                    label = "Index",
+                    validFormat = InputValidSplitEpi.bigDecimal,
+                    changeAuditor =
+                      ChangeAuditor.fromInputValidSplitEpi(InputValidSplitEpi.bigDecimal),
+                    disabled = props.disabled
+                  )
+                ),
+              blackBodyTemperatureAlignerOpt
+                .map(rsu =>
+                  FormInputTextView( // Temperature is in K, a positive integer
+                    id = "bbTempK".refined,
+                    value = rsu.view(_.value.assign).stripQuantity,
+                    label = "Temperature",
+                    validFormat = InputValidSplitEpi.posInt,
+                    changeAuditor = ChangeAuditor
+                      .fromInputValidSplitEpi(InputValidSplitEpi.posInt)
+                      .denyNeg,
+                    units = "°K",
+                    disabled = props.disabled
+                  )
+                ),
+              props.bandBrightnessesViewOpt
+                .map(bandBrightnessesView =>
+                  <.div(ExploreStyles.BrightnessesTableWrapper)(
+                    brightnessEditor(bandBrightnessesView, props.brightnessExpanded, props.disabled)
+                  )
+                ),
+              props.fluxDensityContinuumOpt
+                .map(fluxDensityContinuum =>
+                  React.Fragment(
+                    FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
+                    <.div(
+                      ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
+                      FormInputTextView(
+                        id = "fluxValue".refined,
+                        value = fluxDensityContinuum.zoom(Measure.valueTagged),
+                        validFormat = InputValidSplitEpi
+                          .refinedBigDecimalWithScientificNotation[
+                            FluxDensityContinuumValueRefinement
+                          ]
+                          .andThen(FluxDensityContinuumValue.value.reverse),
+                        changeAuditor = ChangeAuditor.posScientificNotation(),
+                        disabled = props.disabled
+                      ),
+                      EnumDropdownView(
+                        id = "Units".refined,
+                        value = fluxDensityContinuum.zoom(Measure.unitsTagged),
+                        disabled = props.disabled
+                      )
+                    )
+                  )
+                ),
+              props.emissionLinesViewOpt
+                .map(e =>
+                  <.div(ExploreStyles.BrightnessesTableWrapper)(
+                    emissionLineEditor(e, props.brightnessExpanded, props.disabled)
+                  )
+                )
             )
-          )
-      )
+          else EmptyVdom
+        )
 }
