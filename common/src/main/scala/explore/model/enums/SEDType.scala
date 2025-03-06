@@ -56,7 +56,6 @@ sealed abstract class SedTypeEnum[T](
       case BandNormalized(_, bs) => BandNormalized(sed.some, bs)
       case EmissionLines(_, _)   => BandNormalized(sed.some, SortedMap.empty)
 
-  // protected sealed abstract class BandNormalizedSED(name: String) extends SedType[T](name)
   protected object BandNormalizedSed {
     sealed abstract class Immediate(
       name: String,
