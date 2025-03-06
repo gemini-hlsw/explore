@@ -9,9 +9,10 @@ import clue.data.syntax.*
 import crystal.react.View
 import explore.*
 import explore.common.*
+import explore.model.Attachment
 import explore.model.enums.SedType
-import explore.model.enums.SurfaceSEDType
-import explore.model.enums.SurfaceSEDType.given
+import explore.model.enums.SurfaceSedType
+import explore.model.enums.SurfaceSedType.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -29,18 +30,18 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 
-import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
 import brightnessesEditor.SurfaceBrightnessEditor
 import emissionLineEditor.SurfaceEmissionLineEditor
 
 case class SurfaceSpectralDefinitionEditor(
-  spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
-  catalogInfo:        Option[CatalogInfo],
-  brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
+  spectralDefinition:   Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
+  catalogInfo:          Option[CatalogInfo],
+  brightnessExpanded:   View[IsExpanded],
+  customSedAttachments: List[Attachment],
+  disabled:             Boolean,
+  calibrationRole:      Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component
@@ -110,10 +111,9 @@ object SurfaceSpectralDefinitionEditor
       SurfaceSpectralDefinitionEditor
     ] {
   override protected val currentType: SpectralDefinition[Surface] => Option[SedType[Surface]] =
-    SurfaceSEDType.fromSpectralDefinition
+    SurfaceSedType.fromSpectralDefinition
 
-  override protected val disabledItems: HashSet[SedType[Surface]] =
-    HashSet(SurfaceSEDType.UserDefinedType)
+  override protected val userDefinedType: SedType[Surface] = SurfaceSedType.UserDefinedType
 
   override protected val brightnessEditor
     : (View[SortedMap[Band, BrightnessMeasure[Surface]]], View[IsExpanded], Boolean) => VdomNode =

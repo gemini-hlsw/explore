@@ -18,6 +18,7 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.AppContext
+import explore.model.Attachment
 import explore.model.GuideStarSelection
 import explore.model.GuideStarSelection.AgsSelection
 import explore.model.Observation
@@ -64,14 +65,15 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 
 case class TargetTabContents(
-  programId:        Program.Id,
-  userId:           Option[User.Id],
-  programSummaries: UndoContext[ProgramSummaries],
-  userPreferences:  View[UserPreferences],
-  focused:          Focused,
-  searching:        View[Set[Target.Id]],
-  expandedIds:      View[SortedSet[ObsIdSet]],
-  readonly:         Boolean
+  programId:            Program.Id,
+  userId:               Option[User.Id],
+  programSummaries:     UndoContext[ProgramSummaries],
+  userPreferences:      View[UserPreferences],
+  focused:              Focused,
+  searching:            View[Set[Target.Id]],
+  expandedIds:          View[SortedSet[ObsIdSet]],
+  customSedAttachments: List[Attachment],
+  readonly:             Boolean
 ) extends ReactFnProps(TargetTabContents.component):
   private val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
@@ -542,6 +544,7 @@ object TargetTabContents extends TwoPanels:
                 title,
                 props.globalPreferences,
                 guideStarSelection,
+                props.customSedAttachments,
                 props.readonly,
                 backButton = backButton.some
               )
@@ -596,6 +599,7 @@ object TargetTabContents extends TwoPanels:
                   fullScreen,
                   props.globalPreferences,
                   guideStarSelection,
+                  props.customSedAttachments,
                   props.readonly,
                   getObsInfo(none)(targetId),
                   onCloneTarget4Target

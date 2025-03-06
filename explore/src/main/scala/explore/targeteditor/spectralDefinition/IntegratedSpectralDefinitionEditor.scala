@@ -9,8 +9,9 @@ import clue.data.syntax.*
 import crystal.react.View
 import explore.*
 import explore.common.*
-import explore.model.enums.IntegratedSEDType
-import explore.model.enums.IntegratedSEDType.given
+import explore.model.Attachment
+import explore.model.enums.IntegratedSedType
+import explore.model.enums.IntegratedSedType.given
 import explore.model.enums.SedType
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -29,18 +30,18 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 
-import scala.collection.immutable.HashSet
 import scala.collection.immutable.SortedMap
 
 import brightnessesEditor.IntegratedBrightnessEditor
 import emissionLineEditor.IntegratedEmissionLineEditor
 
 case class IntegratedSpectralDefinitionEditor(
-  spectralDefinition: Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
-  catalogInfo:        Option[CatalogInfo],
-  brightnessExpanded: View[IsExpanded],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
+  spectralDefinition:   Aligner[SpectralDefinition[Integrated], SpectralDefinitionIntegratedInput],
+  catalogInfo:          Option[CatalogInfo],
+  brightnessExpanded:   View[IsExpanded],
+  customSedAttachments: List[Attachment],
+  disabled:             Boolean,
+  calibrationRole:      Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[IntegratedSpectralDefinitionEditor](
       IntegratedSpectralDefinitionEditor.component
@@ -115,12 +116,12 @@ object IntegratedSpectralDefinitionEditor
       SpectralDefinitionIntegratedInput,
       IntegratedSpectralDefinitionEditor
     ] {
+
   override protected val currentType
     : SpectralDefinition[Integrated] => Option[SedType[Integrated]] =
-    IntegratedSEDType.fromSpectralDefinition
+    IntegratedSedType.fromSpectralDefinition
 
-  override protected val disabledItems: HashSet[SedType[Integrated]] =
-    HashSet(IntegratedSEDType.UserDefinedType)
+  override protected val userDefinedType: SedType[Integrated] = IntegratedSedType.UserDefinedType
 
   override protected val brightnessEditor: (
     View[SortedMap[Band, BrightnessMeasure[Integrated]]],

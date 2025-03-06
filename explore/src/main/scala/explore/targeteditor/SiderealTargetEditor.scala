@@ -18,6 +18,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.Attachment
 import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
@@ -60,21 +61,22 @@ import queries.common.TargetQueriesGQL
 import java.time.Instant
 
 case class SiderealTargetEditor(
-  programId:          Program.Id,
-  userId:             User.Id,
-  target:             UndoSetter[Target.Sidereal],
-  obsAndTargets:      UndoSetter[ObservationsAndTargets],
-  asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
-  obsTime:            Option[Instant],
-  obsConf:            Option[ObsConfiguration],
-  searching:          View[Set[Target.Id]],
-  obsInfo:            TargetEditObsInfo,
-  onClone:            OnCloneParameters => Callback,
-  fullScreen:         View[AladinFullScreen],
-  globalPreferences:  View[GlobalPreferences],
-  guideStarSelection: View[GuideStarSelection],
-  readonly:           Boolean,
-  invalidateSequence: Callback = Callback.empty
+  programId:            Program.Id,
+  userId:               User.Id,
+  target:               UndoSetter[Target.Sidereal],
+  obsAndTargets:        UndoSetter[ObservationsAndTargets],
+  asterism:             Asterism, // This is passed through to Aladin, to plot the entire Asterism.
+  obsTime:              Option[Instant],
+  obsConf:              Option[ObsConfiguration],
+  searching:            View[Set[Target.Id]],
+  obsInfo:              TargetEditObsInfo,
+  onClone:              OnCloneParameters => Callback,
+  fullScreen:           View[AladinFullScreen],
+  globalPreferences:    View[GlobalPreferences],
+  guideStarSelection:   View[GuideStarSelection],
+  customSedAttachments: List[Attachment],
+  readonly:             Boolean,
+  invalidateSequence:   Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor:
@@ -414,8 +416,9 @@ object SiderealTargetEditor:
               SourceProfileEditor(
                 sourceProfileAligner,
                 props.target.get.catalogInfo,
-                disabled,
-                props.obsConf.flatMap(_.calibrationRole)
+                props.customSedAttachments,
+                props.obsConf.flatMap(_.calibrationRole),
+                disabled
               ).withKey(obsToCloneTo.get.fold("none")(_.show))
             )
           )
