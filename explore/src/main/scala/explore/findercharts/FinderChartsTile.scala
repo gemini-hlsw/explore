@@ -27,6 +27,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.Program
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.components.SolarProgress
 import lucuma.ui.react.given
@@ -36,7 +37,6 @@ import lucuma.ui.syntax.pot.*
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
-import lucuma.react.common.ReactFnComponent
 
 object FinderChartsTile:
   def apply(

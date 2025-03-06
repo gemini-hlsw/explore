@@ -3,17 +3,22 @@
 
 package explore.targeteditor.spectralDefinition
 
+import cats.syntax.all.*
 import crystal.react.View
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.*
 import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.utils.*
+import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.Band
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.CatalogInfo
 import lucuma.core.model.EmissionLine
+import lucuma.core.model.Program
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.schemas.ObservationDB.Types.*
@@ -21,11 +26,13 @@ import lucuma.schemas.ObservationDB.Types.*
 import scala.collection.immutable.SortedMap
 
 private trait SpectralDefinitionEditor[T, S]:
+  def programId: Program.Id
   def spectralDefinition: Aligner[SpectralDefinition[T], S]
   def catalogInfo: Option[CatalogInfo]
   def calibrationRole: Option[CalibrationRole]
   def brightnessExpanded: View[IsExpanded]
-  def customSedAttachments: List[Attachment]
+  def attachments: View[AttachmentList]
+  def authToken: Option[NonEmptyString]
   def disabled: Boolean
 
   def toInput: SpectralDefinition[T] => S
@@ -34,8 +41,11 @@ private trait SpectralDefinitionEditor[T, S]:
   def emissionLinesViewOpt: Option[View[SortedMap[Wavelength, EmissionLine[T]]]]
   def fluxDensityContinuumOpt: Option[View[FluxDensityContinuumMeasure[T]]]
 
-  protected[spectralDefinition] def currentCustomSedAttachmentId: Option[Attachment.Id] =
+  protected[spectralDefinition] val currentCustomSedAttachmentId: Option[Attachment.Id] =
     SpectralDefinition.unnormalizedSED.some
       .andThen(UnnormalizedSED.userDefinedAttachment)
       .andThen(UnnormalizedSED.UserDefinedAttachment.attachmentId)
       .getOption(spectralDefinition.get)
+
+  protected[spectralDefinition] val customSedAttachments: List[Attachment] =
+    attachments.get.map(_._2).toList.filter(_.attachmentType === AttachmentType.CustomSED)

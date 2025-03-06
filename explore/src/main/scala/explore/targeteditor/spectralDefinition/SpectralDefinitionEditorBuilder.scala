@@ -16,6 +16,8 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
 import explore.*
+import explore.attachments.Action
+import explore.attachments.ObsAttachmentUtils
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -27,6 +29,7 @@ import explore.model.syntax.all.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.Band
 import lucuma.core.enums.CatalogName
 import lucuma.core.enums.CoolStarTemperature
@@ -52,6 +55,8 @@ import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.SelectItem
+import lucuma.react.primereact.Tooltip
+import lucuma.react.primereact.tooltip.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
@@ -85,6 +90,7 @@ private abstract class SpectralDefinitionEditorBuilder[
     for
       ctx                   <- useContext(AppContext.ctx)
       given Logger[IO]       = ctx.logger
+      given ToastCtx[IO]     = ctx.toastCtx
       currentSedType         = currentType(props.spectralDefinition.get)
       sedType               <- useStateView(currentSedType)
       customSedAttachmentId <- useStateView(props.currentCustomSedAttachmentId)
@@ -116,6 +122,9 @@ private abstract class SpectralDefinitionEditorBuilder[
               .mod(SpectralDefinition.unnormalizedSED.replace(none))
           case _                                                                                =>
             Callback.empty
+      odbRestClient         <- useMemo(props.authToken):
+                                 _.map(OdbRestClient[IO](ctx.environment, _))
+      action                <- useStateView(Action.None)
     yield
       val isCustomSed: Boolean =
         sedType.get.contains_(userDefinedType)
@@ -203,6 +212,19 @@ private abstract class SpectralDefinitionEditorBuilder[
           disabled = props.disabled
         )
 
+      def addNewFinderChart(client: OdbRestClient[IO])(e: ReactEventFromInput) =
+        action.set(Action.Insert) >>
+          ObsAttachmentUtils.onInsertFileSelected(
+            props.programId,
+            props.attachments,
+            AttachmentType.CustomSED,
+            client,
+            action,
+            Callback.log(_)
+            // id => props.attachmentIds.mod(_ + id) // >>
+            // added.setState(id.some) >> // selected.set(id.some)
+          )(e)
+
       React
         .Fragment(
           props.catalogInfo.flatMap(ci =>
@@ -281,13 +303,37 @@ private abstract class SpectralDefinitionEditorBuilder[
           else EmptyVdom,
           React.Fragment(
             if (isCustomSed)
-              FormDropdownOptional(
-                id = "customSed".refined,
-                value = customSedAttachmentId.get,
-                options =
-                  props.customSedAttachments.map(a => SelectItem(value = a.id, label = a.fileName)),
-                onChange = v => customSedAttachmentId.set(v),
-                disabled = props.disabled
+              React.Fragment(
+                if (!props.disabled)
+                  odbRestClient.value.map: client =>
+                    React.Fragment(
+                      <.label(
+                        ObsAttachmentUtils.LabelButtonClasses,
+                        ^.htmlFor := "attachment-upload",
+                        Icons.FileArrowUp.withFixedWidth(true)
+                      ).withTooltip(
+                        content = s"Upload new custom SED",
+                        position = Tooltip.Position.Bottom
+                      ),
+                      <.input(
+                        ExploreStyles.FileUpload,
+                        ^.tpe    := "file",
+                        ^.onChange ==> addNewFinderChart(client),
+                        ^.id     := "attachment-upload",
+                        ^.name   := "file",
+                        ^.accept := AttachmentType.CustomSED.accept
+                      )
+                    )
+                else EmptyVdom,
+                FormDropdownOptional(
+                  id = "customSed".refined,
+                  value = customSedAttachmentId.get,
+                  options = props.customSedAttachments.map(a =>
+                    SelectItem(value = a.id, label = a.fileName)
+                  ),
+                  onChange = v => customSedAttachmentId.set(v),
+                  disabled = props.disabled
+                )
               )
             else EmptyVdom,
             props.bandBrightnessesViewOpt
