@@ -36,6 +36,7 @@ import lucuma.ui.syntax.pot.*
 import monocle.Focus
 
 import scala.collection.immutable.SortedSet
+import lucuma.react.common.ReactFnComponent
 
 object FinderChartsTile:
   def apply(
@@ -97,82 +98,72 @@ object FinderChartsTile:
     private type Props = Body
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .useMemoBy((p, _) => p.authToken): (_, ctx) =>
-          token => OdbRestClient[IO](ctx.environment, token)
-        // Current transformation
-        .useStateView(Transformation.Default)
-        .useStateView[UrlMap](Map.empty)
-        // added attachment, FIXME once we can upload and assign in one step
-        .useState(none[Attachment.Id])
-        // If added associate with the observation
-        .useEffectWithDepsBy((_, _, _, _, _, added) => added.value):
-          (props, _, _, transform, _, added) =>
-            _ =>
+      ScalaFnComponent[Props]: props =>
+        for
+          ctx       <- useContext(AppContext.ctx)
+          client    <- useMemo(props.authToken): token =>
+                         OdbRestClient[IO](ctx.environment, token)
+          transform <- useStateView(Transformation.Default) // Current transformation
+          urlMap    <- useStateView[UrlMap](Map.empty)
+          // added attachment, FIXME once we can upload and assign in one step
+          added     <- useState(none[Attachment.Id])
+          action    <-                                      // If added associate with the observation
+            useEffectWithDeps(added.value): _ =>
               // Associate the newly added attachment with the observation and select it
-              added.value.map { newlyAdded =>
-                props.attachmentIds.mod(_ + newlyAdded) *> transform.set(
-                  Transformation.Default
-                ) *> props.selected.set(newlyAdded.some) *> added
-                  .setState(none)
-              }.getOrEmpty
-        .useEffectWithDepsBy((props, _, _, _, _, _) =>
-          (props.authToken, props.attachments.get, props.attachmentIds.get)
-        ): (props, _, client, _, urlMap, _) =>
-          (_, obsAttachments, obsAttachmentIds) =>
-            val allCurrentKeys =
-              validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
+              added.value
+                .map: newlyAdded =>
+                  props.attachmentIds.mod(_ + newlyAdded) *>
+                    transform.set(Transformation.Default) *>
+                    props.selected.set(newlyAdded.some) *>
+                    added.setState(none)
+                .getOrEmpty
+          _         <-
+            useEffectWithDeps((props.authToken, props.attachments.get, props.attachmentIds.get)):
+              (_, obsAttachments, obsAttachmentIds) =>
+                val allCurrentKeys =
+                  validAttachments(obsAttachments, obsAttachmentIds).values.map(_.toMapKey).toSet
 
-            val newOas = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
+                val newOas = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
-            val updateUrlMap =
-              urlMap.mod { umap =>
-                val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
-                newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
-              }.toAsync
+                val updateUrlMap =
+                  urlMap.mod { umap =>
+                    val filteredMap = umap.filter((k, _) => allCurrentKeys.contains(k))
+                    newOas.foldRight(filteredMap)((key, m) => m.updated(key, pending))
+                  }.toAsync
 
-            val getUrls =
-              newOas.traverse_(key => getAttachmentUrl(client, key, urlMap))
+                val getUrls =
+                  newOas.traverse_(key => getAttachmentUrl(client, key, urlMap))
 
-            val defaultSelected =
-              if (allCurrentKeys.size === 1) props.selected.set(allCurrentKeys.headOption.map(_._1))
-              else Callback.empty
+                val defaultSelected =
+                  if (allCurrentKeys.size === 1)
+                    props.selected.set(allCurrentKeys.headOption.map(_._1))
+                  else Callback.empty
 
-            updateUrlMap *> getUrls *> defaultSelected.to[IO]
-        // Read preferences
-        .useEffectWithDepsBy((props, _, _, _, _, _) => (props.oid, props.selected.get)):
-          (props, ctx, _, transform, _, _) =>
-            (oid, aid) =>
+                updateUrlMap *> getUrls *> defaultSelected.to[IO]
+          _         <-                                      // Read preferences
+            useEffectWithDeps((props.oid, props.selected.get)): (oid, aid) =>
               import ctx.given
 
               aid
-                .map(aid =>
+                .map: aid =>
                   FinderChartPreferences
                     .queryWithDefault[IO](oid, aid)
-                    .flatMap { t =>
-                      transform.set(t).to[IO]
-                    }
+                    .flatMap(transform.set(_).to[IO])
                     .runAsyncAndForget
-                )
                 .getOrEmpty
-        // Write preferences
-        .useEffectWithDepsBy((props, _, _, transform, _, _) => transform.get):
-          (props, ctx, _, transform, _, _) =>
-            transform =>
+          _         <-                                      // Write preferences
+            useEffectWithDeps(transform.get): transform =>
               import ctx.given
 
               props.selected.get
-                .map(aid =>
+                .map: aid =>
                   FinderChartPreferences
                     .updateTransformation[IO](props.oid, aid, transform)
                     .runAsyncAndForget
-                )
                 .getOrEmpty
-        .useStateView(Action.None)
-        .render: (props, ctx, client, ops, urls, added, action) =>
-          val transforms = ops.get.calcTransform
+          action    <- useStateView(Action.None)
+        yield
+          val transforms = transform.get.calcTransform
 
           <.div(
             ExploreStyles.FinderChartsBackground,
@@ -184,7 +175,7 @@ object FinderChartsTile:
               SolarProgress(ExploreStyles.FinderChartsLoadProgress)
                 .unless(action.get === Action.None)
             ),
-            ControlOverlay(props.parallacticAngle, ops),
+            ControlOverlay(props.parallacticAngle, transform),
             if (props.chartSelector.get.value)
               FinderChartLinker(
                 props.programId,
@@ -196,11 +187,11 @@ object FinderChartsTile:
             else EmptyVdom,
             <.div(ExploreStyles.FinderChartsBody)(
               props.selected.get.map { attId =>
-                urls.get.find { case ((i, _), _) => i === attId }.map { url =>
+                urlMap.get.find { case ((i, _), _) => i === attId }.map { url =>
                   url._2.renderPot(url =>
                     <.img(
                       ExploreStyles.FinderChartsImage,
-                      ExploreStyles.FinderChartsImageInverted.when(ops.get.inverted.value),
+                      ExploreStyles.FinderChartsImageInverted.when(transform.get.inverted.value),
                       ^.transform := transforms.mkString(" "),
                       ^.src       := url
                     )
@@ -217,32 +208,29 @@ object FinderChartsTile:
     attachments:   View[AttachmentList],
     readOnly:      Boolean
   )(val state: View[TileState])
-      extends ReactFnProps(Title.component):
+      extends ReactFnProps(Title):
     val chartSelector = state.zoom(TileState.chartSelector)
     val selected      = state.zoom(TileState.selected)
 
-  private object Title:
-    private type Props = Title
-
-    private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .useMemoBy((p, _) => p.authToken): (_, ctx) =>
-          token => OdbRestClient[IO](ctx.environment, token)
-        .useStateView(Action.None)
-        // added attachment, FIXME once we can upload and assign in one step
-        .useState(none[Attachment.Id])
-        .render: (props, ctx, restClient, action, added) =>
-          attachmentSelector(
-            props.programId,
-            props.attachmentIds,
-            props.attachments,
-            ctx,
-            restClient,
-            props.selected,
-            action,
-            added,
-            props.chartSelector,
-            props.readOnly
-          )
+  private object Title
+      extends ReactFnComponent[Title](props =>
+        for
+          ctx        <- useContext(AppContext.ctx)
+          restClient <- useMemo(props.authToken): token =>
+                          OdbRestClient[IO](ctx.environment, token)
+          action     <- useStateView(Action.None)
+          // added attachment, FIXME once we can upload and assign in one step
+          added      <- useState(none[Attachment.Id])
+        yield attachmentSelector(
+          props.programId,
+          props.attachmentIds,
+          props.attachments,
+          ctx,
+          restClient,
+          props.selected,
+          action,
+          added,
+          props.chartSelector,
+          props.readOnly
+        )
+      )
