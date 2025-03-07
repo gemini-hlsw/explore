@@ -17,3 +17,4 @@ enum TableId(val tag: String) derives Enumerated:
   case ObservationValidations extends TableId("observation_validations")
   case RequestedConfigs       extends TableId("requested_configs")
   case UnrequestedConfigs     extends TableId("unrequested_configs")
+  case GroupWarnings          extends TableId("group_warnings")
