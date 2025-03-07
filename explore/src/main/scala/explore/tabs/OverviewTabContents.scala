@@ -3,6 +3,7 @@
 
 package explore.tabs
 
+import cats.data.NonEmptySet
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Input
@@ -21,13 +22,17 @@ import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.AttachmentList
 import explore.model.ExploreGridLayouts
+import explore.model.Group
+import explore.model.GroupList
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObservationList
 import explore.model.OverviewTabTileIds
 import explore.model.ProgramDetails
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.GroupWarning
 import explore.model.layout.LayoutsMap
 import explore.undo.*
+import explore.validations.GroupWarningsTile
 import explore.validations.ObservationValidationsTableBody
 import explore.validations.ObservationValidationsTableTileState
 import explore.validations.ObservationValidationsTableTitle
@@ -56,6 +61,8 @@ case class OverviewTabContents(
   attachments:              View[AttachmentList],
   obsAttachmentAssignments: ObsAttachmentAssignmentMap,
   observations:             View[ObservationList],
+  groups:                   GroupList,
+  groupWarnings:            Map[Group.Id, NonEmptySet[GroupWarning]],
   detailsUndoSetter:        UndoSetter[ProgramDetails],
   layout:                   LayoutsMap,
   proposalIsAccepted:       Boolean,
@@ -81,6 +88,9 @@ object OverviewTabContents
           ObservationValidationsTableBody(props.userId, props.programId, props.observations, _),
           ObservationValidationsTableTitle.apply
         )
+
+        val groupWarningsTile =
+          GroupWarningsTile.apply(props.userId, props.programId, props.groups, props.groupWarnings)
 
         val obsAttachmentsTile = props.userVault
           .flatMap(vault =>
@@ -159,6 +169,7 @@ object OverviewTabContents
             props.layout,
             List(
               warningsAndErrorsTile,
+              groupWarningsTile,
               obsAttachmentsTile,
               descriptionTile
             ),
