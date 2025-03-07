@@ -28,8 +28,8 @@ addCommandAlias(
 ThisBuild / description                         := "Explore"
 Global / onChangedBuildSource                   := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
-ThisBuild / scalaVersion                        := "3.6.3"
-ThisBuild / crossScalaVersions                  := Seq("3.6.3")
+ThisBuild / scalaVersion                        := "3.6.4"
+ThisBuild / crossScalaVersions                  := Seq("3.6.4")
 ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
 ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
   "https://s01.oss.sonatype.org/content/repositories/snapshots/"
