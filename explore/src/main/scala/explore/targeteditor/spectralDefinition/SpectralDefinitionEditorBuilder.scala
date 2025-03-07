@@ -104,9 +104,9 @@ private abstract class SpectralDefinitionEditorBuilder[
       _                     <- // Update model when state is fully defined.
         useEffectWithDeps(sedType.get, customSedAttachmentId.get):
           case (Some(someSedType), Some(attachmentId))
-              if someSedType === userDefinedType && !currentSedType.contains_(
-                someSedType
-              ) && !props.currentCustomSedAttachmentId.contains_(attachmentId) =>
+              if someSedType === userDefinedType &&
+                (!currentSedType.contains_(someSedType) ||
+                  !props.currentCustomSedAttachmentId.contains_(attachmentId)) =>
             props.spectralDefinition
               .view(props.toInput)
               .mod:
@@ -220,7 +220,8 @@ private abstract class SpectralDefinitionEditorBuilder[
             AttachmentType.CustomSED,
             client,
             action,
-            Callback.log(_)
+            aid => customSedAttachmentId.set(aid.some)
+            // Callback.log(_)
             // id => props.attachmentIds.mod(_ + id) // >>
             // added.setState(id.some) >> // selected.set(id.some)
           )(e)
