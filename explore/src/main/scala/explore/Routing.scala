@@ -75,6 +75,8 @@ object Routing:
                 programSummaries.model.zoom(ProgramSummaries.attachments),
                 programSummaries.model.get.obsAttachmentAssignments,
                 programSummaries.model.zoom(ProgramSummaries.observations),
+                programSummaries.model.get.groups,
+                programSummaries.model.get.groupWarnings,
                 detailsUndoSetter,
                 userPreferences(model.rootModel).overviewTabLayout,
                 programSummaries.get.proposalIsAccepted,

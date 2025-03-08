@@ -216,13 +216,8 @@ object ObservationValidationsTableBody {
         case r: ValidationRow => g(r)
         case r: MessageRow    => h(r)
 
-    def id: Observation.Id = fold(_.obs.id, _.obsId, _.obsId)
-
     def forObs[A](f: ObsRow => A): js.UndefOr[A] =
       fold(r => f(r), _ => js.undefined, _ => js.undefined)
-
-    def forObsOption[A](f: ObsRow => Option[A]): Option[A] =
-      fold(f, _ => none, _ => none[A])
 
     def rowId: String =
       fold(
