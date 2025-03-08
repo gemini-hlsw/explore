@@ -68,10 +68,7 @@ object FinderChartsTile:
               tileState
             )
           .orEmpty,
-      (tileState, _) =>
-        authToken
-          .map[VdomNode]: t =>
-            Title(programId, t, attachmentIds, attachments, readonly)(tileState)
+      (tileState, _) => Title(programId, authToken, attachmentIds, attachments, readonly)(tileState)
     )
 
   case class TileState(chartSelector: ChartSelector, selected: Option[Attachment.Id])
@@ -203,10 +200,10 @@ object FinderChartsTile:
 
   private case class Title(
     programId:     Program.Id,
-    authToken:     NonEmptyString,
+    authToken:     Option[NonEmptyString],
     attachmentIds: View[SortedSet[Attachment.Id]],
     attachments:   View[AttachmentList],
-    readOnly:      Boolean
+    readonly:      Boolean
   )(val state: View[TileState])
       extends ReactFnProps(Title):
     val chartSelector = state.zoom(TileState.chartSelector)
@@ -215,22 +212,16 @@ object FinderChartsTile:
   private object Title
       extends ReactFnComponent[Title](props =>
         for
-          ctx        <- useContext(AppContext.ctx)
-          restClient <- useMemo(props.authToken): token =>
-                          OdbRestClient[IO](ctx.environment, token)
-          action     <- useStateView(Action.None)
           // added attachment, FIXME once we can upload and assign in one step
-          added      <- useState(none[Attachment.Id])
+          added <- useState(none[Attachment.Id])
         yield attachmentSelector(
           props.programId,
           props.attachmentIds,
           props.attachments,
-          ctx,
-          restClient,
+          props.authToken,
           props.selected,
-          action,
           added,
           props.chartSelector,
-          props.readOnly
+          props.readonly
         )
       )

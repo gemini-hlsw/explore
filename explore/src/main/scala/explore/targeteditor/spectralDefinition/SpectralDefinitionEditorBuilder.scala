@@ -16,9 +16,8 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
 import explore.*
-import explore.attachments.Action
-import explore.attachments.ObsAttachmentUtils
 import explore.common.*
+import explore.components.FileUploadButton
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
@@ -53,11 +52,9 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
-import lucuma.react.primereact.Button
 import lucuma.react.primereact.DropdownOptional
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.SelectItem
-import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.TooltipOptions
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -92,7 +89,6 @@ private abstract class SpectralDefinitionEditorBuilder[
     for
       ctx                   <- useContext(AppContext.ctx)
       given Logger[IO]       = ctx.logger
-      given ToastCtx[IO]     = ctx.toastCtx
       currentSedType         = currentType(props.spectralDefinition.get)
       sedType               <- useStateView(currentSedType)
       customSedAttachmentId <- useStateView(props.currentCustomSedAttachmentId)
@@ -118,9 +114,6 @@ private abstract class SpectralDefinitionEditorBuilder[
             props.modSpectralDefinition(SpectralDefinition.unnormalizedSED.replace(none))
           case _                                                                                =>
             Callback.empty
-      odbRestClient         <- useMemo(props.authToken):
-                                 _.map(OdbRestClient[IO](ctx.environment, _))
-      action                <- useStateView(Action.None)
     yield
       val isCustomSed: Boolean =
         sedType.get.contains_(userDefinedType)
@@ -208,18 +201,6 @@ private abstract class SpectralDefinitionEditorBuilder[
           disabled = props.disabled
         )
 
-      def addNewFinderChart(client: OdbRestClient[IO])(e: ReactEventFromInput) =
-        action.set(Action.Insert) >>
-          ObsAttachmentUtils.onInsertFileSelected(
-            props.programId,
-            props.attachments,
-            AttachmentType.CustomSED,
-            client,
-            action,
-            aid =>
-              customSedAttachmentId.set(aid.some).delayMs(1).toCallback // Won't work without delay
-          )(e)
-
       React
         .Fragment(
           props.catalogInfo.flatMap(ci =>
@@ -306,28 +287,23 @@ private abstract class SpectralDefinitionEditorBuilder[
                     options = props.customSedAttachments.map: a =>
                       SelectItem(value = a.id, label = a.fileName),
                     onChange = v => customSedAttachmentId.set(v),
+                    placeholder =
+                      if (props.customSedAttachments.nonEmpty) "Select custom SED file"
+                      else "No custom SED files",
                     disabled = props.disabled
                   ),
-                  odbRestClient.value.map: client =>
-                    React.Fragment(
-                      Button(
-                        icon = Icons.FileArrowUp.withFixedWidth(true),
-                        disabled = props.disabled,
-                        tooltip = "Upload new custom SED",
-                        tooltipOptions = TooltipOptions(
-                          position = Tooltip.Position.Bottom
-                        )
-                      ).mini.compact,
-                      <.input(
-                        ExploreStyles.FileUpload,
-                        ^.tpe      := "file",
-                        ^.onChange ==> addNewFinderChart(client),
-                        ^.id       := "attachment-upload",
-                        ^.name     := "file",
-                        ^.accept   := AttachmentType.CustomSED.accept,
-                        ^.readOnly := props.disabled
-                      )
-                    )
+                  FileUploadButton(
+                    props.programId,
+                    props.attachments,
+                    AttachmentType.CustomSED,
+                    aid => // Won't work without delay
+                      customSedAttachmentId
+                        .set(aid.some)
+                        .delayMs(1)
+                        .toCallback,
+                    props.disabled,
+                    props.authToken
+                  )
                 )
               )
             else EmptyVdom,
