@@ -53,10 +53,12 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.DropdownOptional
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.SelectItem
 import lucuma.react.primereact.Tooltip
-import lucuma.react.primereact.tooltip.*
+import lucuma.react.primereact.TooltipOptions
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
@@ -107,19 +109,13 @@ private abstract class SpectralDefinitionEditorBuilder[
               if someSedType === userDefinedType &&
                 (!currentSedType.contains_(someSedType) ||
                   !props.currentCustomSedAttachmentId.contains_(attachmentId)) =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod:
-                SpectralDefinition.unnormalizedSED
-                  .replace(UnnormalizedSED.UserDefinedAttachment(attachmentId).some)
+            props.modSpectralDefinition:
+              SpectralDefinition.unnormalizedSED.replace:
+                UnnormalizedSED.UserDefinedAttachment(attachmentId).some
           case (Some(sed @ SedType.Immediate(_, convert)), _) if !currentSedType.contains_(sed) =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod(convert)
+            props.modSpectralDefinition(convert)
           case (None, _) if currentSedType.isDefined                                            =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod(SpectralDefinition.unnormalizedSED.replace(none))
+            props.modSpectralDefinition(SpectralDefinition.unnormalizedSED.replace(none))
           case _                                                                                =>
             Callback.empty
       odbRestClient         <- useMemo(props.authToken):
@@ -220,10 +216,8 @@ private abstract class SpectralDefinitionEditorBuilder[
             AttachmentType.CustomSED,
             client,
             action,
-            aid => customSedAttachmentId.set(aid.some)
-            // Callback.log(_)
-            // id => props.attachmentIds.mod(_ + id) // >>
-            // added.setState(id.some) >> // selected.set(id.some)
+            aid =>
+              customSedAttachmentId.set(aid.some).delayMs(1).toCallback // Won't work without delay
           )(e)
 
       React
@@ -305,35 +299,35 @@ private abstract class SpectralDefinitionEditorBuilder[
           React.Fragment(
             if (isCustomSed)
               React.Fragment(
-                if (!props.disabled)
+                <.span(LucumaPrimeStyles.FormField, ExploreStyles.SEDTypeDropdown)(
+                  DropdownOptional(
+                    id = "customSed",
+                    value = customSedAttachmentId.get,
+                    options = props.customSedAttachments.map: a =>
+                      SelectItem(value = a.id, label = a.fileName),
+                    onChange = v => customSedAttachmentId.set(v),
+                    disabled = props.disabled
+                  ),
                   odbRestClient.value.map: client =>
                     React.Fragment(
-                      <.label(
-                        ObsAttachmentUtils.LabelButtonClasses,
-                        ^.htmlFor := "attachment-upload",
-                        Icons.FileArrowUp.withFixedWidth(true)
-                      ).withTooltip(
-                        content = s"Upload new custom SED",
-                        position = Tooltip.Position.Bottom
-                      ),
+                      Button(
+                        icon = Icons.FileArrowUp.withFixedWidth(true),
+                        disabled = props.disabled,
+                        tooltip = "Upload new custom SED",
+                        tooltipOptions = TooltipOptions(
+                          position = Tooltip.Position.Bottom
+                        )
+                      ).mini.compact,
                       <.input(
                         ExploreStyles.FileUpload,
-                        ^.tpe    := "file",
+                        ^.tpe      := "file",
                         ^.onChange ==> addNewFinderChart(client),
-                        ^.id     := "attachment-upload",
-                        ^.name   := "file",
-                        ^.accept := AttachmentType.CustomSED.accept
+                        ^.id       := "attachment-upload",
+                        ^.name     := "file",
+                        ^.accept   := AttachmentType.CustomSED.accept,
+                        ^.readOnly := props.disabled
                       )
                     )
-                else EmptyVdom,
-                FormDropdownOptional(
-                  id = "customSed".refined,
-                  value = customSedAttachmentId.get,
-                  options = props.customSedAttachments.map(a =>
-                    SelectItem(value = a.id, label = a.fileName)
-                  ),
-                  onChange = v => customSedAttachmentId.set(v),
-                  disabled = props.disabled
                 )
               )
             else EmptyVdom,

@@ -3,6 +3,8 @@
 
 package explore.targeteditor.spectralDefinition
 
+import cats.Endo
+import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
@@ -11,6 +13,7 @@ import explore.common.*
 import explore.model.Attachment
 import explore.model.AttachmentList
 import explore.utils.*
+import japgolly.scalajs.react.Callback
 import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.Band
 import lucuma.core.enums.CalibrationRole
@@ -22,6 +25,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.schemas.ObservationDB.Types.*
+import org.typelevel.log4cats.Logger
 
 import scala.collection.immutable.SortedMap
 
@@ -49,3 +53,7 @@ private trait SpectralDefinitionEditor[T, S]:
 
   protected[spectralDefinition] val customSedAttachments: List[Attachment] =
     attachments.get.map(_._2).toList.filter(_.attachmentType === AttachmentType.CustomSED)
+
+  protected[spectralDefinition] val modSpectralDefinition
+    : Logger[IO] ?=> Endo[SpectralDefinition[T]] => Callback =
+    spectralDefinition.view(toInput).mod(_)
