@@ -36,7 +36,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
 
   private def createClient[F[_]: Async]: Client[F] =
     FetchClientBuilder[F]
-      .withRequestTimeout(5.seconds)
+      .withRequestTimeout(10.seconds)
       .create
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
