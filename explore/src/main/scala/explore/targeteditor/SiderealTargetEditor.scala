@@ -11,14 +11,14 @@ import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.types.string.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.ExploreModelValidators
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
@@ -61,22 +61,23 @@ import queries.common.TargetQueriesGQL
 import java.time.Instant
 
 case class SiderealTargetEditor(
-  programId:            Program.Id,
-  userId:               User.Id,
-  target:               UndoSetter[Target.Sidereal],
-  obsAndTargets:        UndoSetter[ObservationsAndTargets],
-  asterism:             Asterism, // This is passed through to Aladin, to plot the entire Asterism.
-  obsTime:              Option[Instant],
-  obsConf:              Option[ObsConfiguration],
-  searching:            View[Set[Target.Id]],
-  obsInfo:              TargetEditObsInfo,
-  onClone:              OnCloneParameters => Callback,
-  fullScreen:           View[AladinFullScreen],
-  globalPreferences:    View[GlobalPreferences],
-  guideStarSelection:   View[GuideStarSelection],
-  customSedAttachments: List[Attachment],
-  readonly:             Boolean,
-  invalidateSequence:   Callback = Callback.empty
+  programId:          Program.Id,
+  userId:             User.Id,
+  target:             UndoSetter[Target.Sidereal],
+  obsAndTargets:      UndoSetter[ObservationsAndTargets],
+  asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
+  obsTime:            Option[Instant],
+  obsConf:            Option[ObsConfiguration],
+  searching:          View[Set[Target.Id]],
+  obsInfo:            TargetEditObsInfo,
+  onClone:            OnCloneParameters => Callback,
+  fullScreen:         View[AladinFullScreen],
+  globalPreferences:  View[GlobalPreferences],
+  guideStarSelection: View[GuideStarSelection],
+  attachments:        View[AttachmentList],
+  authToken:          Option[NonEmptyString],
+  readonly:           Boolean,
+  invalidateSequence: Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor:
@@ -162,48 +163,48 @@ object SiderealTargetEditor:
     }
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStateView(false)          // cloning
-      .useStateView(none[ObsIdSet]) // obs ids to clone to.
-      // If obsTime is not set, change it to now
-      .useEffectKeepResultWithDepsBy((props, _, _, _) => props.obsTime): (_, _, _, _) =>
-        obsTime => IO(obsTime.getOrElse(Instant.now()))
-      // select the aligner to use based on whether a clone will be created or not.
-      .useMemoBy((props, _, _, toCloneTo, _) =>
-        (props.programId, props.target.get, props.asterism.focus.id, toCloneTo.get)
-      ): (props, ctx, cloning, _, _) =>
-        (pid, target, tid, toCloneTo) =>
-          import ctx.given
+    ScalaFnComponent[Props]: props =>
+      for
+        ctx                   <- useContext(AppContext.ctx)
+        cloning               <- useStateView(false)
+        obsToCloneTo          <- useStateView(none[ObsIdSet]) // obs ids to clone to.
+        // If obsTime is not set, change it to now
+        obsTime               <- useEffectKeepResultWithDeps(props.obsTime): obsTime =>
+                                   IO(obsTime.getOrElse(Instant.now()))
+        // select the aligner to use based on whether a clone will be created or not.
+        siderealTargetAligner <-
+          useMemo(
+            (props.programId, props.target.get, props.asterism.focus.id, obsToCloneTo.get)
+          ): (pid, target, tid, toCloneTo) =>
+            import ctx.given
 
-          toCloneTo.fold(
-            Aligner(
-              props.target,
-              UpdateTargetsInput(
-                WHERE = tid.toWhereTarget.assign,
-                SET = TargetPropertiesInput()
-              ),
-              // Invalidate the sequence if the target changes
-              u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
-            )
-          ): obsIds =>
-            val view = View(target, (mod, cb) => cb(target, mod(target)))
-            Aligner(
-              noopUndoSetter(view),
-              // noopUndoSetter(noUndoTargetView),
-              UpdateTargetsInput(SET = TargetPropertiesInput()),
-              u =>
-                props.invalidateSequence.to[IO] *> cloneTarget(
-                  pid,
-                  tid,
-                  obsIds,
-                  cloning,
-                  props.obsAndTargets,
-                  props.onClone
-                )(u)
-            )
-      .render: (props, ctx, cloning, obsToCloneTo, obsTime, siderealTargetAligner) =>
+            toCloneTo.fold(
+              Aligner(
+                props.target,
+                UpdateTargetsInput(
+                  WHERE = tid.toWhereTarget.assign,
+                  SET = TargetPropertiesInput()
+                ),
+                // Invalidate the sequence if the target changes
+                u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
+              )
+            ): obsIds =>
+              val view = View(target, (mod, cb) => cb(target, mod(target)))
+              Aligner(
+                noopUndoSetter(view),
+                // noopUndoSetter(noUndoTargetView),
+                UpdateTargetsInput(SET = TargetPropertiesInput()),
+                u =>
+                  props.invalidateSequence.to[IO] *> cloneTarget(
+                    pid,
+                    tid,
+                    obsIds,
+                    cloning,
+                    props.obsAndTargets,
+                    props.onClone
+                  )(u)
+              )
+      yield
         import ctx.given
 
         val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)
@@ -414,9 +415,11 @@ object SiderealTargetEditor:
               // or the EmissionsLineEditor when the obsIdSubset changed, resulting in targets always
               // being cloned even when all targets should have been edited.
               SourceProfileEditor(
+                props.programId,
                 sourceProfileAligner,
                 props.target.get.catalogInfo,
-                props.customSedAttachments,
+                props.attachments,
+                props.authToken,
                 props.obsConf.flatMap(_.calibrationRole),
                 disabled
               ).withKey(obsToCloneTo.get.fold("none")(_.show))

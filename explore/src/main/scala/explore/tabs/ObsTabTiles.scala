@@ -57,7 +57,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.conditions.*
-import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
@@ -172,9 +171,6 @@ case class ObsTabTiles(
       )
     )
 
-  val customSedAttachments: List[Attachment] =
-    attachments.get.map(_._2).toList.filter(_.attachmentType === AttachmentType.CustomSED)
-
 object ObsTabTiles:
   private type Props = ObsTabTiles
 
@@ -226,408 +222,390 @@ object ObsTabTiles:
         result(GridLayoutSection.ObservationsLayout)
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStreamResourceOnMountBy: (props, ctx) =>
-        import ctx.given
+    ScalaFnComponent[Props]: props =>
+      for
+        ctx                <- useContext(AppContext.ctx)
+        sequenceOffsets    <- useStreamResourceOnMount:
+                                import ctx.given
 
-        SequenceOffsets[IO]
-          .query(props.obsId)
-          .raiseGraphQLErrors
-          .map: data =>
-            Offsets(
-              science = NonEmptyList.fromList(
-                data.observation
-                  .foldMap(_.execution.scienceOffsets)
-                  .distinct
-              ),
-              acquisition = NonEmptyList.fromList(
-                data.observation
-                  .foldMap(_.execution.acquisitionOffsets)
-                  .distinct
-              )
+                                SequenceOffsets[IO]
+                                  .query(props.obsId)
+                                  .raiseGraphQLErrors
+                                  .map: data =>
+                                    Offsets(
+                                      science = NonEmptyList.fromList(
+                                        data.observation
+                                          .foldMap(_.execution.scienceOffsets)
+                                          .distinct
+                                      ),
+                                      acquisition = NonEmptyList.fromList(
+                                        data.observation
+                                          .foldMap(_.execution.acquisitionOffsets)
+                                          .distinct
+                                      )
+                                    )
+                                  // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
+                                  .reRunOnResourceSignals:
+                                    ObservationEditSubscription
+                                      .subscribe[IO](props.obsId.toObservationEditInput)
+                                      .map(_.throttle(5.seconds))
+        agsState           <- useStateView[AgsState](AgsState.Idle)
+        // the configuration the user has selected from the spectroscopy modes table, if any
+        selectedConfig     <- useStateView(none[InstrumentConfigAndItcResult])
+        itcGraphQuerier     =
+          ItcGraphQuerier(props.observation.get, selectedConfig.get, props.obsTargets)
+        itcGraphResults    <- useEffectResultWithDeps(itcGraphQuerier):
+                                itcGraphQuerier => // Compute ITC graph
+                                  import ctx.given
+                                  itcGraphQuerier.requestGraphs
+        sequenceChanged    <- useStateView(().ready) // Signal that the sequence has changed
+        obsTimeOrNowPot    <- useEffectKeepResultWithDeps(props.observation.model.get.observationTime):
+                                vizTime => IO(vizTime.getOrElse(Instant.now()))
+        // Store guide star selection in a view for fast local updates
+        // This is not the ideal place for this but we need to share the selected guide star
+        // across the configuration and target tile
+        guideStarSelection <- useStateView:
+                                props.selectedGSName.get.fold(GuideStarSelection.Default)(
+                                  RemoteGSSelection.apply
+                                )
+                              .map: gss =>
+                                import ctx.given
+
+                                // We tell the backend and the local cache of changes to the selected guidestar
+                                // In some cases when we do a real override
+                                gss.withOnMod {
+                                  (_, _) match {
+                                    // Change of override
+                                    case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
+                                      props.selectedGSName.set(n.some) *>
+                                        ObsQueries
+                                          .setGuideTargetName[IO](props.obsId, n.some)
+                                          .runAsyncAndForget
+                                    // Going from automatic to manual selection
+                                    case (AgsSelection(_), AgsOverride(n, _, _))                 =>
+                                      props.selectedGSName.set(n.some) *>
+                                        ObsQueries
+                                          .setGuideTargetName[IO](props.obsId, n.some)
+                                          .runAsyncAndForget
+                                    // Going from manual to automated selection
+                                    case (AgsOverride(n, _, _), AgsSelection(_))                 =>
+                                      props.selectedGSName.set(none) *>
+                                        ObsQueries
+                                          .setGuideTargetName[IO](props.obsId, none)
+                                          .runAsyncAndForget
+                                    case _                                                       =>
+                                      // All other combinations
+                                      Callback.empty
+                                  }
+                                }
+        roleLayouts        <- useState(roleLayout(props.userPreferences, props.calibrationRole))
+        _                  <- useEffectWithDeps(props.calibrationRole): role =>
+                                roleLayouts.setState(roleLayout(props.userPreferences, role))
+      yield
+        import ctx.given
+        val (section, defaultLayout, layout) = roleLayouts.value
+
+        obsTimeOrNowPot.value.renderPot: obsTimeOrNow =>
+
+          val asterismIds: View[AsterismIds] =
+            props.observation.model.zoom(Observation.scienceTargetIds)
+
+          val basicConfiguration: Option[BasicConfiguration] =
+            props.observation.get.observingMode.map(_.toBasicConfiguration)
+
+          val obsTimeView: View[Option[Instant]] =
+            props.observation.model.zoom(Observation.observationTime)
+
+          val obsDurationView: View[Option[TimeSpan]] =
+            props.observation.model.zoom(Observation.observationDuration)
+
+          val attachmentsView =
+            props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
+              obsEditAttachments(props.obsId, ids).runAsync
+            }
+
+          val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+          val obsDuration =
+            props.observation.get.observationDuration
+              .orElse(pendingTime)
+
+          val paProps: PAProperties =
+            PAProperties(props.obsId, guideStarSelection, agsState, props.posAngleConstraint)
+
+          val averagePA: Option[AveragePABasis] =
+            (basicConfiguration.map(_.siteFor),
+             props.asterismAsNel,
+             obsDuration.filter(_ > TimeSpan.Zero)
             )
-          // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-          .reRunOnResourceSignals:
-            ObservationEditSubscription
-              .subscribe[IO](props.obsId.toObservationEditInput)
-              .map(_.throttle(5.seconds))
-      // Ags state
-      .useStateView[AgsState](AgsState.Idle)
-      // the configuration the user has selected from the spectroscopy modes table, if any
-      .useStateView(none[InstrumentConfigAndItcResult])
-      .localValBy: (props, _, _, _, selectedConfig) => // itcGraphQuerier
-        ItcGraphQuerier(props.observation.get, selectedConfig.get, props.obsTargets)
-      .useEffectResultWithDepsBy((_, _, _, _, _, itcGraphQuerier) => itcGraphQuerier):
-        (_, ctx, _, _, _, _) =>
-          itcGraphQuerier => // Compute ITC graph
-            import ctx.given
-            itcGraphQuerier.requestGraphs
-      .useStateView(().ready) // Signal that the sequence has changed
-      .useEffectKeepResultWithDepsBy((p, _, _, _, _, _, _, _) =>
-        p.observation.model.get.observationTime
-      ): (_, _, _, _, _, _, _, _) =>
-        vizTime => IO(vizTime.getOrElse(Instant.now()))
-      // Store guide star selection in a view for fast local updates
-      // This is not the ideal place for this but we need to share the selected guide star
-      // across the configuration and target tile
-      .useStateViewBy: (props, _, _, _, _, _, _, _, _) =>
-        props.selectedGSName.get.fold(GuideStarSelection.Default)(RemoteGSSelection.apply)
-      .localValBy: (props, ctx, _, _, _, _, _, _, _, guideStarSelection) =>
-        import ctx.given
+              .mapN: (site, asterism, duration) =>
+                props.posAngleConstraint match
+                  case PosAngleConstraint.AverageParallactic =>
+                    // See also `anglesToTestAt` in AladinCell.scala.
+                    averageParallacticAngle(
+                      site.place,
+                      asterism.baseTracking,
+                      obsTimeOrNow,
+                      duration
+                    ).map(AveragePABasis(obsTimeOrNow, duration, _))
+                  case _                                     => none
+              .flatten
 
-        // We tell the backend and the local cache of changes to the selected guidestar
-        // In some cases when we do a real override
-        guideStarSelection.withOnMod {
-          (_, _) match {
-            // Change of override
-            case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
-              props.selectedGSName.set(n.some) *>
-                ObsQueries
-                  .setGuideTargetName[IO](props.obsId, n.some)
-                  .runAsyncAndForget
-            // Going from automatic to manual selection
-            case (AgsSelection(_), AgsOverride(n, _, _))                 =>
-              props.selectedGSName.set(n.some) *>
-                ObsQueries
-                  .setGuideTargetName[IO](props.obsId, n.some)
-                  .runAsyncAndForget
-            // Going from manual to automated selection
-            case (AgsOverride(n, _, _), AgsSelection(_))                 =>
-              props.selectedGSName.set(none) *>
-                ObsQueries
-                  .setGuideTargetName[IO](props.obsId, none)
-                  .runAsyncAndForget
-            case _                                                       =>
-              // All other combinations
-              Callback.empty
-          }
-        }
-      .useStateBy((p, _, _, _, _, _, _, _, _, _, _) =>
-        roleLayout(p.userPreferences, p.calibrationRole)
-      )
-      .useEffectWithDepsBy((p, _, _, _, _, _, _, _, _, _, _, _) => p.calibrationRole):
-        (p, _, _, _, _, _, _, _, _, _, _, l) =>
-          role => l.setState(roleLayout(p.userPreferences, role))
-      .render:
-        (
-          props,
-          ctx,
-          sequenceOffsets,
-          agsState,
-          selectedConfig,
-          itcGraphQuerier,
-          itcGraphResults,
-          sequenceChanged,
-          obsTimeOrNowPot,
-          _,
-          guideStarSelection,
-          roleLayouts
-        ) =>
-          import ctx.given
-          val (section, defaultLayout, layout) = roleLayouts.value
+          // The angle used for `Align to PA` in the finder charts tile.
+          // For Unbounded, use the PA of the currently selected guide star (if any)
+          // For AverageParllactic constraint, use the average PA (if any), otherwise
+          // use the angle specified in the constraint
+          val pa: Option[Angle] =
+            props.posAngleConstraint match
+              case PosAngleConstraint.Unbounded                  => paProps.selectedPA
+              case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
+              case PosAngleConstraint.Fixed(angle)               => angle.some
+              case PosAngleConstraint.AllowFlip(angle)           => angle.some
+              case PosAngleConstraint.ParallacticOverride(angle) => angle.some
 
-          obsTimeOrNowPot.value.renderPot: obsTimeOrNow =>
-
-            val asterismIds: View[AsterismIds] =
-              props.observation.model.zoom(Observation.scienceTargetIds)
-
-            val basicConfiguration: Option[BasicConfiguration] =
-              props.observation.get.observingMode.map(_.toBasicConfiguration)
-
-            val obsTimeView: View[Option[Instant]] =
-              props.observation.model.zoom(Observation.observationTime)
-
-            val obsDurationView: View[Option[TimeSpan]] =
-              props.observation.model.zoom(Observation.observationDuration)
-
-            val attachmentsView =
-              props.observation.model.zoom(Observation.attachmentIds).withOnMod { ids =>
-                obsEditAttachments(props.obsId, ids).runAsync
-              }
-
-            val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
-            val obsDuration =
-              props.observation.get.observationDuration
-                .orElse(pendingTime)
-
-            val paProps: PAProperties =
-              PAProperties(props.obsId, guideStarSelection, agsState, props.posAngleConstraint)
-
-            val averagePA: Option[AveragePABasis] =
-              (basicConfiguration.map(_.siteFor),
-               props.asterismAsNel,
-               obsDuration.filter(_ > TimeSpan.Zero)
-              )
-                .mapN: (site, asterism, duration) =>
-                  props.posAngleConstraint match
-                    case PosAngleConstraint.AverageParallactic =>
-                      // See also `anglesToTestAt` in AladinCell.scala.
-                      averageParallacticAngle(
-                        site.place,
-                        asterism.baseTracking,
-                        obsTimeOrNow,
-                        duration
-                      ).map(AveragePABasis(obsTimeOrNow, duration, _))
-                    case _                                     => none
-                .flatten
-
-            // The angle used for `Align to PA` in the finder charts tile.
-            // For Unbounded, use the PA of the currently selected guide star (if any)
-            // For AverageParllactic constraint, use the average PA (if any), otherwise
-            // use the angle specified in the constraint
-            val pa: Option[Angle] =
-              props.posAngleConstraint match
-                case PosAngleConstraint.Unbounded                  => paProps.selectedPA
-                case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
-                case PosAngleConstraint.Fixed(angle)               => angle.some
-                case PosAngleConstraint.AllowFlip(angle)           => angle.some
-                case PosAngleConstraint.ParallacticOverride(angle) => angle.some
-
-            // Only show finder charts and notes tiles if the proposal has been
-            // accepted. Need to have hidden dummies in their place to not mess
-            // up the stored layouts.
-            val finderChartsTile =
-              if (props.programSummaries.proposalIsAccepted)
-                FinderChartsTile(
-                  props.programId,
-                  props.obsId,
-                  attachmentsView,
-                  props.vault.map(_.token),
-                  props.attachments,
-                  pa,
-                  props.isDisabled
-                )
-              else Tile(ObsTabTileIds.FinderChartsId.id, "", hidden = true)(_ => EmptyVdom)
-
-            val notesView: View[Option[NonEmptyString]] =
-              props.observation.model
-                .zoom(Observation.observerNotes)
-                .withOnMod: notes =>
-                  ObsQueries
-                    .updateNotes[IO](List(props.obsId), notes)
-                    .runAsync
-
-            val notesTile =
-              if (props.programSummaries.proposalIsAccepted)
-                NotesTile.notesTile(props.obsId, notesView)
-              else Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
-
-            val sequenceTile =
-              SequenceTile(
+          // Only show finder charts and notes tiles if the proposal has been
+          // accepted. Need to have hidden dummies in their place to not mess
+          // up the stored layouts.
+          val finderChartsTile =
+            if (props.programSummaries.proposalIsAccepted)
+              FinderChartsTile(
                 props.programId,
                 props.obsId,
-                props.obsExecution,
-                asterismIds.get,
-                sequenceChanged
-              )
-
-            val itcTile =
-              ItcTile(
-                props.vault.userId,
-                props.obsId,
-                props.obsTargets,
-                itcGraphQuerier,
-                itcGraphResults.value,
-                props.globalPreferences
-              )
-
-            val schedulingWindows: View[List[TimingWindow]] =
-              TimingWindowsQueries.viewWithRemoteMod(
-                ObsIdSet.one(props.obsId),
-                props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
-              )
-
-            val obsConf: ObsConfiguration =
-              ObsConfiguration(
-                basicConfiguration,
-                paProps.some,
-                props.constraintSet.get.some,
-                props.centralWavelength,
-                sequenceOffsets.toOption.flatMap(_.science),
-                sequenceOffsets.toOption.flatMap(_.acquisition),
-                averagePA,
-                obsDuration.map(_.toDuration),
-                props.observation.get.needsAGS,
-                props.observation.get.selectedGSName,
-                props.observation.get.calibrationRole
-              )
-
-            val plotData: Option[PlotData] =
-              props.asterismTracking.map: tracking =>
-                PlotData:
-                  Map(
-                    ObjectPlotData.Id(props.obsId.asLeft) ->
-                      ObjectPlotData(
-                        NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
-                        tracking,
-                        obsConf.configuration.foldMap(conf => List(conf.siteFor))
-                      )
-                  )
-
-            val skyPlotTile: Option[Tile[?]] =
-              plotData.map:
-                ElevationPlotTile(
-                  props.vault.userId,
-                  ObsTabTileIds.PlotId.id,
-                  _,
-                  props.observation.get.observingMode.map(_.siteFor),
-                  obsTimeView.get,
-                  obsDuration.map(_.toDuration),
-                  schedulingWindows.get,
-                  props.globalPreferences.get,
-                  "No target selected"
-                )
-
-            def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
-              TargetEditObsInfo.fromProgramSummaries(
-                targetId,
-                ObsIdSet.one(obsId).some,
-                props.programSummaries
-              )
-
-            def setCurrentTarget(
-              tid: Option[Target.Id],
-              via: SetRouteVia
-            ): Callback =
-              // Set the route base on the selected target
-              ctx.setPageVia(
-                (AppTab.Observations,
-                 props.programId,
-                 Focused(ObsIdSet.one(props.obsId).some, tid)
-                ).some,
-                via
-              )
-
-            def onCloneTarget(params: OnCloneParameters): Callback =
-              setCurrentTarget(params.idToAdd.some, SetRouteVia.HistoryReplace)
-
-            def onAsterismUpdate(params: OnAsterismUpdateParams): Callback =
-              val targetForPage: Option[Target.Id] =
-                if (params.areAddingTarget) params.targetId.some else none
-              setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
-
-            val targetTile =
-              AsterismEditorTile(
-                props.vault.userId,
-                ObsTabTileIds.TargetId.id,
-                props.programId,
-                ObsIdSet.one(props.obsId),
-                props.obsAndTargets,
-                basicConfiguration,
-                obsTimeView,
-                obsDurationView,
-                obsConf,
-                pendingTime,
-                props.focusedTarget,
-                setCurrentTarget,
-                onCloneTarget,
-                onAsterismUpdate,
-                getObsInfo(props.obsId),
-                props.searching,
-                "Targets",
-                props.globalPreferences,
-                guideStarSelection,
-                props.customSedAttachments,
-                props.isDisabled,
-                // Any target changes invalidate the sequence
-                sequenceChanged.set(pending)
-              )
-
-            val constraintsSelector: VdomNode =
-              makeConstraintsSelector(
-                props.obsId,
-                props.observation.model.zoom(Observation.constraints),
-                props.allConstraintSets,
+                attachmentsView,
+                props.vault.map(_.token),
+                props.attachments,
+                pa,
                 props.isDisabled
               )
+            else Tile(ObsTabTileIds.FinderChartsId.id, "", hidden = true)(_ => EmptyVdom)
 
-            // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
-            // so that the constraints selector dropdown always appears in front of any other tiles. If more
-            // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
-            // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
+          val notesView: View[Option[NonEmptyString]] =
+            props.observation.model
+              .zoom(Observation.observerNotes)
+              .withOnMod: notes =>
+                ObsQueries
+                  .updateNotes[IO](List(props.obsId), notes)
+                  .runAsync
 
-            val conditionsLikelihood = props.obsConditionsLikelihood(obsTimeOrNow)
-            val constraintsTile      =
-              Tile(
-                ObsTabTileIds.ConstraintsId.id,
-                s"Constraints ${conditionsLikelihood.foldMap(formatPercentile)}"
-              )(
-                _ =>
-                  ConstraintsPanel(
-                    ObsIdSet.one(props.obsId),
-                    props.obsIQLikelihood(obsTimeOrNow),
-                    conditionsLikelihood,
-                    props.centralWavelength,
-                    props.observation.zoom(Observation.constraints),
-                    props.isDisabled
-                  ),
-                (_, _) => constraintsSelector
-              )
+          val notesTile =
+            if (props.programSummaries.proposalIsAccepted)
+              NotesTile.notesTile(props.obsId, notesView)
+            else Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
 
-            val schedulingWindowsTile =
-              SchedulingWindowsTile(schedulingWindows, props.isDisabled, false)
-
-            val configurationTile: Tile[?] =
-              ConfigurationTile(
-                props.vault.userId,
-                props.programId,
-                props.obsId,
-                props.observation.zoom(Observation.scienceRequirements),
-                props.observation
-                  .zoom((Observation.posAngleConstraint, Observation.observingMode).disjointZip),
-                props.observation.get.scienceTargetIds,
-                props.targetCoords(obsTimeOrNow),
-                obsConf,
-                selectedConfig,
-                props.observation.get.toInstrumentConfig(props.obsTargets),
-                props.modes,
-                props.obsTargets,
-                props.programSummaries.observingModeGroups,
-                sequenceChanged.mod:
-                  case Ready(x) => pending
-                  case x        => x
-                ,
-                props.isDisabled,
-                props.globalPreferences.get.wavelengthUnits
-              )
-
-            val alltiles =
-              List(
-                notesTile.some,
-                targetTile.some,
-                if (!props.vault.isGuest) finderChartsTile.some else none,
-                skyPlotTile,
-                constraintsTile.some,
-                schedulingWindowsTile.some,
-                configurationTile.some,
-                itcTile.some
-              ).flattenOption
-
-            val removedIds = ExploreGridLayouts.observations.removedTiles(props.calibrationRole)
-
-            val tiles =
-              alltiles.filterNot(t => removedIds.contains(t.id))
-
-            React.Fragment(
-              TileController(
-                props.vault.userId,
-                props.resize.width.getOrElse(0),
-                defaultLayout,
-                layout,
-                tiles,
-                section,
-                props.backButton.some
-              ),
-              TileController(
-                props.vault.userId,
-                props.resize.width.getOrElse(0),
-                ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsSequenceLayout),
-                props.userPreferences.sequenceTileLayout,
-                List(sequenceTile),
-                GridLayoutSection.ObservationsSequenceLayout,
-                backButton = none,
-                clazz = ExploreStyles.SequenceTileController.some
-              )
+          val sequenceTile =
+            SequenceTile(
+              props.programId,
+              props.obsId,
+              props.obsExecution,
+              asterismIds.get,
+              sequenceChanged
             )
+
+          val itcTile =
+            ItcTile(
+              props.vault.userId,
+              props.obsId,
+              props.obsTargets,
+              itcGraphQuerier,
+              itcGraphResults.value,
+              props.globalPreferences
+            )
+
+          val schedulingWindows: View[List[TimingWindow]] =
+            TimingWindowsQueries.viewWithRemoteMod(
+              ObsIdSet.one(props.obsId),
+              props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
+            )
+
+          val obsConf: ObsConfiguration =
+            ObsConfiguration(
+              basicConfiguration,
+              paProps.some,
+              props.constraintSet.get.some,
+              props.centralWavelength,
+              sequenceOffsets.toOption.flatMap(_.science),
+              sequenceOffsets.toOption.flatMap(_.acquisition),
+              averagePA,
+              obsDuration.map(_.toDuration),
+              props.observation.get.needsAGS,
+              props.observation.get.selectedGSName,
+              props.observation.get.calibrationRole
+            )
+
+          val plotData: Option[PlotData] =
+            props.asterismTracking.map: tracking =>
+              PlotData:
+                Map(
+                  ObjectPlotData.Id(props.obsId.asLeft) ->
+                    ObjectPlotData(
+                      NonEmptyString.from(props.obsId.toString).getOrElse("Observation".refined),
+                      tracking,
+                      obsConf.configuration.foldMap(conf => List(conf.siteFor))
+                    )
+                )
+
+          val skyPlotTile: Option[Tile[?]] =
+            plotData.map:
+              ElevationPlotTile(
+                props.vault.userId,
+                ObsTabTileIds.PlotId.id,
+                _,
+                props.observation.get.observingMode.map(_.siteFor),
+                obsTimeView.get,
+                obsDuration.map(_.toDuration),
+                schedulingWindows.get,
+                props.globalPreferences.get,
+                "No target selected"
+              )
+
+          def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
+            TargetEditObsInfo.fromProgramSummaries(
+              targetId,
+              ObsIdSet.one(obsId).some,
+              props.programSummaries
+            )
+
+          def setCurrentTarget(
+            tid: Option[Target.Id],
+            via: SetRouteVia
+          ): Callback =
+            // Set the route base on the selected target
+            ctx.setPageVia(
+              (AppTab.Observations,
+               props.programId,
+               Focused(ObsIdSet.one(props.obsId).some, tid)
+              ).some,
+              via
+            )
+
+          def onCloneTarget(params: OnCloneParameters): Callback =
+            setCurrentTarget(params.idToAdd.some, SetRouteVia.HistoryReplace)
+
+          def onAsterismUpdate(params: OnAsterismUpdateParams): Callback =
+            val targetForPage: Option[Target.Id] =
+              if (params.areAddingTarget) params.targetId.some else none
+            setCurrentTarget(targetForPage, SetRouteVia.HistoryReplace)
+
+          val targetTile =
+            AsterismEditorTile(
+              props.vault.userId,
+              ObsTabTileIds.TargetId.id,
+              props.programId,
+              ObsIdSet.one(props.obsId),
+              props.obsAndTargets,
+              basicConfiguration,
+              obsTimeView,
+              obsDurationView,
+              obsConf,
+              pendingTime,
+              props.focusedTarget,
+              setCurrentTarget,
+              onCloneTarget,
+              onAsterismUpdate,
+              getObsInfo(props.obsId),
+              props.searching,
+              "Targets",
+              props.globalPreferences,
+              guideStarSelection,
+              props.attachments,
+              props.vault.map(_.token),
+              props.isDisabled,
+              // Any target changes invalidate the sequence
+              sequenceChanged.set(pending)
+            )
+
+          val constraintsSelector: VdomNode =
+            makeConstraintsSelector(
+              props.obsId,
+              props.observation.model.zoom(Observation.constraints),
+              props.allConstraintSets,
+              props.isDisabled
+            )
+
+          // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
+          // so that the constraints selector dropdown always appears in front of any other tiles. If more
+          // than one tile ends up having dropdowns in the tile header, we'll need something more complex such
+          // as changing the css classes on the various tiles when the dropdown is clicked to control z-index.
+
+          val conditionsLikelihood = props.obsConditionsLikelihood(obsTimeOrNow)
+          val constraintsTile      =
+            Tile(
+              ObsTabTileIds.ConstraintsId.id,
+              s"Constraints ${conditionsLikelihood.foldMap(formatPercentile)}"
+            )(
+              _ =>
+                ConstraintsPanel(
+                  ObsIdSet.one(props.obsId),
+                  props.obsIQLikelihood(obsTimeOrNow),
+                  conditionsLikelihood,
+                  props.centralWavelength,
+                  props.observation.zoom(Observation.constraints),
+                  props.isDisabled
+                ),
+              (_, _) => constraintsSelector
+            )
+
+          val schedulingWindowsTile =
+            SchedulingWindowsTile(schedulingWindows, props.isDisabled, false)
+
+          val configurationTile: Tile[?] =
+            ConfigurationTile(
+              props.vault.userId,
+              props.programId,
+              props.obsId,
+              props.observation.zoom(Observation.scienceRequirements),
+              props.observation
+                .zoom((Observation.posAngleConstraint, Observation.observingMode).disjointZip),
+              props.observation.get.scienceTargetIds,
+              props.targetCoords(obsTimeOrNow),
+              obsConf,
+              selectedConfig,
+              props.observation.get.toInstrumentConfig(props.obsTargets),
+              props.modes,
+              props.obsTargets,
+              props.programSummaries.observingModeGroups,
+              sequenceChanged.mod:
+                case Ready(x) => pending
+                case x        => x
+              ,
+              props.isDisabled,
+              props.globalPreferences.get.wavelengthUnits
+            )
+
+          val alltiles =
+            List(
+              notesTile.some,
+              targetTile.some,
+              if (!props.vault.isGuest) finderChartsTile.some else none,
+              skyPlotTile,
+              constraintsTile.some,
+              schedulingWindowsTile.some,
+              configurationTile.some,
+              itcTile.some
+            ).flattenOption
+
+          val removedIds = ExploreGridLayouts.observations.removedTiles(props.calibrationRole)
+
+          val tiles =
+            alltiles.filterNot(t => removedIds.contains(t.id))
+
+          React.Fragment(
+            TileController(
+              props.vault.userId,
+              props.resize.width.getOrElse(0),
+              defaultLayout,
+              layout,
+              tiles,
+              section,
+              props.backButton.some
+            ),
+            TileController(
+              props.vault.userId,
+              props.resize.width.getOrElse(0),
+              ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsSequenceLayout),
+              props.userPreferences.sequenceTileLayout,
+              List(sequenceTile),
+              GridLayoutSection.ObservationsSequenceLayout,
+              backButton = none,
+              clazz = ExploreStyles.SequenceTileController.some
+            )
+          )

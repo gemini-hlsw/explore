@@ -18,7 +18,6 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.AppContext
-import explore.model.Attachment
 import explore.model.GuideStarSelection
 import explore.model.GuideStarSelection.AgsSelection
 import explore.model.Observation
@@ -65,15 +64,16 @@ import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
 
 case class TargetTabContents(
-  programId:            Program.Id,
-  userId:               Option[User.Id],
-  programSummaries:     UndoContext[ProgramSummaries],
-  userPreferences:      View[UserPreferences],
-  focused:              Focused,
-  searching:            View[Set[Target.Id]],
-  expandedIds:          View[SortedSet[ObsIdSet]],
-  customSedAttachments: List[Attachment],
-  readonly:             Boolean
+  programId:        Program.Id,
+  userId:           Option[User.Id],
+  programSummaries: UndoContext[ProgramSummaries],
+  userPreferences:  View[UserPreferences],
+  focused:          Focused,
+  searching:        View[Set[Target.Id]],
+  expandedIds:      View[SortedSet[ObsIdSet]],
+  // attachments:      View[AttachmentList],
+  authToken:        Option[NonEmptyString],
+  readonly:         Boolean
 ) extends ReactFnProps(TargetTabContents.component):
   private val targets: UndoSetter[TargetList] = programSummaries.zoom(ProgramSummaries.targets)
 
@@ -109,6 +109,9 @@ case class TargetTabContents(
 
   private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
+
+  private val attachments: View[AttachmentList] =
+    programSummaries.model.zoom(ProgramSummaries.attachments)
 
 object TargetTabContents extends TwoPanels:
   private type Props = TargetTabContents
@@ -544,7 +547,8 @@ object TargetTabContents extends TwoPanels:
                 title,
                 props.globalPreferences,
                 guideStarSelection,
-                props.customSedAttachments,
+                props.attachments,
+                props.authToken,
                 props.readonly,
                 backButton = backButton.some
               )
@@ -599,7 +603,8 @@ object TargetTabContents extends TwoPanels:
                   fullScreen,
                   props.globalPreferences,
                   guideStarSelection,
-                  props.customSedAttachments,
+                  props.attachments,
+                  props.authToken,
                   props.readonly,
                   getObsInfo(none)(targetId),
                   onCloneTarget4Target

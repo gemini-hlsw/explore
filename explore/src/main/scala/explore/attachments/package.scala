@@ -37,6 +37,9 @@ enum Action(val msg: String) derives Eq:
   case Download extends Action("Downloading Attachment")
   case Unlink   extends Action("Unlinking Attachment")
 
+object Action:
+  given Reusability[Action] = Reusability.byEq
+
 trait AttachmentUtils:
   // TODO: Maybe we can have a graphql query for getting information such as this? This is a config var in ODB.
   private val maxFileSize: NonNegLong = 10000000.refined
@@ -93,19 +96,18 @@ trait ObsAttachmentUtils extends AttachmentUtils:
     attType:     AttachmentType,
     files:       List[DomFile],
     onSuccess:   Attachment.Id => Callback
-  )(using
-    ToastCtx[IO]
-  ): IO[Unit] =
+  )(using ToastCtx[IO]): IO[Unit] =
     files.headOption
       .map(f =>
         checkFileSize(f) {
           val name = NonEmptyString.unsafeFrom(f.name)
           client
-            .insertAttachment(programId,
-                              attType,
-                              name,
-                              None,
-                              dom.readReadableStream(IO(f.stream()))
+            .insertAttachment(
+              programId,
+              attType,
+              name,
+              None,
+              dom.readReadableStream(IO(f.stream()))
             )
             .toastErrors
             .flatMap(id =>
@@ -113,16 +115,17 @@ trait ObsAttachmentUtils extends AttachmentUtils:
                 (onSuccess(id) *>
                   attachments
                     .mod(
-                      _.updated(id,
-                                Attachment(
-                                  id,
-                                  attType,
-                                  name,
-                                  None,
-                                  false,
-                                  f.size.toLong,
-                                  Timestamp.unsafeFromInstantTruncated(now)
-                                )
+                      _.updated(
+                        id,
+                        Attachment(
+                          id,
+                          attType,
+                          name,
+                          None,
+                          false,
+                          f.size.toLong,
+                          Timestamp.unsafeFromInstantTruncated(now)
+                        )
                       )
                     )).toAsync
               }

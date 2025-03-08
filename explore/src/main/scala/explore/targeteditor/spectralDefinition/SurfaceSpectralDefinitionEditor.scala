@@ -7,9 +7,10 @@ import cats.effect.IO
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.react.View
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.common.*
-import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.enums.SedType
 import explore.model.enums.SurfaceSedType
 import explore.model.enums.SurfaceSedType.given
@@ -22,6 +23,7 @@ import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.model.CatalogInfo
 import lucuma.core.model.EmissionLine
+import lucuma.core.model.Program
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
 import lucuma.react.common.ReactFnProps
@@ -36,12 +38,14 @@ import brightnessesEditor.SurfaceBrightnessEditor
 import emissionLineEditor.SurfaceEmissionLineEditor
 
 case class SurfaceSpectralDefinitionEditor(
-  spectralDefinition:   Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
-  catalogInfo:          Option[CatalogInfo],
-  brightnessExpanded:   View[IsExpanded],
-  customSedAttachments: List[Attachment],
-  disabled:             Boolean,
-  calibrationRole:      Option[CalibrationRole]
+  programId:          Program.Id,
+  spectralDefinition: Aligner[SpectralDefinition[Surface], SpectralDefinitionSurfaceInput],
+  catalogInfo:        Option[CatalogInfo],
+  brightnessExpanded: View[IsExpanded],
+  attachments:        View[AttachmentList],
+  authToken:          Option[NonEmptyString],
+  disabled:           Boolean,
+  calibrationRole:    Option[CalibrationRole]
 )(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component

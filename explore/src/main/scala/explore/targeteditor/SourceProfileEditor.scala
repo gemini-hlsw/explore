@@ -6,10 +6,11 @@ package explore.targeteditor
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.*
 import explore.components.HelpIcon
 import explore.model.AppContext
-import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.enums.SourceProfileType
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -17,9 +18,10 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.CatalogInfo
+import lucuma.core.model.Program
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SourceProfile.*
-import lucuma.react.common.ReactFnProps
+import lucuma.react.common.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -34,22 +36,21 @@ import lucuma.ui.syntax.all.given
 import spectralDefinition.{IntegratedSpectralDefinitionEditor, SurfaceSpectralDefinitionEditor}
 
 case class SourceProfileEditor(
-  sourceProfile:        Aligner[SourceProfile, SourceProfileInput],
-  catalogInfo:          Option[CatalogInfo],
-  customSedAttachments: List[Attachment],
-  calibrationRole:      Option[CalibrationRole],
-  disabled:             Boolean
-) extends ReactFnProps(SourceProfileEditor.component)
+  programId:       Program.Id,
+  sourceProfile:   Aligner[SourceProfile, SourceProfileInput],
+  catalogInfo:     Option[CatalogInfo],
+  attachments:     View[AttachmentList],
+  authToken:       Option[NonEmptyString],
+  calibrationRole: Option[CalibrationRole],
+  disabled:        Boolean
+) extends ReactFnProps(SourceProfileEditor)
 
-object SourceProfileEditor:
-  private type Props = SourceProfileEditor
-
-  private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStateView(IsExpanded(true))
-      .render { (props, ctx, brightnessExpanded) =>
+object SourceProfileEditor
+    extends ReactFnComponent[SourceProfileEditor](props =>
+      for
+        ctx                <- useContext(AppContext.ctx)
+        brightnessExpanded <- useStateView(IsExpanded(true))
+      yield
         import ctx.given
 
         val gaussianAlignerOpt: Option[Aligner[Gaussian, GaussianInput]] =
@@ -77,10 +78,12 @@ object SourceProfileEditor:
             )
             .map(pointSpectralDefinitionAccess =>
               IntegratedSpectralDefinitionEditor(
+                props.programId,
                 pointSpectralDefinitionAccess,
                 props.catalogInfo,
                 brightnessExpanded,
-                props.customSedAttachments,
+                props.attachments,
+                props.authToken,
                 props.disabled,
                 props.calibrationRole
               )
@@ -92,10 +95,12 @@ object SourceProfileEditor:
             )
             .map(uniformSpectralDefinitionAccess =>
               SurfaceSpectralDefinitionEditor(
+                props.programId,
                 uniformSpectralDefinitionAccess,
                 props.catalogInfo,
                 brightnessExpanded,
-                props.customSedAttachments,
+                props.attachments,
+                props.authToken,
                 props.disabled,
                 props.calibrationRole
               )
@@ -118,6 +123,7 @@ object SourceProfileEditor:
                   disabled = props.disabled
                 ),
                 IntegratedSpectralDefinitionEditor(
+                  props.programId,
                   gaussianAligner.zoom(
                     Gaussian.spectralDefinition,
                     forceAssign(GaussianInput.spectralDefinition.modify)(
@@ -126,11 +132,12 @@ object SourceProfileEditor:
                   ),
                   props.catalogInfo,
                   brightnessExpanded,
-                  props.customSedAttachments,
+                  props.attachments,
+                  props.authToken,
                   props.disabled,
                   props.calibrationRole
                 )
               )
             )
         )
-      }
+    )
