@@ -86,7 +86,7 @@ case class AppContext[F[_]](
   given agsWorker: WorkerClient[F, AgsMessage.Request]         = workerClients.ags
   given plotWorker: WorkerClient[F, PlotMessage.Request]       = workerClients.plot
 
-  given ToastCtx[F] = new ToastCtx(toastRef)
+  given toastCtx: ToastCtx[F] = new ToastCtx(toastRef)
 
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value

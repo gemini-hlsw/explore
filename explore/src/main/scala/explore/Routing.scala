@@ -25,7 +25,6 @@ import japgolly.scalajs.react.extra.router.*
 import japgolly.scalajs.react.extra.router.StaticDsl.Route
 import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.Instrument
 import lucuma.core.model.Group
 import lucuma.core.model.ObservationReference
@@ -99,10 +98,7 @@ object Routing:
                 routingInfo.focused,
                 model.rootModel.zoom(RootModel.searchingTarget),
                 model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
-                programSummaries.get.attachments
-                  .map(_._2)
-                  .toList
-                  .filter(_.attachmentType === AttachmentType.CustomSED),
+                model.rootModel.get.vault.map(_.token),
                 programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
               )
             .toOption

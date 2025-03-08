@@ -3,18 +3,14 @@
 
 package explore.findercharts
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.attachments.Action
-import explore.attachments.ObsAttachmentUtils
+import explore.components.FileUploadButton
 import explore.components.ui.ExploreStyles
-import explore.model.AppContext
 import explore.model.Attachment
 import explore.model.AttachmentList
-import explore.model.syntax.all.*
-import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -22,7 +18,6 @@ import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.NewType
 import lucuma.react.floatingui.Placement
-import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
@@ -72,32 +67,16 @@ def finderChartsSelector(
   )
 
 def attachmentSelector(
-  programId:        Program.Id,
-  obsAttachmentIds: View[SortedSet[Attachment.Id]],
-  obsAttachments:   View[AttachmentList],
-  ctx:              AppContext[IO],
-  client:           OdbRestClient[IO],
-  selected:         View[Option[Attachment.Id]],
-  action:           View[Action],
-  added:            UseState[Option[Attachment.Id]],
-  chartSelector:    View[ChartSelector],
-  readOnly:         Boolean
-): VdomNode = {
-  import ctx.given
-
-  def addNewFinderChart(e: ReactEventFromInput) =
-    action.set(Action.Insert) *>
-      ObsAttachmentUtils.onInsertFileSelected(
-        programId,
-        obsAttachments,
-        AttachmentType.Finder,
-        client,
-        action,
-        id => obsAttachmentIds.mod(_ + id) *> added.setState(id.some) *> selected.set(id.some)
-      )(e)
-
-  <.div(
-    ExploreStyles.FinderChartsSelectorSection,
+  programId:     Program.Id,
+  attachmentIds: View[SortedSet[Attachment.Id]],
+  attachments:   View[AttachmentList],
+  authToken:     Option[NonEmptyString],
+  selected:      View[Option[Attachment.Id]],
+  added:         UseState[Option[Attachment.Id]],
+  chartSelector: View[ChartSelector],
+  readOnly:      Boolean
+): VdomNode =
+  <.div(ExploreStyles.FinderChartsSelectorSection)(
     Button(
       severity = Button.Severity.Secondary,
       outlined = chartSelector.get.value,
@@ -105,22 +84,13 @@ def attachmentSelector(
       onClick = chartSelector.mod(_.flip),
       tooltip = s"Select charts"
     ).tiny.compact,
-    <.label(
-      ObsAttachmentUtils.LabelButtonClasses,
-      ^.htmlFor := "attachment-upload",
-      Icons.FileArrowUp.withFixedWidth(true)
-    ).withTooltip(
-      tooltip = s"Upload new finder chart",
-      placement = Placement.Bottom
-    ).when(!readOnly),
-    <.input(
-      ExploreStyles.FileUpload,
-      ^.tpe    := "file",
-      ^.onChange ==> addNewFinderChart,
-      ^.id     := "attachment-upload",
-      ^.name   := "file",
-      ^.accept := AttachmentType.Finder.accept
-    ).when(!readOnly),
-    finderChartsSelector(obsAttachments.get, obsAttachmentIds.get, selected)
+    FileUploadButton(
+      programId,
+      attachments,
+      AttachmentType.Finder,
+      id => attachmentIds.mod(_ + id) *> added.setState(id.some) *> selected.set(id.some),
+      disabled = readOnly,
+      authToken = authToken
+    ),
+    finderChartsSelector(attachments.get, attachmentIds.get, selected)
   )
-}

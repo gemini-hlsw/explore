@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ColumnSelectorInTitle
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -15,7 +16,7 @@ import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.Attachment
+import explore.model.AttachmentList
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
@@ -53,29 +54,30 @@ import java.time.Instant
 
 object AsterismEditorTile:
   def apply(
-    userId:               Option[User.Id],
-    tileId:               Tile.TileId,
-    programId:            Program.Id,
-    obsIds:               ObsIdSet,
-    obsAndTargets:        UndoSetter[ObservationsAndTargets],
-    configuration:        Option[BasicConfiguration],
-    obsTime:              View[Option[Instant]],
-    obsDuration:          View[Option[TimeSpan]],
-    obsConf:              ObsConfiguration,
-    pendingTime:          Option[TimeSpan], // estimated remaining execution time.
-    currentTarget:        Option[Target.Id],
-    setTarget:            (Option[Target.Id], SetRouteVia) => Callback,
-    onCloneTarget:        OnCloneParameters => Callback,
-    onAsterismUpdate:     OnAsterismUpdateParams => Callback,
-    obsInfo:              Target.Id => TargetEditObsInfo,
-    searching:            View[Set[Target.Id]],
-    title:                String,
-    globalPreferences:    View[GlobalPreferences],
-    guideStarSelection:   View[GuideStarSelection],
-    customSedAttachments: List[Attachment],
-    readonly:             Boolean,
-    sequenceChanged:      Callback = Callback.empty,
-    backButton:           Option[VdomNode] = None
+    userId:             Option[User.Id],
+    tileId:             Tile.TileId,
+    programId:          Program.Id,
+    obsIds:             ObsIdSet,
+    obsAndTargets:      UndoSetter[ObservationsAndTargets],
+    configuration:      Option[BasicConfiguration],
+    obsTime:            View[Option[Instant]],
+    obsDuration:        View[Option[TimeSpan]],
+    obsConf:            ObsConfiguration,
+    pendingTime:        Option[TimeSpan], // estimated remaining execution time.
+    currentTarget:      Option[Target.Id],
+    setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
+    onCloneTarget:      OnCloneParameters => Callback,
+    onAsterismUpdate:   OnAsterismUpdateParams => Callback,
+    obsInfo:            Target.Id => TargetEditObsInfo,
+    searching:          View[Set[Target.Id]],
+    title:              String,
+    globalPreferences:  View[GlobalPreferences],
+    guideStarSelection: View[GuideStarSelection],
+    attachments:        View[AttachmentList],
+    authToken:          Option[NonEmptyString],
+    readonly:           Boolean,
+    sequenceChanged:    Callback = Callback.empty,
+    backButton:         Option[VdomNode] = None
   )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[TileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
@@ -111,7 +113,8 @@ object AsterismEditorTile:
             searching,
             globalPreferences,
             guideStarSelection,
-            customSedAttachments,
+            attachments,
+            authToken,
             readonly,
             sequenceChanged,
             tileState.zoom(TileState.columnVisibility),
@@ -148,25 +151,26 @@ object AsterismEditorTile:
       Focus[TileState](_.obsEditInfo)
 
   private case class Body(
-    programId:            Program.Id,
-    userId:               User.Id,
-    obsIds:               ObsIdSet,
-    obsAndTargets:        UndoSetter[ObservationsAndTargets],
-    obsTime:              View[Option[Instant]],
-    configuration:        ObsConfiguration,
-    focusedTargetId:      Option[Target.Id],
-    setTarget:            (Option[Target.Id], SetRouteVia) => Callback,
-    onCloneTarget:        OnCloneParameters => Callback,
-    onAsterismUpdate:     OnAsterismUpdateParams => Callback,
-    obsInfo:              Target.Id => TargetEditObsInfo,
-    searching:            View[Set[Target.Id]],
-    globalPreferences:    View[GlobalPreferences],
-    guideStarSelection:   View[GuideStarSelection],
-    customSedAttachments: List[Attachment],
-    readonly:             Boolean,
-    sequenceChanged:      Callback,
-    columnVisibility:     View[ColumnVisibility],
-    obsEditInfo:          View[Option[ObsIdSetEditInfo]]
+    programId:          Program.Id,
+    userId:             User.Id,
+    obsIds:             ObsIdSet,
+    obsAndTargets:      UndoSetter[ObservationsAndTargets],
+    obsTime:            View[Option[Instant]],
+    configuration:      ObsConfiguration,
+    focusedTargetId:    Option[Target.Id],
+    setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
+    onCloneTarget:      OnCloneParameters => Callback,
+    onAsterismUpdate:   OnAsterismUpdateParams => Callback,
+    obsInfo:            Target.Id => TargetEditObsInfo,
+    searching:          View[Set[Target.Id]],
+    globalPreferences:  View[GlobalPreferences],
+    guideStarSelection: View[GuideStarSelection],
+    attachments:        View[AttachmentList],
+    authToken:          Option[NonEmptyString],
+    readonly:           Boolean,
+    sequenceChanged:    Callback,
+    columnVisibility:   View[ColumnVisibility],
+    obsEditInfo:        View[Option[ObsIdSetEditInfo]]
   ) extends ReactFnProps(Body.component):
     val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
@@ -258,7 +262,8 @@ object AsterismEditorTile:
                       fullScreen = fullScreen,
                       globalPreferences = props.globalPreferences,
                       guideStarSelection = props.guideStarSelection,
-                      customSedAttachments = props.customSedAttachments,
+                      attachments = props.attachments,
+                      authToken = props.authToken,
                       readonly = props.readonly,
                       invalidateSequence = props.sequenceChanged
                     )

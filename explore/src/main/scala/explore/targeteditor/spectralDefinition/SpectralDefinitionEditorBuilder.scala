@@ -17,6 +17,7 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
 import explore.*
 import explore.common.*
+import explore.components.FileUploadButton
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
@@ -27,6 +28,7 @@ import explore.model.syntax.all.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.Band
 import lucuma.core.enums.CatalogName
 import lucuma.core.enums.CoolStarTemperature
@@ -50,8 +52,10 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Of
 import lucuma.core.validation.InputValidSplitEpi
+import lucuma.react.primereact.DropdownOptional
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.SelectItem
+import lucuma.react.primereact.TooltipOptions
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor
@@ -98,22 +102,16 @@ private abstract class SpectralDefinitionEditorBuilder[
       _                     <- // Update model when state is fully defined.
         useEffectWithDeps(sedType.get, customSedAttachmentId.get):
           case (Some(someSedType), Some(attachmentId))
-              if someSedType === userDefinedType && !currentSedType.contains_(
-                someSedType
-              ) && !props.currentCustomSedAttachmentId.contains_(attachmentId) =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod:
-                SpectralDefinition.unnormalizedSED
-                  .replace(UnnormalizedSED.UserDefinedAttachment(attachmentId).some)
+              if someSedType === userDefinedType &&
+                (!currentSedType.contains_(someSedType) ||
+                  !props.currentCustomSedAttachmentId.contains_(attachmentId)) =>
+            props.modSpectralDefinition:
+              SpectralDefinition.unnormalizedSED.replace:
+                UnnormalizedSED.UserDefinedAttachment(attachmentId).some
           case (Some(sed @ SedType.Immediate(_, convert)), _) if !currentSedType.contains_(sed) =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod(convert)
+            props.modSpectralDefinition(convert)
           case (None, _) if currentSedType.isDefined                                            =>
-            props.spectralDefinition
-              .view(props.toInput)
-              .mod(SpectralDefinition.unnormalizedSED.replace(none))
+            props.modSpectralDefinition(SpectralDefinition.unnormalizedSED.replace(none))
           case _                                                                                =>
             Callback.empty
     yield
@@ -281,13 +279,32 @@ private abstract class SpectralDefinitionEditorBuilder[
           else EmptyVdom,
           React.Fragment(
             if (isCustomSed)
-              FormDropdownOptional(
-                id = "customSed".refined,
-                value = customSedAttachmentId.get,
-                options =
-                  props.customSedAttachments.map(a => SelectItem(value = a.id, label = a.fileName)),
-                onChange = v => customSedAttachmentId.set(v),
-                disabled = props.disabled
+              React.Fragment(
+                <.span(LucumaPrimeStyles.FormField, ExploreStyles.SEDTypeDropdown)(
+                  DropdownOptional(
+                    id = "customSed",
+                    value = customSedAttachmentId.get,
+                    options = props.customSedAttachments.map: a =>
+                      SelectItem(value = a.id, label = a.fileName),
+                    onChange = v => customSedAttachmentId.set(v),
+                    placeholder =
+                      if (props.customSedAttachments.nonEmpty) "Select custom SED file"
+                      else "No custom SED files",
+                    disabled = props.disabled
+                  ),
+                  FileUploadButton(
+                    props.programId,
+                    props.attachments,
+                    AttachmentType.CustomSED,
+                    aid => // Won't work without delay
+                      customSedAttachmentId
+                        .set(aid.some)
+                        .delayMs(1)
+                        .toCallback,
+                    props.disabled,
+                    props.authToken
+                  )
+                )
               )
             else EmptyVdom,
             props.bandBrightnessesViewOpt
