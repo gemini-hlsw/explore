@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@ronilaukkarinen/stylelint-value-no-unknown-custom-properties": "^4.0.1",
-    "prettier": "^3.3.3",
+    "prettier": "^3.5.3",
     "sass": "^1.83.4",
     "sass-migrator": "^2.3.1",
     "stylelint": "^15.11.0",
