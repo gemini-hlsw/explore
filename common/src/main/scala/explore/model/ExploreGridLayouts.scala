@@ -421,6 +421,7 @@ object ExploreGridLayouts:
   object overview:
 
     private lazy val WarningsAndErrorsHeight: NonNegInt = 8.refined
+    private lazy val GroupWarningsHeight: NonNegInt     = 8.refined
     private lazy val ObsAttachmentsHeight: NonNegInt    = 8.refined
     private lazy val DescriptionHeight: NonNegInt       = 8.refined
 
@@ -432,6 +433,13 @@ object ExploreGridLayouts:
           y = 0,
           w = DefaultWidth.value,
           h = WarningsAndErrorsHeight.value
+        ),
+        LayoutItem(
+          i = OverviewTabTileIds.GroupWarningsId.id.value,
+          x = 0,
+          y = 0,
+          w = DefaultWidth.value,
+          h = GroupWarningsHeight.value
         ),
         LayoutItem(
           i = OverviewTabTileIds.ObsAttachmentsId.id.value,
