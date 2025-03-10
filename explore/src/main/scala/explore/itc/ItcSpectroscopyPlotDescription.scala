@@ -11,9 +11,9 @@ import explore.model.itc.math.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
-import lucuma.itc.FinalSN
 import lucuma.itc.ItcCcd
 import lucuma.itc.SingleSN
+import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
@@ -22,7 +22,7 @@ case class ItcSpectroscopyPlotDescription(
   brightness:   Option[BrightnessValues],
   exposureTime: Option[ItcExposureTime],
   ccds:         Option[NonEmptyChain[ItcCcd]],
-  finalSN:      Option[FinalSN],
+  finalSN:      Option[TotalSN],
   singleSN:     Option[SingleSN]
 ) extends ReactFnProps[ItcSpectroscopyPlotDescription](ItcSpectroscopyPlotDescription.component)
 
