@@ -11,10 +11,10 @@ import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
-import lucuma.itc.FinalSN
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
 import lucuma.itc.SingleSN
+import lucuma.itc.TotalSN
 import lucuma.itc.client.SeriesResult
 import lucuma.itc.client.TargetTimeAndGraphsResult
 import lucuma.itc.math.roundToSignificantFigures
@@ -106,7 +106,7 @@ case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsR
   lazy val itcExposureTime: ItcExposureTime =
     ItcExposureTime(OverridenExposureTime.FromItc, time.exposureTime, time.exposureCount)
 
-  lazy val finalSNRatio: FinalSN =
+  lazy val finalSNRatio: TotalSN =
     timeAndGraphs.atWavelengthFinalSNRatio.getOrElse(timeAndGraphs.peakFinalSNRatio)
 
   lazy val singleSNRatio: SingleSN =

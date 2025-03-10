@@ -19,16 +19,16 @@ import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.Error
-import lucuma.itc.client.IntegrationTimeResult
+import lucuma.itc.client.ClientCalculationResult
 import lucuma.itc.client.ItcClient
-import lucuma.itc.client.SpectroscopyIntegrationTimeInput
-import lucuma.itc.client.SpectroscopyIntegrationTimeParameters
+import lucuma.itc.client.SpectroscopyInput
+import lucuma.itc.client.SpectroscopyParameters
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
 
 object ITCRequests:
-  val cacheVersion = CacheVersion(16)
+  val cacheVersion = CacheVersion(17)
 
   val itcErrorToQueryProblems: Error => ItcQueryProblem =
     case Error.SourceTooBright(halfWell) => ItcQueryProblem.SourceTooBright(halfWell)
@@ -51,7 +51,7 @@ object ITCRequests:
     cache:         Cache[F],
     callback:      Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
-    def itcResults(r: IntegrationTimeResult): EitherNec[ItcTargetProblem, ItcResult] =
+    def itcResults(r: ClientCalculationResult): EitherNec[ItcTargetProblem, ItcResult] =
       // Convert to usable types
       r.targetTimes.partitionErrors.fold(
         errors =>
@@ -78,8 +78,8 @@ object ITCRequests:
           .traverse: mode =>
             ItcClient[F]
               .spectroscopy(
-                SpectroscopyIntegrationTimeInput(
-                  SpectroscopyIntegrationTimeParameters(
+                SpectroscopyInput(
+                  SpectroscopyParameters(
                     exposureTimeMode =
                       ExposureTimeMode.SignalToNoiseMode(params.signalToNoise, params.atWavelength),
                     constraints = params.constraints,

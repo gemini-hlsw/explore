@@ -53,7 +53,6 @@ import lucuma.core.util.Gid
 import lucuma.core.util.Of
 import lucuma.core.util.TimeSpan
 import lucuma.itc.Error
-import lucuma.itc.FinalSN
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
 import lucuma.itc.ItcCcd
@@ -61,8 +60,10 @@ import lucuma.itc.ItcGraph
 import lucuma.itc.ItcSeries
 import lucuma.itc.ItcVersions
 import lucuma.itc.ItcWarning
+import lucuma.itc.SignalToNoiseAt
 import lucuma.itc.SingleSN
 import lucuma.itc.TargetIntegrationTime
+import lucuma.itc.TotalSN
 import lucuma.itc.client.AsterismTargetGraphsResultOutcomes
 import lucuma.itc.client.GraphResult
 import lucuma.itc.client.SeriesResult
@@ -78,7 +79,7 @@ import scala.collection.immutable.SortedMap
 // Boopicklers for itc related types
 trait ItcPicklers extends CommonPicklers {
 
-  given Pickler[FinalSN]  = transformPickler((s: SignalToNoise) => FinalSN(s))(_.value)
+  given Pickler[TotalSN]  = transformPickler((s: SignalToNoise) => TotalSN(s))(_.value)
   given Pickler[SingleSN] = transformPickler((s: SignalToNoise) => SingleSN(s))(_.value)
 
   given Pickler[GmosCcdMode] = generatePickler
@@ -260,6 +261,8 @@ trait ItcPicklers extends CommonPicklers {
     )(z => (z.lefts, z.focus, z.rights))
 
   given Pickler[IntegrationTime] = generatePickler
+
+  given Pickler[SignalToNoiseAt] = generatePickler
 
   given Pickler[TargetIntegrationTime] = generatePickler
 
