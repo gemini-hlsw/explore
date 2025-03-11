@@ -56,6 +56,7 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.ags.AgsAnalysis
 import lucuma.core.conditions.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Site
@@ -332,6 +333,11 @@ object ObsTabTiles:
           val paProps: PAProperties =
             PAProperties(props.obsId, guideStarSelection, agsState, props.posAngleConstraint)
 
+          // For average and allow flip we need to read the flip from the selected star
+          def flipIfNeeded(angle: Option[Angle]): Option[Angle] =
+            if (paProps.selectedPA.exists(a => angle.forall(_ === a.flip))) paProps.selectedPA
+            else angle
+
           val averagePA: Option[AveragePABasis] =
             (basicConfiguration.map(_.siteFor),
              props.asterismAsNel,
@@ -340,26 +346,28 @@ object ObsTabTiles:
               .mapN: (site, asterism, duration) =>
                 props.posAngleConstraint match
                   case PosAngleConstraint.AverageParallactic =>
-                    // See also `anglesToTestAt` in AladinCell.scala.
-                    averageParallacticAngle(
+                    val avpa = averageParallacticAngle(
                       site.place,
                       asterism.baseTracking,
                       obsTimeOrNow,
                       duration
-                    ).map(AveragePABasis(obsTimeOrNow, duration, _))
+                    )
+                    flipIfNeeded(avpa)
+                      .map(AveragePABasis(obsTimeOrNow, duration, _))
                   case _                                     => none
               .flatten
 
           // The angle used for `Align to PA` in the finder charts tile.
           // For Unbounded, use the PA of the currently selected guide star (if any)
-          // For AverageParllactic constraint, use the average PA (if any), otherwise
-          // use the angle specified in the constraint
+          // For AverageParllactic constraint, use the selected guide star angle if flipped
+          // or default to the calculated average PA (if any), otherwise use the angle specified
+          // in the constraint
           val pa: Option[Angle] =
             props.posAngleConstraint match
               case PosAngleConstraint.Unbounded                  => paProps.selectedPA
               case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
               case PosAngleConstraint.Fixed(angle)               => angle.some
-              case PosAngleConstraint.AllowFlip(angle)           => angle.some
+              case PosAngleConstraint.AllowFlip(angle)           => flipIfNeeded(angle.some)
               case PosAngleConstraint.ParallacticOverride(angle) => angle.some
 
           // Only show finder charts and notes tiles if the proposal has been
