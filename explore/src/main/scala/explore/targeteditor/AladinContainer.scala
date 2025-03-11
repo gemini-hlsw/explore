@@ -179,72 +179,70 @@ object AladinContainer extends AladinCommon {
           selectedGS,
           allCoordinates
         ) =>
-          selectedGS.posAngle
-            .map { posAngle =>
-              val (baseCoordinates, scienceTargets) = allCoordinates.value
+          selectedGS.posAngle.foldMap: _ =>
+            val (baseCoordinates, scienceTargets) = allCoordinates.value
 
-              val fov = fovRA.toMicroarcseconds / 1e6
+            val fov = fovRA.toMicroarcseconds / 1e6
 
-              def calcSize(size: Double): Double = size.max(size * (225 / fov))
+            def calcSize(size: Double): Double = size.max(size * (225 / fov))
 
-              val candidatesVisibility =
-                ExploreStyles.GuideStarCandidateVisible.when_(visible.isVisible)
+            val candidatesVisibility =
+              ExploreStyles.GuideStarCandidateVisible.when_(visible.isVisible)
 
-              candidates
-                // TODO This should be done in AGS proper
-                .filterNot(x => scienceTargets.contains(x.target.tracking.baseCoordinates))
-                .flatMap { g =>
-                  val tracking           = g.target.tracking
-                  val targetEpoch        = tracking.epoch.epochYear.round
-                  // Approximate to the midddle of the year
-                  val targetEpochInstant =
-                    LocalDate
-                      .of(targetEpoch.toInt, 6, 1)
-                      .atStartOfDay(Constants.UTC)
-                      .toInstant()
+            candidates
+              // TODO This should be done in AGS proper
+              .filterNot(x => scienceTargets.contains(x.target.tracking.baseCoordinates))
+              .flatMap { g =>
+                val tracking           = g.target.tracking
+                val targetEpoch        = tracking.epoch.epochYear.round
+                // Approximate to the midddle of the year
+                val targetEpochInstant =
+                  LocalDate
+                    .of(targetEpoch.toInt, 6, 1)
+                    .atStartOfDay(Constants.UTC)
+                    .toInstant()
 
-                  val candidateCss =
-                    if (configuration.isEmpty) Css.Empty else speedCss(g.guideSpeed)
+                val candidateCss =
+                  if (configuration.isEmpty) Css.Empty else speedCss(g.guideSpeed)
 
-                  (tracking.at(targetEpochInstant), tracking.at(siderealDiscretizedObsTime.obsTime))
-                    .mapN { (source, dest) =>
-                      if (candidates.length < 500) {
-                        List[SVGTarget](
-                          if (selectedGS.forall(_.target.id === g.target.id)) {
-                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
-                          } else {
-                            SVGTarget.GuideStarCandidateTarget(
-                              dest,
-                              candidateCss |+| candidatesVisibility,
-                              calcSize(3),
-                              g
-                            )
-                          },
-                          SVGTarget.LineTo(
-                            source,
+                (tracking.at(targetEpochInstant), tracking.at(siderealDiscretizedObsTime.obsTime))
+                  .mapN { (source, dest) =>
+                    if (candidates.length < 500) {
+                      List[SVGTarget](
+                        if (selectedGS.forall(_.target.id === g.target.id)) {
+                          SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
+                        } else {
+                          SVGTarget.GuideStarCandidateTarget(
                             dest,
-                            ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                            candidateCss |+| candidatesVisibility,
+                            calcSize(3),
+                            g
                           )
+                        },
+                        SVGTarget.LineTo(
+                          source,
+                          dest,
+                          ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
                         )
-                      } else {
-                        List[SVGTarget](
-                          if (selectedGS.forall(_.target.id === g.target.id)) {
-                            SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
-                          } else {
-                            SVGTarget.GuideStarCandidateTarget(
-                              dest,
-                              ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
-                              calcSize(2.7),
-                              g
-                            )
-                          }
-                        )
-                      }
+                      )
+                    } else {
+                      List[SVGTarget](
+                        if (selectedGS.forall(_.target.id === g.target.id)) {
+                          SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
+                        } else {
+                          SVGTarget.GuideStarCandidateTarget(
+                            dest,
+                            ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
+                            calcSize(2.7),
+                            g
+                          )
+                        }
+                      )
                     }
-                }
-                .flatten
-            }
-            .getOrElse(Nil)
+                  }
+              }
+              .flatten
+
       // Use fov from aladin
       .useState(none[Fov])
       .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
