@@ -324,7 +324,7 @@ object ObsTabTiles:
               obsEditAttachments(props.obsId, ids).runAsync
             }
 
-          val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+          val pendingTime = props.obsExecution.toOption.flatMap(_.fullTimeEstimate)
           val obsDuration =
             props.observation.get.observationDuration
               .orElse(pendingTime)
