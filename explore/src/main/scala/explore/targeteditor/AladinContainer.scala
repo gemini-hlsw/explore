@@ -67,7 +67,6 @@ object AladinContainer extends AladinCommon {
 
   // We need to dectect if the selected GS deserves a refresh, this could be if the
   // selected target changes or if e.g. the pos angle change for the same target
-  // private given Reusability[Option[AgsAnalysis.Usable]] =
   private given Reusability[AgsAnalysis.Usable] =
     Reusability.by(u => (u.target, u.posAngle))
 
