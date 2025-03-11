@@ -14,6 +14,7 @@ import lucuma.odb.json.sequence.given
 
 case class Execution(digest: Option[ExecutionDigest], programTimeCharge: ProgramTime) derives Eq:
   lazy val programTimeEstimate: Option[TimeSpan] = digest.map(_.fullTimeEstimate.programTime)
+  lazy val fullTimeEstimate: Option[TimeSpan]    = digest.map(_.fullTimeEstimate.sum)
 
 object Execution {
   given Decoder[Execution] = Decoder.instance(c =>

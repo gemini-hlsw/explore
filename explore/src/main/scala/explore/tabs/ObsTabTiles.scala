@@ -324,10 +324,14 @@ object ObsTabTiles:
               obsEditAttachments(props.obsId, ids).runAsync
             }
 
-          val pendingTime = props.obsExecution.toOption.flatMap(_.programTimeEstimate)
+          val pendingTime = props.obsExecution.toOption.flatMap(_.fullTimeEstimate)
           val obsDuration =
             props.observation.get.observationDuration
               .orElse(pendingTime)
+
+          println(
+            s"obsDuration: $obsDuration, pendingTime: $pendingTime, explicit: ${props.observation.get.observationDuration}"
+          )
 
           val paProps: PAProperties =
             PAProperties(props.obsId, guideStarSelection, agsState, props.posAngleConstraint)
