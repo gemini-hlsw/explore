@@ -58,6 +58,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.conditions.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.ProgramType
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
@@ -387,7 +388,11 @@ object ObsTabTiles:
                   .runAsync
 
           val notesTile =
-            if (props.programSummaries.proposalIsAccepted)
+            if (
+              props.programSummaries.proposalIsAccepted ||
+              props.programSummaries.optProgramDetails
+                .exists(_.programType =!= ProgramType.Science)
+            )
               NotesTile.notesTile(props.obsId, notesView)
             else Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
 
