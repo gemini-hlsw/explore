@@ -28,7 +28,6 @@ import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
-import lucuma.core.geom.Area
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
@@ -56,8 +55,8 @@ case class AladinContainer(
   updateMouseCoordinates: Coordinates => Callback,
   updateFov:              Fov => Callback,
   updateViewOffset:       Offset => Callback,
-  selectedGuideStar:      Option[AgsAnalysis],
-  guideStarCandidates:    List[AgsAnalysis]
+  selectedGuideStar:      Option[AgsAnalysis.Usable],
+  guideStarCandidates:    List[AgsAnalysis.Usable]
 ) extends ReactFnProps(AladinContainer.component):
   val siderealDiscretizedObsTime: SiderealDiscretizedObsTime =
     SiderealDiscretizedObsTime(obsTime, obsConf.flatMap(_.posAngleConstraint))
@@ -68,15 +67,11 @@ object AladinContainer extends AladinCommon {
 
   // We need to dectect if the selected GS deserves a refresh, this could be if the
   // selected target changes or if e.g. the pos angle change for the same target
-  private given Reusability[Option[AgsAnalysis]] = Reusability.by(_ match {
-    case Some(AgsAnalysis.Usable(_, target, _, _, v)) => ((target.id, v)).some
-    // simulate vignetting for reusability it only matters if it changes
-    case Some(t)                                      =>
-      (t.target.id, NonEmptyList.of((Angle.Angle0, Area.MaxArea))).some
-    case _                                            => None
-  })
+  // private given Reusability[Option[AgsAnalysis.Usable]] =
+  private given Reusability[AgsAnalysis.Usable] =
+    Reusability.by(u => (u.target, u.posAngle))
 
-  private given Reusability[List[AgsAnalysis]] = Reusability.by(_.length)
+  private given Reusability[List[AgsAnalysis.Usable]] = Reusability.by(_.length)
 
   private val AladinComp = Aladin.component
 
@@ -209,16 +204,8 @@ object AladinContainer extends AladinCommon {
                       .atStartOfDay(Constants.UTC)
                       .toInstant()
 
-                  val candidateCss = g.match
-                    case _ if configuration.isEmpty                           =>
-                      // Don't color the stars for guide speed if there is no mode selected
-                      Css.Empty
-                    case AgsAnalysis.Usable(_, _, s, _, _)                    =>
-                      speedCss(s)
-                    case AgsAnalysis.NotReachableAtPosition(_, _, Some(s), _) =>
-                      speedCss(s)
-                    case m                                                    =>
-                      ExploreStyles.VignettedGS
+                  val candidateCss =
+                    if (configuration.isEmpty) Css.Empty else speedCss(g.guideSpeed)
 
                   (tracking.at(targetEpochInstant), tracking.at(siderealDiscretizedObsTime.obsTime))
                     .mapN { (source, dest) =>
@@ -343,8 +330,7 @@ object AladinContainer extends AladinCommon {
             for {
               idx <- refineV[NonNegative](i).toOption
               gs  <- props.selectedGuideStar
-              pa  <- gs.posAngle
-              c   <- baseCoordinates.value.offsetBy(pa, o)
+              c   <- baseCoordinates.value.offsetBy(gs.posAngle, o)
               if visible.isVisible
             } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
           }

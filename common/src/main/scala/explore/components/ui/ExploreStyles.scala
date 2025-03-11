@@ -459,7 +459,6 @@ object ExploreStyles:
   val GuideSpeedMedium             = Css("guide-star-medium")
   val GuideSpeedSlow               = Css("guide-star-slow")
   val VignettedGS                  = Css("guide-star-vignetted")
-  val GuideStarTooFaint            = Css("guide-star-too-faint")
   val GuideStarCandidateTargetBase = Css("guide-star-candidate-target-base")
   val GuideStarCandidateVisible    = Css("guide-star-candidate-target-visible")
   val PMCorrectionLine             = Css("proper-motion-line")

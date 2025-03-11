@@ -71,20 +71,6 @@ trait CatalogPicklers extends CommonPicklers {
     compositePickler[AgsParams]
       .addConcreteType[AgsParams.GmosAgsParams]
 
-  given Pickler[AgsAnalysis.ProperMotionNotAvailable] = generatePickler
-
-  given Pickler[AgsAnalysis.VignettesScience] = generatePickler
-
-  given Pickler[AgsAnalysis.NoGuideStarForProbe] = generatePickler
-
-  given Pickler[AgsAnalysis.MagnitudeTooFaint] = generatePickler
-
-  given Pickler[AgsAnalysis.MagnitudeTooBright] = generatePickler
-
-  given Pickler[AgsAnalysis.NotReachableAtPosition] = generatePickler
-
-  given Pickler[AgsAnalysis.NoMagnitudeForBand] = generatePickler
-
   given Pickler[Area] =
     transformPickler((x: Long) =>
       Area.fromMicroarcsecondsSquared.getOption(x).getOrElse(sys.error("Cannot unpickle"))
@@ -93,17 +79,6 @@ trait CatalogPicklers extends CommonPicklers {
     )
 
   given Pickler[AgsAnalysis.Usable] = generatePickler
-
-  given Pickler[AgsAnalysis] =
-    compositePickler[AgsAnalysis]
-      .addConcreteType[AgsAnalysis.ProperMotionNotAvailable]
-      .addConcreteType[AgsAnalysis.VignettesScience]
-      .addConcreteType[AgsAnalysis.NoGuideStarForProbe]
-      .addConcreteType[AgsAnalysis.MagnitudeTooFaint]
-      .addConcreteType[AgsAnalysis.MagnitudeTooBright]
-      .addConcreteType[AgsAnalysis.NotReachableAtPosition]
-      .addConcreteType[AgsAnalysis.NoMagnitudeForBand]
-      .addConcreteType[AgsAnalysis.Usable]
 
   given Pickler[ObjectTracking.SiderealObjectTracking] = generatePickler
 

@@ -16,7 +16,8 @@ sealed trait GuideStarSelection derives Eq
 
 object GuideStarSelection:
   // Automatic selection, store the index
-  case class AgsSelection(index: Option[(Int, AgsAnalysis)]) extends GuideStarSelection derives Eq
+  case class AgsSelection(index: Option[(Int, AgsAnalysis.Usable)]) extends GuideStarSelection
+      derives Eq
 
   // Remote selection based on the name
   case class RemoteGSSelection(name: NonEmptyString) extends GuideStarSelection derives Eq
@@ -25,7 +26,7 @@ object GuideStarSelection:
   case class AgsOverride(
     selectedGSName:  NonEmptyString,
     selectedGSIndex: Int,
-    analysis:        AgsAnalysis
+    analysis:        AgsAnalysis.Usable
   ) extends GuideStarSelection derives Eq
 
   val Default: GuideStarSelection = AgsSelection(None)
@@ -44,14 +45,14 @@ object GuideStarSelection:
     def targetName: Option[NonEmptyString] =
       fold(_.index.map(_._2.target.name), _.name.some, _.selectedGSName.some)
 
-    def analysis: Option[AgsAnalysis] = gs match
+    def analysis: Option[AgsAnalysis.Usable] = gs match
       case AgsSelection(Some((_, a))) => a.some
       case AgsOverride(_, _, a)       => a.some
       case _                          => none
 
-    def selectedAngle: Option[Angle] = analysis.flatMap(_.posAngle)
+    def selectedAngle: Option[Angle] = analysis.map(_.posAngle)
 
-extension (r: List[AgsAnalysis])
+extension (r: List[AgsAnalysis.Usable])
   def pick(i: Int): GuideStarSelection =
     r.lift(i)
       .fold[GuideStarSelection](GuideStarSelection.AgsSelection(none))(a =>
