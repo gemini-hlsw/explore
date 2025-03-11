@@ -182,10 +182,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   @inline protected val defaultWavelengthDithersLens: Lens[T, NonEmptyList[WavelengthDither]]
   @inline protected val defaultSpatialOffsetsLens: Lens[T, NonEmptyList[Offset.Q]]
 
-  @inline protected val obsoleteGratings: Set[Grating]
-  @inline protected val obsoleteFilters: Set[Filter]
-  @inline protected val obsoleteRois: Set[Roi]
-
   @inline protected def resolvedReadModeGainGetter: T => (ReadMode, Gain)
 
   protected given Display[(ReadMode, Gain)] =
@@ -532,8 +528,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               id = "grating".refined,
               view = grating(props.observingMode),
               original = initialGratingLens.get(props.observingMode.get),
-              disabled = disableAdvancedEdit,
-              exclude = obsoleteGratings
+              disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "filter".refined)(
               "Filter",
@@ -544,7 +539,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               view = filter(props.observingMode),
               original = initialFilterLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit,
-              exclude = obsoleteFilters,
               showClear = true,
               resetToOriginal = true
             ),
@@ -729,8 +723,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               id = "explicitRoi".refined,
               view = explicitRoi(props.observingMode).withDefault(defaultRoi),
               original = defaultRoi.some,
-              disabled = disableAdvancedEdit,
-              exclude = obsoleteRois
+              disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "lambda".refined)("λ / Δλ"),
             <.label(^.id := "lambda",
@@ -800,9 +793,7 @@ object AdvancedConfigurationPanel {
         GmosAmpReadMode,
         GmosAmpGain,
         GmosRoi
-      ] {
-    @inline override protected val obsoleteRois = GmosRoi.all.filter(_.obsolete).toSet
-  }
+      ] {}
 
   // Gmos North Long Slit
   case class GmosNorthLongSlit(
@@ -1008,9 +999,6 @@ object AdvancedConfigurationPanel {
         .get(mode)
         .getOrElse(ObservingMode.GmosNorthLongSlit.defaultAmpGain.get(mode))
       (readMode, ampGain)
-
-    @inline override protected val obsoleteGratings = GmosNorthGrating.all.filter(_.obsolete).toSet
-    @inline override protected val obsoleteFilters  = GmosNorthFilter.all.filter(_.obsolete).toSet
   }
 
 // Gmos South Long Slit
@@ -1222,8 +1210,5 @@ object AdvancedConfigurationPanel {
         .get(mode)
         .getOrElse(ObservingMode.GmosSouthLongSlit.defaultAmpGain.get(mode))
       (readMode, ampGain)
-
-    @inline override protected val obsoleteGratings = GmosSouthGrating.all.filter(_.obsolete).toSet
-    @inline override protected val obsoleteFilters  = GmosSouthFilter.all.filter(_.obsolete).toSet
   }
 }

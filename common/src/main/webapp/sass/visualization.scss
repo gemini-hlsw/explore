@@ -278,14 +278,6 @@ $brightness: var(--aladin-image-brightness);
         fill: var(--ags-slow-guide-speed-color);
         fill-opacity: 0.8;
       }
-
-      // faint -> red
-      &.guide-star-too-faint {
-        stroke-width: 1px;
-        stroke: hsl(9deg 100% 63.9%);
-        fill: hsl(0deg 100% 50%);
-        fill-opacity: 0.5;
-      }
     }
 
     .guide-star-target {

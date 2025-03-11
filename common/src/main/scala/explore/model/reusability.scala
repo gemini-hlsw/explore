@@ -19,7 +19,6 @@ import explore.undo.UndoStacks
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
-import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
@@ -105,7 +104,6 @@ object reusability:
   given Reusability[AgsPosition]                        = Reusability.byEq
   given Reusability[AgsParams]                          = Reusability.byEq
   given Reusability[AgsState]                           = Reusability.byEq
-  given Reusability[AgsAnalysis]                        = Reusability.byEq
   given Reusability[ObsConfiguration]                   = Reusability.byEq
   given Reusability[Existence]                          = Reusability.byEq
   given Reusability[ItcExposureTime]                    = Reusability.byEq

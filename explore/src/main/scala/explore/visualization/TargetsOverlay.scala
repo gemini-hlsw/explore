@@ -64,7 +64,7 @@ object SVGTarget {
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
-    analysis:    AgsAnalysis,
+    analysis:    AgsAnalysis.Usable,
     title:       Option[String] = None
   ) extends SVGTarget derives Eq
 
@@ -72,7 +72,7 @@ object SVGTarget {
     coordinates: Coordinates,
     css:         Css,
     radius:      Double,
-    analysis:    AgsAnalysis,
+    analysis:    AgsAnalysis.Usable,
     title:       Option[String] = None
   ) extends SVGTarget derives Eq
 

@@ -122,10 +122,10 @@ object GmosGeometry:
     referenceCoordinates:    Coordinates,
     configuration:           Option[ObsConfiguration],
     port:                    PortDisposition,
-    gs:                      Option[AgsAnalysis],
+    gs:                      Option[AgsAnalysis.Usable],
     candidatesVisibilityCss: Css
   ): Option[SortedMap[Css, ShapeExpression]] =
-    gs.flatMap(_.posAngle)
+    gs.map(_.posAngle)
       .orElse(configuration.flatMap(_.fallbackPosAngle))
       .map { posAngle =>
         val basicConf = configuration.flatMap(_.configuration)
@@ -137,7 +137,6 @@ object GmosGeometry:
 
         // Don't show the probe if there is no usable GS
         baseShapes ++ gs
-          .filter(_.isUsable)
           .map { gs =>
             val gsOffset   =
               referenceCoordinates.diff(gs.target.tracking.baseCoordinates).offset

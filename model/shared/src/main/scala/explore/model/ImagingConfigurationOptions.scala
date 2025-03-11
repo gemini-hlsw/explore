@@ -51,7 +51,7 @@ object ImagingConfigurationOptions {
 
   val gmosNorthFilters = GmosNorthFilter.all
     .filterNot(f =>
-      f.obsolete || f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
+      f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
     )
     .map { f =>
       val l: Option[Wavelength] = f.width.lowerBound match {
@@ -75,7 +75,7 @@ object ImagingConfigurationOptions {
 
   val gmosSouthFilters = GmosSouthFilter.all
     .filterNot(f =>
-      f.obsolete || f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
+      f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
     )
     .map { f =>
       val l: Option[Wavelength] = f.width.lowerBound match {

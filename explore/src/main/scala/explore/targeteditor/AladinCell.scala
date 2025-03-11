@@ -234,7 +234,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                 props.obsConf.flatMap(_.agsState).foldMap(_.async.set(AgsState.Idle))
           else none.pure
       // Analysis results
-      .useSerialState(List.empty[AgsAnalysis])
+      .useSerialState(List.empty[AgsAnalysis.Usable])
       // Reference to root
       .useMemo(())(_ => domRoot)
       // target options, will be read from the user preferences
@@ -331,7 +331,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                     candidates
                   )
 
-                def processResults(r: Option[List[AgsAnalysis]]): IO[Unit] =
+                def processResults(r: Option[List[AgsAnalysis.Usable]]): IO[Unit] =
                   (for
                     // Store the analysis
                     _ <- r.map(ags.setState).getOrEmpty

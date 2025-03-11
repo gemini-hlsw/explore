@@ -28,7 +28,7 @@ case class AladinToolbar(
   fov:               Fov,
   current:           Coordinates,
   agsState:          AgsState,
-  selectedGuideStar: Option[AgsAnalysis],
+  selectedGuideStar: Option[AgsAnalysis.Usable],
   agsOverlay:        Visible,
   viewOffset:        ViewOpt[Offset]
 ) extends ReactFnProps(AladinToolbar.component)

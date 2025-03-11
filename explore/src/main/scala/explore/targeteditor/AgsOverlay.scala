@@ -25,7 +25,7 @@ import scala.math.BigDecimal.RoundingMode
 
 case class AgsOverlay(
   selectedGS:          View[GuideStarSelection],
-  agsResults:          List[AgsAnalysis],
+  agsResults:          List[AgsAnalysis.Usable],
   agsState:            AgsState,
   modeAvailable:       Boolean,
   durationAvailable:   Boolean, // Duration implies sequence
@@ -97,34 +97,29 @@ object AgsOverlay:
             <.div(
               ExploreStyles.AgsDescription,
               devOnly,
-              analysis.match {
-                case AgsAnalysis.Usable(_, _, GuideSpeed.Fast, _, _)   =>
+              analysis.guideSpeed.match {
+                case GuideSpeed.Fast   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsFast)
-                case AgsAnalysis.Usable(_, _, GuideSpeed.Medium, _, _) =>
+                case GuideSpeed.Medium =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsMedium)
-                case AgsAnalysis.Usable(_, _, GuideSpeed.Slow, _, _)   =>
+                case GuideSpeed.Slow   =>
                   Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
-                case _                                                 => ""
               },
-              analysis match {
-                case AgsAnalysis.Usable(_, _, speed, _, _) =>
-                  React.Fragment(
-                    <.div(ExploreStyles.AgsGuideSpeed, speed.tag),
-                    <.div(
-                      ExploreStyles.AgsGBrightness,
-                      analysis.target.gBrightness.map { case (b, v) =>
-                        React.Fragment(
-                          if (b === Band.GaiaRP) React.Fragment(s"G", <.sub("RP")) else b.shortName,
-                          s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}"
-                        )
-                      }
-                    ),
-                    <.div(ExploreStyles.AgsCoordinates,
-                          s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
+              React.Fragment(
+                <.div(ExploreStyles.AgsGuideSpeed, analysis.guideSpeed.tag),
+                <.div(
+                  ExploreStyles.AgsGBrightness,
+                  analysis.target.gBrightness.map { case (b, v) =>
+                    React.Fragment(
+                      if (b === Band.GaiaRP) React.Fragment(s"G", <.sub("RP")) else b.shortName,
+                      s": ${v.value.value.setScale(2, RoundingMode.HALF_DOWN).toString()}"
                     )
-                  )
-                case _                                     => EmptyVdom
-              }
+                  }
+                ),
+                <.div(ExploreStyles.AgsCoordinates,
+                      s"(${formatCoordinates(analysis.target.tracking.baseCoordinates)})"
+                )
+              )
             )
           )
         }

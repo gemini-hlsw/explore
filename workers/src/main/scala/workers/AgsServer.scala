@@ -23,11 +23,11 @@ object AgsServer extends WorkerServer[IO, AgsMessage.Request] {
   @JSExport
   def runWorker(): Unit = run.unsafeRunAndForget()
 
-  private val AgsCacheVersion: Int = 16
+  private val AgsCacheVersion: Int = 17
 
   private val CacheRetention: Duration = Duration.ofDays(60)
 
-  def agsCalculation(r: AgsMessage.AgsRequest): IO[List[AgsAnalysis]] =
+  def agsCalculation(r: AgsMessage.AgsRequest): IO[List[AgsAnalysis.Usable]] =
     IO.delay(
       Ags
         .agsAnalysis(r.constraints,

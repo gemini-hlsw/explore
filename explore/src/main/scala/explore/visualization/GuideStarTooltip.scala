@@ -3,7 +3,6 @@
 
 package explore.visualization
 
-import cats.syntax.all.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
@@ -14,7 +13,8 @@ import lucuma.core.enums.GuideSpeed
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
 
-case class GuideStarTooltip(analysis: AgsAnalysis) extends ReactFnProps(GuideStarTooltip.component)
+case class GuideStarTooltip(analysis: AgsAnalysis.Usable)
+    extends ReactFnProps(GuideStarTooltip.component)
 
 object GuideStarTooltip:
   private type Props = GuideStarTooltip
@@ -35,13 +35,8 @@ object GuideStarTooltip:
         case GuideSpeed.Slow   =>
           Icons.CircleSmall.withClass(ExploreStyles.AgsSlow)
 
-      val (guideSpeedIcon, speedText) = p.analysis match
-        case AgsAnalysis.Usable(_, _, guideSpeed, _, _)                    =>
-          (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
-        case AgsAnalysis.NotReachableAtPosition(_, _, Some(guideSpeed), _) =>
-          (speedIcon(guideSpeed).some, guideSpeed.tag.toSentenceCase)
-        case _                                                             =>
-          (none, "")
+      val guideSpeedIcon = speedIcon(p.analysis.guideSpeed)
+      val speedText      = p.analysis.guideSpeed.tag.toSentenceCase
 
       <.div(ExploreStyles.AgsTooltip)(
         <.div(id),
