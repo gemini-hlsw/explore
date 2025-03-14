@@ -20,7 +20,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.*
 import lucuma.react.common.*
-import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
 
 case class ObsGroupTiles(

@@ -32,7 +32,6 @@ import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.VisitQueriesGQL.*
 
 object SequenceTile extends SequenceTileHelper:
   def apply(

@@ -9,7 +9,6 @@ import crystal.react.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.*
-import explore.model.AppContext
 import explore.model.enums.AppTab
 import explore.model.enums.SelectedPanel
 import explore.syntax.ui.*

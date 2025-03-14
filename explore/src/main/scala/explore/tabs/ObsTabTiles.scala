@@ -27,14 +27,7 @@ import explore.findercharts.FinderChartsTile
 import explore.itc.ItcGraphQuerier
 import explore.itc.ItcTile
 import explore.model.*
-import explore.model.AppContext
 import explore.model.GuideStarSelection.*
-import explore.model.Observation
-import explore.model.ObservationsAndTargets
-import explore.model.OnAsterismUpdateParams
-import explore.model.OnCloneParameters
-import explore.model.ProgramSummaries
-import explore.model.TargetEditObsInfo
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab

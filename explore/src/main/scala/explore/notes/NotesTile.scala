@@ -17,12 +17,10 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.util.NewType
 import lucuma.react.common.*
-import lucuma.react.common.ReactFnProps
 import lucuma.react.markdown.ReactMarkdown
 import lucuma.react.markdown.RehypePlugin
 import lucuma.react.markdown.RemarkPlugin
 import lucuma.react.primereact.*
-import lucuma.react.primereact.Button
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given

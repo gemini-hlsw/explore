@@ -32,7 +32,6 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.react.primereact.tooltip.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 

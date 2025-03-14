@@ -46,7 +46,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.render.*
 import lucuma.ui.table.*
-import lucuma.ui.table.PrimeTable
 import lucuma.ui.utils.Render
 import monocle.Iso
 import monocle.function.Index

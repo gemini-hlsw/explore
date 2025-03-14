@@ -57,7 +57,6 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import monocle.function.Each.*
 import queries.common.InvitationQueriesGQL.RevokeInvitationMutation
 import queries.common.ProposalQueriesGQL.DeleteProgramUser
 

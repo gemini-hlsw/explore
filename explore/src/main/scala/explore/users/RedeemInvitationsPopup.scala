@@ -26,7 +26,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given

@@ -7,7 +7,6 @@ import cats.syntax.all.*
 import explore.optics.Adjuster
 import explore.optics.GetAdjust
 import monocle.*
-import monocle.Focus
 import monocle.std.option.some
 import mouse.boolean.*
 

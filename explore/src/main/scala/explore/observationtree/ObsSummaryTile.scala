@@ -28,7 +28,6 @@ import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
@@ -40,7 +39,6 @@ import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.react.table.ColumnId
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*

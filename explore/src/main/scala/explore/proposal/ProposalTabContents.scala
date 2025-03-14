@@ -9,7 +9,6 @@ import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import explore.*
-import explore.Icons
 import explore.common.ProposalQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext

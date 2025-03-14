@@ -29,7 +29,6 @@ import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.react.*
 import lucuma.react.common.*
-import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput

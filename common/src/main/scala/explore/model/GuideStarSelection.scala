@@ -8,7 +8,6 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.ReactCats.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.Angle
 

@@ -21,12 +21,6 @@ import explore.model.itc.ItcTarget
 import explore.model.itc.ItcTargetProblem
 import explore.model.itc.OverridenExposureTime
 import explore.modes.*
-import explore.modes.InstrumentConfig
-import explore.modes.ModeAO
-import explore.modes.ModeSlitSize
-import explore.modes.ModeWavelength
-import explore.modes.SpectroscopyModeRow
-import explore.modes.SpectroscopyModesMatrix
 import lucuma.core.data.Zipper
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities

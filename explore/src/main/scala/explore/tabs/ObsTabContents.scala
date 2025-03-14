@@ -10,16 +10,11 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
-import explore.Icons
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ToolbarTooltipOptions
 import explore.components.ui.ExploreStyles
 import explore.model.*
-import explore.model.AppContext
-import explore.model.Observation
-import explore.model.ObservationExecutionMap
-import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel

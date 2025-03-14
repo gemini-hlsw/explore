@@ -36,8 +36,6 @@ import lucuma.react.primereact.tooltip.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.react.table.ColumnDef
-import lucuma.react.table.ColumnId
 import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given

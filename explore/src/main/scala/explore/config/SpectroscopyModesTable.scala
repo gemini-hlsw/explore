@@ -32,14 +32,12 @@ import explore.model.display.given
 import explore.model.enums.TableId
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
-import explore.model.itc.ItcTarget
 import explore.model.reusability.given
 import explore.modes.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
-import lucuma.core.enums.FocalPlane
 import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*

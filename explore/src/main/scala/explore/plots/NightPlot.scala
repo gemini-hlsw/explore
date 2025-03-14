@@ -24,7 +24,6 @@ import lucuma.core.util.time.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.mod.*
-import lucuma.typed.highcharts.mod.XAxisLabelsOptions
 import lucuma.ui.components.MoonPhase
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given

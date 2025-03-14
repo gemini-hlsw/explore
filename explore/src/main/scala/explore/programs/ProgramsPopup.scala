@@ -10,8 +10,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.*
 import crystal.react.*
-import crystal.react.View
-import crystal.react.ViewOpt
 import crystal.react.hooks.*
 import explore.Icons
 import explore.common.ProgramQueries

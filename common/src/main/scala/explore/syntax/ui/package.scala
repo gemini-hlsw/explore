@@ -16,7 +16,6 @@ import explore.components.ui.PartnerFlags
 import explore.model.Constants
 import explore.optics.GetAdjust
 import explore.utils.*
-import explore.utils.ToastCtx
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.VdomNode

@@ -8,7 +8,6 @@ import crystal.react.View
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.*
-import explore.model.GuideStarSelection
 import explore.model.enums.AgsState
 import explore.model.formats.*
 import japgolly.scalajs.react.*

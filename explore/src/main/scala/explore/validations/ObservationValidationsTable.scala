@@ -18,7 +18,6 @@ import explore.model.enums.TableId
 import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.ScalaFnComponent
 import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationValidationCode
@@ -32,8 +31,6 @@ import lucuma.react.primereact.tooltip.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.react.table.ColumnDef
-import lucuma.react.table.ColumnId
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
 import lucuma.ui.table.hooks.*

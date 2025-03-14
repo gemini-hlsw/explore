@@ -22,9 +22,6 @@ import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.TargetList
 import explore.model.itc.*
-import explore.model.itc.ItcAsterismGraphResults
-import explore.model.itc.ItcGraphResult
-import explore.model.itc.ItcTarget
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
