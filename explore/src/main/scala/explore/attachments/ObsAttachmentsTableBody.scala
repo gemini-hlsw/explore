@@ -30,10 +30,8 @@ import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.*
-import explore.utils.OdbRestClient
 import fs2.dom
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.AttachmentPurpose
 import lucuma.core.enums.AttachmentType

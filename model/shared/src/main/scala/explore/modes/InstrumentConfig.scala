@@ -11,7 +11,6 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.*
 import lucuma.core.enums.*
 import lucuma.core.math.Wavelength
-import lucuma.core.math.units.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated

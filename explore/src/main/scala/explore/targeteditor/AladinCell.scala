@@ -9,7 +9,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import crystal.*
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.reuse.*
@@ -24,7 +23,6 @@ import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.components.ui.ExploreStyles
 import explore.events.*
 import explore.model.*
-import explore.model.AppContext
 import explore.model.WorkerClients.*
 import explore.model.boopickle.*
 import explore.model.boopickle.CatalogPicklers.given

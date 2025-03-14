@@ -41,7 +41,6 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Angle
 import lucuma.core.model.CoordinatesAtVizTime

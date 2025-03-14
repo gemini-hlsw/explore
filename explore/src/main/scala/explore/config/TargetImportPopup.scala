@@ -14,7 +14,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.utils.ToastCtx
 import fs2.*
-import fs2.text
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.catalog.csv.TargetImport

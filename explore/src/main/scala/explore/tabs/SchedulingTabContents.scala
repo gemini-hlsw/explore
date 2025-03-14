@@ -15,10 +15,6 @@ import explore.common.TimingWindowsQueries
 import explore.components.FocusedStatus
 import explore.components.TileController
 import explore.model.*
-import explore.model.AppContext
-import explore.model.Observation
-import explore.model.ObservationList
-import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel

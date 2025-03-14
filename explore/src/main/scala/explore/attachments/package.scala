@@ -16,7 +16,6 @@ import explore.model.AttachmentList
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.*
-import explore.utils.OdbRestClient
 import fs2.dom
 import japgolly.scalajs.react.*
 import lucuma.core.enums.AttachmentType

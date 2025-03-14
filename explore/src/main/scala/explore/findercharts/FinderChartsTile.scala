@@ -10,7 +10,6 @@ import crystal.react.hooks.*
 import crystal.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.attachments.*
-import explore.attachments.ObsAttachmentUtils
 import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
 import explore.components.Tile

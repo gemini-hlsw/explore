@@ -54,12 +54,9 @@ import lucuma.ui.utils.*
 import monocle.Iso
 import org.scalajs.dom
 import org.scalajs.dom.Element
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
-
-import ObsQueries.*
 
 case class ObsTree(
   programId:             Program.Id,

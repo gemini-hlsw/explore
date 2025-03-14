@@ -30,8 +30,6 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.react.table.ColumnDef
-import lucuma.react.table.ColumnId
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.table.*

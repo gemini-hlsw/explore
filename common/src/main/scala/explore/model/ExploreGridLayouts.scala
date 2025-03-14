@@ -10,7 +10,6 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegInt
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.*
-import explore.model.layout.LayoutsMap
 import lucuma.core.enums.CalibrationRole
 import lucuma.react.gridlayout.BreakpointName
 import lucuma.react.gridlayout.Layout

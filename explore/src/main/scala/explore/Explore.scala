@@ -17,7 +17,6 @@ import clue.js.WebSocketJsBackend
 import clue.websocket.ReconnectionStrategy
 import explore.components.ui.ExploreStyles
 import explore.events.*
-import explore.events.ExploreEvent
 import explore.model.AppConfig
 import explore.model.AppContext
 import explore.model.ExploreLocalPreferences

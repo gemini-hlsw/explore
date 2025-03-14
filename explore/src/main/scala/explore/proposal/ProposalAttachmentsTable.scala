@@ -23,9 +23,7 @@ import explore.model.Constants
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.utils.*
-import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.AttachmentPurpose
 import lucuma.core.enums.AttachmentType

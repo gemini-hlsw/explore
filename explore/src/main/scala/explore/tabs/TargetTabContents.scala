@@ -17,12 +17,7 @@ import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.*
-import explore.model.AppContext
-import explore.model.GuideStarSelection
 import explore.model.GuideStarSelection.AgsSelection
-import explore.model.Observation
-import explore.model.OnCloneParameters
-import explore.model.TargetEditObsInfo
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel

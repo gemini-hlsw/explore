@@ -18,9 +18,6 @@ import lucuma.core.model.Configuration.ObservingMode.GmosSouthLongSlit
 import lucuma.core.model.Program
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.react.table.ColumnDef
-import lucuma.react.table.ColumnId
-import lucuma.ui.syntax.table.*
 
 case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, TM]):
   import ConfigurationTableColumnBuilder.*

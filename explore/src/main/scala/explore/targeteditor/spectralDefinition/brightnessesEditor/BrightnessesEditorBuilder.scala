@@ -10,7 +10,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
-import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ExploreModelValidators
 import explore.model.display.given

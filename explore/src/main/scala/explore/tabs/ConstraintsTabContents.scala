@@ -18,11 +18,6 @@ import explore.components.TileController
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTile
 import explore.model.*
-import explore.model.AppContext
-import explore.model.ConstraintGroupList
-import explore.model.Observation
-import explore.model.ObservationList
-import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel

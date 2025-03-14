@@ -25,7 +25,6 @@ import lucuma.refined.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.format.TimeSpanFormatter
 import lucuma.ui.reusability.given
-import lucuma.ui.syntax.all.*
 import lucuma.ui.table.*
 
 case class TimeAccountingTable(programTimes: ProgramTimes, allocations: CategoryAllocationList)

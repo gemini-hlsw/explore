@@ -13,7 +13,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.HelpIcon
 import explore.model.*
-import explore.model.AppContext
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
 import japgolly.scalajs.react.*
@@ -24,7 +23,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.refined.*
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given

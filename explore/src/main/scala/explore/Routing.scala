@@ -10,14 +10,10 @@ import crystal.*
 import crystal.react.View
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.*
-import explore.model.Observation
-import explore.model.Page
 import explore.model.Page.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.proposal.ProposalTabContents
 import explore.tabs.*
-import explore.tabs.ConstraintsTabContents
-import explore.tabs.ProgramTabContents
 import explore.undo.UndoContext
 import japgolly.scalajs.react.React
 import japgolly.scalajs.react.ReactMonocle.*

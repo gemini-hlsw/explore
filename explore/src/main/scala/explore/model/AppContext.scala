@@ -11,7 +11,6 @@ import clue.js.*
 import clue.websocket.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.events.*
-import explore.events.ExploreEvent
 import explore.model.enums.AppTab
 import explore.utils
 import explore.utils.ToastCtx

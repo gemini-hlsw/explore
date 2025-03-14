@@ -4,7 +4,6 @@
 package explore.shortcuts
 
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.Callback
 import lucuma.core.util.NewType
 import lucuma.react.hotkeys.HotkeysCallback
 import lucuma.react.hotkeys.HotkeysEvent

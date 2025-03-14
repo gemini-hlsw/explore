@@ -38,7 +38,6 @@ import lucuma.ui.LucumaStyles
 import lucuma.ui.components.CopyControl
 import lucuma.ui.components.SolarProgress
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
