@@ -1324,7 +1324,9 @@ $search-preview-margin: 5px;
   }
 
   .p-datatable-tbody > tr.explore-sequence-row-done {
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
     color: var(--disabled-row-color);
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
     background: var(--disabled-row-background);
   }
 
