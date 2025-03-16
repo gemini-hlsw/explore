@@ -16,7 +16,7 @@ import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.react.aladin.Fov
+import lucuma.ui.aladin.Fov
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Tooltip
