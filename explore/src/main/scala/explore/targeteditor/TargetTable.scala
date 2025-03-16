@@ -118,7 +118,7 @@ object TargetTable extends AsterismModifier:
                     onClickE = (e: ReactMouseEvent) =>
                       e.preventDefaultCB >>
                         e.stopPropagationCB >>
-                        cell.table.options.meta.toOption.foldMap(m =>
+                        cell.table.options.meta.foldMap(m =>
                           deleteSiderealTarget(
                             m.obsIds,
                             m.obsAndTargets,

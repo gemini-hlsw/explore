@@ -70,8 +70,8 @@ object GroupWarningsTile {
     WarningColumnId   -> "Warning"
   )
 
-  private def column[V, CF, FM](id: ColumnId, accessor: GroupWarningRow => V): ColDef.TypeFor[V] =
-    ColDef[V, CF, FM](id, r => accessor(r.value), columnNames(id))
+  private def column[V](id: ColumnId, accessor: GroupWarningRow => V): ColDef.TypeFor[V] =
+    ColDef(id, r => accessor(r.value), columnNames(id))
 
   private def columns(programId: Program.Id, ctx: AppContext[IO]): List[ColDef.Type] =
     def groupUrl(groupId: Group.Id): String =

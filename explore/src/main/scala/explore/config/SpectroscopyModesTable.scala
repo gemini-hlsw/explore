@@ -231,7 +231,7 @@ private object SpectroscopyModesTable:
         .setHeader: header =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",
-            header.table.options.meta.toOption
+            header.table.options.meta
               .map(_.itcProgress)
               .flatten
               .map(p =>

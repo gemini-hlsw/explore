@@ -149,7 +149,7 @@ object SchedulingWindowsTile:
                   text = true,
                   onClickE = e =>
                     e.stopPropagationCB >>
-                      cell.table.options.meta.toOption
+                      cell.table.options.meta
                         .map:
                           _.updateWindows(sws => sws.take(cell.value) ++ sws.drop(cell.value + 1))
                         .orEmpty

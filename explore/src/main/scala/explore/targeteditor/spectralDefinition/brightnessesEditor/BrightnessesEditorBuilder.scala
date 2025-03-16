@@ -121,8 +121,7 @@ private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[
                 clazz = ExploreStyles.DeleteButton,
                 text = true,
                 disabled = cell.table.options.meta.exists(_.disabled),
-                onClick =
-                  cell.table.options.meta.toOption.map(_.modBrightnesses(_ - cell.value)).orEmpty
+                onClick = cell.table.options.meta.map(_.modBrightnesses(_ - cell.value)).orEmpty
               ).small
             ),
           size = 20.toPx,
