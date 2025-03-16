@@ -7,7 +7,7 @@ import cats.Semigroup
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Offset
 import lucuma.core.util.NewType
-import lucuma.react.aladin.Fov
+import lucuma.ui.aladin.Fov
 import lucuma.react.common.Css
 import org.locationtech.jts.geom.Geometry
 

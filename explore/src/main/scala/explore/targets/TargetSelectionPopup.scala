@@ -28,7 +28,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.util.NewType
-import lucuma.react.aladin.*
+import lucuma.ui.aladin.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
@@ -160,16 +160,16 @@ object TargetSelectionPopup:
     // selectedTarget
     .useStateView(none[SelectedTarget])
     // aladinRef
-    .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
-    // re render when selected changes
-    .useEffectWithDepsBy((_, _, _, _, _, _, _, selectedTarget, _) => selectedTarget.get)(
-      (_, _, _, _, _, _, _, _, aladinRef) =>
-        sel =>
-          aladinRef.get.asCBO
-            .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
-            // We need to do this callback delayed or it miss calculates aladin div size
-            .delayMs(10)
-    )
+    // .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
+    // // re render when selected changes
+    // .useEffectWithDepsBy((_, _, _, _, _, _, _, selectedTarget, _) => selectedTarget.get)(
+    //   (_, _, _, _, _, _, _, _, aladinRef) =>
+    //     sel =>
+    //       aladinRef.get.asCBO
+    //         .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
+    //         // We need to do this callback delayed or it miss calculates aladin div size
+    //         .delayMs(10)
+    // )
     .render {
       (
         props,
@@ -179,8 +179,8 @@ object TargetSelectionPopup:
         searching,
         singleEffect,
         isOpen,
-        selectedTarget,
-        aladinRef
+        selectedTarget
+        // aladinRef
       ) =>
         import ctx.given
 
@@ -271,29 +271,29 @@ object TargetSelectionPopup:
                 )
               ),
               <.div(ExploreStyles.TargetSearchPreview)(
-                AladinZoomControl(aladinRef, ExploreStyles.AladinSearchZoomControl),
+                // AladinZoomControl(aladinRef, ExploreStyles.AladinSearchZoomControl),
                 selectedTarget.get
                   .collect { case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, _) =>
                     tracking.baseCoordinates
                   }
                   .map[VdomNode] { case coordinates =>
-                    Aladin.component
-                      .withRef(aladinRef)
-                      .withKey(
-                        selectedTarget.get.foldMap(t => s"${t.source}-${t.resultIndex}")
-                      )(
-                        Aladin(
-                          ExploreStyles.TargetSearchAladin, // required placeholder
-                          showReticle = false,
-                          showLayersControl = false,
-                          target = Coordinates.fromHmsDms.reverseGet(coordinates),
-                          fov = Constants.PreviewFov,
-                          fullScreen = false,
-                          showZoomControl = false,
-                          showFullscreenControl = false,
-                          showGotoControl = false
-                        )
-                      )
+                    // Aladin.component
+                    //   .withRef(aladinRef)
+                    //   .withKey(
+                    //     selectedTarget.get.foldMap(t => s"${t.source}-${t.resultIndex}")
+                    //   )(
+                    Aladin(
+                      ExploreStyles.TargetSearchAladin, // required placeholder
+                      showReticle = false,
+                      showLayersControl = false,
+                      target = Coordinates.fromHmsDms.reverseGet(coordinates),
+                      fov = Constants.PreviewFov,
+                      fullScreen = false,
+                      showZoomControl = false,
+                      showFullscreenControl = false,
+                      showGotoControl = false
+                    )
+                  // )
                   }
                   .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
               ),

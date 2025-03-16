@@ -33,7 +33,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.react.aladin.*
+import lucuma.ui.aladin.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.hooks.*
@@ -116,25 +116,25 @@ object AladinContainer extends AladinCommon {
               currentPos.setState:
                 base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       // Ref to the aladin component
-      .useRefToScalaComponent(AladinComp)
+      .useState(none[AladinRef])
       // If view offset changes upstream to zero, redraw
-      .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)):
-        (_, baseCoordinates, viewCoordinates, aladinRef) =>
-          (_, offset) => {
-            val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
-            newCoords
-              .map: coords =>
-                aladinRef.get.asCBO
-                  .flatMapCB:
-                    _.backend.gotoRaDec(
-                      coords.ra.toAngle.toDoubleDegrees,
-                      coords.dec.toAngle.toSignedDoubleDegrees
-                    )
-                  .asCallback
-                  .void
-                  .when_(offset === Offset.Zero)
-              .getOrEmpty
-          }
+      // .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)):
+      //   (_, baseCoordinates, viewCoordinates, aladinRef) =>
+      //     (_, offset) => {
+      //       val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
+      //       newCoords
+      //         .map: coords =>
+      //           aladinRef.get.asCBO
+      //             .flatMapCB:
+      //               _.backend.gotoRaDec(
+      //                 coords.ra.toAngle.toDoubleDegrees,
+      //                 coords.dec.toAngle.toSignedDoubleDegrees
+      //               )
+      //             .asCallback
+      //             .void
+      //             .when_(offset === Offset.Zero)
+      //         .getOrEmpty
+      //     }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
         (allCoordinates, p.obsConf, p.globalPreferences.agsOverlay, p.selectedGuideStar)
@@ -248,7 +248,7 @@ object AladinContainer extends AladinCommon {
       .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
         (props.globalPreferences.showCatalog, resize)
       ): (_, _, _, aladinRef, _, _, _, _) =>
-        (_, _) => aladinRef.get.asCBO.flatMapCB(_.backend.fixLayoutDimensions).asCallback.void
+        (_, _) => aladinRef.value.map(_.fixLayoutDimensions).orEmpty
       .render: (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
         val (baseCoordinates, scienceTargets) = allCoordinates.value
 
@@ -272,15 +272,15 @@ object AladinContainer extends AladinCommon {
             (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
           }
 
-        def includeSvg(v: JsAladin): Callback =
-          v.onZoom(onZoom) *> // re render on zoom
-            v.onPositionChanged(onPositionChanged) *>
-            v.onMouseMove(s =>
-              props
-                .updateMouseCoordinates(Coordinates(s.ra, s.dec))
-                .rateLimit(200.millis, 1)
-                .void
-            )
+        def includeSvg(v: AladinRef): Callback =
+          v.onZoom(onZoom) *>                      // re render on zoom
+            v.onPositionChanged(onPositionChanged) // *>
+        // v.onMouseMove(s =>
+        //   props
+        //     .updateMouseCoordinates(Coordinates(s.ra, s.dec))
+        //     .rateLimit(200.millis, 1)
+        //     .void
+        // )
 
         val baseCoordinatesForAladin: String =
           currentPos.value
@@ -362,7 +362,7 @@ object AladinContainer extends AladinCommon {
           // will make aladin request a large amount of tiles and end up freeze explore.
           if (resize.height.exists(_ >= 100)) {
             ReactFragment(
-              AladinZoomControl(aladinRef),
+              aladinRef.value.map(AladinZoomControl(_)),
               HelpIcon("aladin-cell.md".refined, ExploreStyles.AladinHelpIcon),
               (resize.width, resize.height, fov.value)
                 .mapN(
@@ -386,23 +386,21 @@ object AladinContainer extends AladinCommon {
                     _
                   )
                 ),
-              AladinComp.withRef(aladinRef) {
-                Aladin(
-                  ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
-                    .unless_(props.globalPreferences.aladinMouseScroll.value),
-                  showReticle = false,
-                  showLayersControl = false,
-                  target = baseCoordinatesForAladin,
-                  fov = Angle.fromMicroarcseconds(
-                    props.options.fovDec.toMicroarcseconds
-                      .max(props.options.fovRA.toMicroarcseconds)
-                  ),
-                  showGotoControl = false,
-                  showZoomControl = false,
-                  showFullscreenControl = false,
-                  customize = (v: JsAladin) => includeSvg(v)
-                )
-              }
+              Aladin(
+                ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
+                  .unless_(props.globalPreferences.aladinMouseScroll.value),
+                showReticle = false,
+                showLayersControl = false,
+                target = baseCoordinatesForAladin,
+                fov = Angle.fromMicroarcseconds(
+                  props.options.fovDec.toMicroarcseconds
+                    .max(props.options.fovRA.toMicroarcseconds)
+                ),
+                showGotoControl = false,
+                showZoomControl = false,
+                showFullscreenControl = false,
+                customize = (v: AladinRef) => includeSvg(v)
+              )
             )
           } else EmptyVdom
         )

@@ -298,12 +298,6 @@ object Dependencies {
     )(mUnitCatsEffect)
   )
 
-  val ReactAladin = Def.setting(
-    deps(
-      "edu.gemini" %%% "react-aladin"
-    )(reactAladin)
-  )
-
   val RefinedAlgebra = Def.setting(
     Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebra)
   )
