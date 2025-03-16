@@ -69,7 +69,6 @@ import scala.collection.decorators.*
 import scala.concurrent.duration.*
 
 import scalajs.js
-import scalajs.js.JSConverters.*
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
