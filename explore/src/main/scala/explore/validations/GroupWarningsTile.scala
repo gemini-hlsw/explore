@@ -70,22 +70,17 @@ object GroupWarningsTile {
     WarningColumnId   -> "Warning"
   )
 
-  private def column[V](
-    id:       ColumnId,
-    accessor: GroupWarningRow => V
-  ): ColumnDef.Single.NoMeta[Expandable[GroupWarningRow], V] =
-    ColDef(id, r => accessor(r.value), columnNames(id))
+  private def column[V, CF, FM](id: ColumnId, accessor: GroupWarningRow => V): ColDef.TypeFor[V] =
+    ColDef[V, CF, FM](id, r => accessor(r.value), columnNames(id))
 
-  private def columns(
-    programId: Program.Id,
-    ctx:       AppContext[IO]
-  ): List[ColumnDef.Single.NoMeta[Expandable[GroupWarningRow], ?]] =
-    def groupUrl(groupId: Group.Id): String    =
+  private def columns(programId: Program.Id, ctx: AppContext[IO]): List[ColDef.Type] =
+    def groupUrl(groupId: Group.Id): String =
       ctx.pageUrl((AppTab.Observations, programId, Focused.group(groupId)).some)
+
     def goToGroup(groupId: Group.Id): Callback =
       ctx.pushPage((AppTab.Observations, programId, Focused.group(groupId)).some)
 
-    def toggleAll(row: Row[Expandable[GroupWarningRow], Nothing]): Callback =
+    def toggleAll(row: Row[Expandable[GroupWarningRow], Nothing, Nothing, Nothing]): Callback =
       row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
 
     List(

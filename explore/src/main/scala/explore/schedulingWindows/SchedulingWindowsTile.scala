@@ -89,7 +89,7 @@ object SchedulingWindowsTile:
   private object Body:
     private type Props = Body
 
-    private val ColDef = ColumnDef.WithTableMeta[(TimingWindow, Int), TableMeta]
+    private val ColDef = ColumnDef[(TimingWindow, Int)].WithTableMeta[TableMeta]
 
     // Update function depends on current observation selection, so we cannot memoize it in the column definition
     private case class TableMeta(updateWindows: Endo[List[TimingWindow]] => Callback)
@@ -149,7 +149,7 @@ object SchedulingWindowsTile:
                   text = true,
                   onClickE = e =>
                     e.stopPropagationCB >>
-                      cell.table.options.meta
+                      cell.table.options.meta.toOption
                         .map:
                           _.updateWindows(sws => sws.take(cell.value) ++ sws.drop(cell.value + 1))
                         .orEmpty

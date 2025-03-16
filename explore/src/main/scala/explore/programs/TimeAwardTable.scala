@@ -38,7 +38,7 @@ object TimeAwardTable:
   private case class TableMeta(totalByBand: BandAllocations):
     lazy val grandTotal: TimeSpan = totalByBand.total
 
-  private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
+  private val ColDef = ColumnDef[Row].WithTableMeta[TableMeta]
 
   private val PartnerColId: ColumnId                = ColumnId("partner")
   private val BandColId: Map[ScienceBand, ColumnId] =
@@ -65,7 +65,7 @@ object TimeAwardTable:
       cell = cell => TimeSpanView(cell.value, TimeSpanFormatter.DecimalHours),
       footer = footer =>
         TimeSpanView(
-          footer.table.options.meta.foldMap(_.totalByBand.value.get(band).orEmpty),
+          footer.table.options.meta.toOption.foldMap(_.totalByBand.value.get(band).orEmpty),
           TimeSpanFormatter.DecimalHours
         )
     ).setSize(90.toPx)
@@ -78,7 +78,7 @@ object TimeAwardTable:
       cell = cell => TimeSpanView(cell.value, TimeSpanFormatter.DecimalHours),
       footer = footer =>
         TimeSpanView(
-          footer.table.options.meta.foldMap(_.grandTotal),
+          footer.table.options.meta.toOption.foldMap(_.grandTotal),
           TimeSpanFormatter.DecimalHours
         )
     ).setSize(90.toPx)

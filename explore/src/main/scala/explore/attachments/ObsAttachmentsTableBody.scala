@@ -84,7 +84,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
     readOnly:    Boolean
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[View[Attachment], TableMeta]
+  private val ColDef = ColumnDef[View[Attachment]].WithTableMeta[TableMeta]
 
   given Reusability[UrlMap]                     = Reusability.map
   given Reusability[ObsAttachmentAssignmentMap] = Reusability.map

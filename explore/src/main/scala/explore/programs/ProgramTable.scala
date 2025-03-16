@@ -54,7 +54,7 @@ object ProgramTable:
     programCount:     Int
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[View[ProgramInfo], TableMeta]
+  private val ColDef = ColumnDef[View[ProgramInfo]].WithTableMeta[TableMeta]
 
   private given Reusability[List[View[ProgramInfo]]] = Reusability.by(_.map(_.get))
 

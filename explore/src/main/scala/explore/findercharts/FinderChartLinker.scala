@@ -49,7 +49,7 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
     attachmentIds: View[SortedSet[Attachment.Id]]
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[Attachment, TableMeta]
+  private val ColDef = ColumnDef[Attachment].WithTableMeta[TableMeta]
 
   private val component =
     ScalaFnComponent

@@ -66,7 +66,7 @@ private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[
     ) => Callback
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[RowValue, TableMeta]
+  private val ColDef = ColumnDef[RowValue].WithTableMeta[TableMeta]
 
   private val BandColumnId: ColumnId   = ColumnId("band")
   private val ValueColumnId: ColumnId  = ColumnId("value")
@@ -121,7 +121,8 @@ private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[
                 clazz = ExploreStyles.DeleteButton,
                 text = true,
                 disabled = cell.table.options.meta.exists(_.disabled),
-                onClick = cell.table.options.meta.map(_.modBrightnesses(_ - cell.value)).orEmpty
+                onClick =
+                  cell.table.options.meta.toOption.map(_.modBrightnesses(_ - cell.value)).orEmpty
               ).small
             ),
           size = 20.toPx,

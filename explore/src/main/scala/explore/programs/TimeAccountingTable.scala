@@ -103,7 +103,7 @@ object TimeAccountingTable:
       List(planned, used, completion)
 
   // A Row is also used for the table metadata for creating the footer
-  private val ColDef = ColumnDef.WithTableMeta[Row, Row]
+  private val ColDef = ColumnDef[Row].WithTableMeta[Row]
 
   private val LabelColId: ColumnId = ColumnId("label")
   private val TotalColId: ColumnId = ColumnId("total")

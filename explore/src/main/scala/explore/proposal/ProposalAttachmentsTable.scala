@@ -66,7 +66,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
 
   private case class TableMeta(action: View[Action], urlMap: UrlMap)
 
-  private val ColDef = ColumnDef.WithTableMeta[Row, TableMeta]
+  private val ColDef = ColumnDef[Row].WithTableMeta[TableMeta]
 
   extension (a: Attachment) private def toMapKey: UrlMapKey = (a.id, a.updatedAt)
 

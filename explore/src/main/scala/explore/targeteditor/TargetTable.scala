@@ -71,7 +71,7 @@ object TargetTable extends AsterismModifier:
     onAsterismUpdate: OnAsterismUpdateParams => Callback
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[SiderealTargetWithId, TableMeta]
+  private val ColDef = ColumnDef[SiderealTargetWithId].WithTableMeta[TableMeta]
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
@@ -118,7 +118,7 @@ object TargetTable extends AsterismModifier:
                     onClickE = (e: ReactMouseEvent) =>
                       e.preventDefaultCB >>
                         e.stopPropagationCB >>
-                        cell.table.options.meta.foldMap(m =>
+                        cell.table.options.meta.toOption.foldMap(m =>
                           deleteSiderealTarget(
                             m.obsIds,
                             m.obsAndTargets,

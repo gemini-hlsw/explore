@@ -118,14 +118,8 @@ object ConstraintsSummaryTile:
       EditColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
     )
 
-    private def columns(
-      props: Body,
-      ctx:   AppContext[IO]
-    ): List[ColumnDef.NoMeta[ConstraintGroup, ?]] =
-      def column[V](
-        id:       ColumnId,
-        accessor: ConstraintGroup => V
-      ): ColumnDef.Single.NoMeta[ConstraintGroup, V] =
+    private def columns(props: Body, ctx: AppContext[IO]): List[ColDef.Type] =
+      def column[V](id: ColumnId, accessor: ConstraintGroup => V): ColDef.TypeFor[V] =
         ColDef(id, accessor, ColumnNames(id))
 
       def goToObsSet(obsIdSet: ObsIdSet): Callback =

@@ -155,7 +155,7 @@ object ProgramUsersTable:
       case Mode.SupportPrimary | Mode.SupportSecondary => false
       case Mode.DataSharing(_)                         => userIsPi
 
-  private val ColDef = ColumnDef.WithTableMeta[View[ProgramUser], TableMeta]
+  private val ColDef = ColumnDef[View[ProgramUser]].WithTableMeta[TableMeta]
 
   private enum Column(
     protected[ProgramUsersTable] val tag:    String,

@@ -107,7 +107,7 @@ private object SpectroscopyModesTable:
 
   private case class TableMeta(itcProgress: Option[Progress])
 
-  private val ColDef = ColumnDef.WithTableMeta[SpectroscopyModeRowWithResult, TableMeta]
+  private val ColDef = ColumnDef[SpectroscopyModeRowWithResult].WithTableMeta[TableMeta]
 
   private val decFormat = new DecimalFormat("0.###")
 
@@ -231,7 +231,7 @@ private object SpectroscopyModesTable:
         .setHeader: header =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",
-            header.table.options.meta
+            header.table.options.meta.toOption
               .map(_.itcProgress)
               .flatten
               .map(p =>

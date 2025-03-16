@@ -88,7 +88,7 @@ object PartnerSplitsEditor:
   private def total(splits:       List[PartnerSplit]) = splits.map(_.percent.value).sum
   private def addsUpTo100(splits: List[PartnerSplit]) = total(splits) === 100
 
-  private val columns: Reusable[List[ColumnDef.NoMeta[View[PartnerSplit], ?]]] =
+  private val columns: Reusable[List[ColDef.Type]] =
     Reusable.always:
       List(
         ColDef(

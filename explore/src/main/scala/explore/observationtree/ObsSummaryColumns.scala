@@ -106,15 +106,9 @@ trait ObsSummaryColumns:
       // ChargedTimeColumnId -> Visibility.Hidden
     )
 
-  def columns(
-    pid: Program.Id,
-    ctx: AppContext[IO]
-  ): List[ColumnDef.NoMeta[Expandable[ObsSummaryRow], ?]] =
+  def columns(pid: Program.Id, ctx: AppContext[IO]): List[ColDef.Type] =
     // For columns that only have data in the base observation row.
-    def obsColumn[V](
-      id:       ColumnId,
-      accessor: ObsRow => V
-    ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], Option[V]] =
+    def obsColumn[V](id: ColumnId, accessor: ObsRow => V): ColDef.TypeFor[Option[V]] =
       ColDef(
         id,
         v => v.value.fold(_ => none, accessor(_).some),
@@ -149,7 +143,7 @@ trait ObsSummaryColumns:
       id:               ColumnId,
       accessor:         ObsRow => V,
       expandedAccessor: ExpandedTargetRow => V
-    ): ColumnDef.Single.NoMeta[Expandable[ObsSummaryRow], V] =
+    ): ColDef.TypeFor[V] =
       ColDef(id, v => v.value.fold(expandedAccessor, accessor), ColumnNames(id))
 
     def constraintUrl(constraintId: Observation.Id): String =

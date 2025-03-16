@@ -63,7 +63,7 @@ object ProgramConfigRequestsTile:
       val targetName = ConfigurationTableColumnBuilder.targetName(obses, targets)
       Row(request, obses, targetName)
 
-  case class TileState(table: Option[Table[Row, Nothing]], selected: List[RowId])
+  case class TileState(table: Option[Table[Row, Nothing, Nothing, Nothing]], selected: List[RowId])
 
   object TileState:
     val Empty: TileState = TileState(none, List.empty)
@@ -105,10 +105,8 @@ object ProgramConfigRequestsTile:
       StatusColumnId          -> "Status"
     )
 
-    private def rowColumn[V](
-      id:       ColumnId,
-      accessor: Row => V
-    ): ColumnDef.Single.NoMeta[Row, V] = ColDef(id, accessor, ColumnNames(id))
+    private def rowColumn[V](id: ColumnId, accessor: Row => V): ColDef.TypeFor[V] =
+      ColDef(id, accessor, ColumnNames(id))
 
     private def stateIcon(status: ConfigurationRequestStatus): VdomNode =
       val style = status match

@@ -39,7 +39,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
     ExtraRowColumnId -> FixedSize(0.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
-  private def columns(using Logger[IO]): List[ColumnDef.NoMeta[SequenceTableRowType, ?]] =
+  private def columns(using Logger[IO]): List[ColDef.Type] =
     List(
       SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(

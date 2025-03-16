@@ -19,7 +19,7 @@ import lucuma.core.model.Program
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 
-case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, TM]):
+case class ConfigurationTableColumnBuilder[D, TM, CM, TF](colDef: ColumnDef.Applied[D, TM, CM, TF]):
   import ConfigurationTableColumnBuilder.*
 
   def configurationColumns(getConfiguration: D => Configuration) =

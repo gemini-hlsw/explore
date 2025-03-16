@@ -430,15 +430,15 @@ object UserPreferencesQueries:
         .void
   end ElevationPlotPreference
 
-  case class TableStore[F[_]: MonadThrow](
+  case class TableStore[F[_]: MonadThrow, TF](
     userId:                Option[User.Id],
     tableId:               TableId,
-    columns:               List[ColumnDef[?, ?, ?, ?]],
+    columns:               List[ColumnDef[?, ?, ?, ?, TF, ?, ?]],
     // Allow for the ignoring of visibility while still including sort order.
     excludeFromVisibility: Set[ColumnId] = Set.empty
   )(using FetchClient[F, UserPreferencesDB], Logger[F])
-      extends TableStateStore[F]:
-    def load(): F[TableState => TableState] =
+      extends TableStateStore[F, TF]:
+    def load(): F[TableState[TF] => TableState[TF]] =
       userId
         .traverse: uid =>
           TableColumnPreferencesQuery[F]
@@ -452,7 +452,7 @@ object UserPreferencesQueries:
                 .error(t)(s"Error loading table preferences for [$tableId]")
                 .as(TableColumnPreferencesQuery.Data(Nil))
             .map: prefs =>
-              (tableState: TableState) =>
+              (tableState: TableState[TF]) =>
                 tableState
                   .setColumnVisibility:
                     prefs.lucumaTableColumnPreferences.applyVisibility(
@@ -462,7 +462,7 @@ object UserPreferencesQueries:
                   .setSorting(prefs.lucumaTableColumnPreferences.applySorting(tableState.sorting))
         .map(_.orEmpty)
 
-    def save(state: TableState): F[Unit] =
+    def save(state: TableState[TF]): F[Unit] =
       userId.traverse { uid =>
         TableColumnPreferencesUpsert[F]
           .execute(
