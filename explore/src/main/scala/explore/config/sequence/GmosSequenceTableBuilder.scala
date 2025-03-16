@@ -41,7 +41,9 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
 
   private def columns(using Logger[IO]): List[ColDef.Type] =
     List(
-      SequenceColumns.headerCell(HeaderColumnId, ColDef).setColumnSize(ColumnSizes(HeaderColumnId)),
+      SequenceColumns
+        .headerCell(HeaderColumnId, ColDef)
+        .withColumnSize(ColumnSizes(HeaderColumnId)),
       ColDef(
         ExtraRowColumnId,
         header = "",
@@ -50,7 +52,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
           .collect:
             case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
               renderVisitExtraRow(step, showOngoingLabel = true)
-      ).setColumnSize(ColumnSizes(ExtraRowColumnId))
+      ).withColumnSize(ColumnSizes(ExtraRowColumnId))
     ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
 
   private lazy val DynTableDef = DynTable(

@@ -193,36 +193,36 @@ trait ObsSummaryColumns:
             )(TableIcons.ChevronRight.withFixedWidth(true))
           else "",
         enableResizing = false
-      ).setSize(35.toPx),
+      ).withSize(35.toPx),
       obsColumn(ObservationIdColumnId, _.obs)
-        .setCell:
+        .withCell:
           _.value.map(obsLink)
         .sortableWith(identifierSortFn),
       // TODO: TargetTypeColumnId
       obsColumn(TargetTypeColumnId, _ => ())
-        .setCell(_ => Icons.Star.withFixedWidth())
-        .setSize(35.toPx)
+        .withCell(_ => Icons.Star.withFixedWidth())
+        .withSize(35.toPx)
         .sortable,
       mixedColumn(
         TargetColumnId,
         r => r.obs.title,
         r => (r.obs.id, r.targetWithId)
       )
-        .setCell:
+        .withCell:
           _.value match
             case s: String => <.span(s)
             case (a, b)    => targetLink(a, b)
         .sortableBy(_.sortableValue),
       obsColumn(GroupColumnId, _.group)
-        .setCell:
+        .withCell:
           _.value.flatten.map(groupLink)
         .sortableBy(_.flatMap(_.flatMap(_.name))),
       // TODO: ValidationCheckColumnId
       obsColumn(StateColumnId, _.obs.workflow.state)
-        .setCell(_.value.map(_.toString).orEmpty)
+        .withCell(_.value.map(_.toString).orEmpty)
         .sortable,
       obsColumn(ScienceBandColumnId, _.obs.scienceBand)
-        .setCell:
+        .withCell:
           _.value.flatten.fold("Not set")(_.shortName)
         .sortable,
       // TODO: CompletionColumnId
@@ -232,7 +232,7 @@ trait ObsSummaryColumns:
         r => r.coordsAtVizTime.map(_.ra),
         r => r.coordsAtVizTime.map(_.ra)
       )
-        .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
+        .withCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
         .sortable,
       mixedColumn(
         DecColumnId,
@@ -240,7 +240,7 @@ trait ObsSummaryColumns:
         r => r.coordsAtVizTime.map(_.dec),
         r => r.coordsAtVizTime.map(_.dec)
       )
-        .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
+        .withCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
         .sortable,
       // TODO: TimingColumnId
       // TODO: SEDColumnId
@@ -257,13 +257,13 @@ trait ObsSummaryColumns:
             )
             .map(_.shortName),
         ColumnNames(SEDColumnId)
-      ).setCell(cell =>
+      ).withCell(cell =>
         cell.value
           .filterNot(_ => cell.row.getCanExpand())
           .orEmpty
       ).sortable,
       obsColumn(ConstraintsColumnId, r => (r.obs.id, r.obs.constraints.summaryString))
-        .setCell: cell =>
+        .withCell: cell =>
           cell.value.map: (id, constraintsSummary) =>
             <.a(
               ^.href := constraintUrl(id),
@@ -273,12 +273,12 @@ trait ObsSummaryColumns:
         .sortableBy(_.map(_._2)),
       // TODO: FindingChartColumnId
       obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty)
-        .setCell(_.value.orEmpty)
+        .withCell(_.value.orEmpty)
         .sortable,
       obsColumn(
         DurationColumnId,
         _.execution.map(_.programTimeEstimate)
-      ).setCell:
+      ).withCell:
         _.value.map:
           _.orSpinner(_.map(HoursMinutesAbbreviation.format).orEmpty)
       .sortableBy(_.sortableTimeSpan)

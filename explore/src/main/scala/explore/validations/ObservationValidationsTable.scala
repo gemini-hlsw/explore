@@ -104,18 +104,18 @@ object ObservationValidationsTableBody {
               )(TableIcons.ChevronRight.withFixedWidth(true))
             else "",
           enableResizing = false
-        ).setSize(30.toPx),
+        ).withSize(30.toPx),
         column(ObservationIdColumnId, _.forObs(_.obs.id))
-          .setCell(cell =>
+          .withCell(cell =>
             cell.value.map: oid =>
               <.a(^.href := obsUrl(oid),
                   ^.onClick ==> (_.preventDefaultCB *> goToObs(oid)),
                   oid.toString
               )
           )
-          .setSize(50.toPx),
-        column(ObservationStateColumnId, _.forObs(_.obs.workflow.state)).setMaxSize(50.toPx),
-        column(ObservationTitleColumnId, _.forObs(_.obs.title)).setCell(_.value),
+          .withSize(50.toPx),
+        column(ObservationStateColumnId, _.forObs(_.obs.workflow.state)).withMaxSize(50.toPx),
+        column(ObservationTitleColumnId, _.forObs(_.obs.title)).withCell(_.value),
         ColDef(
           ValidationCodeColumnId,
           cell = cell => cell.row.original.value.category(cell.row.getIsExpanded()),

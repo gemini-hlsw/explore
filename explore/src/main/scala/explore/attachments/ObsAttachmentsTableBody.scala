@@ -196,7 +196,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
 
           List(
             column(ActionsColumnId, identity)
-              .setCell: cell =>
+              .withCell: cell =>
                 cell.table.options.meta.map: meta =>
                   val thisOa: Attachment = cell.value
                   val id: Attachment.Id  = thisOa.id
@@ -248,24 +248,24 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
                         case Pot.Error(t)   =>
                           <.span(Icons.ExclamationTriangle).withTooltip(t.getMessage)
                   )
-              .setEnableSorting(false),
+              .withEnableSorting(false),
             column(FileNameColumnId, Attachment.fileName.get)
-              .setCell(_.value.value)
+              .withCell(_.value.value)
               .sortableBy(_.value.toUpperCase),
             column(AttachmentTypeColumnId, Attachment.attachmentType.get)
-              .setCell(_.value.shortName),
+              .withCell(_.value.shortName),
             column(SizeColumnId, Attachment.fileSize.get)
-              .setCell(cell =>
+              .withCell(cell =>
                 // The fileSize will always be > 0, the api should be changed to reflect this
                 NonNegLong.from(cell.value).toOption.map(_.toHumanReadableByteCount).orEmpty
               ),
             column(LastUpdateColumnId, Attachment.updatedAt.get)
-              .setCell(cell =>
+              .withCell(cell =>
                 Constants.GppDateFormatter
                   .format(cell.value.toLocalDateTime)
               ),
             column(ObservationsColumnId, Attachment.id.get)
-              .setCell: cell =>
+              .withCell: cell =>
                 cell.table.options.meta.map: meta =>
                   <.span(
                     meta.assignments
@@ -281,7 +281,7 @@ object ObsAttachmentsTableBody extends ObsAttachmentUtils:
                       )
                       .mkReactFragment(", ")
                   )
-              .setEnableSorting(false),
+              .withEnableSorting(false),
             ColDef(
               DescriptionColumnId,
               _.withOnMod(oa =>

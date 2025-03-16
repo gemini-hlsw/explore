@@ -122,7 +122,7 @@ object ProgramConfigRequestsTile:
         ctx     <- useContext(AppContext.ctx)
         columns <- useMemo(()): _ =>
                      List(
-                       rowColumn(ConfigRequestIdColumnId, _.request.id).setSize(90.toPx).sortable,
+                       rowColumn(ConfigRequestIdColumnId, _.request.id).withSize(90.toPx).sortable,
                        columnBuilder.targetColumn(_.targetName)
                      ) ++
                        columnBuilder.configurationColumns(_.request.configuration) ++
@@ -130,8 +130,8 @@ object ProgramConfigRequestsTile:
                          columnBuilder
                            .obsListColumn(_.observations, props.programId, ctx),
                          rowColumn(StatusColumnId, _.request.status)
-                           .setCell(c => stateIcon(c.value))
-                           .setSize(80.toPx)
+                           .withCell(c => stateIcon(c.value))
+                           .withSize(80.toPx)
                            .sortable
                        )
         rows    <-

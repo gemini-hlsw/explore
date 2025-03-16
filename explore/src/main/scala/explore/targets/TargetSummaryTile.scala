@@ -196,12 +196,12 @@ object TargetSummaryTile:
                   CountColumnId,
                   x => props.targetObservations.get(x.id).map(_.size).orEmpty
                 ) // TODO Right align
-                  .setCell(_.value.toString),
+                  .withCell(_.value.toString),
                 column(
                   ObservationsColumnId,
                   x => (x.id, props.targetObservations.get(x.id).orEmpty.toList)
                 )
-                  .setCell(cell =>
+                  .withCell(cell =>
                     val (tid, obsIds) = cell.value
                     <.span(
                       obsIds
@@ -218,7 +218,7 @@ object TargetSummaryTile:
                         .mkReactFragment(", ")
                     )
                   )
-                  .setEnableSorting(false)
+                  .withEnableSorting(false)
               )
         .useMemoBy((props, _, _) => // rows
           (props.targets.get, props.targetObservations, props.calibrationObservationIds)

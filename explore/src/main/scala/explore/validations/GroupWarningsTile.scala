@@ -96,19 +96,19 @@ object GroupWarningsTile {
             )(TableIcons.ChevronRight.withFixedWidth(true))
           else "",
         enableResizing = false
-      ).setSize(30.toPx),
+      ).withSize(30.toPx),
       column(GroupIdColumnId, _.forGroup(_.group.id))
-        .setCell(cell =>
+        .withCell(cell =>
           cell.value.map: gid =>
             <.a(^.href := groupUrl(gid),
                 ^.onClick ==> (_.preventDefaultCB *> goToGroup(gid)),
                 gid.toString
             )
         )
-        .setSize(50.toPx),
+        .withSize(50.toPx),
       column(GroupNameColumnId, _.forGroup(_.group.name.map(_.value).orEmpty))
-        .setCell(_.value)
-        .setSize(50.toPx),
+        .withCell(_.value)
+        .withSize(50.toPx),
       ColDef(
         WarningColumnId,
         cell = cell => cell.row.original.value.message(cell.row.getIsExpanded()),

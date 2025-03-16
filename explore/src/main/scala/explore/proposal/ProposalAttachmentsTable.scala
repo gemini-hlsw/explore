@@ -123,7 +123,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
 
             List(
               column(ActionsColumnId, identity)
-                .setCell(cell =>
+                .withCell(cell =>
                   cell.table.options.meta.map: meta =>
                     cell.value.fold(
                       attType =>
@@ -199,12 +199,12 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                     )
                 ),
               column(AttachmentTypeColumnId, _.attachmentType)
-                .setCell(_.value.shortName),
+                .withCell(_.value.shortName),
               column(FileNameColumnId, _.fileName),
               column(SizeColumnId, _.fileSize)
-                .setCell(cell => cell.value.foldMap(_.toHumanReadableByteCount)),
+                .withCell(cell => cell.value.foldMap(_.toHumanReadableByteCount)),
               column(LastUpdateColumnId, _.updatedAt)
-                .setCell(
+                .withCell(
                   _.value.foldMap(ts => Constants.GppDateFormatter.format(ts.toLocalDateTime))
                 )
             )

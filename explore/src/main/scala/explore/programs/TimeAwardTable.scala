@@ -55,7 +55,7 @@ object TimeAwardTable:
       "Time Award",
       cell = cell => <.div(cell.value.description, cell.value.renderFlag),
       footer = _ => "Total"
-    ).setSize(200.toPx)
+    ).withSize(200.toPx)
 
   private def bandColDef(band: ScienceBand) =
     ColDef(
@@ -68,7 +68,7 @@ object TimeAwardTable:
           footer.table.options.meta.foldMap(_.totalByBand.value.get(band).orEmpty),
           TimeSpanFormatter.DecimalHours
         )
-    ).setSize(90.toPx)
+    ).withSize(90.toPx)
 
   private val totalColDef =
     ColDef(
@@ -81,7 +81,7 @@ object TimeAwardTable:
           footer.table.options.meta.foldMap(_.grandTotal),
           TimeSpanFormatter.DecimalHours
         )
-    ).setSize(90.toPx)
+    ).withSize(90.toPx)
 
   private val columns: Reusable[List[ColumnDef.WithTableMeta[Row, ?, TableMeta]]] =
     Reusable.always:

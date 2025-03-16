@@ -135,7 +135,7 @@ object SchedulingWindowsTile:
                 WindowColId,
                 _._1,
                 size = 400.toPx
-              ).setCell: cell =>
+              ).withCell: cell =>
                 <.span(
                   cell.value.renderVdom,
                   <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow).unless(cell.value.isValid)
@@ -144,7 +144,7 @@ object SchedulingWindowsTile:
                 DeleteColId,
                 _._2,
                 size = DeleteColWidth.toPx
-              ).setCell: cell =>
+              ).withCell: cell =>
                 Button(
                   text = true,
                   onClickE = e =>

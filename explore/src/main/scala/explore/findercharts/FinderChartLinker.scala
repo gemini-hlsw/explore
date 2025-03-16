@@ -64,7 +64,7 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
 
           List(
             column(AttIdColumnId, _.id)
-              .setCell: cell =>
+              .withCell: cell =>
                 cell.table.options.meta
                   .map: meta =>
                     Checkbox(
@@ -86,9 +86,9 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                         } yield ()).finallyRun(action.set(Action.None))
                       }
                     )
-              .setEnableSorting(false),
+              .withEnableSorting(false),
             column(FileNameColumnId, Attachment.fileName.get)
-              .setCell(_.value.value)
+              .withCell(_.value.value)
               .sortableBy(_.value.toUpperCase)
           )
       // Rows
