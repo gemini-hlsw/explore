@@ -15,7 +15,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.*
-import lucuma.react.aladin.Fov
+import lucuma.ui.aladin.Fov
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.Transform
 import lucuma.react.floatingui.Placement

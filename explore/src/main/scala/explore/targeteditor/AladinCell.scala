@@ -41,7 +41,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.react.aladin.Fov
+import lucuma.ui.aladin.Fov
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.hooks.all.*
