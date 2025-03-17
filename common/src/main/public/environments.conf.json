@@ -4,8 +4,8 @@
     "environment": "DEVELOPMENT",
     "odbURI": "wss://lucuma-postgres-odb-dev.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-dev.herokuapp.com",
-    "preferencesDBURI": "wss://user-prefs-development.herokuapp.com/v1/graphql",
-    "itcURI": "https://itc-development.herokuapp.com/itc",
+    "preferencesDBURI": "wss://user-prefs-dev.herokuapp.com/v1/graphql",
+    "itcURI": "https://itc-dev.herokuapp.com/itc",
     "sso": {
       "uri": "https://sso-dev.gpp.lucuma.xyz",
       "readTimeoutSeconds": 10,
@@ -38,7 +38,7 @@
     "environment": "PRODUCTION",
     "odbURI": "wss://lucuma-postgres-odb-production.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-production.herokuapp.com",
-    "preferencesDBURI": "wss://user-prefs.herokuapp.com/v1/graphql",
+    "preferencesDBURI": "wss://user-prefs-production.herokuapp.com/v1/graphql",
     "itcURI": "https://itc.gpp.gemini.edu/itc",
     "sso": {
       "uri": "https://sso.gpp.gemini.edu",
