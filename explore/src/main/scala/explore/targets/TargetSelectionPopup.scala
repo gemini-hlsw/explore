@@ -282,16 +282,18 @@ object TargetSelectionPopup:
                     //   .withKey(
                     //     selectedTarget.get.foldMap(t => s"${t.source}-${t.resultIndex}")
                     //   )(
-                    Aladin(
+                    ReactAladin(
                       ExploreStyles.TargetSearchAladin, // required placeholder
-                      showReticle = false,
-                      showLayersControl = false,
-                      target = Coordinates.fromHmsDms.reverseGet(coordinates),
-                      fov = Constants.PreviewFov,
-                      fullScreen = false,
-                      showZoomControl = false,
-                      showFullscreenControl = false,
-                      showGotoControl = false
+                      AladinOptions(
+                        showReticle = false,
+                        showLayersControl = false,
+                        target = Coordinates.fromHmsDms.reverseGet(coordinates),
+                        fov = Constants.PreviewFov,
+                        fullScreen = false,
+                        showZoomControl = false,
+                        showFullscreenControl = false,
+                        showGotoControl = false
+                      )
                     )
                   // )
                   }

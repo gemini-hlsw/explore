@@ -72,8 +72,6 @@ object AladinContainer extends AladinCommon {
 
   private given Reusability[List[AgsAnalysis.Usable]] = Reusability.by(_.length)
 
-  private val AladinComp = Aladin.component
-
   private def speedCss(gs: GuideSpeed): Css =
     gs match
       case GuideSpeed.Fast   =>
@@ -116,25 +114,21 @@ object AladinContainer extends AladinCommon {
               currentPos.setState:
                 base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
       // Ref to the aladin component
-      .useState(none[AladinRef])
+      .useState(none[Aladin])
       // If view offset changes upstream to zero, redraw
-      // .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)):
-      //   (_, baseCoordinates, viewCoordinates, aladinRef) =>
-      //     (_, offset) => {
-      //       val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
-      //       newCoords
-      //         .map: coords =>
-      //           aladinRef.get.asCBO
-      //             .flatMapCB:
-      //               _.backend.gotoRaDec(
-      //                 coords.ra.toAngle.toDoubleDegrees,
-      //                 coords.dec.toAngle.toSignedDoubleDegrees
-      //               )
-      //             .asCallback
-      //             .void
-      //             .when_(offset === Offset.Zero)
-      //         .getOrEmpty
-      //     }
+      .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)):
+        (_, baseCoordinates, viewCoordinates, aladinRef) =>
+          (_, offset) => {
+            val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
+            newCoords
+              .map: coords =>
+                aladinRef.value
+                  .traverse(_.gotoRaDecCB(coords))
+                  .void
+                  .when_(false)
+              // .when_(offset === Offset.Zero)
+              .getOrEmpty
+          }
       // Memoized svg
       .useMemoBy((p, allCoordinates, _, _) =>
         (allCoordinates, p.obsConf, p.globalPreferences.agsOverlay, p.selectedGuideStar)
@@ -246,9 +240,9 @@ object AladinContainer extends AladinCommon {
       // Use fov from aladin
       .useState(none[Fov])
       .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
-        (props.globalPreferences.showCatalog, resize)
+        (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
       ): (_, _, _, aladinRef, _, _, _, _) =>
-        (_, _) => aladinRef.value.map(_.fixLayoutDimensions).orEmpty
+        (_, _, _) => aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
       .render: (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
         val (baseCoordinates, scienceTargets) = allCoordinates.value
 
@@ -272,15 +266,16 @@ object AladinContainer extends AladinCommon {
             (fov.setState(v.some) *> props.updateFov(v)).unless_(ignore)
           }
 
-        def includeSvg(v: AladinRef): Callback =
-          v.onZoom(onZoom) *>                      // re render on zoom
-            v.onPositionChanged(onPositionChanged) // *>
-        // v.onMouseMove(s =>
-        //   props
-        //     .updateMouseCoordinates(Coordinates(s.ra, s.dec))
-        //     .rateLimit(200.millis, 1)
-        //     .void
-        // )
+        val includeSvg: Aladin => Callback = (v: Aladin) =>
+          aladinRef.setState(v.some) *>
+            v.onZoomCB(onZoom) *> // re render on zoom
+            v.onPositionChangedCB(onPositionChanged) *>
+            v.onMouseMoveCB(s =>
+              props
+                .updateMouseCoordinates(Coordinates(s.ra, s.dec))
+                .rateLimit(200.millis, 1)
+                .void
+            )
 
         val baseCoordinatesForAladin: String =
           currentPos.value
@@ -386,20 +381,26 @@ object AladinContainer extends AladinCommon {
                     _
                   )
                 ),
-              Aladin(
+              ReactAladin(
                 ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
                   .unless_(props.globalPreferences.aladinMouseScroll.value),
-                showReticle = false,
-                showLayersControl = false,
-                target = baseCoordinatesForAladin,
-                fov = Angle.fromMicroarcseconds(
-                  props.options.fovDec.toMicroarcseconds
-                    .max(props.options.fovRA.toMicroarcseconds)
+                AladinOptions(
+                  showReticle = false,
+                  showLayersControl = false,
+                  target = baseCoordinatesForAladin,
+                  fov = Angle.fromMicroarcseconds(
+                    props.options.fovDec.toMicroarcseconds
+                      .max(props.options.fovRA.toMicroarcseconds)
+                  ),
+                  showGotoControl = false,
+                  showZoomControl = false,
+                  showProjectionControl = false,
+                  showSimbadPointerControl = false,
+                  showFullscreenControl = false,
+                  showCooLocation = false,
+                  showFov = false
                 ),
-                showGotoControl = false,
-                showZoomControl = false,
-                showFullscreenControl = false,
-                customize = (v: AladinRef) => includeSvg(v)
+                customize = includeSvg
               )
             )
           } else EmptyVdom

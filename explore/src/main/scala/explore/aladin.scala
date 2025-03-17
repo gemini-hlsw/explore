@@ -16,10 +16,10 @@ import lucuma.react.common.style.Css
 import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.aladin.AladinRef
+import lucuma.ui.aladin.*
 
 case class AladinZoomControl(
-  aladinRef: AladinRef,
+  aladinRef: Aladin,
   clazz:     Css = Css.Empty
 ) extends ReactFnProps(AladinZoomControl.component)
 
@@ -32,13 +32,13 @@ object AladinZoomControl {
         ExploreStyles.AladinZoomControl |+| p.clazz,
         Button(
           clazz = ExploreStyles.ButtonOnAladin,
-          icon = Icons.ThinPlus
-          // onClick = p.aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+          icon = Icons.ThinPlus,
+          onClick = p.aladinRef.increaseZoomCB
         ).small,
         Button(
           clazz = ExploreStyles.ButtonOnAladin,
-          icon = Icons.ThinMinus
-          // onClick = p.aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+          icon = Icons.ThinMinus,
+          onClick = p.aladinRef.decreaseZoomCB
         ).small
       )
     )
