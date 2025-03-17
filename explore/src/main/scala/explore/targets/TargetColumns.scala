@@ -104,10 +104,6 @@ object TargetColumns:
     )
 
   object Builder:
-
-    // type Type       = ColumnDef[T, ?, TM, CM, TF, ?, ?]
-    // type TypeFor[A] = Single[T, A, TM, CM, TF, ?, ?]
-
     trait Common[D, TM, CM, TF](
       colDef:    ColumnDef.Applied[D, TM, CM, TF],
       getTarget: D => Option[Target]
