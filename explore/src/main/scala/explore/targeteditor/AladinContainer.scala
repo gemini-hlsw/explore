@@ -239,10 +239,10 @@ object AladinContainer extends AladinCommon {
 
       // Use fov from aladin
       .useState(none[Fov])
-      .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
-        (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
-      ): (_, _, _, aladinRef, _, _, _, _) =>
-        (_, _, _) => aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
+      // .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
+      //   (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
+      // ): (_, _, _, aladinRef, _, _, _, _) =>
+      //   (_, _, _) => aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
       .render: (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
         val (baseCoordinates, scienceTargets) = allCoordinates.value
 
