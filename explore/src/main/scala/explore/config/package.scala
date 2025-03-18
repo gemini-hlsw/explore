@@ -97,8 +97,8 @@ object SignalToNoiseAt extends ConfigurationFormats {
 
   protected val component =
     ScalaFnComponent[Props] { props =>
-      val signalToNoise   = props.options.zoom(ScienceRequirements.Spectroscopy.signalToNoise)
-      val signalToNoiseAt = props.options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseAt)
+      // val signalToNoise   = props.options.zoom(ScienceRequirements.Spectroscopy.signalToNoise)
+      // val signalToNoiseAt = props.options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseAt)
       React.Fragment(
         FormLabel("signal-to-noise".refined)(
           "S / N",
@@ -106,32 +106,32 @@ object SignalToNoiseAt extends ConfigurationFormats {
         ),
         <.div(
           LucumaPrimeStyles.FormField |+| ExploreStyles.BasicConfigurationSNAt,
-          FormInputTextView(
-            id = "signal-to-noise".refined,
-            value = signalToNoise,
-            groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-            validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
-            postAddons =
-              signalToNoise.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
-                Nil
-              ),
-            changeAuditor = ChangeAuditor.posBigDecimal(3.refined).optional,
-            disabled = props.readonly
-          ).withMods(^.autoComplete.off),
-          FormLabel("signal-to-noise-at".refined)("at"),
-          FormInputTextView(
-            id = "signal-to-noise-at".refined,
-            groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-            postAddons =
-              signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
-                Nil
-              ),
-            value = signalToNoiseAt,
-            units = props.units.symbol,
-            validFormat = props.units.toInputWedge,
-            changeAuditor = props.units.toSNAuditor,
-            disabled = props.readonly
-          ).clearable(^.autoComplete.off)
+          // FormInputTextView(
+          //   id = "signal-to-noise".refined,
+          //   value = signalToNoise,
+          //   groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
+          //   validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
+          //   postAddons =
+          //     signalToNoise.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
+          //       Nil
+          //     ),
+          //   changeAuditor = ChangeAuditor.posBigDecimal(3.refined).optional,
+          //   disabled = props.readonly
+          // ).withMods(^.autoComplete.off),
+          FormLabel("signal-to-noise-at".refined)("at")
+          //   FormInputTextView(
+          //     id = "signal-to-noise-at".refined,
+          //     groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
+          //     postAddons =
+          //       signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
+          //         Nil
+          //       ),
+          //     value = signalToNoiseAt,
+          //     units = props.units.symbol,
+          //     validFormat = props.units.toInputWedge,
+          //     changeAuditor = props.units.toSNAuditor,
+          //     disabled = props.readonly
+          //   ).clearable(^.autoComplete.off)
         )
       )
     }

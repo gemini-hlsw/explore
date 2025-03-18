@@ -21,6 +21,8 @@ import lucuma.core.math.arb.ArbSignalToNoise.given
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.scalacheck.numeric.given
 import lucuma.core.math.arb.ArbRefined.given
+import lucuma.core.model.ExposureTimeMode
+import lucuma.core.model.arb.ArbExposureTimeMode.given
 
 trait ArbScienceRequirements:
 
@@ -29,8 +31,7 @@ trait ArbScienceRequirements:
       for
         wavelength         <- arbitrary[Option[Wavelength]]
         resolution         <- arbitrary[Option[PosInt]]
-        signalToNoise      <- arbitrary[Option[SignalToNoise]]
-        signalToNoiseAt    <- arbitrary[Option[Wavelength]]
+        exposureTimeMode   <- arbitrary[Option[ExposureTimeMode]]
         wavelengthCoverage <- arbitrary[Option[WavelengthDelta]]
         focalPlane         <- arbitrary[Option[FocalPlane]]
         focalPlaneAngle    <- arbitrary[Option[Angle]]
@@ -38,8 +39,7 @@ trait ArbScienceRequirements:
       yield ScienceRequirements.Spectroscopy(
         wavelength,
         resolution,
-        signalToNoise,
-        signalToNoiseAt,
+        exposureTimeMode,
         wavelengthCoverage,
         focalPlane,
         focalPlaneAngle,
@@ -50,8 +50,7 @@ trait ArbScienceRequirements:
   given Cogen[ScienceRequirements.Spectroscopy] = Cogen[
     (Option[Wavelength],
      Option[PosInt],
-     Option[SignalToNoise],
-     Option[Wavelength],
+     Option[ExposureTimeMode],
      Option[WavelengthDelta],
      Option[FocalPlane],
      Option[Angle],
@@ -60,8 +59,7 @@ trait ArbScienceRequirements:
   ].contramap(sr =>
     (sr.wavelength,
      sr.resolution,
-     sr.signalToNoise,
-     sr.signalToNoiseAt,
+     sr.exposureTimeMode,
      sr.wavelengthCoverage,
      sr.focalPlane,
      sr.focalPlaneAngle,

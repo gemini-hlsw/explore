@@ -50,14 +50,15 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
         FocalPlane.SingleSlit.some.widen[FocalPlane]
       ) // For now only SlitView is allowed
       .render: (p, fpView) =>
-        val prevSignalToNoiseAt = p.options.get.signalToNoiseAt
+        // val prevSignalToNoiseAt = p.options.get.signalToNoiseAt
 
         // Set SignalToNoiseAt to wavelength if it is empty
-        val options = p.options.withOnMod(s =>
-          if (s.wavelength =!= prevSignalToNoiseAt && prevSignalToNoiseAt.isEmpty)
-            p.options.set(s.copy(signalToNoiseAt = s.wavelength))
-          else Callback.empty
-        )
+        val options = p.options
+        //   .withOnMod(s =>
+        //   if (s.wavelength =!= prevSignalToNoiseAt && prevSignalToNoiseAt.isEmpty)
+        //     p.options.set(s.copy(signalToNoiseAt = s.wavelength))
+        //   else Callback.empty
+        // )
 
         val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
         val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
