@@ -70,22 +70,17 @@ object GroupWarningsTile {
     WarningColumnId   -> "Warning"
   )
 
-  private def column[V](
-    id:       ColumnId,
-    accessor: GroupWarningRow => V
-  ): ColumnDef.Single.NoMeta[Expandable[GroupWarningRow], V] =
+  private def column[V](id: ColumnId, accessor: GroupWarningRow => V): ColDef.TypeFor[V] =
     ColDef(id, r => accessor(r.value), columnNames(id))
 
-  private def columns(
-    programId: Program.Id,
-    ctx:       AppContext[IO]
-  ): List[ColumnDef.Single.NoMeta[Expandable[GroupWarningRow], ?]] =
-    def groupUrl(groupId: Group.Id): String    =
+  private def columns(programId: Program.Id, ctx: AppContext[IO]): List[ColDef.Type] =
+    def groupUrl(groupId: Group.Id): String =
       ctx.pageUrl((AppTab.Observations, programId, Focused.group(groupId)).some)
+
     def goToGroup(groupId: Group.Id): Callback =
       ctx.pushPage((AppTab.Observations, programId, Focused.group(groupId)).some)
 
-    def toggleAll(row: Row[Expandable[GroupWarningRow], Nothing]): Callback =
+    def toggleAll(row: Row[Expandable[GroupWarningRow], Nothing, Nothing, Nothing]): Callback =
       row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
 
     List(
@@ -101,19 +96,19 @@ object GroupWarningsTile {
             )(TableIcons.ChevronRight.withFixedWidth(true))
           else "",
         enableResizing = false
-      ).setSize(30.toPx),
+      ).withSize(30.toPx),
       column(GroupIdColumnId, _.forGroup(_.group.id))
-        .setCell(cell =>
+        .withCell(cell =>
           cell.value.map: gid =>
             <.a(^.href := groupUrl(gid),
                 ^.onClick ==> (_.preventDefaultCB *> goToGroup(gid)),
                 gid.toString
             )
         )
-        .setSize(50.toPx),
+        .withSize(50.toPx),
       column(GroupNameColumnId, _.forGroup(_.group.name.map(_.value).orEmpty))
-        .setCell(_.value)
-        .setSize(50.toPx),
+        .withCell(_.value)
+        .withSize(50.toPx),
       ColDef(
         WarningColumnId,
         cell = cell => cell.row.original.value.message(cell.row.getIsExpanded()),

@@ -118,14 +118,8 @@ object ConstraintsSummaryTile:
       EditColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.ConstraintsSummaryEdit)
     )
 
-    private def columns(
-      props: Body,
-      ctx:   AppContext[IO]
-    ): List[ColumnDef.NoMeta[ConstraintGroup, ?]] =
-      def column[V](
-        id:       ColumnId,
-        accessor: ConstraintGroup => V
-      ): ColumnDef.Single.NoMeta[ConstraintGroup, V] =
+    private def columns(props: Body, ctx: AppContext[IO]): List[ColDef.Type] =
+      def column[V](id: ColumnId, accessor: ConstraintGroup => V): ColDef.TypeFor[V] =
         ColDef(id, accessor, ColumnNames(id))
 
       def goToObsSet(obsIdSet: ObsIdSet): Callback =
@@ -150,42 +144,42 @@ object ConstraintsSummaryTile:
 
       List(
         column(EditColumnId, ConstraintGroup.obsIds.get)
-          .setCell(cell =>
+          .withCell(cell =>
             <.a(^.href := obsSetUrl(cell.value),
                 ^.onClick ==> (_.preventDefaultCB *> goToObsSet(cell.value)),
                 Icons.Edit
             )
           )
-          .setEnableSorting(false),
+          .withEnableSorting(false),
         column(
           IQColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
         )
-          .setCell(_.value.label)
+          .withCell(_.value.label)
           .sortableBy(_.label),
         column(
           CCColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
         )
-          .setCell(_.value.label)
+          .withCell(_.value.label)
           .sortableBy(_.label),
         column(
           BGColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get
         )
-          .setCell(_.value.label)
+          .withCell(_.value.label)
           .sortableBy(_.label),
         column(
           WVColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.waterVapor).get
         )
-          .setCell(_.value.label)
+          .withCell(_.value.label)
           .sortableBy(_.label),
         column(
           MinAMColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
-          .setCell(_.value match
+          .withCell(_.value match
             case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
             case ElevationRange.HourAngle(_, _) => ""
           )
@@ -198,7 +192,7 @@ object ConstraintsSummaryTile:
           MaxAMColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
-          .setCell(_.value match
+          .withCell(_.value match
             case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
             case ElevationRange.HourAngle(_, _) => ""
           )
@@ -211,7 +205,7 @@ object ConstraintsSummaryTile:
           MinHAColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
-          .setCell(_.value match
+          .withCell(_.value match
             case ElevationRange.AirMass(_, _)     => ""
             case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
           )
@@ -224,7 +218,7 @@ object ConstraintsSummaryTile:
           MaxHAColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
-          .setCell(_.value match
+          .withCell(_.value match
             case ElevationRange.AirMass(_, _)     => ""
             case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
           )
@@ -235,7 +229,7 @@ object ConstraintsSummaryTile:
           ),
         column(CountColumnId, _.obsIds.length),
         column(ObservationsColumnId, ConstraintGroup.obsIds.get)
-          .setCell(cell =>
+          .withCell(cell =>
             <.span(
               cell.value.toSortedSet.toList
                 .map(obsId =>
@@ -251,7 +245,7 @@ object ConstraintsSummaryTile:
                 .mkReactFragment(", ")
             )
           )
-          .setEnableSorting(false)
+          .withEnableSorting(false)
       )
 
     private val component =

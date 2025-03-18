@@ -69,7 +69,6 @@ import scala.collection.decorators.*
 import scala.concurrent.duration.*
 
 import scalajs.js
-import scalajs.js.JSConverters.*
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
@@ -107,7 +106,7 @@ private object SpectroscopyModesTable:
 
   private case class TableMeta(itcProgress: Option[Progress])
 
-  private val ColDef = ColumnDef.WithTableMeta[SpectroscopyModeRowWithResult, TableMeta]
+  private val ColDef = ColumnDef[SpectroscopyModeRowWithResult].WithTableMeta[TableMeta]
 
   private val decFormat = new DecimalFormat("0.###")
 
@@ -224,11 +223,11 @@ private object SpectroscopyModesTable:
         InstrumentColumnId,
         row => formatInstrument(SpectroscopyModeRow.instrumentAndConfig.get(row.entry))
       )
-        .setCell(_.value: String)
-        .setColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx))
+        .withCell(_.value: String)
+        .withColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx))
         .sortable,
-      column(TimeColumnId, _.totalItcTime.orUndefined)
-        .setHeader: header =>
+      column(TimeColumnId, _.totalItcTime)
+        .withHeader: header =>
           <.div(ExploreStyles.ITCHeaderCell)(
             "Time",
             header.table.options.meta
@@ -242,44 +241,43 @@ private object SpectroscopyModesTable:
                 )
               )
           )
-        .setCell: cell =>
+        .withCell: cell =>
           cell.table.options.meta.map: meta =>
             itcCell(cell.row.original.result)
-        .setColumnSize(FixedSize(85.toPx))
-        .setEnableSorting(true)
-        .setSortUndefined(UndefinedPriority.Last)
+        .withColumnSize(FixedSize(85.toPx))
+        .withSortUndefined(UndefinedPriority.Last)
         .sortable,
       column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
-        .setCell(cell => formatSlitWidth(cell.value.value))
-        .setColumnSize(FixedSize(100.toPx))
+        .withCell(cell => formatSlitWidth(cell.value.value))
+        .withColumnSize(FixedSize(100.toPx))
         .sortable,
       column(SlitLengthColumnId, row => SpectroscopyModeRow.slitLength.get(row.entry))
-        .setCell(cell => formatSlitLength(cell.value.value))
-        .setColumnSize(FixedSize(105.toPx))
+        .withCell(cell => formatSlitLength(cell.value.value))
+        .withColumnSize(FixedSize(105.toPx))
         .sortable,
       column(GratingColumnId, row => SpectroscopyModeRow.instrumentConfig.get(row.entry))
-        .setCell(_.value.gratingStr)
-        .setColumnSize(FixedSize(96.toPx))
+        .withCell(_.value.gratingStr)
+        .withColumnSize(FixedSize(96.toPx))
         .sortableBy(_.gratingStr),
       column(FilterColumnId, row => SpectroscopyModeRow.filter.get(row.entry))
-        .setCell(cell => formatFilter(cell.value))
-        .setColumnSize(FixedSize(69.toPx))
+        .withCell(cell => formatFilter(cell.value))
+        .withColumnSize(FixedSize(69.toPx))
         .sortable,
       column(FPUColumnId, row => SpectroscopyModeRow.fpu.get(row.entry))
-        .setCell(cell => formatFPU(cell.value))
-        .setColumnSize(FixedSize(62.toPx))
+        .withCell(cell => formatFPU(cell.value))
+        .withColumnSize(FixedSize(62.toPx))
         .sortable,
       column(WavelengthIntervalColumnId, row => row.wavelengthInterval)
-        .setCell(cell => cell.value.fold("-")(_.shortName))
-        .setColumnSize(FixedSize(100.toPx))
+        .withCell(cell => cell.value.fold("-")(_.shortName))
+        .withColumnSize(FixedSize(100.toPx))
         .sortableBy(_.map(_.lower)),
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
-        .setCell(_.value.toString)
-        .setColumnSize(FixedSize(70.toPx))
+        .withCell(_.value.toString)
+        .withColumnSize(FixedSize(70.toPx))
         .sortable,
       column(AvailablityColumnId, _.configurationSummary)
-        .setCell(_.value.fold("No")(_ => "Yes"))
-        .setColumnSize(FixedSize(66.toPx))
+        .withCell(_.value.fold("No")(_ => "Yes"))
+        .withColumnSize(FixedSize(66.toPx))
         .sortable
     )
 

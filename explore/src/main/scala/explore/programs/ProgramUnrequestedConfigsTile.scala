@@ -64,7 +64,7 @@ object ProgramUnrequestedConfigsTile:
       val targetName = ConfigurationTableColumnBuilder.targetName(observations.toList, targets)
       Row(configuration, observations, targetName)
 
-  case class TileState(table: Option[Table[Row, Nothing]], selected: List[RowId]):
+  case class TileState(table: Option[Table[Row, Nothing, Nothing, Nothing]], selected: List[RowId]):
     def selectedRows: List[Row] =
       table.foldMap(t => selected.map(id => t.getRow(id.value).original))
 

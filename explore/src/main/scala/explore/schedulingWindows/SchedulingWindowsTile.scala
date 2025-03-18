@@ -89,7 +89,7 @@ object SchedulingWindowsTile:
   private object Body:
     private type Props = Body
 
-    private val ColDef = ColumnDef.WithTableMeta[(TimingWindow, Int), TableMeta]
+    private val ColDef = ColumnDef[(TimingWindow, Int)].WithTableMeta[TableMeta]
 
     // Update function depends on current observation selection, so we cannot memoize it in the column definition
     private case class TableMeta(updateWindows: Endo[List[TimingWindow]] => Callback)
@@ -135,7 +135,7 @@ object SchedulingWindowsTile:
                 WindowColId,
                 _._1,
                 size = 400.toPx
-              ).setCell: cell =>
+              ).withCell: cell =>
                 <.span(
                   cell.value.renderVdom,
                   <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow).unless(cell.value.isValid)
@@ -144,7 +144,7 @@ object SchedulingWindowsTile:
                 DeleteColId,
                 _._2,
                 size = DeleteColWidth.toPx
-              ).setCell: cell =>
+              ).withCell: cell =>
                 Button(
                   text = true,
                   onClickE = e =>

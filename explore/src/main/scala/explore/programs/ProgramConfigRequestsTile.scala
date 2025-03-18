@@ -63,7 +63,7 @@ object ProgramConfigRequestsTile:
       val targetName = ConfigurationTableColumnBuilder.targetName(obses, targets)
       Row(request, obses, targetName)
 
-  case class TileState(table: Option[Table[Row, Nothing]], selected: List[RowId])
+  case class TileState(table: Option[Table[Row, Nothing, Nothing, Nothing]], selected: List[RowId])
 
   object TileState:
     val Empty: TileState = TileState(none, List.empty)
@@ -105,10 +105,8 @@ object ProgramConfigRequestsTile:
       StatusColumnId          -> "Status"
     )
 
-    private def rowColumn[V](
-      id:       ColumnId,
-      accessor: Row => V
-    ): ColumnDef.Single.NoMeta[Row, V] = ColDef(id, accessor, ColumnNames(id))
+    private def rowColumn[V](id: ColumnId, accessor: Row => V): ColDef.TypeFor[V] =
+      ColDef(id, accessor, ColumnNames(id))
 
     private def stateIcon(status: ConfigurationRequestStatus): VdomNode =
       val style = status match
@@ -124,7 +122,7 @@ object ProgramConfigRequestsTile:
         ctx     <- useContext(AppContext.ctx)
         columns <- useMemo(()): _ =>
                      List(
-                       rowColumn(ConfigRequestIdColumnId, _.request.id).setSize(90.toPx).sortable,
+                       rowColumn(ConfigRequestIdColumnId, _.request.id).withSize(90.toPx).sortable,
                        columnBuilder.targetColumn(_.targetName)
                      ) ++
                        columnBuilder.configurationColumns(_.request.configuration) ++
@@ -132,8 +130,8 @@ object ProgramConfigRequestsTile:
                          columnBuilder
                            .obsListColumn(_.observations, props.programId, ctx),
                          rowColumn(StatusColumnId, _.request.status)
-                           .setCell(c => stateIcon(c.value))
-                           .setSize(80.toPx)
+                           .withCell(c => stateIcon(c.value))
+                           .withSize(80.toPx)
                            .sortable
                        )
         rows    <-

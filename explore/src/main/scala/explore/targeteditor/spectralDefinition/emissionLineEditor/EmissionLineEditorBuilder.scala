@@ -60,7 +60,7 @@ private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[
     ) => Callback
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[RowValue, TableMeta]
+  private val ColDef = ColumnDef[RowValue].WithTableMeta[TableMeta]
 
   private val WavelengthColumnId: ColumnId = ColumnId("wavelength")
   private val LineValueColumnId: ColumnId  = ColumnId("lineValue")

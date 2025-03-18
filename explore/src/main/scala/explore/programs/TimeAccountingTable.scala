@@ -103,7 +103,7 @@ object TimeAccountingTable:
       List(planned, used, completion)
 
   // A Row is also used for the table metadata for creating the footer
-  private val ColDef = ColumnDef.WithTableMeta[Row, Row]
+  private val ColDef = ColumnDef[Row].WithTableMeta[Row]
 
   private val LabelColId: ColumnId = ColumnId("label")
   private val TotalColId: ColumnId = ColumnId("total")
@@ -117,7 +117,7 @@ object TimeAccountingTable:
       _.label,
       header = _ => <.span("Time Accounting", HelpIcon("program/time-accounting.md".refined)),
       footer = _ => "Remain"
-    ).setSize(200.toPx)
+    ).withSize(200.toPx)
 
   private def bandColDef(osb: Option[ScienceBand]) =
     ColDef(
@@ -126,7 +126,7 @@ object TimeAccountingTable:
       header = osb.fold("No Band")(_.shortName),
       cell = _.value.toCell(false),
       footer = _.table.options.meta.fold(EmptyVdom)(_.data(osb).toCell(true))
-    ).setSize(90.toPx)
+    ).withSize(90.toPx)
 
   private val TotalColDef =
     ColDef(
@@ -135,7 +135,7 @@ object TimeAccountingTable:
       "Total",
       cell = _.value.toCell(false),
       footer = _.table.options.meta.fold(EmptyVdom)(_.total.toCell(true))
-    ).setSize(90.toPx)
+    ).withSize(90.toPx)
 
   private val Columns: Reusable[List[ColumnDef.WithTableMeta[Row, ?, Row]]] =
     Reusable.always:

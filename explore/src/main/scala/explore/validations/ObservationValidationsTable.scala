@@ -74,10 +74,7 @@ object ObservationValidationsTableBody {
   ): List[Expandable[ValidationsTableRow]] =
     ov.messages.tail.map(m => Expandable(MessageRow(obsId, ov.code, m))).toList
 
-  private def column[V](
-    id:       ColumnId,
-    accessor: ValidationsTableRow => V
-  ): ColumnDef.Single.NoMeta[Expandable[ValidationsTableRow], V] =
+  private def column[V](id: ColumnId, accessor: ValidationsTableRow => V): ColDef.TypeFor[V] =
     ColDef(id, r => accessor(r.value), columnNames(id))
 
   private val component = ScalaFnComponent
@@ -90,7 +87,8 @@ object ObservationValidationsTableBody {
       def goToObs(obsId: Observation.Id): Callback =
         ctx.pushPage((AppTab.Observations, props.programId, Focused.singleObs(obsId)).some)
 
-      def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing]): Callback =
+      def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing, Nothing, Nothing])
+        : Callback =
         row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
 
       List(
@@ -106,18 +104,18 @@ object ObservationValidationsTableBody {
               )(TableIcons.ChevronRight.withFixedWidth(true))
             else "",
           enableResizing = false
-        ).setSize(30.toPx),
+        ).withSize(30.toPx),
         column(ObservationIdColumnId, _.forObs(_.obs.id))
-          .setCell(cell =>
+          .withCell(cell =>
             cell.value.map: oid =>
               <.a(^.href := obsUrl(oid),
                   ^.onClick ==> (_.preventDefaultCB *> goToObs(oid)),
                   oid.toString
               )
           )
-          .setSize(50.toPx),
-        column(ObservationStateColumnId, _.forObs(_.obs.workflow.state)).setMaxSize(50.toPx),
-        column(ObservationTitleColumnId, _.forObs(_.obs.title)).setCell(_.value),
+          .withSize(50.toPx),
+        column(ObservationStateColumnId, _.forObs(_.obs.workflow.state)).withMaxSize(50.toPx),
+        column(ObservationTitleColumnId, _.forObs(_.obs.title)).withCell(_.value),
         ColDef(
           ValidationCodeColumnId,
           cell = cell => cell.row.original.value.category(cell.row.getIsExpanded()),

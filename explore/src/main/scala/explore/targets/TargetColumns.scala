@@ -104,25 +104,25 @@ object TargetColumns:
     )
 
   object Builder:
-    trait Common[D, TM](colDef: ColumnDef.Applied[D, TM], getTarget: D => Option[Target]):
-      def baseColumn[V](
-        id:       ColumnId,
-        accessor: Target => V
-      ): ColumnDef.Single.WithTableMeta[D, Option[V], TM] =
+    trait Common[D, TM, CM, TF](
+      colDef:    ColumnDef.Applied[D, TM, CM, TF],
+      getTarget: D => Option[Target]
+    ):
+      def baseColumn[V](id: ColumnId, accessor: Target => V): colDef.TypeFor[Option[V]] =
         colDef(id, getTarget.andThen(_.map(accessor)), BaseColNames(id))
 
-      val NameColumn =
+      val NameColumn: colDef.TypeFor[Option[NonEmptyString]] =
         baseColumn(NameColumnId, Target.name.get)
-          .setCell(_.value.map(_.toString).orEmpty)
-          .setSize(120.toPx)
+          .withCell(_.value.map(_.toString).orEmpty)
+          .withSize(120.toPx)
           .sortable
 
-      val CatalogColumns =
+      val CatalogColumns: List[colDef.Type] =
         List(
           baseColumn(
             CatalogId,
             Target.catalogInfo.andThen(some).getOption(_).map(info => (info.id, info.objectUrl))
-          ).setCell(
+          ).withCell(
             _.value.flatten
               .map((id, uriOpt) =>
                 uriOpt.fold[VdomNode](id.value)(uri =>
@@ -130,7 +130,7 @@ object TargetColumns:
                 )
               )
               .orEmpty
-          ).setSize(100.toPx)
+          ).withSize(100.toPx)
             .sortableBy(_.flatten.map(_._1).toString),
           baseColumn(
             CatalogObjectType,
@@ -140,25 +140,25 @@ object TargetColumns:
               .getOption
               .andThen(_.flatten)
           )
-            .setCell(_.value.flatten.map(_.value).orEmpty)
-            .setSize(100.toPx)
+            .withCell(_.value.flatten.map(_.value).orEmpty)
+            .withSize(100.toPx)
             .sortableBy(_.flatten.map(_.toString))
         )
 
-    trait CommonSidereal[D, TM](
-      colDef:            ColumnDef.Applied[D, TM],
+    trait CommonSidereal[D, TM, CM, TF](
+      colDef:            ColumnDef.Applied[D, TM, CM, TF],
       getSiderealTarget: D => Option[Target.Sidereal]
     ):
       def siderealColumnOpt[V](
         id:       ColumnId,
         accessor: Target.Sidereal => Option[V]
-      ): ColumnDef.Single.WithTableMeta[D, Option[V], TM] =
+      ): colDef.TypeFor[Option[V]] =
         colDef(id, getSiderealTarget.andThen(_.flatMap(accessor)), SiderealColNames(id))
 
       def siderealColumn[V](
         id:       ColumnId,
         accessor: Target.Sidereal => V
-      ): ColumnDef.Single.WithTableMeta[D, Option[V], TM] =
+      ): colDef.TypeFor[Option[V]] =
         siderealColumnOpt(id, accessor.andThen(_.some))
 
       /** Display measure without the uncertainty */
@@ -171,95 +171,95 @@ object TargetColumns:
       // Order first by unit alphabetically and then value
       private given Order[Measure[BrightnessValue]] = Order.by(x => (x.units.abbv, x.value))
 
-      val SiderealColumns =
+      val SiderealColumns: List[colDef.Type] =
         List(
           siderealColumn(RAColumnId, Target.Sidereal.baseRA.get)
-            .setCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
-            .setSize(100.toPx)
+            .withCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
+            .withSize(100.toPx)
             .sortable,
           siderealColumn(DecColumnId, Target.Sidereal.baseDec.get)
-            .setCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
-            .setSize(100.toPx)
+            .withCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
+            .withSize(100.toPx)
             .sortable
         ) ++
           Band.all.map(band =>
             siderealColumnOpt(
               bandColumnId(band),
               t => BandNormalizedTargetBrightnesses.get(t).flatMap(_.get(band))
-            ).setCell(_.value.map(displayWithoutError).orEmpty)
-              .setSize(80.toPx)
+            ).withCell(_.value.map(displayWithoutError).orEmpty)
+              .withSize(80.toPx)
               // By user request we allow sorting by value though there maybe a mix of units
               .sortable
           ) ++
           List(
             siderealColumn(EpochColumnId, Target.Sidereal.epoch.get)
-              .setCell(
+              .withCell(
                 _.value
-                  .map(value =>
+                  .map: value =>
                     s"${value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(value)}"
-                  )
                   .orEmpty
               )
-              .setSize(90.toPx)
+              .withSize(90.toPx)
               .sortable,
             siderealColumnOpt(PMRAColumnId, Target.Sidereal.properMotionRA.getOption)
-              .setCell(_.value.map(pmRAValidWedge.reverseGet).orEmpty)
-              .setSize(90.toPx)
+              .withCell(_.value.map(pmRAValidWedge.reverseGet).orEmpty)
+              .withSize(90.toPx)
               .sortable,
             siderealColumnOpt(PMDecColumnId, Target.Sidereal.properMotionDec.getOption)
-              .setCell(_.value.map(pmDecValidWedge.reverseGet).orEmpty)
-              .setSize(90.toPx)
+              .withCell(_.value.map(pmDecValidWedge.reverseGet).orEmpty)
+              .withSize(90.toPx)
               .sortable,
             siderealColumnOpt(ParallaxColumnId, Target.Sidereal.parallax.get)
-              .setCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
-              .setSize(90.toPx)
+              .withCell(_.value.map(Parallax.milliarcseconds.get).map(_.toString).orEmpty)
+              .withSize(90.toPx)
               .sortable,
             siderealColumnOpt(RVColumnId, Target.Sidereal.radialVelocity.get)
-              .setCell(_.value.map(formatRV.reverseGet).orEmpty)
-              .setSize(90.toPx)
+              .withCell(_.value.map(formatRV.reverseGet).orEmpty)
+              .withSize(90.toPx)
               .sortable,
             siderealColumnOpt(
               ZColumnId,
               Target.Sidereal.radialVelocity.get.andThen(rvToRedshiftGet)
             )
-              .setCell(_.value.map(formatZ.reverseGet).orEmpty)
-              .setSize(90.toPx)
+              .withCell(_.value.map(formatZ.reverseGet).orEmpty)
+              .withSize(90.toPx)
               .sortable
           )
 
-    case class ForProgram[D, TM](
-      colDef:    ColumnDef.Applied[D, TM],
+    case class ForProgram[D, TM, CM, TF](
+      colDef:    ColumnDef.Applied[D, TM, CM, TF],
       getTarget: D => Option[Target]
     ) extends Common(colDef, getTarget)
         with CommonSidereal(
           colDef,
           getTarget.andThen(_.flatMap(Target.sidereal.getOption))
         ):
-      val BaseColumns = List(
-        baseColumn(TypeColumnId, _ => ())
-          .setCell(_ => Icons.Star.withFixedWidth(): VdomNode)
-          .setSize(35.toPx),
-        NameColumn,
-        baseColumn(
-          CatalogName,
-          Target.catalogInfo.andThen(some).andThen(CatalogInfo.catalog).getOption
+      val BaseColumns: List[colDef.Type] =
+        List(
+          baseColumn(TypeColumnId, _ => ())
+            .withCell(_ => Icons.Star.withFixedWidth(): VdomNode)
+            .withSize(35.toPx),
+          NameColumn,
+          baseColumn(
+            CatalogName,
+            Target.catalogInfo.andThen(some).andThen(CatalogInfo.catalog).getOption
+          )
+            .withCell(_.value.flatten.map(_.shortName).orEmpty)
+            .withSize(100.toPx)
+            .sortableBy(_.flatten.map(_.toString))
         )
-          .setCell(_.value.flatten.map(_.shortName).orEmpty)
-          .setSize(100.toPx)
-          .sortableBy(_.flatten.map(_.toString))
-      )
 
-      val ProgramColumns = List(
+      val ProgramColumns: List[colDef.Type] = List(
         siderealColumnOpt(CZColumnId, Target.Sidereal.radialVelocity.get.andThen(rvToARVGet))
-          .setCell(_.value.map(formatCZ.reverseGet).orEmpty)
-          .setSize(90.toPx)
+          .withCell(_.value.map(formatCZ.reverseGet).orEmpty)
+          .withSize(90.toPx)
           .sortable,
         siderealColumn(
           MorphologyColumnId,
           Target.Sidereal.sourceProfile.get.andThen(SourceProfileType.fromSourceProfile)
         )
-          .setCell(_.value.map(_.shortName).orEmpty)
-          .setSize(115.toPx)
+          .withCell(_.value.map(_.shortName).orEmpty)
+          .withSize(115.toPx)
           .sortable,
         siderealColumn(
           SEDColumnId,
@@ -270,16 +270,17 @@ object TargetColumns:
               .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
               .orEmpty
         )
-          .setCell(_.value.orEmpty)
-          .setSize(200.toPx)
+          .withCell(_.value.orEmpty)
+          .withSize(200.toPx)
           .sortable
       )
 
-      lazy val AllColumns = BaseColumns ++ CatalogColumns ++ SiderealColumns ++ ProgramColumns
+      lazy val AllColumns: List[colDef.Type] =
+        BaseColumns ++ CatalogColumns ++ SiderealColumns ++ ProgramColumns
 
-    case class ForSimbad[D](
-      colDef:    ColumnDef.Applied.NoMeta[D],
+    case class ForSimbad[D, TM, CM, TF](
+      colDef:    ColumnDef.Applied[D, TM, CM, TF],
       getTarget: D => Option[Target]
     ) extends Common(colDef, getTarget)
         with CommonSidereal(colDef, getTarget.andThen(_.flatMap(Target.sidereal.getOption))):
-      lazy val AllColumns = (NameColumn +: CatalogColumns) ++ SiderealColumns
+      lazy val AllColumns: List[colDef.Type] = (NameColumn +: CatalogColumns) ++ SiderealColumns

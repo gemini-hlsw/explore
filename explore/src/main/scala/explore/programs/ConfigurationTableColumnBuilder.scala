@@ -19,7 +19,7 @@ import lucuma.core.model.Program
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 
-case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, TM]):
+case class ConfigurationTableColumnBuilder[D, TM, CM, TF](colDef: ColumnDef.Applied[D, TM, CM, TF]):
   import ConfigurationTableColumnBuilder.*
 
   def configurationColumns(getConfiguration: D => Configuration) =
@@ -30,35 +30,35 @@ case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, T
 
     List(
       configurationColumn(RAColumnId, _.refererenceCoordinates.ra)
-        .setCell(c => MathValidators.truncatedRA.reverseGet(c.value))
-        .setSize(110.toPx)
+        .withCell(c => MathValidators.truncatedRA.reverseGet(c.value))
+        .withSize(110.toPx)
         .sortable,
       configurationColumn(DecColumnId, _.refererenceCoordinates.dec)
-        .setCell(c => MathValidators.truncatedDec.reverseGet(c.value))
-        .setSize(110.toPx)
+        .withCell(c => MathValidators.truncatedDec.reverseGet(c.value))
+        .withSize(110.toPx)
         .sortable,
       configurationColumn(InstrumentColumnId, _.observingMode.tpe.instrument.shortName)
-        .setSize(110.toPx)
+        .withSize(110.toPx)
         .sortable,
-      configurationColumn(FPUColumnId, _.observingMode.fpu).setSize(110.toPx).sortable,
+      configurationColumn(FPUColumnId, _.observingMode.fpu).withSize(110.toPx).sortable,
       configurationColumn(DisperserColumnId, _.observingMode.disperser)
-        .setSize(110.toPx)
+        .withSize(110.toPx)
         .sortable,
       configurationColumn(ImageQualityColumnId, _.conditions.imageQuality)
-        .setCell(_.value.label)
-        .setSize(80.toPx)
+        .withCell(_.value.label)
+        .withSize(80.toPx)
         .sortable,
       configurationColumn(CloudExtinctionColumnId, _.conditions.cloudExtinction)
-        .setCell(_.value.label)
-        .setSize(80.toPx)
+        .withCell(_.value.label)
+        .withSize(80.toPx)
         .sortable,
       configurationColumn(SkyBackgroundColumnId, _.conditions.skyBackground)
-        .setCell(_.value.label)
-        .setSize(80.toPx)
+        .withCell(_.value.label)
+        .withSize(80.toPx)
         .sortable,
       configurationColumn(WaterVaporColumnId, _.conditions.waterVapor)
-        .setCell(_.value.label)
-        .setSize(80.toPx)
+        .withCell(_.value.label)
+        .withSize(80.toPx)
         .sortable
     )
 
@@ -68,7 +68,7 @@ case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, T
     ctx:       AppContext[IO]
   ) =
     colDef(ObservationsColumnId, accessor, ColumnNames(ObservationsColumnId))
-      .setCell(c =>
+      .withCell(c =>
         <.span(
           c.value
             .sortBy(_.id)
@@ -80,12 +80,12 @@ case class ConfigurationTableColumnBuilder[D, TM](colDef: ColumnDef.Applied[D, T
             .mkReactFragment(", ")
         )
       )
-      .setSize(150.toPx)
-      .setEnableSorting(false)
+      .withSize(150.toPx)
+      .withEnableSorting(false)
 
   def targetColumn(accessor: D => String) =
     colDef(TargetColumnId, accessor, ColumnNames(TargetColumnId))
-      .setSize(150.toPx)
+      .withSize(150.toPx)
       .sortable
 
 object ConfigurationTableColumnBuilder {

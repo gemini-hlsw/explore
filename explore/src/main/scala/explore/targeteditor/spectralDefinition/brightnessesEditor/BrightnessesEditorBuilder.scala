@@ -66,7 +66,7 @@ private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[
     ) => Callback
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[RowValue, TableMeta]
+  private val ColDef = ColumnDef[RowValue].WithTableMeta[TableMeta]
 
   private val BandColumnId: ColumnId   = ColumnId("band")
   private val ValueColumnId: ColumnId  = ColumnId("value")

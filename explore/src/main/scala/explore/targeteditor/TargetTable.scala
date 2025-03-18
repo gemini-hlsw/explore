@@ -71,7 +71,7 @@ object TargetTable extends AsterismModifier:
     onAsterismUpdate: OnAsterismUpdateParams => Callback
   )
 
-  private val ColDef = ColumnDef.WithTableMeta[SiderealTargetWithId, TableMeta]
+  private val ColDef = ColumnDef[SiderealTargetWithId].WithTableMeta[TableMeta]
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
