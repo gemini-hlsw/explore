@@ -362,6 +362,10 @@ object Icons {
   @JSImport("@fortawesome/pro-solid-svg-icons", "faBookOpen")
   val faBookOpen: FAIcon = js.native
 
+  @js.native
+  @JSImport("@fortawesome/pro-solid-svg-icons", "faLockKeyhole")
+  val faLockKeyhole: FAIcon = js.native
+
   // This is tedious but lets us do proper tree-shaking
   FontAwesome.library.add(
     faArrowDownLeft,
@@ -450,7 +454,8 @@ object Icons {
     faSquarePlus,
     faCloudArrowUp,
     faArrowUpRightFromSquare,
-    faBookOpen
+    faBookOpen,
+    faLockKeyhole
   )
 
   val ArrowDownLeft          = FontAwesomeIcon(faArrowDownLeft)
@@ -542,6 +547,7 @@ object Icons {
   val CloudArrowUp           = FontAwesomeIcon(faCloudArrowUp)
   val ArrowUpRightFromSquare = FontAwesomeIcon(faArrowUpRightFromSquare)
   val BookOpen               = FontAwesomeIcon(faBookOpen)
+  val LockKeyhole            = FontAwesomeIcon(faLockKeyhole)
 
   val MissingInfoIcon  = ExclamationTriangle.withClass(ExploreStyles.WarningIcon)
   val ErrorIcon        = ExclamationTriangle.withClass(ExploreStyles.ErrorIcon)

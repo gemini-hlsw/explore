@@ -113,7 +113,7 @@ object SchedulingTabContents extends TwoPanels:
                   ObservationPasteIntoSchedulingGroupAction(
                     obsAndConstraints,
                     props.expandedIds.async.mod
-                  )(props.programSummaries)
+                  )(props.programSummaries).void
                     .withToastDuring(
                       s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group",
                       s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group".some

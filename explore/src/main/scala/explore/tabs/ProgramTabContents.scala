@@ -29,6 +29,9 @@ import explore.programs.ProgramConfigRequestsTile
 import explore.programs.ProgramDetailsTile
 import explore.programs.ProgramNotesTile
 import explore.programs.ProgramUnrequestedConfigsTile
+import explore.syntax.ui.*
+import explore.undo.UndoSetter
+import explore.undo.Undoer
 import explore.users.AddProgramUserButton
 import explore.users.ProgramUsersTable
 import japgolly.scalajs.react.*
@@ -48,20 +51,22 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class ProgramTabContents(
-  programId:              Program.Id,
-  programDetails:         View[ProgramDetails],
-  configRequests:         View[ConfigurationRequestList],
-  observations:           View[ObservationList],
-  obs4ConfigRequests:     Map[ConfigurationRequest.Id, List[Observation]],
-  configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]],
-  targets:                TargetList,
-  userVault:              Option[UserVault],
-  programTimes:           Pot[ProgramTimes],
-  userPreferences:        UserPreferences,
-  userIsReadonlyCoi:      Boolean,
-  userIsPi:               Boolean
+  programId:                Program.Id,
+  undoer:                   Undoer,
+  programDetailsUndoSetter: UndoSetter[ProgramDetails],
+  configRequests:           View[ConfigurationRequestList],
+  observations:             View[ObservationList],
+  obs4ConfigRequests:       Map[ConfigurationRequest.Id, List[Observation]],
+  configsWithoutRequests:   Map[Configuration, NonEmptyList[Observation]],
+  targets:                  TargetList,
+  userVault:                Option[UserVault],
+  programTimes:             Pot[ProgramTimes],
+  userPreferences:          UserPreferences,
+  userIsReadonlyCoi:        Boolean,
+  userIsPi:                 Boolean
 ) extends ReactFnProps(ProgramTabContents):
-  val users: View[List[ProgramUser]] = programDetails.zoom(ProgramDetails.allUsers)
+  val programDetails: View[ProgramDetails] = programDetailsUndoSetter.model
+  val users: View[List[ProgramUser]]       = programDetails.zoom(ProgramDetails.allUsers)
 
 object ProgramTabContents
     extends ReactFnComponent[ProgramTabContents](props =>
@@ -115,10 +120,13 @@ object ProgramTabContents
           )
 
         val notesTile =
-          Tile(
-            ProgramTabTileIds.NotesId.id,
-            "Notes"
-          )(_ => ProgramNotesTile())
+          ProgramNotesTile(
+            props.programId,
+            props.undoer,
+            props.programDetailsUndoSetter.zoom(ProgramDetails.notes),
+            props.userIsReadonlyCoi,
+            props.userVault.isStaff
+          )
 
         val configurationRequestsTile =
           Tile(

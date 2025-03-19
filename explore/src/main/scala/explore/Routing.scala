@@ -15,6 +15,7 @@ import explore.modes.SpectroscopyModesMatrix
 import explore.proposal.ProposalTabContents
 import explore.tabs.*
 import explore.undo.UndoContext
+import explore.undo.Undoer
 import japgolly.scalajs.react.React
 import japgolly.scalajs.react.ReactMonocle.*
 import japgolly.scalajs.react.extra.router.*
@@ -191,11 +192,11 @@ object Routing:
       .map: routingInfo =>
         withProgramSummaries(model): programSummaries =>
           for
-            programDetails <-
-              programSummaries.model.zoom(ProgramSummaries.optProgramDetails).toOptionView
+            programDetails <- programSummaries.zoom(ProgramSummaries.optProgramDetails.some)
             proposal       <- programDetails.get.proposal
           yield ProgramTabContents(
             routingInfo.programId,
+            programSummaries: Undoer,
             programDetails,
             programSummaries.model.zoom(ProgramSummaries.configurationRequests),
             programSummaries.model.zoom(ProgramSummaries.observations),

@@ -127,6 +127,7 @@ object reusability:
   given [F[_]]: Reusability[OdbRestClient[F]]           = Reusability.by(_.authToken)
   given [D: Eq]: Reusability[Atom[D]]                   = Reusability.byEq
   given Reusability[ExecutionVisits]                    = Reusability.byEq
+  given Reusability[ProgramNote]                        = Reusability.byEq
   given Reusability[ProgramUser]                        = Reusability.byEq
   given Reusability[UserInvitation]                     = Reusability.byEq
   given Reusability[IsActive]                           = Reusability.byEq

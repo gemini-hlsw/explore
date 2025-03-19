@@ -2701,51 +2701,7 @@ $help-title-height: 40px;
 // Observer-notes
 // --------------
 .observer-notes-tile {
-  display: flex;
-}
-
-.observer-notes-controls {
-  display: flex;
-  gap: 0.5em;
-  align-items: center;
-}
-
-.observer-notes {
-  flex-grow: 1;
-  display: flex;
-
-  .markdown-body {
-    flex-grow: 1;
-    padding: 0.5em;
-    overflow: auto;
-    color: var(--site-text-color);
-  }
-}
-
-.observer-notes-empty {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: stretch;
-
-  div {
-    // to center the no notes message
-    align-self: center;
-  }
-}
-
-.observer-notes,
-.observer-notes-empty {
-  .pl-form-field {
-    width: 100%;
-    height: 100%;
-
-    .observer-notes-editor {
-      width: 100%;
-      height: 100%;
-    }
-  }
+  width: 100%;
 }
 
 // --------------
@@ -3444,6 +3400,69 @@ a.explore-upgrade-link {
         align-items: center;
       }
     }
+  }
+}
+
+.program-notes-tile-body {
+  .program-note-header {
+    display: flex;
+    gap: 0.5em;
+  }
+
+  .program-note-editor {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-gap: 1em;
+
+    .program-note-title {
+      display: flex;
+      gap: 1em;
+      align-items: center;
+    }
+  }
+}
+
+.program-notes-tile-title-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+// Markdown Editor
+.markdown-editor {
+  height: 100%;
+
+  .markdown-body {
+    padding: 0.5em;
+    height: 100%;
+    border: 1px solid var(--site-border-color);
+
+    &.markdown-placeholder {
+      opacity: 0.5;
+    }
+  }
+
+  .pl-form-field {
+    height: 100%;
+    width: 100%;
+
+    textarea {
+      height: 100%;
+      width: 100%;
+      resize: none;
+    }
+  }
+}
+
+.p-tabview.full-height-tab-view {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+
+  .p-tabview-panel {
+    height: 100%;
   }
 }
 

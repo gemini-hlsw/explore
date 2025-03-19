@@ -62,6 +62,7 @@ def cloneObs(
       focusObs = obsId => focusObs(programId, obsId.some, ctx),
       postMessage = ToastCtx[IO].showToast(_)
     )(observations)
+    .void
 
 private def obsWithId(obsId: Observation.Id): Lens[ObservationList, Option[Observation]] =
   Iso.id[ObservationList].at(obsId)
@@ -103,6 +104,7 @@ def insertObs(
       focusObs = obsId => focusObs(programId, obsId.some, ctx),
       postMessage = ToastCtx[IO].showToast(_)
     )(observations)
+    .void
     .switching(adding.zoom(AddingObservation.value.asLens).async)
     .withToastDuring("Creating observation")
 

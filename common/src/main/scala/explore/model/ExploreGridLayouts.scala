@@ -363,7 +363,7 @@ object ExploreGridLayouts:
   object programs:
     private lazy val DetailsHeight: NonNegInt            = 10.refined
     private lazy val DataUsersHeight: NonNegInt          = 6.refined
-    private lazy val NotesHeight: NonNegInt              = 6.refined
+    private lazy val NotesHeight: NonNegInt              = 8.refined
     private lazy val ChangeRequestsHeight: NonNegInt     = 6.refined
     private lazy val UnrequestedConfigsHeight: NonNegInt = 6.refined
 

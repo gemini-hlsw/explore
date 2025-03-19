@@ -136,11 +136,7 @@ object ExploreStyles:
   val ProgramName      = Css("program-name")
   val ProgramNameInput = Css("program-name-input")
 
-  val ObserverNotes: Css = Css("observer-notes")
-  val NotesTile: Css     = Css("observer-notes-tile")
-  val NotesEditor: Css   = Css("observer-notes-editor")
-  val NotesControls: Css = Css("observer-notes-controls")
-  val NoNotes: Css       = Css("observer-notes-empty")
+  val NotesTile: Css = Css("observer-notes-tile")
 
   val FinderChartsTile: Css          = Css("finder-charts-tile")
   val FinderChartsBody: Css          = Css("finder-charts-body")
@@ -514,6 +510,19 @@ object ExploreStyles:
   val ProgramDetailsRight: Css    = Css("program-details-right")
   val ProgramTabTable: Css        = Css("program-tab-table")
   val ProgramDetailsUsers: Css    = Css("program-details-users")
+
+  val ProgramNotesTileBody: Css         = Css("program-notes-tile-body")
+  val ProgramNotesTileTitleButtons: Css = Css("program-notes-tile-title-buttons")
+  val ProgramNoteEditor: Css            = Css("program-note-editor")
+  val ProgramNoteHeader: Css            = Css("program-note-header")
+  val ProgramNoteTitle: Css             = Css("program-note-title")
+
+  // Markdown Editor
+  val MarkdownEditor: Css      = Css("markdown-editor")
+  val MarkdownPlaceholder: Css = Css("markdown-placeholder")
+
+  // Make a tabview take up the full height available
+  val FullHeightTabView: Css = Css("full-height-tab-view")
 
   val FocusedInfo: Css = Css("explore-focused-info")
 

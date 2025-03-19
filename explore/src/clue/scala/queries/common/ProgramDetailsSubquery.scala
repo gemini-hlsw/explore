@@ -22,6 +22,7 @@ object ProgramDetailsSubquery
       users $ProgramUserSubquery
       reference $ProgramReferenceSubquery
       allocations $AllocationSubquery
+      notes $ProgramNoteSubquery
       goa {
         proprietaryMonths
         shouldNotify

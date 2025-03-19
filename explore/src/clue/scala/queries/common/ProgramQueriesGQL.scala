@@ -171,3 +171,27 @@ object ProgramQueriesGQL:
         }
       }
     """
+
+  @GraphQL
+  trait CreateProgramNoteMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: CreateProgramNoteInput!) {
+        createProgramNote(input: $$input) {
+          programNote {
+            id
+          }
+        }
+      }
+    """
+
+  @GraphQL
+  trait UpdateProgramNotesMutation extends GraphQLOperation[ObservationDB]:
+    val document = s"""
+      mutation($$input: UpdateProgramNotesInput!) {
+        updateProgramNotes(input: $$input) {
+          programNotes {
+            id
+          }
+        }
+      }
+    """

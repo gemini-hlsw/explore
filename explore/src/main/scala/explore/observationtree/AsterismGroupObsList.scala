@@ -214,6 +214,7 @@ object AsterismGroupObsList:
         selectTargetOrSummary(_).toAsync,
         ToastCtx[IO].showToast(_)
       )(undoCtx)
+      .void
       .switching(adding.async, AddingTargetOrObs(_))
       .withToastDuring("Creating target")
 
