@@ -36,6 +36,7 @@ import lucuma.itc.GraphType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.Message
 import lucuma.react.primereact.SelectItem
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
@@ -94,18 +95,16 @@ object ItcTile:
     private type Props = Body
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        // Reset the selected target if it changes
-        .useEffectWhenDepsReadyOrChangeBy((props, _) =>
-          props.itcGraphResults.map(_.brightestTarget)
-        ): (props, _) =>
-          itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
-        .render: (props, ctx) =>
+      ScalaFnComponent[Props]: props =>
+        for
+          ctx <- useContext(AppContext.ctx)
+          _   <- // Reset the selected target if it changes
+            useEffectWhenDepsReadyOrChange(props.itcGraphResults.map(_.brightestTarget)):
+              itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
+        yield
           import ctx.given
 
-          props.itcGraphResults.renderPot: graphResults =>
+          def body(graphResults: ItcAsterismGraphResults): VdomNode =
             val globalPreferences: View[GlobalPreferences] =
               props.globalPreferences.withOnMod: prefs =>
                 ItcPlotPreferences
@@ -213,6 +212,11 @@ object ItcTile:
               ),
               ItcPlotControl(graphTypeView, detailsView)
             )
+
+          props.itcGraphResults.renderPot(
+            valueRender = body,
+            errorRender = t => Message(text = t.getMessage, severity = Message.Severity.Warning)
+          )
 
   private case class Title(
     itcGraphQuerier: ItcGraphQuerier,

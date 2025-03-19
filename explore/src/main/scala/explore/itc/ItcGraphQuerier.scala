@@ -90,9 +90,14 @@ case class ItcGraphQuerier(
             _.toRight(new Throwable("No response from ITC server."))
           .rethrow
 
-    action.getOrElse:
-      IO.raiseError:
-        new Throwable("Not enough information to calculate the ITC graph or no mode selected.")
+    IO.println("targets " + itcTargets) *>
+      action.getOrElse:
+        IO.raiseError:
+          val tgtMsg = asterismIds.toList match
+            case Nil         => new Throwable("no targets.")
+            case head :: Nil => s"target: $head"
+            case tgts        => s"""targets: ${tgts.mkString(", ")}"""
+          new Throwable(s"Could not generate a graph for $tgtMsg")
 
 object ItcGraphQuerier:
   given Reusability[ItcGraphQuerier] =
