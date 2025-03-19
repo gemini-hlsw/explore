@@ -191,8 +191,11 @@ object ProposalEditor
                 id = "abstract".refined,
                 value = abstractView.as(OptionNonEmptyStringIso),
                 onTextChange = t => abstractCounter.setState(t.wordCount).rateLimitMs(1000).void
-              )(^.disabled        := props.proposalOrUserIsReadonly,
-                ^.cls := ExploreStyles.WarningInput.when_(abstractView.get.isEmpty).htmlClass
+              )(
+                ^.disabled := props.proposalOrUserIsReadonly,
+                ^.cls      := ExploreStyles.WarningInput
+                  .when_(abstractView.get.isEmpty && !props.proposalOrUserIsReadonly)
+                  .htmlClass
               )
             )
 
