@@ -334,7 +334,7 @@ object ProposalDetailsBody:
           FormInputTextView(
             id = "title".refined,
             inputClass = Css("inverse"),
-            groupClass = ExploreStyles.WarningInput.when_(titleView.get.isEmpty),
+            groupClass = ExploreStyles.WarningInput.when_(titleView.get.isEmpty && !props.readonly),
             value = titleView,
             validFormat = InputValidSplitEpi.nonEmptyString.optional,
             label = "Title",
@@ -349,7 +349,7 @@ object ProposalDetailsBody:
             onChange = _.map(v => categoryView.set(Enumerated[TacCategory].fromTag(v))).orEmpty,
             disabled = props.readonly,
             modifiers = List(^.id := "category"),
-            clazz = ExploreStyles.WarningInput.when_(categoryView.get.isEmpty)
+            clazz = ExploreStyles.WarningInput.when_(categoryView.get.isEmpty && !props.readonly)
           ),
           activationView.map(activationView =>
             FormEnumDropdownView(
@@ -443,7 +443,7 @@ object ProposalDetailsBody:
               }.orEmpty,
               disabled = props.readonly,
               modifiers = List(^.id := "cfp"),
-              clazz = ExploreStyles.WarningInput.when_(selectedCfp.isEmpty)
+              clazz = ExploreStyles.WarningInput.when_(selectedCfp.isEmpty && !props.readonly)
             ),
             // Proposal type selector, visible when cfp is selected and has more than one subtpye
             FormDropdown(

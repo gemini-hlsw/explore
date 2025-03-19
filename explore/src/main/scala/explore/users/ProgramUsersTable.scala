@@ -215,7 +215,9 @@ object ProgramUsersTable:
       options = partnerLinkOptions.map { pl =>
         new SelectItem[PartnerLink](value = pl, label = pl.toString)
       },
-      clazz = ExploreStyles.PartnerSelector |+| ExploreStyles.WarningInput.when_(value.isEmpty),
+      clazz = ExploreStyles.PartnerSelector |+| ExploreStyles.WarningInput.when_(
+        value.isEmpty && !readOnly
+      ),
       showClear = true,
       disabled = readOnly,
       itemTemplate = pl => partnerItem(pl.value),
