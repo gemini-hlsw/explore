@@ -43,7 +43,7 @@ import lucuma.itc.client.GraphResult
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-import lucuma.core.model.ExposureTimeMode
+import explore.model.ScienceRequirements.*
 
 /**
  * Reusability instances for model classes
@@ -138,7 +138,9 @@ object reusability:
   given Reusability[CallForProposal]                    = Reusability.byEq
   given Reusability[CategoryAllocationList]             = Reusability.byEq
   given Reusability[InstrumentOverrides]                = Reusability.byEq
-  given Reusability[ExposureTimeMode]                   = Reusability.byEq
+  given Reusability[ExposureTimeModeInfo]               = Reusability.byEq
+  given Reusability[SignalToNoiseModeInfo]              = Reusability.byEq
+  given Reusability[TimeAndCountModeInfo]               = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
   given Reusability[WavelengthDither]                   = Reusability.byEq
   given [A]: Reusability[Offset.Component[A]]           = Reusability.byEq

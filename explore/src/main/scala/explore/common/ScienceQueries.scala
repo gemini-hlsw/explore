@@ -91,10 +91,10 @@ object ScienceQueries:
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          _ <-
-            SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
-              .map(_.toInput)
-              .orUnassign
+          // _ <-
+          //   SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
+          //     .map(_.toInput)
+          // .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
                  .map(wavelengthDelta)
                  .orUnassign

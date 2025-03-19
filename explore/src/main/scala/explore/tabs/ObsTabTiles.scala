@@ -577,6 +577,8 @@ object ObsTabTiles:
               props.globalPreferences.get.wavelengthUnits
             )
 
+          // println(props.vault)
+          // println(props.vault.isGuest)
           val alltiles =
             List(
               notesTile.some,

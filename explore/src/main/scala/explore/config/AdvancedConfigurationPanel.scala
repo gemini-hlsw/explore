@@ -56,6 +56,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
@@ -69,6 +70,7 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
+import explore.model.enums.ExposureTimeModeType
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -365,65 +367,64 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     ).clearable(^.autoComplete.off)
 
   val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      // .useStateViewBy { (props, ctx) =>
-      //   import ctx.given
+    ScalaFnComponent[Props]: props =>
+      for
+        ctx       <- useContext(AppContext.ctx)
+        emv       <- useStateView(
+                       props.spectroscopyRequirements.get.exposureTimeMode.exposureMode
+                     )
+        // .useStateViewBy { (props, ctx) =>
+        //   import ctx.given
 
-      //   overrideExposureTimeMode(props.observingMode).get
-      //     .map(ExposureTimeModeType.fromExposureTimeMode)
-      // }
-      // .useEffectWithDepsBy { (props, ctx, _) =>
-      //   import ctx.given
+        //   overrideExposureTimeMode(props.observingMode).get
+        //     .map(ExposureTimeModeType.fromExposureTimeMode)
+        // }
+        // .useEffectWithDepsBy { (props, ctx, _) =>
+        //   import ctx.given
 
-      //   overrideExposureTimeMode(props.observingMode).get.map(
-      //     ExposureTimeModeType.fromExposureTimeMode
-      //   )
-      // }((_, _, exposureModeEnum) =>
-      //   newExpModeEnum =>
-      //     if (exposureModeEnum.get =!= newExpModeEnum) exposureModeEnum.set(newExpModeEnum)
-      //     else Callback.empty
-      // )
-      // filter the spectroscopy matrix by the requirements that don't get overridden
-      // by the advanced config (wavelength, for example).
-      .useMemoBy((props, _) =>
-        (props.spectroscopyRequirements.get.focalPlane,
-         props.spectroscopyRequirements.get.capability,
-         props.spectroscopyRequirements.get.focalPlaneAngle,
-         props.spectroscopyRequirements.get.resolution,
-         props.spectroscopyRequirements.get.wavelengthCoverage,
-         props.confMatrix.matrix.length
-        )
-      ) { (props, _) =>
-        { case (fp, cap, fpa, res, rng, _) =>
-          props.confMatrix.filtered(
-            focalPlane = fp,
-            capability = cap,
-            slitLength = fpa.map(s => SlitLength(ModeSlitSize(s))),
-            resolution = res,
-            range = rng
-          )
-        }
-      }
-      // Try to find the mode row from the spectroscopy matrix
-      .useMemoBy { (props, ctx, rows) =>
-        import ctx.given
+        //   overrideExposureTimeMode(props.observingMode).get.map(
+        //     ExposureTimeModeType.fromExposureTimeMode
+        //   )
+        // }((_, _, exposureModeEnum) =>
+        //   newExpModeEnum =>
+        //     if (exposureModeEnum.get =!= newExpModeEnum) exposureModeEnum.set(newExpModeEnum)
+        //     else Callback.empty
+        // )
+        // filter the spectroscopy matrix by the requirements that don't get overridden
+        // by the advanced config (wavelength, for example).
+        rows      <- useMemo(
+                       (props.spectroscopyRequirements.get.focalPlane,
+                        props.spectroscopyRequirements.get.capability,
+                        props.spectroscopyRequirements.get.focalPlaneAngle,
+                        props.spectroscopyRequirements.get.resolution,
+                        props.spectroscopyRequirements.get.wavelengthCoverage,
+                        props.confMatrix.matrix.length
+                       )
+                     ) { (fp, cap, fpa, res, rng, _) =>
+                       props.confMatrix.filtered(
+                         focalPlane = fp,
+                         capability = cap,
+                         slitLength = fpa.map(s => SlitLength(ModeSlitSize(s))),
+                         resolution = res,
+                         range = rng
+                       )
+                     }
+        // Try to find the mode row from the spectroscopy matrix
+        modeData  <- useMemo {
+                       import ctx.given
 
-        (props.spectroscopyRequirements.get.wavelength,
-         rows,
-         centralWavelength(props.observingMode).get,
-         grating(props.observingMode).get,
-         filter(props.observingMode).get,
-         fpu(props.observingMode).get
-        )
-      } { (props, _, _) =>
-        { case (reqsWavelength, rows, _, _, _, _) =>
-          findMatrixData(props.observingMode.get, reqsWavelength, rows)
-        }
-      }
-      .useStateView(ConfigEditState.View)
-      .render { (props, ctx, _, modeData, editState) =>
+                       (props.spectroscopyRequirements.get.wavelength,
+                        rows,
+                        centralWavelength(props.observingMode).get,
+                        grating(props.observingMode).get,
+                        filter(props.observingMode).get,
+                        fpu(props.observingMode).get
+                       )
+                     } { (reqsWavelength, rows, _, _, _, _) =>
+                       findMatrixData(props.observingMode.get, reqsWavelength, rows)
+                     }
+        editState <- useStateView(ConfigEditState.View)
+      yield
         import ctx.given
 
         // val exposureModeView = overrideExposureTimeMode(props.observingMode)
@@ -512,6 +513,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(props.units)
 
+        val snModeView =
+          props.spectroscopyRequirements.zoom(ScienceRequirements.Spectroscopy.signalToNoiseMode)
         <.div(
           ExploreStyles.AdvancedConfigurationGrid
         )(
@@ -567,54 +570,24 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            SignalToNoiseAt(props.spectroscopyRequirements,
-                            props.readonly,
-                            props.units,
-                            props.calibrationRole
-            )
-            // FormLabel(htmlFor = "exposureMode".refined)(
-            //   "Exposure Mode",
-            //   HelpIcon("configuration/exposure-mode.md".refined)
-            // ),
-            // <.span(
-            //   LucumaPrimeStyles.FormField,
-            //   PrimeStyles.InputGroup,
-            //   FormEnumDropdownOptionalView(
-            //     id = "exposureMode".refined,
-            //     value = exposureModeEnum.withOnMod(onModeMod _),
-            //     disabled = disableSimpleEdit,
-            //     placeholder = originalSignalToNoiseText
-            //   ),
-            //   exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText))
-            // ),
-            // FormLabel(htmlFor = "signalToNoise".refined)(
-            //   "S/N",
-            //   HelpIcon("configuration/signal-to-noise.md".refined),
-            //   ExploreStyles.IndentLabel
-            // ),
-            // signalToNoiseView
-            //   .map(v =>
-            //     FormInputTextView(
-            //       id = "signalToNoise".refined,
-            //       value = v.withOnMod(_ => invalidateITC),
-            //       validFormat = InputValidWedge.truncatedPosBigDecimal(0.refined),
-            //       changeAuditor = ChangeAuditor.posInt,
-            //       disabled = disableSimpleEdit
-            //     ): VdomNode
-            //   )
-            //   .getOrElse(
-            //     potRender[Option[PosBigDecimal]](
-            //       valueRender = osn => {
-            //         val value = osn.fold(itcNoneMsg)(sn =>
-            //           InputValidWedge.truncatedPosBigDecimal(0.refined).reverseGet(sn)
-            //         )
-            //         FormInputText(id = "signalToNoise".refined, value = value, disabled = true)
-            //       },
-            //       pendingRender = <.div(ExploreStyles.InputReplacementIcon,
-            //                             Icons.Spinner.withSpin(true)
-            //       ): VdomNode
-            //     )(props.potITC.get.map(_.map(_.signalToNoise)))
-            //   ),
+            FormLabel(htmlFor = "exposureMode".refined)(
+              "Exposure Mode",
+              HelpIcon("configuration/exposure-mode.md".refined)
+            ),
+            <.span(
+              LucumaPrimeStyles.FormField,
+              PrimeStyles.InputGroup,
+              FormEnumDropdownView(
+                id = "exposureMode".refined,
+                value = emv,
+                // value = exposureModeEnum.withOnMod(onModeMod _),
+                disabled = disableSimpleEdit
+                // placeholder = originalSignalToNoiseText
+              )
+              // exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText))
+            ),
+            snModeView.asView
+              .map(SignalToNoiseAt(_, props.readonly, props.units, props.calibrationRole))
             // FormLabel(htmlFor = "exposureTime".refined)(
             //   "Exp Time",
             //   HelpIcon("configuration/exposure-time.md".refined),
@@ -769,7 +742,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               .when(editState.get === ConfigEditState.SimpleEdit)
           ).unless(props.readonly)
         )
-      }
 }
 
 object AdvancedConfigurationPanel {

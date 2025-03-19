@@ -3055,7 +3055,7 @@ $help-title-height: 40px;
   align-self: start;
   padding: 0.5em;
   row-gap: 0.5em;
-  grid-template-columns: [label] minmax(110px, 10%) [field] max-content;
+  grid-template-columns: [label] minmax(130px, 10%) [field] max-content;
 
   .pl-form-field {
     justify-self: stretch;

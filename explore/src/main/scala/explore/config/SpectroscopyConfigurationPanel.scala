@@ -30,8 +30,12 @@ import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.clearable
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
+import monocle.Lens
+import explore.model.ScienceRequirements.ExposureTimeModeInfo
+import explore.model.enums.ExposureTimeModeType
 
 case class SpectroscopyConfigurationPanel(
   options:         View[ScienceRequirements.Spectroscopy],
@@ -44,28 +48,41 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
   private type Props = SpectroscopyConfigurationPanel
 
   protected val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useStateView(
+    ScalaFnComponent[Props]: p =>
+      useStateView(
         FocalPlane.SingleSlit.some.widen[FocalPlane]
-      ) // For now only SlitView is allowed
-      .render: (p, fpView) =>
-        // val prevSignalToNoiseAt = p.options.get.signalToNoiseAt
+      ).map: fpView => // For now only SlitView is allowed
+        val prevSignalToNoiseAt = p.options.get.exposureTimeMode.at
 
         // Set SignalToNoiseAt to wavelength if it is empty
         val options = p.options
-        //   .withOnMod(s =>
-        //   if (s.wavelength =!= prevSignalToNoiseAt && prevSignalToNoiseAt.isEmpty)
-        //     p.options.set(s.copy(signalToNoiseAt = s.wavelength))
-        //   else Callback.empty
-        // )
+          .withOnMod(s =>
+            if (s.wavelength =!= prevSignalToNoiseAt && prevSignalToNoiseAt.isEmpty)
+              p.options.set(s.withSNAt(s.wavelength))
+            else Callback.empty
+          )
 
+        val exposureTimeMode       = options.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
+        val snMode                 = options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseMode)
         val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
         val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
         val wavelengthDelta        = options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
         val focalPlaneAngle        = options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
         val spectroscopyCapability =
           options.zoom(ScienceRequirements.Spectroscopy.capability)
+
+        val emvLens: Lens[ExposureTimeModeInfo, ExposureTimeModeType] =
+          Lens[ExposureTimeModeInfo, ExposureTimeModeType](_.exposureMode)(a =>
+            p =>
+              a match {
+                case ExposureTimeModeType.SignalToNoise =>
+                  p.asSignalToNoiseMode
+                case ExposureTimeModeType.TimeAndCount  =>
+                  p.asTimeAndCountMode
+              }
+          )
+
+        val emv = exposureTimeMode.zoom(emvLens)
 
         ReactFragment(
           FormInputTextView[View, Option[Wavelength]](
@@ -93,7 +110,16 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          SignalToNoiseAt(options, p.readonly, p.units, p.calibrationRole),
+          FormEnumDropdownView(
+            id = "exposureMode".refined,
+            value = emv,
+            label = ReactFragment(
+              "Exposure Mode",
+              HelpIcon("configuration/exposure-mode.md".refined)
+            ),
+            disabled = true
+          ),
+          snMode.asView.map(SignalToNoiseAt(_, p.readonly, p.units, p.calibrationRole)),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,

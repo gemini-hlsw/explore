@@ -470,7 +470,7 @@ private object SpectroscopyModesTable:
           ) =>
             import ctx.given
 
-            (exposureTimeMode, asterism)
+            (exposureTimeMode.mode.fold(_ => None, _ => None), asterism)
               .mapN: (expTimeMode, asterism) =>
                 val modes: List[SpectroscopyModeRowWithResult] =
                   sortedRows
