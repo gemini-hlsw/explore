@@ -24,31 +24,9 @@ object NotesTile:
       ObsTabTileIds.NotesId.id,
       s"Note for Observer",
       bodyClass = ExploreStyles.NotesTile
-    )(_ => NotesTileBody(notes), (_, tileSize) => NotesTileTitle(notes, tileSize))
-
-case class NotesTileBody(
-  notes: View[Option[NonEmptyString]]
-) extends ReactFnProps(NotesTileBody.component)
-
-object NotesTileBody:
-  private type Props = NotesTileBody
-
-  val themeAttr = VdomAttr("data-theme")
-
-  private val component =
-    ScalaFnComponent[Props]: props =>
-      MarkdownEditor(props.notes)
-
-case class NotesTileTitle(
-  notes:    View[Option[NonEmptyString]],
-  tileSize: TileSizeState
-) extends ReactFnProps(NotesTileTitle.component)
-
-object NotesTileTitle:
-  private type Props = NotesTileTitle
-
-  private val component =
-    ScalaFnComponent[Props]: props =>
-      Option.unless(props.tileSize === TileSizeState.Minimized)(
-        HelpIcon("observer-notes.md".refined)
-      )
+    )(_ => MarkdownEditor(notes),
+      (_, tileSize) =>
+        Option.unless(tileSize === TileSizeState.Minimized)(
+          HelpIcon("observer-notes.md".refined)
+        )
+    )
