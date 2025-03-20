@@ -31,6 +31,7 @@ case class ProgramDetails(
   users:             List[ProgramUser],
   reference:         Option[ProgramReference],
   allocations:       CategoryAllocationList,
+  notes:             List[ProgramNote],
   proprietaryMonths: NonNegInt,
   shouldNotify:      Boolean,
   active:            DateInterval
@@ -48,6 +49,7 @@ object ProgramDetails:
       b => b.copy(pi = a.headOption, users = a.tail)
     )
   val reference: Lens[ProgramDetails, Option[ProgramReference]] = Focus[ProgramDetails](_.reference)
+  val notes: Lens[ProgramDetails, List[ProgramNote]]            = Focus[ProgramDetails](_.notes)
   val pi: Lens[ProgramDetails, Option[ProgramUser]]             = Focus[ProgramDetails](_.pi)
   val piPartner: Optional[ProgramDetails, Option[PartnerLink]]  =
     pi.some.andThen(ProgramUser.partnerLink)
@@ -55,18 +57,19 @@ object ProgramDetails:
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {
-      n  <- c.downField("name").as[Option[NonEmptyString]]
-      d  <- c.downField("description").as[Option[NonEmptyString]]
-      t  <- c.get[ProgramType]("type")
-      p  <- c.get[Option[Proposal]]("proposal")
-      ps <- c.get[ProposalStatus]("proposalStatus")
-      pi <- c.downField("pi").as[Option[ProgramUser]]
-      us <- c.get[List[ProgramUser]]("users")
-      r  <-
+      n     <- c.downField("name").as[Option[NonEmptyString]]
+      d     <- c.downField("description").as[Option[NonEmptyString]]
+      t     <- c.get[ProgramType]("type")
+      p     <- c.get[Option[Proposal]]("proposal")
+      ps    <- c.get[ProposalStatus]("proposalStatus")
+      pi    <- c.downField("pi").as[Option[ProgramUser]]
+      us    <- c.get[List[ProgramUser]]("users")
+      r     <-
         c.downField("reference").downField("label").success.traverse(_.as[Option[ProgramReference]])
-      as <- c.downField("allocations").as[CategoryAllocationList]
-      pm <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
-      sn <- c.downField("goa").downField("shouldNotify").as[Boolean]
-      ac <- c.downField("active").as[DateInterval]
-    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, pm, sn, ac)
+      as    <- c.downField("allocations").as[CategoryAllocationList]
+      notes <- c.downField("notes").as[List[ProgramNote]]
+      pm    <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
+      sn    <- c.downField("goa").downField("shouldNotify").as[Boolean]
+      ac    <- c.downField("active").as[DateInterval]
+    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, notes, pm, sn, ac)
   )

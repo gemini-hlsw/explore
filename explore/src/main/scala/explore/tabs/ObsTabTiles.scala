@@ -394,7 +394,7 @@ object ObsTabTiles:
               props.programSummaries.optProgramDetails
                 .exists(_.programType =!= ProgramType.Science)
             )
-              NotesTile.notesTile(props.obsId, notesView)
+              NotesTile.notesTile(notesView)
             else Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
 
           val sequenceTile =

@@ -10,6 +10,7 @@ import clue.data.syntax.*
 import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ProgramInfo
+import explore.model.ProgramNote
 import explore.model.ProgramUser
 import lucuma.core.enums.ConfigurationRequestStatus
 import lucuma.core.model.Attachment
@@ -191,6 +192,46 @@ object ProgramQueries:
             status = newStatus.assign,
             justification = justification.orIgnore
           )
+        )
+      .raiseGraphQLErrors
+      .void
+
+  def createProgramNote[F[_]: Async](
+    programId: Program.Id,
+    title:     NonEmptyString
+  )(using FetchClient[F, ObservationDB]): F[ProgramNote.Id] =
+    CreateProgramNoteMutation[F]
+      .execute:
+        CreateProgramNoteInput(
+          programId = programId.assign,
+          SET = ProgramNotePropertiesInput(
+            title = title.assign
+          )
+        )
+      .raiseGraphQLErrors
+      .map(_.createProgramNote.programNote.id)
+
+  def deleteProgramNote[F[_]: Async](id: ProgramNote.Id)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    UpdateProgramNotesMutation[F]
+      .execute:
+        UpdateProgramNotesInput(
+          WHERE = id.toWhereProgramNote.assign,
+          SET = ProgramNotePropertiesInput(existence = Existence.Deleted.assign)
+        )
+      .raiseGraphQLErrors
+      .void
+
+  def undeleteProgramNote[F[_]: Async](id: ProgramNote.Id)(using
+    FetchClient[F, ObservationDB]
+  ): F[Unit] =
+    UpdateProgramNotesMutation[F]
+      .execute:
+        UpdateProgramNotesInput(
+          WHERE = id.toWhereProgramNote.assign,
+          includeDeleted = true.assign,
+          SET = ProgramNotePropertiesInput(existence = Existence.Present.assign)
         )
       .raiseGraphQLErrors
       .void

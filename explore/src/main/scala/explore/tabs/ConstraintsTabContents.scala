@@ -115,7 +115,7 @@ object ConstraintsTabContents extends TwoPanels:
                   ObservationPasteIntoConstraintSetAction(
                     obsAndConstraints,
                     props.expandedIds.async.mod
-                  )(props.programSummaries)
+                  )(props.programSummaries).void
                     .withToastDuring(
                       s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active constraint set",
                       s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active constraint set".some

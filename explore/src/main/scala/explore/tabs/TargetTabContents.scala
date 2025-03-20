@@ -196,7 +196,7 @@ object TargetTabContents extends TwoPanels:
                 IO.whenA(obsAndTargets.nonEmpty): // Apply the obs to selected targets on the tree
                   ObservationPasteIntoAsterismAction(obsAndTargets, props.expandedIds.async.mod)(
                     props.programSummaries
-                  ).withToastDuring(
+                  ).void.withToastDuring(
                     s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into ${selTargetIds.length} target(s)",
                     s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into ${selTargetIds.length} target(s)".some
                   )

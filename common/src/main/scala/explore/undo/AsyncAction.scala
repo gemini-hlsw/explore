@@ -13,6 +13,6 @@ case class AsyncAction[M, K, A](
   onSet:     K => (M, A) => DefaultA[Unit],
   onRestore: K => (M, A) => DefaultA[Unit]
 ):
-  def apply(undoSetter: UndoSetter[M]): DefaultA[Unit] =
+  def apply(undoSetter: UndoSetter[M]): DefaultA[(K, A)] =
     asyncGet.flatMap: (k, a) =>
-      undoSetter.set(getter(k), setter(k), onSet(k), onRestore(k))(a).to[DefaultA]
+      undoSetter.set(getter(k), setter(k), onSet(k), onRestore(k))(a).to[DefaultA].as((k, a))

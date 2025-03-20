@@ -9,6 +9,7 @@ import japgolly.scalajs.react.util.DefaultEffects.Sync as DefaultS
 import monocle.Lens
 import monocle.Optional
 import monocle.Prism
+import monocle.function.Index.index
 
 /*
  * Allows modifying values in an undo context, but doesn't give access to undo and redo operations.
@@ -146,4 +147,15 @@ trait UndoSetter[M] { self =>
 
   def undoableView[N](lens: Lens[M, N]): View[N] =
     undoableView(lens.get, lens.modify)
+
+  /**
+   * Converts an UndoSetter[List[A]] into a List[UndoSetter[A]].
+   */
+  def toListOfUndoSetters[A](using ev: M =:= List[A]): List[UndoSetter[A]] =
+    get.indices.toList
+      .map: i =>
+        val atIndex                   = index[List[A], Int, A](i)
+        val getter: M => A            = m => atIndex.getOption.andThen(_.get)(ev.flip(m))
+        val mod: (A => A) => (M => M) = f => l => ev.flip(atIndex.modify(f)(l))
+        zoom(getter, mod)
 }
