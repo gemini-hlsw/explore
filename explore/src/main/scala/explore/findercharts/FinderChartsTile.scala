@@ -45,13 +45,15 @@ object FinderChartsTile:
     authToken:        Option[NonEmptyString],
     attachments:      View[AttachmentList],
     parallacticAngle: Option[Angle],
-    readonly:         Boolean
+    readonly:         Boolean,
+    hidden:           Boolean
   ) =
     Tile(
       ObsTabTileIds.FinderChartsId.id,
       s"Finder Charts",
       TileState(ChartSelector.Closed, None),
-      bodyClass = ExploreStyles.FinderChartsTile
+      bodyClass = ExploreStyles.FinderChartsTile,
+      hidden = hidden
     )(
       tileState =>
         authToken
