@@ -7,29 +7,29 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
-import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.PosInt
+import explore.model.enums.ExposureTimeModeType
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.Angle
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
+import lucuma.core.model.ExposureTimeMode
+import lucuma.core.model.ExposureTimeMode.SignalToNoiseMode
 import lucuma.core.util.TimeSpan
-import lucuma.core.math.SignalToNoise
 import lucuma.odb.json.angle.decoder.given
 import lucuma.odb.json.wavelength.decoder.given
-import explore.model.enums.ExposureTimeModeType
 import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Lens
-import monocle.Prism
-import monocle.std.either.*
-import monocle.macros.GenPrism
 import monocle.Optional
-import lucuma.core.model.ExposureTimeMode
-import lucuma.core.model.ExposureTimeMode.SignalToNoiseMode
+import monocle.Prism
+import monocle.macros.GenPrism
+import monocle.std.either.*
 
 sealed trait ScienceRequirements derives Eq
 
@@ -130,6 +130,12 @@ object ScienceRequirements:
   ) extends ScienceRequirements derives Eq {
     def withSNAt(w: Option[Wavelength]): Spectroscopy =
       copy(exposureTimeMode = exposureTimeMode.withSNAt(w))
+
+    def extractSignalToNoise: (Option[SignalToNoise], Option[Wavelength]) =
+      exposureTimeMode.mode match
+        case Left(SignalToNoiseModeInfo(v @ Some(_), a @ Some(_))) =>
+          (v, a)
+        case _                                                     => (none, none)
   }
 
   object Spectroscopy {

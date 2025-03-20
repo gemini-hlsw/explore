@@ -58,13 +58,13 @@ case class ItcGraphQuerier(
   val finalConfig: Option[InstrumentConfigAndItcResult] =
     remoteConfig.orElse(selectedConfig)
 
+  spectroscopyRequirements.map(_.extractSignalToNoise)
+
   val signalToNoise: Option[SignalToNoise] =
-  None
-  // spectroscopyRequirements.flatMap(_.signalToNoise)
+    spectroscopyRequirements.flatMap(_.extractSignalToNoise._1)
 
   val signalToNoiseAt: Option[Wavelength] =
-  None
-  // spectroscopyRequirements.flatMap(_.signalToNoiseAt)
+    spectroscopyRequirements.flatMap(_.extractSignalToNoise._2)
 
   private val instrumentConfig: Option[InstrumentConfig] =
     finalConfig.map(_.instrumentConfig)

@@ -7,29 +7,29 @@ import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import clue.data.Input
 import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.model.Observation
 import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.*
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import lucuma.core.enums
 import lucuma.core.math.Angle
-import lucuma.core.util.TimeSpan
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.optics.syntax.lens.*
+import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
-import explore.model.ScienceRequirements.*
-import clue.data.Input
 
 object ScienceQueries:
 

@@ -26,6 +26,7 @@ import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
+import explore.model.enums.ExposureTimeModeType
 import explore.model.enums.WavelengthUnits
 import explore.modes.InstrumentConfig
 import explore.modes.ModeCommonWavelengths
@@ -35,6 +36,7 @@ import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
@@ -56,7 +58,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.ObservationDB.Types.WavelengthInput
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
@@ -70,7 +71,6 @@ import lucuma.ui.utils.given
 import monocle.Lens
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import explore.model.enums.ExposureTimeModeType
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -373,23 +373,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         emv       <- useStateView(
                        props.spectroscopyRequirements.get.exposureTimeMode.exposureMode
                      )
-        // .useStateViewBy { (props, ctx) =>
-        //   import ctx.given
-
-        //   overrideExposureTimeMode(props.observingMode).get
-        //     .map(ExposureTimeModeType.fromExposureTimeMode)
-        // }
-        // .useEffectWithDepsBy { (props, ctx, _) =>
-        //   import ctx.given
-
-        //   overrideExposureTimeMode(props.observingMode).get.map(
-        //     ExposureTimeModeType.fromExposureTimeMode
-        //   )
-        // }((_, _, exposureModeEnum) =>
-        //   newExpModeEnum =>
-        //     if (exposureModeEnum.get =!= newExpModeEnum) exposureModeEnum.set(newExpModeEnum)
-        //     else Callback.empty
-        // )
         // filter the spectroscopy matrix by the requirements that don't get overridden
         // by the advanced config (wavelength, for example).
         rows      <- useMemo(
@@ -426,18 +409,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         editState <- useStateView(ConfigEditState.View)
       yield
         import ctx.given
-
-        // val exposureModeView = overrideExposureTimeMode(props.observingMode)
-
-        // val exposureCountView: Option[View[NonNegInt]] =
-        //   exposureModeView
-        //     .mapValue((v: View[ExposureTimeMode]) => v.zoom(ExposureTimeMode.exposureCount).asView)
-        //     .flatten
-
-        // val exposureTimeView: Option[View[NonNegDuration]] =
-        //   exposureModeView
-        //     .mapValue((v: View[ExposureTimeMode]) => v.zoom(ExposureTimeMode.exposureTime).asView)
-        //     .flatten
 
         val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
         val disableSimpleEdit   =
@@ -570,18 +541,14 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            FormLabel(htmlFor = "exposureMode".refined)(
-              "Exposure Mode",
-              HelpIcon("configuration/exposure-mode.md".refined)
-            ),
-            <.span(
-              LucumaPrimeStyles.FormField,
-              PrimeStyles.InputGroup,
-              FormEnumDropdownView(
-                id = "exposureMode".refined,
-                value = emv,
-                disabled = disableSimpleEdit
-              )
+            FormEnumDropdownView(
+              id = "exposureMode".refined,
+              value = emv,
+              label = ReactFragment(
+                "Exposure Mode",
+                HelpIcon("configuration/exposure-mode.md".refined)
+              ),
+              disabled = true
             ),
             snModeView.asView
               .map(SignalToNoiseAt(_, props.readonly, props.units, props.calibrationRole))

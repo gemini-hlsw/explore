@@ -3,30 +3,28 @@
 
 package explore.model.arb
 
-import explore.model.ScienceRequirements
-import org.scalacheck.Arbitrary
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.Cogen
-import lucuma.core.math.Wavelength
-import lucuma.core.math.Angle
-import lucuma.core.math.WavelengthDelta
-import lucuma.core.enums.FocalPlane
-import lucuma.core.enums.SpectroscopyCapabilities
-import lucuma.core.math.arb.ArbWavelength.given
-import lucuma.core.math.arb.ArbAngle.given
-import lucuma.core.util.arb.ArbEnumerated.given
-import lucuma.core.math.arb.ArbWavelengthDelta.given
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.scalacheck.numeric.given
+import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.*
+import lucuma.core.enums.FocalPlane
+import lucuma.core.enums.SpectroscopyCapabilities
+import lucuma.core.math.Angle
+import lucuma.core.math.SignalToNoise
+import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
+import lucuma.core.math.arb.ArbWavelength.given
+import lucuma.core.math.arb.ArbAngle.given
+import lucuma.core.math.arb.ArbWavelengthDelta.given
+import lucuma.core.math.arb.ArbSignalToNoise.given
 import lucuma.core.math.arb.ArbRefined.given
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbTimeSpan.given
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.arb.ArbSignalToNoise.given
-import lucuma.core.model.ExposureTimeMode
-import lucuma.core.model.arb.ArbExposureTimeMode.given
-import explore.model.ScienceRequirements.*
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Cogen
 
 trait ArbScienceRequirements:
 

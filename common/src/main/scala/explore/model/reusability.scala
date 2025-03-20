@@ -8,6 +8,7 @@ import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.model.ScienceRequirements.*
 import explore.model.enums.AgsState
 import explore.model.enums.GroupWarning
 import explore.model.enums.SelectedPanel
@@ -43,7 +44,6 @@ import lucuma.itc.client.GraphResult
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-import explore.model.ScienceRequirements.*
 
 /**
  * Reusability instances for model classes

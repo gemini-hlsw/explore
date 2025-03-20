@@ -12,7 +12,9 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.ExposureTimeModeInfo
 import explore.model.display.given
+import explore.model.enums.ExposureTimeModeType
 import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
@@ -25,17 +27,10 @@ import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.FormEnumDropdownOptionalView
-import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
-import lucuma.ui.primereact.LucumaPrimeStyles
-import lucuma.ui.primereact.clearable
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import monocle.Lens
-import explore.model.ScienceRequirements.ExposureTimeModeInfo
-import explore.model.enums.ExposureTimeModeType
 
 case class SpectroscopyConfigurationPanel(
   options:         View[ScienceRequirements.Spectroscopy],
