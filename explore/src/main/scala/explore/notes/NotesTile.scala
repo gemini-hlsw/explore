@@ -19,16 +19,14 @@ import lucuma.refined.*
 
 object NotesTile:
   def apply(notes: View[Option[NonEmptyString]], hidden: Boolean): Tile[Unit] =
-    if (hidden)
-      Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
-    else
-      Tile(
-        ObsTabTileIds.NotesId.id,
-        s"Note for Observer",
-        bodyClass = ExploreStyles.NotesTile
-      )(_ => MarkdownEditor(notes),
-        (_, tileSize) =>
-          Option.unless(tileSize === TileSizeState.Minimized)(
-            HelpIcon("observer-notes.md".refined)
-          )
-      )
+    Tile(
+      ObsTabTileIds.NotesId.id,
+      s"Note for Observer",
+      bodyClass = ExploreStyles.NotesTile,
+      hidden = hidden
+    )(_ => MarkdownEditor(notes),
+      (_, tileSize) =>
+        Option.unless(tileSize === TileSizeState.Minimized)(
+          HelpIcon("observer-notes.md".refined)
+        )
+    )
