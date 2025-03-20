@@ -127,8 +127,8 @@ object all:
   extension (site: Site)
     def inPreferredDeclination(d: Declination): Boolean =
       d.toAngle.toSignedDoubleDegrees match
-        case d if d < -40.0 => site === Site.GS
-        case d if d > 30.0  => site === Site.GN
+        case d if d < -37.0 => site === Site.GS
+        case d if d > 28.0  => site === Site.GN
         case _              => true
 
   extension (cs: ConstraintSet)
