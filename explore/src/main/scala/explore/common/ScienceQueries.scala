@@ -18,6 +18,7 @@ import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import lucuma.core.enums
 import lucuma.core.math.Angle
+import lucuma.core.util.TimeSpan
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.optics.syntax.lens.*
@@ -27,6 +28,8 @@ import lucuma.schemas.odb.input.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
+import explore.model.ScienceRequirements.*
+import clue.data.Input
 
 object ScienceQueries:
 
@@ -82,19 +85,39 @@ object ScienceQueries:
     def wavelengthDelta(wc: WavelengthDelta): WavelengthInput =
       wavelength(Wavelength(wc.pm))
 
+    extension (ts: TimeSpan)
+      def toInput: TimeSpanInput = TimeSpanInput(microseconds = ts.toMicroseconds.assign)
+
+    extension (i: ExposureTimeModeInfo)
+      def toInput: Option[ExposureTimeModeInput] =
+        i.mode match
+          case Left(SignalToNoiseModeInfo(Some(v), Some(a)))          =>
+            ExposureTimeModeInput(
+              signalToNoise =
+                SignalToNoiseExposureTimeModeInput(value = v, at = wavelength(a)).assign,
+              timeAndCount = Input.unassign
+            ).some
+          case Right(TimeAndCountModeInfo(Some(t), Some(c), Some(a))) =>
+            ExposureTimeModeInput(
+              signalToNoise = Input.unassign,
+              timeAndCount = TimeAndCountExposureTimeModeInput(time = t.toInput,
+                                                               count = c,
+                                                               at = wavelength(a)
+              ).assign
+            ).some
+          case _                                                      => none
+
     def spectroscopyRequirements(
       op: ScienceRequirements.Spectroscopy
-    ): Endo[ScienceRequirementsInput] = {
+    ): Endo[ScienceRequirementsInput] =
       val input =
         for {
           _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          // _ <-
-          //   SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
-          //     .map(_.toInput)
-          // .orUnassign
+          _ <-
+            SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode.toInput.orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
                  .map(wavelengthDelta)
                  .orUnassign
@@ -107,4 +130,3 @@ object ScienceQueries:
       ScienceRequirementsInput.spectroscopy.replace(
         input.runS(SpectroscopyScienceRequirementsInput()).value.assign
       )
-    }

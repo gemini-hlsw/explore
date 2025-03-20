@@ -580,11 +580,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               FormEnumDropdownView(
                 id = "exposureMode".refined,
                 value = emv,
-                // value = exposureModeEnum.withOnMod(onModeMod _),
                 disabled = disableSimpleEdit
-                // placeholder = originalSignalToNoiseText
               )
-              // exposureModeEnum.get.map(_ => customized(originalSignalToNoiseText))
             ),
             snModeView.asView
               .map(SignalToNoiseAt(_, props.readonly, props.units, props.calibrationRole))
