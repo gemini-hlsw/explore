@@ -47,7 +47,7 @@ object ProgramNotesTile:
   ): Tile[Option[ProgramNote.Id]] =
     Tile(
       ProgramTabTileIds.NotesId.id,
-      "Notes",
+      s"Notes (${notes.get.size})",
       initialState = none,
       bodyClass = ExploreStyles.ProgramNotesTileBody
     )(Body(notes, userIsReadonlyCoi, userIsStaff, _),
