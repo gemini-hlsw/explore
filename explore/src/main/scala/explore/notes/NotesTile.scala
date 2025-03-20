@@ -18,15 +18,17 @@ import lucuma.react.common.*
 import lucuma.refined.*
 
 object NotesTile:
-
-  def notesTile(notes: View[Option[NonEmptyString]]): Tile[Unit] =
-    Tile(
-      ObsTabTileIds.NotesId.id,
-      s"Note for Observer",
-      bodyClass = ExploreStyles.NotesTile
-    )(_ => MarkdownEditor(notes),
-      (_, tileSize) =>
-        Option.unless(tileSize === TileSizeState.Minimized)(
-          HelpIcon("observer-notes.md".refined)
-        )
-    )
+  def apply(notes: View[Option[NonEmptyString]], hidden: Boolean): Tile[Unit] =
+    if (hidden)
+      Tile(ObsTabTileIds.NotesId.id, "", hidden = true)(_ => EmptyVdom)
+    else
+      Tile(
+        ObsTabTileIds.NotesId.id,
+        s"Note for Observer",
+        bodyClass = ExploreStyles.NotesTile
+      )(_ => MarkdownEditor(notes),
+        (_, tileSize) =>
+          Option.unless(tileSize === TileSizeState.Minimized)(
+            HelpIcon("observer-notes.md".refined)
+          )
+      )

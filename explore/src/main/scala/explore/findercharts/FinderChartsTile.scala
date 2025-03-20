@@ -45,30 +45,35 @@ object FinderChartsTile:
     authToken:        Option[NonEmptyString],
     attachments:      View[AttachmentList],
     parallacticAngle: Option[Angle],
-    readonly:         Boolean
+    readonly:         Boolean,
+    hidden:           Boolean
   ) =
-    Tile(
-      ObsTabTileIds.FinderChartsId.id,
-      s"Finder Charts",
-      TileState(ChartSelector.Closed, None),
-      bodyClass = ExploreStyles.FinderChartsTile
-    )(
-      tileState =>
-        authToken
-          .map[VdomNode]: t =>
-            Body(
-              programId,
-              oid,
-              t,
-              attachmentIds,
-              attachments,
-              parallacticAngle,
-              readonly,
-              tileState
-            )
-          .orEmpty,
-      (tileState, _) => Title(programId, authToken, attachmentIds, attachments, readonly)(tileState)
-    )
+    if (hidden)
+      Tile(ObsTabTileIds.FinderChartsId.id, "", hidden = true)(_ => EmptyVdom)
+    else
+      Tile(
+        ObsTabTileIds.FinderChartsId.id,
+        s"Finder Charts",
+        TileState(ChartSelector.Closed, None),
+        bodyClass = ExploreStyles.FinderChartsTile
+      )(
+        tileState =>
+          authToken
+            .map[VdomNode]: t =>
+              Body(
+                programId,
+                oid,
+                t,
+                attachmentIds,
+                attachments,
+                parallacticAngle,
+                readonly,
+                tileState
+              )
+            .orEmpty,
+        (tileState, _) =>
+          Title(programId, authToken, attachmentIds, attachments, readonly)(tileState)
+      )
 
   case class TileState(chartSelector: ChartSelector, selected: Option[Attachment.Id])
 
