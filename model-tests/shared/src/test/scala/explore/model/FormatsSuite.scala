@@ -15,9 +15,23 @@ import org.scalacheck.Gen
 
 import java.time.Duration
 
-class FormatsSuite extends munit.DisciplineSuite {
+class FormatsSuite extends munit.DisciplineSuite:
   private val perturbations: List[String => Gen[String]] =
     List(_ => arbitrary[String]) // swap for a random string
+
+  val finiteDurationsS: Gen[String] =
+    arbitrary[TimeSpan]
+      .map { ts =>
+        println(ts)
+        val r =
+          if (ts.toMillisPart > 0)
+            f"${ts.toSecondsPart}%02d.${ts.toMillisPart}%03d"
+          else
+            f"${ts.toSecondsPart}%02d"
+        println(r)
+        r
+      }
+      .flatMapOneOf(Gen.const, perturbations*)
 
   val finiteDurationsHM: Gen[String] =
     arbitrary[TimeSpan]
@@ -38,6 +52,49 @@ class FormatsSuite extends munit.DisciplineSuite {
       }
       .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations)*)
 
+  assertEquals(parsers.durationMs.parseAll("00.001").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(1)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("45").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(45)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("45.0").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(45)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("45.034").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(45).withNanos(34 * 1000000)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("35").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(35)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(0)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.35").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(350)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.350").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(350)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.000").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(0)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.045").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(45)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.701").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(701)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.38").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(380)).some
+  )
+  // Extra digits beyond 3 should be discarded
+  assertEquals(parsers.durationMs.parseAll("0.00045").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(0)).some
+  )
+  assertEquals(parsers.durationMs.parseAll("0.0000701").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofMillis(0)).some
+  )
   assertEquals(parsers.durationHM.parseAll("0").toOption,
                TimeSpan.unsafeFromDuration(Duration.ofMinutes(0)).some
   )
@@ -77,4 +134,7 @@ class FormatsSuite extends munit.DisciplineSuite {
     "durationHMSValidWedge",
     ValidWedgeTests(durationHMS).validWedgeLawsWith(finiteDurationsHMS)
   )
-}
+  // checkAll(
+  //   "durationSValidWedge",
+  //   ValidWedgeTests(durationMs).validWedgeLawsWith(finiteDurationsS)
+  // )

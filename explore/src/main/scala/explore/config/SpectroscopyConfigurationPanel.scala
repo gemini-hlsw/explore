@@ -59,6 +59,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
 
         val exposureTimeMode       = options.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
         val snMode                 = options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseMode)
+        val tcMode                 = options.zoom(ScienceRequirements.Spectroscopy.timeAndCountMode)
         val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
         val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
         val wavelengthDelta        = options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
@@ -112,9 +113,10 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
               "Exposure Mode",
               HelpIcon("configuration/exposure-mode.md".refined)
             ),
-            disabled = true
+            disabled = p.readonly
           ),
-          snMode.asView.map(SignalToNoiseAt(_, p.readonly, p.units, p.calibrationRole)),
+          snMode.asView.map(SignalToNoiseAtEditor(_, p.readonly, p.units, p.calibrationRole)),
+          tcMode.asView.map(TimeAndCountEditor(_, p.readonly, p.units, p.calibrationRole)),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,

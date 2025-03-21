@@ -551,7 +551,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = true
             ),
             snModeView.asView
-              .map(SignalToNoiseAt(_, props.readonly, props.units, props.calibrationRole))
+              .map(SignalToNoiseAtEditor(_, props.readonly, props.units, props.calibrationRole))
             // FormLabel(htmlFor = "exposureTime".refined)(
             //   "Exp Time",
             //   HelpIcon("configuration/exposure-time.md".refined),

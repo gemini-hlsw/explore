@@ -55,4 +55,18 @@ trait parsers:
       }
       .withContext("duration_hm")
 
+  // Duration in the form of secs.milllis
+  val durationMs: Parser0[TimeSpan] =
+    (digits.? ~ (char('.') ~ digit.rep(1, 3).string ~ digits.?).?)
+      .map {
+        case (s, Some(((_, ms), _))) =>
+          val seconds = s.foldMap(_.toLong)
+          val millis  = ms.padTo(3, '0').toLong
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(seconds).plusMillis(millis))
+        case (s, _)                  =>
+          val seconds = s.foldMap(_.toLong)
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(seconds))
+      }
+      .withContext("duration_s")
+
 object parsers extends parsers
