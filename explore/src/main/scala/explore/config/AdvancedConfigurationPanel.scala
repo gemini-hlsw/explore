@@ -26,7 +26,6 @@ import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
-import explore.model.enums.ExposureTimeModeType
 import explore.model.enums.WavelengthUnits
 import explore.modes.InstrumentConfig
 import explore.modes.ModeCommonWavelengths
@@ -36,7 +35,6 @@ import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
@@ -484,8 +482,9 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
 
         given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(props.units)
 
-        val snModeView =
-          props.spectroscopyRequirements.zoom(ScienceRequirements.Spectroscopy.signalToNoiseMode)
+        val exposureTimeMode =
+          props.spectroscopyRequirements.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
+
         <.div(
           ExploreStyles.AdvancedConfigurationGrid
         )(
@@ -541,79 +540,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            FormEnumDropdownView(
-              id = "exposureMode".refined,
-              value = emv,
-              label = ReactFragment(
-                "Exposure Mode",
-                HelpIcon("configuration/exposure-mode.md".refined)
-              ),
-              disabled = true
-            ),
-            snModeView.asView
-              .map(SignalToNoiseAtEditor(_, props.readonly, props.units, props.calibrationRole))
-            // FormLabel(htmlFor = "exposureTime".refined)(
-            //   "Exp Time",
-            //   HelpIcon("configuration/exposure-time.md".refined),
-            //   ExploreStyles.IndentLabel
-            // ),
-            // exposureTimeView
-            //   .map(v =>
-            //     FormInputTextView(
-            //       id = "exposureTime".refined,
-            //       value = v
-            //         .zoomSplitEpi[NonNegInt](nonNegDurationSecondsSplitEpi)
-            //         .withOnMod(_ => invalidateITC),
-            //       validFormat = InputValidSplitEpi.refinedInt[NonNegative],
-            //       changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-            //       units = "sec",
-            //       disabled = disableSimpleEdit
-            //     ): TagMod
-            //   )
-            //   .getOrElse(
-            //     potRender[Option[NonNegDuration]](
-            //       valueRender = ot => {
-            //         val value =
-            //           ot.fold(itcNoneMsg)(t => nonNegDurationSecondsSplitEpi.get(t).toString)
-            //         FormInputText(id = "exposureTime".refined,
-            //                       value = value,
-            //                       disabled = true,
-            //                       units = "sec"
-            //         )
-            //       },
-            //       pendingRender = <.div(
-            //         ExploreStyles.InputReplacementIcon,
-            //         Icons.Spinner.withSpin(true)
-            //       ): VdomNode
-            //     )(props.potITC.get.map(_.map(_.exposureTime)))
-            //   ),
-            // FormLabel(htmlFor = "exposureCount".refined)(
-            //   "Exp Count",
-            //   HelpIcon("configuration/exposure-count.md".refined),
-            //   ExploreStyles.IndentLabel
-            // ),
-            // exposureCountView
-            //   .map(v =>
-            //     FormInputTextView(
-            //       id = "exposureCount".refined,
-            //       value = v.withOnMod(_ => invalidateITC),
-            //       validFormat = InputValidSplitEpi.refinedInt[NonNegative],
-            //       changeAuditor = ChangeAuditor.refinedInt[NonNegative](),
-            //       disabled = disableSimpleEdit
-            //     ): TagMod
-            //   )
-            //   .getOrElse(
-            //     potRender[Option[NonNegInt]](
-            //       valueRender = oe => {
-            //         val value = oe.fold(itcNoneMsg)(_.toString)
-            //         FormInputText(id = "exposureCount".refined, value = value, disabled = true)
-            //       },
-            //       pendingRender = <.div(
-            //         ExploreStyles.InputReplacementIcon,
-            //         Icons.Spinner.withSpin(true)
-            //       ): VdomNode
-            //     )(props.potITC.get.map(_.map(_.exposures)))
-            //   )
+            ExposureTimeModeEditor(exposureTimeMode,
+                                   props.readonly,
+                                   props.units,
+                                   props.calibrationRole
+            )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
             // Provide better accessibility by using aria-label directly

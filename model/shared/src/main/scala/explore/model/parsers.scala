@@ -69,7 +69,7 @@ trait parsers:
           TimeSpan.unsafeFromDuration(Duration.ofSeconds(seconds))
       }
       .withContext("duration_s")
-      
+
   // Parse a non-negative integer
   val nonNegInt: Parser[NonNegInt] =
     digits

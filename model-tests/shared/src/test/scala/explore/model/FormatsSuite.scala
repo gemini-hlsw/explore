@@ -12,6 +12,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
+
 import java.time.Duration
 
 class FormatsSuite extends munit.DisciplineSuite:

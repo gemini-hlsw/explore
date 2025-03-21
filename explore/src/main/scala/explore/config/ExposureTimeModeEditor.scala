@@ -32,23 +32,20 @@ case class ExposureTimeModeEditor(
 object ExposureTimeModeEditor:
   private type Props = ExposureTimeModeEditor
 
+  // This is not a lawful lens, it will try to convert one mode to the next preserving the data that makes sense
+  val emvLens: Lens[ExposureTimeModeInfo, ExposureTimeModeType] =
+    Lens[ExposureTimeModeInfo, ExposureTimeModeType](_.exposureMode)(a =>
+      p =>
+        a match
+          case ExposureTimeModeType.SignalToNoise => p.asSignalToNoiseMode
+          case ExposureTimeModeType.TimeAndCount  => p.asTimeAndCountMode
+    )
+
   protected val component =
     ScalaFnComponent[Props]: props =>
 
       val snMode = props.options.zoom(ExposureTimeModeInfo.signalToNoise)
-
       val tcMode = props.options.zoom(ExposureTimeModeInfo.timeAndCount)
-
-      val emvLens: Lens[ExposureTimeModeInfo, ExposureTimeModeType] =
-        Lens[ExposureTimeModeInfo, ExposureTimeModeType](_.exposureMode)(a =>
-          p =>
-            a match {
-              case ExposureTimeModeType.SignalToNoise =>
-                p.asSignalToNoiseMode
-              case ExposureTimeModeType.TimeAndCount  =>
-                p.asTimeAndCountMode
-            }
-        )
 
       val emv = props.options.zoom(emvLens)
 
@@ -60,7 +57,7 @@ object ExposureTimeModeEditor:
             "Exposure Mode",
             HelpIcon("configuration/exposure-mode.md".refined)
           ),
-          disabled = props.readonly
+          disabled = true // props.readonly
         ),
         snMode.asView.map(
           SignalToNoiseAtEditor(_, props.readonly, props.units, props.calibrationRole)

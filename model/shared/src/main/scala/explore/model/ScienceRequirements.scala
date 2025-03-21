@@ -149,7 +149,6 @@ object ScienceRequirements:
         fpa <- c.downField("focalPlaneAngle").as[Option[Angle]]
         cap <- c.downField("capability").as[Option[SpectroscopyCapabilities]]
       } yield
-        println(etm)
         val etmi = ExposureTimeModeInfo.fromOption(etm)
         Spectroscopy(wl, res, etmi, cov, fp, fpa, cap)
 
