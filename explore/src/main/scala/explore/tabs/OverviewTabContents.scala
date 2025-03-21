@@ -10,9 +10,7 @@ import clue.data.Input
 import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.attachments.ObsAttachmentsTableBody
-import explore.attachments.ObsAttachmentsTableTileState
-import explore.attachments.ObsAttachmentsTableTitle
+import explore.attachments.AttachmentsTile
 import explore.common.Aligner
 import explore.common.ProgramQueries
 import explore.components.Tile
@@ -28,6 +26,7 @@ import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObservationList
 import explore.model.OverviewTabTileIds
 import explore.model.ProgramDetails
+import explore.model.TargetAttachmentAssignmentMap
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.GroupWarning
 import explore.model.layout.LayoutsMap
@@ -55,18 +54,19 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class OverviewTabContents(
-  programId:                Program.Id,
-  userVault:                Option[UserVault],
-  undoer:                   Undoer,
-  attachments:              View[AttachmentList],
-  obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  observations:             View[ObservationList],
-  groups:                   GroupList,
-  groupWarnings:            Map[Group.Id, NonEmptySet[GroupWarning]],
-  detailsUndoSetter:        UndoSetter[ProgramDetails],
-  layout:                   LayoutsMap,
-  proposalIsAccepted:       Boolean,
-  readonly:                 Boolean
+  programId:                   Program.Id,
+  userVault:                   Option[UserVault],
+  undoer:                      Undoer,
+  attachments:                 View[AttachmentList],
+  obsAttachmentAssignments:    ObsAttachmentAssignmentMap,
+  targetAttachmentAssignments: TargetAttachmentAssignmentMap,
+  observations:                View[ObservationList],
+  groups:                      GroupList,
+  groupWarnings:               Map[Group.Id, NonEmptySet[GroupWarning]],
+  detailsUndoSetter:           UndoSetter[ProgramDetails],
+  layout:                      LayoutsMap,
+  proposalIsAccepted:          Boolean,
+  readonly:                    Boolean
 ) extends ReactFnProps(OverviewTabContents):
   val userId: Option[User.Id] = userVault.map(_.user.id)
 
@@ -92,38 +92,18 @@ object OverviewTabContents
         val groupWarningsTile =
           GroupWarningsTile.apply(props.userId, props.programId, props.groups, props.groupWarnings)
 
-        val obsAttachmentsTile = props.userVault
-          .flatMap(vault =>
-            if (
-              props.proposalIsAccepted || props.detailsUndoSetter.get.programType =!= ProgramType.Science
-            )
-              Tile(
-                OverviewTabTileIds.ObsAttachmentsId.id,
-                "Observation Attachments",
-                ObsAttachmentsTableTileState()
-              )(
-                ObsAttachmentsTableBody(
-                  props.programId,
-                  vault.token,
-                  props.obsAttachmentAssignments,
-                  props.attachments,
-                  props.readonly,
-                  _
-                ),
-                (s, _) =>
-                  ObsAttachmentsTableTitle(
-                    props.programId,
-                    vault.token,
-                    props.attachments,
-                    props.readonly,
-                    s
-                  )
-              ).some
-            else None
-          )
-          // provide a hidden dummy tile to not mess up the saved layouts.
-          .getOrElse(
-            Tile(OverviewTabTileIds.ObsAttachmentsId.id, "", hidden = true)(_ => EmptyVdom)
+        val showObsAttachments =
+          props.proposalIsAccepted || props.detailsUndoSetter.get.programType =!= ProgramType.Science
+
+        val attachmentsTile =
+          AttachmentsTile(
+            props.programId,
+            props.userVault,
+            props.obsAttachmentAssignments,
+            props.targetAttachmentAssignments,
+            props.attachments,
+            showObsAttachments,
+            props.readonly
           )
 
         // only edit program description here for non-science programs. For science programs it
@@ -170,7 +150,7 @@ object OverviewTabContents
             List(
               warningsAndErrorsTile,
               groupWarningsTile,
-              obsAttachmentsTile,
+              attachmentsTile,
               descriptionTile
             ),
             GridLayoutSection.OverviewLayout

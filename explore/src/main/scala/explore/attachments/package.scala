@@ -54,13 +54,13 @@ trait AttachmentUtils:
       )
     else f
 
-  val AttIdColumnId: ColumnId          = ColumnId("id")           // ObsAttachments only
+  val AttIdColumnId: ColumnId          = ColumnId("id")          // ObsAttachments only
   val ActionsColumnId: ColumnId        = ColumnId("actions")
   val FileNameColumnId: ColumnId       = ColumnId("filename")
   val AttachmentTypeColumnId: ColumnId = ColumnId("attachment-type")
   val SizeColumnId                     = ColumnId("filesize")
   val LastUpdateColumnId               = ColumnId("last-update")
-  val ObservationsColumnId: ColumnId   = ColumnId("observations") // ObsAttachments only
+  val AssignmentsColumnId: ColumnId    = ColumnId("assignments") // ObsAttachments only
   val DescriptionColumnId: ColumnId    = ColumnId("description")
   val CheckedColumnId: ColumnId        = ColumnId("checked")
 
@@ -71,7 +71,7 @@ trait AttachmentUtils:
     AttachmentTypeColumnId -> "Type",
     SizeColumnId           -> "Size",
     LastUpdateColumnId     -> "LastUpdate",
-    ObservationsColumnId   -> "Observations",
+    AssignmentsColumnId    -> "Assignments",
     DescriptionColumnId    -> "Description",
     CheckedColumnId        -> "Checked"
   )

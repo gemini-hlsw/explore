@@ -20,8 +20,10 @@ import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
+import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.UnnormalizedSED
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
 import monocle.Focus
@@ -91,7 +93,20 @@ case class ProgramSummaries(
       .mapValues(obsIds => SortedSet.from(obsIds))
       .toMap
 
-  // Might not be used after all
+  lazy val targetAttachmentAssignments: TargetAttachmentAssignmentMap =
+    targets.toList
+      .map((targetId, target) =>
+        SourceProfile.unnormalizedSED.some
+          .andThen(UnnormalizedSED.userDefinedAttachment)
+          .getOption(target.sourceProfile)
+          .map(u => u.attachmentId -> targetId)
+      )
+      .flattenOption
+      .groupMap(_._1)(_._2)
+      .view
+      .mapValues(SortedSet.from)
+      .toMap
+
   lazy val targetsWithObs: TargetWithObsList =
     targets.map((targetId, target) =>
       targetId -> TargetWithObs(target, targetObservations.get(targetId).orEmpty)
