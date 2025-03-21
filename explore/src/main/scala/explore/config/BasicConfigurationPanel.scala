@@ -56,13 +56,13 @@ private object BasicConfigurationPanel:
   private object Creating extends NewType[Boolean]
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useStateView[ScienceMode](ScienceMode.Spectroscopy)
-      .useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
-      .useStateView(Creating(false))
-      .render { (props, ctx, mode, imaging, creating) =>
+    ScalaFnComponent[Props]: props =>
+      for
+        ctx      <- useContext(AppContext.ctx)
+        mode     <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
+        imaging  <- useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
+        creating <- useStateView(Creating(false))
+      yield
         import ctx.given
 
         val canAccept: Boolean =
@@ -132,4 +132,3 @@ private object BasicConfigurationPanel:
             ).compact.small.when(canAccept)
           ).when(props.spectroscopyView.get.isDefined && !props.readonly)
         )
-      }

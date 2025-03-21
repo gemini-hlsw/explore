@@ -24,6 +24,7 @@ import explore.model.AppContext
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Progress
 import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.*
 import explore.model.WorkerClients.*
 import explore.model.boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -316,54 +317,57 @@ private object SpectroscopyModesTable:
         )
       ): (_, _, _) =>
         (matrix, s, dec, itcResults, asterism, constraints) =>
-          (s.wavelength, asterism).mapN { (w, a) =>
-            val profiles: NonEmptyList[SourceProfile] =
-              a.map(_.sourceProfile)
+          // TODO support the timeand count mode
+          val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
 
-            val rows: List[SpectroscopyModeRow]          =
-              matrix
-                .filtered(
-                  focalPlane = s.focalPlane,
-                  capability = s.capability,
-                  wavelength = s.wavelength,
-                  slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
-                  resolution = s.resolution,
-                  range = s.wavelengthCoverage,
-                  declination = dec
+          (s.wavelength, asterism, signalToNoise, signalToNoiseAt).mapN {
+            (w, a, signalToNoise, signalToNoiseAt) =>
+              val profiles: NonEmptyList[SourceProfile] =
+                a.map(_.sourceProfile)
+
+              val rows: List[SpectroscopyModeRow]          =
+                matrix
+                  .filtered(
+                    focalPlane = s.focalPlane,
+                    capability = s.capability,
+                    wavelength = s.wavelength,
+                    slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
+                    resolution = s.resolution,
+                    range = s.wavelengthCoverage,
+                    declination = dec
+                  )
+              val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
+              // Computes the mode overrides for the current parameters
+              val fixedModeRows: List[SpectroscopyModeRow] =
+                sortedRows
+                  .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
+                  .flattenOption
+
+              fixedModeRows.map: row =>
+                SpectroscopyModeRowWithResult(
+                  row,
+                  itcResults.forRow(
+                    Some(signalToNoise),
+                    Some(signalToNoiseAt),
+                    constraints,
+                    asterism,
+                    row
+                  ),
+                  s.wavelength.flatMap: w =>
+                    ModeCommonWavelengths.wavelengthInterval(w)(row),
+                  row.instrument.configurationSummary
                 )
-            val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
-            // Computes the mode overrides for the current parameters
-            val fixedModeRows: List[SpectroscopyModeRow] =
-              sortedRows
-                .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
-                .flattenOption
-
-            fixedModeRows.map: row =>
-              SpectroscopyModeRowWithResult(
-                row,
-                itcResults.forRow(
-                  s.signalToNoise,
-                  s.signalToNoiseAt,
-                  constraints,
-                  asterism,
-                  row
-                ),
-                s.wavelength.flatMap: w =>
-                  ModeCommonWavelengths.wavelengthInterval(w)(row),
-                row.instrument.configurationSummary
-              )
           }.orEmpty
       .useState(none[Progress]) // itcProgress
       .useMemoBy((props, _, itcResults, rows, _) => // Calculate the common errors
         (props.spectroscopyRequirements.wavelength,
-         props.spectroscopyRequirements.signalToNoise,
-         props.spectroscopyRequirements.signalToNoiseAt,
+         props.spectroscopyRequirements.exposureTimeMode,
          props.constraints,
          rows,
          itcResults.value
         )
       ): (_, _, _, _, _) =>
-        (_, _, _, _, rows, _) =>
+        (_, _, _, rows, _) =>
           rows.value
             .map(_.result)
             .collect:
@@ -440,8 +444,7 @@ private object SpectroscopyModesTable:
       // Recalculate ITC values if the wv or sn change or if the rows get modified
       .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
         (
-          props.spectroscopyRequirements.signalToNoise,
-          props.spectroscopyRequirements.signalToNoiseAt,
+          props.spectroscopyRequirements, // TODO only  extract exp mode
           props.constraints,
           props.validTargets,
           rows.length
@@ -463,13 +466,13 @@ private object SpectroscopyModesTable:
           _
         ) =>
           (
-            signalToNoise,
-            signalToNoiseAt,
+            s,
             constraints,
             asterism,
             _
           ) =>
             import ctx.given
+            val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
 
             (signalToNoise, signalToNoiseAt, asterism)
               .mapN: (sn, snAt, asterism) =>
@@ -478,7 +481,8 @@ private object SpectroscopyModesTable:
                     .filterNot: row => // Discard modes already in the cache
                       val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
                         itcResults.value.cache
-                      val cw: Option[CentralWavelength]                                        =
+
+                      val cw: Option[CentralWavelength] =
                         row.entry.intervalCenter(snAt)
 
                       cw.exists: w =>

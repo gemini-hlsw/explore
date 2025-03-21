@@ -1,10 +1,9 @@
 // Copyright (c) 2016-2023 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.config
+package explore.model.enums
 
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.*
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -12,16 +11,14 @@ import lucuma.refined.*
 
 enum ExposureTimeModeType(val label: NonEmptyString) derives Enumerated:
   case SignalToNoise extends ExposureTimeModeType("S/N".refined)
-  case FixedExposure extends ExposureTimeModeType("Fixed".refined)
+  case TimeAndCount  extends ExposureTimeModeType("Time & Count".refined)
 
   private val tag = label.value
 
 object ExposureTimeModeType:
   def fromExposureTimeMode(etm: ExposureTimeMode): ExposureTimeModeType = etm match {
     case ExposureTimeMode.SignalToNoiseMode(_, _)   => SignalToNoise
-    case ExposureTimeMode.TimeAndCountMode(_, _, _) => FixedExposure
+    case ExposureTimeMode.TimeAndCountMode(_, _, _) => TimeAndCount
   }
 
   given Display[ExposureTimeModeType] = Display.byShortName(_.label.value)
-
-  given Reusability[ExposureTimeModeType] = Reusability.byEq

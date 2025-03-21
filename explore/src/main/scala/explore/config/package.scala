@@ -11,6 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.SignalToNoiseModeInfo
 import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -86,7 +87,7 @@ trait ConfigurationFormats:
 object ConfigurationFormats extends ConfigurationFormats
 
 case class SignalToNoiseAt(
-  options:         View[ScienceRequirements.Spectroscopy],
+  options:         View[SignalToNoiseModeInfo],
   readonly:        Boolean,
   units:           WavelengthUnits,
   calibrationRole: Option[CalibrationRole]
@@ -97,8 +98,8 @@ object SignalToNoiseAt extends ConfigurationFormats {
 
   protected val component =
     ScalaFnComponent[Props] { props =>
-      val signalToNoise   = props.options.zoom(ScienceRequirements.Spectroscopy.signalToNoise)
-      val signalToNoiseAt = props.options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseAt)
+      val signalToNoise   = props.options.zoom(SignalToNoiseModeInfo.value)
+      val signalToNoiseAt = props.options.zoom(SignalToNoiseModeInfo.at)
       React.Fragment(
         FormLabel("signal-to-noise".refined)(
           "S / N",

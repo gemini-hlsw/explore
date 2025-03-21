@@ -360,7 +360,7 @@ object ConfigurationTile:
             requirementsViewSet(
               Iso.id.asLens,
               _ match
-                case s @ ScienceRequirements.Spectroscopy(_, _, _, _, _, focalPlane, _, _) =>
+                case s @ ScienceRequirements.Spectroscopy(_, _, _, _, focalPlane, _, _) =>
                   UpdateScienceRequirements.spectroscopyRequirements(s)
             )
 

@@ -8,6 +8,7 @@ import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import clue.PersistentClientStatus
 import explore.data.KeyedIndexedList
+import explore.model.ScienceRequirements.*
 import explore.model.enums.AgsState
 import explore.model.enums.GroupWarning
 import explore.model.enums.SelectedPanel
@@ -138,6 +139,9 @@ object reusability:
   given Reusability[CallForProposal]                    = Reusability.byEq
   given Reusability[CategoryAllocationList]             = Reusability.byEq
   given Reusability[InstrumentOverrides]                = Reusability.byEq
+  given Reusability[ExposureTimeModeInfo]               = Reusability.byEq
+  given Reusability[SignalToNoiseModeInfo]              = Reusability.byEq
+  given Reusability[TimeAndCountModeInfo]               = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
   given Reusability[WavelengthDither]                   = Reusability.byEq
   given [A]: Reusability[Offset.Component[A]]           = Reusability.byEq
