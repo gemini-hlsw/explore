@@ -55,10 +55,14 @@ object all:
     def accept: String = at.fileExtensions.toList.sorted.map("." + _.value).mkString(",")
 
   extension (eat: Enumerated[AttachmentType])
-    def forPurpose(purpose: AttachmentPurpose): List[AttachmentType]    =
+    def forPurpose(purpose: AttachmentPurpose): List[AttachmentType]       =
       eat.all.filter(_.purpose === purpose)
-    def notForPurpose(purpose: AttachmentPurpose): List[AttachmentType] =
-      eat.all.filterNot(_.purpose === purpose)
+    def notForPurposes(purposes: AttachmentPurpose*): List[AttachmentType] =
+      eat.all.filterNot(at => purposes.contains(at.purpose))
+
+  extension [A](e: Enumerated[A])
+    def without(purposes: Set[A]): List[A] =
+      e.all.filterNot(purposes.contains)
 
   extension (self: AsterismGroupList)
     // find the first group which contains the entirety of obsIds
@@ -112,8 +116,6 @@ object all:
       self.map(_._2).filter(_.isForPurpose(purpose)).toList
     def proposalList: List[Attachment]                                =
       listForPurpose(AttachmentPurpose.Proposal)
-    def observationList: List[Attachment]                             =
-      listForPurpose(AttachmentPurpose.Observation)
     def listForType(attachmentType: AttachmentType): List[Attachment] =
       self.map(_._2).filter(_.attachmentType === attachmentType).toList
     def finderList: List[Attachment]                                  =

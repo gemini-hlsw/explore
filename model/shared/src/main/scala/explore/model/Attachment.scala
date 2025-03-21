@@ -28,8 +28,10 @@ case class Attachment(
   fileSize:       Long,
   updatedAt:      Timestamp
 ) derives Eq:
-  def isForPurpose(purpose: AttachmentPurpose): Boolean =
+  def isForPurpose(purpose: AttachmentPurpose): Boolean        =
     attachmentType.purpose === purpose
+  def isForPurposes(purposes: Set[AttachmentPurpose]): Boolean =
+    purposes.contains(attachmentType.purpose)
 
 object Attachment:
   type Id = model.Attachment.Id

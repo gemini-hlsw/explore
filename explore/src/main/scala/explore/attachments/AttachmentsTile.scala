@@ -27,6 +27,7 @@ import explore.model.Focused
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.Observation
 import explore.model.OverviewTabTileIds
+import explore.model.TargetAttachmentAssignmentMap
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
@@ -38,6 +39,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.AttachmentPurpose
 import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
+import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
@@ -64,11 +66,13 @@ import scala.collection.immutable.SortedSet
 
 object AttachmentsTile:
   def apply(
-    programId:                Program.Id,
-    userVault:                Option[UserVault],
-    obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-    attachments:              View[AttachmentList],
-    readOnly:                 Boolean
+    programId:                   Program.Id,
+    userVault:                   Option[UserVault],
+    obsAttachmentAssignments:    ObsAttachmentAssignmentMap,
+    targetAttachmentAssignments: TargetAttachmentAssignmentMap,
+    attachments:                 View[AttachmentList],
+    showObsAttachments:          Boolean,
+    readOnly:                    Boolean
   ) =
     userVault
       .map: vault =>
@@ -82,7 +86,9 @@ object AttachmentsTile:
             programId,
             authToken,
             obsAttachmentAssignments,
+            targetAttachmentAssignments,
             attachments,
+            showObsAttachments,
             readOnly,
             _
           ),
@@ -91,6 +97,7 @@ object AttachmentsTile:
               programId,
               authToken,
               attachments,
+              showObsAttachments,
               readOnly,
               s
             )
@@ -100,22 +107,25 @@ object AttachmentsTile:
       )
 
   private case class Body(
-    pid:                      Program.Id,
-    authToken:                NonEmptyString,
-    obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-    attachments:              View[AttachmentList],
-    readOnly:                 Boolean,
-    action:                   View[Action]
+    pid:                         Program.Id,
+    authToken:                   NonEmptyString,
+    obsAttachmentAssignments:    ObsAttachmentAssignmentMap,
+    targetAttachmentAssignments: TargetAttachmentAssignmentMap,
+    attachments:                 View[AttachmentList],
+    showObsAttachments:          Boolean,
+    readOnly:                    Boolean,
+    action:                      View[Action]
   ) extends ReactFnProps(Body.component)
 
   private object Body extends ObsAttachmentUtils:
     type Props = Body
 
     case class TableMeta(
-      client:      OdbRestClient[IO],
-      assignments: ObsAttachmentAssignmentMap,
-      urlMap:      UrlMap,
-      readOnly:    Boolean
+      client:            OdbRestClient[IO],
+      obsAssignments:    ObsAttachmentAssignmentMap,
+      targetAssignments: TargetAttachmentAssignmentMap,
+      urlMap:            UrlMap,
+      readOnly:          Boolean
     )
 
     val ColDef = ColumnDef[View[Attachment]].WithTableMeta[TableMeta]
@@ -126,7 +136,7 @@ object AttachmentsTile:
     def updateAttachment(
       attachments: View[AttachmentList],
       client:      OdbRestClient[IO],
-      oa:          Attachment,
+      att:         Attachment,
       files:       List[DomFile]
     )(using
       ToastCtx[IO]
@@ -137,16 +147,16 @@ object AttachmentsTile:
             val name = NonEmptyString.unsafeFrom(f.name)
             client
               .updateAttachment(
-                oa.id,
+                att.id,
                 name,
-                oa.description,
+                att.description,
                 dom.readReadableStream(IO(f.stream()))
               ) *>
               IO.now()
                 .flatMap { now =>
                   attachments
                     .mod(
-                      _.updatedWith(oa.id)(
+                      _.updatedWith(att.id)(
                         _.map(
                           _.copy(
                             fileName = name,
@@ -174,21 +184,24 @@ object AttachmentsTile:
     def deletePrompt(
       attachments: View[AttachmentList],
       client:      OdbRestClient[IO],
-      oa:          Attachment,
-      obsIds:      SortedSet[Observation.Id]
+      att:         Attachment,
+      obsIds:      SortedSet[Observation.Id],
+      targetIds:   SortedSet[Target.Id]
     )(
       e:           ReactMouseEvent
     )(using Logger[IO], ToastCtx[IO]): Callback =
+      // will only be assigned to obs or targets, not both
       val msg =
-        if (obsIds.isEmpty) ""
-        else s"It is assigned to ${obsIds.size} observations. "
+        if (obsIds.nonEmpty) s"It is assigned to ${obsIds.size} observations. "
+        else if (targetIds.nonEmpty) s"It is assigned to ${targetIds.size} targets. "
+        else ""
       ConfirmPopup
         .confirmPopup(
           e.currentTarget.domAsHtml,
           s"Delete attachment? ${msg}This action is not undoable.",
           acceptLabel = "Delete",
           rejectLabel = "Cancel",
-          accept = deleteAttachment(attachments, client, oa.id).runAsync
+          accept = deleteAttachment(attachments, client, att.id).runAsync
         )
         .show
 
@@ -207,34 +220,54 @@ object AttachmentsTile:
       def obsUrl(obsId: Observation.Id): String =
         ctx.pageUrl((AppTab.Observations, props.pid, Focused.singleObs(obsId)).some)
 
+      def goToTarget(targetId: Target.Id): Callback =
+        ctx.pushPage((AppTab.Targets, props.pid, Focused.target(targetId)).some)
+
+      def targetUrl(targetId: Target.Id): String =
+        ctx.pageUrl((AppTab.Targets, props.pid, Focused.target(targetId)).some)
+
       List(
         column(ActionsColumnId, identity)
           .withCell: cell =>
             cell.table.options.meta.map: meta =>
-              val thisOa: Attachment = cell.value
-              val id: Attachment.Id  = thisOa.id
+              val thisAtt: Attachment = cell.value
+              val id: Attachment.Id   = thisAtt.id
 
               def onUpdateFileSelected(e: ReactEventFromInput): Callback =
                 val files = e.target.files.toList
                 (Callback(e.target.value = null) *>
-                  updateAttachment(props.attachments, meta.client, thisOa, files)
+                  updateAttachment(props.attachments, meta.client, thisAtt, files)
                     .switching(props.action.async, Action.Replace, Action.None)
                     .runAsync)
                   .when_(files.nonEmpty)
 
+              val targetAssignments = meta.targetAssignments.get(id).orEmpty
+              val deleteTooltip     =
+                if (targetAssignments.nonEmpty)
+                  "Attachment must be removed from all targets before it can be deleted."
+                else "Delete attachment"
+
               <.div(
                 // The upload "button" needs to be a label. In order to make
                 // the styling consistent they're all labels.
-                <.label(
-                  tableLabelButtonClasses,
-                  Icons.Trash,
-                  ^.onClick ==> deletePrompt(
-                    props.attachments,
-                    meta.client,
-                    thisOa,
-                    meta.assignments.get(id).orEmpty
+                <.span( // need to wrap it in a span show tooltip shows even when "disabled"
+                  <.label(
+                    tableLabelButtonClasses |+|
+                      Css("p-disabled").when_(targetAssignments.nonEmpty),
+                    Icons.Trash,
+                    ^.onClick ==> { e =>
+                      if (targetAssignments.nonEmpty) Callback.empty
+                      else
+                        deletePrompt(
+                          props.attachments,
+                          meta.client,
+                          thisAtt,
+                          meta.obsAssignments.get(id).orEmpty,
+                          meta.targetAssignments.get(id).orEmpty
+                        )(e)
+                    }
                   )
-                ).withTooltip("Delete attachment").unless(meta.readOnly),
+                ).withTooltip(deleteTooltip).unless(meta.readOnly),
                 <.label(
                   tableLabelButtonClasses,
                   ^.htmlFor := s"attachment-replace-$id",
@@ -249,10 +282,10 @@ object AttachmentsTile:
                   ^.onChange ==> onUpdateFileSelected,
                   ^.id     := s"attachment-replace-$id",
                   ^.name   := "file",
-                  ^.accept := thisOa.attachmentType.accept
+                  ^.accept := thisAtt.attachmentType.accept
                 ).unless(meta.readOnly),
                 meta.urlMap
-                  .get(thisOa.toMapKey)
+                  .get(thisAtt.toMapKey)
                   .foldMap:
                     case Pot.Ready(url) =>
                       <.a(Icons.FileArrowDown, ^.href := url, tableLabelButtonClasses)
@@ -277,23 +310,43 @@ object AttachmentsTile:
             Constants.GppDateFormatter
               .format(cell.value.toLocalDateTime)
           ),
-        column(ObservationsColumnId, Attachment.id.get)
+        column(AssignmentsColumnId, identity)
           .withCell: cell =>
             cell.table.options.meta.map: meta =>
-              <.span(
-                meta.assignments
-                  .get(cell.value)
-                  .orEmpty
-                  .toList
-                  .map(obsId =>
-                    <.a(
-                      ^.href := obsUrl(obsId),
-                      ^.onClick ==> (_.preventDefaultCB >> goToObs(obsId)),
-                      obsId.toString
-                    )
+              val att = cell.value
+              val id  = att.id
+              att.attachmentType.purpose match
+                case AttachmentPurpose.Observation =>
+                  <.span(
+                    meta.obsAssignments
+                      .get(id)
+                      .orEmpty
+                      .toList
+                      .map(obsId =>
+                        <.a(
+                          ^.href := obsUrl(obsId),
+                          ^.onClick ==> (_.preventDefaultCB >> goToObs(obsId)),
+                          obsId.toString
+                        )
+                      )
+                      .mkReactFragment(", ")
                   )
-                  .mkReactFragment(", ")
-              )
+                case AttachmentPurpose.Target      =>
+                  <.span(
+                    meta.targetAssignments
+                      .get(id)
+                      .orEmpty
+                      .toList
+                      .map(targetId =>
+                        <.a(
+                          ^.href := targetUrl(targetId),
+                          ^.onClick ==> (_.preventDefaultCB >> goToTarget(targetId)),
+                          targetId.toString
+                        )
+                      )
+                      .mkReactFragment(", ")
+                  )
+                case AttachmentPurpose.Proposal    => EmptyVdom
           .withEnableSorting(false),
         ColDef(
           DescriptionColumnId,
@@ -347,9 +400,19 @@ object AttachmentsTile:
           ctx     <- useContext(AppContext.ctx)
           client  <- useMemo(props.authToken): token =>
                        OdbRestClient[IO](ctx.environment, token) // This could be in the shared state
+          columns <- useMemo(())(_ => columns(ctx, props))
+          rows    <- useMemo((props.showObsAttachments, props.attachments.reuseByValue)):
+                       (showObsAttachments, attachments) =>
+                         val include =
+                           if (showObsAttachments)
+                             Set(AttachmentPurpose.Observation, AttachmentPurpose.Target)
+                           else Set(AttachmentPurpose.Target)
+                         attachments.value.toListOfViews
+                           .map(_._2)
+                           .filter(_.get.isForPurposes(include))
           urlMap  <- useStateView[UrlMap](Map.empty)
-          _       <- useEffectWithDeps(props.attachments.get): attachments =>
-                       val allCurrentKeys = attachments.observationList.map(_.toMapKey).toSet
+          _       <- useEffectWithDeps(rows): attachments =>
+                       val allCurrentKeys = attachments.value.map(_.get.toMapKey).toSet
                        val newOas         = allCurrentKeys.filter(key => !urlMap.get.contains(key)).toList
 
                        val updateUrlMap =
@@ -361,11 +424,6 @@ object AttachmentsTile:
                          newOas.traverse_(key => getAttachmentUrl(client, key, urlMap))
 
                        updateUrlMap *> getUrls
-          columns <- useMemo(())(_ => columns(ctx, props))
-          rows    <- useMemo(props.attachments.reuseByValue):
-                       _.value.toListOfViews
-                         .map(_._2)
-                         .filter(_.get.isForPurpose(AttachmentPurpose.Observation))
           table   <- useReactTable:
                        TableOptions(
                          columns,
@@ -373,6 +431,7 @@ object AttachmentsTile:
                          getRowId = (row, _, _) => RowId(row.get.id.toString),
                          meta = TableMeta(client,
                                           props.obsAttachmentAssignments,
+                                          props.targetAttachmentAssignments,
                                           urlMap.get,
                                           props.readOnly
                          )
@@ -401,11 +460,12 @@ object AttachmentsTile:
       )
 
   private case class Title(
-    pid:         Program.Id,
-    authToken:   NonEmptyString,
-    attachments: View[AttachmentList],
-    readOnly:    Boolean,
-    action:      View[Action]
+    pid:                Program.Id,
+    authToken:          NonEmptyString,
+    attachments:        View[AttachmentList],
+    showObsAttachments: Boolean,
+    readOnly:           Boolean,
+    action:             View[Action]
   ) extends ReactFnProps(Title.component)
 
   private object Title extends ObsAttachmentUtils:
@@ -415,12 +475,19 @@ object AttachmentsTile:
         ctx           <- useContext(AppContext.ctx)
         client        <- useMemo(props.authToken): token =>
                            OdbRestClient[IO](ctx.environment, token)
-        newAttType    <-
-          useStateView(Enumerated[AttachmentType].forPurpose(AttachmentPurpose.Observation).head)
         excludedTypes <-
-          useMemo(())(_ =>
-            Enumerated[AttachmentType].notForPurpose(AttachmentPurpose.Observation).toSet
-          )
+          useMemo(props.showObsAttachments): showObsAttachments =>
+            if (showObsAttachments)
+              Enumerated[AttachmentType]
+                .notForPurposes(AttachmentPurpose.Target, AttachmentPurpose.Observation)
+                .toSet
+            else Enumerated[AttachmentType].notForPurposes(AttachmentPurpose.Target).toSet
+        newAttType    <- useStateView:
+                           Enumerated[AttachmentType].without(excludedTypes).head
+        _             <- useEffectWithDeps(excludedTypes): excluded =>
+                           if (excluded.contains(newAttType.get))
+                             newAttType.set(Enumerated[AttachmentType].without(excluded).head)
+                           else Callback.empty
       } yield
         import ctx.given
 

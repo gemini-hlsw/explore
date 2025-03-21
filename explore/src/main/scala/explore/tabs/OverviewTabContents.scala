@@ -26,6 +26,7 @@ import explore.model.ObsAttachmentAssignmentMap
 import explore.model.ObservationList
 import explore.model.OverviewTabTileIds
 import explore.model.ProgramDetails
+import explore.model.TargetAttachmentAssignmentMap
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.GroupWarning
 import explore.model.layout.LayoutsMap
@@ -53,18 +54,19 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class OverviewTabContents(
-  programId:                Program.Id,
-  userVault:                Option[UserVault],
-  undoer:                   Undoer,
-  attachments:              View[AttachmentList],
-  obsAttachmentAssignments: ObsAttachmentAssignmentMap,
-  observations:             View[ObservationList],
-  groups:                   GroupList,
-  groupWarnings:            Map[Group.Id, NonEmptySet[GroupWarning]],
-  detailsUndoSetter:        UndoSetter[ProgramDetails],
-  layout:                   LayoutsMap,
-  proposalIsAccepted:       Boolean,
-  readonly:                 Boolean
+  programId:                   Program.Id,
+  userVault:                   Option[UserVault],
+  undoer:                      Undoer,
+  attachments:                 View[AttachmentList],
+  obsAttachmentAssignments:    ObsAttachmentAssignmentMap,
+  targetAttachmentAssignments: TargetAttachmentAssignmentMap,
+  observations:                View[ObservationList],
+  groups:                      GroupList,
+  groupWarnings:               Map[Group.Id, NonEmptySet[GroupWarning]],
+  detailsUndoSetter:           UndoSetter[ProgramDetails],
+  layout:                      LayoutsMap,
+  proposalIsAccepted:          Boolean,
+  readonly:                    Boolean
 ) extends ReactFnProps(OverviewTabContents):
   val userId: Option[User.Id] = userVault.map(_.user.id)
 
@@ -90,12 +92,17 @@ object OverviewTabContents
         val groupWarningsTile =
           GroupWarningsTile.apply(props.userId, props.programId, props.groups, props.groupWarnings)
 
+        val showObsAttachments =
+          props.proposalIsAccepted || props.detailsUndoSetter.get.programType =!= ProgramType.Science
+
         val attachmentsTile =
           AttachmentsTile(
             props.programId,
             props.userVault,
             props.obsAttachmentAssignments,
+            props.targetAttachmentAssignments,
             props.attachments,
+            showObsAttachments,
             props.readonly
           )
 
