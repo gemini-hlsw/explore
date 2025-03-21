@@ -10,8 +10,7 @@ import cats.syntax.all.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.modes.InstrumentConfig
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
+
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.Error
@@ -31,9 +30,9 @@ object ITCGraphRequests:
   private val significantFigures =
     SignificantFiguresInput(6.refined, 6.refined, 3.refined)
 
+  // Wrapper method to match the call in ItcServer.scala
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:    Wavelength,
-    signalToNoise: SignalToNoise,
+    exposureTimeMode: ExposureTimeMode,
     constraints:   ConstraintSet,
     targets:       NonEmptyList[ItcTarget],
     mode:          InstrumentConfig,
@@ -44,16 +43,14 @@ object ITCGraphRequests:
     val itcRowsParams = mode match // Only handle known modes
       case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
         ItcGraphRequestParams(
-          wavelength,
-          signalToNoise,
+          exposureTimeMode,
           constraints,
           targets,
           m
         ).some
       case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
         ItcGraphRequestParams(
-          wavelength,
-          signalToNoise,
+          exposureTimeMode,
           constraints,
           targets,
           m
@@ -68,8 +65,7 @@ object ITCGraphRequests:
             .spectroscopyIntegrationTimeAndGraphs(
               SpectroscopyIntegrationTimeAndGraphsInput(
                 SpectroscopyIntegrationTimeAndGraphsParameters(
-                  exposureTimeMode =
-                    ExposureTimeMode.SignalToNoiseMode(request.signalToNoise, request.atWavelength),
+                  exposureTimeMode = request.exposureTimeMode,
                   constraints = request.constraints,
                   mode = mode,
                   significantFigures = significantFigures.some

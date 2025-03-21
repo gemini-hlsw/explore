@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
-import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
@@ -26,9 +25,7 @@ sealed trait ItcQueryProblem(val message: String) derives Eq
 object ItcQueryProblem:
   case object UnsupportedMode          extends ItcQueryProblem("Unsupported mode")
   case object MissingWavelength        extends ItcQueryProblem("Missing wavelength")
-  case object MissingSignalToNoise     extends ItcQueryProblem("Missing signal to noise")
-  case object MissingSignalToNoiseAt
-      extends ItcQueryProblem("Missing signal to noise at wavelength")
+  case object MissingExposureTimeMode  extends ItcQueryProblem("Missing exposure time mode")
   case object MissingTargetInfo        extends ItcQueryProblem("Missing target info")
   case object MissingBrightness        extends ItcQueryProblem("Missing brightness")
   case class SourceTooBright(wellHalfFilledSeconds: BigDecimal)
@@ -86,16 +83,9 @@ extension (a: SeriesResult)
     val start = a.xAxis.map(_.start).getOrElse(1.0)
     a.dataY.zipWithIndex.map((y, i) => (roundToSignificantFigures(step * i + start, 6), y))
 
-object OverridenExposureTime extends NewType[Boolean]:
-  val Overriden: OverridenExposureTime = OverridenExposureTime(true)
-  val FromItc: OverridenExposureTime   = OverridenExposureTime(false)
-
-type OverridenExposureTime = OverridenExposureTime.Type
-
 case class ItcExposureTime(
-  overriden: OverridenExposureTime,
-  time:      TimeSpan,
-  count:     NonNegInt
+  time:  TimeSpan,
+  count: NonNegInt
 ) derives Eq
 
 case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsResult) {
@@ -104,7 +94,7 @@ case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsR
   private lazy val time: IntegrationTime = timeAndGraphs.integrationTime.times.focus
 
   lazy val itcExposureTime: ItcExposureTime =
-    ItcExposureTime(OverridenExposureTime.FromItc, time.exposureTime, time.exposureCount)
+    ItcExposureTime(time.exposureTime, time.exposureCount)
 
   lazy val finalSNRatio: TotalSN =
     timeAndGraphs.atWavelengthFinalSNRatio.getOrElse(timeAndGraphs.peakFinalSNRatio)

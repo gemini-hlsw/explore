@@ -305,10 +305,7 @@ private object SpectroscopyModesTable:
     ScalaFnComponent[Props]: props =>
       for {
         ctx            <- useContext(AppContext.ctx)
-        itcResults     <- useState:                       // itcResults
-                            ItcResultsCache(
-                              Map.empty[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
-                            )
+        itcResults     <- useState(ItcResultsCache.Empty)
         rows           <- useMemo(
                             (props.matrix,
                              props.spectroscopyRequirements,
@@ -318,46 +315,41 @@ private object SpectroscopyModesTable:
                              props.constraints
                             )
                           ): (matrix, s, dec, itcResults, asterism, constraints) =>
-                            // TODO support the timeand count mode
-                            val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
+                            (s.wavelength, asterism, s.exposureTimeModeOption).mapN { (w, a, exposureMode) =>
+                              val profiles: NonEmptyList[SourceProfile] =
+                                a.map(_.sourceProfile)
 
-                            (s.wavelength, asterism, signalToNoise, signalToNoiseAt).mapN {
-                              (w, a, signalToNoise, signalToNoiseAt) =>
-                                val profiles: NonEmptyList[SourceProfile] =
-                                  a.map(_.sourceProfile)
-
-                                val rows: List[SpectroscopyModeRow]          =
-                                  matrix
-                                    .filtered(
-                                      focalPlane = s.focalPlane,
-                                      capability = s.capability,
-                                      wavelength = s.wavelength,
-                                      slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
-                                      resolution = s.resolution,
-                                      range = s.wavelengthCoverage,
-                                      declination = dec
-                                    )
-                                val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
-                                // Computes the mode overrides for the current parameters
-                                val fixedModeRows: List[SpectroscopyModeRow] =
-                                  sortedRows
-                                    .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
-                                    .flattenOption
-
-                                fixedModeRows.map: row =>
-                                  SpectroscopyModeRowWithResult(
-                                    row,
-                                    itcResults.forRow(
-                                      Some(signalToNoise),
-                                      Some(signalToNoiseAt),
-                                      constraints,
-                                      asterism,
-                                      row
-                                    ),
-                                    s.wavelength.flatMap: w =>
-                                      ModeCommonWavelengths.wavelengthInterval(w)(row),
-                                    row.instrument.configurationSummary
+                              val rows: List[SpectroscopyModeRow]          =
+                                matrix
+                                  .filtered(
+                                    focalPlane = s.focalPlane,
+                                    capability = s.capability,
+                                    wavelength = s.wavelength,
+                                    slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
+                                    resolution = s.resolution,
+                                    range = s.wavelengthCoverage,
+                                    declination = dec
                                   )
+                              val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
+                              // Computes the mode overrides for the current parameters
+                              val fixedModeRows: List[SpectroscopyModeRow] =
+                                sortedRows
+                                  .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
+                                  .flattenOption
+
+                              fixedModeRows.map: row =>
+                                SpectroscopyModeRowWithResult(
+                                  row,
+                                  itcResults.forRow(
+                                    exposureMode,
+                                    constraints,
+                                    asterism,
+                                    row
+                                  ),
+                                  s.wavelength.flatMap: w =>
+                                    ModeCommonWavelengths.wavelengthInterval(w)(row),
+                                  row.instrument.configurationSummary
+                                )
                             }.orEmpty
         itcProgress    <- useState(none[Progress])
         errs           <- useMemo(
@@ -437,73 +429,64 @@ private object SpectroscopyModesTable:
         // Recalculate ITC values if the wv or sn change or if the rows get modified
         itcValues      <-
           useEffectStreamResourceWithDeps(
-            (
-              props.spectroscopyRequirements, // TODO only  extract exp mode
-              props.constraints,
-              props.validTargets,
-              rows.length
+            (props.spectroscopyRequirements.exposureTimeModeOption,
+             props.constraints,
+             props.validTargets,
+             rows.length
             )
-          ):
-            (
-              s,
-              constraints,
-              asterism,
-              _
-            ) =>
-              import ctx.given
-              val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
+          ): (expTimeMode, constraints, asterism, _) =>
+            import ctx.given
 
-              (signalToNoise, signalToNoiseAt, asterism)
-                .mapN: (sn, snAt, asterism) =>
-                  val modes: List[SpectroscopyModeRowWithResult] =
-                    sortedRows
-                      .filterNot: row => // Discard modes already in the cache
-                        val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
-                          itcResults.value.cache
+            (expTimeMode, expTimeMode.map(ExposureTimeMode.at.get), asterism)
+              .mapN: (expTimeMode, snAt, asterism) =>
+                val modes: List[SpectroscopyModeRowWithResult] =
+                  sortedRows
+                    .filterNot: row => // Discard modes already in the cache
+                      val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
+                        itcResults.value.cache
 
-                        val cw: Option[CentralWavelength] =
-                          row.entry.intervalCenter(snAt)
+                      val cw: Option[CentralWavelength] =
+                        row.entry.intervalCenter(snAt)
 
-                        cw.exists: w =>
-                          row.entry.instrument.instrument match
-                            case Instrument.GmosNorth | Instrument.GmosSouth =>
-                              cache.contains:
-                                ItcRequestParams(
-                                  w.value,
-                                  sn,
-                                  constraints,
-                                  asterism,
-                                  row.entry.instrument
-                                )
-                            case _                                           => true
+                      cw.exists: w =>
+                        row.entry.instrument.instrument match
+                          case Instrument.GmosNorth | Instrument.GmosSouth =>
+                            cache.contains:
+                              ItcRequestParams(
+                                expTimeMode,
+                                constraints,
+                                asterism,
+                                row.entry.instrument
+                              )
+                          case _                                           => true
 
-                  Option.when(modes.nonEmpty):
-                    val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-                    for
-                      _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
-                      request <-
-                        ItcClient[IO]
-                          .request:
-                            ItcMessage.Query(snAt, sn, constraints, asterism, modes.map(_.entry))
-                          .map:
-                            // Avoid rerendering on every single result, it's slow.
-                            _.groupWithin(100, 500.millis)
-                              .evalMap: itcResponseChunk =>
-                                itcProgress
-                                  .modStateAsync(
-                                    _.map(
-                                      _.increment(NonNegInt.unsafeFrom(itcResponseChunk.size))
-                                    )
-                                      .filterNot(_.complete)
-                                  ) >>
-                                  // Update the cache
-                                  itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
-                                  // Enable scrolling to the selected row (which might have moved due to sorting)
-                                  scrollTo.setState(ScrollTo.Scroll).to[IO]
-                              .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
-                    yield request
-                .flatten
-                .orEmpty
+                Option.when(modes.nonEmpty):
+                  val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
+                  for
+                    _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
+                    request <-
+                      ItcClient[IO]
+                        .request:
+                          ItcMessage.Query(expTimeMode, constraints, asterism, modes.map(_.entry))
+                        .map:
+                          // Avoid rerendering on every single result, it's slow.
+                          _.groupWithin(100, 500.millis)
+                            .evalMap: itcResponseChunk =>
+                              itcProgress
+                                .modStateAsync(
+                                  _.map(
+                                    _.increment(NonNegInt.unsafeFrom(itcResponseChunk.size))
+                                  )
+                                    .filterNot(_.complete)
+                                ) >>
+                                // Update the cache
+                                itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
+                                // Enable scrolling to the selected row (which might have moved due to sorting)
+                                scrollTo.setState(ScrollTo.Scroll).to[IO]
+                            .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
+                  yield request
+              .flatten
+              .orEmpty
         virtualizerRef <- useRef(none[HTMLTableVirtualizer])
         // scroll to the currently selected row.
         _              <- useEffectWithDeps((scrollTo, selectedIndex.value, rows)):
@@ -537,16 +520,14 @@ private object SpectroscopyModesTable:
 
         val errLabel: List[VdomNode] =
           errs.collect:
-            case ItcTargetProblem(name, ItcQueryProblem.MissingWavelength)      =>
+            case ItcTargetProblem(name, ItcQueryProblem.MissingWavelength)       =>
               <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set Wavelength")
-            case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoise)   =>
-              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N")
-            case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoiseAt) =>
-              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N at")
+            case ItcTargetProblem(name, ItcQueryProblem.MissingExposureTimeMode) =>
+              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set Exposure time mode")
             case ItcTargetProblem(name, ItcQueryProblem.MissingTargetInfo)
                 if props.spectroscopyRequirements.wavelength.isDefined =>
               <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Missing Target Info")
-            case ItcTargetProblem(name, ItcQueryProblem.MissingBrightness)      =>
+            case ItcTargetProblem(name, ItcQueryProblem.MissingBrightness)       =>
               <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}No Brightness Defined")
 
         val selectedTarget: Option[VdomNode] =

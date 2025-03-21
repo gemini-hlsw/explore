@@ -37,7 +37,7 @@ object ItcSpectroscopyPlotDescription {
     <.div(
       ExploreStyles.ItcPlotDescription,
       <.label("Integration Time:"),
-      <.span(props.exposureTime.fold("-") { case ItcExposureTime(_, time, count) =>
+      <.span(props.exposureTime.fold("-") { case ItcExposureTime(time, count) =>
         // Not ideal, it needs a fix on lucuma-ui
         format(time, PosInt.unsafeFrom(count.value))
       }),

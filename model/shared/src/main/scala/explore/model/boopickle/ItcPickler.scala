@@ -19,7 +19,6 @@ import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.ItcTargetProblem
-import explore.model.itc.OverridenExposureTime
 import explore.modes.*
 import lucuma.core.data.Zipper
 import lucuma.core.enums.FocalPlane
@@ -36,6 +35,7 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
@@ -217,8 +217,7 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[ItcQueryProblem.UnsupportedMode.type]        = generatePickler
   given Pickler[ItcQueryProblem.MissingWavelength.type]      = generatePickler
-  given Pickler[ItcQueryProblem.MissingSignalToNoise.type]   = generatePickler
-  given Pickler[ItcQueryProblem.MissingSignalToNoiseAt.type] = generatePickler
+  given Pickler[ItcQueryProblem.MissingExposureTimeMode.type]      = generatePickler
   given Pickler[ItcQueryProblem.MissingTargetInfo.type]      = generatePickler
   given Pickler[ItcQueryProblem.MissingBrightness.type]      = generatePickler
   given Pickler[ItcQueryProblem.SourceTooBright]             = generatePickler
@@ -230,8 +229,7 @@ trait ItcPicklers extends CommonPicklers {
     compositePickler[ItcQueryProblem]
       .addConcreteType[ItcQueryProblem.UnsupportedMode.type]
       .addConcreteType[ItcQueryProblem.MissingWavelength.type]
-      .addConcreteType[ItcQueryProblem.MissingSignalToNoise.type]
-      .addConcreteType[ItcQueryProblem.MissingSignalToNoiseAt.type]
+      .addConcreteType[ItcQueryProblem.MissingExposureTimeMode.type]
       .addConcreteType[ItcQueryProblem.MissingTargetInfo.type]
       .addConcreteType[ItcQueryProblem.MissingBrightness.type]
       .addConcreteType[ItcQueryProblem.SourceTooBright]
@@ -244,8 +242,6 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[SeriesResult] = generatePickler
 
   given Pickler[GraphResult] = generatePickler
-
-  given Pickler[OverridenExposureTime] = picklerNewType(OverridenExposureTime)
 
   given Pickler[ItcExposureTime] = generatePickler
 
@@ -296,6 +292,14 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcAsterismGraphResults] = generatePickler
 
   given Pickler[ItcVersions] = generatePickler
+
+  given Pickler[ExposureTimeMode.SignalToNoiseMode] = generatePickler
+  given Pickler[ExposureTimeMode.TimeAndCountMode] = generatePickler
+
+  given Pickler[ExposureTimeMode] =
+    compositePickler[ExposureTimeMode]
+      .addConcreteType[ExposureTimeMode.SignalToNoiseMode]
+      .addConcreteType[ExposureTimeMode.TimeAndCountMode]
 }
 
 object ItcPicklers extends ItcPicklers

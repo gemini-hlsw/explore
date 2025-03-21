@@ -136,6 +136,13 @@ object ScienceRequirements:
         case Left(SignalToNoiseModeInfo(v @ Some(_), a @ Some(_))) =>
           (v, a)
         case _                                                     => (none, none)
+
+    def exposureTimeModeOption: Option[ExposureTimeMode] = exposureTimeMode.mode match
+      case Left(SignalToNoiseModeInfo(Some(sn), Some(wl)))         =>
+        Some(ExposureTimeMode.SignalToNoiseMode(sn, wl))
+      case Right(TimeAndCountModeInfo(Some(t), Some(c), Some(wl))) =>
+        Some(ExposureTimeMode.TimeAndCountMode(t, c, wl))
+      case _                                                       => None
   }
 
   object Spectroscopy {
@@ -166,6 +173,7 @@ object ScienceRequirements:
     val focalPlaneAngle: Lens[Spectroscopy, Option[Angle]]               = Focus[Spectroscopy](_.focalPlaneAngle)
     val capability: Lens[Spectroscopy, Option[SpectroscopyCapabilities]] =
       Focus[Spectroscopy](_.capability)
+
   }
 
   val spectroscopy: Prism[ScienceRequirements, ScienceRequirements.Spectroscopy] =

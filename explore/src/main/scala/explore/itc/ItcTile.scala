@@ -41,6 +41,7 @@ import lucuma.react.primereact.SelectItem
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import lucuma.ui.utils.*
+import lucuma.core.model.ExposureTimeMode
 
 object ItcTile:
   def apply(
@@ -207,7 +208,7 @@ object ItcTile:
                 error,
                 graphTypeView.get,
                 selectedTarget.map(_.name.value),
-                props.itcGraphQuerier.signalToNoiseAt,
+                props.itcGraphQuerier.exposureTimeMode.map(ExposureTimeMode.at.get),
                 detailsView.get
               ),
               ItcPlotControl(graphTypeView, detailsView)

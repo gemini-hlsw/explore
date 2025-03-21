@@ -8,9 +8,8 @@ import cats.syntax.all.*
 import explore.modes.*
 import explore.optics.all.*
 import lucuma.core.enums.*
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode
 import monocle.Focus
 import mouse.boolean.*
 
@@ -18,12 +17,6 @@ import mouse.boolean.*
 case class ItcResultsCache(
   cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 ) {
-  def signalToNoise(w: Option[SignalToNoise]): EitherNec[ItcQueryProblem, SignalToNoise] =
-    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblem.MissingSignalToNoise))
-
-  def signalToNoiseAt(w: Option[Wavelength]): EitherNec[ItcQueryProblem, Wavelength] =
-    Either.fromOption(w, NonEmptyChain.of(ItcQueryProblem.MissingSignalToNoiseAt))
-
   def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, InstrumentConfig] =
     Either.fromOption(
       ItcResultsCache.enabledRow(r).option(r.instrument),
@@ -61,17 +54,19 @@ case class ItcResultsCache(
 
   // Read the cache value or a default
   def forRow(
-    sn:   Option[SignalToNoise],
-    snAt: Option[Wavelength],
-    c:    ConstraintSet,
-    a:    Option[NonEmptyList[ItcTarget]],
-    r:    SpectroscopyModeRow
+    etm: ExposureTimeMode,
+    c:   ConstraintSet,
+    a:   Option[NonEmptyList[ItcTarget]],
+    r:   SpectroscopyModeRow
   ): EitherNec[ItcTargetProblem, ItcResult] =
-    (signalToNoise(sn), signalToNoiseAt(snAt), mode(r), targets(a)).parTupled
+    (
+      mode(r),
+      targets(a)
+    ).parTupled
       .leftMap(_.map(ItcTargetProblem(none, _)))
-      .map: (sn, snAt, im, a) =>
+      .map: (im, a) =>
         cache
-          .get(ItcRequestParams(snAt, sn, c, a, im))
+          .get(ItcRequestParams(etm, c, a, im))
           .getOrElse(ItcResult.Pending.rightNec[ItcTargetProblem])
       .flatten
 
@@ -81,12 +76,13 @@ case class ItcResultsCache(
 
 }
 
-object ItcResultsCache {
+object ItcResultsCache:
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
     List[Instrument](Instrument.GmosNorth, Instrument.GmosSouth).contains_(
       row.instrument.instrument
     ) && row.focalPlane === FocalPlane.SingleSlit
 
+  val Empty: ItcResultsCache = ItcResultsCache(Map.empty)
+
   val cache = Focus[ItcResultsCache](_.cache)
-}

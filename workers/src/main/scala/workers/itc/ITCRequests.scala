@@ -14,8 +14,7 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModeRow
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
+
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.Error
@@ -42,9 +41,9 @@ object ITCRequests:
     Semaphore[F](n).flatMap: s =>
       ga.parTraverse(a => s.permit.use(_ => f(a)))
 
+  // Wrapper method to match the call in ItcServer.scala
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    wavelength:    Wavelength,
-    signalToNoise: SignalToNoise,
+    exposureTimeMode: ExposureTimeMode,
     constraints:   ConstraintSet,
     asterism:      NonEmptyList[ItcTarget],
     modes:         List[SpectroscopyModeRow],
@@ -72,7 +71,7 @@ object ITCRequests:
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
       Logger[F]
         .debug(
-          s"ITC: Request for mode: ${params.mode}, atWavelength: ${params.atWavelength} and target count: ${params.asterism.length}"
+          s"ITC: Request for mode: ${params.mode}, exposureTimeMode: ${params.exposureTimeMode} and target count: ${params.asterism.length}"
         ) *>
         params.mode.toItcClientMode
           .traverse: mode =>
@@ -80,8 +79,7 @@ object ITCRequests:
               .spectroscopy(
                 SpectroscopyInput(
                   SpectroscopyParameters(
-                    exposureTimeMode =
-                      ExposureTimeMode.SignalToNoiseMode(params.signalToNoise, params.atWavelength),
+                    exposureTimeMode = params.exposureTimeMode,
                     constraints = params.constraints,
                     mode = mode
                   ),
@@ -110,11 +108,11 @@ object ITCRequests:
         // Only handle known modes
         .collect:
           case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
-            ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
+            ItcRequestParams(exposureTimeMode, constraints, asterism, m)
           case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
-            ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
+            ItcRequestParams(exposureTimeMode, constraints, asterism, m)
           case m @ InstrumentConfig.Flamingos2Spectroscopy(_, _, _)   =>
-            ItcRequestParams(wavelength, signalToNoise, constraints, asterism, m)
+            ItcRequestParams(exposureTimeMode, constraints, asterism, m)
 
     parTraverseN(
       Constants.MaxConcurrentItcRequests.toLong,
