@@ -15,6 +15,7 @@ import lucuma.core.math.arb.ArbOffset.given
 import lucuma.core.math.arb.ArbParallax.given
 import lucuma.core.math.arb.ArbProperMotion.given
 import lucuma.core.math.arb.ArbWavelengthDither.given
+import lucuma.core.optics.laws.discipline.ValidSplitEpiTests
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
@@ -41,6 +42,11 @@ class ExploreModelValidatorsSuite extends DisciplineSuite:
   checkAll(
     "hoursValidWedge",
     ValidWedgeTests(ExploreModelValidators.hoursValidWedge).validWedgeLaws
+  )
+
+  checkAll(
+    "nonNegInt",
+    ValidSplitEpiTests(ExploreModelValidators.nonNegInt).validSplitEpiLaws
   )
 
   private val perturbations: List[String => Gen[String]] =

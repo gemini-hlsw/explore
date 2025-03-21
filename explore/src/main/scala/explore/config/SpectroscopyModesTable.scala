@@ -302,382 +302,329 @@ private object SpectroscopyModesTable:
     )
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useState: // itcResults
-        ItcResultsCache(Map.empty[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]])
-      .useMemoBy((props, _, itcResults) => // rows
-        (props.matrix,
-         props.spectroscopyRequirements,
-         props.baseCoordinates.map(_.value.dec),
-         itcResults.value,
-         props.validTargets,
-         props.constraints
-        )
-      ): (_, _, _) =>
-        (matrix, s, dec, itcResults, asterism, constraints) =>
-          // TODO support the timeand count mode
-          val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
+    ScalaFnComponent[Props]: props =>
+      for {
+        ctx            <- useContext(AppContext.ctx)
+        itcResults     <- useState:                       // itcResults
+                            ItcResultsCache(
+                              Map.empty[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
+                            )
+        rows           <- useMemo(
+                            (props.matrix,
+                             props.spectroscopyRequirements,
+                             props.baseCoordinates.map(_.value.dec),
+                             itcResults.value,
+                             props.validTargets,
+                             props.constraints
+                            )
+                          ): (matrix, s, dec, itcResults, asterism, constraints) =>
+                            // TODO support the timeand count mode
+                            val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
 
-          (s.wavelength, asterism, signalToNoise, signalToNoiseAt).mapN {
-            (w, a, signalToNoise, signalToNoiseAt) =>
-              val profiles: NonEmptyList[SourceProfile] =
-                a.map(_.sourceProfile)
+                            (s.wavelength, asterism, signalToNoise, signalToNoiseAt).mapN {
+                              (w, a, signalToNoise, signalToNoiseAt) =>
+                                val profiles: NonEmptyList[SourceProfile] =
+                                  a.map(_.sourceProfile)
 
-              val rows: List[SpectroscopyModeRow]          =
-                matrix
-                  .filtered(
-                    focalPlane = s.focalPlane,
-                    capability = s.capability,
-                    wavelength = s.wavelength,
-                    slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
-                    resolution = s.resolution,
-                    range = s.wavelengthCoverage,
-                    declination = dec
-                  )
-              val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
-              // Computes the mode overrides for the current parameters
-              val fixedModeRows: List[SpectroscopyModeRow] =
-                sortedRows
-                  .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
-                  .flattenOption
+                                val rows: List[SpectroscopyModeRow]          =
+                                  matrix
+                                    .filtered(
+                                      focalPlane = s.focalPlane,
+                                      capability = s.capability,
+                                      wavelength = s.wavelength,
+                                      slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
+                                      resolution = s.resolution,
+                                      range = s.wavelengthCoverage,
+                                      declination = dec
+                                    )
+                                val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
+                                // Computes the mode overrides for the current parameters
+                                val fixedModeRows: List[SpectroscopyModeRow] =
+                                  sortedRows
+                                    .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
+                                    .flattenOption
 
-              fixedModeRows.map: row =>
-                SpectroscopyModeRowWithResult(
-                  row,
-                  itcResults.forRow(
-                    Some(signalToNoise),
-                    Some(signalToNoiseAt),
-                    constraints,
-                    asterism,
-                    row
-                  ),
-                  s.wavelength.flatMap: w =>
-                    ModeCommonWavelengths.wavelengthInterval(w)(row),
-                  row.instrument.configurationSummary
-                )
-          }.orEmpty
-      .useState(none[Progress]) // itcProgress
-      .useMemoBy((props, _, itcResults, rows, _) => // Calculate the common errors
-        (props.spectroscopyRequirements.wavelength,
-         props.spectroscopyRequirements.exposureTimeMode,
-         props.constraints,
-         rows,
-         itcResults.value
-        )
-      ): (_, _, _, _, _) =>
-        (_, _, _, rows, _) =>
-          rows.value
-            .map(_.result)
-            .collect:
-              case Left(p) =>
-                p.toList
-                  .filter:
-                    case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
-                    case e if e.problem === ItcQueryProblem.MissingBrightness => true
-                    case _                                                    => false
-                  .distinct
-            .flatten
-            .toList
-            .distinct
-      .useReactTableWithStateStoreBy: (props, ctx, _, rows, itcProgress, _) => // table
-        import ctx.given
+                                fixedModeRows.map: row =>
+                                  SpectroscopyModeRowWithResult(
+                                    row,
+                                    itcResults.forRow(
+                                      Some(signalToNoise),
+                                      Some(signalToNoiseAt),
+                                      constraints,
+                                      asterism,
+                                      row
+                                    ),
+                                    s.wavelength.flatMap: w =>
+                                      ModeCommonWavelengths.wavelengthInterval(w)(row),
+                                    row.instrument.configurationSummary
+                                  )
+                            }.orEmpty
+        itcProgress    <- useState(none[Progress])
+        errs           <- useMemo(
+                            (props.spectroscopyRequirements.wavelength,
+                             props.spectroscopyRequirements.exposureTimeMode,
+                             props.constraints,
+                             rows,
+                             itcResults.value
+                            )
+                          ): (_, _, _, rows, _) =>
+                            rows.value
+                              .map(_.result)
+                              .collect:
+                                case Left(p) =>
+                                  p.toList
+                                    .filter:
+                                      case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
+                                      case e if e.problem === ItcQueryProblem.MissingBrightness => true
+                                      case _                                                    => false
+                                    .distinct
+                              .flatten
+                              .toList
+                              .distinct
+        table          <- useReactTableWithStateStore:
+                            import ctx.given
 
-        TableOptionsWithStateStore(
-          TableOptions(
-            Reusable.always(columns),
-            rows,
-            getRowId = (row, _, _) => row.rowId,
-            enableSorting = true,
-            state = PartialTableState(
-              columnVisibility = ColumnVisibility( // Hide FPU column if empty
-                FPUColumnId -> Visibility.fromVisible:
-                  props.spectroscopyRequirements.focalPlane.isDefined
-              )
-            ),
-            meta = TableMeta(itcProgress.value)
-          ),
-          TableStore(props.userId, TableId.SpectroscopyModes, columns)
-        )
-      // We need to have an indicator of whether we need to scrollTo the selectedIndex as
-      // a state because otherwise the scrollTo effect below would often run in the same "hook cyle"
-      // as the index change, and it would use the old index so it would scroll to the wrong location.
-      // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
-      // in the following "hook cycle" and get the proper index.
-      .useState(ScrollTo.Scroll)
-      .useEffectWithDepsBy((_, _, _, _, _, _, table, _) => table.getState().sorting):
-        (_, _, _, _, _, _, table, scrollTo) => _ => scrollTo.setState(ScrollTo.Scroll)
-      .useMemoBy((_, _, _, rows, _, _, table, _) => // sortedRows
-        (rows, table.getState().sorting)
-      ): (_, _, _, _, _, sorting, table, _) =>
-        (_, _) => table.getSortedRowModel().rows.map(_.original).toList
-      .useStateBy: (props, _, _, rows, _, _, _, _, _) => // selectedRow
-        props.selectedConfig.get
-          .flatMap: c =>
-            rows.value.find: row =>
-              c.instrumentConfig === row.entry.instrument
-          .map(_.entry)
-      // selectedIndex
-      // The selected index needs to be the index into the sorted data, because that is what
-      // the virtualizer uses for scrollTo.
-      .useMemoBy((props, _, _, _, _, _, _, _, sortedRows, selectedRow) =>
-        (sortedRows, selectedRow.value)
-      ): (_, _, _, _, _, _, _, _, _, _) =>
-        (sortedRows, selectedRow) =>
-          selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry == sRow))
-      // Set the selected config if the rows change because it might have different itc data.
-      // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
-      .useEffectWithDepsBy((_, _, _, rows, _, _, _, _, _, _, _) => rows):
-        (props, _, _, _, _, _, _, _, sortedRows, _, selectedIndex) =>
-          _ =>
-            val optRow: Option[SpectroscopyModeRowWithResult] =
-              selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
-            val conf: Option[InstrumentConfigAndItcResult]    =
-              optRow.map: row =>
-                InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
-            if (props.selectedConfig.get =!= conf)
-              props.selectedConfig.set(conf)
-            else Callback.empty
-      .useState(none[Range.Inclusive]) // visibleRows
-      .useState(false) // atTop
-      // Recalculate ITC values if the wv or sn change or if the rows get modified
-      .useEffectStreamResourceWithDepsBy((props, _, _, rows, _, _, _, _, _, _, _, _, _) =>
-        (
-          props.spectroscopyRequirements, // TODO only  extract exp mode
-          props.constraints,
-          props.validTargets,
-          rows.length
-        )
-      ):
-        (
-          _,
-          ctx,
-          itcResults,
-          _,
-          itcProgress,
-          _,
-          _,
-          scrollTo,
-          sortedRows,
-          _,
-          _,
-          _,
-          _
-        ) =>
-          (
-            s,
-            constraints,
-            asterism,
-            _
-          ) =>
-            import ctx.given
-            val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
+                            TableOptionsWithStateStore(
+                              TableOptions(
+                                Reusable.always(columns),
+                                rows,
+                                getRowId = (row, _, _) => row.rowId,
+                                enableSorting = true,
+                                state = PartialTableState(
+                                  columnVisibility = ColumnVisibility( // Hide FPU column if empty
+                                    FPUColumnId -> Visibility.fromVisible:
+                                      props.spectroscopyRequirements.focalPlane.isDefined
+                                  )
+                                ),
+                                meta = TableMeta(itcProgress.value)
+                              ),
+                              TableStore(props.userId, TableId.SpectroscopyModes, columns)
+                            )
+        // We need to have an indicator of whether we need to scrollTo the selectedIndex as
+        // a state because otherwise the scrollTo effect below would often run in the same "hook cyle"
+        // as the index change, and it would use the old index so it would scroll to the wrong location.
+        // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
+        // in the following "hook cycle" and get the proper index.
+        scrollTo       <- useState(ScrollTo.Scroll)
+        _              <- useEffectWithDeps(table.getState().sorting)(_ => scrollTo.setState(ScrollTo.Scroll))
+        sortedRows     <- useMemo((rows, table.getState().sorting))(_ =>
+                            table.getSortedRowModel().rows.map(_.original).toList
+                          )
+        selectedRow    <- useState:
+                            props.selectedConfig.get
+                              .flatMap: c =>
+                                rows.value.find: row =>
+                                  c.instrumentConfig === row.entry.instrument
+                              .map(_.entry)
+        // selectedIndex
+        // The selected index needs to be the index into the sorted data, because that is what
+        // the virtualizer uses for scrollTo.
+        selectedIndex  <- useMemo((sortedRows, selectedRow.value)): (sortedRows, selectedRow) =>
+                            selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry == sRow))
+        // Set the selected config if the rows change because it might have different itc data.
+        // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
+        _              <- useEffectWithDeps(rows): _ =>
+                            val optRow: Option[SpectroscopyModeRowWithResult] =
+                              selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
+                            val conf: Option[InstrumentConfigAndItcResult]    =
+                              optRow.map: row =>
+                                InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
+                            if (props.selectedConfig.get =!= conf)
+                              props.selectedConfig.set(conf)
+                            else Callback.empty
+        visibleRows    <- useState(none[Range.Inclusive]) // visibleRows
+        atTop          <- useState(false)                 // atTop
+        // Recalculate ITC values if the wv or sn change or if the rows get modified
+        itcValues      <-
+          useEffectStreamResourceWithDeps(
+            (
+              props.spectroscopyRequirements, // TODO only  extract exp mode
+              props.constraints,
+              props.validTargets,
+              rows.length
+            )
+          ):
+            (
+              s,
+              constraints,
+              asterism,
+              _
+            ) =>
+              import ctx.given
+              val (signalToNoise, signalToNoiseAt) = s.extractSignalToNoise
 
-            (signalToNoise, signalToNoiseAt, asterism)
-              .mapN: (sn, snAt, asterism) =>
-                val modes: List[SpectroscopyModeRowWithResult] =
-                  sortedRows
-                    .filterNot: row => // Discard modes already in the cache
-                      val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
-                        itcResults.value.cache
+              (signalToNoise, signalToNoiseAt, asterism)
+                .mapN: (sn, snAt, asterism) =>
+                  val modes: List[SpectroscopyModeRowWithResult] =
+                    sortedRows
+                      .filterNot: row => // Discard modes already in the cache
+                        val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
+                          itcResults.value.cache
 
-                      val cw: Option[CentralWavelength] =
-                        row.entry.intervalCenter(snAt)
+                        val cw: Option[CentralWavelength] =
+                          row.entry.intervalCenter(snAt)
 
-                      cw.exists: w =>
-                        row.entry.instrument.instrument match
-                          case Instrument.GmosNorth | Instrument.GmosSouth =>
-                            cache.contains:
-                              ItcRequestParams(
-                                w.value,
-                                sn,
-                                constraints,
-                                asterism,
-                                row.entry.instrument
+                        cw.exists: w =>
+                          row.entry.instrument.instrument match
+                            case Instrument.GmosNorth | Instrument.GmosSouth =>
+                              cache.contains:
+                                ItcRequestParams(
+                                  w.value,
+                                  sn,
+                                  constraints,
+                                  asterism,
+                                  row.entry.instrument
+                                )
+                            case _                                           => true
+
+                  Option.when(modes.nonEmpty):
+                    val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
+                    for
+                      _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
+                      request <-
+                        ItcClient[IO]
+                          .request:
+                            ItcMessage.Query(snAt, sn, constraints, asterism, modes.map(_.entry))
+                          .map:
+                            // Avoid rerendering on every single result, it's slow.
+                            _.groupWithin(100, 500.millis)
+                              .evalMap: itcResponseChunk =>
+                                itcProgress
+                                  .modStateAsync(
+                                    _.map(
+                                      _.increment(NonNegInt.unsafeFrom(itcResponseChunk.size))
+                                    )
+                                      .filterNot(_.complete)
+                                  ) >>
+                                  // Update the cache
+                                  itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
+                                  // Enable scrolling to the selected row (which might have moved due to sorting)
+                                  scrollTo.setState(ScrollTo.Scroll).to[IO]
+                              .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
+                    yield request
+                .flatten
+                .orEmpty
+        virtualizerRef <- useRef(none[HTMLTableVirtualizer])
+        // scroll to the currently selected row.
+        _              <- useEffectWithDeps((scrollTo, selectedIndex.value, rows)):
+                            (scrollTo, selectedIndex, _) =>
+                              Callback.when(scrollTo.value === ScrollTo.Scroll)(
+                                selectedIndex.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
+                                  scrollTo.setState(ScrollTo.NoScroll)
                               )
-                          case _                                           => true
+      } yield
+        import ItcQueryProblem.*
 
-                Option.when(modes.nonEmpty):
-                  val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-                  for
-                    _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
-                    request <-
-                      ItcClient[IO]
-                        .request:
-                          ItcMessage.Query(snAt, sn, constraints, asterism, modes.map(_.entry))
-                        .map:
-                          // Avoid rerendering on every single result, it's slow.
-                          _.groupWithin(100, 500.millis)
-                            .evalMap: itcResponseChunk =>
-                              itcProgress
-                                .modStateAsync(
-                                  _.map(_.increment(NonNegInt.unsafeFrom(itcResponseChunk.size)))
-                                    .filterNot(_.complete)
-                                ) >>
-                                // Update the cache
-                                itcResults.modStateAsync(_.updateN(itcResponseChunk.toList)) >>
-                                // Enable scrolling to the selected row (which might have moved due to sorting)
-                                scrollTo.setState(ScrollTo.Scroll).to[IO]
-                            .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
-                  yield request
-              .flatten
-              .orEmpty
-      .useRef(none[HTMLTableVirtualizer])
-      .useEffectWithDepsBy( // scroll to the currently selected row.
-        (_, _, _, _, sortedRows, _, _, scrollTo, _, _, selectedIndex, _, _, _) =>
-          (scrollTo, selectedIndex.value, sortedRows)
-      ):
-        (
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          virtualizerRef
-        ) =>
-          (scrollTo, selectedIndex, _) =>
-            Callback.when(scrollTo.value === ScrollTo.Scroll)(
-              selectedIndex.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
-                scrollTo.setState(ScrollTo.NoScroll)
-            )
-      .render:
-        (
-          props,
-          _,
-          _,
-          rows,
-          _,
-          errs,
-          table,
-          _,
-          _,
-          selectedRow,
-          selectedIndex,
-          visibleRows,
-          atTop,
-          virtualizerRef
-        ) =>
-          import ItcQueryProblem.*
+        def toggleRow(
+          row: SpectroscopyModeRowWithResult
+        ): Option[InstrumentConfigAndItcResult] =
+          Option.when(
+            props.selectedConfig.get.forall(_.instrumentConfig =!= row.entry.instrument)
+          ):
+            InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
 
-          def toggleRow(
-            row: SpectroscopyModeRowWithResult
-          ): Option[InstrumentConfigAndItcResult] =
-            Option.when(
-              props.selectedConfig.get.forall(_.instrumentConfig =!= row.entry.instrument)
-            ):
-              InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
+        def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
+          selectedIndex.value.whenDefined(idx =>
+            Button(
+              clazz = ExploreStyles.ScrollButton |+| style,
+              severity = Button.Severity.Secondary,
+              onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
+            ).withMods(content).compact.when(indexCondition(idx))
+          )
 
-          def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
-            selectedIndex.value.whenDefined(idx =>
-              Button(
-                clazz = ExploreStyles.ScrollButton |+| style,
-                severity = Button.Severity.Secondary,
-                onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
-              ).withMods(content).compact.when(indexCondition(idx))
-            )
+        def renderName(name: Option[NonEmptyString]): String =
+          name.fold("")(n => s"$n: ")
 
-          def renderName(name: Option[NonEmptyString]): String =
-            name.fold("")(n => s"$n: ")
+        val errLabel: List[VdomNode] =
+          errs.collect:
+            case ItcTargetProblem(name, ItcQueryProblem.MissingWavelength)      =>
+              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set Wavelength")
+            case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoise)   =>
+              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N")
+            case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoiseAt) =>
+              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N at")
+            case ItcTargetProblem(name, ItcQueryProblem.MissingTargetInfo)
+                if props.spectroscopyRequirements.wavelength.isDefined =>
+              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Missing Target Info")
+            case ItcTargetProblem(name, ItcQueryProblem.MissingBrightness)      =>
+              <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}No Brightness Defined")
 
-          val errLabel: List[VdomNode] =
-            errs.collect:
-              case ItcTargetProblem(name, ItcQueryProblem.MissingWavelength)      =>
-                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set Wavelength")
-              case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoise)   =>
-                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N")
-              case ItcTargetProblem(name, ItcQueryProblem.MissingSignalToNoiseAt) =>
-                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Set S/N at")
-              case ItcTargetProblem(name, ItcQueryProblem.MissingTargetInfo)
-                  if props.spectroscopyRequirements.wavelength.isDefined =>
-                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}Missing Target Info")
-              case ItcTargetProblem(name, ItcQueryProblem.MissingBrightness)      =>
-                <.label(ExploreStyles.WarningLabel)(s"${renderName(name)}No Brightness Defined")
+        val selectedTarget: Option[VdomNode] =
+          rows.value
+            .collect:
+              case SpectroscopyModeRowWithResult(
+                    _,
+                    Right(result @ ItcResult.Result(_, _, _)),
+                    _,
+                    _
+                  ) =>
+                result
+            // Very short exposure times may have ambiguity WRT the brightest target.
+            .maxByOption(result => (result.exposureTime, result.exposures))
+            .flatMap(_.brightestIndex)
+            .flatMap(brightestIndex => props.validTargets.flatMap(_.get(brightestIndex)))
+            .map(t => <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}"))
 
-          val selectedTarget: Option[VdomNode] =
-            rows.value
-              .collect:
-                case SpectroscopyModeRowWithResult(
-                      _,
-                      Right(result @ ItcResult.Result(_, _, _)),
-                      _,
-                      _
-                    ) =>
-                  result
-              // Very short exposure times may have ambiguity WRT the brightest target.
-              .maxByOption(result => (result.exposureTime, result.exposures))
-              .flatMap(_.brightestIndex)
-              .flatMap(brightestIndex => props.validTargets.flatMap(_.get(brightestIndex)))
-              .map(t => <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}"))
-
-          React.Fragment(
-            <.div(ExploreStyles.ModesTableTitle)(
-              <.label(
-                ExploreStyles.ModesTableCount,
-                s"${rows.length} matching configurations",
-                HelpIcon("configuration/table.md".refined)
-              ),
-              <.div(
-                ExploreStyles.ModesTableInfo,
-                errLabel.toTagMod,
-                selectedTarget
-              )
+        React.Fragment(
+          <.div(ExploreStyles.ModesTableTitle)(
+            <.label(
+              ExploreStyles.ModesTableCount,
+              s"${rows.length} matching configurations",
+              HelpIcon("configuration/table.md".refined)
             ),
             <.div(
-              ExploreStyles.ExploreTable,
-              ExploreStyles.ExploreBorderTable,
-              ExploreStyles.ModesTable
-            )(
-              PrimeAutoHeightVirtualizedTable(
-                table,
-                estimateSize = _ => 32.toPx,
-                striped = true,
-                compact = Compact.Very,
-                containerMod = ^.overflow.auto,
-                rowMod = row =>
-                  TagMod(
-                    ^.disabled := !row.original.entry.enabledRow,
-                    ExploreStyles.TableRowSelected
-                      .when:
-                        props.selectedConfig.get
-                          .exists(_.instrumentConfig === row.original.entry.instrument)
-                    ,
-                    (
-                      ^.onClick --> (
-                        props.selectedConfig.set(toggleRow(row.original)) >>
-                          selectedRow.setState(row.original.entry.some)
-                      )
+              ExploreStyles.ModesTableInfo,
+              errLabel.toTagMod,
+              selectedTarget
+            )
+          ),
+          <.div(
+            ExploreStyles.ExploreTable,
+            ExploreStyles.ExploreBorderTable,
+            ExploreStyles.ModesTable
+          )(
+            PrimeAutoHeightVirtualizedTable(
+              table,
+              estimateSize = _ => 32.toPx,
+              striped = true,
+              compact = Compact.Very,
+              containerMod = ^.overflow.auto,
+              rowMod = row =>
+                TagMod(
+                  ^.disabled := !row.original.entry.enabledRow,
+                  ExploreStyles.TableRowSelected
+                    .when:
+                      props.selectedConfig.get
+                        .exists(_.instrumentConfig === row.original.entry.instrument)
+                  ,
+                  (
+                    ^.onClick --> (
+                      props.selectedConfig.set(toggleRow(row.original)) >>
+                        selectedRow.setState(row.original.entry.some)
                     )
-                      .when(row.original.entry.enabledRow)
-                  ),
-                onChange = virtualizer =>
-                  visibleRows.setState(
-                    virtualizer
-                      .getVirtualItems()
-                      .some
-                      .filter(_.nonEmpty)
-                      .map(items => items.head.index.toInt to items.last.index.toInt)
-                  ) >> atTop.setState(virtualizer.scrollElement.scrollTop < 32),
-                virtualizerRef = virtualizerRef,
-                emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
-              ),
-              scrollButton(
-                Icons.ChevronDoubleUp,
-                ExploreStyles.SelectedUp,
-                idx => !(idx === 0 && atTop.value) && visibleRows.value.exists(_.start + 1 > idx)
-              ),
-              scrollButton(
-                Icons.ChevronDoubleDown,
-                ExploreStyles.SelectedDown,
-                idx => visibleRows.value.exists(_.end - 2 < idx)
-              )
+                  )
+                    .when(row.original.entry.enabledRow)
+                ),
+              onChange = virtualizer =>
+                visibleRows.setState(
+                  virtualizer
+                    .getVirtualItems()
+                    .some
+                    .filter(_.nonEmpty)
+                    .map(items => items.head.index.toInt to items.last.index.toInt)
+                ) >> atTop.setState(virtualizer.scrollElement.scrollTop < 32),
+              virtualizerRef = virtualizerRef,
+              emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
+            ),
+            scrollButton(
+              Icons.ChevronDoubleUp,
+              ExploreStyles.SelectedUp,
+              idx => !(idx === 0 && atTop.value) && visibleRows.value.exists(_.start + 1 > idx)
+            ),
+            scrollButton(
+              Icons.ChevronDoubleDown,
+              ExploreStyles.SelectedDown,
+              idx => visibleRows.value.exists(_.end - 2 < idx)
             )
           )
+        )

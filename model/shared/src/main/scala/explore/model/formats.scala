@@ -135,4 +135,16 @@ trait formats:
       }
     )
 
+  val durationMs: InputValidWedge[TimeSpan] =
+    InputValidWedge(
+      s =>
+        parsers.durationMs
+          .parseAll(s)
+          .leftMap { e =>
+            "Duration parsing errors".refined[NonEmpty]
+          }
+          .toEitherErrors,
+      ts => f"${ts.toSeconds}%.2f"
+    )
+
 object formats extends formats

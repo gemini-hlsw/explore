@@ -9,6 +9,7 @@ import cats.parse.Numbers.digits
 import cats.parse.Parser.char
 import cats.parse.Rfc5234.sp
 import cats.syntax.all.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import lucuma.core.math.parser.AngleParsers
 import lucuma.core.parser.MiscParsers
 import lucuma.core.util.TimeSpan
@@ -54,5 +55,29 @@ trait parsers:
           .map(TimeSpan.unsafeFromDuration)
       }
       .withContext("duration_hm")
+
+  // Duration in the form of secs.milllis
+  val durationMs: Parser0[TimeSpan] =
+    (digits.? ~ (char('.') ~ digit.rep(1, 3).string ~ digits.?).?)
+      .map {
+        case (s, Some(((_, ms), _))) =>
+          val seconds = s.foldMap(_.toLong)
+          val millis  = ms.padTo(3, '0').toLong
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(seconds).plusMillis(millis))
+        case (s, _)                  =>
+          val seconds = s.foldMap(_.toLong)
+          TimeSpan.unsafeFromDuration(Duration.ofSeconds(seconds))
+      }
+      .withContext("duration_s")
+
+  // Parse a non-negative integer
+  val nonNegInt: Parser[NonNegInt] =
+    digits
+      .mapFilter { s =>
+        MiscParsers
+          .catchNFE[String, Int](_.toInt)(s)
+          .flatMap(i => NonNegInt.from(i).toOption)
+      }
+      .withContext("non_neg_int")
 
 object parsers extends parsers
