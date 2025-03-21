@@ -421,7 +421,7 @@ object ExploreGridLayouts:
 
     private lazy val WarningsAndErrorsHeight: NonNegInt = 8.refined
     private lazy val GroupWarningsHeight: NonNegInt     = 8.refined
-    private lazy val ObsAttachmentsHeight: NonNegInt    = 8.refined
+    private lazy val AttachmentsHeight: NonNegInt       = 8.refined
     private lazy val DescriptionHeight: NonNegInt       = 8.refined
 
     private lazy val layoutMedium: Layout = Layout(
@@ -441,16 +441,16 @@ object ExploreGridLayouts:
           h = GroupWarningsHeight.value
         ),
         LayoutItem(
-          i = OverviewTabTileIds.ObsAttachmentsId.id.value,
+          i = OverviewTabTileIds.AttachmentsId.id.value,
           x = 0,
           y = WarningsAndErrorsHeight.value,
           w = DefaultWidth.value,
-          h = ObsAttachmentsHeight.value
+          h = AttachmentsHeight.value
         ),
         LayoutItem(
           i = OverviewTabTileIds.DescriptionId.id.value,
           x = 0,
-          y = (WarningsAndErrorsHeight |+| ObsAttachmentsHeight).value,
+          y = (WarningsAndErrorsHeight |+| AttachmentsHeight).value,
           w = DefaultWidth.value,
           h = DescriptionHeight.value
         )
