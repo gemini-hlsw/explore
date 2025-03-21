@@ -107,7 +107,7 @@ object ScienceRequirements:
         .andThen(SignalToNoiseModeInfo.at)
         .orElse(timeAndCount.andThen(TimeAndCountModeInfo.at))
 
-    val Default = ExposureTimeModeInfo(Left(SignalToNoiseModeInfo(None, None)))
+    val Default = ExposureTimeModeInfo(Left(SignalToNoiseModeInfo.Default))
 
     def fromOption(e: Option[ExposureTimeMode]) = e match {
       case Some(ExposureTimeMode.SignalToNoiseMode(v, a))   =>

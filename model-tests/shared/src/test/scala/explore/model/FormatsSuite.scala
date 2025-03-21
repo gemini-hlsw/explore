@@ -12,26 +12,13 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-
 import java.time.Duration
 
 class FormatsSuite extends munit.DisciplineSuite:
+  override def scalaCheckInitialSeed = "tprrQ0295RsiQ-5mvSW9ajurDGsf3haEulf38PNqa0K="
+
   private val perturbations: List[String => Gen[String]] =
     List(_ => arbitrary[String]) // swap for a random string
-
-  val finiteDurationsS: Gen[String] =
-    arbitrary[TimeSpan]
-      .map { ts =>
-        println(ts)
-        val r =
-          if (ts.toMillisPart > 0)
-            f"${ts.toSecondsPart}%02d.${ts.toMillisPart}%03d"
-          else
-            f"${ts.toSecondsPart}%02d"
-        println(r)
-        r
-      }
-      .flatMapOneOf(Gen.const, perturbations*)
 
   val finiteDurationsHM: Gen[String] =
     arbitrary[TimeSpan]
@@ -134,7 +121,7 @@ class FormatsSuite extends munit.DisciplineSuite:
     "durationHMSValidWedge",
     ValidWedgeTests(durationHMS).validWedgeLawsWith(finiteDurationsHMS)
   )
-  // checkAll(
-  //   "durationSValidWedge",
-  //   ValidWedgeTests(durationMs).validWedgeLawsWith(finiteDurationsS)
-  // )
+  checkAll(
+    "durationMsWedge",
+    ValidWedgeTests(durationMs).validWedgeLaws
+  )

@@ -349,6 +349,7 @@ object ExploreStyles:
   val BasicConfigurationGrid: Css       = Css("explore-basic-configuration-grid")
   val BasicConfigurationForm: Css       = Css("explore-basic-configuration-form")
   val BasicConfigurationSNAt: Css       = Css("explore-basic-configuration-sn-at")
+  val TimeAndCountField: Css            = Css("explore-configuration-time-and-count")
   val BasicConfigurationFocalPlane: Css = Css("explore-basic-configuration-focal-plane")
   val BasicConfigurationButtons: Css    = Css("explore-basic-configuration-buttons")
   val AdvancedConfiguration: Css        = Css("explore-advanced-configuration")

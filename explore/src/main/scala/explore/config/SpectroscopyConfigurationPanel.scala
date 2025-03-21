@@ -12,9 +12,7 @@ import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.ScienceRequirements
-import explore.model.ScienceRequirements.ExposureTimeModeInfo
 import explore.model.display.given
-import explore.model.enums.ExposureTimeModeType
 import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
@@ -30,7 +28,6 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import monocle.Lens
 
 case class SpectroscopyConfigurationPanel(
   options:         View[ScienceRequirements.Spectroscopy],
@@ -58,27 +55,12 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
           )
 
         val exposureTimeMode       = options.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
-        val snMode                 = options.zoom(ScienceRequirements.Spectroscopy.signalToNoiseMode)
-        val tcMode                 = options.zoom(ScienceRequirements.Spectroscopy.timeAndCountMode)
         val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
         val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
         val wavelengthDelta        = options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
         val focalPlaneAngle        = options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
         val spectroscopyCapability =
           options.zoom(ScienceRequirements.Spectroscopy.capability)
-
-        val emvLens: Lens[ExposureTimeModeInfo, ExposureTimeModeType] =
-          Lens[ExposureTimeModeInfo, ExposureTimeModeType](_.exposureMode)(a =>
-            p =>
-              a match {
-                case ExposureTimeModeType.SignalToNoise =>
-                  p.asSignalToNoiseMode
-                case ExposureTimeModeType.TimeAndCount  =>
-                  p.asTimeAndCountMode
-              }
-          )
-
-        val emv = exposureTimeMode.zoom(emvLens)
 
         ReactFragment(
           FormInputTextView[View, Option[Wavelength]](
@@ -106,17 +88,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          FormEnumDropdownView(
-            id = "exposureMode".refined,
-            value = emv,
-            label = ReactFragment(
-              "Exposure Mode",
-              HelpIcon("configuration/exposure-mode.md".refined)
-            ),
-            disabled = p.readonly
-          ),
-          snMode.asView.map(SignalToNoiseAtEditor(_, p.readonly, p.units, p.calibrationRole)),
-          tcMode.asView.map(TimeAndCountEditor(_, p.readonly, p.units, p.calibrationRole)),
+          ExposureTimeModeEditor(exposureTimeMode, p.readonly, p.units, p.calibrationRole),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,

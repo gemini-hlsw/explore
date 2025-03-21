@@ -3108,6 +3108,13 @@ $help-title-height: 40px;
   }
 }
 
+.explore-configuration-time-and-count {
+  display: flex;
+  flex-direction: column;
+  place-items: baseline ;
+  grid-gap: 0.5em;
+}
+
 .explore-basic-configuration-grid {
   flex-grow: 1;
   min-height: 0;
