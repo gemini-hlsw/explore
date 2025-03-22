@@ -38,7 +38,6 @@ object SequenceDigestSubquery
         atomCount
         timeEstimate {
           program $TimeSpanSubquery
-          partner $TimeSpanSubquery
           nonCharged $TimeSpanSubquery
           total $TimeSpanSubquery
         }

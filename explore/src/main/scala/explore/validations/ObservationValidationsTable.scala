@@ -87,8 +87,7 @@ object ObservationValidationsTableBody {
       def goToObs(obsId: Observation.Id): Callback =
         ctx.pushPage((AppTab.Observations, props.programId, Focused.singleObs(obsId)).some)
 
-      def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing, Nothing, Nothing])
-        : Callback =
+      def toggleAll(row: Row[Expandable[ValidationsTableRow], Nothing, ?, Nothing]): Callback =
         row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
 
       List(
