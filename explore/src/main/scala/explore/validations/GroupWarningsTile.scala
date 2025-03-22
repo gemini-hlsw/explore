@@ -80,7 +80,7 @@ object GroupWarningsTile {
     def goToGroup(groupId: Group.Id): Callback =
       ctx.pushPage((AppTab.Observations, programId, Focused.group(groupId)).some)
 
-    def toggleAll(row: Row[Expandable[GroupWarningRow], Nothing, Nothing, Nothing]): Callback =
+    def toggleAll(row: Row[Expandable[GroupWarningRow], Nothing, ?, Nothing]): Callback =
       row.toggleExpanded() *> row.subRows.traverse(r => toggleAll(r)).void
 
     List(
