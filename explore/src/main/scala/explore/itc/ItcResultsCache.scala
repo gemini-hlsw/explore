@@ -59,10 +59,7 @@ case class ItcResultsCache(
     a:   Option[NonEmptyList[ItcTarget]],
     r:   SpectroscopyModeRow
   ): EitherNec[ItcTargetProblem, ItcResult] =
-    (
-      mode(r),
-      targets(a)
-    ).parTupled
+    (mode(r), targets(a)).parTupled
       .leftMap(_.map(ItcTargetProblem(none, _)))
       .map: (im, a) =>
         cache

@@ -29,6 +29,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.LineWidthValue
 import lucuma.core.math.Wavelength
 import lucuma.core.model.EmissionLine
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.User
 import lucuma.core.util.NewType
@@ -41,7 +42,6 @@ import lucuma.react.primereact.SelectItem
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import lucuma.ui.utils.*
-import lucuma.core.model.ExposureTimeMode
 
 object ItcTile:
   def apply(

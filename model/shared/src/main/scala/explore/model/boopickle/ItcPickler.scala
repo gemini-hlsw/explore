@@ -35,10 +35,10 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
-import lucuma.core.model.ExposureTimeMode
 import lucuma.core.math.dimensional.*
 import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
@@ -215,13 +215,13 @@ trait ItcPicklers extends CommonPicklers {
       .addConcreteType[ItcResult.Pending.type]
       .addConcreteType[ItcResult.Result]
 
-  given Pickler[ItcQueryProblem.UnsupportedMode.type]        = generatePickler
-  given Pickler[ItcQueryProblem.MissingWavelength.type]      = generatePickler
-  given Pickler[ItcQueryProblem.MissingExposureTimeMode.type]      = generatePickler
-  given Pickler[ItcQueryProblem.MissingTargetInfo.type]      = generatePickler
-  given Pickler[ItcQueryProblem.MissingBrightness.type]      = generatePickler
-  given Pickler[ItcQueryProblem.SourceTooBright]             = generatePickler
-  given Pickler[ItcQueryProblem.GenericError]                = generatePickler
+  given Pickler[ItcQueryProblem.UnsupportedMode.type]         = generatePickler
+  given Pickler[ItcQueryProblem.MissingWavelength.type]       = generatePickler
+  given Pickler[ItcQueryProblem.MissingExposureTimeMode.type] = generatePickler
+  given Pickler[ItcQueryProblem.MissingTargetInfo.type]       = generatePickler
+  given Pickler[ItcQueryProblem.MissingBrightness.type]       = generatePickler
+  given Pickler[ItcQueryProblem.SourceTooBright]              = generatePickler
+  given Pickler[ItcQueryProblem.GenericError]                 = generatePickler
 
   given Pickler[ItcTargetProblem] = generatePickler
 
@@ -294,7 +294,7 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[ItcVersions] = generatePickler
 
   given Pickler[ExposureTimeMode.SignalToNoiseMode] = generatePickler
-  given Pickler[ExposureTimeMode.TimeAndCountMode] = generatePickler
+  given Pickler[ExposureTimeMode.TimeAndCountMode]  = generatePickler
 
   given Pickler[ExposureTimeMode] =
     compositePickler[ExposureTimeMode]

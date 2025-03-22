@@ -10,7 +10,6 @@ import cats.syntax.all.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.modes.InstrumentConfig
-
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.itc.Error
@@ -33,11 +32,11 @@ object ITCGraphRequests:
   // Wrapper method to match the call in ItcServer.scala
   def queryItc[F[_]: Concurrent: Parallel: Logger](
     exposureTimeMode: ExposureTimeMode,
-    constraints:   ConstraintSet,
-    targets:       NonEmptyList[ItcTarget],
-    mode:          InstrumentConfig,
-    cache:         Cache[F],
-    callback:      ItcAsterismGraphResults => F[Unit]
+    constraints:      ConstraintSet,
+    targets:          NonEmptyList[ItcTarget],
+    mode:             InstrumentConfig,
+    cache:            Cache[F],
+    callback:         ItcAsterismGraphResults => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes

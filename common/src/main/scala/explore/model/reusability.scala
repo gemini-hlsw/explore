@@ -35,6 +35,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.WavelengthDither
 import lucuma.core.model.Configuration
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.TimingWindow
@@ -44,7 +45,6 @@ import lucuma.itc.client.GraphResult
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.*
 import lucuma.ui.reusability.given
-import lucuma.core.model.ExposureTimeMode
 
 /**
  * Reusability instances for model classes
