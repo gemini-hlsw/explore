@@ -29,6 +29,7 @@ import lucuma.core.enums.Band
 import lucuma.core.math.LineWidthValue
 import lucuma.core.math.Wavelength
 import lucuma.core.model.EmissionLine
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.User
 import lucuma.core.util.NewType
@@ -207,7 +208,7 @@ object ItcTile:
                 error,
                 graphTypeView.get,
                 selectedTarget.map(_.name.value),
-                props.itcGraphQuerier.signalToNoiseAt,
+                props.itcGraphQuerier.exposureTimeMode.map(ExposureTimeMode.at.get),
                 detailsView.get
               ),
               ItcPlotControl(graphTypeView, detailsView)

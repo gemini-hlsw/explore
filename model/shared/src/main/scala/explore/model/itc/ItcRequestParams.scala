@@ -5,22 +5,19 @@ package explore.model.itc
 
 import cats.data.*
 import explore.modes.InstrumentConfig
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode
 
 case class ItcRequestParams(
-  atWavelength:  Wavelength,
-  signalToNoise: SignalToNoise,
-  constraints:   ConstraintSet,
-  asterism:      NonEmptyList[ItcTarget],
-  mode:          InstrumentConfig
+  exposureTimeMode: ExposureTimeMode,
+  constraints:      ConstraintSet,
+  asterism:         NonEmptyList[ItcTarget],
+  mode:             InstrumentConfig
 )
 
 case class ItcGraphRequestParams(
-  atWavelength:  Wavelength,
-  signalToNoise: SignalToNoise,
-  constraints:   ConstraintSet,
-  asterism:      NonEmptyList[ItcTarget],
-  mode:          InstrumentConfig
+  exposureTimeMode: ExposureTimeMode,
+  constraints:      ConstraintSet,
+  asterism:         NonEmptyList[ItcTarget],
+  mode:             InstrumentConfig
 )

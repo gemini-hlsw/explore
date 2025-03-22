@@ -58,8 +58,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
           cache.clear *> invocation.respond(())
 
         case ItcMessage.Query(
-              wavelength,
-              signalToNoise,
+              exposureTimeMode,
               constraint,
               targets,
               rows
@@ -68,8 +67,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
             itcClient.get >>= (implicit client =>
             ITCRequests
               .queryItc[IO](
-                wavelength,
-                signalToNoise,
+                exposureTimeMode,
                 constraint,
                 targets,
                 rows,
@@ -79,8 +77,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
           )
 
         case ItcMessage.GraphQuery(
-              wavelength,
-              signalToNoise,
+              exposureTimeMode,
               constraint,
               targets,
               mode
@@ -89,8 +86,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
             itcClient.get >>= (implicit client =>
             ITCGraphRequests
               .queryItc[IO](
-                wavelength,
-                signalToNoise,
+                exposureTimeMode,
                 constraint,
                 targets,
                 mode,

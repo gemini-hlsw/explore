@@ -57,7 +57,7 @@ object ExposureTimeModeEditor:
             "Exposure Mode",
             HelpIcon("configuration/exposure-mode.md".refined)
           ),
-          disabled = true // props.readonly
+          disabled = props.readonly
         ),
         snMode.asView.map(
           SignalToNoiseAtEditor(_, props.readonly, props.units, props.calibrationRole)

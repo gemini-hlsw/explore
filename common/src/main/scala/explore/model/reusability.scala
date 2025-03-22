@@ -35,6 +35,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.WavelengthDither
 import lucuma.core.model.Configuration
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.TimingWindow
@@ -144,6 +145,7 @@ object reusability:
   given Reusability[TimeAndCountModeInfo]               = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
   given Reusability[WavelengthDither]                   = Reusability.byEq
+  given Reusability[ExposureTimeMode]                   = Reusability.byEq
   given [A]: Reusability[Offset.Component[A]]           = Reusability.byEq
   // We explicitly leave default binning out of ObservingMode Reusability since we compute it each time, ignoring the server value.
   given Reusability[ObservingMode.GmosNorthLongSlit]    =
