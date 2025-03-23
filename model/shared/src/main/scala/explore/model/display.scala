@@ -197,9 +197,8 @@ trait DisplayImplicits:
 
   given Display[ItcQueryProblem] = Display.byShortName:
     case ItcQueryProblem.UnsupportedMode               => "Mode not supported"
+    case ItcQueryProblem.MissingExposureTimeMode       => "Exposure time mode is missing"
     case ItcQueryProblem.MissingWavelength             => "Provide a wavelength"
-    case ItcQueryProblem.MissingSignalToNoise          => "Provide a signal to noise"
-    case ItcQueryProblem.MissingSignalToNoiseAt        => "Provide the wavelength where to measure S/N"
     case ItcQueryProblem.MissingTargetInfo             => "Target information is missing"
     case ItcQueryProblem.MissingBrightness             => "Target brightness is missing"
     case ItcQueryProblem.SourceTooBright(halfWellTime) =>

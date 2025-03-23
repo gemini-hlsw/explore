@@ -20,8 +20,7 @@ import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.InstrumentConfig
 import japgolly.scalajs.react.Reusability
-import lucuma.core.math.SignalToNoise
-import lucuma.core.math.Wavelength
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Target
 import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
@@ -58,13 +57,8 @@ case class ItcGraphQuerier(
   val finalConfig: Option[InstrumentConfigAndItcResult] =
     remoteConfig.orElse(selectedConfig)
 
-  spectroscopyRequirements.map(_.extractSignalToNoise)
-
-  val signalToNoise: Option[SignalToNoise] =
-    spectroscopyRequirements.flatMap(_.extractSignalToNoise._1)
-
-  val signalToNoiseAt: Option[Wavelength] =
-    spectroscopyRequirements.flatMap(_.extractSignalToNoise._2)
+  val exposureTimeMode: Option[ExposureTimeMode] =
+    spectroscopyRequirements.flatMap(_.exposureTimeModeOption)
 
   private val instrumentConfig: Option[InstrumentConfig] =
     finalConfig.map(_.instrumentConfig)
@@ -75,7 +69,7 @@ case class ItcGraphQuerier(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps =
-    (signalToNoise, signalToNoiseAt, constraints.some, itcTargets, instrumentConfig).tupled
+    (exposureTimeMode, constraints.some, itcTargets, instrumentConfig).tupled
 
   val isExecutable: Boolean = queryProps.isDefined
 
@@ -84,10 +78,10 @@ case class ItcGraphQuerier(
     WorkerClient[IO, ItcMessage.Request]
   ): IO[ItcAsterismGraphResults] =
     val action: Option[IO[ItcAsterismGraphResults]] =
-      queryProps.map: (sn, snAt, c, t, mode) =>
+      queryProps.map: (etm, c, t, mode) =>
         ItcClient[IO]
           .requestSingle:
-            ItcMessage.GraphQuery(snAt, sn, c, t, mode)
+            ItcMessage.GraphQuery(etm, c, t, mode)
           .map:
             _.toRight(new Throwable("No response from ITC server."))
           .rethrow
