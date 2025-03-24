@@ -79,7 +79,7 @@ object AttachmentsTile:
         val authToken = vault.token
         Tile(
           OverviewTabTileIds.AttachmentsId.id,
-          "Attachments",
+          s"Attachments (${count(attachments, showObsAttachments)})",
           Action.None
         )(
           Body(
@@ -105,6 +105,15 @@ object AttachmentsTile:
       .getOrElse(
         Tile(OverviewTabTileIds.AttachmentsId.id, "Attachments", hidden = true)(_ => EmptyVdom)
       )
+
+  private def includedPurposes(showObsAttachments: Boolean) =
+    if (showObsAttachments)
+      Set(AttachmentPurpose.Observation, AttachmentPurpose.Target)
+    else Set(AttachmentPurpose.Target)
+
+  private def count(attachments: View[AttachmentList], showObsAttachments: Boolean) =
+    val included = includedPurposes(showObsAttachments)
+    attachments.get.count(_._2.isForPurposes(included))
 
   private case class Body(
     pid:                         Program.Id,
@@ -403,13 +412,10 @@ object AttachmentsTile:
           columns <- useMemo(())(_ => columns(ctx, props))
           rows    <- useMemo((props.showObsAttachments, props.attachments.reuseByValue)):
                        (showObsAttachments, attachments) =>
-                         val include =
-                           if (showObsAttachments)
-                             Set(AttachmentPurpose.Observation, AttachmentPurpose.Target)
-                           else Set(AttachmentPurpose.Target)
+                         val included = includedPurposes(showObsAttachments)
                          attachments.value.toListOfViews
                            .map(_._2)
-                           .filter(_.get.isForPurposes(include))
+                           .filter(_.get.isForPurposes(included))
           urlMap  <- useStateView[UrlMap](Map.empty)
           _       <- useEffectWithDeps(rows): attachments =>
                        val allCurrentKeys = attachments.value.map(_.get.toMapKey).toSet
