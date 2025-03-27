@@ -8,6 +8,7 @@ import cats.FlatMap
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.std.Dispatcher
+import cats.effect.std.SecureRandom
 import cats.syntax.all.*
 import explore.events.*
 import org.scalajs.dom
@@ -80,7 +81,9 @@ object WorkerClients {
 
   object PlotClient extends WorkerClientBuilder[PlotMessage.Request](PlotWorker())
 
-  def build[F[_]: Async: Logger](dispatcher: Dispatcher[F]): Resource[F, WorkerClients[F]] =
+  def build[F[_]: Async: Logger: SecureRandom](
+    dispatcher: Dispatcher[F]
+  ): Resource[F, WorkerClients[F]] =
     (ItcClient.build[F](dispatcher),
      CatalogClient.build[F](dispatcher),
      AgsClient.build[F](dispatcher),
