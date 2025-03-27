@@ -165,19 +165,19 @@ object Dependencies {
   val LucumaAgs = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-ags"
-    )(lucumaCatalog)
+    )(lucumaCore)
   )
 
   val LucumaCatalog = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-catalog"
-    )(lucumaCatalog)
+    )(lucumaCore)
   )
 
   val LucumaCatalogTestKit = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-catalog-testkit"
-    )(lucumaCatalog)
+    )(lucumaCore)
   )
 
   val LucumaCore = Def.setting(
