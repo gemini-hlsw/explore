@@ -12,6 +12,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.util.TimeSpan
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
+import lucuma.itc.SignalToNoiseAt
 import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.itc.client.SeriesResult
@@ -34,10 +35,13 @@ object ItcQueryProblem:
 
 case class ItcTargetProblem(targetName: Option[NonEmptyString], problem: ItcQueryProblem) derives Eq
 
-sealed trait ItcResult extends Product with Serializable derives Eq {
+// TODO: move to core
+private given Eq[SignalToNoiseAt] = Eq.by(x => (x.wavelength, x.single, x.total))
+
+sealed trait ItcResult derives Eq {
   def isSuccess: Boolean = this match {
-    case ItcResult.Result(_, _, _) => true
-    case _                         => false
+    case ItcResult.Result(_, _, _, _) => true
+    case _                            => false
   }
 
   def isPending: Boolean = this match {
@@ -48,8 +52,12 @@ sealed trait ItcResult extends Product with Serializable derives Eq {
 
 object ItcResult {
   case object Pending extends ItcResult
-  case class Result(exposureTime: TimeSpan, exposures: NonNegInt, brightestIndex: Option[Int])
-      extends ItcResult:
+  case class Result(
+    exposureTime:   TimeSpan,
+    exposures:      NonNegInt,
+    brightestIndex: Option[Int],
+    snAt:           Option[SignalToNoiseAt]
+  ) extends ItcResult:
     val duration: TimeSpan        = exposureTime *| exposures.value
     override def toString: String = s"${exposures.value} x ${exposureTime.toMinutes}"
 }

@@ -26,7 +26,7 @@ import queries.schemas.itc.syntax.*
 import workers.*
 
 object ITCRequests:
-  val cacheVersion = CacheVersion(17)
+  val cacheVersion = CacheVersion(18)
 
   val itcErrorToQueryProblems: Error => ItcQueryProblem =
     case Error.SourceTooBright(halfWell) => ItcQueryProblem.SourceTooBright(halfWell)
@@ -61,8 +61,11 @@ object ITCRequests:
               )
             .asLeft,
         times =>
-          val i = times.value.focus.times.focus
-          ItcResult.Result(i.exposureTime, i.exposureCount, r.targetTimes.brightestIndex).rightNec
+          val i    = times.value.focus.times.focus
+          val snAt = times.value.focus.signalToNoiseAt
+          ItcResult
+            .Result(i.exposureTime, i.exposureCount, r.targetTimes.brightestIndex, snAt)
+            .rightNec
       )
 
     def doRequest(
