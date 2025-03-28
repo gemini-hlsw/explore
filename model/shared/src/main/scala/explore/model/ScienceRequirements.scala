@@ -92,6 +92,10 @@ object ScienceRequirements:
         case Right(TimeAndCountModeInfo(t, c, _)) =>
           ExposureTimeModeInfo(Right(TimeAndCountModeInfo(t, c, w)))
 
+    def modeType: ExposureTimeModeType = mode match
+      case Left(_)  => ExposureTimeModeType.SignalToNoise
+      case Right(_) => ExposureTimeModeType.TimeAndCount
+
   object ExposureTimeModeInfo {
     val mode: Lens[ExposureTimeModeInfo, Either[SignalToNoiseModeInfo, TimeAndCountModeInfo]] =
       Focus[ExposureTimeModeInfo](_.mode)
