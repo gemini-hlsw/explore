@@ -9,6 +9,7 @@ import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.Quantity
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.given
@@ -99,17 +100,20 @@ private object SpectroscopyModesTable:
 
   private case class SpectroscopyModeRowWithResult(
     entry:                SpectroscopyModeRow,
-    result:               EitherNec[ItcTargetProblem, ItcResult],
+    result:               Pot[EitherNec[ItcTargetProblem, ItcResult]],
     wavelengthInterval:   Option[BoundedInterval[Wavelength]],
     configurationSummary: Option[String]
   ):
     lazy val rowId: RowId = RowId(entry.id.orEmpty.toString)
 
     lazy val totalItcTime: Option[TimeSpan] =
-      result.toOption.collect { case ItcResult.Result(e, t, _, _) => e *| t.value }
+      result.toOption
+        .collect { case Right(ItcResult.Result(e, t, _, _)) => e *| t.value }
 
     lazy val totalSN: Option[SignalToNoise] =
-      result.toOption.collect { case ItcResult.Result(_, _, _, s) => s.map(_.total.value) }.flatten
+      result.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
+        s.map(_.total.value)
+      }.flatten
 
   private case class TableMeta(itcProgress: Option[Progress])
 
@@ -181,11 +185,11 @@ private object SpectroscopyModesTable:
     case FocalPlane.IFU          => "IFU"
 
   private def itcCell(
-    c:   EitherNec[ItcTargetProblem, ItcResult],
+    c:   Pot[EitherNec[ItcTargetProblem, ItcResult]],
     col: TimeOrSNColumn
   ): VdomElement = {
-    val content: TagMod = c match
-      case Left(errors)               =>
+    val content: TagMod = c.toOption match
+      case Some(Left(errors))               =>
         if (errors.exists(_.problem === ItcQueryProblem.UnsupportedMode))
           <.span(Icons.Ban(^.color.red))
             .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
@@ -213,7 +217,7 @@ private object SpectroscopyModesTable:
 
           <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
-      case Right(r: ItcResult.Result) =>
+      case Some(Right(r: ItcResult.Result)) =>
         val content = col.match
           case TimeOrSNColumn.Time =>
             formatDurationHours(r.duration)
@@ -225,8 +229,10 @@ private object SpectroscopyModesTable:
             placement = Placement.RightStart,
             tooltip = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
           )
-      case Right(ItcResult.Pending)   =>
+      case Some(Right(ItcResult.Pending))   =>
         Icons.Spinner.withSpin(true)
+      case _                                =>
+        "-"
 
     <.div(ExploreStyles.ITCCell, content)
   }
@@ -234,6 +240,22 @@ private object SpectroscopyModesTable:
   given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(
     WavelengthUnits.Micrometers
   )
+
+  private def progressingCellHeader(txt: String)(
+    header: HeaderContext[?, ?, TableMeta, ?, ?, ?, ?]
+  ) =
+    <.div(ExploreStyles.ITCHeaderCell)(
+      txt,
+      header.table.options.meta
+        .flatMap(_.itcProgress)
+        .map(p =>
+          CircularProgressbar(
+            p.percentage.value.value,
+            strokeWidth = 15,
+            className = "explore-modes-table-itc-circular-progressbar"
+          )
+        )
+    )
 
   private val columns =
     List(
@@ -245,20 +267,7 @@ private object SpectroscopyModesTable:
         .withColumnSize(Resizable(120.toPx, min = 50.toPx, max = 150.toPx))
         .sortable,
       column(TimeColumnId, _.totalItcTime)
-        .withHeader: header =>
-          <.div(ExploreStyles.ITCHeaderCell)(
-            "Time",
-            header.table.options.meta
-              .map(_.itcProgress)
-              .flatten
-              .map(p =>
-                CircularProgressbar(
-                  p.percentage.value.value,
-                  strokeWidth = 15,
-                  className = "explore-modes-table-itc-circular-progressbar"
-                )
-              )
-          )
+        .withHeader(progressingCellHeader("Time"))
         .withCell: cell =>
           cell.table.options.meta.map: meta =>
             itcCell(cell.row.original.result, TimeOrSNColumn.Time)
@@ -266,20 +275,7 @@ private object SpectroscopyModesTable:
         .withSortUndefined(UndefinedPriority.Last)
         .sortable,
       column(SNColumnId, _.totalSN)
-        .withHeader: header =>
-          <.div(ExploreStyles.ITCHeaderCell)(
-            "S/N",
-            header.table.options.meta
-              .map(_.itcProgress)
-              .flatten
-              .map(p =>
-                CircularProgressbar(
-                  p.percentage.value.value,
-                  strokeWidth = 15,
-                  className = "explore-modes-table-itc-circular-progressbar"
-                )
-              )
-          )
+        .withHeader(progressingCellHeader("S/N"))
         .withCell: cell =>
           cell.table.options.meta.map: meta =>
             itcCell(cell.row.original.result, TimeOrSNColumn.SN)
@@ -353,42 +349,47 @@ private object SpectroscopyModesTable:
                           props.constraints
                          )
                        ): (matrix, s, dec, itcResults, asterism, constraints) =>
-                         (s.wavelength, asterism, s.exposureTimeModeOption).mapN { (w, a, exposureMode) =>
-                           val profiles: NonEmptyList[SourceProfile] =
-                             a.map(_.sourceProfile)
 
-                           val rows: List[SpectroscopyModeRow]          =
-                             matrix
-                               .filtered(
-                                 focalPlane = s.focalPlane,
-                                 capability = s.capability,
-                                 wavelength = s.wavelength,
-                                 slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
-                                 resolution = s.resolution,
-                                 range = s.wavelengthCoverage,
-                                 declination = dec
+                         val rows: List[SpectroscopyModeRow]          =
+                           matrix
+                             .filtered(
+                               focalPlane = s.focalPlane,
+                               capability = s.capability,
+                               wavelength = s.wavelength,
+                               slitLength = s.focalPlaneAngle.map(s => SlitLength(ModeSlitSize(s))),
+                               resolution = s.resolution,
+                               range = s.wavelengthCoverage,
+                               declination = dec
+                             )
+                         val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
+                         // Computes the mode overrides for the current parameters
+                         val fixedModeRows: List[SpectroscopyModeRow] =
+                           sortedRows
+                             .map(
+                               _.withModeOverridesFor(s.wavelength,
+                                                      asterism.map(_.map(_.sourceProfile)),
+                                                      constraints.imageQuality
                                )
-                           val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
-                           // Computes the mode overrides for the current parameters
-                           val fixedModeRows: List[SpectroscopyModeRow] =
-                             sortedRows
-                               .map(_.withModeOverridesFor(w, profiles, constraints.imageQuality))
-                               .flattenOption
+                             )
+                             .flattenOption
 
-                           fixedModeRows.map: row =>
-                             SpectroscopyModeRowWithResult(
-                               row,
+                         fixedModeRows.map: row =>
+                           val result = (s.wavelength, asterism, s.exposureTimeModeOption).mapN {
+                             (w, a, exposureMode) =>
                                itcResults.forRow(
                                  exposureMode,
                                  constraints,
                                  asterism,
                                  row
-                               ),
-                               s.wavelength.flatMap: w =>
-                                 ModeCommonWavelengths.wavelengthInterval(w)(row),
-                               row.instrument.configurationSummary
-                             )
-                         }.orEmpty
+                               )
+                           }
+                           SpectroscopyModeRowWithResult(
+                             row,
+                             Pot.fromOption(result),
+                             s.wavelength.flatMap: w =>
+                               ModeCommonWavelengths.wavelengthInterval(w)(row),
+                             row.instrument.configurationSummary
+                           )
         itcProgress <- useState(none[Progress])
         errs        <- useMemo(
                          (props.spectroscopyRequirements.wavelength,
@@ -399,9 +400,9 @@ private object SpectroscopyModesTable:
                          )
                        ): (_, _, _, rows, _) =>
                          rows.value
-                           .map(_.result)
+                           .map(_.result.toOption)
                            .collect:
-                             case Left(p) =>
+                             case Some(Left(p)) =>
                                p.toList
                                  .filter:
                                    case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
@@ -465,7 +466,7 @@ private object SpectroscopyModesTable:
                               selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
                             val conf: Option[InstrumentConfigAndItcResult]    =
                               optRow.map: row =>
-                                InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
+                                InstrumentConfigAndItcResult(row.entry.instrument, row.result.toOption)
                             if (props.selectedConfig.get =!= conf)
                               props.selectedConfig.set(conf)
                             else Callback.empty
@@ -549,7 +550,7 @@ private object SpectroscopyModesTable:
           Option.when(
             props.selectedConfig.get.forall(_.instrumentConfig =!= row.entry.instrument)
           ):
-            InstrumentConfigAndItcResult(row.entry.instrument, row.result.some)
+            InstrumentConfigAndItcResult(row.entry.instrument, row.result.toOption)
 
         def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
           selectedIndex.value.whenDefined(idx =>
@@ -577,13 +578,9 @@ private object SpectroscopyModesTable:
 
         val selectedTarget: Option[VdomNode] =
           rows.value
+            .map(_.result.toOption)
             .collect:
-              case SpectroscopyModeRowWithResult(
-                    _,
-                    Right(result @ ItcResult.Result(_, _, _, _)),
-                    _,
-                    _
-                  ) =>
+              case Some(Right(result @ ItcResult.Result(_, _, _, _))) =>
                 result
             // Very short exposure times may have ambiguity WRT the brightest target.
             .maxByOption(result => (result.exposureTime, result.exposures))
@@ -595,7 +592,7 @@ private object SpectroscopyModesTable:
           <.div(ExploreStyles.ModesTableTitle)(
             <.label(
               ExploreStyles.ModesTableCount,
-              s"${rows.length} matching configurations",
+              s"${rows.length} available configurations",
               HelpIcon("configuration/table.md".refined)
             ),
             <.div(

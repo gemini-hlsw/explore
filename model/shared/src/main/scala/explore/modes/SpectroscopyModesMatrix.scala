@@ -28,6 +28,7 @@ import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.model.sequence.gmos.longslit.DefaultRoi
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewType
 import lucuma.odb.json.angle.decoder.given
@@ -91,8 +92,6 @@ case class SpectroscopyModeRow(
   slitLength: SlitLength,
   slitWidth:  SlitWidth
 ) extends ModeCommonWavelengths derives Eq {
-  // inline def calculatedCoverage: Quantity[NonNegBigDecimal, Micrometer] = wavelengthDelta
-
   inline def hasFilter: Boolean = instrument.hasFilter
 
   // This `should` always return a `some`, but if the row is wonky for some reason...
@@ -104,9 +103,18 @@ case class SpectroscopyModeRow(
       .flatMap(pms => Wavelength.fromIntPicometers(pms))
       .map(CentralWavelength(_))
 
-  import lucuma.core.model.sequence.gmos.longslit.DefaultRoi
-
   def withModeOverridesFor(
+    wavelength:   Option[Wavelength],
+    profiles:     Option[NonEmptyList[SourceProfile]],
+    imageQuality: ImageQuality
+  ): Option[SpectroscopyModeRow] =
+    (wavelength, profiles)
+      .flatMapN { (w, p) =>
+        withModeOverridesFor(w, p, imageQuality)
+      }
+      .orElse(this.some)
+
+  private def withModeOverridesFor(
     wavelength:   Wavelength,
     profiles:     NonEmptyList[SourceProfile],
     imageQuality: ImageQuality
