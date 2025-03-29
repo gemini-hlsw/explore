@@ -115,6 +115,11 @@ private object SpectroscopyModesTable:
         s.map(_.total.value)
       }.flatten
 
+    lazy val singleSN: Option[SignalToNoise] =
+      result.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
+        s.map(_.single.value)
+      }.flatten
+
   private case class TableMeta(itcProgress: Option[Progress])
 
   private val ColDef = ColumnDef[SpectroscopyModeRowWithResult].WithTableMeta[TableMeta]
@@ -224,10 +229,16 @@ private object SpectroscopyModesTable:
           case TimeOrSNColumn.SN   =>
             r.snAt.map(_.total.value).foldMap(formatSN)
 
+        val tooltipText = col match
+          case TimeOrSNColumn.Time =>
+            s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
+          case TimeOrSNColumn.SN   =>
+            s"${r.snAt.map(_.single.value).foldMap(formatSN)} / exposure"
+
         <.span(content)
           .withTooltip(
             placement = Placement.RightStart,
-            tooltip = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
+            tooltip = tooltipText
           )
       case Some(Right(ItcResult.Pending))   =>
         Icons.Spinner.withSpin(true)
