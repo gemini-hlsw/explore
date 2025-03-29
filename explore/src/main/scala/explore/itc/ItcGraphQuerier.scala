@@ -83,16 +83,20 @@ case class ItcGraphQuerier(
           .requestSingle:
             ItcMessage.GraphQuery(etm, c, t, mode)
           .map:
-            _.toRight(new Throwable("No response from ITC server."))
+            _.toRight(new Throwable("No response from ITC server"))
           .rethrow
 
+    val baseError = "Could not generate a graph:"
     action.getOrElse:
       IO.raiseError:
-        val tgtMsg = asterismIds.toList match
-          case Nil         => new Throwable("no targets.")
-          case head :: Nil => s"target: $head"
-          case tgts        => s"""targets: ${tgts.mkString(", ")}"""
-        new Throwable(s"Could not generate a graph for $tgtMsg")
+        val msg = instrumentConfig match
+          case None    => s"$baseError observation is missing observing mode"
+          case Some(_) =>
+            asterismIds.toList match
+              case Nil         => "no targets"
+              case head :: Nil => s"target: $head"
+              case tgts        => s"""targets: ${tgts.mkString(", ")}"""
+        new Throwable(s"$baseError $msg")
 
 object ItcGraphQuerier:
   given Reusability[ItcGraphQuerier] =
