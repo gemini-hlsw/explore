@@ -20,6 +20,8 @@ import lucuma.core.enums.StepStage
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
+import lucuma.itc.SingleSN
+import lucuma.itc.TotalSN
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.odb.SequenceQueriesGQL.*
@@ -34,20 +36,32 @@ import scala.concurrent.duration.*
 trait SequenceTileHelper:
   protected case class SequenceData(
     config:     InstrumentExecutionConfig,
-    snPerClass: Map[SequenceType, SignalToNoise]
+    snPerClass: Map[SequenceType, (SingleSN, TotalSN)]
   ) derives Eq
 
   protected object SequenceData:
+    private def itcFromOdb(
+      itc: SequenceQuery.Data.Observation.Itc
+    ): Map[SequenceType, (SingleSN, TotalSN)] =
+      val acq: Option[(SequenceType, (SingleSN, TotalSN))] =
+        (itc.acquisition.selected.signalToNoiseAt.map(_.single),
+         itc.acquisition.selected.signalToNoiseAt.map(_.total)
+        ).mapN: (s, t) =>
+          SequenceType.Acquisition -> (SingleSN(s), TotalSN(t))
+
+      val sci: Option[(SequenceType, (SingleSN, TotalSN))] =
+        (itc.science.selected.signalToNoiseAt.map(_.single),
+         itc.science.selected.signalToNoiseAt.map(_.total)
+        ).mapN: (s, t) =>
+          SequenceType.Science -> (SingleSN(s), TotalSN(t))
+      List(acq, sci).flattenOption.toMap
+
     def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
       data.observation.flatMap: obs =>
         obs.execution.config.map: config =>
           SequenceData(
             config,
-            Map.empty
-            // (
-            //   SequenceType.Science     -> obs.itc.science.selected.signalToNoise,
-            //   SequenceType.Acquisition -> obs.itc.acquisition.selected.signalToNoise
-            // )
+            itcFromOdb(obs.itc)
           )
 
     given Reusability[SequenceData] = Reusability.byEq

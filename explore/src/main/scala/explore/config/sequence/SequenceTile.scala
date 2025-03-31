@@ -21,7 +21,6 @@ import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.core.util.TimeSpan
@@ -35,7 +34,6 @@ import lucuma.ui.syntax.all.given
 
 object SequenceTile extends SequenceTileHelper:
   def apply(
-    programId:       Program.Id,
     obsId:           Observation.Id,
     obsExecution:    Pot[Execution],
     asterismIds:     AsterismIds,
@@ -48,7 +46,6 @@ object SequenceTile extends SequenceTileHelper:
     )(
       isRefreshing =>
         Body(
-          programId,
           obsId,
           asterismIds.toList,
           sequenceChanged,
@@ -58,7 +55,6 @@ object SequenceTile extends SequenceTileHelper:
     )
 
   private case class Body(
-    programId:       Program.Id,
     obsId:           Observation.Id,
     targetIds:       List[Target.Id],
     sequenceChanged: View[Pot[Unit]],

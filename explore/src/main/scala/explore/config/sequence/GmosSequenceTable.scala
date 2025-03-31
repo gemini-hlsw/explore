@@ -9,6 +9,8 @@ import lucuma.core.enums.SequenceType
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
+import lucuma.itc.SingleSN
+import lucuma.itc.TotalSN
 import lucuma.schemas.model.Visit
 import lucuma.schemas.model.enums.AtomExecutionState
 import lucuma.schemas.model.enums.StepExecutionState
@@ -17,7 +19,7 @@ import lucuma.ui.sequence.*
 private trait GmosSequenceTable[S, D]:
   def visits: List[Visit[D]]
   def config: ExecutionConfig[S, D]
-  def snPerClass: Map[SequenceType, SignalToNoise]
+  def snPerClass: Map[SequenceType, (SingleSN, TotalSN)]
 
   private def futureSteps(
     seqType:        SequenceType,
@@ -43,6 +45,7 @@ private trait GmosSequenceTable[S, D]:
                       case _                                               => false
                   case ObserveClass.Science         => true
                   case _                            => false
+              .map(_._1.value)
         )
     if (currentSeqType.contains_(seqType)) allSteps.tail
     else allSteps

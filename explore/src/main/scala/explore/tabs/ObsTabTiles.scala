@@ -392,7 +392,6 @@ object ObsTabTiles:
 
           val sequenceTile =
             SequenceTile(
-              props.programId,
               props.obsId,
               props.obsExecution,
               asterismIds.get,
