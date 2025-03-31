@@ -10,7 +10,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.Constants
-import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.TimeAndCountModeInfo
 import explore.model.enums.WavelengthUnits
@@ -80,7 +79,7 @@ object TimeAndCountEditor extends ConfigurationFormats:
           id = "count".refined,
           value = count,
           groupClass = ExploreStyles.WarningInput.when_(count.get.isEmpty),
-          validFormat = ExploreModelValidators.nonNegInt.optional,
+          validFormat = InputValidSplitEpi.nonNegInt.optional,
           postAddons =
             count.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
           changeAuditor = ChangeAuditor.int.optional,

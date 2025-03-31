@@ -319,7 +319,8 @@ object ObsTabTiles:
               obsEditAttachments(props.obsId, ids).runAsync
             }
 
-          val pendingTime = props.obsExecution.toOption.flatMap(_.fullTimeEstimate)
+          val pendingTime = props.obsExecution.toOption.flatMap(_.remainingObsTime)
+          val setupTime   = props.obsExecution.toOption.flatMap(_.fullSetupTime)
           val obsDuration =
             props.observation.get.observationDuration
               .orElse(pendingTime)
@@ -333,22 +334,28 @@ object ObsTabTiles:
             else angle
 
           val averagePA: Option[AveragePABasis] =
-            (basicConfiguration.map(_.siteFor),
-             props.asterismAsNel,
-             obsDuration.filter(_ > TimeSpan.Zero)
-            )
-              .mapN: (site, asterism, duration) =>
-                props.posAngleConstraint match
-                  case PosAngleConstraint.AverageParallactic =>
-                    val avpa = averageParallacticAngle(
-                      site.place,
-                      asterism.baseTracking,
-                      obsTimeOrNow,
-                      duration
-                    )
-                    flipIfNeeded(avpa)
-                      .map(AveragePABasis(obsTimeOrNow, duration, _))
-                  case _                                     => none
+            (basicConfiguration.map(_.siteFor), props.asterismAsNel, obsDuration, setupTime)
+              .flatMapN: (site, asterism, fullDuration, setupDuration) =>
+                // science duration is the obsDuration - setup time
+                fullDuration
+                  .subtract(setupDuration)
+                  .filter(_ > TimeSpan.Zero)
+                  .map: scienceDuration =>
+                    // scienceStartTime is the obsTimeOrNow + setup time
+                    val scienceStartTime =
+                      obsTimeOrNow.plusNanos(setupDuration.toMicroseconds * 1000)
+
+                    props.posAngleConstraint match
+                      case PosAngleConstraint.AverageParallactic =>
+                        val avpa = averageParallacticAngle(
+                          site.place,
+                          asterism.baseTracking,
+                          scienceStartTime,
+                          scienceDuration
+                        )
+                        flipIfNeeded(avpa)
+                          .map(AveragePABasis(scienceStartTime, scienceDuration, _))
+                      case _                                     => none
               .flatten
 
           // The angle used for `Align to PA` in the finder charts tile.
@@ -494,7 +501,7 @@ object ObsTabTiles:
               obsTimeView,
               obsDurationView,
               obsConf,
-              pendingTime,
+              props.obsExecution.map(_.some),
               props.focusedTarget,
               setCurrentTarget,
               onCloneTarget,

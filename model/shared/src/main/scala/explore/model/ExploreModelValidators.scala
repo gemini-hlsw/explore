@@ -8,9 +8,6 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.types.numeric.NonNegBigDecimal
-import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.HourRange
 import explore.model.display.given
@@ -54,15 +51,8 @@ object ExploreModelValidators:
       n => Try(n.shortName).toOption.orEmpty
     )
 
-  // TODO Move to lucuma core
-  val nonNegBigDecimal: InputValidSplitEpi[NonNegBigDecimal] =
-    InputValidSplitEpi.refinedBigDecimal[NonNegative]
-
-  val nonNegInt: InputValidSplitEpi[NonNegInt] =
-    InputValidSplitEpi.refinedInt[NonNegative]
-
   val signalToNoiseValidSplitEpi: InputValidSplitEpi[SignalToNoise] =
-    nonNegBigDecimal.andThen(
+    InputValidSplitEpi.nonNegBigDecimal.andThen(
       SignalToNoise.FromNonNegBigDecimalExact,
       _ => NonEmptyChain("Invalid signal to noise".refined[NonEmpty])
     )

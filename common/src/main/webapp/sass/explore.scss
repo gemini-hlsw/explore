@@ -808,68 +808,85 @@ thead tr th.sticky-header {
   }
 }
 
-.explore-obs-instant-tile-title {
-  justify-content: center;
-  font-size: smaller;
+.asterism-editor-tile-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
 
-  @include small-tile-title;
-  @include react-datepicker-input;
-  @include react-datepicker-wrapper;
-
-  label:first-child {
-    @include lucumaUICommon.text-ellipsis;
-
-    max-width: 5ch;
+  > * {
+    flex: 0 0 min-content;
   }
 
-  label:nth-last-child(2) {
-    display: none;
-  }
-
-  label[data-abbrv]::after {
-    content: attr(data-abbrv);
-  }
-
-  label[data-abbrv] {
-    display: none;
-  }
-
-  /* stylelint-disable selector-class-pattern */
-  .react-datepicker__input-container {
-    input {
-      font-size: small;
-      width: 16ch; // the date/time format is 15 ch
-    }
-  }
-
-  .target-tile-obs-duration {
-    display: none;
-    justify-content: baseline;
-  }
-}
-
-@container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
   .explore-obs-instant-tile-title {
+    flex: 1 1 max-content;
+
+    justify-content: center;
+    font-size: smaller;
+
+    @include small-tile-title;
+    @include react-datepicker-input;
+    @include react-datepicker-wrapper;
+
     label:first-child {
-      max-width: unset;
-      display: unset;
-    }
+      @include lucumaUICommon.text-ellipsis;
 
-    label[data-abbrv]::after {
-      content: '';
-    }
-
-    label[data-abbrv] > span {
-      display: unset;
+      max-width: 5ch;
     }
 
     label:nth-last-child(2) {
-      display: inline;
+      display: none;
+    }
+
+    label[data-abbrv]::after {
+      content: attr(data-abbrv);
+    }
+
+    label[data-abbrv] {
+      display: none;
+    }
+
+    /* stylelint-disable selector-class-pattern */
+    .react-datepicker__input-container {
+      input {
+        font-size: small;
+        width: 16ch; // the date/time format is 15 ch
+      }
     }
 
     .target-tile-obs-duration {
-      display: flex;
-      align-items: baseline;
+      display: none;
+      justify-content: baseline;
+
+      > svg.fa-spinner {
+        margin-left: 0.5em;
+      }
+    }
+  }
+
+  @container tile (min-width: #{exploreCommon.$tile-small-cutoff}) {
+    .explore-obs-instant-tile-title {
+      label:first-child {
+        max-width: unset;
+        display: unset;
+      }
+
+      label[data-abbrv]::after {
+        content: '';
+      }
+
+      label[data-abbrv] > span {
+        display: unset;
+      }
+
+      label:nth-last-child(2) {
+        display: inline;
+      }
+
+      .target-tile-obs-duration {
+        display: flex;
+        align-items: baseline;
+      }
     }
   }
 }
