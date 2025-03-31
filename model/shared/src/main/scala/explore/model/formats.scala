@@ -147,4 +147,16 @@ trait formats:
       ts => f"${ts.toSeconds}%.2f"
     )
 
+  val durationS: InputValidWedge[TimeSpan] =
+    InputValidWedge(
+      s =>
+        parsers.durationS
+          .parseAll(s)
+          .leftMap { e =>
+            "Duration parsing errors".refined[NonEmpty]
+          }
+          .toEitherErrors,
+      _.toSecondsPart.toString
+    )
+
 object formats extends formats

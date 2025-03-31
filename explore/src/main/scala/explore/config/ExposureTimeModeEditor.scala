@@ -14,6 +14,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.Instrument
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
@@ -23,6 +24,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Lens
 
 case class ExposureTimeModeEditor(
+  instrument:      Instrument,
   options:         View[ExposureTimeModeInfo],
   readonly:        Boolean,
   units:           WavelengthUnits,
@@ -62,5 +64,12 @@ object ExposureTimeModeEditor:
         snMode.asView.map(
           SignalToNoiseAtEditor(_, props.readonly, props.units, props.calibrationRole)
         ),
-        tcMode.asView.map(TimeAndCountEditor(_, props.readonly, props.units, props.calibrationRole))
+        tcMode.asView.map(
+          TimeAndCountEditor(props.instrument,
+                             _,
+                             props.readonly,
+                             props.units,
+                             props.calibrationRole
+          )
+        )
       )

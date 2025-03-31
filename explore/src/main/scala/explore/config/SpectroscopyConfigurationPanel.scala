@@ -19,6 +19,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.FocalPlane
+import lucuma.core.enums.Instrument
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.react.common.Css
@@ -30,6 +31,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class SpectroscopyConfigurationPanel(
+  instrument:      Option[Instrument],
   options:         View[ScienceRequirements.Spectroscopy],
   readonly:        Boolean,
   units:           WavelengthUnits,
@@ -88,7 +90,9 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          ExposureTimeModeEditor(exposureTimeMode, p.readonly, p.units, p.calibrationRole),
+          p.instrument.map(
+            ExposureTimeModeEditor(_, exposureTimeMode, p.readonly, p.units, p.calibrationRole)
+          ),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,
