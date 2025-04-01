@@ -13,10 +13,11 @@ import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.TimeAndCountModeInfo
 import explore.model.enums.WavelengthUnits
-import explore.model.formats.durationMs
+import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.Instrument
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.react.common.Css
@@ -30,6 +31,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class TimeAndCountEditor(
+  instrument:      Instrument,
   options:         View[TimeAndCountModeInfo],
   readonly:        Boolean,
   units:           WavelengthUnits,
@@ -44,6 +46,14 @@ object TimeAndCountEditor extends ConfigurationFormats:
       val exposureTime    = props.options.zoom(TimeAndCountModeInfo.time)
       val count           = props.options.zoom(TimeAndCountModeInfo.count)
       val signalToNoiseAt = props.options.zoom(TimeAndCountModeInfo.at)
+
+      val timeFormat = props.instrument match
+        case Instrument.GmosSouth | Instrument.GmosNorth => durationS.optional
+        case _                                           => durationMs.optional
+
+      val timeAuditor = props.instrument match
+        case Instrument.GmosSouth | Instrument.GmosNorth => ChangeAuditor.int.optional
+        case _                                           => ChangeAuditor.posBigDecimal(3.refined).optional
 
       React.Fragment(
         FormLabel("signal-to-noise-at".refined)("S/N at"),
@@ -65,13 +75,13 @@ object TimeAndCountEditor extends ConfigurationFormats:
           id = "exposure-time".refined,
           value = exposureTime,
           groupClass = ExploreStyles.WarningInput.when_(exposureTime.get.isEmpty),
-          validFormat = durationMs.optional,
+          validFormat = timeFormat,
           postAddons =
             exposureTime.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
-          changeAuditor = ChangeAuditor.posBigDecimal(3.refined).optional,
           units = "s",
+          changeAuditor = timeAuditor,
           disabled = props.readonly
-        ).withMods(^.autoComplete.off),
+        ).clearable(^.autoComplete.off),
         FormLabel("signal-to-noise".refined)("Exp. Count"),
         FormInputTextView(
           id = "count".refined,
@@ -83,5 +93,5 @@ object TimeAndCountEditor extends ConfigurationFormats:
           changeAuditor = ChangeAuditor.int.optional,
           units = "#",
           disabled = props.readonly
-        ).withMods(^.autoComplete.off)
+        ).clearable(^.autoComplete.off)
       )

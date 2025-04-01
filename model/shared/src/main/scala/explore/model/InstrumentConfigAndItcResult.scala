@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTargetProblem
 import explore.modes.InstrumentConfig
+import lucuma.core.enums.Instrument
 import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import monocle.Lens
@@ -18,6 +19,8 @@ case class InstrumentConfigAndItcResult(
   instrumentConfig: InstrumentConfig,
   itcResult:        Option[EitherNec[ItcTargetProblem, ItcResult]]
 ) derives Eq:
+  def instrument: Instrument = instrumentConfig.instrument
+
   def toBasicConfiguration: Option[BasicConfiguration] =
     instrumentConfig match
       case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>

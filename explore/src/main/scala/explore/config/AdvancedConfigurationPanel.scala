@@ -84,6 +84,7 @@ sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def sequenceChanged: Callback
   def readonly: Boolean
   def units: WavelengthUnits
+  def instrument = observingMode.get.instrument
 
 sealed abstract class AdvancedConfigurationPanelBuilder[
   T <: ObservingMode,
@@ -540,7 +541,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            ExposureTimeModeEditor(exposureTimeMode,
+            ExposureTimeModeEditor(props.instrument,
+                                   exposureTimeMode,
                                    props.readonly,
                                    props.units,
                                    props.calibrationRole

@@ -70,6 +70,15 @@ trait parsers:
       }
       .withContext("duration_s")
 
+  // Duration in the form of secs
+  val durationS: Parser0[TimeSpan] =
+    (digits.? ~ (char('.') ~ digits.?).?)
+      .map { case (s, _) =>
+        val seconds = s.foldMap(_.toLong)
+        TimeSpan.unsafeFromDuration(Duration.ofSeconds(seconds))
+      }
+      .withContext("duration_s")
+
   // Parse a non-negative integer
   val nonNegInt: Parser[NonNegInt] =
     digits

@@ -100,7 +100,8 @@ private object BasicConfigurationPanel:
             // ),
             props.spectroscopyView
               .mapValue(
-                SpectroscopyConfigurationPanel(_,
+                SpectroscopyConfigurationPanel(props.selectedConfig.get.map(_.instrument),
+                                               _,
                                                props.readonly,
                                                props.units,
                                                props.calibrationRole

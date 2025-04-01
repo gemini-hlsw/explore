@@ -40,6 +40,29 @@ class FormatsSuite extends munit.DisciplineSuite:
       }
       .flatMapOneOf(Gen.const, (((_: String) => finiteDurationsHM) :: perturbations)*)
 
+  // Tests durationS
+  assertEquals(parsers.durationS.parseAll("00.001").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(0)).some
+  )
+  assertEquals(parsers.durationS.parseAll("45").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(45)).some
+  )
+  assertEquals(parsers.durationS.parseAll("45.0").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(45)).some
+  )
+  assertEquals(parsers.durationS.parseAll("45.034").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(45)).some
+  )
+  assertEquals(parsers.durationS.parseAll("0.005046").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(0)).some
+  )
+  assertEquals(parsers.durationS.parseAll("35").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(35)).some
+  )
+  assertEquals(parsers.durationS.parseAll("0").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(0)).some
+  )
+  // Test durationMs
   assertEquals(parsers.durationMs.parseAll("00.001").toOption,
                TimeSpan.unsafeFromDuration(Duration.ofMillis(1)).some
   )
@@ -125,4 +148,8 @@ class FormatsSuite extends munit.DisciplineSuite:
   checkAll(
     "durationMsWedge",
     ValidWedgeTests(durationMs).validWedgeLaws
+  )
+  checkAll(
+    "durationSWedge",
+    ValidWedgeTests(durationS).validWedgeLaws
   )
