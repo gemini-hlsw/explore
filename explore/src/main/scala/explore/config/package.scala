@@ -24,31 +24,13 @@ trait ConfigurationFormats:
   lazy val wvNanoInput                   = ExploreModelValidators.wavelengthNanoValidWedge.optional
   lazy val wvDeltaMicroInput             = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
   lazy val wvDeltaNanoInput              = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
-  lazy val wvMicroBaseAuditor            = ChangeAuditor
-    .fromInputValidWedge(ExploreModelValidators.wavelengthMicroValidWedge)
-    .allow(s => s === "0" || s === "0.")
-  lazy val wvMicroChangeAuditor          = wvMicroBaseAuditor
-    .decimal(4.refined)
-    .optional
-  lazy val snAtWvMicroChangeAuditor      = wvMicroBaseAuditor
-    .decimal(4.refined)
-    .optional
-  lazy val wvNanoBaseAuditor             = ChangeAuditor
-    .fromInputValidWedge(ExploreModelValidators.wavelengthNanoValidWedge)
-    .allow(s => s === "0" || s === "0.")
-  lazy val wvNanoChangeAuditor           = wvNanoBaseAuditor.decimal(1.refined).optional
-  lazy val snAtWvNanoChangeAuditor       = wvNanoBaseAuditor.decimal(1.refined).optional
-
   extension (u: WavelengthUnits)
     def toAuditor: ChangeAuditor =
       u match
-        case WavelengthUnits.Micrometers => wvMicroChangeAuditor
-        case WavelengthUnits.Nanometers  => wvNanoChangeAuditor
+        case WavelengthUnits.Micrometers => ChangeAuditor.posBigDecimal(3.refined)
+        case WavelengthUnits.Nanometers  => ChangeAuditor.posBigDecimal(1.refined)
 
-    def toSNAuditor: ChangeAuditor =
-      u match
-        case WavelengthUnits.Micrometers => snAtWvMicroChangeAuditor
-        case WavelengthUnits.Nanometers  => snAtWvNanoChangeAuditor
+    def toSNAuditor: ChangeAuditor = toAuditor
 
     def toInputWedge: InputValidWedge[Option[Wavelength]] =
       u match
