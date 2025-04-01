@@ -119,7 +119,8 @@ private object BasicConfigurationPanel:
               props.constraints,
               if (props.itcTargets.isEmpty) none else props.itcTargets.some,
               props.baseCoordinates,
-              props.confMatrix
+              props.confMatrix,
+              props.units
             )
           ),
           <.div(ExploreStyles.BasicConfigurationButtons)(

@@ -8,12 +8,14 @@ import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
-import coulomb.Quantity
+import coulomb.*
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.cats.given
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.UserPreferencesQueries
@@ -80,7 +82,8 @@ case class SpectroscopyModesTable(
   constraints:              ConstraintSet,
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],
-  matrix:                   SpectroscopyModesMatrix
+  matrix:                   SpectroscopyModesMatrix,
+  units:                    WavelengthUnits
 ) extends ReactFnProps(SpectroscopyModesTable.component):
   val validTargets = targets.map(_.filter(_.canQueryITC)).flatMap(NonEmptyList.fromList)
 
@@ -144,6 +147,8 @@ private object SpectroscopyModesTable:
   private val TimeColumnId: ColumnId               = ColumnId("time")
   private val SNColumnId: ColumnId                 = ColumnId("sn")
 
+  private val IntervalPrefix: String = "λ Interval"
+
   private val columnNames: Map[ColumnId, String] =
     Map[ColumnId, String](
       InstrumentColumnId         -> "Instrument",
@@ -152,7 +157,7 @@ private object SpectroscopyModesTable:
       GratingColumnId            -> "Grating",
       FilterColumnId             -> "Filter",
       FPUColumnId                -> "FPU",
-      WavelengthIntervalColumnId -> "λ Interval",
+      WavelengthIntervalColumnId -> IntervalPrefix,
       ResolutionColumnId         -> "λ / Δλ",
       AvailablityColumnId        -> "Avail.",
       TimeColumnId               -> "Time",
@@ -248,10 +253,6 @@ private object SpectroscopyModesTable:
     <.div(ExploreStyles.ITCCell, content)
   }
 
-  given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(
-    WavelengthUnits.Micrometers
-  )
-
   private def progressingCellHeader(txt: String)(
     header: HeaderContext[?, ?, TableMeta, ?, ?, ?, ?]
   ) =
@@ -268,7 +269,10 @@ private object SpectroscopyModesTable:
         )
     )
 
-  private val columns =
+  private def columns(units: WavelengthUnits) =
+
+    given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(units)
+
     List(
       column(
         InstrumentColumnId,
@@ -314,6 +318,7 @@ private object SpectroscopyModesTable:
         .withColumnSize(FixedSize(62.toPx))
         .sortable,
       column(WavelengthIntervalColumnId, row => row.wavelengthInterval)
+        .withHeader(s"$IntervalPrefix ${units.symbol}")
         .withCell(cell => cell.value.fold("-")(_.shortName))
         .withColumnSize(FixedSize(100.toPx))
         .sortableBy(_.map(_.lower)),
@@ -362,7 +367,7 @@ private object SpectroscopyModesTable:
                          )
                        ): (matrix, s, dec, itcResults, asterism, constraints) =>
 
-                         val rows: List[SpectroscopyModeRow]          =
+                         val rows: List[SpectroscopyModeRow] =
                            matrix
                              .filtered(
                                focalPlane = s.focalPlane,
@@ -373,14 +378,17 @@ private object SpectroscopyModesTable:
                                range = s.wavelengthCoverage,
                                declination = dec
                              )
+
                          val sortedRows: List[SpectroscopyModeRow]    = rows.sortBy(_.enabledRow)
                          // Computes the mode overrides for the current parameters
                          val fixedModeRows: List[SpectroscopyModeRow] =
                            sortedRows
                              .map(
-                               _.withModeOverridesFor(s.wavelength,
-                                                      asterism.map(_.map(_.sourceProfile)),
-                                                      constraints.imageQuality
+                               _.withModeOverridesFor(
+                                 // Should this wv come from the grating, or is the obs wavelength?
+                                 s.wavelength,
+                                 asterism.map(_.map(_.sourceProfile)),
+                                 constraints.imageQuality
                                )
                              )
                              .flattenOption
@@ -425,12 +433,13 @@ private object SpectroscopyModesTable:
                            .toList
                            .distinct
 
-        cols           <- useMemo(props.spectroscopyRequirements.exposureTimeMode.modeType): m =>
-                            props.spectroscopyRequirements.exposureTimeMode.modeType match
-                              case ExposureTimeModeType.SignalToNoise =>
-                                columns.filterNot(_.id.value === SNColumnId.value)
-                              case ExposureTimeModeType.TimeAndCount  =>
-                                columns.filterNot(_.id.value === TimeColumnId.value)
+        cols           <- useMemo((props.spectroscopyRequirements.exposureTimeMode.modeType, props.units)):
+                            (m, u) =>
+                              m match
+                                case ExposureTimeModeType.SignalToNoise =>
+                                  columns(u).filterNot(_.id.value === SNColumnId.value)
+                                case ExposureTimeModeType.TimeAndCount  =>
+                                  columns(u).filterNot(_.id.value === TimeColumnId.value)
         table          <- useReactTableWithStateStore:
                             import ctx.given
 
@@ -503,10 +512,11 @@ private object SpectroscopyModesTable:
                       val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
                         itcResults.value.cache
 
+                      // center of the row rang
                       val cw: Option[CentralWavelength] =
                         row.entry.intervalCenter(snAt)
 
-                      cw.exists: w =>
+                      cw.exists: _ =>
                         row.entry.instrument.instrument match
                           case Instrument.GmosNorth | Instrument.GmosSouth =>
                             cache.contains:

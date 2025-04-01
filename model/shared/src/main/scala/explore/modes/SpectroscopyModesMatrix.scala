@@ -11,8 +11,10 @@ import cats.implicits.*
 import coulomb.*
 import coulomb.conversion.ValueConversion
 import eu.timepit.refined.*
+import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.collection.NonEmpty
+import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
 import explore.model.syntax.all.*
@@ -96,12 +98,16 @@ case class SpectroscopyModeRow(
 
   // This `should` always return a `some`, but if the row is wonky for some reason...
   def intervalCenter(cw: Wavelength): Option[CentralWavelength] =
-    ModeCommonWavelengths
-      .wavelengthInterval(cw)(this)
+    range(cw)
       .map: interval =>
         interval.lower.pm.value.value + (interval.upper.pm.value.value - interval.lower.pm.value.value) / 2
       .flatMap(pms => Wavelength.fromIntPicometers(pms))
       .map(CentralWavelength(_))
+
+  // Range of wavelengths for this row. It takes the min/max and adjust it for the requested
+  // wavelength
+  def range(cw: Wavelength): Option[BoundedInterval[Wavelength]] =
+    ModeCommonWavelengths.wavelengthInterval(cw)(this)
 
   def withModeOverridesFor(
     wavelength:   Option[Wavelength],
@@ -267,14 +273,18 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
   ): List[SpectroscopyModeRow] = {
     // Criteria to filter the modes
     val filter: SpectroscopyModeRow => Boolean = r =>
+      // contains the  range in picometers
+      val rowRangePM: Option[Int] =
+        wavelength.flatMap(r.range(_).map(w => w.upper.pm.value - w.lower.pm.value))
+
       focalPlane.forall(f => r.focalPlane === f) &&
-        r.capability === capability &&
-        iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
-        wavelength.forall(w => w >= r.λmin.value && w <= r.λmax.value) &&
-        resolution.forall(_ <= r.resolution) &&
-        range.forall(_ <= r.λdelta) &&
-        slitLength.forall(_ <= r.slitLength) &&
-        declination.forall(r.instrument.site.inPreferredDeclination)
+      r.capability === capability &&
+      iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
+      wavelength.forall(w => w >= r.λmin.value && w <= r.λmax.value) &&
+      resolution.forall(_ <= r.resolution) &&
+      (range, rowRangePM).mapN(_.pm.value <= _).forall(identity) &&
+      slitLength.forall(_ <= r.slitLength) &&
+      declination.forall(r.instrument.site.inPreferredDeclination)
 
     // Calculates a score for each mode for sorting purposes. It is down in Rational space, we may change it to double as we don't really need high precission for this
     val score: SpectroscopyModeRow => Rational = { r =>
