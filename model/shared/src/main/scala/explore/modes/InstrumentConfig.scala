@@ -72,14 +72,13 @@ object InstrumentConfig:
     val hasFilter                        = filter.isDefined
   }
 
-  case class Flamingos2Spectroscopy(grating: Option[F2Disperser], filter: F2Filter, fpu: F2Fpu)
+  case class Flamingos2Spectroscopy(grating: F2Disperser, filter: F2Filter, fpu: F2Fpu)
       extends InstrumentConfig derives Eq {
-    type Grating  = Option[F2Disperser]
+    type Grating  = F2Disperser
     type Filter   = F2Filter
     type FPU      = F2Fpu
     type Override = Unit
-    val gratingDisplay: Display[Grating] =
-      Display.byShortName(_.map(_.shortName).getOrElse("None"))
+    val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
     val instrument                       = Instrument.Flamingos2
     val site                             = Site.GS
     val hasFilter                        = true

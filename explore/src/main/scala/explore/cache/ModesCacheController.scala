@@ -8,11 +8,11 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import crystal.Pot
+import explore.model.SupportedInstruments
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import fs2.Stream
 import japgolly.scalajs.react.*
-import lucuma.core.enums.Instrument
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
 import queries.common.ModesQueriesGQL
@@ -27,9 +27,6 @@ case class ModesCacheController(
 
 object ModesCacheController
     extends CacheControllerComponent[SpectroscopyModesMatrix, ModesCacheController]:
-
-  val SupportedInstruments =
-    List(Instrument.GmosNorth, Instrument.GmosSouth, Instrument.Flamingos2)
 
   override protected val updateStream
     : ModesCacheController => Resource[IO, Stream[IO,
