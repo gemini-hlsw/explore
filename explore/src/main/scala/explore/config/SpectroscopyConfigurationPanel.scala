@@ -64,6 +64,8 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
         val spectroscopyCapability =
           options.zoom(ScienceRequirements.Spectroscopy.capability)
 
+        val focalPlaneSupported    = false
+        val capabililitesSupported = false
         ReactFragment(
           FormInputTextView[View, Option[Wavelength]](
             id = "configuration-wavelength".refined,
@@ -90,9 +92,6 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             changeAuditor = ChangeAuditor.posInt.optional,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          p.instrument.map(
-            ExposureTimeModeEditor(_, exposureTimeMode, p.readonly, p.units, p.calibrationRole)
-          ),
           FormInputTextView(
             id = "wavelength-range".refined,
             value = wavelengthDelta,
@@ -105,34 +104,46 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             changeAuditor = p.units.toAuditor,
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
-          FormLabel("focal-plane".refined)("Focal Plane",
-                                           HelpIcon("configuration/focal_plane.md".refined)
+          ExposureTimeModeEditor(p.instrument,
+                                 exposureTimeMode,
+                                 p.readonly,
+                                 p.units,
+                                 p.calibrationRole
           ),
-          <.div(
-            LucumaPrimeStyles.FormField |+| ExploreStyles.BasicConfigurationFocalPlane,
+          Option.when(focalPlaneSupported) { // Hide until supported
+            ReactFragment(
+              FormLabel("focal-plane".refined)("Focal Plane",
+                                               HelpIcon("configuration/focal_plane.md".refined)
+              ),
+              <.div(
+                LucumaPrimeStyles.FormField |+| ExploreStyles.BasicConfigurationFocalPlane,
+                FormEnumDropdownOptionalView(
+                  id = "focal-plane".refined,
+                  placeholder = "Any",
+                  value = fpView,
+                  disabled = true
+                ),
+                FormInputTextView(
+                  id = "focal-plane-angle".refined,
+                  value = focalPlaneAngle,
+                  units = "arcsec",
+                  validFormat = slitLengthFormat,
+                  changeAuditor = slitLengthChangeAuditor,
+                  disabled = p.readonly
+                ).clearable(^.autoComplete.off)
+              )
+            )
+          },
+          Option.when(capabililitesSupported)( // Hide until supported
             FormEnumDropdownOptionalView(
-              id = "focal-plane".refined,
-              placeholder = "Any",
-              value = fpView,
+              id = "spectroscopy-capability".refined,
+              placeholder = "None",
+              value = spectroscopyCapability,
+              label = ReactFragment(
+                "Capability",
+                HelpIcon("configuration/capability.md".refined)
+              ),
               disabled = true
-            ),
-            FormInputTextView(
-              id = "focal-plane-angle".refined,
-              value = focalPlaneAngle,
-              units = "arcsec",
-              validFormat = slitLengthFormat,
-              changeAuditor = slitLengthChangeAuditor,
-              disabled = p.readonly
-            ).clearable(^.autoComplete.off)
-          ),
-          FormEnumDropdownOptionalView(
-            id = "spectroscopy-capability".refined,
-            placeholder = "None",
-            value = spectroscopyCapability,
-            label = ReactFragment(
-              "Capability",
-              HelpIcon("configuration/capability.md".refined)
-            ),
-            disabled = true
+            )
           )
         )

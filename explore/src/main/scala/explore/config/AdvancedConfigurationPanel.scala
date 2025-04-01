@@ -541,7 +541,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
-            ExposureTimeModeEditor(props.instrument,
+            ExposureTimeModeEditor(props.instrument.some,
                                    exposureTimeMode,
                                    props.readonly,
                                    props.units,

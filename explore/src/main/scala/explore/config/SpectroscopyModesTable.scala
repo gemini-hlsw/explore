@@ -320,11 +320,12 @@ private object SpectroscopyModesTable:
       column(ResolutionColumnId, row => SpectroscopyModeRow.resolution.get(row.entry))
         .withCell(_.value.toString)
         .withColumnSize(FixedSize(70.toPx))
-        .sortable,
-      column(AvailablityColumnId, _.configurationSummary)
-        .withCell(_.value.fold("No")(_ => "Yes"))
-        .withColumnSize(FixedSize(66.toPx))
         .sortable
+      // TODO Enable this column when we have the data
+      // column(AvailablityColumnId, _.configurationSummary)
+      //   .withCell(_.value.fold("No")(_ => "Yes"))
+      //   .withColumnSize(FixedSize(66.toPx))
+      //   .sortable
     )
 
   extension (row: SpectroscopyModeRow)

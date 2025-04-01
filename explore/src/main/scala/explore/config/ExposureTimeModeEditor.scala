@@ -24,7 +24,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Lens
 
 case class ExposureTimeModeEditor(
-  instrument:      Instrument,
+  instrument:      Option[Instrument],
   options:         View[ExposureTimeModeInfo],
   readonly:        Boolean,
   units:           WavelengthUnits,
