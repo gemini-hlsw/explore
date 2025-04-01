@@ -47,7 +47,7 @@ object SignalToNoiseAtEditor extends ConfigurationFormats {
 
       React.Fragment(
         FormLabel("signal-to-noise".refined)(
-          "S / N",
+          "Signal / Noise",
           HelpIcon("configuration/signal_to_noise.md".refined)
         ),
         FormInputTextView(

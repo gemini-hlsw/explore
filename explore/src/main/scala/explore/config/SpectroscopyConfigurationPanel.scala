@@ -85,7 +85,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             id = "configuration-resolution-power".refined,
             value = resolution,
             label = ReactFragment(
-              "λ / Δλ",
+              "Min Resolution",
               HelpIcon("configuration/spectral_resolution.md".refined)
             ),
             validFormat = InputValidSplitEpi.posInt.optional,
@@ -97,7 +97,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             value = wavelengthDelta,
             units = p.units.symbol,
             label = ReactFragment(
-              "Δλ",
+              "Min λ Coverage",
               HelpIcon("configuration/wavelength_coverage.md".refined)
             ),
             validFormat = p.units.toDeltaInputWedge,
