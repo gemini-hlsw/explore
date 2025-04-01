@@ -69,4 +69,5 @@ trait Constants:
   val MissingInfoMsg     = "Not enough information to call ITC"
   val P1TemplatesUrl     = "https://www.gemini.edu/observing/phase-i/pit/pit-description#PDF"
 
+  val SignalToNoiseAtLabel = "λ for S/N"
 object Constants extends Constants

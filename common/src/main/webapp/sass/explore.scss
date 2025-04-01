@@ -3045,25 +3045,6 @@ $help-title-height: 40px;
   grid-area: table;
 }
 
-.explore-basic-configuration-sn-at {
-  display: flex;
-  place-items: baseline stretch;
-  grid-gap: 0.5em;
-
-  div:first-child {
-    flex-grow: 1;
-  }
-
-  div:last-child {
-    flex-grow: 1;
-  }
-
-  #signal-to-noise,
-  #signal-to-noise-at {
-    width: 9ch;
-  }
-}
-
 .explore-basic-configuration-grid {
   flex-grow: 1;
   min-height: 0;

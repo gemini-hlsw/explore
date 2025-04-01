@@ -9,6 +9,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
+import explore.model.Constants
 import explore.model.ExploreModelValidators
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.TimeAndCountModeInfo
@@ -31,7 +32,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class TimeAndCountEditor(
-  instrument:      Instrument,
+  instrument:      Option[Instrument],
   options:         View[TimeAndCountModeInfo],
   readonly:        Boolean,
   units:           WavelengthUnits,
@@ -47,29 +48,21 @@ object TimeAndCountEditor extends ConfigurationFormats:
       val count           = props.options.zoom(TimeAndCountModeInfo.count)
       val signalToNoiseAt = props.options.zoom(TimeAndCountModeInfo.at)
 
-      val timeFormat = props.instrument match
-        case Instrument.GmosSouth | Instrument.GmosNorth => durationS.optional
-        case _                                           => durationMs.optional
+      val timeFormat = props.instrument
+        .map {
+          case Instrument.GmosSouth | Instrument.GmosNorth => durationS.optional
+          case _                                           => durationMs.optional
+        }
+        .getOrElse(durationMs.optional)
 
-      val timeAuditor = props.instrument match
-        case Instrument.GmosSouth | Instrument.GmosNorth => ChangeAuditor.int.optional
-        case _                                           => ChangeAuditor.posBigDecimal(3.refined).optional
+      val timeAuditor = props.instrument
+        .map {
+          case Instrument.GmosSouth | Instrument.GmosNorth => ChangeAuditor.int.optional
+          case _                                           => ChangeAuditor.posBigDecimal(3.refined).optional
+        }
+        .getOrElse(ChangeAuditor.posBigDecimal(3.refined).optional)
 
       React.Fragment(
-        FormLabel("signal-to-noise-at".refined)("S/N at"),
-        FormInputTextView(
-          id = "signal-to-noise-at".refined,
-          groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-          postAddons =
-            signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
-              Nil
-            ),
-          value = signalToNoiseAt,
-          units = props.units.symbol,
-          validFormat = props.units.toInputWedge,
-          changeAuditor = props.units.toSNAuditor,
-          disabled = props.readonly
-        ).clearable(^.autoComplete.off),
         FormLabel("exposure-time".refined)("Exp. Time"),
         FormInputTextView(
           id = "exposure-time".refined,
@@ -82,7 +75,7 @@ object TimeAndCountEditor extends ConfigurationFormats:
           changeAuditor = timeAuditor,
           disabled = props.readonly
         ).clearable(^.autoComplete.off),
-        FormLabel("signal-to-noise".refined)("Exp. Count"),
+        FormLabel("signal-to-noise".refined)("Number of Exp."),
         FormInputTextView(
           id = "count".refined,
           value = count,
@@ -92,6 +85,20 @@ object TimeAndCountEditor extends ConfigurationFormats:
             count.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
           changeAuditor = ChangeAuditor.int.optional,
           units = "#",
+          disabled = props.readonly
+        ).clearable(^.autoComplete.off),
+        FormLabel("signal-to-noise-at".refined)(Constants.SignalToNoiseAtLabel),
+        FormInputTextView(
+          id = "signal-to-noise-at".refined,
+          groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
+          postAddons =
+            signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
+              Nil
+            ),
+          value = signalToNoiseAt,
+          units = props.units.symbol,
+          validFormat = props.units.toInputWedge,
+          changeAuditor = props.units.toSNAuditor,
           disabled = props.readonly
         ).clearable(^.autoComplete.off)
       )
