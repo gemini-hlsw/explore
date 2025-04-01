@@ -269,6 +269,8 @@ object ExploreStyles:
   val AsterismTable: Css  = Css("target-asterism-table")
   val BrightnessCell: Css = Css("target-brightness-cell")
 
+  val AsterismEditorTileTitle: Css = Css("asterism-editor-tile-title")
+
   val TargetAladinCell: Css          = Css("target-aladin-cell")
   val TargetAladin: Css              = Css("aladin-target")
   val AladinHelpIcon: Css            = Css("aladin-help-icon")

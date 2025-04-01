@@ -112,6 +112,27 @@ object ObsQueries:
       .void
   }
 
+  def updateVisualizationTimeAndDuration[F[_]: Async](
+    obsIds:              List[Observation.Id],
+    observationTime:     Option[Instant],
+    observationDuration: Option[TimeSpan]
+  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+    val editInput =
+      ObservationTimesInput(
+        observationTime = observationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign,
+        observationDuration = observationDuration.map(_.toInput).orUnassign
+      )
+
+    UpdateObservationTimesMutation[F]
+      .execute:
+        UpdateObservationsTimesInput(
+          WHERE = obsIds.toWhereObservation.assign,
+          SET = editInput
+        )
+      .raiseGraphQLErrors
+      .void
+  }
+
   def updatePosAngle[F[_]: Async](
     obsIds:             List[Observation.Id],
     posAngleConstraint: PosAngleConstraint

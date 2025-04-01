@@ -6,6 +6,7 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
+import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -17,6 +18,7 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.AttachmentList
+import explore.model.Execution
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
@@ -63,7 +65,7 @@ object AsterismEditorTile:
     obsTime:            View[Option[Instant]],
     obsDuration:        View[Option[TimeSpan]],
     obsConf:            ObsConfiguration,
-    pendingTime:        Option[TimeSpan], // estimated remaining execution time.
+    execution:          Pot[Option[Execution]],
     currentTarget:      Option[Target.Id],
     setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
     onCloneTarget:      OnCloneParameters => Callback,
@@ -88,6 +90,18 @@ object AsterismEditorTile:
       obsDuration.withOnMod: t =>
         ObsQueries.updateVisualizationDuration[IO](obsIds.toList, t).runAsync
 
+    val obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])] =
+      View(
+        (obsTimeView.get, obsDurationView.get),
+        (mod, cb) =>
+          val oldValue = (obsTimeView.get, obsDurationView.get)
+          val newValue = mod(oldValue)
+          obsTimeView.set(newValue._1) >> obsDurationView.set(newValue._2) >> cb(oldValue, newValue)
+      ).withOnMod: tuple =>
+        ObsQueries
+          .updateVisualizationTimeAndDuration[IO](obsIds.toList, tuple._1, tuple._2)
+          .runAsync
+
     Tile(
       tileId,
       title,
@@ -103,7 +117,7 @@ object AsterismEditorTile:
             uid,
             obsIds,
             obsAndTargets,
-            obsTime,
+            obsTime.get,
             obsConf,
             currentTarget,
             setTarget,
@@ -129,7 +143,8 @@ object AsterismEditorTile:
           readonly,
           obsTimeView,
           obsDurationView,
-          pendingTime,
+          obsTimeAndDurationView,
+          execution,
           tileState.zoom(TileState.columnVisibility),
           tileState.get.obsEditInfo,
           tileSize
@@ -155,7 +170,7 @@ object AsterismEditorTile:
     userId:             User.Id,
     obsIds:             ObsIdSet,
     obsAndTargets:      UndoSetter[ObservationsAndTargets],
-    obsTime:            View[Option[Instant]],
+    obsTime:            Option[Instant],
     configuration:      ObsConfiguration,
     focusedTargetId:    Option[Target.Id],
     setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
@@ -228,7 +243,7 @@ object AsterismEditorTile:
                   props.obsAndTargets,
                   selectedTargetView,
                   props.onAsterismUpdate,
-                  props.obsTime.get,
+                  props.obsTime,
                   fullScreen.get,
                   props.readonly || obsEditInfo.allAreExecuted,
                   props.columnVisibility
@@ -254,7 +269,7 @@ object AsterismEditorTile:
                       siderealTarget,
                       props.obsAndTargets,
                       asterism.focusOn(focusedTargetId),
-                      props.obsTime.get,
+                      props.obsTime,
                       props.configuration.some,
                       props.searching,
                       onClone = props.onCloneTarget,
@@ -273,17 +288,18 @@ object AsterismEditorTile:
           )
 
   private case class Title(
-    programId:        Program.Id,
-    obsIds:           ObsIdSet,
-    obsAndTargets:    UndoSetter[ObservationsAndTargets],
-    onAsterismUpdate: OnAsterismUpdateParams => Callback,
-    readonly:         Boolean,
-    obsTimeView:      View[Option[Instant]],
-    obsDurationView:  View[Option[TimeSpan]],
-    pendingTime:      Option[TimeSpan],
-    columnVisibility: View[ColumnVisibility],
-    obsEditInfo:      Option[ObsIdSetEditInfo],
-    tileSize:         TileSizeState
+    programId:              Program.Id,
+    obsIds:                 ObsIdSet,
+    obsAndTargets:          UndoSetter[ObservationsAndTargets],
+    onAsterismUpdate:       OnAsterismUpdateParams => Callback,
+    readonly:               Boolean,
+    obsTimeView:            View[Option[Instant]],
+    obsDurationView:        View[Option[TimeSpan]],
+    obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
+    execution:              Pot[Option[Execution]],
+    columnVisibility:       View[ColumnVisibility],
+    obsEditInfo:            Option[ObsIdSetEditInfo],
+    tileSize:               TileSizeState
   ) extends ReactFnProps(Title.component)
 
   private object Title extends AsterismModifier:
@@ -296,32 +312,35 @@ object AsterismEditorTile:
         .useStateView(AreAdding(false))
         .render: (props, ctx, adding) =>
           import ctx.given
-
-          React.Fragment(
-            // only pass in the unexecuted observations. Will be readonly if there aren't any
-            <.span(
-              (props.obsEditInfo, props.obsEditInfo.map(_.unExecuted.getOrElse(props.obsIds)))
-                .mapN: (obsEditInfo, unexecutedObs) =>
-                  targetSelectionPopup(
-                    "Add",
-                    props.programId,
-                    unexecutedObs,
-                    props.obsAndTargets,
-                    adding,
-                    props.onAsterismUpdate,
-                    props.readonly || obsEditInfo.allAreExecuted,
-                    ExploreStyles.AddTargetButton
-                  )
-                .unless(props.tileSize.isMinimized)
-            ),
-            ObsTimeEditor(
-              props.obsTimeView,
-              props.obsDurationView,
-              props.pendingTime,
-              props.obsIds.size > 1
-            ),
-            <.span(^.textAlign.right)(
-              ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
-                .unless(props.tileSize.isMinimized)
-            )
+          val obsTimeEditor = ObsTimeEditor(
+            props.obsTimeView,
+            props.obsDurationView,
+            props.obsTimeAndDurationView,
+            props.execution,
+            props.obsIds.size > 1
           )
+          if (props.tileSize.isMinimized)
+            obsTimeEditor
+          else
+            <.div(
+              ExploreStyles.AsterismEditorTileTitle,
+              // only pass in the unexecuted observations. Will be readonly if there aren't any
+              <.span(
+                (props.obsEditInfo, props.obsEditInfo.map(_.unExecuted.getOrElse(props.obsIds)))
+                  .mapN: (obsEditInfo, unexecutedObs) =>
+                    targetSelectionPopup(
+                      "Add",
+                      props.programId,
+                      unexecutedObs,
+                      props.obsAndTargets,
+                      adding,
+                      props.onAsterismUpdate,
+                      props.readonly || obsEditInfo.allAreExecuted,
+                      ExploreStyles.AddTargetButton
+                    )
+              ),
+              obsTimeEditor,
+              <.span(^.textAlign.right)(
+                ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
+              )
+            )

@@ -90,7 +90,11 @@ object PAConfigurationPanel:
                 <.label(a.when.toString),
                 <.label(TimeSpanView(a.duration))
               )
-            .orElse(<.label("Not Visible or observation complete").some)
+            .orElse(
+              <.label(
+                "Not Visible, observation complete, or explicit observation duration is less than setup time."
+              ).some
+            )
         case PosAngleConstraint.AllowFlip(af) if props.selectedPA.exists(_ =!= af) =>
           props.selectedPA
             .map(a => <.label(f"Flipped to ${a.toDoubleDegrees}%.0f °"))
