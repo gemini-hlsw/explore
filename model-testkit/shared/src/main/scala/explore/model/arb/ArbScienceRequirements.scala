@@ -7,7 +7,8 @@ import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.scalacheck.numeric.given
 import explore.model.ScienceRequirements
-import explore.model.ScienceRequirements.*
+import explore.model.SignalToNoiseModeInfo
+import explore.model.TimeAndCountModeInfo
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.Angle
@@ -19,6 +20,8 @@ import lucuma.core.math.arb.ArbAngle.given
 import lucuma.core.math.arb.ArbWavelengthDelta.given
 import lucuma.core.math.arb.ArbSignalToNoise.given
 import lucuma.core.math.arb.ArbRefined.given
+import lucuma.core.model.ExposureTimeMode
+import lucuma.core.model.arb.ArbExposureTimeMode.given
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbTimeSpan.given
@@ -53,23 +56,12 @@ trait ArbScienceRequirements:
       (tcmi.time, tcmi.count, tcmi.at)
     )
 
-  given Arbitrary[ExposureTimeModeInfo] =
-    Arbitrary(
-      for mode <- arbitrary[Either[SignalToNoiseModeInfo, TimeAndCountModeInfo]]
-      yield ExposureTimeModeInfo(mode)
-    )
-
-  given Cogen[ExposureTimeModeInfo] =
-    Cogen[Either[SignalToNoiseModeInfo, TimeAndCountModeInfo]].contramap(
-      _.mode
-    )
-
   given Arbitrary[ScienceRequirements] =
     Arbitrary(
       for
         wavelength         <- arbitrary[Option[Wavelength]]
         resolution         <- arbitrary[Option[PosInt]]
-        exposureTimeMode   <- arbitrary[ExposureTimeModeInfo]
+        exposureTimeMode   <- arbitrary[Option[ExposureTimeMode]]
         wavelengthCoverage <- arbitrary[Option[WavelengthDelta]]
         focalPlane         <- arbitrary[Option[FocalPlane]]
         focalPlaneAngle    <- arbitrary[Option[Angle]]
@@ -88,7 +80,7 @@ trait ArbScienceRequirements:
   given Cogen[ScienceRequirements.Spectroscopy] = Cogen[
     (Option[Wavelength],
      Option[PosInt],
-     ExposureTimeModeInfo,
+     Option[ExposureTimeMode],
      Option[WavelengthDelta],
      Option[FocalPlane],
      Option[Angle],

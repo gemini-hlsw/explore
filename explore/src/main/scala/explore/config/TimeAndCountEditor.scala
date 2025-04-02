@@ -10,8 +10,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.Constants
-import explore.model.ScienceRequirements
-import explore.model.ScienceRequirements.TimeAndCountModeInfo
+import explore.model.TimeAndCountModeInfo
 import explore.model.enums.WavelengthUnits
 import explore.model.formats.*
 import japgolly.scalajs.react.*

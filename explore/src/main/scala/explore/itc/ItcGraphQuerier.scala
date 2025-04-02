@@ -58,7 +58,7 @@ case class ItcGraphQuerier(
     remoteConfig.orElse(selectedConfig)
 
   val exposureTimeMode: Option[ExposureTimeMode] =
-    spectroscopyRequirements.flatMap(_.exposureTimeModeOption)
+    spectroscopyRequirements.flatMap(_.exposureTimeMode)
 
   private val instrumentConfig: Option[InstrumentConfig] =
     finalConfig.map(_.instrumentConfig)

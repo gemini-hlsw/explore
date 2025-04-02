@@ -46,7 +46,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
       useStateView(
         FocalPlane.SingleSlit.some.widen[FocalPlane]
       ).map: fpView => // For now only SlitView is allowed
-        val prevSignalToNoiseAt = p.options.get.exposureTimeMode.at
+        val prevSignalToNoiseAt = p.options.get.exposureTimeMode.map(_.at)
 
         // Set SignalToNoiseAt to wavelength if it is empty
         val options = p.options

@@ -22,3 +22,8 @@ object ExposureTimeModeType:
   }
 
   given Display[ExposureTimeModeType] = Display.byShortName(_.label.value)
+
+  extension (mode: ExposureTimeMode)
+    def modeType: ExposureTimeModeType = mode match
+      case ExposureTimeMode.SignalToNoiseMode(_, _)   => ExposureTimeModeType.SignalToNoise
+      case ExposureTimeMode.TimeAndCountMode(_, _, _) => ExposureTimeModeType.TimeAndCount
