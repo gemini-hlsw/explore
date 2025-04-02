@@ -7,6 +7,9 @@ import cats.kernel.Order
 import cats.syntax.order.*
 import clue.data.syntax.*
 import explore.model.enums.PosAngleOptions
+import lucuma.core.enums.F2Disperser
+import lucuma.core.enums.F2Filter
+import lucuma.core.enums.F2Fpu
 import lucuma.core.enums.GmosAmpReadMode
 import lucuma.core.enums.GmosNorthFilter
 import lucuma.core.enums.GmosNorthFpu
@@ -41,6 +44,11 @@ enum ObservingModeSummary:
     ampReadMode:       GmosAmpReadMode,
     roi:               GmosRoi
   ) extends ObservingModeSummary
+  case Flamingos2LongSlit(
+    grating: F2Disperser,
+    filter:  F2Filter,
+    fpu:     F2Fpu
+  ) extends ObservingModeSummary
 
   // Currently, everything is long slit and defaults to Average Parallactic.
   // But as we get new modes, Shortcut 3360 states:
@@ -51,6 +59,7 @@ enum ObservingModeSummary:
   def defaultPosAngleConstrait: PosAngleOptions = this match
     case GmosNorthLongSlit(_, _, _, _, _, _) => PosAngleOptions.AverageParallactic
     case GmosSouthLongSlit(_, _, _, _, _, _) => PosAngleOptions.AverageParallactic
+    case Flamingos2LongSlit(_, _, _)         => PosAngleOptions.AverageParallactic
 
   def toInput: ObservingModeInput = this match
     case GmosNorthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
@@ -75,6 +84,9 @@ enum ObservingModeSummary:
           explicitRoi = roi.assign
         ).assign
       )
+    case Flamingos2LongSlit(grating, filter, fpu)                                     =>
+      // TODO ODB does not support F2 mode input yet
+      ObservingModeInput()
 
 object ObservingModeSummary:
   def fromObservingMode(observingMode: ObservingMode): ObservingModeSummary =
@@ -153,6 +165,8 @@ object ObservingModeSummary:
       val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
       val filterStr = filter.fold("None")(_.shortName)
       s"GMOS-S Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
+    case Flamingos2LongSlit(grating, filter, fpu)                                     =>
+      s"Flamingos2 Longslit ${grating.shortName} ${filter.shortName} ${fpu.shortName}"
 
   object GmosNorthLongSlit:
     given Order[GmosNorthLongSlit] =
@@ -161,6 +175,10 @@ object ObservingModeSummary:
   object GmosSouthLongSlit:
     given Order[GmosSouthLongSlit] =
       Order.by(x => (x.grating, x.filter, x.fpu, x.centralWavelength, x.ampReadMode, x.roi))
+
+  object Flamingos2LongSlit:
+    given Order[Flamingos2LongSlit] =
+      Order.by(x => (x.grating, x.filter, x.fpu))
 
   given Order[ObservingModeSummary] = Order.from:
     case (a @ GmosNorthLongSlit(_, _, _, _, _, _), b @ GmosNorthLongSlit(_, _, _, _, _, _)) =>

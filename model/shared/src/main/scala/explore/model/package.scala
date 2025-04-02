@@ -11,6 +11,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.core.enums.Instrument
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
@@ -100,3 +101,6 @@ trait PotMap[K, V] extends NewType[Map[K, Pot[V]]]:
       apply(t.value ++ map)
     def removed(k: K): this.Type                   =
       apply(t.value.removed(k))
+
+val SupportedInstruments =
+  List(Instrument.GmosNorth, Instrument.GmosSouth, Instrument.Flamingos2)

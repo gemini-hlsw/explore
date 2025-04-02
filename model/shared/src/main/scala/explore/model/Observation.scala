@@ -217,7 +217,9 @@ case class Observation(
               ObservingModeSummary.GmosSouthLongSlit(grating, filter, fpu, _, _, _)
             ) =>
           InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
-        case _ => none
+        case (_, ObservingModeSummary.Flamingos2LongSlit(grating, filter, fpu)) =>
+          InstrumentConfig.Flamingos2Spectroscopy(grating, filter, fpu).some
+        case _                                                                  => none
       .flatten
 
   lazy val constraintsSummary: String =

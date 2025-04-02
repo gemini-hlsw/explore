@@ -5,6 +5,7 @@ package explore.model.itc
 
 import cats.data.*
 import cats.syntax.all.*
+import explore.model.SupportedInstruments
 import explore.modes.*
 import explore.optics.all.*
 import lucuma.core.enums.*
@@ -76,9 +77,10 @@ case class ItcResultsCache(
 object ItcResultsCache:
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
-    List[Instrument](Instrument.GmosNorth, Instrument.GmosSouth).contains_(
-      row.instrument.instrument
-    ) && row.focalPlane === FocalPlane.SingleSlit
+    row.focalPlane === FocalPlane.SingleSlit &&
+      SupportedInstruments.contains_(row.instrument.instrument) &&
+      // Temporal, remove when ITC queries are done
+      row.instrument.instrument =!= Instrument.Flamingos2
 
   val Empty: ItcResultsCache = ItcResultsCache(Map.empty)
 
