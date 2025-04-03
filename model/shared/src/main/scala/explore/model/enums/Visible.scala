@@ -3,20 +3,13 @@
 
 package explore.model.enums
 
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 
 /** Visibility of an item. */
-type Visible = Visible.Type
-object Visible extends NewType[Boolean]:
-  val Hidden: Visible = Visible(false)
-  val Shown: Visible  = Visible(true)
-
+object Visible extends NewBoolean:
+  inline def Shown = True; inline def Hidden = False
   extension (self: Visible)
-    def fold[A](hidden: => A, shown: => A): A =
-      self match
-        case Visible.Hidden => hidden
-        case Visible.Shown  => shown
-
-    def isVisible: Boolean = fold(false, true)
-
-    def flip: Visible = fold(Visible.Shown, Visible.Hidden)
+    def fold[A](hidden: => A, shown: => A): A = if self then shown else hidden
+    def flip: Visible                         = fold(Visible.Shown, Visible.Hidden)
+    def isVisible: Boolean                    = self
+type Visible = Visible.Type

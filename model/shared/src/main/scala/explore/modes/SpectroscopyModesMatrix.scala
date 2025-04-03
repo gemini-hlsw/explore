@@ -28,6 +28,7 @@ import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.units.*
+import lucuma.core.model.ImageQuality
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.model.sequence.gmos.longslit.DefaultRoi
@@ -112,7 +113,7 @@ case class SpectroscopyModeRow(
   def withModeOverridesFor(
     wavelength:   Option[Wavelength],
     profiles:     Option[NonEmptyList[SourceProfile]],
-    imageQuality: ImageQuality
+    imageQuality: ImageQuality.Preset
   ): Option[SpectroscopyModeRow] =
     (wavelength, profiles)
       .flatMapN { (w, p) =>
@@ -123,7 +124,7 @@ case class SpectroscopyModeRow(
   private def withModeOverridesFor(
     wavelength:   Wavelength,
     profiles:     NonEmptyList[SourceProfile],
-    imageQuality: ImageQuality
+    imageQuality: ImageQuality.Preset
   ): Option[SpectroscopyModeRow] =
     intervalCenter(wavelength).flatMap: cw =>
       val instrumentConfig: Option[InstrumentConfig] =
@@ -135,7 +136,8 @@ case class SpectroscopyModeRow(
                   InstrumentOverrides
                     .GmosSpectroscopy(
                       cw,
-                      GmosCcdMode.Default.Longslit.gmosNorth(profiles, fpu, grating, imageQuality),
+                      GmosCcdMode.Default.Longslit
+                        .gmosNorth(profiles, fpu, grating, imageQuality.toImageQuality),
                       DefaultRoi
                     )
                     .some
@@ -145,7 +147,8 @@ case class SpectroscopyModeRow(
                   InstrumentOverrides
                     .GmosSpectroscopy(
                       cw,
-                      GmosCcdMode.Default.Longslit.gmosSouth(profiles, fpu, grating, imageQuality),
+                      GmosCcdMode.Default.Longslit
+                        .gmosSouth(profiles, fpu, grating, imageQuality.toImageQuality),
                       DefaultRoi
                     )
                     .some
@@ -244,7 +247,7 @@ object SpectroscopyModeRow {
           name,
           focalPlane,
           capability,
-          ModeAO.fromBoolean(ao),
+          ModeAO(ao),
           ModeWavelength(λmin),
           ModeWavelength(λmax),
           ModeWavelength(λoptimal),
@@ -264,7 +267,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
   def filtered(
     focalPlane:  Option[FocalPlane] = None,
     capability:  Option[SpectroscopyCapabilities] = None,
-    iq:          Option[ImageQuality] = None,
+    iq:          Option[ImageQuality.Preset] = None,
     wavelength:  Option[Wavelength] = None,
     resolution:  Option[PosInt] = None,
     range:       Option[WavelengthDelta] = None,
@@ -279,7 +282,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
 
       focalPlane.forall(f => r.focalPlane === f) &&
       r.capability === capability &&
-      iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo)) &&
+      iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.Preset.PointTwo)) &&
       wavelength.forall(w => w >= r.λmin.value && w <= r.λmax.value) &&
       resolution.forall(_ <= r.resolution) &&
       (range, rowRangePM).mapN(_.pm.value <= _).forall(identity) &&
@@ -296,14 +299,15 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
       // Difference in slit width
       val deltaSlitWidth: Rational    =
         iq.map(i =>
-          (Rational(r.slitWidth.value.value.toMicroarcseconds, 1000000) - i.toArcSeconds.value).abs
+          (Rational(r.slitWidth.value.value.toMicroarcseconds, 1000000) -
+            i.toImageQuality.toArcSeconds.value).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
       val deltaRes: BigDecimal        =
         resolution.foldMap(re => (re.value - r.resolution.value).abs)
       // give a bumpp to non-AO modes (but don't discard them)
       val aoScore: Rational           =
-        if (iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.PointTwo))) ScoreBump
+        if (iq.forall(i => r.ao =!= ModeAO.AO || (i <= ImageQuality.Preset.PointTwo))) ScoreBump
         else Rational.zero
       // If wavelength > 0.65mu, then prefer settings with a filter to avoid 2nd order contamination
       val filterScore: Rational       =
@@ -325,8 +329,11 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
         if (r.focalPlane === FocalPlane.IFU)
           Rational.one
         else
-          iq.map(i => Rational(i.toArcSeconds.value / (i.toArcSeconds.value + deltaSlitWidth)))
-            .getOrElse(Rational.zero)
+          iq.map(i =>
+            Rational(
+              i.toImageQuality.toArcSeconds.value / (i.toImageQuality.toArcSeconds.value + deltaSlitWidth)
+            )
+          ).getOrElse(Rational.zero)
       aoScore + wavelengthScore + filterScore + resolutionScore + slitWidthScore
     }
 

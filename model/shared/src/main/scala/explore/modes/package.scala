@@ -9,6 +9,7 @@ import eu.timepit.refined.types.numeric.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.optics.Wedge
+import lucuma.core.util.NewBoolean
 import lucuma.core.util.NewType
 
 object ModeWavelength extends NewType[Wavelength]:
@@ -27,13 +28,7 @@ object ModeSlitSize extends NewType[Angle]:
 
   extension (size: ModeSlitSize)
     def toString: String = s"${Angle.milliarcseconds.get(size.value) / 1000.0} arcsec"
-
 type ModeSlitSize = ModeSlitSize.Type
 
-object ModeAO extends NewType[Boolean] {
-  val NoAO = ModeAO(false)
-  val AO   = ModeAO(true)
-
-  def fromBoolean(b: Boolean): ModeAO = if b then AO else NoAO
-}
+object ModeAO extends NewBoolean { inline def AO = True; inline def NoAO = False }
 type ModeAO = ModeAO.Type

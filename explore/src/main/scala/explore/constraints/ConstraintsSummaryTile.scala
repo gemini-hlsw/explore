@@ -20,6 +20,7 @@ import explore.model.ConstraintTabTileIds
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.Observation
+import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.syntax.all.*
@@ -29,6 +30,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Program
 import lucuma.core.model.User
+import lucuma.core.syntax.display.*
 import lucuma.core.util.NewType
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -155,14 +157,14 @@ object ConstraintsSummaryTile:
           IQColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.imageQuality).get
         )
-          .withCell(_.value.label)
-          .sortableBy(_.label),
+          .withCell(_.value.shortName)
+          .sortableBy(_.shortName),
         column(
           CCColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.cloudExtinction).get
         )
-          .withCell(_.value.label)
-          .sortableBy(_.label),
+          .withCell(_.value.shortName)
+          .sortableBy(_.shortName),
         column(
           BGColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.skyBackground).get

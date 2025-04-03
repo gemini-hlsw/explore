@@ -38,7 +38,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.beautifuldnd.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
@@ -134,10 +134,10 @@ end AsterismGroupObsList
 object AsterismGroupObsList:
   private type Props = AsterismGroupObsList
 
-  private object AddingTargetOrObs extends NewType[Boolean]
+  private object AddingTargetOrObs extends NewBoolean
   private type AddingTargetOrObs = AddingTargetOrObs.Type
 
-  private object Dragging extends NewType[Boolean]
+  private object Dragging extends NewBoolean
 
   private def toggleExpanded(
     obsIds:      ObsIdSet,

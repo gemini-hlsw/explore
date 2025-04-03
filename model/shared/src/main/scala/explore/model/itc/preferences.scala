@@ -3,10 +3,7 @@
 
 package explore.model.itc
 
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 
-object PlotDetails extends NewType[Boolean]:
-  val Shown: PlotDetails  = PlotDetails(true)
-  val Hidden: PlotDetails = PlotDetails(false)
-
+object PlotDetails extends NewBoolean { val Shown = True; val Hidden = False }
 type PlotDetails = PlotDetails.Type

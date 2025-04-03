@@ -135,7 +135,7 @@ object all:
 
   extension (cs: ConstraintSet)
     def summaryString: String =
-      s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label} ${cs.waterVapor.label}"
+      s"${cs.imageQuality.toImageQuality.label} ${cs.cloudExtinction.toCloudExtinction.label} ${cs.skyBackground.label} ${cs.waterVapor.label}"
 
   extension (ts: Timestamp)
     def formatUtc: String =

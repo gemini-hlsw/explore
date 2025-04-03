@@ -147,7 +147,7 @@ case class ObsTabTiles(
   def obsIQLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
       percentileImageQuality(
-        constraintSet.get.imageQuality.toArcSeconds.toValue[BigDecimal],
+        constraintSet.get.imageQuality.toImageQuality.toArcSeconds.toValue[BigDecimal],
         cw.value,
         minimumAirmass(dec, site)
       )
@@ -159,7 +159,7 @@ case class ObsTabTiles(
         constraintSet.get.skyBackground,
         constraintSet.get.cloudExtinction,
         constraintSet.get.waterVapor,
-        constraintSet.get.imageQuality.toArcSeconds.toValue[BigDecimal],
+        constraintSet.get.imageQuality.toImageQuality.toArcSeconds.toValue[BigDecimal],
         cw.value,
         dec,
         site

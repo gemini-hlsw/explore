@@ -16,7 +16,7 @@ import japgolly.scalajs.react.hooks.Hooks.UseState
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.floatingui.Placement
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
@@ -38,13 +38,11 @@ trait FinderChartsAttachmentUtils:
 
 object FinderChartsAttachmentUtils extends FinderChartsAttachmentUtils
 
-object ChartSelector extends NewType[Boolean]:
-  inline def Open: ChartSelector   = ChartSelector(true)
-  inline def Closed: ChartSelector = ChartSelector(false)
+object ChartSelector extends NewBoolean:
+  inline def Open           = True; inline def Closed = False
   extension (s: ChartSelector)
-    def flip: ChartSelector        =
-      if (s.value) ChartSelector.Closed else ChartSelector.Open
-
+    def flip: ChartSelector =
+      if s then ChartSelector.Closed else ChartSelector.Open
 type ChartSelector = ChartSelector.Type
 
 def finderChartsSelector(

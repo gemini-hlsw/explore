@@ -6,12 +6,12 @@ package explore.targeteditor
 import cats.syntax.option.*
 import explore.model.AsterismVisualOptions
 import japgolly.scalajs.react.*
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.aladin.Fov
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
 
-object AreAdding extends NewType[Boolean]
+object AreAdding extends NewBoolean
 type AreAdding = AreAdding.Type
 
 extension (options: AsterismVisualOptions) inline def fov: Fov = Fov(options.fovRA, options.fovDec)

@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import explore.model.AppContext
 import explore.model.Observation
 import explore.model.TargetList
+import explore.model.display.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
@@ -16,6 +17,7 @@ import lucuma.core.model.Configuration
 import lucuma.core.model.Configuration.ObservingMode.GmosNorthLongSlit
 import lucuma.core.model.Configuration.ObservingMode.GmosSouthLongSlit
 import lucuma.core.model.Program
+import lucuma.core.syntax.display.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 
@@ -45,11 +47,11 @@ case class ConfigurationTableColumnBuilder[D, TM, CM, TF](colDef: ColumnDef.Appl
         .withSize(110.toPx)
         .sortable,
       configurationColumn(ImageQualityColumnId, _.conditions.imageQuality)
-        .withCell(_.value.label)
+        .withCell(_.value.shortName)
         .withSize(80.toPx)
         .sortable,
       configurationColumn(CloudExtinctionColumnId, _.conditions.cloudExtinction)
-        .withCell(_.value.label)
+        .withCell(_.value.shortName)
         .withSize(80.toPx)
         .sortable,
       configurationColumn(SkyBackgroundColumnId, _.conditions.skyBackground)

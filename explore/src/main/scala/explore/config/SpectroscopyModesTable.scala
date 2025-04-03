@@ -47,7 +47,7 @@ import lucuma.core.math.*
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.react.circularprogressbar.CircularProgressbar
 import lucuma.react.common.Css
@@ -90,9 +90,8 @@ case class SpectroscopyModesTable(
 private object SpectroscopyModesTable:
   private type Props = SpectroscopyModesTable
 
-  private object ScrollTo extends NewType[Boolean]:
-    inline def Scroll   = ScrollTo(true)
-    inline def NoScroll = ScrollTo(false)
+  private object ScrollTo extends NewBoolean:
+    inline def Scroll = True; inline def NoScroll = False
 
   private enum TimeOrSNColumn:
     case Time, SN

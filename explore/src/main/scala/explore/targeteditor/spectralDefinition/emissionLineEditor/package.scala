@@ -8,7 +8,7 @@
 
 package explore.targeteditor.spectralDefinition.emissionLineEditor
 
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 
-object AddDisabled extends NewType[Boolean]
+object AddDisabled extends NewBoolean
 type AddDisabled = AddDisabled.Type

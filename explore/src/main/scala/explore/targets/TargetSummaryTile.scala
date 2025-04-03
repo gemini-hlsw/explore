@@ -26,7 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -141,7 +141,7 @@ object TargetSummaryTile:
 
     private val ColDef = ColumnDef[TargetWithId]
 
-    private object IsImportOpen extends NewType[Boolean]
+    private object IsImportOpen extends NewBoolean
 
     private val ColumnClasses: Map[ColumnId, Css] = Map(
       IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),

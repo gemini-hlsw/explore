@@ -14,8 +14,10 @@ import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
 import lucuma.core.enums.*
+import lucuma.core.model.CloudExtinction
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.ImageQuality
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -57,10 +59,10 @@ object ConstraintsQueries:
       apply(lens.get, lens.modify, remoteSet)
 
   object UpdateConstraintSet:
-    def imageQuality(iq: ImageQuality): Endo[ConstraintSetInput] =
+    def imageQuality(iq: ImageQuality.Preset): Endo[ConstraintSetInput] =
       ConstraintSetInput.imageQuality.replace(iq.assign)
 
-    def cloudExtinction(ce: CloudExtinction): Endo[ConstraintSetInput] =
+    def cloudExtinction(ce: CloudExtinction.Preset): Endo[ConstraintSetInput] =
       ConstraintSetInput.cloudExtinction.replace(ce.assign)
 
     def skyBackground(sb: SkyBackground): Endo[ConstraintSetInput] =

@@ -28,6 +28,7 @@ import lucuma.core.enums.RoleType
 import lucuma.core.model.StandardRole
 import lucuma.core.syntax.display.*
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewBoolean
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
@@ -54,7 +55,7 @@ case class UserPreferencesPopup(
   units:   View[WavelengthUnits]
 ) extends ReactFnProps(UserPreferencesPopup.component)
 
-private object IsOpen extends NewType[Boolean]
+private object IsOpen extends NewBoolean
 private type IsOpen = IsOpen.Type
 
 object UserPreferencesPopup:
@@ -95,8 +96,8 @@ case class UserPreferencesContent(
 object UserPreferencesContent:
   private type Props = UserPreferencesContent
 
-  private object IsCleaningTheCache extends NewType[Boolean]
-  private object IsDeletingLayouts  extends NewType[Boolean]
+  private object IsCleaningTheCache extends NewBoolean
+  private object IsDeletingLayouts  extends NewBoolean
 
   private object NewKey extends NewType[Option[String]]
   private type NewKey = NewKey.Type

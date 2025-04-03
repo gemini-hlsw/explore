@@ -6,26 +6,16 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import lucuma.core.math.Angle
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 
-object ColorsInverted extends NewType[Boolean]:
-  val No: ColorsInverted  = ColorsInverted(false)
-  val Yes: ColorsInverted = ColorsInverted(true)
-
-  def fromBoolean(b: Boolean): ColorsInverted =
-    if b then Yes else No
-
+object ColorsInverted extends NewBoolean:
+  inline def Yes = True; inline def No = False
   extension (self: ColorsInverted)
-    def fold[A](no: => A, yes: => A): A =
-      self match
-        case ColorsInverted.Yes => yes
-        case ColorsInverted.No  => no
-
-    def flip: ColorsInverted = fold(ColorsInverted.Yes, ColorsInverted.No)
-
+    def fold[A](no: => A, yes: => A): A = if self then yes else no
+    def flip: ColorsInverted            = fold(ColorsInverted.Yes, ColorsInverted.No)
 type ColorsInverted = ColorsInverted.Type
 
 sealed trait ChartOp derives Eq

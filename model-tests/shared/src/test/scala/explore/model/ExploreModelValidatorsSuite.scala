@@ -10,12 +10,12 @@ import lucuma.core.arb.*
 import lucuma.core.math.Angle
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.arb.ArbAngle.given
-import lucuma.core.math.arb.ArbBrightnessValue.given
 import lucuma.core.math.arb.ArbOffset.given
 import lucuma.core.math.arb.ArbParallax.given
 import lucuma.core.math.arb.ArbProperMotion.given
 import lucuma.core.math.arb.ArbWavelengthDither.given
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
+import lucuma.core.util.arb.ArbNewType.given
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.*

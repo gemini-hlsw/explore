@@ -6,7 +6,7 @@ package explore.visualization
 import cats.Semigroup
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.math.Offset
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.aladin.Fov
 import lucuma.react.common.Css
 import org.locationtech.jts.geom.Geometry
@@ -58,10 +58,7 @@ def calculateViewBox(
   (viewBoxX, viewBoxY, viewBoxW, viewBoxH)
 }
 
-object TooltipState extends NewType[Boolean]:
-  val Open: TooltipState   = TooltipState(true)
-  val Closed: TooltipState = TooltipState(false)
-
+object TooltipState extends NewBoolean { inline def Open = True; inline def Closed = False }
 type TooltipState = TooltipState.Type
 
 /**
