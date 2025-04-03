@@ -319,28 +319,31 @@ object AsterismEditorTile:
             props.execution,
             props.obsIds.size > 1
           )
-          if (props.tileSize.isMinimized)
-            obsTimeEditor
-          else
-            <.div(
-              ExploreStyles.AsterismEditorTileTitle,
-              // only pass in the unexecuted observations. Will be readonly if there aren't any
-              <.span(
-                (props.obsEditInfo, props.obsEditInfo.map(_.unExecuted.getOrElse(props.obsIds)))
-                  .mapN: (obsEditInfo, unexecutedObs) =>
-                    targetSelectionPopup(
-                      "Add",
-                      props.programId,
-                      unexecutedObs,
-                      props.obsAndTargets,
-                      adding,
-                      props.onAsterismUpdate,
-                      props.readonly || obsEditInfo.allAreExecuted,
-                      ExploreStyles.AddTargetButton
-                    )
-              ),
-              obsTimeEditor,
-              <.span(^.textAlign.right)(
-                ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
+
+          <.div(
+            ExploreStyles.AsterismEditorTileTitle,
+            if (props.tileSize.isMinimized)
+              obsTimeEditor
+            else
+              React.Fragment(
+                // only pass in the unexecuted observations. Will be readonly if there aren't any
+                <.span(
+                  (props.obsEditInfo, props.obsEditInfo.map(_.unExecuted.getOrElse(props.obsIds)))
+                    .mapN: (obsEditInfo, unexecutedObs) =>
+                      targetSelectionPopup(
+                        "Add",
+                        props.programId,
+                        unexecutedObs,
+                        props.obsAndTargets,
+                        adding,
+                        props.onAsterismUpdate,
+                        props.readonly || obsEditInfo.allAreExecuted,
+                        ExploreStyles.AddTargetButton
+                      )
+                ),
+                obsTimeEditor,
+                <.span(^.textAlign.right)(
+                  ColumnSelectorInTitle(TargetColumns.AllColNames.toList, props.columnVisibility)
+                )
               )
-            )
+          )
