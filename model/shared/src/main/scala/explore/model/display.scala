@@ -13,8 +13,10 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Wavelength
+import lucuma.core.model.CloudExtinction
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.ImageQuality
 import lucuma.core.model.Semester
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.UnnormalizedSED
@@ -25,6 +27,7 @@ import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
 
 import java.text.DecimalFormat
+import scala.annotation.targetName
 
 trait DisplayImplicits:
   given Display[AttachmentType] =
@@ -60,9 +63,11 @@ trait DisplayImplicits:
     case ScienceMode.Imaging      => "Imaging"
     case ScienceMode.Spectroscopy => "Spectroscopy"
 
-  given Display[ImageQuality] = Display.byShortName(_.label)
+  @targetName("given_Display_ImageQuality_Preset")
+  given Display[ImageQuality.Preset] = Display.byShortName(_.toImageQuality.label)
 
-  given Display[CloudExtinction] = Display.byShortName(_.label)
+  @targetName("given_Display_CloudExtinction_Preset")
+  given Display[CloudExtinction.Preset] = Display.byShortName(_.toCloudExtinction.label)
 
   given Display[WaterVapor] = Display.byShortName(_.label)
 
@@ -90,7 +95,7 @@ trait DisplayImplicits:
         f" ${min.value}%.1f<HA<${max.value}%.1f"
     }
 
-    s"${cs.imageQuality.label} ${cs.cloudExtinction.label} ${cs.skyBackground.label}$wv$er"
+    s"${cs.imageQuality.toImageQuality.label} ${cs.cloudExtinction.toCloudExtinction.label} ${cs.skyBackground.label}$wv$er"
 
   given Display[BrightnessValue] = Display.byShortName: x =>
     val f = new DecimalFormat("#.###")

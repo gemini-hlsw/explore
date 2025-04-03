@@ -150,7 +150,12 @@ case class Observation(
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
-            GmosCcdMode.Default.Longslit.gmosNorth(ps, fpu, grating, constraints.imageQuality)
+            GmosCcdMode.Default.Longslit.gmosNorth(
+              ps,
+              fpu,
+              grating,
+              constraints.imageQuality.toImageQuality
+            )
 
           val mode: GmosCcdMode =
             applyGmosCcdModesOverrides(
@@ -191,7 +196,12 @@ case class Observation(
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
-            GmosCcdMode.Default.Longslit.gmosSouth(ps, fpu, grating, constraints.imageQuality)
+            GmosCcdMode.Default.Longslit.gmosSouth(
+              ps,
+              fpu,
+              grating,
+              constraints.imageQuality.toImageQuality
+            )
 
           val mode: GmosCcdMode = applyGmosCcdModesOverrides(
             explicitXBinning,
@@ -223,7 +233,8 @@ case class Observation(
       .flatten
 
   lazy val constraintsSummary: String =
-    s"${constraints.imageQuality.label} ${constraints.cloudExtinction.label} ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
+    s"${constraints.imageQuality.toImageQuality.label} ${constraints.cloudExtinction.toCloudExtinction.label}" +
+      s" ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
   private val ExecutedStates =
     Set(ObservationWorkflowState.Ongoing, ObservationWorkflowState.Completed)
