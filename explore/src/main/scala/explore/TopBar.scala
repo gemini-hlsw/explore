@@ -26,7 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.*
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
@@ -63,13 +63,10 @@ case class TopBar(
 object TopBar:
   private type Props = TopBar
 
-  private object IsAboutOpen extends NewType[Boolean]
-
-  private object IsProgramOpen extends NewType[Boolean]
-
-  private object IsUserPropertiesOpen extends NewType[Boolean]
-
-  private object IsReedemInvitationsOpen extends NewType[Boolean]
+  private object IsAboutOpen             extends NewBoolean
+  private object IsProgramOpen           extends NewBoolean
+  private object IsUserPropertiesOpen    extends NewBoolean
+  private object IsReedemInvitationsOpen extends NewBoolean
 
   private val component =
     ScalaFnComponent

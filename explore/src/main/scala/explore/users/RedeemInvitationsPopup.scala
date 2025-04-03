@@ -21,6 +21,7 @@ import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.UserInvitation
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewBoolean
 import lucuma.core.util.NewType
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
@@ -41,9 +42,9 @@ case class RedeemInvitationsPopup(vault: UserVault, onClose: Option[Callback] = 
     extends ReactFnProps(RedeemInvitationsPopup.Component)
 
 object RedeemInvitationsPopup:
-  private object IsOpen     extends NewType[Boolean]
+  private object IsOpen     extends NewBoolean
   private object ErrorMsg   extends NewType[Option[String]]
-  private object IsKeyValid extends NewType[Boolean]
+  private object IsKeyValid extends NewBoolean
 
   private val Component = ScalaFnComponent[RedeemInvitationsPopup]: props =>
     for {

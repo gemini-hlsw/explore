@@ -13,7 +13,7 @@ import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.primereact.BooleanRadioButtons
@@ -27,9 +27,8 @@ final case class TargetCloneSelector(
 object TargetCloneSelector:
   private type Props = TargetCloneSelector
 
-  private object EditScope extends NewType[Boolean]:
-    inline def AllInstances: EditScope = EditScope(true)
-    inline def CurrentOnly: EditScope  = EditScope(false)
+  private object EditScope extends NewBoolean:
+    inline def AllInstances = True; inline def CurrentOnly = False
 
   private type EditScope = EditScope.Type
 

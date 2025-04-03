@@ -11,25 +11,25 @@ import explore.model.enums.Visible
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.PlotDetails
 import io.circe.Decoder
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.itc.GraphType
 import monocle.Focus
 
-object AladinMouseScroll extends NewType[Boolean]:
-  inline def Allowed: AladinMouseScroll  = AladinMouseScroll(true)
-  inline def Disabled: AladinMouseScroll = AladinMouseScroll(false)
+object AladinMouseScroll extends NewBoolean:
+  inline def Allowed                   = True
+  inline def Disabled                  = False
   extension (s: AladinMouseScroll)
-    inline def flip: AladinMouseScroll   =
-      if (s.value) AladinMouseScroll.Disabled else AladinMouseScroll.Allowed
+    inline def flip: AladinMouseScroll =
+      if s then AladinMouseScroll.Disabled else AladinMouseScroll.Allowed
 
 type AladinMouseScroll = AladinMouseScroll.Type
 
-object ElevationPlotScheduling extends NewType[Boolean]:
-  val On: ElevationPlotScheduling            = ElevationPlotScheduling(true)
-  val Off: ElevationPlotScheduling           = ElevationPlotScheduling(false)
+object ElevationPlotScheduling extends NewBoolean:
+  val On                                     = True
+  val Off                                    = False
   extension (s: ElevationPlotScheduling)
     inline def flip: ElevationPlotScheduling =
-      if (s.value) ElevationPlotScheduling.Off else ElevationPlotScheduling.On
+      if s then ElevationPlotScheduling.Off else ElevationPlotScheduling.On
 
 type ElevationPlotScheduling = ElevationPlotScheduling.Type
 

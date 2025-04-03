@@ -26,7 +26,7 @@ import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.User
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
@@ -53,7 +53,7 @@ case class BasicConfigurationPanel(
 private object BasicConfigurationPanel:
   private type Props = BasicConfigurationPanel
 
-  private object Creating extends NewType[Boolean]
+  private object Creating extends NewBoolean
 
   private val component =
     ScalaFnComponent[Props]: props =>

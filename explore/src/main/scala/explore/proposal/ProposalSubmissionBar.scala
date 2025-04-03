@@ -20,7 +20,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.CallForProposals
 import lucuma.core.model.Program
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -49,7 +49,7 @@ case class ProposalSubmissionBar(
   val hasObsError = !hasDefinedObservations || hasUndefinedObservations
 
 object ProposalSubmissionBar:
-  private object IsUpdatingStatus extends NewType[Boolean]
+  private object IsUpdatingStatus extends NewBoolean
   private type IsUpdatingStatus = IsUpdatingStatus.Type
 
   private def doUpdateStatus(

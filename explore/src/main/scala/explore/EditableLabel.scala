@@ -8,7 +8,7 @@ import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.fa.FontAwesomeIcon
@@ -80,21 +80,18 @@ object EditableLabel:
       readonly
     )
 
-  private type Editing = Editing.Type
-  private object Editing extends NewType[Boolean]:
-    inline def NotEditing                = Editing(false)
-    inline def InEdition                 = Editing(true)
-    def fromBoolean(b: Boolean): Editing = Editing(b)
+  private object Editing extends NewBoolean:
+    inline def InEdition = True; inline def NotEditing = False
 
   import Editing.*
 
   private val component =
     ScalaFnComponent
       .withHooks[Props]
-      .useStateBy(props => Editing.fromBoolean(props.forceEditing)) // editing
+      .useStateBy(props => Editing(props.forceEditing)) // editing
       .useEffectWithDepsBy((props, _) => props.forceEditing): (_, editing) =>
         forceEditing => if forceEditing then editing.setState(InEdition) else Callback.empty
-      .useState("")                                                 // displayValue
+      .useState("")                                     // displayValue
       .useId
       .render: (props, editing, displayValue, id) =>
         def editCB(e: ReactMouseEvent): Callback =

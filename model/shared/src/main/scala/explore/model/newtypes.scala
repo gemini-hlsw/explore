@@ -3,22 +3,18 @@
 
 package explore.model
 
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 
-object AladinFullScreen extends NewType[Boolean]:
-  inline def FullScreen: AladinFullScreen = AladinFullScreen(true)
-  inline def Normal: AladinFullScreen     = AladinFullScreen(false)
+object AladinFullScreen extends NewBoolean:
+  inline def FullScreen        = True
+  inline def Normal            = False
   extension (s: AladinFullScreen)
-    def flip: AladinFullScreen            =
-      if (s.value) AladinFullScreen.Normal else AladinFullScreen.FullScreen
-
+    def flip: AladinFullScreen =
+      if s then AladinFullScreen.Normal else AladinFullScreen.FullScreen
 type AladinFullScreen = AladinFullScreen.Type
 
-object IsActive extends NewType[Boolean]
+object IsActive extends NewBoolean
 type IsActive = IsActive.Type
 
-object PopupState extends NewType[Boolean]:
-  inline def Open: PopupState   = PopupState(true)
-  inline def Closed: PopupState = PopupState(false)
-
+object PopupState extends NewBoolean { inline def Open = True; inline def Closed = False }
 type PopupState = PopupState.Type

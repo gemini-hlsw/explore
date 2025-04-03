@@ -26,7 +26,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.User
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Dialog
@@ -56,12 +56,12 @@ case class ProgramsPopup(
 object ProgramsPopup:
   private type Props = ProgramsPopup
 
-  private object IsOpen extends NewType[Boolean]
+  private object IsOpen extends NewBoolean
 
-  private object IsAdding extends NewType[Boolean]
+  private object IsAdding extends NewBoolean
   private type IsAdding = IsAdding.Type
 
-  private object ShowDeleted extends NewType[Boolean]
+  private object ShowDeleted extends NewBoolean
 
   private def selectProgram(
     onClose:    Option[Callback],

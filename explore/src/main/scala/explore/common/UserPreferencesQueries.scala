@@ -348,7 +348,7 @@ object UserPreferencesQueries:
               ChartOp.ScaleY(r.scaleY.toDouble / 100),
               ChartOp.FlipX(r.flipX),
               ChartOp.FlipY(r.flipY),
-              ColorsInverted.fromBoolean(r.inverted)
+              ColorsInverted(r.inverted)
             )
         .handleError(_ => none)
         .map(_.getOrElse(Transformation.Default))

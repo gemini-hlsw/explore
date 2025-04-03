@@ -247,7 +247,7 @@ object SpectroscopyModeRow {
           name,
           focalPlane,
           capability,
-          ModeAO.fromBoolean(ao),
+          ModeAO(ao),
           ModeWavelength(λmin),
           ModeWavelength(λmax),
           ModeWavelength(λoptimal),

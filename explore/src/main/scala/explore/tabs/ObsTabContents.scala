@@ -37,7 +37,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
@@ -52,13 +52,10 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import monocle.Optional
 
-object DeckShown extends NewType[Boolean]:
-  inline def Shown: DeckShown  = DeckShown(true)
-  inline def Hidden: DeckShown = DeckShown(false)
-
-  extension (s: DeckShown)
-    def flip: DeckShown =
-      if (s.value) DeckShown.Hidden else DeckShown.Shown
+object DeckShown extends NewBoolean:
+  inline def Shown                             = True
+  inline def Hidden                            = False
+  extension (s: DeckShown) def flip: DeckShown = if s then DeckShown.Hidden else DeckShown.Shown
 
 type DeckShown = DeckShown.Type
 

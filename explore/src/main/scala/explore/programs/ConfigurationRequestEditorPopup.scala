@@ -4,7 +4,6 @@
 package explore.programs
 
 import cats.syntax.all.*
-import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons

@@ -22,7 +22,7 @@ import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
@@ -85,7 +85,7 @@ def obsEditAttachments(
     .raiseGraphQLErrors
     .void
 
-object AddingObservation extends NewType[Boolean]
+object AddingObservation extends NewBoolean
 type AddingObservation = AddingObservation.Type
 
 def insertObs(

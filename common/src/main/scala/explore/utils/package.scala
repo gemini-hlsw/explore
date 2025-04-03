@@ -21,7 +21,7 @@ import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.given
@@ -80,7 +80,7 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
 private def fromDatePickerJsDate(jsDate: js.Date): Instant =
   Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
 
-object IsExpanded extends NewType[Boolean]
+object IsExpanded extends NewBoolean
 type IsExpanded = IsExpanded.Type
 
 /**

@@ -27,7 +27,7 @@ import lucuma.catalog.AngularSize
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
-import lucuma.core.util.NewType
+import lucuma.core.util.NewBoolean
 import lucuma.react.aladin.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
@@ -58,9 +58,7 @@ case class TargetSelectionPopup(
   showCreateEmpty:     Boolean = true
 ) extends ReactFnProps(TargetSelectionPopup.component)
 
-object SearchingState extends NewType[Boolean]:
-  inline def Searching: SearchingState = SearchingState(true)
-  inline def Idle: SearchingState      = SearchingState(false)
+object SearchingState extends NewBoolean { inline def Searching = True; inline def Idle = False }
 
 type SearchingState = SearchingState.Type
 
