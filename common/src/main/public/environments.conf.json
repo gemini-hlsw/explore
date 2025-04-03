@@ -38,7 +38,7 @@
     "environment": "PRODUCTION",
     "odbURI": "wss://lucuma-postgres-odb-production.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-production.herokuapp.com",
-    "preferencesDBURI": "wss://gpp-prefs-production.lucuma.xyz/v1/graphql",
+    "preferencesDBURI": "wss://prefs.gpp.gemini.edu/v1/graphql",
     "itcURI": "https://itc.gpp.gemini.edu/itc",
     "sso": {
       "uri": "https://sso.gpp.gemini.edu",
