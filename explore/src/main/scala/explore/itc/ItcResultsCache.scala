@@ -11,6 +11,7 @@ import explore.optics.all.*
 import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
+import lucuma.core.util.Timestamp
 import monocle.Focus
 import mouse.boolean.*
 
@@ -58,13 +59,14 @@ case class ItcResultsCache(
     etm: ExposureTimeMode,
     c:   ConstraintSet,
     a:   Option[NonEmptyList[ItcTarget]],
+    l:   List[Timestamp],
     r:   SpectroscopyModeRow
   ): EitherNec[ItcTargetProblem, ItcResult] =
     (mode(r), targets(a)).parTupled
       .leftMap(_.map(ItcTargetProblem(none, _)))
       .map: (im, a) =>
         cache
-          .get(ItcRequestParams(etm, c, a, im))
+          .get(ItcRequestParams(etm, c, a, l, im))
           .getOrElse(ItcResult.Pending.rightNec[ItcTargetProblem])
       .flatten
 

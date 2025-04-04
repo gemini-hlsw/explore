@@ -24,6 +24,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
@@ -34,10 +35,11 @@ import lucuma.ui.syntax.all.given
 
 object SequenceTile extends SequenceTileHelper:
   def apply(
-    obsId:           Observation.Id,
-    obsExecution:    Pot[Execution],
-    asterismIds:     AsterismIds,
-    sequenceChanged: View[Pot[Unit]]
+    obsId:               Observation.Id,
+    obsExecution:        Pot[Execution],
+    asterismIds:         AsterismIds,
+    customSedTimestamps: List[Timestamp],
+    sequenceChanged:     View[Pot[Unit]]
   ) =
     Tile(
       ObsTabTileIds.SequenceId.id,
@@ -48,6 +50,7 @@ object SequenceTile extends SequenceTileHelper:
         Body(
           obsId,
           asterismIds.toList,
+          customSedTimestamps,
           sequenceChanged,
           isRefreshing.set
         ),
@@ -55,16 +58,17 @@ object SequenceTile extends SequenceTileHelper:
     )
 
   private case class Body(
-    obsId:           Observation.Id,
-    targetIds:       List[Target.Id],
-    sequenceChanged: View[Pot[Unit]],
-    setIsRefreshing: Boolean => Callback
+    obsId:               Observation.Id,
+    targetIds:           List[Target.Id],
+    customSedTimestamps: List[Timestamp],
+    sequenceChanged:     View[Pot[Unit]],
+    setIsRefreshing:     Boolean => Callback
   ) extends ReactFnProps(Body)
 
   private object Body
       extends ReactFnComponent[Body](props =>
         for
-          liveSequence <- useLiveSequence(props.obsId, props.targetIds)
+          liveSequence <- useLiveSequence(props.obsId, props.targetIds, props.customSedTimestamps)
           _            <- useEffectWithDeps(liveSequence.data): dataPot =>
                             props.sequenceChanged.set(dataPot.void)
           _            <- useEffectWithDeps(liveSequence.refreshing):

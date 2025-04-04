@@ -48,6 +48,7 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
+import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.DropdownOptional
 import lucuma.react.primereact.SelectItem
@@ -74,6 +75,7 @@ object ConfigurationTile:
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
     revertedInstrumentConfig: Option[InstrumentConfig], // configuration selected if reverted
     modes:                    SpectroscopyModesMatrix,
+    customSedTimestamps:      List[Timestamp],
     allTargets:               TargetList,
     observingModeGroups:      ObservingModeGroupList,
     sequenceChanged:          Callback,
@@ -98,6 +100,7 @@ object ConfigurationTile:
           selectedConfig,
           revertedInstrumentConfig,
           modes,
+          customSedTimestamps,
           sequenceChanged,
           readonly,
           units
@@ -225,6 +228,7 @@ object ConfigurationTile:
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
     revertedInstrumentConfig: Option[InstrumentConfig],
     modes:                    SpectroscopyModesMatrix,
+    customSedTimestamps:      List[Timestamp],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
@@ -403,6 +407,7 @@ object ConfigurationTile:
                           )
                         .orEmpty,
                       props.modes,
+                      props.customSedTimestamps,
                       props.readonly,
                       props.units
                     )
