@@ -11,11 +11,7 @@ import monocle.Focus
 import monocle.Lens
 import monocle.Prism
 
-object ColorsInverted extends NewBoolean:
-  inline def Yes = True; inline def No = False
-  extension (self: ColorsInverted)
-    def fold[A](no: => A, yes: => A): A = if self then yes else no
-    def flip: ColorsInverted            = fold(ColorsInverted.Yes, ColorsInverted.No)
+object ColorsInverted extends NewBoolean { inline def Yes = True; inline def No = False }
 type ColorsInverted = ColorsInverted.Type
 
 sealed trait ChartOp derives Eq

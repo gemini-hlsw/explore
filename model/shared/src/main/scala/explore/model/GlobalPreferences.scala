@@ -16,21 +16,10 @@ import lucuma.itc.GraphType
 import monocle.Focus
 
 object AladinMouseScroll extends NewBoolean:
-  inline def Allowed                   = True
-  inline def Disabled                  = False
-  extension (s: AladinMouseScroll)
-    inline def flip: AladinMouseScroll =
-      if s then AladinMouseScroll.Disabled else AladinMouseScroll.Allowed
-
+  inline def Allowed = True; inline def Disabled = False
 type AladinMouseScroll = AladinMouseScroll.Type
 
-object ElevationPlotScheduling extends NewBoolean:
-  val On                                     = True
-  val Off                                    = False
-  extension (s: ElevationPlotScheduling)
-    inline def flip: ElevationPlotScheduling =
-      if s then ElevationPlotScheduling.Off else ElevationPlotScheduling.On
-
+object ElevationPlotScheduling extends NewBoolean { val On = True; val Off = False }
 type ElevationPlotScheduling = ElevationPlotScheduling.Type
 
 case class GlobalPreferences(

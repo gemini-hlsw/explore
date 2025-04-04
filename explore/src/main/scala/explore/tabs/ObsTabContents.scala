@@ -52,11 +52,7 @@ import lucuma.ui.syntax.all.given
 import monocle.Iso
 import monocle.Optional
 
-object DeckShown extends NewBoolean:
-  inline def Shown                             = True
-  inline def Hidden                            = False
-  extension (s: DeckShown) def flip: DeckShown = if s then DeckShown.Hidden else DeckShown.Shown
-
+object DeckShown extends NewBoolean { inline def Shown = True; inline def Hidden = False }
 type DeckShown = DeckShown.Type
 
 case class ObsTabContents(

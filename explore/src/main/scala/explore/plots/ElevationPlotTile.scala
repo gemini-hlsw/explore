@@ -116,16 +116,16 @@ object ElevationPlotTile:
                          showScheduling = props.globalPreferences.elevationPlotScheduling,
                          visiblePlots = List(
                            Option.when(
-                             props.globalPreferences.elevationPlotElevationVisible.isVisible
+                             props.globalPreferences.elevationPlotElevationVisible
                            )(SeriesType.Elevation),
                            Option.when(
-                             props.globalPreferences.elevationPlotParallacticAngleVisible.isVisible
+                             props.globalPreferences.elevationPlotParallacticAngleVisible
                            )(SeriesType.ParallacticAngle),
                            Option.when(
-                             props.globalPreferences.elevationPlotSkyBrightnessVisible.isVisible
+                             props.globalPreferences.elevationPlotSkyBrightnessVisible
                            )(SeriesType.SkyBrightness),
                            Option.when(
-                             props.globalPreferences.elevationPlotLunarElevationVisible.isVisible
+                             props.globalPreferences.elevationPlotLunarElevationVisible
                            )(SeriesType.LunarElevation)
                          ).flattenOption
                        )

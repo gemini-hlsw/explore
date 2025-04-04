@@ -6,11 +6,7 @@ package explore.model
 import lucuma.core.util.NewBoolean
 
 object AladinFullScreen extends NewBoolean:
-  inline def FullScreen        = True
-  inline def Normal            = False
-  extension (s: AladinFullScreen)
-    def flip: AladinFullScreen =
-      if s then AladinFullScreen.Normal else AladinFullScreen.FullScreen
+  inline def FullScreen = True; inline def Normal = False
 type AladinFullScreen = AladinFullScreen.Type
 
 object IsActive extends NewBoolean
