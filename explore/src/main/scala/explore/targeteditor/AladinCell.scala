@@ -457,7 +457,7 @@ object AladinCell extends ModelOptics with AladinCommon:
 
           val renderAgsOverlay: AsterismVisualOptions => VdomNode =
             (t: AsterismVisualOptions) =>
-              if (props.needsAGS && props.globalPreferences.get.agsOverlay.isVisible)
+              if (props.needsAGS && props.globalPreferences.get.agsOverlay)
                 props.obsConf
                   .flatMap(_.agsState)
                   .map: agsState =>

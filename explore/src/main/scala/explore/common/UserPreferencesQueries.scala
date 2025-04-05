@@ -82,10 +82,10 @@ object UserPreferencesQueries:
           objects = LucumaUserPreferencesInsertInput(
             userId = userId.show.assign,
             aladinMouseScroll = aladinMouseScroll.map(_.value).orIgnore,
-            showCatalog = showCatalog.map(_.isVisible).orIgnore,
-            agsOverlay = agsOverlay.map(_.isVisible).orIgnore,
-            scienceOffsets = scienceOffsets.map(_.isVisible).orIgnore,
-            acquisitionOffsets = acquisitionOffsets.map(_.isVisible).orIgnore,
+            showCatalog = showCatalog.map(_.value).orIgnore,
+            agsOverlay = agsOverlay.map(_.value).orIgnore,
+            scienceOffsets = scienceOffsets.map(_.value).orIgnore,
+            acquisitionOffsets = acquisitionOffsets.map(_.value).orIgnore,
             fullScreen = fullScreen.map(_.value).orIgnore
           ),
           update_columns = List(
@@ -421,10 +421,10 @@ object UserPreferencesQueries:
           elevationPlotRange = range,
           elevationPlotTime = time,
           elevationPlotScheduling = scheduling,
-          elevationPlotElevationVisible = elevationPlotElevationVisible.isVisible,
-          elevationPlotParallacticAngleVisible = elevationPlotParallacticAngleVisible.isVisible,
-          elevationPlotSkyBrightnessVisible = elevationPlotSkyBrightnessVisible.isVisible,
-          elevationPlotLunarElevationVisible = elevationPlotLunarElevationVisible.isVisible
+          elevationPlotElevationVisible = elevationPlotElevationVisible,
+          elevationPlotParallacticAngleVisible = elevationPlotParallacticAngleVisible,
+          elevationPlotSkyBrightnessVisible = elevationPlotSkyBrightnessVisible,
+          elevationPlotLunarElevationVisible = elevationPlotLunarElevationVisible
         )
         .attempt
         .void

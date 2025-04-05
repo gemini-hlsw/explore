@@ -38,11 +38,7 @@ trait FinderChartsAttachmentUtils:
 
 object FinderChartsAttachmentUtils extends FinderChartsAttachmentUtils
 
-object ChartSelector extends NewBoolean:
-  inline def Open           = True; inline def Closed = False
-  extension (s: ChartSelector)
-    def flip: ChartSelector =
-      if s then ChartSelector.Closed else ChartSelector.Open
+object ChartSelector extends NewBoolean { inline def Open = True; inline def Closed = False }
 type ChartSelector = ChartSelector.Type
 
 def finderChartsSelector(

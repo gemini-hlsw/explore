@@ -146,7 +146,7 @@ object AladinContainer extends AladinCommon {
           gs
         ) =>
           val candidatesVisibilityCss =
-            ExploreStyles.GuideStarCandidateVisible.when_(agsOverlay.isVisible)
+            ExploreStyles.GuideStarCandidateVisible.when_(agsOverlay)
 
           GmosGeometry.gmosGeometry(
             allCoordinates.value._1.value,
@@ -187,7 +187,7 @@ object AladinContainer extends AladinCommon {
             def calcSize(size: Double): Double = size.max(size * (225 / fov))
 
             val candidatesVisibility =
-              ExploreStyles.GuideStarCandidateVisible.when_(visible.isVisible)
+              ExploreStyles.GuideStarCandidateVisible.when_(visible)
 
             candidates
               // TODO This should be done in AGS proper
@@ -327,8 +327,7 @@ object AladinContainer extends AladinCommon {
             for {
               idx <- refineV[NonNegative](i).toOption
               gs  <- props.selectedGuideStar
-              c   <- baseCoordinates.value.offsetBy(gs.posAngle, o)
-              if visible.isVisible
+              c   <- baseCoordinates.value.offsetBy(gs.posAngle, o) if visible
             } yield SVGTarget.OffsetIndicator(c, idx, o, oType, css, 4)
           }
 
