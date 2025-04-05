@@ -35,6 +35,7 @@ import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.formats.formatPercentile
 import explore.model.layout.*
+import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.modes.SpectroscopyModesMatrix
 import explore.observationtree.obsEditAttachments
@@ -219,83 +220,100 @@ object ObsTabTiles:
   private val component =
     ScalaFnComponent[Props]: props =>
       for
-        ctx                <- useContext(AppContext.ctx)
-        sequenceOffsets    <- useStreamResourceOnMount:
-                                import ctx.given
+        ctx                 <- useContext(AppContext.ctx)
+        sequenceOffsets     <- useStreamResourceOnMount:
+                                 import ctx.given
 
-                                SequenceOffsets[IO]
-                                  .query(props.obsId)
-                                  .raiseGraphQLErrors
-                                  .map: data =>
-                                    Offsets(
-                                      science = NonEmptyList.fromList(
-                                        data.observation
-                                          .foldMap(_.execution.scienceOffsets)
-                                          .distinct
-                                      ),
-                                      acquisition = NonEmptyList.fromList(
-                                        data.observation
-                                          .foldMap(_.execution.acquisitionOffsets)
-                                          .distinct
-                                      )
-                                    )
-                                  // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-                                  .reRunOnResourceSignals:
-                                    ObservationEditSubscription
-                                      .subscribe[IO](props.obsId.toObservationEditInput)
-                                      .map(_.throttle(5.seconds))
-        agsState           <- useStateView[AgsState](AgsState.Idle)
+                                 SequenceOffsets[IO]
+                                   .query(props.obsId)
+                                   .raiseGraphQLErrors
+                                   .map: data =>
+                                     Offsets(
+                                       science = NonEmptyList.fromList(
+                                         data.observation
+                                           .foldMap(_.execution.scienceOffsets)
+                                           .distinct
+                                       ),
+                                       acquisition = NonEmptyList.fromList(
+                                         data.observation
+                                           .foldMap(_.execution.acquisitionOffsets)
+                                           .distinct
+                                       )
+                                     )
+                                   // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
+                                   .reRunOnResourceSignals:
+                                     ObservationEditSubscription
+                                       .subscribe[IO](props.obsId.toObservationEditInput)
+                                       .map(_.throttle(5.seconds))
+        agsState            <- useStateView[AgsState](AgsState.Idle)
         // the configuration the user has selected from the spectroscopy modes table, if any
-        selectedConfig     <- useStateView(none[InstrumentConfigAndItcResult])
-        itcGraphQuerier     =
-          ItcGraphQuerier(props.observation.get, selectedConfig.get, props.obsTargets)
-        itcGraphResults    <- useEffectResultWithDeps(itcGraphQuerier):
-                                itcGraphQuerier => // Compute ITC graph
-                                  import ctx.given
-                                  itcGraphQuerier.requestGraphs
-        sequenceChanged    <- useStateView(().ready) // Signal that the sequence has changed
-        obsTimeOrNowPot    <- useEffectKeepResultWithDeps(props.observation.model.get.observationTime):
-                                vizTime => IO(vizTime.getOrElse(Instant.now()))
+        selectedConfig      <- useStateView(none[InstrumentConfigAndItcResult])
+        customSedTimestamps <-
+          // The updatedAt timestamps for any custom seds.
+          useMemo((props.asterismAsNel, props.attachments.get)): (asterism, attachments) =>
+            asterism.foldMap(
+              _.map(
+                _.target.sourceProfile.customSedId.flatMap(attachments.get).map(_.updatedAt)
+              ).toList.flattenOption
+            )
+        itcGraphQuerier      =
+          ItcGraphQuerier(props.observation.get,
+                          selectedConfig.get,
+                          props.obsTargets,
+                          customSedTimestamps
+          )
+        itcGraphResults     <- useEffectResultWithDeps(itcGraphQuerier):
+                                 itcGraphQuerier => // Compute ITC graph
+                                   import ctx.given
+                                   itcGraphQuerier.requestGraphs
+        sequenceChanged     <- useStateView(().ready) // Signal that the sequence has changed
+        // if the timestamp for a custom sed attachment changes, it means either a new custom sed
+        // has been assigned, OR a new version of the custom sed has been uploaded. This is to
+        // catch the latter case.
+        _                   <- useEffectWithDeps(customSedTimestamps): _ =>
+                                 sequenceChanged.set(pending)
+        obsTimeOrNowPot     <- useEffectKeepResultWithDeps(props.observation.model.get.observationTime):
+                                 vizTime => IO(vizTime.getOrElse(Instant.now()))
         // Store guide star selection in a view for fast local updates
         // This is not the ideal place for this but we need to share the selected guide star
         // across the configuration and target tile
-        guideStarSelection <- useStateView:
-                                props.selectedGSName.get.fold(GuideStarSelection.Default)(
-                                  RemoteGSSelection.apply
-                                )
-                              .map: gss =>
-                                import ctx.given
+        guideStarSelection  <- useStateView:
+                                 props.selectedGSName.get.fold(GuideStarSelection.Default)(
+                                   RemoteGSSelection.apply
+                                 )
+                               .map: gss =>
+                                 import ctx.given
 
-                                // We tell the backend and the local cache of changes to the selected guidestar
-                                // In some cases when we do a real override
-                                gss.withOnMod {
-                                  (_, _) match {
-                                    // Change of override
-                                    case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
-                                      props.selectedGSName.set(n.some) *>
-                                        ObsQueries
-                                          .setGuideTargetName[IO](props.obsId, n.some)
-                                          .runAsyncAndForget
-                                    // Going from automatic to manual selection
-                                    case (AgsSelection(_), AgsOverride(n, _, _))                 =>
-                                      props.selectedGSName.set(n.some) *>
-                                        ObsQueries
-                                          .setGuideTargetName[IO](props.obsId, n.some)
-                                          .runAsyncAndForget
-                                    // Going from manual to automated selection
-                                    case (AgsOverride(n, _, _), AgsSelection(_))                 =>
-                                      props.selectedGSName.set(none) *>
-                                        ObsQueries
-                                          .setGuideTargetName[IO](props.obsId, none)
-                                          .runAsyncAndForget
-                                    case _                                                       =>
-                                      // All other combinations
-                                      Callback.empty
-                                  }
-                                }
-        roleLayouts        <- useState(roleLayout(props.userPreferences, props.calibrationRole))
-        _                  <- useEffectWithDeps(props.calibrationRole): role =>
-                                roleLayouts.setState(roleLayout(props.userPreferences, role))
+                                 // We tell the backend and the local cache of changes to the selected guidestar
+                                 // In some cases when we do a real override
+                                 gss.withOnMod {
+                                   (_, _) match {
+                                     // Change of override
+                                     case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
+                                       props.selectedGSName.set(n.some) *>
+                                         ObsQueries
+                                           .setGuideTargetName[IO](props.obsId, n.some)
+                                           .runAsyncAndForget
+                                     // Going from automatic to manual selection
+                                     case (AgsSelection(_), AgsOverride(n, _, _))                 =>
+                                       props.selectedGSName.set(n.some) *>
+                                         ObsQueries
+                                           .setGuideTargetName[IO](props.obsId, n.some)
+                                           .runAsyncAndForget
+                                     // Going from manual to automated selection
+                                     case (AgsOverride(n, _, _), AgsSelection(_))                 =>
+                                       props.selectedGSName.set(none) *>
+                                         ObsQueries
+                                           .setGuideTargetName[IO](props.obsId, none)
+                                           .runAsyncAndForget
+                                     case _                                                       =>
+                                       // All other combinations
+                                       Callback.empty
+                                   }
+                                 }
+        roleLayouts         <- useState(roleLayout(props.userPreferences, props.calibrationRole))
+        _                   <- useEffectWithDeps(props.calibrationRole): role =>
+                                 roleLayouts.setState(roleLayout(props.userPreferences, role))
       yield
         import ctx.given
         val (section, defaultLayout, layout) = roleLayouts.value
@@ -402,6 +420,7 @@ object ObsTabTiles:
               props.obsId,
               props.obsExecution,
               asterismIds.get,
+              customSedTimestamps,
               sequenceChanged
             )
 
@@ -566,6 +585,7 @@ object ObsTabTiles:
               selectedConfig,
               props.observation.get.toInstrumentConfig(props.obsTargets),
               props.modes,
+              customSedTimestamps,
               props.obsTargets,
               props.programSummaries.observingModeGroups,
               sequenceChanged.mod:

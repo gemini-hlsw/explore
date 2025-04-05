@@ -61,6 +61,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
               exposureTimeMode,
               constraint,
               targets,
+              customSedTimestamps,
               rows
             ) =>
           Logger[IO].debug(s"ITC query ${rows.length}") >>
@@ -70,6 +71,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 exposureTimeMode,
                 constraint,
                 targets,
+                customSedTimestamps,
                 rows,
                 cache,
                 r => invocation.respond(r)
@@ -80,6 +82,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
               exposureTimeMode,
               constraint,
               targets,
+              customSedTimestamps,
               mode
             ) =>
           Logger[IO].debug(s"ITC graph query ${mode}") >>
@@ -89,6 +92,7 @@ object ItcServer extends WorkerServer[IO, ItcMessage.Request] with ItcPicklers {
                 exposureTimeMode,
                 constraint,
                 targets,
+                customSedTimestamps,
                 mode,
                 cache,
                 r => invocation.respond(r)

@@ -22,6 +22,7 @@ import explore.modes.InstrumentConfig
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Target
+import lucuma.core.util.Timestamp
 import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
@@ -29,9 +30,10 @@ import workers.WorkerClient
 import scala.collection.immutable.SortedMap
 
 case class ItcGraphQuerier(
-  observation:    Observation,
-  selectedConfig: Option[InstrumentConfigAndItcResult], // selected row in spectroscopy modes table
-  at:             TargetList
+  observation:         Observation,
+  selectedConfig:      Option[InstrumentConfigAndItcResult], // selected row in spectroscopy modes table
+  at:                  TargetList,
+  customSedTimestamps: List[Timestamp]
 ) derives Eq:
   private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
     ScienceRequirements.spectroscopy.getOption(observation.scienceRequirements)
@@ -69,7 +71,12 @@ case class ItcGraphQuerier(
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps =
-    (exposureTimeMode, constraints.some, itcTargets, instrumentConfig).tupled
+    (exposureTimeMode,
+     constraints.some,
+     itcTargets,
+     instrumentConfig,
+     customSedTimestamps.some
+    ).tupled
 
   val isExecutable: Boolean = queryProps.isDefined
 
@@ -78,10 +85,10 @@ case class ItcGraphQuerier(
     WorkerClient[IO, ItcMessage.Request]
   ): IO[ItcAsterismGraphResults] =
     val action: Option[IO[ItcAsterismGraphResults]] =
-      queryProps.map: (etm, c, t, mode) =>
+      queryProps.map: (etm, c, t, mode, ts) =>
         ItcClient[IO]
           .requestSingle:
-            ItcMessage.GraphQuery(etm, c, t, mode)
+            ItcMessage.GraphQuery(etm, c, t, ts, mode)
           .map:
             _.toRight(new Throwable("No response from ITC server"))
           .rethrow

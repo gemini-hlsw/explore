@@ -46,6 +46,7 @@ import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Gid
 import lucuma.core.util.Of
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.itc.Error
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
@@ -110,6 +111,10 @@ trait ItcPicklers extends CommonPicklers {
   given Pickler[SlitWidth] = picklerNewType(SlitWidth)
 
   given Pickler[ModeAO] = picklerNewType(ModeAO)
+
+  import java.time.Instant
+  given Pickler[Timestamp] =
+    transformPickler((instant: Instant) => Timestamp.fromInstant(instant).get)(_.toInstant)
 
   given [A: Gid]: Pickler[A] =
     transformPickler((str: String) => Gid[A].fromString.getOption(str).get)(_.toString)

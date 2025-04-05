@@ -27,6 +27,7 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.User
 import lucuma.core.util.NewBoolean
+import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
@@ -36,18 +37,19 @@ import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 
 case class BasicConfigurationPanel(
-  userId:           Option[User.Id],
-  obsId:            Observation.Id,
-  spectroscopyView: ViewOpt[Spectroscopy],
-  selectedConfig:   View[Option[InstrumentConfigAndItcResult]],
-  constraints:      ConstraintSet,
-  itcTargets:       List[ItcTarget],
-  baseCoordinates:  Option[CoordinatesAtVizTime],
-  calibrationRole:  Option[CalibrationRole],
-  createConfig:     IO[Unit],
-  confMatrix:       SpectroscopyModesMatrix,
-  readonly:         Boolean,
-  units:            WavelengthUnits
+  userId:              Option[User.Id],
+  obsId:               Observation.Id,
+  spectroscopyView:    ViewOpt[Spectroscopy],
+  selectedConfig:      View[Option[InstrumentConfigAndItcResult]],
+  constraints:         ConstraintSet,
+  itcTargets:          List[ItcTarget],
+  baseCoordinates:     Option[CoordinatesAtVizTime],
+  calibrationRole:     Option[CalibrationRole],
+  createConfig:        IO[Unit],
+  confMatrix:          SpectroscopyModesMatrix,
+  customSedTimestamps: List[Timestamp],
+  readonly:            Boolean,
+  units:               WavelengthUnits
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
 private object BasicConfigurationPanel:
@@ -120,6 +122,7 @@ private object BasicConfigurationPanel:
               if (props.itcTargets.isEmpty) none else props.itcTargets.some,
               props.baseCoordinates,
               props.confMatrix,
+              props.customSedTimestamps,
               props.units
             )
           ),

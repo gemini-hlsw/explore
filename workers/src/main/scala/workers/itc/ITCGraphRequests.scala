@@ -12,6 +12,7 @@ import explore.model.itc.*
 import explore.modes.InstrumentConfig
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
+import lucuma.core.util.Timestamp
 import lucuma.itc.Error
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SignificantFiguresInput
@@ -31,12 +32,13 @@ object ITCGraphRequests:
 
   // Wrapper method to match the call in ItcServer.scala
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    exposureTimeMode: ExposureTimeMode,
-    constraints:      ConstraintSet,
-    targets:          NonEmptyList[ItcTarget],
-    mode:             InstrumentConfig,
-    cache:            Cache[F],
-    callback:         ItcAsterismGraphResults => F[Unit]
+    exposureTimeMode:    ExposureTimeMode,
+    constraints:         ConstraintSet,
+    targets:             NonEmptyList[ItcTarget],
+    customSedTimestamps: List[Timestamp],
+    mode:                InstrumentConfig,
+    cache:               Cache[F],
+    callback:            ItcAsterismGraphResults => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -45,6 +47,7 @@ object ITCGraphRequests:
           exposureTimeMode,
           constraints,
           targets,
+          customSedTimestamps,
           m
         ).some
       case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
@@ -52,6 +55,7 @@ object ITCGraphRequests:
           exposureTimeMode,
           constraints,
           targets,
+          customSedTimestamps,
           m
         ).some
       case _                                                      =>

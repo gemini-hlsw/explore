@@ -20,12 +20,14 @@ import lucuma.core.enums.StepStage
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
+import lucuma.core.util.Timestamp
 import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.schemas.odb.SequenceQueriesGQL.*
 import lucuma.schemas.odb.input.*
+import lucuma.ui.reusability.given
 import queries.common.ObsQueriesGQL
 import queries.common.TargetQueriesGQL
 import queries.common.VisitQueriesGQL
@@ -73,8 +75,9 @@ trait SequenceTileHelper:
   )
 
   protected def useLiveSequence(
-    obsId:     Observation.Id,
-    targetIds: List[Target.Id]
+    obsId:               Observation.Id,
+    targetIds:           List[Target.Id],
+    customSedTimestamps: List[Timestamp]
   ): HookResult[LiveSequence] =
     for
       ctx                                     <- useContext(AppContext.ctx)
@@ -92,7 +95,7 @@ trait SequenceTileHelper:
             .raiseGraphQLErrors
             .map(SequenceData.fromOdbResponse)
       refreshVisits                           <-
-        useThrottledCallback(5.seconds)(visits.refresh.to[IO])
+        useThrottledCallback(5.seconds)(visits.refresh.value.to[IO])
       refreshSequence                         <-
         useThrottledCallback(7.seconds)(sequenceData.refresh.to[IO])
       _                                       <-
@@ -130,6 +133,12 @@ trait SequenceTileHelper:
             .ignoreGraphQLErrors
             .map:
               _.evalMap(_ => (refreshSequence >> refreshVisits).to[IO])
+      _                                       <-
+        useEffectWithDeps(customSedTimestamps): _ =>
+          // if the timestamp for a custom sed attachment changes, it means either a new custom sed
+          // has been assigned, OR a new version of the custom sed has been uploaded. This is to
+          // catch the latter case.
+          refreshSequence.value
     yield LiveSequence(
       (visits.value, sequenceData.value).tupled,
       visits.isRunning || sequenceData.isRunning

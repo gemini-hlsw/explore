@@ -49,6 +49,7 @@ import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.react.circularprogressbar.CircularProgressbar
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -83,6 +84,7 @@ case class SpectroscopyModesTable(
   targets:                  Option[List[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],
   matrix:                   SpectroscopyModesMatrix,
+  customSedTimestamps:      List[Timestamp],
   units:                    WavelengthUnits
 ) extends ReactFnProps(SpectroscopyModesTable.component):
   val validTargets = targets.map(_.filter(_.canQueryITC)).flatMap(NonEmptyList.fromList)
@@ -362,9 +364,10 @@ private object SpectroscopyModesTable:
                           props.baseCoordinates.map(_.value.dec),
                           itcResults.value,
                           props.validTargets,
-                          props.constraints
+                          props.constraints,
+                          props.customSedTimestamps
                          )
-                       ): (matrix, s, dec, itcResults, asterism, constraints) =>
+                       ): (matrix, s, dec, itcResults, asterism, constraints, customSedTimestamps) =>
 
                          val rows: List[SpectroscopyModeRow] =
                            matrix
@@ -399,6 +402,7 @@ private object SpectroscopyModesTable:
                                  exposureMode,
                                  constraints,
                                  asterism,
+                                 customSedTimestamps,
                                  row
                                )
                            }
@@ -498,9 +502,10 @@ private object SpectroscopyModesTable:
             (props.spectroscopyRequirements.exposureTimeModeOption,
              props.constraints,
              props.validTargets,
+             props.customSedTimestamps,
              rows.length
             )
-          ): (expTimeMode, constraints, asterism, _) =>
+          ): (expTimeMode, constraints, asterism, customSedTimestamps, _) =>
             import ctx.given
 
             (expTimeMode, expTimeMode.map(ExposureTimeMode.at.get), asterism)
@@ -523,6 +528,7 @@ private object SpectroscopyModesTable:
                                 expTimeMode,
                                 constraints,
                                 asterism,
+                                customSedTimestamps,
                                 row.entry.instrument
                               )
                           case _                                           => true
@@ -534,7 +540,12 @@ private object SpectroscopyModesTable:
                     request <-
                       ItcClient[IO]
                         .request:
-                          ItcMessage.Query(expTimeMode, constraints, asterism, modes.map(_.entry))
+                          ItcMessage.Query(expTimeMode,
+                                           constraints,
+                                           asterism,
+                                           customSedTimestamps,
+                                           modes.map(_.entry)
+                          )
                         .map:
                           // Avoid rerendering on every single result, it's slow.
                           _.groupWithin(100, 500.millis)

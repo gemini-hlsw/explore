@@ -2,10 +2,10 @@
   {
     "hostName": "*",
     "environment": "DEVELOPMENT",
-    "odbURI": "wss://lucuma-postgres-odb-dev.herokuapp.com/ws",
-    "odbRestURI": "https://lucuma-postgres-odb-dev.herokuapp.com",
+    "odbURI": "ws://localhost:8082/ws",
+    "odbRestURI": "http://localhost:8082",
     "preferencesDBURI": "wss://gpp-prefs-dev.lucuma.xyz/v1/graphql",
-    "itcURI": "https://itc-dev.lucuma.xyz/itc",
+    "itcURI": "http://localhost:6060/itc",
     "sso": {
       "uri": "https://sso-dev.gpp.lucuma.xyz",
       "readTimeoutSeconds": 10,
