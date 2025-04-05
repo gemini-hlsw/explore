@@ -57,7 +57,7 @@ object SignalToNoiseAtEditor extends ConfigurationFormats {
           validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
           postAddons =
             signalToNoise.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
-          changeAuditor = ChangeAuditor.posBigDecimal(3.refined).optional,
+          changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional,
           disabled = props.readonly
         ).withMods(^.autoComplete.off),
         FormLabel("signal-to-noise-at".refined)(Constants.SignalToNoiseAtLabel),

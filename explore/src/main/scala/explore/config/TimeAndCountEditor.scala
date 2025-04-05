@@ -57,7 +57,7 @@ object TimeAndCountEditor extends ConfigurationFormats:
       val timeAuditor = props.instrument
         .map {
           case Instrument.GmosSouth | Instrument.GmosNorth => ChangeAuditor.int.optional
-          case _                                           => ChangeAuditor.posBigDecimal(3.refined).optional
+          case _                                           => ChangeAuditor.posBigDecimal(2.refined).optional
         }
         .getOrElse(ChangeAuditor.posBigDecimal(3.refined).optional)
 
@@ -74,9 +74,9 @@ object TimeAndCountEditor extends ConfigurationFormats:
           changeAuditor = timeAuditor,
           disabled = props.readonly
         ).clearable(^.autoComplete.off),
-        FormLabel("signal-to-noise".refined)("Number of Exp."),
+        FormLabel("exposure-count".refined)("Number of Exp."),
         FormInputTextView(
-          id = "count".refined,
+          id = "exposure-count".refined,
           value = count,
           groupClass = ExploreStyles.WarningInput.when_(count.get.isEmpty),
           validFormat = InputValidSplitEpi.nonNegInt.optional,

@@ -156,7 +156,7 @@ trait formats:
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
-      _.toSecondsPart.toString
+      ts => f"${ts.toSeconds}%.0f"
     )
 
 object formats extends formats

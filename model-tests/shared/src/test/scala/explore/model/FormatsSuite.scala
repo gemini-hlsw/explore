@@ -62,6 +62,9 @@ class FormatsSuite extends munit.DisciplineSuite:
   assertEquals(parsers.durationS.parseAll("0").toOption,
                TimeSpan.unsafeFromDuration(Duration.ofSeconds(0)).some
   )
+  assertEquals(parsers.durationS.parseAll("60").toOption,
+               TimeSpan.unsafeFromDuration(Duration.ofSeconds(60)).some
+  )
   // Test durationMs
   assertEquals(parsers.durationMs.parseAll("00.001").toOption,
                TimeSpan.unsafeFromDuration(Duration.ofMillis(1)).some
@@ -153,3 +156,5 @@ class FormatsSuite extends munit.DisciplineSuite:
     "durationSWedge",
     ValidWedgeTests(durationS).validWedgeLaws
   )
+  assertEquals(durationS.reverseGet(TimeSpan.fromSeconds(60).get), "60")
+  assertEquals(durationS.reverseGet(TimeSpan.fromSeconds(70).get), "70")
