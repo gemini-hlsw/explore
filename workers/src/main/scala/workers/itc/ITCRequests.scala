@@ -16,6 +16,7 @@ import explore.modes.InstrumentConfig
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
+import lucuma.core.util.Timestamp
 import lucuma.itc.Error
 import lucuma.itc.client.ClientCalculationResult
 import lucuma.itc.client.ItcClient
@@ -42,12 +43,13 @@ object ITCRequests:
 
   // Wrapper method to match the call in ItcServer.scala
   def queryItc[F[_]: Concurrent: Parallel: Logger](
-    exposureTimeMode: ExposureTimeMode,
-    constraints:      ConstraintSet,
-    asterism:         NonEmptyList[ItcTarget],
-    modes:            List[SpectroscopyModeRow],
-    cache:            Cache[F],
-    callback:         Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
+    exposureTimeMode:    ExposureTimeMode,
+    constraints:         ConstraintSet,
+    asterism:            NonEmptyList[ItcTarget],
+    customSedTimestamps: List[Timestamp],
+    modes:               List[SpectroscopyModeRow],
+    cache:               Cache[F],
+    callback:            Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
     def itcResults(r: ClientCalculationResult): EitherNec[ItcTargetProblem, ItcResult] =
       // Convert to usable types
@@ -110,11 +112,11 @@ object ITCRequests:
         // Only handle known modes
         .collect:
           case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
-            ItcRequestParams(exposureTimeMode, constraints, asterism, m)
+            ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
           case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
-            ItcRequestParams(exposureTimeMode, constraints, asterism, m)
+            ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
           case m @ InstrumentConfig.Flamingos2Spectroscopy(_, _, _)   =>
-            ItcRequestParams(exposureTimeMode, constraints, asterism, m)
+            ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
 
     parTraverseN(
       Constants.MaxConcurrentItcRequests.toLong,

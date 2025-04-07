@@ -19,8 +19,10 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Declination
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
+import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
 import lucuma.schemas.model.BasicConfiguration
@@ -54,6 +56,10 @@ object all:
   extension (at: AttachmentType)
     def accept: String = at.fileExtensions.toList.sorted.map("." + _.value).mkString(",")
 
+  val customSedIdOptional = SourceProfile.unnormalizedSED.some
+    .andThen(UnnormalizedSED.userDefinedAttachment)
+    .andThen(UnnormalizedSED.UserDefinedAttachment.attachmentId)
+
   extension (eat: Enumerated[AttachmentType])
     def forPurpose(purpose: AttachmentPurpose): List[AttachmentType]       =
       eat.all.filter(_.purpose === purpose)
@@ -63,6 +69,9 @@ object all:
   extension [A](e: Enumerated[A])
     def without(purposes: Set[A]): List[A] =
       e.all.filterNot(purposes.contains)
+
+  extension (self: SourceProfile)
+    def customSedId: Option[Attachment.Id] = customSedIdOptional.getOption(self)
 
   extension (self: AsterismGroupList)
     // find the first group which contains the entirety of obsIds
