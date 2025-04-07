@@ -95,7 +95,7 @@ object ScienceQueries:
           _ <-
             SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
               .map(_.toInput)
-              .orIgnore
+              .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
                  .map(wavelengthDelta)
                  .orUnassign
