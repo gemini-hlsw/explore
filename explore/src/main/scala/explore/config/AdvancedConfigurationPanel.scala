@@ -369,9 +369,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     ScalaFnComponent[Props]: props =>
       for
         ctx       <- useContext(AppContext.ctx)
-        emv       <- useStateView(
-                       props.spectroscopyRequirements.get.exposureTimeMode.exposureMode
-                     )
+        emv       <- useStateView(props.spectroscopyRequirements.get.exposureTimeMode)
         // filter the spectroscopy matrix by the requirements that don't get overridden
         // by the advanced config (wavelength, for example).
         rows      <- useMemo(

@@ -11,8 +11,7 @@ import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
 import explore.model.Constants
 import explore.model.ExploreModelValidators
-import explore.model.ScienceRequirements
-import explore.model.ScienceRequirements.SignalToNoiseModeInfo
+import explore.model.SignalToNoiseModeInfo
 import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

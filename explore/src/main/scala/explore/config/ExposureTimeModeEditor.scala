@@ -5,71 +5,116 @@ package explore.config
 
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
 import explore.components.HelpIcon
-import explore.model.ScienceRequirements
-import explore.model.ScienceRequirements.ExposureTimeModeInfo
+import explore.model.SignalToNoiseModeInfo
+import explore.model.TimeAndCountModeInfo
 import explore.model.enums.ExposureTimeModeType
+import explore.model.enums.ExposureTimeModeType.*
 import explore.model.enums.WavelengthUnits
+import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Instrument
+import lucuma.core.model.ExposureTimeMode
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import monocle.Lens
 
 case class ExposureTimeModeEditor(
-  instrument:      Option[Instrument],
-  options:         View[ExposureTimeModeInfo],
-  readonly:        Boolean,
-  units:           WavelengthUnits,
-  calibrationRole: Option[CalibrationRole]
+  instrument:       Option[Instrument],
+  exposureTimeMode: View[Option[ExposureTimeMode]],
+  readonly:         Boolean,
+  units:            WavelengthUnits,
+  calibrationRole:  Option[CalibrationRole]
 ) extends ReactFnProps[ExposureTimeModeEditor](ExposureTimeModeEditor.component)
 
 object ExposureTimeModeEditor:
   private type Props = ExposureTimeModeEditor
 
-  // This is not a lawful lens, it will try to convert one mode to the next preserving the data that makes sense
-  val emvLens: Lens[ExposureTimeModeInfo, ExposureTimeModeType] =
-    Lens[ExposureTimeModeInfo, ExposureTimeModeType](_.exposureMode)(a =>
-      p =>
-        a match
-          case ExposureTimeModeType.SignalToNoise => p.asSignalToNoiseMode
-          case ExposureTimeModeType.TimeAndCount  => p.asTimeAndCountMode
-    )
-
   protected val component =
     ScalaFnComponent[Props]: props =>
-
-      val snMode = props.options.zoom(ExposureTimeModeInfo.signalToNoise)
-      val tcMode = props.options.zoom(ExposureTimeModeInfo.timeAndCount)
-
-      val emv = props.options.zoom(emvLens)
-
-      React.Fragment(
-        FormEnumDropdownView(
-          id = "exposureMode".refined,
-          value = emv,
-          label = ReactFragment(
-            "Exposure Mode",
-            HelpIcon("configuration/exposure-mode.md".refined)
-          ),
-          disabled = props.readonly
-        ),
-        snMode.asView.map(
-          SignalToNoiseAtEditor(_, props.readonly, props.units, props.calibrationRole)
-        ),
-        tcMode.asView.map(
-          TimeAndCountEditor(props.instrument,
-                             _,
-                             props.readonly,
-                             props.units,
-                             props.calibrationRole
+      for
+        emv    <-
+          useStateView(
+            props.exposureTimeMode.get
+              .map(_.modeType)
+              .getOrElse(ExposureTimeModeType.SignalToNoise)
           )
+        snMode <- useStateView(
+                    props.exposureTimeMode.get
+                      .flatMap(SignalToNoiseModeInfo.fromModel)
+                      .getOrElse(SignalToNoiseModeInfo.Default)
+                  )
+        tcMode <- useStateView(
+                    props.exposureTimeMode.get
+                      .flatMap(TimeAndCountModeInfo.fromModel)
+                      .getOrElse(TimeAndCountModeInfo.Default)
+                  )
+        _      <- useEffectWithDeps(props.exposureTimeMode.get):
+                    // Exposure time mode updated upstream
+                    _.map: etm =>
+                      SignalToNoiseModeInfo.fromModel(etm).traverse(snMode.set) *>
+                        TimeAndCountModeInfo.fromModel(etm).traverse(tcMode.set) *>
+                        emv.set(etm.modeType)
+                    .getOrElse:
+                      snMode.set(SignalToNoiseModeInfo.Default) *>
+                        tcMode.set(TimeAndCountModeInfo.Default) *>
+                        emv.set(ExposureTimeModeType.SignalToNoise)
+      yield
+
+        val snModeView = snMode.withOnMod:
+          case SignalToNoiseModeInfo(Some(value), Some(at)) =>
+            props.exposureTimeMode.set(ExposureTimeMode.SignalToNoiseMode(value, at).some)
+          case _                                            =>
+            Callback.empty
+
+        val tcModeView = tcMode.withOnMod:
+          case TimeAndCountModeInfo(Some(time), Some(count), Some(at)) =>
+            props.exposureTimeMode.set(ExposureTimeMode.TimeAndCountMode(time, count, at).some)
+          case _                                                       =>
+            Callback.empty
+
+        React.Fragment(
+          FormEnumDropdownView(
+            id = "exposureMode".refined,
+            value = emv,
+            label = ReactFragment(
+              "Exposure Mode",
+              HelpIcon("configuration/exposure-mode.md".refined)
+            ),
+            onChangeE = (v, _) =>
+              v match
+                case Some(ExposureTimeModeType.SignalToNoise) =>
+                  tcMode.get match
+                    case TimeAndCountModeInfo(_, _, Some(at)) =>
+                      snModeView.mod:
+                        case s @ SignalToNoiseModeInfo(_, None) => s.copy(at = Some(at))
+                        case s                                  => s
+                    case _                                    => Callback.empty
+                case Some(ExposureTimeModeType.TimeAndCount)  =>
+                  snMode.get match
+                    case SignalToNoiseModeInfo(_, Some(at)) =>
+                      tcModeView.mod:
+                        case s @ TimeAndCountModeInfo(_, _, None) => s.copy(at = Some(at))
+                        case s                                    => s
+                    case _                                  => Callback.empty
+                case None                                     => Callback.empty
+            ,
+            disabled = props.readonly
+          ),
+          if (emv.get === ExposureTimeModeType.SignalToNoise)
+            SignalToNoiseAtEditor(snModeView, props.readonly, props.units, props.calibrationRole)
+          else
+            TimeAndCountEditor(props.instrument,
+                               tcModeView,
+                               props.readonly,
+                               props.units,
+                               props.calibrationRole
+            )
         )
-      )

@@ -396,7 +396,7 @@ private object SpectroscopyModesTable:
                              .flattenOption
 
                          fixedModeRows.map: row =>
-                           val result = (s.wavelength, asterism, s.exposureTimeModeOption).mapN {
+                           val result = (s.wavelength, asterism, s.exposureTimeMode).mapN {
                              (w, a, exposureMode) =>
                                itcResults.forRow(
                                  exposureMode,
@@ -436,13 +436,12 @@ private object SpectroscopyModesTable:
                            .toList
                            .distinct
 
-        cols           <- useMemo((props.spectroscopyRequirements.exposureTimeMode.modeType, props.units)):
-                            (m, u) =>
-                              m match
-                                case ExposureTimeModeType.SignalToNoise =>
-                                  columns(u).filterNot(_.id.value === SNColumnId.value)
-                                case ExposureTimeModeType.TimeAndCount  =>
-                                  columns(u).filterNot(_.id.value === TimeColumnId.value)
+        cols           <- useMemo((props.spectroscopyRequirements.modeType, props.units)): (m, u) =>
+                            m match
+                              case Some(ExposureTimeModeType.SignalToNoise) | None =>
+                                columns(u).filterNot(_.id.value === SNColumnId.value)
+                              case Some(ExposureTimeModeType.TimeAndCount)         =>
+                                columns(u).filterNot(_.id.value === TimeColumnId.value)
         table          <- useReactTableWithStateStore:
                             import ctx.given
 
@@ -499,7 +498,7 @@ private object SpectroscopyModesTable:
         // Recalculate ITC values if the wv or sn change or if the rows get modified
         itcValues      <-
           useEffectStreamResourceWithDeps(
-            (props.spectroscopyRequirements.exposureTimeModeOption,
+            (props.spectroscopyRequirements.exposureTimeMode,
              props.constraints,
              props.validTargets,
              props.customSedTimestamps,

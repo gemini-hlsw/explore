@@ -140,7 +140,6 @@ object reusability:
   given Reusability[CallForProposal]                    = Reusability.byEq
   given Reusability[CategoryAllocationList]             = Reusability.byEq
   given Reusability[InstrumentOverrides]                = Reusability.byEq
-  given Reusability[ExposureTimeModeInfo]               = Reusability.byEq
   given Reusability[SignalToNoiseModeInfo]              = Reusability.byEq
   given Reusability[TimeAndCountModeInfo]               = Reusability.byEq
   given [A: Reusability]: Reusability[NonEmptyChain[A]] = Reusability.by(_.toNonEmptyList)
