@@ -705,7 +705,7 @@ object AdvancedConfigurationPanel {
     ): View[Wavelength] =
       aligner
         .zoom(
-          ObservingMode.GmosNorthLongSlit.centralWavelength.andThen(CentralWavelength.value),
+          ObservingMode.GmosNorthLongSlit.centralWavelength.andThen(CentralWavelength.Value),
           GmosNorthLongSlitInput.centralWavelength.modify
         )
         .view(_.toInput.assign)
@@ -840,7 +840,7 @@ object AdvancedConfigurationPanel {
     @inline override protected val initialFilterLens            = ObservingMode.GmosNorthLongSlit.initialFilter
     @inline override protected val initialFpuLens               = ObservingMode.GmosNorthLongSlit.initialFpu
     @inline override protected val initialCentralWavelengthLens =
-      ObservingMode.GmosNorthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
+      ObservingMode.GmosNorthLongSlit.initialCentralWavelength.andThen(CentralWavelength.Value)
     @inline protected val defaultBinningLens                    =
       (ObservingMode.GmosNorthLongSlit.defaultXBin,
        ObservingMode.GmosNorthLongSlit.defaultYBin
@@ -911,7 +911,7 @@ object AdvancedConfigurationPanel {
     )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): View[Wavelength] =
       aligner
         .zoom(
-          ObservingMode.GmosSouthLongSlit.centralWavelength.andThen(CentralWavelength.value),
+          ObservingMode.GmosSouthLongSlit.centralWavelength.andThen(CentralWavelength.Value),
           GmosSouthLongSlitInput.centralWavelength.modify
         )
         .view(_.toInput.assign)
@@ -1051,7 +1051,7 @@ object AdvancedConfigurationPanel {
     @inline override protected val initialFilterLens            = ObservingMode.GmosSouthLongSlit.initialFilter
     @inline override protected val initialFpuLens               = ObservingMode.GmosSouthLongSlit.initialFpu
     @inline override protected val initialCentralWavelengthLens =
-      ObservingMode.GmosSouthLongSlit.initialCentralWavelength.andThen(CentralWavelength.value)
+      ObservingMode.GmosSouthLongSlit.initialCentralWavelength.andThen(CentralWavelength.Value)
     @inline protected val defaultBinningLens                    =
       (ObservingMode.GmosSouthLongSlit.defaultXBin,
        ObservingMode.GmosSouthLongSlit.defaultYBin

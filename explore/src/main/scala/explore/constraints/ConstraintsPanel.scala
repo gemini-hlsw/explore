@@ -18,7 +18,6 @@ import explore.model.formats.formatPercentile
 import explore.undo.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.conditions.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.IntCentiPercent
@@ -55,36 +54,35 @@ case class ConstraintsPanel(
 object ConstraintsPanel:
   private type Props = ConstraintsPanel
 
-  private enum ElevationRangeType(val label: String):
-    case AirMass   extends ElevationRangeType("Air Mass")
-    case HourAngle extends ElevationRangeType("Hour Angle")
+  private enum ElevationRangeType(val label: String, val tag: String) derives Enumerated:
+    case ByAirMass   extends ElevationRangeType("Air Mass", "by_air_mass")
+    case ByHourAngle extends ElevationRangeType("Hour Angle", "by_hour_angle")
 
   private object ElevationRangeType:
-    given Enumerated[ElevationRangeType] = Enumerated.from(AirMass, HourAngle).withTag(_.label)
-    given Display[ElevationRangeType]    = Display.byShortName(_.label)
+    given Display[ElevationRangeType] = Display.byShortName(_.label)
 
   import ElevationRangeType.*
 
   private case class ElevationRangeOptions(
     rangeType: ElevationRangeType,
-    airMass:   ElevationRange.AirMass,
-    hourAngle: ElevationRange.HourAngle
+    airMass:   ElevationRange.ByAirMass,
+    hourAngle: ElevationRange.ByHourAngle
   ) {
     def toElevationRange(er: ElevationRange): ElevationRangeOptions =
       er match {
-        case am @ ElevationRange.AirMass(_, _)   =>
-          copy(rangeType = ElevationRangeType.AirMass, airMass = am)
-        case ha @ ElevationRange.HourAngle(_, _) =>
-          copy(rangeType = ElevationRangeType.HourAngle, hourAngle = ha)
+        case am @ ElevationRange.ByAirMass(_, _)   =>
+          copy(rangeType = ElevationRangeType.ByAirMass, airMass = am)
+        case ha @ ElevationRange.ByHourAngle(_, _) =>
+          copy(rangeType = ElevationRangeType.ByHourAngle, hourAngle = ha)
       }
   }
 
   private object ElevationRangeOptions {
     def fromElevationRange(er: ElevationRange): ElevationRangeOptions =
       ElevationRangeOptions(
-        ElevationRangeType.AirMass,
-        ElevationRange.AirMass.Default,
-        ElevationRange.HourAngle.Default
+        ElevationRangeType.ByAirMass,
+        ElevationRange.ByAirMass.Default,
+        ElevationRange.ByHourAngle.Default
       ).toElevationRange(er)
   }
 
@@ -125,16 +123,16 @@ object ConstraintsPanel:
             erView
               .setCB(
                 mod(elevationRangeOptions.value.rangeType) match
-                  case AirMass   => elevationRangeOptions.value.airMass
-                  case HourAngle => elevationRangeOptions.value.hourAngle,
+                  case ByAirMass   => elevationRangeOptions.value.airMass
+                  case ByHourAngle => elevationRangeOptions.value.hourAngle,
                 _ match
-                  case ElevationRange.AirMass(_, _)   => cb(previous, AirMass)
-                  case ElevationRange.HourAngle(_, _) => cb(previous, HourAngle)
+                  case ElevationRange.ByAirMass(_, _)   => cb(previous, ByAirMass)
+                  case ElevationRange.ByHourAngle(_, _) => cb(previous, ByHourAngle)
               )
         )
 
-      val airMassView: View[ElevationRange.AirMass] =
-        View[ElevationRange.AirMass](
+      val airMassView: View[ElevationRange.ByAirMass] =
+        View[ElevationRange.ByAirMass](
           elevationRangeOptions.value.airMass,
           (mod, cb) =>
             erView
@@ -145,8 +143,8 @@ object ConstraintsPanel:
               )
         )
 
-      val hourAngleView: View[ElevationRange.HourAngle] =
-        View[ElevationRange.HourAngle](
+      val hourAngleView: View[ElevationRange.ByHourAngle] =
+        View[ElevationRange.ByHourAngle](
           elevationRangeOptions.value.hourAngle,
           (mod, cb) =>
             erView
@@ -176,7 +174,7 @@ object ConstraintsPanel:
             UpdateConstraintSet.cloudExtinction
           ),
           <.div(ExploreStyles.ConstraintsLikelihood,
-                formatPercentile(percentileCloudCoverage(props.constraintSet.cloudExtinction))
+                formatPercentile(props.constraintSet.cloudExtinction.toCloudExtinction.percentile)
           ),
           selectEnum(
             "Water Vapor".refined,
@@ -185,7 +183,7 @@ object ConstraintsPanel:
             UpdateConstraintSet.waterVapor
           ),
           <.div(ExploreStyles.ConstraintsLikelihood,
-                formatPercentile(percentileWaterVapor(props.constraintSet.waterVapor))
+                formatPercentile(props.constraintSet.waterVapor.percentile)
           ),
           selectEnum(
             "Sky Background".refined,
@@ -194,7 +192,7 @@ object ConstraintsPanel:
             UpdateConstraintSet.skyBackground
           ),
           <.div(ExploreStyles.ConstraintsLikelihood,
-                formatPercentile(percentileSkyBackground(props.constraintSet.skyBackground))
+                formatPercentile(props.constraintSet.skyBackground.percentile)
           ),
           FormLabel("ertype".refined)(
             "Elevation Range",
@@ -213,10 +211,11 @@ object ConstraintsPanel:
                 <.label("Min"),
                 FormInputTextView(
                   id = "minam".refined,
-                  value = airMassView.zoom(ElevationRange.AirMass.min),
-                  validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
-                    ValidSplitEpiNec.lte(elevationRangeOptions.value.airMass.max,
-                                         "Must be <= Max".refined
+                  value = airMassView.zoom(ElevationRange.ByAirMass.min),
+                  validFormat = ModelValidators.AirMassElevationRangeValidWedge.andThen(
+                    ValidSplitEpiNec.lte(
+                      elevationRangeOptions.value.airMass.max,
+                      "Must be <= Max".refined
                     )
                   ),
                   changeAuditor = ChangeAuditor.accept.decimal(1.refined),
@@ -226,8 +225,8 @@ object ConstraintsPanel:
                 <.label("Max"),
                 FormInputTextView(
                   id = "maxam".refined,
-                  value = airMassView.zoom(ElevationRange.AirMass.max),
-                  validFormat = ModelValidators.airMassElevationRangeValidWedge.andThen(
+                  value = airMassView.zoom(ElevationRange.ByAirMass.max),
+                  validFormat = ModelValidators.AirMassElevationRangeValidWedge.andThen(
                     ValidSplitEpiNec.gte(elevationRangeOptions.value.airMass.min,
                                          "Must be >= Min".refined
                     )
@@ -237,14 +236,14 @@ object ConstraintsPanel:
                   disabled = props.readonly
                 )
               )
-              .when(elevationRangeOptions.value.rangeType === AirMass),
+              .when(elevationRangeOptions.value.rangeType === ByAirMass),
             React
               .Fragment(
                 <.label("Min"),
                 FormInputTextView(
                   id = "minha".refined,
-                  value = hourAngleView.zoom(ElevationRange.HourAngle.minHours),
-                  validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                  value = hourAngleView.zoom(ElevationRange.ByHourAngle.minHours),
+                  validFormat = ModelValidators.HourAngleElevationRangeValidWedge.andThen(
                     ValidSplitEpiNec.lte(
                       elevationRangeOptions.value.hourAngle.maxHours,
                       "Must be <= Max".refined
@@ -257,8 +256,8 @@ object ConstraintsPanel:
                 <.label("Max"),
                 FormInputTextView(
                   id = "maxha".refined,
-                  value = hourAngleView.zoom(ElevationRange.HourAngle.maxHours),
-                  validFormat = ModelValidators.hourAngleElevationRangeValidWedge.andThen(
+                  value = hourAngleView.zoom(ElevationRange.ByHourAngle.maxHours),
+                  validFormat = ModelValidators.HourAngleElevationRangeValidWedge.andThen(
                     ValidSplitEpiNec.gte(
                       elevationRangeOptions.value.hourAngle.minHours,
                       "Must be >= Min".refined
@@ -270,7 +269,7 @@ object ConstraintsPanel:
                 ),
                 <.label("Hours")
               )
-              .when(elevationRangeOptions.value.rangeType === HourAngle)
+              .when(elevationRangeOptions.value.rangeType === ByHourAngle)
           ),
           <.label(
             LucumaPrimeStyles.FormFieldLabel |+| ExploreStyles.ConstraintsSetLikelihood,

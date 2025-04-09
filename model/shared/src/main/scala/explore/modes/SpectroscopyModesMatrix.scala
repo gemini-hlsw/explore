@@ -300,7 +300,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
       val deltaSlitWidth: Rational    =
         iq.map(i =>
           (Rational(r.slitWidth.value.value.toMicroarcseconds, 1000000) -
-            i.toImageQuality.toArcSeconds.value).abs
+            i.toImageQuality.toArcSeconds).abs
         ).getOrElse(Rational.zero)
       // Difference in resolution
       val deltaRes: BigDecimal        =
@@ -331,7 +331,7 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
         else
           iq.map(i =>
             Rational(
-              i.toImageQuality.toArcSeconds.value / (i.toImageQuality.toArcSeconds.value + deltaSlitWidth)
+              i.toImageQuality.toArcSeconds / (i.toImageQuality.toArcSeconds + deltaSlitWidth)
             )
           ).getOrElse(Rational.zero)
       aoScore + wavelengthScore + filterScore + resolutionScore + slitWidthScore

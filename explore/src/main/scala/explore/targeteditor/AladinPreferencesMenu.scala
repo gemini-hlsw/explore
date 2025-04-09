@@ -87,26 +87,30 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
             props.globalPreferences
               .zoom(get)
               .withOnMod(onMod)
-              .zoom(Visible.value.asLens)
+              .as(Visible.Value)
 
           val agsCandidatesView =
-            visiblePropView(GlobalPreferences.showCatalog,
-                            v => userPrefsSetter(props.uid, showCatalog = v.some)
+            visiblePropView(
+              GlobalPreferences.showCatalog,
+              v => userPrefsSetter(props.uid, showCatalog = v.some)
             )
 
           val agsOverlayView =
-            visiblePropView(GlobalPreferences.agsOverlay,
-                            v => userPrefsSetter(props.uid, agsOverlay = v.some)
+            visiblePropView(
+              GlobalPreferences.agsOverlay,
+              v => userPrefsSetter(props.uid, agsOverlay = v.some)
             )
 
           val scienceOffsetsView =
-            visiblePropView(GlobalPreferences.scienceOffsets,
-                            v => userPrefsSetter(props.uid, scienceOffsets = v.some)
+            visiblePropView(
+              GlobalPreferences.scienceOffsets,
+              v => userPrefsSetter(props.uid, scienceOffsets = v.some)
             )
 
           val acquisitionOffsetsView =
-            visiblePropView(GlobalPreferences.acquisitionOffsets,
-                            v => userPrefsSetter(props.uid, acquisitionOffsets = v.some)
+            visiblePropView(
+              GlobalPreferences.acquisitionOffsets,
+              v => userPrefsSetter(props.uid, acquisitionOffsets = v.some)
             )
 
           def cssVarView(
@@ -180,16 +184,14 @@ object AladinPreferencesMenu extends ModelOptics with AladinCommon:
                 id = "brightness".refined,
                 label = "Brightness",
                 clazz = ExploreStyles.AladinRangeControl,
-                value = brightnessView
-                  .zoom(unsafeRangeLens)
+                value = brightnessView.zoom(unsafeRangeLens)
               )
             ),
             MenuItem.Separator,
             MenuItem.Custom(
               CheckboxView(
                 id = "allow-zoom".refined,
-                value = allowMouseZoomView
-                  .zoom(AladinMouseScroll.value.asLens),
+                value = allowMouseZoomView.as(AladinMouseScroll.Value),
                 label = "Scroll to zoom"
               )
             )

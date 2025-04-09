@@ -166,7 +166,7 @@ object ProgramsPopup:
             ).small.compact,
             CheckboxView(
               id = "show-deleted".refined,
-              value = showDeleted.zoom(ShowDeleted.value.asLens),
+              value = showDeleted.as(ShowDeleted.Value),
               label = "Show deleted"
             ),
             closeButton

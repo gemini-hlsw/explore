@@ -26,8 +26,10 @@ import lucuma.core.math.RightAscension
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
+import lucuma.core.model.AirMassBound
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.HourAngleBound
 import lucuma.core.model.Semester
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
@@ -143,26 +145,26 @@ trait CommonPicklers {
       )
     )(x => (x.p.toAngle, x.q.toAngle))
 
-  given Pickler[ElevationRange.AirMass.DecimalValue] =
+  given Pickler[AirMassBound] =
     transformPickler((b: BigDecimal) =>
-      ElevationRange.AirMass.DecimalValue.from(b).getOrElse(sys.error("Cannot unpickle"))
-    )(_.value)
+      AirMassBound.fromBigDecimal(b).getOrElse(sys.error("Cannot unpickle"))
+    )(_.toBigDecimal)
 
-  given Pickler[ElevationRange.HourAngle.DecimalHour] =
+  given Pickler[HourAngleBound] =
     transformPickler((b: BigDecimal) =>
-      ElevationRange.HourAngle.DecimalHour.from(b).getOrElse(sys.error("Cannot unpickle"))
-    )(_.value)
+      HourAngleBound.from(b).getOrElse(sys.error("Cannot unpickle"))
+    )(_.toBigDecimal)
 
-  given ElevationAirMass: Pickler[ElevationRange.AirMass] =
-    transformPickler(ElevationRange.AirMass.fromDecimalValues.get)(x => (x.min, x.max))
+  given ElevationAirMass: Pickler[ElevationRange.ByAirMass] =
+    transformPickler(ElevationRange.ByAirMass.FromBounds.get)(x => (x.min, x.max))
 
-  given ElevationHourAngle: Pickler[ElevationRange.HourAngle] =
-    transformPickler(ElevationRange.HourAngle.fromDecimalHours.get)(x => (x.minHours, x.maxHours))
+  given ElevationHourAngle: Pickler[ElevationRange.ByHourAngle] =
+    transformPickler(ElevationRange.ByHourAngle.FromBounds.get)(x => (x.minHours, x.maxHours))
 
   given Pickler[ElevationRange] =
     compositePickler[ElevationRange]
-      .addConcreteType[ElevationRange.AirMass]
-      .addConcreteType[ElevationRange.HourAngle]
+      .addConcreteType[ElevationRange.ByAirMass]
+      .addConcreteType[ElevationRange.ByHourAngle]
 
   given Pickler[ConstraintSet] = generatePickler
 
