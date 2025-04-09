@@ -365,14 +365,12 @@ object ObsTabTiles:
 
                     props.posAngleConstraint match
                       case PosAngleConstraint.AverageParallactic =>
-                        val avpa = averageParallacticAngle(
+                        averageParallacticAngle(
                           site.place,
                           asterism.baseTracking,
                           scienceStartTime,
                           scienceDuration
-                        )
-                        flipIfNeeded(avpa)
-                          .map(AveragePABasis(scienceStartTime, scienceDuration, _))
+                        ).map(AveragePABasis(scienceStartTime, scienceDuration, _))
                       case _                                     => none
               .flatten
 
@@ -384,7 +382,7 @@ object ObsTabTiles:
           val pa: Option[Angle] =
             props.posAngleConstraint match
               case PosAngleConstraint.Unbounded                  => paProps.selectedPA
-              case PosAngleConstraint.AverageParallactic         => averagePA.map(_.averagePA)
+              case PosAngleConstraint.AverageParallactic         => flipIfNeeded(averagePA.map(_.averagePA))
               case PosAngleConstraint.Fixed(angle)               => angle.some
               case PosAngleConstraint.AllowFlip(angle)           => flipIfNeeded(angle.some)
               case PosAngleConstraint.ParallacticOverride(angle) => angle.some

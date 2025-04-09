@@ -73,14 +73,12 @@ case class AladinCell(
 
   val anglesToTest: Option[NonEmptyList[Angle]] =
     for
-      conf          <- obsConf
-      configuration <- conf.configuration
-      obsDuration   <- conf.obsDuration
-      paConstraint  <- conf.posAngleConstraint
-      angles        <-
+      conf         <- obsConf
+      paConstraint <- conf.posAngleConstraint
+      angles       <-
         // For visual mode we want to default to PA 0 if needed e.g. average parallactic not available
         paConstraint
-          .anglesToTestAt(configuration.siteFor, asterism.baseTracking, obsTime, obsDuration)
+          .anglesToTestAt(obsConf.flatMap(_.averagePA).map(_.averagePA))
           .orElse(NonEmptyList.one(Angle.Angle0).some)
     // We sort the angles or we could end up in a loop where the angles are tested back and forth
     // This is rare but can happen if each angle finds an equivalent guide star
