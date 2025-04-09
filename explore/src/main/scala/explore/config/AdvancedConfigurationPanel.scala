@@ -540,6 +540,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             dithersControl(props.sequenceChanged),
             ExposureTimeModeEditor(props.instrument.some,
+                                   props.spectroscopyRequirements.get.wavelength,
                                    exposureTimeMode,
                                    props.readonly,
                                    props.units,

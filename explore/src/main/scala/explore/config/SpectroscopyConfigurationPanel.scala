@@ -46,23 +46,14 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
       useStateView(
         FocalPlane.SingleSlit.some.widen[FocalPlane]
       ).map: fpView => // For now only SlitView is allowed
-        val prevSignalToNoiseAt = p.options.get.exposureTimeMode.map(_.at)
 
-        // Set SignalToNoiseAt to wavelength if it is empty
-        val options = p.options
-          .withOnMod(s =>
-            if (s.wavelength =!= prevSignalToNoiseAt && prevSignalToNoiseAt.isEmpty)
-              p.options.set(s.withSNAt(s.wavelength))
-            else Callback.empty
-          )
-
-        val exposureTimeMode       = options.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
-        val resolution             = options.zoom(ScienceRequirements.Spectroscopy.resolution)
-        val wv                     = options.zoom(ScienceRequirements.Spectroscopy.wavelength)
-        val wavelengthDelta        = options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
-        val focalPlaneAngle        = options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
+        val exposureTimeMode       = p.options.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
+        val resolution             = p.options.zoom(ScienceRequirements.Spectroscopy.resolution)
+        val wv                     = p.options.zoom(ScienceRequirements.Spectroscopy.wavelength)
+        val wavelengthDelta        = p.options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
+        val focalPlaneAngle        = p.options.zoom(ScienceRequirements.Spectroscopy.focalPlaneAngle)
         val spectroscopyCapability =
-          options.zoom(ScienceRequirements.Spectroscopy.capability)
+          p.options.zoom(ScienceRequirements.Spectroscopy.capability)
 
         val focalPlaneSupported    = false
         val capabililitesSupported = false
@@ -105,6 +96,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
             disabled = p.readonly
           ).clearable(^.autoComplete.off),
           ExposureTimeModeEditor(p.instrument,
+                                 wv.get,
                                  exposureTimeMode,
                                  p.readonly,
                                  p.units,

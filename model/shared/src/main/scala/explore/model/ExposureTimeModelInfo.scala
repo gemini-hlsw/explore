@@ -21,7 +21,9 @@ case class TimeAndCountModeInfo(
   time:  Option[TimeSpan],
   count: Option[NonNegInt],
   at:    Option[Wavelength]
-) derives Eq
+) derives Eq:
+  def withRequirementsWavelength(w: Wavelength): TimeAndCountModeInfo =
+    at.fold(copy(at = w.some))(_ => this)
 
 object TimeAndCountModeInfo:
   val time: Lens[TimeAndCountModeInfo, Option[TimeSpan]] =
@@ -41,7 +43,9 @@ object TimeAndCountModeInfo:
         TimeAndCountModeInfo(t.some, c.some, a.some).some
       case _                                          => none
 
-case class SignalToNoiseModeInfo(value: Option[SignalToNoise], at: Option[Wavelength]) derives Eq
+case class SignalToNoiseModeInfo(value: Option[SignalToNoise], at: Option[Wavelength]) derives Eq:
+  def withRequirementsWavelength(w: Wavelength): SignalToNoiseModeInfo =
+    at.fold(copy(at = w.some))(_ => this)
 
 object SignalToNoiseModeInfo:
   val value: Lens[SignalToNoiseModeInfo, Option[SignalToNoise]] =
