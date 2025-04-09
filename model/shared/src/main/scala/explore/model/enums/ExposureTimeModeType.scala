@@ -10,7 +10,7 @@ import lucuma.core.util.Enumerated
 import lucuma.refined.*
 
 enum ExposureTimeModeType(val label: NonEmptyString) derives Enumerated:
-  case SignalToNoise extends ExposureTimeModeType("S/N".refined)
+  case SignalToNoise extends ExposureTimeModeType("Signal / Noise".refined)
   case TimeAndCount  extends ExposureTimeModeType("Time & Count".refined)
 
   private val tag = label.value

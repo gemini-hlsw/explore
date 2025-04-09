@@ -40,20 +40,9 @@ object ScienceRequirements:
     focalPlane:         Option[FocalPlane],
     focalPlaneAngle:    Option[Angle],
     capability:         Option[SpectroscopyCapabilities]
-  ) extends ScienceRequirements derives Eq {
-    def withSNAt(w: Option[Wavelength]): Spectroscopy =
-      w.fold(this)(w =>
-        copy(exposureTimeMode = exposureTimeMode.map {
-          case ExposureTimeMode.SignalToNoiseMode(v, _)   =>
-            ExposureTimeMode.SignalToNoiseMode(v, w)
-          case ExposureTimeMode.TimeAndCountMode(t, c, _) =>
-            ExposureTimeMode.TimeAndCountMode(t, c, w)
-        })
-      )
-
+  ) extends ScienceRequirements derives Eq:
     def modeType: Option[ExposureTimeModeType] =
       exposureTimeMode.map(_.modeType)
-  }
 
   object Spectroscopy {
     given Decoder[Spectroscopy] = Decoder.instance: c =>

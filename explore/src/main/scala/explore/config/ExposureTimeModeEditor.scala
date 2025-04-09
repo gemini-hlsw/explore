@@ -18,16 +18,19 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Instrument
+import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
 case class ExposureTimeModeEditor(
   instrument:       Option[Instrument],
+  wavelength:       Option[Wavelength],
   exposureTimeMode: View[Option[ExposureTimeMode]],
   readonly:         Boolean,
   units:            WavelengthUnits,
@@ -66,6 +69,15 @@ object ExposureTimeModeEditor:
                       snMode.set(SignalToNoiseModeInfo.Default) *>
                         tcMode.set(TimeAndCountModeInfo.Default) *>
                         emv.set(ExposureTimeModeType.SignalToNoise)
+        _      <- useEffectWithDeps(props.wavelength):
+                    // Wavelength updated upstream, set `at` if empty
+                    _.map: wv =>
+                      emv.get match
+                        case ExposureTimeModeType.SignalToNoise =>
+                          snMode.set(snMode.get.withRequirementsWavelength(wv))
+                        case ExposureTimeModeType.TimeAndCount  =>
+                          tcMode.set(tcMode.get.withRequirementsWavelength(wv))
+                    .getOrEmpty
       yield
 
         val snModeView = snMode.withOnMod:
