@@ -56,7 +56,7 @@ object TargetCloneSelector:
             info.choice
               .map((currentText, allText) =>
                 BooleanRadioButtons(
-                  view = editScope.as(EditScope.value),
+                  view = editScope.as(EditScope.Value),
                   idBase = "editscope".refined,
                   name = "editscope".refined,
                   trueLabel = allText,

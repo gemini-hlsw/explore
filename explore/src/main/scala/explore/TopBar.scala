@@ -219,7 +219,7 @@ object TopBar:
                 "Explore".refined,
                 ExploreStyles.LoginTitle,
                 ctx.version,
-                isAboutOpen.as(IsAboutOpen.value)
+                isAboutOpen.as(IsAboutOpen.Value)
               )
             else
               EmptyVdom,

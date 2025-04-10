@@ -8,7 +8,6 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import coulomb.policy.spire.standard.given
 import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
@@ -147,20 +146,17 @@ case class ObsTabTiles(
 
   def obsIQLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
-      percentileImageQuality(
-        constraintSet.get.imageQuality.toImageQuality.toArcSeconds.toValue[BigDecimal],
-        cw.value,
-        minimumAirmass(dec, site)
-      )
+      constraintSet.get.imageQuality.toImageQuality
+        .percentile(cw.value, site.minimumAirMassFor(dec))
     )
 
   def obsConditionsLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
       conditionsLikelihood(
         constraintSet.get.skyBackground,
-        constraintSet.get.cloudExtinction,
+        constraintSet.get.cloudExtinction.toCloudExtinction,
         constraintSet.get.waterVapor,
-        constraintSet.get.imageQuality.toImageQuality.toArcSeconds.toValue[BigDecimal],
+        constraintSet.get.imageQuality.toImageQuality,
         cw.value,
         dec,
         site

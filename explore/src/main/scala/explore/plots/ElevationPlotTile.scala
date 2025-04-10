@@ -283,7 +283,7 @@ object ElevationPlotTile:
               onLabel = "Scheduling: On",
               offLabel = "Scheduling: Off",
               checked = showSchedulingView.when(_.value),
-              onChange = showSchedulingView.set.compose(ElevationPlotScheduling.value.reverseGet),
+              onChange = showSchedulingView.set.compose(ElevationPlotScheduling.Value.reverseGet),
               clazz = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
             )
           )

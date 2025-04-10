@@ -42,17 +42,20 @@ object ObsQueries:
     constraints: ConstraintSet
   )(using FetchClient[F, ObservationDB]): F[Unit] = {
     val createER: ElevationRangeInput = constraints.elevationRange match
-      case ElevationRange.AirMass(min, max)   =>
+      case ElevationRange.ByAirMass(min, max)   =>
         ElevationRangeInput(airMass =
           // These are actually safe, because min and max in the model are refined [1.0 - 3.0]
           AirMassRangeInput(
-            min = PosBigDecimal.unsafeFrom(min.value).assign,
-            max = PosBigDecimal.unsafeFrom(max.value).assign
+            min = PosBigDecimal.unsafeFrom(min.toBigDecimal).assign,
+            max = PosBigDecimal.unsafeFrom(max.toBigDecimal).assign
           ).assign
         )
-      case ElevationRange.HourAngle(min, max) =>
+      case ElevationRange.ByHourAngle(min, max) =>
         ElevationRangeInput(hourAngle =
-          HourAngleRangeInput(minHours = min.value.assign, maxHours = max.value.assign).assign
+          HourAngleRangeInput(
+            minHours = min.toBigDecimal.assign,
+            maxHours = max.toBigDecimal.assign
+          ).assign
         )
 
     val editInput = ObservationPropertiesInput(

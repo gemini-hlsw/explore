@@ -105,7 +105,7 @@ def insertObs(
       postMessage = ToastCtx[IO].showToast(_)
     )(observations)
     .void
-    .switching(adding.zoom(AddingObservation.value.asLens).async)
+    .switching(adding.as(AddingObservation.Value).async)
     .withToastDuring("Creating observation")
 
 def insertGroup(
@@ -125,4 +125,4 @@ def insertGroup(
         .set(groups)(group.some)
         .toAsync
     .void
-    .switching(adding.zoom(AddingObservation.value.asLens).async)
+    .switching(adding.as(AddingObservation.Value).async)

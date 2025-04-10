@@ -90,7 +90,7 @@ object ItcTile:
     globalPreferences: View[GlobalPreferences],
     tileState:         View[TileState]
   ) extends ReactFnProps(Body.component):
-    val selectedTarget: View[Option[ItcTarget]] = tileState.zoom(TileState.value.asLens)
+    val selectedTarget: View[Option[ItcTarget]] = tileState.as(TileState.Value)
 
   private object Body:
     private type Props = Body
@@ -224,7 +224,7 @@ object ItcTile:
     itcGraphResults: Pot[ItcAsterismGraphResults],
     tileState:       View[TileState]
   ) extends ReactFnProps(Title.component):
-    val selectedTarget = tileState.zoom(TileState.value.asLens)
+    val selectedTarget = tileState.as(TileState.Value)
 
   private object Title:
     private type Props = Title

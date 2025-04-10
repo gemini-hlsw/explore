@@ -326,7 +326,7 @@ private abstract class SpectralDefinitionEditorBuilder[
                         .refinedBigDecimalWithScientificNotation[
                           FluxDensityContinuumValueRefinement
                         ]
-                        .andThen(FluxDensityContinuumValue.value.reverse),
+                        .andThen(FluxDensityContinuumValue.Value.reverse),
                       changeAuditor = ChangeAuditor.posScientificNotation(),
                       disabled = props.disabled
                     ),

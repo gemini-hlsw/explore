@@ -26,8 +26,10 @@ import explore.model.enums.TableId
 import explore.model.syntax.all.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.AirMassBound
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
+import lucuma.core.model.HourAngleBound
 import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.core.syntax.display.*
@@ -60,9 +62,9 @@ object ConstraintsSummaryTile:
       canMaximize = false
     )(
       tileState =>
-        Body(userId, programId, constraintList, expandedIds, tileState.zoom(TileState.value)),
+        Body(userId, programId, constraintList, expandedIds, tileState.zoom(TileState.Value)),
       (tileState, _) =>
-        ColumnSelectorInTitle(SelectableColumnNames.toList, tileState.zoom(TileState.value))
+        ColumnSelectorInTitle(SelectableColumnNames.toList, tileState.zoom(TileState.Value))
     )
 
   object TileState extends NewType[ColumnVisibility]:
@@ -182,52 +184,48 @@ object ConstraintsSummaryTile:
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
           .withCell(_.value match
-            case ElevationRange.AirMass(min, _) => f"${min.value}%.1f"
-            case ElevationRange.HourAngle(_, _) => ""
+            case ElevationRange.ByAirMass(min, _) => f"${min.value}%.1f"
+            case ElevationRange.ByHourAngle(_, _) => ""
           )
           .sortableBy(_ match
-            case ElevationRange.AirMass(min, _) => min.value
-            case ElevationRange.HourAngle(_, _) =>
-              ElevationRange.AirMass.MinValue - 1
+            case ElevationRange.ByAirMass(min, _) => min.toBigDecimal
+            case ElevationRange.ByHourAngle(_, _) => AirMassBound.Min.toBigDecimal - 1
           ),
         column(
           MaxAMColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
           .withCell(_.value match
-            case ElevationRange.AirMass(_, max) => f"${max.value}%.1f"
-            case ElevationRange.HourAngle(_, _) => ""
+            case ElevationRange.ByAirMass(_, max) => f"${max.value}%.1f"
+            case ElevationRange.ByHourAngle(_, _) => ""
           )
           .sortableBy(_ match
-            case ElevationRange.AirMass(_, max) => max.value
-            case ElevationRange.HourAngle(_, _) =>
-              ElevationRange.AirMass.MinValue - 1
+            case ElevationRange.ByAirMass(_, max) => max.toBigDecimal
+            case ElevationRange.ByHourAngle(_, _) => AirMassBound.Min.toBigDecimal - 1
           ),
         column(
           MinHAColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
           .withCell(_.value match
-            case ElevationRange.AirMass(_, _)     => ""
-            case ElevationRange.HourAngle(min, _) => f"${min.value}%.1f"
+            case ElevationRange.ByAirMass(_, _)     => ""
+            case ElevationRange.ByHourAngle(min, _) => f"${min.value}%.1f"
           )
           .sortableBy(_ match
-            case ElevationRange.AirMass(_, _)     =>
-              ElevationRange.HourAngle.MinHour - 1
-            case ElevationRange.HourAngle(min, _) => min.value
+            case ElevationRange.ByAirMass(_, _)     => HourAngleBound.Min.toBigDecimal - 1
+            case ElevationRange.ByHourAngle(min, _) => min.toBigDecimal
           ),
         column(
           MaxHAColumnId,
           ConstraintGroup.constraintSet.andThen(ConstraintSet.elevationRange).get
         )
           .withCell(_.value match
-            case ElevationRange.AirMass(_, _)     => ""
-            case ElevationRange.HourAngle(_, max) => f"${max.value}%.1f"
+            case ElevationRange.ByAirMass(_, _)     => ""
+            case ElevationRange.ByHourAngle(_, max) => f"${max.value}%.1f"
           )
           .sortableBy(_ match
-            case ElevationRange.AirMass(_, _)     =>
-              ElevationRange.HourAngle.MinHour - 1
-            case ElevationRange.HourAngle(_, max) => max.value
+            case ElevationRange.ByAirMass(_, _)     => HourAngleBound.Min.toBigDecimal - 1
+            case ElevationRange.ByHourAngle(_, max) => max.toBigDecimal
           ),
         column(CountColumnId, _.obsIds.length),
         column(ObservationsColumnId, ConstraintGroup.obsIds.get)

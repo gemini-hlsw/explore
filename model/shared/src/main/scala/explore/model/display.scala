@@ -78,20 +78,20 @@ trait DisplayImplicits:
   given Display[ConstraintSet] = Display.byShortName: cs =>
     val wv = if (cs.waterVapor === WaterVapor.Wet) "" else s" ${cs.waterVapor.label}"
     val er = cs.elevationRange match {
-      case ElevationRange.AirMass(min, max)
-          if min === ElevationRange.AirMass.DefaultMin && max === ElevationRange.AirMass.DefaultMax =>
+      case ElevationRange.ByAirMass(min, max)
+          if min === ElevationRange.ByAirMass.DefaultMin && max === ElevationRange.ByAirMass.DefaultMax =>
         ""
-      case ElevationRange.AirMass(min, max) if min === ElevationRange.AirMass.DefaultMin     =>
+      case ElevationRange.ByAirMass(min, max) if min === ElevationRange.ByAirMass.DefaultMin     =>
         f" AM<${max.value}%.1f"
-      case ElevationRange.AirMass(min, max) if max === ElevationRange.AirMass.DefaultMax     =>
+      case ElevationRange.ByAirMass(min, max) if max === ElevationRange.ByAirMass.DefaultMax     =>
         f" ${min.value}%.1f<AM"
-      case ElevationRange.AirMass(min, max)                                                  =>
+      case ElevationRange.ByAirMass(min, max)                                                    =>
         f" ${min.value}%.1f<AM<${max.value}%.1f"
-      case ElevationRange.HourAngle(min, max) if min === ElevationRange.HourAngle.DefaultMin =>
+      case ElevationRange.ByHourAngle(min, max) if min === ElevationRange.ByHourAngle.DefaultMin =>
         f" HA<${max.value}%.1f"
-      case ElevationRange.HourAngle(min, max) if max === ElevationRange.HourAngle.DefaultMax =>
+      case ElevationRange.ByHourAngle(min, max) if max === ElevationRange.ByHourAngle.DefaultMax =>
         f" ${min.value}%.1f<HA"
-      case ElevationRange.HourAngle(min, max)                                                =>
+      case ElevationRange.ByHourAngle(min, max)                                                  =>
         f" ${min.value}%.1f<HA<${max.value}%.1f"
     }
 

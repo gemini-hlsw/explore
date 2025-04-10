@@ -91,7 +91,7 @@ private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[
               value = cell.value,
               validFormat = InputValidSplitEpi
                 .refinedBigDecimal[LineWidthValueRefinement]
-                .andThen(LineWidthValue.value.reverse),
+                .andThen(LineWidthValue.Value.reverse),
               changeAuditor = ChangeAuditor.posBigDecimal(3.refined).allowEmpty,
               disabled = cell.table.options.meta.exists(_.disabled)
             ),
@@ -107,7 +107,7 @@ private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[
               value = cell.value,
               validFormat = InputValidSplitEpi
                 .refinedBigDecimalWithScientificNotation[LineFluxValueRefinement]
-                .andThen(LineFluxValue.value.reverse),
+                .andThen(LineFluxValue.Value.reverse),
               changeAuditor = ChangeAuditor.posScientificNotation(),
               disabled = cell.table.options.meta.exists(_.disabled)
             ),
