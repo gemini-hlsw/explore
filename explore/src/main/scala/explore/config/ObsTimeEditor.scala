@@ -5,12 +5,13 @@ package explore.config
 
 import cats.data.NonEmptyList
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.View
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.Execution
+import explore.model.PerishablePot
+import explore.model.PerishablePot.*
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -20,6 +21,7 @@ import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
+import lucuma.react.primereact.tooltip.*
 import lucuma.refined.*
 import lucuma.typed.reactDatepicker.mod.ReactDatePicker
 import lucuma.ui.primereact.*
@@ -37,14 +39,14 @@ case class ObsTimeEditor(
   obsTimeView:            View[Option[Instant]],
   obsDurationView:        View[Option[TimeSpan]],
   obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
-  execution:              Pot[Option[Execution]],
+  execution:              PerishablePot[Option[Execution]],
   forMultipleObs:         Boolean
 ) extends ReactFnProps(ObsTimeEditor):
-  val optExecution: Option[Execution] = execution.toOption.flatten
+  val optExecution: Option[Execution] = execution.asValuePot.toOption.flatten
   val pendingTime: Option[TimeSpan]   = optExecution.flatMap(_.remainingObsTime)
   val setupTime: Option[TimeSpan]     = optExecution.flatMap(_.fullSetupTime)
-  val timesAreLoading: Boolean        = execution.isPending
-  val isReadonly: Boolean             = forMultipleObs || timesAreLoading
+  val timesAreLoading: Boolean        = execution.isStaleOrPending
+  val isReadonly: Boolean             = forMultipleObs || timesAreLoading || execution.isError
 
 object ObsTimeEditor
     extends ReactFnComponent[ObsTimeEditor](props =>
@@ -93,7 +95,9 @@ object ObsTimeEditor
                       .map(pt => s"The current remaining time is ${pt.format}.")
                   ).flattenOption
                   val tooltip: Option[VdomNode] =
-                    if (tooltipList.isEmpty) none
+                    if (props.execution.isStale)
+                      ("Awaiting new data from server.": VdomNode).some
+                    else if (tooltipList.isEmpty) none
                     else
                       (tooltipList.mkString(
                         "",
@@ -136,7 +140,10 @@ object ObsTimeEditor
                         <.div(ExploreStyles.TargetObsDefaultDuration, timeDisplay("", pt, ""))
                       )
                   )
-                )
+                ),
+            props.execution.error.map(t =>
+              <.span(Icons.ErrorIcon).withTooltip(content = t.getMessage)
+            )
           )
         )
     )

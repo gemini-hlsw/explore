@@ -27,6 +27,7 @@ import explore.itc.ItcGraphQuerier
 import explore.itc.ItcTile
 import explore.model.*
 import explore.model.GuideStarSelection.*
+import explore.model.PerishablePot.*
 import explore.model.display.given
 import explore.model.enums.AgsState
 import explore.model.enums.AppTab
@@ -116,7 +117,8 @@ case class ObsTabTiles(
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
     programSummaries.targetObservations
 
-  val obsExecution: Pot[Execution] = programSummaries.obsExecutionPots.getPot(obsId)
+  val obsExecution: PerishablePot[Execution] =
+    programSummaries.obsExecutionPots.getPot(obsId)
 
   val obsTargets: TargetList = programSummaries.obsTargets.get(obsId).getOrElse(SortedMap.empty)
 
@@ -333,8 +335,8 @@ object ObsTabTiles:
               obsEditAttachments(props.obsId, ids).runAsync
             }
 
-          val pendingTime = props.obsExecution.toOption.flatMap(_.remainingObsTime)
-          val setupTime   = props.obsExecution.toOption.flatMap(_.fullSetupTime)
+          val pendingTime = props.obsExecution.asValuePot.toOption.flatMap(_.remainingObsTime)
+          val setupTime   = props.obsExecution.asValuePot.toOption.flatMap(_.fullSetupTime)
           val obsDuration =
             props.observation.get.observationDuration
               .orElse(pendingTime)
@@ -514,7 +516,7 @@ object ObsTabTiles:
               obsTimeView,
               obsDurationView,
               obsConf,
-              props.obsExecution.map(_.some),
+              props.obsExecution.mapPerishable(_.some),
               props.focusedTarget,
               setCurrentTarget,
               onCloneTarget,

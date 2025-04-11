@@ -5,13 +5,11 @@ package explore.cache
 
 import cats.Order.given
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.syntax.*
 import explore.givens.given
 import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ProgramSummaries
-import explore.model.ProgramTimeRange
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
@@ -69,7 +67,7 @@ trait CacheModifierUpdaters {
 
         val obsExecutionReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.obsExecutionPots.modify: oem =>
-            if (isPresentInServer) oem.withUpdatePending(obsId)
+            if (isPresentInServer) oem.markStale(obsId)
             else oem.removed(obsId)
 
         ifPresentInServerOrLocally:
@@ -111,7 +109,7 @@ trait CacheModifierUpdaters {
         val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.groupTimeRangePots
             .modify:
-              if isPresentInServer then _.withUpdatePending(groupId)
+              if isPresentInServer then _.markStale(groupId)
               else _.removed(groupId)
             .andThen(parentGroupTimeRangeReset(groupId.asRight))
 
@@ -145,12 +143,8 @@ trait CacheModifierUpdaters {
     id: Either[Observation.Id, Group.Id]
   ): ProgramSummaries => ProgramSummaries =
     programSummaries =>
-      val groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
+      val groupIds: List[Group.Id] =
         programSummaries
           .parentGroups(id)
-          .map(_ -> pending)
-          .toMap
-      ProgramSummaries.groupTimeRangePots.modify(_.allUpdated(groupTimeRangePots))(
-        programSummaries
-      )
+      ProgramSummaries.groupTimeRangePots.modify(_.markStale(groupIds*))(programSummaries)
 }

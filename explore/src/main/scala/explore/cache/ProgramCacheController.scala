@@ -3,9 +3,11 @@
 
 package explore.cache
 
+import cats.data.Ior
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
+import clue.ResponseException
 import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
@@ -14,14 +16,12 @@ import crystal.syntax.*
 import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
-import explore.model.Execution
 import explore.model.Group
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
-import explore.model.ProgramTimeRange
 import explore.utils.*
 import fs2.Pipe
 import fs2.Stream
@@ -94,12 +94,21 @@ object ProgramCacheController
     ProgramSummaryQueriesGQL
       .ObservationExecutionQuery[IO]
       .query(obsId)
-      .raiseGraphQLErrorsOnNoData
+      // This no longer raises an error on no data, rather the error is put in the pot.
+      .map(_.result match {
+        case Ior.Right(r)   => r.asRight
+        case Ior.Both(_, r) => r.asRight
+        case Ior.Left(e)    => ResponseException(e, none).asLeft
+      })
       .map:
-        _.observation
-          .map(_.execution)
-          .fold(identity[ProgramSummaries]): execution =>
-            ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, Pot(execution)))
+        case Left(e)     =>
+          val t = new Exception("Error getting observation execution information.", e)
+          ProgramSummaries.obsExecutionPots.modify(_.setError(obsId, t))
+        case Right(data) =>
+          data.observation
+            .map(_.execution)
+            .fold(identity[ProgramSummaries]): execution =>
+              ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, execution))
 
   private def updateGroupTimeRange(groupId: Group.Id)(using
     StreamingClient[IO, ObservationDB]
@@ -107,12 +116,21 @@ object ProgramCacheController
     ProgramSummaryQueriesGQL
       .GroupTimeRangeQuery[IO]
       .query(groupId)
-      .raiseGraphQLErrors
+      // This no longer raises an error for graphql errors, rather the error is put in the pot.
+      .map(_.result match {
+        case Ior.Right(r)   => r.asRight
+        case Ior.Both(e, r) => ResponseException(e, r.some).asLeft
+        case Ior.Left(e)    => ResponseException(e, none).asLeft
+      })
       .map:
-        _.group
-          .map(_.timeEstimateRange)
-          .fold(identity[ProgramSummaries]): timeRange =>
-            ProgramSummaries.groupTimeRangePots.modify(_.updated(groupId, Pot(timeRange)))
+        case Left(e)     =>
+          val t = new Exception("Error getting group time range information.", e)
+          ProgramSummaries.groupTimeRangePots.modify(_.setError(groupId, t))
+        case Right(data) =>
+          data.group
+            .map(_.timeEstimateRange)
+            .fold(identity[ProgramSummaries]): timeRange =>
+              ProgramSummaries.groupTimeRangePots.modify(_.updated(groupId, timeRange))
 
   override protected val initial: ProgramCacheController => IO[
     (ProgramSummaries, Stream[IO, ProgramSummaries => ProgramSummaries])
@@ -201,10 +219,6 @@ object ProgramCacheController
       observations: List[Observation],
       groups:       List[Group]
     ): IO[ProgramSummaries] =
-      val obsPots: Map[Observation.Id, Pot[Execution]]            =
-        observations.map(o => (o.id, pending)).toMap
-      val groupPots: Map[Group.Id, Pot[Option[ProgramTimeRange]]] =
-        groups.map(g => g.id -> pending).toMap
       (optProgramDetails, targets, attachments, programs, configurationRequests).mapN:
         case (pd, ts, as, ps, crs) =>
           ProgramSummaries
@@ -216,8 +230,6 @@ object ProgramCacheController
               as,
               ps,
               pending,
-              obsPots,
-              groupPots,
               crs
             )
 

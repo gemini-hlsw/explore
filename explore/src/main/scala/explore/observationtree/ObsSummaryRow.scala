@@ -4,11 +4,11 @@
 package explore.observationtree
 
 import cats.syntax.all.*
-import crystal.Pot
 import explore.model.Asterism
 import explore.model.Execution
 import explore.model.Group
 import explore.model.Observation
+import explore.model.PerishablePot
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.schemas.model.TargetWithId
@@ -31,7 +31,7 @@ enum ObsSummaryRow:
     targetWithId: Option[TargetWithId],
     asterism:     Option[Asterism],
     group:        Option[Group],
-    execution:    Pot[Execution]
+    execution:    PerishablePot[Execution]
   ) extends ObsSummaryRow
 
   def fold[A](f: ExpandedTargetRow => A, g: ObsRow => A): A =

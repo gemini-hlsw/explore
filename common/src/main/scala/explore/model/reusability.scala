@@ -76,6 +76,7 @@ object reusability:
   given Reusability[BandedProgramTime]       = Reusability.byEq
   given Reusability[Group]                   = Reusability.byEq
   given Reusability[GroupWarning]            = Reusability.byEq
+  given [V: Eq]: Reusability[Perishable[V]]  = Reusability.byEq
 
   /**
    */

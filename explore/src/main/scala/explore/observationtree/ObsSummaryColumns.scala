@@ -16,6 +16,8 @@ import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Group
 import explore.model.Observation
+import explore.model.PerishablePot
+import explore.model.PerishablePot.*
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
@@ -28,6 +30,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*
 import lucuma.core.util.TimeSpan
+import lucuma.react.primereact.Tooltip
+import lucuma.react.primereact.tooltip.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
@@ -121,9 +125,9 @@ trait ObsSummaryColumns:
           case s: String => s
           case (_, b)    => b.target.name.value
 
-    extension (a: Option[Pot[Option[TimeSpan]]])
+    extension (a: Option[PerishablePot[Option[TimeSpan]]])
       def sortableTimeSpan =
-        a.flatMap(_.toOption).flatten
+        a.flatMap(_.asValuePot.toOption).flatten
 
     // Function for sorting the observation by observation ref index (if available) or
     // observation id. If either observation has an index, both should. The Observations
@@ -277,10 +281,19 @@ trait ObsSummaryColumns:
         .sortable,
       obsColumn(
         DurationColumnId,
-        _.execution.map(_.programTimeEstimate)
+        _.execution.mapPerishable(_.programTimeEstimate)
       ).withCell:
-        _.value.map:
-          _.orSpinner(_.map(HoursMinutesAbbreviation.format).orEmpty)
+        _.value.map: ppot =>
+          ppot.asValuePot
+            .orSpinner(_.map { d =>
+              val text = HoursMinutesAbbreviation.format(d)
+              if (ppot.isStale)
+                <.span(ExploreStyles.Stale, text)
+                  .withTooltip(content = "Awaiting new data from server.",
+                               position = Tooltip.Position.Left
+                  )
+              else text: VdomNode
+            })
       .sortableBy(_.sortableTimeSpan)
       // TODO: PriorityColumnId
       // TODO: ChargedTimeColumnId

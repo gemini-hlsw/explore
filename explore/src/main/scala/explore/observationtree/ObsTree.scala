@@ -23,6 +23,7 @@ import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
+import explore.model.PerishablePot.*
 import explore.model.enums.AppTab
 import explore.model.enums.GroupWarning
 import explore.syntax.ui.*
@@ -315,7 +316,7 @@ object ObsTree:
               )(
                 ObsBadge(
                   obs,
-                  props.obsExecutionTimes.getPot(obs.id).map(_.programTimeEstimate),
+                  props.obsExecutionTimes.getPot(obs.id).mapPerishable(_.programTimeEstimate),
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
                   setStateCB = ObsActions

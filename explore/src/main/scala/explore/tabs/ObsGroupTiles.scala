@@ -11,6 +11,7 @@ import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.Group
 import explore.model.GroupEditTileIds
+import explore.model.Perishable
 import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.GroupWarning
@@ -27,7 +28,7 @@ case class ObsGroupTiles(
   group:             UndoSetter[Group],
   groupWarnings:     Option[NonEmptySet[GroupWarning]],
   childCount:        Int,
-  timeEstimateRange: Pot[Option[ProgramTimeRange]],
+  timeEstimateRange: Pot[Perishable[Option[ProgramTimeRange]]],
   resize:            UseResizeDetectorReturn,
   defaultLayouts:    LayoutsMap,
   layouts:           LayoutsMap,
