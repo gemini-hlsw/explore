@@ -28,7 +28,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.util.NewBoolean
-import lucuma.react.aladin.*
+import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
@@ -36,6 +36,7 @@ import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.DialogPosition
 import lucuma.refined.*
 import lucuma.schemas.model.TargetWithOptId
+import lucuma.ui.aladin.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
@@ -158,13 +159,21 @@ object TargetSelectionPopup:
     // selectedTarget
     .useStateView(none[SelectedTarget])
     // aladinRef
-    .useMemo(())(_ => Ref.toScalaComponent(Aladin.component))
+    .useState(none[Aladin])
     // re render when selected changes
     .useEffectWithDepsBy((_, _, _, _, _, _, _, selectedTarget, _) => selectedTarget.get)(
       (_, _, _, _, _, _, _, _, aladinRef) =>
         sel =>
-          aladinRef.get.asCBO
-            .flatMapCB(b => b.backend.fixLayoutDimensions *> b.backend.recalculateView)
+          aladinRef.value
+            .map(a =>
+              sel
+                .collect { case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, _) =>
+                  tracking.baseCoordinates
+                }
+                .map(a.gotoRaDecCB)
+                .orEmpty
+            )
+            .orEmpty
             // We need to do this callback delayed or it miss calculates aladin div size
             .delayMs(10)
     )
@@ -269,29 +278,26 @@ object TargetSelectionPopup:
                 )
               ),
               <.div(ExploreStyles.TargetSearchPreview)(
-                AladinZoomControl(aladinRef, ExploreStyles.AladinSearchZoomControl),
+                aladinRef.value.map(AladinZoomControl(_)),
                 selectedTarget.get
                   .collect { case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, _) =>
                     tracking.baseCoordinates
                   }
                   .map[VdomNode] { case coordinates =>
-                    Aladin.component
-                      .withRef(aladinRef)
-                      .withKey(
-                        selectedTarget.get.foldMap(t => s"${t.source}-${t.resultIndex}")
-                      )(
-                        Aladin(
-                          ExploreStyles.TargetSearchAladin, // required placeholder
-                          showReticle = false,
-                          showLayersControl = false,
-                          target = Coordinates.fromHmsDms.reverseGet(coordinates),
-                          fov = Constants.PreviewFov,
-                          fullScreen = false,
-                          showZoomControl = false,
-                          showFullscreenControl = false,
-                          showGotoControl = false
-                        )
-                      )
+                    ReactAladin(
+                      ExploreStyles.TargetSearchAladin, // required placeholder
+                      AladinOptions(
+                        showReticle = false,
+                        showLayersControl = false,
+                        target = Coordinates.fromHmsDms.reverseGet(coordinates),
+                        fov = Constants.PreviewFov,
+                        fullScreen = false,
+                        showZoomControl = false,
+                        showFullscreenControl = false,
+                        showGotoControl = false
+                      ),
+                      customize = v => aladinRef.setState(v.some)
+                    )(^.key := selectedTarget.get.foldMap(t => s"${t.source}-${t.resultIndex}"))
                   }
                   .getOrElse(<.div(ExploreStyles.TargetSearchPreviewPlaceholder, "Preview"))
               ),
