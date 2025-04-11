@@ -23,6 +23,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
+import lucuma.react.common.style.Css
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
@@ -141,5 +142,13 @@ def keyedSwitchEvalMap[F[_]: Concurrent, I, O, K](
           .onFinalize(out.close.void)
 }
 
-def timeDisplay(name: String, time: TimeSpan, sep: String = ": ") =
-  <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep), TimeSpanView(time))
+def timeDisplay(
+  name:        String,
+  time:        TimeSpan,
+  sep:         String = ": ",
+  timeClass:   Css = Css.Empty,
+  timeTooltip: Option[VdomNode] = None
+) =
+  <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep),
+         TimeSpanView(time, tooltip = timeTooltip).withMods(timeClass)
+  )

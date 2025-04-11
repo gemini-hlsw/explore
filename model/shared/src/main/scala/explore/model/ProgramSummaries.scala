@@ -40,6 +40,7 @@ case class ProgramSummaries(
   groups:                GroupList,
   attachments:           AttachmentList,
   programs:              ProgramInfoList,
+  // TODO: Persihable: make this a PerishablePot[ProgramTimes]
   programTimesPot:       Pot[ProgramTimes],
   obsExecutionPots:      ObservationExecutionMap,
   groupTimeRangePots:    GroupTimeRangeMap,
@@ -317,16 +318,14 @@ object ProgramSummaries:
       .andThen(ProgramDetails.piPartner.some)
 
   def fromLists(
-    optProgramDetails:  Option[ProgramDetails],
-    targetList:         List[TargetWithId],
-    obsList:            List[Observation],
-    groupList:          List[Group],
-    attachments:        List[Attachment],
-    programs:           List[ProgramInfo],
-    programTimesPot:    Pot[ProgramTimes],
-    obsExecutionPots:   Map[Observation.Id, Pot[Execution]],
-    groupTimeRangePots: Map[Group.Id, Pot[Option[ProgramTimeRange]]],
-    configRequests:     List[ConfigurationRequestWithObsIds]
+    optProgramDetails: Option[ProgramDetails],
+    targetList:        List[TargetWithId],
+    obsList:           List[Observation],
+    groupList:         List[Group],
+    attachments:       List[Attachment],
+    programs:          List[ProgramInfo],
+    programTimesPot:   Pot[ProgramTimes],
+    configRequests:    List[ConfigurationRequestWithObsIds]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,
@@ -336,7 +335,7 @@ object ProgramSummaries:
       attachments.toSortedMap(_.id),
       programs.toSortedMap(_.id),
       programTimesPot,
-      ObservationExecutionMap(obsExecutionPots),
-      GroupTimeRangeMap(groupTimeRangePots),
+      ObservationExecutionMap(Map.empty),
+      GroupTimeRangeMap(Map.empty),
       configRequests.toSortedMap(_.id)
     )

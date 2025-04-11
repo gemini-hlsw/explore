@@ -7,13 +7,14 @@ import cats.Eq
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Observation
+import explore.model.PerishablePot
+import explore.model.PerishablePot.*
 import explore.model.display.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
@@ -39,7 +40,7 @@ import scala.collection.immutable.SortedSet
 
 case class ObsBadge(
   obs:                   Observation,
-  executionTime:         Pot[Option[TimeSpan]],
+  executionTime:         PerishablePot[Option[TimeSpan]],
   layout:                ObsBadge.Layout,
   selected:              Boolean = false,
   setStateCB:            Option[ObservationWorkflowState => Callback] = none,
@@ -184,6 +185,10 @@ object ObsBadge:
 
       val validationIcon = <.span(Icons.ErrorIcon).withTooltip(content = validationTooltip)
 
+      val executionTimeTooltip =
+        if props.executionTime.isStale then ("Awaiting new value from server": VdomNode).some
+        else none
+
       React.Fragment(
         <.div(
           <.div(ExploreStyles.ObsBadge, ExploreStyles.ObsBadgeSelected.when(props.selected))(
@@ -222,7 +227,13 @@ object ObsBadge:
                   ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
                 )
               ),
-              props.executionTime.orSpinner(_.map(TimeSpanView(_))),
+              props.executionTime.asValuePot
+                .orSpinner(
+                  _.map(
+                    TimeSpanView(_, tooltip = executionTimeTooltip)
+                      .withMods(ExploreStyles.Stale.when(props.executionTime.isStale))
+                  )
+                ),
               validationIcon.unless(obs.workflow.validationErrors.isEmpty)
             )
           )

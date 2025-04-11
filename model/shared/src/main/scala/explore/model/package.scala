@@ -5,12 +5,12 @@ package explore.model
 
 import cats.Order.given
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.syntax.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.PerishablePot.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConfigurationRequest
@@ -89,18 +89,20 @@ type ObservationExecutionMap = ObservationExecutionMap.Type
 object GroupTimeRangeMap extends PotMap[Group.Id, Option[ProgramTimeRange]]
 type GroupTimeRangeMap = GroupTimeRangeMap.Type
 
-trait PotMap[K, V] extends NewType[Map[K, Pot[V]]]:
+trait PotMap[K, V] extends NewType[Map[K, PerishablePot[V]]]:
   extension (t: Type)
-    def getPot(k: K): Pot[V]                       =
+    def getPot(k: K): PerishablePot[V]          =
       t.value.get(k).getOrElse(pending)
-    def updated(k: K, pot: Pot[V]): this.Type      =
-      apply(t.value.updated(k, pot))
-    def withUpdatePending(k: K): this.Type         =
-      updated(k, pending)
-    def allUpdated(map: Map[K, Pot[V]]): this.Type =
-      apply(t.value ++ map)
-    def removed(k: K): this.Type                   =
+    def updated(k: K, v: V): this.Type          =
+      apply(t.value.updated(k, PerishablePot(v)))
+    def withUpdatePending(k: K): this.Type      =
+      apply(t.value.updated(k, pending))
+    def markStale(ks: K*): this.Type            =
+      apply(ks.foldLeft(t.value)(_.updatedWith(_)(_.map(_.setStale))))
+    def removed(k: K): this.Type                =
       apply(t.value.removed(k))
+    def setError(k: K, e: Throwable): this.Type =
+      apply(t.value.updated(k, PerishablePot.error(e)))
 
 val SupportedInstruments =
   List(Instrument.GmosNorth, Instrument.GmosSouth, Instrument.Flamingos2)

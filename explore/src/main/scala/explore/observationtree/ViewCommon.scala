@@ -12,6 +12,7 @@ import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
+import explore.model.PerishablePot.*
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -42,7 +43,7 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
-      obsExecutions.getPot(obs.id).map(_.programTimeEstimate),
+      obsExecutions.getPot(obs.id).mapPerishable(_.programTimeEstimate),
       layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
       readonly = readonly,

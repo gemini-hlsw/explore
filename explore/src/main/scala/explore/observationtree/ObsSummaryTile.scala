@@ -4,7 +4,6 @@
 package explore.observationtree
 
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import crystal.react.syntax.pot.given

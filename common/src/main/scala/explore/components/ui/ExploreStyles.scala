@@ -110,15 +110,16 @@ object ExploreStyles:
 
   val ScienceBandPopupMenu = Css("science-band-popup-menu")
 
-  val GroupEditTile: Css      = Css("group-edit-tile")
-  val GroupEditTitle: Css     = Css("group-edit-title")
-  val GroupTypeSelect: Css    = Css("group-type-select")
-  val GroupChangeButtons: Css = Css("group-change-buttons")
-  val GroupEditNote: Css      = Css("group-edit-note")
-  val GroupForm: Css          = Css("group-form")
-  val GroupDelaysForm: Css    = Css("group-delays-form")
-  val GroupPlannedTime: Css   = Css("group-planned-time")
-  val GroupWarnings: Css      = Css("group-warnings")
+  val GroupEditTile: Css       = Css("group-edit-tile")
+  val GroupEditTitle: Css      = Css("group-edit-title")
+  val GroupEditTitleTimes: Css = Css("group-edit-title-times")
+  val GroupTypeSelect: Css     = Css("group-type-select")
+  val GroupChangeButtons: Css  = Css("group-change-buttons")
+  val GroupEditNote: Css       = Css("group-edit-note")
+  val GroupForm: Css           = Css("group-form")
+  val GroupDelaysForm: Css     = Css("group-delays-form")
+  val GroupPlannedTime: Css    = Css("group-planned-time")
+  val GroupWarnings: Css       = Css("group-warnings")
 
   val ApiKeysPopup          = Css("api-keys-popup")
   val ApiKeysTable          = Css("api-keys-table")
@@ -529,3 +530,4 @@ object ExploreStyles:
   val FocusedInfo: Css = Css("explore-focused-info")
 
   val Hidden: Css = Css("explore-hidden")
+  val Stale: Css  = Css("stale")

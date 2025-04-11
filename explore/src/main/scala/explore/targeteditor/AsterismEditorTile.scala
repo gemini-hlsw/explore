@@ -6,7 +6,6 @@ package explore.targeteditor
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -27,6 +26,7 @@ import explore.model.ObsIdSetEditInfo
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
+import explore.model.PerishablePot
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.model.enums.TileSizeState
@@ -65,7 +65,7 @@ object AsterismEditorTile:
     obsTime:            View[Option[Instant]],
     obsDuration:        View[Option[TimeSpan]],
     obsConf:            ObsConfiguration,
-    execution:          Pot[Option[Execution]],
+    execution:          PerishablePot[Option[Execution]],
     currentTarget:      Option[Target.Id],
     setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
     onCloneTarget:      OnCloneParameters => Callback,
@@ -296,7 +296,7 @@ object AsterismEditorTile:
     obsTimeView:            View[Option[Instant]],
     obsDurationView:        View[Option[TimeSpan]],
     obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
-    execution:              Pot[Option[Execution]],
+    execution:              PerishablePot[Option[Execution]],
     columnVisibility:       View[ColumnVisibility],
     obsEditInfo:            Option[ObsIdSetEditInfo],
     tileSize:               TileSizeState

@@ -532,7 +532,7 @@ object TargetTabContents extends TwoPanels:
                   none,
                   none
                 ),
-                Pot(none), // Execution
+                PerishablePot(none), // Execution
                 props.focused.target,
                 setCurrentTarget(idsToEdit.some),
                 onCloneTarget4Asterism,

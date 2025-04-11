@@ -16,6 +16,8 @@ import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTileIds
 import explore.model.Observation
+import explore.model.PerishablePot
+import explore.model.PerishablePot.*
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.*
@@ -27,6 +29,7 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
+import lucuma.react.common.style.Css
 import lucuma.react.primereact.Message
 import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
@@ -36,7 +39,7 @@ import lucuma.ui.syntax.all.given
 object SequenceTile extends SequenceTileHelper:
   def apply(
     obsId:               Observation.Id,
-    obsExecution:        Pot[Execution],
+    obsExecution:        PerishablePot[Execution],
     asterismIds:         AsterismIds,
     customSedTimestamps: List[Timestamp],
     sequenceChanged:     View[Pot[Unit]]
@@ -110,24 +113,37 @@ object SequenceTile extends SequenceTileHelper:
           )
       )
 
-  private case class Title(obsExecution: Pot[Execution], isRefreshing: Boolean)
+  private case class Title(obsExecution: PerishablePot[Execution], isRefreshing: Boolean)
       extends ReactFnProps(Title)
 
   private object Title
       extends ReactFnComponent[Title](props =>
         <.span(ExploreStyles.SequenceTileTitle)(
-          props.obsExecution
+          props.obsExecution.asValuePot
             .filter(_ => !props.isRefreshing)
             .orSpinner: execution =>
-              val programTimeCharge = execution.programTimeCharge.value
+              val (staleCss, staleTooltip) =
+                if (props.obsExecution.isStale)
+                  (ExploreStyles.Stale, ("Awaiting new data from server.": VdomNode).some)
+                else (Css.Empty, None)
+              val programTimeCharge        = execution.programTimeCharge.value
 
-              val executed = timeDisplay("Executed", programTimeCharge)
+              val executed = timeDisplay("Executed",
+                                         programTimeCharge,
+                                         timeClass = staleCss,
+                                         timeTooltip = staleTooltip
+              )
 
               execution.programTimeEstimate
                 .map: plannedTime =>
                   val total   = programTimeCharge +| plannedTime
-                  val pending = timeDisplay("Pending", plannedTime)
-                  val planned = timeDisplay("Planned", total)
+                  val pending = timeDisplay("Pending",
+                                            plannedTime,
+                                            timeClass = staleCss,
+                                            timeTooltip = staleTooltip
+                  )
+                  val planned =
+                    timeDisplay("Planned", total, timeClass = staleCss, timeTooltip = staleTooltip)
 
                   React.Fragment(
                     HelpIcon("target/main/sequence-times.md".refined),
