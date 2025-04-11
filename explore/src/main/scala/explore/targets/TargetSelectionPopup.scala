@@ -28,7 +28,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.util.NewBoolean
-import lucuma.ui.aladin.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
@@ -37,6 +36,7 @@ import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.DialogPosition
 import lucuma.refined.*
 import lucuma.schemas.model.TargetWithOptId
+import lucuma.ui.aladin.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given

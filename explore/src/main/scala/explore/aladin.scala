@@ -10,13 +10,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ui.aladin.Aladin
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.primereact.Button
+import lucuma.ui.aladin.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.aladin.*
 
 case class AladinZoomControl(
   aladinRef: Aladin,

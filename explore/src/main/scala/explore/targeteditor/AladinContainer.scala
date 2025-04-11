@@ -33,11 +33,11 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.ui.aladin.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
+import lucuma.ui.aladin.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
