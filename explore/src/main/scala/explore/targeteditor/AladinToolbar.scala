@@ -15,12 +15,12 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.math.*
-import lucuma.react.aladin.Fov
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.Transform
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
+import lucuma.ui.aladin.Fov
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 

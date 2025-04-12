@@ -132,7 +132,6 @@ lazy val explore: Project = project
     coverageEnabled      := false,
     libraryDependencies ++=
       GeminiLocales.value ++
-        ReactAladin.value ++
         LucumaReact.value,
     // Build workers when you build explore
     Compile / fastLinkJS := (Compile / fastLinkJS)

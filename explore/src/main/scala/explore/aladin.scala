@@ -10,15 +10,15 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.react.aladin.Aladin
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.primereact.Button
+import lucuma.ui.aladin.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 
 case class AladinZoomControl(
-  aladinRef: Ref.ToScalaComponent[Aladin, Aladin.State, Aladin.Backend],
+  aladinRef: Aladin,
   clazz:     Css = Css.Empty
 ) extends ReactFnProps(AladinZoomControl.component)
 
@@ -32,12 +32,12 @@ object AladinZoomControl {
         Button(
           clazz = ExploreStyles.ButtonOnAladin,
           icon = Icons.ThinPlus,
-          onClick = p.aladinRef.get.asCBO.flatMapCB(_.backend.increaseZoom).toCallback
+          onClick = p.aladinRef.increaseZoomCB
         ).small,
         Button(
           clazz = ExploreStyles.ButtonOnAladin,
           icon = Icons.ThinMinus,
-          onClick = p.aladinRef.get.asCBO.flatMapCB(_.backend.decreaseZoom).toCallback
+          onClick = p.aladinRef.decreaseZoomCB
         ).small
       )
     )

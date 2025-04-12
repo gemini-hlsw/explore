@@ -7,7 +7,7 @@ import cats.syntax.option.*
 import explore.model.AsterismVisualOptions
 import japgolly.scalajs.react.*
 import lucuma.core.util.NewBoolean
-import lucuma.react.aladin.Fov
+import lucuma.ui.aladin.Fov
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.document
 
