@@ -27,7 +27,7 @@ import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.TimingWindowEnd
 import lucuma.core.model.TimingWindowRepeat
-import lucuma.core.syntax.display.given
+import lucuma.core.syntax.display.*
 import lucuma.core.util.NewType
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp

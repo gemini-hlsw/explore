@@ -13,6 +13,7 @@ import lucuma.core.math.units.*
 import lucuma.core.model.IntCentiPercent
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
+import lucuma.core.syntax.validation.*
 import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
 import lucuma.refined.*

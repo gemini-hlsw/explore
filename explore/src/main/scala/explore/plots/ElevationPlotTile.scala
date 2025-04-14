@@ -32,7 +32,7 @@ import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
-import lucuma.core.syntax.display.given
+import lucuma.core.syntax.display.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
