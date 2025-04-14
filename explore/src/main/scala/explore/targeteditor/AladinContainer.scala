@@ -122,7 +122,7 @@ object AladinContainer extends AladinCommon {
                   .void
                   .when_(offset === Offset.Zero)
               .getOrEmpty
-        // Memoized svg
+        // Memoized svg for visualization shapes
         shapes     <-
           useMemo(
             (baseCoords, props.obsConf, props.globalPreferences.agsOverlay, props.selectedGuideStar)
@@ -240,6 +240,7 @@ object AladinContainer extends AladinCommon {
 
         // Use fov from aladin
         fov        <- useState(none[Fov])
+        // Update aladin if coords change
         _          <-
           useEffectWithDeps(
             (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
