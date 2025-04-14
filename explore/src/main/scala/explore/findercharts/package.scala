@@ -17,7 +17,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.AttachmentType
 import lucuma.core.model.Program
 import lucuma.core.util.NewBoolean
-import lucuma.react.floatingui.Placement
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
