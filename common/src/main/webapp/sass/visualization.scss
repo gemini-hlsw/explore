@@ -1,5 +1,6 @@
 @use '/lucuma-css/lucuma-ui-common.scss' as lucumaUICommon;
 @use 'explore-common.scss' as exploreCommon;
+@use '/lucuma-css/visualization.scss';
 @use 'sass:string';
 
 :root {
@@ -36,266 +37,20 @@ $brightness: var(--aladin-image-brightness);
     position: relative;
   }
 
-  .visualization-display {
-    display: inline !important; // we use this as a toggle thus we need important set
-  }
-
-  .visualization-tooltip {
-    animation: fadeIn 250ms;
-  }
-
-  .visualization-tooltip-target {
-    pointer-events: bounding-box;
-  }
-
-  .p-tooltip-text {
-    .ags-tooltip {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-
-      .ags-fast-color {
-        fill: var(--ags-fast-guide-speed-color);
-        color: var(--ags-fast-guide-speed-color);
-        stroke: var(--ags-fast-guide-speed-color);
-      }
-
-      .ags-not-found {
-        fill: var(--negative-background-color);
-        color: var(--negative-background-color);
-        stroke: var(--negative-background-color);
-      }
-
-      .ags-medium-color {
-        fill: var(--ags-medium-guide-speed-color);
-        color: var(--ags-medium-guide-speed-color);
-        stroke: var(--ags-medium-guide-speed-color);
-      }
-
-      .ags-slow-color {
-        fill: var(--ags-slow-guide-speed-color);
-        color: var(--ags-slow-guide-speed-color);
-        stroke: var(--ags-slow-guide-speed-color);
-      }
-    }
+  .viz-guides {
+    display: none;
   }
 
   .visualization-overlay-svg {
-    position: absolute;
-    pointer-events: none; // let aladin get pointer events
-    z-index: 40;
-
-    .viz-polygon {
-      stroke: gray;
-      stroke-width: 2px;
-      fill: none;
-      vector-effect: non-scaling-stroke;
-    }
 
     .gmos-probe-arm {
-      stroke: hsl(0deg 67.9% 41.6%);
-    }
-
-    .gmos-patrol-field {
-      stroke: hsl(120deg 100% 50%);
-      display: none;
-      stroke-width: 1px;
-      stroke-dasharray: 10;
-    }
-
-    .patrol-field-intersection {
-      stroke: hsl(120deg 100% 50%);
-      stroke-width: 1.5px;
-      stroke-dasharray: 3;
-    }
-
-    .gmos-fpu > polygon {
-      stroke: blue;
-      stroke-width: 0.8px;
-      fill: lightgray;
-      fill-opacity: 0.1;
-    }
-
-    .gmos-science-area polygon {
-      display: none;
-      stroke: purple;
-      fill: black;
-      fill-opacity: 1;
-    }
-
-    .gmos-science-ccd-offset polygon {
-      display: none;
-      stroke: yellow;
-      fill-opacity: 0.1;
-    }
-
-    .gmos-science-ccd polygon {
-      display: none;
-      stroke: cyan;
-      fill-opacity: 0.1;
-    }
-
-    .gmos-candidates-area {
-      display: none;
-      fill-opacity: 0;
-      stroke: lightgreen;
-      stroke-width: 0.4px;
-      stroke-dasharray: 1.5;
-
-      &.guide-star-candidate-target-visible {
-        display: inline;
-      }
-    }
-
-    .viz-svg-border {
-      stroke: yellow;
-      stroke-width: 2px;
-      vector-effect: non-scaling-stroke;
-      stroke-dasharray: 1;
-    }
-
-    .viz-svg-center {
-      display: none;
-      stroke: green;
-      stroke-width: 2px;
-      vector-effect: non-scaling-stroke;
-    }
-  }
-
-  .targets-overlay-svg {
-    pointer-events: none; // let aladin get pointer events
-    position: absolute;
-    z-index: 40;
-
-    rect,
-    circle,
-    line {
-      vector-effect: non-scaling-stroke;
-    }
-
-    .crosshair-target {
-      stroke: hsl(84deg 100% 29.2%);
-      stroke-width: 2px;
-    }
-
-    .circle-target {
-      display: none;
-      pointer-events: fill;
-    }
-
-    .science-target {
-      fill: hsl(240deg 100% 60.2%);
-      stroke: hsl(240deg 100% 60.2%);
-      stroke-width: 1px;
-      pointer-events: stroke;
-    }
-
-    .science-selected-target {
-      fill: none;
-      stroke: hsl(33deg 100% 50%);
-      stroke-width: 1px;
-    }
-
-    .arrow-between-targets {
-      stroke: darkblue;
-      stroke-width: 2px;
-      stroke-dasharray: 2;
-    }
-
-    .proper-motion-line-gs {
-      display: none;
-
-      &.guide-star-candidate-target-visible {
-        display: inline;
-      }
-    }
-
-    .overlay-all-targets {
-      isolation: inline;
-    }
-
-    .offset-position {
-      stroke-width: 1.5px;
-      stroke-dasharray: 0 1.5 0;
-      stroke-linejoin: bevel;
-      fill: none;
-      pointer-events: stroke;
-    }
-
-    .acquisition-offset-position {
-      // tomato color for acq offets
-      stroke: hsl(9deg 70% 63.9%);
-    }
-
-    .science-offset-position {
-      // dark turqoise for science offsets
-      stroke: hsl(181deg 100% 41% / 100%);
-    }
-
-    .guide-star-target,
-    .guide-star-candidate-target {
-      display: none;
-      stroke-width: 1px;
-      stroke: hsl(9deg 100% 83.9% / 80%);
-      fill: none;
-      pointer-events: fill;
-
-      &.guide-star-candidate-target-crowded {
-        stroke-width: 0.5px;
-        fill: hsl(9deg 100% 63.9% / 50%);
-      }
-
-      &.guide-star-candidate-target-visible {
-        display: inline;
-      }
-
-      &.guide-star-vignetted {
-        stroke: red;
-        stroke-width: 1px;
-        fill: hsl(9deg 100% 63.9% / 80%);
-      }
-
-      // fast -> green
-      &.guide-star-fast {
-        stroke-width: 1px;
-        stroke: hsl(120deg 60.7% 33.9%);
-        fill: var(--ags-fast-guide-speed-color);
-        fill-opacity: 0.7;
-      }
-
-      // medium -> yellow
-      &.guide-star-medium {
-        stroke-width: 1px;
-        stroke: hsl(43deg 74.4% 69%);
-        fill: var(--ags-medium-guide-speed-color);
-        fill-opacity: 0.8;
-      }
-
-      // slow -> orange
-      &.guide-star-slow {
-        stroke-width: 1px;
-        stroke: hsl(39deg 100% 50%);
-        fill: var(--ags-slow-guide-speed-color);
-        fill-opacity: 0.8;
-      }
-    }
-
-    .guide-star-target {
       display: inline;
     }
 
-    .guide-star-candidate-target-base {
-      display: none;
-      stroke: black;
-      stroke-width: 0.5px;
-      fill: yellow;
-      fill-opacity: 0.4;
-      isolation: initial;
+    .gmos-candidates-area {
+      display: inline;
     }
-  }
 
-  .viz-guides {
-    display: none;
   }
 
   .p-menu.p-component.explore-aladin-settings-menu {

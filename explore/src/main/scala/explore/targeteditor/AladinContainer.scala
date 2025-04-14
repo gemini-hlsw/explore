@@ -19,7 +19,6 @@ import explore.model.GlobalPreferences
 import explore.model.ObsConfiguration
 import explore.model.enums.Visible
 import explore.model.reusability.given
-import explore.visualization.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.Reusability.*
 import japgolly.scalajs.react.feature.ReactFragment
@@ -39,6 +38,7 @@ import lucuma.refined.*
 import lucuma.ui.aladin.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.visualization.*
 
 import java.time.Instant
 import java.time.LocalDate
@@ -132,7 +132,10 @@ object AladinContainer extends AladinCommon {
 
             GmosGeometry.gmosGeometry(
               baseCoords.value._1.value,
-              props.obsConf,
+              props.obsConf.flatMap(_.scienceOffsets),
+              props.obsConf.flatMap(_.acquisitionOffsets),
+              props.obsConf.flatMap(_.fallbackPosAngle),
+              props.obsConf.flatMap(_.configuration),
               PortDisposition.Side,
               props.selectedGuideStar,
               candidatesVisibilityCss
