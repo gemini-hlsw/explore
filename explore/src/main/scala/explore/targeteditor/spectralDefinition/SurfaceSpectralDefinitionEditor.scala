@@ -13,7 +13,6 @@ import explore.common.*
 import explore.model.AttachmentList
 import explore.model.enums.SedType
 import explore.model.enums.SurfaceSedType
-import explore.model.enums.SurfaceSedType.given
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -113,7 +112,7 @@ object SurfaceSpectralDefinitionEditor
       Surface,
       SpectralDefinitionSurfaceInput,
       SurfaceSpectralDefinitionEditor
-    ] {
+    ](SurfaceSedType) {
   override protected val currentType: SpectralDefinition[Surface] => Option[SedType[Surface]] =
     SurfaceSedType.fromSpectralDefinition
 

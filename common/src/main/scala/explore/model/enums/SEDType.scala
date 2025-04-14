@@ -49,7 +49,7 @@ sealed abstract class SedTypeEnum[T](
   import UnnormalizedSED.*
   import SpectralDefinition.*
 
-  private def toBandNormalized[T](
+  def toBandNormalized[T](
     sed: UnnormalizedSED
   ): SpectralDefinition[T] => SpectralDefinition[T] =
     _ match
@@ -116,7 +116,7 @@ sealed abstract class SedTypeEnum[T](
       case BandNormalized(Some(UserDefinedAttachment(_)), _) => UserDefinedType.some
       case BandNormalized(_, _)                              => none
 
-  protected val enumSedType: Enumerated[SedType[T]] =
+  given Enumerated[SedType[T]] =
     Enumerated
       .from[SedType[T]](
         StellarLibraryType,
@@ -133,23 +133,17 @@ sealed abstract class SedTypeEnum[T](
       )
       .withTag(_.name)
 
-  protected val displaySedType: Display[SedType[T]] = Display.byShortName(_.name)
+  given Display[SedType[T]] = Display.byShortName(_.name)
 }
 
 object IntegratedSedType
     extends SedTypeEnum[Integrated](
       summon[TaggedUnit[ErgsPerSecondCentimeter2Angstrom, FluxDensityContinuum[Integrated]]].unit
-    ) {
-  given Enumerated[SedType[Integrated]] = enumSedType
-  given Display[SedType[Integrated]]    = displaySedType
-}
+    )
 
 object SurfaceSedType
     extends SedTypeEnum[Surface](
       summon[
         TaggedUnit[ErgsPerSecondCentimeter2AngstromArcsec2, FluxDensityContinuum[Surface]]
       ].unit
-    ) {
-  given Enumerated[SedType[Surface]] = enumSedType
-  given Display[SedType[Surface]]    = displaySedType
-}
+    )
