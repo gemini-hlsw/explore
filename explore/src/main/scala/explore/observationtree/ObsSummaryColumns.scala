@@ -254,12 +254,11 @@ trait ObsSummaryColumns:
           v.value
             .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
             .flatMap(Target.sidereal.getOption)
-            .flatMap(t =>
+            .flatMap: t =>
               Target.Sidereal.integratedSpectralDefinition
                 .getOption(t)
-                .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t))
-            )
-            .map(_.shortName),
+                .map(_.shortName)
+                .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName)),
         ColumnNames(SEDColumnId)
       ).withCell(cell =>
         cell.value

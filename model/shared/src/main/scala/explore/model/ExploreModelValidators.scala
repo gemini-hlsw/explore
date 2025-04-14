@@ -31,6 +31,7 @@ import lucuma.core.optics.ValidSplitEpi
 import lucuma.core.optics.ValidWedge
 import lucuma.core.syntax.display.*
 import lucuma.core.syntax.string.*
+import lucuma.core.syntax.validation.*
 import lucuma.core.validation.*
 import lucuma.refined.*
 import monocle.Iso
