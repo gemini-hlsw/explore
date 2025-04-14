@@ -118,7 +118,7 @@ object ProgramConfigRequestsTile:
         .withTooltip(content = status.shortName, position = Tooltip.Position.Left)
 
     val component = ScalaFnComponent[Body](props =>
-      for {
+      for
         ctx     <- useContext(AppContext.ctx)
         columns <- useMemo(()): _ =>
                      List(
@@ -137,7 +137,7 @@ object ProgramConfigRequestsTile:
         rows    <-
           useMemo((props.configRequests, props.obs4ConfigRequests, props.targets)):
             (requests, obsMap, targets) => requests.map((_, r) => Row(r, obsMap, targets)).toList
-        table   <- useReactTableWithStateStore {
+        table   <- useReactTableWithStateStore:
                      import ctx.given
 
                      val rowSelection: View[RowSelection] =
@@ -148,6 +148,7 @@ object ProgramConfigRequestsTile:
                          columns,
                          rows,
                          getRowId = (row, _, _2) => RowId(row.request.id.toString),
+                         enableSorting = true,
                          enableMultiRowSelection = true,
                          state = PartialTableState(
                            rowSelection = rowSelection.get
@@ -160,12 +161,10 @@ object ProgramConfigRequestsTile:
                          columns
                        )
                      )
-                   }
-        _       <- useEffectOnMount(
+        _       <- useEffectOnMount:
                      props.tileState.zoom(TileState.table).set(table.some)
-                   )
         resizer <- useResizeDetector
-      } yield PrimeAutoHeightVirtualizedTable(
+      yield PrimeAutoHeightVirtualizedTable(
         table,
         _ => 32.toPx,
         striped = true,
