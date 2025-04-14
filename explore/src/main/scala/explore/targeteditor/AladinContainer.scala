@@ -28,7 +28,6 @@ import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.GuideSpeed
 import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
-import lucuma.core.geom.ShapeExpression
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
@@ -43,7 +42,6 @@ import lucuma.ui.syntax.all.given
 
 import java.time.Instant
 import java.time.LocalDate
-import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 case class AladinContainer(
@@ -98,28 +96,25 @@ object AladinContainer extends AladinCommon {
   }
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      // Base coordinates and science targets with pm correction if possible
-      .useStateBy(baseAndScience)
-      // View coordinates base coordinates with pm correction + user panning
-      .useStateBy: (p, baseCoordinates) =>
-        baseCoordinates.value._1.value.offsetBy(Angle.Angle0, p.options.viewOffset)
-      // Update coordinates if asterism or obsTime changes
-      .useEffectWithDepsBy((props, _, _) => (props.asterism, props.obsTime)):
-        (p, baseCoordinates, currentPos) =>
-          _ =>
-            val (base, science) = baseAndScience(p)
-            baseCoordinates.setState((base, science)) *>
-              currentPos.setState:
-                base.value.offsetBy(Angle.Angle0, p.options.viewOffset)
-      // Ref to the aladin component
-      .useState(none[Aladin])
-      // If view offset changes upstream to zero, redraw
-      .useEffectWithDepsBy((p, baseCoordinates, _, _) => (baseCoordinates, p.options.viewOffset)):
-        (_, baseCoordinates, viewCoordinates, aladinRef) =>
-          (_, offset) => {
-            val newCoords = baseCoordinates.value._1.value.offsetBy(Angle.Angle0, offset)
+    ScalaFnComponent[Props]: props =>
+      for {
+        // Base coordinates and science targets with pm correction if possible
+        baseCoords <- useState(baseAndScience(props))
+        // View coordinates base coordinates with pm correction + user panning
+        currentPos <-
+          useState(baseCoords.value._1.value.offsetBy(Angle.Angle0, props.options.viewOffset))
+        // Update coordinates if asterism or obsTime changes
+        _          <- useEffectWithDeps((props.asterism, props.obsTime)): _ =>
+                        val (base, science) = baseAndScience(props)
+                        baseCoords.setState((base, science)) *>
+                          currentPos.setState:
+                            base.value.offsetBy(Angle.Angle0, props.options.viewOffset)
+        // Ref to the aladin component
+        aladinRef  <- useState(none[Aladin])
+        // If view offset changes upstream to zero, redraw
+        _          <-
+          useEffectWithDeps((baseCoords, props.options.viewOffset)): (_, offset) =>
+            val newCoords = baseCoords.value._1.value.offsetBy(Angle.Angle0, offset)
             newCoords
               .map: coords =>
                 aladinRef.value
@@ -127,123 +122,132 @@ object AladinContainer extends AladinCommon {
                   .void
                   .when_(offset === Offset.Zero)
               .getOrEmpty
+        // Memoized svg for visualization shapes
+        shapes     <-
+          useMemo(
+            (baseCoords, props.obsConf, props.globalPreferences.agsOverlay, props.selectedGuideStar)
+          ) { _ =>
+            val candidatesVisibilityCss =
+              ExploreStyles.GuideStarCandidateVisible.when_(props.globalPreferences.agsOverlay)
+
+            GmosGeometry.gmosGeometry(
+              baseCoords.value._1.value,
+              props.obsConf,
+              PortDisposition.Side,
+              props.selectedGuideStar,
+              candidatesVisibilityCss
+            )
           }
-      // Memoized svg
-      .useMemoBy((p, allCoordinates, _, _) =>
-        (allCoordinates, p.obsConf, p.globalPreferences.agsOverlay, p.selectedGuideStar)
-      ): (_, _, _, _) =>
-        (
-          allCoordinates,
-          configuration,
-          agsOverlay,
-          gs
-        ) =>
-          val candidatesVisibilityCss =
-            ExploreStyles.GuideStarCandidateVisible.when_(agsOverlay)
-
-          GmosGeometry.gmosGeometry(
-            allCoordinates.value._1.value,
-            configuration,
-            PortDisposition.Side,
-            gs,
-            candidatesVisibilityCss
-          )
-      // resize detector
-      .useResizeDetector()
-      // memoized catalog targets with their proper motions corrected
-      .useMemoBy((props, allCoordinates, _, _, _, _) =>
-        (props.guideStarCandidates,
-         props.globalPreferences.showCatalog,
-         props.globalPreferences.fullScreen,
-         props.options.fovRA,
-         props.siderealDiscretizedObsTime,
-         props.obsConf.flatMap(_.configuration),
-         props.selectedGuideStar,
-         allCoordinates
-        )
-      ): (_, _, _, _, _, _) =>
-        (
-          candidates,
-          visible,
-          _,
-          fovRA,
-          siderealDiscretizedObsTime,
-          configuration,
-          selectedGS,
-          allCoordinates
-        ) =>
-          selectedGS.posAngle.foldMap: _ =>
-            val (baseCoordinates, scienceTargets) = allCoordinates.value
-
-            val fov = fovRA.toMicroarcseconds / 1e6
-
-            def calcSize(size: Double): Double = size.max(size * (225 / fov))
-
-            val candidatesVisibility =
-              ExploreStyles.GuideStarCandidateVisible.when_(visible)
-
-            candidates
-              // TODO This should be done in AGS proper
-              .filterNot(x => scienceTargets.contains(x.target.tracking.baseCoordinates))
-              .flatMap { g =>
-                val tracking           = g.target.tracking
-                val targetEpoch        = tracking.epoch.epochYear.round
-                // Approximate to the midddle of the year
-                val targetEpochInstant =
-                  LocalDate
-                    .of(targetEpoch.toInt, 6, 1)
-                    .atStartOfDay(Constants.UTC)
-                    .toInstant()
-
-                val candidateCss =
-                  if (configuration.isEmpty) Css.Empty else speedCss(g.guideSpeed)
-
-                (tracking.at(targetEpochInstant), tracking.at(siderealDiscretizedObsTime.obsTime))
-                  .mapN { (source, dest) =>
-                    if (candidates.length < 500) {
-                      List[SVGTarget](
-                        if (selectedGS.forall(_.target.id === g.target.id)) {
-                          SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
-                        } else {
-                          SVGTarget.GuideStarCandidateTarget(
-                            dest,
-                            candidateCss |+| candidatesVisibility,
-                            calcSize(3),
-                            g
-                          )
-                        },
-                        SVGTarget.LineTo(
-                          source,
-                          dest,
-                          ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+        // resize detector
+        resize     <- useResizeDetector
+        // memoized catalog targets with their proper motions corrected
+        candidates <- useMemo(
+                        (props.guideStarCandidates,
+                         props.globalPreferences.showCatalog,
+                         props.globalPreferences.fullScreen,
+                         props.options.fovRA,
+                         props.siderealDiscretizedObsTime,
+                         props.obsConf.flatMap(_.configuration),
+                         props.selectedGuideStar,
+                         baseCoords
                         )
-                      )
-                    } else {
-                      List[SVGTarget](
-                        if (selectedGS.forall(_.target.id === g.target.id)) {
-                          SVGTarget.GuideStarTarget(dest, candidateCss, calcSize(4), g)
-                        } else {
-                          SVGTarget.GuideStarCandidateTarget(
-                            dest,
-                            ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
-                            calcSize(2.7),
-                            g
-                          )
-                        }
-                      )
-                    }
-                  }
-              }
-              .flatten
+                      ):
+                        (
+                          candidates,
+                          visible,
+                          _,
+                          fovRA,
+                          siderealDiscretizedObsTime,
+                          configuration,
+                          selectedGS,
+                          baseCoords
+                        ) =>
+                          selectedGS.posAngle.foldMap: _ =>
+                            val (baseCoordinates, scienceTargets) = baseCoords.value
 
-      // Use fov from aladin
-      .useState(none[Fov])
-      .useEffectWithDepsBy((props, _, _, _, _, resize, _, _) =>
-        (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
-      ): (_, _, _, aladinRef, _, _, _, _) =>
-        (_, _, _) => aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
-      .render: (props, allCoordinates, currentPos, aladinRef, vizShapes, resize, candidates, fov) =>
-        val (baseCoordinates, scienceTargets) = allCoordinates.value
+                            val fov = fovRA.toMicroarcseconds / 1e6
+
+                            def calcSize(size: Double): Double = size.max(size * (225 / fov))
+
+                            val candidatesVisibility =
+                              ExploreStyles.GuideStarCandidateVisible.when_(visible)
+
+                            candidates
+                              // TODO This should be done in AGS proper
+                              .filterNot(x =>
+                                scienceTargets.contains(x.target.tracking.baseCoordinates)
+                              )
+                              .flatMap { g =>
+                                val tracking           = g.target.tracking
+                                val targetEpoch        = tracking.epoch.epochYear.round
+                                // Approximate to the midddle of the year
+                                val targetEpochInstant =
+                                  LocalDate
+                                    .of(targetEpoch.toInt, 6, 1)
+                                    .atStartOfDay(Constants.UTC)
+                                    .toInstant()
+
+                                val candidateCss =
+                                  if (configuration.isEmpty) Css.Empty else speedCss(g.guideSpeed)
+
+                                (tracking.at(targetEpochInstant),
+                                 tracking.at(siderealDiscretizedObsTime.obsTime)
+                                )
+                                  .mapN { (source, dest) =>
+                                    if (candidates.length < 500) {
+                                      List[SVGTarget](
+                                        if (selectedGS.forall(_.target.id === g.target.id)) {
+                                          SVGTarget.GuideStarTarget(dest,
+                                                                    candidateCss,
+                                                                    calcSize(4),
+                                                                    g
+                                          )
+                                        } else {
+                                          SVGTarget.GuideStarCandidateTarget(
+                                            dest,
+                                            candidateCss |+| candidatesVisibility,
+                                            calcSize(3),
+                                            g
+                                          )
+                                        },
+                                        SVGTarget.LineTo(
+                                          source,
+                                          dest,
+                                          ExploreStyles.PMGSCorrectionLine |+| candidatesVisibility
+                                        )
+                                      )
+                                    } else {
+                                      List[SVGTarget](
+                                        if (selectedGS.forall(_.target.id === g.target.id)) {
+                                          SVGTarget.GuideStarTarget(dest,
+                                                                    candidateCss,
+                                                                    calcSize(4),
+                                                                    g
+                                          )
+                                        } else {
+                                          SVGTarget.GuideStarCandidateTarget(
+                                            dest,
+                                            ExploreStyles.GuideStarCandidateCrowded |+| candidateCss |+| candidatesVisibility,
+                                            calcSize(2.7),
+                                            g
+                                          )
+                                        }
+                                      )
+                                    }
+                                  }
+                              }
+                              .flatten
+
+        // Use fov from aladin
+        fov        <- useState(none[Fov])
+        // Update aladin if coords change
+        _          <-
+          useEffectWithDeps(
+            (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
+          ): _ =>
+            aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
+      } yield {
+        val (baseCoordinates, scienceTargets) = baseCoords.value
 
         /**
          * Called when the position changes, i.e. aladin pans. We want to offset the visualization
@@ -369,7 +373,7 @@ object AladinContainer extends AladinCommon {
                     candidates ++ basePosition ++ sciencePositions ++ offsetTargets
                   )
                 ),
-              (resize.width, resize.height, fov.value, vizShapes.value.flatMap(NonEmptyMap.fromMap))
+              (resize.width, resize.height, fov.value, shapes.value.flatMap(NonEmptyMap.fromMap))
                 .mapN(
                   SVGVisualizationOverlay(
                     _,
@@ -403,4 +407,5 @@ object AladinContainer extends AladinCommon {
             )
           } else EmptyVdom
         )
+      }
 }
