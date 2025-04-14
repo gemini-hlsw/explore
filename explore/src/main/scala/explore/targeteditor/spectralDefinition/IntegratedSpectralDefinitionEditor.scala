@@ -12,7 +12,6 @@ import explore.*
 import explore.common.*
 import explore.model.AttachmentList
 import explore.model.enums.IntegratedSedType
-import explore.model.enums.IntegratedSedType.given
 import explore.model.enums.SedType
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -119,7 +118,7 @@ object IntegratedSpectralDefinitionEditor
       Integrated,
       SpectralDefinitionIntegratedInput,
       IntegratedSpectralDefinitionEditor
-    ] {
+    ](IntegratedSedType) {
 
   override protected val currentType
     : SpectralDefinition[Integrated] => Option[SedType[Integrated]] =

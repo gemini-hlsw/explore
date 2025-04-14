@@ -24,6 +24,7 @@ import explore.itc.renderRequiredForITCIcon
 import explore.model.AppContext
 import explore.model.display.given
 import explore.model.enums.SedType
+import explore.model.enums.SedTypeEnum
 import explore.model.syntax.all.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -72,11 +73,9 @@ private abstract class SpectralDefinitionEditorBuilder[
   T,
   S,
   Props <: SpectralDefinitionEditor[T, S]
-](using
-  sedTypeEnum:    Enumerated[SedType[T]],
-  sedTypeDisplay: Display[SedType[T]],
-  enumFDCUnits:   Enumerated[Units Of FluxDensityContinuum[T]]
-) {
+](sedTypeEnum: SedTypeEnum[T])(using enumFDCUnits: Enumerated[Units Of FluxDensityContinuum[T]]) {
+  import sedTypeEnum.given
+
   protected def brightnessEditor
     : (View[SortedMap[Band, BrightnessMeasure[T]]], View[IsExpanded], Boolean) => VdomNode
   protected def emissionLineEditor
@@ -106,8 +105,7 @@ private abstract class SpectralDefinitionEditorBuilder[
                 (!currentSedType.contains_(someSedType) ||
                   !props.currentCustomSedAttachmentId.contains_(attachmentId)) =>
             props.modSpectralDefinition:
-              SpectralDefinition.unnormalizedSED.replace:
-                UnnormalizedSED.UserDefinedAttachment(attachmentId).some
+              sedTypeEnum.toBandNormalized(UnnormalizedSED.UserDefinedAttachment(attachmentId))
           case (Some(sed @ SedType.Immediate(_, convert)), _) if !currentSedType.contains_(sed) =>
             props.modSpectralDefinition(convert)
           case (None, _) if currentSedType.isDefined                                            =>
@@ -307,43 +305,50 @@ private abstract class SpectralDefinitionEditorBuilder[
                 )
               )
             else EmptyVdom,
-            props.bandBrightnessesViewOpt
-              .map(bandBrightnessesView =>
-                <.div(ExploreStyles.BrightnessesTableWrapper)(
-                  brightnessEditor(bandBrightnessesView, props.brightnessExpanded, props.disabled)
-                )
-              ),
-            props.fluxDensityContinuumOpt
-              .map(fluxDensityContinuum =>
-                React.Fragment(
-                  FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
-                  <.div(
-                    ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
-                    FormInputTextView(
-                      id = "fluxValue".refined,
-                      value = fluxDensityContinuum.zoom(Measure.valueTagged),
-                      validFormat = InputValidSplitEpi
-                        .refinedBigDecimalWithScientificNotation[
-                          FluxDensityContinuumValueRefinement
-                        ]
-                        .andThen(FluxDensityContinuumValue.Value.reverse),
-                      changeAuditor = ChangeAuditor.posScientificNotation(),
-                      disabled = props.disabled
-                    ),
-                    EnumDropdownView(
-                      id = "Units".refined,
-                      value = fluxDensityContinuum.zoom(Measure.unitsTagged),
-                      disabled = props.disabled
+            if (isFullyDefined)
+              React.Fragment(
+                props.bandBrightnessesViewOpt
+                  .map(bandBrightnessesView =>
+                    <.div(ExploreStyles.BrightnessesTableWrapper)(
+                      brightnessEditor(bandBrightnessesView,
+                                       props.brightnessExpanded,
+                                       props.disabled
+                      )
+                    )
+                  ),
+                props.fluxDensityContinuumOpt
+                  .map(fluxDensityContinuum =>
+                    React.Fragment(
+                      FormLabel(htmlFor = "fluxValue".refined)("Continuum"),
+                      <.div(
+                        ExploreStyles.FlexContainer |+| LucumaPrimeStyles.FormField,
+                        FormInputTextView(
+                          id = "fluxValue".refined,
+                          value = fluxDensityContinuum.zoom(Measure.valueTagged),
+                          validFormat = InputValidSplitEpi
+                            .refinedBigDecimalWithScientificNotation[
+                              FluxDensityContinuumValueRefinement
+                            ]
+                            .andThen(FluxDensityContinuumValue.Value.reverse),
+                          changeAuditor = ChangeAuditor.posScientificNotation(),
+                          disabled = props.disabled
+                        ),
+                        EnumDropdownView(
+                          id = "Units".refined,
+                          value = fluxDensityContinuum.zoom(Measure.unitsTagged),
+                          disabled = props.disabled
+                        )
+                      )
+                    )
+                  ),
+                props.emissionLinesViewOpt
+                  .map(e =>
+                    <.div(ExploreStyles.BrightnessesTableWrapper)(
+                      emissionLineEditor(e, props.brightnessExpanded, props.disabled)
                     )
                   )
-                )
-              ),
-            props.emissionLinesViewOpt
-              .map(e =>
-                <.div(ExploreStyles.BrightnessesTableWrapper)(
-                  emissionLineEditor(e, props.brightnessExpanded, props.disabled)
-                )
               )
+            else EmptyVdom
           )
         )
 }
