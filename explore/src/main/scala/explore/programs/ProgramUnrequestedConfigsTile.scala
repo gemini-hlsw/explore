@@ -120,6 +120,7 @@ object ProgramUnrequestedConfigsTile:
                          columns,
                          rows,
                          getRowId = (row, _, _) => RowId(row.id),
+                         enableSorting = true,
                          enableMultiRowSelection = true,
                          state = PartialTableState(
                            rowSelection = rowSelection.get
