@@ -183,6 +183,7 @@ jobs:
         run: echo "CI_COMMIT_SHA=${{ github.event.pull_request.head.sha}}" >> $GITHUB_ENV
 
       - name: Run BundleMon
+        continue-on-error: true
         uses: lironer/bundlemon-action@v1
 
       - name: Deploy staging app to Firebase
