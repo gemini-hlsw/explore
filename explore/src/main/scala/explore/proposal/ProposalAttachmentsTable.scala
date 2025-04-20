@@ -34,7 +34,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
-import lucuma.react.primereact.Button
 import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
@@ -215,7 +214,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
           Enumerated[AttachmentType]
             .forPurpose(AttachmentPurpose.Proposal)
             .map(pat => pas.find(_.attachmentType === pat).toRight(pat))
-      .useReactTableBy: (props, _, _, action, urlMap, cols, rows) =>
+      .useReactTableBy: (_, _, _, action, urlMap, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -223,7 +222,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
           getRowId = (row, _, _) => RowId(row.attachmentType.tag),
           meta = TableMeta(action = action, urlMap = urlMap.get)
         )
-      .render { (props, _, client, action, _, _, _, table) =>
+      .render { (_, _, _, action, _, _, _, table) =>
         React.Fragment(
           PrimeTable(
             table,

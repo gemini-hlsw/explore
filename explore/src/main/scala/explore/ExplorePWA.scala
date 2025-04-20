@@ -10,7 +10,6 @@ import explore.events.ExploreEvent
 import fs2.Stream
 import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.callback.Callback
-import lucuma.ui.syntax.all.*
 import org.scalajs.dom
 import org.scalajs.dom.Request
 

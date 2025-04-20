@@ -13,7 +13,6 @@ import explore.model.ProgramUser
 import explore.model.display.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramUserRole
 import lucuma.core.model.Program
 import lucuma.core.syntax.display.*
@@ -21,7 +20,6 @@ import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.TooltipOptions
 import lucuma.schemas.ObservationDB.Types.AddProgramUserInput
 import lucuma.ui.primereact.*
 import queries.common.ProposalQueriesGQL.*

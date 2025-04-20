@@ -6,7 +6,6 @@ package explore.config.sequence
 import cats.syntax.all.*
 import lucuma.core.enums.ObserveClass
 import lucuma.core.enums.SequenceType
-import lucuma.core.math.SignalToNoise
 import lucuma.core.model.sequence.*
 import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.itc.SingleSN

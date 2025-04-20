@@ -6,6 +6,5 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import io.circe.*
-import org.http4s.syntax.all.*
 
 case class TracingConfig(key: String, serviceName: String) derives Eq, Decoder

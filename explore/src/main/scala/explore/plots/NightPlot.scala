@@ -136,7 +136,7 @@ object NightPlot:
       .withHooks[Props]
       .localValBy: props =>
         ObservingNight.fromSiteAndLocalDate(props.options.get.site, props.options.get.date)
-      .localValBy: (props, observingNight) =>
+      .localValBy: (props, _) =>
         val start = props.options.get.minInstant
         val end   = props.options.get.maxInstant
 
@@ -161,7 +161,7 @@ object NightPlot:
          props.obsDuration,
          props.excludeIntervals
         )
-      ): (_, observingNight, bounds, _) =>
+      ): (_, observingNight, _, _) =>
         (plotData, opts, chartAndMoonData, obsTime, obsDuration, excludeIntervals) =>
           val isSingleTargetPlot: Boolean = plotData.value.size === 1
 
@@ -444,7 +444,7 @@ object NightPlot:
           Callback:
             if size === 0 then chartOpt.value.foreach(_.showLoading(props.emptyMessage))
             else chartOpt.value.foreach(_.hideLoading())
-      .render: (props, _, _, chartAndMoonData, chartOptions, chartOpt) =>
+      .render: (_, _, _, chartAndMoonData, chartOptions, chartOpt) =>
         React.Fragment(
           Chart(chartOptions, allowUpdate = false, onCreate = c => chartOpt.set(c.some)),
           chartAndMoonData._2.map: moonData =>

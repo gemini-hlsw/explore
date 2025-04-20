@@ -10,7 +10,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.HelpIcon
 import explore.components.Tile
@@ -27,7 +26,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
-import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.core.model.Semester
 import lucuma.core.model.TimingWindow

@@ -65,8 +65,7 @@ object ProgramTable:
       ProgramQueries.deleteProgram[IO](pinf.get.id)
 
   private def undeleteProgram(pinf: View[ProgramInfo])(using
-    FetchClient[IO, ObservationDB],
-    Logger[IO]
+    FetchClient[IO, ObservationDB]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(false).toAsync >>
       ProgramQueries.undeleteProgram[IO](pinf.get.id)

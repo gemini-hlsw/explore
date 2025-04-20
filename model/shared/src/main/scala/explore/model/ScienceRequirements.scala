@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.enums.ExposureTimeModeType

@@ -17,7 +17,6 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.aladin.AladinFullScreenControl
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.components.ui.ExploreStyles
@@ -39,7 +38,6 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
-import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
@@ -273,7 +271,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Reset selection if pos angle changes except for manual selection changes
       .useEffectWithDepsBy((props, _, _, _, _, _, _) =>
         props.obsConf.flatMap(_.posAngleConstraint)
-      ): (props, ctx, candidates, _, _, _, _) =>
+      ): (props, _, candidates, _, _, _, _) =>
         _ =>
           (props.obsConf
             .flatMap(_.agsState)
@@ -454,7 +452,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               )
 
           val renderAgsOverlay: AsterismVisualOptions => VdomNode =
-            (t: AsterismVisualOptions) =>
+            (_: AsterismVisualOptions) =>
               if (props.needsAGS && props.globalPreferences.get.agsOverlay)
                 props.obsConf
                   .flatMap(_.agsState)

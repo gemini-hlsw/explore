@@ -10,7 +10,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.sequence.*
 import lucuma.react.SizePx
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*

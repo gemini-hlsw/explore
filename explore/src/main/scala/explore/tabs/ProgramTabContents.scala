@@ -43,7 +43,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
-import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.ui.react.given

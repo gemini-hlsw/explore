@@ -245,12 +245,8 @@ object GroupEditBody:
           props.warnings.map: nes =>
             <.div(
               ExploreStyles.GroupWarnings,
-              nes.toList.toTagMod(w =>
-                Message(id = s"${group.id}-${w.shortMsg}",
-                        text = w.longMsg,
-                        severity = Message.Severity.Warning
-                )
-              )
+              nes.toList
+                .toTagMod(using w => Message(id = s"${group.id}-${w.shortMsg}", text = w.longMsg, severity = Message.Severity.Warning))
             )
         )
       )

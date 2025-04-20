@@ -14,7 +14,6 @@ import fs2.text
 import japgolly.webapputil.indexeddb.*
 import lucuma.ags
 import lucuma.ags.GuideStarCandidate
-import lucuma.catalog.*
 import lucuma.catalog.votable.*
 import lucuma.core.geom.gmos.probeArm
 import lucuma.core.geom.jts.interpreter.given

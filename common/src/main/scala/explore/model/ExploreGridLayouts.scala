@@ -49,6 +49,7 @@ object ExploreGridLayouts:
           BreakpointName.md -> (v.copy(_3 =
             Layout(v._3.asList.map(_.copy(w = DefaultWidth.value, minW = TileMinWidth.value)))
           ): LayoutEntry)
+        case a                      => a
       }
 
   val DefaultLayouts: Map[GridLayoutSection, LayoutsMap] =

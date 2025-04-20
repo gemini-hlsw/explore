@@ -12,7 +12,6 @@ import crystal.react.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.utils.ToastCtx
 import fs2.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -37,7 +36,6 @@ import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.syntax.all.*
 import org.scalajs.dom.File as DOMFile
-import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
 import scala.concurrent.duration.*
@@ -69,12 +67,12 @@ object TargetImportPopup:
   private given Reusability[DOMFile] = Reusability.by(_.name)
   private val ColDef                 = ColumnDef[String]
 
-  private def importTargets[F[_]: Async: Logger](
+  private def importTargets[F[_]: Async](
     programId:   Program.Id,
     s:           Stream[F, Byte],
     stateUpdate: (State => State) => F[Unit],
     client:      Client[F]
-  )(using FetchClient[F, ObservationDB], ToastCtx[F]): Stream[F, Unit] =
+  )(using FetchClient[F, ObservationDB]): Stream[F, Unit] =
     s
       .through(text.utf8.decode)
       .through:
@@ -124,7 +122,7 @@ object TargetImportPopup:
             .whenA(files.nonEmpty)
       }
       // cols
-      .useMemoBy((_, _, _) => ()) { (props, ctx, _) => _ =>
+      .useMemoBy((_, _, _) => ()) { (_, _, _) => _ =>
         List(
           ColDef(
             ColumnId("Errors"),
@@ -136,10 +134,10 @@ object TargetImportPopup:
         )
       }
       // rows
-      .useMemoBy((_, _, state, _) => state.value.targetErrors.length) { (props, _, state, _) => _ =>
+      .useMemoBy((_, _, state, _) => state.value.targetErrors.length) { (_, _, state, _) => _ =>
         state.value.targetErrors
       }
-      .useReactTableBy((props, _, _, cols, rows) =>
+      .useReactTableBy((_, _, _, cols, rows) =>
         TableOptions(
           cols,
           rows,
@@ -149,7 +147,7 @@ object TargetImportPopup:
           )
         )
       )
-      .render { (props, _, state, _, rows, table) =>
+      .render { (props, _, state, _, _, table) =>
         Dialog(
           footer = Button(size = Button.Size.Small,
                           icon = Icons.Close,

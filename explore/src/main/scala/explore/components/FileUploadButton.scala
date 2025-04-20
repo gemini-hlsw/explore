@@ -93,15 +93,14 @@ object FileUploadButton
               )
             ).mini.compact
           ),
-          odbRestClient.value.map: client =>
-            <.input.withRef(ref)(
-              ExploreStyles.FileUpload,
-              ^.tpe      := "file",
-              ^.onChange ==> uploadFile,
-              ^.id       := s"attachment-upload-$id",
-              ^.name     := "file",
-              ^.accept   := props.attachmentType.accept,
-              ^.readOnly := props.readonly
-            )
+          <.input.withRef(ref)(
+            ExploreStyles.FileUpload,
+            ^.tpe      := "file",
+            ^.onChange ==> uploadFile,
+            ^.id       := s"attachment-upload-$id",
+            ^.name     := "file",
+            ^.accept   := props.attachmentType.accept,
+            ^.readOnly := props.readonly
+          )
         )
     )

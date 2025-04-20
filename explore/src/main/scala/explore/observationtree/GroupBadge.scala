@@ -44,7 +44,7 @@ object GroupBadge:
         .withTooltip(
           if (nes.length === 1) nes.head.shortMsg
           else
-            <.ul(nes.toList.toTagMod(w => <.li(w.shortMsg)))
+            <.ul(nes.toList.toTagMod(using w => <.li(w.shortMsg)))
         )
     )
 

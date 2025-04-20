@@ -10,7 +10,6 @@ import crystal.*
 import crystal.react.*
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.components.ui.ExploreStyles
@@ -18,7 +17,6 @@ import explore.model.*
 import explore.model.enums.Visible
 import explore.optics.ModelOptics
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.common.*

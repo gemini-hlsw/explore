@@ -8,7 +8,6 @@ import cats.Order
 import cats.implicits.*
 import coulomb.*
 import coulomb.policy.spire.standard.given
-import coulomb.units.si.prefixes.Nano
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.enums.ImagingCapabilities
 import lucuma.core.enums.FilterType

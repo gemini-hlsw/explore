@@ -313,7 +313,7 @@ object AsterismGroupObsList:
           val list        = obsIds.toList
           val div: TagMod = <.div(
             <.div(
-              list.toTagMod(id => <.div(id.show))
+              list.toTagMod(using id => <.div(id.show))
             )
           )
           div.some
@@ -359,8 +359,7 @@ object AsterismGroupObsList:
       def deleteObs(asterismGroup: AsterismGroup): Observation.Id => Callback = obsId =>
         props.undoableDeleteObs(
           obsId,
-          props.observations,
-          o => setFocused(props.focused), {
+          props.observations, {
             // After deletion change focus and keep expanded target
             val newObsIds = asterismGroup.obsIds - obsId
             val newFocus  =
@@ -438,6 +437,24 @@ object AsterismGroupObsList:
           val clickFocus =
             props.focused.withObsSet(obsIds).validateOrSetTarget(asterismGroup.targetIds)
 
+          def badgeItem(obs: Observation, idx: Int): TagMod =
+            props.renderObsBadgeItem(
+              ObsBadge.Layout.TargetsTab,
+              selectable = true,
+              highlightSelected = true,
+              forceHighlight = isObsSelected(obs.id),
+              linkToObsTab = false,
+              onSelect = obsId =>
+                setFocused(
+                  props.focused
+                    .withSingleObs(obsId)
+                    .validateOrSetTarget(obs.scienceTargetIds)
+                ),
+              onDelete = deleteObs(asterismGroup)(obs.id),
+              onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
+              ctx = ctx
+            )(obs, idx)
+
           <.div(
             provided.innerRef,
             provided.droppableProps,
@@ -461,26 +478,7 @@ object AsterismGroupObsList:
             )(
               csHeader,
               TagMod.when(props.expandedIds.get.contains(obsIds))(
-                TagMod(
-                  cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                    props.renderObsBadgeItem(
-                      ObsBadge.Layout.TargetsTab,
-                      selectable = true,
-                      highlightSelected = true,
-                      forceHighlight = isObsSelected(obs.id),
-                      linkToObsTab = false,
-                      onSelect = obsId =>
-                        setFocused(
-                          props.focused
-                            .withSingleObs(obsId)
-                            .validateOrSetTarget(obs.scienceTargetIds)
-                        ),
-                      onDelete = deleteObs(asterismGroup)(obs.id),
-                      onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
-                      ctx = ctx
-                    )(obs, idx)
-                  }
-                )
+                TagMod(cgObs.zipWithIndex.toTagMod(using badgeItem))
               ),
               provided.placeholder
             )
@@ -573,7 +571,7 @@ object AsterismGroupObsList:
                 .map(ag => (ag, getAsterismGroupNames(ag)))
                 .toList
                 .sortBy(_._2)
-                .toTagMod(t => renderAsterismGroup(t._1, t._2))
+                .toTagMod(using t => renderAsterismGroup(t._1, t._2))
             )
           )
         )

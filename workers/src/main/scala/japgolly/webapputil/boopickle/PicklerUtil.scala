@@ -5,7 +5,6 @@ package japgolly.webapputil.boopickle
 
 import boopickle.Decoder
 import boopickle.DefaultBasic.*
-import cats.Eq
 import cats.data.Ior
 import cats.data.NonEmptySet
 import cats.data.NonEmptyVector
@@ -36,7 +35,7 @@ object PicklerUtil {
 
   implicit final class AnyRefPicklerExt[A <: AnyRef](private val p: Pickler[A]) extends AnyVal {
 
-    def reuseByEq(implicit ev: Eq[A]) =
+    def reuseByEq =
       new PickleWithReuse[A](p, true)
 
     def reuseByRef =
@@ -127,7 +126,7 @@ object PicklerUtil {
         }
     }
 
-  def pickleEnum[V: Eq](nev: NonEmptyVector[V], firstValue: Int = 0): Pickler[V] =
+  def pickleEnum[V](nev: NonEmptyVector[V], firstValue: Int = 0): Pickler[V] =
     new Pickler[V] {
       private val fromInt                                          = nev.toVector
       private val toInt                                            = fromInt.iterator.zipWithIndex.toMap
@@ -208,7 +207,7 @@ object PicklerUtil {
   // def pickleNEA[A](implicit p: Pickler[ArraySeq[A]]): Pickler[NonEmptyArraySeq[A]] =
   //   pickleNonEmpty(_.whole)
 
-  def pickleNES[A: Eq](implicit p: Pickler[SortedSet[A]]): Pickler[NonEmptySet[A]] =
+  def pickleNES[A](implicit p: Pickler[SortedSet[A]]): Pickler[NonEmptySet[A]] =
     p.xmap(NonEmptySet.fromSetUnsafe)(_.toSortedSet)
 
   def pickleNEV[A](implicit p: Pickler[Vector[A]]): Pickler[NonEmptyVector[A]] =

@@ -43,15 +43,15 @@ extension (self: Window)
 extension [A](c: js.UndefOr[A => Callback])
   def toJs: js.UndefOr[js.Function1[A, Unit]] = c.map(x => (a: A) => x(a).runNow())
 
-extension [F[_]: MonadThrow](c: Logger[F])
+extension [F[_]](c: Logger[F])
   def pdebug[T](a: T): F[Unit] = c.debug(_root_.pprint.apply(a).render)
 
-  def pdebugCB[T](a: T)(using Effect.Dispatch[F]): Callback =
+  def pdebugCB[T](a: T)(using Effect.Dispatch[F], MonadThrow[F]): Callback =
     c.debug(_root_.pprint.apply(a).render).runAsyncAndForget
 
   def pinfo[T](a: T): F[Unit] = c.info(_root_.pprint.apply(a).render)
 
-  def pinfoCB[T](a: T)(using Effect.Dispatch[F]): Callback =
+  def pinfoCB[T](a: T)(using Effect.Dispatch[F], MonadThrow[F]): Callback =
     c.info(_root_.pprint.apply(a).render).runAsyncAndForget
 
 extension (vault: UserVault)

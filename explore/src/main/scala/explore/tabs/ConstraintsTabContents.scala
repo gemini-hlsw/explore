@@ -123,7 +123,7 @@ object ConstraintsTabContents extends TwoPanels:
               case _                                                 => IO.unit
             .runAsync
             .unless_(readonly)
-      .useGlobalHotkeysWithDepsBy((props, ctx, _, copyCallback, pasteCallback) =>
+      .useGlobalHotkeysWithDepsBy((_, _, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback)
       ): (props, ctx, _, _, _) =>
         (copyCallback, pasteCallback) =>

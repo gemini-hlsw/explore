@@ -13,7 +13,6 @@ import coulomb.conversion.ValueConversion
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
@@ -27,7 +26,6 @@ import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.Declination
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
-import lucuma.core.math.units.*
 import lucuma.core.model.ImageQuality
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.sequence.gmos.GmosCcdMode
@@ -193,8 +191,6 @@ object SpectroscopyModeRow {
 
   def filter: Getter[SpectroscopyModeRow, InstrumentConfig#Filter] =
     instrumentConfig.andThen(InstrumentConfig.filter)
-
-  import lucuma.core.math.units.*
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)

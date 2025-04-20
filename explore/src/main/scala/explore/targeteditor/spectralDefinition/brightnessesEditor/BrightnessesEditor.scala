@@ -4,7 +4,6 @@
 package explore.targeteditor.spectralDefinition.brightnessesEditor
 
 import crystal.react.*
-import explore.*
 import explore.utils.IsExpanded
 import lucuma.core.enums.Band
 import lucuma.core.math.BrightnessUnits.*

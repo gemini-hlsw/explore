@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ColumnSelectorInTitle
 import explore.components.HelpIcon
@@ -26,7 +25,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
-import lucuma.core.util.NewBoolean
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
@@ -140,8 +138,6 @@ object TargetSummaryTile:
     private type Props = Body
 
     private val ColDef = ColumnDef[TargetWithId]
-
-    private object IsImportOpen extends NewBoolean
 
     private val ColumnClasses: Map[ColumnId, Css] = Map(
       IdColumnId                 -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryId),
@@ -334,51 +330,48 @@ object TargetSummaryTile:
     private type Props = Title
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .render: (props, ctx) =>
-          def onTextChange(e: ReactEventFromInput): Callback =
-            val files = e.target.files.toList
-            // set value to null so we can reuse the import button
-            (Callback(e.target.value = null) *> props.filesToImport.set(files))
-              .when_(files.nonEmpty)
+      ScalaFnComponent[Props]: props =>
+        def onTextChange(e: ReactEventFromInput): Callback =
+          val files = e.target.files.toList
+          // set value to null so we can reuse the import button
+          (Callback(e.target.value = null) *> props.filesToImport.set(files))
+            .when_(files.nonEmpty)
 
-          React.Fragment(
-            <.div(ExploreStyles.TableSelectionToolbar)(
-              React.Fragment(
-                if (props.readonly) EmptyVdom
-                else
-                  HelpIcon("target/main/target-import.md".refined),
-                <.label(
-                  PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
-                  ^.htmlFor := "target-import",
-                  Icons.FileArrowUp
-                ),
-                <.input(
-                  ^.tpe     := "file",
-                  ^.onChange ==> onTextChange,
-                  ^.id      := "target-import",
-                  ^.name    := "file",
-                  ^.accept  := ".csv"
-                ),
-                TargetImportPopup(props.programId, props.filesToImport),
-                props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
-                  <.span(
-                    Button(
-                      size = Button.Size.Small,
-                      icon = Icons.CheckDouble,
-                      label = "All",
-                      onClick = toggleAllRowsSelected(true)
-                    ).compact,
-                    Button(
-                      size = Button.Size.Small,
-                      icon = Icons.SquareXMark,
-                      label = "None",
-                      onClick = props.focusTargetId(none) >> toggleAllRowsSelected(false)
-                    ).compact
-                  )
-              )
-            ),
-            ColumnSelectorInTitle(ColNames.toList, props.columnVisibility)
-          )
+        React.Fragment(
+          <.div(ExploreStyles.TableSelectionToolbar)(
+            React.Fragment(
+              if (props.readonly) EmptyVdom
+              else
+                HelpIcon("target/main/target-import.md".refined),
+              <.label(
+                PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
+                ^.htmlFor := "target-import",
+                Icons.FileArrowUp
+              ),
+              <.input(
+                ^.tpe     := "file",
+                ^.onChange ==> onTextChange,
+                ^.id      := "target-import",
+                ^.name    := "file",
+                ^.accept  := ".csv"
+              ),
+              TargetImportPopup(props.programId, props.filesToImport),
+              props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
+                <.span(
+                  Button(
+                    size = Button.Size.Small,
+                    icon = Icons.CheckDouble,
+                    label = "All",
+                    onClick = toggleAllRowsSelected(true)
+                  ).compact,
+                  Button(
+                    size = Button.Size.Small,
+                    icon = Icons.SquareXMark,
+                    label = "None",
+                    onClick = props.focusTargetId(none) >> toggleAllRowsSelected(false)
+                  ).compact
+                )
+            )
+          ),
+          ColumnSelectorInTitle(ColNames.toList, props.columnVisibility)
+        )

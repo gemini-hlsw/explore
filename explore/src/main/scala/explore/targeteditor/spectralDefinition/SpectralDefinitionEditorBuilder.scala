@@ -15,7 +15,6 @@ import eu.timepit.refined.auto.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string
-import explore.*
 import explore.common.*
 import explore.components.FileUploadButton
 import explore.components.HelpIcon
@@ -56,7 +55,6 @@ import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.primereact.DropdownOptional
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.SelectItem
-import lucuma.react.primereact.TooltipOptions
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.ChangeAuditor

@@ -56,7 +56,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.ui.input.*
 import lucuma.ui.primereact.*
@@ -92,7 +91,7 @@ object ProposalDetailsBody:
   private def sortedSplits(splits: List[PartnerSplit]): List[PartnerSplit] =
     splits
       .filter(_.percent.value > 0)
-      .sortBy(_.percent.value)(Ordering[Int].reverse)
+      .sortBy(_.percent.value)(using Ordering[Int].reverse)
 
   private def partnerSplits(splits: List[PartnerSplit]): VdomNode =
     splits match
@@ -103,7 +102,7 @@ object ProposalDetailsBody:
           " Partner time allocations are required."
         )
       case _              =>
-        val ps = sortedSplits(splits).toTagMod(ps => partnerSplit(ps))
+        val ps = sortedSplits(splits).toTagMod(using ps => partnerSplit(ps))
         <.div(ps, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
 
   private def partnerSplit(ps: PartnerSplit): TagMod =
@@ -253,7 +252,7 @@ object ProposalDetailsBody:
         case a if a.isEmpty => TagMod.empty
         case splits         =>
           sortedSplits(splits)
-            .toTagMod(ps => timeSplit(ps, total))
+            .toTagMod(using ps => timeSplit(ps, total))
       }
       <.div(tagmod, ExploreStyles.FlexContainer, ExploreStyles.FlexWrap)
 

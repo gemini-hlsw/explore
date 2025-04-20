@@ -6,7 +6,6 @@ package explore.model
 import cats.*
 import cats.effect.*
 import cats.syntax.all.*
-import clue.*
 import clue.js.*
 import clue.websocket.*
 import io.circe.Json
@@ -33,7 +32,6 @@ object GraphQLClients:
   def build[F[_]: Async: FetchJsBackend: WebSocketJsBackend: Parallel: Logger](
     odbURI:               Uri,
     prefsURI:             Uri,
-    itcURI:               Uri,
     ssoURI:               Uri,
     reconnectionStrategy: ReconnectionStrategy
   ): F[GraphQLClients[F]] =

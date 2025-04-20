@@ -45,5 +45,5 @@ object ProgramReferenceResolver:
                   s"Program reference ${props.programRef.label} does not exist.",
                   Severity.Error
                 ) >> ctx.pushPage(none).to[IO]
-      .render: (props, _, result) =>
+      .render: (_, _, result) =>
         result.value.renderPot(_ => EmptyVdom)

@@ -10,7 +10,6 @@ import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import clue.data.*
 import clue.data.syntax.*
-import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.BuildInfo
 import explore.components.ui.ExploreStyles

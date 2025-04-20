@@ -5,7 +5,6 @@ package explore.model.itc
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band

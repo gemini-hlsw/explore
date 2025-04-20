@@ -25,13 +25,13 @@ trait HoneycombOptions extends js.Object {
 
 object HoneycombOptions {
   def apply(
-    apiKey:              String,
-    serviceName:         String,
-    resourceAttributes:  js.UndefOr[ResourceAttributes] = js.undefined,
-    instrumentations:    js.UndefOr[js.Array[js.Object]] = js.undefined,
-    dataset:             js.UndefOr[String] = js.undefined,
-    localVisualizations: js.UndefOr[Boolean] = js.undefined,
-    debug:               js.UndefOr[Boolean] = js.undefined
+    apiKey:                   String,
+    serviceName:              String,
+    resourceAttributes:       js.UndefOr[ResourceAttributes] = js.undefined,
+    @unused instrumentations: js.UndefOr[js.Array[js.Object]] = js.undefined,
+    dataset:                  js.UndefOr[String] = js.undefined,
+    localVisualizations:      js.UndefOr[Boolean] = js.undefined,
+    debug:                    js.UndefOr[Boolean] = js.undefined
   ): HoneycombOptions =
     js.Dynamic
       .literal(apiKey = apiKey,
@@ -65,7 +65,7 @@ object ResourceAttributes {
 
 @js.native
 @JSImport("@honeycombio/opentelemetry-web", "HoneycombWebSDK")
-class HoneycombWebSDK(@unused options: js.UndefOr[HoneycombOptions] = js.undefined)
+class HoneycombWebSDK(@unused val options: js.UndefOr[HoneycombOptions] = js.undefined)
     extends js.Object {
   def start(): Unit    = js.native
   def shutdown(): Unit = js.native
@@ -81,7 +81,7 @@ object getWebAutoInstrumentations extends js.Object {
 
 @js.native
 @JSImport("@opentelemetry/instrumentation-user-interaction", "UserInteractionInstrumentation")
-class UserInteractionInstrumentation(@unused options: js.UndefOr[js.Object] = js.undefined)
+class UserInteractionInstrumentation(@unused val options: js.UndefOr[js.Object] = js.undefined)
     extends js.Object
 
 case class Observability(options: HoneycombOptions)

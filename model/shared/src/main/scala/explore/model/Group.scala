@@ -8,7 +8,6 @@ import cats.derived.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.syntax.all.*
 import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.util.TimeSpan

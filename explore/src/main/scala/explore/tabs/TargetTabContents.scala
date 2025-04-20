@@ -124,7 +124,7 @@ object TargetTabContents extends TwoPanels:
             case (Focused(None, None, _), SelectedPanel.Editor) =>
               selectedPanel.set(SelectedPanel.Summary)
             case _                                              => Callback.empty
-      .useStateViewBy((props, _, _) => List.empty[Target.Id])   // Selected targets on table
+      .useStateViewBy((_, _, _) => List.empty[Target.Id])       // Selected targets on table
       .useLayoutEffectWithDepsBy((props, _, _, _) => props.focused.target):
         // If a target enters edit mode, unselect the rows.
         (_, _, _, selTargetIds) => _.foldMap(_ => selTargetIds.set(List.empty))
@@ -346,9 +346,7 @@ object TargetTabContents extends TwoPanels:
            *   the edit.
            */
           def renderAsterismEditor(
-            resize:        UseResizeDetectorReturn,
-            idsToEdit:     ObsIdSet,
-            asterismGroup: AsterismGroup
+            idsToEdit: ObsIdSet
           ): List[Tile[?]] = {
             val getObsTime: ProgramSummaries => Option[Instant] = a =>
               for
@@ -516,7 +514,6 @@ object TargetTabContents extends TwoPanels:
                 props.programId,
                 idsToEdit,
                 props.obsAndTargets,
-                configuration,
                 obsTimeView,
                 obsDurationView,
                 ObsConfiguration(
@@ -573,10 +570,7 @@ object TargetTabContents extends TwoPanels:
           /**
            * Renders a single sidereal target editor without an obs context
            */
-          def renderSiderealTargetEditor(
-            resize:   UseResizeDetectorReturn,
-            targetId: Target.Id
-          ): Option[Tile[?]] = {
+          def renderSiderealTargetEditor(targetId: Target.Id): Option[Tile[?]] = {
             def onCloneTarget4Target(params: OnCloneParameters): Callback =
               // It's not perfect, but we'll go to whatever url has the "new" id. This means
               // that if the user went elsewhere before doing undo/redo, they will go back to the new target.
@@ -626,13 +620,13 @@ object TargetTabContents extends TwoPanels:
                 .flatMap(_.toOption)
                 .flatMap: obsIds =>
                   findAsterismGroup(obsIds, props.programSummaries.get.asterismGroups)
-                    .map: asterismGroup =>
-                      renderAsterismEditor(resize, obsIds, asterismGroup)
+                    .map: _ =>
+                      renderAsterismEditor(obsIds)
 
             val singleTargetEditorTile: Option[Tile[?]] = // Target selected on summary table
               props.focusedSummaryTargetId
                 .map:
-                  renderSiderealTargetEditor(resize, _)
+                  renderSiderealTargetEditor
                 .flatten
 
             val selectedTargetsTiles: List[Tile[?]] =

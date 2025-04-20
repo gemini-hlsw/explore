@@ -11,7 +11,6 @@ import crystal.react.*
 import crystal.react.given
 import crystal.react.hooks.*
 import explore.Icons
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen

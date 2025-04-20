@@ -109,7 +109,7 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
               .map(id => Map[RowId, Boolean](RowId(id.show) -> true))
               .getOrElse(Map.empty)
           table.setRowSelection(RowSelection(selection))
-      .render: (p, ctx, action, _, _, table) =>
+      .render: (p, _, action, _, _, table) =>
         <.div(
           ExploreStyles.FinderChartsAttachments,
           ^.onClick ==> { e =>

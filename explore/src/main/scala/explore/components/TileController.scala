@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -123,7 +122,7 @@ object TileController:
           val topTile =
             currentLayout.get.get(breakpoint.value).flatMap(_._3.asList.sortBy(_.y).headOption)
           (topTile, p.backButton)
-            .mapN((t, b) =>
+            .mapN((t, _) =>
               p.tiles
                 .map {
                   case ti if t.i === ti.id.value =>
@@ -144,7 +143,7 @@ object TileController:
           containerPadding = (Constants.GridRowPadding, 0),
           rowHeight = Constants.GridRowHeight,
           draggableHandle = s".${ExploreStyles.TileDraggable.htmlClass}",
-          onBreakpointChange = (bk: BreakpointName, i: Int) =>
+          onBreakpointChange = (bk: BreakpointName, _: Int) =>
             currentLayout
               .mod(_.breakpointProportionalWidth(breakpoint.value, bk))
               .when_(breakpoint.value =!= bk) *>

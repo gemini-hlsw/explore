@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import explore.Icons
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ColumnSelectorInTitle
 import explore.components.Tile

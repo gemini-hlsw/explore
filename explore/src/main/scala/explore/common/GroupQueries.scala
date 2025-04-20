@@ -45,9 +45,8 @@ object GroupQueries:
       .void
 
   def updateGroup[F[_]: Async](
-    groupId:        Group.Id,
-    set:            GroupPropertiesInput,
-    includeDeleted: Boolean = false
+    groupId: Group.Id,
+    set:     GroupPropertiesInput
   )(using
     FetchClient[F, ObservationDB]
   ): F[Unit] =
@@ -79,6 +78,5 @@ object GroupQueries:
   def undeleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
     updateGroup(
       groupId,
-      GroupPropertiesInput(existence = Existence.Present.assign),
-      includeDeleted = true
+      GroupPropertiesInput(existence = Existence.Present.assign)
     )

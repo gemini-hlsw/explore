@@ -114,7 +114,7 @@ object ExploreMain {
       } else IO.unit
 
     val reconnectionStrategy: ReconnectionStrategy =
-      (attempt, reason) =>
+      (attempt, _) =>
         // Increase the delay to get exponential backoff with a minimum of 1s and a max of 1m
         // TODO If it's a Not authorized, do not backoff, retry on constant period.
         FiniteDuration(

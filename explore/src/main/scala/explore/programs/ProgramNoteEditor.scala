@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
 import eu.timepit.refined.cats.given
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.Aligner
 import explore.components.MarkdownEditor
 import explore.components.ui.ExploreStyles
@@ -20,7 +19,6 @@ import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*

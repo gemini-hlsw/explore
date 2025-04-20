@@ -6,7 +6,6 @@ package explore.model
 import cats.Eq
 import crystal.react.*
 import explore.model.enums.AgsState
-import japgolly.scalajs.react.ReactCats.*
 import lucuma.core.model.PosAngleConstraint
 
 case class PAProperties(

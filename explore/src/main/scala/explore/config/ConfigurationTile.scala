@@ -58,7 +58,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
 import queries.schemas.itc.syntax.*
 
@@ -81,7 +80,7 @@ object ConfigurationTile:
     sequenceChanged:          Callback,
     readonly:                 Boolean,
     units:                    WavelengthUnits
-  )(using Logger[IO]) =
+  ) =
     Tile(
       ObsTabTileIds.ConfigurationId.id,
       "Configuration",

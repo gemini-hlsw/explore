@@ -43,7 +43,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*

@@ -9,7 +9,6 @@ import crystal.react.hooks.*
 import explore.model.Proposal
 import fs2.Stream
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ProposalReference
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps

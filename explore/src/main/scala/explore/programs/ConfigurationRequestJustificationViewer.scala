@@ -18,7 +18,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.markdown.ReactMarkdown
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Dialog
-import lucuma.react.primereact.DialogPosition
 import lucuma.ui.primereact.*
 
 case class ConfigurationRequestJustificationViewer(

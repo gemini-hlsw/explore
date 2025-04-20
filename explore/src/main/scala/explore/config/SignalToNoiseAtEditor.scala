@@ -3,9 +3,7 @@
 
 package explore.config
 
-import cats.syntax.all.*
 import crystal.react.View
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
@@ -19,7 +17,6 @@ import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor

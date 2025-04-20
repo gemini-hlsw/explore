@@ -5,7 +5,6 @@ package explore.undo
 
 import cats.Applicative
 import cats.syntax.all.*
-import crystal.*
 import crystal.react.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA

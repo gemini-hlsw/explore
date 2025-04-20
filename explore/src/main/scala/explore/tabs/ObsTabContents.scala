@@ -144,7 +144,7 @@ object ObsTabContents extends TwoPanels:
               case _                                           => IO.unit
             .runAsync
             .unless_(readonly)
-      .useGlobalHotkeysWithDepsBy((props, _, _, _, _, _, _, copyCallback, pasteCallback) =>
+      .useGlobalHotkeysWithDepsBy((_, _, _, _, _, _, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback)
       ): (props, ctx, _, _, _, _, _, _, _) =>
         (copyCallback, pasteCallback) =>

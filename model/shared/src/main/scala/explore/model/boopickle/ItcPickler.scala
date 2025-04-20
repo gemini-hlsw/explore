@@ -7,9 +7,6 @@ import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import cats.implicits.*
 import coulomb.Quantity
-import eu.timepit.refined.types.numeric.PosBigDecimal
-import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.itc.ItcAsterismGraphResults
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcGraphRequestParams
@@ -31,12 +28,9 @@ import lucuma.core.math.BrightnessUnits.LineFlux
 import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.LineFluxValue
 import lucuma.core.math.LineWidthValue
-import lucuma.core.math.RadialVelocity
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.dimensional.*
-import lucuma.core.math.units.*
 import lucuma.core.model.EmissionLine
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.SourceProfile
@@ -45,7 +39,6 @@ import lucuma.core.model.UnnormalizedSED
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Gid
 import lucuma.core.util.Of
-import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.itc.Error
 import lucuma.itc.IntegrationTime

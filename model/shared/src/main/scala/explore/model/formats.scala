@@ -9,7 +9,6 @@ import eu.timepit.refined.collection.NonEmpty
 import explore.optics.all.*
 import lucuma.core.math.*
 import lucuma.core.math.HourAngle.HMS
-import lucuma.core.math.units.*
 import lucuma.core.model.IntCentiPercent
 import lucuma.core.optics.*
 import lucuma.core.syntax.string.*
@@ -110,7 +109,7 @@ trait formats:
       s =>
         parsers.durationHM
           .parseAll(s)
-          .leftMap { e =>
+          .leftMap { _ =>
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
@@ -122,7 +121,7 @@ trait formats:
       s =>
         parsers.durationHMS
           .parseAll(s)
-          .leftMap { e =>
+          .leftMap { _ =>
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
@@ -141,7 +140,7 @@ trait formats:
       s =>
         parsers.durationMs
           .parseAll(s)
-          .leftMap { e =>
+          .leftMap { _ =>
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
@@ -153,7 +152,7 @@ trait formats:
       s =>
         parsers.durationS
           .parseAll(s)
-          .leftMap { e =>
+          .leftMap { _ =>
             "Duration parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,

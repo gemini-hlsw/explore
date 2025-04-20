@@ -18,7 +18,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.components.TimeSpanView

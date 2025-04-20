@@ -6,7 +6,6 @@ package explore.model
 import cats.*
 import cats.effect.*
 import cats.syntax.all.*
-import clue.*
 import clue.js.*
 import clue.websocket.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -70,7 +69,6 @@ case class AppContext[F[_]](
   def obsIdRoutingLink(
     programId: Program.Id,
     obsId:     Observation.Id,
-    via:       SetRouteVia = SetRouteVia.HistoryPush,
     contents:  Option[VdomNode] = None
   ): VdomNode =
     val finalContents: VdomNode = contents.getOrElse(obsId.show)
@@ -106,7 +104,6 @@ object AppContext:
           .build[F](
             config.odbURI,
             config.preferencesDBURI,
-            config.itcURI,
             config.sso.uri,
             reconnectionStrategy
           )

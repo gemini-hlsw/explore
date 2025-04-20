@@ -10,7 +10,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.cats.given
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
@@ -20,7 +19,6 @@ import explore.model.ProgramUser
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.data.EmailAddress
-import lucuma.core.data.EmailPred
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
@@ -35,7 +33,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.*
-import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data
 
 case class InviteUserPopup(
   programUser:        View[ProgramUser],

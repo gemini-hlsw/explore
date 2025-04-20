@@ -10,7 +10,6 @@ import explore.model.itc.ItcExposureTime
 import explore.model.itc.math.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.SignalToNoise
 import lucuma.itc.ItcCcd
 import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
