@@ -50,7 +50,7 @@ case class CallForProposal(
       _.fold(
         None,
         nonPartnerDeadline,
-        p =>
+        _ =>
           partners
             .find(p => piPartner.flatMap(_.partnerOption).exists(_ === p.partner))
             .flatMap(_.submissionDeadline)

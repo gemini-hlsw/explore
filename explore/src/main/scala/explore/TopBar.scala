@@ -44,7 +44,6 @@ import lucuma.ui.enums.Theme
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import org.scalajs.dom
 import org.scalajs.dom.window
 import typings.loglevel.mod.LogLevelDesc
 

@@ -46,7 +46,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
-import lucuma.react.primereact.Button
 import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*

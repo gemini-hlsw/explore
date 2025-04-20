@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -20,15 +19,12 @@ import explore.model.Constants.MissingInfoMsg
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTileIds
 import explore.model.Observation
-import explore.model.TargetList
 import explore.model.itc.*
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
-import lucuma.core.math.LineWidthValue
 import lucuma.core.math.Wavelength
-import lucuma.core.model.EmissionLine
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.User
@@ -47,7 +43,6 @@ object ItcTile:
   def apply(
     uid:               Option[User.Id],
     oid:               Observation.Id,
-    allTargets:        TargetList,
     itcGraphQuerier:   ItcGraphQuerier,
     itcGraphResults:   Pot[ItcAsterismGraphResults],
     globalPreferences: View[GlobalPreferences]

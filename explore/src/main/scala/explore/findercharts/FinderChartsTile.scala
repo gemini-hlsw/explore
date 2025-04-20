@@ -10,7 +10,6 @@ import crystal.react.hooks.*
 import crystal.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.attachments.*
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.FinderChartPreferences
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -165,7 +164,7 @@ object FinderChartsTile:
 
           <.div(
             ExploreStyles.FinderChartsBackground,
-            ^.onClick ==> { e =>
+            ^.onClick ==> { _ =>
               props.chartSelector.set(ChartSelector.Closed).when_(props.chartSelector.get.value)
             }
           )(

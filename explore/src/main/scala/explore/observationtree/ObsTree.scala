@@ -47,14 +47,12 @@ import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.PrimeStyles
 import lucuma.react.primereact.Tree
 import lucuma.react.primereact.Tree.Node
-import lucuma.typed.primereact.treeTreeMod.TreeNodeTemplateOptions
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 import monocle.Iso
 import org.scalajs.dom
-import org.scalajs.dom.Element
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js
@@ -292,8 +290,7 @@ object ObsTree:
             .showToastCB(s"Deleted group ${groupId.shortName}")
 
         def renderItem(
-          nodeValue: Either[Observation, Group],
-          options:   TreeNodeTemplateOptions
+          nodeValue: Either[Observation, Group]
         ): VdomNode =
           nodeValue match
             case Left(obs)    =>
@@ -465,7 +462,7 @@ object ObsTree:
               <.div(^.overflow := "auto")(
                 Tree(
                   props.treeNodes,
-                  renderItem,
+                  (n, _) => renderItem(n),
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set,
                   dragDropScope = if (props.readonly) js.undefined else "obs-tree",
@@ -473,7 +470,7 @@ object ObsTree:
                 ),
                 Tree(
                   props.systemTreeNodes,
-                  renderItem,
+                  (n, _) => renderItem(n),
                   expandedKeys = expandedGroups.get,
                   onToggle = expandedGroups.set
                 )

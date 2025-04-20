@@ -16,7 +16,6 @@ import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Dialog
-import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.Divider
 import lucuma.react.primereact.Message
 import lucuma.refined.*

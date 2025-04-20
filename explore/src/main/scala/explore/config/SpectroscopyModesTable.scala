@@ -13,12 +13,9 @@ import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.NonNegInt
-import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.UserPreferencesQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -41,6 +38,7 @@ import explore.model.reusability.given
 import explore.modes.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseRef
+import japgolly.scalajs.react.util.OptionLike.optionInstance
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.math.*
@@ -184,7 +182,6 @@ private object SpectroscopyModesTable:
   // I think these are valid Orderings because they should be consistent with ==
   // They could probably be Orders, as well, but only Ordering is actually needed here.
   private given Ordering[InstrumentConfig#Filter] = Ordering.by(_.toString)
-  private given Ordering[TimeSpan | Unit]         = Ordering.by(_.toOption)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -285,7 +282,7 @@ private object SpectroscopyModesTable:
       column(TimeColumnId, _.totalItcTime)
         .withHeader(progressingCellHeader("Time"))
         .withCell: cell =>
-          cell.table.options.meta.map: meta =>
+          cell.table.options.meta.map: _ =>
             itcCell(cell.row.original.result, TimeOrSNColumn.Time)
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
@@ -293,7 +290,7 @@ private object SpectroscopyModesTable:
       column(SNColumnId, _.totalSN)
         .withHeader(progressingCellHeader("S/N"))
         .withCell: cell =>
-          cell.table.options.meta.map: meta =>
+          cell.table.options.meta.map: _ =>
             itcCell(cell.row.original.result, TimeOrSNColumn.SN)
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
@@ -397,7 +394,7 @@ private object SpectroscopyModesTable:
 
                          fixedModeRows.map: row =>
                            val result = (s.wavelength, asterism, s.exposureTimeMode).mapN {
-                             (w, a, exposureMode) =>
+                             (_, _, exposureMode) =>
                                itcResults.forRow(
                                  exposureMode,
                                  constraints,
@@ -573,7 +570,6 @@ private object SpectroscopyModesTable:
                                   scrollTo.setState(ScrollTo.NoScroll)
                               )
       } yield
-        import ItcQueryProblem.*
 
         def toggleRow(
           row: SpectroscopyModeRowWithResult
@@ -584,12 +580,14 @@ private object SpectroscopyModesTable:
             InstrumentConfigAndItcResult(row.entry.instrument, row.result.toOption)
 
         def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
-          selectedIndex.value.whenDefined(idx =>
-            Button(
-              clazz = ExploreStyles.ScrollButton |+| style,
-              severity = Button.Severity.Secondary,
-              onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
-            ).withMods(content).compact.when(indexCondition(idx))
+          selectedIndex.value.whenDefined(
+            using
+            idx =>
+              Button(
+                clazz = ExploreStyles.ScrollButton |+| style,
+                severity = Button.Severity.Secondary,
+                onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
+              ).withMods(content).compact.when(indexCondition(idx))
           )
 
         def renderName(name: Option[NonEmptyString]): String =

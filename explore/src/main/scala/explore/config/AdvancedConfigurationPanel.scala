@@ -48,7 +48,6 @@ import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.IconSize
 import lucuma.react.floatingui.syntax.*
@@ -225,7 +224,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     reqsWavelength: Option[Wavelength],
     row:            SpectroscopyModeRow
   ): Option[ModeData] =
-    reqsWavelength.flatMap(cw =>
+    reqsWavelength.flatMap(_ =>
       (mode, row.instrument) match
         case (m: ObservingMode.GmosNorthLongSlit,
               InstrumentConfig.GmosNorthSpectroscopy(rGrating, rFpu, rFilter, _)
@@ -324,8 +323,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     changeAuditor: ChangeAuditor,
     label:         TagMod,
     originalValue: A,
-    units:         Option[String] = None,
-    disabled:      Boolean = false
+    units:         Option[String],
+    disabled:      Boolean
   ) =
     val isCustom    = value.get =!= originalValue
     val customAddon =
@@ -349,8 +348,8 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     changeAuditor: ChangeAuditor,
     label:         TagMod,
     originalValue: A,
-    units:         Option[String] = None,
-    disabled:      Boolean = false
+    units:         Option[String],
+    disabled:      Boolean
   ) =
     val originalText = validFormat.reverseGet(originalValue.some)
     val customAddon  = value.get.map(_ => customized(originalText, value.set(none)))

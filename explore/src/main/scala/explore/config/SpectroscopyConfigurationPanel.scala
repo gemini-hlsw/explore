@@ -7,7 +7,6 @@ import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
@@ -22,7 +21,6 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor

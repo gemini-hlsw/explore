@@ -22,6 +22,7 @@ import org.scalajs.dom.IDBFactory
 
 import java.time.Duration
 import java.time.Instant
+import scala.annotation.unused
 
 import scalajs.js
 import scalajs.js.JSConverters.*
@@ -61,12 +62,14 @@ sealed trait Cache[F[_]](using F: Sync[F]):
  * `NoCache` is used when, for some reason, a cache could not be initialized.
  */
 case class NoCache[F[_]]()(using F: Sync[F]) extends Cache[F]:
+  @unused
   override def get[I: Pickler, O: Pickler](
     name:    CacheName,
     version: CacheVersion,
     key:     I
   ): F[Option[O]] = none.pure[F]
 
+  @unused
   override def eval[I: Pickler, O: Pickler](computation: Cacheable[F, I, O]): I => F[O] =
     computation.invoke
 

@@ -9,7 +9,6 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.display.given
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceBand
 import lucuma.core.syntax.all.*
 import lucuma.react.common.*

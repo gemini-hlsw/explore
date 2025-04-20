@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import cats.syntax.all.*
 import explore.model.ProgramTime
 import io.circe.Decoder
 import lucuma.core.model.sequence.ExecutionDigest

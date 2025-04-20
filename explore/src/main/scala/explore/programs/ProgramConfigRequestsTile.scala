@@ -147,7 +147,7 @@ object ProgramConfigRequestsTile:
                        TableOptions(
                          columns,
                          rows,
-                         getRowId = (row, _, _2) => RowId(row.request.id.toString),
+                         getRowId = (row, _, _) => RowId(row.request.id.toString),
                          enableSorting = true,
                          enableMultiRowSelection = true,
                          state = PartialTableState(

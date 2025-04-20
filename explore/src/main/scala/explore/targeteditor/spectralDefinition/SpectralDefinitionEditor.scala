@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.*
 import explore.common.*
 import explore.model.Attachment
 import explore.model.AttachmentList

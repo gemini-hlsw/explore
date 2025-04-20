@@ -4,7 +4,6 @@
 package explore.targeteditor.spectralDefinition.emissionLineEditor
 
 import crystal.react.*
-import explore.*
 import explore.utils.IsExpanded
 import lucuma.core.math.Wavelength
 import lucuma.core.model.EmissionLine

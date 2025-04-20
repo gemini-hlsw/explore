@@ -5,7 +5,6 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
-import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.Input
 import clue.data.syntax.*

@@ -13,13 +13,10 @@ import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
 import lucuma.core.enums.GuideProbe
 import lucuma.core.geom.Area
-import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Epoch
-import lucuma.core.math.Offset
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
-import lucuma.core.math.RadialVelocity
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
 

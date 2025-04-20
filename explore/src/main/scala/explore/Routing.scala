@@ -323,7 +323,7 @@ object Routing:
 
       val configuration =
         rules
-          .notFound(redirectToPage(NoProgramPage)(SetRouteVia.HistoryPush))
+          .notFound(redirectToPage(NoProgramPage)(using SetRouteVia.HistoryPush))
           .renderWithP((_, resolution) => ExploreLayout(resolution))
       // .logToConsole
 

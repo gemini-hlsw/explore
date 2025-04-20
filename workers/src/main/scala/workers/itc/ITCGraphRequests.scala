@@ -31,7 +31,7 @@ object ITCGraphRequests:
     SignificantFiguresInput(6.refined, 6.refined, 3.refined)
 
   // Wrapper method to match the call in ItcServer.scala
-  def queryItc[F[_]: Concurrent: Parallel: Logger](
+  def queryItc[F[_]: Concurrent: Logger: ItcClient](
     exposureTimeMode:    ExposureTimeMode,
     constraints:         ConstraintSet,
     targets:             NonEmptyList[ItcTarget],
@@ -39,7 +39,7 @@ object ITCGraphRequests:
     mode:                InstrumentConfig,
     cache:               Cache[F],
     callback:            ItcAsterismGraphResults => F[Unit]
-  )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] =
+  ): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
       case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>

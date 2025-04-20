@@ -36,7 +36,7 @@ object AsterismGroupObsListActions {
         .andThen(Observation.scienceTargetIds)
 
     Action(getter = traversal.getAll.andThen(_.head), setter = traversal.replace)(
-      onSet = (observationList, asterismIds) =>
+      onSet = (_, asterismIds) =>
         // destination ids may not be found when undoing
         val filteredTargetIds: SortedSet[Target.Id] = asterismIds.filter(allTargets.contains)
         val destGroup: ObsIdSet                     = destIds ++ draggedIds

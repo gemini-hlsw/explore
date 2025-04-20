@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.*
-import io.circe.generic.semiauto
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.enums.AttachmentPurpose

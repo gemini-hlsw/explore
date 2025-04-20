@@ -15,7 +15,6 @@ import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
 import lucuma.core.math.BoundedInterval
-import lucuma.core.math.Coordinates
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
@@ -256,5 +255,5 @@ object SemesterPlot:
                 .map(_.asInstanceOf[SeriesOptionsType])
                 .toJSArray
             )
-      .render: (props, _, chartOpt, options) =>
+      .render: (_, _, chartOpt, options) =>
         Chart(options, onCreate = c => chartOpt.setState(c.some))

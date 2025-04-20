@@ -13,7 +13,6 @@ import explore.model.AppContext
 import explore.model.ImagingConfigurationOptions
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
-import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget

@@ -20,7 +20,6 @@ import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.primereact.*

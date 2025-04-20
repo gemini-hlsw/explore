@@ -176,7 +176,7 @@ object SchedulingWindowsTile:
         .useEffectOnMountBy: (p, _, _, _, table) =>
           val cb = (a: RowSelection) => table.setRowSelection(a)
           p.setTileState(TileState(cb))
-        .render: (props, resize, dbActive, rows, table) =>
+        .render: (props, resize, _, _, table) =>
           val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
 
           val selectedTW: Option[View[TimingWindow]] =

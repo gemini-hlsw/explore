@@ -276,7 +276,7 @@ object UserPreferencesQueries:
               ).map(i => AsterismVisualOptions.Default.copy(i))
             }
         }
-        .handleError { e =>
+        .handleError { _ =>
           AsterismVisualOptions.Default
         }
     }

@@ -28,7 +28,6 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
 import lucuma.core.util.NewBoolean
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button

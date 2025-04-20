@@ -6,7 +6,6 @@ package explore.model
 import cats.Eq
 import cats.data.NonEmptySet
 import cats.derived.*
-import cats.syntax.all.*
 import lucuma.core.model.Group
 import lucuma.core.model.ObservationReference
 import lucuma.core.model.Program

@@ -47,7 +47,7 @@ object TargetCloneSelector:
         (props, _, _) => (info, scope) =>
           props.toCloneFor.set(info.cloneForScope(scope))
       }
-      .render: (props, info, editScope) =>
+      .render: (_, info, editScope) =>
         if (info.noMessages) <.div()
         else
           <.div(

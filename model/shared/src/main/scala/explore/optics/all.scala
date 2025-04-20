@@ -5,7 +5,6 @@ package explore.optics
 
 import cats.syntax.all.*
 import monocle.*
-import monocle.function.At
 import monocle.function.At.atMap
 
 object all extends ModelOptics {

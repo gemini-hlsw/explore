@@ -27,7 +27,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.Program
 import lucuma.core.model.StandardUser
-import lucuma.core.model.User
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button

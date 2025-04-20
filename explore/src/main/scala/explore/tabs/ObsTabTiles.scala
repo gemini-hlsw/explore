@@ -50,7 +50,6 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.ags.AgsAnalysis
 import lucuma.core.conditions.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.ProgramType
@@ -424,7 +423,6 @@ object ObsTabTiles:
             ItcTile(
               props.vault.userId,
               props.obsId,
-              props.obsTargets,
               itcGraphQuerier,
               itcGraphResults.value,
               props.globalPreferences
@@ -512,7 +510,6 @@ object ObsTabTiles:
               props.programId,
               ObsIdSet.one(props.obsId),
               props.obsAndTargets,
-              basicConfiguration,
               obsTimeView,
               obsDurationView,
               obsConf,

@@ -73,7 +73,7 @@ final case class SafePickler[A](
     }
 
   def encode(a: A): BinaryData = {
-    val bb = PickleImpl.intoBytes(a)(implicitly, picklerCombined)
+    val bb = PickleImpl.intoBytes(a)(using summon[PickleState], picklerCombined)
     BinaryData.unsafeFromByteBuffer(bb)
   }
 
@@ -87,7 +87,7 @@ final case class SafePickler[A](
     }
 
   def decode(bin: BinaryData): SafePickler.Result[A] =
-    wrapRead(UnpickleImpl(picklerCombined).fromBytes(bin.unsafeByteBuffer))
+    wrapRead(UnpickleImpl(using picklerCombined).fromBytes(bin.unsafeByteBuffer))
 
   def decodeOrThrow(bin: BinaryData): A =
     decode(bin).fold(throw _, identity)

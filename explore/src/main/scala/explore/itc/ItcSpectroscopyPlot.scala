@@ -70,7 +70,7 @@ object ItcSpectroscopyPlot {
       }
 
     val tooltipFormatter: TooltipFormatterCallbackFunction =
-      (ctx: TooltipFormatterContextObject, t: Tooltip) =>
+      (ctx: TooltipFormatterContextObject, _: Tooltip) =>
         val x        = rounded(ctx.x)
         val y        = rounded(ctx.y)
         val measUnit = if (graph.graphType === GraphType.SignalGraph) " 𝐞⁻" else ""

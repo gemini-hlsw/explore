@@ -13,7 +13,6 @@ import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.model.Visit
-import lucuma.ui.table.ColumnSize.*
 
 case class GmosNorthSequenceTable(
   visits:     List[Visit.GmosNorth],

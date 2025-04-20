@@ -128,7 +128,7 @@ object UserPreferencesContent:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useStateView[IsActive](IsActive(false))
-    .useEffectResultWithDepsBy((_, ctx, isActive) => isActive.get): (props, ctx, _) =>
+    .useEffectResultWithDepsBy((_, _, isActive) => isActive.get): (props, ctx, _) =>
       _ =>
         import ctx.given
         UserQuery[IO].query(modParams = props.vault.addAuthorizationHeaderTo).raiseGraphQLErrors

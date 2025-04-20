@@ -37,7 +37,7 @@ trait AsterismModifier:
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     targetWithOptId:  TargetWithOptId,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+  )(using FetchClient[IO, ObservationDB], ToastCtx[IO]): IO[Unit] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         oTargetId

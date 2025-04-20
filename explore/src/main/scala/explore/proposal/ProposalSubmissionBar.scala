@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles

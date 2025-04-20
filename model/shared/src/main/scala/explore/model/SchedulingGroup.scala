@@ -5,7 +5,6 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
-import io.circe.generic.semiauto.*
 import lucuma.core.model.TimingWindow
 import monocle.Focus
 

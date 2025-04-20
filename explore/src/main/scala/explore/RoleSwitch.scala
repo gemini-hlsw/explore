@@ -10,7 +10,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
 import lucuma.core.model.StandardUser
-import lucuma.core.model.User
 import lucuma.react.common.*
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*

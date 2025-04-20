@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.syntax.all.*
-import eu.timepit.refined.*
 import explore.model.Page.*
 import explore.model.enums.AppTab
 import lucuma.core.model.Program

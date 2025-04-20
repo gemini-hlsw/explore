@@ -23,8 +23,8 @@ import lucuma.core.model.Program
 import lucuma.react.beautifuldnd.*
 import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
-import org.typelevel.log4cats.Logger
 
+import scala.annotation.unused
 import scala.collection.immutable.SortedSet
 
 trait ViewCommon {
@@ -101,13 +101,12 @@ trait ViewCommon {
     ExploreStyles.DraggingOver.when(isDragging)
 
   def undoableDeleteObs(
-    obsId:        Observation.Id,
-    observations: UndoSetter[ObservationList],
-    afterUndo:    Observation.Id => Callback,
-    afterDelete:  Callback
+    obsId:             Observation.Id,
+    observations:      UndoSetter[ObservationList],
+    @unused afterUndo: Observation.Id => Callback,
+    afterDelete:       Callback
   )(using
     FetchClient[IO, ObservationDB],
-    Logger[IO],
     ToastCtx[IO]
   ): Callback =
     ObsActions

@@ -4,7 +4,6 @@
 package explore
 
 import cats.effect.IO
-import crystal.Pot
 import crystal.react.hooks.*
 import crystal.syntax.*
 import explore.model.AppContext

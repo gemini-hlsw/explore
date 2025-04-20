@@ -7,7 +7,6 @@ import cats.Order
 import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.Pot
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons

@@ -28,7 +28,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.LayeredIcon
 import lucuma.react.fa.TextLayer
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.TooltipOptions
 import lucuma.react.primereact.hooks.all.*
 import lucuma.react.primereact.tooltip.*
 import lucuma.ui.components.TimeSpanView
@@ -147,7 +146,7 @@ object ObsBadge:
               ExploreStyles.ObsBadgeId,
               scienceBandButton.when(props.showScienceBand),
               identifier,
-              props.cloneCB.whenDefined(_ => duplicateButton),
+              props.cloneCB.whenDefined(using _ => duplicateButton),
               deleteButton
             )
           )
@@ -180,7 +179,7 @@ object ObsBadge:
         else
           <.div(
             obs.workflow.validationErrors
-              .toTagMod(ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(<.li(_)))))
+              .toTagMod(using ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(using i => <.li(i)))))
           )
 
       val validationIcon = <.span(Icons.ErrorIcon).withTooltip(content = validationTooltip)

@@ -125,7 +125,7 @@ object ProgramsPopup:
       val programInfoViewListOpt: Option[List[View[ProgramInfo]]] =
         programInfosViewOpt.map:
           _.toListOfViews
-            .map(_._2.withOnMod(pi => newProgramId.set(none)))
+            .map(_._2.withOnMod(_ => newProgramId.set(none)))
             .filter(vpi => showDeleted.get.value || !vpi.get.deleted)
             .sortBy(_.get.id)
 

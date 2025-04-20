@@ -183,7 +183,7 @@ object SchedulingGroupObsList:
     .withHooks[Props]
     .useContext(AppContext.ctx)
     .useState(false) // dragging
-    .useEffectWithDepsBy((props, ctx, _) => props.schedulingGroups): (props, ctx, _) =>
+    .useEffectWithDepsBy((props, _, _) => props.schedulingGroups): (props, ctx, _) =>
       schedulingGroups =>
         val expandedIds: View[SortedSet[ObsIdSet]] = props.expandedIds
 
@@ -228,7 +228,7 @@ object SchedulingGroupObsList:
                   .get(obsIds.head)
                   .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
               else
-                <.div(obsIds.toList.toTagMod(id => <.div(id.show))).some
+                <.div(obsIds.toList.toTagMod(using id => <.div(id.show))).some
             )
             .getOrElse(<.span("ERROR"))
         )
@@ -302,6 +302,19 @@ object SchedulingGroupObsList:
             <.span(ExploreStyles.ObsCount, s"${obsIds.size} Obs")
           )
 
+          def badgeItem(obs: Observation, idx: Int): TagMod =
+            props.renderObsBadgeItem(
+              ObsBadge.Layout.ConstraintsTab,
+              selectable = true,
+              highlightSelected = true,
+              forceHighlight = isObsSelected(obs.id),
+              linkToObsTab = false,
+              onSelect = setObs,
+              onDelete = deleteObs(obs.id),
+              onCtrlClick = id => handleCtrlClick(id, obsIds),
+              ctx = ctx
+            )(obs, idx)
+
           <.div(
             provided.innerRef,
             provided.droppableProps,
@@ -318,19 +331,7 @@ object SchedulingGroupObsList:
             )(^.cursor.pointer, ^.onClick --> setObsSet(obsIds.some))(
               csHeader,
               TagMod.when(props.expandedIds.get.contains(obsIds))(
-                cgObs.zipWithIndex.toTagMod { case (obs, idx) =>
-                  props.renderObsBadgeItem(
-                    ObsBadge.Layout.ConstraintsTab,
-                    selectable = true,
-                    highlightSelected = true,
-                    forceHighlight = isObsSelected(obs.id),
-                    linkToObsTab = false,
-                    onSelect = setObs,
-                    onDelete = deleteObs(obs.id),
-                    onCtrlClick = id => handleCtrlClick(id, obsIds),
-                    ctx = ctx
-                  )(obs, idx)
-                }
+                cgObs.zipWithIndex.toTagMod(using badgeItem)
               ),
               provided.placeholder
             )

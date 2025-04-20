@@ -45,5 +45,5 @@ object ProposalReferenceResolver:
                   s"Proposal reference ${props.proposalRef.label} does not exist",
                   Severity.Error
                 ) >> ctx.pushPage(none).to[IO]
-      .render: (props, _, result) =>
+      .render: (_, _, result) =>
         result.value.renderPot(_ => EmptyVdom)

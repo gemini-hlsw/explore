@@ -32,7 +32,6 @@ import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.util.DefaultEffects.Sync as DefaultS
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators

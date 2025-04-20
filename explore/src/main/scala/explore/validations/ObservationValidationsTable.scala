@@ -171,7 +171,7 @@ object ObservationValidationsTableBody {
       p.tileState.set(ObservationValidationsTableTileState(cb))
     )
     .useResizeDetector()
-    .render((props, _, rows, _, table, resizer) =>
+    .render((_, _, rows, _, table, resizer) =>
       PrimeAutoHeightVirtualizedTable(
         table,
         _ => 32.toPx,
@@ -222,7 +222,9 @@ object ObservationValidationsTableBody {
 
     private def categoryCell(validations: ObservationValidation*) =
       <.span(validations.map(_.code.name).mkString(", "))
-        .withTooltip(content = <.div(validations.toList.toTagMod(ov => <.div(ov.code.description))))
+        .withTooltip(
+          content = <.div(validations.toList.toTagMod(using ov => <.div(ov.code.description)))
+        )
 
     def category(isExpanded: Boolean): VdomElement =
       fold(

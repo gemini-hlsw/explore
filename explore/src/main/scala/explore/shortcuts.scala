@@ -8,8 +8,6 @@ import lucuma.core.util.NewType
 import lucuma.react.hotkeys.HotkeysCallback
 import lucuma.react.hotkeys.HotkeysEvent
 
-import scala.scalajs.js.JSConverters.*
-
 object Shortcut extends NewType[List[String]] {
   inline def apply(key: String): Shortcut = Shortcut(
     List(key.toLowerCase.trim.filterNot(_.isWhitespace))

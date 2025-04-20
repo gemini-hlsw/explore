@@ -4,7 +4,6 @@
 package explore.targeteditor.spectralDefinition
 
 import cats.effect.IO
-import clue.data.Input
 import clue.data.syntax.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString

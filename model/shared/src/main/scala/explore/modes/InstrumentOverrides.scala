@@ -7,7 +7,6 @@ import cats.Eq
 import cats.derived.*
 import lucuma.core.enums.GmosRoi
 import lucuma.core.math.Wavelength
-import lucuma.core.math.units.*
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Enumerated
 import lucuma.schemas.model.CentralWavelength

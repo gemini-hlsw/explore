@@ -5,7 +5,6 @@ package explore.events
 
 import boopickle.DefaultBasic.*
 import boopickle.Pickler
-import explore.model.boopickle.CatalogPicklers.given
 import explore.model.boopickle.CommonPicklers
 import lucuma.core.enums.Site
 import lucuma.core.math.Coordinates

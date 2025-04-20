@@ -43,7 +43,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.ColumnVisibility
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.model.BasicConfiguration
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Focus
@@ -61,7 +60,6 @@ object AsterismEditorTile:
     programId:          Program.Id,
     obsIds:             ObsIdSet,
     obsAndTargets:      UndoSetter[ObservationsAndTargets],
-    configuration:      Option[BasicConfiguration],
     obsTime:            View[Option[Instant]],
     obsDuration:        View[Option[TimeSpan]],
     obsConf:            ObsConfiguration,
