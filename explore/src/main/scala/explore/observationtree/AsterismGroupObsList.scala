@@ -359,8 +359,7 @@ object AsterismGroupObsList:
       def deleteObs(asterismGroup: AsterismGroup): Observation.Id => Callback = obsId =>
         props.undoableDeleteObs(
           obsId,
-          props.observations,
-          _ => setFocused(props.focused), {
+          props.observations, {
             // After deletion change focus and keep expanded target
             val newObsIds = asterismGroup.obsIds - obsId
             val newFocus  =

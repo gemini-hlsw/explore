@@ -235,8 +235,7 @@ object ConstraintGroupObsList:
           .foldMap: obsIds =>
             props.undoableDeleteObs(
               obsId,
-              props.observations,
-              o => setObsSet(obsIds.add(o).some), {
+              props.observations, {
                 // After deletion keep expanded group
                 val newObsIds = obsIds - obsId
                 val expansion =

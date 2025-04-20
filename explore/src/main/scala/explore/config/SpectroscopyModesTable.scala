@@ -282,16 +282,14 @@ private object SpectroscopyModesTable:
       column(TimeColumnId, _.totalItcTime)
         .withHeader(progressingCellHeader("Time"))
         .withCell: cell =>
-          cell.table.options.meta.map: _ =>
-            itcCell(cell.row.original.result, TimeOrSNColumn.Time)
+          itcCell(cell.row.original.result, TimeOrSNColumn.Time)
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
         .sortable,
       column(SNColumnId, _.totalSN)
         .withHeader(progressingCellHeader("S/N"))
         .withCell: cell =>
-          cell.table.options.meta.map: _ =>
-            itcCell(cell.row.original.result, TimeOrSNColumn.SN)
+          itcCell(cell.row.original.result, TimeOrSNColumn.SN)
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
         .sortable,
