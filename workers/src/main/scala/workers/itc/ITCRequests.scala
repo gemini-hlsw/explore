@@ -42,7 +42,7 @@ object ITCRequests:
       ga.parTraverse(a => s.permit.use(_ => f(a)))
 
   // Wrapper method to match the call in ItcServer.scala
-  def queryItc[F[_]: {Concurrent, Parallel, Logger as L}](
+  def queryItc[F[_]: Concurrent: Parallel: Logger](
     exposureTimeMode:    ExposureTimeMode,
     constraints:         ConstraintSet,
     asterism:            NonEmptyList[ItcTarget],
@@ -73,7 +73,9 @@ object ITCRequests:
     def doRequest(
       params: ItcRequestParams
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
-      L.info(s"ITC: Request for mode: ${params.mode}, exposureTimeMode: ${params.exposureTimeMode} and target count: ${params.asterism.length}") *>
+      Logger[F].info(
+        s"ITC: Request for mode: ${params.mode}, exposureTimeMode: ${params.exposureTimeMode} and target count: ${params.asterism.length}"
+      ) *>
         params.mode.toItcClientMode
           .traverse: mode =>
             ItcClient[F]
