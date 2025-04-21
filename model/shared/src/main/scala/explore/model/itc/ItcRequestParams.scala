@@ -4,7 +4,7 @@
 package explore.model.itc
 
 import cats.data.*
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Timestamp
@@ -14,7 +14,7 @@ case class ItcRequestParams(
   constraints:         ConstraintSet,
   asterism:            NonEmptyList[ItcTarget],
   customSedTimestamps: List[Timestamp],
-  mode:                InstrumentConfig
+  mode:                ItcInstrumentConfig
 )
 
 case class ItcGraphRequestParams(
@@ -22,5 +22,5 @@ case class ItcGraphRequestParams(
   constraints:         ConstraintSet,
   asterism:            NonEmptyList[ItcTarget],
   customSedTimestamps: List[Timestamp],
-  mode:                InstrumentConfig
+  mode:                ItcInstrumentConfig
 )

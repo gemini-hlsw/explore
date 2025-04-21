@@ -18,7 +18,7 @@ import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.reusability.given
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import japgolly.scalajs.react.Reusability
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Target
@@ -62,7 +62,7 @@ case class ItcGraphQuerier(
   val exposureTimeMode: Option[ExposureTimeMode] =
     spectroscopyRequirements.flatMap(_.exposureTimeMode)
 
-  private val instrumentConfig: Option[InstrumentConfig] =
+  private val instrumentConfig: Option[ItcInstrumentConfig] =
     finalConfig.map(_.instrumentConfig)
 
   val itcTargets: Option[NonEmptyList[ItcTarget]] =

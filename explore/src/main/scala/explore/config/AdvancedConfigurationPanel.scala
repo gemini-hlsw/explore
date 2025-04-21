@@ -27,7 +27,7 @@ import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import explore.modes.ModeCommonWavelengths
 import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
@@ -227,11 +227,11 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
     reqsWavelength.flatMap(_ =>
       (mode, row.instrument) match
         case (m: ObservingMode.GmosNorthLongSlit,
-              InstrumentConfig.GmosNorthSpectroscopy(rGrating, rFpu, rFilter, _)
+              ItcInstrumentConfig.GmosNorthSpectroscopy(rGrating, rFpu, rFilter, _)
             ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
         case (m: ObservingMode.GmosSouthLongSlit,
-              InstrumentConfig.GmosSouthSpectroscopy(rGrating, rFpu, rFilter, _)
+              ItcInstrumentConfig.GmosSouthSpectroscopy(rGrating, rFpu, rFilter, _)
             ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
         case _ => none

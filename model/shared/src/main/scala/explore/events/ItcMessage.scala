@@ -11,7 +11,7 @@ import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
 import explore.model.itc.ItcTargetProblem
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
@@ -42,7 +42,7 @@ object ItcMessage extends ItcPicklers:
     constraints:         ConstraintSet,
     asterism:            NonEmptyList[ItcTarget],
     customSedTimestamps: List[Timestamp],
-    modes:               InstrumentConfig
+    modes:               ItcInstrumentConfig
   ) extends Request:
     type ResponseType = ItcAsterismGraphResults
 

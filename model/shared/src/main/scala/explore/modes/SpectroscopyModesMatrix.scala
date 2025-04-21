@@ -80,7 +80,7 @@ type SlitWidth = SlitWidth.Type
 
 case class SpectroscopyModeRow(
   id:         Option[Int], // we number the modes for the UI
-  instrument: InstrumentConfig,
+  instrument: ItcInstrumentConfig,
   config:     NonEmptyString,
   focalPlane: FocalPlane,
   capability: Option[SpectroscopyCapabilities],
@@ -125,11 +125,13 @@ case class SpectroscopyModeRow(
     imageQuality: ImageQuality.Preset
   ): Option[SpectroscopyModeRow] =
     intervalCenter(wavelength).flatMap: cw =>
-      val instrumentConfig: Option[InstrumentConfig] =
+      val instrumentConfig: Option[ItcInstrumentConfig] =
         instrument.instrument match
           case Instrument.GmosNorth | Instrument.GmosSouth | Instrument.Flamingos2 =>
+            // In case we have no particular overrides, set ccd with binning calculated
+            // from the target
             instrument match
-              case i @ InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, None) =>
+              case i @ ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, None) =>
                 i.copy(modeOverrides =
                   InstrumentOverrides
                     .GmosSpectroscopy(
@@ -140,7 +142,7 @@ case class SpectroscopyModeRow(
                     )
                     .some
                 ).some
-              case i @ InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, None) =>
+              case i @ ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, None) =>
                 i.copy(modeOverrides =
                   InstrumentOverrides
                     .GmosSpectroscopy(
@@ -151,9 +153,9 @@ case class SpectroscopyModeRow(
                     )
                     .some
                 ).some
-              case i @ InstrumentConfig.Flamingos2Spectroscopy(_, _, _)              =>
+              case i @ ItcInstrumentConfig.Flamingos2Spectroscopy(_, _, _)              =>
                 i.some
-              case i                                                                 =>
+              case i                                                                    =>
                 i.some
           case _                                                                   => none
 
@@ -165,11 +167,11 @@ object SpectroscopyModeRow {
 
   given ValueConversion[NonNegBigDecimal, BigDecimal] = _.value
 
-  val instrumentConfig: Lens[SpectroscopyModeRow, InstrumentConfig] =
+  val instrumentConfig: Lens[SpectroscopyModeRow, ItcInstrumentConfig] =
     GenLens[SpectroscopyModeRow](_.instrument)
 
   val instrument: Getter[SpectroscopyModeRow, Instrument] =
-    instrumentConfig.andThen(InstrumentConfig.instrument)
+    instrumentConfig.andThen(ItcInstrumentConfig.instrument)
 
   val config: Lens[SpectroscopyModeRow, NonEmptyString] =
     GenLens[SpectroscopyModeRow](_.config)
@@ -183,39 +185,39 @@ object SpectroscopyModeRow {
   val slitLength: Lens[SpectroscopyModeRow, SlitLength] =
     GenLens[SpectroscopyModeRow](_.slitLength)
 
-  def grating: Getter[SpectroscopyModeRow, InstrumentConfig#Grating] =
-    instrumentConfig.andThen(InstrumentConfig.grating)
+  def grating: Getter[SpectroscopyModeRow, ItcInstrumentConfig#Grating] =
+    instrumentConfig.andThen(ItcInstrumentConfig.grating)
 
   def fpu: Lens[SpectroscopyModeRow, FocalPlane] =
     GenLens[SpectroscopyModeRow](_.focalPlane)
 
-  def filter: Getter[SpectroscopyModeRow, InstrumentConfig#Filter] =
-    instrumentConfig.andThen(InstrumentConfig.filter)
+  def filter: Getter[SpectroscopyModeRow, ItcInstrumentConfig#Filter] =
+    instrumentConfig.andThen(ItcInstrumentConfig.filter)
 
   def resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)
 
   // decoders for instruments are used locally as they are not lawful
-  private given Decoder[InstrumentConfig.GmosNorthSpectroscopy] = c =>
+  private given Decoder[ItcInstrumentConfig.GmosNorthSpectroscopy] = c =>
     for {
       grating <- c.downField("grating").as[GmosNorthGrating]
       fpu     <- c.downField("fpu").as[GmosNorthFpu]
       filter  <- c.downField("filter").as[Option[GmosNorthFilter]]
-    } yield InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, none)
+    } yield ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, none)
 
-  private given Decoder[InstrumentConfig.GmosSouthSpectroscopy] = c =>
+  private given Decoder[ItcInstrumentConfig.GmosSouthSpectroscopy] = c =>
     for {
       grating <- c.downField("grating").as[GmosSouthGrating]
       fpu     <- c.downField("fpu").as[GmosSouthFpu]
       filter  <- c.downField("filter").as[Option[GmosSouthFilter]]
-    } yield InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, none)
+    } yield ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, none)
 
-  private given Decoder[InstrumentConfig.Flamingos2Spectroscopy] = c =>
+  private given Decoder[ItcInstrumentConfig.Flamingos2Spectroscopy] = c =>
     for {
       disperser <- c.downField("disperser").as[F2Disperser]
       filter    <- c.downField("filter").as[F2Filter]
       fpu       <- c.downField("fpu").as[F2Fpu]
-    } yield InstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)
+    } yield ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)
 
   given Decoder[SpectroscopyModeRow] = c =>
     for {
@@ -230,9 +232,9 @@ object SpectroscopyModeRow {
       resolution <- c.downField("resolution").as[PosInt]
       slitWidth  <- c.downField("slitWidth").as[Angle]
       slitLength <- c.downField("slitLength").as[Angle]
-      gmosNorth  <- c.downField("gmosNorth").as[Option[InstrumentConfig.GmosNorthSpectroscopy]]
-      gmosSouth  <- c.downField("gmosSouth").as[Option[InstrumentConfig.GmosSouthSpectroscopy]]
-      flamingos2 <- c.downField("flamingos2").as[Option[InstrumentConfig.Flamingos2Spectroscopy]]
+      gmosNorth  <- c.downField("gmosNorth").as[Option[ItcInstrumentConfig.GmosNorthSpectroscopy]]
+      gmosSouth  <- c.downField("gmosSouth").as[Option[ItcInstrumentConfig.GmosSouthSpectroscopy]]
+      flamingos2 <- c.downField("flamingos2").as[Option[ItcInstrumentConfig.Flamingos2Spectroscopy]]
     } yield gmosNorth
       .orElse(gmosSouth)
       .orElse(flamingos2)

@@ -14,8 +14,8 @@ import explore.model.enums.GroupWarning
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
-import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
+import explore.modes.ItcInstrumentConfig
 import explore.undo.UndoStacks
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.ReactCats.*
@@ -110,7 +110,7 @@ object reusability:
   given Reusability[ObsConfiguration]                   = Reusability.byEq
   given Reusability[Existence]                          = Reusability.byEq
   given Reusability[ItcExposureTime]                    = Reusability.byEq
-  given Reusability[InstrumentConfig]                   = Reusability.byEq
+  given Reusability[ItcInstrumentConfig]                = Reusability.byEq
   given Reusability[CentralWavelength]                  = Reusability.byEq
   given Reusability[ObjectTracking]                     = Reusability.byEq
   given Reusability[Asterism]                           = Reusability.byEq[Asterism]

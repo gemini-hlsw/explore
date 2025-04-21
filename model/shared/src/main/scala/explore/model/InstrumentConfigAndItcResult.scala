@@ -9,28 +9,28 @@ import cats.derived.*
 import cats.syntax.all.*
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTargetProblem
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import lucuma.core.enums.Instrument
 import lucuma.schemas.model.BasicConfiguration
 import monocle.Focus
 import monocle.Lens
 
 case class InstrumentConfigAndItcResult(
-  instrumentConfig: InstrumentConfig,
+  instrumentConfig: ItcInstrumentConfig,
   itcResult:        Option[EitherNec[ItcTargetProblem, ItcResult]]
 ) derives Eq:
   def instrument: Instrument = instrumentConfig.instrument
 
   def toBasicConfiguration: Option[BasicConfiguration] =
     instrumentConfig match
-      case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
+      case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
         BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cw).some
-      case InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
+      case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
         BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cw).some
-      case _                                                                            => none
+      case _                                                                               => none
 
 object InstrumentConfigAndItcResult:
-  val configuration: Lens[InstrumentConfigAndItcResult, InstrumentConfig] =
+  val configuration: Lens[InstrumentConfigAndItcResult, ItcInstrumentConfig] =
     Focus[InstrumentConfigAndItcResult](_.instrumentConfig)
 
   val itcResult

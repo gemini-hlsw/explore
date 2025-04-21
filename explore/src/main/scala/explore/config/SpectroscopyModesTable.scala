@@ -3,12 +3,17 @@
 
 package explore.config
 
+import algebra.instances.all.given
 import boopickle.DefaultBasic.*
 import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.*
+import coulomb.ops.algebra.spire.all.*
+import coulomb.policy.standard.given
+import coulomb.syntax.*
+import coulomb.units.accepted.ArcSecond
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
@@ -42,6 +47,7 @@ import japgolly.scalajs.react.util.OptionLike.optionInstance
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.math.*
+import lucuma.core.math.units.Pixels
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -67,12 +73,29 @@ import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 import lucuma.ui.utils.*
+import spire.math.*
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
+import scala.language.implicitConversions
 
 import scalajs.js
+
+// TODO: These constants should likely go to lucuma-core
+type ArcSecondPerPixel = ArcSecond / Pixels
+type PixelScale        = Quantity[BigDecimal, ArcSecondPerPixel]
+
+val GmosPixelScale: PixelScale = BigDecimal(0.0807).withUnit[ArcSecondPerPixel]
+val F2PixelScale: PixelScale   = BigDecimal(0.18).withUnit[ArcSecondPerPixel]
+
+def gmosSlitWidthPixels(slitWidth: Angle, xBin: GmosXBinning): Quantity[BigDecimal, Pixels] =
+  val widthArcSeconds = Angle.decimalArcseconds.get(slitWidth).withUnit[ArcSecond]
+  widthArcSeconds / (BigDecimal(xBin.count) * GmosPixelScale)
+
+def f2SlitWidthPixels(slitWidth: Angle): Quantity[BigDecimal, Pixels] =
+  val widthArcSeconds = Angle.decimalArcseconds.get(slitWidth).withUnit[ArcSecond]
+  widthArcSeconds / F2PixelScale
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
@@ -171,7 +194,7 @@ private object SpectroscopyModesTable:
   private val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.value).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
-  private def formatFilter(filter: InstrumentConfig#Filter): String = filter match
+  private def formatFilter(filter: ItcInstrumentConfig#Filter): String = filter match
     case Some(f: GmosSouthFilter) => f.shortName
     case Some(f: GmosNorthFilter) => f.shortName
     case f: F2Filter              => f.shortName
@@ -181,7 +204,7 @@ private object SpectroscopyModesTable:
 
   // I think these are valid Orderings because they should be consistent with ==
   // They could probably be Orders, as well, but only Ordering is actually needed here.
-  private given Ordering[InstrumentConfig#Filter] = Ordering.by(_.toString)
+  private given Ordering[ItcInstrumentConfig#Filter] = Ordering.by(_.toString)
 
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
@@ -267,6 +290,33 @@ private object SpectroscopyModesTable:
         )
     )
 
+  private def slitWidthCell(config: ItcInstrumentConfig, slitWidth: ModeSlitSize): VdomNode =
+    val width = config match {
+      case ItcInstrumentConfig.GmosNorthSpectroscopy(
+            _,
+            _,
+            _,
+            Some(InstrumentOverrides.GmosSpectroscopy(_, ccd, _))
+          ) =>
+        val px = gmosSlitWidthPixels(slitWidth.value, ccd.xBin)
+        f"$px%2.1f px"
+      case ItcInstrumentConfig.GmosSouthSpectroscopy(
+            _,
+            _,
+            _,
+            Some(InstrumentOverrides.GmosSpectroscopy(_, ccd, _))
+          ) =>
+        val px = gmosSlitWidthPixels(slitWidth.value, ccd.xBin)
+        f"$px%2.1f px"
+      case ItcInstrumentConfig.Flamingos2Spectroscopy(_, _, _) =>
+        val px = f2SlitWidthPixels(slitWidth.value)
+        f"$px%2.1f px"
+      case _                                                   => ""
+    }
+
+    <.span(formatSlitWidth(slitWidth))
+      .withTooltip(tooltip = width, placement = Placement.RightStart)
+
   private def columns(units: WavelengthUnits) =
 
     given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(units)
@@ -293,10 +343,15 @@ private object SpectroscopyModesTable:
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
         .sortable,
-      column(SlitWidthColumnId, row => SpectroscopyModeRow.slitWidth.get(row.entry))
-        .withCell(cell => formatSlitWidth(cell.value.value))
+      column(SlitWidthColumnId,
+             row =>
+               (SpectroscopyModeRow.instrumentConfig.get(row.entry),
+                SpectroscopyModeRow.slitWidth.get(row.entry)
+               )
+      )
+        .withCell(cell => slitWidthCell(cell.value._1, cell.value._2.value))
         .withColumnSize(FixedSize(100.toPx))
-        .sortable,
+        .sortableBy(_._2),
       column(SlitLengthColumnId, row => SpectroscopyModeRow.slitLength.get(row.entry))
         .withCell(cell => formatSlitLength(cell.value.value))
         .withColumnSize(FixedSize(105.toPx))

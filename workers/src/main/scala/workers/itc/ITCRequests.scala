@@ -12,7 +12,7 @@ import cats.syntax.all.*
 import explore.model.Constants
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import explore.modes.SpectroscopyModeRow
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
@@ -73,10 +73,9 @@ object ITCRequests:
     def doRequest(
       params: ItcRequestParams
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
-      Logger[F]
-        .debug(
-          s"ITC: Request for mode: ${params.mode}, exposureTimeMode: ${params.exposureTimeMode} and target count: ${params.asterism.length}"
-        ) *>
+      Logger[F].info(
+        s"ITC: Request for mode: ${params.mode}, exposureTimeMode: ${params.exposureTimeMode} and target count: ${params.asterism.length}"
+      ) *>
         params.mode.toItcClientMode
           .traverse: mode =>
             ItcClient[F]
@@ -111,11 +110,11 @@ object ITCRequests:
         .map(_.instrument)
         // Only handle known modes
         .collect:
-          case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
+          case m @ ItcInstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
             ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
-          case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
+          case m @ ItcInstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
             ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
-          case m @ InstrumentConfig.Flamingos2Spectroscopy(_, _, _)   =>
+          case m @ ItcInstrumentConfig.Flamingos2Spectroscopy(_, _, _)   =>
             ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
 
     parTraverseN(

@@ -19,7 +19,7 @@ import mouse.boolean.*
 case class ItcResultsCache(
   cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 ) {
-  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, InstrumentConfig] =
+  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, ItcInstrumentConfig] =
     Either.fromOption(
       ItcResultsCache.enabledRow(r).option(r.instrument),
       NonEmptyChain.of(ItcQueryProblem.UnsupportedMode)
