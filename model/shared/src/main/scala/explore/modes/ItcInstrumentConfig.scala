@@ -17,7 +17,7 @@ import lucuma.core.util.Enumerated
 import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
 
-sealed trait InstrumentConfig derives Eq:
+sealed trait ItcInstrumentConfig derives Eq:
   def instrument: Instrument
 
   type Grating
@@ -38,13 +38,13 @@ sealed trait InstrumentConfig derives Eq:
   type Override
   def modeOverrides: Option[Override] = None
 
-object InstrumentConfig:
+object ItcInstrumentConfig:
   case class GmosNorthSpectroscopy(
     grating:                    GmosNorthGrating,
     fpu:                        GmosNorthFpu,
     filter:                     Option[GmosNorthFilter],
     override val modeOverrides: Option[InstrumentOverrides.GmosSpectroscopy]
-  ) extends InstrumentConfig derives Eq {
+  ) extends ItcInstrumentConfig derives Eq {
     type Grating  = GmosNorthGrating
     type Filter   = Option[GmosNorthFilter]
     type FPU      = GmosNorthFpu
@@ -61,7 +61,7 @@ object InstrumentConfig:
     fpu:                        GmosSouthFpu,
     filter:                     Option[GmosSouthFilter],
     override val modeOverrides: Option[InstrumentOverrides.GmosSpectroscopy]
-  ) extends InstrumentConfig derives Eq {
+  ) extends ItcInstrumentConfig derives Eq {
     type Grating  = GmosSouthGrating
     type Filter   = Option[GmosSouthFilter]
     type FPU      = GmosSouthFpu
@@ -73,7 +73,7 @@ object InstrumentConfig:
   }
 
   case class Flamingos2Spectroscopy(grating: F2Disperser, filter: F2Filter, fpu: F2Fpu)
-      extends InstrumentConfig derives Eq {
+      extends ItcInstrumentConfig derives Eq {
     type Grating  = F2Disperser
     type Filter   = F2Filter
     type FPU      = F2Fpu
@@ -84,7 +84,7 @@ object InstrumentConfig:
     val hasFilter                        = true
   }
 
-  case class GpiSpectroscopy(grating: GpiDisperser, filter: GpiFilter) extends InstrumentConfig
+  case class GpiSpectroscopy(grating: GpiDisperser, filter: GpiFilter) extends ItcInstrumentConfig
       derives Eq {
     type Grating  = GpiDisperser
     type Filter   = GpiFilter
@@ -98,7 +98,7 @@ object InstrumentConfig:
   }
 
   case class GnirsSpectroscopy(grating: GnirsDisperser, filter: GnirsFilter)
-      extends InstrumentConfig derives Eq {
+      extends ItcInstrumentConfig derives Eq {
     type Grating  = GnirsDisperser
     type Filter   = GnirsFilter
     type FPU      = Unit
@@ -112,7 +112,7 @@ object InstrumentConfig:
 
   // Used for Instruments not fully defined
   case class GenericSpectroscopy(i: Instrument, grating: String, filter: NonEmptyString)
-      extends InstrumentConfig derives Eq {
+      extends ItcInstrumentConfig derives Eq {
     type Grating  = String
     type Filter   = NonEmptyString
     type FPU      = Unit
@@ -124,11 +124,11 @@ object InstrumentConfig:
     val hasFilter                        = true
   }
 
-  val instrument: Getter[InstrumentConfig, Instrument] =
-    Getter[InstrumentConfig, Instrument](_.instrument)
+  val instrument: Getter[ItcInstrumentConfig, Instrument] =
+    Getter[ItcInstrumentConfig, Instrument](_.instrument)
 
-  def grating: Getter[InstrumentConfig, InstrumentConfig#Grating] =
-    Getter[InstrumentConfig, InstrumentConfig#Grating](_.grating)
+  def grating: Getter[ItcInstrumentConfig, ItcInstrumentConfig#Grating] =
+    Getter[ItcInstrumentConfig, ItcInstrumentConfig#Grating](_.grating)
 
-  def filter: Getter[InstrumentConfig, InstrumentConfig#Filter] =
-    Getter[InstrumentConfig, InstrumentConfig#Filter](_.filter)
+  def filter: Getter[ItcInstrumentConfig, ItcInstrumentConfig#Filter] =
+    Getter[ItcInstrumentConfig, ItcInstrumentConfig#Filter](_.filter)

@@ -74,26 +74,26 @@ trait ItcPicklers extends CommonPicklers {
 
   given Pickler[InstrumentOverrides.GmosSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig.GmosNorthSpectroscopy] = generatePickler
+  given Pickler[ItcInstrumentConfig.GmosNorthSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig.GmosSouthSpectroscopy] = generatePickler
+  given Pickler[ItcInstrumentConfig.GmosSouthSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig.Flamingos2Spectroscopy] = generatePickler
+  given Pickler[ItcInstrumentConfig.Flamingos2Spectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig.GpiSpectroscopy] = generatePickler
+  given Pickler[ItcInstrumentConfig.GpiSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig.GnirsSpectroscopy] = generatePickler
+  given Pickler[ItcInstrumentConfig.GnirsSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig.GenericSpectroscopy] = generatePickler
+  given Pickler[ItcInstrumentConfig.GenericSpectroscopy] = generatePickler
 
-  given Pickler[InstrumentConfig] =
-    compositePickler[InstrumentConfig]
-      .addConcreteType[InstrumentConfig.GmosNorthSpectroscopy]
-      .addConcreteType[InstrumentConfig.GmosSouthSpectroscopy]
-      .addConcreteType[InstrumentConfig.Flamingos2Spectroscopy]
-      .addConcreteType[InstrumentConfig.GpiSpectroscopy]
-      .addConcreteType[InstrumentConfig.GnirsSpectroscopy]
-      .addConcreteType[InstrumentConfig.GenericSpectroscopy]
+  given Pickler[ItcInstrumentConfig] =
+    compositePickler[ItcInstrumentConfig]
+      .addConcreteType[ItcInstrumentConfig.GmosNorthSpectroscopy]
+      .addConcreteType[ItcInstrumentConfig.GmosSouthSpectroscopy]
+      .addConcreteType[ItcInstrumentConfig.Flamingos2Spectroscopy]
+      .addConcreteType[ItcInstrumentConfig.GpiSpectroscopy]
+      .addConcreteType[ItcInstrumentConfig.GnirsSpectroscopy]
+      .addConcreteType[ItcInstrumentConfig.GenericSpectroscopy]
 
   given Pickler[ModeWavelength] = picklerNewType(ModeWavelength)
 

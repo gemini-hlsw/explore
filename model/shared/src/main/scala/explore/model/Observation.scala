@@ -13,8 +13,8 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.givens.given
 import explore.model.syntax.all.*
-import explore.modes.InstrumentConfig
 import explore.modes.InstrumentOverrides
+import explore.modes.ItcInstrumentConfig
 import io.circe.Decoder
 import io.circe.generic.semiauto.*
 import io.circe.refined.given
@@ -216,19 +216,19 @@ case class Observation(
             explicitRoi.getOrElse(defaultRoi)
           )
 
-  def toInstrumentConfig(targets: TargetList): Option[InstrumentConfig] =
+  def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
     (toModeOverride(targets), observingModeSummary)
       .mapN:
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
               ObservingModeSummary.GmosNorthLongSlit(grating, filter, fpu, _, _, _)
             ) =>
-          InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
+          ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
               ObservingModeSummary.GmosSouthLongSlit(grating, filter, fpu, _, _, _)
             ) =>
-          InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
+          ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
         case (_, ObservingModeSummary.Flamingos2LongSlit(grating, filter, fpu)) =>
-          InstrumentConfig.Flamingos2Spectroscopy(grating, filter, fpu).some
+          ItcInstrumentConfig.Flamingos2Spectroscopy(grating, filter, fpu).some
         case _                                                                  => none
       .flatten
 

@@ -8,7 +8,7 @@ import cats.syntax.all.*
 import explore.model.AsterismIds
 import explore.model.TargetList
 import explore.model.itc.ItcTarget
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import explore.optics.all.*
 import lucuma.core.enums.GmosRoi
 import lucuma.core.math.RadialVelocity
@@ -21,10 +21,10 @@ import lucuma.itc.client.TargetInput
 
 trait syntax:
 
-  extension (row: InstrumentConfig)
+  extension (row: ItcInstrumentConfig)
     def toItcClientMode: Option[InstrumentMode] =
       row match
-        case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, modeOverrides) =>
+        case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, modeOverrides) =>
           val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
           val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
           modeOverrides
@@ -33,7 +33,7 @@ trait syntax:
               InstrumentMode
                 .GmosNorthSpectroscopy(cw, grating, filter, GmosFpu.North(fpu.asRight), ccd, roi)
                 .some
-        case InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, modeOverrides) =>
+        case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, modeOverrides) =>
           val roi: Option[GmosRoi]     = modeOverrides.map(_.roi)
           val ccd: Option[GmosCcdMode] = modeOverrides.map(_.ccdMode)
           modeOverrides
@@ -42,7 +42,7 @@ trait syntax:
               InstrumentMode
                 .GmosSouthSpectroscopy(cw, grating, filter, GmosFpu.South(fpu.asRight), ccd, roi)
                 .some
-        case _                                                                           => None
+        case _                                                                              => None
 
   // We may consider adjusting this to consider small variations of RV identical for the
   // purpose of doing ITC calculations

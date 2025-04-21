@@ -36,7 +36,7 @@ import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
 import explore.model.syntax.all.*
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
 import explore.undo.*
@@ -72,7 +72,7 @@ object ConfigurationTile:
     baseCoordinates:          Option[CoordinatesAtVizTime],
     obsConf:                  ObsConfiguration,
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
-    revertedInstrumentConfig: Option[InstrumentConfig], // configuration selected if reverted
+    revertedInstrumentConfig: Option[ItcInstrumentConfig], // configuration selected if reverted
     modes:                    SpectroscopyModesMatrix,
     customSedTimestamps:      List[Timestamp],
     allTargets:               TargetList,
@@ -197,7 +197,7 @@ object ConfigurationTile:
   private def revertConfiguration(
     obsId:                    Observation.Id,
     mode:                     UndoSetter[Option[ObservingMode]],
-    revertedInstrumentConfig: Option[InstrumentConfig],
+    revertedInstrumentConfig: Option[ItcInstrumentConfig],
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]]
   )(using FetchClient[IO, ObservationDB]): IO[Unit] =
     val obsInput = UpdateObservationsInput(
@@ -225,7 +225,7 @@ object ConfigurationTile:
     itcTargets:               List[ItcTarget],
     baseCoordinates:          Option[CoordinatesAtVizTime],
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
-    revertedInstrumentConfig: Option[InstrumentConfig],
+    revertedInstrumentConfig: Option[ItcInstrumentConfig],
     modes:                    SpectroscopyModesMatrix,
     customSedTimestamps:      List[Timestamp],
     sequenceChanged:          Callback,
@@ -455,7 +455,7 @@ object ConfigurationTile:
     pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
     observingModeGroups:      ObservingModeGroupList,
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
-    revertedInstrumentConfig: Option[InstrumentConfig],
+    revertedInstrumentConfig: Option[ItcInstrumentConfig],
     readonly:                 Boolean
   ) extends ReactFnProps(Title.component):
     val observingMode                           = pacAndMode.get._2

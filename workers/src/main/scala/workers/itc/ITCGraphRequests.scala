@@ -9,7 +9,7 @@ import cats.effect.*
 import cats.syntax.all.*
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Timestamp
@@ -36,13 +36,13 @@ object ITCGraphRequests:
     constraints:         ConstraintSet,
     targets:             NonEmptyList[ItcTarget],
     customSedTimestamps: List[Timestamp],
-    mode:                InstrumentConfig,
+    mode:                ItcInstrumentConfig,
     cache:               Cache[F],
     callback:            ItcAsterismGraphResults => F[Unit]
   ): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
-      case m @ InstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
+      case m @ ItcInstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
         ItcGraphRequestParams(
           exposureTimeMode,
           constraints,
@@ -50,7 +50,7 @@ object ITCGraphRequests:
           customSedTimestamps,
           m
         ).some
-      case m @ InstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
+      case m @ ItcInstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
         ItcGraphRequestParams(
           exposureTimeMode,
           constraints,
@@ -58,7 +58,7 @@ object ITCGraphRequests:
           customSedTimestamps,
           m
         ).some
-      case _                                                      =>
+      case _                                                         =>
         none
 
     def doRequest(request: ItcGraphRequestParams): F[ItcAsterismGraphResults] =

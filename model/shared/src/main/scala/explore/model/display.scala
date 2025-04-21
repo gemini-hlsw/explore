@@ -7,7 +7,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcQueryProblem
-import explore.modes.InstrumentConfig
+import explore.modes.ItcInstrumentConfig
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
@@ -257,12 +257,12 @@ trait DisplayImplicits:
       case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
         s"GMOS-S ${grating.shortName} ${fpu.shortName}"
 
-  extension (revertedInstrumentConfig: InstrumentConfig)
+  extension (revertedInstrumentConfig: ItcInstrumentConfig)
     def configurationSummary: Option[String] =
       revertedInstrumentConfig match
-        case InstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
+        case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
           s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-        case InstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
+        case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
           s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
         case _                                                          =>
           none
