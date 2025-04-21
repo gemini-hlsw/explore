@@ -264,7 +264,7 @@ trait DisplayImplicits:
           s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
         case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
           s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-        case _                                                          =>
+        case _                                                             =>
           none
 
 object display extends DisplayImplicits

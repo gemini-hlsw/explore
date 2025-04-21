@@ -84,18 +84,18 @@ import scalajs.js
 
 // TODO: These constants should likely go to lucuma-core
 type ArcSecondPerPixel = ArcSecond / Pixels
-type PlateScale        = Quantity[BigDecimal, ArcSecondPerPixel]
+type PixelScale        = Quantity[BigDecimal, ArcSecondPerPixel]
 
-val GmosPlateScale: PlateScale = BigDecimal(0.0807).withUnit[ArcSecondPerPixel]
-val F2PlateScale: PlateScale   = BigDecimal(0.18).withUnit[ArcSecondPerPixel]
+val GmosPixelScale: PixelScale = BigDecimal(0.0807).withUnit[ArcSecondPerPixel]
+val F2PixelScale: PixelScale   = BigDecimal(0.18).withUnit[ArcSecondPerPixel]
 
 def gmosSlitWidthPixels(slitWidth: Angle, xBin: GmosXBinning): Quantity[BigDecimal, Pixels] =
   val widthArcSeconds = Angle.decimalArcseconds.get(slitWidth).withUnit[ArcSecond]
-  widthArcSeconds / (BigDecimal(xBin.count) * GmosPlateScale)
+  widthArcSeconds / (BigDecimal(xBin.count) * GmosPixelScale)
 
 def f2SlitWidthPixels(slitWidth: Angle): Quantity[BigDecimal, Pixels] =
   val widthArcSeconds = Angle.decimalArcseconds.get(slitWidth).withUnit[ArcSecond]
-  widthArcSeconds / F2PlateScale
+  widthArcSeconds / F2PixelScale
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
