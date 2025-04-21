@@ -4,7 +4,7 @@ object Versions {
   val catsEffect             = "3.6.1"
   val catsRetry              = "3.1.3"
   val catsTime               = "0.5.1"
-  val circe                  = "0.14.12"
+  val circe                  = "0.14.13"
   val circeGolden            = "0.3.0"
   val coulomb                = "0.8.0"
   val clue                   = "0.43.1"
