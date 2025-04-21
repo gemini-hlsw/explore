@@ -101,9 +101,6 @@ case class Observation(
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
-  lazy val observingModeSummary: Option[ObservingModeSummary] =
-    observingMode.map(ObservingModeSummary.fromObservingMode)
-
   private def profiles(targets: TargetList): Option[NonEmptyList[SourceProfile]] =
     NonEmptyList.fromList:
       scienceTargetIds.toList.map(targets.get).flattenOption.map(_.sourceProfile)
@@ -125,28 +122,15 @@ case class Observation(
   def toModeOverride(targets: TargetList): Option[InstrumentOverrides] =
     observingMode.flatMap:
       case ObservingMode.GmosNorthLongSlit(
-            _,
-            grating,
-            _,
-            _,
-            _,
-            fpu,
-            _,
-            centralWavelength,
-            _,
-            explicitXBinning,
-            _,
-            explicitYBinning,
-            _,
-            explicitAmpReadMode,
-            _,
-            explicitAmpGain,
-            defaultRoi,
-            explicitRoi,
-            _,
-            _,
-            _,
-            _
+            grating = grating,
+            fpu = fpu,
+            centralWavelength = centralWavelength,
+            explicitXBin = explicitXBinning,
+            explicitYBin = explicitYBinning,
+            explicitAmpReadMode = explicitAmpReadMode,
+            explicitAmpGain = explicitAmpGain,
+            defaultRoi = defaultRoi,
+            explicitRoi = explicitRoi
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
@@ -171,28 +155,15 @@ case class Observation(
             explicitRoi.getOrElse(defaultRoi)
           )
       case ObservingMode.GmosSouthLongSlit(
-            _,
-            grating,
-            _,
-            _,
-            _,
-            fpu,
-            _,
-            centralWavelength,
-            _,
-            explicitXBinning,
-            _,
-            explicitYBinning,
-            _,
-            explicitAmpReadMode,
-            _,
-            explicitAmpGain,
-            defaultRoi,
-            explicitRoi,
-            _,
-            _,
-            _,
-            _
+            grating = grating,
+            fpu = fpu,
+            centralWavelength = centralWavelength,
+            explicitXBin = explicitXBinning,
+            explicitYBin = explicitYBinning,
+            explicitAmpReadMode = explicitAmpReadMode,
+            explicitAmpGain = explicitAmpGain,
+            defaultRoi = defaultRoi,
+            explicitRoi = explicitRoi
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
@@ -217,19 +188,17 @@ case class Observation(
           )
 
   def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
-    (toModeOverride(targets), observingModeSummary)
+    (toModeOverride(targets), observingMode)
       .mapN:
-        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              ObservingModeSummary.GmosNorthLongSlit(grating, filter, fpu, _, _, _)
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(roi = _),
+              ObservingMode.GmosNorthLongSlit(grating = grating, filter = filter, fpu = fpu)
             ) =>
           ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
-        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              ObservingModeSummary.GmosSouthLongSlit(grating, filter, fpu, _, _, _)
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(roi = _),
+              ObservingMode.GmosSouthLongSlit(grating = grating, filter = filter, fpu = fpu)
             ) =>
           ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
-        case (_, ObservingModeSummary.Flamingos2LongSlit(grating, filter, fpu)) =>
-          ItcInstrumentConfig.Flamingos2Spectroscopy(grating, filter, fpu).some
-        case _                                                                  => none
+        case _ => none
       .flatten
 
   lazy val constraintsSummary: String =

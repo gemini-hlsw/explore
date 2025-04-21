@@ -192,3 +192,8 @@ object all:
             .andThen(ObservingMode.GmosSouthLongSlit.centralWavelength)
             .getOption(om)
         )
+
+  extension (bc: ObservingMode)
+    def defaultPosAngleConstrait: PosAngleOptions = this match
+      case ObservingMode.GmosSouthLongSlit => PosAngleOptions.AverageParallactic
+      case ObservingMode.GmosNorthLongSlit => PosAngleOptions.AverageParallactic

@@ -25,6 +25,7 @@ import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.ObservingMode
 
 import java.text.DecimalFormat
 import scala.annotation.targetName
@@ -256,6 +257,36 @@ trait DisplayImplicits:
         s"GMOS-N ${grating.shortName} ${fpu.shortName}"
       case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
         s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+
+  given Display[ObservingMode] = Display.byShortName:
+    case ObservingMode.GmosNorthLongSlit(
+      grating = grating,
+      filter = filter,
+      fpu = fpu,
+      centralWavelength = centralWavelength,
+      explicitAmpReadMode = explicitAmpReadMode,
+      defaultAmpReadMode = defaultAmpReadMode,
+      explicitRoi = explicitRoi,
+      defaultRoi = defaultRoi) =>
+      val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
+      val ampReadMode = explicitAmpReadMode.getOrElse(defaultAmpReadMode)
+      val roi = explicitRoi.getOrElse(defaultRoi)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-N Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
+    case ObservingMode.GmosSouthLongSlit(
+      grating = grating,
+      filter = filter,
+      fpu = fpu,
+      centralWavelength = centralWavelength,
+      explicitAmpReadMode = explicitAmpReadMode,
+      defaultAmpReadMode = defaultAmpReadMode,
+      explicitRoi = explicitRoi,
+      defaultRoi = defaultRoi) =>
+      val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
+      val ampReadMode = explicitAmpReadMode.getOrElse(defaultAmpReadMode)
+      val roi = explicitRoi.getOrElse(defaultRoi)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-S Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
 
   extension (revertedInstrumentConfig: ItcInstrumentConfig)
     def configurationSummary: Option[String] =
