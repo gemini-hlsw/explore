@@ -4,6 +4,7 @@
 package explore.model
 
 import cats.Order.given
+import cats.kernel.Order
 import cats.syntax.all.*
 import crystal.syntax.*
 import eu.timepit.refined.api.Refined
@@ -61,7 +62,7 @@ type ObservationList               = SortedMap[Observation.Id, Observation]
 type GroupList                     = SortedMap[Group.Id, Group]
 type ConstraintGroupList           = SortedMap[ObsIdSet, ConstraintSet]
 type SchedulingGroupList           = SortedMap[ObsIdSet, List[TimingWindow]]
-type ObservingModeGroupList        = SortedMap[ObsIdSet, Option[ObservingModeSummary]]
+type ObservingModeGroupList        = SortedMap[ObsIdSet, Option[ObservingMode]]
 type AttachmentList                = SortedMap[Attachment.Id, Attachment]
 type ObsAttachmentAssignmentMap    = Map[Attachment.Id, SortedSet[Observation.Id]]
 type TargetAttachmentAssignmentMap = Map[Attachment.Id, SortedSet[Target.Id]]
@@ -106,3 +107,33 @@ trait PotMap[K, V] extends NewType[Map[K, PerishablePot[V]]]:
 
 val SupportedInstruments =
   List(Instrument.GmosNorth, Instrument.GmosSouth, Instrument.Flamingos2)
+
+private given Order[ObservingMode.GmosNorthLongSlit] =
+  Order.by(x =>
+    (x.grating,
+     x.filter,
+     x.fpu,
+     x.centralWavelength,
+     x.explicitAmpReadMode.getOrElse(x.defaultAmpReadMode),
+     x.explicitRoi.getOrElse(x.defaultRoi)
+    )
+  )
+
+private given Order[ObservingMode.GmosSouthLongSlit] =
+  Order.by(x =>
+    (x.grating,
+     x.filter,
+     x.fpu,
+     x.centralWavelength,
+     x.explicitAmpReadMode.getOrElse(x.defaultAmpReadMode),
+     x.explicitRoi.getOrElse(x.defaultRoi)
+    )
+  )
+
+given Order[ObservingMode] = Order.from:
+  case (a: ObservingMode.GmosNorthLongSlit, b: ObservingMode.GmosNorthLongSlit) =>
+    a.compare(b)
+  case (a: ObservingMode.GmosSouthLongSlit, b: ObservingMode.GmosSouthLongSlit) =>
+    a.compare(b)
+  case (_: ObservingMode.GmosNorthLongSlit, _)                                  => -1
+  case _                                                                        => 1

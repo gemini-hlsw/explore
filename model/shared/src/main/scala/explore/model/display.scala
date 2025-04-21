@@ -25,6 +25,7 @@ import lucuma.core.util.Display
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.ObservingMode
 
 import java.text.DecimalFormat
 import scala.annotation.targetName
@@ -267,5 +268,7 @@ trait DisplayImplicits:
       val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
       val filterStr = filter.fold("None")(_.shortName)
       s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}"
+    case BasicConfiguration.F2LongSlit(disperser, _, fpu) =>
+      s"F2 ${disperser.shortName} ${fpu.shortName}"
 
 object display extends DisplayImplicits

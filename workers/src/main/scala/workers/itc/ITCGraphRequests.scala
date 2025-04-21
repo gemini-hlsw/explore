@@ -58,6 +58,14 @@ object ITCGraphRequests:
           customSedTimestamps,
           m
         ).some
+      case m: ItcInstrumentConfig.Flamingos2Spectroscopy             =>
+        ItcGraphRequestParams(
+          exposureTimeMode,
+          constraints,
+          targets,
+          customSedTimestamps,
+          m
+        ).some
       case _                                                         =>
         none
 

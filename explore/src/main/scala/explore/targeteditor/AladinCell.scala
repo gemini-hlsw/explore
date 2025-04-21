@@ -309,7 +309,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               (positions, base, agsState, candidates) =>
 
                 val fpu: Option[Either[GmosNorthFpu, GmosSouthFpu]] =
-                  observingMode.flatMap(_.fpuAlternative)
+                  observingMode.flatMap(_.gmosFpuAlternative)
                 val params: AgsParams.GmosAgsParams                 =
                   AgsParams.GmosAgsParams(fpu, PortDisposition.Side)
 

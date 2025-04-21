@@ -30,6 +30,7 @@ import explore.model.InstrumentConfigAndItcResult
 import explore.model.Progress
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.*
+import explore.model.SupportedInstruments
 import explore.model.WorkerClients.*
 import explore.model.boopickle.*
 import explore.model.boopickle.ItcPicklers.given
@@ -388,7 +389,7 @@ private object SpectroscopyModesTable:
 
   extension (row: SpectroscopyModeRow)
     private def enabledRow: Boolean =
-      List(Instrument.GmosNorth, Instrument.GmosSouth).contains_(row.instrument.instrument) &&
+      SupportedInstruments.contains_(row.instrument.instrument) &&
         row.focalPlane === FocalPlane.SingleSlit
 
   private val ScrollOptions =
@@ -567,13 +568,13 @@ private object SpectroscopyModesTable:
                       val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
                         itcResults.value.cache
 
-                      // center of the row rang
+                      // center of the row range
                       val cw: Option[CentralWavelength] =
                         row.entry.intervalCenter(snAt)
 
                       cw.exists: _ =>
                         row.entry.instrument.instrument match
-                          case Instrument.GmosNorth | Instrument.GmosSouth =>
+                          case i if SupportedInstruments.contains(i) =>
                             cache.contains:
                               ItcRequestParams(
                                 expTimeMode,
@@ -582,11 +583,11 @@ private object SpectroscopyModesTable:
                                 customSedTimestamps,
                                 row.entry.instrument
                               )
-                          case _                                           => true
+                          case _                                     => true
 
                 Option.when(modes.nonEmpty):
                   val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
-                  for
+                  for {
                     _       <- Resource.eval(itcProgress.setStateAsync(progressZero))
                     request <-
                       ItcClient[IO]
@@ -613,7 +614,7 @@ private object SpectroscopyModesTable:
                                 // Enable scrolling to the selected row (which might have moved due to sorting)
                                 scrollTo.setState(ScrollTo.Scroll).to[IO]
                             .onComplete(fs2.Stream.eval(itcProgress.setStateAsync(none)))
-                  yield request
+                  } yield request
               .flatten
               .orEmpty
         virtualizerRef <- useRef(none[HTMLTableVirtualizer])

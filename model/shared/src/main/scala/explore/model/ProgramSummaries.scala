@@ -136,7 +136,7 @@ case class ProgramSummaries(
   lazy val observingModeGroups: ObservingModeGroupList =
     SortedMap.from:
       nonCalibrationObservations
-        .map(obs => obs.observingModeSummary -> obs.id)
+        .map(obs => obs.observingMode -> obs.id)
         .groupMap(_._1)(_._2)
         .map((mode, obsIds) => ObsIdSet.of(obsIds.head, obsIds.tail.toList*) -> mode)
 
