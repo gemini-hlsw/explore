@@ -274,7 +274,7 @@ trait ObsSummaryColumns:
             )
         .sortableBy(_.map(_._2)),
       // TODO: FindingChartColumnId
-      obsColumn(ConfigurationColumnId, _.obs.configurationSummary.orEmpty)
+      obsColumn(ConfigurationColumnId, _.obs.basicConfiguration.foldMap(_.shortName))
         .withCell(_.value.orEmpty)
         .sortable,
       obsColumn(

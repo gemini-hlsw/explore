@@ -131,9 +131,9 @@ private given Order[ObservingMode.GmosSouthLongSlit] =
   )
 
 given Order[ObservingMode] = Order.from:
-  case (a @ ObservingMode.GmosNorthLongSlit(grating = _), b @ ObservingMode.GmosNorthLongSlit(grating = _)) =>
+  case (a: ObservingMode.GmosNorthLongSlit, b: ObservingMode.GmosNorthLongSlit) =>
     a.compare(b)
-  case (a @ ObservingMode.GmosSouthLongSlit(grating = _), b @ ObservingMode.GmosSouthLongSlit(grating = _)) =>
+  case (a: ObservingMode.GmosSouthLongSlit, b: ObservingMode.GmosSouthLongSlit) =>
     a.compare(b)
-  case (ObservingMode.GmosNorthLongSlit(grating = _), _)                         => -1
-  case _                                                                         => 1
+  case (_: ObservingMode.GmosNorthLongSlit, _)                                  => -1
+  case _                                                                        => 1

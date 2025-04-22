@@ -251,51 +251,36 @@ trait DisplayImplicits:
   given Display[ConfigurationRequestStatus] = Display.byShortName(_.tag.capitalize)
   given Display[ObservationWorkflowState]   = Display.byShortName(_.tag.capitalize)
 
-  extension (configuration: BasicConfiguration)
-    def configurationSummary: String = configuration match
-      case BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _) =>
-        s"GMOS-N ${grating.shortName} ${fpu.shortName}"
-      case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
-        s"GMOS-S ${grating.shortName} ${fpu.shortName}"
-
   given Display[ObservingMode] = Display.byShortName:
-    case ObservingMode.GmosNorthLongSlit(
-      grating = grating,
-      filter = filter,
-      fpu = fpu,
-      centralWavelength = centralWavelength,
-      explicitAmpReadMode = explicitAmpReadMode,
-      defaultAmpReadMode = defaultAmpReadMode,
-      explicitRoi = explicitRoi,
-      defaultRoi = defaultRoi) =>
-      val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
-      val ampReadMode = explicitAmpReadMode.getOrElse(defaultAmpReadMode)
-      val roi = explicitRoi.getOrElse(defaultRoi)
-      val filterStr = filter.fold("None")(_.shortName)
-      s"GMOS-N Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
-    case ObservingMode.GmosSouthLongSlit(
-      grating = grating,
-      filter = filter,
-      fpu = fpu,
-      centralWavelength = centralWavelength,
-      explicitAmpReadMode = explicitAmpReadMode,
-      defaultAmpReadMode = defaultAmpReadMode,
-      explicitRoi = explicitRoi,
-      defaultRoi = defaultRoi) =>
-      val cwvStr    = "%.1fnm".format(centralWavelength.value.toNanometers)
-      val ampReadMode = explicitAmpReadMode.getOrElse(defaultAmpReadMode)
-      val roi = explicitRoi.getOrElse(defaultRoi)
-      val filterStr = filter.fold("None")(_.shortName)
-      s"GMOS-S Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
+    case n: ObservingMode.GmosNorthLongSlit =>
+      val cwvStr      = "%.1fnm".format(n.centralWavelength.value.toNanometers)
+      val ampReadMode = n.explicitAmpReadMode.getOrElse(n.defaultAmpReadMode)
+      val roi         = n.explicitRoi.getOrElse(n.defaultRoi)
+      val filterStr   = n.filter.fold("None")(_.shortName)
+      s"GMOS-N Longslit ${n.grating.shortName} @ $cwvStr $filterStr  ${n.fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
+    case s: ObservingMode.GmosSouthLongSlit =>
+      val cwvStr      = "%.1fnm".format(s.centralWavelength.value.toNanometers)
+      val ampReadMode = s.explicitAmpReadMode.getOrElse(s.defaultAmpReadMode)
+      val roi         = s.explicitRoi.getOrElse(s.defaultRoi)
+      val filterStr   = s.filter.fold("None")(_.shortName)
+      s"GMOS-S Longslit ${s.grating.shortName} @ $cwvStr $filterStr  ${s.fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
 
-  extension (revertedInstrumentConfig: ItcInstrumentConfig)
-    def configurationSummary: Option[String] =
-      revertedInstrumentConfig match
-        case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
-          s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-        case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
-          s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-        case _                                                             =>
-          none
+  given Display[ItcInstrumentConfig] = Display.byShortName:
+    case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
+      s"GMOS-N ${grating.shortName} ${fpu.shortName}"
+    case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
+      s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+    case _                                                             =>
+      s"Unsupported configuration"
+
+  given Display[BasicConfiguration] = Display.byShortName:
+    case BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cwl) =>
+      val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-N ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}"
+    case BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cwl) =>
+      val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}"
 
 object display extends DisplayImplicits

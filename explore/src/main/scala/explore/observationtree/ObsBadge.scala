@@ -140,7 +140,7 @@ object ObsBadge:
         <.div(ExploreStyles.ObsBadgeHeader)(
           <.div(ExploreStyles.ObsBadgeTargetAndId)(
             <.div(obs.title).when(layout.showTitle),
-            <.div(obs.configurationSummary.getOrElse("-"))
+            <.div(obs.basicConfiguration.map(_.shortName).getOrElse("-"))
               .when(layout.showConfiguration === Section.Header),
             <.div(
               ExploreStyles.ObsBadgeId,
@@ -195,8 +195,8 @@ object ObsBadge:
             meta,
             <.div(ExploreStyles.ObsBadgeDescription)(
               <.span(
-                obs.configurationSummary
-                  .map(conf => <.div(conf))
+                obs.basicConfiguration
+                  .map(conf => <.div(conf.shortName))
                   .whenDefined
                   .when(layout.showConfiguration === Section.Detail),
                 <.div(obs.constraintsSummary).when(layout.showConstraints)

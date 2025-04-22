@@ -84,19 +84,6 @@ case class Observation(
   lazy val basicConfiguration: Option[BasicConfiguration] =
     observingMode.map(_.toBasicConfiguration)
 
-  lazy val configurationSummary: Option[String] =
-    basicConfiguration match
-      case Some(BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cwl)) =>
-        val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
-        val filterStr = filter.fold("None")(_.shortName)
-        s"GMOS-N ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}".some
-      case Some(BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cwl)) =>
-        val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
-        val filterStr = filter.fold("None")(_.shortName)
-        s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}".some
-      case _                                                                     =>
-        none
-
   val site: Option[Site] = observingMode.map(_.siteFor)
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
@@ -122,15 +109,28 @@ case class Observation(
   def toModeOverride(targets: TargetList): Option[InstrumentOverrides] =
     observingMode.flatMap:
       case ObservingMode.GmosNorthLongSlit(
-            grating = grating,
-            fpu = fpu,
-            centralWavelength = centralWavelength,
-            explicitXBin = explicitXBinning,
-            explicitYBin = explicitYBinning,
-            explicitAmpReadMode = explicitAmpReadMode,
-            explicitAmpGain = explicitAmpGain,
-            defaultRoi = defaultRoi,
-            explicitRoi = explicitRoi
+            _,
+            grating,
+            _,
+            _,
+            _,
+            fpu,
+            _,
+            centralWavelength,
+            _,
+            explicitXBinning,
+            _,
+            explicitYBinning,
+            _,
+            explicitAmpReadMode,
+            _,
+            explicitAmpGain,
+            defaultRoi,
+            explicitRoi,
+            _,
+            _,
+            _,
+            _
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
@@ -155,15 +155,28 @@ case class Observation(
             explicitRoi.getOrElse(defaultRoi)
           )
       case ObservingMode.GmosSouthLongSlit(
-            grating = grating,
-            fpu = fpu,
-            centralWavelength = centralWavelength,
-            explicitXBin = explicitXBinning,
-            explicitYBin = explicitYBinning,
-            explicitAmpReadMode = explicitAmpReadMode,
-            explicitAmpGain = explicitAmpGain,
-            defaultRoi = defaultRoi,
-            explicitRoi = explicitRoi
+            _,
+            grating,
+            _,
+            _,
+            _,
+            fpu,
+            _,
+            centralWavelength,
+            _,
+            explicitXBinning,
+            _,
+            explicitYBinning,
+            _,
+            explicitAmpReadMode,
+            _,
+            explicitAmpGain,
+            defaultRoi,
+            explicitRoi,
+            _,
+            _,
+            _,
+            _
           ) =>
         profiles(targets).map: ps =>
           val defaultMode: GmosCcdMode =
@@ -190,14 +203,14 @@ case class Observation(
   def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
     (toModeOverride(targets), observingMode)
       .mapN:
-        case (overrides @ InstrumentOverrides.GmosSpectroscopy(roi = _),
-              ObservingMode.GmosNorthLongSlit(grating = grating, filter = filter, fpu = fpu)
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
+              n: ObservingMode.GmosNorthLongSlit
             ) =>
-          ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
-        case (overrides @ InstrumentOverrides.GmosSpectroscopy(roi = _),
-              ObservingMode.GmosSouthLongSlit(grating = grating, filter = filter, fpu = fpu)
+          ItcInstrumentConfig.GmosNorthSpectroscopy(n.grating, n.fpu, n.filter, overrides.some).some
+        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
+              s: ObservingMode.GmosSouthLongSlit
             ) =>
-          ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
+          ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some).some
         case _ => none
       .flatten
 
