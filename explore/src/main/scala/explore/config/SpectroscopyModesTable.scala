@@ -291,6 +291,9 @@ private object SpectroscopyModesTable:
     )
 
   private def slitWidthCell(config: ItcInstrumentConfig, slitWidth: ModeSlitSize): VdomNode =
+    def fmtGmos(px: Quantity[BigDecimal, Pixels], xBin: GmosXBinning) =
+      f"$px%2.1f px (xbin=${xBin.count})"
+
     val width = config match {
       case ItcInstrumentConfig.GmosNorthSpectroscopy(
             _,
@@ -299,7 +302,7 @@ private object SpectroscopyModesTable:
             Some(InstrumentOverrides.GmosSpectroscopy(_, ccd, _))
           ) =>
         val px = gmosSlitWidthPixels(slitWidth.value, ccd.xBin)
-        f"$px%2.1f px"
+        fmtGmos(px, ccd.xBin)
       case ItcInstrumentConfig.GmosSouthSpectroscopy(
             _,
             _,
@@ -307,7 +310,7 @@ private object SpectroscopyModesTable:
             Some(InstrumentOverrides.GmosSpectroscopy(_, ccd, _))
           ) =>
         val px = gmosSlitWidthPixels(slitWidth.value, ccd.xBin)
-        f"$px%2.1f px"
+        fmtGmos(px, ccd.xBin)
       case ItcInstrumentConfig.Flamingos2Spectroscopy(_, _, _) =>
         val px = f2SlitWidthPixels(slitWidth.value)
         f"$px%2.1f px"
