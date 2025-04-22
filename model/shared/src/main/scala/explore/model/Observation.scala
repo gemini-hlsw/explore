@@ -84,19 +84,6 @@ case class Observation(
   lazy val basicConfiguration: Option[BasicConfiguration] =
     observingMode.map(_.toBasicConfiguration)
 
-  lazy val configurationSummary: Option[String] =
-    basicConfiguration match
-      case Some(BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cwl)) =>
-        val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
-        val filterStr = filter.fold("None")(_.shortName)
-        s"GMOS-N ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}".some
-      case Some(BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cwl)) =>
-        val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
-        val filterStr = filter.fold("None")(_.shortName)
-        s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}".some
-      case _                                                                     =>
-        none
-
   val site: Option[Site] = observingMode.map(_.siteFor)
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)

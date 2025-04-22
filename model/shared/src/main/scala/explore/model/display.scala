@@ -250,21 +250,22 @@ trait DisplayImplicits:
   given Display[ConfigurationRequestStatus] = Display.byShortName(_.tag.capitalize)
   given Display[ObservationWorkflowState]   = Display.byShortName(_.tag.capitalize)
 
-  extension (configuration: BasicConfiguration)
-    def configurationSummary: String = configuration match
-      case BasicConfiguration.GmosNorthLongSlit(grating, _, fpu, _) =>
-        s"GMOS-N ${grating.shortName} ${fpu.shortName}"
-      case BasicConfiguration.GmosSouthLongSlit(grating, _, fpu, _) =>
-        s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+  given Display[ItcInstrumentConfig] = Display.byShortName:
+    case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
+      s"GMOS-N ${grating.shortName} ${fpu.shortName}"
+    case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
+      s"GMOS-S ${grating.shortName} ${fpu.shortName}"
+    case _                                                             =>
+      s"Unsupported configuration"
 
-  extension (revertedInstrumentConfig: ItcInstrumentConfig)
-    def configurationSummary: Option[String] =
-      revertedInstrumentConfig match
-        case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, _, _) =>
-          s"GMOS-N ${grating.shortName} ${fpu.shortName}".some
-        case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, _, _) =>
-          s"GMOS-S ${grating.shortName} ${fpu.shortName}".some
-        case _                                                             =>
-          none
+  given Display[BasicConfiguration] = Display.byShortName:
+    case BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cwl) =>
+      val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-N ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}"
+    case BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cwl) =>
+      val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
+      val filterStr = filter.fold("None")(_.shortName)
+      s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}"
 
 object display extends DisplayImplicits

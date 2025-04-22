@@ -402,7 +402,7 @@ object ConfigurationTile:
                           updateConfiguration(props.obsId,
                                               props.pacAndMode,
                                               bc.toInput,
-                                              bc.defaultPosAngleConstrait
+                                              bc.obsModeType.defaultPosAngleConstraint
                           )
                         .orEmpty,
                       props.modes,
@@ -492,7 +492,7 @@ object ConfigurationTile:
                 updateConfiguration(props.obsId,
                                     props.pacAndMode,
                                     m.toInput,
-                                    m.defaultPosAngleConstrait
+                                    m.obsModeType.defaultPosAngleConstraint
                 ).switching(isChanging.async).runAsync
               ),
             options = props.observingModeGroups.values.toList.sorted

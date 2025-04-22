@@ -14,6 +14,7 @@ import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.AttachmentPurpose
 import lucuma.core.enums.AttachmentType
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.ObservingModeType
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Declination
@@ -25,7 +26,6 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
-import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 
@@ -171,17 +171,6 @@ object all:
 
   extension (cr: Option[CalibrationRole]) def needsITC: Boolean = cr.fold(true)(_.needsITC)
 
-  extension (bc: BasicConfiguration)
-    // Currently, everything is long slit and defaults to Average Parallactic.
-    // But as we get new modes, Shortcut 3360 states:
-    // Slit spectroscopy ->  Average Parallactic
-    // MOS -> Fixed
-    // Imaging -> Unconstrained
-    // IFU -> 180 Flip
-    def defaultPosAngleConstrait: PosAngleOptions = bc match
-      case BasicConfiguration.GmosNorthLongSlit(_, _, _, _) => PosAngleOptions.AverageParallactic
-      case BasicConfiguration.GmosSouthLongSlit(_, _, _, _) => PosAngleOptions.AverageParallactic
-
   extension (om: ObservingMode)
     def centralWavelength: Option[CentralWavelength] =
       ObservingMode.gmosNorthLongSlit
@@ -192,3 +181,9 @@ object all:
             .andThen(ObservingMode.GmosSouthLongSlit.centralWavelength)
             .getOption(om)
         )
+
+  // TODO: This will be on the next release of core
+  extension (bc: ObservingModeType)
+    def defaultPosAngleConstraint: PosAngleOptions = this match
+      case ObservingModeType.GmosNorthLongSlit => PosAngleOptions.AverageParallactic
+      case ObservingModeType.GmosNorthLongSlit => PosAngleOptions.AverageParallactic
