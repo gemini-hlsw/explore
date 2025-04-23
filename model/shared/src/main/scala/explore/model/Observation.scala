@@ -89,6 +89,9 @@ case class Observation(
 
   val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
 
+  lazy val observingModeSummary: Option[ObservingModeSummary] =
+    observingMode.map(ObservingModeSummary.fromObservingMode)
+
   private def profiles(targets: TargetList): Option[NonEmptyList[SourceProfile]] =
     NonEmptyList.fromList:
       scienceTargetIds.toList.map(targets.get).flattenOption.map(_.sourceProfile)
@@ -213,7 +216,9 @@ case class Observation(
               s: ObservingMode.GmosSouthLongSlit
             ) =>
           ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some).some
-        case _ => none
+        case (_, f: ObservingMode.F2LongSlit) =>
+          ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu).some
+        case _                                => none
       .flatten
 
   lazy val constraintsSummary: String =

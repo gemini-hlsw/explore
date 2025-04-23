@@ -73,7 +73,7 @@ object ITCRequests:
     def doRequest(
       params: ItcRequestParams
     ): F[Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
-      Logger[F].info(
+      Logger[F].debug(
         s"ITC: Request for mode: ${params.mode}, exposureTimeMode: ${params.exposureTimeMode} and target count: ${params.asterism.length}"
       ) *>
         params.mode.toItcClientMode

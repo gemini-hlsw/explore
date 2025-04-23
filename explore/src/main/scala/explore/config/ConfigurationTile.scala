@@ -27,14 +27,13 @@ import explore.model.ObsConfiguration
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.ObservingModeGroupList
+import explore.model.ObservingModeSummary
 import explore.model.PosAngleConstraintAndObsMode
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.TargetList
-import explore.model.display.given
 import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
-import explore.model.given
 import explore.model.itc.ItcTarget
 import explore.model.syntax.all.*
 import explore.modes.ItcInstrumentConfig
@@ -482,13 +481,13 @@ object ConfigurationTile:
           ).runAsyncAndForget
 
         <.div(ExploreStyles.TileTitleConfigSelector)(
-          DropdownOptional[ObservingMode](
-            value = props.observingMode,
+          DropdownOptional[ObservingModeSummary](
+            value = props.observingMode.map(ObservingModeSummary.fromObservingMode),
             placeholder = "Choose existing observing mode...",
             disabled = isChanging.get,
             loading = isChanging.get,
             showClear = true,
-            onChange = (om: Option[ObservingMode]) =>
+            onChange = (om: Option[ObservingModeSummary]) =>
               om.fold(revertConfig)(m =>
                 updateConfiguration(props.obsId,
                                     props.pacAndMode,
@@ -499,7 +498,7 @@ object ConfigurationTile:
             options = props.observingModeGroups.values.toList.sorted
               .map:
                 _.map: om =>
-                  new SelectItem[ObservingMode](value = om, label = om.shortName)
+                  new SelectItem[ObservingModeSummary](value = om, label = om.shortName)
               .flattenOption
           ).unless(props.readonly)
         )
