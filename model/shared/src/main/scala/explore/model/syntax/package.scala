@@ -184,6 +184,8 @@ object all:
 
   // TODO: This will be on the next release of core
   extension (bc: ObservingModeType)
-    def defaultPosAngleConstraint: PosAngleOptions = this match
-      case ObservingModeType.GmosNorthLongSlit => PosAngleOptions.AverageParallactic
-      case ObservingModeType.GmosNorthLongSlit => PosAngleOptions.AverageParallactic
+    def defaultPosAngleConstraint: PosAngleOptions =
+      bc match
+        case ObservingModeType.GmosNorthLongSlit  => PosAngleOptions.AverageParallactic
+        case ObservingModeType.GmosSouthLongSlit  => PosAngleOptions.AverageParallactic
+        case ObservingModeType.Flamingos2LongSlit => PosAngleOptions.AverageParallactic
