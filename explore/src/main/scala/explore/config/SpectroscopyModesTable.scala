@@ -73,7 +73,6 @@ import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 import lucuma.ui.utils.*
-import spire.math.*
 
 import java.text.DecimalFormat
 import scala.collection.decorators.*
@@ -461,7 +460,7 @@ private object SpectroscopyModesTable:
                              Pot.fromOption(result),
                              s.wavelength.flatMap: w =>
                                ModeCommonWavelengths.wavelengthInterval(w)(row),
-                             row.instrument.configurationSummary
+                             row.instrument.shortName.some
                            )
         itcProgress <- useState(none[Progress])
         errs        <- useMemo(

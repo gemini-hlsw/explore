@@ -6,7 +6,6 @@ package explore.model
 import cats.kernel.Order
 import cats.syntax.order.*
 import clue.data.syntax.*
-import explore.model.enums.PosAngleOptions
 import lucuma.core.enums.F2Disperser
 import lucuma.core.enums.F2Filter
 import lucuma.core.enums.F2Fpu
@@ -18,6 +17,7 @@ import lucuma.core.enums.GmosRoi
 import lucuma.core.enums.GmosSouthFilter
 import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.enums.GmosSouthGrating
+import lucuma.core.enums.ObservingModeType
 import lucuma.core.util.Display
 import lucuma.schemas.ObservationDB.Types.GmosNorthLongSlitInput
 import lucuma.schemas.ObservationDB.Types.GmosSouthLongSlitInput
@@ -50,16 +50,10 @@ enum ObservingModeSummary:
     fpu:     F2Fpu
   ) extends ObservingModeSummary
 
-  // Currently, everything is long slit and defaults to Average Parallactic.
-  // But as we get new modes, Shortcut 3360 states:
-  // Slit spectroscopy ->  Average Parallactic
-  // MOS -> Fixed
-  // Imaging -> Unconstrained
-  // IFU -> 180 Flip
-  def defaultPosAngleConstrait: PosAngleOptions = this match
-    case GmosNorthLongSlit(_, _, _, _, _, _) => PosAngleOptions.AverageParallactic
-    case GmosSouthLongSlit(_, _, _, _, _, _) => PosAngleOptions.AverageParallactic
-    case Flamingos2LongSlit(_, _, _)         => PosAngleOptions.AverageParallactic
+  def obsModeType: ObservingModeType = this match
+    case GmosNorthLongSlit(_, _, _, _, _, _) => ObservingModeType.GmosNorthLongSlit
+    case GmosSouthLongSlit(_, _, _, _, _, _) => ObservingModeType.GmosSouthLongSlit
+    case Flamingos2LongSlit(_, _, _)         => ObservingModeType.Flamingos2LongSlit
 
   def toInput: ObservingModeInput = this match
     case GmosNorthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
@@ -91,7 +85,7 @@ enum ObservingModeSummary:
 object ObservingModeSummary:
   def fromObservingMode(observingMode: ObservingMode): ObservingModeSummary =
     observingMode match
-      case ObservingMode.GmosNorthLongSlit(
+      case n @ ObservingMode.GmosNorthLongSlit(
             _,
             grating,
             _,
@@ -120,10 +114,10 @@ object ObservingModeSummary:
           filter,
           fpu,
           centralWavelength,
-          explicitAmpReadMode.getOrElse(defaultAmpReadMode),
-          explicitRoi.getOrElse(defaultRoi)
+          n.ampReadMode,
+          n.roi
         )
-      case ObservingMode.GmosSouthLongSlit(
+      case s @ ObservingMode.GmosSouthLongSlit(
             _,
             grating,
             _,
@@ -152,8 +146,8 @@ object ObservingModeSummary:
           filter,
           fpu,
           centralWavelength,
-          explicitAmpReadMode.getOrElse(defaultAmpReadMode),
-          explicitRoi.getOrElse(defaultRoi)
+          s.ampReadMode,
+          s.roi
         )
 
   given Display[ObservingModeSummary] = Display.byShortName:
