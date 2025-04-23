@@ -44,11 +44,8 @@ object TimeAndCountEditor extends ConfigurationFormats:
       val signalToNoiseAt = props.options.zoom(TimeAndCountModeInfo.at)
 
       val (timeFormat, timeAuditor) = props.instrument
-        .map {
-          case Instrument.GmosSouth | Instrument.GmosNorth | Instrument.Flamingos2 =>
-            (durationS.optional, ChangeAuditor.int.optional)
-          case _                                                                   =>
-            (durationMs.optional, ChangeAuditor.posBigDecimal(2.refined).optional)
+        .collect { case Instrument.GmosSouth | Instrument.GmosNorth | Instrument.Flamingos2 =>
+          (durationS.optional, ChangeAuditor.int.optional)
         }
         .getOrElse((durationMs.optional, ChangeAuditor.posBigDecimal(2.refined).optional))
 
