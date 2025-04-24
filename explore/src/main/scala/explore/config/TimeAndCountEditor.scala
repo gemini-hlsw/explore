@@ -43,19 +43,11 @@ object TimeAndCountEditor extends ConfigurationFormats:
       val count           = props.options.zoom(TimeAndCountModeInfo.count)
       val signalToNoiseAt = props.options.zoom(TimeAndCountModeInfo.at)
 
-      val timeFormat = props.instrument
-        .map {
-          case Instrument.GmosSouth | Instrument.GmosNorth => durationS.optional
-          case _                                           => durationMs.optional
+      val (timeFormat, timeAuditor) = props.instrument
+        .collect { case Instrument.GmosSouth | Instrument.GmosNorth | Instrument.Flamingos2 =>
+          (durationS.optional, ChangeAuditor.int.optional)
         }
-        .getOrElse(durationMs.optional)
-
-      val timeAuditor = props.instrument
-        .map {
-          case Instrument.GmosSouth | Instrument.GmosNorth => ChangeAuditor.int.optional
-          case _                                           => ChangeAuditor.posBigDecimal(2.refined).optional
-        }
-        .getOrElse(ChangeAuditor.posBigDecimal(3.refined).optional)
+        .getOrElse((durationMs.optional, ChangeAuditor.posBigDecimal(2.refined).optional))
 
       React.Fragment(
         FormLabel("exposure-time".refined)("Exp. Time"),

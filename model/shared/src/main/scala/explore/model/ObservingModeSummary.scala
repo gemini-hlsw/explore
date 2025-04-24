@@ -85,70 +85,26 @@ enum ObservingModeSummary:
 object ObservingModeSummary:
   def fromObservingMode(observingMode: ObservingMode): ObservingModeSummary =
     observingMode match
-      case n @ ObservingMode.GmosNorthLongSlit(
-            _,
-            grating,
-            _,
-            filter,
-            _,
-            fpu,
-            _,
-            centralWavelength,
-            _,
-            _,
-            _,
-            _,
-            defaultAmpReadMode,
-            explicitAmpReadMode,
-            _,
-            _,
-            defaultRoi,
-            explicitRoi,
-            _,
-            _,
-            _,
-            _
-          ) =>
+      case n: ObservingMode.GmosNorthLongSlit =>
         GmosNorthLongSlit(
-          grating,
-          filter,
-          fpu,
-          centralWavelength,
+          n.grating,
+          n.filter,
+          n.fpu,
+          n.centralWavelength,
           n.ampReadMode,
           n.roi
         )
-      case s @ ObservingMode.GmosSouthLongSlit(
-            _,
-            grating,
-            _,
-            filter,
-            _,
-            fpu,
-            _,
-            centralWavelength,
-            _,
-            _,
-            _,
-            _,
-            defaultAmpReadMode,
-            explicitAmpReadMode,
-            _,
-            _,
-            defaultRoi,
-            explicitRoi,
-            _,
-            _,
-            _,
-            _
-          ) =>
+      case s: ObservingMode.GmosSouthLongSlit =>
         GmosSouthLongSlit(
-          grating,
-          filter,
-          fpu,
-          centralWavelength,
+          s.grating,
+          s.filter,
+          s.fpu,
+          s.centralWavelength,
           s.ampReadMode,
           s.roi
         )
+      case f: ObservingMode.F2LongSlit        =>
+        Flamingos2LongSlit(f.disperser, f.filter, f.fpu)
 
   given Display[ObservingModeSummary] = Display.byShortName:
     case GmosNorthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>

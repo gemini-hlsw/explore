@@ -80,9 +80,7 @@ object ItcResultsCache:
 
   def enabledRow(row: SpectroscopyModeRow): Boolean =
     row.focalPlane === FocalPlane.SingleSlit &&
-      SupportedInstruments.contains_(row.instrument.instrument) &&
-      // Temporal, remove when ITC queries are done
-      row.instrument.instrument =!= Instrument.Flamingos2
+      SupportedInstruments.contains_(row.instrument.instrument)
 
   val Empty: ItcResultsCache = ItcResultsCache(Map.empty)
 

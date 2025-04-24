@@ -50,6 +50,7 @@ import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
+import lucuma.schemas.model.ObservingMode.given
 import monocle.Focus
 import monocle.Lens
 import org.typelevel.cats.time.*
@@ -202,21 +203,22 @@ case class Observation(
             mode,
             explicitRoi.getOrElse(defaultRoi)
           )
+      case _: ObservingMode.F2LongSlit => None
 
   def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
-    (toModeOverride(targets), observingModeSummary)
+    (toModeOverride(targets), observingMode)
       .mapN:
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              ObservingModeSummary.GmosNorthLongSlit(grating, filter, fpu, _, _, _)
+              n: ObservingMode.GmosNorthLongSlit
             ) =>
-          ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, overrides.some).some
+          ItcInstrumentConfig.GmosNorthSpectroscopy(n.grating, n.fpu, n.filter, overrides.some).some
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              ObservingModeSummary.GmosSouthLongSlit(grating, filter, fpu, _, _, _)
+              s: ObservingMode.GmosSouthLongSlit
             ) =>
-          ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, overrides.some).some
-        case (_, ObservingModeSummary.Flamingos2LongSlit(grating, filter, fpu)) =>
-          ItcInstrumentConfig.Flamingos2Spectroscopy(grating, filter, fpu).some
-        case _                                                                  => none
+          ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some).some
+        case (_, f: ObservingMode.F2LongSlit) =>
+          ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu).some
+        case _                                => none
       .flatten
 
   lazy val constraintsSummary: String =
