@@ -19,6 +19,7 @@ import explore.model.AttachmentList
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.Transformation
+import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import explore.utils.OdbRestClient
 import japgolly.scalajs.react.*
@@ -68,7 +69,8 @@ object FinderChartsTile:
               tileState
             )
           .orEmpty,
-      (tileState, _) => Title(programId, authToken, attachmentIds, attachments, readonly)(tileState)
+      (tileState, size) =>
+        Title(programId, authToken, attachmentIds, attachments, readonly, tileState, size)
     )
 
   case class TileState(chartSelector: ChartSelector, selected: Option[Attachment.Id])
@@ -96,7 +98,7 @@ object FinderChartsTile:
 
     private val component =
       ScalaFnComponent[Props]: props =>
-        for
+        for {
           ctx       <- useContext(AppContext.ctx)
           client    <- useMemo(props.authToken): token =>
                          OdbRestClient[IO](ctx.environment, token)
@@ -159,7 +161,7 @@ object FinderChartsTile:
                     .runAsyncAndForget
                 .getOrEmpty
           action    <- useStateView(Action.None)
-        yield
+        } yield
           val transforms = transform.get.calcTransform
 
           <.div(
@@ -203,25 +205,35 @@ object FinderChartsTile:
     authToken:     Option[NonEmptyString],
     attachmentIds: View[SortedSet[Attachment.Id]],
     attachments:   View[AttachmentList],
-    readonly:      Boolean
-  )(val state: View[TileState])
-      extends ReactFnProps(Title):
+    readonly:      Boolean,
+    state:         View[TileState],
+    size:          TileSizeState
+  ) extends ReactFnProps(Title):
     val chartSelector = state.zoom(TileState.chartSelector)
     val selected      = state.zoom(TileState.selected)
 
   private object Title
       extends ReactFnComponent[Title](props =>
-        for
-          // added attachment, FIXME once we can upload and assign in one step
-          added <- useState(none[Attachment.Id])
-        yield attachmentSelector(
-          props.programId,
-          props.attachmentIds,
-          props.attachments,
-          props.authToken,
-          props.selected,
-          added,
-          props.chartSelector,
-          props.readonly
-        )
+        useState(none[Attachment.Id]).map: added =>
+          if (props.size === TileSizeState.Minimized) {
+            // If minimized only indicate if there is a chart
+            val count = props.attachmentIds.get.size
+            val msg   = props.attachments.get.toList match {
+              case Nil              => "No finder charts"
+              case (_, head) :: Nil => s"Finder chart: ${head.fileName}"
+              case _                => s"$count finder charts"
+            }
+            <.div(ExploreStyles.FinderChartsTileTitle, msg)
+          } else
+            // If normal size show the selector
+            attachmentSelector(
+              props.programId,
+              props.attachmentIds,
+              props.attachments,
+              props.authToken,
+              props.selected,
+              added,
+              props.chartSelector,
+              props.readonly
+            )
       )
