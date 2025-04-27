@@ -19,7 +19,7 @@
     "highcharts": "11.4.8",
     "loglevel": "1.9.2",
     "primeicons": "^7.0.0",
-    "primereact": "10.9.1",
+    "primereact": "10.9.5",
     "prop-types": "15.8.1",
     "react": "18.3.1",
     "react-circular-progressbar": "^2.1.0",
