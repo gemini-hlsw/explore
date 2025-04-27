@@ -14,6 +14,7 @@ import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Constants
 import explore.model.Focused
 import explore.model.ObsTabTileIds
 import explore.model.Observation
@@ -313,7 +314,7 @@ object TargetSummaryTile:
               ),
             cellMod = cell => ColumnClasses.get(cell.column.id).orEmpty,
             virtualizerRef = virtualizerRef,
-            emptyMessage = <.div("No targets present")
+            emptyMessage = <.div(Constants.NoTargets)
             // workaround to redraw when files are imported
           ).withKey(s"summary-table-${props.filesToImportCount}")
 

@@ -10,6 +10,7 @@ import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import explore.events.ItcMessage
+import explore.model.Constants
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
 import explore.model.ScienceRequirements
@@ -78,7 +79,21 @@ case class ItcGraphQuerier(
      customSedTimestamps.some
     ).tupled
 
-  val isExecutable: Boolean = queryProps.isDefined
+  val isExecutable: Boolean =
+    queryProps.isDefined
+
+  def queryProblemDescription: Option[String] =
+    Option.unless(isExecutable):
+      if (exposureTimeMode.isEmpty)
+        Constants.NoExposureTimeMode
+      else if (itcTargets.isEmpty)
+        Constants.NoTargets
+      else if (instrumentConfig.isEmpty)
+        Constants.MissingMode
+      else if (customSedTimestamps.isEmpty)
+        Constants.MissingCustomSED
+      else
+        Constants.MissingInfoMsg
 
   // Returns graphs for each target and the brightest target
   def requestGraphs(using
@@ -97,7 +112,7 @@ case class ItcGraphQuerier(
     action.getOrElse:
       IO.raiseError:
         val msg = instrumentConfig match
-          case None    => s"$baseError observation is missing observing mode"
+          case None    => Constants.MissingMode
           case Some(_) =>
             asterismIds.toList match
               case Nil         => "no targets"

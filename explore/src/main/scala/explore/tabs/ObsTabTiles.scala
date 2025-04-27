@@ -472,7 +472,7 @@ object ObsTabTiles:
                 obsDuration.map(_.toDuration),
                 schedulingWindows.get,
                 props.globalPreferences.get,
-                "No target selected"
+                Constants.NoTargetSelected
               )
 
           def getObsInfo(obsId: Observation.Id)(targetId: Target.Id): TargetEditObsInfo =
