@@ -47,12 +47,14 @@ fetch('/environments.conf.json').then((response) => {
       // Set it globally so it can be read in Scala code.
       window.enumMetadataString = enumMetadataModule.enumMetadata;
 
-      Explore.runIOApp();
-
       // Setup the Service Worker, after Explore is started
       if ('serviceWorker' in navigator && !/local.lucuma.xyz/.test(window.location)) {
         ExplorePWA.runServiceWorker();
       }
+
+      // IMOPORTANT: Starte explore after the PWA service worker
+      // Otherwiste, errors on load may swallow the service worker
+      Explore.runIOApp();
 
       if (import.meta.hot) {
         import.meta.hot.accept();
