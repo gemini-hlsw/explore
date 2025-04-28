@@ -19,11 +19,13 @@ trait ConfigurationFormats:
   lazy val slitLengthChangeAuditor       = slitLengthBaseAuditor
     .decimal(2.refined)
     .optional
-  lazy val slitLengthFormat              = ExploreModelValidators.decimalArcsecondsValidWedge.optional
-  lazy val wvMicroInput                  = ExploreModelValidators.wavelengthMicroValidWedge.optional
-  lazy val wvNanoInput                   = ExploreModelValidators.wavelengthNanoValidWedge.optional
-  lazy val wvDeltaMicroInput             = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
-  lazy val wvDeltaNanoInput              = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
+
+  lazy val slitLengthFormat  = ExploreModelValidators.decimalArcsecondsValidWedge.optional
+  lazy val wvMicroInput      = ExploreModelValidators.wavelengthMicroValidWedge.optional
+  lazy val wvNanoInput       = ExploreModelValidators.wavelengthNanoValidWedge.optional
+  lazy val wvDeltaMicroInput = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
+  lazy val wvDeltaNanoInput  = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
+
   extension (u: WavelengthUnits)
     def toAuditor: ChangeAuditor =
       u match

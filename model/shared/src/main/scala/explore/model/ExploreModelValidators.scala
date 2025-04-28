@@ -141,14 +141,8 @@ object ExploreModelValidators:
 
   val wavelengthNanoDeltaValidWedge: InputValidWedge[WavelengthDelta] =
     wavelengthNanoValidWedge.andThen(
-      Iso[Wavelength, WavelengthDelta](w =>
-        WavelengthDelta
-          .fromIntNanometers(w.nm.value.value.toInt)
-          .getOrElse(sys.error("Invalid Wavelength"))
-      )(wc =>
-        Wavelength
-          .fromIntNanometers(wc.nm.value.value.toInt)
-          .getOrElse(sys.error("Invalid Wavelength"))
+      Iso[Wavelength, WavelengthDelta](w => WavelengthDelta(w.pm.value))(wd =>
+        Wavelength(wd.pm.value)
       )
     )
 
