@@ -3342,9 +3342,15 @@ a.explore-upgrade-link {
   margin: 0;
 }
 
+.finder-charts-tile-title {
+  display: flex;
+  justify-content: center;
+}
+
 .finder-charts-background {
   width: 100%;
   height: 100%;
+  border: 0.1px dotted var(--under-tab-border-color);
 }
 
 .finder-charts-selector-section {

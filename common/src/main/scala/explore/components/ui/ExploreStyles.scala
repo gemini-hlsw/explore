@@ -140,6 +140,7 @@ object ExploreStyles:
   val NotesTile: Css = Css("observer-notes-tile")
 
   val FinderChartsTile: Css          = Css("finder-charts-tile")
+  val FinderChartsTileTitle: Css     = Css("finder-charts-tile-title")
   val FinderChartsBody: Css          = Css("finder-charts-body")
   val FinderChartsImage: Css         = Css("finder-charts-image")
   val FinderChartsImageInverted: Css = Css("finder-charts-image-inverted")
