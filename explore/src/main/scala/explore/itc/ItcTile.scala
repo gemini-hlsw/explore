@@ -15,6 +15,7 @@ import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.Constants
 import explore.model.Constants.MissingInfoMsg
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTileIds
@@ -50,7 +51,7 @@ object ItcTile:
     Tile(
       ObsTabTileIds.ItcId.id,
       s"ITC",
-      TileState(itcGraphResults.toOption.flatMap(_.brightestTarget)),
+      ItcTileState(itcGraphResults.toOption.flatMap(_.brightestTarget)),
       bodyClass =
         ExploreStyles.ItcTileBody |+| ExploreStyles.ItcTileBodyError.when_(itcGraphResults.isError)
     )(
@@ -73,9 +74,9 @@ object ItcTile:
         )
     )
 
-  object TileState extends NewType[Option[ItcTarget]]:
-    val Initial: TileState = TileState(none)
-  type TileState = TileState.Type
+  object ItcTileState extends NewType[Option[ItcTarget]]:
+    val Initial: ItcTileState = ItcTileState(none)
+  type ItcTileState = ItcTileState.Type
 
   private case class Body(
     uid:               User.Id,
@@ -83,9 +84,9 @@ object ItcTile:
     itcGraphQuerier:   ItcGraphQuerier,
     itcGraphResults:   Pot[ItcAsterismGraphResults],
     globalPreferences: View[GlobalPreferences],
-    tileState:         View[TileState]
+    tileState:         View[ItcTileState]
   ) extends ReactFnProps(Body.component):
-    val selectedTarget: View[Option[ItcTarget]] = tileState.as(TileState.Value)
+    val selectedTarget: View[Option[ItcTarget]] = tileState.as(ItcTileState.Value)
 
   private object Body:
     private type Props = Body
@@ -164,7 +165,7 @@ object ItcTile:
               props.itcGraphQuerier.selectedConfig.isDefined || selectedResult.isDefined
 
             val targetErrors: Option[String] =
-              if graphResults.asterismGraphs.isEmpty then "No target available".some
+              if graphResults.asterismGraphs.isEmpty then Constants.NoTargets.some
               else
                 NonEmptyString
                   .from:
@@ -217,9 +218,9 @@ object ItcTile:
   private case class Title(
     itcGraphQuerier: ItcGraphQuerier,
     itcGraphResults: Pot[ItcAsterismGraphResults],
-    tileState:       View[TileState]
+    tileState:       View[ItcTileState]
   ) extends ReactFnProps(Title.component):
-    val selectedTarget = tileState.as(TileState.Value)
+    val selectedTarget = tileState.as(ItcTileState.Value)
 
   private object Title:
     private type Props = Title
@@ -262,7 +263,9 @@ object ItcTile:
                   e => <.span(Icons.MissingInfoIcon).withTooltip(e.getMessage)
                 )
               else
-                <.span(Icons.MissingInfoIcon).withTooltip(MissingInfoMsg)
+                <.span(Icons.MissingInfoIcon).withTooltip(
+                  props.itcGraphQuerier.queryProblemDescription.getOrElse(MissingInfoMsg)
+                )
             )
 
           <.div(

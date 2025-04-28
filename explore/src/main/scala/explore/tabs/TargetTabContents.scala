@@ -555,7 +555,7 @@ object TargetTabContents extends TwoPanels:
                 none,
                 Nil,
                 props.globalPreferences.get,
-                "No target selected"
+                Constants.NoTargetSelected
               )
 
             List(asterismEditorTile, skyPlotTile)
@@ -610,7 +610,7 @@ object TargetTabContents extends TwoPanels:
               none,
               Nil,
               props.globalPreferences.get,
-              "No target selected"
+              Constants.NoTargetSelected
             )
 
           val rightSide = { (resize: UseResizeDetectorReturn) =>

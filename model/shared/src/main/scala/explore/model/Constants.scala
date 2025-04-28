@@ -63,11 +63,17 @@ trait Constants:
   val Calculating        = "Calculating..."
   val NoGuideStarMessage = "No guidestar available"
   val NoDuration         = "No duration available"
-  val MissingMode        = "Mode not selected"
+  val NoExposureTimeMode = "No exposure time mode defined"
+  val NoConstraints      = "Constraints not defined"
+  val MissingMode        = "Observation is missing observing mode" // Matches odb error message
   val MissingCandidates  = "No catalog stars available"
+  val MissingCustomSED   = "Missing custom SED timestamps"
+  val NoTargets          = "No targets available"
+  val NoTargetSelected   = "No target selected"
   val BadTimingWindow    = "Review the dates on this timing window."
   val MissingInfoMsg     = "Not enough information to call ITC"
   val P1TemplatesUrl     = "https://www.gemini.edu/observing/phase-i/pit/pit-description#PDF"
 
   val SignalToNoiseAtLabel = "λ for S/N"
+
 object Constants extends Constants
