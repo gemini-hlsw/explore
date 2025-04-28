@@ -52,8 +52,9 @@ fetch('/environments.conf.json').then((response) => {
         ExplorePWA.runServiceWorker();
       }
 
-      // IMOPORTANT: Starte explore after the PWA service worker
-      // Otherwiste, errors on load may swallow the service worker
+      // IMPORTANT: Start explore **after** the PWA service worker
+      // Otherwise, errors on load may swallow the service worker
+      // And leave the user unable to upgrade forever
       Explore.runIOApp();
 
       if (import.meta.hot) {
