@@ -16,6 +16,7 @@ import lucuma.core.enums.GmosSouthFilter
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.*
+import lucuma.core.util.Enumerated
 import monocle.Focus
 import spire.math.interval.ValueBound
 
@@ -48,7 +49,7 @@ object ImagingConfigurationOptions {
 
   val Default = ImagingConfigurationOptions(SortedSet.empty, none, none, none)
 
-  val gmosNorthFilters = GmosNorthFilter.all
+  val gmosNorthFilters = Enumerated[GmosNorthFilter].all
     .filterNot(f =>
       f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
     )
@@ -72,7 +73,7 @@ object ImagingConfigurationOptions {
       }
     }
 
-  val gmosSouthFilters = GmosSouthFilter.all
+  val gmosSouthFilters = Enumerated[GmosSouthFilter].all
     .filterNot(f =>
       f.filterType === FilterType.Spectroscopic || f.filterType === FilterType.Engineering
     )

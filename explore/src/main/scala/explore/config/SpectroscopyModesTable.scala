@@ -10,10 +10,6 @@ import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import coulomb.*
-import coulomb.ops.algebra.spire.all.*
-import coulomb.policy.standard.given
-import coulomb.syntax.*
-import coulomb.units.accepted.ArcSecond
 import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
@@ -47,6 +43,8 @@ import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.util.OptionLike.optionInstance
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
+import lucuma.core.geom.f2.f2SlitWidthPixels
+import lucuma.core.geom.gmos.gmosSlitWidthPixels
 import lucuma.core.math.*
 import lucuma.core.math.units.Pixels
 import lucuma.core.model.*
@@ -81,21 +79,6 @@ import scala.concurrent.duration.*
 import scala.language.implicitConversions
 
 import scalajs.js
-
-// TODO: These constants should likely go to lucuma-core
-type ArcSecondPerPixel = ArcSecond / Pixels
-type PixelScale        = Quantity[BigDecimal, ArcSecondPerPixel]
-
-val GmosPixelScale: PixelScale = BigDecimal(0.0807).withUnit[ArcSecondPerPixel]
-val F2PixelScale: PixelScale   = BigDecimal(0.18).withUnit[ArcSecondPerPixel]
-
-def gmosSlitWidthPixels(slitWidth: Angle, xBin: GmosXBinning): Quantity[BigDecimal, Pixels] =
-  val widthArcSeconds = Angle.decimalArcseconds.get(slitWidth).withUnit[ArcSecond]
-  widthArcSeconds / (BigDecimal(xBin.count) * GmosPixelScale)
-
-def f2SlitWidthPixels(slitWidth: Angle): Quantity[BigDecimal, Pixels] =
-  val widthArcSeconds = Angle.decimalArcseconds.get(slitWidth).withUnit[ArcSecond]
-  widthArcSeconds / F2PixelScale
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],

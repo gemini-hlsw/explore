@@ -182,10 +182,11 @@ object all:
             .getOption(om)
         )
 
-  // TODO: This will be on the next release of core
   extension (bc: ObservingModeType)
-    def defaultPosAngleConstraint: PosAngleOptions =
-      bc match
-        case ObservingModeType.GmosNorthLongSlit  => PosAngleOptions.AverageParallactic
-        case ObservingModeType.GmosSouthLongSlit  => PosAngleOptions.AverageParallactic
-        case ObservingModeType.Flamingos2LongSlit => PosAngleOptions.AverageParallactic
+    def defaultPosAngleOptions: PosAngleOptions =
+      bc.defaultPosAngleConstraint match
+        case PosAngleConstraint.Unbounded              => PosAngleOptions.Unconstrained
+        case PosAngleConstraint.Fixed(_)               => PosAngleOptions.Fixed
+        case PosAngleConstraint.AllowFlip(_)           => PosAngleOptions.AllowFlip
+        case PosAngleConstraint.ParallacticOverride(_) => PosAngleOptions.ParallacticOverride
+        case PosAngleConstraint.AverageParallactic     => PosAngleOptions.AverageParallactic
