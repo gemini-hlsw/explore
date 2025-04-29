@@ -15,7 +15,7 @@ import japgolly.webapputil.indexeddb.*
 import lucuma.ags
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.votable.*
-import lucuma.core.geom.gmos.probeArm
+import lucuma.core.geom.gmos.candidatesArea
 import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
@@ -94,7 +94,7 @@ trait CatalogCache extends CatalogIDB {
         // Make a query based on two coordinates of the base of an asterism over a year
         val query = CoordinatesRangeQueryByADQL(
           NonEmptyList.of(a.value, b.value),
-          probeArm.candidatesArea,
+          candidatesArea.candidatesArea,
           brightnessConstraints.some,
           proxy.some
         )
