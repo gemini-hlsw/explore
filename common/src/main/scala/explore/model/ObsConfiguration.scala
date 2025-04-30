@@ -12,6 +12,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enums.AgsState
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.ObservingModeType
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
@@ -58,3 +59,6 @@ case class ObsConfiguration(
 
   def selectedPA: Option[Angle] =
     posAngleProperties.flatMap(_.selectedPA)
+
+  def obsModeType: Option[ObservingModeType] =
+    configuration.map(_.obsModeType)

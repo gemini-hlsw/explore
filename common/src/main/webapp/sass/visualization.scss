@@ -49,6 +49,15 @@ $brightness: var(--aladin-image-brightness);
     .gmos-candidates-area {
       display: inline;
     }
+
+    .f2-probe-arm {
+      display: inline;
+    }
+
+    .f2-science-ccd,
+    .f2-candidates-area {
+      display: inline;
+    }
   }
 
   .p-menu.p-component.explore-aladin-settings-menu {

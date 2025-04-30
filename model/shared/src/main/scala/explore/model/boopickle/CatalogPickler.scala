@@ -11,6 +11,7 @@ import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.enums.F2Fpu
 import lucuma.core.enums.GuideProbe
 import lucuma.core.geom.Area
 import lucuma.core.math.Coordinates
@@ -19,9 +20,10 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
+import lucuma.core.model.sequence.f2.F2FpuMask
 
 // Boopicklers for catalog related types
-trait CatalogPicklers extends CommonPicklers {
+trait CatalogPicklers extends CommonPicklers:
 
   given Pickler[Epoch] =
     new Pickler[Epoch] {
@@ -64,9 +66,21 @@ trait CatalogPicklers extends CommonPicklers {
 
   given Pickler[AgsParams.GmosAgsParams] = generatePickler
 
+  given Pickler[F2FpuMask.Imaging.type] = generatePickler
+  given Pickler[F2FpuMask.Builtin]      = generatePickler
+  given Pickler[F2FpuMask.Custom]       = generatePickler
+  given Pickler[F2FpuMask]              =
+    compositePickler[F2FpuMask]
+      .addConcreteType[F2FpuMask.Imaging.type]
+      .addConcreteType[F2FpuMask.Builtin]
+      .addConcreteType[F2FpuMask.Custom]
+
+  given Pickler[AgsParams.F2AgsParams] = generatePickler
+
   given Pickler[AgsParams] =
     compositePickler[AgsParams]
       .addConcreteType[AgsParams.GmosAgsParams]
+      .addConcreteType[AgsParams.F2AgsParams]
 
   given Pickler[Area] =
     transformPickler((x: Long) =>
@@ -88,6 +102,5 @@ trait CatalogPicklers extends CommonPicklers {
       .addConcreteType[ObjectTracking.SiderealObjectTracking]
       .addConcreteType[ObjectTracking.SiderealAsterismTracking]
       .addConcreteType[ObjectTracking.ConstantTracking]
-}
 
 object CatalogPicklers extends CatalogPicklers

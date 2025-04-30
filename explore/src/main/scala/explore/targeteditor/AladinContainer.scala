@@ -25,6 +25,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.AgsAnalysis
 import lucuma.core.enums.GuideSpeed
+import lucuma.core.enums.ObservingModeType
 import lucuma.core.enums.PortDisposition
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.Angle
@@ -130,16 +131,30 @@ object AladinContainer extends AladinCommon {
             val candidatesVisibilityCss =
               ExploreStyles.GuideStarCandidateVisible.when_(props.globalPreferences.agsOverlay)
 
-            GmosGeometry.gmosGeometry(
-              baseCoords.value._1.value,
-              props.obsConf.flatMap(_.scienceOffsets),
-              props.obsConf.flatMap(_.acquisitionOffsets),
-              props.obsConf.flatMap(_.fallbackPosAngle),
-              props.obsConf.flatMap(_.configuration),
-              PortDisposition.Side,
-              props.selectedGuideStar,
-              candidatesVisibilityCss
-            )
+            props.obsConf.flatMap(_.configuration.map(_.obsModeType)).flatMap {
+              case ObservingModeType.Flamingos2LongSlit                                      =>
+                Flamingos2Geometry.f2Geometry(
+                  baseCoords.value._1.value,
+                  props.obsConf.flatMap(_.scienceOffsets),
+                  props.obsConf.flatMap(_.acquisitionOffsets),
+                  props.obsConf.flatMap(_.fallbackPosAngle),
+                  props.obsConf.flatMap(_.configuration),
+                  PortDisposition.Side,
+                  props.selectedGuideStar,
+                  candidatesVisibilityCss
+                )
+              case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit =>
+                GmosGeometry.gmosGeometry(
+                  baseCoords.value._1.value,
+                  props.obsConf.flatMap(_.scienceOffsets),
+                  props.obsConf.flatMap(_.acquisitionOffsets),
+                  props.obsConf.flatMap(_.fallbackPosAngle),
+                  props.obsConf.flatMap(_.configuration),
+                  PortDisposition.Side,
+                  props.selectedGuideStar,
+                  candidatesVisibilityCss
+                )
+            }
           }
         // resize detector
         resize     <- useResizeDetector
