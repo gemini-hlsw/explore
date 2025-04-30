@@ -607,18 +607,22 @@ thead tr th.sticky-header {
   & > * {
     flex: 1 1 0;
   }
+
+  .explore-tile-title-menu {
+    cursor: move;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+  }
 }
 
+.finder-charts-tile-title,
 .explore-tile-title-menu {
   @include lucumaUICommon.text-ellipsis;
 
-  cursor: move;
   padding: 0.5em;
   letter-spacing: 2px;
-  min-width: 100px;
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
 }
 
 .explore-tile-control-buttons {
@@ -3340,11 +3344,6 @@ a.explore-upgrade-link {
   list-style: none;
   padding-left: 0;
   margin: 0;
-}
-
-.finder-charts-tile-title {
-  display: flex;
-  justify-content: center;
 }
 
 .finder-charts-background {
