@@ -348,7 +348,7 @@ object ConfigurationTile:
             )
           }
 
-          val optGmosNSouthAligner = optModeAligner.flatMap {
+          val optGmosSouthAligner = optModeAligner.flatMap {
             _.zoomOpt(
               ObservingMode.gmosSouthLongSlit,
               modOrAssignAndMap(GmosSouthLongSlitInput())(
@@ -440,7 +440,7 @@ object ConfigurationTile:
                       )
                   ),
                   // Gmos South Long Slit
-                  (optGmosNSouthAligner, spectroscopyView.asView).mapN((southAligner, specView) =>
+                  (optGmosSouthAligner, spectroscopyView.asView).mapN((southAligner, specView) =>
                     AdvancedConfigurationPanel
                       .GmosSouthLongSlit(
                         props.programId,
