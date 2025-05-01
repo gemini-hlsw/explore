@@ -219,9 +219,8 @@ object FinderChartsTile:
             // If minimized only indicate if there is a chart
             val count = props.attachmentIds.get.size
             val msg   = props.attachments.get.toList match {
-              case Nil              => "No finder charts"
-              case (_, head) :: Nil => s"Finder chart: ${head.fileName}"
-              case _                => s"$count finder charts"
+              case Nil => "(0)"
+              case _   => s"($count)"
             }
             <.div(ExploreStyles.FinderChartsTileTitle, msg)
           } else
