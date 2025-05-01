@@ -203,7 +203,8 @@ case class Observation(
             mode,
             explicitRoi.getOrElse(defaultRoi)
           )
-      case _: ObservingMode.F2LongSlit => None
+      case _: ObservingMode.F2LongSlit =>
+        InstrumentOverrides.F2Spectroscopy().some
 
   def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
     (toModeOverride(targets), observingMode)
