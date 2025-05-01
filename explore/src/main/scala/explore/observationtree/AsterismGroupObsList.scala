@@ -240,56 +240,63 @@ object AsterismGroupObsList:
           .toAsync
       .switching(adding.async, AddingTargetOrObs(_))
 
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useState(Dragging(false))
-    .useStateView(AddingTargetOrObs(false))
-    .useEffectOnMountBy: (props, ctx, _, _) =>
-      def replacePage(focused: Focused): Callback =
-        ctx.replacePage((AppTab.Targets, props.programId, focused).some)
+  private val component = ScalaFnComponent[Props]: props =>
+    for {
+      ctx               <- useContext(AppContext.ctx)
+      dragging          <- useState(Dragging(false))
+      addingTargetOrObs <- useStateView(AddingTargetOrObs(false))
+      _                 <- useEffectOnMount:
+                             def replacePage(focused: Focused): Callback =
+                               ctx.replacePage((AppTab.Targets, props.programId, focused).some)
 
-      val obsMissing: Boolean =
-        props.focused.obsSet.nonEmpty && props.selectedAsterismGroup.isEmpty
+                             val obsMissing: Boolean =
+                               props.focused.obsSet.nonEmpty && props.selectedAsterismGroup.isEmpty
 
-      val targetMissing: Boolean =
-        props.focused.target.fold(false)(tid =>
-          !props.programSummaries.get.targetsWithObs.keySet.contains(tid)
-        )
+                             val targetMissing: Boolean =
+                               props.focused.target.fold(false)(tid =>
+                                 !props.programSummaries.get.targetsWithObs.keySet.contains(tid)
+                               )
 
-      val (newFocused, needNewPage): (Focused, Boolean) =
-        (obsMissing, targetMissing) match
-          case (true, _) => (Focused.None, true)
-          case (_, true) => (props.focused.withoutTarget, true)
-          case _         => (props.focused, false)
+                             val (newFocused, needNewPage): (Focused, Boolean) =
+                               (obsMissing, targetMissing) match
+                                 case (true, _) => (Focused.None, true)
+                                 case (_, true) => (props.focused.withoutTarget, true)
+                                 case _         => (props.focused, false)
 
-      val unfocus: Callback =
-        if (needNewPage) replacePage(newFocused) else Callback.empty
+                             val unfocus: Callback =
+                               if (needNewPage) replacePage(newFocused) else Callback.empty
 
-      val expandSelected: Callback =
-        props.selectedAsterismGroup.foldMap(ag => props.expandedIds.mod(_ + ag.obsIds))
+                             val expandSelected: Callback =
+                               props.selectedAsterismGroup.foldMap(ag => props.expandedIds.mod(_ + ag.obsIds))
 
-      def cleanupExpandedIds: Callback =
-        props.expandedIds.mod(_.filter(props.asterismGroups.contains))
+                             def cleanupExpandedIds: Callback =
+                               props.expandedIds.mod(_.filter(props.asterismGroups.contains))
 
-      for
-        _ <- unfocus
-        _ <- expandSelected
-        _ <- cleanupExpandedIds
-      yield ()
-    .render: (props, ctx, dragging, addingTargetOrObs) =>
+                             for
+                               _ <- unfocus
+                               _ <- expandSelected
+                               _ <- cleanupExpandedIds
+                             yield ()
+    } yield
       import ctx.given
 
       val observations: ObservationList =
         props.programSummaries.get.observations
 
+      val targetWithObsMap: SortedMap[Target.Id, TargetWithObs] =
+        props.programSummaries.get.targetsWithObs
+
       val asterismGroups: List[AsterismGroup] =
         props.programSummaries.get.asterismGroups
           .map(AsterismGroup.fromTuple)
+          // Remove targets whose observations are calibrations
+          .filter { ag =>
+            ag.obsIds.idSet.toList
+              .map(observations.get)
+              .flattenOption
+              .forall(_.calibrationRole.isEmpty)
+          }
           .toList
-
-      val targetWithObsMap: SortedMap[Target.Id, TargetWithObs] =
-        props.programSummaries.get.targetsWithObs
 
       // first look to see if something is focused in the tree, else see if something is focused in the summary
       val selectedTargetIds: SortedSet[Target.Id] =
