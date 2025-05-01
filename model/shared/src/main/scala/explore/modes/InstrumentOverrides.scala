@@ -13,3 +13,4 @@ import lucuma.schemas.model.CentralWavelength
 
 enum InstrumentOverrides derives Eq:
   case GmosSpectroscopy(centralWavelength: CentralWavelength, ccdMode: GmosCcdMode, roi: GmosRoi)
+  case F2Spectroscopy()
