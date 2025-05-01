@@ -19,6 +19,7 @@ import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.enums.GmosSouthGrating
 import lucuma.core.enums.ObservingModeType
 import lucuma.core.util.Display
+import lucuma.schemas.ObservationDB.Types.Flamingos2LongSlitInput
 import lucuma.schemas.ObservationDB.Types.GmosNorthLongSlitInput
 import lucuma.schemas.ObservationDB.Types.GmosSouthLongSlitInput
 import lucuma.schemas.ObservationDB.Types.ObservingModeInput
@@ -78,9 +79,14 @@ enum ObservingModeSummary:
           explicitRoi = roi.assign
         ).assign
       )
-    case Flamingos2LongSlit(grating, filter, fpu)                                     =>
-      // TODO ODB does not support F2 mode input yet
-      ObservingModeInput()
+    case Flamingos2LongSlit(disperser, filter, fpu)                                   =>
+      ObservingModeInput(
+        flamingos2LongSlit = Flamingos2LongSlitInput(
+          disperser = disperser.assign,
+          filter = filter.assign,
+          fpu = fpu.assign
+        ).assign
+      )
 
 object ObservingModeSummary:
   def fromObservingMode(observingMode: ObservingMode): ObservingModeSummary =

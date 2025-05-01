@@ -10,6 +10,10 @@ import cats.syntax.all.*
 import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
 import japgolly.webapputil.indexeddb.IndexedDb
+import lucuma.core.enums.F2LyotWheel
+import lucuma.core.enums.ObservingModeType
+import lucuma.core.geom.f2
+import lucuma.core.geom.gmos
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
 import org.typelevel.log4cats.Logger
@@ -35,10 +39,16 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
       client   = FetchClientBuilder[IO].create
     yield invocation =>
       invocation.data match
-        case CatalogMessage.CleanCache            =>
+        case CatalogMessage.CleanCache                     =>
           cacheDb.traverse(stores.clean(_).toF[IO]).void
-        case req @ CatalogMessage.GSRequest(_, _) =>
-          readFromGaia(client, cacheDb, stores, req, c => invocation.respond(c)) *>
+        case req @ CatalogMessage.GSRequest(_, _, obsMode) =>
+          val candidatesArea = obsMode match {
+            case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit =>
+              gmos.candidatesArea.candidatesArea
+            case ObservingModeType.Flamingos2LongSlit                                      =>
+              f2.candidatesArea.candidatesArea(F2LyotWheel.F16) // In practice this is always F16
+          }
+          readFromGaia(client, cacheDb, stores, req, candidatesArea, c => invocation.respond(c)) *>
             expireGuideStarCandidates(cacheDb, stores, Expiration)
               .toF[IO]
               .handleErrorWith(e => Logger[IO].error(e)("Error expiring guidestar candidates"))

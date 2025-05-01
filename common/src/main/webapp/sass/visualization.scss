@@ -42,11 +42,15 @@ $brightness: var(--aladin-image-brightness);
   }
 
   .visualization-overlay-svg {
-    .gmos-probe-arm {
+    .gmos-fpu,
+    .gmos-probe-arm,
+    .gmos-candidates-area {
       display: inline;
     }
 
-    .gmos-candidates-area {
+    .f2-science-ccd,
+    .f2-probe-arm,
+    .f2-candidates-area {
       display: inline;
     }
   }

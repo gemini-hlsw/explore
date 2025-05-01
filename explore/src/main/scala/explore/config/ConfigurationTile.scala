@@ -56,6 +56,7 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
+import lucuma.ui.components.UnderConstruction
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.common.ObsQueriesGQL
@@ -338,7 +339,7 @@ object ConfigurationTile:
 
           val optModeAligner = modeAligner.toOption
 
-          val optNorthAligner = optModeAligner.flatMap {
+          val optGmosNorthAligner = optModeAligner.flatMap {
             _.zoomOpt(
               ObservingMode.gmosNorthLongSlit,
               modOrAssignAndMap(GmosNorthLongSlitInput())(
@@ -347,11 +348,20 @@ object ConfigurationTile:
             )
           }
 
-          val optSouthAligner = optModeAligner.flatMap {
+          val optGmosSouthAligner = optModeAligner.flatMap {
             _.zoomOpt(
               ObservingMode.gmosSouthLongSlit,
               modOrAssignAndMap(GmosSouthLongSlitInput())(
                 ObservingModeInput.gmosSouthLongSlit.modify
+              )
+            )
+          }
+
+          val optF2Aligner = optModeAligner.flatMap {
+            _.zoomOpt(
+              ObservingMode.f2LongSlit,
+              modOrAssignAndMap(Flamingos2LongSlitInput())(
+                ObservingModeInput.flamingos2LongSlit.modify
               )
             )
           }
@@ -414,7 +424,7 @@ object ConfigurationTile:
               else
                 React.Fragment(
                   // Gmos North Long Slit
-                  (optNorthAligner, spectroscopyView.asView).mapN((northAligner, specView) =>
+                  (optGmosNorthAligner, spectroscopyView.asView).mapN((northAligner, specView) =>
                     AdvancedConfigurationPanel
                       .GmosNorthLongSlit(
                         props.programId,
@@ -430,7 +440,7 @@ object ConfigurationTile:
                       )
                   ),
                   // Gmos South Long Slit
-                  (optSouthAligner, spectroscopyView.asView).mapN((southAligner, specView) =>
+                  (optGmosSouthAligner, spectroscopyView.asView).mapN((southAligner, specView) =>
                     AdvancedConfigurationPanel
                       .GmosSouthLongSlit(
                         props.programId,
@@ -444,7 +454,9 @@ object ConfigurationTile:
                         props.readonly,
                         props.units
                       )
-                  )
+                  ),
+                  // F2 Long Slit
+                  (optF2Aligner, spectroscopyView.asView).mapN((_, _) => UnderConstruction())
                 )
             )
           )

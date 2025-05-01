@@ -15,7 +15,7 @@ import japgolly.webapputil.indexeddb.*
 import lucuma.ags
 import lucuma.ags.GuideStarCandidate
 import lucuma.catalog.votable.*
-import lucuma.core.geom.gmos.candidatesArea
+import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
@@ -34,7 +34,7 @@ trait CatalogQuerySettings {
   val proxy = uri"https://cors-proxy.lucuma.xyz"
 
   val MaxTargets           = 100
-  private val CacheVersion = 2
+  private val CacheVersion = 3
 
   given Hash[Coordinates]            = Hash.fromUniversalHashCode
   given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3Lite
@@ -74,13 +74,14 @@ trait CatalogCache extends CatalogIDB {
    * Try to read the gaia query from the cache or else get it from gaia
    */
   def readFromGaia(
-    client:  Client[IO],
-    idb:     Option[IndexedDb.Database],
-    stores:  CacheIDBStores,
-    request: CatalogMessage.GSRequest,
-    respond: List[GuideStarCandidate] => IO[Unit]
+    client:         Client[IO],
+    idb:            Option[IndexedDb.Database],
+    stores:         CacheIDBStores,
+    request:        CatalogMessage.GSRequest,
+    candidatesArea: ShapeExpression,
+    respond:        List[GuideStarCandidate] => IO[Unit]
   )(using Logger[IO]): IO[Unit] = {
-    val CatalogMessage.GSRequest(tracking, obsTime) = request
+    val CatalogMessage.GSRequest(tracking, obsTime, _) = request
 
     val brightnessConstraints = ags.widestConstraints
 
@@ -94,7 +95,7 @@ trait CatalogCache extends CatalogIDB {
         // Make a query based on two coordinates of the base of an asterism over a year
         val query = CoordinatesRangeQueryByADQL(
           NonEmptyList.of(a.value, b.value),
-          candidatesArea.candidatesArea,
+          candidatesArea,
           brightnessConstraints.some,
           proxy.some
         )

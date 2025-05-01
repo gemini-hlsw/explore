@@ -7,6 +7,7 @@ import boopickle.DefaultBasic.*
 import boopickle.Pickler
 import explore.model.boopickle.CatalogPicklers
 import lucuma.ags.GuideStarCandidate
+import lucuma.core.enums.ObservingModeType
 import lucuma.core.model.ObjectTracking
 import workers.WorkerRequest
 
@@ -20,8 +21,9 @@ object CatalogMessage extends CatalogPicklers {
   }
 
   case class GSRequest(
-    tracking: ObjectTracking,
-    vizTime:  Instant
+    tracking:    ObjectTracking,
+    vizTime:     Instant,
+    obsModeType: ObservingModeType
   ) extends Request {
     type ResponseType = List[GuideStarCandidate]
   }

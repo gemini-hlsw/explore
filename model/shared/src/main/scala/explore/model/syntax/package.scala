@@ -18,6 +18,7 @@ import lucuma.core.enums.ObservingModeType
 import lucuma.core.enums.Site
 import lucuma.core.math.Angle
 import lucuma.core.math.Declination
+import lucuma.core.math.Wavelength
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SourceProfile
@@ -180,6 +181,12 @@ object all:
           ObservingMode.gmosSouthLongSlit
             .andThen(ObservingMode.GmosSouthLongSlit.centralWavelength)
             .getOption(om)
+        )
+        .orElse(
+          // FIXME: Hardcoded for Flamingos2
+          ObservingMode.f2LongSlit
+            .getOption(om)
+            .flatMap(_ => Wavelength.decimalMicrometers.getOption(0.65).map(CentralWavelength(_)))
         )
 
   extension (bc: ObservingModeType)
