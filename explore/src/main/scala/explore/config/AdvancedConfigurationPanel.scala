@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.Eq
 import cats.MonadError
 import cats.data.NonEmptyList
 import cats.effect.IO
@@ -14,10 +13,9 @@ import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
-import explore.components.HelpIcon
+import explore.components.*
 import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationFormats.*
 import explore.model.AppContext
@@ -34,6 +32,7 @@ import explore.modes.ModeWavelength
 import explore.modes.SlitLength
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -49,10 +48,7 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
-import lucuma.react.fa.IconSize
-import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.CentralWavelength
@@ -61,16 +57,11 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import monocle.Lens
-import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-
-import scalajs.js
-import scalajs.js.JSConverters.*
 
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id
@@ -244,126 +235,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
   ): Option[ModeData] =
     rows.collectFirstSome(row => findMatrixDataFromRow(mode, reqsWavelength, row))
 
-  extension [A: Eq](view: View[Option[A]])
-    // If the view contains `none`, `get` returns the defaultDisplay value. When setting,
-    // if the new value is the defaultSet value, set it to none.
-    private def withDefault(defaultSet: A, defaultDisplay: A): View[Option[A]] =
-      view.zoom(_.orElse(defaultDisplay.some))(f =>
-        b => f(b).flatMap(newB => if (newB === defaultSet) none else newB.some)
-      )
-
-    private def withDefault(default: A): View[Option[A]] =
-      withDefault(default, default)
-
-  private def customized(original: String, toRevert: Callback): VdomNode =
-    <.span(
-      ^.cls := "fa-layers fa-fw",
-      Icons.ExclamationDiamond
-        .withClass(ExploreStyles.WarningIcon)
-        .withSize(IconSize.X1),
-      ^.onClick --> toRevert
-    ).withTooltip(tooltip =
-      <.div("Customized!", <.br, s"Orginal: $original", <.br, "Click to revert.")
-    )
-
-  private def customizableEnumSelect[A: Enumerated: Display](
-    id:       NonEmptyString,
-    view:     View[A],
-    original: A,
-    disabled: Boolean,
-    exclude:  Set[A] = Set.empty[A]
-  ) =
-    val originalText = original.shortName
-    <.span(
-      LucumaPrimeStyles.FormField,
-      PrimeStyles.InputGroup,
-      FormEnumDropdownView(
-        id = id,
-        value = view,
-        exclude = exclude,
-        disabled = disabled
-      ),
-      (view.get =!= original).fold(
-        <.span(PrimeStyles.InputGroupAddon, customized(originalText, view.set(original)).some),
-        none[VdomNode]
-      )
-    )
-
-  private def customizableEnumSelectOptional[A: Enumerated: Display](
-    id:              NonEmptyString,
-    view:            View[Option[A]],
-    original:        Option[A],
-    disabled:        Boolean,
-    exclude:         Set[A] = Set.empty[A],
-    showClear:       Boolean = false,
-    resetToOriginal: Boolean = false, // resets to `none` on false
-    dropdownMods:    TagMod = TagMod.empty
-  ) =
-    val originalText = original.map(_.shortName).getOrElse("None")
-    <.span(
-      LucumaPrimeStyles.FormField,
-      PrimeStyles.InputGroup,
-      FormEnumDropdownOptionalView(
-        id = id,
-        value = view,
-        exclude = exclude,
-        disabled = disabled,
-        showClear = showClear
-      )(dropdownMods),
-      <.span(PrimeStyles.InputGroupAddon,
-             customized(originalText, view.set(if (resetToOriginal) original else none))
-      )
-        .when(view.get =!= original)
-    )
-
-  private def customizableInputText[A: Eq](
-    id:            NonEmptyString,
-    value:         View[A],
-    validFormat:   InputValidFormat[A],
-    changeAuditor: ChangeAuditor,
-    label:         TagMod,
-    originalValue: A,
-    units:         Option[String],
-    disabled:      Boolean
-  ) =
-    val isCustom    = value.get =!= originalValue
-    val customAddon =
-      if (isCustom) customized(validFormat.reverseGet(originalValue), value.set(originalValue)).some
-      else none
-    FormInputTextView(
-      id = id,
-      value = value,
-      label = label,
-      units = units.orUndefined,
-      postAddons = customAddon.toList,
-      validFormat = validFormat,
-      changeAuditor = changeAuditor,
-      disabled = disabled
-    ).withMods(^.autoComplete.off)
-
-  private def customizableInputTextOptional[A: Eq](
-    id:            NonEmptyString,
-    value:         View[Option[A]],
-    validFormat:   InputValidFormat[Option[A]],
-    changeAuditor: ChangeAuditor,
-    label:         TagMod,
-    originalValue: A,
-    units:         Option[String],
-    disabled:      Boolean
-  ) =
-    val originalText = validFormat.reverseGet(originalValue.some)
-    val customAddon  = value.get.map(_ => customized(originalText, value.set(none)))
-    FormInputTextView(
-      id = id,
-      value = value.withDefault(originalValue),
-      label = label,
-      units = units.orUndefined,
-      postAddons = customAddon.toList,
-      validFormat = validFormat,
-      changeAuditor = changeAuditor,
-      disabled = disabled
-    ).clearable(^.autoComplete.off)
-
   val component =
     ScalaFnComponent[Props]: props =>
       for
@@ -439,10 +310,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         def dithersControl(onChange: Callback): VdomElement =
           val default = defaultWavelengthDithersLens.get(props.observingMode.get)
           val view    = explicitWavelengthDithers(props.observingMode)
-          customizableInputTextOptional(
+          CustomizableInputTextOptional(
             id = "dithers".refined,
             value = view.withOnMod(_ => onChange),
-            originalValue = default,
+            defaultValue = default,
             label =
               React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
             validFormat = validDithers,
@@ -457,10 +328,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         def offsetsControl(onChange: Callback): VdomElement = {
           val default = defaultSpatialOffsetsLens.get(props.observingMode.get)
           val view    = explicitSpatialOffsets(props.observingMode)
-          customizableInputTextOptional(
+          CustomizableInputTextOptional(
             id = "offsets".refined,
             value = view.withOnMod(_ => onChange),
-            originalValue = default,
+            defaultValue = default,
             label = React.Fragment(
               "Spatial Offsets",
               HelpIcon("configuration/spatial-offsets.md".refined)
@@ -494,20 +365,20 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               "Grating",
               HelpIcon("configuration/grating.md".refined)
             ),
-            customizableEnumSelect(
+            CustomizableEnumSelect(
               id = "grating".refined,
               view = grating(props.observingMode),
-              original = initialGratingLens.get(props.observingMode.get),
+              defaultValue = initialGratingLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "filter".refined)(
               "Filter",
               HelpIcon("configuration/filter.md".refined)
             ),
-            customizableEnumSelectOptional(
+            CustomizableEnumSelectOptional(
               id = "filter".refined,
               view = filter(props.observingMode),
-              original = initialFilterLens.get(props.observingMode.get),
+              defaultValue = initialFilterLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit,
               showClear = true,
               resetToOriginal = true
@@ -516,16 +387,16 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               "FPU",
               HelpIcon("configuration/fpu.md".refined)
             ),
-            customizableEnumSelect(
+            CustomizableEnumSelect(
               id = "fpu".refined,
               view = fpu(props.observingMode),
-              original = initialFpuLens.get(props.observingMode.get),
+              defaultValue = initialFpuLens.get(props.observingMode.get),
               disabled = disableAdvancedEdit
             ),
             offsetsControl(props.sequenceChanged)
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
-            customizableInputText(
+            CustomizableInputText(
               id = "central-wavelength".refined,
               value = centralWavelengthView.withOnMod(_ => invalidateITC),
               label = React.Fragment("Central Wavelength",
@@ -534,7 +405,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               units = props.units.symbol.some,
               validFormat = props.units.toInputFormat,
               changeAuditor = props.units.toAuditor,
-              originalValue = initialCentralWavelength,
+              defaultValue = initialCentralWavelength,
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
@@ -556,18 +427,18 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             <.div(
               ExploreStyles.AdvancedConfigurationBinning,
-              customizableEnumSelectOptional(
+              CustomizableEnumSelectOptional(
                 id = "explicitXBin".refined,
                 view = explicitXBinning(props.observingMode).withDefault(defaultXBinning),
-                original = defaultXBinning.some,
+                defaultValue = defaultXBinning.some,
                 disabled = disableAdvancedEdit,
                 dropdownMods = ^.aria.label := "X Binning"
               ),
               <.label("x"),
-              customizableEnumSelectOptional(
+              CustomizableEnumSelectOptional(
                 id = "explicitYBin".refined,
                 view = explicitYBinning(props.observingMode).withDefault(defaultYBinning),
-                original = defaultYBinning.some,
+                defaultValue = defaultYBinning.some,
                 disabled = disableAdvancedEdit,
                 dropdownMods = ^.aria.label := "Y Binning"
               )
@@ -576,20 +447,20 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               "Read Mode",
               HelpIcon("configuration/read-mode.md".refined)
             ),
-            customizableEnumSelectOptional(
+            CustomizableEnumSelectOptional(
               id = "explicitReadMode".refined,
               view = explicitReadModeGain(props.observingMode)
                 .withDefault(defaultReadModeGain, resolvedReadModeGain),
-              original = defaultReadModeGain.some,
+              defaultValue = defaultReadModeGain.some,
               disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "explicitRoi".refined)("ROI",
                                                        HelpIcon("configuration/roi.md".refined)
             ),
-            customizableEnumSelectOptional(
+            CustomizableEnumSelectOptional(
               id = "explicitRoi".refined,
               view = explicitRoi(props.observingMode).withDefault(defaultRoi),
-              original = defaultRoi.some,
+              defaultValue = defaultRoi.some,
               disabled = disableAdvancedEdit
             ),
             FormLabel(htmlFor = "lambda".refined)("λ / Δλ"),
