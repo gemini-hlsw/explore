@@ -111,7 +111,7 @@ object F2LongslitConfigPanel
               view = disperserView,
               defaultValue = props.observingMode.get.initialDisperser,
               label = "Disperser".some,
-              helpId = Some("configuration/disperser.md".refined),
+              helpId = Some("configuration/f2/disperser.md".refined),
               disabled = disableSimpleEdit
             ),
             CustomizableEnumSelect(
@@ -119,7 +119,7 @@ object F2LongslitConfigPanel
               view = filterView,
               defaultValue = props.observingMode.get.initialFilter,
               label = "Filter".some,
-              helpId = Some("configuration/filter.md".refined),
+              helpId = Some("configuration/f2/filter.md".refined),
               disabled = disableSimpleEdit
             ),
             CustomizableEnumSelect(
@@ -127,7 +127,7 @@ object F2LongslitConfigPanel
               view = fpuView,
               defaultValue = props.observingMode.get.initialFpu,
               label = "FPU".some,
-              helpId = Some("configuration/fpu.md".refined),
+              helpId = Some("configuration/f2/fpu.md".refined),
               disabled = disableSimpleEdit
             ),
             CustomizableEnumSelectOptional(
@@ -135,7 +135,7 @@ object F2LongslitConfigPanel
               view = readModeView.withDefault(defaultReadMode),
               defaultValue = defaultReadMode.some,
               label = "Read Mode".some,
-              helpId = Some("configuration/read-mode.md".refined),
+              helpId = Some("configuration/f2/read-mode.md".refined),
               disabled = disableSimpleEdit
             )
           ),
@@ -151,7 +151,7 @@ object F2LongslitConfigPanel
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
             FormLabel(htmlFor = "decker".refined)("Decker",
-                                                  HelpIcon("configuration/decker.md".refined)
+                                                  HelpIcon("configuration/f2/decker.md".refined)
             ),
             if (props.isStaff)
               CustomizableEnumSelectOptional(
