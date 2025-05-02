@@ -154,6 +154,16 @@ trait DisplayImplicits:
 
   given Display[GmosRoi] = Display.byShortName(_.longName)
 
+  given Display[F2Disperser] = Display.by(_.shortName, _.longName)
+
+  given Display[F2Filter] = Display.by(_.shortName, _.longName)
+
+  given Display[F2Fpu] = Display.by(_.shortName, _.longName)
+
+  given Display[F2ReadMode] = Display.by(_.shortName, _.longName)
+
+  given Display[F2Decker] = Display.by(_.shortName, _.longName)
+
   given Display[SequenceType] = Display.byShortName:
     case SequenceType.Acquisition => "Acquisition"
     case SequenceType.Science     => "Science"

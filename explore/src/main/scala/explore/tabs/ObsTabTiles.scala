@@ -586,7 +586,8 @@ object ObsTabTiles:
                 case x        => x
               ,
               props.isDisabled,
-              props.globalPreferences.get.wavelengthUnits
+              props.globalPreferences.get.wavelengthUnits,
+              props.vault.isStaff
             )
 
           val alltiles =

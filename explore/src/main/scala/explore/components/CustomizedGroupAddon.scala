@@ -10,10 +10,13 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.IconSize
+import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
 
-private[components] final case class CustomizedGroupAddon(original: String, toRevert: Callback)
-    extends ReactFnProps(CustomizedGroupAddon)
+private[components] final case class CustomizedGroupAddon(
+  original: String,
+  toRevert: Callback
+) extends ReactFnProps(CustomizedGroupAddon)
 
 private[components] object CustomizedGroupAddon
     extends ReactFnComponent[CustomizedGroupAddon](props =>
@@ -23,7 +26,9 @@ private[components] object CustomizedGroupAddon
           .withClass(ExploreStyles.WarningIcon)
           .withSize(IconSize.X1),
         ^.onClick --> props.toRevert
-      ).withTooltip(content =
-        <.div("Customized!", <.br, s"Orginal: ${props.original}", <.br, "Click to revert.")
+      ).withTooltip(
+        content =
+          <.div("Customized!", <.br, s"Orginal: ${props.original}", <.br, "Click to revert."),
+        position = Tooltip.Position.Left // putting it on the left should always work.
       )
     )

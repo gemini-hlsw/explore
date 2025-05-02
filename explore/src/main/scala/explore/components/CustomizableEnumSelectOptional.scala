@@ -6,7 +6,8 @@ package explore.components
 import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.types.string.NonEmptyString
-import japgolly.scalajs.react.ScalaFnComponent
+import explore.model.Help
+import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -14,6 +15,7 @@ import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.PrimeStyles
 import lucuma.ui.primereact.FormEnumDropdownOptionalView
+import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
@@ -29,6 +31,8 @@ final case class CustomizableEnumSelectOptional[A: Enumerated: Display](
   view:            View[Option[A]],
   defaultValue:    Option[A],
   disabled:        Boolean,
+  label:           Option[String] = None,
+  helpId:          Option[Help.Id] = None,
   exclude:         Set[A] = Set.empty[A],
   showClear:       Boolean = false,
   resetToOriginal: Boolean = false, // resets to `none` on false
@@ -42,23 +46,27 @@ object CustomizableEnumSelectOptional:
 
     val originalText = props.defaultValue.map(_.shortName).getOrElse("None")
 
-    <.span(
-      LucumaPrimeStyles.FormField,
-      PrimeStyles.InputGroup,
-      FormEnumDropdownOptionalView(
-        id = props.id,
-        value = props.view,
-        exclude = props.exclude,
-        disabled = props.disabled,
-        showClear = props.showClear
-      )(props.dropdownMods),
+    React.Fragment(
+      props.label.map(label => FormLabel(htmlFor = props.id)(label, props.helpId.map(HelpIcon(_)))),
       <.span(
-        PrimeStyles.InputGroupAddon,
-        CustomizedGroupAddon(originalText,
-                             props.view.set(if (props.resetToOriginal) props.defaultValue else none)
+        LucumaPrimeStyles.FormField,
+        PrimeStyles.InputGroup,
+        FormEnumDropdownOptionalView(
+          id = props.id,
+          value = props.view,
+          exclude = props.exclude,
+          disabled = props.disabled,
+          showClear = props.showClear
+        )(props.dropdownMods),
+        <.span(
+          PrimeStyles.InputGroupAddon,
+          CustomizedGroupAddon(
+            originalText,
+            props.view.set(if (props.resetToOriginal) props.defaultValue else none)
+          )
         )
+          .when(props.view.get =!= props.defaultValue)
       )
-        .when(props.view.get =!= props.defaultValue)
     )
   )
 
