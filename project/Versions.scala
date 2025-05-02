@@ -14,7 +14,7 @@ object Versions {
   val fs2                    = "3.12.0"
   val fs2Data                = "1.11.0"
   val fs2Dom                 = "0.3.0-M1"
-  val geminiLocales          = "0.7.0"
+  val geminiLocales          = "0.12.0"
   val http4s                 = "0.23.30"
   val http4sDom              = "0.2.11"
   val kittens                = "3.5.0"
