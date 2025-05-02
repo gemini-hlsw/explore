@@ -446,7 +446,7 @@ private object SpectroscopyModesTable:
                              row,
                              Pot.fromOption(result),
                              s.wavelength.flatMap: w =>
-                               ModeCommonWavelengths.wavelengthInterval(w)(row),
+                               row.wavelengthInterval(w),
                              row.instrument.shortName.some
                            )
         itcProgress <- useState(none[Progress])

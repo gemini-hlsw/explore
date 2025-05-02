@@ -44,30 +44,28 @@ trait ModeCommonWavelengths {
   val λmin: ModeWavelength
   val λmax: ModeWavelength
   val λdelta: WavelengthDelta
-}
 
-object ModeCommonWavelengths:
   def wavelengthInterval(
     λ: Wavelength
-  ): ModeCommonWavelengths => Option[BoundedInterval[Wavelength]] =
-    r =>
-      val λr      = r.λdelta
-      // Coverage of allowed wavelength
-      // Can be simplified once coulomb-refined is available
-      val λmin    = r.λmin.value
-      val λmax    = r.λmax.value
-      val range   = λr.centeredAt(λ)
-      // if we are below min clip but shift the range
-      // same if we are above max
-      // At any event we clip at min/max
-      val shifted =
-        if (range.lower < λmin)
-          λr.startingAt(λmin)
-        else if (range.upper > λmax)
-          λr.endingAt(λmax)
-        else
-          range
-      shifted.intersect(BoundedInterval.unsafeClosed(λmin, λmax))
+  ): Option[BoundedInterval[Wavelength]] =
+    val λr      = λdelta
+    // Coverage of allowed wavelength
+    // Can be simplified once coulomb-refined is available
+    val λminV   = λmin.value
+    val λmaxV   = λmax.value
+    val range   = λr.centeredAt(λ)
+    // if we are below min clip but shift the range
+    // same if we are above max
+    // At any event we clip at min/max
+    val shifted =
+      if (range.lower < λminV)
+        λr.startingAt(λminV)
+      else if (range.upper > λmaxV)
+        λr.endingAt(λmaxV)
+      else
+        range
+    shifted.intersect(BoundedInterval.unsafeClosed(λminV, λmaxV))
+}
 
 object SlitLength extends NewType[ModeSlitSize] {
   given Order[SlitLength] = Order.by(_.value.value.toMicroarcseconds)
@@ -106,7 +104,7 @@ case class SpectroscopyModeRow(
   // Range of wavelengths for this row. It takes the min/max and adjust it for the requested
   // wavelength
   def range(cw: Wavelength): Option[BoundedInterval[Wavelength]] =
-    ModeCommonWavelengths.wavelengthInterval(cw)(this)
+    wavelengthInterval(cw)
 
   def withModeOverridesFor(
     wavelength:   Option[Wavelength],

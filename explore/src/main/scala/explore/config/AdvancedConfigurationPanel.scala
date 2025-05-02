@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.Eq
 import cats.MonadError
 import cats.data.NonEmptyList
 import cats.effect.IO
@@ -13,35 +12,25 @@ import coulomb.Quantity
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
 import explore.common.Aligner
-import explore.components.HelpIcon
+import explore.components.*
 import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationFormats.*
 import explore.model.AppContext
 import explore.model.ExploreModelValidators
 import explore.model.Observation
 import explore.model.ScienceRequirements
-import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
-import explore.modes.ItcInstrumentConfig
-import explore.modes.ModeCommonWavelengths
-import explore.modes.ModeSlitSize
 import explore.modes.ModeWavelength
-import explore.modes.SlitLength
-import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
-import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.math.WavelengthDelta
 import lucuma.core.math.WavelengthDither
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
@@ -49,10 +38,6 @@ import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
-import lucuma.react.fa.IconSize
-import lucuma.react.floatingui.syntax.*
-import lucuma.react.primereact.Button
-import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.CentralWavelength
@@ -61,16 +46,10 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
-import lucuma.ui.primereact.given
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import monocle.Lens
-import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-
-import scalajs.js
-import scalajs.js.JSConverters.*
 
 sealed trait AdvancedConfigurationPanel[T <: ObservingMode, Input]:
   def programId: Program.Id
@@ -189,219 +168,15 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
       { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
     )
 
-  private case class ModeData private (
-    centralWavelength: Wavelength,
-    interval:          BoundedInterval[Wavelength],
-    resolution:        PosInt,
-    λmin:              ModeWavelength,
-    λmax:              ModeWavelength,
-    λdelta:            WavelengthDelta
-  ) extends ModeCommonWavelengths
-
-  private object ModeData {
-    def build(row: SpectroscopyModeRow, wavelength: Option[Wavelength]): Option[ModeData] =
-      wavelength.flatMap { cw =>
-        if (cw >= row.λmin.value && cw <= row.λmax.value)
-          ModeCommonWavelengths
-            .wavelengthInterval(cw)(row)
-            .map(interval =>
-              ModeData(
-                cw,
-                interval,
-                row.resolution,
-                row.λmin,
-                row.λmax,
-                row.λdelta
-              )
-            )
-        else
-          none
-      }
-  }
-
-  private def findMatrixDataFromRow(
-    mode:           T,
-    reqsWavelength: Option[Wavelength],
-    row:            SpectroscopyModeRow
-  ): Option[ModeData] =
-    reqsWavelength.flatMap(_ =>
-      (mode, row.instrument) match
-        case (m: ObservingMode.GmosNorthLongSlit,
-              ItcInstrumentConfig.GmosNorthSpectroscopy(rGrating, rFpu, rFilter, _)
-            ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
-          ModeData.build(row, reqsWavelength)
-        case (m: ObservingMode.GmosSouthLongSlit,
-              ItcInstrumentConfig.GmosSouthSpectroscopy(rGrating, rFpu, rFilter, _)
-            ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
-          ModeData.build(row, reqsWavelength)
-        case _ => none
-    )
-
-  private def findMatrixData(
-    mode:           T,
-    reqsWavelength: Option[Wavelength],
-    rows:           List[SpectroscopyModeRow]
-  ): Option[ModeData] =
-    rows.collectFirstSome(row => findMatrixDataFromRow(mode, reqsWavelength, row))
-
-  extension [A: Eq](view: View[Option[A]])
-    // If the view contains `none`, `get` returns the defaultDisplay value. When setting,
-    // if the new value is the defaultSet value, set it to none.
-    private def withDefault(defaultSet: A, defaultDisplay: A): View[Option[A]] =
-      view.zoom(_.orElse(defaultDisplay.some))(f =>
-        b => f(b).flatMap(newB => if (newB === defaultSet) none else newB.some)
-      )
-
-    private def withDefault(default: A): View[Option[A]] =
-      withDefault(default, default)
-
-  private def customized(original: String, toRevert: Callback): VdomNode =
-    <.span(
-      ^.cls := "fa-layers fa-fw",
-      Icons.ExclamationDiamond
-        .withClass(ExploreStyles.WarningIcon)
-        .withSize(IconSize.X1),
-      ^.onClick --> toRevert
-    ).withTooltip(tooltip =
-      <.div("Customized!", <.br, s"Orginal: $original", <.br, "Click to revert.")
-    )
-
-  private def customizableEnumSelect[A: Enumerated: Display](
-    id:       NonEmptyString,
-    view:     View[A],
-    original: A,
-    disabled: Boolean,
-    exclude:  Set[A] = Set.empty[A]
-  ) =
-    val originalText = original.shortName
-    <.span(
-      LucumaPrimeStyles.FormField,
-      PrimeStyles.InputGroup,
-      FormEnumDropdownView(
-        id = id,
-        value = view,
-        exclude = exclude,
-        disabled = disabled
-      ),
-      (view.get =!= original).fold(
-        <.span(PrimeStyles.InputGroupAddon, customized(originalText, view.set(original)).some),
-        none[VdomNode]
-      )
-    )
-
-  private def customizableEnumSelectOptional[A: Enumerated: Display](
-    id:              NonEmptyString,
-    view:            View[Option[A]],
-    original:        Option[A],
-    disabled:        Boolean,
-    exclude:         Set[A] = Set.empty[A],
-    showClear:       Boolean = false,
-    resetToOriginal: Boolean = false, // resets to `none` on false
-    dropdownMods:    TagMod = TagMod.empty
-  ) =
-    val originalText = original.map(_.shortName).getOrElse("None")
-    <.span(
-      LucumaPrimeStyles.FormField,
-      PrimeStyles.InputGroup,
-      FormEnumDropdownOptionalView(
-        id = id,
-        value = view,
-        exclude = exclude,
-        disabled = disabled,
-        showClear = showClear
-      )(dropdownMods),
-      <.span(PrimeStyles.InputGroupAddon,
-             customized(originalText, view.set(if (resetToOriginal) original else none))
-      )
-        .when(view.get =!= original)
-    )
-
-  private def customizableInputText[A: Eq](
-    id:            NonEmptyString,
-    value:         View[A],
-    validFormat:   InputValidFormat[A],
-    changeAuditor: ChangeAuditor,
-    label:         TagMod,
-    originalValue: A,
-    units:         Option[String],
-    disabled:      Boolean
-  ) =
-    val isCustom    = value.get =!= originalValue
-    val customAddon =
-      if (isCustom) customized(validFormat.reverseGet(originalValue), value.set(originalValue)).some
-      else none
-    FormInputTextView(
-      id = id,
-      value = value,
-      label = label,
-      units = units.orUndefined,
-      postAddons = customAddon.toList,
-      validFormat = validFormat,
-      changeAuditor = changeAuditor,
-      disabled = disabled
-    ).withMods(^.autoComplete.off)
-
-  private def customizableInputTextOptional[A: Eq](
-    id:            NonEmptyString,
-    value:         View[Option[A]],
-    validFormat:   InputValidFormat[Option[A]],
-    changeAuditor: ChangeAuditor,
-    label:         TagMod,
-    originalValue: A,
-    units:         Option[String],
-    disabled:      Boolean
-  ) =
-    val originalText = validFormat.reverseGet(originalValue.some)
-    val customAddon  = value.get.map(_ => customized(originalText, value.set(none)))
-    FormInputTextView(
-      id = id,
-      value = value.withDefault(originalValue),
-      label = label,
-      units = units.orUndefined,
-      postAddons = customAddon.toList,
-      validFormat = validFormat,
-      changeAuditor = changeAuditor,
-      disabled = disabled
-    ).clearable(^.autoComplete.off)
-
   val component =
     ScalaFnComponent[Props]: props =>
       for
         ctx       <- useContext(AppContext.ctx)
-        emv       <- useStateView(props.spectroscopyRequirements.get.exposureTimeMode)
-        // filter the spectroscopy matrix by the requirements that don't get overridden
-        // by the advanced config (wavelength, for example).
-        rows      <- useMemo(
-                       (props.spectroscopyRequirements.get.focalPlane,
-                        props.spectroscopyRequirements.get.capability,
-                        props.spectroscopyRequirements.get.focalPlaneAngle,
-                        props.spectroscopyRequirements.get.resolution,
-                        props.spectroscopyRequirements.get.wavelengthCoverage,
-                        props.confMatrix.matrix.length
-                       )
-                     ) { (fp, cap, fpa, res, rng, _) =>
-                       props.confMatrix.filtered(
-                         focalPlane = fp,
-                         capability = cap,
-                         slitLength = fpa.map(s => SlitLength(ModeSlitSize(s))),
-                         resolution = res,
-                         range = rng
-                       )
-                     }
-        // Try to find the mode row from the spectroscopy matrix
-        modeData  <- useMemo {
-                       import ctx.given
-
-                       (props.spectroscopyRequirements.get.wavelength,
-                        rows,
-                        centralWavelength(props.observingMode).get,
-                        grating(props.observingMode).get,
-                        filter(props.observingMode).get,
-                        fpu(props.observingMode).get
-                       )
-                     } { (reqsWavelength, rows, _, _, _, _) =>
-                       findMatrixData(props.observingMode.get, reqsWavelength, rows)
-                     }
+        modeData  <- useModeData(
+                       props.confMatrix,
+                       props.spectroscopyRequirements.get,
+                       props.observingMode.get
+                     )
         editState <- useStateView(ConfigEditState.View)
       yield
         import ctx.given
@@ -413,18 +188,13 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         val centralWavelengthView    = centralWavelength(props.observingMode)
         val initialCentralWavelength = initialCentralWavelengthLens.get(props.observingMode.get)
 
-        val adjustedInterval =
-          modeData.value.flatMap(
-            ModeCommonWavelengths.wavelengthInterval(centralWavelengthView.get)
-          )
-
         val defaultXBinning      = defaultXBinningLens.get(props.observingMode.get)
         val defaultYBinning      = defaultYBinningLens.get(props.observingMode.get)
         val defaultReadModeGain  = defaultReadModeGainLens.get(props.observingMode.get)
         val defaultRoi           = defaultRoiLens.get(props.observingMode.get)
         val resolvedReadModeGain = resolvedReadModeGainGetter(props.observingMode.get)
 
-        val validDithers = modeData.value
+        val validDithers = modeData
           .map(mode =>
             ExploreModelValidators
               .dithersValidWedge(centralWavelengthView.get, mode.λmin.value, mode.λmax.value)
@@ -439,10 +209,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         def dithersControl(onChange: Callback): VdomElement =
           val default = defaultWavelengthDithersLens.get(props.observingMode.get)
           val view    = explicitWavelengthDithers(props.observingMode)
-          customizableInputTextOptional(
+          CustomizableInputTextOptional(
             id = "dithers".refined,
             value = view.withOnMod(_ => onChange),
-            originalValue = default,
+            defaultValue = default,
             label =
               React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
             validFormat = validDithers,
@@ -457,10 +227,10 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
         def offsetsControl(onChange: Callback): VdomElement = {
           val default = defaultSpatialOffsetsLens.get(props.observingMode.get)
           val view    = explicitSpatialOffsets(props.observingMode)
-          customizableInputTextOptional(
+          CustomizableInputTextOptional(
             id = "offsets".refined,
             value = view.withOnMod(_ => onChange),
-            originalValue = default,
+            defaultValue = default,
             label = React.Fragment(
               "Spatial Offsets",
               HelpIcon("configuration/spatial-offsets.md".refined)
@@ -475,11 +245,6 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
           )
         }
 
-        val invalidateITC: Callback =
-          Callback.empty
-
-        given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(props.units)
-
         val exposureTimeMode =
           props.spectroscopyRequirements.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
 
@@ -490,51 +255,45 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             LucumaPrimeStyles.FormColumnCompact,
             ExploreStyles.AdvancedConfigurationCol1
           )(
-            FormLabel(htmlFor = "grating".refined)(
-              "Grating",
-              HelpIcon("configuration/grating.md".refined)
-            ),
-            customizableEnumSelect(
+            CustomizableEnumSelect(
               id = "grating".refined,
               view = grating(props.observingMode),
-              original = initialGratingLens.get(props.observingMode.get),
+              defaultValue = initialGratingLens.get(props.observingMode.get),
+              label = "Grating".some,
+              helpId = Some("configuration/grating.md".refined),
               disabled = disableAdvancedEdit
             ),
-            FormLabel(htmlFor = "filter".refined)(
-              "Filter",
-              HelpIcon("configuration/filter.md".refined)
-            ),
-            customizableEnumSelectOptional(
+            CustomizableEnumSelectOptional(
               id = "filter".refined,
               view = filter(props.observingMode),
-              original = initialFilterLens.get(props.observingMode.get),
+              defaultValue = initialFilterLens.get(props.observingMode.get),
+              label = "Filter".some,
+              helpId = Some("configuration/filter.md".refined),
               disabled = disableAdvancedEdit,
               showClear = true,
               resetToOriginal = true
             ),
-            FormLabel(htmlFor = "fpu".refined)(
-              "FPU",
-              HelpIcon("configuration/fpu.md".refined)
-            ),
-            customizableEnumSelect(
+            CustomizableEnumSelect(
               id = "fpu".refined,
               view = fpu(props.observingMode),
-              original = initialFpuLens.get(props.observingMode.get),
+              defaultValue = initialFpuLens.get(props.observingMode.get),
+              label = "FPU".some,
+              helpId = Some("configuration/fpu.md".refined),
               disabled = disableAdvancedEdit
             ),
             offsetsControl(props.sequenceChanged)
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
-            customizableInputText(
+            CustomizableInputText(
               id = "central-wavelength".refined,
-              value = centralWavelengthView.withOnMod(_ => invalidateITC),
+              value = centralWavelengthView,
               label = React.Fragment("Central Wavelength",
                                      HelpIcon("configuration/central=wavelength.md".refined)
               ),
               units = props.units.symbol.some,
               validFormat = props.units.toInputFormat,
               changeAuditor = props.units.toAuditor,
-              originalValue = initialCentralWavelength,
+              defaultValue = initialCentralWavelength,
               disabled = disableSimpleEdit
             ),
             dithersControl(props.sequenceChanged),
@@ -556,86 +315,53 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             ),
             <.div(
               ExploreStyles.AdvancedConfigurationBinning,
-              customizableEnumSelectOptional(
+              CustomizableEnumSelectOptional(
                 id = "explicitXBin".refined,
                 view = explicitXBinning(props.observingMode).withDefault(defaultXBinning),
-                original = defaultXBinning.some,
+                defaultValue = defaultXBinning.some,
                 disabled = disableAdvancedEdit,
                 dropdownMods = ^.aria.label := "X Binning"
               ),
               <.label("x"),
-              customizableEnumSelectOptional(
+              CustomizableEnumSelectOptional(
                 id = "explicitYBin".refined,
                 view = explicitYBinning(props.observingMode).withDefault(defaultYBinning),
-                original = defaultYBinning.some,
+                defaultValue = defaultYBinning.some,
                 disabled = disableAdvancedEdit,
                 dropdownMods = ^.aria.label := "Y Binning"
               )
             ),
-            FormLabel(htmlFor = "explicitReadMode".refined)(
-              "Read Mode",
-              HelpIcon("configuration/read-mode.md".refined)
-            ),
-            customizableEnumSelectOptional(
+            CustomizableEnumSelectOptional(
               id = "explicitReadMode".refined,
               view = explicitReadModeGain(props.observingMode)
                 .withDefault(defaultReadModeGain, resolvedReadModeGain),
-              original = defaultReadModeGain.some,
+              defaultValue = defaultReadModeGain.some,
+              label = "Read Mode".some,
+              helpId = Some("configuration/read-mode.md".refined),
               disabled = disableAdvancedEdit
             ),
-            FormLabel(htmlFor = "explicitRoi".refined)("ROI",
-                                                       HelpIcon("configuration/roi.md".refined)
-            ),
-            customizableEnumSelectOptional(
+            CustomizableEnumSelectOptional(
               id = "explicitRoi".refined,
               view = explicitRoi(props.observingMode).withDefault(defaultRoi),
-              original = defaultRoi.some,
+              defaultValue = defaultRoi.some,
+              label = "ROI".some,
+              helpId = Some("configuration/roi.md".refined),
               disabled = disableAdvancedEdit
             ),
-            FormLabel(htmlFor = "lambda".refined)("λ / Δλ"),
-            <.label(^.id := "lambda",
-                    ExploreStyles.FormValue,
-                    s"${modeData.value.fold("Unknown")(_.resolution.toString)}"
-            ),
-            FormLabel(htmlFor = "lambdaInterval".refined)("λ Interval"),
-            <.label(^.id := "lambdaInterval",
-                    ExploreStyles.FormValue,
-                    s"${adjustedInterval.fold("Unknown")(_.shortName)} ${props.units.symbol}"
+            LambdaAndIntervalFormValues(
+              modeData = modeData,
+              centralWavelength = centralWavelengthView.get.some,
+              units = props.units
             )
           ),
-          <.div(ExploreStyles.AdvancedConfigurationButtons)(
-            Button(
-              label = "Revert Configuration",
-              icon = Icons.ListIcon,
-              severity = Button.Severity.Secondary,
-              onClick = props.revertConfig
-            ).compact.small
-              .unless(isCustomized(props.observingMode)),
-            Button(
-              label = "Revert Customizations",
-              icon = Icons.TrashUnstyled,
-              severity = Button.Severity.Danger,
-              onClick = props.sequenceChanged *> editState.set(ConfigEditState.View) >>
-                // exposureModeEnum.set(none) >>
-                invalidateITC >>
-                revertCustomizations(props.observingMode)
-            ).compact.small
-              .when(isCustomized(props.observingMode)),
-            Button(
-              label = "Customize",
-              icon = Icons.Edit,
-              severity = Button.Severity.Secondary,
-              onClick = editState.set(ConfigEditState.SimpleEdit)
-            ).compact.small
-              .when(editState.get === ConfigEditState.View),
-            Button(
-              label = "Advanced Customization",
-              icon = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
-              severity = Button.Severity.Secondary,
-              onClick = editState.set(ConfigEditState.AdvancedEdit)
-            ).compact.small
-              .when(editState.get === ConfigEditState.SimpleEdit)
-          ).unless(props.readonly)
+          AdvancedConfigButtons(
+            editState = editState,
+            isCustomized = isCustomized(props.observingMode),
+            revertConfig = props.revertConfig,
+            revertCustomizations = revertCustomizations(props.observingMode),
+            sequenceChanged = props.sequenceChanged,
+            readonly = props.readonly
+          )
         )
 }
 
@@ -898,9 +624,6 @@ object AdvancedConfigurationPanel {
         GmosSouthFpu
       ] {
 
-    // @inline override protected def isCustomized(aligner: AA): Boolean =
-    //   aligner.get =!= ObservingMode.GmosSouthLongSlit.Empty
-
     @inline override protected def revertCustomizations(
       aligner: AA
     )(using MonadError[IO, Throwable], Effect.Dispatch[IO], Logger[IO]): Callback =
@@ -950,17 +673,6 @@ object AdvancedConfigurationPanel {
         GmosSouthLongSlitInput.fpu.modify
       )
       .view(_.assign)
-
-    // @inline override protected def overrideExposureTimeMode(aligner: AA)(using
-    //   MonadError[IO, Throwable],
-    //   Effect.Dispatch[IO],
-    //   Logger[IO]
-    // ): View[Option[ExposureTimeMode]] = aligner
-    //   .zoom(
-    //     ObservingMode.GmosSouthLongSlit.overrideExposureTimeMode,
-    //     GmosSouthLongSlitInput.overrideExposureTimeMode.modify
-    //   )
-    //   .view(_.map(_.toInput).orUnassign)
 
     @inline override protected def explicitXBinning(aligner: AA)(using
       MonadError[IO, Throwable],

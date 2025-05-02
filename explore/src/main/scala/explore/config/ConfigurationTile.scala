@@ -56,7 +56,6 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
-import lucuma.ui.components.UnderConstruction
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.common.ObsQueriesGQL
@@ -80,7 +79,8 @@ object ConfigurationTile:
     observingModeGroups:      ObservingModeGroupList,
     sequenceChanged:          Callback,
     readonly:                 Boolean,
-    units:                    WavelengthUnits
+    units:                    WavelengthUnits,
+    isStaff:                  Boolean
   ) =
     Tile(
       ObsTabTileIds.ConfigurationId.id,
@@ -103,7 +103,8 @@ object ConfigurationTile:
           customSedTimestamps,
           sequenceChanged,
           readonly,
-          units
+          units,
+          isStaff
         ),
       (_, _) =>
         Title(obsId,
@@ -231,7 +232,8 @@ object ConfigurationTile:
     customSedTimestamps:      List[Timestamp],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
-    units:                    WavelengthUnits
+    units:                    WavelengthUnits,
+    isStaff:                  Boolean
   ) extends ReactFnProps(Body.component):
     val mode: UndoSetter[Option[ObservingMode]]  =
       pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode)
@@ -456,7 +458,21 @@ object ConfigurationTile:
                       )
                   ),
                   // F2 Long Slit
-                  (optF2Aligner, spectroscopyView.asView).mapN((_, _) => UnderConstruction())
+                  (optF2Aligner, spectroscopyView.asView).mapN((f2Aligner, specView) =>
+                    F2LongslitConfigPanel(
+                      props.programId,
+                      props.obsId,
+                      props.obsConf.calibrationRole,
+                      f2Aligner,
+                      specView,
+                      revertConfig,
+                      props.modes,
+                      props.sequenceChanged,
+                      props.readonly,
+                      props.units,
+                      props.isStaff
+                    )
+                  )
                 )
             )
           )
