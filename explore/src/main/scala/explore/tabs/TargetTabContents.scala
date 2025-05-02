@@ -516,18 +516,11 @@ object TargetTabContents extends TwoPanels:
                 props.obsAndTargets,
                 obsTimeView,
                 obsDurationView,
-                ObsConfiguration(
+                ObsConfiguration.forPlainTarget(
                   configuration,
-                  none,
                   constraints,
                   wavelength,
-                  none,
-                  none,
-                  none,
-                  none,
-                  needsAGS,
-                  none,
-                  none
+                  needsAGS
                 ),
                 PerishablePot(none), // Execution
                 props.focused.target,

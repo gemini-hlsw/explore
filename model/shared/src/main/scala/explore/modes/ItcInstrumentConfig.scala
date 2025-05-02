@@ -9,11 +9,14 @@ import cats.implicits.*
 import eu.timepit.refined.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.*
+import explore.model.ConfigurationForVisualization
 import lucuma.core.enums.*
+import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.model.sequence.gmos.GmosCcdMode
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import monocle.Getter
 
@@ -38,7 +41,17 @@ sealed trait ItcInstrumentConfig derives Eq:
   type Override
   def modeOverrides: Option[Override] = None
 
+  // Return a configuration enough to be used for visualization
+  def toVizConfig(selectedPosAngle: Option[Angle]): Option[ConfigurationForVisualization] =
+    None
+
 object ItcInstrumentConfig:
+  // GMOS suporta a total wavelength range of 360-1030 nm
+  // https://www.gemini.edu/instrumentation/gmos
+  // the center is 360 + (1030 - 360) / 2 = 695
+  private val gmosFallbackCW: CentralWavelength =
+    CentralWavelength(Wavelength.fromIntNanometers(695).get)
+
   case class GmosNorthSpectroscopy(
     grating:                    GmosNorthGrating,
     fpu:                        GmosNorthFpu,
@@ -54,6 +67,22 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = filter.isDefined
+
+    // This configuration is used for aladin, and wavelength is ignored
+    // Nevertheless we'll use the override if available with a fallback
+    override def toVizConfig(
+      selectedPosAngle: Option[Angle]
+    ): Option[ConfigurationForVisualization] =
+      val cw = modeOverrides
+        .map(_.centralWavelength)
+        .getOrElse(gmosFallbackCW)
+      ConfigurationForVisualization(
+        BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cw),
+        None,
+        None,
+        selectedPosAngle,
+        None
+      ).some
   }
 
   case class GmosSouthSpectroscopy(
@@ -70,6 +99,22 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosSouth
     val site                             = Site.GS
     val hasFilter                        = filter.isDefined
+
+    // This configuration is used for aladin, and wavelength is ignored
+    // Nevertheless we'll use the override if available with a fallback
+    override def toVizConfig(
+      selectedPosAngle: Option[Angle]
+    ): Option[ConfigurationForVisualization] =
+      val cw = modeOverrides
+        .map(_.centralWavelength)
+        .getOrElse(gmosFallbackCW)
+      ConfigurationForVisualization(
+        BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cw),
+        None,
+        None,
+        selectedPosAngle,
+        None
+      ).some
   }
 
   case class Flamingos2Spectroscopy(grating: F2Disperser, filter: F2Filter, fpu: F2Fpu)
@@ -82,6 +127,17 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.Flamingos2
     val site                             = Site.GS
     val hasFilter                        = true
+
+    override def toVizConfig(
+      selectedPosAngle: Option[Angle]
+    ): Option[ConfigurationForVisualization] =
+      ConfigurationForVisualization(
+        BasicConfiguration.F2LongSlit(grating, filter, fpu),
+        None,
+        None,
+        selectedPosAngle,
+        None
+      ).some
   }
 
   case class GpiSpectroscopy(grating: GpiDisperser, filter: GpiFilter) extends ItcInstrumentConfig

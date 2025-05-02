@@ -108,6 +108,7 @@ object reusability:
   given Reusability[AgsParams]                          = Reusability.byEq
   given Reusability[AgsState]                           = Reusability.byEq
   given Reusability[ObsConfiguration]                   = Reusability.byEq
+  given Reusability[ConfigurationForVisualization]      = Reusability.byEq
   given Reusability[Existence]                          = Reusability.byEq
   given Reusability[ItcExposureTime]                    = Reusability.byEq
   given Reusability[ItcInstrumentConfig]                = Reusability.byEq

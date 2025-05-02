@@ -197,3 +197,13 @@ object all:
         case PosAngleConstraint.AllowFlip(_)           => PosAngleOptions.AllowFlip
         case PosAngleConstraint.ParallacticOverride(_) => PosAngleOptions.ParallacticOverride
         case PosAngleConstraint.AverageParallactic     => PosAngleOptions.AverageParallactic
+
+  extension (pac: PosAngleConstraint)
+    def fallbackPosAngle(averagePA: Option[Angle]): Angle =
+      pac match
+        case PosAngleConstraint.Fixed(a)               => a
+        case PosAngleConstraint.AllowFlip(a)           => a
+        case PosAngleConstraint.ParallacticOverride(a) => a
+        case PosAngleConstraint.Unbounded              => Angle.Angle0
+        case PosAngleConstraint.AverageParallactic     =>
+          averagePA.getOrElse(Angle.Angle0)

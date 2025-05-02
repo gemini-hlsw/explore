@@ -11,6 +11,8 @@ import crystal.react.View
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enums.AgsState
+import explore.model.syntax.all.*
+import explore.modes.ItcInstrumentConfig
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.ObservingModeType
 import lucuma.core.math.Angle
@@ -26,6 +28,7 @@ import java.time.Duration
 
 case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],
+  selectedConfig:     Option[ItcInstrumentConfig], // selected row in spectroscopy modes table
   posAngleProperties: Option[PAProperties],
   constraints:        Option[ConstraintSet],
   centralWavelength:  Option[CentralWavelength],
@@ -37,19 +40,9 @@ case class ObsConfiguration(
   remoteGSName:       Option[NonEmptyString],
   calibrationRole:    Option[CalibrationRole]
 ) derives Eq:
-  // In case there is no guide star we still want to have a posAngle equivalent
-  // To draw visualization
-  def fallbackPosAngle: Option[Angle] =
-    posAngleConstraint match
-      case Some(PosAngleConstraint.Fixed(a))               => a.some
-      case Some(PosAngleConstraint.AllowFlip(a))           => a.some
-      case Some(PosAngleConstraint.ParallacticOverride(a)) => a.some
-      case Some(PosAngleConstraint.Unbounded)              => Angle.Angle0.some
-      case Some(PosAngleConstraint.AverageParallactic)     =>
-        averagePA.map(_.averagePA).orElse(Angle.Angle0.some)
-      case _                                               => none
 
-  def posAngleConstraint: Option[PosAngleConstraint] = posAngleProperties.map(_.constraint)
+  def posAngleConstraint: Option[PosAngleConstraint] =
+    posAngleProperties.map(_.constraint)
 
   def agsState: Option[View[AgsState]] =
     posAngleProperties.map(_.agsState)
@@ -57,8 +50,50 @@ case class ObsConfiguration(
   def guideStarSelection: Option[View[GuideStarSelection]] =
     posAngleProperties.map(_.guideStarSelection)
 
+  // AGS selected position
   def selectedPA: Option[Angle] =
     posAngleProperties.flatMap(_.selectedPA)
 
+  // In case there is no guide star we still want to have a posAngle equivalent
+  // To draw visualization
+  def fallbackPA: Option[Angle] =
+    posAngleProperties.map(_.constraint.fallbackPosAngle(averagePA.map(_.averagePA)))
+
   def obsModeType: Option[ObservingModeType] =
     configuration.map(_.obsModeType)
+
+  def toVizConfig: Option[ConfigurationForVisualization] =
+    configuration
+      .map { c =>
+        ConfigurationForVisualization(
+          c,
+          scienceOffsets,
+          acquisitionOffsets,
+          selectedPA.orElse(fallbackPA),
+          posAngleConstraint
+        )
+      }
+      .orElse:
+        selectedConfig.flatMap(_.toVizConfig(fallbackPA))
+
+object ObsConfiguration:
+  def forPlainTarget(
+    configuration: Option[BasicConfiguration],
+    constraints:   Option[ConstraintSet],
+    wavelength:    Option[CentralWavelength],
+    needsAGS:      Boolean
+  ): ObsConfiguration =
+    ObsConfiguration(
+      configuration,
+      none,
+      none,
+      constraints,
+      wavelength,
+      none,
+      none,
+      none,
+      none,
+      needsAGS,
+      none,
+      none
+    )
