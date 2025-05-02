@@ -214,7 +214,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             value = view.withOnMod(_ => onChange),
             defaultValue = default,
             label =
-              React.Fragment("λ Dithers", HelpIcon("configuration/lambda-dithers.md".refined)),
+              React.Fragment("λ Dithers", HelpIcon("configuration/gmos/lambda-dithers.md".refined)),
             validFormat = validDithers,
             changeAuditor = ChangeAuditor
               .bigDecimal(integers = 3.refined, decimals = 1.refined)
@@ -260,7 +260,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               view = grating(props.observingMode),
               defaultValue = initialGratingLens.get(props.observingMode.get),
               label = "Grating".some,
-              helpId = Some("configuration/grating.md".refined),
+              helpId = Some("configuration/gmos/grating.md".refined),
               disabled = disableAdvancedEdit
             ),
             CustomizableEnumSelectOptional(
@@ -268,7 +268,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               view = filter(props.observingMode),
               defaultValue = initialFilterLens.get(props.observingMode.get),
               label = "Filter".some,
-              helpId = Some("configuration/filter.md".refined),
+              helpId = Some("configuration/gmos/filter.md".refined),
               disabled = disableAdvancedEdit,
               showClear = true,
               resetToOriginal = true
@@ -278,7 +278,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               view = fpu(props.observingMode),
               defaultValue = initialFpuLens.get(props.observingMode.get),
               label = "FPU".some,
-              helpId = Some("configuration/fpu.md".refined),
+              helpId = Some("configuration/gmos/fpu.md".refined),
               disabled = disableAdvancedEdit
             ),
             offsetsControl(props.sequenceChanged)
@@ -288,7 +288,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               id = "central-wavelength".refined,
               value = centralWavelengthView,
               label = React.Fragment("Central Wavelength",
-                                     HelpIcon("configuration/central=wavelength.md".refined)
+                                     HelpIcon("configuration/gmos/central=wavelength.md".refined)
               ),
               units = props.units.symbol.some,
               validFormat = props.units.toInputFormat,
@@ -311,7 +311,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
             <.label(
               LucumaPrimeStyles.FormFieldLabel,
               "Binning",
-              HelpIcon("configuration/binning.md".refined)
+              HelpIcon("configuration/gmos/binning.md".refined)
             ),
             <.div(
               ExploreStyles.AdvancedConfigurationBinning,
@@ -337,7 +337,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
                 .withDefault(defaultReadModeGain, resolvedReadModeGain),
               defaultValue = defaultReadModeGain.some,
               label = "Read Mode".some,
-              helpId = Some("configuration/read-mode.md".refined),
+              helpId = Some("configuration/gmos/read-mode.md".refined),
               disabled = disableAdvancedEdit
             ),
             CustomizableEnumSelectOptional(
@@ -345,7 +345,7 @@ sealed abstract class AdvancedConfigurationPanelBuilder[
               view = explicitRoi(props.observingMode).withDefault(defaultRoi),
               defaultValue = defaultRoi.some,
               label = "ROI".some,
-              helpId = Some("configuration/roi.md".refined),
+              helpId = Some("configuration/gmos/roi.md".refined),
               disabled = disableAdvancedEdit
             ),
             LambdaAndIntervalFormValues(
