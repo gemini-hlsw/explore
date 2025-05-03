@@ -62,20 +62,6 @@ case class ObsConfiguration(
   def obsModeType: Option[ObservingModeType] =
     configuration.map(_.obsModeType)
 
-  def toVizConfig: Option[ConfigurationForVisualization] =
-    configuration
-      .map { c =>
-        ConfigurationForVisualization(
-          c,
-          scienceOffsets,
-          acquisitionOffsets,
-          selectedPA.orElse(fallbackPA),
-          posAngleConstraint
-        )
-      }
-      .orElse:
-        selectedConfig.flatMap(_.toVizConfig(fallbackPA))
-
 object ObsConfiguration:
   def forPlainTarget(
     configuration: Option[BasicConfiguration],

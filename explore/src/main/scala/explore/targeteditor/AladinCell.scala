@@ -445,7 +445,7 @@ object AladinCell extends ModelOptics with AladinCommon:
           AladinContainer(
             props.asterism,
             props.obsTime,
-            props.obsConf.flatMap(_.toVizConfig),
+            props.obsConf.flatMap(ConfigurationForVisualization.fromObsConfiguration),
             props.globalPreferences.get,
             t,
             coordinatesSetter,
