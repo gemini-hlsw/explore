@@ -39,6 +39,12 @@ sealed trait ItcInstrumentConfig derives Eq:
   def modeOverrides: Option[Override] = None
 
 object ItcInstrumentConfig:
+  // GMOS suporta a total wavelength range of 360-1030 nm
+  // https://www.gemini.edu/instrumentation/gmos
+  // the center is 360 + (1030 - 360) / 2 = 695
+  val GmosFallbackCW: CentralWavelength =
+    CentralWavelength(Wavelength.fromIntNanometers(695).get)
+
   case class GmosNorthSpectroscopy(
     grating:                    GmosNorthGrating,
     fpu:                        GmosNorthFpu,
@@ -54,6 +60,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = filter.isDefined
+
   }
 
   case class GmosSouthSpectroscopy(
@@ -82,6 +89,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.Flamingos2
     val site                             = Site.GS
     val hasFilter                        = true
+
   }
 
   case class GpiSpectroscopy(grating: GpiDisperser, filter: GpiFilter) extends ItcInstrumentConfig

@@ -14,9 +14,9 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
 import explore.model.Asterism
 import explore.model.AsterismVisualOptions
+import explore.model.ConfigurationForVisualization
 import explore.model.Constants
 import explore.model.GlobalPreferences
-import explore.model.ObsConfiguration
 import explore.model.enums.Visible
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
@@ -48,7 +48,7 @@ import scala.concurrent.duration.*
 case class AladinContainer(
   asterism:               Asterism,
   obsTime:                Instant,
-  obsConf:                Option[ObsConfiguration],
+  vizConf:                Option[ConfigurationForVisualization],
   globalPreferences:      GlobalPreferences,
   options:                AsterismVisualOptions,
   updateMouseCoordinates: Coordinates => Callback,
@@ -58,13 +58,13 @@ case class AladinContainer(
   guideStarCandidates:    List[AgsAnalysis.Usable]
 ) extends ReactFnProps(AladinContainer.component):
   val siderealDiscretizedObsTime: SiderealDiscretizedObsTime =
-    SiderealDiscretizedObsTime(obsTime, obsConf.flatMap(_.posAngleConstraint))
+    SiderealDiscretizedObsTime(obsTime, vizConf.flatMap(_.selectedPosAngleConstraint))
 
 object AladinContainer extends AladinCommon {
 
   private type Props = AladinContainer
 
-  // We need to dectect if the selected GS deserves a refresh, this could be if the
+  // We need to detect if the selected GS deserves a refresh, this could be if the
   // selected target changes or if e.g. the pos angle change for the same target
   private given Reusability[AgsAnalysis.Usable] =
     Reusability.by(u => (u.target, u.posAngle))
@@ -126,19 +126,19 @@ object AladinContainer extends AladinCommon {
         // Memoized svg for visualization shapes
         shapes     <-
           useMemo(
-            (baseCoords, props.obsConf, props.globalPreferences.agsOverlay, props.selectedGuideStar)
+            (baseCoords, props.vizConf, props.globalPreferences.agsOverlay, props.selectedGuideStar)
           ) { _ =>
             val candidatesVisibilityCss =
               ExploreStyles.GuideStarCandidateVisible.when_(props.globalPreferences.agsOverlay)
 
-            props.obsConf.flatMap(_.configuration.map(_.obsModeType)).flatMap {
+            props.vizConf.map(_.configuration.obsModeType).flatMap {
               case ObservingModeType.Flamingos2LongSlit                                      =>
                 Flamingos2Geometry.f2Geometry(
                   baseCoords.value._1.value,
-                  props.obsConf.flatMap(_.scienceOffsets),
-                  props.obsConf.flatMap(_.acquisitionOffsets),
-                  props.obsConf.flatMap(_.fallbackPosAngle),
-                  props.obsConf.flatMap(_.configuration),
+                  props.vizConf.flatMap(_.scienceOffsets),
+                  props.vizConf.flatMap(_.acquisitionOffsets),
+                  props.vizConf.map(_.posAngle),
+                  props.vizConf.map(_.configuration),
                   PortDisposition.Side,
                   props.selectedGuideStar,
                   candidatesVisibilityCss
@@ -146,10 +146,10 @@ object AladinContainer extends AladinCommon {
               case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit =>
                 GmosGeometry.gmosGeometry(
                   baseCoords.value._1.value,
-                  props.obsConf.flatMap(_.scienceOffsets),
-                  props.obsConf.flatMap(_.acquisitionOffsets),
-                  props.obsConf.flatMap(_.fallbackPosAngle),
-                  props.obsConf.flatMap(_.configuration),
+                  props.vizConf.flatMap(_.scienceOffsets),
+                  props.vizConf.flatMap(_.acquisitionOffsets),
+                  props.vizConf.map(_.posAngle),
+                  props.vizConf.map(_.configuration),
                   PortDisposition.Side,
                   props.selectedGuideStar,
                   candidatesVisibilityCss
@@ -165,7 +165,7 @@ object AladinContainer extends AladinCommon {
                          props.globalPreferences.fullScreen,
                          props.options.fovRA,
                          props.siderealDiscretizedObsTime,
-                         props.obsConf.flatMap(_.configuration),
+                         props.vizConf.map(_.configuration),
                          props.selectedGuideStar,
                          baseCoords
                         )
@@ -334,12 +334,12 @@ object AladinContainer extends AladinCommon {
           else Nil
 
         def offsetIndicators(
-          f:       ObsConfiguration => Option[NonEmptyList[Offset]],
+          f:       ConfigurationForVisualization => Option[NonEmptyList[Offset]],
           oType:   SequenceType,
           css:     Css,
           visible: Visible
         ) =
-          props.obsConf.foldMap(f).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
+          props.vizConf.foldMap(f).foldMap(_.toList).zipWithIndex.map { case (o, i) =>
             for {
               idx <- refineV[NonNegative](i).toOption
               gs  <- props.selectedGuideStar

@@ -277,12 +277,12 @@ object AladinCell extends ModelOptics with AladinCommon:
                              yield ()
       // Reset selection if pos angle changes except for manual selection changes
       _                 <- useEffectWithDeps(props.obsConf.flatMap(_.posAngleConstraint)): _ =>
-                             props.obsConf
+                             (props.obsConf
                                .flatMap(_.agsState)
                                .foldMap(
                                  _.set(AgsState.Calculating)
                                ) *> props.guideStarSelection
-                               .set(GuideStarSelection.Default)
+                               .set(GuideStarSelection.Default))
                                .whenA(props.needsAGS && candidates.value.toOption.flatten.nonEmpty)
       // Request ags calculation
       _                 <- useEffectWithDeps(
@@ -440,12 +440,12 @@ object AladinCell extends ModelOptics with AladinCommon:
 
       val guideStar = props.guideStarSelection.get.analysis
 
-      val renderCell: AsterismVisualOptions => VdomNode =
+      val renderAladin: AsterismVisualOptions => VdomNode =
         (t: AsterismVisualOptions) =>
           AladinContainer(
             props.asterism,
             props.obsTime,
-            props.obsConf,
+            props.obsConf.flatMap(ConfigurationForVisualization.fromObsConfiguration),
             props.globalPreferences.get,
             t,
             coordinatesSetter,
@@ -499,7 +499,7 @@ object AladinCell extends ModelOptics with AladinCommon:
               Icons.ThinSliders
             )
           ),
-          options.renderPotView(renderCell),
+          options.renderPotView(renderAladin),
           options.renderPotView(renderToolbar),
           options.renderPotView(renderAgsOverlay)
         ),

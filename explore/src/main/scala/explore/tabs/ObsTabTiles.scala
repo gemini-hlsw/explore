@@ -437,6 +437,7 @@ object ObsTabTiles:
           val obsConf: ObsConfiguration =
             ObsConfiguration(
               basicConfiguration,
+              selectedConfig.get.map(_.instrumentConfig),
               paProps.some,
               props.constraintSet.get.some,
               props.centralWavelength,
