@@ -221,27 +221,6 @@ object GmosLongslitConfigPanel {
               disabled = disableSimpleEdit
             )
 
-          def offsetsControl(onChange: Callback): VdomElement = {
-            val default = defaultSpatialOffsetsLens.get(props.observingMode.get)
-            val view    = explicitSpatialOffsets(props.observingMode)
-            CustomizableInputTextOptional(
-              id = "offsets".refined,
-              value = view.withOnMod(_ => onChange),
-              defaultValue = default,
-              label = React.Fragment(
-                "Spatial Offsets",
-                HelpIcon("configuration/spatial-offsets.md".refined)
-              ),
-              validFormat = ExploreModelValidators.offsetQNELValidWedge,
-              changeAuditor = ChangeAuditor
-                .bigDecimal(integers = 3.refined, decimals = 2.refined)
-                .toSequence()
-                .optional,
-              units = "arcsec".some,
-              disabled = disableSimpleEdit
-            )
-          }
-
           val exposureTimeMode =
             props.spectroscopyRequirements.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
 
@@ -278,7 +257,11 @@ object GmosLongslitConfigPanel {
                 helpId = Some("configuration/gmos/fpu.md".refined),
                 disabled = disableAdvancedEdit
               ),
-              offsetsControl(props.sequenceChanged)
+              OffsetsControl(explicitSpatialOffsets(props.observingMode),
+                             defaultSpatialOffsetsLens.get(props.observingMode.get),
+                             props.sequenceChanged,
+                             disableSimpleEdit
+              )
             ),
             <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
               CustomizableInputText(
