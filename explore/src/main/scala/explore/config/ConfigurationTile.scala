@@ -427,7 +427,7 @@ object ConfigurationTile:
                 React.Fragment(
                   // Gmos North Long Slit
                   (optGmosNorthAligner, spectroscopyView.asView).mapN((northAligner, specView) =>
-                    AdvancedConfigurationPanel
+                    GmosLongslitConfigPanel
                       .GmosNorthLongSlit(
                         props.programId,
                         props.obsId,
@@ -443,7 +443,7 @@ object ConfigurationTile:
                   ),
                   // Gmos South Long Slit
                   (optGmosSouthAligner, spectroscopyView.asView).mapN((southAligner, specView) =>
-                    AdvancedConfigurationPanel
+                    GmosLongslitConfigPanel
                       .GmosSouthLongSlit(
                         props.programId,
                         props.obsId,
