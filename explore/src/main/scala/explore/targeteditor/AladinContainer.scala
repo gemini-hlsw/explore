@@ -8,7 +8,6 @@ import cats.data.NonEmptyMap
 import cats.syntax.all.*
 import eu.timepit.refined.*
 import eu.timepit.refined.numeric.NonNegative
-import explore.aladin.AladinZoomControl
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AladinMouseScroll
@@ -31,6 +30,7 @@ import lucuma.core.enums.SequenceType
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
+import lucuma.core.math.Wavelength
 import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -95,6 +95,14 @@ object AladinContainer extends AladinCommon {
       )
     (base, science)
   }
+
+  private val CutOff = Wavelength.fromIntMicrometers(1).get
+
+  private def surveyForWavelength(w: Wavelength) =
+    if (w > CutOff)
+      ImageSurvey.TWOMASS
+    else
+      ImageSurvey.DSS
 
   private val component =
     ScalaFnComponent[Props]: props =>
@@ -264,6 +272,17 @@ object AladinContainer extends AladinCommon {
             (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
           ): _ =>
             aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
+        // Survey
+        survey     <- useState(
+                        props.vizConf
+                          .flatMap(_.centralWavelength)
+                          .map(w => surveyForWavelength(w.value))
+                          .getOrElse(ImageSurvey.DSS)
+                      )
+        // Update survey if conf changes
+        _          <-
+          useEffectWithDeps(props.vizConf.flatMap(_.centralWavelength.map(_.value))): w =>
+            w.map(w => survey.setState(surveyForWavelength(w))).getOrEmpty
       } yield {
         val (baseCoordinates, scienceTargets) = baseCoords.value
 
@@ -405,13 +424,14 @@ object AladinContainer extends AladinCommon {
                 ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
                   .unless_(props.globalPreferences.aladinMouseScroll.value),
                 AladinOptions(
-                  showReticle = false,
-                  showLayersControl = false,
                   target = baseCoordinatesForAladin,
                   fov = Angle.fromMicroarcseconds(
                     props.options.fovDec.toMicroarcseconds
                       .max(props.options.fovRA.toMicroarcseconds)
                   ),
+                  survey = survey.value,
+                  showReticle = false,
+                  showLayersControl = false,
                   showGotoControl = false,
                   showZoomControl = false,
                   showProjectionControl = false,
