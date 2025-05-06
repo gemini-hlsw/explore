@@ -21,6 +21,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.enums.TableId
 import explore.model.extensions.*
+import explore.services.OdbApi
 import explore.targets.TargetColumns
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -95,79 +96,75 @@ object TargetTable extends AsterismModifier:
       onAsterismUpdate(OnAsterismUpdateParams(target.id, obsIds, false, false)).async.toCallback
 
   protected val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useMemoBy((props, _) => props.readOnly): (_, ctx) => // cols
-        readOnly =>
-          import ctx.given
+    ScalaFnComponent[Props]: props =>
+      for
+        ctx     <- useContext(AppContext.ctx)
+        odbApi  <- useContext(OdbApi.ctx)
+        cols    <- useMemo(props.readOnly): readOnly =>
+                     import ctx.given
 
-          Option
-            .unless(readOnly)(
-              ColDef(
-                DeleteColumnId,
-                _.id,
-                "",
-                cell =>
-                  Button(
-                    text = true,
-                    clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
-                    icon = Icons.Trash,
-                    tooltip = "Delete",
-                    onClickE = (e: ReactMouseEvent) =>
-                      e.preventDefaultCB >>
-                        e.stopPropagationCB >>
-                        cell.table.options.meta.foldMap(m =>
-                          deleteSiderealTarget(
-                            m.obsIds,
-                            m.obsAndTargets,
-                            cell.row.original.toTargetWithId,
-                            m.onAsterismUpdate
-                          )
-                        )
-                  ).tiny.compact,
-                size = 35.toPx,
-                enableSorting = false
-              )
-            )
-            .toList ++
-            TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
-      // If vizTime is not set, change it to now
-      .useEffectKeepResultWithDepsBy((p, _, _) => p.vizTime): (_, _, _) =>
-        vizTime => IO(vizTime.getOrElse(Instant.now()))
-      .useMemoBy((props, _, _, vizTime) =>
-        (props.targetIds, props.obsAndTargets.get._2, vizTime.value)
-      ): // rows
-        (_, _, _, _) =>
-          case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
-            targetIds.toList
-              .map(id =>
-                targetInfo
-                  .get(id)
-                  .flatMap(_.toSiderealAt(vizTime))
-                  .map(st => SiderealTargetWithId(id, st))
-              )
-              .flattenOption
-          case _                                           => Nil
-      .useReactTableWithStateStoreBy: (props, ctx, cols, _, rows) =>
-        import ctx.given
+                     Option
+                       .unless(readOnly)(
+                         ColDef(
+                           DeleteColumnId,
+                           _.id,
+                           "",
+                           cell =>
+                             Button(
+                               text = true,
+                               clazz = ExploreStyles.DeleteButton |+| ExploreStyles.ObsDeleteButton,
+                               icon = Icons.Trash,
+                               tooltip = "Delete",
+                               onClickE = (e: ReactMouseEvent) =>
+                                 e.preventDefaultCB >>
+                                   e.stopPropagationCB >>
+                                   cell.table.options.meta.foldMap(m =>
+                                     deleteSiderealTarget(
+                                       m.obsIds,
+                                       m.obsAndTargets,
+                                       cell.row.original.toTargetWithId,
+                                       m.onAsterismUpdate
+                                     )
+                                   )
+                             ).tiny.compact,
+                           size = 35.toPx,
+                           enableSorting = false
+                         )
+                       )
+                       .toList ++
+                       TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
+        vizTime <- useEffectKeepResultWithDeps(props.vizTime): vizTime =>
+                     IO(vizTime.getOrElse(Instant.now()))
+        rows    <- useMemo((props.targetIds, props.obsAndTargets.get._2, vizTime.value)):
+                     case (targetIds, targetInfo, Pot.Ready(vizTime)) =>
+                       targetIds.toList
+                         .map(id =>
+                           targetInfo
+                             .get(id)
+                             .flatMap(_.toSiderealAt(vizTime))
+                             .map(st => SiderealTargetWithId(id, st))
+                         )
+                         .flattenOption
+                     case _                                           => Nil
+        table   <- useReactTableWithStateStore:
+                     import ctx.given
 
-        TableOptionsWithStateStore(
-          TableOptions(
-            cols,
-            rows,
-            getRowId = (row, _, _) => RowId(row.id.toString),
-            enableSorting = true,
-            enableColumnResizing = true,
-            columnResizeMode = ColumnResizeMode.OnChange,
-            state = PartialTableState(columnVisibility = props.columnVisibility.get),
-            onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod),
-            meta = TableMeta(props.obsIds, props.obsAndTargets, props.onAsterismUpdate)
-          ),
-          TableStore(props.userId, TableId.AsterismTargets, cols)
-        )
-      .useStateView(AreAdding(false))
-      .render: (props, ctx, _, _, rows, table, adding) =>
+                     TableOptionsWithStateStore(
+                       TableOptions(
+                         cols,
+                         rows,
+                         getRowId = (row, _, _) => RowId(row.id.toString),
+                         enableSorting = true,
+                         enableColumnResizing = true,
+                         columnResizeMode = ColumnResizeMode.OnChange,
+                         state = PartialTableState(columnVisibility = props.columnVisibility.get),
+                         onColumnVisibilityChange = stateInViewHandler(props.columnVisibility.mod),
+                         meta = TableMeta(props.obsIds, props.obsAndTargets, props.onAsterismUpdate)
+                       ),
+                       TableStore(props.userId, TableId.AsterismTargets, cols)
+                     )
+        adding  <- useStateView(AreAdding(false))
+      yield
         import ctx.given
 
         React.Fragment(
@@ -181,7 +178,7 @@ object TargetTable extends AsterismModifier:
                 adding,
                 props.onAsterismUpdate,
                 buttonClass = LucumaPrimeStyles.Massive
-              )
+              )(odbApi)
             )
           else
             <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(

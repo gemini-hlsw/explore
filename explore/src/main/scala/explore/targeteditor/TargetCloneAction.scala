@@ -8,13 +8,13 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.syntax.all.*
 import explore.common.AsterismQueries
-import explore.common.TargetQueries
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.syntax.all.*
+import explore.services.OdbApi
 import explore.undo.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
@@ -73,7 +73,7 @@ object TargetCloneAction {
     programId:    Program.Id,
     onCloneParms: OnCloneParameters,
     observations: ObservationList
-  )(using
+  )(odbApi: OdbApi[IO])(using
     FetchClient[IO, ObservationDB]
   ): IO[Unit] =
     val optExistence =
@@ -87,11 +87,12 @@ object TargetCloneAction {
           Existence.Deleted.some
       }
     optExistence.foldMap(existence =>
-      TargetQueries.setTargetExistence[IO](programId, onCloneParms.cloneId, existence)
+      odbApi.setTargetExistence(programId, onCloneParms.cloneId, existence)
     ) >>
-      AsterismQueries.addAndRemoveTargetsFromAsterisms(onCloneParms.obsIds.toList,
-                                                       toAdd = List(onCloneParms.idToAdd),
-                                                       toRemove = List(onCloneParms.idToRemove)
+      AsterismQueries.addAndRemoveTargetsFromAsterisms(
+        onCloneParms.obsIds.toList,
+        toAdd = List(onCloneParms.idToAdd),
+        toRemove = List(onCloneParms.idToRemove)
       )
 
   def cloneTarget(
@@ -100,16 +101,17 @@ object TargetCloneAction {
     clone:      TargetWithId,
     obsIds:     ObsIdSet,
     onClone:    OnCloneParameters => Callback
-  )(using
-    FetchClient[IO, ObservationDB]
-  ): Action[ObservationsAndTargets, Option[Target]] =
-    Action[ObservationsAndTargets, Option[Target]](getter(clone.id),
-                                                   setter(originalId, clone, obsIds)
+  )(
+    odbApi:     OdbApi[IO]
+  )(using FetchClient[IO, ObservationDB]): Action[ObservationsAndTargets, Option[Target]] =
+    Action[ObservationsAndTargets, Option[Target]](
+      getter(clone.id),
+      setter(originalId, clone, obsIds)
     )(
       onSet = (_, _) => IO.unit, // clone is created and first `onClone` called outside of Action
       onRestore = (obsAndTargets, optClone) =>
         val params = OnCloneParameters(originalId, clone.id, obsIds, optClone.isDefined)
         onClone(params).toAsync >>
-          updateRemote(programId, params, obsAndTargets._1)
+          updateRemote(programId, params, obsAndTargets._1)(odbApi)
     )
 }

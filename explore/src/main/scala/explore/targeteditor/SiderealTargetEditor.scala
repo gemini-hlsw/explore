@@ -91,11 +91,9 @@ object SiderealTargetEditor:
     cloning:       View[Boolean],
     obsAndTargets: UndoSetter[ObservationsAndTargets],
     onClone:       OnCloneParameters => Callback
-  )(input: UpdateTargetsInput)(using
-    FetchClient[IO, ObservationDB],
-    Logger[IO],
-    ToastCtx[IO]
-  ): IO[Unit] =
+  )(
+    input:         UpdateTargetsInput
+  )(odbApi: OdbApi[IO])(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     TargetQueriesGQL
       .CloneTargetMutation[IO]
       .execute:
@@ -108,7 +106,7 @@ object SiderealTargetEditor:
       .map(_.cloneTarget.newTarget)
       .flatMap: clone =>
         (TargetCloneAction
-          .cloneTarget(programId, targetId, clone, obsIds, onClone)
+          .cloneTarget(programId, targetId, clone, obsIds, onClone)(odbApi)
           .set(obsAndTargets)(clone.target.some) >>
           // If we do the first `onClone` here, the UI works correctly.
           onClone(OnCloneParameters(targetId, clone.id, obsIds, true))).toAsync
@@ -190,7 +188,7 @@ object SiderealTargetEditor:
                     cloning,
                     props.obsAndTargets,
                     props.onClone
-                  )(u)
+                  )(u)(odbApi)
               )
       yield
         import ctx.given

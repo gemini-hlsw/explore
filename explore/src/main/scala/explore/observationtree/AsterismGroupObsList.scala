@@ -29,6 +29,7 @@ import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
+import explore.services.OdbApi
 import explore.syntax.ui.*
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
@@ -207,13 +208,13 @@ object AsterismGroupObsList:
     undoCtx:               UndoContext[ProgramSummaries],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+  )(odbApi: OdbApi[IO])(using Logger[IO], ToastCtx[IO]): IO[Unit] =
     TargetAddDeleteActions
       .insertTarget(
         programId,
         selectTargetOrSummary(_).toAsync,
         ToastCtx[IO].showToast(_)
-      )(undoCtx)
+      )(odbApi)(undoCtx)
       .void
       .switching(adding.async, AddingTargetOrObs(_))
       .withToastDuring("Creating target")
@@ -243,6 +244,7 @@ object AsterismGroupObsList:
   private val component = ScalaFnComponent[Props]: props =>
     for {
       ctx               <- useContext(AppContext.ctx)
+      odbApi            <- useContext(OdbApi.ctx)
       dragging          <- useState(Dragging(false))
       addingTargetOrObs <- useStateView(AddingTargetOrObs(false))
       _                 <- useEffectOnMount:
@@ -391,7 +393,7 @@ object AsterismGroupObsList:
                   props.programId,
                   props.focusTargetId(none).toAsync,
                   ToastCtx[IO].showToast(_)
-                )
+                )(odbApi)
                 .set(props.undoCtx)(selectedTargetsIds.map(_ => none))
                 .toAsync
                 .runAsyncAndForget,
@@ -537,7 +539,7 @@ object AsterismGroupObsList:
                   props.undoCtx,
                   addingTargetOrObs,
                   props.focusTargetId
-                ).runAsync
+                )(odbApi).runAsync
               ).compact.mini
             ),
             UndoButtons(props.undoCtx, size = PlSize.Mini),

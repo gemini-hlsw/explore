@@ -8,16 +8,15 @@ import cats.syntax.all.*
 import clue.FetchClient
 import crystal.react.*
 import explore.Icons
-import explore.common.TargetQueries
 import explore.components.ui.ExploreStyles
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
+import explore.services.OdbApi
 import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
 import explore.undo.UndoSetter
-import explore.utils.ToastCtx
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -37,13 +36,13 @@ trait AsterismModifier:
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     targetWithOptId:  TargetWithOptId,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
-  )(using FetchClient[IO, ObservationDB], ToastCtx[IO]): IO[Unit] =
+  )(odbApi: OdbApi[IO])(using FetchClient[IO, ObservationDB]): IO[Unit] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         oTargetId
           .fold(
-            TargetQueries
-              .insertTarget[IO](programId, target)
+            odbApi
+              .insertTarget(programId, target)
               .map((_, true))
           )(id => IO((id, false)))
           .flatMap((id, created) =>
@@ -73,10 +72,9 @@ trait AsterismModifier:
     onAsterismUpdate: OnAsterismUpdateParams => Callback,
     readOnly:         Boolean = false,
     buttonClass:      Css = Css.Empty
-  )(using
+  )(odbApi: OdbApi[IO])(using
     FetchClient[IO, ObservationDB],
-    Logger[IO],
-    ToastCtx[IO]
+    Logger[IO]
   ): TargetSelectionPopup =
     TargetSelectionPopup(
       "Add Target",
@@ -100,5 +98,5 @@ trait AsterismModifier:
           obsAndTargets,
           targetWithOptId,
           onAsterismUpdate
-        ).switching(adding.async, AreAdding(_)).runAsync
+        )(odbApi).switching(adding.async, AreAdding(_)).runAsync
     )

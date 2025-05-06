@@ -31,6 +31,7 @@ import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.model.enums.TileSizeState
 import explore.model.reusability.given
+import explore.services.OdbApi
 import explore.targets.TargetColumns
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -304,11 +305,12 @@ object AsterismEditorTile:
     private type Props = Title
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .useStateView(AreAdding(false))
-        .render: (props, ctx, adding) =>
+      ScalaFnComponent[Props]: props =>
+        for
+          ctx    <- useContext(AppContext.ctx)
+          odbApi <- useContext(OdbApi.ctx)
+          adding <- useStateView(AreAdding(false))
+        yield
           import ctx.given
           val obsTimeEditor = ObsTimeEditor(
             props.obsTimeView,
@@ -337,7 +339,7 @@ object AsterismEditorTile:
                         props.onAsterismUpdate,
                         props.readonly || obsEditInfo.allAreExecuted,
                         ExploreStyles.AddTargetButton
-                      )
+                      )(odbApi)
                 ),
                 obsTimeEditor,
                 <.span(^.textAlign.right)(
