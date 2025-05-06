@@ -8,6 +8,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import clue.model.GraphQLResponse
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -28,6 +29,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
+import explore.services.OdbApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -116,20 +118,6 @@ object SiderealTargetEditor:
         Logger[IO].error(t)(msg) >>
           ToastCtx[IO].showToast(msg, Message.Severity.Error)
 
-  private def remoteOnMod(
-    targetId: Target.Id,
-    input:    UpdateTargetsInput
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
-      .execute(input)
-      .void
-      .handleErrorWith(t =>
-        val msg = s"Error updating target [$targetId]"
-        Logger[IO].error(t)(msg) >>
-          ToastCtx[IO].showToast(msg, Message.Severity.Error)
-      )
-
   private def buildProperMotion(
     ra:  Option[ProperMotion.RA],
     dec: Option[ProperMotion.Dec]
@@ -165,6 +153,7 @@ object SiderealTargetEditor:
     ScalaFnComponent[Props]: props =>
       for
         ctx                   <- useContext(AppContext.ctx)
+        odbApi                <- useContext(OdbApi.ctx)
         cloning               <- useStateView(false)
         obsToCloneTo          <- useStateView(none[ObsIdSet]) // obs ids to clone to.
         // If obsTime is not set, change it to now
@@ -185,7 +174,7 @@ object SiderealTargetEditor:
                   SET = TargetPropertiesInput()
                 ),
                 // Invalidate the sequence if the target changes
-                u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
+                u => props.invalidateSequence.to[IO] >> odbApi.updateTarget(tid, u)
               )
             ): obsIds =>
               val view = View(target, (mod, cb) => cb(target, mod(target)))

@@ -25,21 +25,21 @@ trait HoneycombOptions extends js.Object {
 
 object HoneycombOptions {
   def apply(
-    apiKey:                   String,
-    serviceName:              String,
-    resourceAttributes:       js.UndefOr[ResourceAttributes] = js.undefined,
-    @unused instrumentations: js.UndefOr[js.Array[js.Object]] = js.undefined,
-    dataset:                  js.UndefOr[String] = js.undefined,
-    localVisualizations:      js.UndefOr[Boolean] = js.undefined,
-    debug:                    js.UndefOr[Boolean] = js.undefined
+    apiKey:              String,
+    serviceName:         String,
+    resourceAttributes:  js.UndefOr[ResourceAttributes] = js.undefined,
+    dataset:             js.UndefOr[String] = js.undefined,
+    localVisualizations: js.UndefOr[Boolean] = js.undefined,
+    debug:               js.UndefOr[Boolean] = js.undefined
   ): HoneycombOptions =
     js.Dynamic
-      .literal(apiKey = apiKey,
-               serviceName = serviceName,
-               dataset = dataset,
-               localVisualizations = localVisualizations,
-               resourceAttributes = resourceAttributes,
-               debug = debug
+      .literal(
+        apiKey = apiKey,
+        serviceName = serviceName,
+        dataset = dataset,
+        localVisualizations = localVisualizations,
+        resourceAttributes = resourceAttributes,
+        debug = debug
       )
       .asInstanceOf[HoneycombOptions]
 }
