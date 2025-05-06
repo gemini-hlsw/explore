@@ -14,7 +14,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.aladin.AladinZoomControl
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants

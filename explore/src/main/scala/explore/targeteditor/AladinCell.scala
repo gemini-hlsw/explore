@@ -16,7 +16,6 @@ import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.aladin.AladinFullScreenControl
 import explore.common.UserPreferencesQueries.AsterismPreferences
 import explore.common.UserPreferencesQueries.GlobalUserPreferences
 import explore.components.ui.ExploreStyles
@@ -46,10 +45,13 @@ import lucuma.react.common.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.hooks.all.*
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.ui.aladin.AladinFullScreen as UIFullScreen
+import lucuma.ui.aladin.AladinFullScreenControl
 import lucuma.ui.aladin.Fov
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Iso
 import monocle.Lens
 import org.typelevel.log4cats.Logger
 import queries.schemas.UserPreferencesDB
@@ -115,6 +117,7 @@ case class AladinCell(
     asterism.asList
       .flatMap(_.toSidereal)
       .flatMap(_.target.tracking.at(vizTime))
+
 end AladinCell
 
 trait AladinCommon:
@@ -152,6 +155,9 @@ object AladinCell extends ModelOptics with AladinCommon:
   private val fovLens: Lens[AsterismVisualOptions, Fov] =
     Lens[AsterismVisualOptions, Fov](t => Fov(t.fovRA, t.fovDec)): f =>
       t => t.copy(fovRA = f.x, fovDec = f.y)
+
+  val fullScreenIso: Iso[AladinFullScreen, UIFullScreen] =
+    Iso[AladinFullScreen, UIFullScreen](x => UIFullScreen(x.value))(x => AladinFullScreen(x.value))
 
   private def offsetViews(
     props:   Props,
@@ -491,7 +497,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       <.div(ExploreStyles.TargetAladinCell)(
         <.div(
           ExploreStyles.AladinContainerColumn,
-          AladinFullScreenControl(fullScreenView),
+          AladinFullScreenControl(fullScreenView.zoom(fullScreenIso)),
           <.div(
             ExploreStyles.AladinToolbox,
             Button(onClickE = menuRef.toggle).withMods(

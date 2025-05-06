@@ -27,6 +27,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.model.UnnormalizedSED
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.ObservingMode
 
@@ -186,8 +187,17 @@ object all:
           // FIXME: Hardcoded for Flamingos2
           ObservingMode.f2LongSlit
             .getOption(om)
-            .flatMap(_ => Wavelength.decimalMicrometers.getOption(0.65).map(CentralWavelength(_)))
+            .flatMap(f => f.filter.wavelength.map(CentralWavelength(_)))
         )
+
+  extension (bc: BasicConfiguration)
+    def centralWavelength: Option[CentralWavelength] = bc match
+      case g: BasicConfiguration.GmosNorthLongSlit =>
+        g.centralWavelength.some
+      case g: BasicConfiguration.GmosSouthLongSlit =>
+        g.centralWavelength.some
+      case g: BasicConfiguration.F2LongSlit        =>
+        g.filter.wavelength.map(CentralWavelength(_))
 
   extension (bc: ObservingModeType)
     def defaultPosAngleOptions: PosAngleOptions =

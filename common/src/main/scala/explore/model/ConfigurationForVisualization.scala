@@ -13,6 +13,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.PosAngleConstraint
 import lucuma.schemas.model.BasicConfiguration
+import lucuma.schemas.model.CentralWavelength
 
 // Yet another config class. This one is has the minmimal set of params to visualize the configuration
 // It is a subset of ObsConfiguration such that can be built out of either the db config
@@ -22,7 +23,8 @@ case class ConfigurationForVisualization private (
   scienceOffsets:             Option[NonEmptyList[Offset]],
   acquisitionOffsets:         Option[NonEmptyList[Offset]],
   selectedPosAngle:           Option[Angle],
-  selectedPosAngleConstraint: Option[PosAngleConstraint]
+  selectedPosAngleConstraint: Option[PosAngleConstraint],
+  centralWavelength:          Option[CentralWavelength]
 ) derives Eq:
   // Effective pos angle, either from the AGS, or the default for the conifguratio
   // TODO: Take the calculated average parallactic angle if needed
@@ -42,7 +44,8 @@ object ConfigurationForVisualization:
           obsConfig.scienceOffsets,
           obsConfig.acquisitionOffsets,
           obsConfig.selectedPA.orElse(obsConfig.fallbackPA),
-          obsConfig.posAngleConstraint
+          obsConfig.posAngleConstraint,
+          obsConfig.centralWavelength
         )
       }
       .orElse:
@@ -57,7 +60,8 @@ object ConfigurationForVisualization:
       None,
       None,
       selectedPosAngle,
-      None
+      None,
+      basicConfiguration.centralWavelength
     )
 
   def fromItcInstrumentConfig(
