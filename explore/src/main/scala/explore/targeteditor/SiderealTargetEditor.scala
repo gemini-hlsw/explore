@@ -8,7 +8,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import clue.model.GraphQLResponse
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
@@ -57,7 +56,6 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils.*
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
 
 import java.time.Instant
 
@@ -94,16 +92,8 @@ object SiderealTargetEditor:
   )(
     input:         UpdateTargetsInput
   )(odbApi: OdbApi[IO])(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    TargetQueriesGQL
-      .CloneTargetMutation[IO]
-      .execute:
-        CloneTargetInput(
-          targetId = targetId,
-          REPLACE_IN = obsIds.toList.assign,
-          SET = input.SET.assign
-        )
-      .raiseGraphQLErrors
-      .map(_.cloneTarget.newTarget)
+    odbApi
+      .cloneTarget(targetId, obsIds, input)
       .flatMap: clone =>
         (TargetCloneAction
           .cloneTarget(programId, targetId, clone, obsIds, onClone)(odbApi)

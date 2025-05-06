@@ -76,7 +76,7 @@ object TargetCloneAction {
   )(odbApi: OdbApi[IO])(using
     FetchClient[IO, ObservationDB]
   ): IO[Unit] =
-    val optExistence =
+    val optExistence: Option[Existence] =
       if (onCloneParms.areCreating) Existence.Present.some
       else {
         // If the clone has been assigned to another observation (unlikely), perhaps by another

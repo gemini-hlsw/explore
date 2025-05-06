@@ -10,20 +10,25 @@ import clue.FetchClient
 import clue.data.syntax.*
 import clue.model.GraphQLError
 import clue.model.GraphQLResponse
+import explore.model.ObsIdSet
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.schemas.ObservationDB.Types.CloneTargetInput
 import lucuma.schemas.ObservationDB.Types.TargetPropertiesInput
 import lucuma.schemas.ObservationDB.Types.UpdateTargetsInput
+import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
 case class OdbApiImpl()(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO])
     extends OdbApi[IO]:
+
+  // START TARGETS
 
   override def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): IO[Unit] =
     // TODO REMOVE DEBUGGING LOGIC vvv
@@ -97,3 +102,25 @@ case class OdbApiImpl()(using FetchClient[IO, ObservationDB], Logger[IO], ToastC
         )
       .raiseGraphQLErrors
       .void
+
+  override def cloneTarget(
+    targetId:  Target.Id,
+    replaceIn: ObsIdSet,
+    input:     UpdateTargetsInput
+  ): IO[TargetWithId] =
+    TargetQueriesGQL
+      .CloneTargetMutation[IO]
+      .execute:
+        CloneTargetInput(
+          targetId = targetId,
+          REPLACE_IN = replaceIn.toList.assign,
+          SET = input.SET.assign
+        )
+      .raiseGraphQLErrors
+      .map(_.cloneTarget.newTarget)
+
+  // END TARGETS
+
+  // START ASTERISMS
+
+  // END ASTERISMS
