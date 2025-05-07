@@ -81,12 +81,12 @@ object F2LongslitConfigPanel
           )
           .view(_.assign)
 
-        val readModeView: View[Option[F2ReadMode]] = props.observingMode
-          .zoom(
-            ObservingMode.F2LongSlit.explicitReadMode,
-            Flamingos2LongSlitInput.explicitReadMode.modify
-          )
-          .view(_.orUnassign)
+        // val readModeView: View[Option[F2ReadMode]] = props.observingMode
+        //   .zoom(
+        //     ObservingMode.F2LongSlit.explicitReadMode,
+        //     Flamingos2LongSlitInput.explicitReadMode.modify
+        //   )
+        //   .view(_.orUnassign)
 
         val deckerView: View[Option[F2Decker]] = props.observingMode
           .zoom(
@@ -95,8 +95,8 @@ object F2LongslitConfigPanel
           )
           .view(_.orUnassign)
 
-        val defaultReadMode = props.observingMode.get.defaultReadMode
-        val defaultDecker   = props.observingMode.get.defaultDecker
+        // val defaultReadMode = props.observingMode.get.defaultReadMode
+        val defaultDecker = props.observingMode.get.defaultDecker
 
         val exposureTimeModeView = props.spectroscopyRequirements.zoom(
           ScienceRequirements.Spectroscopy.exposureTimeMode
@@ -129,15 +129,15 @@ object F2LongslitConfigPanel
               label = "FPU".some,
               helpId = Some("configuration/f2/fpu.md".refined),
               disabled = disableSimpleEdit
-            ),
-            CustomizableEnumSelectOptional(
-              id = "read-mode".refined,
-              view = readModeView.withDefault(defaultReadMode),
-              defaultValue = defaultReadMode.some,
-              label = "Read Mode".some,
-              helpId = Some("configuration/f2/read-mode.md".refined),
-              disabled = disableSimpleEdit
             )
+            // CustomizableEnumSelectOptional(
+            //   id = "read-mode".refined,
+            //   view = readModeView.withDefault(defaultReadMode),
+            //   defaultValue = defaultReadMode.some,
+            //   label = "Read Mode".some,
+            //   helpId = Some("configuration/f2/read-mode.md".refined),
+            //   disabled = disableSimpleEdit
+            // )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
             ExposureTimeModeEditor(
