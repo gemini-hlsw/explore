@@ -26,34 +26,20 @@ case class RootComponent(
   ctx:          AppContext[IO],
   router:       RouterWithProps[Page, RootModelViews],
   initialModel: RootModel
-) extends ReactFnProps(RootComponent.component)
+) extends ReactFnProps(RootComponent)
 
-object RootComponent:
-  private type Props = RootComponent
-
-  val instrumentations =
-    js.Array(getWebAutoInstrumentations(), new UserInteractionInstrumentation())
-
-  private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useStateViewBy(_.initialModel)
-      .useThrottlingStateView(pending[ProgramSummaries], 5.seconds)
-      .render: (props, rootModel, programSummariesPot) =>
-        AppContext.ctx.provide(props.ctx):
-          React.Fragment(
-            props.ctx.tracing.map: c =>
-              val attr = rootModel.get.vault.map(ResourceAttributes.fromUserVault)
-              Observability(
-                HoneycombOptions(
-                  c.key,
-                  c.serviceName,
-                  instrumentations = instrumentations,
-                  resourceAttributes = attr.orUndefined
-                )
-              )
-            ,
-            HelpContext.Provider:
-              programSummariesPot.renderPot: programSummaries =>
-                props.router(RootModelViews(rootModel, programSummaries))
-          )
+object RootComponent
+    extends ReactFnComponent[RootComponent](props =>
+      for
+        rootModel                       <- useStateView(props.initialModel)
+        attr: Option[ResourceAttributes] = rootModel.get.vault.map(ResourceAttributes.fromUserVault)
+        programSummariesPot             <- useThrottlingStateView(pending[ProgramSummaries], 5.seconds)
+      yield AppContext.ctx.provide(props.ctx):
+        React.Fragment(
+          props.ctx.tracing.map: c =>
+            Observability(HoneycombOptions(c.key, c.serviceName, attr.orUndefined)),
+          HelpContext.Provider:
+            programSummariesPot.renderPot: programSummaries =>
+              props.router(RootModelViews(rootModel, programSummaries))
+        )
+    )

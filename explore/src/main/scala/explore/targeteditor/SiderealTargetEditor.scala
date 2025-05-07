@@ -6,7 +6,6 @@ package explore.targeteditor
 import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
@@ -28,6 +27,8 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
+import explore.services.OdbAsterismApi
+import explore.services.OdbTargetApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -55,7 +56,6 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import lucuma.utils.*
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
 
 import java.time.Instant
 
@@ -89,21 +89,13 @@ object SiderealTargetEditor:
     cloning:       View[Boolean],
     obsAndTargets: UndoSetter[ObservationsAndTargets],
     onClone:       OnCloneParameters => Callback
-  )(input: UpdateTargetsInput)(using
-    FetchClient[IO, ObservationDB],
-    Logger[IO],
-    ToastCtx[IO]
-  ): IO[Unit] =
-    TargetQueriesGQL
-      .CloneTargetMutation[IO]
-      .execute:
-        CloneTargetInput(
-          targetId = targetId,
-          REPLACE_IN = obsIds.toList.assign,
-          SET = input.SET.assign
-        )
-      .raiseGraphQLErrors
-      .map(_.cloneTarget.newTarget)
+  )(
+    input:         UpdateTargetsInput
+  )(using
+    odbApi:        OdbTargetApi[IO] & OdbAsterismApi[IO]
+  )(using Logger[IO], ToastCtx[IO]): IO[Unit] =
+    odbApi
+      .cloneTarget(targetId, obsIds, input)
       .flatMap: clone =>
         (TargetCloneAction
           .cloneTarget(programId, targetId, clone, obsIds, onClone)
@@ -111,24 +103,10 @@ object SiderealTargetEditor:
           // If we do the first `onClone` here, the UI works correctly.
           onClone(OnCloneParameters(targetId, clone.id, obsIds, true))).toAsync
       .switching(cloning.async)
-      .handleErrorWith: t =>
+      .handleErrorWith: t => // TODO Move error handling to API layer
         val msg = s"Error cloning target [$targetId]"
         Logger[IO].error(t)(msg) >>
           ToastCtx[IO].showToast(msg, Message.Severity.Error)
-
-  private def remoteOnMod(
-    targetId: Target.Id,
-    input:    UpdateTargetsInput
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
-      .execute(input)
-      .void
-      .handleErrorWith(t =>
-        val msg = s"Error updating target [$targetId]"
-        Logger[IO].error(t)(msg) >>
-          ToastCtx[IO].showToast(msg, Message.Severity.Error)
-      )
 
   private def buildProperMotion(
     ra:  Option[ProperMotion.RA],
@@ -185,7 +163,7 @@ object SiderealTargetEditor:
                   SET = TargetPropertiesInput()
                 ),
                 // Invalidate the sequence if the target changes
-                u => props.invalidateSequence.to[IO] *> remoteOnMod(tid, u)
+                u => props.invalidateSequence.to[IO] >> ctx.odbApi.updateTarget(tid, u)
               )
             ): obsIds =>
               val view = View(target, (mod, cb) => cb(target, mod(target)))
@@ -194,14 +172,15 @@ object SiderealTargetEditor:
                 // noopUndoSetter(noUndoTargetView),
                 UpdateTargetsInput(SET = TargetPropertiesInput()),
                 u =>
-                  props.invalidateSequence.to[IO] *> cloneTarget(
-                    pid,
-                    tid,
-                    obsIds,
-                    cloning,
-                    props.obsAndTargets,
-                    props.onClone
-                  )(u)
+                  props.invalidateSequence.to[IO] *>
+                    cloneTarget(
+                      pid,
+                      tid,
+                      obsIds,
+                      cloning,
+                      props.obsAndTargets,
+                      props.onClone
+                    )(u)
               )
       yield
         import ctx.given

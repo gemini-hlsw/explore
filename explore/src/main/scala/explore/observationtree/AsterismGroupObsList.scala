@@ -29,6 +29,7 @@ import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
+import explore.services.OdbTargetApi
 import explore.syntax.ui.*
 import explore.targets.TargetAddDeleteActions
 import explore.undo.*
@@ -207,7 +208,7 @@ object AsterismGroupObsList:
     undoCtx:               UndoContext[ProgramSummaries],
     adding:                View[AddingTargetOrObs],
     selectTargetOrSummary: Option[Target.Id] => Callback
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+  )(using odbApi: OdbTargetApi[IO])(using Logger[IO], ToastCtx[IO]): IO[Unit] =
     TargetAddDeleteActions
       .insertTarget(
         programId,

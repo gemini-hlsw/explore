@@ -304,12 +304,13 @@ object AsterismEditorTile:
     private type Props = Title
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .useStateView(AreAdding(false))
-        .render: (props, ctx, adding) =>
+      ScalaFnComponent[Props]: props =>
+        for
+          ctx    <- useContext(AppContext.ctx)
+          adding <- useStateView(AreAdding(false))
+        yield
           import ctx.given
+
           val obsTimeEditor = ObsTimeEditor(
             props.obsTimeView,
             props.obsDurationView,

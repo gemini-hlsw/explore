@@ -5,16 +5,15 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.syntax.all.*
-import explore.common.AsterismQueries
-import explore.common.TargetQueries
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.syntax.all.*
+import explore.services.OdbAsterismApi
+import explore.services.OdbTargetApi
 import explore.undo.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
@@ -73,10 +72,8 @@ object TargetCloneAction {
     programId:    Program.Id,
     onCloneParms: OnCloneParameters,
     observations: ObservationList
-  )(using
-    FetchClient[IO, ObservationDB]
-  ): IO[Unit] =
-    val optExistence =
+  )(using odbApi: OdbTargetApi[IO] & OdbAsterismApi[IO]): IO[Unit] =
+    val optExistence: Option[Existence] =
       if (onCloneParms.areCreating) Existence.Present.some
       else {
         // If the clone has been assigned to another observation (unlikely), perhaps by another
@@ -87,11 +84,12 @@ object TargetCloneAction {
           Existence.Deleted.some
       }
     optExistence.foldMap(existence =>
-      TargetQueries.setTargetExistence[IO](programId, onCloneParms.cloneId, existence)
+      odbApi.setTargetExistence(programId, onCloneParms.cloneId, existence)
     ) >>
-      AsterismQueries.addAndRemoveTargetsFromAsterisms(onCloneParms.obsIds.toList,
-                                                       toAdd = List(onCloneParms.idToAdd),
-                                                       toRemove = List(onCloneParms.idToRemove)
+      odbApi.addAndRemoveTargetsFromAsterisms(
+        onCloneParms.obsIds.toList,
+        toAdd = List(onCloneParms.idToAdd),
+        toRemove = List(onCloneParms.idToRemove)
       )
 
   def cloneTarget(
@@ -101,10 +99,11 @@ object TargetCloneAction {
     obsIds:     ObsIdSet,
     onClone:    OnCloneParameters => Callback
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:     OdbTargetApi[IO] & OdbAsterismApi[IO]
   ): Action[ObservationsAndTargets, Option[Target]] =
-    Action[ObservationsAndTargets, Option[Target]](getter(clone.id),
-                                                   setter(originalId, clone, obsIds)
+    Action[ObservationsAndTargets, Option[Target]](
+      getter(clone.id),
+      setter(originalId, clone, obsIds)
     )(
       onSet = (_, _) => IO.unit, // clone is created and first `onClone` called outside of Action
       onRestore = (obsAndTargets, optClone) =>

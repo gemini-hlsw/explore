@@ -5,20 +5,12 @@ package explore.targets
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
-import clue.data.syntax.*
-import explore.common.TargetQueries
 import explore.model.EmptySiderealTarget
 import explore.model.ProgramSummaries
+import explore.services.OdbTargetApi
 import explore.undo.*
-import explore.utils.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Enums.*
-import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
-import queries.common.TargetQueriesGQL
 
 object TargetAddDeleteActions {
   private def singleTargetGetter(targetId: Target.Id): ProgramSummaries => Option[Target] =
@@ -41,64 +33,30 @@ object TargetAddDeleteActions {
       singleTargetSetter(tid)(targetOpt)(acc)
     }
 
-  private def remoteDeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: FetchClient[IO, ObservationDB]
-  ): IO[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
-      .execute:
-        UpdateTargetsInput(
-          WHERE = targetIds.toWhereTargets
-            .copy(program = programId.toWhereProgram.assign)
-            .assign,
-          SET = TargetPropertiesInput(existence = Existence.Deleted.assign)
-        )
-      .raiseGraphQLErrors
-      .void
-
-  private def remoteUndeleteTargets(targetIds: List[Target.Id], programId: Program.Id)(using
-    c: FetchClient[IO, ObservationDB]
-  ): IO[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
-      .execute:
-        UpdateTargetsInput(
-          WHERE = targetIds.toWhereTargets
-            .copy(program = programId.toWhereProgram.assign)
-            .assign,
-          SET = TargetPropertiesInput(existence = Existence.Present.assign),
-          includeDeleted = true.assign
-        )
-      .raiseGraphQLErrors
-      .void
-
   def insertTarget(
     programId:   Program.Id,
     setPage:     Option[Target.Id] => IO[Unit],
     postMessage: String => IO[Unit]
-  )(using
-    FetchClient[IO, ObservationDB],
-    ToastCtx[IO]
-  ): AsyncAction[ProgramSummaries, Target.Id, Option[Target]] =
+  )(using odbApi: OdbTargetApi[IO]): AsyncAction[ProgramSummaries, Target.Id, Option[Target]] =
     AsyncAction[ProgramSummaries, Target.Id, Option[Target]](
-      asyncGet = TargetQueries
-        .insertTarget[IO](programId, EmptySiderealTarget)
+      asyncGet = odbApi
+        .insertTarget(programId, EmptySiderealTarget)
         .map((_, EmptySiderealTarget.some)),
       getter = singleTargetGetter,
       setter = singleTargetSetter,
       // DB creation is performed beforehand, in order to get id
       onSet = targetId =>
         (_, otwo) =>
-          otwo.fold(remoteDeleteTargets(List(targetId), programId) >> setPage(none))(_ =>
+          otwo.fold(odbApi.deleteTargets(List(targetId), programId) >> setPage(none))(_ =>
             setPage(targetId.some)
           ),
       onRestore = targetId =>
         (_, otwo) =>
           otwo.fold(
-            remoteDeleteTargets(List(targetId), programId) >> setPage(none) >>
+            odbApi.deleteTargets(List(targetId), programId) >> setPage(none) >>
               postMessage(s"Re-deleted target '$targetId'")
           ) { _ =>
-            remoteUndeleteTargets(List(targetId), programId) >> setPage(targetId.some) >>
+            odbApi.undeleteTargets(List(targetId), programId) >> setPage(targetId.some) >>
               postMessage(s"Restored target '$targetId'")
           }
     )
@@ -108,20 +66,18 @@ object TargetAddDeleteActions {
     programId:   Program.Id,
     setSummary:  IO[Unit],
     postMessage: String => IO[Unit]
-  )(using
-    c:           FetchClient[IO, ObservationDB]
-  ): Action[ProgramSummaries, List[Option[Target]]] =
+  )(using odbApi: OdbTargetApi[IO]): Action[ProgramSummaries, List[Option[Target]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>
-        lotwo.sequence.fold(remoteDeleteTargets(targetIds, programId))(_ =>
-          remoteUndeleteTargets(targetIds, programId)
+        lotwo.sequence.fold(odbApi.deleteTargets(targetIds, programId))(_ =>
+          odbApi.undeleteTargets(targetIds, programId)
         ),
       onRestore = (_, lotwo) =>
         lotwo.sequence.fold(
-          remoteDeleteTargets(targetIds, programId) >> setSummary >>
+          odbApi.deleteTargets(targetIds, programId) >> setSummary >>
             postMessage(s"Deleted ${targetIds.length} target(s)")
         )(_ =>
-          remoteUndeleteTargets(targetIds, programId) >> setSummary >>
+          odbApi.undeleteTargets(targetIds, programId) >> setSummary >>
             postMessage(s"Restored ${targetIds.length} target(s)")
         )
     )
