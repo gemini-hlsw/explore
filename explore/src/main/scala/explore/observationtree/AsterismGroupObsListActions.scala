@@ -4,17 +4,15 @@
 package explore.observationtree
 
 import cats.effect.IO
-import clue.FetchClient
 import crystal.react.*
-import explore.common.AsterismQueries
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.TargetList
+import explore.services.OdbAsterismApi
 import explore.undo.*
 import japgolly.scalajs.react.callback.Callback
 import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB
 import monocle.Iso
 import org.typelevel.log4cats.Logger
 
@@ -28,7 +26,7 @@ object AsterismGroupObsListActions {
     expandedIds: View[SortedSet[ObsIdSet]],
     setObsSet:   ObsIdSet => Callback,
     allTargets:  TargetList
-  )(using FetchClient[IO, ObservationDB], Logger[IO]) =
+  )(using odbApi: OdbAsterismApi[IO])(using Logger[IO]) =
     val traversal =
       Iso
         .id[ObservationList]
@@ -45,10 +43,7 @@ object AsterismGroupObsListActions {
           val base = ids - draggedIds - destIds + destGroup
           (srcIds -- draggedIds).fold(base)(base + _)
         ) >>
-          AsterismQueries.replaceAsterism[IO](
-            draggedIds.toList,
-            filteredTargetIds.toList
-          ) >>
+          odbApi.replaceAsterism(draggedIds.toList, filteredTargetIds.toList) >>
           setObsSet(destGroup).toAsync
     )
 }

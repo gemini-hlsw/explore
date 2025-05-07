@@ -3,13 +3,10 @@
 
 package explore.services
 
-import cats.Applicative
 import cats.MonadThrow
-import cats.data.NonEmptyList
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import clue.model.GraphQLError
 import clue.model.GraphQLResponse
 import clue.model.GraphQLResponse.*
 import explore.model.ObsIdSet
@@ -34,26 +31,15 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
 ) extends OdbTargetApi[F]:
 
   override def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
-    // TODO REMOVE DEBUGGING LOGIC vvv
-    (if (input.SET.name.exists(_.toString === "1"))
-       // Logger[IO].info(s"Updating target [$targetId] with input [$input]")
-       MonadThrow[F].raiseError(new Exception("Test Generic error"))
-     else if (input.SET.name.exists(_.toString === "2"))
-       Applicative[F]
-         .pure(GraphQLResponse.errors(NonEmptyList.of(GraphQLError("Test GraphQL error"))))
-         .void
-     else
-       TargetQueriesGQL
-         .UpdateTargetsMutation[F]
-         .execute(input)
-         //  .raiseGraphQLErrorsOnNoData
-         .void) // TODO ADAIWHEIHWEIWQHLIAHEDILAWHFLIAWHFLIAWHFLIWAH
-      // TODO REMOVE DEBUGGING LOGIC ^^^
-      .handleErrorWith(t =>
+    TargetQueriesGQL
+      .UpdateTargetsMutation[F]
+      .execute(input)
+      .raiseGraphQLErrors
+      .void
+      .handleErrorWith: t => // TODO Resync data? Revert change?
         val msg = s"Error updating target [$targetId]"
         Logger[F].error(t)(msg) >>
           ToastCtx[F].showToast(msg, Message.Severity.Error)
-      )
 
   override def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
     TargetQueriesGQL

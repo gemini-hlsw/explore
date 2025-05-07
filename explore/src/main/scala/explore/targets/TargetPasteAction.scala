@@ -5,9 +5,7 @@ package explore.targets
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
-import explore.common.AsterismQueries
 import explore.model.AsterismGroup
 import explore.model.AsterismGroupList
 import explore.model.ObsIdSet
@@ -16,8 +14,8 @@ import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
 import explore.model.syntax.all.*
+import explore.services.OdbAsterismApi
 import explore.undo.*
-import lucuma.schemas.ObservationDB
 import monocle.Iso
 
 import scala.annotation.unused
@@ -79,7 +77,7 @@ object TargetPasteAction {
     selectObsIds: ObsIdSet => IO[Unit],
     expandedIds:  View[SortedSet[ObsIdSet]]
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:       OdbAsterismApi[IO]
   ): Action[ProgramSummaries, Unit] =
     Action(getter = getter, setter = setter(obsIds, targetIds))(
       onSet = (ps, _) =>
@@ -92,11 +90,9 @@ object TargetPasteAction {
             .toAsync >>
             selectObsIds(obsIds) >>
             (if (isUndo)
-               AsterismQueries
-                 .removeTargetsFromAsterisms[IO](obsIds.toList, targetIds.toList)
+               odbApi.removeTargetsFromAsterisms(obsIds.toList, targetIds.toList)
              else
-               AsterismQueries
-                 .addTargetsToAsterisms[IO](obsIds.toList, targetIds.toList))
+               odbApi.addTargetsToAsterisms(obsIds.toList, targetIds.toList))
         )
     )
 }

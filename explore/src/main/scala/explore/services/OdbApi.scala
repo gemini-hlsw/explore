@@ -3,4 +3,4 @@
 
 package explore.services
 
-trait OdbApi[F[_]] extends OdbTargetApi[F]
+trait OdbApi[F[_]] extends OdbTargetApi[F] with OdbAsterismApi[F]

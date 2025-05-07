@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.Pot
 import crystal.react.*
 import crystal.react.given
@@ -21,6 +20,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.enums.TableId
 import explore.model.extensions.*
+import explore.services.OdbAsterismApi
 import explore.targets.TargetColumns
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -33,7 +33,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.LucumaStyles
@@ -87,7 +86,7 @@ object TargetTable extends AsterismModifier:
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     target:           TargetWithId,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
-  )(using FetchClient[IO, ObservationDB]): Callback =
+  )(using OdbAsterismApi[IO]): Callback =
     AsterismActions
       .removeTargetFromAsterisms(target, obsIds, onAsterismUpdate)
       .set(obsAndTargets)(true) >>

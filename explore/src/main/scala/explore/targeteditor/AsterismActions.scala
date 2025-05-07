@@ -4,17 +4,15 @@
 package explore.targeteditor
 
 import cats.effect.IO
-import clue.FetchClient
 import crystal.react.syntax.all.*
-import explore.common.AsterismQueries
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.syntax.all.*
+import explore.services.OdbAsterismApi
 import explore.undo.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.TargetWithId
 
 import scala.annotation.unused
@@ -57,7 +55,7 @@ object AsterismActions:
     obsAndTargets: ObservationsAndTargets, // this is the value before the setter
     createdTarget: Boolean
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:        OdbAsterismApi[IO]
   ): IO[Unit] =
     val asterismHasTarget = obsAndTargets.asterismHasTarget(targetId, obsIds)
     val targetList        = List(targetId)
@@ -67,11 +65,11 @@ object AsterismActions:
     if (asterismHasTarget)
       // Removing it
       if (obsAndTargets.shouldDelete(targetId, obsIds, createdTarget))
-        AsterismQueries.deleteTargetsAndRemoveFromAsterism(obsList, targetList)
-      else AsterismQueries.removeTargetsFromAsterisms(obsList, targetList)
+        odbApi.deleteTargetsAndRemoveFromAsterism(obsList, targetList)
+      else odbApi.removeTargetsFromAsterisms(obsList, targetList)
     else if (createdTarget)
-      AsterismQueries.undeleteTargetsAndAddToAsterism(obsList, targetList)
-    else AsterismQueries.addTargetsToAsterisms(obsList, targetList)
+      odbApi.undeleteTargetsAndAddToAsterism(obsList, targetList)
+    else odbApi.addTargetsToAsterisms(obsList, targetList)
 
   def addTargetToAsterisms(
     target:           TargetWithId,
@@ -79,7 +77,7 @@ object AsterismActions:
     createdTarget:    Boolean,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:           OdbAsterismApi[IO]
   ): Action[ObservationsAndTargets, Boolean] =
     Action(getter(target.id, obsIds), setter(target, obsIds, createdTarget))(
       onSet = (obsAndTargets, _) => updateRemote(target.id, obsIds, obsAndTargets, createdTarget),
@@ -94,7 +92,7 @@ object AsterismActions:
     obsIds:           ObsIdSet,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:           OdbAsterismApi[IO]
   ): Action[ObservationsAndTargets, Boolean] =
     Action(getter(target.id, obsIds), setter(target, obsIds, false))(
       onSet = (

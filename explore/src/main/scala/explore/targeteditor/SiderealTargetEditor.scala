@@ -6,7 +6,6 @@ package explore.targeteditor
 import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.data.syntax.*
 import crystal.*
 import crystal.react.*
@@ -28,6 +27,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
+import explore.services.OdbAsterismApi
 import explore.services.OdbTargetApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
@@ -92,18 +92,18 @@ object SiderealTargetEditor:
   )(
     input:         UpdateTargetsInput
   )(using
-    odbApi:        OdbTargetApi[IO]
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+    odbApi:        OdbTargetApi[IO] & OdbAsterismApi[IO]
+  )(using Logger[IO], ToastCtx[IO]): IO[Unit] =
     odbApi
       .cloneTarget(targetId, obsIds, input)
       .flatMap: clone =>
         (TargetCloneAction
-          .cloneTarget(programId, targetId, clone, obsIds, onClone)(odbApi)
+          .cloneTarget(programId, targetId, clone, obsIds, onClone)
           .set(obsAndTargets)(clone.target.some) >>
           // If we do the first `onClone` here, the UI works correctly.
           onClone(OnCloneParameters(targetId, clone.id, obsIds, true))).toAsync
       .switching(cloning.async)
-      .handleErrorWith: t =>
+      .handleErrorWith: t => // TODO Move error handling to API layer
         val msg = s"Error cloning target [$targetId]"
         Logger[IO].error(t)(msg) >>
           ToastCtx[IO].showToast(msg, Message.Severity.Error)

@@ -16,3 +16,4 @@ case class OdbApiImpl[F[_]: MonadThrow]()(using
   ToastCtx[F]
 ) extends OdbApi[F]
     with OdbTargetApiImpl[F]
+    with OdbAsterismApiImpl[F]

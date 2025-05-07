@@ -5,15 +5,14 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.syntax.all.*
-import explore.common.AsterismQueries
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.syntax.all.*
+import explore.services.OdbAsterismApi
 import explore.services.OdbTargetApi
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -73,9 +72,7 @@ object TargetCloneAction {
     programId:    Program.Id,
     onCloneParms: OnCloneParameters,
     observations: ObservationList
-  )(odbApi: OdbTargetApi[IO])(using
-    FetchClient[IO, ObservationDB]
-  ): IO[Unit] =
+  )(using odbApi: OdbTargetApi[IO] & OdbAsterismApi[IO]): IO[Unit] =
     val optExistence: Option[Existence] =
       if (onCloneParms.areCreating) Existence.Present.some
       else {
@@ -89,7 +86,7 @@ object TargetCloneAction {
     optExistence.foldMap(existence =>
       odbApi.setTargetExistence(programId, onCloneParms.cloneId, existence)
     ) >>
-      AsterismQueries.addAndRemoveTargetsFromAsterisms(
+      odbApi.addAndRemoveTargetsFromAsterisms(
         onCloneParms.obsIds.toList,
         toAdd = List(onCloneParms.idToAdd),
         toRemove = List(onCloneParms.idToRemove)
@@ -101,9 +98,9 @@ object TargetCloneAction {
     clone:      TargetWithId,
     obsIds:     ObsIdSet,
     onClone:    OnCloneParameters => Callback
-  )(
-    odbApi:     OdbTargetApi[IO]
-  )(using FetchClient[IO, ObservationDB]): Action[ObservationsAndTargets, Option[Target]] =
+  )(using
+    odbApi:     OdbTargetApi[IO] & OdbAsterismApi[IO]
+  ): Action[ObservationsAndTargets, Option[Target]] =
     Action[ObservationsAndTargets, Option[Target]](
       getter(clone.id),
       setter(originalId, clone, obsIds)
@@ -112,6 +109,6 @@ object TargetCloneAction {
       onRestore = (obsAndTargets, optClone) =>
         val params = OnCloneParameters(originalId, clone.id, obsIds, optClone.isDefined)
         onClone(params).toAsync >>
-          updateRemote(programId, params, obsAndTargets._1)(odbApi)
+          updateRemote(programId, params, obsAndTargets._1)
     )
 }
