@@ -11,8 +11,6 @@ import explore.model.Page
 import explore.model.ProgramSummaries
 import explore.model.RootModel
 import explore.model.RootModelViews
-import explore.services.OdbApi
-import explore.services.OdbApiImpl
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.RouterWithProps
 import japgolly.scalajs.react.vdom.VdomNode
@@ -28,9 +26,7 @@ case class RootComponent(
   ctx:          AppContext[IO],
   router:       RouterWithProps[Page, RootModelViews],
   initialModel: RootModel
-) extends ReactFnProps(RootComponent):
-  import ctx.given
-  private val odbApi: OdbApi[IO] = OdbApiImpl()
+) extends ReactFnProps(RootComponent)
 
 object RootComponent
     extends ReactFnComponent[RootComponent](props =>
@@ -39,12 +35,11 @@ object RootComponent
         attr: Option[ResourceAttributes] = rootModel.get.vault.map(ResourceAttributes.fromUserVault)
         programSummariesPot             <- useThrottlingStateView(pending[ProgramSummaries], 5.seconds)
       yield AppContext.ctx.provide(props.ctx):
-        OdbApi.ctx.provide(props.odbApi):
-          React.Fragment(
-            props.ctx.tracing.map: c =>
-              Observability(HoneycombOptions(c.key, c.serviceName, attr.orUndefined)),
-            HelpContext.Provider:
-              programSummariesPot.renderPot: programSummaries =>
-                props.router(RootModelViews(rootModel, programSummaries))
-          )
+        React.Fragment(
+          props.ctx.tracing.map: c =>
+            Observability(HoneycombOptions(c.key, c.serviceName, attr.orUndefined)),
+          HelpContext.Provider:
+            programSummariesPot.renderPot: programSummaries =>
+              props.router(RootModelViews(rootModel, programSummaries))
+        )
     )

@@ -3,13 +3,16 @@
 
 package explore.services
 
-import cats.effect.IO
+import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import explore.utils.ToastCtx
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 
-case class OdbApiImpl()(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO])
-    extends OdbApi[IO]
-    with OdbTargetApiImpl
+case class OdbApiImpl[F[_]: MonadThrow]()(using
+  FetchClient[F, ObservationDB],
+  Logger[F],
+  ToastCtx[F]
+) extends OdbApi[F]
+    with OdbTargetApiImpl[F]

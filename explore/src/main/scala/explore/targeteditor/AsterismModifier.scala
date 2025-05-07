@@ -12,7 +12,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
-import explore.services.OdbApi
+import explore.services.OdbTargetApi
 import explore.syntax.ui.*
 import explore.targets.TargetSelectionPopup
 import explore.targets.TargetSource
@@ -36,7 +36,7 @@ trait AsterismModifier:
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     targetWithOptId:  TargetWithOptId,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
-  )(odbApi: OdbApi[IO])(using FetchClient[IO, ObservationDB]): IO[Unit] =
+  )(odbApi: OdbTargetApi[IO])(using FetchClient[IO, ObservationDB]): IO[Unit] =
     targetWithOptId match
       case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
         oTargetId
@@ -72,7 +72,7 @@ trait AsterismModifier:
     onAsterismUpdate: OnAsterismUpdateParams => Callback,
     readOnly:         Boolean = false,
     buttonClass:      Css = Css.Empty
-  )(odbApi: OdbApi[IO])(using
+  )(using odbApi: OdbTargetApi[IO])(using
     FetchClient[IO, ObservationDB],
     Logger[IO]
   ): TargetSelectionPopup =

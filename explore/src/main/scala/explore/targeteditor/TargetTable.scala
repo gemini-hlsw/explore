@@ -21,7 +21,6 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.enums.TableId
 import explore.model.extensions.*
-import explore.services.OdbApi
 import explore.targets.TargetColumns
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -99,7 +98,6 @@ object TargetTable extends AsterismModifier:
     ScalaFnComponent[Props]: props =>
       for
         ctx     <- useContext(AppContext.ctx)
-        odbApi  <- useContext(OdbApi.ctx)
         cols    <- useMemo(props.readOnly): readOnly =>
                      import ctx.given
 
@@ -178,7 +176,7 @@ object TargetTable extends AsterismModifier:
                 adding,
                 props.onAsterismUpdate,
                 buttonClass = LucumaPrimeStyles.Massive
-              )(odbApi)
+              )
             )
           else
             <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(

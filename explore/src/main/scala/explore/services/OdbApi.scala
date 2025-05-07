@@ -3,13 +3,4 @@
 
 package explore.services
 
-import cats.MonadThrow
-import cats.effect.IO
-import japgolly.scalajs.react.React
-import japgolly.scalajs.react.feature.Context
-
-trait OdbApi[F[+_]: MonadThrow] extends OdbTargetApi[F]
-
-object OdbApi:
-  // Default value noop implementations with warning
-  val ctx: Context[OdbApi[IO]] = React.createContext(new OdbApi[IO] {})
+trait OdbApi[F[_]] extends OdbTargetApi[F]

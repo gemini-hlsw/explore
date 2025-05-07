@@ -14,7 +14,7 @@ import explore.model.ObservationList
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.syntax.all.*
-import explore.services.OdbApi
+import explore.services.OdbTargetApi
 import explore.undo.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
@@ -73,7 +73,7 @@ object TargetCloneAction {
     programId:    Program.Id,
     onCloneParms: OnCloneParameters,
     observations: ObservationList
-  )(odbApi: OdbApi[IO])(using
+  )(odbApi: OdbTargetApi[IO])(using
     FetchClient[IO, ObservationDB]
   ): IO[Unit] =
     val optExistence: Option[Existence] =
@@ -102,7 +102,7 @@ object TargetCloneAction {
     obsIds:     ObsIdSet,
     onClone:    OnCloneParameters => Callback
   )(
-    odbApi:     OdbApi[IO]
+    odbApi:     OdbTargetApi[IO]
   )(using FetchClient[IO, ObservationDB]): Action[ObservationsAndTargets, Option[Target]] =
     Action[ObservationsAndTargets, Option[Target]](
       getter(clone.id),

@@ -28,7 +28,7 @@ import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.reusability.given
-import explore.services.OdbApi
+import explore.services.OdbTargetApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -91,7 +91,9 @@ object SiderealTargetEditor:
     onClone:       OnCloneParameters => Callback
   )(
     input:         UpdateTargetsInput
-  )(odbApi: OdbApi[IO])(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
+  )(using
+    odbApi:        OdbTargetApi[IO]
+  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
     odbApi
       .cloneTarget(targetId, obsIds, input)
       .flatMap: clone =>
@@ -141,7 +143,6 @@ object SiderealTargetEditor:
     ScalaFnComponent[Props]: props =>
       for
         ctx                   <- useContext(AppContext.ctx)
-        odbApi                <- useContext(OdbApi.ctx)
         cloning               <- useStateView(false)
         obsToCloneTo          <- useStateView(none[ObsIdSet]) // obs ids to clone to.
         // If obsTime is not set, change it to now
@@ -162,7 +163,7 @@ object SiderealTargetEditor:
                   SET = TargetPropertiesInput()
                 ),
                 // Invalidate the sequence if the target changes
-                u => props.invalidateSequence.to[IO] >> odbApi.updateTarget(tid, u)
+                u => props.invalidateSequence.to[IO] >> ctx.odbApi.updateTarget(tid, u)
               )
             ): obsIds =>
               val view = View(target, (mod, cb) => cb(target, mod(target)))
@@ -171,14 +172,15 @@ object SiderealTargetEditor:
                 // noopUndoSetter(noUndoTargetView),
                 UpdateTargetsInput(SET = TargetPropertiesInput()),
                 u =>
-                  props.invalidateSequence.to[IO] *> cloneTarget(
-                    pid,
-                    tid,
-                    obsIds,
-                    cloning,
-                    props.obsAndTargets,
-                    props.onClone
-                  )(u)(odbApi)
+                  props.invalidateSequence.to[IO] *>
+                    cloneTarget(
+                      pid,
+                      tid,
+                      obsIds,
+                      cloning,
+                      props.obsAndTargets,
+                      props.onClone
+                    )(u)
               )
       yield
         import ctx.given

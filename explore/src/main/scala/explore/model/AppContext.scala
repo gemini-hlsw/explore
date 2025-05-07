@@ -11,6 +11,8 @@ import clue.websocket.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.events.*
 import explore.model.enums.AppTab
+import explore.services.OdbApi
+import explore.services.OdbApiImpl
 import explore.utils
 import explore.utils.ToastCtx
 import fs2.dom.BroadcastChannel
@@ -84,6 +86,8 @@ case class AppContext[F[_]](
   given plotWorker: WorkerClient[F, PlotMessage.Request]       = workerClients.plot
 
   given toastCtx: ToastCtx[F] = new ToastCtx(toastRef)
+
+  given odbApi: OdbApi[F] = OdbApiImpl[F]()
 
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value

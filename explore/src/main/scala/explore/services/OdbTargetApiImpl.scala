@@ -3,13 +3,15 @@
 
 package explore.services
 
+import cats.Applicative
+import cats.MonadThrow
 import cats.data.NonEmptyList
-import cats.effect.IO
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
 import clue.model.GraphQLError
 import clue.model.GraphQLResponse
+import clue.model.GraphQLResponse.*
 import explore.model.ObsIdSet
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
@@ -25,44 +27,49 @@ import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
 import queries.common.TargetQueriesGQL
 
-trait OdbTargetApiImpl(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO])
-    extends OdbTargetApi[IO]:
+trait OdbTargetApiImpl[F[_]: MonadThrow](using
+  FetchClient[F, ObservationDB],
+  Logger[F],
+  ToastCtx[F]
+) extends OdbTargetApi[F]:
 
-  override def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): IO[Unit] =
+  override def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
     // TODO REMOVE DEBUGGING LOGIC vvv
     (if (input.SET.name.exists(_.toString === "1"))
        // Logger[IO].info(s"Updating target [$targetId] with input [$input]")
-       IO.raiseError(new Exception("Test Generic error"))
+       MonadThrow[F].raiseError(new Exception("Test Generic error"))
      else if (input.SET.name.exists(_.toString === "2"))
-       IO(GraphQLResponse.errors(NonEmptyList.of(GraphQLError("Test GraphQL error")))).void
+       Applicative[F]
+         .pure(GraphQLResponse.errors(NonEmptyList.of(GraphQLError("Test GraphQL error"))))
+         .void
      else
        TargetQueriesGQL
-         .UpdateTargetsMutation[IO]
+         .UpdateTargetsMutation[F]
          .execute(input)
          //  .raiseGraphQLErrorsOnNoData
          .void) // TODO ADAIWHEIHWEIWQHLIAHEDILAWHFLIAWHFLIAWHFLIWAH
       // TODO REMOVE DEBUGGING LOGIC ^^^
       .handleErrorWith(t =>
         val msg = s"Error updating target [$targetId]"
-        Logger[IO].error(t)(msg) >>
-          ToastCtx[IO].showToast(msg, Message.Severity.Error)
+        Logger[F].error(t)(msg) >>
+          ToastCtx[F].showToast(msg, Message.Severity.Error)
       )
 
-  override def insertTarget(programId: Program.Id, target: Target.Sidereal): IO[Target.Id] =
+  override def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
     TargetQueriesGQL
-      .CreateTargetMutation[IO]
+      .CreateTargetMutation[F]
       .execute(target.toCreateTargetInput(programId))
       .raiseGraphQLErrors
       .map(_.createTarget.target.id)
-      .flatTap(id => ToastCtx[IO].showToast(s"Created new target [$id]"))
+      .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
 
   override def setTargetExistence(
     programId: Program.Id,
     targetId:  Target.Id,
     existence: Existence
-  ): IO[Unit] =
+  ): F[Unit] =
     TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
+      .UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
           WHERE = targetId.toWhereTarget
@@ -74,9 +81,9 @@ trait OdbTargetApiImpl(using FetchClient[IO, ObservationDB], Logger[IO], ToastCt
       .raiseGraphQLErrors
       .void
 
-  override def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): IO[Unit] =
+  override def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
     TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
+      .UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
@@ -87,9 +94,9 @@ trait OdbTargetApiImpl(using FetchClient[IO, ObservationDB], Logger[IO], ToastCt
       .raiseGraphQLErrors
       .void
 
-  override def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): IO[Unit] =
+  override def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
     TargetQueriesGQL
-      .UpdateTargetsMutation[IO]
+      .UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
@@ -105,9 +112,9 @@ trait OdbTargetApiImpl(using FetchClient[IO, ObservationDB], Logger[IO], ToastCt
     targetId:  Target.Id,
     replaceIn: ObsIdSet,
     input:     UpdateTargetsInput
-  ): IO[TargetWithId] =
+  ): F[TargetWithId] =
     TargetQueriesGQL
-      .CloneTargetMutation[IO]
+      .CloneTargetMutation[F]
       .execute:
         CloneTargetInput(
           targetId = targetId,

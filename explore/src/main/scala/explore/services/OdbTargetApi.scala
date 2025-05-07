@@ -3,7 +3,6 @@
 
 package explore.services
 
-import cats.MonadThrow
 import explore.model.ObsIdSet
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -11,27 +10,23 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.UpdateTargetsInput
 import lucuma.schemas.model.TargetWithId
 
-trait OdbTargetApi[F[+_]: MonadThrow]:
-  private val Uninitialized: F[Nothing] =
-    MonadThrow[F].raiseError:
-      new RuntimeException("OdbApi is not initialized.")
+trait OdbTargetApi[F[_]]:
+  def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id]
 
-  def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] = Uninitialized
-
-  def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] = Uninitialized
+  def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit]
 
   def setTargetExistence(
     programId: Program.Id,
     targetId:  Target.Id,
     existence: Existence
-  ): F[Unit] = Uninitialized
+  ): F[Unit]
 
-  def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] = Uninitialized
+  def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit]
 
-  def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] = Uninitialized
+  def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit]
 
   def cloneTarget(
     targetId:  Target.Id,
     replaceIn: ObsIdSet,
     input:     UpdateTargetsInput
-  ): F[TargetWithId] = Uninitialized
+  ): F[TargetWithId]

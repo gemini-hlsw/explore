@@ -7,7 +7,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import explore.model.EmptySiderealTarget
 import explore.model.ProgramSummaries
-import explore.services.OdbApi
+import explore.services.OdbTargetApi
 import explore.undo.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -37,7 +37,7 @@ object TargetAddDeleteActions {
     programId:   Program.Id,
     setPage:     Option[Target.Id] => IO[Unit],
     postMessage: String => IO[Unit]
-  )(odbApi: OdbApi[IO]): AsyncAction[ProgramSummaries, Target.Id, Option[Target]] =
+  )(using odbApi: OdbTargetApi[IO]): AsyncAction[ProgramSummaries, Target.Id, Option[Target]] =
     AsyncAction[ProgramSummaries, Target.Id, Option[Target]](
       asyncGet = odbApi
         .insertTarget(programId, EmptySiderealTarget)
@@ -66,7 +66,7 @@ object TargetAddDeleteActions {
     programId:   Program.Id,
     setSummary:  IO[Unit],
     postMessage: String => IO[Unit]
-  )(odbApi: OdbApi[IO]): Action[ProgramSummaries, List[Option[Target]]] =
+  )(using odbApi: OdbTargetApi[IO]): Action[ProgramSummaries, List[Option[Target]]] =
     Action(getter = targetListGetter(targetIds), setter = targetListSetter(targetIds))(
       onSet = (_, lotwo) =>
         lotwo.sequence.fold(odbApi.deleteTargets(targetIds, programId))(_ =>
