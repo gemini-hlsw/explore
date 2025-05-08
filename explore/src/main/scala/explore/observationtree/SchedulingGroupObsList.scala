@@ -6,7 +6,6 @@ package explore.observationtree
 import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.given
-import clue.FetchClient
 import crystal.react.View
 import explore.Icons
 import explore.common.TimingWindowsQueries
@@ -23,6 +22,7 @@ import explore.model.SchedulingGroupList
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.render.given
+import explore.services.OdbObservationApi
 import explore.undo.UndoSetter
 import explore.undo.Undoer
 import explore.utils.ToastCtx
@@ -38,7 +38,6 @@ import lucuma.react.beautifuldnd.*
 import lucuma.react.common.*
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.floatingui.syntax.*
-import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.render.*
@@ -143,7 +142,7 @@ object SchedulingGroupObsList:
     focusedObsSet:    Option[ObsIdSet],
     schedulingGroups: SchedulingGroupList
   )(using
-    FetchClient[IO, ObservationDB],
+    OdbObservationApi[IO],
     Logger[IO],
     ToastCtx[IO]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {

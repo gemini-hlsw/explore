@@ -1,23 +1,24 @@
 // Copyright (c) 2016-2025 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package queries.schemas.odb
+package explore.services
 
-import cats.effect.Async
+import cats.MonadThrow
 import cats.implicits.*
 import clue.FetchClient
+import clue.data.Input
 import clue.data.syntax.*
 import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ConfigurationRequestWithObsIds
-import explore.model.ConstraintGroup
-import explore.model.ObsIdSet
+import explore.model.ExecutionOffsets
 import explore.model.Observation
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Group
+import lucuma.core.model.ObservationReference
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -27,20 +28,38 @@ import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
 import queries.common.TargetQueriesGQL.SetGuideTargetName
 
 import java.time.Instant
-import scala.collection.immutable.SortedMap
 
-object ObsQueries:
-  type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
+trait OdbObservationApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
+    extends OdbObservationApi[F]:
+  // type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
 
-  def updateObservationConstraintSet[F[_]: Async](
+  def updateObservations(input: UpdateObservationsInput): F[Unit] =
+    UpdateObservationMutation[F]
+      .execute(input)
+      .raiseGraphQLErrors
+      // .toastErrors
+      .void
+
+  def updateObservations(
+    obsIds: List[Observation.Id],
+    input:  ObservationPropertiesInput
+  ): F[Unit] =
+    updateObservations:
+      UpdateObservationsInput(
+        WHERE = obsIds.toWhereObservation.assign,
+        SET = input
+      )
+
+  def updateObservationConstraintSet(
     obsIds:      List[Observation.Id],
     constraints: ConstraintSet
-  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+  ): F[Unit] = {
     val createER: ElevationRangeInput = constraints.elevationRange match
       case ElevationRange.ByAirMass(min, max)   =>
         ElevationRangeInput(airMass =
@@ -67,20 +86,14 @@ object ObsQueries:
         elevationRange = createER.assign
       ).assign
     )
-    UpdateObservationMutation[F]
-      .execute:
-        UpdateObservationsInput(
-          WHERE = obsIds.toWhereObservation.assign,
-          SET = editInput
-        )
-      .raiseGraphQLErrors
-      .void
+
+    updateObservations(obsIds, editInput)
   }
 
-  def updateVisualizationTime[F[_]: Async](
+  def updateVisualizationTime(
     obsIds:          List[Observation.Id],
     observationTime: Option[Instant]
-  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+  ): F[Unit] = {
 
     val editInput = ObservationTimesInput(observationTime =
       observationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
@@ -96,10 +109,10 @@ object ObsQueries:
       .void
   }
 
-  def updateVisualizationDuration[F[_]: Async](
+  def updateVisualizationDuration(
     obsIds:              List[Observation.Id],
     observationDuration: Option[TimeSpan]
-  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+  ): F[Unit] = {
 
     val editInput = ObservationTimesInput(
       observationDuration = observationDuration.map(_.toInput).orUnassign
@@ -115,11 +128,11 @@ object ObsQueries:
       .void
   }
 
-  def updateVisualizationTimeAndDuration[F[_]: Async](
+  def updateVisualizationTimeAndDuration(
     obsIds:              List[Observation.Id],
     observationTime:     Option[Instant],
     observationDuration: Option[TimeSpan]
-  )(using FetchClient[F, ObservationDB]): F[Unit] = {
+  ): F[Unit] = {
     val editInput =
       ObservationTimesInput(
         observationTime = observationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign,
@@ -136,11 +149,10 @@ object ObsQueries:
       .void
   }
 
-  def updatePosAngle[F[_]: Async](
+  def updatePosAngle(
     obsIds:             List[Observation.Id],
     posAngleConstraint: PosAngleConstraint
-  )(using FetchClient[F, ObservationDB]): F[Unit] = {
-
+  ): F[Unit] = {
     val editInput =
       ObservationPropertiesInput(posAngleConstraint = posAngleConstraint.toInput.assign)
 
@@ -154,11 +166,10 @@ object ObsQueries:
       .void
   }
 
-  def updateNotes[F[_]: Async](
+  def updateNotes(
     obsIds: List[Observation.Id],
     notes:  Option[NonEmptyString]
-  )(using FetchClient[F, ObservationDB]): F[Unit] = {
-
+  ): F[Unit] = {
     val editInput =
       ObservationPropertiesInput(observerNotes = notes.orUnassign)
 
@@ -172,10 +183,10 @@ object ObsQueries:
       .void
   }
 
-  def createObservation[F[_]: Async](
+  def createObservation(
     programId: Program.Id,
     parentId:  Option[Group.Id]
-  )(using FetchClient[F, ObservationDB]): F[Observation] =
+  ): F[Observation] =
     ProgramCreateObservation[F]
       .execute:
         CreateObservationInput(
@@ -188,11 +199,9 @@ object ObsQueries:
       .map: result =>
         result.createObservation.observation
 
-  def createObservationWithTargets[F[_]: Async](
+  def createObservationWithTargets(
     programId: Program.Id,
     targetIds: Set[Target.Id]
-  )(using
-    FetchClient[F, ObservationDB]
   ): F[Observation] =
     ProgramCreateObservation[F]
       .execute:
@@ -205,11 +214,9 @@ object ObsQueries:
       .raiseGraphQLErrors
       .map(_.createObservation.observation)
 
-  def cloneObservation[F[_]: Async](
+  def cloneObservation(
     obsId:      Observation.Id,
     newGroupId: Option[Group.Id]
-  )(using
-    FetchClient[F, ObservationDB]
   ): F[Observation] =
     CloneObservationMutation[F]
       .execute:
@@ -220,13 +227,11 @@ object ObsQueries:
       .raiseGraphQLErrorsOnNoData
       .map(_.cloneObservation.newObservation)
 
-  def applyObservation[F[_]: Async](
+  def applyObservation(
     obsId:           Observation.Id,
     onTargets:       Option[List[Target.Id]] = none,
     onConstraintSet: Option[ConstraintSet] = none,
     onTimingWindows: Option[List[TimingWindow]] = none
-  )(using
-    FetchClient[F, ObservationDB]
   ): F[Observation] =
     CloneObservationMutation[F]
       .execute:
@@ -243,19 +248,13 @@ object ObsQueries:
       .raiseGraphQLErrors
       .map(_.cloneObservation.newObservation)
 
-  def deleteObservation[F[_]: Async](
-    obsId: Observation.Id
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def deleteObservation(obsId: Observation.Id): F[Unit] =
     deleteObservations(List(obsId))
 
-  def undeleteObservation[F[_]: Async](
-    obsId: Observation.Id
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def undeleteObservation(obsId: Observation.Id): F[Unit] =
     undeleteObservations(List(obsId))
 
-  def deleteObservations[F[_]: Async](
-    obsIds: List[Observation.Id]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def deleteObservations(obsIds: List[Observation.Id]): F[Unit] =
     UpdateObservationMutation[F]
       .execute:
         UpdateObservationsInput(
@@ -265,9 +264,7 @@ object ObsQueries:
       .raiseGraphQLErrors
       .void
 
-  def undeleteObservations[F[_]: Async](
-    obsIds: List[Observation.Id]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def undeleteObservations(obsIds: List[Observation.Id]): F[Unit] =
     UpdateObservationMutation[F]
       .execute:
         UpdateObservationsInput(
@@ -286,11 +283,11 @@ object ObsQueries:
    * @param groupIndex
    *   New index in group. `None` to leave position unchanged
    */
-  def moveObservation[F[_]: Async](
+  def moveObservation(
     obsId:      Observation.Id,
     groupId:    Option[Group.Id],
     groupIndex: NonNegShort
-  )(using FetchClient[F, ObservationDB]) =
+  ): F[Unit] =
     val input = UpdateObservationsInput(
       WHERE = obsId.toWhereObservation.assign,
       SET = ObservationPropertiesInput(
@@ -300,22 +297,61 @@ object ObsQueries:
     )
     UpdateObservationMutation[F].execute(input).void
 
-  def setGuideTargetName[F[_]: Async](
+  def setGuideTargetName(
     obsId:      Observation.Id,
     targetName: Option[NonEmptyString]
-  )(using FetchClient[F, ObservationDB]) =
+  ): F[Unit] =
     val input = SetGuideTargetNameInput(
       observationId = obsId.assign,
       targetName = targetName.orUnassign
     )
     SetGuideTargetName[F].execute(input).void
 
-  def createConfigurationRequest[F[_]: Async](
+  def createConfigurationRequest(
     obsId:         Observation.Id,
     justification: Option[NonEmptyString]
-  )(using FetchClient[F, ObservationDB]): F[ConfigurationRequestWithObsIds] =
+  ): F[ConfigurationRequestWithObsIds] =
     val input = CreateConfigurationRequestInput(
       observationId = obsId.assign,
       SET = ConfigurationRequestProperties(justification = justification.orIgnore).assign
     )
     CreateConfigurationRequestMutation[F].execute(input).raiseGraphQLErrors.map(_._1)
+
+  def updateConfiguration(
+    obsId:              Observation.Id,
+    observingMode:      Input[ObservingModeInput],
+    posAngleConstraint: Input[PosAngleConstraintInput] = Input.ignore
+  ): F[Option[ObservingMode]] =
+    val input = UpdateObservationsInput(
+      WHERE = obsId.toWhereObservation.assign,
+      SET = ObservationPropertiesInput(
+        observingMode = observingMode,
+        posAngleConstraint = posAngleConstraint
+      )
+    )
+
+    UpdateConfigurationMutation[F]
+      .execute(input)
+      .raiseGraphQLErrors
+      .map(_.updateObservations.observations.headOption.flatMap(_.observingMode))
+
+  def setObservationWorkflowState(obsId: Observation.Id, st: ObservationWorkflowState): F[Unit] =
+    SetObservationWorkflowStateMutation[F]
+      .execute:
+        SetObservationWorkflowStateInput(obsId, st)
+      .raiseGraphQLErrors
+      .void
+
+  def resolveObservationReference(
+    obsRef: ObservationReference
+  ): F[Option[(Program.Id, Observation.Id)]] =
+    ResolveObsReference[F]
+      .query(obsRef.assign)
+      .raiseGraphQLErrors
+      .map(_.observation.map(r => (r.program.id, r.id)))
+
+  def sequenceOffsets(obsId: Observation.Id): F[Option[ExecutionOffsets]] =
+    SequenceOffsets[F]
+      .query(obsId)
+      .raiseGraphQLErrors
+      .map(_.observation.map(_.execution))

@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -31,6 +30,7 @@ import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.model.enums.TileSizeState
 import explore.model.reusability.given
+import explore.services.OdbObservationApi
 import explore.targets.TargetColumns
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -42,14 +42,12 @@ import lucuma.core.model.User
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.ColumnVisibility
-import lucuma.schemas.ObservationDB
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries
 
 import java.time.Instant
 
@@ -78,15 +76,15 @@ object AsterismEditorTile:
     readonly:           Boolean,
     sequenceChanged:    Callback = Callback.empty,
     backButton:         Option[VdomNode] = None
-  )(using FetchClient[IO, ObservationDB], Logger[IO]): Tile[TileState] = {
+  )(using odbApi: OdbObservationApi[IO])(using Logger[IO]): Tile[TileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
     val obsTimeView: View[Option[Instant]] =
-      obsTime.withOnMod(t => ObsQueries.updateVisualizationTime[IO](obsIds.toList, t).runAsync)
+      obsTime.withOnMod(t => odbApi.updateVisualizationTime(obsIds.toList, t).runAsync)
 
     val obsDurationView: View[Option[TimeSpan]] =
       obsDuration.withOnMod: t =>
-        ObsQueries.updateVisualizationDuration[IO](obsIds.toList, t).runAsync
+        odbApi.updateVisualizationDuration(obsIds.toList, t).runAsync
 
     val obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])] =
       View(
@@ -96,8 +94,8 @@ object AsterismEditorTile:
           val newValue = mod(oldValue)
           obsTimeView.set(newValue._1) >> obsDurationView.set(newValue._2) >> cb(oldValue, newValue)
       ).withOnMod: tuple =>
-        ObsQueries
-          .updateVisualizationTimeAndDuration[IO](obsIds.toList, tuple._1, tuple._2)
+        odbApi
+          .updateVisualizationTimeAndDuration(obsIds.toList, tuple._1, tuple._2)
           .runAsync
 
     Tile(

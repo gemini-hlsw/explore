@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
 import explore.common.GroupQueries
@@ -17,6 +16,7 @@ import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.enums.AppTab
+import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -25,10 +25,8 @@ import lucuma.core.model.Program
 import lucuma.core.util.NewBoolean
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
 import monocle.Iso
 import monocle.Lens
-import queries.common.ObsQueriesGQL.*
 
 def focusObs[F[_]](
   programId: Program.Id,
@@ -74,16 +72,12 @@ def obsEditAttachments(
   obsId:         Observation.Id,
   attachmentIds: Set[Attachment.Id]
 )(using
-  FetchClient[IO, ObservationDB]
+  odbApi:        OdbObservationApi[IO]
 ): IO[Unit] =
-  UpdateObservationMutation[IO]
-    .execute:
-      UpdateObservationsInput(
-        WHERE = obsId.toWhereObservation.assign,
-        SET = ObservationPropertiesInput(attachments = attachmentIds.toList.assign)
-      )
-    .raiseGraphQLErrors
-    .void
+  odbApi.updateObservations(
+    List(obsId),
+    ObservationPropertiesInput(attachments = attachmentIds.toList.assign)
+  )
 
 object AddingObservation extends NewBoolean
 type AddingObservation = AddingObservation.Type

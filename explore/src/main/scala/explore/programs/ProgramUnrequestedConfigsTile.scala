@@ -43,7 +43,6 @@ import lucuma.ui.table.hooks.*
 import monocle.Focus
 import monocle.Iso
 import monocle.Lens
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedMap
 
@@ -166,16 +165,16 @@ object ProgramUnrequestedConfigsTile:
 
   object Title
       extends ReactFnComponent[Title](props =>
-        for {
+        for
           ctx        <- useContext(AppContext.ctx)
           isActive   <- useStateView(IsActive(false))
           popupState <- useStateView(PopupState.Closed)
-        } yield
+        yield
           import ctx.given
 
           def submitOne(row: Row, msg: NonEmptyString): IO[Unit] =
-            ObsQueries
-              .createConfigurationRequest[IO](row.observations.head.id, msg.some)
+            ctx.odbApi
+              .createConfigurationRequest(row.observations.head.id, msg.some)
               .flatMap: request =>
                 (props.configRequests.mod(_.updated(request.id, request)) >>
                   props.observations.mod: obsList =>

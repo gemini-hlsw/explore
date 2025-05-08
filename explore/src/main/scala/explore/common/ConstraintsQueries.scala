@@ -5,11 +5,11 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
-import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.ObsIdSet
+import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
@@ -20,16 +20,14 @@ import lucuma.core.model.ElevationRange
 import lucuma.core.model.ImageQuality
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.schemas.odb.input.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
-import queries.common.ObsQueriesGQL.*
 
 object ConstraintsQueries:
   case class UndoView(
     obsIds:  ObsIdSet,
     undoCtx: UndoSetter[ConstraintSet]
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
+  )(using odbApi: OdbObservationApi[IO])(using Logger[IO], ToastCtx[IO]):
     def apply[A](
       modelGet:  ConstraintSet => A,
       modelMod:  (A => A) => ConstraintSet => ConstraintSet,
@@ -37,20 +35,16 @@ object ConstraintsQueries:
     ): View[A] =
       undoCtx
         .undoableView(modelGet, modelMod)
-        .withOnMod(value =>
-          UpdateObservationMutation[IO]
-            .execute(
-              UpdateObservationsInput(
-                WHERE = obsIds.toList.toWhereObservation.assign,
-                SET = ObservationPropertiesInput(
-                  constraintSet = remoteSet(value)(ConstraintSetInput()).assign
-                )
+        .withOnMod: value =>
+          odbApi
+            .updateObservations(
+              obsIds.toList,
+              ObservationPropertiesInput(constraintSet =
+                remoteSet(value)(ConstraintSetInput()).assign
               )
             )
             .toastErrors
-            .void
             .runAsync
-        )
 
     def apply[A](
       lens:      Lens[ConstraintSet, A],

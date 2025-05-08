@@ -6,7 +6,6 @@ package explore.config
 import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.data.Assign
 import clue.data.Input
 import clue.data.syntax.*
@@ -38,6 +37,7 @@ import explore.model.itc.ItcTarget
 import explore.model.syntax.all.*
 import explore.modes.ItcInstrumentConfig
 import explore.modes.SpectroscopyModesMatrix
+import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*
@@ -58,7 +58,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import queries.common.ObsQueriesGQL
 import queries.schemas.itc.syntax.*
 
 object ConfigurationTile:
@@ -117,9 +116,9 @@ object ConfigurationTile:
     )
 
   private def pacAndModeAction(
-    obsId: Observation.Id
+    obsId:  Observation.Id
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi: OdbObservationApi[IO]
   ): Action[PosAngleConstraintAndObsMode, PosAngleConstraintAndObsMode] =
     Action[PosAngleConstraintAndObsMode, PosAngleConstraintAndObsMode](
       getter = identity,
@@ -128,19 +127,19 @@ object ConfigurationTile:
       onSet = (_, _) => IO.unit, // Nothing to do, creation is done before this
       onRestore = (_, pm) =>
         val (pac, oMode) = pm
-        val input        = UpdateObservationsInput(
-          WHERE = obsId.toWhereObservation.assign,
-          SET = ObservationPropertiesInput(
+
+        odbApi.updateObservations(
+          List(obsId),
+          ObservationPropertiesInput(
             observingMode = oMode.map(_.toInput).orUnassign,
             posAngleConstraint = pac.toInput.assign
           )
         )
-        ObsQueriesGQL.UpdateObservationMutation[IO].execute(input).void
     )
   private def modeAction(
-    obsId: Observation.Id
+    obsId:  Observation.Id
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi: OdbObservationApi[IO]
   ): Action[Option[ObservingMode], Option[ObservingMode]] =
     Action[Option[ObservingMode], Option[ObservingMode]](
       getter = identity,
@@ -148,52 +147,35 @@ object ConfigurationTile:
     )(
       onSet = (_, _) => IO.unit, // Nothing to do, creation is done before this
       onRestore = (_, oMode) =>
-        val input = UpdateObservationsInput(
-          WHERE = obsId.toWhereObservation.assign,
-          SET = ObservationPropertiesInput(observingMode = oMode.map(_.toInput).orUnassign)
+        odbApi.updateObservations(
+          List(obsId),
+          ObservationPropertiesInput(observingMode = oMode.map(_.toInput).orUnassign)
         )
-        ObsQueriesGQL.UpdateObservationMutation[IO].execute(input).void
     )
-
-  private def remoteUpdate(
-    input: UpdateObservationsInput
-  )(using FetchClient[IO, ObservationDB]): IO[Option[ObservingMode]] =
-    ObsQueriesGQL
-      .UpdateConfigurationMutation[IO]
-      .execute(input)
-      .raiseGraphQLErrors
-      .map(_.updateObservations.observations.headOption.flatMap(_.observingMode))
 
   private def updateConfiguration(
     obsId:                    Observation.Id,
     pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
     input:                    ObservingModeInput,
     defaultPosAngleConstrait: PosAngleOptions
-  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-    val obsInput   = UpdateObservationsInput(
-      WHERE = obsId.toWhereObservation.assign,
-      SET = ObservationPropertiesInput(observingMode = input.assign)
-    )
+  )(using odbApi: OdbObservationApi[IO]): IO[Unit] =
     val currentPac = pacAndMode.get._1
     if (defaultPosAngleConstrait != currentPac.toPosAngleOptions)
-      val angle    =
+      val angle  =
         PosAngleConstraint.angle.getOption(currentPac).getOrElse(Angle.Angle0)
-      val newPac   = defaultPosAngleConstrait.toPosAngle(angle)
-      val newInput = UpdateObservationsInput.SET
-        .andThen(ObservationPropertiesInput.posAngleConstraint)
-        .replace(newPac.toInput.assign)(obsInput)
-      remoteUpdate(newInput)
+      val newPac = defaultPosAngleConstrait.toPosAngle(angle)
+      odbApi
+        .updateConfiguration(obsId, input.assign, newPac.toInput.assign)
         .flatMap: om =>
           pacAndModeAction(obsId)
             .set(pacAndMode)((newPac, om))
             .toAsync
     else
-      remoteUpdate(obsInput)
+      odbApi
+        .updateConfiguration(obsId, input.assign)
         .flatMap: om =>
           modeAction(obsId)
-            .set(pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode))(
-              om
-            )
+            .set(pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode))(om)
             .toAsync
 
   private def revertConfiguration(
@@ -201,12 +183,9 @@ object ConfigurationTile:
     mode:                     UndoSetter[Option[ObservingMode]],
     revertedInstrumentConfig: Option[ItcInstrumentConfig],
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]]
-  )(using FetchClient[IO, ObservationDB]): IO[Unit] =
-    val obsInput = UpdateObservationsInput(
-      WHERE = obsId.toWhereObservation.assign,
-      SET = ObservationPropertiesInput(observingMode = Input.unassign)
-    )
-    remoteUpdate(obsInput) >>
+  )(using odbApi: OdbObservationApi[IO]): IO[Unit] =
+    odbApi
+      .updateConfiguration(obsId, Input.unassign) >>
       (modeAction(obsId).set(mode)(none) >>
         revertedInstrumentConfig
           .map: row => // Select the reverted config
@@ -287,10 +266,9 @@ object ConfigurationTile:
         })
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useContext(AppContext.ctx)
-        .render { (props, ctx) =>
+      ScalaFnComponent[Props] { props =>
+        for ctx <- useContext(AppContext.ctx)
+        yield
           import ctx.given
 
           val posAngleConstraintAligner
@@ -301,10 +279,7 @@ object ConfigurationTile:
                 WHERE = props.obsId.toWhereObservation.assign,
                 SET = ObservationPropertiesInput()
               ),
-              ObsQueriesGQL
-                .UpdateObservationMutation[IO]
-                .execute(_)
-                .void
+              ctx.odbApi.updateObservations(_)
             ).zoom(
               Iso.id,
               UpdateObservationsInput.SET
@@ -322,7 +297,7 @@ object ConfigurationTile:
                 WHERE = props.obsId.toWhereObservation.assign,
                 SET = ObservationPropertiesInput(observingMode = ObservingModeInput().assign)
               ),
-              (ObsQueriesGQL.UpdateObservationMutation[IO].execute(_)).andThen(_.void)
+              (ctx.odbApi.updateObservations(_)).andThen(_.void)
             ).zoom( // Can we avoid the zoom and make an Aligner constructor that takes an input value?
               Iso.id,
               UpdateObservationsInput.SET.andThen(ObservationPropertiesInput.observingMode).modify
@@ -476,7 +451,7 @@ object ConfigurationTile:
                 )
             )
           )
-        }
+      }
 
   private case class Title(
     obsId:                    Observation.Id,

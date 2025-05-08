@@ -5,7 +5,6 @@ package explore
 
 import cats.effect.IO
 import cats.syntax.option.*
-import clue.data.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.model.AppContext
@@ -18,7 +17,6 @@ import lucuma.core.model.ObservationReference
 import lucuma.react.common.*
 import lucuma.react.primereact.Message.Severity
 import lucuma.ui.syntax.pot.*
-import queries.common.ObsQueriesGQL.ResolveObsReference
 
 case class ObsReferenceResolver(obsRef: ObservationReference)
     extends ReactFnProps(ObsReferenceResolver)
@@ -30,20 +28,18 @@ object ObsReferenceResolver
         result <- useEffectResultOnMount:
                     import ctx.given
 
-                    ResolveObsReference[IO]
-                      .query(props.obsRef.assign)
-                      .raiseGraphQLErrors
-                      .flatMap: data =>
-                        data.observation
-                          .map: o =>
-                            ctx
-                              .pushPage:
-                                (AppTab.Observations, o.program.id, Focused.singleObs(o.id)).some
-                              .to[IO]
-                          .getOrElse:
-                            ToastCtx[IO].showToast(
-                              s"Observation reference ${props.obsRef.label} does not exist.",
-                              Severity.Error
-                            ) >> ctx.pushPage(none).to[IO]
+                    ctx.odbApi
+                      .resolveObservationReference(props.obsRef)
+                      .flatMap:
+                        _.map: (programId, obsId) =>
+                          ctx
+                            .pushPage:
+                              (AppTab.Observations, programId, Focused.singleObs(obsId)).some
+                            .to[IO]
+                        .getOrElse:
+                          ToastCtx[IO].showToast(
+                            s"Observation reference ${props.obsRef.label} does not exist.",
+                            Severity.Error
+                          ) >> ctx.pushPage(none).to[IO]
       yield result.value.renderPot(_ => EmptyVdom)
     )

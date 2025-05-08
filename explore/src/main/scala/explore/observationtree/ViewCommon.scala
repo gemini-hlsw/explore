@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
@@ -13,6 +12,7 @@ import explore.model.Observation
 import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.PerishablePot.*
+import explore.services.OdbObservationApi
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -21,7 +21,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
 import lucuma.react.beautifuldnd.*
-import lucuma.schemas.ObservationDB
 import lucuma.ui.syntax.all.given
 
 import scala.collection.immutable.SortedSet
@@ -104,14 +103,11 @@ trait ViewCommon {
     observations: UndoSetter[ObservationList],
     afterDelete:  Callback
   )(using
-    FetchClient[IO, ObservationDB],
+    OdbObservationApi[IO],
     ToastCtx[IO]
   ): Callback =
     ObsActions
-      .obsExistence(
-        List(obsId),
-        postMessage = ToastCtx[IO].showToast(_)
-      )
+      .obsExistence(List(obsId), postMessage = ToastCtx[IO].showToast(_))
       .mod(observations)(_ => List(none))
       .flatMap(_ => afterDelete)
 }

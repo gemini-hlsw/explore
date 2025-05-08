@@ -6,16 +6,14 @@ package explore.actions
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
+import explore.services.OdbObservationApi
 import explore.undo.*
 import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 
@@ -60,7 +58,7 @@ object ObservationInsertAction {
     setPage:     Option[Observation.Id] => IO[Unit],
     postMessage: String => IO[Unit]
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:      OdbObservationApi[IO]
   ): Action[ProgramSummaries, Option[Observation]] =
     Action(getter = getter(obsId), setter = setter(obsId))(
       onSet = (agwo, optObs) =>
@@ -68,11 +66,11 @@ object ObservationInsertAction {
       onRestore = (agwo, optObs) =>
         expandedIds.mod(updateExpandedIds(obsId, agwo, optObs)).toAsync >>
           optObs.fold(
-            ObsQueries.deleteObservation[IO](obsId) >>
+            odbApi.deleteObservation(obsId) >>
               setPage(none) >>
               postMessage(s"Deleted observation $obsId")
           )(_ =>
-            ObsQueries.undeleteObservation[IO](obsId) >>
+            odbApi.undeleteObservation(obsId) >>
               setPage(obsId.some) >>
               postMessage(s"Restored observation $obsId")
           )

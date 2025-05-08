@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.View
 import explore.Icons
 import explore.common.ConstraintsQueries
@@ -22,6 +21,7 @@ import explore.model.ObservationList
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
+import explore.services.OdbObservationApi
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -34,7 +34,6 @@ import lucuma.react.beautifuldnd.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
@@ -113,7 +112,7 @@ object ConstraintGroupObsList:
     focusedObsSet:    Option[ObsIdSet],
     constraintGroups: ConstraintGroupList
   )(using
-    FetchClient[IO, ObservationDB],
+    OdbObservationApi[IO],
     Logger[IO],
     ToastCtx[IO]
   ): (DropResult, ResponderProvided) => Callback = (result, _) => {
@@ -151,35 +150,37 @@ object ConstraintGroupObsList:
     }
   }
 
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useState(false) // dragging
-    .useEffectOnMountBy: (props, ctx, _) =>
-      val expandedIds = props.expandedIds
+  private val component = ScalaFnComponent[Props]: props =>
+    for
+      ctx      <- useContext(AppContext.ctx)
+      dragging <- useState(false)
+      _        <- useEffectOnMount:
+                    val expandedIds = props.expandedIds
 
-      val selectedGroupObsIds =
-        props.focusedObsSet
-          .flatMap(idSet => props.constraintGroups.find { case (key, _) => idSet.subsetOf(key) })
-          .map(_._1)
+                    val selectedGroupObsIds =
+                      props.focusedObsSet
+                        .flatMap(idSet =>
+                          props.constraintGroups.find { case (key, _) => idSet.subsetOf(key) }
+                        )
+                        .map(_._1)
 
-      // Unfocus the group with observations doesn't exist
-      val unfocus =
-        if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
-          ctx.replacePage((AppTab.Constraints, props.programId, Focused.None).some)
-        else Callback.empty
+                    // Unfocus the group with observations doesn't exist
+                    val unfocus =
+                      if (props.focusedObsSet.nonEmpty && selectedGroupObsIds.isEmpty)
+                        ctx.replacePage((AppTab.Constraints, props.programId, Focused.None).some)
+                      else Callback.empty
 
-      val expandSelected = selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
+                    val expandSelected = selectedGroupObsIds.foldMap(obsIds => expandedIds.mod(_ + obsIds))
 
-      val cleanupExpandedIds =
-        expandedIds.mod(_.filter(ids => props.constraintGroups.contains(ids)))
+                    val cleanupExpandedIds =
+                      expandedIds.mod(_.filter(ids => props.constraintGroups.contains(ids)))
 
-      for {
-        _ <- unfocus
-        _ <- expandSelected
-        _ <- cleanupExpandedIds
-      } yield ()
-    .render: (props, ctx, dragging) =>
+                    for
+                      _ <- unfocus
+                      _ <- expandSelected
+                      _ <- cleanupExpandedIds
+                    yield ()
+    yield
       import ctx.given
 
       val constraintGroups: List[(ObsIdSet, ConstraintSet)] =

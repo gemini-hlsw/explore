@@ -7,7 +7,6 @@ import cats.Order.given
 import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.Pot.Ready
 import crystal.react.*
@@ -43,6 +42,7 @@ import explore.plots.ElevationPlotTile
 import explore.plots.ObjectPlotData
 import explore.plots.PlotData
 import explore.schedulingWindows.SchedulingWindowsTile
+import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
 import explore.undo.UndoSetter
@@ -72,7 +72,6 @@ import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.SelectItem
 import lucuma.react.resizeDetector.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.TargetWithId
@@ -82,8 +81,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.ObsQueriesGQL.*
-import queries.schemas.odb.ObsQueries
+import queries.common.ObsQueriesGQL.ObservationEditSubscription
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -172,15 +170,15 @@ object ObsTabTiles:
     constraintSet:     View[ConstraintSet],
     allConstraintSets: Set[ConstraintSet],
     isDisabled:        Boolean
-  )(using FetchClient[IO, ObservationDB]): VdomNode =
+  )(using odbApi: OdbObservationApi[IO]): VdomNode =
     <.div(ExploreStyles.TileTitleConstraintSelector)(
       Dropdown[ConstraintSet](
         value = constraintSet.get,
         disabled = isDisabled,
         onChange = (cs: ConstraintSet) =>
           constraintSet.set(cs) >>
-            ObsQueries
-              .updateObservationConstraintSet[IO](List(observationId), cs)
+            odbApi
+              .updateObservationConstraintSet(List(observationId), cs)
               .runAsyncAndForget,
         options = allConstraintSets
           .map(cs => new SelectItem[ConstraintSet](value = cs, label = cs.shortName))
@@ -221,19 +219,18 @@ object ObsTabTiles:
         sequenceOffsets     <- useStreamResourceOnMount:
                                  import ctx.given
 
-                                 SequenceOffsets[IO]
-                                   .query(props.obsId)
-                                   .raiseGraphQLErrors
-                                   .map: data =>
+                                 ctx.odbApi
+                                   .sequenceOffsets(props.obsId)
+                                   .map: executionOffsets =>
                                      Offsets(
                                        science = NonEmptyList.fromList(
-                                         data.observation
-                                           .foldMap(_.execution.scienceOffsets)
+                                         executionOffsets
+                                           .foldMap(_.scienceOffsets)
                                            .distinct
                                        ),
                                        acquisition = NonEmptyList.fromList(
-                                         data.observation
-                                           .foldMap(_.execution.acquisitionOffsets)
+                                         executionOffsets
+                                           .foldMap(_.acquisitionOffsets)
                                            .distinct
                                        )
                                      )
@@ -288,20 +285,20 @@ object ObsTabTiles:
                                      // Change of override
                                      case (AgsOverride(m, _, _), AgsOverride(n, _, _)) if m =!= n =>
                                        props.selectedGSName.set(n.some) *>
-                                         ObsQueries
-                                           .setGuideTargetName[IO](props.obsId, n.some)
+                                         odbApi
+                                           .setGuideTargetName(props.obsId, n.some)
                                            .runAsyncAndForget
                                      // Going from automatic to manual selection
                                      case (AgsSelection(_), AgsOverride(n, _, _))                 =>
                                        props.selectedGSName.set(n.some) *>
-                                         ObsQueries
-                                           .setGuideTargetName[IO](props.obsId, n.some)
+                                         odbApi
+                                           .setGuideTargetName(props.obsId, n.some)
                                            .runAsyncAndForget
                                      // Going from manual to automated selection
                                      case (AgsOverride(n, _, _), AgsSelection(_))                 =>
                                        props.selectedGSName.set(none) *>
-                                         ObsQueries
-                                           .setGuideTargetName[IO](props.obsId, none)
+                                         odbApi
+                                           .setGuideTargetName(props.obsId, none)
                                            .runAsyncAndForget
                                      case _                                                       =>
                                        // All other combinations
@@ -404,9 +401,7 @@ object ObsTabTiles:
             props.observation.model
               .zoom(Observation.observerNotes)
               .withOnMod: notes =>
-                ObsQueries
-                  .updateNotes[IO](List(props.obsId), notes)
-                  .runAsync
+                odbApi.updateNotes(List(props.obsId), notes).runAsync
 
           val notesTile = NotesTile(notesView, hidden = hideTiles)
 
