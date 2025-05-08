@@ -4,7 +4,6 @@
 package explore.tabs
 
 import cats.data.NonEmptySet
-import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Input
 import clue.data.syntax.*
@@ -12,7 +11,6 @@ import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.attachments.AttachmentsTile
 import explore.common.Aligner
-import explore.common.ProgramQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -119,7 +117,7 @@ object OverviewTabContents
                   WHERE = props.programId.toWhereProgram.assign,
                   SET = ProgramPropertiesInput()
                 ),
-                ProgramQueries.updateProgram[IO](_)
+                odbApi.updateProgram(_)
               ).zoom(ProgramDetails.description,
                      UpdateProgramsInput.SET.andThen(ProgramPropertiesInput.description).modify
               )

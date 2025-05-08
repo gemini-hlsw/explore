@@ -16,7 +16,6 @@ import eu.timepit.refined.types.numeric.NonNegLong
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.EditableLabel
 import explore.Icons
-import explore.common.ProgramQueries
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -146,9 +145,7 @@ object AttachmentsTile:
       client:      OdbRestClient[IO],
       att:         Attachment,
       files:       List[DomFile]
-    )(using
-      ToastCtx[IO]
-    ): IO[Unit] =
+    )(using ToastCtx[IO]): IO[Unit] =
       files.headOption
         .map(f =>
           checkFileSize(f) {
@@ -359,11 +356,10 @@ object AttachmentsTile:
         ColDef(
           DescriptionColumnId,
           _.withOnMod(oa =>
-            ProgramQueries
-              .updateAttachmentDescription[IO](oa.id, oa.description)
+            ctx.odbApi
+              .updateAttachmentDescription(oa.id, oa.description)
               .runAsync
-          )
-            .zoom(Attachment.description),
+          ).zoom(Attachment.description),
           columnNames(DescriptionColumnId),
           cell =>
             cell.table.options.meta.map: meta =>
@@ -390,8 +386,8 @@ object AttachmentsTile:
                 id = NonEmptyString.unsafeFrom(s"checked-${cell.value.get.id}"),
                 value = cell.value
                   .withOnMod(oa =>
-                    ProgramQueries
-                      .updateAttachmentChecked[IO](oa.id, oa.checked)
+                    ctx.odbApi
+                      .updateAttachmentChecked(oa.id, oa.checked)
                       .runAsync
                   )
                   .zoom(Attachment.checked),

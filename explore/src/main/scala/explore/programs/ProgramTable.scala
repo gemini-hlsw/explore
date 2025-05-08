@@ -6,15 +6,14 @@ package explore.programs
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
 import crystal.react.reuse.*
 import explore.*
-import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ProgramInfo
 import explore.model.reusability.given
+import explore.services.OdbProgramApi
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.VdomNode
@@ -25,7 +24,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -59,22 +57,21 @@ object ProgramTable:
   private given Reusability[List[View[ProgramInfo]]] = Reusability.by(_.map(_.get))
 
   private def deleteProgram(pinf: View[ProgramInfo])(using
-    FetchClient[IO, ObservationDB]
+    odbApi: OdbProgramApi[IO]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(true).toAsync >>
-      ProgramQueries.deleteProgram[IO](pinf.get.id)
+      odbApi.deleteProgram(pinf.get.id)
 
   private def undeleteProgram(pinf: View[ProgramInfo])(using
-    FetchClient[IO, ObservationDB]
+    odbApi: OdbProgramApi[IO]
   ): IO[Unit] =
     pinf.zoom(ProgramInfo.deleted).set(false).toAsync >>
-      ProgramQueries.undeleteProgram[IO](pinf.get.id)
+      odbApi.undeleteProgram(pinf.get.id)
 
-  private def onModName(pinf: ProgramInfo)(using
-    FetchClient[IO, ObservationDB],
+  private def onModName(pinf: ProgramInfo)(using odbApi: OdbProgramApi[IO])(using
     Logger[IO]
   ): Callback =
-    ProgramQueries.updateProgramName[IO](pinf.id, pinf.name).runAsync
+    odbApi.updateProgramName(pinf.id, pinf.name).runAsync
 
   private val ActionsColumnId: ColumnId   = ColumnId("actions")
   private val IdColumnId: ColumnId        = ColumnId("id")

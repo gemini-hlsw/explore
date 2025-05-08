@@ -6,13 +6,11 @@ package explore.programs
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ProgramQueries
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
@@ -23,6 +21,7 @@ import explore.model.ProgramNote
 import explore.model.ProgramTabTileIds
 import explore.model.enums.TileSizeState
 import explore.model.reusability.given
+import explore.services.OdbProgramApi
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
@@ -33,7 +32,6 @@ import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.*
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 
@@ -173,32 +171,28 @@ object ProgramNotesTile:
     programId: Program.Id,
     title:     NonEmptyString
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:    OdbProgramApi[IO]
   ): AsyncAction[List[ProgramNote], ProgramNote.Id, Option[ProgramNote]] =
     AsyncAction[List[ProgramNote], ProgramNote.Id, Option[ProgramNote]](
-      asyncGet = ProgramQueries
-        .createProgramNote[IO](programId, title)
+      asyncGet = odbApi
+        .createProgramNote(programId, title)
         .map(id => (id, ProgramNote.newProgramNote(id, title).some)),
       getter = id => noteGetter(id),
       setter = id => noteSetter(id),
-      onSet =
-        id => (_, oNote) => oNote.fold(ProgramQueries.deleteProgramNote[IO](id))(_ => IO.unit),
+      onSet = id => (_, oNote) => oNote.fold(odbApi.deleteProgramNote(id))(_ => IO.unit),
       onRestore = id =>
-        (_, oNote) =>
-          oNote.fold(ProgramQueries.deleteProgramNote[IO](id))(_ =>
-            ProgramQueries.undeleteProgramNote[IO](id)
-          )
+        (_, oNote) => oNote.fold(odbApi.deleteProgramNote(id))(_ => odbApi.undeleteProgramNote(id))
     )
 
   private def deleteNoteAction(noteId: ProgramNote.Id, setId: Option[ProgramNote.Id] => IO[Unit])(
-    using FetchClient[IO, ObservationDB]
+    using odbApi: OdbProgramApi[IO]
   ): Action[List[ProgramNote], Option[ProgramNote]] =
     Action(
       getter = noteGetter(noteId),
       setter = noteSetter(noteId)
     )(
       onSet = (_, oNote) =>
-        oNote.fold(ProgramQueries.deleteProgramNote[IO](noteId))(_ =>
-          setId(noteId.some) >> ProgramQueries.undeleteProgramNote[IO](noteId)
+        oNote.fold(odbApi.deleteProgramNote(noteId))(_ =>
+          setId(noteId.some) >> odbApi.undeleteProgramNote(noteId)
         )
     )

@@ -12,7 +12,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ProgramQueries.*
 import explore.components.deleteConfirmation
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
@@ -332,14 +331,14 @@ object ProgramUsersTable:
             // AND the fallback display name is the same as the credit name.
             // In explore, we'll always set the credit name, but a user could have
             // updated the fallback profile via the API, and we won't mess with that.
-            if (
-              canEdit && pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName
-            )
-              val view = c.value
-                .zoom(ProgramUser.fallbackCreditName)
-                .withOnMod(ones =>
-                  updateUserFallbackName[IO](programUserId, ones.map(_.value)).runAsync
-                )
+            if canEdit && pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName
+            then
+              val view: View[Option[NonEmptyString]] =
+                c.value
+                  .zoom(ProgramUser.fallbackCreditName)
+                  .withOnMod: ones =>
+                    ctx.odbApi.updateUserFallbackName(programUserId, ones.map(_.value)).runAsync
+
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"${programUserId}-name"),
                 value = view,
@@ -359,12 +358,12 @@ object ProgramUsersTable:
             val canEdit                       = meta.canEditUserFields(pu)
             // We'll allow editing the email if there is no REAL user
             // or the real email address is empty
-            if (canEdit && pu.user.flatMap(_.profile).flatMap(_.email).isEmpty)
+            if canEdit && pu.user.flatMap(_.profile).flatMap(_.email).isEmpty then
               val view = c.value
                 .zoom(ProgramUser.fallbackEmail)
-                .withOnMod(oe =>
-                  updateUserFallbackEmail[IO](programUserId, oe.map(_.value.value)).runAsync
-                )
+                .withOnMod: oe =>
+                  ctx.odbApi.updateUserFallbackEmail(programUserId, oe.map(_.value.value)).runAsync
+
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"${programUserId}-email"),
                 value = view,
@@ -384,7 +383,7 @@ object ProgramUsersTable:
             val programUserId: ProgramUser.Id        = cell.get.id
             val usersView: View[Option[PartnerLink]] =
               c.value.withOnMod: pl =>
-                updateProgramPartner[IO](programUserId, pl).runAsync
+                ctx.odbApi.updateProgramPartner(programUserId, pl).runAsync
             val pl: Option[PartnerLink]              =
               cell.get.partnerLink.flatMap:
                 case PartnerLink.HasUnspecifiedPartner => None
@@ -404,7 +403,7 @@ object ProgramUsersTable:
           c.table.options.meta.map: meta =>
             val view: View[Option[EducationalStatus]] =
               c.value.withOnMod: es =>
-                updateUserES[IO](programUserId, es).runAsync
+                ctx.odbApi.updateUserES(programUserId, es).runAsync
             val canEdit                               = meta.canEditUserFields(cell.get)
 
             EnumDropdownOptionalView(
@@ -427,7 +426,7 @@ object ProgramUsersTable:
 
           c.table.options.meta.map: meta =>
             val view    = c.value
-              .withOnMod(th => updateUserThesis[IO](programUserId, th).runAsync)
+              .withOnMod(th => ctx.odbApi.updateUserThesis(programUserId, th).runAsync)
             val canEdit = meta.canEditUserFields(cell.get)
 
             Checkbox(
@@ -448,7 +447,7 @@ object ProgramUsersTable:
 
           c.table.options.meta.map: meta =>
             val view    = c.value
-              .withOnMod(th => updateUserGender[IO](programUserId, th).runAsync)
+              .withOnMod(th => ctx.odbApi.updateUserGender(programUserId, th).runAsync)
             val canEdit = meta.canEditUserFields(cell.get)
 
             EnumOptionalDropdown[Gender](
@@ -471,10 +470,12 @@ object ProgramUsersTable:
         cell = c =>
           val currentRole = c.value.get
           c.table.options.meta.map: meta =>
-            if (meta.userCanChangeCoiAccess && CoIRoles.contains(currentRole))
+            if meta.userCanChangeCoiAccess && CoIRoles.contains(currentRole) then
               val programUserId = c.row.original.get.id
               val view          =
-                c.value.withOnMod(role => changeProgramUserRole[IO](programUserId, role).runAsync)
+                c.value.withOnMod: role =>
+                  ctx.odbApi.changeProgramUserRole(programUserId, role).runAsync
+
               EnumDropdownView(
                 id = NonEmptyString.unsafeFrom(s"$programUserId-role"),
                 value = view,
@@ -493,7 +494,7 @@ object ProgramUsersTable:
 
           c.table.options.meta.map: meta =>
             val view = c.value
-              .withOnMod(hda => updateUserHasDataAccess[IO](programUserId, hda).runAsync)
+              .withOnMod(hda => ctx.odbApi.updateUserHasDataAccess(programUserId, hda).runAsync)
 
             Checkbox(
               id = s"$programUserId-has-data-access",

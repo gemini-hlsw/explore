@@ -17,3 +17,4 @@ case class OdbApiImpl[F[_]: MonadThrow]()(using
 ) extends OdbApi[F]
     with OdbTargetApiImpl[F]
     with OdbAsterismApiImpl[F]
+    with OdbProgramApiImpl[F]
