@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "explore-gemini-dev"
+    "default": "explore-gemini"
   },
   "targets": {
     "explore-gemini": {
