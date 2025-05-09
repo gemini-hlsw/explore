@@ -6,10 +6,6 @@
       "ignore": ["/*.conf.json"],
       "rewrites": [
         {
-          "source": "/conf.json",
-          "destination": "/dev.conf.json"
-        },
-        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -21,10 +17,6 @@
       "ignore": ["/*.conf.json"],
       "rewrites": [
         {
-          "source": "/conf.json",
-          "destination": "/staging.conf.json"
-        },
-        {
           "source": "**",
           "destination": "/index.html"
         }
@@ -35,10 +27,6 @@
       "public": "heroku/static",
       "ignore": ["/*.conf.json"],
       "rewrites": [
-        {
-          "source": "/conf.json",
-          "destination": "/production.conf.json"
-        },
         {
           "source": "**",
           "destination": "/index.html"

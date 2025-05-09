@@ -17,14 +17,14 @@
     }
   },
   {
-    "hostName": "explore-staging.lucuma.xyz",
+    "hostName": "explore-test.gemini.edu",
     "environment": "STAGING",
     "odbURI": "wss://lucuma-postgres-odb-staging.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-staging.herokuapp.com",
     "preferencesDBURI": "wss://gpp-prefs-staging.lucuma.xyz/v1/graphql",
     "itcURI": "https://itc-staging.lucuma.xyz/itc",
     "sso": {
-      "uri": "https://sso.gpp.lucuma.xyz",
+      "uri": "https://sso-test.gpp.gemini.edu",
       "readTimeoutSeconds": 10,
       "expirationAnticipationSeconds": 10
     },
