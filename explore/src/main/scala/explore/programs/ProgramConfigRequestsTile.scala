@@ -10,7 +10,6 @@ import crystal.react.View
 import crystal.react.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
-import explore.common.ProgramQueries
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -191,7 +190,7 @@ object ProgramConfigRequestsTile:
 
   object Title
       extends ReactFnComponent[Title](props =>
-        for {
+        for
           ctx              <- useContext(AppContext.ctx)
           selectedRequests <-
             useMemo((props.tileState.selected.map(_.value), props.configRequests.get)):
@@ -199,7 +198,7 @@ object ProgramConfigRequestsTile:
                 selectedIds
                   .map(rowId => ConfigurationRequest.Id.parse(rowId).flatMap(requests.get))
                   .flattenOption
-        } yield
+        yield
           import ctx.given
 
           props.tileState.table.map: table =>
@@ -212,8 +211,8 @@ object ProgramConfigRequestsTile:
                     _.updatedWith(id)(_.map(ConfigurationRequestWithObsIds.status.replace(status)))
                   )
               ) >>
-                ProgramQueries
-                  .updateConfigurationRequestStatus[IO](selectedIds, status, none)
+                ctx.odbApi
+                  .updateConfigurationRequestStatus(selectedIds, status, none)
                   .runAsync
 
             def changeStatusAndJustification(
@@ -233,8 +232,8 @@ object ProgramConfigRequestsTile:
                     )
                   )
               ) >>
-                ProgramQueries
-                  .updateConfigurationRequestStatus[IO](selectedIds, status, justification.some)
+                ctx.odbApi
+                  .updateConfigurationRequestStatus(selectedIds, status, justification.some)
                   .runAsync
 
             def allAreThisStatus(status: ConfigurationRequestStatus) =

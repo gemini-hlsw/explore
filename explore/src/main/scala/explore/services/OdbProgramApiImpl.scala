@@ -1,9 +1,9 @@
 // Copyright (c) 2016-2025 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.common
+package explore.services
 
-import cats.effect.Async
+import cats.MonadThrow
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
@@ -23,19 +23,17 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import queries.common.ProgramQueriesGQL.*
 
-object ProgramQueries:
-  def createProgram[F[_]: Async](name: Option[NonEmptyString])(using
-    FetchClient[F, ObservationDB]
-  ): F[ProgramInfo] =
+trait OdbProgramApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
+    extends OdbProgramApi[F]:
+
+  def createProgram(name: Option[NonEmptyString]): F[ProgramInfo] =
     CreateProgramMutation[F]
       .execute:
         CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
       .raiseGraphQLErrors
       .map(_.createProgram.program)
 
-  def deleteProgram[F[_]: Async](id: Program.Id)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def deleteProgram(id: Program.Id): F[Unit] =
     UpdateProgramsMutation[F]
       .execute:
         UpdateProgramsInput(
@@ -45,9 +43,7 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def undeleteProgram[F[_]: Async](id: Program.Id)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def undeleteProgram(id: Program.Id): F[Unit] =
     UpdateProgramsMutation[F]
       .execute:
         UpdateProgramsInput(
@@ -58,23 +54,17 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def updateProgram[F[_]: Async](input: UpdateProgramsInput)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def updateProgram(input: UpdateProgramsInput): F[Unit] =
     UpdateProgramsMutation[F].execute(input).raiseGraphQLErrors.void
 
-  def updateProgramName[F[_]: Async](id: Program.Id, name: Option[NonEmptyString])(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def updateProgramName(id: Program.Id, name: Option[NonEmptyString]): F[Unit] =
     updateProgram:
       UpdateProgramsInput(
         WHERE = id.toWhereProgram.assign,
         SET = ProgramPropertiesInput(name = name.orUnassign)
       )
 
-  def updateGoaShouldNotify[F[_]: Async](id: Program.Id, shouldNotify: Boolean)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def updateGoaShouldNotify(id: Program.Id, shouldNotify: Boolean): F[Unit] =
     updateProgram:
       UpdateProgramsInput(
         WHERE = id.toWhereProgram.assign,
@@ -83,10 +73,7 @@ object ProgramQueries:
         )
       )
 
-  def updateAttachmentDescription[F[_]: Async](
-    oid:  Attachment.Id,
-    desc: Option[NonEmptyString]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateAttachmentDescription(oid: Attachment.Id, desc: Option[NonEmptyString]): F[Unit] =
     UpdateAttachmentMutation[F]
       .execute:
         UpdateAttachmentsInput(
@@ -96,10 +83,7 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def updateAttachmentChecked[F[_]: Async](
-    oid:     Attachment.Id,
-    checked: Boolean
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateAttachmentChecked(oid: Attachment.Id, checked: Boolean): F[Unit] =
     UpdateAttachmentMutation[F]
       .execute:
         UpdateAttachmentsInput(
@@ -109,10 +93,7 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def updateProgramUsers[F[_]: Async](
-    puid: ProgramUser.Id,
-    set:  ProgramUserPropertiesInput
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateProgramUsers(puid: ProgramUser.Id, set: ProgramUserPropertiesInput): F[Unit] =
     ProgramUsersMutation[F]
       .execute:
         UpdateProgramUsersInput(
@@ -122,55 +103,32 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def updateUserFallbackName[F[_]: Async](
-    puid:       ProgramUser.Id,
-    creditName: Option[String]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateUserFallbackName(puid: ProgramUser.Id, creditName: Option[String]): F[Unit] =
     val fallbackInput = UserProfileInput(creditName = creditName.orUnassign)
     val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
     updateProgramUsers(puid, input)
 
-  def updateUserFallbackEmail[F[_]: Async](
-    puid:  ProgramUser.Id,
-    email: Option[String]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateUserFallbackEmail(puid: ProgramUser.Id, email: Option[String]): F[Unit] =
     val fallbackInput = UserProfileInput(email = email.orUnassign)
     val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
     updateProgramUsers(puid, input)
 
-  def updateProgramPartner[F[_]: Async](
-    puid: ProgramUser.Id,
-    pl:   Option[PartnerLink]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateProgramPartner(puid: ProgramUser.Id, pl: Option[PartnerLink]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
 
-  def updateUserES[F[_]: Async](
-    puid: ProgramUser.Id,
-    es:   Option[EducationalStatus]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateUserES(puid: ProgramUser.Id, es: Option[EducationalStatus]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
 
-  def updateUserThesis[F[_]: Async](
-    puid: ProgramUser.Id,
-    th:   Option[Boolean]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateUserThesis(puid: ProgramUser.Id, th: Option[Boolean]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(thesis = th.orUnassign))
 
-  def updateUserHasDataAccess[F[_]: Async](
-    puid: ProgramUser.Id,
-    hda:  Boolean
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateUserHasDataAccess(puid: ProgramUser.Id, hda: Boolean): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(hasDataAccess = hda.assign))
 
-  def updateUserGender[F[_]: Async](
-    puid: ProgramUser.Id,
-    g:    Option[Gender]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  def updateUserGender(puid: ProgramUser.Id, g: Option[Gender]): F[Unit] =
     updateProgramUsers(puid, ProgramUserPropertiesInput(gender = g.orUnassign))
 
-  def changeProgramUserRole[F[_]: Async](puid: ProgramUser.Id, role: ProgramUserRole)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def changeProgramUserRole(puid: ProgramUser.Id, role: ProgramUserRole): F[Unit] =
     ChangeProgramUserRoleMutation[F]
       .execute:
         ChangeProgramUserRoleInput(programUserId = puid, newRole = role)
@@ -179,11 +137,11 @@ object ProgramQueries:
 
   // Note: If justification is none, it is ignored, not un-set. We
   // (currently, at least) do not allow unsetting justifications in explore.
-  def updateConfigurationRequestStatus[F[_]: Async](
+  def updateConfigurationRequestStatus(
     rids:          List[ConfigurationRequest.Id],
     newStatus:     ConfigurationRequestStatus,
     justification: Option[NonEmptyString]
-  )(using FetchClient[F, ObservationDB]): F[Unit] =
+  ): F[Unit] =
     UpdateConfigurationRequestsMutation[F]
       .execute:
         UpdateConfigurationRequestsInput(
@@ -196,10 +154,7 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def createProgramNote[F[_]: Async](
-    programId: Program.Id,
-    title:     NonEmptyString
-  )(using FetchClient[F, ObservationDB]): F[ProgramNote.Id] =
+  def createProgramNote(programId: Program.Id, title: NonEmptyString): F[ProgramNote.Id] =
     CreateProgramNoteMutation[F]
       .execute:
         CreateProgramNoteInput(
@@ -211,9 +166,7 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .map(_.createProgramNote.programNote.id)
 
-  def deleteProgramNote[F[_]: Async](id: ProgramNote.Id)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def deleteProgramNote(id: ProgramNote.Id): F[Unit] =
     UpdateProgramNotesMutation[F]
       .execute:
         UpdateProgramNotesInput(
@@ -223,9 +176,7 @@ object ProgramQueries:
       .raiseGraphQLErrors
       .void
 
-  def undeleteProgramNote[F[_]: Async](id: ProgramNote.Id)(using
-    FetchClient[F, ObservationDB]
-  ): F[Unit] =
+  def undeleteProgramNote(id: ProgramNote.Id): F[Unit] =
     UpdateProgramNotesMutation[F]
       .execute:
         UpdateProgramNotesInput(

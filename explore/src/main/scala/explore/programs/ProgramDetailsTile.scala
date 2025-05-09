@@ -3,12 +3,10 @@
 
 package explore.programs
 
-import cats.effect.IO
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.View
 import crystal.react.syntax.effect.*
-import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
@@ -44,7 +42,7 @@ object ProgramDetailsTile
         val newDataNotificationView        =
           props.programDetails
             .zoom(ProgramDetails.shouldNotify)
-            .withOnMod(b => ProgramQueries.updateGoaShouldNotify[IO](props.programId, b).runAsync)
+            .withOnMod(b => ctx.odbApi.updateGoaShouldNotify(props.programId, b).runAsync)
 
         <.div(ExploreStyles.ProgramDetailsTile)(
           <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(

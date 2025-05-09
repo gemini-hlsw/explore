@@ -5,7 +5,6 @@ package explore.common
 
 import cats.Endo
 import cats.effect.IO
-import clue.FetchClient
 import clue.data.Input
 import clue.data.syntax.*
 import crystal.react.*
@@ -13,6 +12,7 @@ import eu.timepit.refined.*
 import eu.timepit.refined.numeric.Positive
 import explore.model.Observation
 import explore.model.ScienceRequirements
+import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
@@ -26,14 +26,13 @@ import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger
-import queries.common.ObsQueriesGQL.*
 
 object ScienceQueries:
 
   case class ScienceRequirementsUndoView(
     obsId:                   Observation.Id,
     scienceRequirementsUndo: UndoSetter[ScienceRequirements]
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]):
+  )(using odbApi: OdbObservationApi[IO])(using Logger[IO], ToastCtx[IO]):
     def apply[A](
       modelGet:  ScienceRequirements => A,
       modelMod:  (A => A) => ScienceRequirements => ScienceRequirements,
@@ -41,21 +40,16 @@ object ScienceQueries:
     ): View[A] =
       scienceRequirementsUndo
         .undoableView(modelGet, modelMod)
-        .withOnMod(value =>
-          UpdateObservationMutation[IO]
-            .execute(
-              UpdateObservationsInput(
-                WHERE = obsId.toWhereObservation.assign,
-                SET = ObservationPropertiesInput(scienceRequirements =
-                  remoteSet(value)(ScienceRequirementsInput()).assign
-                )
+        .withOnMod: value =>
+          odbApi
+            .updateObservations(
+              List(obsId),
+              ObservationPropertiesInput(
+                scienceRequirements = remoteSet(value)(ScienceRequirementsInput()).assign
               )
             )
-            .raiseGraphQLErrors
-            .void
             .toastErrors
             .runAsync
-        )
 
     def apply[A](
       lens:      Lens[ScienceRequirements, A],

@@ -5,7 +5,6 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
@@ -29,6 +28,7 @@ import explore.model.TargetList
 import explore.model.TargetWithObs
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
+import explore.services.OdbObservationApi
 import explore.services.OdbTargetApi
 import explore.syntax.ui.*
 import explore.targets.TargetAddDeleteActions
@@ -47,12 +47,10 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.ConfirmDialog
 import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.PrimeStyles
-import lucuma.schemas.ObservationDB
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 import mouse.boolean.*
 import org.typelevel.log4cats.Logger
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
@@ -226,9 +224,9 @@ object AsterismGroupObsList:
     adding:             View[AddingTargetOrObs],
     expandedIds:        View[SortedSet[ObsIdSet]],
     selectObsOrSummary: Option[Observation.Id] => Callback
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): IO[Unit] =
-    ObsQueries
-      .createObservationWithTargets[IO](programId, targetIds)
+  )(using odbApi: OdbObservationApi[IO])(using Logger[IO], ToastCtx[IO]): IO[Unit] =
+    odbApi
+      .createObservationWithTargets(programId, targetIds)
       .flatMap: obs =>
         ObservationInsertAction
           .insert(

@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.cats.given
 import explore.Icons
-import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ExploreModelValidators
@@ -80,8 +79,7 @@ object InviteUserPopup:
                     .zoom(ProgramUser.fallbackEmail)
                     .set(email.some)
                     .to[IO] >>
-                    ProgramQueries
-                      .updateUserFallbackEmail(props.programUserId, email.value.value.some)
+                    ctx.odbApi.updateUserFallbackEmail(props.programUserId, email.value.value.some)
 
               props.programUser
                 .zoom(ProgramUser.invitations)

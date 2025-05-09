@@ -6,15 +6,13 @@ package explore.actions
 import cats.Endo
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import explore.model.ObsIdSet
 import explore.model.Observation
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
+import explore.services.OdbObservationApi
 import explore.undo.*
 import lucuma.core.model.TimingWindow
-import lucuma.schemas.ObservationDB
-import queries.schemas.odb.ObsQueries
 
 import scala.collection.immutable.SortedSet
 
@@ -54,13 +52,12 @@ object ObservationPasteIntoSchedulingGroupAction:
     ids:            List[(Observation.Id, List[TimingWindow])],
     modExpandedIds: Endo[SortedSet[ObsIdSet]] => IO[Unit]
   )(using
-    c:              FetchClient[IO, ObservationDB]
+    odbApi:         OdbObservationApi[IO]
   ): AsyncAction[ProgramSummaries, List[Observation.Id], Option[List[Observation]]] =
     AsyncAction(
       asyncGet = ids
         .traverse: (obsId, timingWindows) =>
-          ObsQueries
-            .applyObservation[IO](obsId, onTimingWindows = timingWindows.some)
+          odbApi.applyObservation(obsId, onTimingWindows = timingWindows.some)
         .map(obsList => (obsList.map(_.id), obsList.some)),
       getter = obsListGetter,
       setter = obsListSetter,
@@ -71,9 +68,9 @@ object ObservationPasteIntoSchedulingGroupAction:
         (programSummaries, olObsSumm) =>
           olObsSumm.fold(
             modExpandedIds(updateExpandedSchedulingGroups(newObsIds, programSummaries, false)) >>
-              ObsQueries.deleteObservations[IO](newObsIds)
+              odbApi.deleteObservations(newObsIds)
           )(_ =>
             modExpandedIds(updateExpandedSchedulingGroups(newObsIds, programSummaries, true)) >>
-              ObsQueries.undeleteObservations[IO](newObsIds)
+              odbApi.undeleteObservations(newObsIds)
           )
     )

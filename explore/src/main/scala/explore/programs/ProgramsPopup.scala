@@ -7,12 +7,10 @@ import cats.Endo
 import cats.Order.*
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
-import explore.common.ProgramQueries
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
@@ -20,6 +18,7 @@ import explore.model.ProgramInfo
 import explore.model.ProgramInfoList
 import explore.model.ProgramSummaries
 import explore.model.enums.AppTab
+import explore.services.OdbProgramApi
 import explore.syntax.ui.*
 import explore.undo.UndoStacks
 import japgolly.scalajs.react.*
@@ -34,7 +33,6 @@ import lucuma.react.primereact.DialogPosition
 import lucuma.react.primereact.Message
 import lucuma.react.table.HTMLTableVirtualizer
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -83,12 +81,9 @@ object ProgramsPopup:
     programsMod:     Endo[ProgramInfoList] => Callback,
     adding:          View[IsAdding],
     setNewProgramId: Program.Id => Callback
-  )(using
-    FetchClient[IO, ObservationDB],
-    Logger[IO]
-  ): IO[Unit] =
-    ProgramQueries
-      .createProgram[IO](none)
+  )(using odbApi: OdbProgramApi[IO])(using Logger[IO]): IO[Unit] =
+    odbApi
+      .createProgram(none)
       .flatTap(pi => programsMod(_.updated(pi.id, pi)).to[IO])
       .flatMap(pi => setNewProgramId(pi.id).to[IO])
       .switching(adding.async, IsAdding(_))

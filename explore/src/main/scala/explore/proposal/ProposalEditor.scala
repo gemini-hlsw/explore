@@ -13,7 +13,6 @@ import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
-import explore.common.ProgramQueries
 import explore.components.HelpIcon
 import explore.components.Tile
 import explore.components.TileController
@@ -86,7 +85,7 @@ object ProposalEditor
               .split("\\s+", HardWordLimit + 1)
               .length // add a limit to restrict the performance hit
 
-      for {
+      for
         ctx             <- useContext(AppContext.ctx)
         abstractCounter <-
           useState(props.undoCtx.get.description.map(_.value).foldMap(_.wordCount))
@@ -95,8 +94,9 @@ object ProposalEditor
                              case None    => abstractCounter.setState(0)
                            }
         resize          <- useResizeDetector
-      } yield
+      yield
         import ctx.given
+
         props.userVault.map: userVault =>
           val detailsAligner: Aligner[ProgramDetails, ProgramPropertiesInput] =
             Aligner(
@@ -105,7 +105,7 @@ object ProposalEditor
                 WHERE = props.programId.toWhereProgram.assign,
                 SET = ProgramPropertiesInput()
               ),
-              ProgramQueries.updateProgram[IO](_)
+              ctx.odbApi.updateProgram(_)
             ).zoom(Iso.id[ProgramDetails].asLens, UpdateProgramsInput.SET.modify)
 
           val proposalAligner: Aligner[Proposal, ProposalPropertiesInput] =
