@@ -9,12 +9,12 @@ import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.services.OdbGroupApi
 import explore.model.Group
 import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.optics.all.*
+import explore.services.OdbGroupApi
 import explore.services.OdbObservationApi
 import explore.undo.Action
 import explore.undo.AsyncAction

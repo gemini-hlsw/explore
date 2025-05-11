@@ -18,7 +18,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.common.Aligner
-import explore.common.ProposalQueries.*
+import explore.common.ProposalOdbExtensions.*
 import explore.components.FormStaticData
 import explore.components.HelpIcon
 import explore.components.ui.*

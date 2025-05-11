@@ -24,7 +24,7 @@ import lucuma.schemas.ObservationDB.Types.QueueInput
 import lucuma.schemas.ObservationDB.Types.SystemVerificationInput
 import lucuma.schemas.ObservationDB.Types.TimeSpanInput
 
-trait ProposalQueries:
+trait ProposalOdbExtensions:
   // This is on import lucuma.schemas.odb.input.* but it is not picked up for some reason
   extension (ts: TimeSpan)
     def toInput: TimeSpanInput = TimeSpanInput(microseconds = ts.toMicroseconds.assign)
@@ -54,11 +54,12 @@ trait ProposalQueries:
               piAffiliation = piAffiliation.orUnassign
             ).assign
           )
-        case ProposalType.LargeProgram(_,
-                                       toOActivation,
-                                       minPercentTime,
-                                       minPercentTotalTime,
-                                       totalTime
+        case ProposalType.LargeProgram(
+              _,
+              toOActivation,
+              minPercentTime,
+              minPercentTotalTime,
+              totalTime
             ) =>
           ProposalTypeInput(largeProgram =
             LargeProgramInput(
@@ -118,4 +119,4 @@ trait ProposalQueries:
         `type` = proposal.proposalType.map(_.toInput).orUnassign
       )
 
-object ProposalQueries extends ProposalQueries
+object ProposalOdbExtensions extends ProposalOdbExtensions

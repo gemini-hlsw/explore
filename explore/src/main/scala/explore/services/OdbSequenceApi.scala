@@ -3,11 +3,8 @@
 
 package explore.services
 
-trait OdbApi[F[_]]
-    extends OdbTargetApi[F]
-    with OdbAsterismApi[F]
-    with OdbProgramApi[F]
-    with OdbObservationApi[F]
-    with OdbGroupApi[F]
-    with OdbVisitApi[F]
-    with OdbSequenceApi[F]
+import explore.model.SequenceData
+import lucuma.core.model.Observation
+
+trait OdbSequenceApi[F[_]]:
+  def sequenceData(obsId: Observation.Id): F[Option[SequenceData]]

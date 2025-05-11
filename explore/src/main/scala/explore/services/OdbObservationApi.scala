@@ -3,6 +3,7 @@
 
 package explore.services
 
+import cats.effect.Resource
 import cats.syntax.option.*
 import clue.data.Input
 import eu.timepit.refined.types.numeric.NonNegShort
@@ -21,6 +22,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
+import queries.common.ObsQueriesGQL.ObservationEditSubscription
 
 import java.time.Instant
 
@@ -91,3 +93,6 @@ trait OdbObservationApi[F[_]]:
     obsRef: ObservationReference
   ): F[Option[(Program.Id, Observation.Id)]]
   def sequenceOffsets(obsId:             Observation.Id): F[Option[ExecutionOffsets]]
+  def observationEditSubscription(
+    obsId: Observation.Id
+  ): Resource[F, fs2.Stream[F, ObservationEditSubscription.Data]]

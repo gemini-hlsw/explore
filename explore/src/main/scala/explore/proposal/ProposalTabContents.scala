@@ -9,7 +9,7 @@ import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import explore.*
-import explore.common.ProposalQueries.*
+import explore.common.ProposalOdbExtensions.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.AttachmentList

@@ -3,12 +3,14 @@
 
 package explore.services
 
+import cats.effect.Resource
 import explore.model.ObsIdSet
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.UpdateTargetsInput
 import lucuma.schemas.model.TargetWithId
+import queries.common.TargetQueriesGQL.TargetEditSubscription
 
 trait OdbTargetApi[F[_]]:
   def insertTarget(programId:    Program.Id, target:         Target.Sidereal): F[Target.Id]
@@ -25,3 +27,6 @@ trait OdbTargetApi[F[_]]:
     replaceIn: ObsIdSet,
     input:     UpdateTargetsInput
   ): F[TargetWithId]
+  def targetEditSubscription(
+    targetId: Target.Id
+  ): Resource[F, fs2.Stream[F, TargetEditSubscription.Data]]

@@ -3,6 +3,7 @@
 
 package explore.services
 
+import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
@@ -14,7 +15,6 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.GroupQueriesGQL.*
-import cats.MonadThrow
 
 trait OdbGroupApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB]):
   def moveGroup(
