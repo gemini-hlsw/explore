@@ -5,12 +5,11 @@ package explore.observationtree
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import clue.data.syntax.*
 import crystal.react.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.common.GroupQueries
+import explore.services.OdbGroupApi
 import explore.model.Group
 import explore.model.GroupList
 import explore.model.Observation
@@ -54,7 +53,7 @@ object ObsActions:
   def groupParentInfo(
     groupId: Group.Id
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:  OdbGroupApi[IO]
   ): Action[GroupList, Option[(Option[Group.Id], NonNegShort)]] =
     Action(
       access = groupWithId(groupId).composeOptionLens(groupParentInfo)
@@ -62,9 +61,7 @@ object ObsActions:
       onSet = (_, parentInfo) =>
         parentInfo
           .map: (parentId, index) =>
-            GroupQueries
-              .moveGroup[IO](groupId, parentId, index)
-              .void
+            odbApi.moveGroup(groupId, parentId, index).void
           .orEmpty
     )
 
@@ -109,20 +106,20 @@ object ObsActions:
     groupId:  Group.Id,
     setGroup: Group.Id => Callback
   )(using
-    FetchClient[IO, ObservationDB]
+    odbApi:   OdbGroupApi[IO]
   ): Action[GroupList, Option[Group]] =
     Action(
       groupWithId(groupId)
     )(
       onSet = (_, groupOpt) =>
         groupOpt.fold {
-          GroupQueries.deleteGroup[IO](groupId)
+          odbApi.deleteGroup(groupId)
         }(_ => setGroup(groupId).toAsync),
       onRestore = (_, groupOpt) =>
         groupOpt.fold {
-          GroupQueries.deleteGroup[IO](groupId)
+          odbApi.deleteGroup(groupId)
         } { _ =>
-          GroupQueries.undeleteGroup[IO](groupId) >> setGroup(groupId).toAsync
+          odbApi.undeleteGroup(groupId) >> setGroup(groupId).toAsync
         }
     )
 

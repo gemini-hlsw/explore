@@ -19,3 +19,4 @@ case class OdbApiImpl[F[_]: MonadThrow]()(using
     with OdbAsterismApiImpl[F]
     with OdbProgramApiImpl[F]
     with OdbObservationApiImpl[F]
+    with OdbGroupApiImpl[F]

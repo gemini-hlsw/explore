@@ -12,7 +12,7 @@ import lucuma.schemas.odb.TimeSpanSubquery
 
 object GroupQueriesGQL:
 
-  object GroupSubQuery extends GraphQLSubquery.Typed[ObservationDB, Group]("Group"):
+  object GroupSubQuery extends GraphQLSubquery.Typed[ObservationDB, Group]("Group") {
     override val subquery: String = s"""
       {
         id
@@ -26,6 +26,7 @@ object GroupQueriesGQL:
         parentIndex
       }
     """
+  }
 
   @GraphQL
   trait UpdateGroupsMutation extends GraphQLOperation[ObservationDB]:

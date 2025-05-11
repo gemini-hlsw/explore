@@ -37,8 +37,6 @@ import java.time.Instant
 
 trait OdbObservationApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
     extends OdbObservationApi[F]:
-  // type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
-
   def updateObservations(input: UpdateObservationsInput): F[Unit] =
     UpdateObservationMutation[F]
       .execute(input)
