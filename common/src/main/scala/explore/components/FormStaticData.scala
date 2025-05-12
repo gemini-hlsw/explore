@@ -4,6 +4,7 @@
 package explore.components
 
 import explore.components.ui.ExploreStyles
+import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.TagMod
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -19,6 +20,7 @@ case class FormStaticData(
   id:        String,
   value:     TagMod,
   label:     String,
+  tooltip:   Option[VdomNode] = None,
   modifiers: Seq[TagMod] = Seq.empty
 ) extends ReactFnProps[FormStaticData](FormStaticData.component) {
   def apply(mods: TagMod*): FormStaticData = copy(modifiers = modifiers ++ mods)
@@ -36,6 +38,6 @@ object FormStaticData {
         <.div(
           <.data(props.value, ExploreStyles.StaticData, ^.id := props.id, ^.tabIndex := 0)
         )
-      )
+      ).withOptionalTooltip(props.tooltip)
     }
 }

@@ -31,5 +31,8 @@ object ProgramDetailsSubquery
         start
         end
       }
+      timeEstimateRange: timeEstimateRange2 $CalculatedProgramTimeRangeSubquery
+      timeEstimateBanded: timeEstimateBanded2 $CalculatedBandedProgramTimeSubquery
+      timeCharge $BandedProgramTimeSubquery
     }
   """

@@ -18,6 +18,7 @@ import explore.optics.GetAdjust
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
 import japgolly.scalajs.react.util.Effect
+import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
@@ -25,11 +26,16 @@ import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.model.Access
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
+import lucuma.core.util.CalculatedValue
+import lucuma.core.util.CalculationState
 import lucuma.core.util.Enumerated
 import lucuma.react.primereact.Message
+import lucuma.react.primereact.Tooltip
+import lucuma.react.primereact.tooltip.*
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import org.http4s.headers.Authorization
+import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
@@ -108,6 +114,41 @@ extension [F[_]: MonadCancelThrow, A](f: F[A])
 extension [A](pot: Pot[A])
   def orSpinner(f: A => VdomNode): VdomNode =
     pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
+
+// TODO: Move to lucuma-react?
+extension (tag:    TagOf[HTMLElement])
+  def withTooltipWhen(
+    condition: Boolean,
+    content:   VdomNode,
+    position:  Tooltip.Position = Tooltip.Position.Right
+  ): VdomNode =
+    if (condition) tag.withTooltip(content = content, position = position) else tag
+  def withTooltipUnless(
+    condition: Boolean,
+    content:   VdomNode,
+    position:  Tooltip.Position = Tooltip.Position.Right
+  ): VdomNode =
+    withTooltipWhen(!condition, content, position)
+  def withOptionalTooltip(
+    content:  Option[VdomNode],
+    position: Tooltip.Position = Tooltip.Position.Right
+  ): VdomNode =
+    content.fold(tag)(t => tag.withTooltip(content = t, position = position))
+
+extension [A](calc: CalculatedValue[A])
+  def isReady: Boolean                              = calc.state === CalculationState.Ready
+  def isStale: Boolean                              = !isReady
+  def staleClass: TagMod                            = ExploreStyles.Stale.when(isStale)
+  def staleTooltip: Option[VdomNode]                = staleTooltip("Awaiting new data from server.")
+  def staleTooltip(tip: VdomNode): Option[VdomNode] =
+    if (isStale) tip.some else none
+  def renderOrElse(
+    ready: A => VdomNode,
+    stale: => VdomNode
+  ): VdomNode =
+    if (isStale) stale else ready(calc.value)
+
+extension [A](a: A) def asReady: CalculatedValue[A] = CalculatedValue(CalculationState.Ready, a)
 
 extension (partner: Partner)
   def renderFlag: VdomNode =

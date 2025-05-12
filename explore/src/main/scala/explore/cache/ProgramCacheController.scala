@@ -12,7 +12,6 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import crystal.Pot
 import crystal.Throttler
-import crystal.syntax.*
 import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
@@ -32,8 +31,8 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.ConfigurationRequestEditInput
+import lucuma.schemas.ObservationDB.Types.ObscalcUpdateInput
 import lucuma.schemas.ObservationDB.Types.WhereObservation
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
@@ -77,6 +76,11 @@ object ProgramCacheController
     go(none, List.empty)
   }
 
+  private val programTimesLens =
+    ProgramSummaries.optProgramDetails.some.andThen(
+      ProgramDetails.programTimes
+    )
+
   private def updateProgramTimes(
     programId: Program.Id
   )(using StreamingClient[IO, ObservationDB]): IO[ProgramSummaries => ProgramSummaries] =
@@ -86,7 +90,7 @@ object ProgramCacheController
       .raiseGraphQLErrors
       .map:
         _.program.fold(identity[ProgramSummaries]): times =>
-          ProgramSummaries.programTimesPot.replace(Pot(times))
+          programTimesLens.replace(times)
 
   private def updateObservationExecution(
     obsId: Observation.Id
@@ -110,27 +114,39 @@ object ProgramCacheController
             .fold(identity[ProgramSummaries]): execution =>
               ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, execution))
 
-  private def updateGroupTimeRange(groupId: Group.Id)(using
+  // TODO: Move into updateStream and use the keyedSwitchEvalMap for recursion?
+  private def updateGroupTimeRange(
+    groupId: Option[Group.Id]
+  )(using StreamingClient[IO, ObservationDB]): IO[
+    ProgramSummaries => ProgramSummaries
+  ] =
+    def go(
+      optId: Option[Group.Id],
+      fn:    ProgramSummaries => ProgramSummaries
+    ): IO[ProgramSummaries => ProgramSummaries] =
+      optId.fold(fn.pure[IO])(gid =>
+        queryGroupTimes(gid)
+          .flatMap: (parentId, newFn) =>
+            go(parentId, fn.andThen(newFn))
+      )
+    go(groupId, identity)
+
+  private def queryGroupTimes(groupId: Group.Id)(using
     StreamingClient[IO, ObservationDB]
-  ): IO[ProgramSummaries => ProgramSummaries] =
+  ): IO[(Option[Group.Id], ProgramSummaries => ProgramSummaries)] =
     ProgramSummaryQueriesGQL
       .GroupTimeRangeQuery[IO]
       .query(groupId)
-      // This no longer raises an error for graphql errors, rather the error is put in the pot.
-      .map(_.result match {
-        case Ior.Right(r)   => r.asRight
-        case Ior.Both(e, r) => ResponseException(e, r.some).asLeft
-        case Ior.Left(e)    => ResponseException(e, none).asLeft
-      })
-      .map:
-        case Left(e)     =>
-          val t = new Exception("Error getting group time range information.", e)
-          ProgramSummaries.groupTimeRangePots.modify(_.setError(groupId, t))
-        case Right(data) =>
-          data.group
-            .map(_.timeEstimateRange)
-            .fold(identity[ProgramSummaries]): timeRange =>
-              ProgramSummaries.groupTimeRangePots.modify(_.updated(groupId, timeRange))
+      .raiseGraphQLErrors
+      .map: data =>
+        val fn = data.group
+          .map(_.timeEstimateRange2)
+          .fold(identity[ProgramSummaries])(timeRange =>
+            ProgramSummaries.groups.modify(
+              _.updatedWith(groupId)(_.map(Group.timeEstimateRange.replace(timeRange)))
+            )
+          )
+        (data.group.flatMap(_.parentId), fn)
 
   override protected val initial: ProgramCacheController => IO[
     (ProgramSummaries, Stream[IO, ProgramSummaries => ProgramSummaries])
@@ -229,7 +245,6 @@ object ProgramCacheController
               groups,
               as,
               ps,
-              pending,
               crs
             )
 
@@ -240,9 +255,7 @@ object ProgramCacheController
       // We want to update all the observations first, followed by the groups,
       // and then the program, because the program requires all of the observation times be calculated.
       // So, if we do it first, it could take a long time.
-      Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution) ++
-        Stream.emits(groups.map(_.id)).evalMap(updateGroupTimeRange) ++
-        Stream.eval(updateProgramTimes(props.programId))
+      Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution)
 
     for
       (obs, groups) <- (observations, groups).parTupled
@@ -324,28 +337,26 @@ object ProgramCacheController
                 .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
                 .map(_.map(data => modifyTargets(data.targetEdit)))
 
-            val onlyExistingObs: Pipe[
-              IO,
-              ObsQueriesGQL.ProgramObservationsDelta.Data,
-              ObsQueriesGQL.ProgramObservationsDelta.Data
-            ] =
-              _.filter(_.observationEdit.meta.exists(_.existence === Existence.Present))
+            val obsCalcObsIdPipe: Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data, Observation.Id] =
+              _.map(_.obscalcUpdate.observationId)
 
-            val onlyExistingGroups: Pipe[
+            val obsCalcGoupIdPipe: Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data, Group.Id] =
+              _.map(_.obscalcUpdate.value.flatMap(_.groupId)).filter(_.isDefined).map(_.get)
+
+            val groupEditParentIdPipe: Pipe[
               IO,
               ProgramQueriesGQL.GroupEditSubscription.Data,
-              ProgramQueriesGQL.GroupEditSubscription.Data
+              Group.Id
             ] =
-              _.filter(_.groupEdit.meta.exists(_.existence === Existence.Present))
+              _.map(_.groupEdit.value.flatMap(_.parentId)).filter(_.isDefined).map(_.get)
 
             val obsTimesUpdates: Pipe[
               IO,
-              ObsQueriesGQL.ProgramObservationsDelta.Data,
+              Observation.Id,
               ProgramSummaries => ProgramSummaries
             ] = keyedSwitchEvalMap(
-              _.observationEdit.observationId,
-              data =>
-                updateObservationExecution(data.observationEdit.observationId) <* queryProgramTimes
+              identity,
+              id => updateObservationExecution(id)
             )
 
             extension (data: ProgramQueriesGQL.ConfigurationRequestSubscription.Data)
@@ -372,14 +383,11 @@ object ProgramCacheController
 
             val groupTimeRangeUpdate: Pipe[
               IO,
-              ProgramQueriesGQL.GroupEditSubscription.Data,
+              Group.Id,
               ProgramSummaries => ProgramSummaries
             ] = keyedSwitchEvalMap(
-              _.groupEdit.value.map(_.id),
-              _.groupEdit.value
-                .map: group =>
-                  updateGroupTimeRange(group.id) <* queryProgramTimes
-                .getOrElse(IO(identity))
+              identity,
+              oid => updateGroupTimeRange(oid.some)
             )
 
             val updateObservations: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
@@ -387,19 +395,17 @@ object ProgramCacheController
                 .subscribe[IO](props.programId.toObservationEditInput)
                 .handleGraphQLErrors(IO.println(_))
                 .map:
-                  _.broadcastThrough(
-                    _.map(data => modifyObservations(data.observationEdit)),
-                    onlyExistingObs.andThen(obsTimesUpdates)
-                  )
+                  _.map(data => modifyObservations(data.observationEdit))
 
             val updateGroups: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
               ProgramQueriesGQL.GroupEditSubscription
                 .subscribe[IO](props.programId.toProgramEditInput)
                 .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
+                .evalTap(_ => queryProgramTimes)
                 .map:
                   _.broadcastThrough(
                     _.map(data => modifyGroups(data.groupEdit)),
-                    onlyExistingGroups.andThen(groupTimeRangeUpdate)
+                    groupEditParentIdPipe.andThen(groupTimeRangeUpdate)
                   )
 
             val updateConfigurationRequests
@@ -429,6 +435,17 @@ object ProgramCacheController
                 .map:
                   _.map(data => modifyPrograms(data.programEdit))
 
+            val updateObsCalc: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
+              ObsQueriesGQL.ObsCalcSubscription
+                .subscribe[IO](ObscalcUpdateInput(props.programId.assign))
+                .logGraphQLErrors(_ => "Error in ObsCalcSubscription subscription")
+                .map:
+                  _.evalTap(_ => queryProgramTimes)
+                    .broadcastThrough(
+                      obsCalcObsIdPipe.andThen(obsTimesUpdates),
+                      obsCalcGoupIdPipe.andThen(groupTimeRangeUpdate)
+                    )
+
             // TODO Handle errors, disable transparent resubscription upon connection loss.
             List(
               updateProgramDetails,
@@ -437,7 +454,8 @@ object ProgramCacheController
               updateGroups,
               updateAttachments,
               updatePrograms,
-              updateConfigurationRequests
+              updateConfigurationRequests,
+              updateObsCalc
             ).sequence.map: updateStreams =>
               (updateStreams :+ updateProgramTimesStream)
                 .reduceLeft(_.merge(_))

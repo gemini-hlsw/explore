@@ -5,14 +5,11 @@ package explore.tabs
 
 import cats.data.NonEmptySet
 import cats.syntax.all.*
-import crystal.Pot
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
 import explore.model.Group
 import explore.model.GroupEditTileIds
-import explore.model.Perishable
-import explore.model.ProgramTimeRange
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.GroupWarning
 import explore.model.layout.LayoutsMap
@@ -24,15 +21,14 @@ import lucuma.react.common.*
 import lucuma.react.resizeDetector.UseResizeDetectorReturn
 
 case class ObsGroupTiles(
-  userId:            Option[User.Id],
-  group:             UndoSetter[Group],
-  groupWarnings:     Option[NonEmptySet[GroupWarning]],
-  childCount:        Int,
-  timeEstimateRange: Pot[Perishable[Option[ProgramTimeRange]]],
-  resize:            UseResizeDetectorReturn,
-  defaultLayouts:    LayoutsMap,
-  layouts:           LayoutsMap,
-  backButton:        VdomNode
+  userId:         Option[User.Id],
+  group:          UndoSetter[Group],
+  groupWarnings:  Option[NonEmptySet[GroupWarning]],
+  childCount:     Int,
+  resize:         UseResizeDetectorReturn,
+  defaultLayouts: LayoutsMap,
+  layouts:        LayoutsMap,
+  backButton:     VdomNode
 ) extends ReactFnProps(ObsGroupTiles.component)
 
 object ObsGroupTiles:
@@ -57,12 +53,11 @@ object ObsGroupTiles:
               props.group,
               props.groupWarnings,
               props.childCount,
-              props.timeEstimateRange,
               props.group.get.system
             )
               .withKey(props.group.get.id.toString)
               .toUnmounted,
-          (_, _) => GroupEditTitle(props.group, props.childCount, props.timeEstimateRange)
+          (_, _) => GroupEditTitle(props.group, props.childCount)
         )
 
       TileController(

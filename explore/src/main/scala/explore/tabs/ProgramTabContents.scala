@@ -5,7 +5,6 @@ package explore.tabs
 
 import cats.data.NonEmptyList
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.View
 import explore.*
 import explore.components.HelpIcon
@@ -19,7 +18,6 @@ import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramDetails
 import explore.model.ProgramTabTileIds
-import explore.model.ProgramTimes
 import explore.model.ProgramUser
 import explore.model.TargetList
 import explore.model.UserPreferences
@@ -59,7 +57,6 @@ case class ProgramTabContents(
   configsWithoutRequests:   Map[Configuration, NonEmptyList[Observation]],
   targets:                  TargetList,
   userVault:                Option[UserVault],
-  programTimes:             Pot[ProgramTimes],
   userPreferences:          UserPreferences,
   userIsReadonlyCoi:        Boolean,
   userIsPi:                 Boolean
@@ -89,7 +86,6 @@ object ProgramTabContents
             ProgramDetailsTile(
               props.programId,
               props.programDetails,
-              props.programTimes,
               props.userIsReadonlyCoi
             )
           )

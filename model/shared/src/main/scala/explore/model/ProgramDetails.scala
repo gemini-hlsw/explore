@@ -14,8 +14,10 @@ import io.circe.refined.given
 import lucuma.core.enums.ProgramType
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.DateInterval
 import lucuma.odb.json.time.decoder.given
+import lucuma.schemas.decoders.given
 import lucuma.schemas.enums.ProposalStatus
 import monocle.Focus
 import monocle.Lens
@@ -34,7 +36,8 @@ case class ProgramDetails(
   notes:             List[ProgramNote],
   proprietaryMonths: NonNegInt,
   shouldNotify:      Boolean,
-  active:            DateInterval
+  active:            DateInterval,
+  programTimes:      ProgramTimes
 ) derives Eq:
   val allUsers: List[ProgramUser] = pi.fold(users)(_ :: users)
 
@@ -54,6 +57,8 @@ object ProgramDetails:
   val piPartner: Optional[ProgramDetails, Option[PartnerLink]]  =
     pi.some.andThen(ProgramUser.partnerLink)
   val shouldNotify: Lens[ProgramDetails, Boolean]               = Focus[ProgramDetails](_.shouldNotify)
+  val active: Lens[ProgramDetails, DateInterval]                = Focus[ProgramDetails](_.active)
+  val programTimes: Lens[ProgramDetails, ProgramTimes]          = Focus[ProgramDetails](_.programTimes)
 
   given Decoder[ProgramDetails] = Decoder.instance(c =>
     for {
@@ -71,5 +76,22 @@ object ProgramDetails:
       pm    <- c.downField("goa").downField("proprietaryMonths").as[NonNegInt]
       sn    <- c.downField("goa").downField("shouldNotify").as[Boolean]
       ac    <- c.downField("active").as[DateInterval]
-    } yield ProgramDetails(n, d, t, p, ps, pi, us, r.flatten, as, notes, pm, sn, ac)
+      ter   <- c.downField("timeEstimateRange").as[CalculatedValue[Option[ProgramTimeRange]]]
+      teb   <- c.downField("timeEstimateBanded").as[List[CalculatedValue[BandedProgramTime]]]
+      tc    <- c.downField("timeCharge").as[List[BandedProgramTime]]
+    } yield ProgramDetails(n,
+                           d,
+                           t,
+                           p,
+                           ps,
+                           pi,
+                           us,
+                           r.flatten,
+                           as,
+                           notes,
+                           pm,
+                           sn,
+                           ac,
+                           ProgramTimes(ter, teb, tc)
+    )
   )

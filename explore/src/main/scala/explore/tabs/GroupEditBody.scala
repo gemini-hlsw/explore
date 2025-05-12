@@ -15,14 +15,13 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Group
-import explore.model.PerishablePot
-import explore.model.PerishablePot.*
 import explore.model.ProgramTimeRange
 import explore.model.enums.GroupWarning
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
@@ -42,12 +41,13 @@ import monocle.Lens
 import scala.scalajs.js
 
 case class GroupEditBody(
-  group:             UndoSetter[Group],
-  warnings:          Option[NonEmptySet[GroupWarning]],
-  elementsLength:    Int,
-  timeEstimateRange: PerishablePot[Option[ProgramTimeRange]],
-  readonly:          Boolean
-) extends ReactFnProps(GroupEditBody)
+  group:          UndoSetter[Group],
+  warnings:       Option[NonEmptySet[GroupWarning]],
+  elementsLength: Int,
+  readonly:       Boolean
+) extends ReactFnProps(GroupEditBody):
+  val timeEstimateRange: Option[CalculatedValue[Option[ProgramTimeRange]]] =
+    group.get.timeEstimateRange
 
 object GroupEditBody
     extends ReactFnComponent[GroupEditBody](props =>
@@ -203,32 +203,28 @@ object GroupEditBody
           )
         )
 
-        val staleTooltip =
-          if (props.timeEstimateRange.isStale)
-            ("Awaiting new data from server.": VdomNode).some
-          else none
-
-        val staleClass = ExploreStyles.Stale.when(props.timeEstimateRange.isStale)
-
         val plannedTime =
-          props.timeEstimateRange.asValuePot.orSpinner(_.map: timeEstimateRange =>
-            <.div(ExploreStyles.GroupPlannedTime)(
-              if timeEstimateRange.maximum === timeEstimateRange.minimum then
-                React.Fragment(
-                  FormLabel(htmlFor = "plannedTime".refined)("Planned Time"),
-                  TimeSpanView(timeEstimateRange.maximum.value, tooltip = staleTooltip)
-                    .withMods(^.id := "plannedTime", staleClass)
-                )
-              else
-                React.Fragment(
-                  FormLabel(htmlFor = "maxPlannedTime".refined)("Maximum Planned Time"),
-                  TimeSpanView(timeEstimateRange.maximum.value, tooltip = staleTooltip)
-                    .withMods(^.id := "maxPlannedTime", staleClass),
-                  FormLabel(htmlFor = "minPlannedTime".refined)("Minimum Planned Time"),
-                  TimeSpanView(timeEstimateRange.minimum.value, tooltip = staleTooltip)
-                    .withMods(^.id := "minPlannedTime", staleClass)
-                )
-            ))
+          props.timeEstimateRange.flatMap: cvter =>
+            val staleTooltip = cvter.staleTooltip
+            val staleClass   = cvter.staleClass
+            cvter.value.map: timeEstimateRange =>
+              <.div(ExploreStyles.GroupPlannedTime)(
+                if timeEstimateRange.maximum === timeEstimateRange.minimum then
+                  React.Fragment(
+                    FormLabel(htmlFor = "plannedTime".refined)("Planned Time"),
+                    TimeSpanView(timeEstimateRange.maximum.value, tooltip = staleTooltip)
+                      .withMods(^.id := "plannedTime", staleClass)
+                  )
+                else
+                  React.Fragment(
+                    FormLabel(htmlFor = "maxPlannedTime".refined)("Maximum Planned Time"),
+                    TimeSpanView(timeEstimateRange.maximum.value, tooltip = staleTooltip)
+                      .withMods(^.id := "maxPlannedTime", staleClass),
+                    FormLabel(htmlFor = "minPlannedTime".refined)("Minimum Planned Time"),
+                    TimeSpanView(timeEstimateRange.minimum.value, tooltip = staleTooltip)
+                      .withMods(^.id := "minPlannedTime", staleClass)
+                  )
+              )
 
         val groupTypeSpecificForms =
           if isAnd then <.div(ExploreStyles.GroupForm)(nameForm, orderForm, delaysForm, plannedTime)
@@ -249,39 +245,35 @@ object GroupEditBody
     )
 
 case class GroupEditTitle(
-  group:             UndoSetter[Group],
-  elementsLength:    Int,
-  timeEstimateRange: PerishablePot[Option[ProgramTimeRange]]
-) extends ReactFnProps(GroupEditTitle)
+  group:          UndoSetter[Group],
+  elementsLength: Int
+) extends ReactFnProps(GroupEditTitle):
+  val timeEstimateRange: Option[CalculatedValue[Option[ProgramTimeRange]]] =
+    group.get.timeEstimateRange
 
 object GroupEditTitle
     extends ReactFnComponent[GroupEditTitle](props =>
+
       def makeTitle(
         group:             Group,
-        timeEstimateRange: PerishablePot[Option[ProgramTimeRange]],
+        timeEstimateRange: Option[CalculatedValue[Option[ProgramTimeRange]]],
         elementsLength:    Int
-      ) = {
-        val timeStr: VdomNode  = timeEstimateRange.asValuePot.orSpinner(
-          _.map: timeEstimateRange =>
-            if timeEstimateRange.maximum === timeEstimateRange.minimum then
-              HoursMinutesAbbreviation.format(timeEstimateRange.maximum.value)
-            else
-              s"${HoursMinutesAbbreviation.format(timeEstimateRange.maximum.value)} max - ${HoursMinutesAbbreviation
-                  .format(timeEstimateRange.minimum.value)} min"
-          .map(s =>
-            <.span(s", $s",
-                   ExploreStyles.GroupEditTitleTimes,
-                   ExploreStyles.Stale.when(timeEstimateRange.isStale)
-            )
-          )
-        )
+      ) =
+        val timeStr: VdomNode  = timeEstimateRange.flatMap: cvter =>
+          cvter.value.map: timeEstimateRange =>
+            val str =
+              if timeEstimateRange.maximum === timeEstimateRange.minimum then
+                HoursMinutesAbbreviation.format(timeEstimateRange.maximum.value)
+              else
+                s"${HoursMinutesAbbreviation.format(timeEstimateRange.maximum.value)} max - ${HoursMinutesAbbreviation
+                    .format(timeEstimateRange.minimum.value)} min"
+            <.span(s", $str", ExploreStyles.GroupEditTitleTimes, cvter.staleClass)
         val andOrStr: VdomNode =
           if group.isAnd then if group.ordered then "Ordered" else "Any order"
           else
             s"Choose ${group.minimumRequired.getOrElse(1.refined[NonNegative])} of ${elementsLength}"
 
         <.span("(", andOrStr, timeStr, ")")
-      }
 
       for ctx <- useContext(AppContext.ctx)
       yield makeTitle(props.group.get, props.timeEstimateRange, props.elementsLength)

@@ -1328,10 +1328,6 @@ $search-preview-margin: 5px;
   .explore-sequence-tile-title-item {
     font-weight: bold;
   }
-
-  .stale {
-    opacity: 0.5;
-  }
 }
 
 @container tile (min-width: #{exploreCommon.$tile-xtra-small-cutoff}) {
@@ -1540,10 +1536,6 @@ svg.fa-check.explore-success-icon {
     .obs-state-select-wrapper {
       flex-grow: 2;
     }
-
-    .stale {
-      opacity: 0.5;
-    }
   }
 
   .obs-badge-subtitle {
@@ -1610,10 +1602,6 @@ svg.fa-check.explore-success-icon {
   .explore-tile-control-buttons {
     margin-left: auto;
   }
-}
-
-.group-edit-title-times.stale {
-  opacity: 0.5;
 }
 
 .group-edit-tile {
@@ -1695,10 +1683,6 @@ svg.fa-check.explore-success-icon {
     grid-template-columns: repeat(2, auto);
     align-items: center;
     margin-right: auto;
-
-    .stale {
-      opacity: 0.5;
-    }
   }
 
   .group-warnings {
@@ -3380,10 +3364,6 @@ a.explore-upgrade-link {
     width: 100px;
     text-align: right;
   }
-
-  .stale {
-    opacity: 0.5;
-  }
 }
 
 // Program Tab
@@ -3592,4 +3572,8 @@ a.explore-upgrade-link {
   position: absolute;
   top: -20px;
   left: 0;
+}
+
+.stale {
+  opacity: 0.5;
 }

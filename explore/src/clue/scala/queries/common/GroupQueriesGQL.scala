@@ -22,6 +22,7 @@ object GroupQueriesGQL:
         system
         minimumInterval $TimeSpanSubquery
         maximumInterval $TimeSpanSubquery
+        timeEstimateRange: timeEstimateRange2 $CalculatedProgramTimeRangeSubquery
         parentId 
         parentIndex
       }

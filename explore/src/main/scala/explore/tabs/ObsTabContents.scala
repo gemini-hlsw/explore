@@ -75,7 +75,6 @@ case class ObsTabContents(
   private val activeGroup: Option[Group.Id]              = focusedGroup.orElse:
     focusedObs.flatMap(observations.get.get(_)).flatMap(_.groupId)
   private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
-  private val groupTimeRanges: GroupTimeRangeMap         = programSummaries.get.groupTimeRangePots
   private val targets: UndoSetter[TargetList]            = programSummaries.zoom(ProgramSummaries.targets)
   private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
@@ -316,7 +315,6 @@ object ObsTabContents extends TwoPanels:
                   group,
                   props.programSummaries.get.groupWarnings.get(group.get.id),
                   props.programSummaries.get.groupsChildren.get(groupId.some).map(_.length).orEmpty,
-                  props.groupTimeRanges.getPot(groupId),
                   resize,
                   ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
                   props.userPreferences.get.groupEditLayout,

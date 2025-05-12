@@ -120,7 +120,8 @@ object ProgramSummaryQueriesGQL {
     val document: String = s"""
       query($$groupId: GroupId!) {
         group(groupId: $$groupId) {
-          timeEstimateRange $ProgramTimeRangeSubquery
+          timeEstimateRange2 $CalculatedProgramTimeRangeSubquery
+          parentId
         }
       }
     """
