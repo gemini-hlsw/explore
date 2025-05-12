@@ -3,9 +3,10 @@
 
 package explore.services
 
-import cats.MonadThrow
+import cats.effect.Sync
+import cats.effect.kernel.Resource
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.StreamingClient
 import clue.data.syntax.*
 import clue.model.GraphQLResponse
 import clue.model.GraphQLResponse.*
@@ -22,17 +23,16 @@ import lucuma.schemas.ObservationDB.Types.UpdateTargetsInput
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL
+import queries.common.TargetQueriesGQL.*
 
-trait OdbTargetApiImpl[F[_]: MonadThrow](using
-  FetchClient[F, ObservationDB],
+trait OdbTargetApiImpl[F[_]: Sync](using
+  StreamingClient[F, ObservationDB],
   Logger[F],
   ToastCtx[F]
 ) extends OdbTargetApi[F]:
 
   override def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[F]
+    UpdateTargetsMutation[F]
       .execute(input)
       .raiseGraphQLErrors
       .void
@@ -42,8 +42,7 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
           ToastCtx[F].showToast(msg, Message.Severity.Error)
 
   override def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
-    TargetQueriesGQL
-      .CreateTargetMutation[F]
+    CreateTargetMutation[F]
       .execute(target.toCreateTargetInput(programId))
       .raiseGraphQLErrors
       .map(_.createTarget.target.id)
@@ -54,8 +53,7 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
     targetId:  Target.Id,
     existence: Existence
   ): F[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[F]
+    UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
           WHERE = targetId.toWhereTarget
@@ -68,8 +66,7 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
       .void
 
   override def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[F]
+    UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
@@ -81,8 +78,7 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
       .void
 
   override def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
-    TargetQueriesGQL
-      .UpdateTargetsMutation[F]
+    UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
           WHERE = targetIds.toWhereTargets
@@ -99,8 +95,7 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
     replaceIn: ObsIdSet,
     input:     UpdateTargetsInput
   ): F[TargetWithId] =
-    TargetQueriesGQL
-      .CloneTargetMutation[F]
+    CloneTargetMutation[F]
       .execute:
         CloneTargetInput(
           targetId = targetId,
@@ -109,3 +104,11 @@ trait OdbTargetApiImpl[F[_]: MonadThrow](using
         )
       .raiseGraphQLErrors
       .map(_.cloneTarget.newTarget)
+
+  override def targetEditSubscription(
+    targetId: Target.Id
+  ): Resource[F, fs2.Stream[F, TargetEditSubscription.Data]] =
+    TargetEditSubscription
+      .subscribe[F](targetId)
+      .raiseFirstNoDataError
+      .ignoreGraphQLErrors

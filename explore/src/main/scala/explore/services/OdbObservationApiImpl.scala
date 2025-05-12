@@ -3,9 +3,10 @@
 
 package explore.services
 
-import cats.MonadThrow
+import cats.effect.Resource
+import cats.effect.Sync
 import cats.implicits.*
-import clue.FetchClient
+import clue.StreamingClient
 import clue.data.Input
 import clue.data.syntax.*
 import clue.syntax.*
@@ -35,10 +36,8 @@ import queries.common.TargetQueriesGQL.SetGuideTargetName
 
 import java.time.Instant
 
-trait OdbObservationApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
+trait OdbObservationApiImpl[F[_]: Sync](using StreamingClient[F, ObservationDB])
     extends OdbObservationApi[F]:
-  // type ConstraintsList = SortedMap[ObsIdSet, ConstraintGroup]
-
   def updateObservations(input: UpdateObservationsInput): F[Unit] =
     UpdateObservationMutation[F]
       .execute(input)
@@ -355,3 +354,11 @@ trait OdbObservationApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB
       .query(obsId)
       .raiseGraphQLErrors
       .map(_.observation.map(_.execution))
+
+  def observationEditSubscription(
+    obsId: Observation.Id
+  ): Resource[F, fs2.Stream[F, ObservationEditSubscription.Data]] =
+    ObservationEditSubscription
+      .subscribe[F](obsId.toObservationEditInput)
+      .raiseFirstNoDataError
+      .ignoreGraphQLErrors

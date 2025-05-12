@@ -7,7 +7,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.*
-import explore.common.GroupQueries
 import explore.model.AppContext
 import explore.model.Attachment
 import explore.model.Focused
@@ -111,8 +110,8 @@ def insertGroup(
 ): IO[Unit] =
   import ctx.given
 
-  GroupQueries
-    .createGroup[IO](programId, parentId)
+  ctx.odbApi
+    .createGroup(programId, parentId)
     .flatMap: group =>
       ObsActions
         .groupExistence(group.id, g => focusGroup(programId, g.some, ctx))

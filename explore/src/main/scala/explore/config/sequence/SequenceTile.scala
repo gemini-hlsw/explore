@@ -18,6 +18,7 @@ import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.PerishablePot
 import explore.model.PerishablePot.*
+import explore.model.SequenceData
 import explore.model.reusability.given
 import explore.syntax.ui.*
 import explore.utils.*

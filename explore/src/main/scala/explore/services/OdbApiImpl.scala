@@ -3,15 +3,15 @@
 
 package explore.services
 
-import cats.MonadThrow
+import cats.effect.Sync
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.StreamingClient
 import explore.utils.ToastCtx
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 
-case class OdbApiImpl[F[_]: MonadThrow]()(using
-  FetchClient[F, ObservationDB],
+case class OdbApiImpl[F[_]: Sync]()(using
+  StreamingClient[F, ObservationDB],
   Logger[F],
   ToastCtx[F]
 ) extends OdbApi[F]
@@ -19,3 +19,6 @@ case class OdbApiImpl[F[_]: MonadThrow]()(using
     with OdbAsterismApiImpl[F]
     with OdbProgramApiImpl[F]
     with OdbObservationApiImpl[F]
+    with OdbGroupApiImpl[F]
+    with OdbVisitApiImpl[F]
+    with OdbSequenceApiImpl[F]

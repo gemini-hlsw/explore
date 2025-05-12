@@ -1,9 +1,9 @@
 // Copyright (c) 2016-2025 Association of Universities for Research in Astronomy, Inc. (AURA)
 // For license information see LICENSE or https://opensource.org/licenses/BSD-3-Clause
 
-package explore.common
+package explore.services
 
-import cats.effect.Async
+import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
@@ -16,22 +16,12 @@ import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.GroupQueriesGQL.*
 
-object GroupQueries:
-
-  /**
-   * @param groupId
-   *   Group to move
-   * @param parentGroup
-   *   New parent group, `None` to move to top level
-   * @param parentGroupIndex
-   *   New index in parent group, `None` to leave position unchanged (or let backend decide index
-   *   when moving)
-   */
-  def moveGroup[F[_]: Async](
+trait OdbGroupApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB]):
+  def moveGroup(
     groupId:          Group.Id,
     parentGroup:      Option[Group.Id],
     parentGroupIndex: NonNegShort
-  )(using FetchClient[F, ObservationDB]) =
+  ): F[Unit] =
     UpdateGroupsMutation[F]
       .execute:
         UpdateGroupsInput(
@@ -44,11 +34,9 @@ object GroupQueries:
       .raiseGraphQLErrors
       .void
 
-  def updateGroup[F[_]: Async](
+  def updateGroup(
     groupId: Group.Id,
     set:     GroupPropertiesInput
-  )(using
-    FetchClient[F, ObservationDB]
   ): F[Unit] =
     UpdateGroupsMutation[F]
       .execute:
@@ -59,9 +47,7 @@ object GroupQueries:
       .raiseGraphQLErrors
       .void
 
-  def createGroup[F[_]: Async](programId: Program.Id, parentId: Option[Group.Id])(using
-    FetchClient[F, ObservationDB]
-  ): F[Group] =
+  def createGroup(programId: Program.Id, parentId: Option[Group.Id]): F[Group] =
     CreateGroupMutation[F]
       .execute:
         CreateGroupInput(
@@ -72,11 +58,8 @@ object GroupQueries:
       .map: result =>
         result.createGroup.group
 
-  def deleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
+  def deleteGroup(groupId: Group.Id): F[Unit] =
     updateGroup(groupId, GroupPropertiesInput(existence = Existence.Deleted.assign))
 
-  def undeleteGroup[F[_]: Async](groupId: Group.Id)(using FetchClient[F, ObservationDB]): F[Unit] =
-    updateGroup(
-      groupId,
-      GroupPropertiesInput(existence = Existence.Present.assign)
-    )
+  def undeleteGroup(groupId: Group.Id): F[Unit] =
+    updateGroup(groupId, GroupPropertiesInput(existence = Existence.Present.assign))
