@@ -398,6 +398,7 @@ object AladinContainer extends AladinCommon {
             ReactFragment(
               aladinRef.value.map(AladinZoomControl(_)),
               HelpIcon("aladin-cell.md".refined, ExploreStyles.AladinHelpIcon),
+              <.div(ExploreStyles.AladinSurvey, s"Survey: ${survey.value.name}"),
               (resize.width, resize.height, fov.value)
                 .mapN(
                   TargetsOverlay(

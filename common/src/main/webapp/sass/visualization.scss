@@ -112,6 +112,16 @@ $brightness: var(--aladin-image-brightness);
     top: 40px;
   }
 
+  .aladin-survey {
+    @include aladin-button-mixin;
+
+    /* stylelint-disable-next-line csstools/value-no-unknown-custom-properties */
+    font-size: var(--pl-mini-font-size);
+    color: var(--hud-color);
+    left: 50px;
+    top: 8px;
+  }
+
   .explore-aladin-zoom-control {
     @include aladin-button-mixin;
 
