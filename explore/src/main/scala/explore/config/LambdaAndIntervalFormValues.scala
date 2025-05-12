@@ -21,14 +21,14 @@ import lucuma.ui.syntax.all.given
 
 final case class LambdaAndIntervalFormValues(
   modeData:          Option[ModeData],
-  centralWavelength: Option[Wavelength],
+  centralWavelength: Wavelength,
   units:             WavelengthUnits
 ) extends ReactFnProps(LambdaAndIntervalFormValues)
 
 object LambdaAndIntervalFormValues
     extends ReactFnComponent[LambdaAndIntervalFormValues](props =>
       val adjustedInterval =
-        (props.modeData, props.centralWavelength).flatMapN((md, cw) => md.wavelengthInterval(cw))
+        props.modeData.flatMap(md => md.wavelengthInterval(props.centralWavelength))
 
       given Display[BoundedInterval[Wavelength]] = wavelengthIntervalDisplay(props.units)
 

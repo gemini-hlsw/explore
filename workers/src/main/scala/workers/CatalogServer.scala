@@ -47,6 +47,8 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
               gmos.candidatesArea.candidatesArea
             case ObservingModeType.Flamingos2LongSlit                                      =>
               f2.candidatesArea.candidatesArea(F2LyotWheel.F16) // In practice this is always F16
+            case ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging =>
+              throw new NotImplementedError("Gmos Imaging not implemented")
           }
           readFromGaia(client, cacheDb, stores, req, candidatesArea, c => invocation.respond(c)) *>
             expireGuideStarCandidates(cacheDb, stores, Expiration)

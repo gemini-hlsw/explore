@@ -84,7 +84,7 @@ object SequenceTile extends SequenceTileHelper:
               // TODO Show visits even if sequence data is not available
               sequenceDataOpt
                 .fold[VdomNode](<.div("Empty or incomplete sequence data returned by server")) {
-                  case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass) =>
+                  case SequenceData(InstrumentExecutionConfig.GmosNorth(config), snPerClass)  =>
                     GmosNorthSequenceTable(
                       visitsOpt
                         .collect:
@@ -93,7 +93,7 @@ object SequenceTile extends SequenceTileHelper:
                       config,
                       snPerClass
                     )
-                  case SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass) =>
+                  case SequenceData(InstrumentExecutionConfig.GmosSouth(config), snPerClass)  =>
                     GmosSouthSequenceTable(
                       visitsOpt
                         .collect:
@@ -102,6 +102,8 @@ object SequenceTile extends SequenceTileHelper:
                       config,
                       snPerClass
                     )
+                  case SequenceData(InstrumentExecutionConfig.Flamingos2(config), snPerClass) =>
+                    throw new NotImplementedError("Flamingos2 not implemented")
                 },
             errorRender = m =>
               <.div(ExploreStyles.SequencesPanelError)(

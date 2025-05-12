@@ -330,7 +330,7 @@ object GmosLongslitConfigPanel {
               ),
               LambdaAndIntervalFormValues(
                 modeData = modeData,
-                centralWavelength = centralWavelengthView.get.some,
+                centralWavelength = centralWavelengthView.get,
                 units = props.units
               )
             ),

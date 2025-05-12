@@ -187,7 +187,7 @@ object all:
           // FIXME: Hardcoded for Flamingos2
           ObservingMode.f2LongSlit
             .getOption(om)
-            .flatMap(f => f.filter.wavelength.map(CentralWavelength(_)))
+            .flatMap(f => CentralWavelength(f.filter.wavelength).some)
         )
 
   extension (bc: BasicConfiguration)
@@ -197,7 +197,7 @@ object all:
       case g: BasicConfiguration.GmosSouthLongSlit =>
         g.centralWavelength.some
       case g: BasicConfiguration.F2LongSlit        =>
-        g.filter.wavelength.map(CentralWavelength(_))
+        CentralWavelength(g.filter.wavelength).some
 
   extension (bc: ObservingModeType)
     def defaultPosAngleOptions: PosAngleOptions =
