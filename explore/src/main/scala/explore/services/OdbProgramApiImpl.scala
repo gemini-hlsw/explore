@@ -12,16 +12,23 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ProgramInfo
 import explore.model.ProgramNote
 import explore.model.ProgramUser
+import explore.model.RedeemInvitationResult
+import lucuma.core.data.EmailAddress
 import lucuma.core.enums.ConfigurationRequestStatus
 import lucuma.core.model.Attachment
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
+import lucuma.core.model.ProgramReference
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import queries.common.InvitationQueriesGQL.*
+import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data.CreateUserInvitation
 import queries.common.ProgramQueriesGQL.*
+import queries.common.ProposalQueriesGQL.AddProgramUser
+import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
 trait OdbProgramApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
     extends OdbProgramApi[F]:
@@ -93,45 +100,55 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
       .raiseGraphQLErrors
       .void
 
-  def updateProgramUsers(puid: ProgramUser.Id, set: ProgramUserPropertiesInput): F[Unit] =
+  def addProgramUser(programId: Program.Id, role: ProgramUserRole): F[ProgramUser] =
+    val input = AddProgramUserInput(programId = programId, role = role)
+    AddProgramUser[F]
+      .execute(input)
+      .raiseGraphQLErrors
+      .map(_.addProgramUser.programUser)
+
+  def deleteProgramUser(programUserId: ProgramUser.Id): F[Unit] =
+    DeleteProgramUser[F].execute(programUserId.toDeleteInput).raiseGraphQLErrors.void
+
+  def updateProgramUsers(programUserId: ProgramUser.Id, set: ProgramUserPropertiesInput): F[Unit] =
     ProgramUsersMutation[F]
       .execute:
         UpdateProgramUsersInput(
-          WHERE = puid.toWhereProgramUser.assign,
+          WHERE = programUserId.toWhereProgramUser.assign,
           SET = set
         )
       .raiseGraphQLErrors
       .void
 
-  def updateUserFallbackName(puid: ProgramUser.Id, creditName: Option[String]): F[Unit] =
+  def updateUserFallbackName(programUserId: ProgramUser.Id, creditName: Option[String]): F[Unit] =
     val fallbackInput = UserProfileInput(creditName = creditName.orUnassign)
     val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
-    updateProgramUsers(puid, input)
+    updateProgramUsers(programUserId, input)
 
-  def updateUserFallbackEmail(puid: ProgramUser.Id, email: Option[String]): F[Unit] =
+  def updateUserFallbackEmail(programUserId: ProgramUser.Id, email: Option[String]): F[Unit] =
     val fallbackInput = UserProfileInput(email = email.orUnassign)
     val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
-    updateProgramUsers(puid, input)
+    updateProgramUsers(programUserId, input)
 
-  def updateProgramPartner(puid: ProgramUser.Id, pl: Option[PartnerLink]): F[Unit] =
-    updateProgramUsers(puid, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
+  def updateProgramPartner(programUserId: ProgramUser.Id, pl: Option[PartnerLink]): F[Unit] =
+    updateProgramUsers(programUserId, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
 
-  def updateUserES(puid: ProgramUser.Id, es: Option[EducationalStatus]): F[Unit] =
-    updateProgramUsers(puid, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
+  def updateUserES(programUserId: ProgramUser.Id, es: Option[EducationalStatus]): F[Unit] =
+    updateProgramUsers(programUserId, ProgramUserPropertiesInput(educationalStatus = es.orUnassign))
 
-  def updateUserThesis(puid: ProgramUser.Id, th: Option[Boolean]): F[Unit] =
-    updateProgramUsers(puid, ProgramUserPropertiesInput(thesis = th.orUnassign))
+  def updateUserThesis(programUserId: ProgramUser.Id, th: Option[Boolean]): F[Unit] =
+    updateProgramUsers(programUserId, ProgramUserPropertiesInput(thesis = th.orUnassign))
 
-  def updateUserHasDataAccess(puid: ProgramUser.Id, hda: Boolean): F[Unit] =
-    updateProgramUsers(puid, ProgramUserPropertiesInput(hasDataAccess = hda.assign))
+  def updateUserHasDataAccess(programUserId: ProgramUser.Id, hda: Boolean): F[Unit] =
+    updateProgramUsers(programUserId, ProgramUserPropertiesInput(hasDataAccess = hda.assign))
 
-  def updateUserGender(puid: ProgramUser.Id, g: Option[Gender]): F[Unit] =
-    updateProgramUsers(puid, ProgramUserPropertiesInput(gender = g.orUnassign))
+  def updateUserGender(programUserId: ProgramUser.Id, g: Option[Gender]): F[Unit] =
+    updateProgramUsers(programUserId, ProgramUserPropertiesInput(gender = g.orUnassign))
 
-  def changeProgramUserRole(puid: ProgramUser.Id, role: ProgramUserRole): F[Unit] =
+  def changeProgramUserRole(programUserId: ProgramUser.Id, role: ProgramUserRole): F[Unit] =
     ChangeProgramUserRoleMutation[F]
       .execute:
-        ChangeProgramUserRoleInput(programUserId = puid, newRole = role)
+        ChangeProgramUserRoleInput(programUserId = programUserId, newRole = role)
       .raiseGraphQLErrors
       .void
 
@@ -186,3 +203,30 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
         )
       .raiseGraphQLErrors
       .void
+
+  def updateProgramNote(input: UpdateProgramNotesInput): F[Unit] =
+    UpdateProgramNotesMutation[F].execute(input).raiseGraphQLErrors.void
+
+  def resolveProgramReference(programRef: ProgramReference): F[Option[Program.Id]] =
+    ResolveProgramReference[F]
+      .query(programRef.assign)
+      .raiseGraphQLErrors
+      .map(_.program.map(_.id))
+
+  def createUserInvitation(
+    programUserId: ProgramUser.Id,
+    email:         EmailAddress
+  ): F[CreateUserInvitation] =
+    CreateInviteMutation[F]
+      .execute(programUserId, email.value.value)
+      .raiseGraphQLErrors
+      .map(_.createUserInvitation)
+
+  def revokeUserInvitation(userInvitationId: String): F[Unit] =
+    RevokeInvitationMutation[F].execute(userInvitationId).raiseGraphQLErrors.void
+
+  def redeemUserInvitation(key: String): F[RedeemInvitationResult] =
+    RedeemInvitationMutation[F]
+      .execute(key)
+      .raiseGraphQLErrors
+      .map(_.redeemUserInvitation.invitation)

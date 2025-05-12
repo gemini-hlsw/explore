@@ -3,7 +3,6 @@
 
 package explore.proposal
 
-import cats.effect.IO
 import cats.syntax.all.*
 import clue.*
 import clue.data.Input
@@ -51,7 +50,6 @@ import lucuma.ui.react.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import monocle.Iso
-import queries.common.ProposalQueriesGQL
 
 case class ProposalEditor(
   programId:          Program.Id,
@@ -115,7 +113,7 @@ object ProposalEditor
                 programId = props.programId.assign,
                 SET = ProposalPropertiesInput()
               ),
-              (ProposalQueriesGQL.UpdateProposalMutation[IO].execute(_)).andThen(_.void)
+              ctx.odbApi.updateProposal(_)
             ).zoom(Iso.id[Proposal].asLens, UpdateProposalInput.SET.modify)
 
           val abstractAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =

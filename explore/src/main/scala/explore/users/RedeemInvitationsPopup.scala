@@ -30,7 +30,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import queries.common.InvitationQueriesGQL.RedeemInvitationMutation
 
 enum RedeemInviteProcess(private val tag: String) derives Enumerated:
   case Idle    extends RedeemInviteProcess("idle")
@@ -66,13 +65,12 @@ object RedeemInvitationsPopup:
         isKeyValid.set(IsKeyValid(UserInvitation.fromString.getOption(key.trim).isDefined))
 
       def redeem(key: String): IO[Unit] =
-        RedeemInvitationMutation[IO]
-          .execute(key)
-          .raiseGraphQLErrors
-          .flatMap(l =>
+        ctx.odbApi
+          .redeemUserInvitation(key)
+          .flatMap(invitation =>
             (process.set(RedeemInviteProcess.Done) *>
               errorMsg.set(ErrorMsg(none)) *>
-              result.set(l.redeemUserInvitation.invitation.some))
+              result.set(invitation.some))
               .to[IO]
           )
           .handleErrorWith {

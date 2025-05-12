@@ -45,7 +45,7 @@ case class AppContext[F[_]](
   broadcastChannel: BroadcastChannel[F, ExploreEvent],
   toastRef:         Deferred[F, ToastRef]
 )(using
-  val F:            Sync[F],
+  val F:            Async[F],
   val logger:       Logger[F],
   val P:            Parallel[F]
 ):

@@ -46,7 +46,6 @@ import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
 import explore.undo.UndoSetter
-import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -75,18 +74,15 @@ import lucuma.refined.*
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.TargetWithId
-import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import queries.common.ObsQueriesGQL.ObservationEditSubscription
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import scala.concurrent.duration.*
 
 case class ObsTabTiles(
   vault:             Option[UserVault],
@@ -217,28 +213,19 @@ object ObsTabTiles:
       for
         ctx                 <- useContext(AppContext.ctx)
         sequenceOffsets     <- useStreamResourceOnMount:
-                                 import ctx.given
-
                                  ctx.odbApi
                                    .sequenceOffsets(props.obsId)
                                    .map: executionOffsets =>
                                      Offsets(
-                                       science = NonEmptyList.fromList(
-                                         executionOffsets
-                                           .foldMap(_.scienceOffsets)
-                                           .distinct
-                                       ),
-                                       acquisition = NonEmptyList.fromList(
-                                         executionOffsets
-                                           .foldMap(_.acquisitionOffsets)
-                                           .distinct
-                                       )
+                                       science = NonEmptyList.fromList:
+                                         executionOffsets.foldMap(_.scienceOffsets).distinct
+                                       ,
+                                       acquisition = NonEmptyList.fromList:
+                                         executionOffsets.foldMap(_.acquisitionOffsets).distinct
                                      )
                                    // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
                                    .reRunOnResourceSignals:
-                                     ObservationEditSubscription
-                                       .subscribe[IO](props.obsId.toObservationEditInput)
-                                       .map(_.throttle(5.seconds))
+                                     ctx.odbApi.observationEditSubscription(props.obsId)
         agsState            <- useStateView[AgsState](AgsState.Idle)
         // the configuration the user has selected from the spectroscopy modes table, if any
         selectedConfig      <- useStateView(none[InstrumentConfigAndItcResult])
@@ -310,6 +297,7 @@ object ObsTabTiles:
                                  roleLayouts.setState(roleLayout(props.userPreferences, role))
       yield
         import ctx.given
+
         val (section, defaultLayout, layout) = roleLayouts.value
 
         obsTimeOrNowPot.value.renderPot: obsTimeOrNow =>

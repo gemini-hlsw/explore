@@ -10,7 +10,9 @@ import clue.StreamingClient
 import clue.data.syntax.*
 import clue.model.GraphQLResponse
 import clue.model.GraphQLResponse.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsIdSet
+import explore.targets.TargetSearchResult
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -31,7 +33,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
   ToastCtx[F]
 ) extends OdbTargetApi[F]:
 
-  override def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
+  def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
     UpdateTargetsMutation[F]
       .execute(input)
       .raiseGraphQLErrors
@@ -41,14 +43,14 @@ trait OdbTargetApiImpl[F[_]: Sync](using
         Logger[F].error(t)(msg) >>
           ToastCtx[F].showToast(msg, Message.Severity.Error)
 
-  override def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
+  def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
     CreateTargetMutation[F]
       .execute(target.toCreateTargetInput(programId))
       .raiseGraphQLErrors
       .map(_.createTarget.target.id)
       .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
 
-  override def setTargetExistence(
+  def setTargetExistence(
     programId: Program.Id,
     targetId:  Target.Id,
     existence: Existence
@@ -65,7 +67,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
       .raiseGraphQLErrors
       .void
 
-  override def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
+  def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
     UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
@@ -77,7 +79,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
       .raiseGraphQLErrors
       .void
 
-  override def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
+  def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
     UpdateTargetsMutation[F]
       .execute:
         UpdateTargetsInput(
@@ -90,7 +92,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
       .raiseGraphQLErrors
       .void
 
-  override def cloneTarget(
+  def cloneTarget(
     targetId:  Target.Id,
     replaceIn: ObsIdSet,
     input:     UpdateTargetsInput
@@ -105,10 +107,24 @@ trait OdbTargetApiImpl[F[_]: Sync](using
       .raiseGraphQLErrors
       .map(_.cloneTarget.newTarget)
 
-  override def targetEditSubscription(
+  def targetEditSubscription(
     targetId: Target.Id
   ): Resource[F, fs2.Stream[F, TargetEditSubscription.Data]] =
     TargetEditSubscription
       .subscribe[F](targetId)
       .raiseFirstNoDataError
       .ignoreGraphQLErrors
+
+  def searchTargetsByNamePrefix(
+    programId: Program.Id,
+    name:      NonEmptyString
+  ): F[List[TargetSearchResult]] =
+    TargetNameQuery[F]
+      .query(programId)
+      .raiseGraphQLErrors
+      .map: data =>
+        data.targetGroup.matches
+          .map(mtch => TargetSearchResult(mtch.target.toOptId, none))
+          // TODO Remove the filter when the API has a name pattern query
+          .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
+          .distinct

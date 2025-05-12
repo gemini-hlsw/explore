@@ -166,7 +166,7 @@ object ExploreLayout:
             UserInsertMutation[IO].execute(vault.user.id.toString.assign).start.void
           )
 
-        val userVault = view.zoom(RootModel.vault)
+        val userVault: View[Option[UserVault]] = view.zoom(RootModel.vault)
 
         React.Fragment(
           Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),

@@ -3,8 +3,8 @@
 
 package explore.services
 
+import cats.effect.Async
 import cats.effect.Resource
-import cats.effect.Sync
 import cats.implicits.*
 import clue.StreamingClient
 import clue.data.Input
@@ -16,6 +16,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ConfigurationRequestWithObsIds
 import explore.model.ExecutionOffsets
 import explore.model.Observation
+import explore.utils.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Group
@@ -35,8 +36,9 @@ import queries.common.ObsQueriesGQL.*
 import queries.common.TargetQueriesGQL.SetGuideTargetName
 
 import java.time.Instant
+import scala.concurrent.duration.*
 
-trait OdbObservationApiImpl[F[_]: Sync](using StreamingClient[F, ObservationDB])
+trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB])
     extends OdbObservationApi[F]:
   def updateObservations(input: UpdateObservationsInput): F[Unit] =
     UpdateObservationMutation[F]
@@ -362,3 +364,4 @@ trait OdbObservationApiImpl[F[_]: Sync](using StreamingClient[F, ObservationDB])
       .subscribe[F](obsId.toObservationEditInput)
       .raiseFirstNoDataError
       .ignoreGraphQLErrors
+      .map(_.throttle(5.seconds)) // TODO Do we want this in all subscriptions? Parametrize timeout?

@@ -5,11 +5,9 @@ package explore.proposal
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.*
 import crystal.react.*
 import explore.*
-import explore.common.ProposalOdbExtensions.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.AttachmentList
@@ -19,6 +17,7 @@ import explore.model.ProgramTimeRange
 import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.layout.LayoutsMap
+import explore.services.OdbProposalApi
 import explore.syntax.ui.*
 import explore.undo.*
 import explore.utils.*
@@ -32,8 +31,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Image
 import lucuma.react.primereact.Message
-import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.LucumaStyles
 import lucuma.ui.Resources
@@ -41,7 +38,6 @@ import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.sso.UserVault
 import org.typelevel.log4cats.Logger
-import queries.common.ProposalQueriesGQL.*
 
 case class ProposalTabContents(
   programId:                Program.Id,
@@ -63,19 +59,10 @@ object ProposalTabContents:
   private def createProposal(
     programId:      Program.Id,
     programDetails: View[ProgramDetails]
-  )(using FetchClient[IO, ObservationDB], Logger[IO], ToastCtx[IO]): Callback =
+  )(using odbApi: OdbProposalApi[IO])(using Logger[IO], ToastCtx[IO]): Callback =
     val proposal = Proposal.Default
     programDetails.zoom(ProgramDetails.proposal).set(proposal.some) >>
-      CreateProposalMutation[IO]
-        .execute:
-          CreateProposalInput(
-            programId = programId,
-            SET = proposal.toInput
-          )
-        .raiseGraphQLErrors
-        .toastErrors
-        .void
-        .runAsync
+      odbApi.createProposal(programId, proposal).toastErrors.runAsync
 
   private val component = ScalaFnComponent[Props]: props =>
     for {

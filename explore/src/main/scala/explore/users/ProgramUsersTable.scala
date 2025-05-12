@@ -48,7 +48,6 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.react.given
@@ -56,8 +55,6 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
-import queries.common.InvitationQueriesGQL.RevokeInvitationMutation
-import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
 import scala.collection.immutable.SortedSet
 
@@ -233,8 +230,8 @@ object ProgramUsersTable:
   )(using ctx: AppContext[IO]): VdomNode =
     import ctx.given
 
-    val action =
-      DeleteProgramUser[IO].execute(programUserId.toDeleteInput) *>
+    val action: IO[Unit] =
+      ctx.odbApi.deleteProgramUser(programUserId) *>
         users.mod(_.filterNot(_.id === programUserId)).to[IO]
 
     val delete = deleteConfirmation(
@@ -277,7 +274,7 @@ object ProgramUsersTable:
     import ctx.given
 
     val action: IO[Unit] =
-      RevokeInvitationMutation[IO].execute(invitation.id) *>
+      ctx.odbApi.revokeUserInvitation(invitation.id) *>
         programUser.zoom(ProgramUser.invitations).mod(_.filterNot(_.id === invitation.id)).to[IO]
 
     val revoke: Callback =

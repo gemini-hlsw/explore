@@ -7,19 +7,16 @@ import cats.Order
 import cats.data.NonEmptyList
 import cats.effect.Async
 import cats.syntax.all.*
-import clue.FetchClient
-import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.common.SimbadSearch
+import explore.services.OdbTargetApi
 import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enums.CatalogName
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
-import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
-import queries.common.TargetQueriesGQL // TODO How can we avoid this???
 
 sealed trait TargetSource[F[_]]:
   def name: String
@@ -28,25 +25,14 @@ sealed trait TargetSource[F[_]]:
 
 object TargetSource:
   case class FromProgram[F[_]: Async](programId: Program.Id)(using
-    FetchClient[F, ObservationDB]
+    odbApi: OdbTargetApi[F]
   ) extends TargetSource[F]:
     val name: String = s"Program $programId"
 
     val existing: Boolean = true
 
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
-      List(
-        TargetQueriesGQL
-          .TargetNameQuery[F]
-          .query(programId)
-          .raiseGraphQLErrors
-          .map: data =>
-            data.targetGroup.matches
-              .map(mtch => TargetSearchResult(mtch.target.toOptId, none))
-              // TODO Remove the filter when the API has a name pattern query
-              .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
-              .distinct
-      )
+      List(odbApi.searchTargetsByNamePrefix(programId, name))
 
     override def toString: String = programId.toString
 
