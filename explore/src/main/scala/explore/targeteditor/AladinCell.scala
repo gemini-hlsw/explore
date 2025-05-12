@@ -324,7 +324,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                  ).mapN { (positions, base, obsModeType, agsState, candidates) =>
 
                                    val params = obsModeType match {
-                                     case ObservingModeType.Flamingos2LongSlit =>
+                                     case ObservingModeType.Flamingos2LongSlit                                    =>
                                        val fpu = observingMode.collect { case m: BasicConfiguration.F2LongSlit =>
                                          m.fpu
                                        }
@@ -339,6 +339,8 @@ object AladinCell extends ModelOptics with AladinCommon:
                                        val fpu: Option[Either[GmosNorthFpu, GmosSouthFpu]] =
                                          observingMode.flatMap(_.gmosFpuAlternative)
                                        AgsParams.GmosAgsParams(fpu, PortDisposition.Side).some
+                                     case ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging =>
+                                       throw new NotImplementedError("Gmos Imaging not implemented")
                                    }
 
                                    val request: Option[AgsMessage.AgsRequest] =

@@ -162,6 +162,8 @@ object AladinContainer extends AladinCommon {
                   props.selectedGuideStar,
                   candidatesVisibilityCss
                 )
+              case ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging   =>
+                throw new NotImplementedError("Gmos Imaging not implemented")
             }
           }
         // resize detector
