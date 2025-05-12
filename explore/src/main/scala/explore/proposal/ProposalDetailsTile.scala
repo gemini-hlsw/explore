@@ -10,7 +10,6 @@ import cats.syntax.all.*
 import clue.*
 import clue.data.Input
 import clue.data.syntax.*
-import crystal.Pot
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.auto.*
@@ -48,6 +47,7 @@ import lucuma.core.model.IntPercent
 import lucuma.core.model.SiteCoordinatesLimits
 import lucuma.core.model.ZeroTo100
 import lucuma.core.syntax.all.*
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.core.validation.*
@@ -62,18 +62,18 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.syntax.pot.*
 import org.typelevel.log4cats.Logger
 import spire.std.any.*
 
 case class ProposalDetailsBody(
-  detailsAligner:    Aligner[ProgramDetails, ProgramPropertiesInput],
-  proposalAligner:   Aligner[Proposal, ProposalPropertiesInput],
-  timeEstimateRange: Pot[Option[ProgramTimeRange]],
-  cfps:              List[CallForProposal],
-  readonly:          Boolean
+  detailsAligner:  Aligner[ProgramDetails, ProgramPropertiesInput],
+  proposalAligner: Aligner[Proposal, ProposalPropertiesInput],
+  cfps:            List[CallForProposal],
+  readonly:        Boolean
 ) extends ReactFnProps(ProposalDetailsBody.component):
-  val proposal: Proposal = proposalAligner.get
+  val proposal: Proposal                                           = proposalAligner.get
+  val timeEstimateRange: CalculatedValue[Option[ProgramTimeRange]] =
+    detailsAligner.get.programTimes.timeEstimateRange
 
 object ProposalDetailsBody:
   private type Props = ProposalDetailsBody
@@ -120,18 +120,20 @@ object ProposalDetailsBody:
       ExploreStyles.PartnerSplitData
     )
 
-  private def timeSplit(ps: PartnerSplit, total: TimeSpan) =
-    val splitTime = ps.percent.value * toHours(total).value / 100
+  private def timeSplit(ps: PartnerSplit, total: CalculatedValue[TimeSpan]) =
+    val splitTime = ps.percent.value * toHours(total.value).value / 100
     val timeText  = formatHours(splitTime)
-    <.span(timeText, ExploreStyles.PartnerSplitData)
+    <.span(timeText, ExploreStyles.PartnerSplitData, total.staleClass).withOptionalTooltip(
+      total.staleTooltip
+    )
 
-  private def minimumTime(pct: IntPercent, total: TimeSpan) =
-    val time     = pct.value * toHours(total).value / 100
+  private def minimumTime(pct: IntPercent, total: CalculatedValue[TimeSpan]) =
+    val time     = pct.value * toHours(total.value).value / 100
     val timeText = formatHours(time)
     <.div(
       ExploreStyles.PartnerSplitsGridMinPctItem,
       ExploreStyles.PartnerSplitsGridMinPct,
-      <.span(timeText)
+      <.span(timeText, total.staleClass).withOptionalTooltip(total.staleTooltip)
     )
 
   private def categoryTag(category: TacCategory): String = Enumerated[TacCategory].tag(category)
@@ -225,10 +227,12 @@ object ProposalDetailsBody:
     val totalTimeView: Option[View[TimeSpan]] =
       proposalTypeView.toOptionView.map(_.zoom(ProposalType.totalTime).toOptionView).flatten
 
-    val minExecutionPot: Pot[TimeSpan] = props.timeEstimateRange.map(_.map(_.minimum.value).orEmpty)
-    val maxExecutionPot: Pot[TimeSpan] = props.timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
+    val minExecution: CalculatedValue[TimeSpan] =
+      props.timeEstimateRange.map(_.map(_.minimum.value).orEmpty)
+    val maxExecution: CalculatedValue[TimeSpan] =
+      props.timeEstimateRange.map(_.map(_.maximum.value).orEmpty)
 
-    val areTimesSame = minExecutionPot.toOption === maxExecutionPot.toOption
+    val areTimesSame = minExecution.value === maxExecution.value
 
     val (maxTimeLabel, minTimeLabel) =
       props.proposalAligner.get.proposalType match {
@@ -247,7 +251,7 @@ object ProposalDetailsBody:
         inputClass = ExploreStyles.PartnerSplitsGridMinPct
       )
 
-    def timeSplits(total: TimeSpan) =
+    def timeSplits(total: CalculatedValue[TimeSpan]) =
       val tagmod = partnerSplitsView.foldMap(_.get) match {
         case a if a.isEmpty => TagMod.empty
         case splits         =>
@@ -258,22 +262,18 @@ object ProposalDetailsBody:
 
     val timeFields = if (areTimesSame) {
       // If min and max time are the same we only show one line
-      val validTime =
-        maxExecutionPot.isPending || maxExecutionPot.toOption.exists(_ > TimeSpan.Zero)
+      val validTime = maxExecution.value > TimeSpan.Zero
       if (validTime) {
         React.Fragment(
           FormStaticData(
-            value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
+            value = formatHours(toHours(maxExecution.value)),
             label = "Prog. Time",
-            id = "programTime"
-          ),
-          maxExecutionPot.renderPot(
-            valueRender = maxExecutionTime =>
-              React.Fragment(
-                timeSplits(maxExecutionTime),
-                minimumPct1View.map(r => minimumTime(r.get, maxExecutionTime))
-              ),
-            pendingRender = React.Fragment(<.span(), <.span())
+            id = "programTime",
+            tooltip = maxExecution.staleTooltip
+          )(maxExecution.staleClass),
+          React.Fragment(
+            timeSplits(maxExecution),
+            minimumPct1View.map(r => minimumTime(r.get, maxExecution))
           )
         )
       } else
@@ -289,31 +289,25 @@ object ProposalDetailsBody:
       React.Fragment(
         // The second partner splits row, for maximum times - is always there
         FormStaticData(
-          value = maxExecutionPot.orSpinner(t => formatHours(toHours(t))),
+          value = formatHours(toHours(maxExecution.value)),
           label = maxTimeLabel,
-          id = "maxTime"
-        ),
-        maxExecutionPot.renderPot(
-          valueRender = maxExecutionTime =>
-            React.Fragment(
-              timeSplits(maxExecutionTime),
-              minimumPct1View.map(r => minimumTime(r.get, maxExecutionTime))
-            ),
-          pendingRender = React.Fragment(<.span(), <.span())
+          id = "maxTime",
+          tooltip = maxExecution.staleTooltip
+        )(maxExecution.staleClass),
+        React.Fragment(
+          timeSplits(maxExecution),
+          minimumPct1View.map(r => minimumTime(r.get, maxExecution))
         ),
         // The third partner splits row, for minimum times - is always there
         FormStaticData(
-          value = minExecutionPot.orSpinner(t => formatHours(toHours(t))),
+          value = formatHours(toHours(minExecution.value)),
           label = minTimeLabel,
-          id = "maxTime"
-        ),
-        minExecutionPot.renderPot(
-          valueRender = minExecutionTime =>
-            React.Fragment(
-              timeSplits(minExecutionTime),
-              minimumPct1View.map(r => minimumTime(r.get, minExecutionTime))
-            ),
-          pendingRender = React.Fragment(<.span(), <.span())
+          id = "maxTime",
+          tooltip = minExecution.staleTooltip
+        )(minExecution.staleClass),
+        React.Fragment(
+          timeSplits(minExecution),
+          minimumPct1View.map(r => minimumTime(r.get, minExecution))
         )
       )
     }
@@ -415,11 +409,11 @@ object ProposalDetailsBody:
 
                 React.Fragment(
                   <.div(totalTimeEntry),
-                  timeSplits(tt),
+                  timeSplits(tt.asReady),
                   <.div(
                     minimumPct2View
                       .map(makeMinimumPctInput(_, "min-pct-2".refined))
-                      .orElse(minimumPct1View.map(v => minimumTime(v.get, tt)))
+                      .orElse(minimumPct1View.map(v => minimumTime(v.get, tt.asReady)))
                       .getOrElse(EmptyVdom)
                   )
                 )

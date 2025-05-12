@@ -4,7 +4,6 @@
 package explore.programs
 
 import cats.syntax.all.*
-import crystal.Pot
 import crystal.react.View
 import crystal.react.syntax.effect.*
 import explore.components.ui.ExploreStyles
@@ -22,14 +21,13 @@ import lucuma.refined.*
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.FormInfo
 import lucuma.ui.primereact.given
-import lucuma.ui.syntax.all.*
 
 case class ProgramDetailsTile(
   programId:         Program.Id,
   programDetails:    View[ProgramDetails],
-  programTimes:      Pot[ProgramTimes],
   userIsReadonlyCoi: Boolean
-) extends ReactFnProps(ProgramDetailsTile)
+) extends ReactFnProps(ProgramDetailsTile):
+  val programTimes: ProgramTimes = programDetails.get.programTimes
 
 object ProgramDetailsTile
     extends ReactFnComponent[ProgramDetailsTile](props =>
@@ -55,7 +53,7 @@ object ProgramDetailsTile
           ),
           <.div(
             TimeAwardTable(details.allocations),
-            props.programTimes.renderPot(TimeAccountingTable(_, details.allocations))
+            TimeAccountingTable(props.programTimes, details.allocations)
           ),
           <.div(ExploreStyles.ProgramDetailsInfoArea)(
             SupportUsers(

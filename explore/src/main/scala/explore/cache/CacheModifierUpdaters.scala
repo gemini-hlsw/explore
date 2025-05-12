@@ -5,7 +5,6 @@ package explore.cache
 
 import cats.Order.given
 import cats.syntax.all.*
-import crystal.syntax.*
 import explore.givens.given
 import explore.model.GroupList
 import explore.model.Observation
@@ -62,16 +61,13 @@ trait CacheModifierUpdaters {
               else
                 observations - obsId
 
-        val programTimesReset: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.programTimesPot.replace(pending)
-
         val obsExecutionReset: ProgramSummaries => ProgramSummaries =
           ProgramSummaries.obsExecutionPots.modify: oem =>
             if (isPresentInServer) oem.markStale(obsId)
             else oem.removed(obsId)
 
         ifPresentInServerOrLocally:
-          obsUpdate >>> programTimesReset >>> obsExecutionReset
+          obsUpdate >>> obsExecutionReset
       .getOrElse:
         if (observationEdit.editType === EditType.DeletedCal)
           ProgramSummaries.observations.modify(_ - obsId)
@@ -106,15 +102,7 @@ trait CacheModifierUpdaters {
                   case _          => _ + (groupId -> group)
             mod(groupList)
 
-        val groupTimeRangePotsReset: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.groupTimeRangePots
-            .modify:
-              if isPresentInServer then _.markStale(groupId)
-              else _.removed(groupId)
-            .andThen(parentGroupTimeRangeReset(groupId.asRight))
-
-        ifPresentInServerOrLocally:
-          updateGroup >>> groupTimeRangePotsReset
+        ifPresentInServerOrLocally(updateGroup)
       }.orEmpty
 
   protected def modifyAttachments(
@@ -136,15 +124,4 @@ trait CacheModifierUpdaters {
         .modify: crs =>
           crs.updated(cr.id, cr)
 
-  /**
-   * Reset the time range pots for all parent groups of the given id
-   */
-  private def parentGroupTimeRangeReset(
-    id: Either[Observation.Id, Group.Id]
-  ): ProgramSummaries => ProgramSummaries =
-    programSummaries =>
-      val groupIds: List[Group.Id] =
-        programSummaries
-          .parentGroups(id)
-      ProgramSummaries.groupTimeRangePots.modify(_.markStale(groupIds*))(programSummaries)
 }

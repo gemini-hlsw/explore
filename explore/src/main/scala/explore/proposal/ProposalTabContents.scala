@@ -15,7 +15,6 @@ import explore.model.AppContext
 import explore.model.AttachmentList
 import explore.model.CallForProposal
 import explore.model.ProgramDetails
-import explore.model.ProgramTimeRange
 import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.layout.LayoutsMap
@@ -48,7 +47,6 @@ case class ProposalTabContents(
   userVault:                Option[UserVault],
   programDetails:           View[ProgramDetails],
   cfps:                     List[CallForProposal],
-  timeEstimateRange:        Pot[Option[ProgramTimeRange]],
   attachments:              View[AttachmentList],
   undoStacks:               View[UndoStacks[IO, ProgramDetails]],
   layout:                   LayoutsMap,
@@ -119,7 +117,6 @@ object ProposalTabContents:
                 props.userVault,
                 undoCtx,
                 proposal,
-                props.timeEstimateRange,
                 users,
                 props.attachments,
                 props.userVault.map(_.token),

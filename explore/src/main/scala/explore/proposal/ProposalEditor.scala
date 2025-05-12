@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import clue.*
 import clue.data.Input
 import clue.data.syntax.*
-import crystal.Pot
 import crystal.react.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
@@ -23,7 +22,6 @@ import explore.model.CallForProposal
 import explore.model.Constants
 import explore.model.ExploreGridLayouts
 import explore.model.ProgramDetails
-import explore.model.ProgramTimeRange
 import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.ProposalTabTileIds
@@ -58,7 +56,6 @@ case class ProposalEditor(
   userVault:          Option[UserVault],
   undoCtx:            UndoContext[ProgramDetails],
   proposal:           UndoSetter[Proposal],
-  timeEstimateRange:  Pot[Option[ProgramTimeRange]],
   users:              View[List[ProgramUser]],
   attachments:        View[AttachmentList],
   authToken:          Option[NonEmptyString],
@@ -134,7 +131,6 @@ object ProposalEditor
                 ProposalDetailsBody(
                   detailsAligner,
                   proposalAligner,
-                  props.timeEstimateRange,
                   props.cfps,
                   props.proposalOrUserIsReadonly
                 ),

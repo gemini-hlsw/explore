@@ -177,7 +177,6 @@ object Routing:
                 model.rootModel.zoom(RootModel.vault).get,
                 detailsView,
                 model.rootModel.zoom(RootModel.cfps).get.toOption.orEmpty,
-                programSummaries.model.get.programTimesPot.map(_.timeEstimateRange),
                 programSummaries.model.zoom(ProgramSummaries.attachments),
                 model.rootModel.zoom(RootModel.otherUndoStacks).zoom(ModelUndoStacks.forProposal),
                 userPreferences(model.rootModel).proposalTabLayout,
@@ -205,7 +204,6 @@ object Routing:
             programSummaries.get.configsWithoutRequests,
             programSummaries.get.targets,
             model.rootModel.zoom(RootModel.vault).get,
-            programSummaries.get.programTimesPot,
             userPreferences(model.rootModel),
             model.userIsReadonlyCoi,
             model.userIsPi

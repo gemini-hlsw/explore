@@ -86,9 +86,6 @@ object PosAngleConstraintAndObsMode:
 object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
 type ObservationExecutionMap = ObservationExecutionMap.Type
 
-object GroupTimeRangeMap extends PotMap[Group.Id, Option[ProgramTimeRange]]
-type GroupTimeRangeMap = GroupTimeRangeMap.Type
-
 trait PotMap[K, V] extends NewType[Map[K, PerishablePot[V]]]:
   extension (t: Type)
     def getPot(k: K): PerishablePot[V]          =

@@ -128,6 +128,23 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
+  trait ObsCalcSubscription extends GraphQLOperation[ObservationDB]:
+    val document = """
+      subscription($input: ObscalcUpdateInput!) {
+        obscalcUpdate(input: $input) {
+          observationId
+          oldState
+          newState
+          meta:value { existence }
+          editType
+          value {
+            groupId
+          }
+        }
+      }
+    """
+
+  @GraphQL
   trait ResolveObsReference extends GraphQLOperation[ObservationDB]:
     val document = """
       query($input: ObservationReferenceLabel) {

@@ -40,10 +40,7 @@ case class ProgramSummaries(
   groups:                GroupList,
   attachments:           AttachmentList,
   programs:              ProgramInfoList,
-  // TODO: Persihable: make this a PerishablePot[ProgramTimes]
-  programTimesPot:       Pot[ProgramTimes],
   obsExecutionPots:      ObservationExecutionMap,
-  groupTimeRangePots:    GroupTimeRangeMap,
   configurationRequests: ConfigurationRequestList
 ) derives Eq:
   lazy val proposalIsSubmitted =
@@ -297,12 +294,8 @@ object ProgramSummaries:
   val groups: Lens[ProgramSummaries, GroupList]                               = Focus[ProgramSummaries](_.groups)
   val attachments: Lens[ProgramSummaries, AttachmentList]                     = Focus[ProgramSummaries](_.attachments)
   val programs: Lens[ProgramSummaries, ProgramInfoList]                       = Focus[ProgramSummaries](_.programs)
-  val programTimesPot: Lens[ProgramSummaries, Pot[ProgramTimes]]              =
-    Focus[ProgramSummaries](_.programTimesPot)
   val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]       =
     Focus[ProgramSummaries](_.obsExecutionPots)
-  val groupTimeRangePots: Lens[ProgramSummaries, GroupTimeRangeMap]           =
-    Focus[ProgramSummaries](_.groupTimeRangePots)
   val configurationRequests: Lens[ProgramSummaries, ConfigurationRequestList] =
     Focus[ProgramSummaries](_.configurationRequests)
 
@@ -324,7 +317,6 @@ object ProgramSummaries:
     groupList:         List[Group],
     attachments:       List[Attachment],
     programs:          List[ProgramInfo],
-    programTimesPot:   Pot[ProgramTimes],
     configRequests:    List[ConfigurationRequestWithObsIds]
   ): ProgramSummaries =
     ProgramSummaries(
@@ -334,8 +326,6 @@ object ProgramSummaries:
       groupList.toSortedMap(_.id),
       attachments.toSortedMap(_.id),
       programs.toSortedMap(_.id),
-      programTimesPot,
       ObservationExecutionMap(Map.empty),
-      GroupTimeRangeMap(Map.empty),
       configRequests.toSortedMap(_.id)
     )
