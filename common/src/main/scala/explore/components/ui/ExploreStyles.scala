@@ -276,6 +276,7 @@ object ExploreStyles:
   val TargetAladinCell: Css          = Css("target-aladin-cell")
   val TargetAladin: Css              = Css("aladin-target")
   val AladinHelpIcon: Css            = Css("aladin-help-icon")
+  val AladinSurvey: Css              = Css("aladin-survey")
   val TargetAladinDisableMouse: Css  = Css("aladin-target-disable-mouse")
   val TargetForm: Css                = Css("target-form")
   val TargetProperMotionForm: Css    = Css("target-proper-motion-form")
