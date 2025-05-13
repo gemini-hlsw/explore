@@ -27,8 +27,7 @@ private[components] object CustomizedGroupAddon
           .withSize(IconSize.X1),
         ^.onClick --> props.toRevert
       ).withTooltip(
-        content =
-          <.div("Customized!", <.br, s"Orginal: ${props.original}", <.br, "Click to revert."),
+        content = <.div("Customized!", <.br, s"Click to revert to '${props.original}'"),
         position = Tooltip.Position.Left // putting it on the left should always work.
       )
     )
