@@ -20,6 +20,8 @@ import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
+import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.style.Css
@@ -151,3 +153,25 @@ def timeDisplay(
   <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep),
          TimeSpanView(time, tooltip = timeTooltip).withMods(timeClass)
   )
+
+def deriveOptionalEnumerated[A](
+  emptyTag: String
+)(using e: Enumerated[A]): Enumerated[Option[A]] =
+  new Enumerated {
+    val all                        = None :: e.all.map(Some(_))
+    def tag(oa: Option[A]): String = oa match
+      case None    => emptyTag
+      case Some(a) => e.tag(a)
+  }
+
+def deriveOptionalDisplay[A](
+  emptyDisplay: String
+)(using d: Display[A]): Display[Option[A]] =
+  new Display {
+    def shortName(oa: Option[A]): String         = oa match
+      case None    => emptyDisplay
+      case Some(a) => d.shortName(a)
+    override def longName(oa: Option[A]): String = oa match
+      case None    => emptyDisplay
+      case Some(a) => d.longName(a)
+  }
