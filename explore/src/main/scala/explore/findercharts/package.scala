@@ -75,6 +75,7 @@ def attachmentSelector(
       outlined = chartSelector.get.value,
       icon = Icons.Link.withFixedWidth(false).withInverse(chartSelector.get.value),
       onClick = chartSelector.mod(_.flip),
+      disabled = readOnly,
       tooltip = s"Select charts"
     ).tiny.compact,
     FileUploadButton(

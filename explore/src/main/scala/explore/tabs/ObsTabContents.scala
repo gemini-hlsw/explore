@@ -282,14 +282,16 @@ object ObsTabContents extends TwoPanels:
             props.observations.model
               .zoom(indexValue)
               .mapValue(obsView =>
+                // FIXME Find a better mechanism for this.
+                // Something like .mapValue but for UndoContext
+                val obsUndoSetter =
+                  props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify)
                 ObsTabTiles(
                   props.vault,
                   props.programId,
                   props.modes,
                   backButton,
-                  // FIXME Find a better mechanism for this.
-                  // Something like .mapValue but for UndoContext
-                  props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify),
+                  obsUndoSetter,
                   props.programSummaries
                     .zoom((ProgramSummaries.observations, ProgramSummaries.targets).disjointZip),
                   props.programSummaries.model.zoom(ProgramSummaries.attachments),
@@ -301,7 +303,7 @@ object ObsTabContents extends TwoPanels:
                   resize,
                   props.userPreferences.get,
                   props.globalPreferences,
-                  props.readonly || addingObservation.get.value
+                  props.readonly || addingObservation.get.value || obsUndoSetter.get.isExecuted
                 ).withKey(s"${obsId.show}")
               )
           }

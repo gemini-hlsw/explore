@@ -65,7 +65,6 @@ object FinderChartsTile:
               attachmentIds,
               attachments,
               parallacticAngle,
-              readonly,
               tileState
             )
           .orEmpty,
@@ -86,7 +85,6 @@ object FinderChartsTile:
     attachmentIds:    View[SortedSet[Attachment.Id]],
     attachments:      View[AttachmentList],
     parallacticAngle: Option[Angle],
-    readOnly:         Boolean,
     state:            View[TileState]
   ) extends ReactFnProps(Body.component) {
     val chartSelector = state.zoom(TileState.chartSelector)
