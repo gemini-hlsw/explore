@@ -3,7 +3,6 @@
 
 package explore.programs
 
-import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
 import eu.timepit.refined.cats.given
@@ -26,7 +25,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import monocle.Iso
 import org.scalajs.dom
-import queries.common.ProgramQueriesGQL
 
 final case class ProgramNoteEditor(
   note:              UndoSetter[ProgramNote],
@@ -52,7 +50,7 @@ object ProgramNoteEditor
             WHERE = props.note.get.id.toWhereProgramNote.assign,
             SET = ProgramNotePropertiesInput()
           ),
-          ProgramQueriesGQL.UpdateProgramNotesMutation[IO].execute(_).void
+          ctx.odbApi.updateProgramNote(_)
         ).zoom(Iso.id[ProgramNote].asLens, UpdateProgramNotesInput.SET.modify)
 
         val titleView =

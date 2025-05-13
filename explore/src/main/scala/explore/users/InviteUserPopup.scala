@@ -31,7 +31,6 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
-import queries.common.InvitationQueriesGQL.*
 
 case class InviteUserPopup(
   programUser:        View[ProgramUser],
@@ -60,16 +59,10 @@ object InviteUserPopup:
         email:   EmailAddress,
         viewKey: View[Option[String]]
       ): IO[Unit] =
-        (createInviteStatus.set(CreateInviteStatus.Running).to[IO] *>
-          CreateInviteMutation[IO].execute(
-            props.programUserId,
-            email.value.value
-          )).raiseGraphQLErrors.attempt
-          .flatMap:
-            case Left(e)  =>
-              Logger[IO].error(e)("Error creating invitation") *>
-                createInviteStatus.set(CreateInviteStatus.Error).to[IO]
-            case Right(r) =>
+        createInviteStatus.set(CreateInviteStatus.Running).to[IO] >>
+          ctx.odbApi
+            .createUserInvitation(props.programUserId, email)
+            .flatMap: result =>
               // set the fallback email address of the user to this email if it is
               // different from the calculated email address of the user.
               val setEmail: IO[Unit] =
@@ -83,11 +76,14 @@ object InviteUserPopup:
 
               props.programUser
                 .zoom(ProgramUser.invitations)
-                .mod(r.createUserInvitation.invitation :: _)
+                .mod(result.invitation :: _)
                 .to[IO] *>
                 setEmail *>
-                viewKey.set(r.createUserInvitation.key.some).to[IO] *>
+                viewKey.set(result.key.some).to[IO] *>
                 createInviteStatus.set(CreateInviteStatus.Done).to[IO]
+            .handleErrorWith: e =>
+              Logger[IO].error(e)("Error creating invitation") *>
+                createInviteStatus.set(CreateInviteStatus.Error).to[IO]
 
       OverlayPanel(
         closeOnEscape = true,

@@ -3,14 +3,14 @@
 
 package explore.services
 
-import cats.effect.Sync
+import cats.effect.Async
 import cats.syntax.all.*
 import clue.StreamingClient
 import explore.utils.ToastCtx
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 
-case class OdbApiImpl[F[_]: Sync]()(using
+case class OdbApiImpl[F[_]: Async]()(using
   StreamingClient[F, ObservationDB],
   Logger[F],
   ToastCtx[F]
@@ -22,3 +22,5 @@ case class OdbApiImpl[F[_]: Sync]()(using
     with OdbGroupApiImpl[F]
     with OdbVisitApiImpl[F]
     with OdbSequenceApiImpl[F]
+    with OdbProposalApiImpl[F]
+    with OdbConfigApiImpl[F]

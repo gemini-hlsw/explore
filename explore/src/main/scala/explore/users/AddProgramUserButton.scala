@@ -20,9 +20,7 @@ import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
-import lucuma.schemas.ObservationDB.Types.AddProgramUserInput
 import lucuma.ui.primereact.*
-import queries.common.ProposalQueriesGQL.*
 
 case class AddProgramUserButton(
   programId: Program.Id,
@@ -39,11 +37,8 @@ object AddProgramUserButton
         import ctx.given
 
         def addProgramUser: IO[Unit] =
-          val input = AddProgramUserInput(programId = props.programId, role = props.role)
-          AddProgramUser[IO]
-            .execute(input)
-            .raiseGraphQLErrors
-            .map(_.addProgramUser.programUser)
+          ctx.odbApi
+            .addProgramUser(props.programId, props.role)
             .flatMap(pu => props.users.mod(_ :+ pu).to[IO])
             .switching(isActive.async, IsActive(_))
 
