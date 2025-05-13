@@ -19,7 +19,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.enums.SelectedPanel
 import explore.model.reusability.given
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.observationtree.*
 import explore.plots.ElevationPlotTile
 import explore.plots.ObjectPlotData
@@ -60,7 +60,7 @@ case class ObsTabContents(
   programId:        Program.Id,
   programSummaries: UndoContext[ProgramSummaries],
   userPreferences:  View[UserPreferences],
-  modes:            SpectroscopyModesMatrix,
+  modes:            ScienceModes,
   focused:          Focused,
   searching:        View[Set[Target.Id]],
   expandedGroups:   View[Set[Group.Id]],

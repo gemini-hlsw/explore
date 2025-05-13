@@ -250,7 +250,7 @@ object ExploreLayout:
                     )
                   ),
                   <.div(LayoutStyles.MainGrid)(
-                    ModesCacheController(view.zoom(RootModel.spectroscopyModes).async.mod),
+                    ModesCacheController(view.zoom(RootModel.scienceModes).async.mod),
                     CfpCacheController(view.zoom(RootModel.cfps).async.mod),
                     // This might use the `RoutingInfo.dummyProgramId` if the URL had no
                     // program id in it. But, that's OK, because the list of user

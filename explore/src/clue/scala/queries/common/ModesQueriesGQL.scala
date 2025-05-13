@@ -7,11 +7,12 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import explore.modes.SpectroscopyModeRow
+import explore.modes.ImagingModeRow
 
 object ModesQueriesGQL:
 
   @GraphQL
-  trait SpectroscopyModes extends GraphQLOperation[ObservationDB]:
+  trait ScienceModes extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
       query($$supportedInstruments: [Instrument!]!) {
         spectroscopyConfigOptions(
@@ -61,8 +62,29 @@ object ModesQueriesGQL:
             fpu
           }
         }
+
+        imagingConfigOptions(
+          WHERE: {
+            instrument: {
+              IN: $$supportedInstruments
+            }
+          }
+        ) {
+          instrument
+          adaptiveOptics
+          fov {
+            microarcseconds
+          }
+          gmosNorth {
+            filter
+          }
+          gmosSouth {
+            filter
+          }
+        }
       }
     """
 
     object Data:
       type SpectroscopyConfigOptions = SpectroscopyModeRow
+      type ImagingConfigOptions      = ImagingModeRow

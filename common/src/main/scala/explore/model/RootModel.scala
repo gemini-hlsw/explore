@@ -11,7 +11,7 @@ import crystal.Pot
 import crystal.syntax.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.syntax.ui.*
 import explore.undo.UndoStacks
 import lucuma.core.model.GuestUser
@@ -33,7 +33,7 @@ case class RootModel(
   searchingTarget:      Set[Target.Id] = HashSet.empty,
   userSelectionMessage: Option[NonEmptyString] = none,
   userPreferences:      Pot[UserPreferences] = pending,
-  spectroscopyModes:    Pot[SpectroscopyModesMatrix] = pending,
+  scienceModes:         Pot[ScienceModes] = pending,
   cfps:                 Pot[List[CallForProposal]] = pending,
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
@@ -47,7 +47,7 @@ object RootModel:
   val searchingTarget      = Focus[RootModel](_.searchingTarget)
   val userSelectionMessage = Focus[RootModel](_.userSelectionMessage)
   val userPreferences      = Focus[RootModel](_.userPreferences)
-  val spectroscopyModes    = Focus[RootModel](_.spectroscopyModes)
+  val scienceModes         = Focus[RootModel](_.scienceModes)
   val cfps                 = Focus[RootModel](_.cfps)
   val undoStacks           = Focus[RootModel](_.undoStacks)
   val otherUndoStacks      = Focus[RootModel](_.otherUndoStacks)

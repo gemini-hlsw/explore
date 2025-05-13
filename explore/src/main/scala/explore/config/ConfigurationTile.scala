@@ -36,7 +36,7 @@ import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
 import explore.model.syntax.all.*
 import explore.modes.ItcInstrumentConfig
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.*
@@ -72,7 +72,7 @@ object ConfigurationTile:
     obsConf:                  ObsConfiguration,
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
     revertedInstrumentConfig: Option[ItcInstrumentConfig], // configuration selected if reverted
-    modes:                    SpectroscopyModesMatrix,
+    modes:                    ScienceModes,
     customSedTimestamps:      List[Timestamp],
     allTargets:               TargetList,
     observingModeGroups:      ObservingModeGroupList,
@@ -207,7 +207,7 @@ object ConfigurationTile:
     baseCoordinates:          Option[CoordinatesAtVizTime],
     selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
     revertedInstrumentConfig: Option[ItcInstrumentConfig],
-    modes:                    SpectroscopyModesMatrix,
+    modes:                    ScienceModes,
     customSedTimestamps:      List[Timestamp],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
@@ -410,7 +410,7 @@ object ConfigurationTile:
                         northAligner,
                         specView,
                         revertConfig,
-                        props.modes,
+                        props.modes.spectroscopy,
                         props.sequenceChanged,
                         props.readonly,
                         props.units
@@ -426,7 +426,7 @@ object ConfigurationTile:
                         southAligner,
                         specView,
                         revertConfig,
-                        props.modes,
+                        props.modes.spectroscopy,
                         props.sequenceChanged,
                         props.readonly,
                         props.units
@@ -441,7 +441,7 @@ object ConfigurationTile:
                       f2Aligner,
                       specView,
                       revertConfig,
-                      props.modes,
+                      props.modes.spectroscopy,
                       props.sequenceChanged,
                       props.readonly,
                       props.units,
