@@ -18,12 +18,14 @@ import explore.model.display.given
 import explore.model.enums.WavelengthUnits
 import explore.modes.SpectroscopyModesMatrix
 import explore.syntax.ui.*
-import explore.utils.OptionalEnumerated
+import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.model.Program
+import lucuma.core.util.Display
+import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
@@ -89,8 +91,8 @@ object F2LongslitConfigPanel
           )
           .view(_.orUnassign)
 
-        val optionalEnumReadMode = OptionalEnumerated[F2ReadMode]("Auto")
-        import optionalEnumReadMode.given
+        given Enumerated[Option[F2ReadMode]] = deriveOptionalEnumerated[F2ReadMode]("Auto")
+        given Display[Option[F2ReadMode]]    = deriveOptionalDisplay[F2ReadMode]("Auto")
 
         val deckerView: View[Option[F2Decker]] = props.observingMode
           .zoom(
