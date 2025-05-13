@@ -14,6 +14,7 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ConfigurationRequestWithObsIds
+import explore.model.Execution
 import explore.model.ExecutionOffsets
 import explore.model.Observation
 import explore.utils.*
@@ -32,13 +33,17 @@ import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
+import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
+import queries.common.ProgramSummaryQueriesGQL.AllProgramObservations
+import queries.common.ProgramSummaryQueriesGQL.ObservationExecutionQuery
+import queries.common.ProgramSummaryQueriesGQL.ObservationsWorkflowQuery
 import queries.common.TargetQueriesGQL.SetGuideTargetName
 
 import java.time.Instant
 import scala.concurrent.duration.*
 
-trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB])
+trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB], Logger[F])
     extends OdbObservationApi[F]:
   def updateObservations(input: UpdateObservationsInput): F[Unit] =
     UpdateObservationMutation[F]
@@ -359,9 +364,56 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
 
   def observationEditSubscription(
     obsId: Observation.Id
-  ): Resource[F, fs2.Stream[F, ObservationEditSubscription.Data]] =
+  ): Resource[F, fs2.Stream[F, Unit]] =
     ObservationEditSubscription
       .subscribe[F](obsId.toObservationEditInput)
       .raiseFirstNoDataError
       .ignoreGraphQLErrors
-      .map(_.throttle(5.seconds)) // TODO Do we want this in all subscriptions? Parametrize timeout?
+      .map: // TODO Do we want throttle in all subscriptions? Parametrize throttle timeout?
+        _.void.throttle(5.seconds)
+
+  def programObservationsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ProgramObservationsDelta.Data.ObservationEdit]] =
+    ProgramObservationsDelta
+      .subscribe[F](programId.toObservationEditInput)
+      .logGraphQLErrors(_ => "Error in ProgramObservationsDelta subscription")
+      .map(_.map(_.observationEdit))
+
+  def observationExecution(obsId: Observation.Id): F[Option[Execution]] =
+    ObservationExecutionQuery[F]
+      .query(obsId)
+      .raiseGraphQLErrorsOnNoData
+      .map(_.observation.map(_.execution))
+
+  def allProgramObservations(programId: Program.Id): F[List[Observation]] =
+    drain[F, Observation, Observation.Id, AllProgramObservations.Data.Observations](
+      offset =>
+        AllProgramObservations[F]
+          .query(programId.toWhereObservation, offset.orUnassign)
+          // We need this because we currently get errors for things like having no targets
+          .raiseGraphQLErrorsOnNoData
+          .map(_.observations),
+      _.matches,
+      _.hasMore,
+      _.id
+    )
+
+  def observationWorkflows(
+    whereObservation: WhereObservation
+  ): F[List[ObservationsWorkflowQuery.Data.Observations.Matches]] =
+    drain[
+      F,
+      ObservationsWorkflowQuery.Data.Observations.Matches,
+      Observation.Id,
+      ObservationsWorkflowQuery.Data.Observations
+    ](
+      offset =>
+        ObservationsWorkflowQuery[F]
+          .query(whereObservation, offset.orUnassign)
+          .raiseGraphQLErrors
+          .map(_.observations),
+      _.matches,
+      _.hasMore,
+      _.id
+    )
