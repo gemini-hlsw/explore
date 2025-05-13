@@ -93,14 +93,17 @@ object FileUploadButton
               )
             ).mini.compact
           ),
-          <.input.withRef(ref)(
-            ExploreStyles.FileUpload,
-            ^.tpe      := "file",
-            ^.onChange ==> uploadFile,
-            ^.id       := s"attachment-upload-$id",
-            ^.name     := "file",
-            ^.accept   := props.attachmentType.accept,
-            ^.readOnly := props.readonly
-          )
+          if (props.readonly)
+            EmptyVdom
+          else
+            <.input.withRef(ref)(
+              ExploreStyles.FileUpload,
+              ^.tpe      := "file",
+              ^.onChange ==> uploadFile,
+              ^.id       := s"attachment-upload-$id",
+              ^.name     := "file",
+              ^.accept   := props.attachmentType.accept,
+              ^.readOnly := props.readonly
+            )
         )
     )
