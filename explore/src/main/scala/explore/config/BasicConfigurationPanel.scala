@@ -116,10 +116,9 @@ private object BasicConfigurationPanel:
                                                  props.calibrationRole
                   )
                 )
-            else <.div("imaging")
-            // TODO Pending reinstate
-            // ImagingConfigurationPanel(imaging)
-            //   .unless(isSpectroscopy)
+            else
+              ImagingConfigurationPanel(imaging, true, props.calibrationRole)
+                .unless(isSpectroscopy)
           ),
           props.spectroscopyView
             .mapValue(spectroscopy =>
@@ -145,5 +144,5 @@ private object BasicConfigurationPanel:
               severity = Button.Severity.Primary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
-          ).when(props.spectroscopyView.get.isDefined && !props.readonly)
+          ).when(isSpectroscopy && !props.readonly)
         )

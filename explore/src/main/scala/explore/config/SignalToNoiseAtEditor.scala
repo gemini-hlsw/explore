@@ -4,19 +4,18 @@
 package explore.config
 
 import crystal.react.View
-import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.config.ConfigurationFormats.*
 import explore.itc.renderRequiredForITCIcon
 import explore.model.Constants
-import explore.model.ExploreModelValidators
 import explore.model.SignalToNoiseModeInfo
 import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
-import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
@@ -31,39 +30,26 @@ case class SignalToNoiseAtEditor(
   readonly:        Boolean,
   units:           WavelengthUnits,
   calibrationRole: Option[CalibrationRole]
-) extends ReactFnProps[SignalToNoiseAtEditor](SignalToNoiseAtEditor.component)
+) extends ReactFnProps(SignalToNoiseAtEditor)
 
-object SignalToNoiseAtEditor extends ConfigurationFormats {
-  private type Props = SignalToNoiseAtEditor
-
-  protected val component =
-    ScalaFnComponent[Props] { props =>
+object SignalToNoiseAtEditor
+    extends ReactFnComponent[SignalToNoiseAtEditor](props =>
       val signalToNoise   = props.options.zoom(SignalToNoiseModeInfo.value)
       val signalToNoiseAt = props.options.zoom(SignalToNoiseModeInfo.at)
 
       React.Fragment(
-        FormLabel("signal-to-noise".refined)(
-          "Signal / Noise",
-          HelpIcon("configuration/signal_to_noise.md".refined)
+        SignalToNoiseInput(
+          signalToNoise,
+          props.calibrationRole,
+          props.readonly
         ),
-        FormInputTextView(
-          id = "signal-to-noise".refined,
-          value = signalToNoise,
-          groupClass = ExploreStyles.WarningInput.when_(signalToNoise.get.isEmpty),
-          validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
-          postAddons =
-            signalToNoise.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
-          changeAuditor = ChangeAuditor.posBigDecimal(1.refined).optional,
-          disabled = props.readonly
-        ).withMods(^.autoComplete.off),
         FormLabel("signal-to-noise-at".refined)(Constants.SignalToNoiseAtLabel),
         FormInputTextView(
           id = "signal-to-noise-at".refined,
           groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-          postAddons =
-            signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
-              Nil
-            ),
+          postAddons = signalToNoiseAt.get.fold(
+            List(props.calibrationRole.renderRequiredForITCIcon)
+          )(_ => Nil),
           value = signalToNoiseAt,
           units = props.units.symbol,
           validFormat = props.units.toInputWedge,
@@ -71,5 +57,4 @@ object SignalToNoiseAtEditor extends ConfigurationFormats {
           disabled = props.readonly
         ).clearable(^.autoComplete.off)
       )
-    }
-}
+    )

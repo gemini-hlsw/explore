@@ -117,8 +117,8 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
                   id = "focal-plane-angle".refined,
                   value = focalPlaneAngle,
                   units = "arcsec",
-                  validFormat = slitLengthFormat,
-                  changeAuditor = slitLengthChangeAuditor,
+                  validFormat = angleArcsecsFormat,
+                  changeAuditor = angleArcsecondsChangeAuditor,
                   disabled = p.readonly
                 ).clearable(^.autoComplete.off)
               )

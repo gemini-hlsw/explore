@@ -25,18 +25,18 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.reusability.given
 
 trait ConfigurationFormats:
-  private lazy val slitLengthBaseAuditor = ChangeAuditor
+  private lazy val angleArcsecondsBaseAuditor = ChangeAuditor
     .fromInputValidWedge(ExploreModelValidators.decimalArcsecondsValidWedge)
     .allow(s => s === "0" || s === "0.")
-  lazy val slitLengthChangeAuditor       = slitLengthBaseAuditor
+  lazy val angleArcsecondsChangeAuditor       = angleArcsecondsBaseAuditor
     .decimal(2.refined)
     .optional
 
-  lazy val slitLengthFormat  = ExploreModelValidators.decimalArcsecondsValidWedge.optional
-  lazy val wvMicroInput      = ExploreModelValidators.wavelengthMicroValidWedge.optional
-  lazy val wvNanoInput       = ExploreModelValidators.wavelengthNanoValidWedge.optional
-  lazy val wvDeltaMicroInput = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
-  lazy val wvDeltaNanoInput  = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
+  lazy val angleArcsecsFormat = ExploreModelValidators.decimalArcsecondsValidWedge.optional
+  lazy val wvMicroInput       = ExploreModelValidators.wavelengthMicroValidWedge.optional
+  lazy val wvNanoInput        = ExploreModelValidators.wavelengthNanoValidWedge.optional
+  lazy val wvDeltaMicroInput  = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
+  lazy val wvDeltaNanoInput   = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
 
   extension (u: WavelengthUnits)
     def toAuditor: ChangeAuditor =

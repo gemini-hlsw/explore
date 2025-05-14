@@ -7,11 +7,11 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import crystal.Pot
+import explore.modes.ScienceModes
 import explore.services.OdbConfigApi
 import fs2.Stream
 import japgolly.scalajs.react.*
 import lucuma.react.common.ReactFnProps
-import explore.modes.ScienceModes
 
 case class ModesCacheController(
   modModes: (Pot[ScienceModes] => Pot[ScienceModes]) => IO[Unit]
