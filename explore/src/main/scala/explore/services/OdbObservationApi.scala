@@ -9,6 +9,7 @@ import clue.data.Input
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ConfigurationRequestWithObsIds
+import explore.model.Execution
 import explore.model.ExecutionOffsets
 import explore.model.Observation
 import lucuma.core.enums.ObservationWorkflowState
@@ -22,7 +23,8 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
-import queries.common.ObsQueriesGQL.ObservationEditSubscription
+import queries.common.ObsQueriesGQL.ProgramObservationsDelta
+import queries.common.ProgramSummaryQueriesGQL.ObservationsWorkflowQuery
 
 import java.time.Instant
 
@@ -93,6 +95,12 @@ trait OdbObservationApi[F[_]]:
     obsRef: ObservationReference
   ): F[Option[(Program.Id, Observation.Id)]]
   def sequenceOffsets(obsId:             Observation.Id): F[Option[ExecutionOffsets]]
-  def observationEditSubscription(
-    obsId: Observation.Id
-  ): Resource[F, fs2.Stream[F, ObservationEditSubscription.Data]]
+  def observationEditSubscription(obsId: Observation.Id): Resource[F, fs2.Stream[F, Unit]]
+  def programObservationsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ProgramObservationsDelta.Data.ObservationEdit]]
+  def observationExecution(obsId:        Observation.Id): F[Option[Execution]]
+  def allProgramObservations(programId:  Program.Id): F[List[Observation]]
+  def observationWorkflows(
+    whereObservation: WhereObservation
+  ): F[List[ObservationsWorkflowQuery.Data.Observations.Matches]]

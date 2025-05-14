@@ -4,16 +4,25 @@
 package explore.services
 
 import cats.MonadThrow
+import cats.effect.Resource
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.StreamingClient
+import clue.data.syntax.*
 import clue.model.GraphQLResponse.*
+import explore.model.ConfigurationRequestWithObsIds
 import explore.model.SupportedInstruments
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
+import lucuma.core.model.ConfigurationRequest
+import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.ObservationDB.Types.ConfigurationRequestEditInput
+import org.typelevel.log4cats.Logger
 import queries.common.ModesQueriesGQL
+import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription
+import queries.common.ProgramSummaryQueriesGQL.AllProgramConfigurationRequests
 
-trait OdbConfigApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
+trait OdbConfigApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F])
     extends OdbConfigApi[F]:
   def spectroscopyModes: F[SpectroscopyModesMatrix] =
     ModesQueriesGQL
@@ -25,3 +34,30 @@ trait OdbConfigApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
           u.spectroscopyConfigOptions.zipWithIndex.map: (s, i) =>
             s.copy(id = i.some)
         SpectroscopyModesMatrix(modes)
+
+  def allProgramConfigurationRequests(
+    programId: Program.Id
+  ): F[List[ConfigurationRequestWithObsIds]] =
+    drain[
+      F,
+      ConfigurationRequestWithObsIds,
+      ConfigurationRequest.Id,
+      Option[AllProgramConfigurationRequests.Data.Program.ConfigurationRequests]
+    ](
+      offset =>
+        AllProgramConfigurationRequests[F]
+          .query(programId, offset.orUnassign)
+          .raiseGraphQLErrors
+          .map(_.program.map(_.configurationRequests)),
+      _.foldMap(_.matches),
+      _.fold(false)(_.hasMore),
+      _.id
+    )
+
+  def programConfigurationRequestsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ConfigurationRequestWithObsIds]] =
+    ConfigurationRequestSubscription
+      .subscribe[F](ConfigurationRequestEditInput(programId.assign))
+      .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
+      .map(_.map(_.configurationRequestEdit.configurationRequest).unNone)

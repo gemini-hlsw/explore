@@ -6,8 +6,11 @@ package explore.cache
 import cats.Order.given
 import cats.syntax.all.*
 import explore.givens.given
+import explore.model.Attachment
+import explore.model.ConfigurationRequestWithObsIds
 import explore.model.GroupList
 import explore.model.Observation
+import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
 import lucuma.core.model.Group
@@ -15,10 +18,7 @@ import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
-import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription.Data.ConfigurationRequestEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
-import queries.common.ProgramQueriesGQL.ProgramEditAttachmentSubscription.Data.ProgramEdit as AttachmentProgramEdit
-import queries.common.ProgramQueriesGQL.ProgramInfoDelta.Data.ProgramEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
 
 /**
@@ -106,22 +106,17 @@ trait CacheModifierUpdaters {
       }.orEmpty
 
   protected def modifyAttachments(
-    programEdit: AttachmentProgramEdit
-  ): ProgramSummaries => ProgramSummaries = {
-    val attachments = programEdit.value.attachments.toSortedMap(_.id)
-    ProgramSummaries.attachments.replace(attachments)
-  }
+    attachments: List[Attachment]
+  ): ProgramSummaries => ProgramSummaries =
+    ProgramSummaries.attachments.replace(attachments.toSortedMap(_.id))
 
-  protected def modifyPrograms(programEdit: ProgramEdit): ProgramSummaries => ProgramSummaries =
-    ProgramSummaries.programs
-      .modify(_.updated(programEdit.value.id, programEdit.value))
+  protected def modifyPrograms(programInfo: ProgramInfo): ProgramSummaries => ProgramSummaries =
+    ProgramSummaries.programs.modify(_.updated(programInfo.id, programInfo))
 
   protected def modifyConfigurationRequests(
-    crEdit: ConfigurationRequestEdit
+    cr: ConfigurationRequestWithObsIds
   ): ProgramSummaries => ProgramSummaries =
-    crEdit.configurationRequest.foldMap: cr =>
-      ProgramSummaries.configurationRequests
-        .modify: crs =>
-          crs.updated(cr.id, cr)
+    ProgramSummaries.configurationRequests.modify: crs =>
+      crs.updated(cr.id, cr)
 
 }

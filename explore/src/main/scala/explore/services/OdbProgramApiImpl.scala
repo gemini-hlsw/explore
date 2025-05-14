@@ -4,18 +4,21 @@
 package explore.services
 
 import cats.MonadThrow
+import cats.effect.Resource
 import cats.implicits.*
-import clue.FetchClient
+import clue.StreamingClient
 import clue.data.syntax.*
 import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.Attachment
+import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramNote
+import explore.model.ProgramTimes
 import explore.model.ProgramUser
 import explore.model.RedeemInvitationResult
 import lucuma.core.data.EmailAddress
 import lucuma.core.enums.ConfigurationRequestStatus
-import lucuma.core.model.Attachment
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
@@ -24,13 +27,18 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
+import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.*
 import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data.CreateUserInvitation
 import queries.common.ProgramQueriesGQL.*
+import queries.common.ProgramSummaryQueriesGQL.AllProgramAttachments
+import queries.common.ProgramSummaryQueriesGQL.AllPrograms
+import queries.common.ProgramSummaryQueriesGQL.ProgramDetailsQuery
+import queries.common.ProgramSummaryQueriesGQL.ProgramTimesQuery
 import queries.common.ProposalQueriesGQL.AddProgramUser
 import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
-trait OdbProgramApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
+trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F])
     extends OdbProgramApi[F]:
 
   def createProgram(name: Option[NonEmptyString]): F[ProgramInfo] =
@@ -230,3 +238,56 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
       .execute(key)
       .raiseGraphQLErrors
       .map(_.redeemUserInvitation.invitation)
+
+  def programTimes(programId: Program.Id): F[Option[ProgramTimes]] =
+    ProgramTimesQuery[F]
+      .query(programId)
+      .raiseGraphQLErrors
+      .map(_.program)
+
+  def programDetails(programId: Program.Id): F[Option[ProgramDetails]] =
+    ProgramDetailsQuery[F]
+      .query(programId)
+      .raiseGraphQLErrors
+      .map(_.program)
+
+  val allPrograms: F[List[ProgramInfo]] =
+    drain[F, ProgramInfo, Program.Id, AllPrograms.Data.Programs](
+      offset =>
+        AllPrograms[F]
+          .query(offset.orUnassign)
+          .raiseGraphQLErrors
+          .map(_.programs),
+      _.matches,
+      _.hasMore,
+      _.id
+    )
+
+  def allProgramAttachments(programId: Program.Id): F[List[Attachment]] =
+    AllProgramAttachments[F]
+      .query(programId)
+      .raiseGraphQLErrors
+      .map:
+        _.program.fold(List.empty)(_.attachments)
+
+  def programEditsSubscription(programId: Program.Id): Resource[F, fs2.Stream[F, ProgramDetails]] =
+    ProgramEditDetailsSubscription
+      .subscribe[F](programId.toProgramEditInput)
+      .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
+      .map(_.map(_.programEdit.value))
+
+  def programAttachmentsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, List[Attachment]]] =
+    ProgramEditAttachmentSubscription
+      .subscribe[F](programId.toProgramEditInput)
+      .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
+      .map(_.map(_.programEdit.value.attachments))
+
+  def programDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ProgramInfo]] =
+    ProgramInfoDelta
+      .subscribe[F]()
+      .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
+      .map(_.map(_.programEdit.value))
