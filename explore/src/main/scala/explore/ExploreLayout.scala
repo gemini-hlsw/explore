@@ -24,6 +24,7 @@ import explore.shortcuts.*
 import explore.shortcuts.given
 import explore.syntax.ui.*
 import explore.utils.*
+import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.ResolutionWithProps
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -43,18 +44,17 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
+import lucuma.ui.components.SolarProgress
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
-import lucuma.ui.react.given
 import lucuma.ui.layout.LayoutStyles
+import lucuma.ui.react.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
-import fs2.dom.BroadcastChannel
-import lucuma.react.primereact.Dialog
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, RootModelViews]
@@ -188,12 +188,19 @@ object ExploreLayout:
         React.Fragment(
           Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
           globalError.value.foldMap(error =>
-            Dialog(
-              onHide = Callback.empty,
-              visible = true,
-              modal = true,
-              closable = false
-            )(error)
+            React.Fragment(
+              Sidebar(
+                onHide = Callback.empty,
+                visible = true,
+                modal = true,
+                showCloseIcon = false,
+                dismissable = false,
+                position = Sidebar.Position.Bottom,
+                content = error,
+                clazz = ExploreStyles.GlobalErrorDialog
+              ),
+              SolarProgress()
+            )
           ),
           IfLogged[ExploreEvent](
             "Explore".refined,

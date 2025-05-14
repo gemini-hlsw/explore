@@ -15,6 +15,7 @@ import explore.services.OdbApi
 import explore.services.OdbApiImpl
 import explore.utils
 import explore.utils.ToastCtx
+import fs2.concurrent.SignallingRef
 import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -31,7 +32,6 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
 import workers.WorkerClient
-import fs2.concurrent.SignallingRef
 
 case class AppContext[F[_]](
   version:                         NonEmptyString,

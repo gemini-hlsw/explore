@@ -8,11 +8,11 @@ import cats.effect.kernel.Deferred
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.hooks.*
+import fs2.Pipe
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ui.syntax.effect.*
-import fs2.Pipe
 
 trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   private type F[T] = DefaultA[T]
