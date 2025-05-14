@@ -43,7 +43,6 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
       _                  <-
         useResourceOnMount:
           for
-            // _               <- Resource.eval(props.modState(_ => pending)) // Initialize on mount.
             // Start the update fiber. We want subscriptions to start before initial query.
             // This way we don't miss updates.
             // The update fiber will only update once the cache is initialized (via latch).

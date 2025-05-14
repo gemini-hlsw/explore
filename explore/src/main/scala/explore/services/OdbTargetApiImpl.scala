@@ -27,7 +27,7 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProgramSummaryQueriesGQL.AllProgramTargets
 import queries.common.TargetQueriesGQL.*
 
-trait OdbTargetApiImpl[F[_]: Sync](resetCache: String => F[Unit])(using
+trait OdbTargetApiImpl[F[_]: Sync](using
   StreamingClient[F, ObservationDB],
   Logger[F],
   ToastCtx[F]
@@ -41,27 +41,14 @@ trait OdbTargetApiImpl[F[_]: Sync](resetCache: String => F[Unit])(using
       .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
 
   def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
-    // UpdateTargetsMutation[F]
-    //   .execute(input)
-    //   .raiseGraphQLErrors
-    // TODO REMOVE
-    // .flatMap(_ => cats.MonadThrow[F].raiseError(new Throwable("TODO: Remove this error")))
-    cats
-      .MonadThrow[F]
-      .raiseError(new Throwable("TODO: Remove this error"))
-      // END TODO
+    UpdateTargetsMutation[F]
+      .execute(input)
+      .raiseGraphQLErrors
       .void
       .handleErrorWith: t => // TODO Resync data? Revert change?
-        val msg = s"Error updating target [$targetId: ${t.getMessage}]"
+        val msg = s"Error updating target [$targetId]"
         Logger[F].error(t)(msg) >>
-          resetCache(msg) // >> { // messageitem in global somewhere??
-    //   val message =             MessageItem(
-    //     content = <.a(^.onClick --> (Callback.log("HELLO")))(msg),
-    //     severity = Message.Severity.Error,
-    //     sticky = true,
-    //     closable = false
-    //   )
-    // }
+          ToastCtx[F].showToast(msg, Message.Severity.Error)
 
   def setTargetExistence(
     programId: Program.Id,

@@ -15,7 +15,7 @@ case class OdbApiImpl[F[_]: Async](resetCache: String => F[Unit])(using
   Logger[F],
   ToastCtx[F]
 ) extends OdbApi[F]
-    with OdbTargetApiImpl[F](resetCache)
+    with OdbTargetApiImpl[F]
     with OdbAsterismApiImpl[F]
     with OdbProgramApiImpl[F]
     with OdbObservationApiImpl[F]
