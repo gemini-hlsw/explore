@@ -3,14 +3,17 @@
 
 package explore.services
 
+import cats.effect.Resource
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.Attachment
+import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramNote
+import explore.model.ProgramTimes
 import explore.model.ProgramUser
 import explore.model.RedeemInvitationResult
 import lucuma.core.data.EmailAddress
 import lucuma.core.enums.ConfigurationRequestStatus
-import lucuma.core.model.Attachment
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.Program
@@ -55,3 +58,12 @@ trait OdbProgramApi[F[_]]:
   ): F[CreateUserInvitation]
   def revokeUserInvitation(userInvitationId: String): F[Unit]
   def redeemUserInvitation(key:              String): F[RedeemInvitationResult]
+  def programTimes(programId:                Program.Id): F[Option[ProgramTimes]]
+  def programDetails(programId:              Program.Id): F[Option[ProgramDetails]]
+  def allPrograms: F[List[ProgramInfo]]
+  def allProgramAttachments(programId:       Program.Id): F[List[Attachment]]
+  def programEditsSubscription(programId:    Program.Id): Resource[F, fs2.Stream[F, ProgramDetails]]
+  def programAttachmentsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, List[Attachment]]]
+  def programDeltaSubscription(programId:    Program.Id): Resource[F, fs2.Stream[F, ProgramInfo]]

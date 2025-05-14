@@ -4,8 +4,9 @@
 package explore.services
 
 import cats.MonadThrow
+import cats.effect.Resource
 import cats.syntax.all.*
-import clue.FetchClient
+import clue.StreamingClient
 import clue.data.syntax.*
 import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
@@ -14,9 +15,14 @@ import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.schemas.odb.input.*
+import org.typelevel.log4cats.Logger
 import queries.common.GroupQueriesGQL.*
+import queries.common.ProgramQueriesGQL.GroupEditSubscription
+import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
+import queries.common.ProgramSummaryQueriesGQL.GroupTimeRangeQuery
 
-trait OdbGroupApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB]):
+trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F]):
   def moveGroup(
     groupId:          Group.Id,
     parentGroup:      Option[Group.Id],
@@ -63,3 +69,23 @@ trait OdbGroupApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB]):
 
   def undeleteGroup(groupId: Group.Id): F[Unit] =
     updateGroup(groupId, GroupPropertiesInput(existence = Existence.Present.assign))
+
+  def groupTimeRange(groupId: Group.Id): F[Option[GroupTimeRangeQuery.Data.Group]] =
+    GroupTimeRangeQuery[F]
+      .query(groupId)
+      .raiseGraphQLErrors
+      .map(_.group)
+
+  def allProgramGroups(programId: Program.Id): F[List[Group]] =
+    ProgramGroupsQuery[F]
+      .query(programId)
+      .raiseGraphQLErrors
+      .map(_.program.toList.flatMap(_.allGroupElements.map(_.group).flattenOption))
+
+  def programGroupsDeltaEdits(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, GroupEditSubscription.Data.GroupEdit]] =
+    GroupEditSubscription
+      .subscribe[F](programId.toProgramEditInput)
+      .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
+      .map(_.map(_.groupEdit))

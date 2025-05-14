@@ -25,6 +25,7 @@ import lucuma.schemas.ObservationDB.Types.UpdateTargetsInput
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger
+import queries.common.ProgramSummaryQueriesGQL.AllProgramTargets
 import queries.common.TargetQueriesGQL.*
 
 trait OdbTargetApiImpl[F[_]: Sync](using
@@ -109,11 +110,20 @@ trait OdbTargetApiImpl[F[_]: Sync](using
 
   def targetEditSubscription(
     targetId: Target.Id
-  ): Resource[F, fs2.Stream[F, TargetEditSubscription.Data]] =
+  ): Resource[F, fs2.Stream[F, Unit]] =
     TargetEditSubscription
       .subscribe[F](targetId)
       .raiseFirstNoDataError
       .ignoreGraphQLErrors
+      .map(_.void)
+
+  def programTargetsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ProgramTargetsDelta.Data.TargetEdit]] =
+    ProgramTargetsDelta
+      .subscribe[F](programId.toTargetEditInput)
+      .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
+      .map(_.map(_.targetEdit))
 
   def searchTargetsByNamePrefix(
     programId: Program.Id,
@@ -128,3 +138,15 @@ trait OdbTargetApiImpl[F[_]: Sync](using
           // TODO Remove the filter when the API has a name pattern query
           .filter(_.target.name.value.toLowerCase.startsWith(name.value.toLowerCase))
           .distinct
+
+  def allProgramTargets(programId: Program.Id): F[List[TargetWithId]] =
+    drain[F, TargetWithId, Target.Id, AllProgramTargets.Data.Targets](
+      offset =>
+        AllProgramTargets[F]
+          .query(programId.toWhereTarget, offset.orUnassign)
+          .raiseGraphQLErrors
+          .map(_.targets),
+      _.matches,
+      _.hasMore,
+      _.id
+    )

@@ -3,7 +3,16 @@
 
 package explore.services
 
+import cats.effect.Resource
+import explore.model.ConfigurationRequestWithObsIds
 import explore.modes.SpectroscopyModesMatrix
+import lucuma.core.model.Program
 
 trait OdbConfigApi[F[_]]:
   def spectroscopyModes: F[SpectroscopyModesMatrix]
+  def allProgramConfigurationRequests(
+    programId: Program.Id
+  ): F[List[ConfigurationRequestWithObsIds]]
+  def programConfigurationRequestsDeltaSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ConfigurationRequestWithObsIds]]
