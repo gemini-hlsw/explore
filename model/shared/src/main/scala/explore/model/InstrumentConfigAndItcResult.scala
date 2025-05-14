@@ -28,7 +28,7 @@ case class InstrumentConfigAndItcResult(
       case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
         BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cw).some
       case ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)              =>
-        BasicConfiguration.F2LongSlit(disperser, filter, fpu).some
+        BasicConfiguration.Flamingos2LongSlit(disperser, filter, fpu).some
       case _                                                                               => none
 
 object InstrumentConfigAndItcResult:

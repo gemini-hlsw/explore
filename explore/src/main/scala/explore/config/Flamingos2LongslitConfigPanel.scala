@@ -35,11 +35,11 @@ import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
 
-final case class F2LongslitConfigPanel(
+final case class Flamingos2LongslitConfigPanel(
   programId:                Program.Id,
   obsId:                    Observation.Id,
   calibrationRole:          Option[CalibrationRole],
-  observingMode:            Aligner[ObservingMode.F2LongSlit, Flamingos2LongSlitInput],
+  observingMode:            Aligner[ObservingMode.Flamingos2LongSlit, Flamingos2LongSlitInput],
   spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
   revertConfig:             Callback,
   confMatrix:               SpectroscopyModesMatrix,
@@ -47,10 +47,10 @@ final case class F2LongslitConfigPanel(
   readonly:                 Boolean,
   units:                    WavelengthUnits,
   isStaff:                  Boolean
-) extends ReactFnProps(F2LongslitConfigPanel)
+) extends ReactFnProps(Flamingos2LongslitConfigPanel)
 
-object F2LongslitConfigPanel
-    extends ReactFnComponent[F2LongslitConfigPanel](props =>
+object Flamingos2LongslitConfigPanel
+    extends ReactFnComponent[Flamingos2LongslitConfigPanel](props =>
       for
         ctx       <- useContext(AppContext.ctx)
         modeData  <-
@@ -63,40 +63,42 @@ object F2LongslitConfigPanel
         val disableSimpleEdit   =
           disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
-        val disperserView: View[F2Disperser] = props.observingMode
+        val disperserView: View[Flamingos2Disperser] = props.observingMode
           .zoom(
-            ObservingMode.F2LongSlit.disperser,
+            ObservingMode.Flamingos2LongSlit.disperser,
             Flamingos2LongSlitInput.disperser.modify
           )
           .view(_.assign)
 
-        val filterView: View[F2Filter] = props.observingMode
+        val filterView: View[Flamingos2Filter] = props.observingMode
           .zoom(
-            ObservingMode.F2LongSlit.filter,
+            ObservingMode.Flamingos2LongSlit.filter,
             Flamingos2LongSlitInput.filter.modify
           )
           .view(_.assign)
 
-        val fpuView: View[F2Fpu] = props.observingMode
+        val fpuView: View[Flamingos2Fpu] = props.observingMode
           .zoom(
-            ObservingMode.F2LongSlit.fpu,
+            ObservingMode.Flamingos2LongSlit.fpu,
             Flamingos2LongSlitInput.fpu.modify
           )
           .view(_.assign)
 
-        val readModeView: View[Option[F2ReadMode]] = props.observingMode
+        val readModeView: View[Option[Flamingos2ReadMode]] = props.observingMode
           .zoom(
-            ObservingMode.F2LongSlit.explicitReadMode,
+            ObservingMode.Flamingos2LongSlit.explicitReadMode,
             Flamingos2LongSlitInput.explicitReadMode.modify
           )
           .view(_.orUnassign)
 
-        given Enumerated[Option[F2ReadMode]] = deriveOptionalEnumerated[F2ReadMode]("Auto")
-        given Display[Option[F2ReadMode]]    = deriveOptionalDisplay[F2ReadMode]("Auto")
+        given Enumerated[Option[Flamingos2ReadMode]] =
+          deriveOptionalEnumerated[Flamingos2ReadMode]("Auto")
+        given Display[Option[Flamingos2ReadMode]]    =
+          deriveOptionalDisplay[Flamingos2ReadMode]("Auto")
 
-        val deckerView: View[Option[F2Decker]] = props.observingMode
+        val deckerView: View[Option[Flamingos2Decker]] = props.observingMode
           .zoom(
-            ObservingMode.F2LongSlit.explicitDecker,
+            ObservingMode.Flamingos2LongSlit.explicitDecker,
             Flamingos2LongSlitInput.explicitDecker.modify
           )
           .view(_.orUnassign)

@@ -11,7 +11,7 @@ import lucuma.ags.AgsAnalysis
 import lucuma.ags.AgsParams
 import lucuma.ags.AgsPosition
 import lucuma.ags.GuideStarCandidate
-import lucuma.core.enums.F2Fpu
+import lucuma.core.enums.Flamingos2Fpu
 import lucuma.core.enums.GuideProbe
 import lucuma.core.geom.Area
 import lucuma.core.math.Coordinates
@@ -20,7 +20,7 @@ import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
-import lucuma.core.model.sequence.f2.F2FpuMask
+import lucuma.core.model.sequence.flamingos2.Flamingos2FpuMask
 
 // Boopicklers for catalog related types
 trait CatalogPicklers extends CommonPicklers:
@@ -66,21 +66,21 @@ trait CatalogPicklers extends CommonPicklers:
 
   given Pickler[AgsParams.GmosAgsParams] = generatePickler
 
-  given Pickler[F2FpuMask.Imaging.type] = generatePickler
-  given Pickler[F2FpuMask.Builtin]      = generatePickler
-  given Pickler[F2FpuMask.Custom]       = generatePickler
-  given Pickler[F2FpuMask]              =
-    compositePickler[F2FpuMask]
-      .addConcreteType[F2FpuMask.Imaging.type]
-      .addConcreteType[F2FpuMask.Builtin]
-      .addConcreteType[F2FpuMask.Custom]
+  given Pickler[Flamingos2FpuMask.Imaging.type] = generatePickler
+  given Pickler[Flamingos2FpuMask.Builtin]      = generatePickler
+  given Pickler[Flamingos2FpuMask.Custom]       = generatePickler
+  given Pickler[Flamingos2FpuMask]              =
+    compositePickler[Flamingos2FpuMask]
+      .addConcreteType[Flamingos2FpuMask.Imaging.type]
+      .addConcreteType[Flamingos2FpuMask.Builtin]
+      .addConcreteType[Flamingos2FpuMask.Custom]
 
-  given Pickler[AgsParams.F2AgsParams] = generatePickler
+  given Pickler[AgsParams.Flamingos2AgsParams] = generatePickler
 
   given Pickler[AgsParams] =
     compositePickler[AgsParams]
       .addConcreteType[AgsParams.GmosAgsParams]
-      .addConcreteType[AgsParams.F2AgsParams]
+      .addConcreteType[AgsParams.Flamingos2AgsParams]
 
   given Pickler[Area] =
     transformPickler((x: Long) =>

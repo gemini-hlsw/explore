@@ -192,11 +192,11 @@ object all:
 
   extension (bc: BasicConfiguration)
     def centralWavelength: Option[CentralWavelength] = bc match
-      case g: BasicConfiguration.GmosNorthLongSlit =>
+      case g: BasicConfiguration.GmosNorthLongSlit  =>
         g.centralWavelength.some
-      case g: BasicConfiguration.GmosSouthLongSlit =>
+      case g: BasicConfiguration.GmosSouthLongSlit  =>
         g.centralWavelength.some
-      case g: BasicConfiguration.F2LongSlit        =>
+      case g: BasicConfiguration.Flamingos2LongSlit =>
         CentralWavelength(g.filter.wavelength).some
 
   extension (bc: ObservingModeType)

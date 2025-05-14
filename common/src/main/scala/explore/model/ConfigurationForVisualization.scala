@@ -91,7 +91,7 @@ object ConfigurationForVisualization:
         ).some
       case f: ItcInstrumentConfig.Flamingos2Spectroscopy =>
         fromBasicConfiguration(
-          BasicConfiguration.F2LongSlit(f.grating, f.filter, f.fpu),
+          BasicConfiguration.Flamingos2LongSlit(f.grating, f.filter, f.fpu),
           selectedPosAngle
         ).some
       case _                                             => none

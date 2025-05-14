@@ -43,7 +43,7 @@ import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.util.OptionLike.optionInstance
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
-import lucuma.core.geom.f2.f2SlitWidthPixels
+import lucuma.core.geom.flamingos2.flamingos2SlitWidthPixels
 import lucuma.core.geom.gmos.gmosSlitWidthPixels
 import lucuma.core.math.*
 import lucuma.core.math.units.Pixels
@@ -180,7 +180,7 @@ private object SpectroscopyModesTable:
   private def formatFilter(filter: ItcInstrumentConfig#Filter): String = filter match
     case Some(f: GmosSouthFilter) => f.shortName
     case Some(f: GmosNorthFilter) => f.shortName
-    case f: F2Filter              => f.shortName
+    case f: Flamingos2Filter      => f.shortName
     case f: GnirsFilter           => f.shortName
     case _: None.type             => "none"
     case r                        => r.toString
@@ -295,7 +295,7 @@ private object SpectroscopyModesTable:
         val px = gmosSlitWidthPixels(slitWidth.value, ccd.xBin)
         fmtGmos(px, ccd.xBin)
       case ItcInstrumentConfig.Flamingos2Spectroscopy(_, _, _) =>
-        val px = f2SlitWidthPixels(slitWidth.value)
+        val px = flamingos2SlitWidthPixels(slitWidth.value)
         f"$px%2.1f px"
       case _                                                   => ""
     }

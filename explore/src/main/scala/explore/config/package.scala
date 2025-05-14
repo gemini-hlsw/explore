@@ -93,13 +93,13 @@ def useModeData(
   // a reusablity based only on what is used here
   given Reusability[ObservingMode] = Reusability:
     // TODO: change to named tuples with scala 3.7
-    case (x: ObservingMode.GmosNorthLongSlit, y: ObservingMode.GmosNorthLongSlit) =>
+    case (x: ObservingMode.GmosNorthLongSlit, y: ObservingMode.GmosNorthLongSlit)   =>
       x.grating === y.grating && x.filter === y.filter && x.fpu === y.fpu
-    case (x: ObservingMode.GmosSouthLongSlit, y: ObservingMode.GmosSouthLongSlit) =>
+    case (x: ObservingMode.GmosSouthLongSlit, y: ObservingMode.GmosSouthLongSlit)   =>
       x.grating === y.grating && x.filter === y.filter && x.fpu === y.fpu
-    case (x: ObservingMode.F2LongSlit, y: ObservingMode.F2LongSlit)               =>
+    case (x: ObservingMode.Flamingos2LongSlit, y: ObservingMode.Flamingos2LongSlit) =>
       x.disperser === y.disperser && x.filter === y.filter && x.fpu === y.fpu
-    case _                                                                        => false
+    case _                                                                          => false
 
   def findMatrixDataFromRow(
     reqsWavelength: Option[Wavelength],
@@ -116,7 +116,7 @@ def useModeData(
               ItcInstrumentConfig.GmosSouthSpectroscopy(rGrating, rFpu, rFilter, _)
             ) if m.grating === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)
-        case (m: ObservingMode.F2LongSlit,
+        case (m: ObservingMode.Flamingos2LongSlit,
               ItcInstrumentConfig.Flamingos2Spectroscopy(rGrating, rFilter, rFpu)
             ) if m.disperser === rGrating && m.filter === rFilter && m.fpu === rFpu =>
           ModeData.build(row, reqsWavelength)

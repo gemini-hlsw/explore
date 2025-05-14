@@ -334,7 +334,7 @@ object ConfigurationTile:
             )
           }
 
-          val optF2Aligner = optModeAligner.flatMap {
+          val optFlamingos2Aligner = optModeAligner.flatMap {
             _.zoomOpt(
               ObservingMode.f2LongSlit,
               modOrAssignAndMap(Flamingos2LongSlitInput())(
@@ -432,9 +432,9 @@ object ConfigurationTile:
                         props.units
                       )
                   ),
-                  // F2 Long Slit
-                  (optF2Aligner, spectroscopyView.asView).mapN((f2Aligner, specView) =>
-                    F2LongslitConfigPanel(
+                  // Flamingos2 Long Slit
+                  (optFlamingos2Aligner, spectroscopyView.asView).mapN((f2Aligner, specView) =>
+                    Flamingos2LongslitConfigPanel(
                       props.programId,
                       props.obsId,
                       props.obsConf.calibrationRole,

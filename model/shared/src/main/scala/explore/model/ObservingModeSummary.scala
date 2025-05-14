@@ -6,9 +6,9 @@ package explore.model
 import cats.kernel.Order
 import cats.syntax.order.*
 import clue.data.syntax.*
-import lucuma.core.enums.F2Disperser
-import lucuma.core.enums.F2Filter
-import lucuma.core.enums.F2Fpu
+import lucuma.core.enums.Flamingos2Disperser
+import lucuma.core.enums.Flamingos2Filter
+import lucuma.core.enums.Flamingos2Fpu
 import lucuma.core.enums.GmosAmpReadMode
 import lucuma.core.enums.GmosNorthFilter
 import lucuma.core.enums.GmosNorthFpu
@@ -46,9 +46,9 @@ enum ObservingModeSummary:
     roi:               GmosRoi
   ) extends ObservingModeSummary
   case Flamingos2LongSlit(
-    grating: F2Disperser,
-    filter:  F2Filter,
-    fpu:     F2Fpu
+    grating: Flamingos2Disperser,
+    filter:  Flamingos2Filter,
+    fpu:     Flamingos2Fpu
   ) extends ObservingModeSummary
 
   def obsModeType: ObservingModeType = this match
@@ -91,7 +91,7 @@ enum ObservingModeSummary:
 object ObservingModeSummary:
   def fromObservingMode(observingMode: ObservingMode): ObservingModeSummary =
     observingMode match
-      case n: ObservingMode.GmosNorthLongSlit =>
+      case n: ObservingMode.GmosNorthLongSlit  =>
         GmosNorthLongSlit(
           n.grating,
           n.filter,
@@ -100,7 +100,7 @@ object ObservingModeSummary:
           n.ampReadMode,
           n.roi
         )
-      case s: ObservingMode.GmosSouthLongSlit =>
+      case s: ObservingMode.GmosSouthLongSlit  =>
         GmosSouthLongSlit(
           s.grating,
           s.filter,
@@ -109,7 +109,7 @@ object ObservingModeSummary:
           s.ampReadMode,
           s.roi
         )
-      case f: ObservingMode.F2LongSlit        =>
+      case f: ObservingMode.Flamingos2LongSlit =>
         Flamingos2LongSlit(f.disperser, f.filter, f.fpu)
 
   given Display[ObservingModeSummary] = Display.byShortName:

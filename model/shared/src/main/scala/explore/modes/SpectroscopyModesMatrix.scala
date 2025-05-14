@@ -212,9 +212,9 @@ object SpectroscopyModeRow {
 
   private given Decoder[ItcInstrumentConfig.Flamingos2Spectroscopy] = c =>
     for {
-      disperser <- c.downField("disperser").as[F2Disperser]
-      filter    <- c.downField("filter").as[F2Filter]
-      fpu       <- c.downField("fpu").as[F2Fpu]
+      disperser <- c.downField("disperser").as[Flamingos2Disperser]
+      filter    <- c.downField("filter").as[Flamingos2Filter]
+      fpu       <- c.downField("fpu").as[Flamingos2Fpu]
     } yield ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)
 
   given Decoder[SpectroscopyModeRow] = c =>

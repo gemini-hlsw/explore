@@ -203,8 +203,8 @@ case class Observation(
             mode,
             explicitRoi.getOrElse(defaultRoi)
           )
-      case _: ObservingMode.F2LongSlit =>
-        InstrumentOverrides.F2Spectroscopy().some
+      case _: ObservingMode.Flamingos2LongSlit =>
+        InstrumentOverrides.Flamingos2Spectroscopy().some
 
   def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
     (toModeOverride(targets), observingMode)
@@ -217,9 +217,9 @@ case class Observation(
               s: ObservingMode.GmosSouthLongSlit
             ) =>
           ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some).some
-        case (_, f: ObservingMode.F2LongSlit) =>
+        case (_, f: ObservingMode.Flamingos2LongSlit) =>
           ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu).some
-        case _                                => none
+        case _                                        => none
       .flatten
 
   lazy val constraintsSummary: String =

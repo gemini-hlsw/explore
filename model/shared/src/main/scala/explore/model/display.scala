@@ -154,15 +154,15 @@ trait DisplayImplicits:
 
   given Display[GmosRoi] = Display.byShortName(_.longName)
 
-  given Display[F2Disperser] = Display.by(_.shortName, _.longName)
+  given Display[Flamingos2Disperser] = Display.by(_.shortName, _.longName)
 
-  given Display[F2Filter] = Display.by(_.shortName, _.longName)
+  given Display[Flamingos2Filter] = Display.by(_.shortName, _.longName)
 
-  given Display[F2Fpu] = Display.by(_.shortName, _.longName)
+  given Display[Flamingos2Fpu] = Display.by(_.shortName, _.longName)
 
-  given Display[F2ReadMode] = Display.by(_.shortName.capitalize, _.longName)
+  given Display[Flamingos2ReadMode] = Display.by(_.shortName.capitalize, _.longName)
 
-  given Display[F2Decker] = Display.by(_.shortName, _.longName)
+  given Display[Flamingos2Decker] = Display.by(_.shortName, _.longName)
 
   given Display[SequenceType] = Display.byShortName:
     case SequenceType.Acquisition => "Acquisition"
@@ -277,7 +277,7 @@ trait DisplayImplicits:
       val cwvStr    = "%.0fnm".format(cwl.value.toNanometers)
       val filterStr = filter.fold("None")(_.shortName)
       s"GMOS-S ${grating.shortName} @ $cwvStr $filterStr ${fpu.shortName}"
-    case BasicConfiguration.F2LongSlit(disperser, _, fpu)                =>
-      s"F2 ${disperser.shortName} ${fpu.shortName}"
+    case BasicConfiguration.Flamingos2LongSlit(disperser, _, fpu)        =>
+      s"Flamingos2 ${disperser.shortName} ${fpu.shortName}"
 
 object display extends DisplayImplicits
