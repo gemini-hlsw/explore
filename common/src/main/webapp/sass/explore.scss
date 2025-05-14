@@ -502,6 +502,12 @@ thead tr th.sticky-header {
   z-index: 10;
 }
 
+.explore-modes-imaging-filter-filters {
+  grid-column: 1 / span 2;
+  display: flex;
+  justify-content: space-between;
+}
+
 .explore-modes-table-itc-header-cell {
   display: inline-flex;
   align-items: center;

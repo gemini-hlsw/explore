@@ -8,15 +8,17 @@ import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import explore.Icons
+import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ImagingConfigurationOptions
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
 import explore.model.ScienceRequirements.Spectroscopy
+import explore.model.display.given
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -31,8 +33,10 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Tag
+import lucuma.refined.*
 import lucuma.ui.LucumaIcons
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class BasicConfigurationPanel(
@@ -45,7 +49,7 @@ case class BasicConfigurationPanel(
   baseCoordinates:     Option[CoordinatesAtVizTime],
   calibrationRole:     Option[CalibrationRole],
   createConfig:        IO[Unit],
-  confMatrix:          SpectroscopyModesMatrix,
+  confMatrix:          ScienceModes,
   customSedTimestamps: List[Timestamp],
   readonly:            Boolean,
   units:               WavelengthUnits
@@ -68,6 +72,9 @@ private object BasicConfigurationPanel:
 
         val canAccept: Boolean =
           props.selectedConfig.get.flatMap(_.itcResult).flatMap(_.toOption).exists(_.isSuccess)
+
+        val isSpectroscopy: Boolean =
+          mode.get === ScienceMode.Spectroscopy
 
         // wavelength has to be handled special because you can't select a row without a wavelength.
         val message: Option[String] =
@@ -94,37 +101,40 @@ private object BasicConfigurationPanel:
           <.div(
             ExploreStyles.BasicConfigurationForm,
             // TODO Enable when imaging is available
-            // <.label("Mode", HelpIcon("configuration/mode.md".refined)),
-            // FormEnumDropdownView(id = "configuration-mode".refined,
-            //                      value = mode,
-            //                      disabled = props.readonly
-            // ),
-            props.spectroscopyView
-              .mapValue(
-                SpectroscopyConfigurationPanel(props.selectedConfig.get.map(_.instrument),
-                                               _,
-                                               props.readonly,
-                                               props.units,
-                                               props.calibrationRole
+            <.label("Mode", HelpIcon("configuration/mode.md".refined)),
+            FormEnumDropdownView(id = "configuration-mode".refined,
+                                 value = mode,
+                                 disabled = props.readonly
+            ),
+            if (isSpectroscopy)
+              props.spectroscopyView
+                .mapValue(
+                  SpectroscopyConfigurationPanel(props.selectedConfig.get.map(_.instrument),
+                                                 _,
+                                                 props.readonly,
+                                                 props.units,
+                                                 props.calibrationRole
+                  )
                 )
+            else
+              ImagingConfigurationPanel(imaging, true, props.calibrationRole)
+                .unless(isSpectroscopy)
+          ),
+          props.spectroscopyView
+            .mapValue(spectroscopy =>
+              SpectroscopyModesTable(
+                props.userId,
+                props.selectedConfig,
+                spectroscopy.get,
+                props.constraints,
+                if (props.itcTargets.isEmpty) none else props.itcTargets.some,
+                props.baseCoordinates,
+                props.confMatrix.spectroscopy,
+                props.customSedTimestamps,
+                props.units
               )
-            // TODO Pending reinstate
-            // ImagingConfigurationPanel(imaging)
-            //   .unless(isSpectroscopy)
-          ),
-          props.spectroscopyView.mapValue(spectroscopy =>
-            SpectroscopyModesTable(
-              props.userId,
-              props.selectedConfig,
-              spectroscopy.get,
-              props.constraints,
-              if (props.itcTargets.isEmpty) none else props.itcTargets.some,
-              props.baseCoordinates,
-              props.confMatrix,
-              props.customSedTimestamps,
-              props.units
             )
-          ),
+            .when(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             message.map(Tag(_, severity = Tag.Severity.Success)),
             Button(
@@ -134,5 +144,5 @@ private object BasicConfigurationPanel:
               severity = Button.Severity.Primary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
-          ).when(props.spectroscopyView.get.isDefined && !props.readonly)
+          ).when(isSpectroscopy && !props.readonly)
         )

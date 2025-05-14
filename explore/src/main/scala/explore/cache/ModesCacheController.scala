@@ -7,30 +7,27 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import crystal.Pot
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.services.OdbConfigApi
 import fs2.Stream
 import japgolly.scalajs.react.*
 import lucuma.react.common.ReactFnProps
 
 case class ModesCacheController(
-  modModes: (Pot[SpectroscopyModesMatrix] => Pot[SpectroscopyModesMatrix]) => IO[Unit]
+  modModes: (Pot[ScienceModes] => Pot[ScienceModes]) => IO[Unit]
 )(using val odbApi: OdbConfigApi[IO])
     extends ReactFnProps[ModesCacheController](ModesCacheController.component)
-    with CacheControllerComponent.Props[SpectroscopyModesMatrix]:
+    with CacheControllerComponent.Props[ScienceModes]:
   val modState = modModes
 
-object ModesCacheController
-    extends CacheControllerComponent[SpectroscopyModesMatrix, ModesCacheController]:
+object ModesCacheController extends CacheControllerComponent[ScienceModes, ModesCacheController]:
 
   override protected val updateStream: ModesCacheController => Resource[
     IO,
-    Stream[IO, SpectroscopyModesMatrix => SpectroscopyModesMatrix]
+    Stream[IO, ScienceModes => ScienceModes]
   ] =
     _ => Resource.pure(Stream.empty)
 
   override protected val initial: ModesCacheController => IO[
-    (SpectroscopyModesMatrix, fs2.Stream[IO, SpectroscopyModesMatrix => SpectroscopyModesMatrix])
-  ] = props =>
-    props.odbApi.spectroscopyModes
-      .tupleRight(Stream.empty)
+    (ScienceModes, fs2.Stream[IO, ScienceModes => ScienceModes])
+  ] = props => props.odbApi.scienceModes.tupleRight(Stream.empty)

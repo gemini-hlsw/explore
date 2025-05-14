@@ -8,15 +8,16 @@ import cats.Order
 import cats.implicits.*
 import coulomb.*
 import coulomb.policy.spire.standard.given
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.model.enums.ImagingCapabilities
 import lucuma.core.enums.FilterType
 import lucuma.core.enums.GmosNorthFilter
 import lucuma.core.enums.GmosSouthFilter
 import lucuma.core.math.Angle
+import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.units.*
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewBoolean
 import monocle.Focus
 import spire.math.interval.ValueBound
 
@@ -34,20 +35,29 @@ object AvailableFilter {
   given Order[AvailableFilter] = Order.by(x => (x.centralWavelength, x.tag))
 }
 
+object NarrowBand extends NewBoolean
+type NarrowBand = NarrowBand.Type
+object BroadBand extends NewBoolean
+type BroadBand = BroadBand.Type
+
 case class ImagingConfigurationOptions(
   filters:       SortedSet[AvailableFilter],
-  fov:           Option[Angle],
-  signalToNoise: Option[PosBigDecimal],
-  capabilities:  Option[ImagingCapabilities]
+  minimumFov:    Option[Angle],
+  signalToNoise: Option[SignalToNoise],
+  narrowBand:    NarrowBand = NarrowBand.False,
+  broadBand:     BroadBand = BroadBand.False,
+  capabilities:  Option[ImagingCapabilities] = None
 )
 
 object ImagingConfigurationOptions {
   val filters       = Focus[ImagingConfigurationOptions](_.filters)
-  val fov           = Focus[ImagingConfigurationOptions](_.fov)
+  val fov           = Focus[ImagingConfigurationOptions](_.minimumFov)
   val signalToNoise = Focus[ImagingConfigurationOptions](_.signalToNoise)
   val capabilities  = Focus[ImagingConfigurationOptions](_.capabilities)
+  val narrowBand    = Focus[ImagingConfigurationOptions](_.narrowBand)
+  val broadBand     = Focus[ImagingConfigurationOptions](_.broadBand)
 
-  val Default = ImagingConfigurationOptions(SortedSet.empty, none, none, none)
+  val Default = ImagingConfigurationOptions(SortedSet.empty, none, none)
 
   val gmosNorthFilters = Enumerated[GmosNorthFilter].all
     .filterNot(f =>

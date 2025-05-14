@@ -4,130 +4,77 @@
 package explore.config
 
 import cats.implicits.*
-import coulomb.Quantity
 import crystal.react.View
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.cats.*
-import eu.timepit.refined.types.numeric.PosBigDecimal
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model.AvailableFilter
+import explore.config.ConfigurationFormats.*
+import explore.model.BroadBand
 import explore.model.ImagingConfigurationOptions
-import explore.model.enums.ImagingCapabilities
+import explore.model.NarrowBand
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.enums.FilterType
-import lucuma.core.math.units.*
-import lucuma.core.util.Display
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.validation.*
 import lucuma.react.common.Css
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.MultiSelect
-import lucuma.react.primereact.SelectItem
-import lucuma.react.primereact.SelectItemGroup
-import lucuma.react.primereact.SelectItemGroups
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.FormEnumDropdownOptionalView
+import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
-import scala.collection.immutable.SortedSet
-
 case class ImagingConfigurationPanel(
-  options: View[ImagingConfigurationOptions]
-) extends ReactFnProps(ImagingConfigurationPanel.component)
+  options:         View[ImagingConfigurationOptions],
+  readonly:        Boolean,
+  calibrationRole: Option[CalibrationRole]
+) extends ReactFnProps(ImagingConfigurationPanel)
 
-object ImagingConfigurationPanel extends ConfigurationFormats {
-  private type Props = ImagingConfigurationPanel
+object ImagingConfigurationPanel
+    extends ReactFnComponent[ImagingConfigurationPanel](p =>
 
-  private given Display[ImagingCapabilities] = Display.by(_.label, _.label)
-
-  private val byFilterType = ImagingConfigurationOptions.availableOptions.groupBy(_.filterType)
-  private val broadBand    =
-    byFilterType.getOrElse(FilterType.BroadBand, Nil).sortBy(_.centralWavelength)
-  private val narrowBand   =
-    byFilterType.getOrElse(FilterType.NarrowBand, Nil).sortBy(_.centralWavelength)
-  private val combination  =
-    byFilterType.getOrElse(FilterType.Combination, Nil).sortBy(_.centralWavelength)
-
-  private def formatCentral(r: Quantity[PosBigDecimal, Micrometer]): String =
-    if (r.value > 1000)
-      f"${r.value.value.toDouble}%.3f μm"
-    else
-      s"${r.value.toInt} nm"
-
-  private def formatRange(r: Quantity[Int, Nanometer]): String =
-    s"${r.value.toInt} nm"
-
-  extension (filter: AvailableFilter)
-    def toSelectItem: SelectItem[AvailableFilter] =
-      SelectItem(value = filter, label = filter.shortName)
-
-  private val filterGroups: SelectItemGroups[AvailableFilter] = SelectItemGroups(groups =
-    List(
-      SelectItemGroup(label = "Broad Band", options = broadBand.map(_.toSelectItem)),
-      SelectItemGroup(label = "Narrow Band", options = narrowBand.map(_.toSelectItem)),
-      SelectItemGroup(label = "Combination", options = combination.map(_.toSelectItem))
-    )
-  )
-
-  protected val component =
-    ScalaFnComponent[Props] { p =>
-      val filters       = p.options.zoom(ImagingConfigurationOptions.filters)
       val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
       val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
-      val capabilities  = p.options.zoom(ImagingConfigurationOptions.capabilities)
+      val narrowBand    =
+        p.options.zoom(ImagingConfigurationOptions.narrowBand.andThen(NarrowBand.Value))
+      val broadBand     = p.options.zoom(ImagingConfigurationOptions.broadBand.andThen(BroadBand.Value))
 
       ReactFragment(
-        <.label("Filter",
-                HelpIcon("configuration/filter.md".refined),
-                LucumaPrimeStyles.FormFieldLabel
-        ),
-        MultiSelect(
-          id = "filters",
-          value = filters.get.toList,
-          options = filterGroups,
-          clazz = LucumaPrimeStyles.FormField,
-          panelClass = ExploreStyles.ConfigurationFilter,
-          filter = true,
-          showSelectAll = false,
-          display = MultiSelect.Display.Chip,
-          onChange = fs => filters.set(SortedSet.from(fs)),
-          itemTemplate = si =>
-            <.div(
-              <.span(si.value.shortName),
-              <.span(formatCentral(si.value.centralWavelength.toMicrometers)),
-              <.span(si.value.range.map(formatRange))
-            )
-        ),
         FormInputTextView(
           id = "configuration-fov".refined,
           value = fov,
-          label = ReactFragment("Field of View", HelpIcon("configuration/fov.md".refined)),
+          label = ReactFragment("Minimum FoV", HelpIcon("configuration/fov.md".refined)),
           units = "arcsec",
-          validFormat = slitLengthFormat,
-          changeAuditor = slitLengthChangeAuditor
+          validFormat = angleArcsecsFormat,
+          changeAuditor = angleArcsecondsChangeAuditor,
+          disabled = p.readonly
         ),
-        FormInputTextView(
-          id = "signal-to-noise".refined,
-          value = signalToNoise,
-          label = ReactFragment("S / N", HelpIcon("configuration/signal_to_noise.md".refined)),
-          validFormat = InputValidSplitEpi.posBigDecimal.optional,
-          changeAuditor = ChangeAuditor.posBigDecimal().optional
-        ),
-        FormEnumDropdownOptionalView(
-          id = "imaging-capabilities".refined,
-          label = ReactFragment(
-            "Capabilities",
-            HelpIcon("configuration/capabilities.md".refined)
+        <.div(
+          ExploreStyles.ImagingFilterFilters,
+          <.label("Filters",
+                  HelpIcon("configuration/filter.md".refined),
+                  LucumaPrimeStyles.FormFieldLabel
           ),
-          placeholder = "Extra capablities",
-          value = capabilities
+          CheckboxView(
+            id = "narrowband-filter".refined,
+            value = narrowBand,
+            label = "Narrow",
+            disabled = p.readonly
+          ),
+          CheckboxView(
+            id = "broadband-filter".refined,
+            value = broadBand,
+            label = "Broad",
+            disabled = p.readonly
+          )
+        ),
+        SignalToNoiseInput(
+          signalToNoise,
+          p.calibrationRole,
+          p.readonly
         )
       )
-    }
-}
+    )

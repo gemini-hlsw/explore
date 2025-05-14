@@ -3,7 +3,9 @@
 
 package explore.modes
 
+import cats.Eq
 import cats.Order
+import cats.derived.*
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.optics.Wedge
@@ -26,3 +28,9 @@ type ModeSlitSize = ModeSlitSize.Type
 
 object ModeAO extends NewBoolean { inline def AO = True; inline def NoAO = False }
 type ModeAO = ModeAO.Type
+
+case class ScienceModes(spectroscopy: SpectroscopyModesMatrix, imaging: ImagingModesMatrix)
+    derives Eq
+
+object ScienceModes:
+  val empty = ScienceModes(SpectroscopyModesMatrix.empty, ImagingModesMatrix.empty)

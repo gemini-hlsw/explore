@@ -11,7 +11,7 @@ import crystal.react.View
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.*
 import explore.model.Page.*
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.proposal.ProposalTabContents
 import explore.tabs.*
 import explore.undo.UndoContext
@@ -118,10 +118,10 @@ object Routing:
                 programSummaries,
                 userPrefs,
                 model.rootModel
-                  .zoom(RootModel.spectroscopyModes)
+                  .zoom(RootModel.scienceModes)
                   .get
                   .toOption
-                  .getOrElse(SpectroscopyModesMatrix.empty),
+                  .getOrElse(ScienceModes.empty),
                 routingInfo.focused,
                 model.rootModel.zoom(RootModel.searchingTarget),
                 model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),

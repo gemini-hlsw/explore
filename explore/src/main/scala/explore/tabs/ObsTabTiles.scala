@@ -36,7 +36,7 @@ import explore.model.formats.formatPercentile
 import explore.model.layout.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
-import explore.modes.SpectroscopyModesMatrix
+import explore.modes.ScienceModes
 import explore.observationtree.obsEditAttachments
 import explore.plots.ElevationPlotTile
 import explore.plots.ObjectPlotData
@@ -87,7 +87,7 @@ import scala.collection.immutable.SortedSet
 case class ObsTabTiles(
   vault:             Option[UserVault],
   programId:         Program.Id,
-  modes:             SpectroscopyModesMatrix,
+  modes:             ScienceModes,
   backButton:        VdomNode,
   observation:       UndoSetter[Observation],
   obsAndTargets:     UndoSetter[ObservationsAndTargets],

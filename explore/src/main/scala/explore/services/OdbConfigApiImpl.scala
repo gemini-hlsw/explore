@@ -11,6 +11,9 @@ import clue.data.syntax.*
 import clue.model.GraphQLResponse.*
 import explore.model.ConfigurationRequestWithObsIds
 import explore.model.SupportedInstruments
+import explore.modes.ImagingModeRow
+import explore.modes.ImagingModesMatrix
+import explore.modes.ScienceModes
 import explore.modes.SpectroscopyModeRow
 import explore.modes.SpectroscopyModesMatrix
 import lucuma.core.model.ConfigurationRequest
@@ -24,16 +27,22 @@ import queries.common.ProgramSummaryQueriesGQL.AllProgramConfigurationRequests
 
 trait OdbConfigApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F])
     extends OdbConfigApi[F]:
-  def spectroscopyModes: F[SpectroscopyModesMatrix] =
+
+  def scienceModes: F[ScienceModes] =
     ModesQueriesGQL
-      .SpectroscopyModes[F]
+      .ScienceModes[F]
       .query(SupportedInstruments)
       .raiseGraphQLErrors
       .map: u =>
-        val modes: List[SpectroscopyModeRow] =
+        val imgModes: List[ImagingModeRow]       =
+          u.imagingConfigOptions.zipWithIndex.map: (s, i) =>
+            s.copy(id = i.some)
+        val img                                  = ImagingModesMatrix(imgModes)
+        val specModes: List[SpectroscopyModeRow] =
           u.spectroscopyConfigOptions.zipWithIndex.map: (s, i) =>
             s.copy(id = i.some)
-        SpectroscopyModesMatrix(modes)
+        val spec                                 = SpectroscopyModesMatrix(specModes)
+        ScienceModes(spec, img)
 
   def allProgramConfigurationRequests(
     programId: Program.Id

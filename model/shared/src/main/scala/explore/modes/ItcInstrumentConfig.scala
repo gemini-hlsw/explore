@@ -60,7 +60,6 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = filter.isDefined
-
   }
 
   case class GmosSouthSpectroscopy(
@@ -77,6 +76,41 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosSouth
     val site                             = Site.GS
     val hasFilter                        = filter.isDefined
+  }
+
+  case class GmosNorthImaging(
+    filter:                     GmosNorthFilter,
+    override val modeOverrides: Option[InstrumentOverrides.GmosImaging]
+  ) extends ItcInstrumentConfig derives Eq {
+    type Grating  = Unit
+    type Filter   = GmosNorthFilter
+    type FPU      = Unit
+    type Override = InstrumentOverrides.GmosImaging
+
+    val gratingDisplay: Display[Grating] = Display.byShortName(_ => "")
+    val instrument                       = Instrument.GmosNorth
+    val site                             = Site.GN
+    val hasFilter                        = true
+    val grating: Grating                 = ()
+    val fpu: FPU                         = ()
+  }
+
+  case class GmosSouthImaging(
+    filter:                     GmosSouthFilter,
+    override val modeOverrides: Option[InstrumentOverrides.GmosImaging]
+  ) extends ItcInstrumentConfig derives Eq {
+
+    type Grating  = Unit
+    type Filter   = GmosSouthFilter
+    type FPU      = Unit
+    type Override = InstrumentOverrides.GmosImaging
+    val gratingDisplay: Display[Grating] = Display.byShortName(_ => "")
+    val instrument                       = Instrument.GmosSouth
+    val site                             = Site.GS
+    val hasFilter                        = true
+    val grating: Grating                 = ()
+    val fpu: FPU                         = ()
+
   }
 
   case class Flamingos2Spectroscopy(
