@@ -79,11 +79,14 @@ object ItcInstrumentConfig:
     val hasFilter                        = filter.isDefined
   }
 
-  case class Flamingos2Spectroscopy(grating: F2Disperser, filter: F2Filter, fpu: F2Fpu)
-      extends ItcInstrumentConfig derives Eq {
-    type Grating  = F2Disperser
-    type Filter   = F2Filter
-    type FPU      = F2Fpu
+  case class Flamingos2Spectroscopy(
+    grating: Flamingos2Disperser,
+    filter:  Flamingos2Filter,
+    fpu:     Flamingos2Fpu
+  ) extends ItcInstrumentConfig derives Eq {
+    type Grating  = Flamingos2Disperser
+    type Filter   = Flamingos2Filter
+    type FPU      = Flamingos2Fpu
     type Override = Unit
     val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
     val instrument                       = Instrument.Flamingos2

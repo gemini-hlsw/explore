@@ -31,7 +31,7 @@ import explore.optics.ModelOptics
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.ags.*
-import lucuma.core.enums.F2LyotWheel
+import lucuma.core.enums.Flamingos2LyotWheel
 import lucuma.core.enums.GmosNorthFpu
 import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.enums.ObservingModeType
@@ -40,7 +40,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.model.User
-import lucuma.core.model.sequence.f2.F2FpuMask
+import lucuma.core.model.sequence.flamingos2.Flamingos2FpuMask
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.hooks.all.*
@@ -325,13 +325,14 @@ object AladinCell extends ModelOptics with AladinCommon:
 
                                    val params = obsModeType match {
                                      case ObservingModeType.Flamingos2LongSlit                                    =>
-                                       val fpu = observingMode.collect { case m: BasicConfiguration.F2LongSlit =>
-                                         m.fpu
+                                       val fpu = observingMode.collect {
+                                         case m: BasicConfiguration.Flamingos2LongSlit =>
+                                           m.fpu
                                        }
                                        fpu.map(f =>
-                                         AgsParams.F2AgsParams(F2LyotWheel.F16,
-                                                               F2FpuMask.Builtin(f),
-                                                               PortDisposition.Side
+                                         AgsParams.Flamingos2AgsParams(Flamingos2LyotWheel.F16,
+                                                                       Flamingos2FpuMask.Builtin(f),
+                                                                       PortDisposition.Side
                                          )
                                        )
                                      case ObservingModeType.GmosNorthLongSlit |

@@ -10,9 +10,9 @@ import cats.syntax.all.*
 import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
 import japgolly.webapputil.indexeddb.IndexedDb
-import lucuma.core.enums.F2LyotWheel
+import lucuma.core.enums.Flamingos2LyotWheel
 import lucuma.core.enums.ObservingModeType
-import lucuma.core.geom.f2
+import lucuma.core.geom.flamingos2
 import lucuma.core.geom.gmos
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
@@ -46,7 +46,9 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
             case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit =>
               gmos.candidatesArea.candidatesArea
             case ObservingModeType.Flamingos2LongSlit                                      =>
-              f2.candidatesArea.candidatesArea(F2LyotWheel.F16) // In practice this is always F16
+              flamingos2.candidatesArea.candidatesArea(
+                Flamingos2LyotWheel.F16
+              ) // In practice this is always F16
             case ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging =>
               throw new NotImplementedError("Gmos Imaging not implemented")
           }
