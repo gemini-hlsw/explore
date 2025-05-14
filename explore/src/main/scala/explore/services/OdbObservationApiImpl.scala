@@ -417,3 +417,11 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
       _.hasMore,
       _.id
     )
+
+  def obsCalcSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ObsCalcSubscription.Data.ObscalcUpdate]] =
+    ObsCalcSubscription
+      .subscribe[F](ObscalcUpdateInput(programId.assign))
+      .logGraphQLErrors(_ => "Error in ObsCalcSubscription subscription")
+      .map(_.map(_.obscalcUpdate))

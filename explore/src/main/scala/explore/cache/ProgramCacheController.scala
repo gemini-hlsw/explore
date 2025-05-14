@@ -6,8 +6,6 @@ package explore.cache
 import cats.effect.IO
 import cats.effect.Resource
 import cats.syntax.all.*
-import clue.StreamingClient
-import clue.data.syntax.*
 import crystal.Pot
 import crystal.Throttler
 import explore.givens.given
@@ -32,7 +30,6 @@ import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.ObservationDB
-import lucuma.schemas.ObservationDB.Types.ObscalcUpdateInput
 import lucuma.schemas.ObservationDB.Types.WhereObservation
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
@@ -47,13 +44,12 @@ import scala.concurrent.duration.*
 case class ProgramCacheController(
   programId:           Program.Id,
   modProgramSummaries: (Pot[ProgramSummaries] => Pot[ProgramSummaries]) => IO[Unit]
-)(using val odbApi: OdbApi[IO], client: StreamingClient[IO, ObservationDB], logger: Logger[IO])
+)(using val odbApi: OdbApi[IO], logger: Logger[IO])
 // Do not remove the explicit type parameter below, it confuses the compiler.
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
-  val modState                             = modProgramSummaries
-  given StreamingClient[IO, ObservationDB] = client
-  given Logger[IO]                         = logger
+  val modState     = modProgramSummaries
+  given Logger[IO] = logger
 
 object ProgramCacheController
     extends CacheControllerComponent[ProgramSummaries, ProgramCacheController]
@@ -237,11 +233,13 @@ object ProgramCacheController
                 .programTargetsDeltaSubscription(props.programId)
                 .map(_.map(modifyTargets(_)))
 
-            val obsCalcObsIdPipe: Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data, Observation.Id] =
-              _.map(_.obscalcUpdate.observationId)
+            val obsCalcObsIdPipe
+              : Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate, Observation.Id] =
+              _.map(_.observationId)
 
-            val obsCalcGoupIdPipe: Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data, Group.Id] =
-              _.map(_.obscalcUpdate.value.flatMap(_.groupId)).filter(_.isDefined).map(_.get)
+            val obsCalcGoupIdPipe
+              : Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate, Group.Id] =
+              _.map(_.value.flatMap(_.groupId)).filter(_.isDefined).map(_.get)
 
             val groupEditParentIdPipe: Pipe[
               IO,
@@ -319,9 +317,8 @@ object ProgramCacheController
                 .map(_.map(modifyPrograms(_)))
 
             val updateObsCalc: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
-              ObsQueriesGQL.ObsCalcSubscription
-                .subscribe[IO](ObscalcUpdateInput(props.programId.assign))
-                .logGraphQLErrors(_ => "Error in ObsCalcSubscription subscription")
+              odbApi
+                .obsCalcSubscription(props.programId)
                 .map:
                   _.evalTap(_ => queryProgramTimes)
                     .broadcastThrough(

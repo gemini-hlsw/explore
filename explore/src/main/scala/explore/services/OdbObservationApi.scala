@@ -23,6 +23,7 @@ import lucuma.core.model.TimingWindow
 import lucuma.core.util.TimeSpan
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
+import queries.common.ObsQueriesGQL.ObsCalcSubscription
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta
 import queries.common.ProgramSummaryQueriesGQL.ObservationsWorkflowQuery
 
@@ -104,3 +105,6 @@ trait OdbObservationApi[F[_]]:
   def observationWorkflows(
     whereObservation: WhereObservation
   ): F[List[ObservationsWorkflowQuery.Data.Observations.Matches]]
+  def obsCalcSubscription(
+    programId: Program.Id
+  ): Resource[F, fs2.Stream[F, ObsCalcSubscription.Data.ObscalcUpdate]]
