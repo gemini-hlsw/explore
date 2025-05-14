@@ -20,7 +20,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.clearable
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
@@ -43,9 +42,9 @@ object SignalToNoiseAtEditor
           props.calibrationRole,
           props.readonly
         ),
-        FormLabel("signal-to-noise-at".refined)(Constants.SignalToNoiseAtLabel),
         FormInputTextView(
           id = "signal-to-noise-at".refined,
+          label = Constants.SignalToNoiseAtLabel,
           groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
           postAddons = signalToNoiseAt.get.fold(
             List(props.calibrationRole.renderRequiredForITCIcon)

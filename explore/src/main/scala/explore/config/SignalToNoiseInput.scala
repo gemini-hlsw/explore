@@ -18,7 +18,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
@@ -35,13 +34,11 @@ object SignalToNoiseInput
         props.signalToNoise.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil)
 
       React.Fragment(
-        FormLabel("signal-to-noise".refined)(
-          "Signal / Noise",
-          HelpIcon("configuration/signal_to_noise.md".refined)
-        ),
         FormInputTextView(
           id = "signal-to-noise".refined,
           value = props.signalToNoise,
+          label =
+            React.Fragment("Signal / Noise", HelpIcon("configuration/signal_to_noise.md".refined)),
           groupClass = groupClass,
           validFormat = ExploreModelValidators.signalToNoiseValidSplitEpi.optional,
           postAddons = postAddons,
