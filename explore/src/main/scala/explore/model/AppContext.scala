@@ -31,23 +31,25 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
 import workers.WorkerClient
+import fs2.concurrent.SignallingRef
 
 case class AppContext[F[_]](
-  version:          NonEmptyString,
-  clients:          GraphQLClients[F],
-  workerClients:    WorkerClients[F],
-  sso:              SSOClient[F],
-  tracing:          Option[TracingConfig],
-  httpClient:       Client[F],
-  pageUrl:          Option[(AppTab, Program.Id, Focused)] => String,
-  setPageVia:       (Option[(AppTab, Program.Id, Focused)], SetRouteVia) => Callback,
-  environment:      ExecutionEnvironment,
-  broadcastChannel: BroadcastChannel[F, ExploreEvent],
-  toastRef:         Deferred[F, ToastRef]
+  version:                         NonEmptyString,
+  clients:                         GraphQLClients[F],
+  workerClients:                   WorkerClients[F],
+  sso:                             SSOClient[F],
+  tracing:                         Option[TracingConfig],
+  httpClient:                      Client[F],
+  pageUrl:                         Option[(AppTab, Program.Id, Focused)] => String,
+  setPageVia:                      (Option[(AppTab, Program.Id, Focused)], SetRouteVia) => Callback,
+  environment:                     ExecutionEnvironment,
+  broadcastChannel:                BroadcastChannel[F, ExploreEvent],
+  toastRef:                        Deferred[F, ToastRef],
+  private val resetProgramCacheSR: SignallingRef[F, Option[String]] // Error message
 )(using
-  val F:            Async[F],
-  val logger:       Logger[F],
-  val P:            Parallel[F]
+  val F:                           Async[F],
+  val logger:                      Logger[F],
+  val P:                           Parallel[F]
 ):
   def pushPage(location: Option[(AppTab, Program.Id, Focused)]): Callback =
     setPageVia(location, SetRouteVia.HistoryPush)
@@ -76,6 +78,15 @@ case class AppContext[F[_]](
     val finalContents: VdomNode = contents.getOrElse(obsId.show)
     routingLink((AppTab.Observations, programId, Focused.singleObs(obsId)).some, finalContents)
 
+  def resetProgramCache(errorMsg: String): F[Unit] =
+    resetProgramCacheSR.set(errorMsg.some)
+
+  def endResetProgramCache: F[Unit] =
+    resetProgramCacheSR.set(none)
+
+  def resetProgramCacheSignal: fs2.Stream[F, Option[String]] =
+    resetProgramCacheSR.discrete
+
   given WebSocketJsClient[F, ObservationDB]     = clients.odb
   given WebSocketJsClient[F, UserPreferencesDB] = clients.preferencesDB
   given FetchJsClient[F, SSO]                   = clients.sso
@@ -87,7 +98,7 @@ case class AppContext[F[_]](
 
   given toastCtx: ToastCtx[F] = new ToastCtx(toastRef)
 
-  given odbApi: OdbApi[F] = OdbApiImpl[F]()
+  given odbApi: OdbApi[F] = OdbApiImpl[F](resetProgramCache)
 
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value
@@ -103,15 +114,11 @@ object AppContext:
     toastRef:             Deferred[F, ToastRef]
   ): F[AppContext[F]] =
     for {
-      clients <-
+      clients             <-
         GraphQLClients
-          .build[F](
-            config.odbURI,
-            config.preferencesDBURI,
-            config.sso.uri,
-            reconnectionStrategy
-          )
-      version  = utils.version(config.environment)
+          .build[F](config.odbURI, config.preferencesDBURI, config.sso.uri, reconnectionStrategy)
+      resetProgramCacheSR <- SignallingRef[F, Option[String]](none)
+      version              = utils.version(config.environment)
     } yield AppContext[F](
       version,
       clients,
@@ -123,7 +130,8 @@ object AppContext:
       setPageVia,
       config.environment,
       broadcastChannel,
-      toastRef
+      toastRef,
+      resetProgramCacheSR
     )
 
   given [F[_]]: Reusability[AppContext[F]] = Reusability.always

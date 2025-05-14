@@ -18,7 +18,8 @@ case class CfpCacheController(
 )(using val odbApi: OdbProposalApi[IO])
     extends ReactFnProps[CfpCacheController](CfpCacheController.component)
     with CacheControllerComponent.Props[List[CallForProposal]]:
-  val modState = modCalls
+  val modState         = modCalls
+  val onLoad: IO[Unit] = IO.unit
 
 object CfpCacheController
     extends CacheControllerComponent[List[CallForProposal], CfpCacheController]:

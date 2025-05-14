@@ -16,7 +16,6 @@ import explore.targets.TargetSearchResult
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.CloneTargetInput
@@ -28,21 +27,11 @@ import org.typelevel.log4cats.Logger
 import queries.common.ProgramSummaryQueriesGQL.AllProgramTargets
 import queries.common.TargetQueriesGQL.*
 
-trait OdbTargetApiImpl[F[_]: Sync](using
+trait OdbTargetApiImpl[F[_]: Sync](resetCache: String => F[Unit])(using
   StreamingClient[F, ObservationDB],
   Logger[F],
   ToastCtx[F]
 ) extends OdbTargetApi[F]:
-
-  def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
-    UpdateTargetsMutation[F]
-      .execute(input)
-      .raiseGraphQLErrors
-      .void
-      .handleErrorWith: t => // TODO Resync data? Revert change?
-        val msg = s"Error updating target [$targetId]"
-        Logger[F].error(t)(msg) >>
-          ToastCtx[F].showToast(msg, Message.Severity.Error)
 
   def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
     CreateTargetMutation[F]
@@ -50,6 +39,29 @@ trait OdbTargetApiImpl[F[_]: Sync](using
       .raiseGraphQLErrors
       .map(_.createTarget.target.id)
       .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
+
+  def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
+    // UpdateTargetsMutation[F]
+    //   .execute(input)
+    //   .raiseGraphQLErrors
+    // TODO REMOVE
+    // .flatMap(_ => cats.MonadThrow[F].raiseError(new Throwable("TODO: Remove this error")))
+    cats
+      .MonadThrow[F]
+      .raiseError(new Throwable("TODO: Remove this error"))
+      // END TODO
+      .void
+      .handleErrorWith: t => // TODO Resync data? Revert change?
+        val msg = s"Error updating target [$targetId: ${t.getMessage}]"
+        Logger[F].error(t)(msg) >>
+          resetCache(msg) // >> { // messageitem in global somewhere??
+    //   val message =             MessageItem(
+    //     content = <.a(^.onClick --> (Callback.log("HELLO")))(msg),
+    //     severity = Message.Severity.Error,
+    //     sticky = true,
+    //     closable = false
+    //   )
+    // }
 
   def setTargetExistence(
     programId: Program.Id,

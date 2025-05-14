@@ -46,12 +46,15 @@ import lucuma.ui.components.SideTabs
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
+import lucuma.ui.react.given
 import lucuma.ui.layout.LayoutStyles
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
+import fs2.dom.BroadcastChannel
+import lucuma.react.primereact.Dialog
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, RootModelViews]
@@ -63,99 +66,113 @@ object ExploreLayout:
   private type Props = ExploreLayout
 
   private given Reusability[ToastRef] = Reusability.by_==
+  private given Reusability[Page]     = Reusability.by(_.toString)
+
+  private def useMountHotkeys(ctx: AppContext[IO], helpCtx: HelpContext)(
+    page: Page
+  ): HookResult[Unit] =
+    useGlobalHotkeysWithDeps(page): p =>
+      RoutingInfo
+        .from(p)
+        .map: routingInfo =>
+          def goToTab(tab: AppTab) =
+            ctx.setPageVia(
+              (tab, routingInfo.programId, routingInfo.focused).some,
+              SetRouteVia.HistoryPush
+            )
+
+          val callbacks: ShortcutCallbacks =
+            case GoToObs                         =>
+              goToTab(AppTab.Observations)
+            case GoToTargets                     =>
+              goToTab(AppTab.Targets)
+            case GoToProposals                   =>
+              goToTab(AppTab.Proposal)
+            case GoToConstraints                 =>
+              goToTab(AppTab.Constraints)
+            case GoToOverview                    =>
+              goToTab(AppTab.Overview)
+            case ShortcutsHelp1 | ShortcutsHelp2 =>
+              helpCtx.displayedHelp.set(Some("shortcuts.md".refined))
+
+          UseHotkeysProps(
+            (ShortcutsHelpKeys :::
+              List(
+                GoToObs,
+                GoToTargets,
+                GoToProposals,
+                GoToConstraints,
+                GoToOverview
+              )).toHotKeys,
+            callbacks
+          )
+        .getOrElse(UseHotkeysProps(List.empty, Callback.empty))
+
+  private def useMountProgressiveWebApp(
+    bc:       BroadcastChannel[IO, ExploreEvent],
+    toastRef: ToastRef
+  ): HookResult[Unit] =
+    useEffectStreamOnMount:
+      bc.messages.evalMap:
+        // This is coming from the js world, we can't match the type
+        _.data.event match
+          // TODO: Handle logout events
+          case ExploreEvent.PWAUpdateId =>
+            // Clear other toasts first
+            toastRef.clear().toAsync *>
+              toastRef
+                .upgradePrompt(
+                  <.span(
+                    "A new version of ",
+                    <.a(
+                      ExploreStyles.UpgradeLink,
+                      "Explore",
+                      ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
+                      ^.target := "_blank"
+                    ),
+                    " is available!"
+                  ),
+                  bc
+                    .postMessage(ExploreEvent.PWAReload)
+                    .runAsyncAndForget
+                )
+                .toAsync
+          case _                        => IO.unit
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(HelpContext.ctx)
-      .useContext(AppContext.ctx)
-      .useEffectWithDepsBy((p, _, _) =>
-        p.model.programSummariesValue.toOption.flatMap(_.programOrProposalReference)
-      ): (_, _, _) =>
-        // Set the title of the page to the program reference
-        // scalajs-react suggest to use setTitle for this but we'd need to put the
-        // reference in the url for that
-        _.fold(Callback(document.title = "Explore")): r =>
-          Callback(document.title = s"Explore - ${r}")
-      .useGlobalHotkeysWithDepsBy((props, _, _) => props.resolution.page.toString) {
-        (props, help, ctx) => _ =>
-          RoutingInfo
-            .from(props.resolution.page)
-            .map: routingInfo =>
-              def goToTab(tab: AppTab) =
-                ctx.setPageVia(
-                  (tab, routingInfo.programId, routingInfo.focused).some,
-                  SetRouteVia.HistoryPush
-                )
+    ScalaFnComponent[Props]: props =>
+      for
+        helpCtx              <- useContext(HelpContext.ctx)
+        ctx                  <- useContext(AppContext.ctx)
+        _                    <- useEffectWithDeps(
+                                  props.model.programSummariesValue.toOption.flatMap(_.programOrProposalReference)
+                                ):
+                                  // Set the title of the page to the program reference
+                                  // scalajs-react suggest to use setTitle for this but we'd need to put the
+                                  // reference in the url for that
+                                  _.fold(Callback(document.title = "Explore")): r =>
+                                    Callback(document.title = s"Explore - ${r}")
+        _                    <- useMountHotkeys(ctx, helpCtx)(props.resolution.page)
+        toastRef             <- useToastRef
+        _                    <- useEffectWithDeps(toastRef):
+                                  import ctx.given
 
-              val callbacks: ShortcutCallbacks =
-                case GoToObs                         =>
-                  goToTab(AppTab.Observations)
-                case GoToTargets                     =>
-                  goToTab(AppTab.Targets)
-                case GoToProposals                   =>
-                  goToTab(AppTab.Proposal)
-                case GoToConstraints                 =>
-                  goToTab(AppTab.Constraints)
-                case GoToOverview                    =>
-                  goToTab(AppTab.Overview)
-                case ShortcutsHelp1 | ShortcutsHelp2 =>
-                  help.displayedHelp.set(Some("shortcuts.md".refined))
-
-              UseHotkeysProps(
-                (ShortcutsHelpKeys :::
-                  List(
-                    GoToObs,
-                    GoToTargets,
-                    GoToProposals,
-                    GoToConstraints,
-                    GoToOverview
-                  )).toHotKeys,
-                callbacks
-              )
-            .getOrElse(UseHotkeysProps(List.empty, Callback.empty))
-      }
-      .useToastRef
-      .useEffectWithDepsBy((_, _, _, toastRef) => toastRef): (_, _, ctx, _) =>
-        import ctx.given
-
-        toastRef =>
-          toastRef.ref.get
-            .flatMap:
-              _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
-      .useStreamOnMountBy: (_, _, ctx, toastRef) =>
-        ctx.broadcastChannel.messages.evalTap(
-          // This is coming from the js world, we can't match the type
-          _.data.event match {
-            // TODO: Handle logout events
-            case ExploreEvent.PWAUpdateId =>
-              // Clear other toasts first
-              toastRef.clear().toAsync *>
-                toastRef
-                  .upgradePrompt(
-                    <.span(
-                      "A new version of ",
-                      <.a(
-                        ExploreStyles.UpgradeLink,
-                        "Explore",
-                        ^.href   := s"https://github.com/gemini-hlsw/explore/compare/${utils.gitHash.orEmpty}...HEAD",
-                        ^.target := "_blank"
-                      ),
-                      " is available!"
-                    ),
-                    ctx.broadcastChannel
-                      .postMessage(ExploreEvent.PWAReload)
-                      .runAsyncAndForget
-                  )
-                  .toAsync
-            case _                        => IO.unit
-          }
-        )
-      .useEffectOnMountBy: (_, _, ctx, _, _) =>
-        ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
-      .useStateView(none[NonEmptyString]) // userSelectionMessage
-      .useTheme(Theme.Dark)
-      .render: (props, helpCtx, ctx, toastRef, _, userSelectionMessage, theme) =>
+                                  toastRef =>
+                                    toastRef.ref.get
+                                      .flatMap:
+                                        _.map(_ => ctx.toastRef.complete(toastRef).void.runAsync).orEmpty
+        _                    <- useMountProgressiveWebApp(ctx.broadcastChannel, toastRef)
+        _                    <- useEffectOnMount:
+                                  ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
+        userSelectionMessage <- useStateView(none[NonEmptyString])
+        theme                <- useTheme(Theme.Dark)
+        programCacheKeyVer   <- useState(0)
+        globalError          <- useState(none[String])
+        _                    <- useEffectStreamOnMount:
+                                  ctx.resetProgramCacheSignal.evalMap: errorMsg =>
+                                    (globalError.setState(errorMsg) >>
+                                      programCacheKeyVer.modState(_ + 1).when_(errorMsg.isDefined)).toAsync
+      yield
         import ctx.given
 
         val view: View[RootModel] = props.model.rootModel
@@ -170,6 +187,14 @@ object ExploreLayout:
 
         React.Fragment(
           Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
+          globalError.value.foldMap(error =>
+            Dialog(
+              onHide = Callback.empty,
+              visible = true,
+              modal = true,
+              closable = false
+            )(error)
+          ),
           IfLogged[ExploreEvent](
             "Explore".refined,
             ExploreStyles.LoginTitle,
@@ -233,6 +258,8 @@ object ExploreLayout:
                     .map(_.user)
                     .foldMap(u => s"${routingInfo.programId}-${u.id}-${u.role.name}")
 
+                val programCacheKey: String = s"$cacheKey-${programCacheKeyVer.value}"
+
                 React.Fragment(
                   ConfirmDialog(),
                   Sidebar(
@@ -258,8 +285,9 @@ object ExploreLayout:
                     // selection popup.
                     ProgramCacheController(
                       routingInfo.programId,
-                      props.model.programSummaries.throttledView.mod
-                    ).withKey(cacheKey),
+                      props.model.programSummaries.throttledView.mod,
+                      globalError.setState(none).toAsync
+                    ).withKey(programCacheKey),
                     userVault.mapValue: (vault: View[UserVault]) =>
                       React.Fragment(
                         PreferencesCacheController(

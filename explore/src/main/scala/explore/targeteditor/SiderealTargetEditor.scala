@@ -286,7 +286,7 @@ object SiderealTargetEditor:
             forceAssign(sourceProfileLens.modify)(SourceProfileInput())
           )
 
-        val disabled =
+        val disabled: Boolean =
           props.searching.get.exists(
             _ === props.asterism.focus.id
           ) || cloning.get || props.readonly || props.obsInfo.isReadonly

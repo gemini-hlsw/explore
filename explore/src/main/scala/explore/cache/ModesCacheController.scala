@@ -18,7 +18,8 @@ case class ModesCacheController(
 )(using val odbApi: OdbConfigApi[IO])
     extends ReactFnProps[ModesCacheController](ModesCacheController.component)
     with CacheControllerComponent.Props[ScienceModes]:
-  val modState = modModes
+  val modState         = modModes
+  val onLoad: IO[Unit] = IO.unit
 
 object ModesCacheController extends CacheControllerComponent[ScienceModes, ModesCacheController]:
 
