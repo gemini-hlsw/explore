@@ -33,6 +33,7 @@ case class PreferencesCacheController(
     extends ReactFnProps[PreferencesCacheController](PreferencesCacheController.component)
     with CacheControllerComponent.Props[UserPreferences]:
   val modState                                 = modUserPrefrences
+  val onLoad: IO[Unit]                         = IO.unit
   given StreamingClient[IO, UserPreferencesDB] = client
 
 object PreferencesCacheController

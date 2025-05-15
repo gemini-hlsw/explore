@@ -34,6 +34,13 @@ trait OdbTargetApiImpl[F[_]: Sync](using
   ToastCtx[F]
 ) extends OdbTargetApi[F]:
 
+  def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
+    CreateTargetMutation[F]
+      .execute(target.toCreateTargetInput(programId))
+      .raiseGraphQLErrors
+      .map(_.createTarget.target.id)
+      .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
+
   def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
     UpdateTargetsMutation[F]
       .execute(input)
@@ -43,13 +50,6 @@ trait OdbTargetApiImpl[F[_]: Sync](using
         val msg = s"Error updating target [$targetId]"
         Logger[F].error(t)(msg) >>
           ToastCtx[F].showToast(msg, Message.Severity.Error)
-
-  def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
-    CreateTargetMutation[F]
-      .execute(target.toCreateTargetInput(programId))
-      .raiseGraphQLErrors
-      .map(_.createTarget.target.id)
-      .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
 
   def setTargetExistence(
     programId: Program.Id,

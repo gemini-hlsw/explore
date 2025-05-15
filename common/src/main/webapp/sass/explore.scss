@@ -3583,3 +3583,11 @@ a.explore-upgrade-link {
 .stale {
   opacity: 0.5;
 }
+
+.explore-global-error-dialog {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--red-900);
+  border: 0;
+}

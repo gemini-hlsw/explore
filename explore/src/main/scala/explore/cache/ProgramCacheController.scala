@@ -43,13 +43,15 @@ import scala.concurrent.duration.*
 
 case class ProgramCacheController(
   programId:           Program.Id,
-  modProgramSummaries: (Pot[ProgramSummaries] => Pot[ProgramSummaries]) => IO[Unit]
+  modProgramSummaries: (Pot[ProgramSummaries] => Pot[ProgramSummaries]) => IO[Unit],
+  onLoad:              IO[Unit]
 )(using val odbApi: OdbApi[IO], logger: Logger[IO])
 // Do not remove the explicit type parameter below, it confuses the compiler.
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
-  val modState     = modProgramSummaries
-  given Logger[IO] = logger
+  val modState                           = modProgramSummaries
+  given Logger[IO]                       = logger
+  val updateSignal: fs2.Stream[IO, Unit] = fs2.Stream.empty
 
 object ProgramCacheController
     extends CacheControllerComponent[ProgramSummaries, ProgramCacheController]

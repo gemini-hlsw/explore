@@ -13,6 +13,8 @@ object ExploreStyles:
 
   val HideReusability = Css("hide-reusability")
 
+  val GlobalErrorDialog = Css("explore-global-error-dialog")
+
   val Tile: Css                        = Css("explore-tile")
   val TileTitle: Css                   = Css("explore-tile-title")
   val TileTitleText: Css               = Css("explore-tile-title-text")
