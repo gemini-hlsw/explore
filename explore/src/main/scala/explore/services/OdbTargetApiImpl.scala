@@ -16,7 +16,6 @@ import explore.targets.TargetSearchResult
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.CloneTargetInput
@@ -33,23 +32,20 @@ trait OdbTargetApiImpl[F[_]: Sync](using
   Logger[F],
   ToastCtx[F]
 ) extends OdbTargetApi[F]:
+  self: OdbApiHelper[F] =>
 
   def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
     CreateTargetMutation[F]
       .execute(target.toCreateTargetInput(programId))
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.createTarget.target.id)
       .flatTap(id => ToastCtx[F].showToast(s"Created new target [$id]"))
 
   def updateTarget(targetId: Target.Id, input: UpdateTargetsInput): F[Unit] =
     UpdateTargetsMutation[F]
       .execute(input)
-      .raiseGraphQLErrors
+      .processErrors
       .void
-      .handleErrorWith: t => // TODO Resync data? Revert change?
-        val msg = s"Error updating target [$targetId]"
-        Logger[F].error(t)(msg) >>
-          ToastCtx[F].showToast(msg, Message.Severity.Error)
 
   def setTargetExistence(
     programId: Program.Id,
@@ -65,7 +61,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
           SET = TargetPropertiesInput(existence = existence.assign),
           includeDeleted = true.assign
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def deleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
@@ -77,7 +73,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
             .assign,
           SET = TargetPropertiesInput(existence = Existence.Deleted.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def undeleteTargets(targetIds: List[Target.Id], programId: Program.Id): F[Unit] =
@@ -90,7 +86,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
           SET = TargetPropertiesInput(existence = Existence.Present.assign),
           includeDeleted = true.assign
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def cloneTarget(
@@ -131,7 +127,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
   ): F[List[TargetSearchResult]] =
     TargetNameQuery[F]
       .query(programId)
-      .raiseGraphQLErrors
+      .processErrors
       .map: data =>
         data.targetGroup.matches
           .map(mtch => TargetSearchResult(mtch.target.toOptId, none))
@@ -140,11 +136,11 @@ trait OdbTargetApiImpl[F[_]: Sync](using
           .distinct
 
   def allProgramTargets(programId: Program.Id): F[List[TargetWithId]] =
-    drain[F, TargetWithId, Target.Id, AllProgramTargets.Data.Targets](
+    drain[TargetWithId, Target.Id, AllProgramTargets.Data.Targets](
       offset =>
         AllProgramTargets[F]
           .query(programId.toWhereTarget, offset.orUnassign)
-          .raiseGraphQLErrors
+          .processErrors
           .map(_.targets),
       _.matches,
       _.hasMore,

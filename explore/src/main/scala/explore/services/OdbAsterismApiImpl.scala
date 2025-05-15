@@ -7,7 +7,6 @@ import cats.MonadThrow
 import cats.implicits.*
 import clue.FetchClient
 import clue.data.syntax.*
-import clue.model.GraphQLResponse.*
 import lucuma.core.model.Observation
 import lucuma.core.model.Target
 import lucuma.schemas.ObservationDB
@@ -19,6 +18,8 @@ import queries.common.ObsQueriesGQL.*
 
 trait OdbAsterismApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
     extends OdbAsterismApi[F]:
+  self: OdbApiHelper[F] =>
+
   def replaceAsterism(obsIds: List[Observation.Id], targetIds: List[Target.Id]): F[Unit] =
     val input = UpdateObservationsInput(
       WHERE = obsIds.toWhereObservation.assign,
@@ -26,14 +27,14 @@ trait OdbAsterismApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
         targetEnvironment = TargetEnvironmentInput(asterism = targetIds.assign).assign
       )
     )
-    UpdateObservationMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateObservationMutation[F].execute(input).processErrors.void
 
   def addTargetsToAsterisms(obsIds: List[Observation.Id], targetIds: List[Target.Id]): F[Unit] =
     val input = UpdateAsterismsInput(
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(ADD = targetIds.assign)
     )
-    UpdateAsterismsMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateAsterismsMutation[F].execute(input).processErrors.void
 
   def removeTargetsFromAsterisms(
     obsIds:    List[Observation.Id],
@@ -43,7 +44,7 @@ trait OdbAsterismApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(DELETE = targetIds.assign)
     )
-    UpdateAsterismsMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateAsterismsMutation[F].execute(input).processErrors.void
 
   def addAndRemoveTargetsFromAsterisms(
     obsIds:   List[Observation.Id],
@@ -54,7 +55,7 @@ trait OdbAsterismApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(ADD = toAdd.assign, DELETE = toRemove.assign)
     )
-    UpdateAsterismsMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateAsterismsMutation[F].execute(input).processErrors.void
 
   def undeleteTargetsAndAddToAsterism(
     obsIds:    List[Observation.Id],
@@ -69,7 +70,7 @@ trait OdbAsterismApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(ADD = targetIds.assign)
     )
-    UpdateTargetsAndAsterismsMutation[F].execute(targetInput, asterismInput).raiseGraphQLErrors.void
+    UpdateTargetsAndAsterismsMutation[F].execute(targetInput, asterismInput).processErrors.void
 
   def deleteTargetsAndRemoveFromAsterism(
     obsIds:    List[Observation.Id],
@@ -84,4 +85,4 @@ trait OdbAsterismApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
       WHERE = obsIds.toWhereObservation.assign,
       SET = EditAsterismsPatchInput(DELETE = targetIds.assign)
     )
-    UpdateTargetsAndAsterismsMutation[F].execute(targetInput, asterismInput).raiseGraphQLErrors.void
+    UpdateTargetsAndAsterismsMutation[F].execute(targetInput, asterismInput).processErrors.void

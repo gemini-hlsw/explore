@@ -40,12 +40,13 @@ import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
 trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F])
     extends OdbProgramApi[F]:
+  self: OdbApiHelper[F] =>
 
   def createProgram(name: Option[NonEmptyString]): F[ProgramInfo] =
     CreateProgramMutation[F]
       .execute:
         CreateProgramInput(SET = ProgramPropertiesInput(name = name.orIgnore).assign)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.createProgram.program)
 
   def deleteProgram(id: Program.Id): F[Unit] =
@@ -55,7 +56,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           WHERE = id.toWhereProgram.assign,
           SET = ProgramPropertiesInput(existence = Existence.Deleted.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def undeleteProgram(id: Program.Id): F[Unit] =
@@ -66,11 +67,11 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           includeDeleted = true.assign,
           SET = ProgramPropertiesInput(existence = Existence.Present.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def updateProgram(input: UpdateProgramsInput): F[Unit] =
-    UpdateProgramsMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateProgramsMutation[F].execute(input).processErrors.void
 
   def updateProgramName(id: Program.Id, name: Option[NonEmptyString]): F[Unit] =
     updateProgram:
@@ -95,7 +96,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           WHERE = WhereAttachment(id = WhereOrderAttachmentId(EQ = oid.assign).assign).assign,
           SET = AttachmentPropertiesInput(description = desc.orUnassign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def updateAttachmentChecked(oid: Attachment.Id, checked: Boolean): F[Unit] =
@@ -105,18 +106,18 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           WHERE = WhereAttachment(id = WhereOrderAttachmentId(EQ = oid.assign).assign).assign,
           SET = AttachmentPropertiesInput(checked = checked.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def addProgramUser(programId: Program.Id, role: ProgramUserRole): F[ProgramUser] =
     val input = AddProgramUserInput(programId = programId, role = role)
     AddProgramUser[F]
       .execute(input)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.addProgramUser.programUser)
 
   def deleteProgramUser(programUserId: ProgramUser.Id): F[Unit] =
-    DeleteProgramUser[F].execute(programUserId.toDeleteInput).raiseGraphQLErrors.void
+    DeleteProgramUser[F].execute(programUserId.toDeleteInput).processErrors.void
 
   def updateProgramUsers(programUserId: ProgramUser.Id, set: ProgramUserPropertiesInput): F[Unit] =
     ProgramUsersMutation[F]
@@ -125,7 +126,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           WHERE = programUserId.toWhereProgramUser.assign,
           SET = set
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def updateUserFallbackName(programUserId: ProgramUser.Id, creditName: Option[String]): F[Unit] =
@@ -157,7 +158,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
     ChangeProgramUserRoleMutation[F]
       .execute:
         ChangeProgramUserRoleInput(programUserId = programUserId, newRole = role)
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   // Note: If justification is none, it is ignored, not un-set. We
@@ -176,7 +177,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
             justification = justification.orIgnore
           )
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def createProgramNote(programId: Program.Id, title: NonEmptyString): F[ProgramNote.Id] =
@@ -188,7 +189,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
             title = title.assign
           )
         )
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.createProgramNote.programNote.id)
 
   def deleteProgramNote(id: ProgramNote.Id): F[Unit] =
@@ -198,7 +199,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           WHERE = id.toWhereProgramNote.assign,
           SET = ProgramNotePropertiesInput(existence = Existence.Deleted.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def undeleteProgramNote(id: ProgramNote.Id): F[Unit] =
@@ -209,16 +210,16 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
           includeDeleted = true.assign,
           SET = ProgramNotePropertiesInput(existence = Existence.Present.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def updateProgramNote(input: UpdateProgramNotesInput): F[Unit] =
-    UpdateProgramNotesMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateProgramNotesMutation[F].execute(input).processErrors.void
 
   def resolveProgramReference(programRef: ProgramReference): F[Option[Program.Id]] =
     ResolveProgramReference[F]
       .query(programRef.assign)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.program.map(_.id))
 
   def createUserInvitation(
@@ -227,36 +228,36 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
   ): F[CreateUserInvitation] =
     CreateInviteMutation[F]
       .execute(programUserId, email.value.value)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.createUserInvitation)
 
   def revokeUserInvitation(userInvitationId: String): F[Unit] =
-    RevokeInvitationMutation[F].execute(userInvitationId).raiseGraphQLErrors.void
+    RevokeInvitationMutation[F].execute(userInvitationId).processErrors.void
 
   def redeemUserInvitation(key: String): F[RedeemInvitationResult] =
     RedeemInvitationMutation[F]
       .execute(key)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.redeemUserInvitation.invitation)
 
   def programTimes(programId: Program.Id): F[Option[ProgramTimes]] =
     ProgramTimesQuery[F]
       .query(programId)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.program)
 
   def programDetails(programId: Program.Id): F[Option[ProgramDetails]] =
     ProgramDetailsQuery[F]
       .query(programId)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.program)
 
   val allPrograms: F[List[ProgramInfo]] =
-    drain[F, ProgramInfo, Program.Id, AllPrograms.Data.Programs](
+    drain[ProgramInfo, Program.Id, AllPrograms.Data.Programs](
       offset =>
         AllPrograms[F]
           .query(offset.orUnassign)
-          .raiseGraphQLErrors
+          .processErrors
           .map(_.programs),
       _.matches,
       _.hasMore,
@@ -266,7 +267,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
   def allProgramAttachments(programId: Program.Id): F[List[Attachment]] =
     AllProgramAttachments[F]
       .query(programId)
-      .raiseGraphQLErrors
+      .processErrors
       .map:
         _.program.fold(List.empty)(_.attachments)
 

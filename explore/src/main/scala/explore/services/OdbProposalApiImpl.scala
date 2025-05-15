@@ -7,7 +7,6 @@ import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import clue.model.GraphQLResponse.*
 import explore.common.ProposalOdbExtensions.*
 import explore.model.CallForProposal
 import explore.model.Proposal
@@ -24,31 +23,33 @@ import queries.common.ProposalQueriesGQL.*
 
 trait OdbProposalApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
     extends OdbProposalApi[F]:
+  self: OdbApiHelper[F] =>
+
   def openCfps(): F[List[CallForProposal]] =
     ReadOpenCFPs[F]
       .query()
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.callsForProposals.matches)
 
   def resolveProposalReference(proposalRef: ProposalReference): F[Option[Program.Id]] =
     ResolveProposalReference[F]
       .query(proposalRef.assign)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.program.map(_.id))
 
   def createProposal(programId: Program.Id, proposal: Proposal): F[Unit] =
     CreateProposalMutation[F]
       .execute:
         CreateProposalInput(programId = programId, SET = proposal.toInput)
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def updateProposal(input: UpdateProposalInput): F[Unit] =
-    UpdateProposalMutation[F].execute(input).raiseGraphQLErrors.void
+    UpdateProposalMutation[F].execute(input).processErrors.void
 
   def setProposalStatus(programId: Program.Id, newStatus: ProposalStatus): F[Unit] =
     SetProposalStatus[F]
       .execute:
         SetProposalStatusInput(programId = programId.assign, status = newStatus)
-      .raiseGraphQLErrorsOnNoData
+      .processNoDataErrors
       .void

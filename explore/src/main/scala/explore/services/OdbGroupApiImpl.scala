@@ -23,6 +23,8 @@ import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.ProgramSummaryQueriesGQL.GroupTimeRangeQuery
 
 trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F]):
+  self: OdbApiHelper[F] =>
+
   def moveGroup(
     groupId:          Group.Id,
     parentGroup:      Option[Group.Id],
@@ -37,7 +39,7 @@ trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB],
             parentGroupIndex = parentGroupIndex.assign
           )
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def updateGroup(
@@ -50,7 +52,7 @@ trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB],
           WHERE = WhereGroup(id = WhereOrderGroupId(EQ = groupId.assign).assign).assign,
           SET = set
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def createGroup(programId: Program.Id, parentId: Option[Group.Id]): F[Group] =
@@ -60,7 +62,7 @@ trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB],
           programId = programId.assign,
           SET = parentId.map(gId => GroupPropertiesInput(parentGroup = gId.assign)).orIgnore
         )
-      .raiseGraphQLErrors
+      .processErrors
       .map: result =>
         result.createGroup.group
 
@@ -73,13 +75,13 @@ trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB],
   def groupTimeRange(groupId: Group.Id): F[Option[GroupTimeRangeQuery.Data.Group]] =
     GroupTimeRangeQuery[F]
       .query(groupId)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.group)
 
   def allProgramGroups(programId: Program.Id): F[List[Group]] =
     ProgramGroupsQuery[F]
       .query(programId)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.program.toList.flatMap(_.allGroupElements.map(_.group).flattenOption))
 
   def programGroupsDeltaEdits(
