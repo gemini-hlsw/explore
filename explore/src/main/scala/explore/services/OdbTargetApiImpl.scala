@@ -16,6 +16,7 @@ import explore.targets.TargetSearchResult
 import explore.utils.ToastCtx
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.react.primereact.Message
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.CloneTargetInput
