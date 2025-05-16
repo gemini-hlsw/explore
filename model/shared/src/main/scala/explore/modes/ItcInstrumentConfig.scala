@@ -24,6 +24,7 @@ sealed trait ItcInstrumentConfig derives Eq:
   val grating: Grating
   def gratingDisplay: Display[Grating]
   def gratingStr: String = gratingDisplay.shortName(grating)
+  def filterStr: String
 
   type FPU
   val fpu: FPU
@@ -57,6 +58,7 @@ object ItcInstrumentConfig:
     type Override = InstrumentOverrides.GmosSpectroscopy
 
     val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val filterStr: String                = filter.fold("none")(_.shortName)
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = filter.isDefined
@@ -73,6 +75,7 @@ object ItcInstrumentConfig:
     type FPU      = GmosSouthFpu
     type Override = InstrumentOverrides.GmosSpectroscopy
     val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val filterStr: String                = filter.fold("none")(_.shortName)
     val instrument                       = Instrument.GmosSouth
     val site                             = Site.GS
     val hasFilter                        = filter.isDefined
@@ -88,6 +91,7 @@ object ItcInstrumentConfig:
     type Override = InstrumentOverrides.GmosImaging
 
     val gratingDisplay: Display[Grating] = Display.byShortName(_ => "")
+    val filterStr: String                = filter.shortName
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = true
@@ -105,6 +109,7 @@ object ItcInstrumentConfig:
     type FPU      = Unit
     type Override = InstrumentOverrides.GmosImaging
     val gratingDisplay: Display[Grating] = Display.byShortName(_ => "")
+    val filterStr: String                = filter.shortName
     val instrument                       = Instrument.GmosSouth
     val site                             = Site.GS
     val hasFilter                        = true
@@ -123,6 +128,7 @@ object ItcInstrumentConfig:
     type FPU      = Flamingos2Fpu
     type Override = Unit
     val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val filterStr: String                = filter.shortName
     val instrument                       = Instrument.Flamingos2
     val site                             = Site.GS
     val hasFilter                        = true
@@ -136,6 +142,7 @@ object ItcInstrumentConfig:
     type FPU      = Unit
     type Override = Unit
     val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val filterStr: String                = filter.shortName
     val fpu                              = ()
     val instrument                       = Instrument.Gpi
     val site                             = Site.GN
@@ -149,6 +156,7 @@ object ItcInstrumentConfig:
     type FPU      = Unit
     type Override = Unit
     val gratingDisplay: Display[Grating] = Display.byShortName(_.shortName)
+    val filterStr: String                = filter.shortName
     val fpu                              = ()
     val instrument                       = Instrument.Gnirs
     val site                             = Site.GN
@@ -163,6 +171,7 @@ object ItcInstrumentConfig:
     type FPU      = Unit
     type Override = Unit
     val gratingDisplay: Display[Grating] = Display.byShortName(identity)
+    val filterStr: String                = filter.value
     val fpu                              = ()
     val instrument                       = i
     val site                             = Site.GN

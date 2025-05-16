@@ -135,6 +135,8 @@ private object BasicConfigurationPanel:
               )
             )
             .when(isSpectroscopy),
+          ImagingModesTable(props.userId, props.confMatrix.imaging, props.units)
+            .unless(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             message.map(Tag(_, severity = Tag.Severity.Success)),
             Button(

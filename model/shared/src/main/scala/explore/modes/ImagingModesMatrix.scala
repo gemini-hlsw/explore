@@ -10,6 +10,7 @@ import io.circe.Decoder
 import lucuma.core.enums.*
 import lucuma.core.math.Angle
 import lucuma.odb.json.angle.decoder.given
+import monocle.Getter
 import monocle.Lens
 import monocle.macros.GenLens
 
@@ -24,11 +25,18 @@ object ImagingModeRow {
 
   val id: Lens[ImagingModeRow, Option[Int]] = GenLens[ImagingModeRow](_.id)
 
-  val instrument: Lens[ImagingModeRow, ItcInstrumentConfig] = GenLens[ImagingModeRow](_.instrument)
+  val instrumentConfig: Lens[ImagingModeRow, ItcInstrumentConfig] =
+    GenLens[ImagingModeRow](_.instrument)
+
+  val instrument: Getter[ImagingModeRow, Instrument] =
+    instrumentConfig.andThen(ItcInstrumentConfig.instrument)
 
   val ao: Lens[ImagingModeRow, ModeAO] = GenLens[ImagingModeRow](_.ao)
 
   val fov: Lens[ImagingModeRow, Angle] = GenLens[ImagingModeRow](_.fov)
+
+  def filter: Getter[ImagingModeRow, ItcInstrumentConfig#Filter] =
+    instrumentConfig.andThen(ItcInstrumentConfig.filter)
 
   // decoders for instruments are used locally as they are not lawful
   private given Decoder[ItcInstrumentConfig.GmosNorthImaging] =

@@ -50,10 +50,8 @@ import lucuma.core.math.units.Pixels
 import lucuma.core.model.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
-import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
-import lucuma.react.circularprogressbar.CircularProgressbar
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.Placement
@@ -64,17 +62,14 @@ import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
 import lucuma.typed.tanstackVirtualCore as rawVirtual
-import lucuma.ui.components.ThemeIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
-import lucuma.ui.utils.*
 
 import java.text.DecimalFormat
-import scala.collection.decorators.*
 import scala.concurrent.duration.*
 import scala.language.implicitConversions
 
@@ -93,14 +88,8 @@ case class SpectroscopyModesTable(
 ) extends ReactFnProps(SpectroscopyModesTable.component):
   val validTargets = targets.map(_.filter(_.canQueryITC)).flatMap(NonEmptyList.fromList)
 
-private object SpectroscopyModesTable:
+private object SpectroscopyModesTable extends ModesTableCommon:
   private type Props = SpectroscopyModesTable
-
-  private object ScrollTo extends NewBoolean:
-    inline def Scroll = True; inline def NoScroll = False
-
-  private enum TimeOrSNColumn:
-    case Time, SN
 
   private given Reusability[SpectroscopyModeRow]     = Reusability.by(_.id)
   private given Reusability[SpectroscopyModesMatrix] = Reusability.by(_.matrix.length)
@@ -111,24 +100,8 @@ private object SpectroscopyModesTable:
     result:               Pot[EitherNec[ItcTargetProblem, ItcResult]],
     wavelengthInterval:   Option[BoundedInterval[Wavelength]],
     configurationSummary: Option[String]
-  ):
+  ) extends TableRowWithResult:
     lazy val rowId: RowId = RowId(entry.id.orEmpty.toString)
-
-    lazy val totalItcTime: Option[TimeSpan] =
-      result.toOption
-        .collect { case Right(ItcResult.Result(e, t, _, _)) => e *| t.value }
-
-    lazy val totalSN: Option[SignalToNoise] =
-      result.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
-        s.map(_.total.value)
-      }.flatten
-
-    lazy val singleSN: Option[SignalToNoise] =
-      result.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
-        s.map(_.single.value)
-      }.flatten
-
-  private case class TableMeta(itcProgress: Option[Progress])
 
   private val ColDef = ColumnDef[SpectroscopyModeRowWithResult].WithTableMeta[TableMeta]
 
@@ -177,18 +150,6 @@ private object SpectroscopyModesTable:
   private val formatSlitLength: ModeSlitSize => String = ss =>
     f"${ModeSlitSize.milliarcseconds.get(ss.value).setScale(0, BigDecimal.RoundingMode.DOWN)}%1.0f"
 
-  private def formatFilter(filter: ItcInstrumentConfig#Filter): String = filter match
-    case Some(f: GmosSouthFilter) => f.shortName
-    case Some(f: GmosNorthFilter) => f.shortName
-    case f: Flamingos2Filter      => f.shortName
-    case f: GnirsFilter           => f.shortName
-    case _: None.type             => "none"
-    case r                        => r.toString
-
-  // I think these are valid Orderings because they should be consistent with ==
-  // They could probably be Orders, as well, but only Ordering is actually needed here.
-  private given Ordering[ItcInstrumentConfig#Filter] = Ordering.by(_.toString)
-
   private def formatInstrument(r: (Instrument, NonEmptyString)): String = r match
     case (i @ Instrument.Gnirs, m) => s"${i.longName} $m"
     case (i, _)                    => i.longName
@@ -197,81 +158,6 @@ private object SpectroscopyModesTable:
     case FocalPlane.SingleSlit   => "Single"
     case FocalPlane.MultipleSlit => "Multi"
     case FocalPlane.IFU          => "IFU"
-
-  private def itcCell(
-    c:   Pot[EitherNec[ItcTargetProblem, ItcResult]],
-    col: TimeOrSNColumn
-  ): VdomElement = {
-    val content: TagMod = c.toOption match
-      case Some(Left(errors))               =>
-        if (errors.exists(_.problem === ItcQueryProblem.UnsupportedMode))
-          <.span(Icons.Ban(^.color.red))
-            .withTooltip(tooltip = "Mode not supported", placement = Placement.RightStart)
-        else
-          import ItcQueryProblem.*
-
-          def renderName(name: Option[NonEmptyString]): String =
-            name.fold("")(n => s"$n: ")
-
-          val content: List[TagMod] =
-            errors
-              .collect:
-                case ItcTargetProblem(name, s @ SourceTooBright(_)) =>
-                  <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon))(
-                    renderName(name) + (s: ItcQueryProblem).shortName
-                  )
-                case ItcTargetProblem(name, GenericError(e))        =>
-                  e.split("\n")
-                    .map(u => <.span(u))
-                    .mkTagMod(<.span(renderName(name)), <.br, EmptyVdom)
-                case ItcTargetProblem(name, problem)                =>
-                  <.span(s"${renderName(name)}${problem.message}")
-              .toList
-              .intersperse(<.br: VdomNode)
-
-          <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
-            .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
-      case Some(Right(r: ItcResult.Result)) =>
-        val content = col.match
-          case TimeOrSNColumn.Time =>
-            formatDurationHours(r.duration)
-          case TimeOrSNColumn.SN   =>
-            r.snAt.map(_.total.value).foldMap(formatSN)
-
-        val tooltipText = col match
-          case TimeOrSNColumn.Time =>
-            s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
-          case TimeOrSNColumn.SN   =>
-            s"${r.snAt.map(_.single.value).foldMap(formatSN)} / exposure"
-
-        <.span(content)
-          .withTooltip(
-            placement = Placement.RightStart,
-            tooltip = tooltipText
-          )
-      case Some(Right(ItcResult.Pending))   =>
-        Icons.Spinner.withSpin(true)
-      case _                                =>
-        "-"
-
-    <.div(ExploreStyles.ITCCell, content)
-  }
-
-  private def progressingCellHeader(txt: String)(
-    header: HeaderContext[?, ?, TableMeta, ?, ?, ?, ?]
-  ) =
-    <.div(ExploreStyles.ITCHeaderCell)(
-      txt,
-      header.table.options.meta
-        .flatMap(_.itcProgress)
-        .map(p =>
-          CircularProgressbar(
-            p.percentage.value.value,
-            strokeWidth = 15,
-            className = "explore-modes-table-itc-circular-progressbar"
-          )
-        )
-    )
 
   private def slitWidthCell(config: ItcInstrumentConfig, slitWidth: ModeSlitSize): VdomNode =
     def fmtGmos(px: Quantity[BigDecimal, Pixels], xBin: GmosXBinning) =
@@ -346,10 +232,10 @@ private object SpectroscopyModesTable:
         .withCell(_.value.gratingStr)
         .withColumnSize(FixedSize(96.toPx))
         .sortableBy(_.gratingStr),
-      column(FilterColumnId, row => SpectroscopyModeRow.filter.get(row.entry))
-        .withCell(cell => formatFilter(cell.value))
+      column(FilterColumnId, row => SpectroscopyModeRow.instrumentConfig.get(row.entry))
+        .withCell(_.value.filterStr)
         .withColumnSize(FixedSize(69.toPx))
-        .sortable,
+        .sortableBy(_.filterStr),
       column(FPUColumnId, row => SpectroscopyModeRow.fpu.get(row.entry))
         .withCell(cell => formatFPU(cell.value))
         .withColumnSize(FixedSize(62.toPx))
