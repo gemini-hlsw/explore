@@ -25,14 +25,17 @@ import queries.common.ModesQueriesGQL
 import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription
 import queries.common.ProgramSummaryQueriesGQL.AllProgramConfigurationRequests
 
-trait OdbConfigApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F])
-    extends OdbConfigApi[F]:
+trait OdbConfigApiImpl[F[_]: MonadThrow](using
+  StreamingClient[F, ObservationDB],
+  Logger[F]
+) extends OdbConfigApi[F]:
+  self: OdbApiHelper[F] =>
 
   def scienceModes: F[ScienceModes] =
     ModesQueriesGQL
       .ScienceModes[F]
       .query(SupportedInstruments)
-      .raiseGraphQLErrors
+      .processErrors
       .map: u =>
         val imgModes: List[ImagingModeRow]       =
           u.imagingConfigOptions.zipWithIndex.map: (s, i) =>
@@ -48,7 +51,6 @@ trait OdbConfigApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB]
     programId: Program.Id
   ): F[List[ConfigurationRequestWithObsIds]] =
     drain[
-      F,
       ConfigurationRequestWithObsIds,
       ConfigurationRequest.Id,
       Option[AllProgramConfigurationRequests.Data.Program.ConfigurationRequests]
@@ -56,7 +58,7 @@ trait OdbConfigApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB]
       offset =>
         AllProgramConfigurationRequests[F]
           .query(programId, offset.orUnassign)
-          .raiseGraphQLErrors
+          .processErrors
           .map(_.program.map(_.configurationRequests)),
       _.foldMap(_.matches),
       _.fold(false)(_.hasMore),

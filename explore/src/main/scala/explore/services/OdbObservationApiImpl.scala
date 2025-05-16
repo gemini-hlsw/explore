@@ -45,11 +45,12 @@ import scala.concurrent.duration.*
 
 trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB], Logger[F])
     extends OdbObservationApi[F]:
+  self: OdbApiHelper[F] =>
+
   def updateObservations(input: UpdateObservationsInput): F[Unit] =
     UpdateObservationMutation[F]
       .execute(input)
-      .raiseGraphQLErrors
-      // .toastErrors
+      .processErrors
       .void
 
   def updateObservations(
@@ -100,7 +101,6 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
     obsIds:          List[Observation.Id],
     observationTime: Option[Instant]
   ): F[Unit] = {
-
     val editInput = ObservationTimesInput(observationTime =
       observationTime.flatMap(Timestamp.fromInstantTruncated).orUnassign
     )
@@ -111,7 +111,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
   }
 
@@ -119,7 +119,6 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
     obsIds:              List[Observation.Id],
     observationDuration: Option[TimeSpan]
   ): F[Unit] = {
-
     val editInput = ObservationTimesInput(
       observationDuration = observationDuration.map(_.toInput).orUnassign
     )
@@ -130,7 +129,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
   }
 
@@ -151,7 +150,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
   }
 
@@ -168,7 +167,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
   }
 
@@ -176,8 +175,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
     obsIds: List[Observation.Id],
     notes:  Option[NonEmptyString]
   ): F[Unit] = {
-    val editInput =
-      ObservationPropertiesInput(observerNotes = notes.orUnassign)
+    val editInput = ObservationPropertiesInput(observerNotes = notes.orUnassign)
 
     UpdateObservationMutation[F]
       .execute:
@@ -185,7 +183,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           WHERE = obsIds.toWhereObservation.assign,
           SET = editInput
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
   }
 
@@ -201,7 +199,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
             .map(gId => ObservationPropertiesInput(groupId = gId.assign))
             .orIgnore
         )
-      .raiseGraphQLErrorsOnNoData
+      .processNoDataErrors
       .map: result =>
         result.createObservation.observation
 
@@ -217,7 +215,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
             targetEnvironment = TargetEnvironmentInput(asterism = targetIds.toList.assign).assign
           ).assign
         )
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.createObservation.observation)
 
   def cloneObservation(
@@ -230,7 +228,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           observationId = obsId.assign,
           SET = ObservationPropertiesInput(groupId = newGroupId.orUnassign).assign
         )
-      .raiseGraphQLErrorsOnNoData
+      .processNoDataErrors
       .map(_.cloneObservation.newObservation)
 
   def applyObservation(
@@ -251,7 +249,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
             attachments = List.empty.assign // Always clean observation attachments
           ).assign
         )
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.cloneObservation.newObservation)
 
   def deleteObservation(obsId: Observation.Id): F[Unit] =
@@ -267,7 +265,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           WHERE = obsIds.toWhereObservation.assign,
           SET = ObservationPropertiesInput(existence = Existence.Deleted.assign)
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def undeleteObservations(obsIds: List[Observation.Id]): F[Unit] =
@@ -278,7 +276,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           SET = ObservationPropertiesInput(existence = Existence.Present.assign),
           includeDeleted = true.assign
         )
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   /**
@@ -301,7 +299,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
         groupIndex = groupIndex.assign
       )
     )
-    UpdateObservationMutation[F].execute(input).void
+    UpdateObservationMutation[F].execute(input).processErrors.void
 
   def setGuideTargetName(
     obsId:      Observation.Id,
@@ -311,7 +309,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
       observationId = obsId.assign,
       targetName = targetName.orUnassign
     )
-    SetGuideTargetName[F].execute(input).void
+    SetGuideTargetName[F].execute(input).processErrors.void
 
   def createConfigurationRequest(
     obsId:         Observation.Id,
@@ -321,7 +319,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
       observationId = obsId.assign,
       SET = ConfigurationRequestProperties(justification = justification.orIgnore).assign
     )
-    CreateConfigurationRequestMutation[F].execute(input).raiseGraphQLErrors.map(_._1)
+    CreateConfigurationRequestMutation[F].execute(input).processErrors.map(_._1)
 
   def updateConfiguration(
     obsId:              Observation.Id,
@@ -338,14 +336,14 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
 
     UpdateConfigurationMutation[F]
       .execute(input)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.updateObservations.observations.headOption.flatMap(_.observingMode))
 
   def setObservationWorkflowState(obsId: Observation.Id, st: ObservationWorkflowState): F[Unit] =
     SetObservationWorkflowStateMutation[F]
       .execute:
         SetObservationWorkflowStateInput(obsId, st)
-      .raiseGraphQLErrors
+      .processErrors
       .void
 
   def resolveObservationReference(
@@ -353,13 +351,13 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
   ): F[Option[(Program.Id, Observation.Id)]] =
     ResolveObsReference[F]
       .query(obsRef.assign)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.observation.map(r => (r.program.id, r.id)))
 
   def sequenceOffsets(obsId: Observation.Id): F[Option[ExecutionOffsets]] =
     SequenceOffsets[F]
       .query(obsId)
-      .raiseGraphQLErrors
+      .processErrors
       .map(_.observation.map(_.execution))
 
   def observationEditSubscription(
@@ -383,16 +381,16 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
   def observationExecution(obsId: Observation.Id): F[Option[Execution]] =
     ObservationExecutionQuery[F]
       .query(obsId)
-      .raiseGraphQLErrorsOnNoData
+      .processNoDataErrors
       .map(_.observation.map(_.execution))
 
   def allProgramObservations(programId: Program.Id): F[List[Observation]] =
-    drain[F, Observation, Observation.Id, AllProgramObservations.Data.Observations](
+    drain[Observation, Observation.Id, AllProgramObservations.Data.Observations](
       offset =>
         AllProgramObservations[F]
           .query(programId.toWhereObservation, offset.orUnassign)
           // We need this because we currently get errors for things like having no targets
-          .raiseGraphQLErrorsOnNoData
+          .processNoDataErrors
           .map(_.observations),
       _.matches,
       _.hasMore,
@@ -403,7 +401,6 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
     whereObservation: WhereObservation
   ): F[List[ObservationsWorkflowQuery.Data.Observations.Matches]] =
     drain[
-      F,
       ObservationsWorkflowQuery.Data.Observations.Matches,
       Observation.Id,
       ObservationsWorkflowQuery.Data.Observations
@@ -411,7 +408,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
       offset =>
         ObservationsWorkflowQuery[F]
           .query(whereObservation, offset.orUnassign)
-          .raiseGraphQLErrors
+          .processErrors
           .map(_.observations),
       _.matches,
       _.hasMore,
