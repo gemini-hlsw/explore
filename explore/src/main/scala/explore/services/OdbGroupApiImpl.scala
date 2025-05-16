@@ -8,7 +8,6 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
-import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.Group
 import lucuma.core.model.Program
@@ -89,5 +88,5 @@ trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB],
   ): Resource[F, fs2.Stream[F, GroupEditSubscription.Data.GroupEdit]] =
     GroupEditSubscription
       .subscribe[F](programId.toProgramEditInput)
-      .logGraphQLErrors(_ => "Error in GroupEditSubscription subscription")
+      .processErrors("GroupEditSubscription")
       .map(_.map(_.groupEdit))

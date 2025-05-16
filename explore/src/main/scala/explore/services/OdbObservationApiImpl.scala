@@ -357,7 +357,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
   def sequenceOffsets(obsId: Observation.Id): F[Option[ExecutionOffsets]] =
     SequenceOffsets[F]
       .query(obsId)
-      .processErrors
+      .raiseGraphQLErrors
       .map(_.observation.map(_.execution))
 
   def observationEditSubscription(
@@ -375,13 +375,13 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
   ): Resource[F, fs2.Stream[F, ProgramObservationsDelta.Data.ObservationEdit]] =
     ProgramObservationsDelta
       .subscribe[F](programId.toObservationEditInput)
-      .logGraphQLErrors(_ => "Error in ProgramObservationsDelta subscription")
+      .processErrors("ProgramObservationsDelta")
       .map(_.map(_.observationEdit))
 
   def observationExecution(obsId: Observation.Id): F[Option[Execution]] =
     ObservationExecutionQuery[F]
       .query(obsId)
-      .processNoDataErrors
+      .raiseGraphQLErrorsOnNoData
       .map(_.observation.map(_.execution))
 
   def allProgramObservations(programId: Program.Id): F[List[Observation]] =
@@ -420,5 +420,5 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
   ): Resource[F, fs2.Stream[F, ObsCalcSubscription.Data.ObscalcUpdate]] =
     ObsCalcSubscription
       .subscribe[F](ObscalcUpdateInput(programId.assign))
-      .logGraphQLErrors(_ => "Error in ObsCalcSubscription subscription")
+      .processErrors("ObsCalcSubscription")
       .map(_.map(_.obscalcUpdate))

@@ -3,15 +3,17 @@
 
 package explore.services
 
-import cats.MonadThrow
+import cats.effect.Resource
+import cats.effect.Sync
 import cats.syntax.all.*
 import clue.ResponseException
 import clue.model.GraphQLError
 import clue.model.GraphQLResponse
 import clue.model.GraphQLResponse.*
 import lucuma.odb.data.OdbError
+import org.typelevel.log4cats.Logger
 
-trait OdbApiHelper[F[_]: MonadThrow](resetCache: String => F[Unit]):
+trait OdbApiHelper[F[_]: Sync: Logger](resetCache: String => F[Unit]):
   private case class OdbAdaptedError[D](message: String, cause: ResponseException[D])
       extends RuntimeException(message, cause)
 
@@ -23,14 +25,16 @@ trait OdbApiHelper[F[_]: MonadThrow](resetCache: String => F[Unit]):
         odbError   <- json.as[OdbError].toOption
       yield odbError
 
+  private val adaptResponseException: PartialFunction[Throwable, Throwable] =
+    case e @ ResponseException(errors, data) =>
+      errors
+        .traverse(_.asOdbError)
+        .map(odbErrors => OdbAdaptedError(odbErrors.map(_.message).toList.mkString("\n"), e))
+        .getOrElse(e)
+
   extension [A](fa: F[A])
-    private def processOdbErrors: F[A] =
-      fa.adaptError:
-        case e @ ResponseException(errors, data) =>
-          errors
-            .traverse(_.asOdbError)
-            .map(odbErrors => OdbAdaptedError(odbErrors.map(_.message).toList.mkString("\n"), e))
-            .getOrElse(e)
+    private def adaptOdbErrors: F[A] =
+      fa.adaptError(adaptResponseException)
 
     protected def resetCacheOnError: F[A] =
       fa.onError: e =>
@@ -38,10 +42,10 @@ trait OdbApiHelper[F[_]: MonadThrow](resetCache: String => F[Unit]):
 
   extension [D](fa: F[GraphQLResponse[D]])
     protected def processErrors: F[D] =
-      fa.raiseGraphQLErrors.processOdbErrors.resetCacheOnError
+      fa.raiseGraphQLErrors.adaptOdbErrors.resetCacheOnError
 
     protected def processNoDataErrors: F[D] =
-      fa.raiseGraphQLErrorsOnNoData.processOdbErrors.resetCacheOnError
+      fa.raiseGraphQLErrorsOnNoData.adaptOdbErrors.resetCacheOnError
 
   protected def drain[A, Id, R](
     fetch:      Option[Id] => F[R],
@@ -59,3 +63,13 @@ trait OdbApiHelper[F[_]: MonadThrow](resetCache: String => F[Unit]):
 
     go(none, List.empty)
   }
+
+  extension [D](subscription: Resource[F, fs2.Stream[F, GraphQLResponse[D]]])
+    protected def processErrors(logPrefix: String): Resource[F, fs2.Stream[F, D]] =
+      subscription.raiseFirstNoDataError
+        .handleGraphQLErrors: e =>
+          val re: Throwable = adaptResponseException(e)
+          Logger[F].error(re)(s"[$logPrefix] Error in subscription")
+        .map:
+          _.onError: e =>
+            fs2.Stream.eval(resetCache(e.getMessage))

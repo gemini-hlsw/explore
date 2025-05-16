@@ -118,7 +118,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
   ): Resource[F, fs2.Stream[F, ProgramTargetsDelta.Data.TargetEdit]] =
     ProgramTargetsDelta
       .subscribe[F](programId.toTargetEditInput)
-      .logGraphQLErrors(_ => "Error in ProgramTargetsDelta subscription")
+      .processErrors("ProgramTargetsDelta")
       .map(_.map(_.targetEdit))
 
   def searchTargetsByNamePrefix(
