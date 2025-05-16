@@ -8,7 +8,6 @@ import cats.effect.Resource
 import cats.implicits.*
 import clue.StreamingClient
 import clue.data.syntax.*
-import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.Attachment
 import explore.model.ProgramDetails
@@ -274,7 +273,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
   def programEditsSubscription(programId: Program.Id): Resource[F, fs2.Stream[F, ProgramDetails]] =
     ProgramEditDetailsSubscription
       .subscribe[F](programId.toProgramEditInput)
-      .logGraphQLErrors(_ => "Error in ProgramEditDetailsSubscription subscription")
+      .processErrors("ProgramEditDetailsSubscription")
       .map(_.map(_.programEdit.value))
 
   def programAttachmentsDeltaSubscription(
@@ -282,7 +281,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
   ): Resource[F, fs2.Stream[F, List[Attachment]]] =
     ProgramEditAttachmentSubscription
       .subscribe[F](programId.toProgramEditInput)
-      .logGraphQLErrors(_ => "Error in ProgramEditAttachmentSubscription subscription")
+      .processErrors("ProgramEditAttachmentSubscription")
       .map(_.map(_.programEdit.value.attachments))
 
   def programDeltaSubscription(
@@ -290,5 +289,5 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
   ): Resource[F, fs2.Stream[F, ProgramInfo]] =
     ProgramInfoDelta
       .subscribe[F]()
-      .logGraphQLErrors(_ => "Error in ProgramInfoDelta subscription")
+      .processErrors("ProgramInfoDelta")
       .map(_.map(_.programEdit.value))

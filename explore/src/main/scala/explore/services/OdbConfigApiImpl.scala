@@ -8,7 +8,6 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
-import clue.model.GraphQLResponse.*
 import explore.model.ConfigurationRequestWithObsIds
 import explore.model.SupportedInstruments
 import explore.modes.ImagingModeRow
@@ -70,5 +69,5 @@ trait OdbConfigApiImpl[F[_]: MonadThrow](using
   ): Resource[F, fs2.Stream[F, ConfigurationRequestWithObsIds]] =
     ConfigurationRequestSubscription
       .subscribe[F](ConfigurationRequestEditInput(programId.assign))
-      .logGraphQLErrors(_ => "Error in ConfigurationRequestSubscription subscription")
+      .processErrors("ConfigurationRequestSubscription")
       .map(_.map(_.configurationRequestEdit.configurationRequest).unNone)
