@@ -25,9 +25,25 @@ object SimbadSearch {
   def search[F[_]](
     term:     NonEmptyString,
     wildcard: Boolean = false
+  )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] =
+    val harvardUrl = uri"https://simbad.cfa.harvard.edu/simbad/sim-id"
+    val strasbgUrl = uri"https://simbad.u-strasbg.fr/simbad/sim-id"
+    // Try both harvard and strasbourg and return whichever completes first.
+    // If a site is down (as has been known to happen with harvard), the one that is up
+    /// will complete. I thought I would have to use racePair to handle errors, but it
+    // seems to work as is.
+    F.race(searchSingle(harvardUrl, term, wildcard), searchSingle(strasbgUrl, term, wildcard)).map {
+      case Left(results)  => results
+      case Right(results) => results
+    }
+
+  private def searchSingle[F[_]](
+    simbadUrl: Uri,
+    term:      NonEmptyString,
+    wildcard:  Boolean = false
   )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] = {
     val baseURL =
-      uri"https://simbad.cfa.harvard.edu/simbad/sim-id"
+      simbadUrl
         .withQueryParam("Ident", term.value)
         .withQueryParam("output.format", "VOTable")
         .withQueryParam("output.max", Constants.SimbadResultLimit)
