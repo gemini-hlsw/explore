@@ -106,7 +106,7 @@ object ProgramCacheController
       .groupTimeRange(groupId)
       .map: result =>
         val fn = result
-          .map(_.timeEstimateRange2)
+          .map(_.timeEstimateRange)
           .fold(identity[ProgramSummaries])(timeRange =>
             ProgramSummaries.groups.modify(
               _.updatedWith(groupId)(_.map(Group.timeEstimateRange.replace(timeRange)))
