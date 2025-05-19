@@ -38,7 +38,8 @@ trait OdbApiHelper[F[_]: Sync: Logger](resetCache: String => F[Unit]):
 
     protected def resetCacheOnError: F[A] =
       fa.onError: e =>
-        resetCache(e.getMessage)
+        Logger[F].error(e)(s"Error in ODB API call, resetting cache") >>
+          resetCache(e.getMessage)
 
   extension [D](fa: F[GraphQLResponse[D]])
     protected def processErrors: F[D] =
@@ -72,4 +73,6 @@ trait OdbApiHelper[F[_]: Sync: Logger](resetCache: String => F[Unit]):
           Logger[F].error(re)(s"[$logPrefix] Error in subscription")
         .map:
           _.onError: e =>
-            fs2.Stream.eval(resetCache(e.getMessage))
+            fs2.Stream.eval:
+              Logger[F].error(e)(s"Error in ODB API call, resetting cache") >>
+                resetCache(e.getMessage)
