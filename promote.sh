@@ -31,10 +31,22 @@ echo "Promote ODB to $TARGET_ENV"
 heroku pipelines:promote -a lucuma-postgres-odb-${SOURCE_ENV} -t lucuma-postgres-odb-${TARGET_ENV}
 
 # Update user preferences
+HASURA_ENDPOINT=""
+case $TARGET_ENV in
+  "production")
+    HASURA_ENDPOINT="https://prefs.gpp.gemini.edu"
+    ;;
+  "staging")
+    HASURA_ENDPOINT="https://gpp-prefs-staging.lucuma.xyz"
+    ;;
+  *)
+    echo "Unknown environment: $TARGET_ENV"
+    exit 1
+    ;;
+esac
 echo "Promote user preferences db to $TARGET_ENV"
 cd hasura/user-prefs
 unset NODE_OPTIONS
-HASURA_ENDPOINT="https://gpp-prefs-${TARGET_ENV}.lucuma.xyz"
 hasura migrate apply --endpoint "$HASURA_ENDPOINT" --database-name default
 hasura metadata apply --endpoint "$HASURA_ENDPOINT"
 hasura metadata reload --endpoint "$HASURA_ENDPOINT"

@@ -13,6 +13,7 @@ import lucuma.core.math.BoundedInterval
 import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Wavelength
+import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.CloudExtinction
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
@@ -178,19 +179,33 @@ trait DisplayImplicits:
     case ScienceSubtype.DemoScience        => "Demo Science"
     case ScienceSubtype.SystemVerification => "System Verification"
 
+  private def formatWavelength(units: WavelengthUnits, q: Wavelength) =
+    units match
+      case WavelengthUnits.Nanometers  =>
+        val v = q.toNanometers.value.value.setScale(1, BigDecimal.RoundingMode.DOWN)
+        "%.1f".format(v)
+      case WavelengthUnits.Micrometers =>
+        val v = q.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN)
+        "%.3f".format(v)
+
+  def wavelengthDisplay(units: WavelengthUnits): Display[Wavelength] =
+    Display.byShortName(formatWavelength(units, _))
+
   def wavelengthIntervalDisplay(units: WavelengthUnits): Display[BoundedInterval[Wavelength]] =
     Display.byShortName: interval =>
       List(interval.lower, interval.upper)
-        .map { q =>
-          units match
-            case WavelengthUnits.Nanometers  =>
-              val v = q.toNanometers.value.value.setScale(1, BigDecimal.RoundingMode.DOWN)
-              "%.1f".format(v)
-            case WavelengthUnits.Micrometers =>
-              val v = q.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN)
-              "%.3f".format(v)
-        }
+        .map(formatWavelength(units, _))
         .mkString(" - ")
+
+  def wavelengthDeltaDisplay(units: WavelengthUnits): Display[WavelengthDelta] =
+    Display.byShortName: delta =>
+      units match
+        case WavelengthUnits.Nanometers  =>
+          val v = delta.toNanometers.value.value.setScale(1, BigDecimal.RoundingMode.DOWN)
+          "%.1f".format(v)
+        case WavelengthUnits.Micrometers =>
+          val v = delta.toMicrometers.value.value.setScale(3, BigDecimal.RoundingMode.DOWN)
+          "%.3f".format(v)
 
   given Display[CatalogName] = Display.byShortName:
     case CatalogName.Simbad => "SIMBAD"
