@@ -7,12 +7,12 @@ import explore.config.sequence.SequenceTable
 import explore.config.sequence.SequenceTableBuilder
 import lucuma.core.enums.SequenceType
 import lucuma.core.model.sequence.*
+import lucuma.core.model.sequence.flamingos2.Flamingos2DynamicConfig
+import lucuma.core.model.sequence.flamingos2.Flamingos2StaticConfig
 import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.model.Visit
-import lucuma.core.model.sequence.flamingos2.Flamingos2DynamicConfig
-import lucuma.core.model.sequence.flamingos2.Flamingos2StaticConfig
 
 case class Flamingos2SequenceTable(
   visits:     List[Visit.Flamingos2],
