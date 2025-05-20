@@ -103,7 +103,14 @@ object SequenceTile extends SequenceTileHelper:
                       snPerClass
                     )
                   case SequenceData(InstrumentExecutionConfig.Flamingos2(config), snPerClass) =>
-                    throw new NotImplementedError("Flamingos2 not implemented")
+                    Flamingos2SequenceTable(
+                      visitsOpt
+                        .collect:
+                          case ExecutionVisits.Flamingos2(visits) => visits.toList
+                        .orEmpty,
+                      config,
+                      snPerClass
+                    )
                 },
             errorRender = m =>
               <.div(ExploreStyles.SequencesPanelError)(

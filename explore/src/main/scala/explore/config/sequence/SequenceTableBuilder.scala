@@ -4,7 +4,6 @@
 package explore.config.sequence
 
 import cats.Eq
-import cats.effect.IO
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -21,12 +20,18 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
-import org.typelevel.log4cats.Logger
 
 import scala.scalajs.LinkingInfo
 
-private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
-  private type Props = GmosSequenceTable[S, D]
+private type SequenceColumnsType[D] =
+  SequenceColumns[D, SequenceIndexedRow[D], SequenceRow[D], Nothing, Nothing, Nothing]
+private type ColumnType[D]          =
+  ColumnDef[Expandable[HeaderOrRow[SequenceIndexedRow[D]]], ?, Nothing, Nothing, Nothing, Any, Any]
+
+private trait SequenceTableBuilder[S, D: Eq](
+  instrumentColumns: SequenceColumnsType[D] => List[ColumnType[D]]
+) extends SequenceRowBuilder[D]:
+  private type Props = SequenceTable[S, D]
 
   private lazy val ColDef = ColumnDef[SequenceTableRowType]
 
@@ -38,21 +43,22 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
     ExtraRowColumnId -> FixedSize(0.toPx)
   ) ++ SequenceColumns.BaseColumnSizes
 
-  private def columns(using Logger[IO]): List[ColDef.Type] =
-    List(
-      SequenceColumns
-        .headerCell(HeaderColumnId, ColDef)
-        .withColumnSize(ColumnSizes(HeaderColumnId)),
-      ColDef(
-        ExtraRowColumnId,
-        header = "",
-        cell = _.row.original.value.toOption
-          .map(_.step)
-          .collect:
-            case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
-              renderVisitExtraRow(step, showOngoingLabel = true)
-      ).withColumnSize(ColumnSizes(ExtraRowColumnId))
-    ) ++ SequenceColumns.gmosColumns(ColDef, _.step.some, _.index.some)
+  private lazy val columns: Reusable[List[ColDef.Type]] =
+    Reusable.always:
+      List(
+        SequenceColumns
+          .headerCell(HeaderColumnId, ColDef)
+          .withColumnSize(ColumnSizes(HeaderColumnId)),
+        ColDef(
+          ExtraRowColumnId,
+          header = "",
+          cell = _.row.original.value.toOption
+            .map(_.step)
+            .collect:
+              case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
+                renderVisitExtraRow(step, showOngoingLabel = true)
+        ).withColumnSize(ColumnSizes(ExtraRowColumnId))
+      ) ++ instrumentColumns(SequenceColumns(ColDef, _.step.some, _.index.some))
 
   private lazy val DynTableDef = DynTable(
     ColumnSizes,
@@ -67,9 +73,6 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
     ScalaFnComponent[Props]: props =>
       for
         ctx        <- useContext(AppContext.ctx)
-        cols       <- useMemo(()): _ =>
-                        import ctx.given
-                        columns
         visitsData <- useMemo(props.visits):
                         visitsSequences(_, none)
         rows       <-
@@ -89,7 +92,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
         table      <-
           useReactTable:
             TableOptions(
-              cols.map(dynTable.setInitialColWidths),
+              columns.map(dynTable.setInitialColWidths),
               rows,
               enableSorting = false,
               enableColumnResizing = true,
@@ -157,7 +160,7 @@ private trait GmosSequenceTableBuilder[S, D: Eq] extends SequenceRowBuilder[D]:
             cell.row.original.value match
               case Left(_)        => // Header
                 cell.column.id match
-                  case id if id == HeaderColumnId => TagMod(^.colSpan := cols.length)
+                  case id if id == HeaderColumnId => TagMod(^.colSpan := columns.length)
                   case _                          => ^.display.none
               case Right(stepRow) =>
                 cell.column.id match

@@ -4,10 +4,8 @@
 package explore.config.sequence
 
 import cats.syntax.all.*
-import lucuma.core.enums.ObserveClass
 import lucuma.core.enums.SequenceType
 import lucuma.core.model.sequence.*
-import lucuma.core.model.sequence.gmos.DynamicConfig
 import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.schemas.model.Visit
@@ -15,7 +13,7 @@ import lucuma.schemas.model.enums.AtomExecutionState
 import lucuma.schemas.model.enums.StepExecutionState
 import lucuma.ui.sequence.*
 
-private trait GmosSequenceTable[S, D]:
+private trait SequenceTable[S, D]:
   def visits: List[Visit[D]]
   def config: ExecutionConfig[S, D]
   def snPerClass: Map[SequenceType, (SingleSN, TotalSN)]
@@ -32,19 +30,7 @@ private trait GmosSequenceTable[S, D]:
               case SequenceType.Science => sequence.possibleFuture
               case _                    => List.empty
           ),
-          i => // Only show S/N for science or acq if FPU is None
-            snPerClass
-              .get(seqType)
-              .filter: _ =>
-                i.observeClass match
-                  case a @ ObserveClass.Acquisition =>
-                    i.instrumentConfig match
-                      case DynamicConfig.GmosNorth(_, _, _, _, _, _, None) => true
-                      case DynamicConfig.GmosSouth(_, _, _, _, _, _, None) => true
-                      case _                                               => false
-                  case ObserveClass.Science         => true
-                  case _                            => false
-              .map(_._1.value)
+          snPerClass.get(seqType).map(_._1.value)
         )
     if (currentSeqType.contains_(seqType)) allSteps.tail
     else allSteps
