@@ -11,15 +11,15 @@ import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.model.Visit
+import lucuma.core.model.sequence.flamingos2.Flamingos2DynamicConfig
+import lucuma.core.model.sequence.flamingos2.Flamingos2StaticConfig
 
-case class GmosSouthSequenceTable(
-  visits:     List[Visit.GmosSouth],
-  config:     ExecutionConfig.GmosSouth,
+case class Flamingos2SequenceTable(
+  visits:     List[Visit.Flamingos2],
+  config:     ExecutionConfig.Flamingos2,
   snPerClass: Map[SequenceType, (SingleSN, TotalSN)]
-) extends ReactFnProps(GmosSouthSequenceTable.component)
-    with SequenceTable[gmos.StaticConfig.GmosSouth, gmos.DynamicConfig.GmosSouth]
+) extends ReactFnProps(Flamingos2SequenceTable.component)
+    with SequenceTable[Flamingos2StaticConfig, Flamingos2DynamicConfig]
 
-object GmosSouthSequenceTable
-    extends SequenceTableBuilder[gmos.StaticConfig.GmosSouth, gmos.DynamicConfig.GmosSouth](
-      _.forGmos
-    )
+object Flamingos2SequenceTable
+    extends SequenceTableBuilder[Flamingos2StaticConfig, Flamingos2DynamicConfig](_.forFlamingos2)
