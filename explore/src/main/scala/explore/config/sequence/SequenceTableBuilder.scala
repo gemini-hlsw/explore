@@ -69,7 +69,7 @@ private trait SequenceTableBuilder[S, D: Eq](
     )
   )
 
-  protected[sequence] lazy val component =
+  protected[sequence] val component =
     ScalaFnComponent[Props]: props =>
       for
         ctx        <- useContext(AppContext.ctx)
