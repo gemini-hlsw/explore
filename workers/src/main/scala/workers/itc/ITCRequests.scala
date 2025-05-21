@@ -13,12 +13,14 @@ import explore.model.Constants
 import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.modes.ItcInstrumentConfig
-import explore.modes.SpectroscopyModeRow
+import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Timestamp
 import lucuma.itc.Error
 import lucuma.itc.client.ClientCalculationResult
+import lucuma.itc.client.ImagingInput
+import lucuma.itc.client.ImagingParameters
 import lucuma.itc.client.ItcClient
 import lucuma.itc.client.SpectroscopyInput
 import lucuma.itc.client.SpectroscopyParameters
@@ -47,7 +49,7 @@ object ITCRequests:
     constraints:         ConstraintSet,
     asterism:            NonEmptyList[ItcTarget],
     customSedTimestamps: List[Timestamp],
-    modes:               List[SpectroscopyModeRow],
+    modes:               List[ItcInstrumentConfig],
     cache:               Cache[F],
     callback:            Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
@@ -78,19 +80,34 @@ object ITCRequests:
       ) *>
         params.mode.toItcClientMode
           .traverse: mode =>
-            ItcClient[F]
-              .spectroscopy(
-                SpectroscopyInput(
-                  SpectroscopyParameters(
-                    exposureTimeMode = params.exposureTimeMode,
-                    constraints = params.constraints,
-                    mode = mode
-                  ),
-                  params.asterism.map(_.gaiaFree.input)
-                ),
-                false
-              )
-              .map(r => Map(params -> itcResults(r)))
+            val result =
+              if (params.mode.mode == ScienceMode.Imaging)
+                ItcClient[F]
+                  .imaging(
+                    ImagingInput(
+                      ImagingParameters(
+                        exposureTimeMode = params.exposureTimeMode,
+                        constraints = params.constraints,
+                        mode = mode
+                      ),
+                      params.asterism.map(_.gaiaFree.input)
+                    ),
+                    false
+                  )
+              else
+                ItcClient[F]
+                  .spectroscopy(
+                    SpectroscopyInput(
+                      SpectroscopyParameters(
+                        exposureTimeMode = params.exposureTimeMode,
+                        constraints = params.constraints,
+                        mode = mode
+                      ),
+                      params.asterism.map(_.gaiaFree.input)
+                    ),
+                    false
+                  )
+            result.map(r => Map(params -> itcResults(r)))
 
     val cacheableRequest =
       Cacheable(
@@ -107,7 +124,6 @@ object ITCRequests:
 
     val itcRowsParams: List[ItcRequestParams] =
       modes
-        .map(_.instrument)
         // Only handle known modes
         .collect:
           case m @ ItcInstrumentConfig.GmosNorthSpectroscopy(_, _, _, _) =>
@@ -115,6 +131,10 @@ object ITCRequests:
           case m @ ItcInstrumentConfig.GmosSouthSpectroscopy(_, _, _, _) =>
             ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
           case m @ ItcInstrumentConfig.Flamingos2Spectroscopy(_, _, _)   =>
+            ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
+          case m @ ItcInstrumentConfig.GmosNorthImaging(_, _)            =>
+            ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
+          case m @ ItcInstrumentConfig.GmosSouthImaging(_, _)            =>
             ItcRequestParams(exposureTimeMode, constraints, asterism, customSedTimestamps, m)
 
     parTraverseN(

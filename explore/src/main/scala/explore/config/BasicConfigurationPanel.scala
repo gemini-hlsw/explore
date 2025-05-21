@@ -117,7 +117,7 @@ private object BasicConfigurationPanel:
                   )
                 )
             else
-              ImagingConfigurationPanel(imaging, true, props.calibrationRole)
+              ImagingConfigurationPanel(imaging, props.readonly, props.calibrationRole)
                 .unless(isSpectroscopy)
           ),
           props.spectroscopyView
@@ -127,7 +127,7 @@ private object BasicConfigurationPanel:
                 props.selectedConfig,
                 spectroscopy.get,
                 props.constraints,
-                if (props.itcTargets.isEmpty) none else props.itcTargets.some,
+                props.itcTargets,
                 props.baseCoordinates,
                 props.confMatrix.spectroscopy,
                 props.customSedTimestamps,
@@ -135,7 +135,16 @@ private object BasicConfigurationPanel:
               )
             )
             .when(isSpectroscopy),
-          ImagingModesTable(props.userId, props.confMatrix.imaging, props.units)
+          ImagingModesTable(
+            props.userId,
+            imaging.get,
+            props.confMatrix.imaging,
+            props.constraints,
+            props.itcTargets,
+            props.baseCoordinates,
+            props.customSedTimestamps,
+            props.units
+          )
             .unless(isSpectroscopy),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             message.map(Tag(_, severity = Tag.Severity.Success)),

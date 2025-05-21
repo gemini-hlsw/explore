@@ -5,18 +5,23 @@ package explore.config
 
 import cats.Order
 import cats.data.EitherNec
+import cats.data.NonEmptyList
 import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.react.hooks.*
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.ImagingConfigurationOptions
 import explore.model.Progress
 import explore.model.display.*
+import explore.model.display.given
 import explore.model.enums.TableId
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
+import explore.model.reusability.given
 import explore.modes.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
@@ -28,10 +33,14 @@ import lucuma.core.math.BoundedInterval.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
 import lucuma.react.syntax.*
 import lucuma.react.table.*
@@ -42,10 +51,20 @@ import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
 
 final case class ImagingModesTable(
-  userId: Option[User.Id],
-  matrix: ImagingModesMatrix,
-  units:  WavelengthUnits
-) extends ReactFnProps(ImagingModesTable.component)
+  userId:              Option[User.Id],
+  imaging:             ImagingConfigurationOptions,
+  matrix:              ImagingModesMatrix,
+  constraints:         ConstraintSet,
+  targets:             List[ItcTarget],
+  baseCoordinates:     Option[CoordinatesAtVizTime],
+  customSedTimestamps: List[Timestamp],
+  units:               WavelengthUnits
+) extends ReactFnProps(ImagingModesTable.component):
+  val validTargets: Option[NonEmptyList[ItcTarget]] =
+    NonEmptyList.fromList(targets.filter(_.canQueryITC))
+  // Temporary until we have exposure time mode in the imaging requirements
+  val exposureTimeMode: Option[ExposureTimeMode]    =
+    imaging.signalToNoise.map(sn => ExposureTimeMode.SignalToNoiseMode(sn, Wavelength.Min))
 
 object ImagingModesTable extends ModesTableCommon:
 
@@ -74,6 +93,12 @@ object ImagingModesTable extends ModesTableCommon:
         case g: GmosSouthFilter => g.wavelength.some
         case _                  => None
 
+    private def filterType: String =
+      filter match
+        case g: GmosNorthFilter => g.filterType.shortName
+        case g: GmosSouthFilter => g.filterType.shortName
+        case _                  => "-"
+
     private def wavelengthRangeAndDelta
       : (Option[BoundedInterval[Wavelength]], Option[WavelengthDelta]) =
       def forGmos(
@@ -91,7 +116,8 @@ object ImagingModesTable extends ModesTableCommon:
     entry:  ImagingModeRow,
     result: Pot[EitherNec[ItcTargetProblem, ItcResult]]
   ) extends TableRowWithResult:
-    val rowId: RowId = RowId(entry.id.orEmpty.toString)
+    val rowId: RowId                = RowId(entry.id.orEmpty.toString)
+    val config: ItcInstrumentConfig = entry.instrument
 
   private val ColDef = ColumnDef[ImagingModeRowWithResult].WithTableMeta[TableMeta]
 
@@ -99,6 +125,7 @@ object ImagingModesTable extends ModesTableCommon:
   private val TimeColumnId: ColumnId        = ColumnId("time")
   private val SNColumnId: ColumnId          = ColumnId("sn")
   private val FilterColumnId: ColumnId      = ColumnId("filter")
+  private val FilterTypeColumnId: ColumnId  = ColumnId("filter_type")
   private val LambdaColumnId: ColumnId      = ColumnId("lambda")
   private val DeltaLambdaColumnId: ColumnId = ColumnId("delta_lambda")
   private val FovColumnId: ColumnId         = ColumnId("fov")
@@ -109,6 +136,7 @@ object ImagingModesTable extends ModesTableCommon:
       TimeColumnId        -> "Time",
       SNColumnId          -> "S/N",
       FilterColumnId      -> "Filter",
+      FilterTypeColumnId  -> "Filter Type",
       LambdaColumnId      -> "λ",
       DeltaLambdaColumnId -> "Δλ",
       FovColumnId         -> "FoV"
@@ -150,6 +178,10 @@ object ImagingModesTable extends ModesTableCommon:
         .withCell(_.value.filterStr)
         .withColumnSize(FixedSize(69.toPx))
         .sortableBy(_.filterStr),
+      column(FilterTypeColumnId, row => ImagingModeRow.filter.get(row.entry))
+        .withCell(_.value.filterType)
+        .withColumnSize(FixedSize(85.toPx))
+        .sortableBy(_.filterType),
       column(LambdaColumnId, row => ImagingModeRow.filter.get(row.entry).wavelength)
         .withHeader(s"λ ${units.symbol}")
         .withCell(_.value.fold("-")(_.shortName))
@@ -177,15 +209,30 @@ object ImagingModesTable extends ModesTableCommon:
   private val component = ScalaFnComponent[ImagingModesTable]: props =>
     for {
       ctx         <- useContext(AppContext.ctx)
-      rows        <- useMemo(props.matrix): matrix =>
+      itcResults  <- useStateView(ItcResultsCache.Empty)
+      itcProgress <- useStateView(none[Progress])
+      rows        <- useMemo(props.matrix,
+                             props.exposureTimeMode,
+                             props.validTargets,
+                             props.constraints,
+                             props.customSedTimestamps,
+                             itcResults.get.cache.size
+                     ): (matrix, etm, asterism, constraints, customSedTimestamps, _) =>
                        matrix.matrix.map: row =>
+                         val result = (asterism, etm).mapN: (_, e) =>
+                           itcResults.get.forRow(
+                             e,
+                             constraints,
+                             asterism,
+                             customSedTimestamps,
+                             row
+                           )
                          ImagingModeRowWithResult(
                            row,
-                           Pot.Pending
+                           Pot.fromOption(result)
                          )
       cols        <- useMemo(props.units): units =>
                        columns(units).filterNot(_.id.value === SNColumnId.value)
-      itcProgress <- useState(none[Progress])
       table       <- useReactTableWithStateStore:
                        import ctx.given
 
@@ -195,33 +242,55 @@ object ImagingModesTable extends ModesTableCommon:
                            rows,
                            getRowId = (row, _, _) => row.rowId,
                            enableSorting = true,
-                           meta = TableMeta(itcProgress.value)
+                           meta = TableMeta(itcProgress.get)
                          ),
                          TableStore(props.userId, TableId.ImagingModes, cols)
                        )
+      sortedRows  <- useMemo((rows, table.getState().sorting))(_ =>
+                       table.getSortedRowModel().rows.map(_.original).toList
+                     )
+      itcHookData <- useItc(
+                       itcResults,
+                       itcProgress,
+                       Callback.empty,
+                       props.exposureTimeMode,
+                       props.constraints,
+                       props.validTargets,
+                       props.customSedTimestamps,
+                       sortedRows
+                     )
 
       virtualizerRef <- useRef(none[HTMLTableVirtualizer])
-    } yield React.Fragment(
-      <.div(ExploreStyles.ModesTableTitle)(
-        <.label(
-          ExploreStyles.ModesTableCount,
-          s"${rows.length} available configurations",
-          HelpIcon("configuration/imaging_table.md".refined)
-        )
-      ),
-      <.div(
-        ExploreStyles.ExploreTable,
-        ExploreStyles.ExploreBorderTable,
-        ExploreStyles.ModesTable
-      )(
-        PrimeAutoHeightVirtualizedTable(
-          table,
-          estimateSize = _ => 32.toPx,
-          striped = true,
-          compact = Compact.Very,
-          containerMod = ^.overflow.auto,
-          virtualizerRef = virtualizerRef,
-          emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
+    } yield
+      val errlabel       = itcHookData.errorLabel(true)
+      val selectedTarget = findSelectedTarget(rows.value, props.validTargets)
+
+      React.Fragment(
+        <.div(ExploreStyles.ModesTableTitle)(
+          <.label(
+            ExploreStyles.ModesTableCount,
+            s"${rows.length} available configurations",
+            HelpIcon("configuration/imaging_table.md".refined)
+          ),
+          <.div(
+            ExploreStyles.ModesTableInfo,
+            errlabel.toTagMod,
+            selectedTarget
+          )
+        ),
+        <.div(
+          ExploreStyles.ExploreTable,
+          ExploreStyles.ExploreBorderTable,
+          ExploreStyles.ModesTable
+        )(
+          PrimeAutoHeightVirtualizedTable(
+            table,
+            estimateSize = _ => 32.toPx,
+            striped = true,
+            compact = Compact.Very,
+            containerMod = ^.overflow.auto,
+            virtualizerRef = virtualizerRef,
+            emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
+          )
         )
       )
-    )

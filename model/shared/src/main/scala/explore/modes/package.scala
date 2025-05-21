@@ -12,6 +12,10 @@ import lucuma.core.optics.Wedge
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.NewType
 
+trait ModeRow:
+  def instrument: ItcInstrumentConfig
+  def enabled: Boolean
+
 object ModeWavelength extends NewType[Wavelength]
 type ModeWavelength = ModeWavelength.Type
 

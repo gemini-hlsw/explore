@@ -3,36 +3,67 @@
 
 package explore.config
 
+import boopickle.DefaultBasic.*
 import cats.data.EitherNec
+import cats.data.NonEmptyList
+import cats.effect.*
+import cats.implicits.catsKernelOrderingForOrder
 import cats.syntax.all.*
 import crystal.Pot
+import crystal.react.*
+import crystal.react.hooks.useEffectStreamResourceWithDeps
+import eu.timepit.refined.cats.*
+import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.Icons
 import explore.components.ui.ExploreStyles
+import explore.events.ItcMessage
+import explore.model.AppContext
 import explore.model.Progress
+import explore.model.SupportedInstruments
+import explore.model.WorkerClients.ItcClient
+import explore.model.boopickle.*
+import explore.model.boopickle.ItcPicklers.given
 import explore.model.display.given
 import explore.model.itc.*
+import explore.model.reusability.given
+import explore.modes.ItcInstrumentConfig
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
+import lucuma.core.model.ConstraintSet
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.syntax.all.*
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
 import lucuma.react.circularprogressbar.CircularProgressbar
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.table.HeaderContext
 import lucuma.ui.components.ThemeIcons
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 
 import scala.collection.decorators.*
+import scala.concurrent.duration.*
 
 trait ModesTableCommon:
   protected case class TableMeta(itcProgress: Option[Progress])
 
+  extension (pot: Pot[EitherNec[ItcTargetProblem, ItcResult]])
+    def totalItcTime: Option[TimeSpan] =
+      pot.toOption.collect { case Right(ItcResult.Result(e, t, _, _)) => e *| t.value }
+
+    def totalSN: Option[SignalToNoise] =
+      pot.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
+        s.map(_.total.value)
+      }.flatten
+
   protected trait TableRowWithResult:
     val result: Pot[EitherNec[ItcTargetProblem, ItcResult]]
+    val config: ItcInstrumentConfig
 
     lazy val totalItcTime: Option[TimeSpan] =
       result.toOption
@@ -45,6 +76,7 @@ trait ModesTableCommon:
 
   protected object ScrollTo extends NewBoolean:
     inline def Scroll = True; inline def NoScroll = False
+  protected type ScrollTo = ScrollTo.Type
 
   protected enum TimeOrSNColumn:
     case Time, SN
@@ -123,3 +155,126 @@ trait ModesTableCommon:
 
     <.div(ExploreStyles.ITCCell, content)
   }
+
+  protected case class ItcHookData(
+    errors: List[ItcTargetProblem]
+  ):
+    def errorLabel(showMissingTargetInfo: Boolean): List[VdomNode] =
+      def renderName3(name: Option[NonEmptyString]): String =
+        name.fold("")(n => s"$n: ")
+      errors.collect:
+        case ItcTargetProblem(name, ItcQueryProblem.MissingWavelength)                          =>
+          <.label(ExploreStyles.WarningLabel)(s"${renderName3(name)}Set Wavelength")
+        case ItcTargetProblem(name, ItcQueryProblem.MissingExposureTimeMode)                    =>
+          <.label(ExploreStyles.WarningLabel)(s"${renderName3(name)}Set Exposure time mode")
+        case ItcTargetProblem(name, ItcQueryProblem.MissingTargetInfo) if showMissingTargetInfo =>
+          <.label(ExploreStyles.WarningLabel)(s"${renderName3(name)}Missing Target Info")
+        case ItcTargetProblem(name, ItcQueryProblem.MissingBrightness)                          =>
+          <.label(ExploreStyles.WarningLabel)(s"${renderName3(name)}No Brightness Defined")
+
+  protected given Reusability[ItcResultsCache] = Reusability.by(_.cache.size)
+
+  protected def useItc[Row <: TableRowWithResult](
+    itcResults:          View[ItcResultsCache],
+    itcProgress:         View[Option[Progress]],
+    onNewItc:            Callback,
+    expTimeMode:         Option[ExposureTimeMode],
+    constraints:         ConstraintSet,
+    targets:             Option[NonEmptyList[ItcTarget]],
+    customSedTimestamps: List[Timestamp],
+    sortedRows:          Reusable[List[Row]]
+  ): HookResult[ItcHookData] =
+    for {
+      ctx    <- useContext(AppContext.ctx)
+      errors <- useMemo(sortedRows): rows =>
+                  rows.value
+                    .map(_.result.toOption)
+                    .collect:
+                      case Some(Left(p)) =>
+                        p.toList
+                          .filter:
+                            case e if e.problem === ItcQueryProblem.MissingTargetInfo => true
+                            case e if e.problem === ItcQueryProblem.MissingBrightness => true
+                            case _                                                    => false
+                          .distinct
+                    .flatten
+                    .toList
+                    .distinct
+      _      <-
+        useEffectStreamResourceWithDeps(
+          (expTimeMode, constraints, targets, customSedTimestamps, sortedRows.length)
+        ): (expTimeMode, constraints, asterism, customSedTimestamps, _) =>
+          import ctx.given
+
+          (expTimeMode, asterism)
+            .mapN { (expTimeMode, asterism) =>
+              val modes: List[Row] =
+                sortedRows
+                  .filterNot: row => // Discard modes already in the cache
+                    val cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] =
+                      itcResults.get.cache
+
+                    // The cache returns an error for unsupported instruments
+                    row.config.instrument match
+                      case i if SupportedInstruments.contains(i) =>
+                        cache.contains:
+                          ItcRequestParams(
+                            expTimeMode,
+                            constraints,
+                            asterism,
+                            customSedTimestamps,
+                            row.config
+                          )
+                      case _                                     => true
+
+              Option
+                .when(modes.nonEmpty):
+                  val progressZero = Progress.initial(NonNegInt.unsafeFrom(modes.length)).some
+                  for {
+                    _       <- Resource.eval(itcProgress.set(progressZero).to[IO])
+                    request <-
+                      ItcClient[IO]
+                        .request:
+                          ItcMessage.Query(expTimeMode,
+                                           constraints,
+                                           asterism,
+                                           customSedTimestamps,
+                                           modes.map(_.config)
+                          )
+                        .map:
+                          // Avoid rerendering on every single result, it's slow.
+                          _.groupWithin(100, 500.millis)
+                            .evalMap: itcResponseChunk =>
+                              itcProgress
+                                .mod(
+                                  _.map(
+                                    _.increment(NonNegInt.unsafeFrom(itcResponseChunk.size))
+                                  )
+                                    .filterNot(_.complete)
+                                )
+                                .to[IO] >>
+                                // Update the cache
+                                itcResults.mod(_.updateN(itcResponseChunk.toList)).to[IO] >>
+                                // Enable scrolling to the selected row (which might have moved due to sorting)
+                                onNewItc.to[IO]
+                            .onComplete(fs2.Stream.eval(itcProgress.set(none).to[IO]))
+                  } yield request
+            }
+            .flatten
+            .orEmpty
+    } yield ItcHookData(errors.value)
+
+  def findSelectedTarget[Row <: TableRowWithResult](
+    rows:         List[Row],
+    validTargets: Option[NonEmptyList[ItcTarget]]
+  ): Option[VdomNode] =
+    rows
+      .map(_.result.toOption)
+      .collect:
+        case Some(Right(result @ ItcResult.Result(_, _, _, _))) =>
+          result
+      // Very short exposure times may have ambiguity WRT the brightest target.
+      .maxByOption(result => (result.exposureTime, result.exposures))
+      .flatMap(_.brightestIndex)
+      .flatMap(brightestIndex => validTargets.flatMap(_.get(brightestIndex)))
+      .map(t => <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}"))

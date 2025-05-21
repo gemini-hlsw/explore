@@ -155,6 +155,13 @@ trait DisplayImplicits:
 
   given Display[GmosRoi] = Display.byShortName(_.longName)
 
+  given Display[FilterType] = Display.byShortName:
+    case FilterType.BroadBand     => "Broad Band"
+    case FilterType.NarrowBand    => "Narrow Band"
+    case FilterType.Combination   => "Combination"
+    case FilterType.Spectroscopic => "Spectroscopic"
+    case FilterType.Engineering   => "Engineering"
+
   given Display[Flamingos2Disperser] = Display.by(_.shortName, _.longName)
 
   given Display[Flamingos2Filter] = Display.by(_.shortName, _.longName)

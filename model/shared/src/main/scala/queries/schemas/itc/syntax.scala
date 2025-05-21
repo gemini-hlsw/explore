@@ -46,6 +46,10 @@ trait syntax:
           InstrumentMode
             .Flamingos2Spectroscopy(disperser, filter, fpu)
             .some
+        case ItcInstrumentConfig.GmosNorthImaging(filter, modeOverrides)                    =>
+          InstrumentMode.GmosNorthImaging(filter, none).some
+        case ItcInstrumentConfig.GmosSouthImaging(filter, modeOverrides)                    =>
+          InstrumentMode.GmosSouthImaging(filter, none).some
         case _                                                                              => None
 
   // We may consider adjusting this to consider small variations of RV identical for the
