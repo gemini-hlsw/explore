@@ -5,10 +5,8 @@ package explore.model.itc
 
 import cats.data.*
 import cats.syntax.all.*
-import explore.model.SupportedInstruments
 import explore.modes.*
 import explore.optics.all.*
-import lucuma.core.enums.*
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Timestamp
@@ -19,9 +17,9 @@ import mouse.boolean.*
 case class ItcResultsCache(
   cache: Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]
 ) {
-  def mode(r: SpectroscopyModeRow): EitherNec[ItcQueryProblem, ItcInstrumentConfig] =
+  def mode(r: ModeRow): EitherNec[ItcQueryProblem, ItcInstrumentConfig] =
     Either.fromOption(
-      ItcResultsCache.enabledRow(r).option(r.instrument),
+      r.enabled.option(r.instrument),
       NonEmptyChain.of(ItcQueryProblem.UnsupportedMode)
     )
 
@@ -60,7 +58,7 @@ case class ItcResultsCache(
     c:   ConstraintSet,
     a:   Option[NonEmptyList[ItcTarget]],
     l:   List[Timestamp],
-    r:   SpectroscopyModeRow
+    r:   ModeRow
   ): EitherNec[ItcTargetProblem, ItcResult] =
     (mode(r), targets(a)).parTupled
       .leftMap(_.map(ItcTargetProblem(none, _)))
@@ -77,10 +75,6 @@ case class ItcResultsCache(
 }
 
 object ItcResultsCache:
-
-  def enabledRow(row: SpectroscopyModeRow): Boolean =
-    row.focalPlane === FocalPlane.SingleSlit &&
-      SupportedInstruments.contains_(row.instrument.instrument)
 
   val Empty: ItcResultsCache = ItcResultsCache(Map.empty)
 

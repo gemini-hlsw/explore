@@ -16,6 +16,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.*
 import eu.timepit.refined.types.numeric.*
 import eu.timepit.refined.types.string.*
+import explore.model.SupportedInstruments
 import explore.model.syntax.all.*
 import io.circe.Decoder
 import io.circe.refined.*
@@ -90,8 +91,12 @@ case class SpectroscopyModeRow(
   resolution: PosInt,
   slitLength: SlitLength,
   slitWidth:  SlitWidth
-) extends ModeCommonWavelengths derives Eq {
+) extends ModeCommonWavelengths
+    with ModeRow derives Eq {
   inline def hasFilter: Boolean = instrument.hasFilter
+  val enabled                   =
+    focalPlane === FocalPlane.SingleSlit &&
+      SupportedInstruments.contains_(instrument.instrument)
 
   // This `should` always return a `some`, but if the row is wonky for some reason...
   def intervalCenter(cw: Wavelength): Option[CentralWavelength] =

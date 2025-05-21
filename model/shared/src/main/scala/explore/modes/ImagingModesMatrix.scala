@@ -6,6 +6,7 @@ package explore.modes
 import cats.Eq
 import cats.derived.*
 import cats.implicits.*
+import explore.model.SupportedInstruments
 import io.circe.Decoder
 import lucuma.core.enums.*
 import lucuma.core.math.Angle
@@ -19,7 +20,8 @@ case class ImagingModeRow(
   instrument: ItcInstrumentConfig,
   ao:         ModeAO,
   fov:        Angle
-)
+) extends ModeRow:
+  val enabled = SupportedInstruments.contains_(instrument.instrument)
 
 object ImagingModeRow {
 

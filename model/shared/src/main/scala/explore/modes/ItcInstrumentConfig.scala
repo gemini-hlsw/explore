@@ -36,6 +36,8 @@ sealed trait ItcInstrumentConfig derives Eq:
 
   def hasFilter: Boolean
 
+  val mode: ScienceMode
+
   type Override
   def modeOverrides: Option[Override] = None
 
@@ -62,6 +64,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = filter.isDefined
+    val mode                             = ScienceMode.Spectroscopy
   }
 
   case class GmosSouthSpectroscopy(
@@ -79,6 +82,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosSouth
     val site                             = Site.GS
     val hasFilter                        = filter.isDefined
+    val mode                             = ScienceMode.Spectroscopy
   }
 
   case class GmosNorthImaging(
@@ -95,6 +99,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosNorth
     val site                             = Site.GN
     val hasFilter                        = true
+    val mode                             = ScienceMode.Imaging
     val grating: Grating                 = ()
     val fpu: FPU                         = ()
   }
@@ -113,6 +118,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.GmosSouth
     val site                             = Site.GS
     val hasFilter                        = true
+    val mode                             = ScienceMode.Imaging
     val grating: Grating                 = ()
     val fpu: FPU                         = ()
 
@@ -132,6 +138,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.Flamingos2
     val site                             = Site.GS
     val hasFilter                        = true
+    val mode                             = ScienceMode.Spectroscopy
 
   }
 
@@ -147,6 +154,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.Gpi
     val site                             = Site.GN
     val hasFilter                        = true
+    val mode                             = ScienceMode.Spectroscopy
   }
 
   case class GnirsSpectroscopy(grating: GnirsDisperser, filter: GnirsFilter)
@@ -161,6 +169,7 @@ object ItcInstrumentConfig:
     val instrument                       = Instrument.Gnirs
     val site                             = Site.GN
     val hasFilter                        = true
+    val mode                             = ScienceMode.Spectroscopy
   }
 
   // Used for Instruments not fully defined
@@ -176,6 +185,7 @@ object ItcInstrumentConfig:
     val instrument                       = i
     val site                             = Site.GN
     val hasFilter                        = true
+    val mode                             = ScienceMode.Spectroscopy
   }
 
   val instrument: Getter[ItcInstrumentConfig, Instrument] =
