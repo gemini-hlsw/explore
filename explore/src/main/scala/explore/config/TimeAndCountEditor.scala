@@ -3,6 +3,7 @@
 
 package explore.config
 
+import cats.syntax.all.*
 import crystal.react.View
 import eu.timepit.refined.cats.*
 import explore.components.ui.ExploreStyles
@@ -15,6 +16,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Instrument
+import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
@@ -29,6 +31,7 @@ import lucuma.ui.syntax.all.given
 case class TimeAndCountEditor(
   instrument:      Option[Instrument],
   options:         View[TimeAndCountModeInfo],
+  scienceMode:     ScienceMode,
   readonly:        Boolean,
   units:           WavelengthUnits,
   calibrationRole: Option[CalibrationRole]
@@ -74,18 +77,21 @@ object TimeAndCountEditor extends ConfigurationFormats:
           units = "#",
           disabled = props.readonly
         ).clearable(^.autoComplete.off),
-        FormLabel("signal-to-noise-at".refined)(Constants.SignalToNoiseAtLabel),
-        FormInputTextView(
-          id = "signal-to-noise-at".refined,
-          groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-          postAddons =
-            signalToNoiseAt.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ =>
-              Nil
-            ),
-          value = signalToNoiseAt,
-          units = props.units.symbol,
-          validFormat = props.units.toInputWedge,
-          changeAuditor = props.units.toSNAuditor,
-          disabled = props.readonly
-        ).clearable(^.autoComplete.off)
+        Option.when(props.scienceMode === ScienceMode.Spectroscopy):
+          React
+            .Fragment(
+              FormLabel("signal-to-noise-at".refined)(Constants.SignalToNoiseAtLabel),
+              FormInputTextView(
+                id = "signal-to-noise-at".refined,
+                groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
+                postAddons = signalToNoiseAt.get.fold(
+                  List(props.calibrationRole.renderRequiredForITCIcon)
+                )(_ => Nil),
+                value = signalToNoiseAt,
+                units = props.units.symbol,
+                validFormat = props.units.toInputWedge,
+                changeAuditor = props.units.toSNAuditor,
+                disabled = props.readonly
+              ).clearable(^.autoComplete.off)
+            )
       )

@@ -8,6 +8,7 @@ import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.NonNegInt
+import lucuma.core.enums.ScienceMode
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
@@ -35,7 +36,11 @@ object TimeAndCountModeInfo:
   val at: Lens[TimeAndCountModeInfo, Option[Wavelength]] =
     Focus[TimeAndCountModeInfo](_.at)
 
-  val Default = TimeAndCountModeInfo(None, None, None)
+  def default(mode: ScienceMode): TimeAndCountModeInfo =
+    TimeAndCountModeInfo(None,
+                         None,
+                         if (mode === ScienceMode.Spectroscopy) none else Wavelength.Min.some
+    )
 
   def fromModel(etm: ExposureTimeMode): Option[TimeAndCountModeInfo] =
     etm match
@@ -54,7 +59,10 @@ object SignalToNoiseModeInfo:
   val at: Lens[SignalToNoiseModeInfo, Option[Wavelength]] =
     Focus[SignalToNoiseModeInfo](_.at)
 
-  val Default = SignalToNoiseModeInfo(None, None)
+  def default(mode: ScienceMode): SignalToNoiseModeInfo =
+    SignalToNoiseModeInfo(None,
+                          if (mode === ScienceMode.Spectroscopy) none else Wavelength.Min.some
+    )
 
   def fromModel(etm: ExposureTimeMode): Option[SignalToNoiseModeInfo] =
     etm match

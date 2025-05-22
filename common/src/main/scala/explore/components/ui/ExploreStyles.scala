@@ -382,7 +382,6 @@ object ExploreStyles:
   val SelectedDown: Css                 = Css("selected-down")
   val ITCHeaderCell: Css                = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
-  val ImagingFilterFilters: Css         = Css("explore-modes-imaging-filter-filters")
 
   // Sequence Viewer
   val SequencesPanel         = Css("explore-sequences-panel")

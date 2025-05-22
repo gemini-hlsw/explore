@@ -6,41 +6,45 @@ package explore.config
 import cats.implicits.*
 import crystal.react.View
 import explore.components.HelpIcon
-import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationFormats.*
 import explore.model.BroadBand
-import explore.model.ImagingConfigurationOptions
+import explore.model.Combination
 import explore.model.NarrowBand
+import explore.model.ScienceRequirements
+import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.ScienceMode
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
 import lucuma.ui.input.ChangeAuditor
-import lucuma.ui.primereact.CheckboxView
-import lucuma.ui.primereact.FormInputTextView
-import lucuma.ui.primereact.LucumaPrimeStyles
+import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class ImagingConfigurationPanel(
-  options:         View[ImagingConfigurationOptions],
+  options:         View[ScienceRequirements.Imaging],
   readonly:        Boolean,
+  units:           WavelengthUnits,
   calibrationRole: Option[CalibrationRole]
 ) extends ReactFnProps(ImagingConfigurationPanel)
 
 object ImagingConfigurationPanel
     extends ReactFnComponent[ImagingConfigurationPanel](p =>
 
-      val fov           = p.options.zoom(ImagingConfigurationOptions.fov)
-      val signalToNoise = p.options.zoom(ImagingConfigurationOptions.signalToNoise)
-      val narrowBand    =
-        p.options.zoom(ImagingConfigurationOptions.narrowBand.andThen(NarrowBand.Value))
-      val broadBand     = p.options.zoom(ImagingConfigurationOptions.broadBand.andThen(BroadBand.Value))
+      val fov              = p.options.zoom(ScienceRequirements.Imaging.minimumFov)
+      val exposureTimeMode = p.options.zoom(ScienceRequirements.Imaging.exposureTimeMode)
+      val narrowBand       =
+        p.options.zoom(ScienceRequirements.Imaging.narrowFilters.andThen(NarrowBand.Value))
+      val broadBand        =
+        p.options.zoom(ScienceRequirements.Imaging.broadFilters.andThen(BroadBand.Value))
+      val combination      =
+        p.options.zoom(ScienceRequirements.Imaging.combinationFilters.andThen(Combination.Value))
 
       ReactFragment(
         FormInputTextView(
@@ -51,30 +55,37 @@ object ImagingConfigurationPanel
           validFormat = angleArcsecsFormat,
           changeAuditor = angleArcsecondsChangeAuditor,
           disabled = p.readonly
+        ).clearable,
+        <.label("Filters",
+                HelpIcon("configuration/filter.md".refined),
+                LucumaPrimeStyles.FormFieldLabel
         ),
-        <.div(
-          ExploreStyles.ImagingFilterFilters,
-          <.label("Filters",
-                  HelpIcon("configuration/filter.md".refined),
-                  LucumaPrimeStyles.FormFieldLabel
-          ),
-          CheckboxView(
-            id = "narrowband-filter".refined,
-            value = narrowBand,
-            label = "Narrow",
-            disabled = p.readonly
-          ),
-          CheckboxView(
-            id = "broadband-filter".refined,
-            value = broadBand,
-            label = "Broad",
-            disabled = p.readonly
-          )
+        CheckboxView(
+          id = "narrowband-filter".refined,
+          value = narrowBand,
+          label = "Narrow",
+          disabled = p.readonly
         ),
-        SignalToNoiseInput(
-          signalToNoise,
-          p.calibrationRole,
-          p.readonly
+        CheckboxView(
+          id = "broadband-filter".refined,
+          value = broadBand,
+          label = "Broad",
+          disabled = p.readonly
+        ),
+        CheckboxView(
+          id = "combination-filter".refined,
+          value = combination,
+          label = "Combination",
+          disabled = p.readonly
+        ),
+        ExposureTimeModeEditor(
+          none,
+          none,
+          exposureTimeMode,
+          ScienceMode.Imaging,
+          p.readonly,
+          p.units,
+          p.calibrationRole
         )
       )
     )

@@ -502,12 +502,6 @@ thead tr th.sticky-header {
   z-index: 10;
 }
 
-.explore-modes-imaging-filter-filters {
-  grid-column: 1 / span 2;
-  display: flex;
-  justify-content: space-between;
-}
-
 .explore-modes-table-itc-header-cell {
   display: inline-flex;
   align-items: center;
@@ -3038,6 +3032,10 @@ $help-title-height: 40px;
   padding: 0.5em;
   row-gap: 0.5em;
   grid-template-columns: [label] minmax(130px, 10%) [field] max-content;
+
+  .pl-checkbox-with-label {
+    grid-column: 2;
+  }
 
   .pl-form-field {
     justify-self: stretch;

@@ -3,6 +3,7 @@
 
 package explore.config
 
+import cats.syntax.all.*
 import crystal.react.View
 import explore.components.ui.ExploreStyles
 import explore.config.ConfigurationFormats.*
@@ -13,6 +14,7 @@ import explore.model.enums.WavelengthUnits
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnComponent
@@ -26,6 +28,7 @@ import lucuma.ui.syntax.all.given
 
 case class SignalToNoiseAtEditor(
   options:         View[SignalToNoiseModeInfo],
+  scienceMode:     ScienceMode,
   readonly:        Boolean,
   units:           WavelengthUnits,
   calibrationRole: Option[CalibrationRole]
@@ -42,18 +45,19 @@ object SignalToNoiseAtEditor
           props.calibrationRole,
           props.readonly
         ),
-        FormInputTextView(
-          id = "signal-to-noise-at".refined,
-          label = Constants.SignalToNoiseAtLabel,
-          groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
-          postAddons = signalToNoiseAt.get.fold(
-            List(props.calibrationRole.renderRequiredForITCIcon)
-          )(_ => Nil),
-          value = signalToNoiseAt,
-          units = props.units.symbol,
-          validFormat = props.units.toInputWedge,
-          changeAuditor = props.units.toSNAuditor,
-          disabled = props.readonly
-        ).clearable(^.autoComplete.off)
+        Option.when(props.scienceMode === ScienceMode.Spectroscopy):
+          FormInputTextView(
+            id = "signal-to-noise-at".refined,
+            label = Constants.SignalToNoiseAtLabel,
+            groupClass = ExploreStyles.WarningInput.when_(signalToNoiseAt.get.isEmpty),
+            postAddons = signalToNoiseAt.get.fold(
+              List(props.calibrationRole.renderRequiredForITCIcon)
+            )(_ => Nil),
+            value = signalToNoiseAt,
+            units = props.units.symbol,
+            validFormat = props.units.toInputWedge,
+            changeAuditor = props.units.toSNAuditor,
+            disabled = props.readonly
+          ).clearable(^.autoComplete.off)
       )
     )

@@ -352,6 +352,8 @@ object ConfigurationTile:
               _ match
                 case s @ ScienceRequirements.Spectroscopy(_, _, _, _, focalPlane, _, _) =>
                   UpdateScienceRequirements.spectroscopyRequirements(s)
+                case s @ ScienceRequirements.Imaging(_, _, _, _, _)                     =>
+                  throw NotImplementedError()
             )
 
           val spectroscopyView: ViewOpt[Spectroscopy] =

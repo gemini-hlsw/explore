@@ -188,16 +188,16 @@ object SpectroscopyModeRow {
   val slitLength: Lens[SpectroscopyModeRow, SlitLength] =
     GenLens[SpectroscopyModeRow](_.slitLength)
 
-  def grating: Getter[SpectroscopyModeRow, ItcInstrumentConfig#Grating] =
+  val grating: Getter[SpectroscopyModeRow, ItcInstrumentConfig#Grating] =
     instrumentConfig.andThen(ItcInstrumentConfig.grating)
 
-  def fpu: Lens[SpectroscopyModeRow, FocalPlane] =
+  val fpu: Lens[SpectroscopyModeRow, FocalPlane] =
     GenLens[SpectroscopyModeRow](_.focalPlane)
 
-  def filter: Getter[SpectroscopyModeRow, ItcInstrumentConfig#Filter] =
+  val filter: Getter[SpectroscopyModeRow, ItcInstrumentConfig#Filter] =
     instrumentConfig.andThen(ItcInstrumentConfig.filter)
 
-  def resolution: Getter[SpectroscopyModeRow, PosInt] =
+  val resolution: Getter[SpectroscopyModeRow, PosInt] =
     Getter(_.resolution)
 
   // decoders for instruments are used locally as they are not lawful

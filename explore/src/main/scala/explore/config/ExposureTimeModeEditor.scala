@@ -18,6 +18,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Instrument
+import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.model.ExposureTimeMode
 import lucuma.react.common.ReactFnProps
@@ -31,6 +32,7 @@ case class ExposureTimeModeEditor(
   instrument:       Option[Instrument],
   wavelength:       Option[Wavelength],
   exposureTimeMode: View[Option[ExposureTimeMode]],
+  scienceMode:      ScienceMode,
   readonly:         Boolean,
   units:            WavelengthUnits,
   calibrationRole:  Option[CalibrationRole]
@@ -51,12 +53,12 @@ object ExposureTimeModeEditor:
         snMode <- useStateView(
                     props.exposureTimeMode.get
                       .flatMap(SignalToNoiseModeInfo.fromModel)
-                      .getOrElse(SignalToNoiseModeInfo.Default)
+                      .getOrElse(SignalToNoiseModeInfo.default(props.scienceMode))
                   )
         tcMode <- useStateView(
                     props.exposureTimeMode.get
                       .flatMap(TimeAndCountModeInfo.fromModel)
-                      .getOrElse(TimeAndCountModeInfo.Default)
+                      .getOrElse(TimeAndCountModeInfo.default(props.scienceMode))
                   )
         _      <- useEffectWithDeps(props.exposureTimeMode.get):
                     // Exposure time mode updated upstream
@@ -65,8 +67,8 @@ object ExposureTimeModeEditor:
                         TimeAndCountModeInfo.fromModel(etm).traverse(tcMode.set) *>
                         emv.set(etm.modeType)
                     .getOrElse:
-                      snMode.set(SignalToNoiseModeInfo.Default) *>
-                        tcMode.set(TimeAndCountModeInfo.Default) *>
+                      snMode.set(SignalToNoiseModeInfo.default(props.scienceMode)) *>
+                        tcMode.set(TimeAndCountModeInfo.default(props.scienceMode)) *>
                         emv.set(ExposureTimeModeType.SignalToNoise)
         _      <- useEffectWithDeps(props.wavelength):
                     // Wavelength updated upstream, set `at` if empty
@@ -120,10 +122,16 @@ object ExposureTimeModeEditor:
             disabled = props.readonly
           ),
           if (emv.get === ExposureTimeModeType.SignalToNoise)
-            SignalToNoiseAtEditor(snModeView, props.readonly, props.units, props.calibrationRole)
+            SignalToNoiseAtEditor(snModeView,
+                                  props.scienceMode,
+                                  props.readonly,
+                                  props.units,
+                                  props.calibrationRole
+            )
           else
             TimeAndCountEditor(props.instrument,
                                tcModeView,
+                               props.scienceMode,
                                props.readonly,
                                props.units,
                                props.calibrationRole

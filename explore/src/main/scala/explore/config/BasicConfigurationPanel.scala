@@ -11,9 +11,9 @@ import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ImagingConfigurationOptions
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
+import explore.model.ScienceRequirements.Imaging
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
@@ -65,7 +65,7 @@ private object BasicConfigurationPanel:
       for
         ctx      <- useContext(AppContext.ctx)
         mode     <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
-        imaging  <- useStateView[ImagingConfigurationOptions](ImagingConfigurationOptions.Default)
+        imaging  <- useStateView[Imaging](Imaging.Default)
         creating <- useStateView(Creating(false))
       yield
         import ctx.given
@@ -117,7 +117,7 @@ private object BasicConfigurationPanel:
                   )
                 )
             else
-              ImagingConfigurationPanel(imaging, props.readonly, props.calibrationRole)
+              ImagingConfigurationPanel(imaging, props.readonly, props.units, props.calibrationRole)
                 .unless(isSpectroscopy)
           ),
           props.spectroscopyView

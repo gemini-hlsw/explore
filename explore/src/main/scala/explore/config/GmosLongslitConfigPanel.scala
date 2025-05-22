@@ -277,12 +277,14 @@ object GmosLongslitConfigPanel {
                 disabled = disableSimpleEdit
               ),
               dithersControl(props.sequenceChanged),
-              ExposureTimeModeEditor(props.instrument.some,
-                                     props.spectroscopyRequirements.get.wavelength,
-                                     exposureTimeMode,
-                                     props.readonly,
-                                     props.units,
-                                     props.calibrationRole
+              ExposureTimeModeEditor(
+                props.instrument.some,
+                props.spectroscopyRequirements.get.wavelength,
+                exposureTimeMode,
+                ScienceMode.Spectroscopy,
+                props.readonly,
+                props.units,
+                props.calibrationRole
               )
             ),
             <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
