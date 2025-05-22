@@ -4,6 +4,7 @@
 package explore.modes
 
 import cats.Eq
+import cats.Order
 import cats.derived.*
 import cats.implicits.*
 import explore.model.SupportedInstruments
@@ -21,7 +22,12 @@ case class ImagingModeRow(
   ao:         ModeAO,
   fov:        Angle
 ) extends ModeRow:
-  val enabled = SupportedInstruments.contains_(instrument.instrument)
+  val enabled                        = SupportedInstruments.contains_(instrument.instrument)
+  val filterType: Option[FilterType] =
+    instrument match
+      case ItcInstrumentConfig.GmosNorthImaging(filter, _) => filter.filterType.some
+      case ItcInstrumentConfig.GmosSouthImaging(filter, _) => filter.filterType.some
+      case _                                               => none
 
 object ImagingModeRow {
 
@@ -37,7 +43,7 @@ object ImagingModeRow {
 
   val fov: Lens[ImagingModeRow, Angle] = GenLens[ImagingModeRow](_.fov)
 
-  def filter: Getter[ImagingModeRow, ItcInstrumentConfig#Filter] =
+  val filter: Getter[ImagingModeRow, ItcInstrumentConfig#Filter] =
     instrumentConfig.andThen(ItcInstrumentConfig.filter)
 
   // decoders for instruments are used locally as they are not lawful
@@ -70,7 +76,14 @@ object ImagingModeRow {
       .getOrElse(sys.error("Instrument not found"))
 }
 
-case class ImagingModesMatrix(matrix: List[ImagingModeRow]) derives Eq
+case class ImagingModesMatrix(matrix: List[ImagingModeRow]) derives Eq:
+  def filtered(minimumFov: Option[Angle], filterTypes: Set[FilterType]): List[ImagingModeRow] =
+    given Order[Angle]                    = Angle.AngleOrder
+    val filter: ImagingModeRow => Boolean = r =>
+      minimumFov.forall(fov => r.fov >= fov) &&
+        (filterTypes.isEmpty || r.filterType.exists(filterTypes.contains))
+
+    matrix.filter(filter)
 
 object ImagingModesMatrix {
   val empty: ImagingModesMatrix = ImagingModesMatrix(Nil)

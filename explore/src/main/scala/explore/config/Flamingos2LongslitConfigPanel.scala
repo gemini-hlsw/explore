@@ -151,6 +151,7 @@ object Flamingos2LongslitConfigPanel
               props.observingMode.get.instrument.some,
               props.spectroscopyRequirements.get.wavelength,
               exposureTimeModeView,
+              ScienceMode.Spectroscopy,
               props.readonly,
               props.units,
               props.calibrationRole

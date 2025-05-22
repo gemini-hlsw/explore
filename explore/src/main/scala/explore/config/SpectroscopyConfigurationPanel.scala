@@ -19,6 +19,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.Instrument
+import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
@@ -96,6 +97,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
           ExposureTimeModeEditor(p.instrument,
                                  wv.get,
                                  exposureTimeMode,
+                                 ScienceMode.Spectroscopy,
                                  p.readonly,
                                  p.units,
                                  p.calibrationRole

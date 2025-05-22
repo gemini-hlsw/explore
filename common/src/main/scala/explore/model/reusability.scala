@@ -96,8 +96,6 @@ object reusability:
 
   given modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]] = Reusability.byEq
 
-  given Reusability[AvailableFilter]                    = Reusability.byEq
-  given Reusability[ImagingConfigurationOptions]        = Reusability.byEq
   given Reusability[Progress]                           = Reusability.byEq
   given Reusability[AngularSize]                        = Reusability.byEq
   given Reusability[CatalogTargetResult]                = Reusability.byEq
@@ -126,6 +124,7 @@ object reusability:
   given Reusability[ApiKey]                             = Reusability.byEq
   given Reusability[SignalToNoise]                      = Reusability.byEq
   given Reusability[ScienceRequirements.Spectroscopy]   = Reusability.byEq
+  given Reusability[ScienceRequirements.Imaging]        = Reusability.byEq
   given Reusability[ScienceRequirements]                = Reusability.byEq
   given Reusability[Transformation]                     = Reusability.byEq
   given [F[_]]: Reusability[OdbRestClient[F]]           = Reusability.by(_.authToken)

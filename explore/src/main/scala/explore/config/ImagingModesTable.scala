@@ -14,10 +14,11 @@ import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.ImagingConfigurationOptions
 import explore.model.Progress
+import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
+import explore.model.enums.ExposureTimeModeType
 import explore.model.enums.TableId
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
@@ -35,7 +36,6 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
-import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -52,7 +52,7 @@ import lucuma.ui.table.hooks.*
 
 final case class ImagingModesTable(
   userId:              Option[User.Id],
-  imaging:             ImagingConfigurationOptions,
+  imaging:             ScienceRequirements.Imaging,
   matrix:              ImagingModesMatrix,
   constraints:         ConstraintSet,
   targets:             List[ItcTarget],
@@ -62,9 +62,6 @@ final case class ImagingModesTable(
 ) extends ReactFnProps(ImagingModesTable.component):
   val validTargets: Option[NonEmptyList[ItcTarget]] =
     NonEmptyList.fromList(targets.filter(_.canQueryITC))
-  // Temporary until we have exposure time mode in the imaging requirements
-  val exposureTimeMode: Option[ExposureTimeMode]    =
-    imaging.signalToNoise.map(sn => ExposureTimeMode.SignalToNoiseMode(sn, Wavelength.Min))
 
 object ImagingModesTable extends ModesTableCommon:
 
@@ -93,7 +90,7 @@ object ImagingModesTable extends ModesTableCommon:
         case g: GmosSouthFilter => g.wavelength.some
         case _                  => None
 
-    private def filterType: String =
+    private def filterTypeStr: String =
       filter match
         case g: GmosNorthFilter => g.filterType.shortName
         case g: GmosSouthFilter => g.filterType.shortName
@@ -179,9 +176,9 @@ object ImagingModesTable extends ModesTableCommon:
         .withColumnSize(FixedSize(69.toPx))
         .sortableBy(_.filterStr),
       column(FilterTypeColumnId, row => ImagingModeRow.filter.get(row.entry))
-        .withCell(_.value.filterType)
+        .withCell(_.value.filterTypeStr)
         .withColumnSize(FixedSize(85.toPx))
-        .sortableBy(_.filterType),
+        .sortableBy(_.filterTypeStr),
       column(LambdaColumnId, row => ImagingModeRow.filter.get(row.entry).wavelength)
         .withHeader(s"λ ${units.symbol}")
         .withCell(_.value.fold("-")(_.shortName))
@@ -211,28 +208,37 @@ object ImagingModesTable extends ModesTableCommon:
       ctx         <- useContext(AppContext.ctx)
       itcResults  <- useStateView(ItcResultsCache.Empty)
       itcProgress <- useStateView(none[Progress])
-      rows        <- useMemo(props.matrix,
-                             props.exposureTimeMode,
-                             props.validTargets,
-                             props.constraints,
-                             props.customSedTimestamps,
-                             itcResults.get.cache.size
-                     ): (matrix, etm, asterism, constraints, customSedTimestamps, _) =>
-                       matrix.matrix.map: row =>
-                         val result = (asterism, etm).mapN: (_, e) =>
-                           itcResults.get.forRow(
-                             e,
-                             constraints,
-                             asterism,
-                             customSedTimestamps,
-                             row
+      rows        <- useMemo(
+                       props.matrix,
+                       props.imaging.exposureTimeMode,
+                       props.validTargets,
+                       props.constraints,
+                       props.customSedTimestamps,
+                       props.imaging.minimumFov,
+                       props.imaging.allowedFilterTypes,
+                       itcResults.get.cache.size
+                     ): (matrix, etm, asterism, constraints, customSedTimestamps, minimumFov, fts, _) =>
+                       matrix
+                         .filtered(minimumFov, fts)
+                         .map: row =>
+                           val result = (asterism, etm).mapN: (_, e) =>
+                             itcResults.get.forRow(
+                               e,
+                               constraints,
+                               asterism,
+                               customSedTimestamps,
+                               row
+                             )
+                           ImagingModeRowWithResult(
+                             row,
+                             Pot.fromOption(result)
                            )
-                         ImagingModeRowWithResult(
-                           row,
-                           Pot.fromOption(result)
-                         )
-      cols        <- useMemo(props.units): units =>
-                       columns(units).filterNot(_.id.value === SNColumnId.value)
+      cols        <- useMemo((props.imaging.modeType, props.units)): (m, u) =>
+                       m match
+                         case Some(ExposureTimeModeType.SignalToNoise) | None =>
+                           columns(u).filterNot(_.id.value === SNColumnId.value)
+                         case Some(ExposureTimeModeType.TimeAndCount)         =>
+                           columns(u).filterNot(_.id.value === TimeColumnId.value)
       table       <- useReactTableWithStateStore:
                        import ctx.given
 
@@ -253,7 +259,7 @@ object ImagingModesTable extends ModesTableCommon:
                        itcResults,
                        itcProgress,
                        Callback.empty,
-                       props.exposureTimeMode,
+                       props.imaging.exposureTimeMode,
                        props.constraints,
                        props.validTargets,
                        props.customSedTimestamps,
