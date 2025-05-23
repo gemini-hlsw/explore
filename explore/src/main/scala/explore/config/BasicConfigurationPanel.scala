@@ -18,6 +18,7 @@ import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
+import explore.modes.ConfigSelection
 import explore.modes.ScienceModes
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
@@ -63,10 +64,13 @@ private object BasicConfigurationPanel:
   private val component =
     ScalaFnComponent[Props]: props =>
       for
-        ctx      <- useContext(AppContext.ctx)
-        mode     <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
-        imaging  <- useStateView[Imaging](Imaging.Default)
-        creating <- useStateView(Creating(false))
+        ctx             <- useContext(AppContext.ctx)
+        mode            <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
+        // these next 2 are temporary
+        imaging         <- useStateView[Imaging](Imaging.Default)
+        // selectedConfig above should be replaced by one of these...
+        selectedConfigs <- useStateView(none[ConfigSelection])
+        creating        <- useStateView(Creating(false))
       yield
         import ctx.given
 
@@ -137,6 +141,7 @@ private object BasicConfigurationPanel:
             .when(isSpectroscopy),
           ImagingModesTable(
             props.userId,
+            selectedConfigs,
             imaging.get,
             props.confMatrix.imaging,
             props.constraints,

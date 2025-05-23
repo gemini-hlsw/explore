@@ -21,7 +21,7 @@ case class ImagingModeRow(
   instrument: ItcInstrumentConfig,
   ao:         ModeAO,
   fov:        Angle
-) extends ModeRow:
+) extends ModeRow derives Eq:
   val enabled                        = SupportedInstruments.contains_(instrument.instrument)
   val filterType: Option[FilterType] =
     instrument match
