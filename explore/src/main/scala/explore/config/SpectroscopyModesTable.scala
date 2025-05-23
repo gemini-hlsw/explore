@@ -377,7 +377,7 @@ private object SpectroscopyModesTable extends ModesTableCommon:
         // The selected index needs to be the index into the sorted data, because that is what
         // the virtualizer uses for scrollTo.
         selectedIndex  <- useMemo((sortedRows, selectedRow.value)): (sortedRows, selectedRow) =>
-                            selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry == sRow))
+                            selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry === sRow))
         // Set the selected config if the rows change because it might have different itc data.
         // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
         _              <- useEffectWithDeps(rows): _ =>
