@@ -15,7 +15,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
@@ -32,7 +31,6 @@ import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.util.OptionLike.optionInstance
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
@@ -45,17 +43,13 @@ import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
-import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
 import lucuma.schemas.model.CentralWavelength
-import lucuma.typed.tanstackVirtualCore as rawVirtual
-import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
@@ -64,8 +58,6 @@ import lucuma.ui.table.hooks.*
 
 import java.text.DecimalFormat
 import scala.language.implicitConversions
-
-import scalajs.js
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
@@ -248,20 +240,6 @@ private object SpectroscopyModesTable extends ModesTableCommon:
       //   .sortable
     )
 
-  private val ScrollOptions =
-    rawVirtual.mod
-      .ScrollToOptions()
-      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
-      .setAlign(rawVirtual.mod.ScrollAlignment.center)
-
-  def scrollToVirtualizedIndex(
-    selectedIndex:  Int,
-    virtualizerRef: UseRef[Option[HTMLTableVirtualizer]]
-  ): Callback =
-    virtualizerRef.get.flatMap(refOpt =>
-      Callback(refOpt.map(_.scrollToIndex(selectedIndex, ScrollOptions)))
-    )
-
   private val component =
     ScalaFnComponent[Props]: props =>
       for {
@@ -389,8 +367,8 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                             if (props.selectedConfig.get =!= conf)
                               props.selectedConfig.set(conf)
                             else Callback.empty
-        visibleRows    <- useState(none[Range.Inclusive]) // visibleRows
-        atTop          <- useState(false)                 // atTop
+        visibleRows    <- useStateView(none[Range.Inclusive])
+        atTop          <- useStateView(false)
         virtualizerRef <- useRef(none[HTMLTableVirtualizer])
         // scroll to the currently selected row.
         _              <- useEffectWithDeps((scrollTo.reuseByValue, selectedIndex.value, rows)):
@@ -408,15 +386,6 @@ private object SpectroscopyModesTable extends ModesTableCommon:
             props.selectedConfig.get.forall(_.instrumentConfig =!= row.entry.instrument)
           ):
             InstrumentConfigAndItcResult(row.entry.instrument, row.result.toOption)
-
-        def scrollButton(content: VdomNode, style: Css, indexCondition: Int => Boolean): TagMod =
-          selectedIndex.value.whenDefined(idx =>
-            Button(
-              clazz = ExploreStyles.ScrollButton |+| style,
-              severity = Button.Severity.Secondary,
-              onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
-            ).withMods(content).compact.when(indexCondition(idx))
-          )
 
         val errLabel = itcHookData.errorLabel(props.spectroscopyRequirements.wavelength.isDefined)
 
@@ -465,26 +434,20 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                   )
                     .when(row.original.entry.enabled)
                 ),
-              onChange = virtualizer =>
-                visibleRows.setState(
-                  virtualizer
-                    .getVirtualItems()
-                    .some
-                    .filter(_.nonEmpty)
-                    .map(items => items.head.index.toInt to items.last.index.toInt)
-                ) >> atTop.setState(virtualizer.scrollElement.scrollTop < 32),
+              onChange = tableOnChangeHandler(visibleRows, atTop),
               virtualizerRef = virtualizerRef,
               emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
             ),
-            scrollButton(
-              Icons.ChevronDoubleUp,
-              ExploreStyles.SelectedUp,
-              idx => !(idx === 0 && atTop.value) && visibleRows.value.exists(_.start + 1 > idx)
+            scrollUpButton(
+              selectedIndex,
+              virtualizerRef,
+              visibleRows.get,
+              atTop.get
             ),
-            scrollButton(
-              Icons.ChevronDoubleDown,
-              ExploreStyles.SelectedDown,
-              idx => visibleRows.value.exists(_.end - 2 < idx)
+            scrollDownButton(
+              selectedIndex,
+              virtualizerRef,
+              visibleRows.get
             )
           )
         )

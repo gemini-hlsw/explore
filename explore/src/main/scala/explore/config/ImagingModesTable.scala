@@ -15,6 +15,7 @@ import explore.common.UserPreferencesQueries.TableStore
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.Progress
 import explore.model.ScienceRequirements
 import explore.model.display.*
@@ -53,7 +54,7 @@ import lucuma.ui.table.hooks.*
 
 final case class ImagingModesTable(
   userId:              Option[User.Id],
-  selectedConfigs:     View[Option[ConfigSelection]],
+  selectedConfigs:     View[ConfigSelection],
   imaging:             ScienceRequirements.Imaging,
   matrix:              ImagingModesMatrix,
   constraints:         ConstraintSet,
@@ -254,13 +255,20 @@ object ImagingModesTable extends ModesTableCommon:
                              ),
                              TableStore(props.userId, TableId.ImagingModes, cols)
                            )
+      // We need to have an indicator of whether we need to scrollTo the selectedIndex as
+      // a state because otherwise the scrollTo effect below would often run in the same "hook cyle"
+      // as the index change, and it would use the old index so it would scroll to the wrong location.
+      // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
+      // in the following "hook cycle" and get the proper index.
+      scrollTo        <- useStateView(ScrollTo.Scroll)
+      _               <- useEffectWithDeps(table.getState().sorting)(_ => scrollTo.set(ScrollTo.Scroll))
       sortedRows      <- useMemo((rows, table.getState().sorting))(_ =>
                            table.getSortedRowModel().rows.map(_.original).toList
                          )
       itcHookData     <- useItc(
                            itcResults,
                            itcProgress,
-                           Callback.empty,
+                           scrollTo.set(ScrollTo.Scroll),
                            props.imaging.exposureTimeMode,
                            props.constraints,
                            props.validTargets,
@@ -268,42 +276,48 @@ object ImagingModesTable extends ModesTableCommon:
                            sortedRows
                          )
       // Set the selected config if the rows change because the new rows may no longer contain
-      // one or more of the selected rows.
+      // one or more of the selected rows or the itc results may have changed.
       // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
       _               <- useEffectWithDeps(rows): rs =>
-                           val existing    = props.selectedConfigs.get.fold(List.empty[ItcInstrumentConfig])(
-                             _.configs.toList.filter(c => rs.exists(_.entry.instrument === c))
-                           )
-                           val newSelected = ConfigSelection.fromList(existing)
-                           if (props.selectedConfigs.get =!= newSelected)
-                             props.selectedConfigs.set(newSelected)
+                           val oldCfgs = props.selectedConfigs.get.configs
+                           val newCfgs =
+                             oldCfgs
+                               .map(cfg => rs.find(_.entry.instrument === cfg.instrumentConfig))
+                               .flattenOption
+                               .map(_.configAndResult)
+                           if (oldCfgs =!= newCfgs)
+                             props.selectedConfigs.set(ConfigSelection.fromList(newCfgs))
                            else Callback.empty
       selectedIndices <- useMemo((sortedRows, props.selectedConfigs.get)):
                            (sortRows, selectedConfigs) =>
-                             selectedConfigs.fold(List.empty[Int]):
-                               _.configs.toList.map(c =>
-                                 sortRows.indexWhere(_.entry.instrument === c)
-                               )
+                             selectedConfigs.configs
+                               .map: c =>
+                                 sortRows.indexWhere(_.entry.instrument === c.instrumentConfig)
+                               .sorted
+      visibleRows     <- useStateView(none[Range.Inclusive])
+      atTop           <- useStateView(false)
       virtualizerRef  <- useRef(none[HTMLTableVirtualizer])
+      // scroll to the top selected row.
+      _               <- useEffectWithDeps((scrollTo.reuseByValue, selectedIndices.value.headOption, rows)):
+                           (scrollTo, optFirstIdx, _) =>
+                             Callback.when(scrollTo.get === ScrollTo.Scroll)(
+                               optFirstIdx.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
+                                 scrollTo.set(ScrollTo.NoScroll)
+                             )
     } yield
       val errlabel       = itcHookData.errorLabel(true)
       val selectedTarget = findSelectedTarget(rows.value, props.validTargets)
-      val selectedCount  = props.selectedConfigs.get.fold(0)(_.configs.length)
+      val selectedCount  = props.selectedConfigs.get.count
+
+      val upIndex   = visibleRows.get.flatMap(vr => selectedIndices.value.findLast(_ < vr.start))
+      val downIndex = visibleRows.get.flatMap(vr => selectedIndices.value.find(_ > vr.end))
 
       def clickHandler(row: ImagingModeRowWithResult): ReactMouseEvent => Callback =
         (e: ReactMouseEvent) =>
           if (e.metaKey || e.ctrlKey)
-            props.selectedConfigs.mod(
-              _.fold(ConfigSelection.fromItcInstrumentConfig(row.entry.instrument).some)(
-                _.toggle(row.entry.instrument)
-              )
-            )
+            props.selectedConfigs.mod(_.toggle(row.configAndResult))
           else
-            props.selectedConfigs.mod(
-              _.fold(ConfigSelection.fromItcInstrumentConfig(row.entry.instrument).some)(
-                _.toggleOrSet(row.entry.instrument)
-              )
-            )
+            props.selectedConfigs.mod(_.toggleOrSet(row.configAndResult))
 
       React.Fragment(
         <.div(ExploreStyles.ModesTableTitle)(
@@ -333,12 +347,24 @@ object ImagingModesTable extends ModesTableCommon:
               TagMod(
                 ^.disabled := !row.original.entry.enabled,
                 ExploreStyles.TableRowSelected.when:
-                  props.selectedConfigs.get.exists(_.contains(row.original.entry.instrument))
+                  props.selectedConfigs.get.contains(row.original.entry.instrument)
                 ,
                 (^.onClick            ==> clickHandler(row.original)).when(row.original.entry.enabled)
               ),
+            onChange = tableOnChangeHandler(visibleRows, atTop),
             virtualizerRef = virtualizerRef,
             emptyMessage = <.div(ExploreStyles.SpectroscopyTableEmpty, "No matching modes")
+          ),
+          scrollUpButton(
+            upIndex,
+            virtualizerRef,
+            visibleRows.get,
+            atTop.get
+          ),
+          scrollDownButton(
+            downIndex,
+            virtualizerRef,
+            visibleRows.get
           )
         )
       )

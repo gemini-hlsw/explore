@@ -4,41 +4,54 @@
 package explore.modes
 
 import cats.Eq
-import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
+import explore.model.InstrumentConfigAndItcResult
 import lucuma.core.enums.ScienceMode
 import lucuma.schemas.model.BasicConfiguration
 
-// ModeSelection is a collection of ItcInstrumentConfig objects that are consistent with each other
-final case class ConfigSelection private (configs: NonEmptyList[ItcInstrumentConfig]) derives Eq:
-  def contains(config: ItcInstrumentConfig): Boolean = configs.contains_(config)
+// ModeSelection is a collection of InstrumentConfigAndItcResult objects that are consistent with each other
+final case class ConfigSelection private (configs: List[InstrumentConfigAndItcResult]) derives Eq:
+  lazy val headOption: Option[InstrumentConfigAndItcResult] = configs.headOption
+  lazy val count: Int                                       = configs.length
+  lazy val isEmpty: Boolean                                 = configs.isEmpty
+  lazy val nonEmpty: Boolean                                = configs.nonEmpty
 
-  def canAdd(config: ItcInstrumentConfig): Boolean =
-    configs.head.mode === ScienceMode.Imaging &&
-      configs.head.instrument === config.instrument && !contains(config)
+  // We can create a configuration if there is at least one selection and all ITCs are successful.
+  lazy val canAccept: Boolean =
+    nonEmpty &&
+      configs.forall(_.itcResult.flatMap(_.toOption).exists(_.isSuccess))
 
-  def add(config: ItcInstrumentConfig): ConfigSelection =
+  def contains(config: ItcInstrumentConfig): Boolean = configs.exists(_.instrumentConfig === config)
+
+  def canAdd(configAndResult: InstrumentConfigAndItcResult): Boolean =
+    headOption.fold(true)(head =>
+      head.instrumentConfig.mode === ScienceMode.Imaging &&
+        head.instrumentConfig.instrument === configAndResult.instrument &&
+        !contains(configAndResult.instrumentConfig)
+    )
+
+  def add(configAndResult: InstrumentConfigAndItcResult): ConfigSelection =
     // should I throw an exception for instrument mismatch, or just ignore the new config?
-    if canAdd(config) then ConfigSelection(configs :+ config)
+    if canAdd(configAndResult) then ConfigSelection(configs :+ configAndResult)
     else this
 
-  def remove(config: ItcInstrumentConfig): Option[ConfigSelection] =
-    NonEmptyList.fromList(configs.toList.filterNot(_ === config)).map(ConfigSelection(_))
+  def remove(config: ItcInstrumentConfig): ConfigSelection =
+    ConfigSelection.fromList(configs.filterNot(_.instrumentConfig === config))
 
   // The cmd-click handler for imaging. Toggles the inclusion of the config in the selection.
-  def toggle(config: ItcInstrumentConfig): Option[ConfigSelection] =
-    if configs.contains_(config) then remove(config)
-    else add(config).some
+  def toggle(configAndResult: InstrumentConfigAndItcResult): ConfigSelection =
+    if configs.contains_(configAndResult) then remove(configAndResult.instrumentConfig)
+    else add(configAndResult)
 
   // Click handler for spectroscopy and non-cmd click handler for imaging.
   // If the config is in the selection, "unset" it (return None), otherwise make it the selection.
-  def toggleOrSet(config: ItcInstrumentConfig): Option[ConfigSelection] =
-    if configs.contains_(config) then none
-    else ConfigSelection.fromItcInstrumentConfig(config).some
+  def toggleOrSet(configAndResult: InstrumentConfigAndItcResult): ConfigSelection =
+    if configs.contains_(configAndResult) then ConfigSelection.Empty
+    else ConfigSelection.one(configAndResult)
 
   def toBasicConfiguration: Option[BasicConfiguration] =
-    configs.head match
+    configs.headOption.flatMap(_.instrumentConfig match
       case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
         BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cw).some
       case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
@@ -46,15 +59,18 @@ final case class ConfigSelection private (configs: NonEmptyList[ItcInstrumentCon
       case ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)              =>
         BasicConfiguration.Flamingos2LongSlit(disperser, filter, fpu).some
       case _                                                                               => none
+    )
 
 object ConfigSelection:
-  def fromItcInstrumentConfig(config: ItcInstrumentConfig): ConfigSelection =
-    ConfigSelection(NonEmptyList.of(config))
+  val Empty: ConfigSelection = ConfigSelection(Nil)
+
+  def one(config: InstrumentConfigAndItcResult): ConfigSelection =
+    ConfigSelection(List(config))
 
   // ignores duplicates and configs inconsistent with the first one. But, maybe it should throw an exception?
-  def fromNel(configs: NonEmptyList[ItcInstrumentConfig]): ConfigSelection =
-    val head = fromItcInstrumentConfig(configs.head)
-    configs.tail.foldLeft(head)(_.add(_))
-
-  def fromList(configs: List[ItcInstrumentConfig]): Option[ConfigSelection] =
-    NonEmptyList.fromList(configs).map(fromNel)
+  def fromList(configs: List[InstrumentConfigAndItcResult]): ConfigSelection =
+    configs match
+      case Nil    => ConfigSelection(Nil)
+      case h :: t =>
+        val head = one(h)
+        t.foldLeft(head)(_.add(_))

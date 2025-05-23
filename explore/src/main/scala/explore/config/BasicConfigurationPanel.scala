@@ -69,7 +69,7 @@ private object BasicConfigurationPanel:
         // these next 2 are temporary
         imaging         <- useStateView[Imaging](Imaging.Default)
         // selectedConfig above should be replaced by one of these...
-        selectedConfigs <- useStateView(none[ConfigSelection])
+        selectedConfigs <- useStateView(ConfigSelection.Empty)
         creating        <- useStateView(Creating(false))
       yield
         import ctx.given
