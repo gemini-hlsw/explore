@@ -60,8 +60,6 @@ object ScienceQueries:
     def scienceRequirements(
       op: ScienceRequirements
     ): Endo[ScienceRequirementsInput] =
-      // val i: Int = op.spectroscopy
-      //   .map(spectroscopyRequirements)
       val input =
         for {
           _ <- ScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
@@ -69,9 +67,7 @@ object ScienceQueries:
                  .orUnassign
           _ <- ScienceRequirementsInput.spectroscopy     := op.spectroscopy
                  .map(spectroscopyRequirements)
-          // .orUnassign
-          // _ <- ScienceRequirementsInput.exposureTimeUnit := op.exposureTimeUnit.orUnassign
-          // _ <- ScienceRequirementsInput.readoutMode := op.readoutMode.orUnassign
+                 .orUnassign
         } yield ()
       input.runS(_).value
 
@@ -90,7 +86,7 @@ object ScienceQueries:
     def wavelengthDelta(wc: WavelengthDelta): WavelengthInput =
       wavelength(Wavelength(wc.pm))
 
-    def spectroscopyRequirements(
+    private def spectroscopyRequirements(
       op: ScienceRequirements.Spectroscopy
     ): SpectroscopyScienceRequirementsInput =
       val input =

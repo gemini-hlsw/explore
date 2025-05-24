@@ -32,6 +32,7 @@ import lucuma.core.enums.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDither
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -50,7 +51,6 @@ import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import monocle.Lens
 import org.typelevel.log4cats.Logger
-import lucuma.core.model.ExposureTimeMode
 
 object GmosLongslitConfigPanel {
   sealed trait GmosLongslitConfigPanel[T <: ObservingMode, Input]:

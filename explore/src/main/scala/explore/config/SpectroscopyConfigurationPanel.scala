@@ -21,6 +21,7 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.Instrument
 import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
@@ -28,7 +29,6 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import lucuma.core.model.ExposureTimeMode
 
 case class SpectroscopyConfigurationPanel(
   instrument:       Option[Instrument],

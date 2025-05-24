@@ -17,6 +17,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.ScienceMode
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnComponent
@@ -26,7 +27,6 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import lucuma.core.model.ExposureTimeMode
 
 case class ImagingConfigurationPanel(
   exposureTimeMode: View[Option[ExposureTimeMode]],

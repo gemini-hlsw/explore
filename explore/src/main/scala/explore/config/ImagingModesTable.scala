@@ -37,6 +37,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -50,7 +51,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
-import lucuma.core.model.ExposureTimeMode
 
 final case class ImagingModesTable(
   userId:              Option[User.Id],

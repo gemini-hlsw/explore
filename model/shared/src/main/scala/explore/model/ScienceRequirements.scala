@@ -106,7 +106,7 @@ object ScienceRequirements:
   val spectroscopy: Lens[ScienceRequirements, Option[Spectroscopy]] =
     Focus[ScienceRequirements](_.spectroscopy)
 
-  val imagig: Lens[ScienceRequirements, Option[Imaging]] =
+  val imaging: Lens[ScienceRequirements, Option[Imaging]] =
     Focus[ScienceRequirements](_.imaging)
 
   given Decoder[ScienceRequirements] = Decoder.instance: c =>

@@ -23,6 +23,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -34,7 +35,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
-import lucuma.core.model.ExposureTimeMode
 
 final case class Flamingos2LongslitConfigPanel(
   programId:                Program.Id,

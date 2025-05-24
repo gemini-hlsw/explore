@@ -13,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
+import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Imaging
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
@@ -38,7 +39,6 @@ import lucuma.ui.LucumaIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
-import explore.model.ScienceRequirements
 
 case class BasicConfigurationPanel(
   userId:              Option[User.Id],
