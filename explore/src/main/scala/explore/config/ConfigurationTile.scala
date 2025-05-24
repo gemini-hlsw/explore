@@ -346,18 +346,17 @@ object ConfigurationTile:
           val requirementsViewSet: ScienceRequirementsUndoView =
             ScienceRequirementsUndoView(props.obsId, props.requirements)
 
+          val exposureTimeModeView =
+            props.requirements.zoom(ScienceRequirements.exposureTimeMode)
+
           val requirementsView: View[ScienceRequirements] =
             requirementsViewSet(
               Iso.id.asLens,
-              _ match
-                case s @ ScienceRequirements.Spectroscopy(_, _, _, _, focalPlane, _, _) =>
-                  UpdateScienceRequirements.spectroscopyRequirements(s)
-                case s @ ScienceRequirements.Imaging(_, _, _, _, _)                     =>
-                  throw NotImplementedError()
+              UpdateScienceRequirements.scienceRequirements
             )
 
           val spectroscopyView: ViewOpt[Spectroscopy] =
-            requirementsView.zoom(ScienceRequirements.spectroscopy)
+            requirementsView.zoom(ScienceRequirements.spectroscopy.some)
 
           React.Fragment(
             <.div(ExploreStyles.ConfigurationGrid)(
@@ -379,7 +378,7 @@ object ConfigurationTile:
                     BasicConfigurationPanel(
                       props.userId,
                       props.obsId,
-                      spectroscopyView,
+                      requirementsView,
                       props.selectedConfig,
                       constraints,
                       props.itcTargets,
@@ -410,6 +409,7 @@ object ConfigurationTile:
                         props.obsId,
                         props.obsConf.calibrationRole,
                         northAligner,
+                        exposureTimeModeView.model,
                         specView,
                         revertConfig,
                         props.modes.spectroscopy,
@@ -426,6 +426,7 @@ object ConfigurationTile:
                         props.obsId,
                         props.obsConf.calibrationRole,
                         southAligner,
+                        exposureTimeModeView.model,
                         specView,
                         revertConfig,
                         props.modes.spectroscopy,
@@ -441,6 +442,7 @@ object ConfigurationTile:
                       props.obsId,
                       props.obsConf.calibrationRole,
                       f2Aligner,
+                      exposureTimeModeView.model,
                       specView,
                       revertConfig,
                       props.modes.spectroscopy,

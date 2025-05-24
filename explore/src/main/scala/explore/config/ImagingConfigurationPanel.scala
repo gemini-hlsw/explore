@@ -26,24 +26,25 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
+import lucuma.core.model.ExposureTimeMode
 
 case class ImagingConfigurationPanel(
-  options:         View[ScienceRequirements.Imaging],
-  readonly:        Boolean,
-  units:           WavelengthUnits,
-  calibrationRole: Option[CalibrationRole]
+  exposureTimeMode: View[Option[ExposureTimeMode]],
+  options:          View[ScienceRequirements.Imaging],
+  readonly:         Boolean,
+  units:            WavelengthUnits,
+  calibrationRole:  Option[CalibrationRole]
 ) extends ReactFnProps(ImagingConfigurationPanel)
 
 object ImagingConfigurationPanel
     extends ReactFnComponent[ImagingConfigurationPanel](p =>
 
-      val fov              = p.options.zoom(ScienceRequirements.Imaging.minimumFov)
-      val exposureTimeMode = p.options.zoom(ScienceRequirements.Imaging.exposureTimeMode)
-      val narrowBand       =
+      val fov         = p.options.zoom(ScienceRequirements.Imaging.minimumFov)
+      val narrowBand  =
         p.options.zoom(ScienceRequirements.Imaging.narrowFilters.andThen(NarrowBand.Value))
-      val broadBand        =
+      val broadBand   =
         p.options.zoom(ScienceRequirements.Imaging.broadFilters.andThen(BroadBand.Value))
-      val combination      =
+      val combination =
         p.options.zoom(ScienceRequirements.Imaging.combinationFilters.andThen(Combination.Value))
 
       ReactFragment(
@@ -81,7 +82,7 @@ object ImagingConfigurationPanel
         ExposureTimeModeEditor(
           none,
           none,
-          exposureTimeMode,
+          p.exposureTimeMode,
           ScienceMode.Imaging,
           p.readonly,
           p.units,

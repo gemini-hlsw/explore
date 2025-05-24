@@ -19,6 +19,7 @@ import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.ExposureTimeModeType
+import explore.model.enums.ExposureTimeModeType.*
 import explore.model.enums.TableId
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
@@ -49,9 +50,11 @@ import lucuma.ui.reusability.given
 import lucuma.ui.table.*
 import lucuma.ui.table.ColumnSize.*
 import lucuma.ui.table.hooks.*
+import lucuma.core.model.ExposureTimeMode
 
 final case class ImagingModesTable(
   userId:              Option[User.Id],
+  exposureTimeMode:    Option[ExposureTimeMode],
   imaging:             ScienceRequirements.Imaging,
   matrix:              ImagingModesMatrix,
   constraints:         ConstraintSet,
@@ -210,7 +213,7 @@ object ImagingModesTable extends ModesTableCommon:
       itcProgress <- useStateView(none[Progress])
       rows        <- useMemo(
                        props.matrix,
-                       props.imaging.exposureTimeMode,
+                       props.exposureTimeMode,
                        props.validTargets,
                        props.constraints,
                        props.customSedTimestamps,
@@ -233,7 +236,7 @@ object ImagingModesTable extends ModesTableCommon:
                              row,
                              Pot.fromOption(result)
                            )
-      cols        <- useMemo((props.imaging.modeType, props.units)): (m, u) =>
+      cols        <- useMemo((props.exposureTimeMode.map(_.modeType), props.units)): (m, u) =>
                        m match
                          case Some(ExposureTimeModeType.SignalToNoise) | None =>
                            columns(u).filterNot(_.id.value === SNColumnId.value)
@@ -259,7 +262,7 @@ object ImagingModesTable extends ModesTableCommon:
                        itcResults,
                        itcProgress,
                        Callback.empty,
-                       props.imaging.exposureTimeMode,
+                       props.exposureTimeMode,
                        props.constraints,
                        props.validTargets,
                        props.customSedTimestamps,

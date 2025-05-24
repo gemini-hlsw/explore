@@ -13,7 +13,6 @@ import explore.events.ItcMessage
 import explore.model.Constants
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
-import explore.model.ScienceRequirements
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.ItcPicklers.given
@@ -36,8 +35,6 @@ case class ItcGraphQuerier(
   at:                  TargetList,
   customSedTimestamps: List[Timestamp]
 ) derives Eq:
-  private val spectroscopyRequirements: Option[ScienceRequirements.Spectroscopy] =
-    ScienceRequirements.spectroscopy.getOption(observation.scienceRequirements)
 
   private val allTargets: TargetList =
     SortedMap.from:
@@ -61,7 +58,7 @@ case class ItcGraphQuerier(
     remoteConfig.orElse(selectedConfig)
 
   val exposureTimeMode: Option[ExposureTimeMode] =
-    spectroscopyRequirements.flatMap(_.exposureTimeMode)
+    observation.scienceRequirements.exposureTimeMode
 
   private val instrumentConfig: Option[ItcInstrumentConfig] =
     finalConfig.map(_.instrumentConfig)
