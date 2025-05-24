@@ -25,9 +25,13 @@ import lucuma.core.model.arb.ArbExposureTimeMode.given
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbTimeSpan.given
+import lucuma.core.util.arb.ArbNewType.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
+import explore.model.NarrowBand
+import explore.model.BroadBand
+import explore.model.Combination
 
 trait ArbScienceRequirements:
 
@@ -56,49 +60,71 @@ trait ArbScienceRequirements:
       (tcmi.time, tcmi.count, tcmi.at)
     )
 
-  given Arbitrary[ScienceRequirements] =
-    Arbitrary(
-      for
-        wavelength         <- arbitrary[Option[Wavelength]]
-        resolution         <- arbitrary[Option[PosInt]]
-        exposureTimeMode   <- arbitrary[Option[ExposureTimeMode]]
-        wavelengthCoverage <- arbitrary[Option[WavelengthDelta]]
-        focalPlane         <- arbitrary[Option[FocalPlane]]
-        focalPlaneAngle    <- arbitrary[Option[Angle]]
-        capability         <- arbitrary[Option[SpectroscopyCapabilities]]
-      yield ScienceRequirements.Spectroscopy(
-        wavelength,
-        resolution,
-        exposureTimeMode,
-        wavelengthCoverage,
-        focalPlane,
-        focalPlaneAngle,
-        capability
+  given Arbitrary[ScienceRequirements.Imaging] = Arbitrary(
+    for {
+      minimumFov  <- arbitrary[Option[Angle]]
+      narrowBand  <- arbitrary[NarrowBand]
+      broadBand   <- arbitrary[BroadBand]
+      combination <- arbitrary[Combination]
+    } yield ScienceRequirements.Imaging(minimumFov, narrowBand, broadBand, combination)
+  )
+
+  given Cogen[ScienceRequirements.Imaging] =
+    Cogen[(Option[Angle], NarrowBand, BroadBand, Combination)].contramap(imaging =>
+      (imaging.minimumFov, imaging.narrowFilters, imaging.broadFilters, imaging.combinationFilters)
+    )
+
+  given Arbitrary[ScienceRequirements.Spectroscopy] = Arbitrary(
+    for
+      wavelength         <- arbitrary[Option[Wavelength]]
+      resolution         <- arbitrary[Option[PosInt]]
+      wavelengthCoverage <- arbitrary[Option[WavelengthDelta]]
+      focalPlane         <- arbitrary[Option[FocalPlane]]
+      focalPlaneAngle    <- arbitrary[Option[Angle]]
+      capability         <- arbitrary[Option[SpectroscopyCapabilities]]
+    yield ScienceRequirements.Spectroscopy(
+      wavelength,
+      resolution,
+      wavelengthCoverage,
+      focalPlane,
+      focalPlaneAngle,
+      capability
+    )
+  )
+
+  given Cogen[ScienceRequirements.Spectroscopy] =
+    Cogen[
+      (Option[Wavelength],
+       Option[PosInt],
+       Option[WavelengthDelta],
+       Option[FocalPlane],
+       Option[Angle],
+       Option[SpectroscopyCapabilities]
+      )
+    ].contramap(sr =>
+      (sr.wavelength,
+       sr.resolution,
+       sr.wavelengthCoverage,
+       sr.focalPlane,
+       sr.focalPlaneAngle,
+       sr.capability
       )
     )
 
-  given Cogen[ScienceRequirements.Spectroscopy] = Cogen[
-    (Option[Wavelength],
-     Option[PosInt],
-     Option[ExposureTimeMode],
-     Option[WavelengthDelta],
-     Option[FocalPlane],
-     Option[Angle],
-     Option[SpectroscopyCapabilities]
-    )
-  ].contramap(sr =>
-    (sr.wavelength,
-     sr.resolution,
-     sr.exposureTimeMode,
-     sr.wavelengthCoverage,
-     sr.focalPlane,
-     sr.focalPlaneAngle,
-     sr.capability
-    )
+  given Arbitrary[ScienceRequirements] = Arbitrary(
+    for
+      exposureTimeMode <- arbitrary[Option[ExposureTimeMode]]
+      spectroscopy     <- arbitrary[Option[ScienceRequirements.Spectroscopy]]
+      imaging          <- arbitrary[Option[ScienceRequirements.Imaging]]
+    yield ScienceRequirements(exposureTimeMode, spectroscopy, imaging)
   )
 
-  given Cogen[ScienceRequirements] = Cogen[ScienceRequirements.Spectroscopy].contramap(
-    _.asInstanceOf[ScienceRequirements.Spectroscopy]
-  )
-
+  given Cogen[ScienceRequirements] =
+    Cogen[
+      (Option[ExposureTimeMode],
+       Option[ScienceRequirements.Spectroscopy],
+       Option[ScienceRequirements.Imaging]
+      )
+    ]
+      .contramap(sr => (sr.exposureTimeMode, sr.spectroscopy, sr.imaging))
 object ArbScienceRequirements extends ArbScienceRequirements

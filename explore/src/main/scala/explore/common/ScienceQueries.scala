@@ -16,7 +16,6 @@ import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
-import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
@@ -58,8 +57,19 @@ object ScienceQueries:
       apply(lens.get, lens.modify, remoteSet)
 
   object UpdateScienceRequirements:
-    def mode(n: enums.ScienceMode): Endo[ScienceRequirementsInput] =
-      ScienceRequirementsInput.mode.replace(n.assign)
+    def scienceRequirements(
+      op: ScienceRequirements
+    ): Endo[ScienceRequirementsInput] =
+      val input =
+        for {
+          _ <- ScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
+                 .map(_.toInput)
+                 .orUnassign
+          _ <- ScienceRequirementsInput.spectroscopy     := op.spectroscopy
+                 .map(spectroscopyRequirements)
+                 .orUnassign
+        } yield ()
+      input.runS(_).value
 
     def angle(w: Angle): AngleInput =
       (AngleInput.microarcseconds := w.toMicroarcseconds.assign)
@@ -76,19 +86,15 @@ object ScienceQueries:
     def wavelengthDelta(wc: WavelengthDelta): WavelengthInput =
       wavelength(Wavelength(wc.pm))
 
-    def spectroscopyRequirements(
+    private def spectroscopyRequirements(
       op: ScienceRequirements.Spectroscopy
-    ): Endo[ScienceRequirementsInput] =
+    ): SpectroscopyScienceRequirementsInput =
       val input =
         for {
           _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          _ <-
-            SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
-              .map(_.toInput)
-              .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
                  .map(wavelengthDelta)
                  .orUnassign
@@ -98,6 +104,4 @@ object ScienceQueries:
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.capability         := op.capability.orUnassign
         } yield ()
-      ScienceRequirementsInput.spectroscopy.replace(
-        input.runS(SpectroscopyScienceRequirementsInput()).value.assign
-      )
+      input.runS(SpectroscopyScienceRequirementsInput()).value

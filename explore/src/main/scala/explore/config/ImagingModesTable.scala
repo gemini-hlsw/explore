@@ -21,6 +21,7 @@ import explore.model.ScienceRequirements
 import explore.model.display.*
 import explore.model.display.given
 import explore.model.enums.ExposureTimeModeType
+import explore.model.enums.ExposureTimeModeType.*
 import explore.model.enums.TableId
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
@@ -38,6 +39,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -55,6 +57,7 @@ import lucuma.ui.table.hooks.*
 final case class ImagingModesTable(
   userId:              Option[User.Id],
   selectedConfigs:     View[ConfigSelection],
+  exposureTimeMode:    Option[ExposureTimeMode],
   imaging:             ScienceRequirements.Imaging,
   matrix:              ImagingModesMatrix,
   constraints:         ConstraintSet,
@@ -213,7 +216,7 @@ object ImagingModesTable extends ModesTableCommon:
       itcProgress     <- useStateView(none[Progress])
       rows            <- useMemo(
                            props.matrix,
-                           props.imaging.exposureTimeMode,
+                           props.exposureTimeMode,
                            props.validTargets,
                            props.constraints,
                            props.customSedTimestamps,
@@ -236,7 +239,7 @@ object ImagingModesTable extends ModesTableCommon:
                                  row,
                                  Pot.fromOption(result)
                                )
-      cols            <- useMemo((props.imaging.modeType, props.units)): (m, u) =>
+      cols            <- useMemo((props.exposureTimeMode.map(_.modeType), props.units)): (m, u) =>
                            m match
                              case Some(ExposureTimeModeType.SignalToNoise) | None =>
                                columns(u).filterNot(_.id.value === SNColumnId.value)
@@ -269,7 +272,7 @@ object ImagingModesTable extends ModesTableCommon:
                            itcResults,
                            itcProgress,
                            scrollTo.set(ScrollTo.Scroll),
-                           props.imaging.exposureTimeMode,
+                           props.exposureTimeMode,
                            props.constraints,
                            props.validTargets,
                            props.customSedTimestamps,
