@@ -19,6 +19,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.events.ItcMessage
 import explore.model.AppContext
+import explore.model.InstrumentConfigAndItcResult
 import explore.model.Progress
 import explore.model.SupportedInstruments
 import explore.model.WorkerClients.ItcClient
@@ -29,6 +30,7 @@ import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.ItcInstrumentConfig
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.hooks.Hooks.UseRef
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.ConstraintSet
@@ -38,10 +40,15 @@ import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.react.circularprogressbar.CircularProgressbar
+import lucuma.react.common.Css
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Button
+import lucuma.react.table.HTMLTableVirtualizer
 import lucuma.react.table.HeaderContext
+import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
+import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
@@ -64,6 +71,8 @@ trait ModesTableCommon:
   protected trait TableRowWithResult:
     val result: Pot[EitherNec[ItcTargetProblem, ItcResult]]
     val config: ItcInstrumentConfig
+    lazy val configAndResult: InstrumentConfigAndItcResult =
+      InstrumentConfigAndItcResult(config, result.toOption)
 
     lazy val totalItcTime: Option[TimeSpan] =
       result.toOption
@@ -77,6 +86,74 @@ trait ModesTableCommon:
   protected object ScrollTo extends NewBoolean:
     inline def Scroll = True; inline def NoScroll = False
   protected type ScrollTo = ScrollTo.Type
+
+  protected val ScrollOptions =
+    rawVirtual.mod
+      .ScrollToOptions()
+      .setBehavior(rawVirtual.mod.ScrollBehavior.smooth)
+      .setAlign(rawVirtual.mod.ScrollAlignment.center)
+
+  protected def scrollToVirtualizedIndex(
+    selectedIndex:  Int,
+    virtualizerRef: UseRef[Option[HTMLTableVirtualizer]]
+  ): Callback =
+    virtualizerRef.get.flatMap(refOpt =>
+      Callback(refOpt.map(_.scrollToIndex(selectedIndex, ScrollOptions)))
+    )
+
+  private def scrollButton(
+    virtualizerRef: UseRef[Option[HTMLTableVirtualizer]],
+    index:          Option[Int],
+    content:        VdomNode,
+    style:          Css,
+    indexCondition: Int => Boolean
+  ): TagMod =
+    index.whenDefined(idx =>
+      Button(
+        clazz = ExploreStyles.ScrollButton |+| style,
+        severity = Button.Severity.Secondary,
+        onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
+      ).withMods(content).compact.when(indexCondition(idx))
+    )
+
+  protected def scrollUpButton(
+    index:          Option[Int],
+    virtualizerRef: UseRef[Option[HTMLTableVirtualizer]],
+    visibleRows:    Option[Range.Inclusive],
+    atTop:          Boolean
+  ): TagMod =
+    scrollButton(
+      virtualizerRef,
+      index,
+      Icons.ChevronDoubleUp,
+      ExploreStyles.SelectedUp,
+      idx => !(idx === 0 && atTop) && visibleRows.exists(_.start + 1 > idx)
+    )
+
+  protected def scrollDownButton(
+    index:          Option[Int],
+    virtualizerRef: UseRef[Option[HTMLTableVirtualizer]],
+    visibleRows:    Option[Range.Inclusive]
+  ): TagMod =
+    scrollButton(virtualizerRef,
+                 index,
+                 Icons.ChevronDoubleDown,
+                 ExploreStyles.SelectedDown,
+                 idx => visibleRows.exists(_.end - 2 < idx)
+    )
+
+  protected def tableOnChangeHandler(
+    visibleRows: View[Option[Range.Inclusive]],
+    atTop:       View[Boolean]
+  ): HTMLTableVirtualizer => Callback =
+    virtualizer =>
+      visibleRows.set(
+        virtualizer
+          .getVirtualItems()
+          .some
+          .filter(_.nonEmpty)
+          .map(items => items.head.index.toInt to items.last.index.toInt)
+      ) >> atTop.set(virtualizer.scrollElement.scrollTop < 32)
 
   protected enum TimeOrSNColumn:
     case Time, SN
