@@ -32,20 +32,20 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
             id
           }
           scienceRequirements {
+            exposureTimeMode {
+              signalToNoise {
+                value
+                at $WavelengthSubquery
+              }
+              timeAndCount {
+                time $TimeSpanSubquery
+                count
+                at $WavelengthSubquery
+              }
+            }
             spectroscopy {
               wavelength $WavelengthSubquery
               resolution
-              exposureTimeMode {
-                signalToNoise {
-                  value
-                  at $WavelengthSubquery
-                }
-                timeAndCount {
-                  time $TimeSpanSubquery
-                  count
-                  at $WavelengthSubquery
-                }
-              }
               wavelengthCoverage $WavelengthDeltaSubquery
               focalPlane
               focalPlaneAngle $AngleSubquery

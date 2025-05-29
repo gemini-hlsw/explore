@@ -17,6 +17,7 @@ import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.ScienceMode
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnComponent
@@ -28,23 +29,24 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class ImagingConfigurationPanel(
-  options:         View[ScienceRequirements.Imaging],
-  readonly:        Boolean,
-  units:           WavelengthUnits,
-  calibrationRole: Option[CalibrationRole]
+  exposureTimeMode: View[Option[ExposureTimeMode]],
+  options:          View[ScienceRequirements.Imaging],
+  readonly:         Boolean,
+  units:            WavelengthUnits,
+  calibrationRole:  Option[CalibrationRole]
 ) extends ReactFnProps(ImagingConfigurationPanel)
 
 object ImagingConfigurationPanel
     extends ReactFnComponent[ImagingConfigurationPanel](p =>
 
-      val fov              = p.options.zoom(ScienceRequirements.Imaging.minimumFov)
-      val exposureTimeMode = p.options.zoom(ScienceRequirements.Imaging.exposureTimeMode)
-      val narrowBand       =
-        p.options.zoom(ScienceRequirements.Imaging.narrowFilters.andThen(NarrowBand.Value))
-      val broadBand        =
-        p.options.zoom(ScienceRequirements.Imaging.broadFilters.andThen(BroadBand.Value))
-      val combination      =
-        p.options.zoom(ScienceRequirements.Imaging.combinationFilters.andThen(Combination.Value))
+      val fov         = p.options.zoom(ScienceRequirements.Imaging.minimumFov)
+      val narrowBand  =
+        p.options.zoom(ScienceRequirements.Imaging.narrowFilters.some.andThen(NarrowBand.Value))
+      val broadBand   =
+        p.options.zoom(ScienceRequirements.Imaging.broadFilters.some.andThen(BroadBand.Value))
+      val combination =
+        p.options
+          .zoom(ScienceRequirements.Imaging.combinationFilters.some.andThen(Combination.Value))
 
       ReactFragment(
         FormInputTextView(
@@ -81,7 +83,7 @@ object ImagingConfigurationPanel
         ExposureTimeModeEditor(
           none,
           none,
-          exposureTimeMode,
+          p.exposureTimeMode,
           ScienceMode.Imaging,
           p.readonly,
           p.units,

@@ -25,6 +25,7 @@ import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.*
 import explore.model.display.*
 import explore.model.enums.ExposureTimeModeType
+import explore.model.enums.ExposureTimeModeType.*
 import explore.model.enums.TableId
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.*
@@ -62,6 +63,7 @@ import scala.language.implicitConversions
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
   selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
+  exposureTimeMode:         Option[ExposureTimeMode],
   spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
   targets:                  List[ItcTarget],
@@ -284,7 +286,7 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                                 .flattenOption
 
                             fixedModeRows.map: row =>
-                              val result = (s.wavelength, asterism, s.exposureTimeMode).mapN {
+                              val result = (s.wavelength, asterism, props.exposureTimeMode).mapN {
                                 (_, _, exposureMode) =>
                                   itcResults.get.forRow(
                                     exposureMode,
@@ -300,7 +302,7 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                                 s.wavelength.flatMap: w =>
                                   row.wavelengthInterval(w)
                               )
-        cols           <- useMemo((props.spectroscopyRequirements.modeType, props.units)): (m, u) =>
+        cols           <- useMemo((props.exposureTimeMode.map(_.modeType), props.units)): (m, u) =>
                             m match
                               case Some(ExposureTimeModeType.SignalToNoise) | None =>
                                 columns(u).filterNot(_.id.value === SNColumnId.value)
@@ -339,7 +341,7 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                             itcResults,
                             itcProgress,
                             scrollTo.set(ScrollTo.Scroll),
-                            props.spectroscopyRequirements.exposureTimeMode,
+                            props.exposureTimeMode,
                             props.constraints,
                             props.validTargets,
                             props.customSedTimestamps,

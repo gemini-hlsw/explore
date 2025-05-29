@@ -5,6 +5,7 @@ package explore.model
 
 import cats.Eq
 import cats.derived.*
+import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.PosInt
 import explore.model.enums.ExposureTimeModeType
@@ -27,8 +28,7 @@ import lucuma.schemas.decoders.given
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
-import monocle.Prism
-import monocle.macros.GenPrism
+import monocle.std.either.*
 
 object NarrowBand extends NewBoolean
 type NarrowBand = NarrowBand.Type
@@ -37,8 +37,10 @@ type BroadBand = BroadBand.Type
 object Combination extends NewBoolean
 type Combination = Combination.Type
 
-sealed trait ScienceRequirements derives Eq:
-  val exposureTimeMode: Option[ExposureTimeMode]
+case class ScienceRequirements(
+  exposureTimeMode: Option[ExposureTimeMode],
+  scienceMode:      Option[Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]]
+) derives Eq:
   def modeType: Option[ExposureTimeModeType] =
     exposureTimeMode.map(_.modeType)
 
@@ -46,33 +48,25 @@ object ScienceRequirements:
   case class Spectroscopy(
     wavelength:         Option[Wavelength],
     resolution:         Option[PosInt],
-    exposureTimeMode:   Option[ExposureTimeMode],
     wavelengthCoverage: Option[WavelengthDelta],
     focalPlane:         Option[FocalPlane],
     focalPlaneAngle:    Option[Angle],
     capability:         Option[SpectroscopyCapabilities]
-  ) extends ScienceRequirements derives Eq
+  ) derives Eq
 
   object Spectroscopy:
     given Decoder[Spectroscopy] = Decoder.instance: c =>
       for {
         wl  <- c.downField("wavelength").as[Option[Wavelength]]
         res <- c.downField("resolution").as[Option[PosInt]]
-        etm <- c.downField("exposureTimeMode").as[Option[ExposureTimeMode]]
         cov <- c.downField("wavelengthCoverage").as[Option[WavelengthDelta]]
         fp  <- c.downField("focalPlane").as[Option[FocalPlane]]
         fpa <- c.downField("focalPlaneAngle").as[Option[Angle]]
         cap <- c.downField("capability").as[Option[SpectroscopyCapabilities]]
-      } yield Spectroscopy(wl, res, etm, cov, fp, fpa, cap)
+      } yield Spectroscopy(wl, res, cov, fp, fpa, cap)
 
     val wavelength: Lens[Spectroscopy, Option[Wavelength]]               = Focus[Spectroscopy](_.wavelength)
     val resolution: Lens[Spectroscopy, Option[PosInt]]                   = Focus[Spectroscopy](_.resolution)
-    val exposureTimeMode: Lens[Spectroscopy, Option[ExposureTimeMode]]   =
-      Focus[Spectroscopy](_.exposureTimeMode)
-    val signalToNoiseMode: Optional[Spectroscopy, SignalToNoiseMode]     =
-      exposureTimeMode.some.andThen(ExposureTimeMode.signalToNoise)
-    val timeAndCountMode: Optional[Spectroscopy, TimeAndCountMode]       =
-      exposureTimeMode.some.andThen(ExposureTimeMode.timeAndCount)
     val wavelengthCoverage: Lens[Spectroscopy, Option[WavelengthDelta]]  =
       Focus[Spectroscopy](_.wavelengthCoverage)
     val focalPlane: Lens[Spectroscopy, Option[FocalPlane]]               = Focus[Spectroscopy](_.focalPlane)
@@ -81,39 +75,65 @@ object ScienceRequirements:
       Focus[Spectroscopy](_.capability)
 
   case class Imaging(
-    exposureTimeMode:   Option[ExposureTimeMode],
     minimumFov:         Option[Angle],
-    narrowFilters:      NarrowBand = NarrowBand.False,
-    broadFilters:       BroadBand = BroadBand.False,
-    combinationFilters: Combination = Combination.False
-  ) extends ScienceRequirements derives Eq:
+    narrowFilters:      Option[NarrowBand],
+    broadFilters:       Option[BroadBand],
+    combinationFilters: Option[Combination]
+  ) derives Eq:
     lazy val allowedFilterTypes: Set[FilterType] =
       extension (b: Boolean)
         def toSet(ft: FilterType): Set[FilterType] =
           if b then Set(ft) else Set.empty[FilterType]
       Set.empty[FilterType] ++
-        narrowFilters.value.toSet(FilterType.NarrowBand) ++
-        broadFilters.toSet(FilterType.BroadBand) ++
-        combinationFilters.toSet(FilterType.Combination)
+        narrowFilters.foldMap(_.toSet(FilterType.NarrowBand)) ++
+        broadFilters.foldMap(_.toSet(FilterType.BroadBand)) ++
+        combinationFilters.foldMap(_.toSet(FilterType.Combination))
 
   object Imaging:
-    val exposureTimeMode: Lens[Imaging, Option[ExposureTimeMode]] =
-      Focus[Imaging](_.exposureTimeMode)
-    val signalToNoiseMode: Optional[Imaging, SignalToNoiseMode]   =
-      exposureTimeMode.some.andThen(ExposureTimeMode.signalToNoise)
-    val timeAndCountMode: Optional[Imaging, TimeAndCountMode]     =
-      exposureTimeMode.some.andThen(ExposureTimeMode.timeAndCount)
-    val minimumFov: Lens[Imaging, Option[Angle]]                  = Focus[Imaging](_.minimumFov)
-    val narrowFilters: Lens[Imaging, NarrowBand]                  = Focus[Imaging](_.narrowFilters)
-    val broadFilters: Lens[Imaging, BroadBand]                    = Focus[Imaging](_.broadFilters)
-    val combinationFilters: Lens[Imaging, Combination]            = Focus[Imaging](_.combinationFilters)
+    given Decoder[Imaging] = Decoder.instance: c =>
+      for {
+        fov <- c.downField("minimumFov").as[Option[Angle]]
+        nf  <- c.downField("narrowFilters")
+                 .as[Option[Boolean]]
+                 .map(_.map(NarrowBand(_)))
+        bf  <-
+          c.downField("broadFilters").as[Option[Boolean]].map(_.map(BroadBand(_)))
+        cf  <- c.downField("combinationFilters")
+                 .as[Option[Boolean]]
+                 .map(_.map(Combination(_)))
+      } yield Imaging(fov, nf, bf, cf)
 
-    val Default: Imaging = Imaging(None, None)
+    val minimumFov: Lens[Imaging, Option[Angle]]               = Focus[Imaging](_.minimumFov)
+    val narrowFilters: Lens[Imaging, Option[NarrowBand]]       = Focus[Imaging](_.narrowFilters)
+    val broadFilters: Lens[Imaging, Option[BroadBand]]         = Focus[Imaging](_.broadFilters)
+    val combinationFilters: Lens[Imaging, Option[Combination]] =
+      Focus[Imaging](_.combinationFilters)
 
-  val spectroscopy: Prism[ScienceRequirements, ScienceRequirements.Spectroscopy] =
-    GenPrism[ScienceRequirements, ScienceRequirements.Spectroscopy]
+    val Default: Imaging = Imaging(None, None, None, None)
 
-  val imaging: Prism[ScienceRequirements, ScienceRequirements.Imaging] =
-    GenPrism[ScienceRequirements, ScienceRequirements.Imaging]
+  val exposureTimeMode: Lens[ScienceRequirements, Option[ExposureTimeMode]] =
+    Focus[ScienceRequirements](_.exposureTimeMode)
+  val signalToNoiseMode: Optional[ScienceRequirements, SignalToNoiseMode]   =
+    exposureTimeMode.some.andThen(ExposureTimeMode.signalToNoise)
+  val timeAndCountMode: Optional[ScienceRequirements, TimeAndCountMode]     =
+    exposureTimeMode.some.andThen(ExposureTimeMode.timeAndCount)
 
-  given Decoder[ScienceRequirements] = Decoder.instance(c => c.get[Spectroscopy]("spectroscopy"))
+  val scienceMode: Lens[ScienceRequirements, Option[Either[Spectroscopy, Imaging]]] =
+    Focus[ScienceRequirements](_.scienceMode)
+
+  val spectroscopy: Optional[ScienceRequirements, Spectroscopy] =
+    scienceMode.some.andThen(stdLeft)
+
+  val imaging: Optional[ScienceRequirements, Imaging] =
+    scienceMode.some.andThen(stdRight)
+
+  given Decoder[ScienceRequirements] = Decoder.instance: c =>
+    for {
+      spec <- c.get[Option[Spectroscopy]]("spectroscopy")
+      img  <- c.get[Option[Imaging]]("imaging")
+      etm  <- c.get[Option[ExposureTimeMode]]("exposureTimeMode")
+      mode  = (spec, img) match
+                case (Some(s), None) => Some(Left(s))
+                case (None, Some(i)) => Some(Right(i))
+                case _               => None
+    } yield ScienceRequirements(etm, mode)
