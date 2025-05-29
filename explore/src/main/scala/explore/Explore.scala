@@ -33,8 +33,8 @@ import log4cats.loglevel.LogLevelLogger
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
-import lucuma.ui.utils.showEnvironment
 import lucuma.ui.sso.UserVault
+import lucuma.ui.utils.showEnvironment
 import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
