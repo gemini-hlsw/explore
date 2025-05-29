@@ -34,6 +34,7 @@ import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.Program
 import lucuma.react.primereact.ToastRef
 import lucuma.ui.sso.UserVault
+import lucuma.ui.utils.showEnvironment
 import org.http4s.client.Client
 import org.http4s.dom.FetchClientBuilder
 import org.scalajs.dom
@@ -75,18 +76,6 @@ object ExploreMain {
       elem
     }
   )
-
-  def showEnvironment[F[_]: Sync](env: ExecutionEnvironment): F[Unit] = Sync[F]
-    .delay {
-      val nonProdBanner = dom.document.createElement("div")
-      nonProdBanner.id = "non-prod-banner"
-      nonProdBanner.textContent = env.tag
-      dom.document.body.appendChild(nonProdBanner)
-    }
-    .whenA(
-      env =!= ExecutionEnvironment.Production &&
-        dom.document.querySelector("#non-prod-banner") == null
-    )
 
   def crash[F[_]: Sync](msg: String): F[Unit] =
     setupDOM[F].map { element =>
