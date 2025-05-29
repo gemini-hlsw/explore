@@ -355,8 +355,8 @@ object ConfigurationTile:
               UpdateScienceRequirements.scienceRequirements
             )
 
-          val spectroscopyView: ViewOpt[Spectroscopy] =
-            requirementsView.zoom(ScienceRequirements.spectroscopy.some)
+          val spectroscopyView: ViewOpt[Spectroscopy] = requirementsView
+            .zoom(ScienceRequirements.spectroscopy)
 
           React.Fragment(
             <.div(ExploreStyles.ConfigurationGrid)(

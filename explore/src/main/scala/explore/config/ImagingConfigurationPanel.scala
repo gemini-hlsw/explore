@@ -41,11 +41,12 @@ object ImagingConfigurationPanel
 
       val fov         = p.options.zoom(ScienceRequirements.Imaging.minimumFov)
       val narrowBand  =
-        p.options.zoom(ScienceRequirements.Imaging.narrowFilters.andThen(NarrowBand.Value))
+        p.options.zoom(ScienceRequirements.Imaging.narrowFilters.some.andThen(NarrowBand.Value))
       val broadBand   =
-        p.options.zoom(ScienceRequirements.Imaging.broadFilters.andThen(BroadBand.Value))
+        p.options.zoom(ScienceRequirements.Imaging.broadFilters.some.andThen(BroadBand.Value))
       val combination =
-        p.options.zoom(ScienceRequirements.Imaging.combinationFilters.andThen(Combination.Value))
+        p.options
+          .zoom(ScienceRequirements.Imaging.combinationFilters.some.andThen(Combination.Value))
 
       ReactFragment(
         FormInputTextView(

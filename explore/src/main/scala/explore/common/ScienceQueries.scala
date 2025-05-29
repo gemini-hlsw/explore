@@ -65,9 +65,17 @@ object ScienceQueries:
           _ <- ScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
                  .map(_.toInput)
                  .orUnassign
-          _ <- ScienceRequirementsInput.spectroscopy     := op.spectroscopy
-                 .map(spectroscopyRequirements)
-                 .orUnassign
+          _ <- op.scienceMode match {
+                 case Some(Left(spec)) =>
+                   ScienceRequirementsInput.spectroscopy := spectroscopyRequirements(spec).assign
+                 case Some(Right(img)) =>
+                   ScienceRequirementsInput.imaging := imagingRequirements(img).assign
+                 case None             =>
+                   for {
+                     _ <- ScienceRequirementsInput.spectroscopy := Input.unassign
+                     _ <- ScienceRequirementsInput.imaging      := Input.unassign
+                   } yield ()
+               }
         } yield ()
       input.runS(_).value
 
@@ -105,3 +113,22 @@ object ScienceQueries:
           _ <- SpectroscopyScienceRequirementsInput.capability         := op.capability.orUnassign
         } yield ()
       input.runS(SpectroscopyScienceRequirementsInput()).value
+
+    private def imagingRequirements(
+      op: ScienceRequirements.Imaging
+    ): ImagingScienceRequirementsInput =
+      val input =
+        for {
+          _ <- ImagingScienceRequirementsInput.minimumFov      := op.minimumFov
+                 .map(angle)
+                 .orUnassign
+          _ <- ImagingScienceRequirementsInput.narrowFilters   := op.narrowFilters
+                 .map(_.value)
+                 .orUnassign
+          _ <-
+            ImagingScienceRequirementsInput.broadFilters := op.broadFilters.map(_.value).orUnassign
+          _ <- ImagingScienceRequirementsInput.combinedFilters := op.combinationFilters
+                 .map(_.value)
+                 .orUnassign
+        } yield ()
+      input.runS(ImagingScienceRequirementsInput()).value

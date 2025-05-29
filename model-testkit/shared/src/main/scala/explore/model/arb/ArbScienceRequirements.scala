@@ -63,15 +63,20 @@ trait ArbScienceRequirements:
   given Arbitrary[ScienceRequirements.Imaging] = Arbitrary(
     for {
       minimumFov  <- arbitrary[Option[Angle]]
-      narrowBand  <- arbitrary[NarrowBand]
-      broadBand   <- arbitrary[BroadBand]
-      combination <- arbitrary[Combination]
+      narrowBand  <- arbitrary[Option[NarrowBand]]
+      broadBand   <- arbitrary[Option[BroadBand]]
+      combination <- arbitrary[Option[Combination]]
     } yield ScienceRequirements.Imaging(minimumFov, narrowBand, broadBand, combination)
   )
 
   given Cogen[ScienceRequirements.Imaging] =
-    Cogen[(Option[Angle], NarrowBand, BroadBand, Combination)].contramap(imaging =>
-      (imaging.minimumFov, imaging.narrowFilters, imaging.broadFilters, imaging.combinationFilters)
+    Cogen[(Option[Angle], Option[NarrowBand], Option[BroadBand], Option[Combination])].contramap(
+      imaging =>
+        (imaging.minimumFov,
+         imaging.narrowFilters,
+         imaging.broadFilters,
+         imaging.combinationFilters
+        )
     )
 
   given Arbitrary[ScienceRequirements.Spectroscopy] = Arbitrary(
@@ -116,15 +121,19 @@ trait ArbScienceRequirements:
       exposureTimeMode <- arbitrary[Option[ExposureTimeMode]]
       spectroscopy     <- arbitrary[Option[ScienceRequirements.Spectroscopy]]
       imaging          <- arbitrary[Option[ScienceRequirements.Imaging]]
-    yield ScienceRequirements(exposureTimeMode, spectroscopy, imaging)
+      scienceMode       = (spectroscopy, imaging) match
+                            case (Some(s), None) => Some(Left(s))
+                            case (None, Some(i)) => Some(Right(i))
+                            case _               => None
+    yield ScienceRequirements(exposureTimeMode, scienceMode)
   )
 
   given Cogen[ScienceRequirements] =
     Cogen[
       (Option[ExposureTimeMode],
-       Option[ScienceRequirements.Spectroscopy],
-       Option[ScienceRequirements.Imaging]
+       Option[Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]]
       )
     ]
-      .contramap(sr => (sr.exposureTimeMode, sr.spectroscopy, sr.imaging))
+      .contramap(sr => (sr.exposureTimeMode, sr.scienceMode))
+
 object ArbScienceRequirements extends ArbScienceRequirements

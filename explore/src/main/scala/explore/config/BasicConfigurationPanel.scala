@@ -82,7 +82,7 @@ private object BasicConfigurationPanel:
           mode.get === ScienceMode.Spectroscopy
 
         val spectroscopyView: ViewOpt[Spectroscopy] = props.requirementsView
-          .zoom(ScienceRequirements.spectroscopy.some)
+          .zoom(ScienceRequirements.spectroscopy)
 
         val exposureTimeView = props.requirementsView
           .zoom(ScienceRequirements.exposureTimeMode)
