@@ -19,8 +19,6 @@ import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.Instrument
 import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ExposureTimeMode
-import lucuma.core.validation.*
-import lucuma.react.common.Css
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*

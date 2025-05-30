@@ -5,11 +5,9 @@ package explore.components.ui
 
 import lucuma.core.enums.Partner
 
-import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 
-@nowarn
 object PartnerFlags {
   @js.native
   @JSImport("/images/flags/argentina-flag-icon-32.png", JSImport.Default)

@@ -19,14 +19,12 @@ import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.ConfigurationRequestEditInput
-import org.typelevel.log4cats.Logger
 import queries.common.ModesQueriesGQL
 import queries.common.ProgramQueriesGQL.ConfigurationRequestSubscription
 import queries.common.ProgramSummaryQueriesGQL.AllProgramConfigurationRequests
 
 trait OdbConfigApiImpl[F[_]: MonadThrow](using
-  StreamingClient[F, ObservationDB],
-  Logger[F]
+  StreamingClient[F, ObservationDB]
 ) extends OdbConfigApi[F]:
   self: OdbApiHelper[F] =>
 

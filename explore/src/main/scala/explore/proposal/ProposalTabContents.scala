@@ -5,7 +5,6 @@ package explore.proposal
 
 import cats.effect.IO
 import cats.syntax.all.*
-import crystal.*
 import crystal.react.*
 import explore.*
 import explore.components.ui.ExploreStyles

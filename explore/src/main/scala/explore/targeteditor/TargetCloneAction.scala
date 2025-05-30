@@ -18,7 +18,6 @@ import explore.undo.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.model.TargetWithId
 

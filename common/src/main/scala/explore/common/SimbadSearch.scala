@@ -40,7 +40,7 @@ object SimbadSearch {
   private def searchSingle[F[_]](
     simbadUrl: Uri,
     term:      NonEmptyString,
-    wildcard:  Boolean = false
+    wildcard:  Boolean
   )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] = {
     val baseURL =
       simbadUrl

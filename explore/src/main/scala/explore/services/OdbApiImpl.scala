@@ -4,7 +4,6 @@
 package explore.services
 
 import cats.effect.Async
-import cats.syntax.all.*
 import clue.StreamingClient
 import explore.utils.ToastCtx
 import lucuma.schemas.ObservationDB

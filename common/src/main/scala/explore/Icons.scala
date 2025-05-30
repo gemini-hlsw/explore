@@ -8,11 +8,9 @@ import lucuma.react.fa.FAIcon
 import lucuma.react.fa.FontAwesome
 import lucuma.react.fa.FontAwesomeIcon
 
-import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
-@nowarn
 object Icons {
   @js.native
   @JSImport("@fortawesome/pro-regular-svg-icons", "faArrowDownLeft")

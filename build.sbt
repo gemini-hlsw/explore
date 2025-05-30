@@ -28,9 +28,13 @@ addCommandAlias(
 ThisBuild / description                         := "Explore"
 Global / onChangedBuildSource                   := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaSchemas
-ThisBuild / scalaVersion                        := "3.6.4"
-ThisBuild / crossScalaVersions                  := Seq("3.6.4")
+ThisBuild / scalaVersion                        := "3.7.1"
+ThisBuild / crossScalaVersions                  := Seq("3.7.1")
 ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
+ThisBuild / scalacOptions ++= Seq(
+  // warning coming out of scalablytyped generated code stBuildingComponent.scala.
+  "-Wconf:msg=method linkingInfo in package scala.scalajs.runtime is deprecated since 1.18.0:s"
+)
 ThisBuild / scalafixResolvers += coursierapi.MavenRepository.of(
   "https://s01.oss.sonatype.org/content/repositories/snapshots/"
 )
@@ -175,6 +179,8 @@ lazy val commonLibSettings = Seq(
           MUnitCatsEffect.value ++
           MonocleLaw.value
       ),
+  // temporary? fix for upgrading to Scala 3.7
+  libraryDependencies += "org.scala-lang" %% "scala3-library" % scalaVersion.value,
   testFrameworks += new TestFramework("munit.Framework")
 )
 

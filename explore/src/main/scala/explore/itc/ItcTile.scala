@@ -274,10 +274,7 @@ object ItcTile:
             Dropdown(
               clazz = ExploreStyles.ItcTileTargetSelector,
               value = idx,
-              onChange = {
-                case t: Int => props.selectedTarget.set(newSelected(t))
-                case _      => Callback.empty
-              },
+              onChange = t => props.selectedTarget.set(newSelected(t)),
               options =
                 itcTargetsWithIndex.map((t, i) => SelectItem(label = t.name.value, value = i))
             ).when(itcTargets.length > 1),

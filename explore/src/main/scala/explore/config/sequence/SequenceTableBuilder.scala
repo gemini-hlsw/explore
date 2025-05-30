@@ -3,7 +3,6 @@
 
 package explore.config.sequence
 
-import cats.Eq
 import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
@@ -28,7 +27,7 @@ private type SequenceColumnsType[D] =
 private type ColumnType[D]          =
   ColumnDef[Expandable[HeaderOrRow[SequenceIndexedRow[D]]], ?, Nothing, Nothing, Nothing, Any, Any]
 
-private trait SequenceTableBuilder[S, D: Eq](
+private trait SequenceTableBuilder[S, D](
   instrumentColumns: SequenceColumnsType[D] => List[ColumnType[D]]
 ) extends SequenceRowBuilder[D]:
   private type Props = SequenceTable[S, D]

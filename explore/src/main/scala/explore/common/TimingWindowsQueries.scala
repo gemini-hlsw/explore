@@ -14,7 +14,6 @@ import explore.utils.ToastCtx
 import japgolly.scalajs.react.util.Effect.Dispatch
 import lucuma.core.model.TimingWindow
 import lucuma.react.primereact.Message
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import org.typelevel.log4cats.Logger

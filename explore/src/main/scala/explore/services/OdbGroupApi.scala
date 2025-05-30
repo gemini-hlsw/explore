@@ -7,7 +7,6 @@ import cats.effect.Resource
 import eu.timepit.refined.types.numeric.NonNegShort
 import explore.model.Group
 import lucuma.core.model.Program
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import queries.common.ProgramSummaryQueriesGQL.GroupTimeRangeQuery
