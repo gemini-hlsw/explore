@@ -16,7 +16,6 @@ import explore.services.OdbObservationApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import explore.utils.ToastCtx
-import lucuma.core.enums
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
@@ -58,8 +57,27 @@ object ScienceQueries:
       apply(lens.get, lens.modify, remoteSet)
 
   object UpdateScienceRequirements:
-    def mode(n: enums.ScienceMode): Endo[ScienceRequirementsInput] =
-      ScienceRequirementsInput.mode.replace(n.assign)
+    def scienceRequirements(
+      op: ScienceRequirements
+    ): Endo[ScienceRequirementsInput] =
+      val input =
+        for {
+          _ <- ScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
+                 .map(_.toInput)
+                 .orUnassign
+          _ <- op.scienceMode match {
+                 case Some(Left(spec)) =>
+                   ScienceRequirementsInput.spectroscopy := spectroscopyRequirements(spec).assign
+                 case Some(Right(img)) =>
+                   ScienceRequirementsInput.imaging := imagingRequirements(img).assign
+                 case None             =>
+                   for {
+                     _ <- ScienceRequirementsInput.spectroscopy := Input.unassign
+                     _ <- ScienceRequirementsInput.imaging      := Input.unassign
+                   } yield ()
+               }
+        } yield ()
+      input.runS(_).value
 
     def angle(w: Angle): AngleInput =
       (AngleInput.microarcseconds := w.toMicroarcseconds.assign)
@@ -76,19 +94,15 @@ object ScienceQueries:
     def wavelengthDelta(wc: WavelengthDelta): WavelengthInput =
       wavelength(Wavelength(wc.pm))
 
-    def spectroscopyRequirements(
+    private def spectroscopyRequirements(
       op: ScienceRequirements.Spectroscopy
-    ): Endo[ScienceRequirementsInput] =
+    ): SpectroscopyScienceRequirementsInput =
       val input =
         for {
           _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
                  .map(wavelength)
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          _ <-
-            SpectroscopyScienceRequirementsInput.exposureTimeMode := op.exposureTimeMode
-              .map(_.toInput)
-              .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
                  .map(wavelengthDelta)
                  .orUnassign
@@ -98,6 +112,23 @@ object ScienceQueries:
                  .orUnassign
           _ <- SpectroscopyScienceRequirementsInput.capability         := op.capability.orUnassign
         } yield ()
-      ScienceRequirementsInput.spectroscopy.replace(
-        input.runS(SpectroscopyScienceRequirementsInput()).value.assign
-      )
+      input.runS(SpectroscopyScienceRequirementsInput()).value
+
+    private def imagingRequirements(
+      op: ScienceRequirements.Imaging
+    ): ImagingScienceRequirementsInput =
+      val input =
+        for {
+          _ <- ImagingScienceRequirementsInput.minimumFov      := op.minimumFov
+                 .map(angle)
+                 .orUnassign
+          _ <- ImagingScienceRequirementsInput.narrowFilters   := op.narrowFilters
+                 .map(_.value)
+                 .orUnassign
+          _ <-
+            ImagingScienceRequirementsInput.broadFilters := op.broadFilters.map(_.value).orUnassign
+          _ <- ImagingScienceRequirementsInput.combinedFilters := op.combinationFilters
+                 .map(_.value)
+                 .orUnassign
+        } yield ()
+      input.runS(ImagingScienceRequirementsInput()).value

@@ -13,6 +13,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
+import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Imaging
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
@@ -43,7 +44,7 @@ import lucuma.ui.syntax.all.given
 case class BasicConfigurationPanel(
   userId:              Option[User.Id],
   obsId:               Observation.Id,
-  spectroscopyView:    ViewOpt[Spectroscopy],
+  requirementsView:    View[ScienceRequirements],
   selectedConfig:      View[Option[InstrumentConfigAndItcResult]],
   constraints:         ConstraintSet,
   itcTargets:          List[ItcTarget],
@@ -80,10 +81,16 @@ private object BasicConfigurationPanel:
         val isSpectroscopy: Boolean =
           mode.get === ScienceMode.Spectroscopy
 
+        val spectroscopyView: ViewOpt[Spectroscopy] = props.requirementsView
+          .zoom(ScienceRequirements.spectroscopy)
+
+        val exposureTimeView = props.requirementsView
+          .zoom(ScienceRequirements.exposureTimeMode)
+
         // wavelength has to be handled special because you can't select a row without a wavelength.
         val message: Option[String] =
-          props.spectroscopyView.get
-            .map(_.wavelength)
+          spectroscopyView.get
+            .flatMap(_.wavelength)
             .fold("Wavelength is required for creating a configuration.".some)(_ =>
               props.selectedConfig.get match {
                 case Some(InstrumentConfigAndItcResult(_, itc)) =>
@@ -111,9 +118,10 @@ private object BasicConfigurationPanel:
                                  disabled = props.readonly
             ),
             if (isSpectroscopy)
-              props.spectroscopyView
+              spectroscopyView
                 .mapValue(
                   SpectroscopyConfigurationPanel(props.selectedConfig.get.map(_.instrument),
+                                                 exposureTimeView,
                                                  _,
                                                  props.readonly,
                                                  props.units,
@@ -121,15 +129,21 @@ private object BasicConfigurationPanel:
                   )
                 )
             else
-              ImagingConfigurationPanel(imaging, props.readonly, props.units, props.calibrationRole)
+              ImagingConfigurationPanel(exposureTimeView,
+                                        imaging,
+                                        props.readonly,
+                                        props.units,
+                                        props.calibrationRole
+              )
                 .unless(isSpectroscopy)
           ),
-          props.spectroscopyView
-            .mapValue(spectroscopy =>
+          spectroscopyView
+            .mapValue(s =>
               SpectroscopyModesTable(
                 props.userId,
                 props.selectedConfig,
-                spectroscopy.get,
+                exposureTimeView.get,
+                s.get,
                 props.constraints,
                 props.itcTargets,
                 props.baseCoordinates,
@@ -142,6 +156,7 @@ private object BasicConfigurationPanel:
           ImagingModesTable(
             props.userId,
             selectedConfigs,
+            exposureTimeView.get,
             imaging.get,
             props.confMatrix.imaging,
             props.constraints,

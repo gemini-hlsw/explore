@@ -21,6 +21,7 @@ import lucuma.core.enums.FocalPlane
 import lucuma.core.enums.Instrument
 import lucuma.core.enums.ScienceMode
 import lucuma.core.math.Wavelength
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
@@ -30,11 +31,12 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class SpectroscopyConfigurationPanel(
-  instrument:      Option[Instrument],
-  options:         View[ScienceRequirements.Spectroscopy],
-  readonly:        Boolean,
-  units:           WavelengthUnits,
-  calibrationRole: Option[CalibrationRole]
+  instrument:       Option[Instrument],
+  exposureTimeMode: View[Option[ExposureTimeMode]],
+  options:          View[ScienceRequirements.Spectroscopy],
+  readonly:         Boolean,
+  units:            WavelengthUnits,
+  calibrationRole:  Option[CalibrationRole]
 ) extends ReactFnProps[SpectroscopyConfigurationPanel](SpectroscopyConfigurationPanel.component)
 
 object SpectroscopyConfigurationPanel extends ConfigurationFormats:
@@ -46,7 +48,6 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
         FocalPlane.SingleSlit.some.widen[FocalPlane]
       ).map: fpView => // For now only SlitView is allowed
 
-        val exposureTimeMode       = p.options.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
         val resolution             = p.options.zoom(ScienceRequirements.Spectroscopy.resolution)
         val wv                     = p.options.zoom(ScienceRequirements.Spectroscopy.wavelength)
         val wavelengthDelta        = p.options.zoom(ScienceRequirements.Spectroscopy.wavelengthCoverage)
@@ -96,7 +97,7 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
           ).clearable(^.autoComplete.off),
           ExposureTimeModeEditor(p.instrument,
                                  wv.get,
-                                 exposureTimeMode,
+                                 p.exposureTimeMode,
                                  ScienceMode.Spectroscopy,
                                  p.readonly,
                                  p.units,

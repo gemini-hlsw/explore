@@ -32,6 +32,7 @@ import lucuma.core.enums.*
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDither
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
@@ -57,6 +58,7 @@ object GmosLongslitConfigPanel {
     def obsId: Observation.Id
     def calibrationRole: Option[CalibrationRole]
     def observingMode: Aligner[T, Input]
+    def exposureTimeMode: View[Option[ExposureTimeMode]]
     def spectroscopyRequirements: View[ScienceRequirements.Spectroscopy]
     def revertConfig: Callback
     def confMatrix: SpectroscopyModesMatrix
@@ -221,9 +223,6 @@ object GmosLongslitConfigPanel {
               disabled = disableSimpleEdit
             )
 
-          val exposureTimeMode =
-            props.spectroscopyRequirements.zoom(ScienceRequirements.Spectroscopy.exposureTimeMode)
-
           <.div(
             ExploreStyles.AdvancedConfigurationGrid
           )(
@@ -280,7 +279,7 @@ object GmosLongslitConfigPanel {
               ExposureTimeModeEditor(
                 props.instrument.some,
                 props.spectroscopyRequirements.get.wavelength,
-                exposureTimeMode,
+                props.exposureTimeMode,
                 ScienceMode.Spectroscopy,
                 props.readonly,
                 props.units,
@@ -353,6 +352,7 @@ object GmosLongslitConfigPanel {
     obsId:                    Observation.Id,
     calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosNorthLongSlit, GmosNorthLongSlitInput],
+    exposureTimeMode:         View[Option[ExposureTimeMode]],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     revertConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,
@@ -549,6 +549,7 @@ object GmosLongslitConfigPanel {
     obsId:                    Observation.Id,
     calibrationRole:          Option[CalibrationRole],
     observingMode:            Aligner[ObservingMode.GmosSouthLongSlit, GmosSouthLongSlitInput],
+    exposureTimeMode:         View[Option[ExposureTimeMode]],
     spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
     revertConfig:             Callback,
     confMatrix:               SpectroscopyModesMatrix,

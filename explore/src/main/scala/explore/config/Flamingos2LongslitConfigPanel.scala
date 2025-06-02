@@ -23,6 +23,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
+import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -40,6 +41,7 @@ final case class Flamingos2LongslitConfigPanel(
   obsId:                    Observation.Id,
   calibrationRole:          Option[CalibrationRole],
   observingMode:            Aligner[ObservingMode.Flamingos2LongSlit, Flamingos2LongSlitInput],
+  exposureTimeMode:         View[Option[ExposureTimeMode]],
   spectroscopyRequirements: View[ScienceRequirements.Spectroscopy],
   revertConfig:             Callback,
   confMatrix:               SpectroscopyModesMatrix,
@@ -105,10 +107,6 @@ object Flamingos2LongslitConfigPanel
 
         val defaultDecker = props.observingMode.get.defaultDecker
 
-        val exposureTimeModeView = props.spectroscopyRequirements.zoom(
-          ScienceRequirements.Spectroscopy.exposureTimeMode
-        )
-
         <.div(
           ExploreStyles.AdvancedConfigurationGrid
         )(
@@ -150,7 +148,7 @@ object Flamingos2LongslitConfigPanel
             ExposureTimeModeEditor(
               props.observingMode.get.instrument.some,
               props.spectroscopyRequirements.get.wavelength,
-              exposureTimeModeView,
+              props.exposureTimeMode,
               ScienceMode.Spectroscopy,
               props.readonly,
               props.units,
