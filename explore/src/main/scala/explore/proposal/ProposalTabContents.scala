@@ -16,6 +16,7 @@ import explore.model.ProgramDetails
 import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.layout.LayoutsMap
+import explore.model.reusability.given
 import explore.services.OdbProposalApi
 import explore.syntax.ui.*
 import explore.undo.*
@@ -35,6 +36,7 @@ import lucuma.ui.LucumaStyles
 import lucuma.ui.Resources
 import lucuma.ui.components.LoginStyles
 import lucuma.ui.primereact.*
+import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import org.typelevel.log4cats.Logger
 
@@ -49,7 +51,12 @@ case class ProposalTabContents(
   userIsReadonlyCoi:        Boolean,
   hasDefinedObservations:   Boolean,
   hasUndefinedObservations: Boolean
-) extends ReactFnProps(ProposalTabContents.component)
+) extends ReactFnProps(ProposalTabContents.component):
+  val proposalStatus: ProposalStatus = programDetails.get.proposalStatus
+  val proposalIsReadonly: Boolean    =
+    proposalStatus === ProposalStatus.Submitted || proposalStatus === ProposalStatus.Accepted
+  val users: View[List[ProgramUser]] =
+    programDetails.zoom(ProgramDetails.allUsers)
 
 object ProposalTabContents:
   private type Props = ProposalTabContents
@@ -64,19 +71,37 @@ object ProposalTabContents:
 
   private val component = ScalaFnComponent[Props]: props =>
     for {
-      ctx <- useContext(AppContext.ctx)
+      ctx    <- useContext(AppContext.ctx)
+      errors <-
+        useMemo(
+          (props.proposalStatus,
+           props.programDetails.get.proposal,
+           props.users.get,
+           props.attachments.get,
+           props.hasDefinedObservations,
+           props.hasUndefinedObservations
+          )
+        ):
+          (
+            status,
+            proposal,
+            users,
+            attachments,
+            hasDefinedObservations,
+            hasUndefinedObservations
+          ) =>
+            if (status === ProposalStatus.NotSubmitted)
+              proposal
+                .foldMap(
+                  _.errors(users, attachments, hasDefinedObservations, hasUndefinedObservations)
+                )
+                .some
+            else none
     } yield
       import ctx.given
 
-      val proposalStatus     = props.programDetails.get.proposalStatus
-      val proposalIsReadonly =
-        proposalStatus === ProposalStatus.Submitted || proposalStatus === ProposalStatus.Accepted
-
       val undoCtx: UndoContext[ProgramDetails] =
         UndoContext(props.undoStacks, props.programDetails)
-
-      val users: View[List[ProgramUser]] =
-        props.programDetails.zoom(ProgramDetails.allUsers)
 
       val isStdUser: Boolean =
         props.userVault.map(_.user).collect { case StandardUser(_, _, _, _) => () }.isDefined
@@ -104,22 +129,21 @@ object ProposalTabContents:
                 props.userVault,
                 undoCtx,
                 proposal,
-                users,
+                props.users,
                 props.attachments,
+                errors,
                 props.userVault.map(_.token),
                 props.cfps,
                 props.layout,
-                proposalIsReadonly,
+                props.proposalIsReadonly,
                 props.userIsReadonlyCoi
               ),
               ProposalSubmissionBar(
                 props.programId,
                 props.programDetails.zoom(ProgramDetails.proposalStatus),
                 deadline,
-                proposal.get.call.map(_.id),
                 isStdUser && !props.userIsReadonlyCoi,
-                props.hasDefinedObservations,
-                props.hasUndefinedObservations
+                errors.exists(_.nonEmpty)
               )
             )
           )

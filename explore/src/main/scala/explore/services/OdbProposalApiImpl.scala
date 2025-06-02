@@ -7,6 +7,7 @@ import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
+import clue.model.GraphQLResponse.*
 import explore.common.ProposalOdbExtensions.*
 import explore.model.CallForProposal
 import explore.model.Proposal
@@ -51,5 +52,5 @@ trait OdbProposalApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
     SetProposalStatus[F]
       .execute:
         SetProposalStatusInput(programId = programId.assign, status = newStatus)
-      .processNoDataErrors
+      .raiseGraphQLErrorsOnNoData
       .void

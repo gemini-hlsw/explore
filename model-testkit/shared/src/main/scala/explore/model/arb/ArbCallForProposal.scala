@@ -43,20 +43,22 @@ trait ArbCallForProposal {
   given Arbitrary[CallForProposal] =
     Arbitrary {
       for {
-        id       <- arbitrary[CallForProposals.Id]
-        semester <- arbitrary[Semester]
-        title    <- arbitrary[NonEmptyString]
-        cfpType  <- arbitrary[CallForProposalsType]
-        partners <- arbitrary[List[CallPartner]]
-        deadline <- arbitrary[Option[Timestamp]]
-        instr    <- arbitrary[List[Instrument]]
-        limits   <- arbitrary[CallCoordinatesLimits]
-        active   <- arbitrary[DateInterval]
+        id                 <- arbitrary[CallForProposals.Id]
+        semester           <- arbitrary[Semester]
+        title              <- arbitrary[NonEmptyString]
+        cfpType            <- arbitrary[CallForProposalsType]
+        partners           <- arbitrary[List[CallPartner]]
+        allowsNonPartnerPi <- arbitrary[Boolean]
+        deadline           <- arbitrary[Option[Timestamp]]
+        instr              <- arbitrary[List[Instrument]]
+        limits             <- arbitrary[CallCoordinatesLimits]
+        active             <- arbitrary[DateInterval]
       } yield CallForProposal(id,
                               semester,
                               title,
                               cfpType,
                               partners,
+                              allowsNonPartnerPi,
                               deadline,
                               instr,
                               limits,
@@ -71,6 +73,7 @@ trait ArbCallForProposal {
        NonEmptyString,
        CallForProposalsType,
        List[CallPartner],
+       Boolean,
        Option[Timestamp],
        List[Instrument],
        CallCoordinatesLimits,
@@ -82,6 +85,7 @@ trait ArbCallForProposal {
        p.title,
        p.cfpType,
        p.partners,
+       p.allowsNonPartnerPi,
        p.nonPartnerDeadline,
        p.instruments,
        p.coordinateLimits,

@@ -62,6 +62,8 @@ object reusability:
     Reusability.by(_.toList)
 
   given Reusability[ObsIdSet]                = Reusability.byEq
+  given Reusability[Proposal]                = Reusability.byEq
+  given Reusability[ProposalType]            = Reusability.byEq
   given Reusability[TargetEditObsInfo]       = Reusability.byEq
   given Reusability[TargetIdSet]             = Reusability.byEq
   given Reusability[TargetWithId]            = Reusability.byEq

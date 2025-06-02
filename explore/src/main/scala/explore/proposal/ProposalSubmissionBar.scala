@@ -12,10 +12,10 @@ import explore.model.AppContext
 import explore.model.Proposal
 import explore.services.OdbProposalApi
 import explore.syntax.ui.*
+import explore.utils.ToastCtx
 import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.model.CallForProposals
 import lucuma.core.model.Program
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.Timestamp
@@ -33,15 +33,12 @@ import org.typelevel.log4cats.Logger
 import scala.concurrent.duration.*
 
 case class ProposalSubmissionBar(
-  programId:                Program.Id,
-  proposalStatus:           View[ProposalStatus],
-  deadline:                 Option[Timestamp],
-  callId:                   Option[CallForProposals.Id],
-  canSubmit:                Boolean,
-  hasDefinedObservations:   Boolean,
-  hasUndefinedObservations: Boolean
-) extends ReactFnProps(ProposalSubmissionBar):
-  val hasObsError = !hasDefinedObservations || hasUndefinedObservations
+  programId:         Program.Id,
+  proposalStatus:    View[ProposalStatus],
+  deadline:          Option[Timestamp],
+  canSubmit:         Boolean,
+  hasProposalErrors: Boolean
+) extends ReactFnProps(ProposalSubmissionBar)
 
 object ProposalSubmissionBar
     extends ReactFnComponent[ProposalSubmissionBar](props =>
@@ -51,39 +48,25 @@ object ProposalSubmissionBar
       def doUpdateStatus(
         programId:              Program.Id,
         isUpdatingStatus:       View[IsUpdatingStatus],
-        setLocalProposalStatus: ProposalStatus => IO[Unit],
-        setErrorMessage:        Option[String] => IO[Unit]
+        setLocalProposalStatus: ProposalStatus => IO[Unit]
       )(
         newStatus:              ProposalStatus
-      )(using odbApi: OdbProposalApi[IO])(using Logger[IO]): Callback =
+      )(using odbApi: OdbProposalApi[IO])(using Logger[IO], ToastCtx[IO]): Callback =
         odbApi
           .setProposalStatus(programId, newStatus)
           .flatMap(_ => setLocalProposalStatus(newStatus))
-          .handleErrorWith(e => setErrorMessage(e.getMessage.some))
+          .toastErrors
           .switching(isUpdatingStatus.async, IsUpdatingStatus(_))
           .runAsync
 
       for {
         ctx              <- useContext(AppContext.ctx)
         isUpdatingStatus <- useStateView(IsUpdatingStatus(false))
-        errorMessage     <- useStateView(none[String]) // Submission error message
-        _                <-
-          useLayoutEffectWithDeps(
-            (props.proposalStatus.get,
-             props.callId,
-             props.hasDefinedObservations,
-             props.hasUndefinedObservations
-            )
-          ): (ps, _, hasDef, hasUndef) =>
-            if (!hasDef && ps === ProposalStatus.NotSubmitted)
-              errorMessage.set(
-                "Proposal cannot be submitted without at least one defined observation.".some
-              )
-            else if (hasUndef && ps === ProposalStatus.NotSubmitted)
-              errorMessage.set(
-                "Proposal cannot be submitted with undefined observations. Define them or mark them as inactive.".some
-              )
-            else errorMessage.set(none) // Reset error message on CfP change
+        errorMessage     <-
+          useMemo((props.proposalStatus.get, props.hasProposalErrors)): (ps, hasErrors) =>
+            if (hasErrors && ps === ProposalStatus.NotSubmitted)
+              "Proposal cannot be submitted with errors. See errors tile for details.".some
+            else none
         nowPot           <- useStreamOnMount:
                               Stream
                                 .fixedRateStartImmediately[IO](1.second)
@@ -97,8 +80,7 @@ object ProposalSubmissionBar
           doUpdateStatus(
             props.programId,
             isUpdatingStatus,
-            props.proposalStatus.async.set,
-            errorMessage.async.set
+            props.proposalStatus.async.set
           )
 
         nowPot.toOption.flatten.map: now =>
@@ -120,7 +102,7 @@ object ProposalSubmissionBar
                     label = "Submit Proposal",
                     onClick = updateStatus(ProposalStatus.Submitted),
                     disabled =
-                      isUpdatingStatus.get.value || props.callId.isEmpty || isDueDeadline || props.hasObsError
+                      isUpdatingStatus.get.value || props.hasProposalErrors || isDueDeadline
                   ).compact.tiny,
                   props.deadline.map: deadline =>
                     val (deadlineStr, left): (String, Option[String]) =
@@ -149,7 +131,7 @@ object ProposalSubmissionBar
                 .when:
                   props.canSubmit && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
               ,
-              errorMessage.get
+              errorMessage.value
                 .map(r =>
                   <.span(ExploreStyles.ProposalDeadline)(
                     Message(text = r, severity = Message.Severity.Error)
