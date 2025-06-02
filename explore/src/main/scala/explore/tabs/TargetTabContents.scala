@@ -556,9 +556,9 @@ object TargetTabContents extends TwoPanels:
 
           // We still want to render these 2 tiles, even when not shown, so as not to mess up the stored layout.
           val dummyTargetTile: Tile[Unit]    =
-            Tile(TargetTabTileIds.AsterismEditor.id, "", hidden = true)(_ => EmptyVdom)
+            Tile.dummyTile(TargetTabTileIds.AsterismEditor.id)
           val dummyElevationTile: Tile[Unit] =
-            Tile(TargetTabTileIds.ElevationPlot.id, "", hidden = true)(_ => EmptyVdom)
+            Tile.dummyTile(TargetTabTileIds.ElevationPlot.id)
 
           /**
            * Renders a single sidereal target editor without an obs context

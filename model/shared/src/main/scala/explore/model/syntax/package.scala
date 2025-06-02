@@ -131,6 +131,8 @@ object all:
       self.map(_._2).filter(_.attachmentType === attachmentType).toList
     def finderList: List[Attachment]                                  =
       listForType(AttachmentType.Finder)
+    def hasForType(attachmentType: AttachmentType): Boolean           =
+      self.exists(_._2.attachmentType === attachmentType)
 
   extension [A](list: Iterable[A])
     def toSortedMap[K: Ordering, V](getKey: A => K, getValue: A => V = identity[A](_)) =

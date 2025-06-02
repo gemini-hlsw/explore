@@ -37,6 +37,7 @@ import lucuma.core.model.User
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.PrimeStyles
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -56,6 +57,7 @@ case class ProposalEditor(
   proposal:           UndoSetter[Proposal],
   users:              View[List[ProgramUser]],
   attachments:        View[AttachmentList],
+  errors:             Option[List[String]],
   authToken:          Option[NonEmptyString],
   cfps:               List[CallForProposal],
   layout:             LayoutsMap,
@@ -204,14 +206,30 @@ object ProposalEditor
                     props.programId,
                     token,
                     props.attachments,
+                    props.proposal.get.proposalType,
                     props.proposalOrUserIsReadonly
                   )
                 ),
               (_, _) =>
-                <.a(^.href           := Constants.P1TemplatesUrl,
+                // put it in a span so it doesn't take up the full width
+                <.span(
+                  <.a(
+                    ^.href   := Constants.P1TemplatesUrl,
                     ^.target := "_blank",
-                    Icons.ArrowUpRightFromSquare
-                ).withTooltip("Download templates")
+                    Icons.ArrowUpRightFromSquare,
+                    PrimeStyles.Component,
+                    PrimeStyles.Button,
+                    PrimeStyles.ButtonIconOnly,
+                    LucumaPrimeStyles.Tiny,
+                    LucumaPrimeStyles.Compact,
+                    PrimeStyles.ButtonSecondary
+                  ).withTooltip("Download templates")
+                )
+            )
+
+          val errorsTile =
+            props.errors.fold(Tile.dummyTile(ProposalTabTileIds.ErrorsId.id))(
+              ProposalErrorsTile(_)
             )
 
           <.div(ExploreStyles.MultiPanelTile)(
@@ -220,7 +238,7 @@ object ProposalEditor
               resize.width.getOrElse(1),
               defaultLayouts,
               props.layout,
-              List(detailsTile, usersTile, abstractTile, attachmentsTile),
+              List(detailsTile, usersTile, abstractTile, attachmentsTile, errorsTile),
               GridLayoutSection.ProposalLayout,
               storeLayout = true
             )

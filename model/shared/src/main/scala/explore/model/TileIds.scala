@@ -40,13 +40,14 @@ enum ProgramTabTileIds:
     case DataUsers            => "dataUsers".refined
 
 enum ProposalTabTileIds:
-  case DetailsId, UsersId, AbstractId, AttachmentsId
+  case DetailsId, UsersId, AbstractId, AttachmentsId, ErrorsId
 
   def id: NonEmptyString = this match
     case DetailsId     => "proposalDetails".refined
     case UsersId       => "proposalUsers".refined
     case AbstractId    => "proposalAbstract".refined
     case AttachmentsId => "proposalAttachments".refined
+    case ErrorsId      => "proposalErrors".refined
 
 enum GroupEditTileIds:
   case GroupEditId

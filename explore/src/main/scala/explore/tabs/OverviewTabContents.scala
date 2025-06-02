@@ -107,8 +107,7 @@ object OverviewTabContents
         // is edited as the abstract on the proposals tab.
         val descriptionTile =
           if (props.detailsUndoSetter.get.programType === ProgramType.Science)
-            // dummy tile as above
-            Tile(OverviewTabTileIds.DescriptionId.id, "", hidden = true)(_ => EmptyVdom)
+            Tile.dummyTile(OverviewTabTileIds.DescriptionId.id)
           else
             val descriptionAligner: Aligner[Option[NonEmptyString], Input[NonEmptyString]] =
               Aligner(

@@ -101,6 +101,9 @@ case class Tile[A](
 object Tile:
   type TileId = NonEmptyString
 
+  def dummyTile(id: TileId): Tile[Unit] =
+    Tile(id, "", hidden = true)(_ => EmptyVdom)
+
   private type Props[A] = Tile[A]
 
   private def componentBuilder[A] =

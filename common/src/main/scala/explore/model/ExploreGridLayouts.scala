@@ -473,6 +473,7 @@ object ExploreGridLayouts:
     private lazy val UsersHeight: NonNegInt       = 6.refined
     private lazy val AbstractHeight: NonNegInt    = 8.refined
     private lazy val AttachmentsHeight: NonNegInt = 8.refined
+    private lazy val ErrorsHeight: NonNegInt      = 4.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -503,6 +504,13 @@ object ExploreGridLayouts:
           y = (DetailsHeight |+| AbstractHeight).value,
           w = DefaultWidth.value,
           h = AttachmentsHeight.value
+        ),
+        LayoutItem(
+          i = ProposalTabTileIds.ErrorsId.id.value,
+          x = 0,
+          y = (DetailsHeight |+| AbstractHeight |+| AttachmentsHeight).value,
+          w = DefaultWidth.value,
+          h = ErrorsHeight.value
         )
       )
     )

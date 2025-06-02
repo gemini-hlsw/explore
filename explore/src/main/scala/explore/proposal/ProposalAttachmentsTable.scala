@@ -20,6 +20,7 @@ import explore.model.AppContext
 import explore.model.Attachment
 import explore.model.AttachmentList
 import explore.model.Constants
+import explore.model.ProposalType
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.utils.*
@@ -27,6 +28,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.AttachmentPurpose
 import lucuma.core.enums.AttachmentType
+import lucuma.core.enums.ScienceSubtype
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
@@ -43,10 +45,11 @@ import lucuma.ui.table.*
 import org.typelevel.log4cats.Logger
 
 case class ProposalAttachmentsTable(
-  programId:   Program.Id,
-  authToken:   NonEmptyString,
-  attachments: View[AttachmentList],
-  readOnly:    Boolean
+  programId:    Program.Id,
+  authToken:    NonEmptyString,
+  attachments:  View[AttachmentList],
+  proposalType: Option[ProposalType],
+  readOnly:     Boolean
 ) extends ReactFnProps(ProposalAttachmentsTable.component)
 
 object ProposalAttachmentsTable extends ProposalAttachmentUtils {
@@ -208,12 +211,19 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                 )
             )
       // Rows
-      .useMemoBy((props, _, _, _, _, _) => props.attachments.reuseByValue): (_, _, _, _, _, _) =>
-        vl =>
-          val pas = vl.get.proposalList
-          Enumerated[AttachmentType]
-            .forPurpose(AttachmentPurpose.Proposal)
-            .map(pat => pas.find(_.attachmentType === pat).toRight(pat))
+      .useMemoBy((props, _, _, _, _, _) => (props.attachments.reuseByValue, props.proposalType)):
+        (_, _, _, _, _, _) =>
+          (vl, pt) =>
+            val pas = vl.get.proposalList
+            Enumerated[AttachmentType]
+              .forPurpose(AttachmentPurpose.Proposal)
+              .filterNot(
+                // Fast turnaround proposals do not have a team attachment
+                _ === AttachmentType.Team && pt.exists(t =>
+                  t.scienceSubtype === ScienceSubtype.FastTurnaround
+                )
+              )
+              .map(pat => pas.find(_.attachmentType === pat).toRight(pat))
       .useReactTableBy: (_, _, _, action, urlMap, cols, rows) =>
         TableOptions(
           cols,

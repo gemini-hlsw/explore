@@ -38,6 +38,7 @@ case class CallForProposal(
   title:              NonEmptyString,
   cfpType:            CallForProposalsType,
   partners:           List[CallPartner],
+  allowsNonPartnerPi: Boolean,
   nonPartnerDeadline: Option[Timestamp],
   instruments:        List[Instrument],
   coordinateLimits:   CallCoordinatesLimits,
