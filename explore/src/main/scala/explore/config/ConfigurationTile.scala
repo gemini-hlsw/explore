@@ -34,6 +34,7 @@ import explore.model.TargetList
 import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
+import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.modes.ItcInstrumentConfig
 import explore.modes.ScienceModes
@@ -267,7 +268,17 @@ object ConfigurationTile:
 
     private val component =
       ScalaFnComponent[Props] { props =>
-        for ctx <- useContext(AppContext.ctx)
+        for
+          ctx <- useContext(AppContext.ctx)
+          _   <- useEffectWithDeps(props.requirements.get): requirements =>
+                   // if neither spectroscopy or imaging is set, we want to update the observation
+                   // to default to spectroscopy, but only locally. Sending an empty spectroscopy
+                   // to the API is the same as setting it to neither spec or imaging.
+                   requirements.scienceMode.fold(
+                     props.requirements.model // using the `model` excludes it from undo/redo
+                       .zoom(ScienceRequirements.scienceMode)
+                       .set(Spectroscopy.Default.asLeft.some)
+                   )(_ => Callback.empty)
         yield
           import ctx.given
 
