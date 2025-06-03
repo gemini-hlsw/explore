@@ -45,7 +45,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.odb.json.configurationrequest.query.given
 import lucuma.odb.json.time.decoder.given
-import lucuma.odb.json.wavelength.decoder.given
 import lucuma.schemas.decoders.given
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
@@ -300,7 +299,6 @@ object Observation:
   val observationTime          = Focus[Observation](_.observationTime)
   val observationDuration      = Focus[Observation](_.observationDuration)
   val posAngleConstraint       = Focus[Observation](_.posAngleConstraint)
-  val wavelength               = Focus[Observation](_.centralWavelength)
   val observerNotes            = Focus[Observation](_.observerNotes)
   val calibrationRole          = Focus[Observation](_.calibrationRole)
   val scienceBand              = Focus[Observation](_.scienceBand)
@@ -353,9 +351,6 @@ object Observation:
       observationTime     <- c.get[Option[Timestamp]]("observationTime")
       observationDur      <- c.get[Option[TimeSpan]]("observationDuration")
       posAngleConstraint  <- c.get[PosAngleConstraint]("posAngleConstraint")
-      wavelength          <- c.downField("scienceRequirements")
-                               .downField("spectroscopy")
-                               .get[Option[CentralWavelength]]("wavelength")
       observerNotes       <- c.get[Option[NonEmptyString]]("observerNotes")
       calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
       scienceBand         <- c.get[Option[ScienceBand]]("scienceBand")
@@ -378,7 +373,10 @@ object Observation:
       observationTime.map(_.toInstant),
       observationDur,
       posAngleConstraint,
-      wavelength,
+      ScienceRequirements.spectroscopy
+        .getOption(scienceRequirements)
+        .flatMap(_.wavelength)
+        .map(CentralWavelength(_)),
       observerNotes,
       calibrationRole,
       scienceBand,
