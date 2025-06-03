@@ -97,38 +97,21 @@ object ScienceQueries:
     private def spectroscopyRequirements(
       op: ScienceRequirements.Spectroscopy
     ): SpectroscopyScienceRequirementsInput =
-      val input =
-        for {
-          _ <- SpectroscopyScienceRequirementsInput.wavelength         := op.wavelength
-                 .map(wavelength)
-                 .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.resolution         := op.resolution.orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.wavelengthCoverage := op.wavelengthCoverage
-                 .map(wavelengthDelta)
-                 .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.focalPlane         := op.focalPlane.orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.focalPlaneAngle    := op.focalPlaneAngle
-                 .map(angle)
-                 .orUnassign
-          _ <- SpectroscopyScienceRequirementsInput.capability         := op.capability.orUnassign
-        } yield ()
-      input.runS(SpectroscopyScienceRequirementsInput()).value
+      SpectroscopyScienceRequirementsInput(
+        wavelength = op.wavelength.map(wavelength).orUnassign,
+        resolution = op.resolution.orUnassign,
+        wavelengthCoverage = op.wavelengthCoverage.map(wavelengthDelta).orUnassign,
+        focalPlane = op.focalPlane.orUnassign,
+        focalPlaneAngle = op.focalPlaneAngle.map(angle).orUnassign,
+        capability = op.capability.orUnassign
+      )
 
     private def imagingRequirements(
       op: ScienceRequirements.Imaging
     ): ImagingScienceRequirementsInput =
-      val input =
-        for {
-          _ <- ImagingScienceRequirementsInput.minimumFov      := op.minimumFov
-                 .map(angle)
-                 .orUnassign
-          _ <- ImagingScienceRequirementsInput.narrowFilters   := op.narrowFilters
-                 .map(_.value)
-                 .orUnassign
-          _ <-
-            ImagingScienceRequirementsInput.broadFilters := op.broadFilters.map(_.value).orUnassign
-          _ <- ImagingScienceRequirementsInput.combinedFilters := op.combinationFilters
-                 .map(_.value)
-                 .orUnassign
-        } yield ()
-      input.runS(ImagingScienceRequirementsInput()).value
+      ImagingScienceRequirementsInput(
+        minimumFov = op.minimumFov.map(angle).orUnassign,
+        narrowFilters = op.narrowFilters.map(_.value).orUnassign,
+        broadFilters = op.broadFilters.map(_.value).orUnassign,
+        combinedFilters = op.combinationFilters.map(_.value).orUnassign
+      )

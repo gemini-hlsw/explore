@@ -55,6 +55,8 @@ object ScienceRequirements:
   ) derives Eq
 
   object Spectroscopy:
+    val Default: Spectroscopy = Spectroscopy(None, None, None, None, None, None)
+
     given Decoder[Spectroscopy] = Decoder.instance: c =>
       for {
         wl  <- c.downField("wavelength").as[Option[Wavelength]]
@@ -90,6 +92,11 @@ object ScienceRequirements:
         combinationFilters.foldMap(_.toSet(FilterType.Combination))
 
   object Imaging:
+    val Default: Imaging =
+      // By setting the booleans, we prevent confusion with an empty spectroscopy when
+      // getting a response from the odb.
+      Imaging(None, NarrowBand.False.some, BroadBand.False.some, Combination.False.some)
+
     given Decoder[Imaging] = Decoder.instance: c =>
       for {
         fov <- c.downField("minimumFov").as[Option[Angle]]
@@ -108,8 +115,6 @@ object ScienceRequirements:
     val broadFilters: Lens[Imaging, Option[BroadBand]]         = Focus[Imaging](_.broadFilters)
     val combinationFilters: Lens[Imaging, Option[Combination]] =
       Focus[Imaging](_.combinationFilters)
-
-    val Default: Imaging = Imaging(None, None, None, None)
 
   val exposureTimeMode: Lens[ScienceRequirements, Option[ExposureTimeMode]] =
     Focus[ScienceRequirements](_.exposureTimeMode)
