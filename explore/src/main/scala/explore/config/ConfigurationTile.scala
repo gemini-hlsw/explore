@@ -56,7 +56,6 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.schemas.itc.syntax.*
@@ -261,17 +260,7 @@ object ConfigurationTile:
 
     private val component =
       ScalaFnComponent[Props] { props =>
-        for
-          ctx <- useContext(AppContext.ctx)
-          _   <- useEffectWithDeps(props.requirements.get.scienceModeType): modeType =>
-                   // if neither spectroscopy or imaging is set, we want to update the observation
-                   // to default to spectroscopy, but only locally. Sending an empty spectroscopy
-                   // to the API is the same as setting it to neither spec or imaging.
-                   modeType.fold(
-                     props.requirements.model // using the `model` excludes it from undo/redo
-                       .zoom(ScienceRequirements.scienceMode)
-                       .set(Spectroscopy.Default.asLeft.some)
-                   )(_ => Callback.empty)
+        for ctx <- useContext(AppContext.ctx)
         yield
           import ctx.given
 

@@ -66,15 +66,10 @@ object ScienceQueries:
                  .map(_.toInput)
                  .orUnassign
           _ <- op.scienceMode match {
-                 case Some(Left(spec)) =>
+                 case Left(spec) =>
                    ScienceRequirementsInput.spectroscopy := spectroscopyRequirements(spec).assign
-                 case Some(Right(img)) =>
+                 case Right(img) =>
                    ScienceRequirementsInput.imaging := imagingRequirements(img).assign
-                 case None             =>
-                   for {
-                     _ <- ScienceRequirementsInput.spectroscopy := Input.unassign
-                     _ <- ScienceRequirementsInput.imaging      := Input.unassign
-                   } yield ()
                }
         } yield ()
       input.runS(_).value

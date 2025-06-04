@@ -68,7 +68,7 @@ private object BasicConfigurationPanel:
         ctx             <- useContext(AppContext.ctx)
         scienceModeType <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
         _               <- useEffectWithDeps(props.requirementsView.get.scienceModeType): modeType =>
-                             scienceModeType.set(modeType.getOrElse(ScienceMode.Spectroscopy))
+                             scienceModeType.set(modeType)
         creating        <- useStateView(Creating(false))
       yield
         import ctx.given
@@ -100,8 +100,8 @@ private object BasicConfigurationPanel:
 
         def switchMode(scienceModeType: ScienceMode): Callback =
           val newScienceMode = scienceModeType match
-            case ScienceMode.Spectroscopy => ScienceRequirements.Spectroscopy.Default.asLeft.some
-            case ScienceMode.Imaging      => ScienceRequirements.Imaging.Default.asRight.some
+            case ScienceMode.Spectroscopy => ScienceRequirements.Spectroscopy.Default.asLeft
+            case ScienceMode.Imaging      => ScienceRequirements.Imaging.Default.asRight
           props.requirementsView
             .zoom(ScienceRequirements.scienceMode)
             .set(

@@ -38,15 +38,17 @@ type BroadBand = BroadBand.Type
 object Combination extends NewBoolean
 type Combination = Combination.Type
 
+// Although the ODB can have neither spectroscopy or imaging set, in explore we always
+// treat a `missing` science mode as spectroscopy.
 case class ScienceRequirements(
   exposureTimeMode: Option[ExposureTimeMode],
-  scienceMode:      Option[Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]]
+  scienceMode:      Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]
 ) derives Eq:
   lazy val exposureTimeModeType: Option[ExposureTimeModeType] =
     exposureTimeMode.map(_.modeType)
 
-  lazy val scienceModeType: Option[ScienceMode] =
-    scienceMode.map(_.fold(_ => ScienceMode.Spectroscopy, _ => ScienceMode.Imaging))
+  lazy val scienceModeType: ScienceMode =
+    scienceMode.fold(_ => ScienceMode.Spectroscopy, _ => ScienceMode.Imaging)
 
 object ScienceRequirements:
   case class Spectroscopy(
@@ -121,14 +123,14 @@ object ScienceRequirements:
   val timeAndCountMode: Optional[ScienceRequirements, TimeAndCountMode]     =
     exposureTimeMode.some.andThen(ExposureTimeMode.timeAndCount)
 
-  val scienceMode: Lens[ScienceRequirements, Option[Either[Spectroscopy, Imaging]]] =
+  val scienceMode: Lens[ScienceRequirements, Either[Spectroscopy, Imaging]] =
     Focus[ScienceRequirements](_.scienceMode)
 
   val spectroscopy: Optional[ScienceRequirements, Spectroscopy] =
-    scienceMode.some.andThen(stdLeft)
+    scienceMode.andThen(stdLeft)
 
   val imaging: Optional[ScienceRequirements, Imaging] =
-    scienceMode.some.andThen(stdRight)
+    scienceMode.andThen(stdRight)
 
   given Decoder[ScienceRequirements] = Decoder.instance: c =>
     for {
@@ -136,8 +138,8 @@ object ScienceRequirements:
       img  <- c.get[Option[Imaging]]("imaging")
       etm  <- c.get[Option[ExposureTimeMode]]("exposureTimeMode")
       mode  = (spec, img) match
-                case (Some(s), None) => Some(Left(s))
-                case (None, Some(i)) => Some(Right(i))
+                case (Some(s), None) => Left(s)
+                case (None, Some(i)) => Right(i)
                 // Default to spectroscopy
-                case _               => Some(Left(Spectroscopy.Default))
+                case _               => Left(Spectroscopy.Default)
     } yield ScienceRequirements(etm, mode)

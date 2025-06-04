@@ -29,6 +29,7 @@ import lucuma.core.util.arb.ArbNewType.given
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen
+import org.scalacheck.Gen
 import explore.model.NarrowBand
 import explore.model.BroadBand
 import explore.model.Combination
@@ -115,19 +116,17 @@ trait ArbScienceRequirements:
   given Arbitrary[ScienceRequirements] = Arbitrary(
     for
       exposureTimeMode <- arbitrary[Option[ExposureTimeMode]]
-      spectroscopy     <- arbitrary[Option[ScienceRequirements.Spectroscopy]]
-      imaging          <- arbitrary[Option[ScienceRequirements.Imaging]]
-      scienceMode       = (spectroscopy, imaging) match
-                            case (Some(s), None) => Some(Left(s))
-                            case (None, Some(i)) => Some(Right(i))
-                            case _               => None
+      scienceMode      <- Gen.oneOf(
+                            arbitrary[ScienceRequirements.Spectroscopy].map(Left(_)),
+                            arbitrary[ScienceRequirements.Imaging].map(Right(_))
+                          )
     yield ScienceRequirements(exposureTimeMode, scienceMode)
   )
 
   given Cogen[ScienceRequirements] =
     Cogen[
       (Option[ExposureTimeMode],
-       Option[Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]]
+       Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]
       )
     ]
       .contramap(sr => (sr.exposureTimeMode, sr.scienceMode))
