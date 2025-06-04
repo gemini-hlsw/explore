@@ -21,7 +21,6 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.AsterismIds
-import explore.model.InstrumentConfigAndItcResult
 import explore.model.ObsConfiguration
 import explore.model.ObsTabTileIds
 import explore.model.Observation
@@ -34,8 +33,8 @@ import explore.model.TargetList
 import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
-import explore.model.reusability.given
 import explore.model.syntax.all.*
+import explore.modes.ConfigSelection
 import explore.modes.ItcInstrumentConfig
 import explore.modes.ScienceModes
 import explore.services.OdbObservationApi
@@ -71,8 +70,8 @@ object ConfigurationTile:
     scienceTargetIds:         AsterismIds,
     baseCoordinates:          Option[CoordinatesAtVizTime],
     obsConf:                  ObsConfiguration,
-    selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
-    revertedInstrumentConfig: Option[ItcInstrumentConfig], // configuration selected if reverted
+    selectedConfig:           View[ConfigSelection],
+    revertedInstrumentConfig: List[ItcInstrumentConfig], // configuration rows selected if reverted
     modes:                    ScienceModes,
     customSedTimestamps:      List[Timestamp],
     allTargets:               TargetList,
@@ -182,20 +181,13 @@ object ConfigurationTile:
   private def revertConfiguration(
     obsId:                    Observation.Id,
     mode:                     UndoSetter[Option[ObservingMode]],
-    revertedInstrumentConfig: Option[ItcInstrumentConfig],
-    selectedConfig:           View[Option[InstrumentConfigAndItcResult]]
+    revertedInstrumentConfig: List[ItcInstrumentConfig],
+    selectedConfig:           View[ConfigSelection]
   )(using odbApi: OdbObservationApi[IO]): IO[Unit] =
     odbApi
       .updateConfiguration(obsId, Input.unassign) >>
       (modeAction(obsId).set(mode)(none) >>
-        revertedInstrumentConfig
-          .map: row => // Select the reverted config
-            selectedConfig.mod: c =>
-              InstrumentConfigAndItcResult(
-                row,
-                c.flatMap(_.itcResult.flatMap(_.toOption.map(_.asRight)))
-              ).some
-          .orEmpty).toAsync
+        selectedConfig.set(ConfigSelection.fromInstrumentConfigs(revertedInstrumentConfig))).toAsync
 
   private case class Body(
     userId:                   Option[User.Id],
@@ -206,8 +198,8 @@ object ConfigurationTile:
     obsConf:                  ObsConfiguration,
     itcTargets:               List[ItcTarget],
     baseCoordinates:          Option[CoordinatesAtVizTime],
-    selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
-    revertedInstrumentConfig: Option[ItcInstrumentConfig],
+    selectedConfig:           View[ConfigSelection],
+    revertedInstrumentConfig: List[ItcInstrumentConfig],
     modes:                    ScienceModes,
     customSedTimestamps:      List[Timestamp],
     sequenceChanged:          Callback,
@@ -268,17 +260,7 @@ object ConfigurationTile:
 
     private val component =
       ScalaFnComponent[Props] { props =>
-        for
-          ctx <- useContext(AppContext.ctx)
-          _   <- useEffectWithDeps(props.requirements.get): requirements =>
-                   // if neither spectroscopy or imaging is set, we want to update the observation
-                   // to default to spectroscopy, but only locally. Sending an empty spectroscopy
-                   // to the API is the same as setting it to neither spec or imaging.
-                   requirements.scienceMode.fold(
-                     props.requirements.model // using the `model` excludes it from undo/redo
-                       .zoom(ScienceRequirements.scienceMode)
-                       .set(Spectroscopy.Default.asLeft.some)
-                   )(_ => Callback.empty)
+        for ctx <- useContext(AppContext.ctx)
         yield
           import ctx.given
 
@@ -396,7 +378,7 @@ object ConfigurationTile:
                       props.baseCoordinates,
                       props.obsConf.calibrationRole,
                       props.selectedConfig.get
-                        .flatMap(_.toBasicConfiguration)
+                        .toBasicConfiguration()
                         .map: bc =>
                           updateConfiguration(props.obsId,
                                               props.pacAndMode,
@@ -472,8 +454,8 @@ object ConfigurationTile:
     obsId:                    Observation.Id,
     pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
     observingModeGroups:      ObservingModeGroupList,
-    selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
-    revertedInstrumentConfig: Option[ItcInstrumentConfig],
+    selectedConfig:           View[ConfigSelection],
+    revertedInstrumentConfig: List[ItcInstrumentConfig],
     readonly:                 Boolean
   ) extends ReactFnProps(Title.component):
     val observingMode                           = pacAndMode.get._2

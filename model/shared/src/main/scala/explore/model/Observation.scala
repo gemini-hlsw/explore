@@ -205,21 +205,26 @@ case class Observation(
       case _: ObservingMode.Flamingos2LongSlit =>
         InstrumentOverrides.Flamingos2Spectroscopy().some
 
-  def toInstrumentConfig(targets: TargetList): Option[ItcInstrumentConfig] =
+  // Imaging modes can return multiple configs due to multiple filters.
+  def toInstrumentConfig(targets: TargetList): List[ItcInstrumentConfig] =
     (toModeOverride(targets), observingMode)
       .mapN:
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
               n: ObservingMode.GmosNorthLongSlit
             ) =>
-          ItcInstrumentConfig.GmosNorthSpectroscopy(n.grating, n.fpu, n.filter, overrides.some).some
+          List(
+            ItcInstrumentConfig.GmosNorthSpectroscopy(n.grating, n.fpu, n.filter, overrides.some)
+          )
         case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
               s: ObservingMode.GmosSouthLongSlit
             ) =>
-          ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some).some
+          List(
+            ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some)
+          )
         case (_, f: ObservingMode.Flamingos2LongSlit) =>
-          ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu).some
-        case _                                        => none
-      .flatten
+          List(ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu))
+        case _                                        => List.empty
+      .getOrElse(List.empty)
 
   lazy val constraintsSummary: String =
     s"${constraints.imageQuality.toImageQuality.label} ${constraints.cloudExtinction.toCloudExtinction.label}" +

@@ -49,6 +49,7 @@ case class ItcGraphQuerier(
   private val remoteConfig: Option[InstrumentConfigAndItcResult] =
     observation
       .toInstrumentConfig(at)
+      .headOption
       .map: row =>
         InstrumentConfigAndItcResult(row, none)
 

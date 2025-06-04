@@ -36,6 +36,7 @@ import explore.model.formats.formatPercentile
 import explore.model.layout.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
+import explore.modes.ConfigSelection
 import explore.modes.ScienceModes
 import explore.observationtree.obsEditAttachments
 import explore.plots.ElevationPlotTile
@@ -228,7 +229,7 @@ object ObsTabTiles:
                                      ctx.odbApi.observationEditSubscription(props.obsId)
         agsState            <- useStateView[AgsState](AgsState.Idle)
         // the configuration the user has selected from the spectroscopy modes table, if any
-        selectedConfig      <- useStateView(none[InstrumentConfigAndItcResult])
+        selectedConfig      <- useStateView(ConfigSelection.Empty)
         customSedTimestamps <-
           // The updatedAt timestamps for any custom seds.
           useMemo((props.asterismAsNel, props.attachments.get)): (asterism, attachments) =>
@@ -239,7 +240,7 @@ object ObsTabTiles:
             )
         itcGraphQuerier      =
           ItcGraphQuerier(props.observation.get,
-                          selectedConfig.get,
+                          selectedConfig.get.headOption,
                           props.obsTargets,
                           customSedTimestamps
           )
@@ -420,7 +421,7 @@ object ObsTabTiles:
           val obsConf: ObsConfiguration =
             ObsConfiguration(
               basicConfiguration,
-              selectedConfig.get.map(_.instrumentConfig),
+              selectedConfig.get,
               paProps.some,
               props.constraintSet.get.some,
               props.centralWavelength,

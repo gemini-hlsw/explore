@@ -12,7 +12,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.enums.AgsState
 import explore.model.syntax.all.*
-import explore.modes.ItcInstrumentConfig
+import explore.modes.ConfigSelection
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.ObservingModeType
 import lucuma.core.math.Angle
@@ -28,7 +28,7 @@ import java.time.Duration
 
 case class ObsConfiguration(
   configuration:      Option[BasicConfiguration],
-  selectedConfig:     Option[ItcInstrumentConfig], // selected row in spectroscopy modes table
+  selectedConfig:     ConfigSelection, // selected row(s) in the modes table
   posAngleProperties: Option[PAProperties],
   constraints:        Option[ConstraintSet],
   centralWavelength:  Option[CentralWavelength],
@@ -71,7 +71,7 @@ object ObsConfiguration:
   ): ObsConfiguration =
     ObsConfiguration(
       configuration,
-      none,
+      ConfigSelection.Empty,
       none,
       constraints,
       wavelength,

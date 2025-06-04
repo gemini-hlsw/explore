@@ -62,7 +62,7 @@ import scala.language.implicitConversions
 
 case class SpectroscopyModesTable(
   userId:                   Option[User.Id],
-  selectedConfig:           View[Option[InstrumentConfigAndItcResult]],
+  selectedConfig:           View[ConfigSelection],
   exposureTimeMode:         Option[ExposureTimeMode],
   spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
@@ -78,7 +78,6 @@ case class SpectroscopyModesTable(
 private object SpectroscopyModesTable extends ModesTableCommon:
   private type Props = SpectroscopyModesTable
 
-  private given Reusability[SpectroscopyModeRow]     = Reusability.by(_.id)
   private given Reusability[SpectroscopyModesMatrix] = Reusability.by(_.matrix.length)
 
   private case class SpectroscopyModeRowWithResult(
@@ -347,28 +346,25 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                             props.customSedTimestamps,
                             sortedRows
                           )
-        selectedRow    <- useState:
-                            props.selectedConfig.get
-                              .flatMap: c =>
-                                rows.value.find: row =>
-                                  c.instrumentConfig === row.entry.instrument
-                              .map(_.entry)
-        // selectedIndex
-        // The selected index needs to be the index into the sorted data, because that is what
-        // the virtualizer uses for scrollTo.
-        selectedIndex  <- useMemo((sortedRows, selectedRow.value)): (sortedRows, selectedRow) =>
-                            selectedRow.map(sRow => sortedRows.indexWhere(row => row.entry === sRow))
-        // Set the selected config if the rows change because it might have different itc data.
+        // Set the selected config if the rows change because the new rows may no longer contain
+        // one or more of the selected rows or the itc results may have changed.
         // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
         _              <- useEffectWithDeps(rows): _ =>
-                            val optRow: Option[SpectroscopyModeRowWithResult] =
-                              selectedIndex.value.flatMap(idx => sortedRows.lift(idx))
-                            val conf: Option[InstrumentConfigAndItcResult]    =
-                              optRow.map: row =>
-                                InstrumentConfigAndItcResult(row.entry.instrument, row.result.toOption)
-                            if (props.selectedConfig.get =!= conf)
-                              props.selectedConfig.set(conf)
+                            val oldCfgs = props.selectedConfig.get.configs
+                            val newCfgs =
+                              oldCfgs
+                                .map(cfg => rows.find(_.entry.instrument === cfg.instrumentConfig))
+                                .flattenOption
+                                .map(_.configAndResult)
+                            if (oldCfgs =!= newCfgs)
+                              props.selectedConfig.set(ConfigSelection.fromList(newCfgs))
                             else Callback.empty
+        // The selected index needs to be the index into the sorted data, because that is what
+        // the virtualizer uses for scrollTo.
+        selectedIndex  <- useMemo((sortedRows, props.selectedConfig.get)):
+                            (sortRows, selectedConfig) =>
+                              selectedConfig.headOption.map: head =>
+                                sortRows.indexWhere(_.entry.instrument === head.instrumentConfig)
         visibleRows    <- useStateView(none[Range.Inclusive])
         atTop          <- useStateView(false)
         virtualizerRef <- useRef(none[HTMLTableVirtualizer])
@@ -380,14 +376,6 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                                   scrollTo.set(ScrollTo.NoScroll)
                               )
       } yield
-
-        def toggleRow(
-          row: SpectroscopyModeRowWithResult
-        ): Option[InstrumentConfigAndItcResult] =
-          Option.when(
-            props.selectedConfig.get.forall(_.instrumentConfig =!= row.entry.instrument)
-          ):
-            InstrumentConfigAndItcResult(row.entry.instrument, row.result.toOption)
 
         val errLabel = itcHookData.errorLabel(props.spectroscopyRequirements.wavelength.isDefined)
 
@@ -425,13 +413,12 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                   ^.disabled := !row.original.entry.enabled,
                   ExploreStyles.TableRowSelected
                     .when:
-                      props.selectedConfig.get
+                      props.selectedConfig.get.headOption
                         .exists(_.instrumentConfig === row.original.entry.instrument)
                   ,
                   (
-                    ^.onClick --> (
-                      props.selectedConfig.set(toggleRow(row.original)) >>
-                        selectedRow.setState(row.original.entry.some)
+                    ^.onClick --> props.selectedConfig.mod(
+                      _.toggleOrSet(row.original.configAndResult)
                     )
                   )
                     .when(row.original.entry.enabled)
