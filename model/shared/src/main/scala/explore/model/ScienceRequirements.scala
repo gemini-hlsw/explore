@@ -14,6 +14,7 @@ import io.circe.Decoder
 import io.circe.refined.given
 import lucuma.core.enums.FilterType
 import lucuma.core.enums.FocalPlane
+import lucuma.core.enums.ScienceMode
 import lucuma.core.enums.SpectroscopyCapabilities
 import lucuma.core.math.Angle
 import lucuma.core.math.Wavelength
@@ -41,8 +42,11 @@ case class ScienceRequirements(
   exposureTimeMode: Option[ExposureTimeMode],
   scienceMode:      Option[Either[ScienceRequirements.Spectroscopy, ScienceRequirements.Imaging]]
 ) derives Eq:
-  def modeType: Option[ExposureTimeModeType] =
+  lazy val exposureTimeModeType: Option[ExposureTimeModeType] =
     exposureTimeMode.map(_.modeType)
+
+  lazy val scienceModeType: Option[ScienceMode] =
+    scienceMode.map(_.fold(_ => ScienceMode.Spectroscopy, _ => ScienceMode.Imaging))
 
 object ScienceRequirements:
   case class Spectroscopy(
@@ -77,10 +81,10 @@ object ScienceRequirements:
       Focus[Spectroscopy](_.capability)
 
   case class Imaging(
-    minimumFov:         Option[Angle],
-    narrowFilters:      Option[NarrowBand],
-    broadFilters:       Option[BroadBand],
-    combinationFilters: Option[Combination]
+    minimumFov:      Option[Angle],
+    narrowFilters:   Option[NarrowBand],
+    broadFilters:    Option[BroadBand],
+    combinedFilters: Option[Combination]
   ) derives Eq:
     lazy val allowedFilterTypes: Set[FilterType] =
       extension (b: Boolean)
@@ -89,7 +93,7 @@ object ScienceRequirements:
       Set.empty[FilterType] ++
         narrowFilters.foldMap(_.toSet(FilterType.NarrowBand)) ++
         broadFilters.foldMap(_.toSet(FilterType.BroadBand)) ++
-        combinationFilters.foldMap(_.toSet(FilterType.Combination))
+        combinedFilters.foldMap(_.toSet(FilterType.Combination))
 
   object Imaging:
     val Default: Imaging =
@@ -100,21 +104,15 @@ object ScienceRequirements:
     given Decoder[Imaging] = Decoder.instance: c =>
       for {
         fov <- c.downField("minimumFov").as[Option[Angle]]
-        nf  <- c.downField("narrowFilters")
-                 .as[Option[Boolean]]
-                 .map(_.map(NarrowBand(_)))
-        bf  <-
-          c.downField("broadFilters").as[Option[Boolean]].map(_.map(BroadBand(_)))
-        cf  <- c.downField("combinationFilters")
-                 .as[Option[Boolean]]
-                 .map(_.map(Combination(_)))
+        nf  <- c.downField("narrowFilters").as[Option[NarrowBand]]
+        bf  <- c.downField("broadFilters").as[Option[BroadBand]]
+        cf  <- c.downField("combinedFilters").as[Option[Combination]]
       } yield Imaging(fov, nf, bf, cf)
 
-    val minimumFov: Lens[Imaging, Option[Angle]]               = Focus[Imaging](_.minimumFov)
-    val narrowFilters: Lens[Imaging, Option[NarrowBand]]       = Focus[Imaging](_.narrowFilters)
-    val broadFilters: Lens[Imaging, Option[BroadBand]]         = Focus[Imaging](_.broadFilters)
-    val combinationFilters: Lens[Imaging, Option[Combination]] =
-      Focus[Imaging](_.combinationFilters)
+    val minimumFov: Lens[Imaging, Option[Angle]]            = Focus[Imaging](_.minimumFov)
+    val narrowFilters: Lens[Imaging, Option[NarrowBand]]    = Focus[Imaging](_.narrowFilters)
+    val broadFilters: Lens[Imaging, Option[BroadBand]]      = Focus[Imaging](_.broadFilters)
+    val combinedFilters: Lens[Imaging, Option[Combination]] = Focus[Imaging](_.combinedFilters)
 
   val exposureTimeMode: Lens[ScienceRequirements, Option[ExposureTimeMode]] =
     Focus[ScienceRequirements](_.exposureTimeMode)
@@ -140,5 +138,6 @@ object ScienceRequirements:
       mode  = (spec, img) match
                 case (Some(s), None) => Some(Left(s))
                 case (None, Some(i)) => Some(Right(i))
-                case _               => None
+                // Default to spectroscopy
+                case _               => Some(Left(Spectroscopy.Default))
     } yield ScienceRequirements(etm, mode)

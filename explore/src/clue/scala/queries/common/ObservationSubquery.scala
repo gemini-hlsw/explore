@@ -51,6 +51,12 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
               focalPlaneAngle $AngleSubquery
               capability
             }
+            imaging {
+              minimumFov $AngleSubquery
+              narrowFilters
+              broadFilters
+              combinedFilters
+            }
           }
           observingMode $ObservingModeSubquery
           observerNotes

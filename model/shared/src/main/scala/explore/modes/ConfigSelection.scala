@@ -22,6 +22,15 @@ final case class ConfigSelection private (configs: List[InstrumentConfigAndItcRe
     nonEmpty &&
       configs.forall(_.itcResult.flatMap(_.toOption).exists(_.isSuccess))
 
+  lazy val hasItcErrors: Boolean =
+    configs.exists(_.itcResult.exists(_.isLeft))
+
+  lazy val isMissingSomeItc: Boolean =
+    configs.exists(_.itcResult.isEmpty)
+
+  lazy val hasPendingItc: Boolean =
+    configs.exists(_.itcResult.exists(_.toOption.exists(_.isPending)))
+
   def contains(config: ItcInstrumentConfig): Boolean = configs.exists(_.instrumentConfig === config)
 
   def canAdd(configAndResult: InstrumentConfigAndItcResult): Boolean =
@@ -50,12 +59,22 @@ final case class ConfigSelection private (configs: List[InstrumentConfigAndItcRe
     if configs.contains_(configAndResult) then ConfigSelection.Empty
     else ConfigSelection.one(configAndResult)
 
-  def toBasicConfiguration: Option[BasicConfiguration] =
+  def toBasicConfiguration(withFallbackWavelength: Boolean = false): Option[BasicConfiguration] =
     configs.headOption.flatMap(_.instrumentConfig match
       case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
         BasicConfiguration.GmosNorthLongSlit(grating, filter, fpu, cw).some
+      case ItcInstrumentConfig.GmosNorthSpectroscopy(grating, fpu, filter, None)
+          if withFallbackWavelength =>
+        BasicConfiguration
+          .GmosNorthLongSlit(grating, filter, fpu, ItcInstrumentConfig.GmosFallbackCW)
+          .some
       case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, Some(cw, _, _)) =>
         BasicConfiguration.GmosSouthLongSlit(grating, filter, fpu, cw).some
+      case ItcInstrumentConfig.GmosSouthSpectroscopy(grating, fpu, filter, None)
+          if withFallbackWavelength =>
+        BasicConfiguration
+          .GmosSouthLongSlit(grating, filter, fpu, ItcInstrumentConfig.GmosFallbackCW)
+          .some
       case ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)              =>
         BasicConfiguration.Flamingos2LongSlit(disperser, filter, fpu).some
       case _                                                                               => none
@@ -74,3 +93,8 @@ object ConfigSelection:
       case h :: t =>
         val head = one(h)
         t.foldLeft(head)(_.add(_))
+
+  // A list of instrument configs, with no itc results.
+  // Like fromList, ingnore inconsistencies and duplicates.
+  def fromInstrumentConfigs(configs: List[ItcInstrumentConfig]): ConfigSelection =
+    ConfigSelection.fromList(configs.map(InstrumentConfigAndItcResult(_, None)))

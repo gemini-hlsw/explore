@@ -113,5 +113,5 @@ object ScienceQueries:
         minimumFov = op.minimumFov.map(angle).orUnassign,
         narrowFilters = op.narrowFilters.map(_.value).orUnassign,
         broadFilters = op.broadFilters.map(_.value).orUnassign,
-        combinedFilters = op.combinationFilters.map(_.value).orUnassign
+        combinedFilters = op.combinedFilters.map(_.value).orUnassign
       )

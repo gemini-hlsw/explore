@@ -8,7 +8,6 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.implicits.*
 import explore.model.syntax.all.*
-import explore.modes.ItcInstrumentConfig
 import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.model.PosAngleConstraint
@@ -49,7 +48,10 @@ object ConfigurationForVisualization:
         )
       }
       .orElse:
-        obsConfig.selectedConfig.flatMap(fromItcInstrumentConfig(_, obsConfig.fallbackPA))
+        obsConfig.selectedConfig
+          .toBasicConfiguration(withFallbackWavelength = true)
+          .map:
+            fromBasicConfiguration(_, obsConfig.fallbackPA)
 
   def fromBasicConfiguration(
     basicConfiguration: BasicConfiguration,
@@ -63,36 +65,3 @@ object ConfigurationForVisualization:
       None,
       basicConfiguration.centralWavelength
     )
-
-  def fromItcInstrumentConfig(
-    itcInstrumentConfig: ItcInstrumentConfig,
-    selectedPosAngle:    Option[Angle]
-  ): Option[ConfigurationForVisualization] =
-    itcInstrumentConfig match {
-      case c: ItcInstrumentConfig.GmosNorthSpectroscopy  =>
-        // This configuration is used for aladin, and wavelength is ignored
-        // Nevertheless we'll use the override if available with a fallback
-        val cw = c.modeOverrides
-          .map(_.centralWavelength)
-          .getOrElse(ItcInstrumentConfig.GmosFallbackCW)
-        fromBasicConfiguration(
-          BasicConfiguration.GmosNorthLongSlit(c.grating, c.filter, c.fpu, cw),
-          selectedPosAngle
-        ).some
-      case c: ItcInstrumentConfig.GmosSouthSpectroscopy  =>
-        // This configuration is used for aladin, and wavelength is ignored
-        // Nevertheless we'll use the override if available with a fallback
-        val cw = c.modeOverrides
-          .map(_.centralWavelength)
-          .getOrElse(ItcInstrumentConfig.GmosFallbackCW)
-        fromBasicConfiguration(
-          BasicConfiguration.GmosSouthLongSlit(c.grating, c.filter, c.fpu, cw),
-          selectedPosAngle
-        ).some
-      case f: ItcInstrumentConfig.Flamingos2Spectroscopy =>
-        fromBasicConfiguration(
-          BasicConfiguration.Flamingos2LongSlit(f.grating, f.filter, f.fpu),
-          selectedPosAngle
-        ).some
-      case _                                             => none
-    }

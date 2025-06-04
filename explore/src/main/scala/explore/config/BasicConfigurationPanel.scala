@@ -11,7 +11,6 @@ import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
 import explore.model.ScienceRequirements
 import explore.model.ScienceRequirements.Imaging
@@ -39,13 +38,14 @@ import lucuma.refined.*
 import lucuma.ui.LucumaIcons
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
 case class BasicConfigurationPanel(
   userId:              Option[User.Id],
   obsId:               Observation.Id,
   requirementsView:    View[ScienceRequirements],
-  selectedConfig:      View[Option[InstrumentConfigAndItcResult]],
+  selectedConfig:      View[ConfigSelection],
   constraints:         ConstraintSet,
   itcTargets:          List[ItcTarget],
   baseCoordinates:     Option[CoordinatesAtVizTime],
@@ -66,42 +66,46 @@ private object BasicConfigurationPanel:
     ScalaFnComponent[Props]: props =>
       for
         ctx             <- useContext(AppContext.ctx)
-        mode            <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
-        // these next 2 are temporary
-        imaging         <- useStateView[Imaging](Imaging.Default)
-        // selectedConfig above should be replaced by one of these...
-        selectedConfigs <- useStateView(ConfigSelection.Empty)
+        scienceModeType <- useStateView[ScienceMode](ScienceMode.Spectroscopy)
+        _               <- useEffectWithDeps(props.requirementsView.get.scienceModeType): modeType =>
+                             scienceModeType.set(modeType.getOrElse(ScienceMode.Spectroscopy))
         creating        <- useStateView(Creating(false))
       yield
         import ctx.given
 
-        val canAccept: Boolean =
-          props.selectedConfig.get.flatMap(_.itcResult).flatMap(_.toOption).exists(_.isSuccess)
-
-        val isSpectroscopy: Boolean =
-          mode.get === ScienceMode.Spectroscopy
+        val canAccept: Boolean = props.selectedConfig.get.canAccept
 
         val spectroscopyView: ViewOpt[Spectroscopy] = props.requirementsView
           .zoom(ScienceRequirements.spectroscopy)
 
+        val imagingView: ViewOpt[Imaging] = props.requirementsView
+          .zoom(ScienceRequirements.imaging)
+
         val exposureTimeView = props.requirementsView
           .zoom(ScienceRequirements.exposureTimeMode)
 
-        // wavelength has to be handled special because you can't select a row without a wavelength.
+        // wavelength has to be handled special for spectroscopy because you can't select a row without a wavelength.
         val message: Option[String] =
-          spectroscopyView.get
-            .flatMap(_.wavelength)
-            .fold("Wavelength is required for creating a configuration.".some)(_ =>
-              props.selectedConfig.get match {
-                case Some(InstrumentConfigAndItcResult(_, itc)) =>
-                  itc match {
-                    case Some(Right(r)) if r.isPending => "Waiting for ITC result...".some
-                    case Some(Right(r)) if r.isSuccess => none
-                    case _                             => "ITC issues must be fixed.".some
-                  }
+          if (spectroscopyView.get.exists(_.wavelength.isEmpty))
+            "Wavelength is required for creating a configuration.".some
+          else if (
+            props.selectedConfig.get.hasItcErrors || props.selectedConfig.get.isMissingSomeItc
+          )
+            "ITC issues must be fixed.".some
+          else if (props.selectedConfig.get.hasPendingItc)
+            "Waiting for ITC result...".some
+          else if (props.selectedConfig.get.isEmpty)
+            "To create a configuration, select a table row.".some
+          else none
 
-                case None => "To create a configuration, select a table row.".some
-              }
+        def switchMode(scienceModeType: ScienceMode): Callback =
+          val newScienceMode = scienceModeType match
+            case ScienceMode.Spectroscopy => ScienceRequirements.Spectroscopy.Default.asLeft.some
+            case ScienceMode.Imaging      => ScienceRequirements.Imaging.Default.asRight.some
+          props.requirementsView
+            .zoom(ScienceRequirements.scienceMode)
+            .set(
+              newScienceMode
             )
 
         val buttonIcon: FontAwesomeIcon =
@@ -111,31 +115,30 @@ private object BasicConfigurationPanel:
         <.div(ExploreStyles.BasicConfigurationGrid)(
           <.div(
             ExploreStyles.BasicConfigurationForm,
-            // TODO Enable when imaging is available
-            <.label("Mode", HelpIcon("configuration/mode.md".refined)),
-            FormEnumDropdownView(id = "configuration-mode".refined,
-                                 value = mode,
-                                 disabled = props.readonly
+            FormEnumDropdownView(
+              id = "configuration-mode".refined,
+              label = React.Fragment("Mode", HelpIcon("configuration/mode.md".refined)),
+              value = scienceModeType.withOnMod(switchMode),
+              disabled = props.readonly
             ),
-            if (isSpectroscopy)
-              spectroscopyView
-                .mapValue(
-                  SpectroscopyConfigurationPanel(props.selectedConfig.get.map(_.instrument),
-                                                 exposureTimeView,
-                                                 _,
-                                                 props.readonly,
-                                                 props.units,
-                                                 props.calibrationRole
-                  )
-                )
-            else
-              ImagingConfigurationPanel(exposureTimeView,
-                                        imaging,
-                                        props.readonly,
-                                        props.units,
-                                        props.calibrationRole
+            spectroscopyView.mapValue: s =>
+              SpectroscopyConfigurationPanel(
+                props.selectedConfig.get.headOption.map(_.instrument),
+                exposureTimeView,
+                s,
+                props.readonly,
+                props.units,
+                props.calibrationRole
+              ),
+            imagingView.mapValue: s =>
+              ImagingConfigurationPanel(
+                props.selectedConfig.get.headOption.map(_.instrument),
+                exposureTimeView,
+                s,
+                props.readonly,
+                props.units,
+                props.calibrationRole
               )
-                .unless(isSpectroscopy)
           ),
           spectroscopyView
             .mapValue(s =>
@@ -151,21 +154,21 @@ private object BasicConfigurationPanel:
                 props.customSedTimestamps,
                 props.units
               )
+            ),
+          imagingView.mapValue(s =>
+            ImagingModesTable(
+              props.userId,
+              props.selectedConfig,
+              exposureTimeView.get,
+              s.get,
+              props.confMatrix.imaging,
+              props.constraints,
+              props.itcTargets,
+              props.baseCoordinates,
+              props.customSedTimestamps,
+              props.units
             )
-            .when(isSpectroscopy),
-          ImagingModesTable(
-            props.userId,
-            selectedConfigs,
-            exposureTimeView.get,
-            imaging.get,
-            props.confMatrix.imaging,
-            props.constraints,
-            props.itcTargets,
-            props.baseCoordinates,
-            props.customSedTimestamps,
-            props.units
-          )
-            .unless(isSpectroscopy),
+          ),
           <.div(ExploreStyles.BasicConfigurationButtons)(
             message.map(Tag(_, severity = Tag.Severity.Success)),
             Button(
@@ -175,5 +178,5 @@ private object BasicConfigurationPanel:
               severity = Button.Severity.Primary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
-          ).when(isSpectroscopy && !props.readonly)
+          ).unless(props.readonly || scienceModeType.get === ScienceMode.Imaging)
         )

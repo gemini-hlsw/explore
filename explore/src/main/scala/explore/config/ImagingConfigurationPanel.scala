@@ -16,6 +16,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.feature.ReactFragment
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.enums.Instrument
 import lucuma.core.enums.ScienceMode
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.validation.*
@@ -29,6 +30,7 @@ import lucuma.ui.primereact.given
 import lucuma.ui.syntax.all.given
 
 case class ImagingConfigurationPanel(
+  instrument:       Option[Instrument],
   exposureTimeMode: View[Option[ExposureTimeMode]],
   options:          View[ScienceRequirements.Imaging],
   readonly:         Boolean,
@@ -46,7 +48,7 @@ object ImagingConfigurationPanel
         p.options.zoom(ScienceRequirements.Imaging.broadFilters.some.andThen(BroadBand.Value))
       val combination =
         p.options
-          .zoom(ScienceRequirements.Imaging.combinationFilters.some.andThen(Combination.Value))
+          .zoom(ScienceRequirements.Imaging.combinedFilters.some.andThen(Combination.Value))
 
       ReactFragment(
         FormInputTextView(
@@ -81,7 +83,7 @@ object ImagingConfigurationPanel
           disabled = p.readonly
         ),
         ExposureTimeModeEditor(
-          none,
+          p.instrument,
           none,
           p.exposureTimeMode,
           ScienceMode.Imaging,

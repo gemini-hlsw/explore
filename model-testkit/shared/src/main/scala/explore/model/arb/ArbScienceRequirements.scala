@@ -72,11 +72,7 @@ trait ArbScienceRequirements:
   given Cogen[ScienceRequirements.Imaging] =
     Cogen[(Option[Angle], Option[NarrowBand], Option[BroadBand], Option[Combination])].contramap(
       imaging =>
-        (imaging.minimumFov,
-         imaging.narrowFilters,
-         imaging.broadFilters,
-         imaging.combinationFilters
-        )
+        (imaging.minimumFov, imaging.narrowFilters, imaging.broadFilters, imaging.combinedFilters)
     )
 
   given Arbitrary[ScienceRequirements.Spectroscopy] = Arbitrary(
