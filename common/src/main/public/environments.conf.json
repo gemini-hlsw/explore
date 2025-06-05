@@ -21,7 +21,7 @@
     "environment": "STAGING",
     "odbURI": "wss://lucuma-postgres-odb-staging.herokuapp.com/ws",
     "odbRestURI": "https://lucuma-postgres-odb-staging.herokuapp.com",
-    "preferencesDBURI": "wss://gpp-prefs-staging.lucuma.xyz/v1/graphql",
+    "preferencesDBURI": "wss://prefs-test.gpp.gemini.edu/v1/graphql",
     "itcURI": "https://itc-staging.lucuma.xyz/itc",
     "sso": {
       "uri": "https://sso-test.gpp.gemini.edu",
