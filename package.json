@@ -16,7 +16,7 @@
     "@react-hook/size": "^2.1.2",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "v3.13.9",
-    "highcharts": "11.4.8",
+    "highcharts": "12.2.0",
     "loglevel": "1.9.2",
     "primeicons": "^7.0.0",
     "primereact": "10.9.5",
