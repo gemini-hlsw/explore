@@ -18,7 +18,6 @@ import lucuma.core.model.CloudExtinction
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.ImageQuality
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import monocle.Lens
 import org.typelevel.log4cats.Logger

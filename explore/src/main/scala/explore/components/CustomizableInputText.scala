@@ -24,7 +24,7 @@ import scalajs.js.JSConverters.*
  * then an addon icon with a tooltip is displayed. Clicking on the icon reverts the value to the
  * default value.
  */
-final case class CustomizableInputText[A: Eq](
+final case class CustomizableInputText[A](
   id:            NonEmptyString,
   value:         View[A],
   validFormat:   InputValidFormat[A],

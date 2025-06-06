@@ -108,12 +108,14 @@ trait ModesTableCommon:
     style:          Css,
     indexCondition: Int => Boolean
   ): TagMod =
-    index.whenDefined(idx =>
-      Button(
-        clazz = ExploreStyles.ScrollButton |+| style,
-        severity = Button.Severity.Secondary,
-        onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
-      ).withMods(content).compact.when(indexCondition(idx))
+    index.whenDefined(
+      using
+      idx =>
+        Button(
+          clazz = ExploreStyles.ScrollButton |+| style,
+          severity = Button.Severity.Secondary,
+          onClick = scrollToVirtualizedIndex(idx, virtualizerRef)
+        ).withMods(content).compact.when(indexCondition(idx))
     )
 
   protected def scrollUpButton(

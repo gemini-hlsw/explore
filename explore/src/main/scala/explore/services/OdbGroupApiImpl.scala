@@ -15,13 +15,12 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.Existence
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
-import org.typelevel.log4cats.Logger
 import queries.common.GroupQueriesGQL.*
 import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import queries.common.ProgramQueriesGQL.ProgramGroupsQuery
 import queries.common.ProgramSummaryQueriesGQL.GroupTimeRangeQuery
 
-trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F]):
+trait OdbGroupApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB]):
   self: OdbApiHelper[F] =>
 
   def moveGroup(

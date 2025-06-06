@@ -26,7 +26,7 @@ import lucuma.ui.syntax.all.given
  * same as the default value, then an addon icon with a tooltip is displayed. Clicking on the icon
  * reverts the value to the default value.
  */
-final case class CustomizableEnumSelect[A: Enumerated: Display](
+final case class CustomizableEnumSelect[A](
   id:           NonEmptyString,
   view:         View[A],
   defaultValue: A,

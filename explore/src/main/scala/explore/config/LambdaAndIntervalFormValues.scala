@@ -3,7 +3,6 @@
 
 package explore.config
 
-import cats.syntax.all.*
 import explore.components.ui.ExploreStyles
 import explore.model.display.*
 import explore.model.enums.WavelengthUnits

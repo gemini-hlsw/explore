@@ -25,7 +25,7 @@ import scalajs.js.JSConverters.*
  * Clicking on the icon sets the value to None (which represents the default value). Explicitly
  * entering the default value will also set it to None.
  */
-final case class CustomizableInputTextOptional[A: Eq](
+final case class CustomizableInputTextOptional[A](
   id:            NonEmptyString,
   value:         View[Option[A]],
   validFormat:   InputValidFormat[Option[A]],

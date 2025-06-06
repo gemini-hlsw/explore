@@ -33,7 +33,6 @@ import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
-import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL.*
 import queries.common.ProgramSummaryQueriesGQL.AllProgramObservations
 import queries.common.ProgramSummaryQueriesGQL.ObservationExecutionQuery
@@ -43,7 +42,7 @@ import queries.common.TargetQueriesGQL.SetGuideTargetName
 import java.time.Instant
 import scala.concurrent.duration.*
 
-trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB], Logger[F])
+trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB])
     extends OdbObservationApi[F]:
   self: OdbApiHelper[F] =>
 

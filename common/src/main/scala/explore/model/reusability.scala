@@ -123,8 +123,8 @@ object reusability:
   given Reusability[Configuration]                      = Reusability.byEq
   given Reusability[ConfigurationRequestWithObsIds]     = Reusability.byEq
   given Reusability[TimingWindow]                       = Reusability.byEq
-  given [D: Eq]: Reusability[Visit[D]]                  = Reusability.byEq
-  given [D: Eq]: Reusability[StepRecord[D]]             = Reusability.byEq
+  given [D]: Reusability[Visit[D]]                      = Reusability.byEq
+  given [D]: Reusability[StepRecord[D]]                 = Reusability.byEq
   given Reusability[ApiKey]                             = Reusability.byEq
   given Reusability[SignalToNoise]                      = Reusability.byEq
   given Reusability[ScienceRequirements.Spectroscopy]   = Reusability.byEq

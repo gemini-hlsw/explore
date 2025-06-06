@@ -4,7 +4,6 @@
 package explore.config
 
 import algebra.instances.all.given
-import boopickle.DefaultBasic.*
 import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder
@@ -50,7 +49,6 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.schemas.model.CentralWavelength
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*

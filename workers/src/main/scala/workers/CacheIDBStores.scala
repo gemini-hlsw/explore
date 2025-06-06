@@ -14,11 +14,9 @@ import japgolly.webapputil.indexeddb.*
 import japgolly.webapputil.indexeddb.IndexedDb.DatabaseName
 import lucuma.ags.GuideStarCandidate
 
-import scala.annotation.nowarn
 import scala.scalajs.js
 
 @js.native
-@nowarn
 trait CacheEntry extends js.Object {
   val timestamp: Double = js.native
   val key: String       = js.native

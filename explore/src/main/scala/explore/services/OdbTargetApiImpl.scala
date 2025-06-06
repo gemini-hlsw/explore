@@ -23,13 +23,11 @@ import lucuma.schemas.ObservationDB.Types.TargetPropertiesInput
 import lucuma.schemas.ObservationDB.Types.UpdateTargetsInput
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
-import org.typelevel.log4cats.Logger
 import queries.common.ProgramSummaryQueriesGQL.AllProgramTargets
 import queries.common.TargetQueriesGQL.*
 
 trait OdbTargetApiImpl[F[_]: Sync](using
   StreamingClient[F, ObservationDB],
-  Logger[F],
   ToastCtx[F]
 ) extends OdbTargetApi[F]:
   self: OdbApiHelper[F] =>

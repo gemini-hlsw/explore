@@ -14,7 +14,6 @@ import org.scalajs.dom
 import org.scalajs.dom.Request
 
 import java.util.concurrent.TimeUnit
-import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
@@ -73,7 +72,6 @@ object ExplorePWA {
   @js.native
   @JSImport("virtual:pwa-register", "registerSW")
   object registerSW extends js.Object {
-    @nowarn
     def apply(
       options: js.UndefOr[RegisterSWOptions] = js.undefined
     ): js.Function1[js.UndefOr[Boolean], js.Promise[Unit]] = js.native

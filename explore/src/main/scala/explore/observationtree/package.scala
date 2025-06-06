@@ -22,7 +22,6 @@ import explore.utils.*
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.core.util.NewBoolean
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import monocle.Iso
 import monocle.Lens

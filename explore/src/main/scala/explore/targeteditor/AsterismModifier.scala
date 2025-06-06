@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import cats.effect.IO
 import cats.syntax.all.*
-import clue.FetchClient
 import crystal.react.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -23,7 +22,6 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.react.common.Css
 import lucuma.react.primereact.Button
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.model.TargetWithOptId
 import lucuma.ui.primereact.*
@@ -74,7 +72,6 @@ trait AsterismModifier:
     readOnly:         Boolean = false,
     buttonClass:      Css = Css.Empty
   )(using odbApi: OdbTargetApi[IO] & OdbAsterismApi[IO])(using
-    FetchClient[IO, ObservationDB],
     Logger[IO]
   ): TargetSelectionPopup =
     TargetSelectionPopup(

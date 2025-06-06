@@ -44,7 +44,6 @@ import lucuma.core.validation.*
 import lucuma.react.common.*
 import lucuma.react.primereact.Message
 import lucuma.refined.*
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
 import lucuma.ui.input.ChangeAuditor

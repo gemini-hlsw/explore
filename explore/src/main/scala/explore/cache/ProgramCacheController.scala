@@ -29,14 +29,12 @@ import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
-import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Types.WhereObservation
 import lucuma.schemas.model.TargetWithId
 import lucuma.schemas.odb.input.*
 import monocle.Optional
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
-import queries.common.ProgramQueriesGQL
 import queries.common.ProgramQueriesGQL.GroupEditSubscription
 
 import scala.concurrent.duration.*
@@ -160,8 +158,7 @@ object ProgramCacheController
             )
 
     def combineTimesUpdates(
-      observations: List[Observation],
-      groups:       List[Group]
+      observations: List[Observation]
     ): Stream[IO, ProgramSummaries => ProgramSummaries] =
       // We want to update all the observations first, followed by the groups,
       // and then the program, because the program requires all of the observation times be calculated.
@@ -171,7 +168,7 @@ object ProgramCacheController
     for
       (obs, groups) <- (observations, groups).parTupled
       summaries     <- initializeSummaries(obs, groups)
-    yield (summaries, combineTimesUpdates(obs, groups))
+    yield (summaries, combineTimesUpdates(obs))
   }
 
   override protected val updateStream

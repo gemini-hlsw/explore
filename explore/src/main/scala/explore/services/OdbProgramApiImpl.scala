@@ -26,7 +26,6 @@ import lucuma.schemas.ObservationDB
 import lucuma.schemas.ObservationDB.Enums.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.odb.input.*
-import org.typelevel.log4cats.Logger
 import queries.common.InvitationQueriesGQL.*
 import queries.common.InvitationQueriesGQL.CreateInviteMutation.Data.CreateUserInvitation
 import queries.common.ProgramQueriesGQL.*
@@ -37,7 +36,7 @@ import queries.common.ProgramSummaryQueriesGQL.ProgramTimesQuery
 import queries.common.ProposalQueriesGQL.AddProgramUser
 import queries.common.ProposalQueriesGQL.DeleteProgramUser
 
-trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB], Logger[F])
+trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB])
     extends OdbProgramApi[F]:
   self: OdbApiHelper[F] =>
 

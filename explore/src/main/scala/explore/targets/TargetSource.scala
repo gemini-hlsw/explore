@@ -24,7 +24,7 @@ sealed trait TargetSource[F[_]]:
   def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]]
 
 object TargetSource:
-  case class FromProgram[F[_]: Async](programId: Program.Id)(using
+  case class FromProgram[F[_]](programId: Program.Id)(using
     odbApi: OdbTargetApi[F]
   ) extends TargetSource[F]:
     val name: String = s"Program $programId"
