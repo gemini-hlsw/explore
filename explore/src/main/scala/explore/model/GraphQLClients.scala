@@ -5,6 +5,7 @@ package explore.model
 
 import cats.*
 import cats.effect.*
+import cats.effect.std.SecureRandom
 import cats.syntax.all.*
 import clue.js.*
 import clue.websocket.*
@@ -29,7 +30,7 @@ case class GraphQLClients[F[_]: Async: Parallel] protected (
     ).sequence.void
 
 object GraphQLClients:
-  def build[F[_]: Async: FetchJsBackend: WebSocketJsBackend: Parallel: Logger](
+  def build[F[_]: Async: FetchJsBackend: WebSocketJsBackend: Parallel: Logger: SecureRandom](
     odbURI:               Uri,
     prefsURI:             Uri,
     ssoURI:               Uri,
