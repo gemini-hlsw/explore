@@ -439,7 +439,7 @@ object GmosLongslitConfigPanel {
         ObservingMode.GmosNorthLongSlit.explicitXBin,
         GmosNorthLongSlitInput.explicitXBin.modify
       )
-      .view(_.orUnassign)
+      .view(_.map(_.value).orUnassign)
 
     @inline override protected def explicitYBinning(aligner: AA)(using
       MonadError[IO, Throwable],
@@ -450,7 +450,7 @@ object GmosLongslitConfigPanel {
         ObservingMode.GmosNorthLongSlit.explicitYBin,
         GmosNorthLongSlitInput.explicitYBin.modify
       )
-      .view(_.orUnassign)
+      .view(_.map(_.value).orUnassign)
 
     private val explicitReadMode =
       ObservingMode.GmosNorthLongSlit.explicitAmpReadMode
@@ -633,7 +633,7 @@ object GmosLongslitConfigPanel {
         ObservingMode.GmosSouthLongSlit.explicitXBin,
         GmosSouthLongSlitInput.explicitXBin.modify
       )
-      .view(_.orUnassign)
+      .view(_.map(_.value).orUnassign)
 
     @inline override protected def explicitYBinning(aligner: AA)(using
       MonadError[IO, Throwable],
@@ -644,7 +644,7 @@ object GmosLongslitConfigPanel {
         ObservingMode.GmosSouthLongSlit.explicitYBin,
         GmosSouthLongSlitInput.explicitYBin.modify
       )
-      .view(_.orUnassign)
+      .view(_.map(_.value).orUnassign)
 
     private val explicitReadMode =
       ObservingMode.GmosSouthLongSlit.explicitAmpReadMode
