@@ -1919,7 +1919,10 @@ svg.fa-check.explore-success-icon {
 // Programs Popup
 // ------
 .programs-popup.p-dialog {
+  $top-bottom-space: 37px; // reuse from lucuma-ui
+
   height: 90vh;
+  top: $top-bottom-space;
 }
 
 .api-keys-popup.p-dialog,
