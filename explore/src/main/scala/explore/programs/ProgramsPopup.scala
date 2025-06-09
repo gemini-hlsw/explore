@@ -88,15 +88,15 @@ object ProgramsPopup:
       .flatMap(pi => setNewProgramId(pi.id).to[IO])
       .switching(adding.async, IsAdding(_))
 
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useContext(AppContext.ctx)
-    .useStateView(IsOpen(true))
-    .useStateView(IsAdding(false))    // Adding new program
-    .useStateView(ShowDeleted(false)) // Show deleted
-    .useStateView(none[Program.Id])   // Recently added program
-    .useRef(none[HTMLTableVirtualizer])
-    .render: (props, ctx, isOpen, isAdding, showDeleted, newProgramId, virtualizerRef) =>
+  private val component = ScalaFnComponent[Props]: props =>
+    for {
+      ctx            <- useContext(AppContext.ctx)
+      isOpen         <- useStateView(IsOpen(true))
+      isAdding       <- useStateView(IsAdding(false))    // Adding new program
+      showDeleted    <- useStateView(ShowDeleted(false)) // Show deleted
+      newProgramId   <- useStateView(none[Program.Id])   // Recently added program
+      virtualizerRef <- useRef(none[HTMLTableVirtualizer])
+    } yield
       import ctx.given
 
       val onHide: Callback =
