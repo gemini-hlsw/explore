@@ -6,6 +6,7 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.syntax.all.*
 import io.circe.Decoder
 import lucuma.core.enums.AttachmentType
@@ -63,22 +64,26 @@ case class Proposal(
   private lazy val partnerSplits: Option[List[PartnerSplit]] =
     proposalType.flatMap(pt => ProposalType.partnerSplits.getOption(pt))
 
-  private lazy val validatePartnerSplits: Option[String] =
-    partnerSplits.flatMap(splits =>
+  private def usersAndTimesErrors(users: List[ProgramUser]): List[String] =
+    val partnerError       = Option.unless(users.forall(_.partnerLink.exists(_.isSet))) {
+      "Partnership of every investigator must be specified."
+    }
+    val partnerSplitsError = partnerSplits.flatMap(splits =>
       Option.when(splits.foldLeft(0)(_ + _.percent.value) != 100) {
         "Partner time splits must be specified and sum to 100%."
       }
     )
-
-  private def usersAndTimesErrors(users: List[ProgramUser]): List[String] =
-    val partnerError = Option.unless(users.forall(_.partnerLink.exists(_.isSet))) {
-      "Partnership of every investigator must be specified."
+    val piEmailError       = Option.unless(users.pi.exists(_.email.isDefined)) {
+      "PI email is required."
     }
-    (partnerError, validatePartnerSplits) match
-      case (Some(a), None)    => List(a)
-      case (None, Some(b))    => List(b)
-      case (Some(a), Some(b)) => List(a, b)
-      case (None, None)       =>
+    val notInvitedError    = Option.when(users.exists(u => !u.isConfirmed && !u.successfullyInvited)) {
+      "All investigators must be invited."
+    }
+
+    // only validate this if the splits are valid and all partners have been affiliated.
+    val affiliationMismatches: List[String] = (partnerError, partnerSplitsError).tupled match
+      case Some(_) => List.empty
+      case None    =>
         // Make sure every partner split requested has a matching user.
         // Only verify this if splits and users are all valid.
         partnerSplits
@@ -97,6 +102,14 @@ case class Proposal(
           )
           .toList
           .flatten
+
+    List(
+      partnerError.toList,
+      piEmailError.toList,
+      notInvitedError.toList,
+      partnerSplitsError.toList,
+      affiliationMismatches
+    ).flatten
 
   private lazy val isFastTurnaround: Boolean =
     proposalType.exists {
@@ -122,19 +135,24 @@ case class Proposal(
   ): List[String] =
     List(
       Option.unless(hasDefinedObservations)(
-        "Proposal cannot be submitted without at least one defined observation."
+        "At least one observation must be defined."
       ),
       Option.when(hasUndefinedObservations)(
-        "Proposal cannot be submitted with undefined observations. Define them or mark them as inactive."
+        "There are undefined observations. Define them or mark them as inactive."
       )
     ).flattenOption
 
   def errors(
+    title:                    Option[NonEmptyString], // from program name
+    abstrakt:                 Option[NonEmptyString], // from program description
     users:                    List[ProgramUser],
     attachments:              AttachmentList,
     hasDefinedObservations:   Boolean,
     hasUndefinedObservations: Boolean
   ): List[String] = List(
+    title.fold("Title is required.".some)(_ => none).toList,
+    abstrakt.fold("Abstract is required.".some)(_ => none).toList,
+    Option.unless(category.isDefined)("Category is required.").toList,
     cfPError(users).toList,
     usersAndTimesErrors(users),
     attachmentErrors(attachments),
