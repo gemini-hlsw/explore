@@ -35,7 +35,11 @@ case class UserInvitation(
       case InvitationStatus.Revoked  => Failed("The invitation has been revoked.")
 
 object UserInvitation:
-  sealed abstract class DeliveryStatus(val message: String)
+  sealed abstract class DeliveryStatus(val message: String):
+    def failed: Boolean = this match
+      case DeliveryStatus.Failed(_) => true
+      case _                        => false
+
   object DeliveryStatus:
     case class Success(override val message: String)    extends DeliveryStatus(message)
     case class InProgress(override val message: String) extends DeliveryStatus(message)

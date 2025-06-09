@@ -102,7 +102,9 @@ object ProposalSubmissionBar
                     label = "Submit Proposal",
                     onClick = updateStatus(ProposalStatus.Submitted),
                     disabled =
-                      isUpdatingStatus.get.value || props.hasProposalErrors || isDueDeadline
+                      // Temporarily enable submission even if there are errors for testing against PI validation
+                      // isUpdatingStatus.get.value || props.hasProposalErrors || isDueDeadline
+                      isUpdatingStatus.get.value || isDueDeadline
                   ).compact.tiny,
                   props.deadline.map: deadline =>
                     val (deadlineStr, left): (String, Option[String]) =

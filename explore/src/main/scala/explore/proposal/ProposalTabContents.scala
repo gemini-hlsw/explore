@@ -73,7 +73,9 @@ object ProposalTabContents:
       ctx    <- useContext(AppContext.ctx)
       errors <-
         useMemo(
-          (props.proposalStatus,
+          (props.programDetails.get.name,
+           props.programDetails.get.description,
+           props.proposalStatus,
            props.programDetails.get.proposal,
            props.users.get,
            props.attachments.get,
@@ -82,6 +84,8 @@ object ProposalTabContents:
           )
         ):
           (
+            title,
+            abstrakt,
             status,
             proposal,
             users,
@@ -92,7 +96,13 @@ object ProposalTabContents:
             if (status === ProposalStatus.NotSubmitted)
               proposal
                 .foldMap(
-                  _.errors(users, attachments, hasDefinedObservations, hasUndefinedObservations)
+                  _.errors(title,
+                           abstrakt,
+                           users,
+                           attachments,
+                           hasDefinedObservations,
+                           hasUndefinedObservations
+                  )
                 )
                 .some
             else none
