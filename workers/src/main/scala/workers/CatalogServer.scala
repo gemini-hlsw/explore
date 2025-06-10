@@ -19,6 +19,8 @@ import org.scalajs.dom
 import org.typelevel.log4cats.Logger
 
 import java.time.Duration
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.js.annotation.JSExportTopLevel
 
@@ -28,7 +30,8 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
   def runWorker(): Unit = run.unsafeRunAndForget()
 
   // Expire the data in 30 days
-  private val Expiration: Duration = Duration.ofDays(30)
+  private val Expiration: Duration           = Duration.ofDays(30)
+  private val RequestTimeout: FiniteDuration = FiniteDuration(90, TimeUnit.SECONDS)
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for
@@ -36,7 +39,7 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
       idb     <- IO(self.indexedDB.toOption)
       stores   = CacheIDBStores()
       cacheDb <- idb.traverse(idb => stores.open(IndexedDb(idb)).toF[IO])
-      client   = FetchClientBuilder[IO].create
+      client   = FetchClientBuilder[IO].withRequestTimeout(RequestTimeout).create
     yield invocation =>
       invocation.data match
         case CatalogMessage.CleanCache                     =>

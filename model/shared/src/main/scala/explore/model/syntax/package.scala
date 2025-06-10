@@ -192,13 +192,14 @@ object all:
         )
 
   extension (bc: BasicConfiguration)
-    def centralWavelength: Option[CentralWavelength] = bc match
-      case g: BasicConfiguration.GmosNorthLongSlit  =>
-        g.centralWavelength.some
-      case g: BasicConfiguration.GmosSouthLongSlit  =>
-        g.centralWavelength.some
-      case g: BasicConfiguration.Flamingos2LongSlit =>
-        CentralWavelength(g.filter.wavelength).some
+    def centralWavelength: Option[CentralWavelength] =
+      bc match
+      case BasicConfiguration.GmosNorthLongSlit(centralWavelength = centralWavelength) =>
+        centralWavelength.some
+      case BasicConfiguration.GmosSouthLongSlit(centralWavelength = centralWavelength) =>
+        centralWavelength.some
+      case BasicConfiguration.Flamingos2LongSlit(filter = filter) =>
+        CentralWavelength(filter.wavelength).some
 
   extension (bc: ObservingModeType)
     def defaultPosAngleOptions: PosAngleOptions =
