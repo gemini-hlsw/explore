@@ -61,6 +61,7 @@ trait Constants:
       .mkString(", ") + s", ${seconds}s"
 
   val Calculating        = "Calculating..."
+  val LoadingStars       = "Loading candidate stars..."
   val NoGuideStarMessage = "No guidestar available"
   val NoDuration         = "No duration available"
   val NoExposureTimeMode = "No exposure time mode defined"

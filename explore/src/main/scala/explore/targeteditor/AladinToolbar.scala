@@ -72,7 +72,8 @@ object AladinToolbar {
             .map { case g => s"GS: ${g.target.name.value}" }
             .unless(props.agsOverlay || !usableGuideStar),
           Constants.NoGuideStarMessage.when(!usableGuideStar && props.agsState === AgsState.Idle),
-          Constants.Calculating.when(props.agsState.isCalculating)
+          Constants.Calculating.when(props.agsState.isCalculating),
+          Constants.LoadingStars.when(props.agsState.isLoading)
         ),
         <.label(
           Icons.MousePointer.withClass(ExploreStyles.Accented),
