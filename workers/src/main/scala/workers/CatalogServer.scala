@@ -10,6 +10,7 @@ import cats.syntax.all.*
 import explore.events.CatalogMessage
 import explore.model.boopickle.CatalogPicklers.given
 import japgolly.webapputil.indexeddb.IndexedDb
+import lucuma.catalog.clients.GaiaClient
 import lucuma.core.enums.Flamingos2LyotWheel
 import lucuma.core.enums.ObservingModeType
 import lucuma.core.geom.flamingos2
@@ -31,15 +32,16 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
 
   // Expire the data in 30 days
   private val Expiration: Duration           = Duration.ofDays(30)
-  private val RequestTimeout: FiniteDuration = FiniteDuration(90, TimeUnit.SECONDS)
+  private val RequestTimeout: FiniteDuration = FiniteDuration(300, TimeUnit.SECONDS)
 
   protected val handler: Logger[IO] ?=> IO[Invocation => IO[Unit]] =
     for
-      self    <- IO(dom.DedicatedWorkerGlobalScope.self)
-      idb     <- IO(self.indexedDB.toOption)
-      stores   = CacheIDBStores()
-      cacheDb <- idb.traverse(idb => stores.open(IndexedDb(idb)).toF[IO])
-      client   = FetchClientBuilder[IO].withRequestTimeout(RequestTimeout).create
+      self      <- IO(dom.DedicatedWorkerGlobalScope.self)
+      idb       <- IO(self.indexedDB.toOption)
+      stores     = CacheIDBStores()
+      cacheDb   <- idb.traverse(idb => stores.open(IndexedDb(idb)).toF[IO])
+      httpClient = FetchClientBuilder[IO].withRequestTimeout(RequestTimeout).create
+      client     = GaiaClient.build(httpClient)
     yield invocation =>
       invocation.data match
         case CatalogMessage.CleanCache                     =>
