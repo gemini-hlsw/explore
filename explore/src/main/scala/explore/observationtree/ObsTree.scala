@@ -21,9 +21,7 @@ import explore.model.Group
 import explore.model.GroupList
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
-import explore.model.PerishablePot.*
 import explore.model.enums.AppTab
 import explore.model.enums.GroupWarning
 import explore.syntax.ui.*
@@ -64,7 +62,6 @@ case class ObsTree(
   groupsChildren:        Map[Option[Group.Id], List[Either[Observation, Group]]],
   parentGroups:          Either[Observation.Id, Group.Id] => List[Group.Id],
   groupWarnings:         Map[Group.Id, NonEmptySet[GroupWarning]],
-  obsExecutionTimes:     ObservationExecutionMap,
   undoer:                Undoer,
   focusedObs:            Option[Observation.Id], // obs explicitly selected for editing
   focusedTarget:         Option[Target.Id],
@@ -313,7 +310,6 @@ object ObsTree:
               )(
                 ObsBadge(
                   obs,
-                  props.obsExecutionTimes.getPot(obs.id).mapPerishable(_.programTimeEstimate),
                   ObsBadge.Layout.ObservationsTab,
                   selected = selected,
                   setStateCB = ObsActions

@@ -26,9 +26,11 @@ import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.model.Access
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
+import lucuma.core.model.sequence.ExecutionDigest
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.CalculationState
 import lucuma.core.util.Enumerated
+import lucuma.core.util.TimeSpan
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
@@ -139,6 +141,9 @@ extension [A](calc: CalculatedValue[A])
   def isReady: Boolean                              = calc.state === CalculationState.Ready
   def isStale: Boolean                              = !isReady
   def staleClass: TagMod                            = ExploreStyles.Stale.when(isStale)
+  // Buttons require string tooltips :(
+  def staleTooltipString: Option[String]            =
+    if (isStale) "Awaiting new data from server.".some else none
   def staleTooltip: Option[VdomNode]                = staleTooltip("Awaiting new data from server.")
   def staleTooltip(tip: VdomNode): Option[VdomNode] =
     if (isStale) tip.some else none
@@ -149,6 +154,13 @@ extension [A](calc: CalculatedValue[A])
     if (isStale) stale else ready(calc.value)
 
 extension [A](a: A) def asReady: CalculatedValue[A] = CalculatedValue(CalculationState.Ready, a)
+
+extension (calcDigest: CalculatedValue[Option[ExecutionDigest]])
+  def programTimeEstimate: CalculatedValue[Option[TimeSpan]] =
+    calcDigest.map(_.map(_.fullTimeEstimate.programTime))
+  def fullSetupTime: CalculatedValue[Option[TimeSpan]]       = calcDigest.map(_.map(_.setup.full))
+  def remainingObsTime: CalculatedValue[Option[TimeSpan]]    =
+    calcDigest.map(_.map(d => d.science.timeEstimate.sum +| d.setup.full))
 
 extension (partner: Partner)
   def renderFlag: VdomNode =

@@ -16,7 +16,6 @@ import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.SchedulingGroupList
 import explore.model.enums.AppTab
@@ -53,7 +52,6 @@ case class SchedulingGroupObsList(
   observations:          UndoSetter[ObservationList],
   undoer:                Undoer,
   schedulingGroups:      SchedulingGroupList,
-  obsExecutions:         ObservationExecutionMap,
   focusedObsSet:         Option[ObsIdSet],
   setSummaryPanel:       Callback,
   expandedIds:           View[SortedSet[ObsIdSet]],

@@ -8,7 +8,6 @@ import cats.data.NonEmptyList
 import cats.data.NonEmptySet
 import cats.derived.*
 import cats.implicits.*
-import crystal.Pot
 import eu.timepit.refined.cats.given
 import explore.model.enums.GroupWarning
 import explore.model.syntax.all.*
@@ -40,7 +39,6 @@ case class ProgramSummaries(
   groups:                GroupList,
   attachments:           AttachmentList,
   programs:              ProgramInfoList,
-  obsExecutionPots:      ObservationExecutionMap,
   configurationRequests: ConfigurationRequestList
 ) derives Eq:
   lazy val proposalIsSubmitted =
@@ -294,8 +292,6 @@ object ProgramSummaries:
   val groups: Lens[ProgramSummaries, GroupList]                               = Focus[ProgramSummaries](_.groups)
   val attachments: Lens[ProgramSummaries, AttachmentList]                     = Focus[ProgramSummaries](_.attachments)
   val programs: Lens[ProgramSummaries, ProgramInfoList]                       = Focus[ProgramSummaries](_.programs)
-  val obsExecutionPots: Lens[ProgramSummaries, ObservationExecutionMap]       =
-    Focus[ProgramSummaries](_.obsExecutionPots)
   val configurationRequests: Lens[ProgramSummaries, ConfigurationRequestList] =
     Focus[ProgramSummaries](_.configurationRequests)
 
@@ -326,6 +322,5 @@ object ProgramSummaries:
       groupList.toSortedMap(_.id),
       attachments.toSortedMap(_.id),
       programs.toSortedMap(_.id),
-      ObservationExecutionMap(Map.empty),
       configRequests.toSortedMap(_.id)
     )

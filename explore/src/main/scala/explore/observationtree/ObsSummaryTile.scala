@@ -6,7 +6,6 @@ package explore.observationtree
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
-import crystal.react.syntax.pot.given
 import explore.Icons
 import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ColumnSelectorInTitle
@@ -14,12 +13,10 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
-import explore.model.Execution
 import explore.model.Group
 import explore.model.GroupList
 import explore.model.ObsSummaryTabTileIds
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.TargetList
 import explore.model.enums.TableId
@@ -57,7 +54,6 @@ object ObsSummaryTile extends ObsSummaryColumns:
     observations:    UndoSetter[ObservationList],
     selectedObsIds:  View[List[Observation.Id]],
     groups:          View[GroupList],
-    obsExecutions:   ObservationExecutionMap,
     allTargets:      TargetList,
     showScienceBand: Boolean,
     backButton:      VdomNode
@@ -77,7 +73,6 @@ object ObsSummaryTile extends ObsSummaryColumns:
           observations,
           selectedObsIds,
           groups,
-          obsExecutions,
           allTargets,
           showScienceBand,
           s.zoom(TileState.columnVisibility),
@@ -96,7 +91,6 @@ object ObsSummaryTile extends ObsSummaryColumns:
     observations:             UndoSetter[ObservationList],
     selectedObsIds:           View[List[Observation.Id]],
     groups:                   View[GroupList],
-    obsExecutions:            ObservationExecutionMap,
     allTargets:               TargetList,
     showScienceBand:          Boolean,
     columnVisibility:         View[ColumnVisibility],
@@ -106,8 +100,7 @@ object ObsSummaryTile extends ObsSummaryColumns:
   private object Body:
     import ObsSummaryRow.*
 
-    given Reusability[UUID]                    = Reusability.byEq
-    given Reusability[ObservationExecutionMap] = Reusability.by(_.value.toList)
+    given Reusability[UUID] = Reusability.byEq
 
     private val component = ScalaFnComponent[Body]: props =>
       for {
@@ -115,12 +108,8 @@ object ObsSummaryTile extends ObsSummaryColumns:
         cols    <- useMemo(()):                           // Columns
                      _ => columns(props.programId, ctx)
         rows    <- useMemo(
-                     (props.observations.get.values.toList,
-                      props.allTargets,
-                      props.groups.get,
-                      props.obsExecutions
-                     )
-                   ): (obsList, allTargets, groups, obsExecutions) =>
+                     (props.observations.get.values.toList, props.allTargets, props.groups.get)
+                   ): (obsList, allTargets, groups) =>
                      obsList
                        .filterNot(_.isCalibration)
                        .map: obs =>
@@ -134,8 +123,7 @@ object ObsSummaryTile extends ObsSummaryColumns:
                              obs,
                              targets.headOption,
                              asterism,
-                             obs.groupId.flatMap(groups.get),
-                             obsExecutions.getPot(obs.id)
+                             obs.groupId.flatMap(groups.get)
                            ),
                            // Only expand if there are multiple targets
                            if (targets.sizeIs > 1)

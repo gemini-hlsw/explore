@@ -5,12 +5,10 @@ package explore.model
 
 import cats.Order.given
 import cats.syntax.all.*
-import crystal.syntax.*
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.api.RefinedTypeOps
 import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.PerishablePot.*
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Coordinates
 import lucuma.core.model.ConfigurationRequest
@@ -23,7 +21,6 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
-import lucuma.core.util.NewType
 import lucuma.refined.*
 import lucuma.schemas.model.ObservingMode
 import monocle.Focus
@@ -82,24 +79,6 @@ object PosAngleConstraintAndObsMode:
     Focus[PosAngleConstraintAndObsMode](_._1)
   val observingMode: Lens[PosAngleConstraintAndObsMode, Option[ObservingMode]]   =
     Focus[PosAngleConstraintAndObsMode](_._2)
-
-object ObservationExecutionMap extends PotMap[Observation.Id, Execution]
-type ObservationExecutionMap = ObservationExecutionMap.Type
-
-trait PotMap[K, V] extends NewType[Map[K, PerishablePot[V]]]:
-  extension (t: Type)
-    def getPot(k: K): PerishablePot[V]          =
-      t.value.get(k).getOrElse(pending)
-    def updated(k: K, v: V): this.Type          =
-      apply(t.value.updated(k, PerishablePot(v)))
-    def withUpdatePending(k: K): this.Type      =
-      apply(t.value.updated(k, pending))
-    def markStale(ks: K*): this.Type            =
-      apply(ks.foldLeft(t.value)(_.updatedWith(_)(_.map(_.setStale))))
-    def removed(k: K): this.Type                =
-      apply(t.value.removed(k))
-    def setError(k: K, e: Throwable): this.Type =
-      apply(t.value.updated(k, PerishablePot.error(e)))
 
 val SupportedInstruments =
   List(Instrument.GmosNorth, Instrument.GmosSouth, Instrument.Flamingos2)

@@ -105,17 +105,6 @@ object ProgramSummaryQueriesGQL {
   }
 
   @GraphQL
-  trait ObservationExecutionQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = s"""
-      query($$id: ObservationId!) {
-        observation(observationId: $$id) {
-          execution $ExecutionSubquery
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait GroupTimeRangeQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
       query($$groupId: GroupId!) {

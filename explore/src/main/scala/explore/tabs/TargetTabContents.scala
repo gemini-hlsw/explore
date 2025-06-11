@@ -29,6 +29,7 @@ import explore.plots.ObjectPlotData
 import explore.plots.PlotData
 import explore.shortcuts.*
 import explore.shortcuts.given
+import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryTile
@@ -42,6 +43,8 @@ import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
@@ -421,6 +424,7 @@ object TargetTabContents extends TwoPanels:
                           _,
                           _,
                           _,
+                          _,
                           _
                         ) if obsId === id =>
                       (const, conf.toBasicConfiguration, posAngle, wavelength, o.needsAGS)
@@ -522,7 +526,7 @@ object TargetTabContents extends TwoPanels:
                   wavelength,
                   needsAGS
                 ),
-                PerishablePot(none), // Execution
+                none[ExecutionDigest].asReady,
                 props.focused.target,
                 setCurrentTarget(idsToEdit.some),
                 onCloneTarget4Asterism,

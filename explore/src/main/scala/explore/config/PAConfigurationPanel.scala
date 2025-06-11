@@ -19,6 +19,7 @@ import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Tooltip
 import lucuma.refined.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.input.ChangeAuditor
@@ -87,7 +88,7 @@ object PAConfigurationPanel:
               <.div(ExploreStyles.AveragePA)(
                 <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
                 <.label(a.when.toString),
-                <.label(TimeSpanView(a.duration))
+                <.label(TimeSpanView(a.duration, tooltipPosition = Tooltip.Position.Left.some))
               )
             .orElse(
               <.label(

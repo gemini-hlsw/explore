@@ -13,14 +13,12 @@ import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Group
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ProgramDetails
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.ProgramTimes
 import explore.services.OdbApi
 import explore.services.OdbGroupApi
-import explore.services.OdbObservationApi
 import explore.services.OdbProgramApi
 import explore.utils.*
 import fs2.Pipe
@@ -67,18 +65,6 @@ object ProgramCacheController
       .map:
         _.fold(identity[ProgramSummaries]): times =>
           programTimesLens.replace(times)
-
-  private def updateObservationExecution(
-    obsId: Observation.Id
-  )(using odbApi: OdbObservationApi[IO]): IO[ProgramSummaries => ProgramSummaries] =
-    odbApi
-      .observationExecution(obsId)
-      .map:
-        _.fold(identity[ProgramSummaries]): execution =>
-          ProgramSummaries.obsExecutionPots.modify(_.updated(obsId, execution))
-      .handleError: e =>
-        val t = new Exception("Error getting observation execution information.", e)
-        ProgramSummaries.obsExecutionPots.modify(_.setError(obsId, t))
 
   // TODO: Move into updateStream and use the keyedSwitchEvalMap for recursion?
   private def updateGroupTimeRange(
@@ -157,18 +143,7 @@ object ProgramCacheController
               crs
             )
 
-    def combineTimesUpdates(
-      observations: List[Observation]
-    ): Stream[IO, ProgramSummaries => ProgramSummaries] =
-      // We want to update all the observations first, followed by the groups,
-      // and then the program, because the program requires all of the observation times be calculated.
-      // So, if we do it first, it could take a long time.
-      Stream.emits(observations.map(_.id)).evalMap(updateObservationExecution)
-
-    for
-      (obs, groups) <- (observations, groups).parTupled
-      summaries     <- initializeSummaries(obs, groups)
-    yield (summaries, combineTimesUpdates(obs))
+    (observations, groups).parFlatMapN(initializeSummaries(_, _).map((_, Stream.empty)))
   }
 
   override protected val updateStream
@@ -232,10 +207,6 @@ object ProgramCacheController
                 .programTargetsDeltaSubscription(props.programId)
                 .map(_.map(modifyTargets(_)))
 
-            val obsCalcObsIdPipe
-              : Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate, Observation.Id] =
-              _.map(_.observationId)
-
             val obsCalcGoupIdPipe
               : Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate, Group.Id] =
               _.map(_.value.flatMap(_.groupId)).filter(_.isDefined).map(_.get)
@@ -246,12 +217,6 @@ object ProgramCacheController
               Group.Id
             ] =
               _.map(_.value.flatMap(_.parentId)).filter(_.isDefined).map(_.get)
-
-            val obsTimesUpdates: Pipe[IO, Observation.Id, ProgramSummaries => ProgramSummaries] =
-              keyedSwitchEvalMap(
-                identity,
-                id => updateObservationExecution(id)
-              )
 
             // We'll request updates to all the workflows at once. Since this
             // is being updated due to the configuration request change, the workflows
@@ -321,7 +286,7 @@ object ProgramCacheController
                 .map:
                   _.evalTap(_ => queryProgramTimes)
                     .broadcastThrough(
-                      obsCalcObsIdPipe.andThen(obsTimesUpdates),
+                      _.map(modifyObservationCalculatedValues),
                       obsCalcGoupIdPipe.andThen(groupTimeRangeUpdate)
                     )
 

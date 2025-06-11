@@ -16,7 +16,6 @@ import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.AttachmentList
-import explore.model.Execution
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
@@ -25,7 +24,6 @@ import explore.model.ObsIdSetEditInfo
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
-import explore.model.PerishablePot
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
 import explore.model.enums.TileSizeState
@@ -39,6 +37,8 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
+import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
 import lucuma.react.table.ColumnVisibility
@@ -61,7 +61,7 @@ object AsterismEditorTile:
     obsTime:            View[Option[Instant]],
     obsDuration:        View[Option[TimeSpan]],
     obsConf:            ObsConfiguration,
-    execution:          PerishablePot[Option[Execution]],
+    digest:             CalculatedValue[Option[ExecutionDigest]],
     currentTarget:      Option[Target.Id],
     setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
     onCloneTarget:      OnCloneParameters => Callback,
@@ -140,7 +140,7 @@ object AsterismEditorTile:
           obsTimeView,
           obsDurationView,
           obsTimeAndDurationView,
-          execution,
+          digest,
           tileState.zoom(TileState.columnVisibility),
           tileState.get.obsEditInfo,
           tileSize
@@ -292,7 +292,7 @@ object AsterismEditorTile:
     obsTimeView:            View[Option[Instant]],
     obsDurationView:        View[Option[TimeSpan]],
     obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
-    execution:              PerishablePot[Option[Execution]],
+    digest:                 CalculatedValue[Option[ExecutionDigest]],
     columnVisibility:       View[ColumnVisibility],
     obsEditInfo:            Option[ObsIdSetEditInfo],
     tileSize:               TileSizeState
@@ -313,7 +313,7 @@ object AsterismEditorTile:
             props.obsTimeView,
             props.obsDurationView,
             props.obsTimeAndDurationView,
-            props.execution,
+            props.digest,
             props.obsIds.size > 1
           )
 

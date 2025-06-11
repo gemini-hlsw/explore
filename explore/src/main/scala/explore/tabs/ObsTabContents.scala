@@ -74,7 +74,6 @@ case class ObsTabContents(
   private val groups: UndoSetter[GroupList]              = programSummaries.zoom(ProgramSummaries.groups)
   private val activeGroup: Option[Group.Id]              = focusedGroup.orElse:
     focusedObs.flatMap(observations.get.get(_)).flatMap(_.groupId)
-  private val obsExecutions: ObservationExecutionMap     = programSummaries.get.obsExecutionPots
   private val targets: UndoSetter[TargetList]            = programSummaries.zoom(ProgramSummaries.targets)
   private val globalPreferences: View[GlobalPreferences] =
     userPreferences.zoom(UserPreferences.globalPreferences)
@@ -187,7 +186,6 @@ object ObsTabContents extends TwoPanels:
                 props.programSummaries.get.groupsChildren,
                 props.programSummaries.get.parentGroups(_),
                 props.programSummaries.get.groupWarnings,
-                props.obsExecutions,
                 props.programSummaries: Undoer,
                 props.focusedObs,
                 props.focusedTarget,
@@ -227,7 +225,6 @@ object ObsTabContents extends TwoPanels:
               props.observations,
               selectedObsIds,
               props.groups.model,
-              props.obsExecutions,
               props.targets.get,
               props.programSummaries.get.allocatedScienceBands.size > 1,
               backButton

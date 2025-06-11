@@ -6,8 +6,10 @@ package explore.model.arb
 import cats.Order.given
 import eu.timepit.refined.scalacheck.string.given
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.model.Execution
 import explore.model.Observation
 import explore.model.ScienceRequirements
+import explore.model.arb.ArbExecution
 import lucuma.core.arb.ArbTime
 import lucuma.core.enums.ScienceBand
 import lucuma.core.math.Wavelength
@@ -47,6 +49,7 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.scalacheck.numeric.given
 
 trait ArbObservation:
+  import ArbExecution.given
   import ArbTime.given
   import ArbScienceRequirements.given
   import ArbObservingMode.given
@@ -77,6 +80,7 @@ trait ArbObservation:
         workflow            <- arbitrary[ObservationWorkflow]
         groupId             <- arbitrary[Option[Group.Id]]
         groupIndex          <- arbitrary[NonNegShort]
+        execution           <- arbitrary[Execution]
       yield Observation(
         id,
         reference,
@@ -99,7 +103,8 @@ trait ArbObservation:
         configuration,
         workflow,
         groupId,
-        groupIndex
+        groupIndex,
+        execution
       )
     )
 
@@ -126,7 +131,7 @@ trait ArbObservation:
        Option[Configuration],
        ObservationWorkflow,
        Option[Group.Id],
-       Short
+       (Short, Execution)
       )
     ]
       .contramap(o =>
@@ -151,7 +156,7 @@ trait ArbObservation:
          o.configuration,
          o.workflow,
          o.groupId,
-         o.groupIndex.value
+         (o.groupIndex.value, o.execution)
         )
       )
 

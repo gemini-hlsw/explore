@@ -14,7 +14,6 @@ import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ConfigurationRequestWithObsIds
-import explore.model.Execution
 import explore.model.ExecutionOffsets
 import explore.model.Observation
 import explore.utils.*
@@ -35,7 +34,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
 import queries.common.ProgramSummaryQueriesGQL.AllProgramObservations
-import queries.common.ProgramSummaryQueriesGQL.ObservationExecutionQuery
 import queries.common.ProgramSummaryQueriesGQL.ObservationsWorkflowQuery
 import queries.common.TargetQueriesGQL.SetGuideTargetName
 
@@ -376,12 +374,6 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
       .subscribe[F](programId.toObservationEditInput)
       .processErrors("ProgramObservationsDelta")
       .map(_.map(_.observationEdit))
-
-  def observationExecution(obsId: Observation.Id): F[Option[Execution]] =
-    ObservationExecutionQuery[F]
-      .query(obsId)
-      .raiseGraphQLErrorsOnNoData
-      .map(_.observation.map(_.execution))
 
   def allProgramObservations(programId: Program.Id): F[List[Observation]] =
     drain[Observation, Observation.Id, AllProgramObservations.Data.Observations](

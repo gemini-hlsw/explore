@@ -9,9 +9,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
-import explore.model.PerishablePot.*
 import explore.services.OdbObservationApi
 import explore.undo.UndoSetter
 import explore.utils.*
@@ -28,7 +26,6 @@ import scala.collection.immutable.SortedSet
 trait ViewCommon {
   def programId: Program.Id
   def focusedObsSet: Option[ObsIdSet]
-  def obsExecutions: ObservationExecutionMap
   def allocatedScienceBands: SortedSet[ScienceBand]
   def readonly: Boolean
 
@@ -41,7 +38,6 @@ trait ViewCommon {
   ): TagMod =
     ObsBadge(
       obs,
-      obsExecutions.getPot(obs.id).mapPerishable(_.programTimeEstimate),
       layout,
       selected = forceHighlight || (highlightSelected && focusedObsSet.exists(_.contains(obs.id))),
       readonly = readonly,
