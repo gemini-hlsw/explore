@@ -33,6 +33,7 @@ case class AgsOverlay(
   val canCalculate: Boolean =
     candidatesAvailable && durationAvailable && modeAvailable
   val noGuideStar: Boolean  = canCalculate && selectedGS.get.idx.isEmpty && !agsState.isCalculating
+  val loadingStars          = agsState.isLoading
 }
 
 object AgsOverlay:
@@ -126,12 +127,18 @@ object AgsOverlay:
           <.div(
             ExploreStyles.AgsDescription,
             devOnly,
-            (props.modeAvailable, props.durationAvailable, props.candidatesAvailable) match {
-              case (false, _, _)                     =>
+            (props.modeAvailable,
+             props.durationAvailable,
+             props.candidatesAvailable,
+             props.loadingStars
+            ) match {
+              case (_, _, _, true)                   =>
+                <.span(errorIcon, Constants.LoadingStars)
+              case (false, _, _, _)                  =>
                 <.span(errorIcon, Constants.MissingMode)
-              case (_, false, _)                     =>
+              case (_, false, _, _)                  =>
                 <.span(errorIcon, Constants.NoDuration)
-              case (_, _, false)                     =>
+              case (_, _, false, _)                  =>
                 <.span(errorIcon, Constants.MissingCandidates)
               case _ if props.agsState.isCalculating =>
                 <.span(Icons.CircleSmall.withBeat().withClass(ExploreStyles.WarningIcon),

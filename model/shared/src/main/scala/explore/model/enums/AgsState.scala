@@ -18,6 +18,8 @@ enum AgsState:
 
   def isCalculating: Boolean = fold(false, false, true, false, false)
 
+  def isLoading: Boolean = fold(false, true, false, false, false)
+
   def isIdle: Boolean = fold(true, false, false, false, false)
 
   def canRecalculate: Boolean = this match
