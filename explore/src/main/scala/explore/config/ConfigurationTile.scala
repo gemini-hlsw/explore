@@ -338,14 +338,14 @@ object ConfigurationTile:
           val requirementsViewSet: ScienceRequirementsUndoView =
             ScienceRequirementsUndoView(props.obsId, props.requirements)
 
-          val exposureTimeModeView =
-            props.requirements.zoom(ScienceRequirements.exposureTimeMode)
-
           val requirementsView: View[ScienceRequirements] =
             requirementsViewSet(
               Iso.id.asLens,
               UpdateScienceRequirements.scienceRequirements
             )
+
+          val exposureTimeModeView =
+            requirementsView.zoom(ScienceRequirements.exposureTimeMode)
 
           val spectroscopyView: ViewOpt[Spectroscopy] = requirementsView
             .zoom(ScienceRequirements.spectroscopy)
@@ -401,7 +401,7 @@ object ConfigurationTile:
                         props.obsId,
                         props.obsConf.calibrationRole,
                         northAligner,
-                        exposureTimeModeView.model,
+                        exposureTimeModeView,
                         specView,
                         revertConfig,
                         props.modes.spectroscopy,
@@ -418,7 +418,7 @@ object ConfigurationTile:
                         props.obsId,
                         props.obsConf.calibrationRole,
                         southAligner,
-                        exposureTimeModeView.model,
+                        exposureTimeModeView,
                         specView,
                         revertConfig,
                         props.modes.spectroscopy,
@@ -434,7 +434,7 @@ object ConfigurationTile:
                       props.obsId,
                       props.obsConf.calibrationRole,
                       f2Aligner,
-                      exposureTimeModeView.model,
+                      exposureTimeModeView,
                       specView,
                       revertConfig,
                       props.modes.spectroscopy,
