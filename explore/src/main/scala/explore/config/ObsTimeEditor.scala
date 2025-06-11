@@ -9,19 +9,17 @@ import crystal.react.View
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
-import explore.model.Execution
-import explore.model.PerishablePot
-import explore.model.PerishablePot.*
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
-import lucuma.react.primereact.tooltip.*
 import lucuma.refined.*
 import lucuma.typed.reactDatepicker.mod.ReactDatePicker
 import lucuma.ui.primereact.*
@@ -39,14 +37,13 @@ case class ObsTimeEditor(
   obsTimeView:            View[Option[Instant]],
   obsDurationView:        View[Option[TimeSpan]],
   obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
-  execution:              PerishablePot[Option[Execution]],
+  calcDigest:             CalculatedValue[Option[ExecutionDigest]],
   forMultipleObs:         Boolean
 ) extends ReactFnProps(ObsTimeEditor):
-  val optExecution: Option[Execution] = execution.asValuePot.toOption.flatten
-  val pendingTime: Option[TimeSpan]   = optExecution.flatMap(_.remainingObsTime)
-  val setupTime: Option[TimeSpan]     = optExecution.flatMap(_.fullSetupTime)
-  val timesAreLoading: Boolean        = execution.isStaleOrPending
-  val isReadonly: Boolean             = forMultipleObs || timesAreLoading || execution.isError
+  val pendingTime: Option[TimeSpan] = calcDigest.remainingObsTime.value
+  val setupTime: Option[TimeSpan]   = calcDigest.fullSetupTime.value
+  val timesAreLoading: Boolean      = calcDigest.isStale
+  val isReadonly: Boolean           = forMultipleObs || timesAreLoading
 
 object ObsTimeEditor
     extends ReactFnComponent[ObsTimeEditor](props =>
@@ -54,8 +51,9 @@ object ObsTimeEditor
         ref             <- useRef[Option[ReactDatePicker[Any, Any]]](none)
         defaultDuration <- useMemo(props.pendingTime)(_.getOrElse(TimeSpan.fromHours(1).get))
       } yield
-        val nowTooltip =
+        val nowTooltip         =
           s"Set time to the current time${props.pendingTime.fold("")(_ => " and duration to remaining time")}"
+        val staleTooltipString = props.calcDigest.staleTooltipString
 
         <.div(ExploreStyles.ObsInstantTileTitle)(
           React.Fragment(
@@ -95,15 +93,15 @@ object ObsTimeEditor
                       .map(pt => s"The current remaining time is ${pt.format}.")
                   ).flattenOption
                   val tooltip: Option[VdomNode] =
-                    if (props.execution.isStale)
-                      ("Awaiting new data from server.": VdomNode).some
-                    else if (tooltipList.isEmpty) none
-                    else
-                      (tooltipList.mkString(
-                        "",
-                        "\n",
-                        "\nValues entered will be coerced to this range."
-                      ): VdomNode).some
+                    props.calcDigest.staleTooltip.orElse(
+                      if (tooltipList.isEmpty) none
+                      else
+                        (tooltipList.mkString(
+                          "",
+                          "\n",
+                          "\nValues entered will be coerced to this range."
+                        ): VdomNode).some
+                    )
 
                   <.span(
                     ExploreStyles.TargetTileObsDuration,
@@ -119,12 +117,12 @@ object ObsTimeEditor
                     Button(
                       text = true,
                       icon = Icons.ClockRotateLeft,
-                      tooltip = "Set duration to full remaining sequence",
+                      tooltip =
+                        staleTooltipString.getOrElse("Set duration to full remaining sequence"),
                       onClick = props.obsDurationView.set(props.pendingTime)
                     ).tiny.compact.when(
                       props.pendingTime.isDefined && props.obsDurationView.get =!= props.pendingTime
-                    ),
-                    props.execution.orSpinner(_ => EmptyVdom)
+                    )
                   )
                 )
                 .getOrElse(
@@ -132,18 +130,21 @@ object ObsTimeEditor
                     Button(
                       icon = Icons.ClockRotateLeft,
                       onClick = props.obsDurationView.set(defaultDuration.value.some),
-                      tooltip = "Set an explicit duration instead of using the remaining sequence",
-                      clazz = ExploreStyles.TargetTileObsDuration
+                      tooltip = staleTooltipString.getOrElse(
+                        "Set an explicit duration instead of using the remaining sequence"
+                      ),
+                      clazz = ExploreStyles.TargetTileObsDuration,
+                      disabled = props.timesAreLoading
                     ).tiny.compact,
                     props.pendingTime
                       .map(pt =>
-                        <.div(ExploreStyles.TargetObsDefaultDuration, timeDisplay("", pt, ""))
+                        <.div(
+                          ExploreStyles.TargetObsDefaultDuration,
+                          timeDisplay("", pt, "", timeClass = props.calcDigest.staleClass)
+                        )
                       )
                   )
-                ),
-            props.execution.error.map(t =>
-              <.span(Icons.ErrorIcon).withTooltip(content = t.getMessage)
-            )
+                )
           )
         )
     )

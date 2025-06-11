@@ -7,6 +7,8 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
+// gql: import lucuma.odb.json.sequence.given
+// gql: import lucuma.schemas.decoders.given
 
 object ObsQueriesGQL:
   @GraphQL
@@ -129,9 +131,9 @@ object ObsQueriesGQL:
 
   @GraphQL
   trait ObsCalcSubscription extends GraphQLOperation[ObservationDB]:
-    val document = """
-      subscription($input: ObscalcUpdateInput!) {
-        obscalcUpdate(input: $input) {
+    val document = s"""
+      subscription($$input: ObscalcUpdateInput!) {
+        obscalcUpdate(input: $$input) {
           observationId
           oldState
           newState
@@ -139,6 +141,9 @@ object ObsQueriesGQL:
           editType
           value {
             groupId
+            execution {
+              digest: calculatedDigest $CalculatedDigestSubquery
+            }
           }
         }
       }

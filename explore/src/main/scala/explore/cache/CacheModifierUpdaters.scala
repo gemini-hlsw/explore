@@ -8,6 +8,7 @@ import cats.syntax.all.*
 import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
+import explore.model.Execution
 import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ProgramInfo
@@ -17,6 +18,7 @@ import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
+import queries.common.ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta.Data.TargetEdit
@@ -61,17 +63,25 @@ trait CacheModifierUpdaters {
               else
                 observations - obsId
 
-        val obsExecutionReset: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.obsExecutionPots.modify: oem =>
-            if (isPresentInServer) oem.markStale(obsId)
-            else oem.removed(obsId)
-
-        ifPresentInServerOrLocally:
-          obsUpdate >>> obsExecutionReset
+        ifPresentInServerOrLocally(obsUpdate)
       .getOrElse:
         if (observationEdit.editType === EditType.DeletedCal)
           ProgramSummaries.observations.modify(_ - obsId)
         else identity
+
+  protected def modifyObservationCalculatedValues(
+    obscalcUpdate: ObscalcUpdate
+  ): ProgramSummaries => ProgramSummaries =
+    // `execution.calculatedDigest` will probably be made non-optional in the future.
+    obscalcUpdate.value.flatMap(_.execution.calculatedDigest).fold(identity[ProgramSummaries]) {
+      digest =>
+        val obsId: Observation.Id = obscalcUpdate.observationId
+        ProgramSummaries.observations
+          .index(obsId)
+          .andThen(Observation.execution)
+          .andThen(Execution.digest)
+          .replace(digest)
+    }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     groupEdit.value // We ignore updates on deleted groups.

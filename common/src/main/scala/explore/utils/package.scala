@@ -147,7 +147,7 @@ def timeDisplay(
   name:        String,
   time:        TimeSpan,
   sep:         String = ": ",
-  timeClass:   Css = Css.Empty,
+  timeClass:   TagMod = TagMod.empty,
   timeTooltip: Option[VdomNode] = None
 ) =
   <.span(<.span(ExploreStyles.SequenceTileTitleItem)(name, sep),

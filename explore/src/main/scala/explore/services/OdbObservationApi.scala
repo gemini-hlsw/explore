@@ -9,7 +9,6 @@ import clue.data.Input
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ConfigurationRequestWithObsIds
-import explore.model.Execution
 import explore.model.ExecutionOffsets
 import explore.model.Observation
 import lucuma.core.enums.ObservationWorkflowState
@@ -100,7 +99,6 @@ trait OdbObservationApi[F[_]]:
   def programObservationsDeltaSubscription(
     programId: Program.Id
   ): Resource[F, fs2.Stream[F, ProgramObservationsDelta.Data.ObservationEdit]]
-  def observationExecution(obsId:        Observation.Id): F[Option[Execution]]
   def allProgramObservations(programId:  Program.Id): F[List[Observation]]
   def observationWorkflows(
     whereObservation: WhereObservation

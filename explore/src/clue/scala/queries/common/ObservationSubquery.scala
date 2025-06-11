@@ -69,5 +69,6 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           reference {
             label
           }
+          execution $ExecutionSubquery
         }
       """

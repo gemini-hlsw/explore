@@ -16,7 +16,6 @@ import explore.model.ConstraintGroupList
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.display.given
 import explore.model.enums.AppTab
@@ -48,7 +47,6 @@ case class ConstraintGroupObsList(
   observations:          UndoSetter[ObservationList],
   undoer:                Undoer,
   constraintGroups:      ConstraintGroupList,
-  obsExecutions:         ObservationExecutionMap,
   focusedObsSet:         Option[ObsIdSet],
   setSummaryPanel:       Callback,
   expandedIds:           View[SortedSet[ObsIdSet]],

@@ -15,22 +15,19 @@ import explore.model.AppContext
 import explore.model.Focused
 import explore.model.Group
 import explore.model.Observation
-import explore.model.PerishablePot
-import explore.model.PerishablePot.*
 import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.syntax.display.*
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.primereact.Tooltip
-import lucuma.react.primereact.tooltip.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
@@ -124,9 +121,8 @@ trait ObsSummaryColumns:
           case s: String => s
           case (_, b)    => b.target.name.value
 
-    extension (a: Option[PerishablePot[Option[TimeSpan]]])
-      def sortableTimeSpan =
-        a.flatMap(_.asValuePot.toOption).flatten
+    extension (a: Option[CalculatedValue[Option[TimeSpan]]])
+      def sortableTimeSpan: Option[TimeSpan] = a.flatMap(_.value)
 
     // Function for sorting the observation by observation ref index (if available) or
     // observation id. If either observation has an index, both should. The Observations
@@ -279,19 +275,13 @@ trait ObsSummaryColumns:
         .sortable,
       obsColumn(
         DurationColumnId,
-        _.execution.mapPerishable(_.programTimeEstimate)
+        _.obs.execution.digest.programTimeEstimate
       ).withCell:
-        _.value.map: ppot =>
-          ppot.asValuePot
-            .orSpinner(_.map { d =>
-              val text = HoursMinutesAbbreviation.format(d)
-              if (ppot.isStale)
-                <.span(ExploreStyles.Stale, text)
-                  .withTooltip(content = "Awaiting new data from server.",
-                               position = Tooltip.Position.Left
-                  )
-              else text: VdomNode
-            })
+        _.value.map: cv =>
+          cv.value.map: d =>
+            val text = HoursMinutesAbbreviation.format(d)
+            <.span(text, cv.staleClass)
+              .withOptionalTooltip(content = cv.staleTooltip, position = Tooltip.Position.Left)
       .sortableBy(_.sortableTimeSpan)
       // TODO: PriorityColumnId
       // TODO: ChargedTimeColumnId

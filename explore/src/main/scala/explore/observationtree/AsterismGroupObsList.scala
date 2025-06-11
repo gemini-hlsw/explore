@@ -20,7 +20,6 @@ import explore.model.Focused
 import explore.model.LocalClipboard
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.ObservationExecutionMap
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
 import explore.model.TargetIdSet
@@ -72,8 +71,6 @@ case class AsterismGroupObsList(
 ) extends ReactFnProps[AsterismGroupObsList](AsterismGroupObsList.component)
     with ViewCommon:
   private val programSummaries: View[ProgramSummaries] = undoCtx.model
-
-  override val obsExecutions: ObservationExecutionMap = programSummaries.get.obsExecutionPots
 
   private val observations: UndoSetter[ObservationList] =
     undoCtx.zoom(ProgramSummaries.observations)

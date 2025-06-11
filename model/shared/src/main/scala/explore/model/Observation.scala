@@ -79,7 +79,8 @@ case class Observation(
   configuration:       Option[Configuration],
   workflow:            ObservationWorkflow,
   groupId:             Option[Group.Id],
-  groupIndex:          NonNegShort
+  groupIndex:          NonNegShort,
+  execution:           Execution
 ) derives Eq:
   lazy val basicConfiguration: Option[BasicConfiguration] =
     observingMode.map(_.toBasicConfiguration)
@@ -314,6 +315,7 @@ object Observation:
   val validationErrors         = workflow.andThen(ObservationWorkflow.validationErrors)
   val groupId                  = Focus[Observation](_.groupId)
   val groupIndex               = Focus[Observation](_.groupIndex)
+  val execution                = Focus[Observation](_.execution)
 
   // unlawful because it also updates the list of valid transitions, but
   // is needed for optimistically setting the state in the ObsBadge
@@ -363,6 +365,7 @@ object Observation:
       workflow            <- c.get[ObservationWorkflow]("workflow")
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
+      execution           <- c.get[Execution]("execution")
     } yield Observation(
       id,
       reference.flatten,
@@ -388,6 +391,7 @@ object Observation:
       configuration,
       workflow,
       groupId,
-      groupIndex
+      groupIndex,
+      execution
     )
   )

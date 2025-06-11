@@ -13,8 +13,6 @@ import explore.EditableLabel
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Observation
-import explore.model.PerishablePot
-import explore.model.PerishablePot.*
 import explore.model.display.given
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
@@ -22,6 +20,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.syntax.all.*
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
@@ -39,7 +38,6 @@ import scala.collection.immutable.SortedSet
 
 case class ObsBadge(
   obs:                   Observation,
-  executionTime:         PerishablePot[Option[TimeSpan]],
   layout:                ObsBadge.Layout,
   selected:              Boolean = false,
   setStateCB:            Option[ObservationWorkflowState => Callback] = none,
@@ -50,10 +48,11 @@ case class ObsBadge(
   allocatedScienceBands: SortedSet[ScienceBand],
   readonly:              Boolean = false
 ) extends ReactFnProps(ObsBadge.component):
-  val isDisabled: Boolean      = readonly || obs.isCalibration
-  val nonEmptyAllocatedBands   = NonEmptySet.fromSet(allocatedScienceBands)
-  val scienceBandIsInvalid     = obs.scienceBand.exists(b => !allocatedScienceBands.contains(b))
-  val showScienceBand: Boolean =
+  val executionTime: CalculatedValue[Option[TimeSpan]] = obs.execution.digest.programTimeEstimate
+  val isDisabled: Boolean                              = readonly || obs.isCalibration
+  val nonEmptyAllocatedBands                           = NonEmptySet.fromSet(allocatedScienceBands)
+  val scienceBandIsInvalid                             = obs.scienceBand.exists(b => !allocatedScienceBands.contains(b))
+  val showScienceBand: Boolean                         =
     obs.calibrationRole.isEmpty && (allocatedScienceBands.size > 1 || scienceBandIsInvalid)
 
 object ObsBadge:
@@ -184,10 +183,6 @@ object ObsBadge:
 
       val validationIcon = <.span(Icons.ErrorIcon).withTooltip(content = validationTooltip)
 
-      val executionTimeTooltip =
-        if props.executionTime.isStale then ("Awaiting new value from server": VdomNode).some
-        else none
-
       React.Fragment(
         <.div(
           <.div(ExploreStyles.ObsBadge, ExploreStyles.ObsBadgeSelected.when(props.selected))(
@@ -226,13 +221,10 @@ object ObsBadge:
                   ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
                 )
               ),
-              props.executionTime.asValuePot
-                .orSpinner(
-                  _.map(
-                    TimeSpanView(_, tooltip = executionTimeTooltip)
-                      .withMods(ExploreStyles.Stale.when(props.executionTime.isStale))
-                  )
-                ),
+              props.executionTime.value.map(
+                TimeSpanView(_, tooltip = props.executionTime.staleTooltip)
+                  .withMods(props.executionTime.staleClass)
+              ),
               validationIcon.unless(obs.workflow.validationErrors.isEmpty)
             )
           )

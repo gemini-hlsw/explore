@@ -227,7 +227,6 @@ object ConstraintsTabContents extends TwoPanels:
             observations,
             props.programSummaries,
             props.programSummaries.get.constraintGroups,
-            props.programSummaries.get.obsExecutionPots,
             props.focusedObsSet,
             state.set(SelectedPanel.Summary),
             props.expandedIds,
