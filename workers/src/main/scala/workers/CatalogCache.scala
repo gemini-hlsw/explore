@@ -37,7 +37,7 @@ trait CatalogQuerySettings {
   private val CacheVersion = 3
 
   given Hash[Coordinates]            = Hash.fromUniversalHashCode
-  given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3Lite
+  given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3LiteEsa
   given ci: ADQLInterpreter          = ADQLInterpreter.nTarget(MaxTargets)
 
   def cacheQueryHash: Hash[ADQLQuery] =
@@ -65,7 +65,7 @@ trait CatalogCache extends CatalogIDB {
       .flatMap(
         _.body
           .through(text.utf8.decode)
-          .through(CatalogSearch.guideStars[F](CatalogAdapter.Gaia3Lite))
+          .through(CatalogSearch.guideStars[F](CatalogAdapter.Gaia3LiteEsa))
       )
       .compile
       .toList
