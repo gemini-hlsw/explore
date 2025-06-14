@@ -6,7 +6,6 @@ import scala.sys.process.*
 ThisBuild / ScalafixConfig / bspEnabled.withRank(KeyRanks.Invisible) := false
 
 ThisBuild / evictionErrorLevel := Level.Info
-ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 
 ThisBuild / lucumaCssExts += "svg"
 

@@ -29,7 +29,6 @@ import explore.shortcuts.given
 import explore.undo.*
 import explore.utils.*
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.callback.CallbackCatsEffect.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ConstraintSet
