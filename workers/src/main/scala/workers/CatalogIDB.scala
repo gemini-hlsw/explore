@@ -16,7 +16,7 @@ import java.time.Duration
  */
 trait CatalogIDB extends CatalogQuerySettings:
 
-  def readGuideStarCandidates(
+  def readGuideStarCandidatesFromCache(
     idb:    Option[IndexedDb.Database],
     stores: CacheIDBStores,
     query:  ADQLQuery

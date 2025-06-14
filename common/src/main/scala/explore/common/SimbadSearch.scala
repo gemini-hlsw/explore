@@ -3,6 +3,7 @@
 
 package explore.common
 
+import cats.data.NonEmptyChain
 import cats.effect.*
 import cats.syntax.all.*
 import eu.timepit.refined.types.string.NonEmptyString
@@ -10,6 +11,7 @@ import explore.model.Constants
 import lucuma.catalog.CatalogTargetResult
 import lucuma.catalog.votable.CatalogAdapter
 import lucuma.catalog.votable.CatalogSearch
+import lucuma.core.syntax.effect.*
 import org.http4s.*
 import org.http4s.dom.FetchClientBuilder
 import org.http4s.implicits.*
@@ -26,16 +28,16 @@ object SimbadSearch {
     term:     NonEmptyString,
     wildcard: Boolean = false
   )(implicit F: Async[F], logger: Logger[F]): F[List[CatalogTargetResult]] =
-    val harvardUrl = uri"https://simbad.cfa.harvard.edu/simbad/sim-id"
-    val strasbgUrl = uri"https://simbad.u-strasbg.fr/simbad/sim-id"
+    val harvardUri: Uri = uri"https://simbad.cfa.harvard.edu/simbad/sim-id"
+    val strasbgUri: Uri = uri"https://simbad.u-strasbg.fr/simbad/sim-id"
     // Try both harvard and strasbourg and return whichever completes first.
     // If a site is down (as has been known to happen with harvard), the one that is up
-    /// will complete. I thought I would have to use racePair to handle errors, but it
-    // seems to work as is.
-    F.race(searchSingle(harvardUrl, term, wildcard), searchSingle(strasbgUrl, term, wildcard)).map {
-      case Left(results)  => results
-      case Right(results) => results
-    }
+    // will complete.
+    NonEmptyChain
+      .of(harvardUri, strasbgUri)
+      .map: uri =>
+        searchSingle[F](uri, term, wildcard)
+      .raceAllToSuccess
 
   private def searchSingle[F[_]](
     simbadUrl: Uri,
