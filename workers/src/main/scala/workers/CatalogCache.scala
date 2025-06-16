@@ -4,25 +4,19 @@
 package workers
 
 import cats.Hash
-import cats.data.EitherNec
 import cats.data.NonEmptyList
-import cats.effect.Concurrent
 import cats.effect.IO
 import cats.syntax.all.*
 import explore.events.*
-import fs2.text
 import japgolly.webapputil.indexeddb.*
 import lucuma.ags
 import lucuma.ags.GuideStarCandidate
+import lucuma.catalog.clients.GaiaClient
 import lucuma.catalog.votable.*
 import lucuma.core.geom.ShapeExpression
 import lucuma.core.geom.jts.interpreter.given
 import lucuma.core.math.Coordinates
 import lucuma.core.model.Target
-import org.http4s.Method.*
-import org.http4s.Request
-import org.http4s.client.Client
-import org.http4s.syntax.all.*
 import org.typelevel.log4cats.Logger
 
 import java.time.LocalDateTime
@@ -31,18 +25,14 @@ import java.time.temporal.ChronoField
 import java.time.temporal.ChronoUnit
 
 trait CatalogQuerySettings {
-  val proxy = uri"https://cors-proxy.lucuma.xyz"
+  private val MaxTargets: Int   = 100
+  private val CacheVersion: Int = 3
 
-  val MaxTargets           = 100
-  private val CacheVersion = 3
+  protected given Hash[Coordinates] = Hash.fromUniversalHashCode
+  protected given ADQLInterpreter   = ADQLInterpreter.nTarget(MaxTargets)
 
-  given Hash[Coordinates]            = Hash.fromUniversalHashCode
-  given catalog: CatalogAdapter.Gaia = CatalogAdapter.Gaia3LiteEsa
-  given ci: ADQLInterpreter          = ADQLInterpreter.nTarget(MaxTargets)
-
-  def cacheQueryHash: Hash[ADQLQuery] =
-    Hash.by(q => (MaxTargets, CacheVersion, catalog.gaiaDB, q.base, q.adqlGeom, q.adqlBrightness))
-
+  protected def cacheQueryHash: Hash[ADQLQuery] =
+    Hash.by(q => (MaxTargets, CacheVersion, q.toString))
 }
 
 /**
@@ -52,29 +42,10 @@ trait CatalogQuerySettings {
 trait CatalogCache extends CatalogIDB {
 
   /**
-   * Request and parse data from Gaia
-   */
-  def readFromGaia[F[_]: Concurrent](
-    client: Client[F],
-    query:  ADQLQuery
-  ): F[List[EitherNec[CatalogProblem, Target.Sidereal]]] =
-    val queryUri = CatalogSearch.gaiaSearchUri(query)
-    val request  = Request[F](GET, queryUri)
-    client
-      .stream(request)
-      .flatMap(
-        _.body
-          .through(text.utf8.decode)
-          .through(CatalogSearch.guideStars[F](CatalogAdapter.Gaia3LiteEsa))
-      )
-      .compile
-      .toList
-
-  /**
    * Try to read the gaia query from the cache or else get it from gaia
    */
   def readFromGaia(
-    client:         Client[IO],
+    client:         GaiaClient[IO],
     idb:            Option[IndexedDb.Database],
     stores:         CacheIDBStores,
     request:        CatalogMessage.GSRequest,
@@ -93,22 +64,23 @@ trait CatalogCache extends CatalogIDB {
     (tracking.at(start.toInstant(ZoneOffset.UTC)), tracking.at(end.toInstant(ZoneOffset.UTC)))
       .mapN { (a, b) =>
         // Make a query based on two coordinates of the base of an asterism over a year
-        val query = CoordinatesRangeQueryByADQL(
-          NonEmptyList.of(a.value, b.value),
-          candidatesArea,
-          brightnessConstraints.some,
-          proxy.some
-        )
+        val query: CoordinatesRangeQueryByADQL =
+          CoordinatesRangeQueryByADQL(
+            NonEmptyList.of(a.value, b.value),
+            candidatesArea,
+            brightnessConstraints.some
+          )
 
         (Logger[IO].debug(s"Requested catalog $query ${cacheQueryHash.hash(query)}") *>
           // Try to find it in the db
-          readGuideStarCandidates(idb, stores, query)
+          readGuideStarCandidatesFromCache(idb, stores, query)
             .toF[IO]
             .handleError(_ => none)) // Try to find it in the db
           .flatMap(
             _.fold(
               // Not found in the db, re request
-              readFromGaia[IO](client, query)
+              client
+                .query(query)
                 .map(
                   _.collect { case Right(s) =>
                     GuideStarCandidate.siderealTarget.get(s)
