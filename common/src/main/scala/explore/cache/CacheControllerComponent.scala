@@ -46,7 +46,6 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
             // Start the update fiber. We want subscriptions to start before initial query.
             // This way we don't miss updates.
             // The update fiber will only update once the cache is initialized (via latch).
-            // TODO: RESTART CACHE IN CASE OF INTERRUPTED SUBSCRIPTION.
             latch           <- Resource.eval(Deferred[F, Unit])
             // Next is the update fiber. It will start getting updates immediately,
             // but will wait until the cache is initialized to start applying them.

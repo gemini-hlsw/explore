@@ -3,15 +3,20 @@
 
 package explore.model
 
+import cats.Eq
+import cats.derived.*
 import cats.syntax.all.*
 import explore.model.Page.*
 import explore.model.enums.AppTab
+import japgolly.scalajs.react.ReactCats.*
+import japgolly.scalajs.react.Reusability
 import lucuma.core.model.Program
 import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
 
-case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused) {
+case class RoutingInfo(appTab: AppTab, optProgramId: Option[Program.Id], focused: Focused)
+    derives Eq {
   // The only Page that doesn't have a program ID is the NoProgramPage, so instead of forcing everyplace to deal
   // Option[Program.Id], we'll just associate a dummy id with it. NoProgramPage will need special handling, anyways.
   def programId: Program.Id = optProgramId.getOrElse(RoutingInfo.dummyProgramId)
@@ -90,4 +95,6 @@ object RoutingInfo {
               .map(SchedulingObsPage(programId, _))
               .getOrElse(SchedulingBasePage(programId))
       .getOrElse(NoProgramPage)
+
+  given Reusability[RoutingInfo] = Reusability.byEq
 }

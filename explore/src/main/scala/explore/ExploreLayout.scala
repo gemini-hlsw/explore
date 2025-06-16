@@ -49,7 +49,7 @@ import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
 import lucuma.ui.layout.LayoutStyles
-import lucuma.ui.react.given
+import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
@@ -66,47 +66,44 @@ object ExploreLayout:
   private type Props = ExploreLayout
 
   private given Reusability[ToastRef] = Reusability.by_==
-  private given Reusability[Page]     = Reusability.by(_.toString)
 
   private def useMountHotkeys(ctx: AppContext[IO], helpCtx: HelpContext)(
-    page: Page
+    routingInfo: Option[RoutingInfo]
   ): HookResult[Unit] =
-    useGlobalHotkeysWithDeps(page): p =>
-      RoutingInfo
-        .from(p)
-        .map: routingInfo =>
-          def goToTab(tab: AppTab) =
-            ctx.setPageVia(
-              (tab, routingInfo.programId, routingInfo.focused).some,
-              SetRouteVia.HistoryPush
-            )
-
-          val callbacks: ShortcutCallbacks =
-            case GoToObs                         =>
-              goToTab(AppTab.Observations)
-            case GoToTargets                     =>
-              goToTab(AppTab.Targets)
-            case GoToProposals                   =>
-              goToTab(AppTab.Proposal)
-            case GoToConstraints                 =>
-              goToTab(AppTab.Constraints)
-            case GoToOverview                    =>
-              goToTab(AppTab.Overview)
-            case ShortcutsHelp1 | ShortcutsHelp2 =>
-              helpCtx.displayedHelp.set(Some("shortcuts.md".refined))
-
-          UseHotkeysProps(
-            (ShortcutsHelpKeys :::
-              List(
-                GoToObs,
-                GoToTargets,
-                GoToProposals,
-                GoToConstraints,
-                GoToOverview
-              )).toHotKeys,
-            callbacks
+    useGlobalHotkeysWithDeps(routingInfo): ri =>
+      ri.map: routingInfo =>
+        def goToTab(tab: AppTab) =
+          ctx.setPageVia(
+            (tab, routingInfo.programId, routingInfo.focused).some,
+            SetRouteVia.HistoryPush
           )
-        .getOrElse(UseHotkeysProps(List.empty, Callback.empty))
+
+        val callbacks: ShortcutCallbacks =
+          case GoToObs                         =>
+            goToTab(AppTab.Observations)
+          case GoToTargets                     =>
+            goToTab(AppTab.Targets)
+          case GoToProposals                   =>
+            goToTab(AppTab.Proposal)
+          case GoToConstraints                 =>
+            goToTab(AppTab.Constraints)
+          case GoToOverview                    =>
+            goToTab(AppTab.Overview)
+          case ShortcutsHelp1 | ShortcutsHelp2 =>
+            helpCtx.displayedHelp.set(Some("shortcuts.md".refined))
+
+        UseHotkeysProps(
+          (ShortcutsHelpKeys :::
+            List(
+              GoToObs,
+              GoToTargets,
+              GoToProposals,
+              GoToConstraints,
+              GoToOverview
+            )).toHotKeys,
+          callbacks
+        )
+      .getOrElse(UseHotkeysProps(List.empty, Callback.empty))
 
   private def useMountProgressiveWebApp(
     bc:       BroadcastChannel[IO, ExploreEvent],
@@ -152,7 +149,8 @@ object ExploreLayout:
                                   // reference in the url for that
                                   _.fold(Callback(document.title = "Explore")): r =>
                                     Callback(document.title = s"Explore - ${r}")
-        _                    <- useMountHotkeys(ctx, helpCtx)(props.resolution.page)
+        routingInfo           = RoutingInfo.from(props.resolution.page)
+        _                    <- useMountHotkeys(ctx, helpCtx)(routingInfo)
         toastRef             <- useToastRef
         _                    <- useEffectWithDeps(toastRef):
                                   import ctx.given
@@ -167,10 +165,15 @@ object ExploreLayout:
         userSelectionMessage <- useStateView(none[NonEmptyString])
         theme                <- useTheme(Theme.Dark)
         programCacheKeyVer   <- useState(0)
-        globalError          <- useState(none[String])
+        // Indicates whether the current program is loading, ready or errored.
+        programState         <- useState(Pot.pending[Unit])
+        _                    <- useEffectWithDeps(routingInfo.map(_.programId)): _ =>
+                                  programState.setState(Pot.pending[Unit])
         _                    <- useEffectStreamOnMount:
                                   ctx.resetProgramCacheSignal.evalMap: errorMsg =>
-                                    (globalError.setState(errorMsg) >>
+                                    (programState.setState(
+                                      errorMsg.fold(Pot.pending)(e => Pot.Error(RuntimeException(e)))
+                                    ) >>
                                       programCacheKeyVer.modState(_ + 1).when_(errorMsg.isDefined)).toAsync
       yield
         import ctx.given
@@ -187,21 +190,24 @@ object ExploreLayout:
 
         React.Fragment(
           Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
-          globalError.value.foldMap(error =>
-            React.Fragment(
-              Sidebar(
-                onHide = Callback.empty,
-                visible = true,
-                modal = true,
-                showCloseIcon = false,
-                dismissable = false,
-                position = Sidebar.Position.Bottom,
-                content = error,
-                clazz = ExploreStyles.GlobalErrorDialog
-              ),
-              SolarProgress()
-            )
-          ),
+          // On Error we show a modal dialog with the error message while we reload.
+          programState.value.toOptionEither
+            .flatMap(_.swap.toOption)
+            .map(error =>
+              React.Fragment(
+                Sidebar(
+                  onHide = Callback.empty,
+                  visible = true,
+                  modal = true,
+                  showCloseIcon = false,
+                  dismissable = false,
+                  position = Sidebar.Position.Bottom,
+                  content = error.getMessage,
+                  clazz = ExploreStyles.GlobalErrorDialog
+                ),
+                SolarProgress()
+              )
+            ),
           IfLogged[ExploreEvent](
             "Explore".refined,
             ExploreStyles.LoginTitle,
@@ -217,8 +223,7 @@ object ExploreLayout:
             _.value.toString,
             ExploreEvent.LogoutEvent(_)
           )(onLogout =>
-            RoutingInfo
-              .from(props.resolution.page)
+            routingInfo
               .map { routingInfo =>
                 val routingInfoView: View[RoutingInfo] =
                   View(
@@ -293,7 +298,7 @@ object ExploreLayout:
                     ProgramCacheController(
                       routingInfo.programId,
                       props.model.programSummaries.throttledView.mod,
-                      globalError.setState(none).toAsync
+                      programState.setState(().ready).toAsync
                     ).withKey(programCacheKey),
                     userVault.mapValue: (vault: View[UserVault]) =>
                       React.Fragment(
@@ -336,32 +341,36 @@ object ExploreLayout:
                               message = msg
                             ): VdomElement
                           else
-                            React.Fragment(
-                              SideTabs(
-                                "side-tabs".refined,
-                                routingInfoView.zoom(RoutingInfo.appTab),
-                                tab =>
-                                  ctx.pageUrl(
-                                    (tab, routingInfo.programId, routingInfo.focused).some
-                                  ),
-                                _.separatorAfter,
-                                tab =>
-                                  programSummaries.toOption
-                                    .flatMap(_.optProgramDetails)
-                                    .forall: program =>
-                                      // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                                      (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                                        program.programType === ProgramType.Science &&
-                                        (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
-                              ),
-                              <.div(LayoutStyles.MainBody,
-                                    LayoutStyles.WithMessage.when(isSubmitted)
-                              )(
-                                props.resolution.renderP(props.model),
-                                TagMod.when(isSubmitted):
-                                  SubmittedProposalMessage(proposalReference, deadline)
+                            // Only render spinner if program loading is pending.
+                            // In case of error, we still show the data but with an error modal, rendered above.
+                            programState.value.toOptionEither.fold[VdomNode](SolarProgress()): _ =>
+                              React.Fragment(
+                                SideTabs(
+                                  "side-tabs".refined,
+                                  routingInfoView.zoom(RoutingInfo.appTab),
+                                  tab =>
+                                    ctx.pageUrl(
+                                      (tab, routingInfo.programId, routingInfo.focused).some
+                                    ),
+                                  _.separatorAfter,
+                                  tab =>
+                                    programSummaries.toOption
+                                      .flatMap(_.optProgramDetails)
+                                      .forall: program =>
+                                        // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                                        (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                                          program.programType === ProgramType.Science &&
+                                          (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                                ),
+                                <.div(
+                                  LayoutStyles.MainBody,
+                                  LayoutStyles.WithMessage.when(isSubmitted)
+                                )(
+                                  props.resolution.renderP(props.model),
+                                  TagMod.when(isSubmitted):
+                                    SubmittedProposalMessage(proposalReference, deadline)
+                                )
                               )
-                            )
                       )
                   )
                 )
