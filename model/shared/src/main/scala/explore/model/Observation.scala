@@ -40,6 +40,7 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
@@ -77,7 +78,7 @@ case class Observation(
   calibrationRole:     Option[CalibrationRole],
   scienceBand:         Option[ScienceBand],
   configuration:       Option[Configuration],
-  workflow:            ObservationWorkflow,
+  workflow:            CalculatedValue[ObservationWorkflow],
   groupId:             Option[Group.Id],
   groupIndex:          NonNegShort,
   execution:           Execution
@@ -236,24 +237,24 @@ case class Observation(
   lazy val disabledStates    =
     Enumerated[
       ObservationWorkflowState
-    ].all.toSet -- workflow.validTransitions.toSet - workflow.state
+    ].all.toSet -- workflow.value.validTransitions.toSet - workflow.value.state
 
-  val isInactive = workflow.state === ObservationWorkflowState.Inactive
+  val isInactive = workflow.value.state === ObservationWorkflowState.Inactive
 
   inline def isCalibration: Boolean = calibrationRole.isDefined
   inline def isExecuted: Boolean    =
-    ExecutedStates.contains(workflow.state) ||
-      workflow.validTransitions.exists(ExecutedStates.contains)
+    ExecutedStates.contains(workflow.value.state) ||
+      workflow.value.validTransitions.exists(ExecutedStates.contains)
 
   inline def newConfigurationRequestApplies(config: Configuration): Boolean =
     (hasNotRequestedCode || hasDeniedValidationCode) &&
       configuration.fold(false)(config.subsumes)
 
   inline def hasValidationErrors: Boolean =
-    !workflow.validationErrors.isEmpty
+    !workflow.value.validationErrors.isEmpty
 
   inline def hasValidationCode(code: ObservationValidationCode): Boolean =
-    workflow.validationErrors.exists(_.code === code)
+    workflow.value.validationErrors.exists(_.code === code)
 
   // If an observation has a ConfigurationRequest* error, it is the only error they will have
   inline def hasPendingRequestCode: Boolean =
@@ -310,9 +311,11 @@ object Observation:
   val scienceBand              = Focus[Observation](_.scienceBand)
   val configuration            = Focus[Observation](_.configuration)
   val workflow                 = Focus[Observation](_.workflow)
-  val workflowState            = workflow.andThen(ObservationWorkflow.state)
-  val workflowValidTransitions = workflow.andThen(ObservationWorkflow.validTransitions)
-  val validationErrors         = workflow.andThen(ObservationWorkflow.validationErrors)
+  val workflowState            = workflow.andThen(CalculatedValue.value).andThen(ObservationWorkflow.state)
+  val workflowValidTransitions =
+    workflow.andThen(CalculatedValue.value).andThen(ObservationWorkflow.validTransitions)
+  val validationErrors         =
+    workflow.andThen(CalculatedValue.value).andThen(ObservationWorkflow.validationErrors)
   val groupId                  = Focus[Observation](_.groupId)
   val groupIndex               = Focus[Observation](_.groupIndex)
   val execution                = Focus[Observation](_.execution)
@@ -320,12 +323,12 @@ object Observation:
   // unlawful because it also updates the list of valid transitions, but
   // is needed for optimistically setting the state in the ObsBadge
   val unlawfulWorkflowState: Lens[Observation, ObservationWorkflowState] =
-    Lens[Observation, ObservationWorkflowState](_.workflow.state)(newState =>
+    Lens[Observation, ObservationWorkflowState](_.workflow.value.state)(newState =>
       o =>
-        val oldState = o.workflow.state
+        val oldState = o.workflow.value.state
         if (oldState === newState) o
         else
-          val newAllowed = oldState +: o.workflow.validTransitions.filterNot(_ === newState)
+          val newAllowed = oldState +: o.workflow.value.validTransitions.filterNot(_ === newState)
           workflowState.replace(newState).andThen(workflowValidTransitions.replace(newAllowed))(o)
     )
 
@@ -362,7 +365,7 @@ object Observation:
       calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
       scienceBand         <- c.get[Option[ScienceBand]]("scienceBand")
       configuration       <- c.get[Configuration]("configuration").fold(_ => none.asRight, _.some.asRight)
-      workflow            <- c.get[ObservationWorkflow]("workflow")
+      workflow            <- c.get[CalculatedValue[ObservationWorkflow]]("workflow")
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
       execution           <- c.get[Execution]("execution")

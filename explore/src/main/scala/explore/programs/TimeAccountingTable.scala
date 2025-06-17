@@ -11,6 +11,7 @@ import explore.model.CategoryAllocationList
 import explore.model.ProgramTimes
 import explore.model.display.given
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*

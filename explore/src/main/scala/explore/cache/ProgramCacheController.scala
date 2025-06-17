@@ -8,7 +8,6 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.Throttler
-import explore.givens.given
 import explore.model.Attachment
 import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Group
@@ -27,9 +26,7 @@ import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
-import lucuma.schemas.ObservationDB.Types.WhereObservation
 import lucuma.schemas.model.TargetWithId
-import lucuma.schemas.odb.input.*
 import monocle.Optional
 import org.typelevel.log4cats.Logger
 import queries.common.ObsQueriesGQL
@@ -160,47 +157,21 @@ object ProgramCacheController
 
             // Signal a program times update.
             val queryProgramTimes: IO[Unit] =
-              programTimesThrottler.submit:
-                programUpdateChannel.send(()).void
+              programTimesThrottler
+                .submit:
+                  programUpdateChannel.send(()).void
 
             val updateProgramTimesStream: Stream[IO, ProgramSummaries => ProgramSummaries] =
               programUpdateChannel.stream
                 .switchMap(_ => Stream.eval(updateProgramTimes(props.programId)))
-
-            def updateObservationsWorkflows(
-              whereObservation: WhereObservation
-            ): IO[ProgramSummaries => ProgramSummaries] =
-              odbApi
-                .observationWorkflows(whereObservation)
-                .map:
-                  _.map: m =>
-                    ProgramSummaries.observations
-                      .modify:
-                        _.updatedWith(m.id)(_.map(Observation.workflow.replace(m.workflow)))
-                  .combineAll
-
-            // Changing the proposal's CfP can change the validations for observations,
-            // eg: coordinates bounds, so we requery them all.
-            // https://app.shortcut.com/lucuma/story/4412/update-warnings-without-page-reload
-            val allObservationsValidationsUpdate: Pipe[
-              IO,
-              ProgramDetails,
-              ProgramSummaries => ProgramSummaries
-            ] =
-              _.map(_.proposal.flatMap(_.call.map(_.id))).changes.void
-                .throttle(5.seconds)
-                .evalMap(_ => updateObservationsWorkflows(props.programId.toWhereObservation))
 
             val updateProgramDetails
               : Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
               props.odbApi
                 .programEditsSubscription(props.programId)
                 .map:
-                  _.broadcastThrough(
-                    _.map: programDetails => // Replace program.
-                      ProgramSummaries.optProgramDetails.replace(programDetails.some),
-                    allObservationsValidationsUpdate
-                  )
+                  _.map: programDetails => // Replace program.
+                    ProgramSummaries.optProgramDetails.replace(programDetails.some)
 
             val updateTargets: Resource[IO, Stream[IO, ProgramSummaries => ProgramSummaries]] =
               props.odbApi
@@ -217,23 +188,6 @@ object ProgramCacheController
               Group.Id
             ] =
               _.map(_.value.flatMap(_.parentId)).filter(_.isDefined).map(_.get)
-
-            // We'll request updates to all the workflows at once. Since this
-            // is being updated due to the configuration request change, the workflows
-            // "shouldn't" be expensive and we're unlikely to need to cancel
-            // unless the same configuration request is edited so using the set
-            // of ids as a key should be OK.
-            val obsWorkflowUpdates: Pipe[
-              IO,
-              ConfigurationRequestWithObsIds,
-              ProgramSummaries => ProgramSummaries
-            ] = keyedSwitchEvalMap(
-              _.applicableObservations.toSet,
-              _.applicableObservations match
-                case Nil             => IO.pure(identity)
-                case nonEmptyObsList =>
-                  updateObservationsWorkflows(nonEmptyObsList.toWhereObservation)
-            )
 
             val groupTimeRangeUpdate: Pipe[IO, Group.Id, ProgramSummaries => ProgramSummaries] =
               keyedSwitchEvalMap(
@@ -262,10 +216,7 @@ object ProgramCacheController
               props.odbApi
                 .programConfigurationRequestsDeltaSubscription(props.programId)
                 .map:
-                  _.broadcastThrough(
-                    _.map(modifyConfigurationRequests(_)),
-                    obsWorkflowUpdates
-                  )
+                  _.map(modifyConfigurationRequests(_))
 
             // Right now the programEdit subsription isn't fine grained enough to
             // differentiate what got updated, so we alway update all the attachments.

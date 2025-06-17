@@ -14,6 +14,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.Observation
 import explore.model.display.given
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -174,10 +175,10 @@ object ObsBadge:
 
       val validationTooltip =
         if (obs.hasConfigurationRequestError)
-          <.span(obs.workflow.validationErrors.head.messages.head)
+          <.span(obs.workflow.value.validationErrors.head.messages.head)
         else
           <.div(
-            obs.workflow.validationErrors
+            obs.workflow.value.validationErrors
               .toTagMod(using ov => <.div(ov.code.name, <.ul(ov.messages.toList.toTagMod(using i => <.li(i)))))
           )
 
@@ -204,28 +205,28 @@ object ObsBadge:
                   EnumDropdownView(
                     id = NonEmptyString.unsafeFrom(s"obs-status-${obs.id}-2"),
                     value = View[ObservationWorkflowState](
-                      obs.workflow.state,
+                      obs.workflow.value.state,
                       (f, cb) =>
-                        val oldValue = obs.workflow.state
-                        val newValue = f(obs.workflow.state)
+                        val oldValue = obs.workflow.value.state
+                        val newValue = f(obs.workflow.value.state)
                         setStatus(newValue) >> cb(oldValue, newValue)
                     ),
                     size = PlSize.Mini,
                     clazz = ExploreStyles.ObsStateSelect,
                     panelClass = ExploreStyles.ObsStateSelectPanel,
-                    disabled = props.isDisabled,
+                    disabled = props.isDisabled || obs.workflow.isStale,
                     exclude = obs.disabledStates
                   )
                 )(
                   // don't select the observation when changing the status
                   ^.onClick ==> { e => e.preventDefaultCB >> e.stopPropagationCB }
-                )
+                ).withOptionalTooltip(obs.workflow.staleTooltip)
               ),
               props.executionTime.value.map(
                 TimeSpanView(_, tooltip = props.executionTime.staleTooltip)
                   .withMods(props.executionTime.staleClass)
               ),
-              validationIcon.unless(obs.workflow.validationErrors.isEmpty)
+              validationIcon.unless(obs.workflow.value.validationErrors.isEmpty)
             )
           )
         ),

@@ -34,7 +34,6 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import queries.common.ObsQueriesGQL.*
 import queries.common.ProgramSummaryQueriesGQL.AllProgramObservations
-import queries.common.ProgramSummaryQueriesGQL.ObservationsWorkflowQuery
 import queries.common.TargetQueriesGQL.SetGuideTargetName
 
 import java.time.Instant
@@ -382,24 +381,6 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
           .query(programId.toWhereObservation, offset.orUnassign)
           // We need this because we currently get errors for things like having no targets
           .processNoDataErrors
-          .map(_.observations),
-      _.matches,
-      _.hasMore,
-      _.id
-    )
-
-  def observationWorkflows(
-    whereObservation: WhereObservation
-  ): F[List[ObservationsWorkflowQuery.Data.Observations.Matches]] =
-    drain[
-      ObservationsWorkflowQuery.Data.Observations.Matches,
-      Observation.Id,
-      ObservationsWorkflowQuery.Data.Observations
-    ](
-      offset =>
-        ObservationsWorkflowQuery[F]
-          .query(whereObservation, offset.orUnassign)
-          .processErrors
           .map(_.observations),
       _.matches,
       _.hasMore,

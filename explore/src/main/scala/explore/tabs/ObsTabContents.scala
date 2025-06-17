@@ -283,6 +283,9 @@ object ObsTabContents extends TwoPanels:
                 // Something like .mapValue but for UndoContext
                 val obsUndoSetter =
                   props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify)
+                val obs           = obsUndoSetter.get
+                val obsIsReadonly =
+                  props.readonly || addingObservation.get.value || obs.isCalibration || obs.isExecuted
                 ObsTabTiles(
                   props.vault,
                   props.programId,
@@ -300,7 +303,7 @@ object ObsTabContents extends TwoPanels:
                   resize,
                   props.userPreferences.get,
                   props.globalPreferences,
-                  props.readonly || addingObservation.get.value || obsUndoSetter.get.isExecuted
+                  obsIsReadonly
                 ).withKey(s"${obsId.show}")
               )
           }

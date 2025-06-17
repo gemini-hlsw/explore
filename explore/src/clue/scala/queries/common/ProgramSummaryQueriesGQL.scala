@@ -90,21 +90,6 @@ object ProgramSummaryQueriesGQL {
   }
 
   @GraphQL
-  trait ObservationsWorkflowQuery extends GraphQLOperation[ObservationDB] {
-    val document: String = s"""
-      query($$where: WhereObservation!, $$offset: ObservationId) {
-        observations(WHERE: $$where, OFFSET: $$offset) {
-          matches {
-            id
-            workflow $ObservationWorkflowSubquery
-          }
-          hasMore
-        }
-      }
-    """
-  }
-
-  @GraphQL
   trait GroupTimeRangeQuery extends GraphQLOperation[ObservationDB] {
     val document: String = s"""
       query($$groupId: GroupId!) {

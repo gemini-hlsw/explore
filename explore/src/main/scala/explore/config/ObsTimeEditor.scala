@@ -9,6 +9,7 @@ import crystal.react.View
 import explore.Icons
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*

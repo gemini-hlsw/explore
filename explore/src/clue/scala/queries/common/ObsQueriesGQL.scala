@@ -142,8 +142,9 @@ object ObsQueriesGQL:
           value {
             groupId
             execution {
-              digest: calculatedDigest $CalculatedDigestSubquery
+              calculatedDigest $CalculatedDigestSubquery
             }
+            calculatedWorkflow $CalculatedObservationWorkflowSubquery
           }
         }
       }

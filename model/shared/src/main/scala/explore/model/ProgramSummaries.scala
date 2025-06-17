@@ -76,10 +76,10 @@ case class ProgramSummaries(
       .toMap
 
   lazy val hasUndefinedObservations: Boolean =
-    observations.values.exists(_.workflow.state === ObservationWorkflowState.Undefined)
+    observations.values.exists(_.workflow.value.state === ObservationWorkflowState.Undefined)
 
   lazy val hasDefinedObservations: Boolean =
-    observations.values.exists(_.workflow.state === ObservationWorkflowState.Defined)
+    observations.values.exists(_.workflow.value.state === ObservationWorkflowState.Defined)
 
   lazy val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     observations.toList
@@ -159,7 +159,7 @@ case class ProgramSummaries(
   lazy val configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]] =
     val l = observations.values.toList
       .filter: o =>
-        o.workflow.state =!= ObservationWorkflowState.Inactive &&
+        o.workflow.value.state =!= ObservationWorkflowState.Inactive &&
           o.calibrationRole.isEmpty &&
           o.configuration.fold(false): config =>
             o.hasNotRequestedCode ||
@@ -255,15 +255,15 @@ case class ProgramSummaries(
       .map: (group, obses) =>
         val undefWarning =
           obses
-            .exists(_.workflow.state === ObservationWorkflowState.Undefined)
+            .exists(_.workflow.value.state === ObservationWorkflowState.Undefined)
             .mkSet(GroupWarning.UndefinedObservations)
         val unapproved   =
           obses
-            .exists(_.workflow.state === ObservationWorkflowState.Unapproved)
+            .exists(_.workflow.value.state === ObservationWorkflowState.Unapproved)
             .mkSet(GroupWarning.UnapprovedObservations)
 
         val obs2Check =
-          NonEmptyList.fromList(obses.filterNot(o => ignoreStates.contains(o.workflow.state)))
+          NonEmptyList.fromList(obses.filterNot(o => ignoreStates.contains(o.workflow.value.state)))
 
         val moreWarnings = obs2Check.fold(Set.empty): nel =>
           val bandMismatch = // for all AND groups
