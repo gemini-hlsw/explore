@@ -32,26 +32,25 @@ trait ProposalOdbExtensions:
   extension (proposalType: ProposalType)
     def toInput: ProposalTypeInput =
       proposalType match
-        case ProposalType.DemoScience(_, toOActivation, minPercentTime)                   =>
+        case ProposalType.DemoScience(_, toOActivation, minPercentTime)          =>
           ProposalTypeInput(demoScience =
             DemoScienceInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign
             ).assign
           )
-        case ProposalType.DirectorsTime(_, toOActivation, minPercentTime)                 =>
+        case ProposalType.DirectorsTime(_, toOActivation, minPercentTime)        =>
           ProposalTypeInput(directorsTime =
             DirectorsTimeInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign
             ).assign
           )
-        case ProposalType.FastTurnaround(_, toOActivation, minPercentTime, piAffiliation) =>
+        case ProposalType.FastTurnaround(_, toOActivation, minPercentTime)       =>
           ProposalTypeInput(fastTurnaround =
             FastTurnaroundInput(
               toOActivation = toOActivation.assign,
-              minPercentTime = minPercentTime.assign,
-              piAffiliation = piAffiliation.orUnassign
+              minPercentTime = minPercentTime.assign
             ).assign
           )
         case ProposalType.LargeProgram(
@@ -69,7 +68,7 @@ trait ProposalOdbExtensions:
               totalTime = totalTime.toInput.assign
             ).assign
           )
-        case ProposalType.Classical(_, minPercentTime, partnerSplits)                     =>
+        case ProposalType.Classical(_, minPercentTime, partnerSplits)            =>
           ProposalTypeInput(classical =
             ClassicalInput(
               minPercentTime = minPercentTime.assign,
@@ -77,7 +76,7 @@ trait ProposalOdbExtensions:
                 if (partnerSplits.nonEmpty) partnerSplits.map(_.toInput).assign else Unassign
             ).assign
           )
-        case ProposalType.Queue(_, toOActivation, minPercentTime, partnerSplits)          =>
+        case ProposalType.Queue(_, toOActivation, minPercentTime, partnerSplits) =>
           ProposalTypeInput(queue =
             QueueInput(
               toOActivation = toOActivation.assign,
@@ -86,14 +85,14 @@ trait ProposalOdbExtensions:
                 if (partnerSplits.nonEmpty) partnerSplits.map(_.toInput).assign else Unassign
             ).assign
           )
-        case ProposalType.SystemVerification(_, toOActivation, minPercentTime)            =>
+        case ProposalType.SystemVerification(_, toOActivation, minPercentTime)   =>
           ProposalTypeInput(systemVerification =
             SystemVerificationInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign
             ).assign
           )
-        case ProposalType.PoorWeather(scienceSubtype)                                     =>
+        case ProposalType.PoorWeather(scienceSubtype)                            =>
           ProposalTypeInput(poorWeather = PoorWeatherInput().assign)
 
   // Used to reset the proposal type when the call changes

@@ -113,8 +113,8 @@ case class Proposal(
 
   private lazy val isFastTurnaround: Boolean =
     proposalType.exists {
-      case ProposalType.FastTurnaround(_, _, _, _) => true
-      case _                                       => false
+      case ProposalType.FastTurnaround(_, _, _) => true
+      case _                                    => false
     }
 
   private def attachmentErrors(attachments: AttachmentList): List[String] =
