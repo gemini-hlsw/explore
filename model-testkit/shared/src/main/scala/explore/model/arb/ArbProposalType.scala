@@ -6,7 +6,6 @@ package explore.model.arb
 import eu.timepit.refined.scalacheck.all.*
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
-import lucuma.core.enums.Partner
 import lucuma.core.util.arb.ArbEnumerated.given
 import org.scalacheck.*
 import org.scalacheck.Arbitrary.arbitrary
@@ -82,8 +81,7 @@ trait ArbProposalType:
         scienceSubtype <- arbitrary[ScienceSubtype]
         toOActivation  <- arbitrary[ToOActivation]
         minPercentType <- arbitrary[IntPercent]
-        piAffiliation  <- arbitrary[Option[Partner]]
-      } yield FastTurnaround(scienceSubtype, toOActivation, minPercentType, piAffiliation)
+      } yield FastTurnaround(scienceSubtype, toOActivation, minPercentType)
     }
 
   given Cogen[FastTurnaround] =
@@ -91,10 +89,9 @@ trait ArbProposalType:
       (
         ScienceSubtype,
         ToOActivation,
-        IntPercent,
-        Option[Partner]
+        IntPercent
       )
-    ].contramap(p => (p.scienceSubtype, p.toOActivation, p.minPercentTime, p.piAffiliation))
+    ].contramap(p => (p.scienceSubtype, p.toOActivation, p.minPercentTime))
 
   given Arbitrary[LargeProgram] =
     Arbitrary {

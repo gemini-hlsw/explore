@@ -10,7 +10,6 @@ import eu.timepit.refined.cats.given
 import io.circe.ACursor
 import io.circe.Decoder
 import io.circe.refined.*
-import lucuma.core.enums.Partner
 import lucuma.core.enums.ScienceSubtype
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
@@ -156,18 +155,15 @@ object ProposalType:
   case class FastTurnaround(
     scienceSubtype: ScienceSubtype,
     toOActivation:  ToOActivation,
-    minPercentTime: IntPercent,
-    piAffiliation:  Option[Partner]
+    minPercentTime: IntPercent
   ) extends ProposalType derives Eq
 
   object FastTurnaround {
-    val minPercentTime: Lens[FastTurnaround, IntPercent]     = Focus[FastTurnaround](_.minPercentTime)
-    val toOActivation: Lens[FastTurnaround, ToOActivation]   = Focus[FastTurnaround](_.toOActivation)
-    val piAffiliation: Lens[FastTurnaround, Option[Partner]] =
-      Focus[FastTurnaround](_.piAffiliation)
+    val minPercentTime: Lens[FastTurnaround, IntPercent]   = Focus[FastTurnaround](_.minPercentTime)
+    val toOActivation: Lens[FastTurnaround, ToOActivation] = Focus[FastTurnaround](_.toOActivation)
 
     val Default: FastTurnaround =
-      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 100.refined, None)
+      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 100.refined)
   }
 
   // Define the LargeProgram case class implementing ProposalType
@@ -259,8 +255,7 @@ object ProposalType:
           for {
             toOActivation  <- c.downField("toOActivation").as[ToOActivation]
             minPercentTime <- c.downField("minPercentTime").as[IntPercent]
-            piAffiliation  <- c.downField("piAffiliation").as[Option[Partner]]
-          } yield FastTurnaround(tpe, toOActivation, minPercentTime, piAffiliation)
+          } yield FastTurnaround(tpe, toOActivation, minPercentTime)
         case ScienceSubtype.LargeProgram       =>
           for {
             toOActivation       <- c.downField("toOActivation").as[ToOActivation]

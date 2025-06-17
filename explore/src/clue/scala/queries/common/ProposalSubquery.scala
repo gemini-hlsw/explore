@@ -31,7 +31,6 @@ object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("
         ... on FastTurnaround {
           toOActivation
           minPercentTime
-          piAffiliation
         }
         ... on LargeProgram {
           toOActivation
