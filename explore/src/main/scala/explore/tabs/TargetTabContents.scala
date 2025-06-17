@@ -29,7 +29,6 @@ import explore.plots.ObjectPlotData
 import explore.plots.PlotData
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.syntax.ui.*
 import explore.targeteditor.AsterismEditorTile
 import explore.targets.TargetPasteAction
 import explore.targets.TargetSummaryTile

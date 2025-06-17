@@ -14,6 +14,7 @@ import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.components.ui.PartnerFlags
 import explore.model.Constants
+import explore.model.syntax.all.*
 import explore.optics.GetAdjust
 import explore.utils.*
 import japgolly.scalajs.react.callback.Callback
@@ -26,11 +27,8 @@ import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.model.Access
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
-import lucuma.core.model.sequence.ExecutionDigest
 import lucuma.core.util.CalculatedValue
-import lucuma.core.util.CalculationState
 import lucuma.core.util.Enumerated
-import lucuma.core.util.TimeSpan
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
@@ -138,29 +136,18 @@ extension (tag:    TagOf[HTMLElement])
     content.fold(tag)(t => tag.withTooltip(content = t, position = position))
 
 extension [A](calc: CalculatedValue[A])
-  def isReady: Boolean                              = calc.state === CalculationState.Ready
-  def isStale: Boolean                              = !isReady
-  def staleClass: TagMod                            = ExploreStyles.Stale.when(isStale)
+  def staleClass: TagMod                            = ExploreStyles.Stale.when(calc.isStale)
   // Buttons require string tooltips :(
   def staleTooltipString: Option[String]            =
-    if (isStale) "Awaiting new data from server.".some else none
+    if (calc.isStale) "Awaiting new data from server.".some else none
   def staleTooltip: Option[VdomNode]                = staleTooltip("Awaiting new data from server.")
   def staleTooltip(tip: VdomNode): Option[VdomNode] =
-    if (isStale) tip.some else none
+    if (calc.isStale) tip.some else none
   def renderOrElse(
     ready: A => VdomNode,
     stale: => VdomNode
   ): VdomNode =
-    if (isStale) stale else ready(calc.value)
-
-extension [A](a: A) def asReady: CalculatedValue[A] = CalculatedValue(CalculationState.Ready, a)
-
-extension (calcDigest: CalculatedValue[Option[ExecutionDigest]])
-  def programTimeEstimate: CalculatedValue[Option[TimeSpan]] =
-    calcDigest.map(_.map(_.fullTimeEstimate.programTime))
-  def fullSetupTime: CalculatedValue[Option[TimeSpan]]       = calcDigest.map(_.map(_.setup.full))
-  def remainingObsTime: CalculatedValue[Option[TimeSpan]]    =
-    calcDigest.map(_.map(d => d.science.timeEstimate.sum +| d.setup.full))
+    if (calc.isStale) stale else ready(calc.value)
 
 extension (partner: Partner)
   def renderFlag: VdomNode =

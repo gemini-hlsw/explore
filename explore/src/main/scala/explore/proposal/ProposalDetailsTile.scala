@@ -37,6 +37,7 @@ import explore.model.display.given
 import explore.model.enums.TileSizeState
 import explore.model.enums.Visible
 import explore.model.reusability.given
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.undo.*
 import japgolly.scalajs.react.*

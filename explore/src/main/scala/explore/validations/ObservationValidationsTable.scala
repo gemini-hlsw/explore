@@ -135,10 +135,10 @@ object ObservationValidationsTableBody {
       .map: obs =>
         Expandable(
           ObsRow(obs),
-          if (obs.workflow.validationErrors.size > 1)
+          if (obs.workflow.value.validationErrors.size > 1)
             // only include the tails for messages and validations. The head will be shown in the "parent" row.
-            messagesTailRows(obs.id, obs.workflow.validationErrors.head) ++
-              obs.workflow.validationErrors.tail
+            messagesTailRows(obs.id, obs.workflow.value.validationErrors.head) ++
+              obs.workflow.value.validationErrors.tail
                 .map(v =>
                   Expandable(
                     ValidationRow(obs.id, v),
@@ -229,8 +229,9 @@ object ObservationValidationsTableBody {
     def category(isExpanded: Boolean): VdomElement =
       fold(
         r =>
-          if (isExpanded) categoryCell(r.obs.workflow.validationErrors.head) // head is safe here
-          else categoryCell(r.obs.workflow.validationErrors*),
+          if (isExpanded)
+            categoryCell(r.obs.workflow.value.validationErrors.head) // head is safe here
+          else categoryCell(r.obs.workflow.value.validationErrors*),
         r => categoryCell(r.validation),
         _ => <.span()
       )
@@ -238,8 +239,9 @@ object ObservationValidationsTableBody {
     def message(isExpanded: Boolean): String =
       fold(
         r =>
-          if (isExpanded) r.obs.workflow.validationErrors.headOption.map(_.messages.head).orEmpty
-          else r.obs.workflow.validationErrors.flatMap(_.messages.toList).mkString(", "),
+          if (isExpanded)
+            r.obs.workflow.value.validationErrors.headOption.map(_.messages.head).orEmpty
+          else r.obs.workflow.value.validationErrors.flatMap(_.messages.toList).mkString(", "),
         r =>
           if (isExpanded) r.validation.messages.head
           else r.validation.messages.mkString_(", "),

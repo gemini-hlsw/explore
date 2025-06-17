@@ -18,6 +18,7 @@ import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
+import lucuma.ui.optics.*
 import queries.common.ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
@@ -72,16 +73,19 @@ trait CacheModifierUpdaters {
   protected def modifyObservationCalculatedValues(
     obscalcUpdate: ObscalcUpdate
   ): ProgramSummaries => ProgramSummaries =
-    // `execution.calculatedDigest` will probably be made non-optional in the future.
-    obscalcUpdate.value.flatMap(_.execution.calculatedDigest).fold(identity[ProgramSummaries]) {
-      digest =>
+    val digestLens   = Observation.execution.andThen(Execution.digest)
+    val disjointLens = digestLens.disjointZip(Observation.workflow)
+    // `execution.calculatedDigest` and `workflow` will be made non-optional in the future.
+    // In practice, both should be defined.
+    obscalcUpdate.value
+      .flatMap(value => (value.execution.calculatedDigest, value.calculatedWorkflow).tupled)
+      .fold(identity[ProgramSummaries]) { case (digest, workflow) =>
         val obsId: Observation.Id = obscalcUpdate.observationId
         ProgramSummaries.observations
           .index(obsId)
-          .andThen(Observation.execution)
-          .andThen(Execution.digest)
-          .replace(digest)
-    }
+          .andThen(disjointLens)
+          .replace((digest, workflow))
+      }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =
     groupEdit.value // We ignore updates on deleted groups.

@@ -30,7 +30,9 @@ import lucuma.core.model.arb.ArbObservationValidation.given
 import lucuma.core.model.arb.ArbObservationWorkflow.given
 import lucuma.core.model.arb.ArbPosAngleConstraint.given
 import lucuma.core.model.arb.ArbTimingWindow.given
+import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.arb.ArbCalculatedValue.given
 import lucuma.core.util.arb.ArbEnumerated.given
 import lucuma.core.util.arb.ArbGid.given
 import lucuma.core.util.arb.ArbTimeSpan.given
@@ -77,7 +79,7 @@ trait ArbObservation:
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
         scienceBand         <- arbitrary[Option[ScienceBand]]
         configuration       <- arbitrary[Option[Configuration]]
-        workflow            <- arbitrary[ObservationWorkflow]
+        workflow            <- arbitrary[CalculatedValue[ObservationWorkflow]]
         groupId             <- arbitrary[Option[Group.Id]]
         groupIndex          <- arbitrary[NonNegShort]
         execution           <- arbitrary[Execution]
@@ -129,7 +131,7 @@ trait ArbObservation:
        Option[CalibrationRole],
        Option[ScienceBand],
        Option[Configuration],
-       ObservationWorkflow,
+       CalculatedValue[ObservationWorkflow],
        Option[Group.Id],
        (Short, Execution)
       )

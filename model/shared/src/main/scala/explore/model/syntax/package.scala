@@ -24,7 +24,11 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.CalculatedValue
+import lucuma.core.util.CalculationState
 import lucuma.core.util.Enumerated
+import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
@@ -218,3 +222,16 @@ object all:
         case PosAngleConstraint.Unbounded              => Angle.Angle0
         case PosAngleConstraint.AverageParallactic     =>
           averagePA.getOrElse(Angle.Angle0)
+
+  extension [A](calc: CalculatedValue[A])
+    def isReady: Boolean = calc.state === CalculationState.Ready
+    def isStale: Boolean = !isReady
+
+  extension [A](a: A) def asReady: CalculatedValue[A] = CalculatedValue(CalculationState.Ready, a)
+
+  extension (calcDigest: CalculatedValue[Option[ExecutionDigest]])
+    def programTimeEstimate: CalculatedValue[Option[TimeSpan]] =
+      calcDigest.map(_.map(_.fullTimeEstimate.programTime))
+    def fullSetupTime: CalculatedValue[Option[TimeSpan]]       = calcDigest.map(_.map(_.setup.full))
+    def remainingObsTime: CalculatedValue[Option[TimeSpan]]    =
+      calcDigest.map(_.map(d => d.science.timeEstimate.sum +| d.setup.full))

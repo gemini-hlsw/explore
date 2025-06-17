@@ -103,8 +103,6 @@ case class ObsTabTiles(
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsId: Observation.Id = observation.get.id
 
-  val isDisabled: Boolean = readonly || observation.get.isCalibration
-
   val allConstraintSets: Set[ConstraintSet] = programSummaries.constraintGroups.map(_._2).toSet
 
   val targetObservations: Map[Target.Id, SortedSet[Observation.Id]] =
@@ -379,7 +377,7 @@ object ObsTabTiles:
               props.vault.map(_.token),
               props.attachments,
               pa,
-              props.isDisabled,
+              props.readonly,
               hidden = hideTiles
             )
 
@@ -507,7 +505,7 @@ object ObsTabTiles:
               guideStarSelection,
               props.attachments,
               props.vault.map(_.token),
-              props.isDisabled,
+              props.readonly,
               // Any target changes invalidate the sequence
               sequenceChanged.set(pending)
             )
@@ -517,7 +515,7 @@ object ObsTabTiles:
               props.obsId,
               props.observation.model.zoom(Observation.constraints),
               props.allConstraintSets,
-              props.isDisabled
+              props.readonly
             )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
@@ -538,13 +536,13 @@ object ObsTabTiles:
                   conditionsLikelihood,
                   props.centralWavelength,
                   props.observation.zoom(Observation.constraints),
-                  props.isDisabled
+                  props.readonly
                 ),
               (_, _) => constraintsSelector
             )
 
           val schedulingWindowsTile =
-            SchedulingWindowsTile(schedulingWindows, props.isDisabled, false)
+            SchedulingWindowsTile(schedulingWindows, props.readonly, false)
 
           val configurationTile: Tile[?] =
             ConfigurationTile(
@@ -567,7 +565,7 @@ object ObsTabTiles:
                 case Ready(x) => pending
                 case x        => x
               ,
-              props.isDisabled,
+              props.readonly,
               props.globalPreferences.get.wavelengthUnits,
               props.vault.isStaff
             )
