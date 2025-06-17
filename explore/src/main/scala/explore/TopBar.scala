@@ -26,6 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.ExecutionEnvironment
 import lucuma.core.model.GuestRole
 import lucuma.core.model.Program
+import lucuma.core.model.StandardRole
 import lucuma.core.util.NewBoolean
 import lucuma.react.common.*
 import lucuma.react.fa.FontAwesomeIcon
@@ -56,6 +57,7 @@ case class TopBar(
   programInfos:               ViewOpt[ProgramInfoList],
   theme:                      View[Theme],
   onLogout:                   IO[Unit],
+  onRoleChange:               StandardRole => IO[Unit],
   globalPreferences:          View[GlobalPreferences]
 ) extends ReactFnProps(TopBar.component)
 
@@ -202,7 +204,7 @@ object TopBar:
               ),
               right = React.Fragment(
                 <.span(LayoutStyles.MainUserName)(user.displayName),
-                RoleSwitch(props.vault, ctx.sso),
+                RoleSwitch(props.vault, ctx.sso, props.onRoleChange),
                 ConnectionsStatus(),
                 Button(
                   icon = Icons.Bars,

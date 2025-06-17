@@ -15,6 +15,7 @@ import explore.cache.CfpCacheController
 import explore.cache.ModesCacheController
 import explore.cache.PreferencesCacheController
 import explore.cache.ProgramCacheController
+import explore.cache.ResetType
 import explore.components.ui.ExploreStyles
 import explore.events.ExploreEvent
 import explore.model.*
@@ -164,17 +165,18 @@ object ExploreLayout:
                                   ctx.broadcastChannel.postMessage(ExploreEvent.ExploreUIReady)
         userSelectionMessage <- useStateView(none[NonEmptyString])
         theme                <- useTheme(Theme.Dark)
-        programCacheKeyVer   <- useState(0)
-        // Indicates whether the current program is loading, ready or errored.
-        programState         <- useState(Pot.pending[Unit])
+        // Indicates whether the current program has errored.
+        // We keep a separate state from the Pot in props.model.programSummaries so that we can keep
+        // the value there when there's an error, and show the error only as a modal on top.
+        programError         <- useState(none[String])
+        // Reset the program cache when the program changes.
         _                    <- useEffectWithDeps(routingInfo.map(_.programId)): _ =>
-                                  programState.setState(Pot.pending[Unit])
-        _                    <- useEffectStreamOnMount:
-                                  ctx.resetProgramCacheSignal.evalMap: errorMsg =>
-                                    (programState.setState(
-                                      errorMsg.fold(Pot.pending)(e => Pot.Error(RuntimeException(e)))
-                                    ) >>
-                                      programCacheKeyVer.modState(_ + 1).when_(errorMsg.isDefined)).toAsync
+                                  ctx.resetProgramCache(none)
+        // Reset the program cache when there's an error signal.
+        _                    <- useEffectStreamResourceOnMount:
+                                  ctx.resetProgramCacheTopic.subscribeAwaitUnbounded.map:
+                                    _.unNone.evalMap: errorMsg =>
+                                      programError.setStateAsync(errorMsg.some)
       yield
         import ctx.given
 
@@ -191,8 +193,7 @@ object ExploreLayout:
         React.Fragment(
           Toast(Toast.Position.BottomRight, baseZIndex = 2000).withRef(toastRef.ref),
           // On Error we show a modal dialog with the error message while we reload.
-          programState.value.toOptionEither
-            .flatMap(_.swap.toOption)
+          programError.value
             .map(error =>
               React.Fragment(
                 Sidebar(
@@ -202,7 +203,7 @@ object ExploreLayout:
                   showCloseIcon = false,
                   dismissable = false,
                   position = Sidebar.Position.Bottom,
-                  content = error.getMessage,
+                  content = error,
                   clazz = ExploreStyles.GlobalErrorDialog
                 ),
                 SolarProgress()
@@ -270,8 +271,6 @@ object ExploreLayout:
                     .map(_.user)
                     .foldMap(u => s"${routingInfo.programId}-${u.id}-${u.role.name}")
 
-                val programCacheKey: String = s"$cacheKey-${programCacheKeyVer.value}"
-
                 React.Fragment(
                   ConfirmDialog(),
                   Sidebar(
@@ -298,8 +297,10 @@ object ExploreLayout:
                     ProgramCacheController(
                       routingInfo.programId,
                       props.model.programSummaries.throttledView.mod,
-                      programState.setState(().ready).toAsync
-                    ).withKey(programCacheKey),
+                      programError.setState(none).toAsync,
+                      ctx.resetProgramCacheTopic.subscribeUnbounded // On error, keep the current program cache.
+                        .map(_.fold(ResetType.Wipe)(_ => ResetType.Keep))
+                    ),
                     userVault.mapValue: (vault: View[UserVault]) =>
                       React.Fragment(
                         PreferencesCacheController(
@@ -325,6 +326,7 @@ object ExploreLayout:
                                 .zoom(ProgramSummaries.programs),
                               theme,
                               onLogout >> view.zoom(RootModel.vault).set(none).toAsync,
+                              _ => ctx.resetProgramCache(none),
                               prefs
                             )
                           ),
@@ -341,36 +343,33 @@ object ExploreLayout:
                               message = msg
                             ): VdomElement
                           else
-                            // Only render spinner if program loading is pending.
-                            // In case of error, we still show the data but with an error modal, rendered above.
-                            programState.value.toOptionEither.fold[VdomNode](SolarProgress()): _ =>
-                              React.Fragment(
-                                SideTabs(
-                                  "side-tabs".refined,
-                                  routingInfoView.zoom(RoutingInfo.appTab),
-                                  tab =>
-                                    ctx.pageUrl(
-                                      (tab, routingInfo.programId, routingInfo.focused).some
-                                    ),
-                                  _.separatorAfter,
-                                  tab =>
-                                    programSummaries.toOption
-                                      .flatMap(_.optProgramDetails)
-                                      .forall: program =>
-                                        // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                                        (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                                          program.programType === ProgramType.Science &&
-                                          (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
-                                ),
-                                <.div(
-                                  LayoutStyles.MainBody,
-                                  LayoutStyles.WithMessage.when(isSubmitted)
-                                )(
-                                  props.resolution.renderP(props.model),
-                                  TagMod.when(isSubmitted):
-                                    SubmittedProposalMessage(proposalReference, deadline)
-                                )
+                            React.Fragment(
+                              SideTabs(
+                                "side-tabs".refined,
+                                routingInfoView.zoom(RoutingInfo.appTab),
+                                tab =>
+                                  ctx.pageUrl(
+                                    (tab, routingInfo.programId, routingInfo.focused).some
+                                  ),
+                                _.separatorAfter,
+                                tab =>
+                                  programSummaries.toOption
+                                    .flatMap(_.optProgramDetails)
+                                    .forall: program =>
+                                      // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                                      (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                                        program.programType === ProgramType.Science &&
+                                        (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                              ),
+                              <.div(
+                                LayoutStyles.MainBody,
+                                LayoutStyles.WithMessage.when(isSubmitted)
+                              )(
+                                props.resolution.renderP(props.model),
+                                TagMod.when(isSubmitted):
+                                  SubmittedProposalMessage(proposalReference, deadline)
                               )
+                            )
                       )
                   )
                 )

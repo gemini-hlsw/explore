@@ -35,16 +35,16 @@ import queries.common.ProgramQueriesGQL.GroupEditSubscription
 import scala.concurrent.duration.*
 
 case class ProgramCacheController(
-  programId:           Program.Id,
-  modProgramSummaries: (Pot[ProgramSummaries] => Pot[ProgramSummaries]) => IO[Unit],
-  onLoad:              IO[Unit]
+  programId:                Program.Id,
+  modProgramSummaries:      (Pot[ProgramSummaries] => Pot[ProgramSummaries]) => IO[Unit],
+  onLoad:                   IO[Unit],
+  override val resetSignal: fs2.Stream[IO, ResetType]
 )(using val odbApi: OdbApi[IO], logger: Logger[IO])
 // Do not remove the explicit type parameter below, it confuses the compiler.
     extends ReactFnProps[ProgramCacheController](ProgramCacheController.component)
     with CacheControllerComponent.Props[ProgramSummaries]:
-  val modState                           = modProgramSummaries
-  given Logger[IO]                       = logger
-  val updateSignal: fs2.Stream[IO, Unit] = fs2.Stream.empty
+  val modState     = modProgramSummaries
+  given Logger[IO] = logger
 
 object ProgramCacheController
     extends CacheControllerComponent[ProgramSummaries, ProgramCacheController]
