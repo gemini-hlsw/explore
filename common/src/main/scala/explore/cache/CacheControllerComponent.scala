@@ -8,11 +8,16 @@ import cats.effect.kernel.Deferred
 import cats.syntax.all.*
 import crystal.Pot
 import crystal.react.hooks.*
+import crystal.react.syntax.effect.*
 import fs2.Pipe
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.util.DefaultEffects.Async as DefaultA
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.util.NewBoolean
 import lucuma.ui.syntax.effect.*
+
+object ResetType extends NewBoolean { val Wipe = True; val Keep = False }
+type ResetType = ResetType.Type
 
 trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   private type F[T] = DefaultA[T]
@@ -25,8 +30,8 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
   protected val updateStream: P => Resource[F, fs2.Stream[F, S => S]]
 
   private def impactModel(
-    modState: (Pot[S] => Pot[S]) => DefaultA[Unit]
-  ): Pipe[DefaultA, Either[Throwable, S => S], Unit] =
+    modState: (Pot[S] => Pot[S]) => F[Unit]
+  ): Pipe[F, Either[Throwable, S => S], Unit] =
     _.evalMap: modElem =>
       modState: oldValue =>
         modElem.fold(
@@ -40,8 +45,9 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
         useCallback: // Apply updates from an update stream.
           (stream: fs2.Stream[F, Either[Throwable, S => S]]) =>
             stream.through(impactModel(props.modState)).compile.drain
+      version            <- useState(0)
       _                  <-
-        useResourceOnMount:
+        useResource(version.value): _ =>
           for
             // Start the update fiber. We want subscriptions to start before initial query.
             // This way we don't miss updates.
@@ -68,10 +74,14 @@ trait CacheControllerComponent[S, P <: CacheControllerComponent.Props[S]]:
                                  .orEmpty
                                  .background
           yield ()
+      _                  <- useStreamOnMount:
+                              props.resetSignal.evalMap: resetType =>
+                                props.modState(_ => Pot.pending).whenA(resetType === ResetType.Wipe) >>
+                                  version.modState(_ + 1).toAsync
     yield EmptyVdom
 
 object CacheControllerComponent:
   trait Props[S]:
     def modState: (Pot[S] => Pot[S]) => DefaultA[Unit]
     def onLoad: DefaultA[Unit]
-    // def resetSignal: fs2.Stream[DefaultA, Unit]
+    def resetSignal: fs2.Stream[DefaultA, ResetType] = fs2.Stream.empty

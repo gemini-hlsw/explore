@@ -16,7 +16,7 @@ import explore.services.OdbApi
 import explore.services.OdbApiImpl
 import explore.utils
 import explore.utils.ToastCtx
-import fs2.concurrent.SignallingRef
+import fs2.concurrent.Topic
 import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.SetRouteVia
@@ -35,22 +35,22 @@ import queries.schemas.UserPreferencesDB
 import workers.WorkerClient
 
 case class AppContext[F[_]](
-  version:                         NonEmptyString,
-  clients:                         GraphQLClients[F],
-  workerClients:                   WorkerClients[F],
-  sso:                             SSOClient[F],
-  tracing:                         Option[TracingConfig],
-  httpClient:                      Client[F],
-  pageUrl:                         Option[(AppTab, Program.Id, Focused)] => String,
-  setPageVia:                      (Option[(AppTab, Program.Id, Focused)], SetRouteVia) => Callback,
-  environment:                     ExecutionEnvironment,
-  broadcastChannel:                BroadcastChannel[F, ExploreEvent],
-  toastRef:                        Deferred[F, ToastRef],
-  private val resetProgramCacheSR: SignallingRef[F, Option[String]] // Error message
+  version:                NonEmptyString,
+  clients:                GraphQLClients[F],
+  workerClients:          WorkerClients[F],
+  sso:                    SSOClient[F],
+  tracing:                Option[TracingConfig],
+  httpClient:             Client[F],
+  pageUrl:                Option[(AppTab, Program.Id, Focused)] => String,
+  setPageVia:             (Option[(AppTab, Program.Id, Focused)], SetRouteVia) => Callback,
+  environment:            ExecutionEnvironment,
+  broadcastChannel:       BroadcastChannel[F, ExploreEvent],
+  toastRef:               Deferred[F, ToastRef],
+  resetProgramCacheTopic: Topic[F, Option[String]] // Error message (if any)
 )(using
-  val F:                           Async[F],
-  val logger:                      Logger[F],
-  val P:                           Parallel[F]
+  val F:                  Async[F],
+  val logger:             Logger[F],
+  val P:                  Parallel[F]
 ):
   def pushPage(location: Option[(AppTab, Program.Id, Focused)]): Callback =
     setPageVia(location, SetRouteVia.HistoryPush)
@@ -79,14 +79,8 @@ case class AppContext[F[_]](
     val finalContents: VdomNode = contents.getOrElse(obsId.show)
     routingLink((AppTab.Observations, programId, Focused.singleObs(obsId)).some, finalContents)
 
-  def resetProgramCache(errorMsg: String): F[Unit] =
-    resetProgramCacheSR.set(errorMsg.some)
-
-  def endResetProgramCache: F[Unit] =
-    resetProgramCacheSR.set(none)
-
-  def resetProgramCacheSignal: fs2.Stream[F, Option[String]] =
-    resetProgramCacheSR.discrete
+  def resetProgramCache(errorMsg: Option[String]): F[Unit] =
+    resetProgramCacheTopic.publish1(errorMsg).void
 
   given WebSocketJsClient[F, ObservationDB]     = clients.odb
   given WebSocketJsClient[F, UserPreferencesDB] = clients.preferencesDB
@@ -99,7 +93,8 @@ case class AppContext[F[_]](
 
   given toastCtx: ToastCtx[F] = new ToastCtx(toastRef)
 
-  given odbApi: OdbApi[F] = OdbApiImpl[F](resetProgramCache)
+  given odbApi: OdbApi[F] =
+    OdbApiImpl[F](errorMsg => resetProgramCache(errorMsg.some))
 
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value
@@ -115,11 +110,11 @@ object AppContext:
     toastRef:             Deferred[F, ToastRef]
   ): F[AppContext[F]] =
     for {
-      clients             <-
+      clients                <-
         GraphQLClients
           .build[F](config.odbURI, config.preferencesDBURI, config.sso.uri, reconnectionStrategy)
-      resetProgramCacheSR <- SignallingRef[F, Option[String]](none)
-      version              = utils.version(config.environment)
+      resetProgramCacheTopic <- Topic[F, Option[String]]
+      version                 = utils.version(config.environment)
     } yield AppContext[F](
       version,
       clients,
@@ -132,7 +127,7 @@ object AppContext:
       config.environment,
       broadcastChannel,
       toastRef,
-      resetProgramCacheSR
+      resetProgramCacheTopic
     )
 
   given [F[_]]: Reusability[AppContext[F]] = Reusability.always

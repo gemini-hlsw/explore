@@ -19,41 +19,43 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 
 case class RoleSwitch(
-  vault:     View[UserVault],
-  ssoClient: SSOClient[IO]
-) extends ReactFnProps(RoleSwitch.component)
+  vault:        View[UserVault],
+  ssoClient:    SSOClient[IO],
+  onRoleChange: StandardRole => IO[Unit]
+) extends ReactFnProps(RoleSwitch)
 
-object RoleSwitch:
-  private type Props = RoleSwitch
+object RoleSwitch
+    extends ReactFnComponent[RoleSwitch](props =>
+      val user = props.vault.get.user
 
-  private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .render: props =>
-        val user = props.vault.get.user
+      def roleSwitch(role: StandardRole) =
+        (
+          for
+            t <- props.ssoClient.switchRole(role.id)
+            _ <- t.foldMap(props.vault.set(_).toAsync)
+            _ <- props.onRoleChange(role)
+          yield ()
+        ).runAsyncAndForget
 
-        def roleSwitch(id: StandardRole.Id) =
-          (for {
-            t <- props.ssoClient.switchRole(id)
-            _ <- t.foldMap(props.vault.set(_).to[IO])
-          } yield ()).runAsyncAndForget
+      val (curRole, otherRoles) = user match {
+        case StandardUser(_, role, other, _) => (role.some, other)
+        case _                               => (none, Nil)
+      }
 
-        val (curRole, otherRoles) = user match {
-          case StandardUser(_, role, other, _) => (role.some, other)
-          case _                               => (none, Nil)
+      React.Fragment(
+        curRole match {
+          case Some(r) if otherRoles.nonEmpty =>
+            val options: List[SelectItem[StandardRole]] =
+              (r :: otherRoles).map(r => SelectItem(r, label = r.name))
+
+            FormDropdown(
+              id = "role-selector-switch".refined,
+              r,
+              options,
+              onChange = roleSwitch
+            )
+          case a                              =>
+            EmptyVdom
         }
-
-        React.Fragment(
-          curRole match {
-            case Some(r) if otherRoles.nonEmpty =>
-              val options = (r :: otherRoles).map(r => SelectItem(r.id, label = r.name))
-              FormDropdown(
-                id = "role-selector-switch".refined,
-                r.id,
-                options,
-                onChange = roleSwitch
-              )
-            case a                              =>
-              EmptyVdom
-          }
-        )
+      )
+    )
