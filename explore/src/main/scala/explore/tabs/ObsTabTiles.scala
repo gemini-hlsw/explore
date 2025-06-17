@@ -134,6 +134,16 @@ case class ObsTabTiles(
 
   def site: Option[Site] = observation.get.observingMode.map(_.siteFor)
 
+  def acqOffset: Option[NonEmptyList[Offset]] =
+    NonEmptyList.fromList(
+      Execution.acqOffset.getOption(observation.get.execution).orEmpty.toList.distinct
+    )
+
+  def sciOffset: Option[NonEmptyList[Offset]] =
+    NonEmptyList.fromList(
+      Execution.sciOffset.getOption(observation.get.execution).orEmpty.toList.distinct
+    )
+
   def obsIQLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
       constraintSet.get.imageQuality.toImageQuality
@@ -207,20 +217,6 @@ object ObsTabTiles:
     ScalaFnComponent[Props]: props =>
       for
         ctx                 <- useContext(AppContext.ctx)
-        sequenceOffsets     <- useStreamResourceOnMount:
-                                 ctx.odbApi
-                                   .sequenceOffsets(props.obsId)
-                                   .map: executionOffsets =>
-                                     Offsets(
-                                       science = NonEmptyList.fromList:
-                                         executionOffsets.foldMap(_.scienceOffsets).distinct
-                                       ,
-                                       acquisition = NonEmptyList.fromList:
-                                         executionOffsets.foldMap(_.acquisitionOffsets).distinct
-                                     )
-                                   // TODO Could we get the edit signal from ProgramCache instead of doing another subscritpion??
-                                   .reRunOnResourceSignals:
-                                     ctx.odbApi.observationEditSubscription(props.obsId)
         agsState            <- useStateView[AgsState](AgsState.Idle)
         // the configuration the user has selected from the spectroscopy modes table, if any
         selectedConfig      <- useStateView(ConfigSelection.Empty)
@@ -420,8 +416,8 @@ object ObsTabTiles:
               paProps.some,
               props.constraintSet.get.some,
               props.centralWavelength,
-              sequenceOffsets.toOption.flatMap(_.science),
-              sequenceOffsets.toOption.flatMap(_.acquisition),
+              props.sciOffset,
+              props.acqOffset,
               averagePA,
               obsDuration.map(_.toDuration),
               props.observation.get.needsAGS,
