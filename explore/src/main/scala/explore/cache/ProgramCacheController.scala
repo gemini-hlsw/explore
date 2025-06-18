@@ -178,7 +178,7 @@ object ProgramCacheController
                 .programTargetsDeltaSubscription(props.programId)
                 .map(_.map(modifyTargets(_)))
 
-            val obsCalcGoupIdPipe
+            val obsCalcGroupId
               : Pipe[IO, ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate, Group.Id] =
               _.map(_.value.flatMap(_.groupId)).filter(_.isDefined).map(_.get)
 
@@ -238,7 +238,7 @@ object ProgramCacheController
                   _.evalTap(_ => queryProgramTimes)
                     .broadcastThrough(
                       _.map(modifyObservationCalculatedValues),
-                      obsCalcGoupIdPipe.andThen(groupTimeRangeUpdate)
+                      obsCalcGroupId.andThen(groupTimeRangeUpdate)
                     )
 
             // TODO Handle errors, disable transparent resubscription upon connection loss.
