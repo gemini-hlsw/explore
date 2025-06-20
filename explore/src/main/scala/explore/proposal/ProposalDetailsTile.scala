@@ -30,6 +30,7 @@ import explore.model.Hours
 import explore.model.PartnerSplit
 import explore.model.ProgramDetails
 import explore.model.ProgramTimeRange
+import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.ProposalType
 import explore.model.ProposalType.*
@@ -66,15 +67,21 @@ import lucuma.ui.syntax.all.given
 import org.typelevel.log4cats.Logger
 import spire.std.any.*
 
+import scalajs.js.JSConverters.*
+
 case class ProposalDetailsBody(
   detailsAligner:  Aligner[ProgramDetails, ProgramPropertiesInput],
   proposalAligner: Aligner[Proposal, ProposalPropertiesInput],
   cfps:            List[CallForProposal],
+  users:           List[ProgramUser],
+  setReviewer:     Option[ProgramUser] => Callback,
+  setMentor:       Option[ProgramUser] => Callback,
   readonly:        Boolean
 ) extends ReactFnProps(ProposalDetailsBody.component):
   val proposal: Proposal                                           = proposalAligner.get
   val timeEstimateRange: CalculatedValue[Option[ProgramTimeRange]] =
     detailsAligner.get.programTimes.timeEstimateRange
+  val pi: Option[ProgramUser]                                      = detailsAligner.get.pi
 
 object ProposalDetailsBody:
   private type Props = ProposalDetailsBody
@@ -432,7 +439,10 @@ object ProposalDetailsBody:
               options = cfpOptions,
               onChange = _.map { cfp =>
                 proposalCfpView.mod(
-                  _.copy(call = cfp.some, proposalType = cfp.cfpType.defaultType.some)
+                  _.copy(
+                    call = cfp.some,
+                    proposalType = cfp.cfpType.defaultType(props.pi.map(_.id)).some
+                  )
                 )
               }.orEmpty,
               disabled = props.readonly,
@@ -450,7 +460,39 @@ object ProposalDetailsBody:
               onChange = v => proposalTypeView.mod(_.map(ProposalType.toScienceSubtype(v))),
               disabled = props.readonly,
               modifiers = List(^.id := "proposalType")
-            ).when(hasSubtypes)
+            ).when(hasSubtypes),
+            // Reviewer and mentor for FastTurnaround
+            props.proposal.proposalType
+              .flatMap(ProposalType.fastTurnaround.getOption)
+              .map: ft =>
+                val reviewer = ft.reviewerId.flatMap(r => props.users.find(_.id === r))
+                React.Fragment(
+                  FormDropdownOptional(
+                    id = "fastTurnaroundReviewer".refined,
+                    label =
+                      React.Fragment("Reviewer",
+                                     HelpIcon("proposal/main/fast-turnaround-reviewer.md".refined)
+                      ),
+                    value = reviewer,
+                    placeholder = props.pi.map(_.name).orUndefined,
+                    options = props.users.map(u => SelectItem(u, u.name)),
+                    onChange = props.setReviewer,
+                    disabled = props.readonly
+                  ),
+                  // The API says it will default to the PI if the reviewer is null
+                  Option.unless(reviewer.orElse(props.pi).exists(_.hasPhd)) {
+                    val potentialMentors = props.users.filter(_.hasPhd)
+                    // show icon or tooltip or something if there are no available mentors
+                    FormDropdownOptional(
+                      id = "fastTurnaroundMentor".refined,
+                      label = "Mentor",
+                      value = ft.mentorId.flatMap(r => props.users.find(_.id === r)),
+                      options = potentialMentors.map(u => SelectItem(u, u.name)),
+                      onChange = props.setMentor,
+                      disabled = props.readonly
+                    )
+                  }
+                )
           ),
           selectedCfp.map(cfp =>
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.CfpData)(

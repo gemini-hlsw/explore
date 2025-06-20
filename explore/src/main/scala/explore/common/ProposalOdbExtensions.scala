@@ -7,6 +7,7 @@ import clue.data.Input
 import clue.data.Unassign
 import clue.data.syntax.*
 import explore.model.PartnerSplit
+import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.ProposalType
 import lucuma.core.enums.CallForProposalsType
@@ -32,25 +33,27 @@ trait ProposalOdbExtensions:
   extension (proposalType: ProposalType)
     def toInput: ProposalTypeInput =
       proposalType match
-        case ProposalType.DemoScience(_, toOActivation, minPercentTime)          =>
+        case ProposalType.DemoScience(_, toOActivation, minPercentTime)                      =>
           ProposalTypeInput(demoScience =
             DemoScienceInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign
             ).assign
           )
-        case ProposalType.DirectorsTime(_, toOActivation, minPercentTime)        =>
+        case ProposalType.DirectorsTime(_, toOActivation, minPercentTime)                    =>
           ProposalTypeInput(directorsTime =
             DirectorsTimeInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign
             ).assign
           )
-        case ProposalType.FastTurnaround(_, toOActivation, minPercentTime)       =>
+        case ProposalType.FastTurnaround(_, toOActivation, minPercentTime, reviewer, mentor) =>
           ProposalTypeInput(fastTurnaround =
             FastTurnaroundInput(
               toOActivation = toOActivation.assign,
-              minPercentTime = minPercentTime.assign
+              minPercentTime = minPercentTime.assign,
+              reviewerId = reviewer.orUnassign,
+              mentorId = mentor.orUnassign
             ).assign
           )
         case ProposalType.LargeProgram(
@@ -68,7 +71,7 @@ trait ProposalOdbExtensions:
               totalTime = totalTime.toInput.assign
             ).assign
           )
-        case ProposalType.Classical(_, minPercentTime, partnerSplits)            =>
+        case ProposalType.Classical(_, minPercentTime, partnerSplits)                        =>
           ProposalTypeInput(classical =
             ClassicalInput(
               minPercentTime = minPercentTime.assign,
@@ -76,7 +79,7 @@ trait ProposalOdbExtensions:
                 if (partnerSplits.nonEmpty) partnerSplits.map(_.toInput).assign else Unassign
             ).assign
           )
-        case ProposalType.Queue(_, toOActivation, minPercentTime, partnerSplits) =>
+        case ProposalType.Queue(_, toOActivation, minPercentTime, partnerSplits)             =>
           ProposalTypeInput(queue =
             QueueInput(
               toOActivation = toOActivation.assign,
@@ -85,22 +88,23 @@ trait ProposalOdbExtensions:
                 if (partnerSplits.nonEmpty) partnerSplits.map(_.toInput).assign else Unassign
             ).assign
           )
-        case ProposalType.SystemVerification(_, toOActivation, minPercentTime)   =>
+        case ProposalType.SystemVerification(_, toOActivation, minPercentTime)               =>
           ProposalTypeInput(systemVerification =
             SystemVerificationInput(
               toOActivation = toOActivation.assign,
               minPercentTime = minPercentTime.assign
             ).assign
           )
-        case ProposalType.PoorWeather(scienceSubtype)                            =>
+        case ProposalType.PoorWeather(scienceSubtype)                                        =>
           ProposalTypeInput(poorWeather = PoorWeatherInput().assign)
 
   // Used to reset the proposal type when the call changes
   extension (cfpType: CallForProposalsType)
-    def defaultType: ProposalType = cfpType match
+    def defaultType(reviewerId: Option[ProgramUser.Id]): ProposalType = cfpType match
       case CallForProposalsType.DemoScience        => ProposalType.DemoScience.Default
       case CallForProposalsType.DirectorsTime      => ProposalType.DirectorsTime.Default
-      case CallForProposalsType.FastTurnaround     => ProposalType.FastTurnaround.Default
+      case CallForProposalsType.FastTurnaround     =>
+        ProposalType.FastTurnaround.defaultWithReviewer(reviewerId)
       case CallForProposalsType.LargeProgram       => ProposalType.LargeProgram.Default
       case CallForProposalsType.PoorWeather        => ProposalType.PoorWeather.Default
       case CallForProposalsType.RegularSemester    => ProposalType.Queue.Default

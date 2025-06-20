@@ -54,6 +54,7 @@ case class ProgramUser(
 
   lazy val isConfirmed: Boolean         = status === ProgramUser.Status.Confirmed
   lazy val successfullyInvited: Boolean = activeInvitation.exists(!_.deliveryStatus.failed)
+  lazy val hasPhd: Boolean              = educationalStatus.exists(_ === EducationalStatus.PhD)
 
 object ProgramUser:
   type Id = lucuma.core.model.ProgramUser.Id

@@ -24,6 +24,8 @@ import explore.model.ProgramDetails
 import explore.model.ProgramUser
 import explore.model.Proposal
 import explore.model.ProposalTabTileIds
+import explore.model.ProposalType
+import explore.model.ProposalType.FastTurnaround
 import explore.model.enums.GridLayoutSection
 import explore.model.layout.LayoutsMap
 import explore.undo.*
@@ -66,6 +68,7 @@ case class ProposalEditor(
 ) extends ReactFnProps(ProposalEditor):
   val optUserId: Option[User.Id]        = userVault.map(_.user.id)
   val proposalOrUserIsReadonly: Boolean = proposalIsReadonly || userIsReadonlyCoi
+  val pi: Option[ProgramUser]           = undoCtx.get.pi
 
 object ProposalEditor
     extends ReactFnComponent[ProposalEditor](props =>
@@ -125,6 +128,105 @@ object ProposalEditor
 
           val defaultLayouts = ExploreGridLayouts.sectionLayout(GridLayoutSection.ProposalLayout)
 
+          // the FT reviewer and mentor assigments don't participate in undo/redo
+          val fastTurnaroundView: Option[View[FastTurnaround]] =
+            props.proposal.model
+              .zoom(Proposal.proposalType)
+              .toOptionView
+              .flatMap(_.zoom(ProposalType.fastTurnaround).toOptionView)
+
+          def reviewerMentorRemoteUpdate(
+            reviewer: Input[ProgramUser.Id],
+            mentor:   Input[ProgramUser.Id]
+          ): Callback =
+            ctx.odbApi
+              .updateProposal(
+                UpdateProposalInput(
+                  programId = props.programId.assign,
+                  SET = ProposalPropertiesInput(
+                    `type` = ProposalTypeInput(
+                      fastTurnaround = FastTurnaroundInput(
+                        reviewerId = reviewer,
+                        mentorId = mentor
+                      ).assign
+                    ).assign
+                  )
+                )
+              )
+              .void
+              .runAsyncAndForget
+
+          def setFastTurnaroundReviewerOnly(reviewer: Option[ProgramUser]): Callback =
+            fastTurnaroundView.foldMap: v =>
+              v.zoom(FastTurnaround.reviewerId).set(reviewer.map(_.id)) >>
+                reviewerMentorRemoteUpdate(reviewer.map(_.id).orUnassign, Input.ignore)
+
+          def setFastTurnaroundMentorOnly(mentor: Option[ProgramUser]): Callback =
+            fastTurnaroundView.foldMap: v =>
+              v.zoom(FastTurnaround.mentorId).set(mentor.map(_.id)) >>
+                reviewerMentorRemoteUpdate(Input.ignore, mentor.map(_.id).orUnassign)
+
+          def setFastTurnaroundReviewerAndMentor(
+            reviewer: Option[ProgramUser],
+            mentor:   Option[ProgramUser]
+          ): Callback =
+            fastTurnaroundView.foldMap: v =>
+              v.zoom(FastTurnaround.reviewerId).set(reviewer.map(_.id)) >>
+                v.zoom(FastTurnaround.mentorId).set(mentor.map(_.id)) >>
+                reviewerMentorRemoteUpdate(reviewer.map(_.id).orUnassign,
+                                           mentor.map(_.id).orUnassign
+                )
+
+          // clears mentor if reviewer has a PhD
+          def setFastTurnaroundReviewer(reviewer: Option[ProgramUser]): Callback =
+            // clear the mentor if the reviewer has a PhD
+            if (reviewer.exists(_.hasPhd))
+              setFastTurnaroundReviewerAndMentor(reviewer, none)
+            else setFastTurnaroundReviewerOnly(reviewer)
+
+          // handle updates on the user table
+          def onUsersMod(users: List[ProgramUser]): Callback =
+            val updateFt: FastTurnaround => FastTurnaround = ft =>
+              val reviewer = ft.reviewerId.flatMap(i => users.find(_.id == i))
+              val mentor   = ft.mentorId.flatMap(i => users.find(_.id == i))
+
+              val newReviewerId = (ft.reviewerId, reviewer) match
+                case (Some(_), None) =>
+                  // reviewer was deleted, so we want set it to the PI
+                  props.pi.map(_.id)
+                case _               => ft.reviewerId
+
+              val newMentorId =
+                if (reviewer.orElse(props.pi).exists(_.hasPhd))
+                  none
+                else
+                  (ft.mentorId, mentor) match
+                    case (Some(_), None)                  =>
+                      // mentor was deleted
+                      none
+                    case (Some(id), Some(m)) if !m.hasPhd =>
+                      // The mentor has probably been downgraded from a PhD, so remove them
+                      none
+                    case _                                => ft.mentorId
+
+              val afterReviewer =
+                if (ft.reviewerId === newReviewerId) ft
+                else FastTurnaround.reviewerId.replace(newReviewerId)(ft)
+              if (ft.mentorId === newMentorId) afterReviewer
+              else FastTurnaround.mentorId.replace(newMentorId)(afterReviewer)
+
+            fastTurnaroundView.foldMap: v =>
+              v.modCB(
+                updateFt,
+                (oldFt: FastTurnaround, newFt: FastTurnaround) =>
+                  if (oldFt.reviewerId === newFt.reviewerId && oldFt.mentorId === newFt.mentorId)
+                    Callback.empty
+                  else
+                    reviewerMentorRemoteUpdate(newFt.reviewerId.orUnassign,
+                                               newFt.mentorId.orUnassign
+                    )
+              )
+
           val detailsTile =
             Tile(ProposalTabTileIds.DetailsId.id, "Details")(
               _ =>
@@ -132,6 +234,9 @@ object ProposalEditor
                   detailsAligner,
                   proposalAligner,
                   props.cfps,
+                  props.users.get,
+                  setFastTurnaroundReviewer,
+                  setFastTurnaroundMentorOnly,
                   props.proposalOrUserIsReadonly
                 ),
               (_, s) => ProposalDetailsTitle(props.undoCtx, s, props.proposalOrUserIsReadonly)
@@ -144,7 +249,7 @@ object ProposalEditor
             )(
               _ =>
                 ProgramUsersTable(
-                  props.users,
+                  props.users.withOnMod(onUsersMod),
                   ProgramUsersTable.Mode.CoIs(
                     userVault,
                     props.proposalIsReadonly,
