@@ -19,6 +19,8 @@ import lucuma.refined.*
 import monocle.Focus
 import monocle.Lens
 import monocle.Optional
+import monocle.Prism
+import monocle.macros.GenPrism
 
 // Define the ProposalType trait
 sealed trait ProposalType derives Eq {
@@ -155,15 +157,23 @@ object ProposalType:
   case class FastTurnaround(
     scienceSubtype: ScienceSubtype,
     toOActivation:  ToOActivation,
-    minPercentTime: IntPercent
+    minPercentTime: IntPercent,
+    reviewerId:     Option[ProgramUser.Id],
+    mentorId:       Option[ProgramUser.Id]
   ) extends ProposalType derives Eq
 
   object FastTurnaround {
-    val minPercentTime: Lens[FastTurnaround, IntPercent]   = Focus[FastTurnaround](_.minPercentTime)
-    val toOActivation: Lens[FastTurnaround, ToOActivation] = Focus[FastTurnaround](_.toOActivation)
+    val minPercentTime: Lens[FastTurnaround, IntPercent]         = Focus[FastTurnaround](_.minPercentTime)
+    val toOActivation: Lens[FastTurnaround, ToOActivation]       = Focus[FastTurnaround](_.toOActivation)
+    val reviewerId: Lens[FastTurnaround, Option[ProgramUser.Id]] =
+      Focus[FastTurnaround](_.reviewerId)
+    val mentorId: Lens[FastTurnaround, Option[ProgramUser.Id]]   = Focus[FastTurnaround](_.mentorId)
 
     val Default: FastTurnaround =
-      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 100.refined)
+      FastTurnaround(ScienceSubtype.FastTurnaround, ToOActivation.None, 100.refined, None, None)
+
+    def defaultWithReviewer(id: Option[ProgramUser.Id]): FastTurnaround =
+      reviewerId.replace(id)(Default)
   }
 
   // Define the LargeProgram case class implementing ProposalType
@@ -232,6 +242,16 @@ object ProposalType:
       SystemVerification(ScienceSubtype.SystemVerification, ToOActivation.None, 100.refined)
   }
 
+  val classical: Prism[ProposalType, Classical]                   = GenPrism[ProposalType, Classical]
+  val directorsTime: Prism[ProposalType, DirectorsTime]           = GenPrism[ProposalType, DirectorsTime]
+  val demoScience: Prism[ProposalType, DemoScience]               = GenPrism[ProposalType, DemoScience]
+  val fastTurnaround: Prism[ProposalType, FastTurnaround]         = GenPrism[ProposalType, FastTurnaround]
+  val largeProgram: Prism[ProposalType, LargeProgram]             = GenPrism[ProposalType, LargeProgram]
+  val poorWeather: Prism[ProposalType, PoorWeather]               = GenPrism[ProposalType, PoorWeather]
+  val queue: Prism[ProposalType, Queue]                           = GenPrism[ProposalType, Queue]
+  val systemVerification: Prism[ProposalType, SystemVerification] =
+    GenPrism[ProposalType, SystemVerification]
+
   given Decoder[ProposalType] = {
 
     def toProposalType(tpe: ScienceSubtype, c: ACursor): Decoder.Result[ProposalType] =
@@ -255,7 +275,16 @@ object ProposalType:
           for {
             toOActivation  <- c.downField("toOActivation").as[ToOActivation]
             minPercentTime <- c.downField("minPercentTime").as[IntPercent]
-          } yield FastTurnaround(tpe, toOActivation, minPercentTime)
+            reviewerId     <-
+              c.downField("reviewer").downField("id").success.traverse(_.as[Option[ProgramUser.Id]])
+            mentorId       <-
+              c.downField("mentor").downField("id").success.traverse(_.as[Option[ProgramUser.Id]])
+          } yield FastTurnaround(tpe,
+                                 toOActivation,
+                                 minPercentTime,
+                                 reviewerId.flatten,
+                                 mentorId.flatten
+          )
         case ScienceSubtype.LargeProgram       =>
           for {
             toOActivation       <- c.downField("toOActivation").as[ToOActivation]

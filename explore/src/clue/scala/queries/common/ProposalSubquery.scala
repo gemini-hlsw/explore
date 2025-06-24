@@ -31,6 +31,8 @@ object ProposalSubquery extends GraphQLSubquery.Typed[ObservationDB, Proposal]("
         ... on FastTurnaround {
           toOActivation
           minPercentTime
+          reviewer { id }
+          mentor { id }
         }
         ... on LargeProgram {
           toOActivation

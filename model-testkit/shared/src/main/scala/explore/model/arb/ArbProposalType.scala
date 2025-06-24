@@ -4,20 +4,21 @@
 package explore.model.arb
 
 import eu.timepit.refined.scalacheck.all.*
+import explore.model.PartnerSplit
+import explore.model.ProgramUser
+import explore.model.ProposalType
+import explore.model.ProposalType.*
+import explore.model.arb.ArbPartnerSplit.given
+import lucuma.core.enums.ScienceSubtype
 import lucuma.core.enums.ToOActivation
 import lucuma.core.model.IntPercent
+import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbEnumerated.given
+import lucuma.core.util.arb.ArbGid.given
+import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.*
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen.*
-
-import explore.model.arb.ArbPartnerSplit.given
-import explore.model.ProposalType
-import explore.model.ProposalType.*
-import explore.model.PartnerSplit
-import lucuma.core.util.TimeSpan
-import lucuma.core.util.arb.ArbTimeSpan.given
-import lucuma.core.enums.ScienceSubtype
 
 trait ArbProposalType:
 
@@ -81,7 +82,9 @@ trait ArbProposalType:
         scienceSubtype <- arbitrary[ScienceSubtype]
         toOActivation  <- arbitrary[ToOActivation]
         minPercentType <- arbitrary[IntPercent]
-      } yield FastTurnaround(scienceSubtype, toOActivation, minPercentType)
+        reviewer       <- arbitrary[Option[ProgramUser.Id]]
+        mentor         <- arbitrary[Option[ProgramUser.Id]]
+      } yield FastTurnaround(scienceSubtype, toOActivation, minPercentType, reviewer, mentor)
     }
 
   given Cogen[FastTurnaround] =
@@ -89,9 +92,13 @@ trait ArbProposalType:
       (
         ScienceSubtype,
         ToOActivation,
-        IntPercent
+        IntPercent,
+        Option[ProgramUser.Id],
+        Option[ProgramUser.Id]
       )
-    ].contramap(p => (p.scienceSubtype, p.toOActivation, p.minPercentTime))
+    ].contramap(p =>
+      (p.scienceSubtype, p.toOActivation, p.minPercentTime, p.reviewerId, p.mentorId)
+    )
 
   given Arbitrary[LargeProgram] =
     Arbitrary {

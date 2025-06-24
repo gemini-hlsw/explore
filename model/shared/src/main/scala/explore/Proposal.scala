@@ -111,11 +111,10 @@ case class Proposal(
       affiliationMismatches
     ).flatten
 
-  private lazy val isFastTurnaround: Boolean =
-    proposalType.exists {
-      case ProposalType.FastTurnaround(_, _, _) => true
-      case _                                    => false
-    }
+  private lazy val fastTurnaround: Option[ProposalType.FastTurnaround] =
+    proposalType.flatMap(ProposalType.fastTurnaround.getOption)
+
+  private lazy val isFastTurnaround: Boolean = fastTurnaround.isDefined
 
   private def attachmentErrors(attachments: AttachmentList): List[String] =
     // only validate if there is a CfP
@@ -127,6 +126,15 @@ case class Proposal(
         "Team attachment is required."
       )
       List(science, team).flattenOption
+    )
+
+  private def fastTurnaroundErrors(users: List[ProgramUser]): List[String] =
+    fastTurnaround.foldMap(ft =>
+      // explore defaults reviewer to PI, but it can be unset via the API and the API
+      // says it will default to the PI if null.
+      val reviewer = ft.reviewerId.flatMap(r => users.find(_.id === r)).orElse(users.pi)
+      if (reviewer.exists(_.hasPhd) || ft.mentorId.isDefined) List.empty
+      else List("Fast Turnaround mentor is required for non-PhD reviewer.")
     )
 
   private def obsErrors(
@@ -155,6 +163,7 @@ case class Proposal(
     Option.unless(category.isDefined)("Category is required.").toList,
     cfPError(users).toList,
     usersAndTimesErrors(users),
+    fastTurnaroundErrors(users),
     attachmentErrors(attachments),
     obsErrors(hasDefinedObservations, hasUndefinedObservations)
   ).flatten

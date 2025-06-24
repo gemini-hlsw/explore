@@ -3,19 +3,18 @@
 
 package explore.model.arb
 
-import lucuma.core.enums.TacCategory
 import explore.model.CallForProposal
 import explore.model.Proposal
-import lucuma.core.util.arb.ArbEnumerated.given
+import explore.model.ProposalType
+import explore.model.arb.ArbCallForProposal.given
+import explore.model.arb.ArbProposalType.given
+import lucuma.core.enums.TacCategory
+import lucuma.core.model.ProposalReference
 import lucuma.core.model.arb.ArbProposalReference.given
+import lucuma.core.util.arb.ArbEnumerated.given
 import org.scalacheck.*
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen.*
-
-import explore.model.arb.ArbCallForProposal.given
-import explore.model.arb.ArbProposalType.given
-import explore.model.ProposalType
-import lucuma.core.model.ProposalReference
 
 trait ArbProposal:
 
