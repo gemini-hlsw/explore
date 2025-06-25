@@ -63,6 +63,9 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           calibrationRole
           scienceBand
           configuration $ConfigurationSubquery
+          configurationRequests {
+            id
+          }
           workflow: calculatedWorkflow $CalculatedObservationWorkflowSubquery
           groupId
           groupIndex

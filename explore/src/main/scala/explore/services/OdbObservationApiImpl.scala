@@ -13,10 +13,10 @@ import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ConfigurationRequestWithObsIds
 import explore.model.ExecutionOffsets
 import explore.model.Observation
 import explore.utils.*
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ElevationRange
 import lucuma.core.model.Group
@@ -310,7 +310,7 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
   def createConfigurationRequest(
     obsId:         Observation.Id,
     justification: Option[NonEmptyString]
-  ): F[ConfigurationRequestWithObsIds] =
+  ): F[ConfigurationRequest] =
     val input = CreateConfigurationRequestInput(
       observationId = obsId.assign,
       SET = ConfigurationRequestProperties(justification = justification.orIgnore).assign

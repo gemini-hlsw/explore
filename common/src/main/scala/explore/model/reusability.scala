@@ -36,6 +36,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.WavelengthDither
 import lucuma.core.model.Configuration
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
@@ -121,7 +122,7 @@ object reusability:
   given Reusability[GlobalPreferences]                  = Reusability.byEq
   given Reusability[SelectedPanel]                      = Reusability.byEq
   given Reusability[Configuration]                      = Reusability.byEq
-  given Reusability[ConfigurationRequestWithObsIds]     = Reusability.byEq
+  given Reusability[ConfigurationRequest]               = Reusability.byEq
   given Reusability[TimingWindow]                       = Reusability.byEq
   given [D]: Reusability[Visit[D]]                      = Reusability.byEq
   given [D]: Reusability[StepRecord[D]]                 = Reusability.byEq

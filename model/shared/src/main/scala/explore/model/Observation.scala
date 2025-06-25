@@ -16,7 +16,6 @@ import explore.model.syntax.all.*
 import explore.modes.InstrumentOverrides
 import explore.modes.ItcInstrumentConfig
 import io.circe.Decoder
-import io.circe.generic.semiauto.*
 import io.circe.refined.given
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.enums.GmosAmpGain
@@ -30,6 +29,7 @@ import lucuma.core.enums.Site
 import lucuma.core.math.Wavelength
 import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.ObservationReference
@@ -59,29 +59,30 @@ import java.time.Instant
 import scala.collection.immutable.SortedSet
 
 case class Observation(
-  id:                  Observation.Id,
-  reference:           Option[ObservationReference],
-  title:               String,
-  subtitle:            Option[NonEmptyString],
-  scienceTargetIds:    AsterismIds,
-  selectedGSName:      Option[NonEmptyString],
-  constraints:         ConstraintSet,
-  timingWindows:       List[TimingWindow],
-  attachmentIds:       SortedSet[Attachment.Id],
-  scienceRequirements: ScienceRequirements,
-  observingMode:       Option[ObservingMode],
-  observationTime:     Option[Instant],
-  observationDuration: Option[TimeSpan],
-  posAngleConstraint:  PosAngleConstraint,
-  centralWavelength:   Option[CentralWavelength],
-  observerNotes:       Option[NonEmptyString],
-  calibrationRole:     Option[CalibrationRole],
-  scienceBand:         Option[ScienceBand],
-  configuration:       Option[Configuration],
-  workflow:            CalculatedValue[ObservationWorkflow],
-  groupId:             Option[Group.Id],
-  groupIndex:          NonNegShort,
-  execution:           Execution
+  id:                      Observation.Id,
+  reference:               Option[ObservationReference],
+  title:                   String,
+  subtitle:                Option[NonEmptyString],
+  scienceTargetIds:        AsterismIds,
+  selectedGSName:          Option[NonEmptyString],
+  constraints:             ConstraintSet,
+  timingWindows:           List[TimingWindow],
+  attachmentIds:           SortedSet[Attachment.Id],
+  scienceRequirements:     ScienceRequirements,
+  observingMode:           Option[ObservingMode],
+  observationTime:         Option[Instant],
+  observationDuration:     Option[TimeSpan],
+  posAngleConstraint:      PosAngleConstraint,
+  centralWavelength:       Option[CentralWavelength],
+  observerNotes:           Option[NonEmptyString],
+  calibrationRole:         Option[CalibrationRole],
+  scienceBand:             Option[ScienceBand],
+  configuration:           Option[Configuration],
+  configurationRequestIds: SortedSet[ConfigurationRequest.Id],
+  workflow:                CalculatedValue[ObservationWorkflow],
+  groupId:                 Option[Group.Id],
+  groupIndex:              NonNegShort,
+  execution:               Execution
 ) derives Eq:
   lazy val basicConfiguration: Option[BasicConfiguration] =
     observingMode.map(_.toBasicConfiguration)
@@ -270,13 +271,16 @@ case class Observation(
   inline def hasConfigurationRequestError: Boolean =
     hasPendingRequestCode || hasNotRequestedCode || hasDeniedValidationCode
 
-  inline def updateToPending: Observation =
-    Observation.validationErrors.replace(List(ObservationValidation.configurationRequestPending))(
-      this
-    )
+  // update the validation status to pending and add the configuration request id
+  inline def updateToPending(crId: ConfigurationRequest.Id): Observation =
+    Observation.validationErrors
+      .replace(List(ObservationValidation.configurationRequestPending))
+      .andThen(Observation.configurationRequestIds.modify(_ + crId))(
+        this
+      )
 
-  def updateToPendingIfConfigurationApplies(config: Configuration): Observation =
-    if (newConfigurationRequestApplies(config)) updateToPending
+  def updateToPendingIfConfigurationApplies(request: ConfigurationRequest): Observation =
+    if (newConfigurationRequestApplies(request.configuration)) updateToPending(request.id)
     else this
 
   def asterismTracking(allTargets: TargetList): Option[ObjectTracking] =
@@ -310,6 +314,7 @@ object Observation:
   val calibrationRole          = Focus[Observation](_.calibrationRole)
   val scienceBand              = Focus[Observation](_.scienceBand)
   val configuration            = Focus[Observation](_.configuration)
+  val configurationRequestIds  = Focus[Observation](_.configurationRequestIds)
   val workflow                 = Focus[Observation](_.workflow)
   val workflowState            = workflow.andThen(CalculatedValue.value).andThen(ObservationWorkflow.state)
   val workflowValidTransitions =
@@ -332,13 +337,9 @@ object Observation:
           workflowState.replace(newState).andThen(workflowValidTransitions.replace(newAllowed))(o)
     )
 
-  private case class TargetIdWrapper(id: Target.Id)
-  private object TargetIdWrapper:
-    given Decoder[TargetIdWrapper] = deriveDecoder
-
-  private case class AttachmentIdWrapper(id: Attachment.Id)
-  private object AttachmentIdWrapper:
-    given Decoder[AttachmentIdWrapper] = deriveDecoder
+  private case class TargetIdWrapper(id: Target.Id) derives Decoder
+  private case class AttachmentIdWrapper(id: Attachment.Id) derives Decoder
+  private case class ConfigurationRequestIdWrapper(id: ConfigurationRequest.Id) derives Decoder
 
   given Decoder[Observation] = Decoder.instance(c =>
     for {
@@ -365,6 +366,7 @@ object Observation:
       calibrationRole     <- c.get[Option[CalibrationRole]]("calibrationRole")
       scienceBand         <- c.get[Option[ScienceBand]]("scienceBand")
       configuration       <- c.get[Configuration]("configuration").fold(_ => none.asRight, _.some.asRight)
+      crIds               <- c.get[List[ConfigurationRequestIdWrapper]]("configurationRequests")
       workflow            <- c.get[CalculatedValue[ObservationWorkflow]]("workflow")
       groupId             <- c.get[Option[Group.Id]]("groupId")
       groupIndex          <- c.get[NonNegShort]("groupIndex")
@@ -392,6 +394,7 @@ object Observation:
       calibrationRole,
       scienceBand,
       configuration,
+      SortedSet.from(crIds.map(_.id)),
       workflow,
       groupId,
       groupIndex,

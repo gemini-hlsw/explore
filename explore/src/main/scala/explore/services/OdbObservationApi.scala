@@ -8,10 +8,10 @@ import cats.syntax.option.*
 import clue.data.Input
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ConfigurationRequestWithObsIds
 import explore.model.ExecutionOffsets
 import explore.model.Observation
 import lucuma.core.enums.ObservationWorkflowState
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
 import lucuma.core.model.ObservationReference
@@ -83,7 +83,7 @@ trait OdbObservationApi[F[_]]:
   def createConfigurationRequest(
     obsId:         Observation.Id,
     justification: Option[NonEmptyString]
-  ): F[ConfigurationRequestWithObsIds]
+  ): F[ConfigurationRequest]
   def updateConfiguration(
     obsId:              Observation.Id,
     observingMode:      Input[ObservingModeInput],

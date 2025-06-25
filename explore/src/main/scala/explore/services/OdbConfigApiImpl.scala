@@ -8,7 +8,6 @@ import cats.effect.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
-import explore.model.ConfigurationRequestWithObsIds
 import explore.model.SupportedInstruments
 import explore.modes.ImagingModeRow
 import explore.modes.ImagingModesMatrix
@@ -46,9 +45,9 @@ trait OdbConfigApiImpl[F[_]: MonadThrow](using
 
   def allProgramConfigurationRequests(
     programId: Program.Id
-  ): F[List[ConfigurationRequestWithObsIds]] =
+  ): F[List[ConfigurationRequest]] =
     drain[
-      ConfigurationRequestWithObsIds,
+      ConfigurationRequest,
       ConfigurationRequest.Id,
       Option[AllProgramConfigurationRequests.Data.Program.ConfigurationRequests]
     ](
@@ -64,7 +63,7 @@ trait OdbConfigApiImpl[F[_]: MonadThrow](using
 
   def programConfigurationRequestsDeltaSubscription(
     programId: Program.Id
-  ): Resource[F, fs2.Stream[F, ConfigurationRequestWithObsIds]] =
+  ): Resource[F, fs2.Stream[F, ConfigurationRequest]] =
     ConfigurationRequestSubscription
       .subscribe[F](ConfigurationRequestEditInput(programId.assign))
       .processErrors("ConfigurationRequestSubscription")

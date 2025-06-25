@@ -6,6 +6,7 @@ package queries.common
 import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
+// gql: import lucuma.odb.json.configurationrequest.query.given
 
 import GroupQueriesGQL.*
 

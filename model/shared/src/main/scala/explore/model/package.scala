@@ -63,7 +63,7 @@ type AttachmentList                = SortedMap[Attachment.Id, Attachment]
 type ObsAttachmentAssignmentMap    = Map[Attachment.Id, SortedSet[Observation.Id]]
 type TargetAttachmentAssignmentMap = Map[Attachment.Id, SortedSet[Target.Id]]
 type ProgramInfoList               = SortedMap[Program.Id, ProgramInfo]
-type ConfigurationRequestList      = SortedMap[ConfigurationRequest.Id, ConfigurationRequestWithObsIds]
+type ConfigurationRequestList      = SortedMap[ConfigurationRequest.Id, ConfigurationRequest]
 
 type ObservationsAndTargets = (ObservationList, TargetList)
 
