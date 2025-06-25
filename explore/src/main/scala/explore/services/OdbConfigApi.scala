@@ -4,15 +4,15 @@
 package explore.services
 
 import cats.effect.Resource
-import explore.model.ConfigurationRequestWithObsIds
 import explore.modes.ScienceModes
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 
 trait OdbConfigApi[F[_]]:
   def scienceModes: F[ScienceModes]
   def allProgramConfigurationRequests(
     programId: Program.Id
-  ): F[List[ConfigurationRequestWithObsIds]]
+  ): F[List[ConfigurationRequest]]
   def programConfigurationRequestsDeltaSubscription(
     programId: Program.Id
-  ): Resource[F, fs2.Stream[F, ConfigurationRequestWithObsIds]]
+  ): Resource[F, fs2.Stream[F, ConfigurationRequest]]

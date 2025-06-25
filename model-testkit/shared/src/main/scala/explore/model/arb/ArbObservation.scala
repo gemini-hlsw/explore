@@ -16,6 +16,7 @@ import lucuma.core.math.Wavelength
 import lucuma.core.math.arb.ArbWavelength.given
 import lucuma.core.model.Attachment
 import lucuma.core.model.Configuration
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ObservationReference
 import lucuma.core.model.ObservationValidation
@@ -79,6 +80,7 @@ trait ArbObservation:
         calibrationRole     <- arbitrary[Option[CalibrationRole]]
         scienceBand         <- arbitrary[Option[ScienceBand]]
         configuration       <- arbitrary[Option[Configuration]]
+        crIds               <- arbitrary[Set[ConfigurationRequest.Id]]
         workflow            <- arbitrary[CalculatedValue[ObservationWorkflow]]
         groupId             <- arbitrary[Option[Group.Id]]
         groupIndex          <- arbitrary[NonNegShort]
@@ -103,6 +105,7 @@ trait ArbObservation:
         calibrationRole,
         scienceBand,
         configuration,
+        SortedSet.from(crIds),
         workflow,
         groupId,
         groupIndex,
@@ -131,9 +134,9 @@ trait ArbObservation:
        Option[CalibrationRole],
        Option[ScienceBand],
        Option[Configuration],
+       SortedSet[ConfigurationRequest.Id],
        CalculatedValue[ObservationWorkflow],
-       Option[Group.Id],
-       (Short, Execution)
+       (Option[Group.Id], Short, Execution)
       )
     ]
       .contramap(o =>
@@ -156,9 +159,9 @@ trait ArbObservation:
          o.calibrationRole,
          o.scienceBand,
          o.configuration,
+         o.configurationRequestIds,
          o.workflow,
-         o.groupId,
-         (o.groupIndex.value, o.execution)
+         (o.groupId, o.groupIndex.value, o.execution)
         )
       )
 

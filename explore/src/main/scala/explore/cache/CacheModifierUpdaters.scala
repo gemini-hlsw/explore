@@ -7,13 +7,13 @@ import cats.Order.given
 import cats.syntax.all.*
 import explore.givens.given
 import explore.model.Attachment
-import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Execution
 import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ProgramInfo
 import explore.model.ProgramSummaries
 import explore.model.syntax.all.*
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
@@ -128,7 +128,7 @@ trait CacheModifierUpdaters {
     ProgramSummaries.programs.modify(_.updated(programInfo.id, programInfo))
 
   protected def modifyConfigurationRequests(
-    cr: ConfigurationRequestWithObsIds
+    cr: ConfigurationRequest
   ): ProgramSummaries => ProgramSummaries =
     ProgramSummaries.configurationRequests.modify: crs =>
       crs.updated(cr.id, cr)

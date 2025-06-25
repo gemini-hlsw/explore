@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import crystal.Pot
 import crystal.Throttler
 import explore.model.Attachment
-import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Group
 import explore.model.Observation
 import explore.model.ProgramDetails
@@ -24,6 +23,7 @@ import fs2.Pipe
 import fs2.Stream
 import fs2.concurrent.Channel
 import japgolly.scalajs.react.*
+import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.Program
 import lucuma.react.common.ReactFnProps
 import lucuma.schemas.model.TargetWithId
@@ -109,7 +109,7 @@ object ProgramCacheController
     val observations: IO[List[Observation]] =
       props.odbApi.allProgramObservations(props.programId).logTime("AllProgramObservations")
 
-    val configurationRequests: IO[List[ConfigurationRequestWithObsIds]] =
+    val configurationRequests: IO[List[ConfigurationRequest]] =
       props.odbApi
         .allProgramConfigurationRequests(props.programId)
         .logTime("AllProgramConfigurationRequests")

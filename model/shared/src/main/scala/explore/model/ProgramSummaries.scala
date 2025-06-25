@@ -145,16 +145,11 @@ case class ProgramSummaries(
     optProgramDetails.foldMap(_.allocations.scienceBands)
 
   lazy val obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]] =
-    configurationRequests
-      .map: (crId, cr) =>
-        val obsList = cr.applicableObservations
-          .map(observations.get)
-          .flattenOption
-          // keep inactive, but filter out calibrations - the API should
-          // should stop including calibration observations, but until then...
-          .filterNot(_.isCalibration)
-        (crId, obsList)
-      .toMap
+    observations.values.toList
+      .filterNot(_.isCalibration)
+      .foldRight(Map.empty[ConfigurationRequest.Id, List[Observation]]): (obs, accum) =>
+        obs.configurationRequestIds.foldRight(accum): (crId, innerAccum) =>
+          innerAccum.updatedWith(crId)(_.fold(List(obs))(_ :+ obs).some)
 
   lazy val configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]] =
     val l = observations.values.toList
@@ -313,7 +308,7 @@ object ProgramSummaries:
     groupList:         List[Group],
     attachments:       List[Attachment],
     programs:          List[ProgramInfo],
-    configRequests:    List[ConfigurationRequestWithObsIds]
+    configRequests:    List[ConfigurationRequest]
   ): ProgramSummaries =
     ProgramSummaries(
       optProgramDetails,

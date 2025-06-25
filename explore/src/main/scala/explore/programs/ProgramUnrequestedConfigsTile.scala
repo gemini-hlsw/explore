@@ -76,7 +76,6 @@ object ProgramUnrequestedConfigsTile:
   case class Body(
     userId:                 Option[User.Id],
     programId:              Program.Id,
-    configRequests:         View[ConfigurationRequestList],
     configsWithoutRequests: Map[Configuration, NonEmptyList[Observation]],
     targets:                TargetList,
     tileState:              View[TileState]
@@ -181,7 +180,7 @@ object ProgramUnrequestedConfigsTile:
                     SortedMap
                       .from:
                         obsList.view.mapValues:
-                          _.updateToPendingIfConfigurationApplies(request.configuration)
+                          _.updateToPendingIfConfigurationApplies(request)
                 ).to[IO]
 
           props.tileState.table.map: table =>

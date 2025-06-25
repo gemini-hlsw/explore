@@ -14,7 +14,6 @@ import explore.common.UserPreferencesQueries.TableStore
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.ConfigurationRequestList
-import explore.model.ConfigurationRequestWithObsIds
 import explore.model.Observation
 import explore.model.TargetList
 import explore.model.display.given
@@ -47,14 +46,14 @@ import monocle.Lens
 
 object ProgramConfigRequestsTile:
   case class Row(
-    request:      ConfigurationRequestWithObsIds,
+    request:      ConfigurationRequest,
     observations: List[Observation],
     targetName:   String
   )
 
   object Row:
     def apply(
-      request:            ConfigurationRequestWithObsIds,
+      request:            ConfigurationRequest,
       obs4ConfigRequests: Map[ConfigurationRequest.Id, List[Observation]],
       targets:            TargetList
     ): Row =
@@ -208,7 +207,7 @@ object ProgramConfigRequestsTile:
               selectedIds.traverse(id =>
                 props.configRequests
                   .mod(
-                    _.updatedWith(id)(_.map(ConfigurationRequestWithObsIds.status.replace(status)))
+                    _.updatedWith(id)(_.map(ConfigurationRequest.status.replace(status)))
                   )
               ) >>
                 ctx.odbApi
@@ -223,10 +222,10 @@ object ProgramConfigRequestsTile:
                   .mod(
                     _.updatedWith(id)(
                       _.map(
-                        ConfigurationRequestWithObsIds.status
+                        ConfigurationRequest.status
                           .replace(status)
                           .andThen(
-                            ConfigurationRequestWithObsIds.justification.replace(justification.some)
+                            ConfigurationRequest.justification.replace(justification.some)
                           )
                       )
                     )

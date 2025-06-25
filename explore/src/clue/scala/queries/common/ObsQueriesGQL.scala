@@ -7,6 +7,7 @@ import clue.GraphQLOperation
 import clue.annotation.GraphQL
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.*
+// gql: import lucuma.odb.json.configurationrequest.query.given
 // gql: import lucuma.odb.json.sequence.given
 // gql: import lucuma.schemas.decoders.given
 

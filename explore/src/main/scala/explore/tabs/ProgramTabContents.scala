@@ -150,7 +150,6 @@ object ProgramTabContents
             ProgramUnrequestedConfigsTile.Body(
               userId,
               props.programId,
-              props.configRequests,
               props.configsWithoutRequests,
               props.targets,
               _
