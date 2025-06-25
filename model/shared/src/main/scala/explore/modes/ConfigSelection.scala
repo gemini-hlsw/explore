@@ -4,6 +4,7 @@
 package explore.modes
 
 import cats.Eq
+import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import explore.model.InstrumentConfigAndItcResult
@@ -77,6 +78,12 @@ final case class ConfigSelection private (configs: List[InstrumentConfigAndItcRe
           .some
       case ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)              =>
         BasicConfiguration.Flamingos2LongSlit(disperser, filter, fpu).some
+      case ItcInstrumentConfig.GmosNorthImaging(f, _)                                      =>
+        // FIXME
+        BasicConfiguration.GmosNorthImaging(NonEmptyList.of(f)).some
+      case ItcInstrumentConfig.GmosSouthImaging(f, _)                                      =>
+        // FIXME
+        BasicConfiguration.GmosSouthImaging(NonEmptyList.of(f)).some
       case _                                                                               => none
     )
 

@@ -207,6 +207,10 @@ case class Observation(
           )
       case _: ObservingMode.Flamingos2LongSlit =>
         InstrumentOverrides.Flamingos2Spectroscopy().some
+      case _: ObservingMode.GmosNorthImaging   =>
+        InstrumentOverrides.GmosImaging().some
+      case _: ObservingMode.GmosSouthImaging   =>
+        InstrumentOverrides.GmosImaging().some
 
   // Imaging modes can return multiple configs due to multiple filters.
   def toInstrumentConfig(targets: TargetList): List[ItcInstrumentConfig] =

@@ -112,7 +112,8 @@ case class ObsTabTiles(
 
   val obsAttachmentAssignments: ObsAttachmentAssignmentMap =
     programSummaries.obsAttachmentAssignments
-  val asterismTracking: Option[ObjectTracking]             =
+
+  val asterismTracking: Option[ObjectTracking] =
     observation.get.asterismTracking(obsTargets)
 
   val posAngleConstraint: PosAngleConstraint = observation.get.posAngleConstraint

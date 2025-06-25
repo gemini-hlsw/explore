@@ -28,6 +28,7 @@ import explore.model.ObservingModeGroupList
 import explore.model.ObservingModeSummary
 import explore.model.PosAngleConstraintAndObsMode
 import explore.model.ScienceRequirements
+import explore.model.ScienceRequirements.Imaging
 import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.TargetList
 import explore.model.enums.PosAngleOptions
@@ -55,6 +56,7 @@ import lucuma.react.primereact.SelectItem
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
+import lucuma.ui.components.UnderConstruction
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.schemas.itc.syntax.*
@@ -328,9 +330,27 @@ object ConfigurationTile:
 
           val optFlamingos2Aligner = optModeAligner.flatMap {
             _.zoomOpt(
-              ObservingMode.f2LongSlit,
+              ObservingMode.flamingos2LongSlit,
               modOrAssignAndMap(Flamingos2LongSlitInput())(
                 ObservingModeInput.flamingos2LongSlit.modify
+              )
+            )
+          }
+
+          val optGmosNorthImagingAligner = optModeAligner.flatMap {
+            _.zoomOpt(
+              ObservingMode.gmosNorthImaging,
+              modOrAssignAndMap(GmosNorthImagingInput())(
+                ObservingModeInput.gmosNorthImaging.modify
+              )
+            )
+          }
+
+          val optGmosSouthImagingAligner = optModeAligner.flatMap {
+            _.zoomOpt(
+              ObservingMode.gmosSouthImaging,
+              modOrAssignAndMap(GmosSouthImagingInput())(
+                ObservingModeInput.gmosSouthImaging.modify
               )
             )
           }
@@ -349,6 +369,9 @@ object ConfigurationTile:
 
           val spectroscopyView: ViewOpt[Spectroscopy] = requirementsView
             .zoom(ScienceRequirements.spectroscopy)
+
+          val imagingView: ViewOpt[Imaging] = requirementsView
+            .zoom(ScienceRequirements.imaging)
 
           React.Fragment(
             <.div(ExploreStyles.ConfigurationGrid)(
@@ -426,6 +449,14 @@ object ConfigurationTile:
                         props.readonly,
                         props.units
                       )
+                  ),
+                  // Gmos North Imaging
+                  (optGmosNorthImagingAligner, imagingView.asView).mapN((_, _) =>
+                    UnderConstruction()
+                  ),
+                  // Gmos South Imaging
+                  (optGmosSouthImagingAligner, imagingView.asView).mapN((_, _) =>
+                    UnderConstruction()
                   ),
                   // Flamingos2 Long Slit
                   (optFlamingos2Aligner, spectroscopyView.asView).mapN((f2Aligner, specView) =>
