@@ -9,7 +9,7 @@ import cats.syntax.all.*
 import clue.ResponseException
 import clue.model.GraphQLError
 import clue.model.GraphQLResponse
-import clue.model.GraphQLResponse.*
+import clue.syntax.*
 import lucuma.odb.data.OdbError
 import org.typelevel.log4cats.Logger
 

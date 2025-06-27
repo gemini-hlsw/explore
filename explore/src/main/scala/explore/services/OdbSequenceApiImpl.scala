@@ -6,7 +6,7 @@ package explore.services
 import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
-import clue.model.GraphQLResponse.*
+import clue.syntax.*
 import explore.model.SequenceData
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
