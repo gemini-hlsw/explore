@@ -139,31 +139,46 @@ object AladinContainer extends AladinCommon {
             val candidatesVisibilityCss =
               ExploreStyles.GuideStarCandidateVisible.when_(props.globalPreferences.agsOverlay)
 
-            props.vizConf.map(_.configuration.obsModeType).flatMap {
+            props.vizConf.map(_.configuration.obsModeType).map {
               case ObservingModeType.Flamingos2LongSlit                                      =>
-                Flamingos2Geometry.f2Geometry(
-                  baseCoords.value._1.value,
-                  props.vizConf.flatMap(_.scienceOffsets),
-                  props.vizConf.flatMap(_.acquisitionOffsets),
-                  props.vizConf.map(_.posAngle),
-                  props.vizConf.map(_.configuration),
-                  PortDisposition.Side,
-                  props.selectedGuideStar,
-                  candidatesVisibilityCss
+                (Css.Empty,
+                 Flamingos2Geometry.f2Geometry(
+                   baseCoords.value._1.value,
+                   props.vizConf.flatMap(_.scienceOffsets),
+                   props.vizConf.flatMap(_.acquisitionOffsets),
+                   props.vizConf.map(_.posAngle),
+                   props.vizConf.map(_.configuration),
+                   PortDisposition.Side,
+                   props.selectedGuideStar,
+                   candidatesVisibilityCss
+                 )
                 )
               case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit =>
-                GmosGeometry.gmosGeometry(
-                  baseCoords.value._1.value,
-                  props.vizConf.flatMap(_.scienceOffsets),
-                  props.vizConf.flatMap(_.acquisitionOffsets),
-                  props.vizConf.map(_.posAngle),
-                  props.vizConf.map(_.configuration),
-                  PortDisposition.Side,
-                  props.selectedGuideStar,
-                  candidatesVisibilityCss
+                (Css.Empty,
+                 GmosGeometry.gmosGeometry(
+                   baseCoords.value._1.value,
+                   props.vizConf.flatMap(_.scienceOffsets),
+                   props.vizConf.flatMap(_.acquisitionOffsets),
+                   props.vizConf.map(_.posAngle),
+                   props.vizConf.map(_.configuration),
+                   PortDisposition.Side,
+                   props.selectedGuideStar,
+                   candidatesVisibilityCss
+                 )
                 )
               case ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging   =>
-                throw new NotImplementedError("Gmos Imaging not implemented")
+                (VisualizationStyles.GmosCcdVisible,
+                 GmosGeometry.gmosGeometry(
+                   baseCoords.value._1.value,
+                   props.vizConf.flatMap(_.scienceOffsets),
+                   props.vizConf.flatMap(_.acquisitionOffsets),
+                   props.vizConf.map(_.posAngle),
+                   props.vizConf.map(_.configuration),
+                   PortDisposition.Side,
+                   props.selectedGuideStar,
+                   candidatesVisibilityCss
+                 )
+                )
             }
           }
         // resize detector
@@ -413,13 +428,19 @@ object AladinContainer extends AladinCommon {
                     candidates ++ basePosition ++ sciencePositions ++ offsetTargets
                   )
                 ),
-              (resize.width, resize.height, fov.value, shapes.value.flatMap(NonEmptyMap.fromMap))
+              (resize.width,
+               resize.height,
+               fov.value,
+               shapes.value.flatMap(_._2.flatMap(NonEmptyMap.fromMap)),
+               shapes.value.map(_._1)
+              )
                 .mapN(
                   SVGVisualizationOverlay(
                     _,
                     _,
                     _,
                     screenOffset,
+                    _,
                     _
                   )
                 ),
