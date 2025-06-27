@@ -7,7 +7,7 @@ import cats.effect.Resource
 import cats.effect.Sync
 import cats.syntax.all.*
 import clue.StreamingClient
-import clue.model.GraphQLResponse.*
+import clue.syntax.*
 import lucuma.core.enums.StepStage
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
