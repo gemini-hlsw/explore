@@ -18,7 +18,6 @@ import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Timestamp
 import lucuma.itc.Error
-import lucuma.itc.client.ClientCalculationResult
 import lucuma.itc.client.ImagingInput
 import lucuma.itc.client.ImagingParameters
 import lucuma.itc.client.ItcClient
@@ -27,9 +26,10 @@ import lucuma.itc.client.SpectroscopyParameters
 import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
+import lucuma.itc.client.ClientAllResults
 
 object ITCRequests:
-  val cacheVersion = CacheVersion(18)
+  val cacheVersion = CacheVersion(19)
 
   val itcErrorToQueryProblems: Error => ItcQueryProblem =
     case Error.SourceTooBright(halfWell) => ItcQueryProblem.SourceTooBright(halfWell)
@@ -53,9 +53,10 @@ object ITCRequests:
     cache:               Cache[F],
     callback:            Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]] => F[Unit]
   )(using Monoid[F[Unit]], ItcClient[F]): F[Unit] = {
-    def itcResults(r: ClientCalculationResult): EitherNec[ItcTargetProblem, ItcResult] =
+    def itcResults(r: ClientAllResults): EitherNec[ItcTargetProblem, ItcResult] =
+      // TODO Run all e.g. imaging filters in one call
       // Convert to usable types
-      r.targetTimes.partitionErrors.fold(
+      r.all.head.targetTimes.partitionErrors.fold(
         errors =>
           errors
             .map: (error, idx) =>
@@ -68,7 +69,7 @@ object ITCRequests:
           val i    = times.value.focus.times.focus
           val snAt = times.value.focus.signalToNoiseAt
           ItcResult
-            .Result(i.exposureTime, i.exposureCount, r.targetTimes.brightestIndex, snAt)
+            .Result(i.exposureTime, i.exposureCount, r.all.head.targetTimes.brightestIndex, snAt)
             .rightNec
       )
 
@@ -88,7 +89,7 @@ object ITCRequests:
                       ImagingParameters(
                         exposureTimeMode = params.exposureTimeMode,
                         constraints = params.constraints,
-                        mode = mode
+                        modes = NonEmptyList.one(mode)
                       ),
                       params.asterism.map(_.gaiaFree.input)
                     ),
@@ -101,7 +102,7 @@ object ITCRequests:
                       SpectroscopyParameters(
                         exposureTimeMode = params.exposureTimeMode,
                         constraints = params.constraints,
-                        mode = mode
+                        modes = NonEmptyList.one(mode)
                       ),
                       params.asterism.map(_.gaiaFree.input)
                     ),
