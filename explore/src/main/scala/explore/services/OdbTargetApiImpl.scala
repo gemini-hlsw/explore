@@ -8,7 +8,7 @@ import cats.effect.kernel.Resource
 import cats.syntax.all.*
 import clue.StreamingClient
 import clue.data.syntax.*
-import clue.model.GraphQLResponse.*
+import clue.syntax.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.model.ObsIdSet
 import explore.targets.TargetSearchResult

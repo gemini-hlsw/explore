@@ -7,7 +7,7 @@ import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.data.syntax.*
-import clue.model.GraphQLResponse.*
+import clue.syntax.*
 import explore.common.ProposalOdbExtensions.*
 import explore.model.CallForProposal
 import explore.model.Proposal
