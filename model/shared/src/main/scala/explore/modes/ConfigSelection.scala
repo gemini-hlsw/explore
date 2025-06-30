@@ -8,6 +8,7 @@ import cats.data.NonEmptyList
 import cats.derived.*
 import cats.syntax.all.*
 import explore.model.InstrumentConfigAndItcResult
+import explore.model.itc.ItcTargetProblem
 import lucuma.core.enums.ScienceMode
 import lucuma.schemas.model.BasicConfiguration
 
@@ -25,6 +26,13 @@ final case class ConfigSelection private (configs: List[InstrumentConfigAndItcRe
 
   lazy val hasItcErrors: Boolean =
     configs.exists(_.itcResult.exists(_.isLeft))
+
+  lazy val itcErrors: List[ItcTargetProblem] =
+    configs
+      .collect:
+        case InstrumentConfigAndItcResult(_, Some(Left(e))) => e.toList
+      .flatten
+      .distinct
 
   lazy val isMissingSomeItc: Boolean =
     configs.exists(_.itcResult.isEmpty)

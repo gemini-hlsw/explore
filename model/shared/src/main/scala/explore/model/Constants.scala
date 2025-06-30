@@ -68,7 +68,6 @@ trait Constants:
   val NoConstraints      = "Constraints not defined"
   val MissingMode        = "Observation is missing observing mode" // Matches odb error message
   val MissingCandidates  = "No catalog stars available"
-  val MissingCustomSED   = "Missing custom SED timestamps"
   val NoTargets          = "No targets available"
   val NoTargetSelected   = "No target selected"
   val BadTimingWindow    = "Review the dates on this timing window."

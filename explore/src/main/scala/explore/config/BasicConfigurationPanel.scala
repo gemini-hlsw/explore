@@ -3,6 +3,8 @@
 
 package explore.config
 
+import cats.data.EitherNec
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
@@ -18,6 +20,7 @@ import explore.model.ScienceRequirements.Spectroscopy
 import explore.model.display.given
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
+import explore.model.itc.ItcTargetProblem
 import explore.modes.ConfigSelection
 import explore.modes.ScienceModes
 import explore.syntax.ui.*
@@ -47,7 +50,7 @@ case class BasicConfigurationPanel(
   requirementsView:    View[ScienceRequirements],
   selectedConfig:      View[ConfigSelection],
   constraints:         ConstraintSet,
-  itcTargets:          List[ItcTarget],
+  itcTargets:          EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]],
   baseCoordinates:     Option[CoordinatesAtVizTime],
   calibrationRole:     Option[CalibrationRole],
   createConfig:        IO[Unit],

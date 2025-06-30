@@ -25,7 +25,6 @@ import explore.model.SupportedInstruments
 import explore.model.WorkerClients.ItcClient
 import explore.model.boopickle.*
 import explore.model.boopickle.ItcPicklers.given
-import explore.model.display.given
 import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.ItcInstrumentConfig
@@ -35,7 +34,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.SignalToNoise
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
-import lucuma.core.syntax.all.*
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
@@ -194,16 +192,16 @@ trait ModesTableCommon:
           val content: List[TagMod] =
             errors
               .collect:
-                case ItcTargetProblem(name, s @ SourceTooBright(_)) =>
+                case p @ ItcTargetProblem(name, s @ SourceTooBright(_)) =>
                   <.span(ThemeIcons.SunBright.addClass(ExploreStyles.ItcSourceTooBrightIcon))(
-                    renderName(name) + (s: ItcQueryProblem).shortName
+                    p.format
                   )
-                case ItcTargetProblem(name, GenericError(e))        =>
+                case ItcTargetProblem(name, GenericError(e))            =>
                   e.split("\n")
                     .map(u => <.span(u))
                     .mkTagMod(<.span(renderName(name)), <.br, EmptyVdom)
-                case ItcTargetProblem(name, problem)                =>
-                  <.span(s"${renderName(name)}${problem.message}")
+                case p @ ItcTargetProblem(_, _)                         =>
+                  <.span(p.format)
               .toList
               .intersperse(<.br: VdomNode)
 

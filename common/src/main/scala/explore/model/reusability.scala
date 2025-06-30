@@ -14,6 +14,7 @@ import explore.model.enums.GroupWarning
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.ItcTarget
+import explore.model.itc.ItcTargetProblem
 import explore.modes.ConfigSelection
 import explore.modes.InstrumentOverrides
 import explore.modes.ItcInstrumentConfig
@@ -55,6 +56,7 @@ object reusability:
   // Model
   given Reusability[ProgramSummaries]                                         = Reusability.byEq
   given Reusability[ItcTarget]                                                = Reusability.byEq
+  given Reusability[ItcTargetProblem]                                         = Reusability.byEq
   given Reusability[PersistentClientStatus]                                   = Reusability.byEq
   given Reusability[AsterismVisualOptions]                                    = Reusability.byEq
   given Reusability[ExpandedIds]                                              = Reusability.byEq
