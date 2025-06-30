@@ -45,7 +45,6 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
-import lucuma.ui.components.SolarProgress
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
@@ -205,8 +204,7 @@ object ExploreLayout:
                   position = Sidebar.Position.Bottom,
                   content = error,
                   clazz = ExploreStyles.GlobalErrorDialog
-                ),
-                SolarProgress()
+                )
               )
             ),
           IfLogged[ExploreEvent](
