@@ -243,7 +243,7 @@ object ItcTile:
           val selectedTarget = props.selectedTarget
           val existTargets   = props.itcGraphQuerier.targets.nonEmpty && selectedTarget.get.isDefined
 
-          val itcTargets          = props.itcGraphQuerier.itcTargets.foldMap(_.toList)
+          val itcTargets          = props.itcGraphQuerier.targets
           val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)
           val itcTargetsWithIndex = itcTargets.zipWithIndex
 

@@ -6,7 +6,6 @@ package explore.model
 import cats.syntax.all.*
 import eu.timepit.refined.cats.*
 import explore.model.enums.WavelengthUnits
-import explore.model.itc.ItcQueryProblem
 import explore.modes.ItcInstrumentConfig
 import lucuma.core.enums.*
 import lucuma.core.math.BoundedInterval
@@ -231,16 +230,6 @@ trait DisplayImplicits:
     case GraphType.SignalGraph      => "Signal"
     case GraphType.SignalPixelGraph => "Pixel"
     case GraphType.S2NGraph         => "S/N"
-
-  given Display[ItcQueryProblem] = Display.byShortName:
-    case ItcQueryProblem.UnsupportedMode               => "Mode not supported"
-    case ItcQueryProblem.MissingExposureTimeMode       => "Exposure time mode is missing"
-    case ItcQueryProblem.MissingWavelength             => "Provide a wavelength"
-    case ItcQueryProblem.MissingTargetInfo             => "Target information is missing"
-    case ItcQueryProblem.MissingBrightness             => "Target brightness is missing"
-    case ItcQueryProblem.SourceTooBright(halfWellTime) =>
-      f"Source too bright, well half filled in $halfWellTime%.2f seconds"
-    case ItcQueryProblem.GenericError(e)               => e
 
   given Display[ScienceBand] = Display.byShortName:
     case ScienceBand.Band1 => "Band-1"

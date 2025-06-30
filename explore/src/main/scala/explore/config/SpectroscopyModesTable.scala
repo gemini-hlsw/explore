@@ -64,14 +64,12 @@ case class SpectroscopyModesTable(
   exposureTimeMode:         Option[ExposureTimeMode],
   spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
-  targets:                  List[ItcTarget],
+  targets:                  EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]],
   baseCoordinates:          Option[CoordinatesAtVizTime],
   matrix:                   SpectroscopyModesMatrix,
   customSedTimestamps:      List[Timestamp],
   units:                    WavelengthUnits
-) extends ReactFnProps(SpectroscopyModesTable.component):
-  val validTargets: Option[NonEmptyList[ItcTarget]] =
-    NonEmptyList.fromList(targets.filter(_.canQueryITC))
+) extends ReactFnProps(SpectroscopyModesTable.component)
 
 private object SpectroscopyModesTable extends ModesTableCommon:
   private type Props = SpectroscopyModesTable
@@ -247,14 +245,15 @@ private object SpectroscopyModesTable extends ModesTableCommon:
         itcProgress    <- useStateView(none[Progress])
         rows           <- useMemo(
                             (props.matrix,
+                             props.exposureTimeMode,
                              props.spectroscopyRequirements,
                              props.baseCoordinates.map(_.value.dec),
                              itcResults.get.cache.size,
-                             props.validTargets,
+                             props.targets,
                              props.constraints,
                              props.customSedTimestamps
                             )
-                          ): (matrix, s, dec, _, asterism, constraints, customSedTimestamps) =>
+                          ): (matrix, etm, s, dec, _, targets, constraints, customSedTimestamps) =>
 
                             val rows: List[SpectroscopyModeRow] =
                               matrix
@@ -276,23 +275,24 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                                   _.withModeOverridesFor(
                                     // Should this wv come from the grating, or is the obs wavelength?
                                     s.wavelength,
-                                    asterism.map(_.map(_.sourceProfile)),
+                                    targets.toOption.map(_.map(_.sourceProfile)),
                                     constraints.imageQuality
                                   )
                                 )
                                 .flattenOption
 
                             fixedModeRows.map: row =>
-                              val result = (s.wavelength, asterism, props.exposureTimeMode).mapN {
-                                (_, _, exposureMode) =>
-                                  itcResults.get.forRow(
-                                    exposureMode,
-                                    constraints,
-                                    asterism,
-                                    customSedTimestamps,
-                                    row
-                                  )
-                              }
+                              val result: Option[EitherNec[ItcTargetProblem, ItcResult]] =
+                                (s.wavelength, etm).mapN: (_, exposureMode) =>
+                                  targets.flatMap: asterism =>
+                                    itcResults.get.forRow(
+                                      exposureMode,
+                                      constraints,
+                                      asterism.some,
+                                      customSedTimestamps,
+                                      row
+                                    )
+
                               SpectroscopyModeRowWithResult(
                                 row,
                                 Pot.fromOption(result),
@@ -340,7 +340,7 @@ private object SpectroscopyModesTable extends ModesTableCommon:
                             scrollTo.set(ScrollTo.Scroll),
                             props.exposureTimeMode,
                             props.constraints,
-                            props.validTargets,
+                            props.targets.toOption,
                             props.customSedTimestamps,
                             sortedRows
                           )
@@ -379,7 +379,7 @@ private object SpectroscopyModesTable extends ModesTableCommon:
 
         val selectedTarget: Option[VdomNode] = findSelectedTarget(
           rows.value,
-          props.validTargets
+          props.targets.toOption
         )
 
         React.Fragment(

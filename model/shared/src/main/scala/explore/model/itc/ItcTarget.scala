@@ -4,7 +4,9 @@
 package explore.model.itc
 
 import cats.Eq
+import cats.data.EitherNec
 import cats.derived.*
+import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Band
@@ -41,5 +43,9 @@ case class ItcTarget(name: NonEmptyString, input: TargetInput) derives Eq:
     case SourceProfile.Point(sd)       => canQuerySD(sd)
     case SourceProfile.Uniform(sd)     => canQuerySD(sd)
     case SourceProfile.Gaussian(_, sd) => canQuerySD(sd)
+
+  def orItcProblem: EitherNec[ItcTargetProblem, ItcTarget] =
+    if (canQueryITC) this.rightNec
+    else ItcTargetProblem(name.some, ItcQueryProblem.MissingBrightness).leftNec
 
   def gaiaFree: ItcTarget = copy(input = input.copy(sourceProfile = input.sourceProfile.gaiaFree))

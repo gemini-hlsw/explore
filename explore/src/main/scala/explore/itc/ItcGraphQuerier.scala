@@ -4,7 +4,7 @@
 package explore.itc
 
 import cats.Eq
-import cats.Order.given
+import cats.data.EitherNec
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.effect.IO
@@ -27,18 +27,12 @@ import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
 
-import scala.collection.immutable.SortedMap
-
 case class ItcGraphQuerier(
   observation:         Observation,
   selectedConfig:      Option[InstrumentConfigAndItcResult], // selected row in spectroscopy modes table
-  at:                  TargetList,
+  allTargets:          TargetList,
   customSedTimestamps: List[Timestamp]
 ) derives Eq:
-
-  private val allTargets: TargetList =
-    SortedMap.from:
-      at.view.mapValues(Target.sourceProfile.modify(_.gaiaFree))
 
   private val constraints = observation.constraints
   private val asterismIds = observation.scienceTargetIds
@@ -48,14 +42,14 @@ case class ItcGraphQuerier(
   // When we use the remote configuration we don't need the exposure time.
   private val remoteConfig: Option[InstrumentConfigAndItcResult] =
     observation
-      .toInstrumentConfig(at)
+      .toInstrumentConfig(allTargets)
       .headOption
       .map: row =>
         InstrumentConfigAndItcResult(row, none)
 
   // If the observation has an assigned configuration, we use that one.
   // Otherwise, we use the one selected in the table.
-  val finalConfig: Option[InstrumentConfigAndItcResult] =
+  private val finalConfig: Option[InstrumentConfigAndItcResult] =
     remoteConfig.orElse(selectedConfig)
 
   val exposureTimeMode: Option[ExposureTimeMode] =
@@ -64,15 +58,15 @@ case class ItcGraphQuerier(
   private val instrumentConfig: Option[ItcInstrumentConfig] =
     finalConfig.map(_.instrumentConfig)
 
-  val itcTargets: Option[NonEmptyList[ItcTarget]] =
-    asterismIds.itcTargets(allTargets).filter(_.canQueryITC).toNel
+  private val itcTargets: EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]] =
+    asterismIds.toItcTargets(allTargets)
 
   val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
 
   private val queryProps =
     (exposureTimeMode,
      constraints.some,
-     itcTargets,
+     itcTargets.toOption,
      instrumentConfig,
      customSedTimestamps.some
     ).tupled
@@ -88,8 +82,6 @@ case class ItcGraphQuerier(
         Constants.NoTargets
       else if (instrumentConfig.isEmpty)
         Constants.MissingMode
-      else if (customSedTimestamps.isEmpty)
-        Constants.MissingCustomSED
       else
         Constants.MissingInfoMsg
 

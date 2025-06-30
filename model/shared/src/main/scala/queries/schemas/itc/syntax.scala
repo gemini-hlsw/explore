@@ -4,10 +4,14 @@
 package queries.schemas.itc
 
 import cats.Hash
+import cats.data.EitherNec
+import cats.data.NonEmptyList
 import cats.syntax.all.*
 import explore.model.AsterismIds
 import explore.model.TargetList
+import explore.model.itc.ItcQueryProblem
 import explore.model.itc.ItcTarget
+import explore.model.itc.ItcTargetProblem
 import explore.modes.ItcInstrumentConfig
 import explore.optics.all.*
 import lucuma.core.enums.GmosRoi
@@ -60,32 +64,27 @@ trait syntax:
   private given Hash[ItcTarget]      = Hash.by(x => (x.name.value, x.input))
 
   extension (targetIds: AsterismIds)
-    // From the list of targets selects the ones relevant for ITC
-    def itcTargets(allTargets: TargetList): List[ItcTarget] =
-      targetIds.toList
-        .map(targetId =>
-          allTargets
-            .get(targetId)
-            .flatMap(target =>
-              TargetRV
-                .getOption(target)
-                .map(r => ItcTarget(target.name, TargetInput(Target.sourceProfile.get(target), r)))
-            )
-        )
-        .flatten
-        .hashDistinct
+    // assumes all targets are present
+    def toAsterism(allTargets: TargetList): List[Target] =
+      targetIds.toList.map(targetId => allTargets.get(targetId)).flattenOption
 
-  extension (allTargets: TargetList)
-    // From the list of targets selects the ones relevant for ITC
-    def itcTargets: List[ItcTarget] =
-      allTargets.values
-        .map(target =>
-          TargetRV
-            .getOption(target)
-            .map(r => ItcTarget(target.name, TargetInput(Target.sourceProfile.get(target), r)))
+    def toItcTargets(allTargets: TargetList): EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]] =
+      toAsterism(allTargets).toItcTargets
+
+  extension (target: Target)
+    def itcTarget: EitherNec[ItcTargetProblem, ItcTarget] =
+      TargetRV
+        .getOption(target)
+        .toRightNec(ItcTargetProblem(target.name.some, ItcQueryProblem.MissingTargetInfo))
+        .flatMap(r =>
+          ItcTarget(target.name, TargetInput(Target.sourceProfile.get(target), r)).orItcProblem
         )
-        .toList
-        .flattenOption
-        .hashDistinct
+
+  extension (asterism: List[Target])
+    def toItcTargets: EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]] =
+      asterism
+        .traverse(_.itcTarget)
+        .map(_.hashDistinct)
+        .flatMap(_.toNel.toRightNec(ItcTargetProblem(None, ItcQueryProblem.MissingTargetInfo)))
 
 object syntax extends syntax

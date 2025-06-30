@@ -4,6 +4,8 @@
 package explore.config
 
 import cats.Order.given
+import cats.data.EitherNec
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.Assign
@@ -34,6 +36,7 @@ import explore.model.TargetList
 import explore.model.enums.PosAngleOptions
 import explore.model.enums.WavelengthUnits
 import explore.model.itc.ItcTarget
+import explore.model.itc.ItcTargetProblem
 import explore.model.syntax.all.*
 import explore.modes.ConfigSelection
 import explore.modes.ItcInstrumentConfig
@@ -95,7 +98,7 @@ object ConfigurationTile:
           requirements,
           pacAndMode,
           obsConf,
-          scienceTargetIds.itcTargets(allTargets),
+          scienceTargetIds.toItcTargets(allTargets),
           baseCoordinates,
           selectedConfig,
           revertedInstrumentConfig,
@@ -197,7 +200,7 @@ object ConfigurationTile:
     requirements:             UndoSetter[ScienceRequirements],
     pacAndMode:               UndoSetter[PosAngleConstraintAndObsMode],
     obsConf:                  ObsConfiguration,
-    itcTargets:               List[ItcTarget],
+    itcTargets:               EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]],
     baseCoordinates:          Option[CoordinatesAtVizTime],
     selectedConfig:           View[ConfigSelection],
     revertedInstrumentConfig: List[ItcInstrumentConfig],

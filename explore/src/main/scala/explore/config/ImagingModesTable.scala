@@ -61,13 +61,11 @@ final case class ImagingModesTable(
   imaging:             ScienceRequirements.Imaging,
   matrix:              ImagingModesMatrix,
   constraints:         ConstraintSet,
-  targets:             List[ItcTarget],
+  targets:             EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]],
   baseCoordinates:     Option[CoordinatesAtVizTime],
   customSedTimestamps: List[Timestamp],
   units:               WavelengthUnits
-) extends ReactFnProps(ImagingModesTable.component):
-  val validTargets: Option[NonEmptyList[ItcTarget]] =
-    NonEmptyList.fromList(targets.filter(_.canQueryITC))
+) extends ReactFnProps(ImagingModesTable.component)
 
 object ImagingModesTable extends ModesTableCommon:
 
@@ -217,24 +215,26 @@ object ImagingModesTable extends ModesTableCommon:
       rows            <- useMemo(
                            props.matrix,
                            props.exposureTimeMode,
-                           props.validTargets,
+                           props.targets,
                            props.constraints,
                            props.customSedTimestamps,
                            props.imaging.minimumFov,
                            props.imaging.allowedFilterTypes,
                            itcResults.get.cache.size
-                         ): (matrix, etm, asterism, constraints, customSedTimestamps, minimumFov, fts, _) =>
+                         ): (matrix, etm, targets, constraints, customSedTimestamps, minimumFov, fts, _) =>
                            matrix
                              .filtered(minimumFov, fts)
                              .map: row =>
-                               val result = (asterism, etm).mapN: (_, e) =>
-                                 itcResults.get.forRow(
-                                   e,
-                                   constraints,
-                                   asterism,
-                                   customSedTimestamps,
-                                   row
-                                 )
+                               val result: Option[EitherNec[ItcTargetProblem, ItcResult]] =
+                                 etm.map: exposureMode =>
+                                   targets.flatMap: asterism =>
+                                     itcResults.get.forRow(
+                                       exposureMode,
+                                       constraints,
+                                       asterism.some,
+                                       customSedTimestamps,
+                                       row
+                                     )
                                ImagingModeRowWithResult(
                                  row,
                                  Pot.fromOption(result)
@@ -274,7 +274,7 @@ object ImagingModesTable extends ModesTableCommon:
                            scrollTo.set(ScrollTo.Scroll),
                            props.exposureTimeMode,
                            props.constraints,
-                           props.validTargets,
+                           props.targets.toOption,
                            props.customSedTimestamps,
                            sortedRows
                          )
@@ -309,7 +309,7 @@ object ImagingModesTable extends ModesTableCommon:
                              )
     } yield
       val errlabel       = itcHookData.errorLabel(true)
-      val selectedTarget = findSelectedTarget(rows.value, props.validTargets)
+      val selectedTarget = findSelectedTarget(rows.value, props.targets.toOption)
       val selectedCount  = props.selectedConfigs.get.count
 
       val upIndex   = visibleRows.get.flatMap(vr => selectedIndices.value.findLast(_ < vr.start))

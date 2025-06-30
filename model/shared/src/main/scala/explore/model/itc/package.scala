@@ -24,16 +24,21 @@ import scala.math.*
 // Do not turn into enum or compositePickler will break.
 sealed trait ItcQueryProblem(val message: String) derives Eq
 object ItcQueryProblem:
-  case object UnsupportedMode          extends ItcQueryProblem("Unsupported mode")
-  case object MissingWavelength        extends ItcQueryProblem("Missing wavelength")
-  case object MissingExposureTimeMode  extends ItcQueryProblem("Missing exposure time mode")
-  case object MissingTargetInfo        extends ItcQueryProblem("Missing target info")
-  case object MissingBrightness        extends ItcQueryProblem("Missing brightness")
+  case object UnsupportedMode          extends ItcQueryProblem("Mode not supported")
+  case object MissingWavelength        extends ItcQueryProblem("Wavelength is missing")
+  case object MissingExposureTimeMode  extends ItcQueryProblem("Exposure time mode is missing")
+  case object MissingTargetInfo        extends ItcQueryProblem("Target information is missing")
+  case object MissingBrightness        extends ItcQueryProblem("Target brightness is missing")
   case class SourceTooBright(wellHalfFilledSeconds: BigDecimal)
-      extends ItcQueryProblem(s"Source too bright")
+      extends ItcQueryProblem(
+        f"Source too bright, well half filled in $wellHalfFilledSeconds%.2f seconds"
+      )
   case class GenericError(msg: String) extends ItcQueryProblem(msg)
 
-case class ItcTargetProblem(targetName: Option[NonEmptyString], problem: ItcQueryProblem) derives Eq
+case class ItcTargetProblem(targetName: Option[NonEmptyString], problem: ItcQueryProblem)
+    derives Eq:
+  def format: String =
+    targetName.fold(problem.message)(name => s"$name: ${problem.message}")
 
 // TODO: move to core
 private given Eq[SignalToNoiseAt] = Eq.by(x => (x.wavelength, x.single, x.total))
