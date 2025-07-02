@@ -227,6 +227,7 @@ object ObsTabContents extends TwoPanels:
               props.groups.model,
               props.targets.get,
               props.programSummaries.get.allocatedScienceBands.size > 1,
+              props.readonly,
               backButton
             )
 

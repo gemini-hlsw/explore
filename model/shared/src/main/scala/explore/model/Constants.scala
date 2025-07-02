@@ -67,6 +67,7 @@ trait Constants:
   val NoExposureTimeMode = "No exposure time mode defined"
   val MissingMode        = "Observation is missing observing mode" // Matches odb error message
   val MissingCandidates  = "No catalog stars available"
+  val NoObservations     = "No observations available"
   val NoTargets          = "No targets available"
   val NoTargetSelected   = "No target selected"
   val BadTimingWindow    = "Review the dates on this timing window."

@@ -15,6 +15,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.AsterismIds
+import explore.model.Constants
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
 import explore.model.OnAsterismUpdateParams
@@ -164,8 +165,10 @@ object TargetTable extends AsterismModifier:
       yield
         import ctx.given
 
-        React.Fragment(
-          if (rows.isEmpty)
+        if (rows.isEmpty)
+          if (props.readOnly)
+            <.div(LucumaStyles.HVCenter)(Constants.NoTargets)
+          else
             <.div(LucumaStyles.HVCenter)(
               targetSelectionPopup(
                 "Add a target",
@@ -177,24 +180,23 @@ object TargetTable extends AsterismModifier:
                 buttonClass = LucumaPrimeStyles.Massive
               )
             )
-          else
-            <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
-              PrimeTable(
-                table,
-                striped = true,
-                compact = Compact.Very,
-                tableMod = ExploreStyles.ExploreTable,
-                headerCellMod = headerCell =>
-                  ColumnClasses
-                    .get(headerCell.column.id)
-                    .orEmpty |+| ExploreStyles.StickyHeader,
-                rowMod = row =>
-                  TagMod(
-                    ExploreStyles.TableRowSelected
-                      .when_(props.selectedTarget.get.exists(_ === row.original.id)),
-                    ^.onClick --> props.selectedTarget.set(row.original.id.some)
-                  ),
-                cellMod = cell => ColumnClasses.get(cell.column.id).orEmpty
-              )
+        else
+          <.div(ExploreStyles.ExploreTable |+| ExploreStyles.AsterismTable)(
+            PrimeTable(
+              table,
+              striped = true,
+              compact = Compact.Very,
+              tableMod = ExploreStyles.ExploreTable,
+              headerCellMod = headerCell =>
+                ColumnClasses
+                  .get(headerCell.column.id)
+                  .orEmpty |+| ExploreStyles.StickyHeader,
+              rowMod = row =>
+                TagMod(
+                  ExploreStyles.TableRowSelected
+                    .when_(props.selectedTarget.get.exists(_ === row.original.id)),
+                  ^.onClick --> props.selectedTarget.set(row.original.id.some)
+                ),
+              cellMod = cell => ColumnClasses.get(cell.column.id).orEmpty
             )
-        )
+          )
