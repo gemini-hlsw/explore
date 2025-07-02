@@ -3,6 +3,9 @@
 
 package explore.itc
 
+import cats.Eq
+import cats.data.EitherNec
+import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.*
@@ -10,13 +13,11 @@ import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.Icons
 import explore.common.UserPreferencesQueries.*
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Constants
-import explore.model.Constants.MissingInfoMsg
 import explore.model.GlobalPreferences
 import explore.model.ObsTabTileIds
 import explore.model.Observation
@@ -26,13 +27,11 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.Wavelength
-import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.User
-import lucuma.core.util.NewType
 import lucuma.itc.GraphType
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
-import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.SelectItem
@@ -41,26 +40,53 @@ import lucuma.ui.syntax.pot.*
 import lucuma.ui.utils.*
 
 object ItcTile:
+  case class TargetAndResults(
+    target: ItcTarget,
+    result: Either[ItcQueryProblem, ItcGraphResult]
+  ) derives Eq:
+    def asTargetProblem: EitherNec[ItcTargetProblem, ItcGraphResult] =
+      result.leftMap(p => ItcTargetProblem(target.name.some, p)).toEitherNec
+
+  given Reusability[TargetAndResults] = Reusability.byEq
+
+  extension (tuple: (ItcTarget, Either[ItcQueryProblem, ItcGraphResult]))
+    def toTargetAndResults: TargetAndResults =
+      TargetAndResults(tuple._1, tuple._2)
+
+  extension (asterismGraphResults: EitherNec[ItcTargetProblem, ItcAsterismGraphResults])
+    def targets: List[ItcTarget]                                      =
+      asterismGraphResults.toOption.map(_.asterismGraphs.keys.toList).getOrElse(List.empty)
+    def findGraphResults(target: ItcTarget): Option[TargetAndResults] =
+      asterismGraphResults.toOption
+        .flatMap(_.asterismGraphs.get(target))
+        .map(TargetAndResults(target, _))
+    def brightestTarget: Option[TargetAndResults]                     =
+      asterismGraphResults.toOption.flatMap(_.brightestTarget).flatMap(findGraphResults)
+    def brightestOrFirst: Option[TargetAndResults]                    =
+      brightestTarget
+        .orElse(
+          asterismGraphResults.toOption
+            .flatMap(_.asterismGraphs.headOption)
+            .map(_.toTargetAndResults)
+        )
+
   def apply(
     uid:               Option[User.Id],
     oid:               Observation.Id,
-    itcGraphQuerier:   ItcGraphQuerier,
-    itcGraphResults:   Pot[ItcAsterismGraphResults],
+    itcGraphResults:   Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
     globalPreferences: View[GlobalPreferences]
   ) =
     Tile(
       ObsTabTileIds.ItcId.id,
       s"ITC",
-      ItcTileState(itcGraphResults.toOption.flatMap(_.brightestTarget)),
-      bodyClass =
-        ExploreStyles.ItcTileBody |+| ExploreStyles.ItcTileBodyError.when_(itcGraphResults.isError)
+      none[TargetAndResults],
+      bodyClass = ExploreStyles.ItcTileBody
     )(
       s =>
         uid.map(
           Body(
             _,
             oid,
-            itcGraphQuerier,
             itcGraphResults,
             globalPreferences,
             s
@@ -68,40 +94,37 @@ object ItcTile:
         ),
       (s, _) =>
         Title(
-          itcGraphQuerier,
-          itcGraphResults,
+          itcGraphResults.toOption.flatMap(_.toOption),
           s
         )
     )
 
-  object ItcTileState extends NewType[Option[ItcTarget]]:
-    val Initial: ItcTileState = ItcTileState(none)
-  type ItcTileState = ItcTileState.Type
-
   private case class Body(
-    uid:               User.Id,
-    oid:               Observation.Id,
-    itcGraphQuerier:   ItcGraphQuerier,
-    itcGraphResults:   Pot[ItcAsterismGraphResults],
-    globalPreferences: View[GlobalPreferences],
-    tileState:         View[ItcTileState]
-  ) extends ReactFnProps(Body.component):
-    val selectedTarget: View[Option[ItcTarget]] = tileState.as(ItcTileState.Value)
+    uid:                      User.Id,
+    oid:                      Observation.Id,
+    itcGraphResults:          Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
+    globalPreferences:        View[GlobalPreferences],
+    selectedTargetAndResults: View[Option[TargetAndResults]]
+  ) extends ReactFnProps(Body)
 
-  private object Body:
-    private type Props = Body
-
-    private val component =
-      ScalaFnComponent[Props]: props =>
+  private object Body
+      extends ReactFnComponent[Body](props =>
         for
           ctx <- useContext(AppContext.ctx)
-          _   <- // Reset the selected target if it changes
-            useEffectWhenDepsReadyOrChange(props.itcGraphResults.map(_.brightestTarget)):
-              itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
+          _   <- // Reset the selected target if the brightest target changes
+            useEffectWhenDepsReadyOrChange(props.itcGraphResults.map(_.brightestOrFirst)):
+              itcBrightestOrFirst => props.selectedTargetAndResults.set(itcBrightestOrFirst)
+          _   <- // if the targets change, make sure the selected target is still available
+            useEffectWhenDepsReadyOrChange(props.itcGraphResults.map(_.targets)): targets =>
+              if (props.selectedTargetAndResults.get.exists(targets.contains))
+                Callback.empty
+              else
+                props.selectedTargetAndResults
+                  .set(props.itcGraphResults.toOption.flatMap(_.brightestOrFirst))
         yield
           import ctx.given
 
-          def body(graphResults: ItcAsterismGraphResults): VdomNode =
+          def body(signalToNoiseAt: Wavelength, graphResult: ItcGraphResult): VdomNode =
             val globalPreferences: View[GlobalPreferences] =
               props.globalPreferences.withOnMod: prefs =>
                 ItcPlotPreferences
@@ -113,15 +136,6 @@ object ItcTile:
 
             val detailsView: View[PlotDetails] =
               globalPreferences.zoom(GlobalPreferences.itcDetailsOpen)
-
-            val selectedTarget: Option[ItcTarget] = props.selectedTarget.get
-
-            val selectedResult: Option[ItcGraphResult] =
-              for
-                t <- selectedTarget
-                r <- graphResults.asterismGraphs.get(t)
-                c <- r.toOption
-              yield c
 
             def bandValues(sp: SourceProfile)(band: Band): Option[BrightnessValues.ForBand] =
               SourceProfile.integratedBrightnesses
@@ -152,40 +166,10 @@ object ItcTile:
                     e.lineFlux.units
                   )
 
+            val sourceProfile: SourceProfile                       = graphResult.target.input.sourceProfile
             val selectedTargetBrightness: Option[BrightnessValues] =
-              for
-                t         <- selectedTarget
-                sp         = t.input.sourceProfile
-                r         <- selectedResult
-                bandOrLine = r.timeAndGraphs.integrationTime.bandOrLine
-                values    <- bandOrLine.fold(bandValues(sp), emissionLineValues(sp))
-              yield values
-
-            val isModeSelected: Boolean =
-              props.itcGraphQuerier.selectedConfig.isDefined || selectedResult.isDefined
-
-            val targetErrors: Option[String] =
-              if graphResults.asterismGraphs.isEmpty then Constants.NoTargets.some
-              else
-                NonEmptyString
-                  .from:
-                    graphResults.asterismGraphs
-                      .collect:
-                        case (t, Left(e)) => s"${t.name.value}: ${e.message}"
-                      .mkString("/n")
-                  .toOption
-                  .map(_.value)
-                  .orElse:
-                    "Select a mode to plot".some.filterNot(_ => isModeSelected)
-
-            val error: Option[String] =
-              selectedTarget
-                .fold(targetErrors): t =>
-                  graphResults.asterismGraphs
-                    .get(t)
-                    .flatMap:
-                      _.left.toOption.map(_.message)
-                .orElse(targetErrors)
+              graphResult.integrationTime.bandOrLine
+                .fold(bandValues(sourceProfile), emissionLineValues(sourceProfile))
 
             <.div(
               ExploreStyles.ItcPlotSection,
@@ -193,60 +177,61 @@ object ItcTile:
             )(
               ItcSpectroscopyPlotDescription(
                 selectedTargetBrightness,
-                selectedResult.map(_.itcExposureTime),
-                selectedResult.map(_.ccds),
-                selectedResult.map(_.finalSNRatio),
-                selectedResult.map(_.singleSNRatio)
+                graphResult.itcExposureTime,
+                graphResult.ccds,
+                graphResult.finalSNRatio,
+                graphResult.singleSNRatio
               ),
               ItcSpectroscopyPlot(
-                selectedResult.map(_.ccds),
-                selectedResult.map(_.graphData),
-                error,
+                graphResult.ccds,
+                graphResult.graphData,
                 graphTypeView.get,
-                selectedTarget.map(_.name.value),
-                props.itcGraphQuerier.exposureTimeMode.map(ExposureTimeMode.at.get),
+                graphResult.target.name.value,
+                signalToNoiseAt,
                 detailsView.get
               ),
               ItcPlotControl(graphTypeView, detailsView)
             )
 
-          props.itcGraphResults.renderPot(
-            valueRender = body,
-            errorRender = t => Message(text = t.getMessage, severity = Message.Severity.Warning)
+          val resultPot: Pot[EitherNec[ItcTargetProblem, (Wavelength, ItcGraphResult)]] =
+            props.itcGraphResults.map(
+              _.flatMap(agr =>
+                props.selectedTargetAndResults.get
+                  .toRightNec(ItcQueryProblem.GenericError(Constants.NoTargets).toTargetProblem)
+                  .flatMap(_.asTargetProblem)
+                  .map(gr => (agr.signalToNoiseAt, gr))
+              )
+            )
+
+          resultPot.renderPot(
+            valueRender = _.fold(
+              es =>
+                Message(
+                  text = es.toList
+                    .map(_.format)
+                    .mkString("Could not generate a graph:\n", "\n", ""),
+                  severity = Message.Severity.Warning
+                ),
+              (signalToNoiseAt, graphResult) => body(signalToNoiseAt, graphResult)
+            )
           )
+      )
 
   private case class Title(
-    itcGraphQuerier: ItcGraphQuerier,
-    itcGraphResults: Pot[ItcAsterismGraphResults],
-    tileState:       View[ItcTileState]
-  ) extends ReactFnProps(Title.component):
-    val selectedTarget = tileState.as(ItcTileState.Value)
+    itcGraphResults:          Option[ItcAsterismGraphResults],
+    selectedTargetAndResults: View[Option[TargetAndResults]]
+  ) extends ReactFnProps(Title)
 
-  private object Title:
-    private type Props = Title
-
-    private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        // Reset the selected target if it changes
-        .useEffectWhenDepsReadyOrChangeBy(props => props.itcGraphResults.map(_.brightestTarget)):
-          props => itcBrightestTarget => props.selectedTarget.set(itcBrightestTarget)
-        .render: props =>
-          def newSelected(p: Int): Option[ItcTarget] =
-            props.itcGraphQuerier.targets.lift(p)
-
-          val selectedResult: Pot[ItcGraphResult] =
-            props.selectedTarget.get.toPot
-              .flatMap: t =>
-                props.itcGraphResults.flatMap(_.asterismGraphs.get(t).flatMap(_.toOption).toPot)
-
-          val selectedTarget = props.selectedTarget
-          val existTargets   = props.itcGraphQuerier.targets.nonEmpty && selectedTarget.get.isDefined
-
-          val itcTargets          = props.itcGraphQuerier.targets
-          val idx                 = itcTargets.indexWhere(props.selectedTarget.get.contains)
-          val itcTargetsWithIndex = itcTargets.zipWithIndex
-
+  private object Title
+      extends ReactFnComponent[Title](props =>
+        for {
+          options <-
+            useMemo(
+              props.itcGraphResults.foldMap(_.asterismGraphs.toList.map(_.toTargetAndResults))
+            )(
+              _.map(t => SelectItem(label = t.target.name.value, value = t))
+            )
+        } yield
           def singleSN: ItcGraphResult => VdomNode =
             (r: ItcGraphResult) => <.span(formatSN(r.singleSNRatio.value))
 
@@ -254,32 +239,28 @@ object ItcTile:
             (r: ItcGraphResult) => <.span(formatSN(r.finalSNRatio.value))
 
           def snSection(title: String, fn: ItcGraphResult => VdomNode) =
-            React.Fragment(
-              <.label(title),
-              if (existTargets && props.itcGraphQuerier.isExecutable)
-                selectedResult.renderPot(
-                  fn,
-                  Icons.Spinner.withSpin(true),
-                  e => <.span(Icons.MissingInfoIcon).withTooltip(e.getMessage)
+            props.selectedTargetAndResults.get
+              .flatMap(_.result.toOption)
+              .map: result =>
+                React.Fragment(
+                  <.label(title),
+                  fn(result)
                 )
-              else
-                <.span(Icons.MissingInfoIcon).withTooltip(
-                  props.itcGraphQuerier.queryProblemDescription.getOrElse(MissingInfoMsg)
-                )
-            )
 
-          <.div(
-            ExploreStyles.ItcTileTitle,
-            <.label(s"Target:"),
-            Dropdown(
-              clazz = ExploreStyles.ItcTileTargetSelector,
-              value = idx,
-              onChange = t => props.selectedTarget.set(newSelected(t)),
-              options =
-                itcTargetsWithIndex.map((t, i) => SelectItem(label = t.name.value, value = i))
-            ).when(itcTargets.length > 1),
-            <.span(props.selectedTarget.get.map(_.name.value).getOrElse("-"))
-              .when(itcTargets.length === 1),
-            snSection("S/N per exposure:", singleSN),
-            snSection("S/N Total:", totalSN)
-          )
+          // The only way this should be empty is if there are no targets in the results.
+          props.selectedTargetAndResults.get.map: gr =>
+            <.div(
+              ExploreStyles.ItcTileTitle,
+              <.label(s"Target:"),
+              Dropdown(
+                clazz = ExploreStyles.ItcTileTargetSelector,
+                value = gr,
+                onChange = o => props.selectedTargetAndResults.set(o.some),
+                options = options.value
+              ).when(options.value.length > 1),
+              <.span(props.selectedTargetAndResults.get.map(_.target.name.value).getOrElse("-"))
+                .when(options.value.length === 1),
+              snSection("S/N per exposure:", singleSN),
+              snSection("S/N Total:", totalSN)
+            )
+      )

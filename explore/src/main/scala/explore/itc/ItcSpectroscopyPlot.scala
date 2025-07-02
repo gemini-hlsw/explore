@@ -26,23 +26,19 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters.*
 
 case class ItcSpectroscopyPlot(
-  ccds:            Option[NonEmptyChain[ItcCcd]],
-  graphs:          Option[NonEmptyChain[GraphResult]],
-  error:           Option[String],
+  ccds:            NonEmptyChain[ItcCcd],
+  graphs:          NonEmptyChain[GraphResult],
   graphType:       GraphType,
-  targetName:      Option[String],
-  signalToNoiseAt: Option[Wavelength],
+  targetName:      String,
+  signalToNoiseAt: Wavelength,
   details:         PlotDetails
 ) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
-  private type Props = ItcSpectroscopyPlot
-
   private def chartOptions(
     graph:           GraphResult,
-    targetName:      Option[String],
-    signalToNoiseAt: Option[Wavelength],
-    maxSNWavelength: Option[Wavelength]
+    targetName:      String,
+    signalToNoiseAt: Wavelength
   ) = {
     val yAxis            = graph.series.foldLeft(YAxis.Empty)(_ ∪ _.yAxis.yAxis)
     val title            = graph.graphType match
@@ -85,20 +81,16 @@ object ItcSpectroscopyPlot {
       case GraphType.SignalGraph      => js.Array()
       case GraphType.SignalPixelGraph => js.Array()
       case GraphType.S2NGraph         =>
-        signalToNoiseAt
-          .orElse(maxSNWavelength)
-          .map(_.toNanometers.value.value.toDouble)
-          .foldMap: value =>
-            List(
-              XAxisPlotLinesOptions()
-                .setDashStyle(DashStyleValue.LongDash)
-                .setWidth(3)
-                .setValue(value)
-                .clazz(ExploreStyles.ItcPlotWvPlotLine)
-                .setZIndex(10)
-                .setLabel(XAxisPlotLinesLabelOptions().setText(f"$value%.1f nm"))
-            )
-          .toJSArray
+        val value = signalToNoiseAt.toNanometers.value.value.toDouble
+        List(
+          XAxisPlotLinesOptions()
+            .setDashStyle(DashStyleValue.LongDash)
+            .setWidth(3)
+            .setValue(value)
+            .clazz(ExploreStyles.ItcPlotWvPlotLine)
+            .setZIndex(10)
+            .setLabel(XAxisPlotLinesLabelOptions().setText(f"$value%.1f nm"))
+        ).toJSArray
 
     Options()
       .setChart(
@@ -106,7 +98,7 @@ object ItcSpectroscopyPlot {
       )
       .setTitle(TitleOptions().setText(graphTitle))
       .setSubtitle(
-        targetName.fold(SubtitleOptions().setTextUndefined)(t => SubtitleOptions().setText(t))
+        SubtitleOptions().setText(targetName)
       )
       .setCredits(CreditsOptions().setEnabled(false))
       .setLegend(LegendOptions().setMargin(0))
@@ -186,43 +178,26 @@ object ItcSpectroscopyPlot {
         )
     }
 
-  private val component = ScalaFnComponent
-    .withHooks[Props]
-    .useMemoBy(props => (props.graphs, props.targetName, props.signalToNoiseAt, props.ccds)): _ =>
-      (graphs, targetName, signalToNoiseAt, ccds) =>
-        val series: List[GraphResult] =
-          graphs.foldMap(_.toList)
-
-        val maxSNWavelength: Option[Wavelength] =
-          ccds
-            .foldMap(_.toList)
-            .map(c => (c.maxTotalSNRatio, c.wavelengthForMaxTotalSNRatio))
-            .maxByOption(_._1)
-            .map(_._2)
-
-        series
-          .map: graph =>
-            graph.graphType -> chartOptions(
-              graph,
-              targetName,
-              signalToNoiseAt,
-              maxSNWavelength
-            )
-          .toMap
-    .useMemoBy((props, itcGraphOptions) => (props.graphType, itcGraphOptions)): (_, _) =>
-      (graphType, itcGraphOptions) => itcGraphOptions.get(graphType)
-    .render: (props, _, options) =>
+  private val component = ScalaFnComponent[ItcSpectroscopyPlot]: props =>
+    for {
+      itcGraphOptions <- useMemo((props.graphs, props.targetName, props.signalToNoiseAt)):
+                           (graphs, targetName, signalToNoiseAt) =>
+                             graphs.toList
+                               .map: graph =>
+                                 graph.graphType -> chartOptions(
+                                   graph,
+                                   targetName,
+                                   signalToNoiseAt
+                                 )
+                               .toMap
+      options         <- useMemo((props.graphType, itcGraphOptions)): (graphType, itcGraphOptions) =>
+                           itcGraphOptions.get(graphType)
+    } yield
       val chartOptions: Reusable[Options] = options.sequenceOption.getOrElse(EmptyGraphOptions)
-
-      def formatErrorMessage(c: Chart_): Callback =
-        props.error
-          .map(e => c.showLoadingCB(e))
-          .orEmpty
 
       Chart(
         chartOptions,
         allowUpdate = false,
-        onCreate = formatErrorMessage,
         containerMod = TagMod(ExploreStyles.ItcPlotBody)
       )
 }

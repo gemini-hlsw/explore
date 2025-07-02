@@ -7,6 +7,7 @@ import boopickle.DefaultBasic.*
 import cats.data.*
 import explore.model.boopickle.ItcPicklers
 import explore.model.itc.ItcAsterismGraphResults
+import explore.model.itc.ItcQueryProblem
 import explore.model.itc.ItcRequestParams
 import explore.model.itc.ItcResult
 import explore.model.itc.ItcTarget
@@ -43,7 +44,7 @@ object ItcMessage extends ItcPicklers:
     customSedTimestamps: List[Timestamp],
     modes:               ItcInstrumentConfig
   ) extends Request:
-    type ResponseType = ItcAsterismGraphResults
+    type ResponseType = EitherNec[ItcQueryProblem, ItcAsterismGraphResults]
 
   private given Pickler[Query] = generatePickler
 

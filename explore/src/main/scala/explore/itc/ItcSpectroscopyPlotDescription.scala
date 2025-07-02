@@ -13,41 +13,40 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.itc.ItcCcd
 import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
+import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
 
 case class ItcSpectroscopyPlotDescription(
   brightness:   Option[BrightnessValues],
-  exposureTime: Option[ItcExposureTime],
-  ccds:         Option[NonEmptyChain[ItcCcd]],
-  finalSN:      Option[TotalSN],
-  singleSN:     Option[SingleSN]
-) extends ReactFnProps[ItcSpectroscopyPlotDescription](ItcSpectroscopyPlotDescription.component)
+  exposureTime: ItcExposureTime,
+  ccds:         NonEmptyChain[ItcCcd],
+  finalSN:      TotalSN,
+  singleSN:     SingleSN
+) extends ReactFnProps[ItcSpectroscopyPlotDescription](ItcSpectroscopyPlotDescription)
 
-object ItcSpectroscopyPlotDescription {
-  type Props = ItcSpectroscopyPlotDescription
-
-  val component = ScalaFnComponent[Props] { props =>
-    val finalSN: String    = props.finalSN.fold("-")(u => formatSN(u.value))
-    val singleSN: String   = props.singleSN.fold("-")(u => formatSN(u.value))
-    val brightness: String = props.brightness.fold("-")(_.toString)
-
-    <.div(
-      ExploreStyles.ItcPlotDescription,
-      <.label("Integration Time:"),
-      <.span(props.exposureTime.fold("-") { case ItcExposureTime(time, count) =>
+object ItcSpectroscopyPlotDescription
+    extends ReactFnComponent[ItcSpectroscopyPlotDescription](props =>
+      val finalSN: String    = formatSN(props.finalSN.value)
+      val singleSN: String   = formatSN(props.singleSN.value)
+      val brightness: String = props.brightness.fold("-")(_.toString)
+      val exposureTime: String =
         // Not ideal, it needs a fix on lucuma-ui
-        format(time, PosInt.unsafeFrom(count.value))
-      }),
-      <.label("S/N per exposure:"),
-      <.span(singleSN),
-      <.label("Total S/N:"),
-      <.span(finalSN),
-      <.label("Peak (signal + background):"),
-      <.span(formatCcds(props.ccds, ccds => s"${ccds.maxPeakPixelFlux} 𝐞⁻ (${ccds.maxADU} ADU)")),
-      <.label("Input brightness:"),
-      <.span(brightness)
+        format(props.exposureTime.time, PosInt.unsafeFrom(props.exposureTime.count.value))
+      val ccds: String       = s"${props.ccds.maxPeakPixelFlux} 𝐞⁻ (${props.ccds.maxADU} ADU)"
+
+      <.div(
+        ExploreStyles.ItcPlotDescription,
+        <.label("Integration Time:"),
+        <.span(exposureTime),
+        <.label("S/N per exposure:"),
+        <.span(singleSN),
+        <.label("Total S/N:"),
+        <.span(finalSN),
+        <.label("Peak (signal + background):"),
+        <.span(ccds),
+        <.label("Input brightness:"),
+        <.span(brightness)
+      )
     )
-  }
-}

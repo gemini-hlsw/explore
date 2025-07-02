@@ -711,7 +711,7 @@ thead tr th.sticky-header {
 .explore-itc-tile-body {
   display: flex;
 
-  &.explore-itc-tile-body-error {
+  &:has(.p-inline-message) {
     justify-content: center;
     flex-grow: 0;
   }

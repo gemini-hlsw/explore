@@ -8,6 +8,7 @@ import cats.data.EitherNec
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import explore.model.AsterismIds
+import explore.model.Constants
 import explore.model.TargetList
 import explore.model.itc.ItcQueryProblem
 import explore.model.itc.ItcTarget
@@ -85,6 +86,9 @@ trait syntax:
       asterism
         .traverse(_.itcTarget)
         .map(_.hashDistinct)
-        .flatMap(_.toNel.toRightNec(ItcTargetProblem(None, ItcQueryProblem.MissingTargetInfo)))
+        .flatMap(
+          _.toNel
+            .toRightNec(ItcTargetProblem(None, ItcQueryProblem.GenericError(Constants.NoTargets)))
+        )
 
 object syntax extends syntax
