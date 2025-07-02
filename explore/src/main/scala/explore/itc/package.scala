@@ -3,7 +3,6 @@
 
 package explore.itc
 
-import cats.data.NonEmptyChain
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -15,7 +14,6 @@ import lucuma.core.math.LineWidthValue
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.Units
 import lucuma.core.syntax.display.*
-import lucuma.itc.ItcCcd
 import lucuma.react.fa.*
 import lucuma.react.floatingui.syntax.*
 import lucuma.ui.syntax.all.given
@@ -29,12 +27,6 @@ extension (role: Option[CalibrationRole])
         TextLayer("ITC", clazz = ExploreStyles.RequiredForItcText, inverse = true)
       )
     ).withTooltip("Required for ITC")
-
-protected def formatCcds(
-  ccds:      Option[NonEmptyChain[ItcCcd]],
-  extractor: NonEmptyChain[ItcCcd] => String
-): String =
-  ccds.fold("-")(extractor)
 
 protected enum BrightnessValues:
   case ForBand(band: Band, value: BrightnessValue, units: Units)

@@ -3,8 +3,10 @@
 
 package explore.itc
 
+import boopickle.DefaultBasic.*
 import cats.Eq
 import cats.data.EitherNec
+import cats.data.EitherT
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.effect.IO
@@ -19,11 +21,12 @@ import explore.model.boopickle.ItcPicklers.given
 import explore.model.itc.*
 import explore.model.reusability.given
 import explore.modes.ItcInstrumentConfig
+import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
+import lucuma.core.model.ConstraintSet
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Target
 import lucuma.core.util.Timestamp
-import lucuma.ui.reusability.given
 import queries.schemas.itc.syntax.*
 import workers.WorkerClient
 
@@ -52,7 +55,7 @@ case class ItcGraphQuerier(
   private val finalConfig: Option[InstrumentConfigAndItcResult] =
     remoteConfig.orElse(selectedConfig)
 
-  val exposureTimeMode: Option[ExposureTimeMode] =
+  private val exposureTimeMode: Option[ExposureTimeMode] =
     observation.scienceRequirements.exposureTimeMode
 
   private val instrumentConfig: Option[ItcInstrumentConfig] =
@@ -61,55 +64,54 @@ case class ItcGraphQuerier(
   private val itcTargets: EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]] =
     asterismIds.toItcTargets(allTargets)
 
-  val targets: List[ItcTarget] = itcTargets.foldMap(_.toList)
-
-  private val queryProps =
-    (exposureTimeMode,
-     constraints.some,
-     itcTargets.toOption,
-     instrumentConfig,
-     customSedTimestamps.some
-    ).tupled
-
-  val isExecutable: Boolean =
-    queryProps.isDefined
-
-  def queryProblemDescription: Option[String] =
-    Option.unless(isExecutable):
-      if (exposureTimeMode.isEmpty)
-        Constants.NoExposureTimeMode
-      else if (itcTargets.isEmpty)
-        Constants.NoTargets
-      else if (instrumentConfig.isEmpty)
-        Constants.MissingMode
-      else
-        Constants.MissingInfoMsg
+  private val queryProps: EitherNec[ItcTargetProblem, ItcGraphQuerier.QueryProps] =
+    for {
+      t   <- itcTargets
+      exp <- exposureTimeMode.toRightNec(
+               ItcQueryProblem.MissingExposureTimeMode.toTargetProblem
+             )
+      i   <- instrumentConfig.toRightNec(
+               ItcQueryProblem.GenericError(Constants.MissingMode).toTargetProblem
+             )
+    } yield ItcGraphQuerier.QueryProps(exp, constraints, t, i, customSedTimestamps)
 
   // Returns graphs for each target and the brightest target
   def requestGraphs(using
     WorkerClient[IO, ItcMessage.Request]
-  ): IO[ItcAsterismGraphResults] =
-    val action: Option[IO[ItcAsterismGraphResults]] =
-      queryProps.map: (etm, c, t, mode, ts) =>
-        ItcClient[IO]
-          .requestSingle:
-            ItcMessage.GraphQuery(etm, c, t, ts, mode)
-          .map:
-            _.toRight(new Throwable("No response from ITC server"))
-          .rethrow
+  ): IO[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]] =
+    def action(
+      qp: ItcGraphQuerier.QueryProps
+    ): IO[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]] =
+      ItcClient[IO]
+        .requestSingle:
+          ItcMessage.GraphQuery(qp.exposureTimeMode,
+                                qp.constraints,
+                                qp.targets,
+                                qp.customSedTimestamps,
+                                qp.instrumentConfig
+          )
+        .map(
+          _.fold(
+            ItcQueryProblem.GenericError("No response from ITC server").toTargetProblem.leftNec
+          )(
+            _.leftMap(_.map(_.toTargetProblem))
+          )
+        )
 
-    val baseError = "Could not generate a graph:"
-    action.getOrElse:
-      IO.raiseError:
-        val msg = instrumentConfig match
-          case None    => Constants.MissingMode
-          case Some(_) =>
-            asterismIds.toList match
-              case Nil         => "no targets"
-              case head :: Nil => s"target: $head"
-              case tgts        => s"""targets: ${tgts.mkString(", ")}"""
-        new Throwable(s"$baseError $msg")
+    (for {
+      qp <- EitherT(queryProps.pure[IO])
+      r  <- EitherT(action(qp))
+    } yield r).value
 
 object ItcGraphQuerier:
-  given Reusability[ItcGraphQuerier] =
+  private case class QueryProps(
+    exposureTimeMode:    ExposureTimeMode,
+    constraints:         ConstraintSet,
+    targets:             NonEmptyList[ItcTarget],
+    instrumentConfig:    ItcInstrumentConfig,
+    customSedTimestamps: List[Timestamp]
+  ) derives Eq
+
+  private given Reusability[QueryProps] = Reusability.byEq
+  given Reusability[ItcGraphQuerier]    =
     Reusability.by(_.queryProps)

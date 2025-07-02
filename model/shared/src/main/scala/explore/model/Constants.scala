@@ -65,7 +65,6 @@ trait Constants:
   val NoGuideStarMessage = "No guidestar available"
   val NoDuration         = "No duration available"
   val NoExposureTimeMode = "No exposure time mode defined"
-  val NoConstraints      = "Constraints not defined"
   val MissingMode        = "Observation is missing observing mode" // Matches odb error message
   val MissingCandidates  = "No catalog stars available"
   val NoTargets          = "No targets available"

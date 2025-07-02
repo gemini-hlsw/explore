@@ -3,6 +3,7 @@
 
 package explore.itc
 
+import boopickle.DefaultBasic.*
 import cats.*
 import cats.data.*
 import cats.effect.*
@@ -38,7 +39,7 @@ object ITCGraphRequests:
     customSedTimestamps: List[Timestamp],
     mode:                ItcInstrumentConfig,
     cache:               Cache[F],
-    callback:            ItcAsterismGraphResults => F[Unit]
+    callback:            EitherNec[ItcQueryProblem, ItcAsterismGraphResults] => F[Unit]
   ): F[Unit] =
 
     val itcRowsParams = mode match // Only handle known modes
@@ -69,7 +70,9 @@ object ITCGraphRequests:
       case _                                                         =>
         none
 
-    def doRequest(request: ItcGraphRequestParams): F[ItcAsterismGraphResults] =
+    def doRequest(
+      request: ItcGraphRequestParams
+    ): F[EitherNec[ItcQueryProblem, ItcAsterismGraphResults]] =
       request.mode.toItcClientMode
         .map: mode =>
           ItcClient[F]
@@ -117,43 +120,36 @@ object ITCGraphRequests:
 
               ItcAsterismGraphResults(
                 asterismGraphs,
-                graphsResult.brightestIndex.flatMap(request.asterism.get)
-              )
+                graphsResult.brightestIndex.flatMap(request.asterism.get),
+                ExposureTimeMode.at.get(request.exposureTimeMode)
+              ).rightNec
             .handleError {
               case JavaScriptException(a) if a.toString.startsWith("TypeError") =>
                 // This happens when the server is unreachable
-                ItcAsterismGraphResults(
-                  request.asterism
-                    .map((_, ItcQueryProblem.GenericError("ITC Server Unreachable").asLeft))
-                    .toList
-                    .toMap,
-                  none
-                )
+                ItcQueryProblem.GenericError("ITC Server Unreachable").leftNec
               case a                                                            =>
-                ItcAsterismGraphResults(
-                  request.asterism
-                    .map((_, ItcQueryProblem.GenericError(a.getMessage).asLeft))
-                    .toList
-                    .toMap,
-                  none
-                )
+                ItcQueryProblem.GenericError(a.getMessage).leftNec
             }
-        .getOrElse(ItcAsterismGraphResults(Map.empty, none).pure[F])
+        .getOrElse(ItcQueryProblem.UnsupportedMode.leftNec.pure[F])
 
     // We cache unexpanded results, exactly as received from server.
-    val cacheableRequest: Cacheable[F, ItcGraphRequestParams, ItcAsterismGraphResults] =
+    val cacheableRequest
+      : Cacheable[F, ItcGraphRequestParams, EitherNec[ItcQueryProblem, ItcAsterismGraphResults]] =
       Cacheable(
         CacheName("itcGraphQuery"),
         ITCRequests.cacheVersion,
         doRequest,
-        (r, g) =>
-          r.asterism.forall: t =>
-            g.asterismGraphs
-              .get(t)
-              .forall:
-                case Right(_)                              => true
-                case Left(ItcQueryProblem.GenericError(_)) => false
-                case Left(_)                               => true
+        (r, e) =>
+          e match
+            case Left(_)  => false
+            case Right(g) =>
+              r.asterism.forall: t =>
+                g.asterismGraphs
+                  .get(t)
+                  .forall:
+                    case Right(_)                              => true
+                    case Left(ItcQueryProblem.GenericError(_)) => false
+                    case Left(_)                               => true
       )
 
     itcRowsParams

@@ -9,6 +9,7 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.core.math.Wavelength
 import lucuma.core.util.TimeSpan
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
@@ -22,7 +23,9 @@ import lucuma.itc.math.roundToSignificantFigures
 import scala.math.*
 
 // Do not turn into enum or compositePickler will break.
-sealed trait ItcQueryProblem(val message: String) derives Eq
+sealed trait ItcQueryProblem(val message: String) derives Eq:
+  def toTargetProblem: ItcTargetProblem = ItcTargetProblem(None, this)
+
 object ItcQueryProblem:
   case object UnsupportedMode          extends ItcQueryProblem("Mode not supported")
   case object MissingWavelength        extends ItcQueryProblem("Wavelength is missing")
@@ -118,5 +121,6 @@ case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsR
 
 case class ItcAsterismGraphResults(
   asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
-  brightestTarget: Option[ItcTarget]
+  brightestTarget: Option[ItcTarget],
+  signalToNoiseAt: Wavelength
 )

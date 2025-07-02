@@ -229,16 +229,19 @@ object ObsTabTiles:
                 _.target.sourceProfile.customSedId.flatMap(attachments.get).map(_.updatedAt)
               ).toList.flattenOption
             )
-        itcGraphQuerier      =
-          ItcGraphQuerier(props.observation.get,
-                          selectedConfig.get.headOption,
-                          props.obsTargets,
-                          customSedTimestamps
-          )
-        itcGraphResults     <- useEffectResultWithDeps(itcGraphQuerier):
-                                 itcGraphQuerier => // Compute ITC graph
-                                   import ctx.given
-                                   itcGraphQuerier.requestGraphs
+        itcGraphResults     <- useEffectResultWithDeps(
+                                 (props.observation.get,
+                                  selectedConfig.get.headOption,
+                                  props.obsTargets,
+                                  customSedTimestamps
+                                 )
+                               ): (obs, config, targets, customSedTimestamps) =>
+                                 import ctx.given
+                                 ItcGraphQuerier(obs,
+                                                 config,
+                                                 targets,
+                                                 customSedTimestamps
+                                 ).requestGraphs
         sequenceChanged     <- useStateView(().ready) // Signal that the sequence has changed
         // if the timestamp for a custom sed attachment changes, it means either a new custom sed
         // has been assigned, OR a new version of the custom sed has been uploaded. This is to
@@ -399,7 +402,6 @@ object ObsTabTiles:
             ItcTile(
               props.vault.userId,
               props.obsId,
-              itcGraphQuerier,
               itcGraphResults.value,
               props.globalPreferences
             )
