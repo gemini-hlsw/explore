@@ -86,12 +86,14 @@ final case class ConfigSelection private (configs: List[InstrumentConfigAndItcRe
           .some
       case ItcInstrumentConfig.Flamingos2Spectroscopy(disperser, filter, fpu)              =>
         BasicConfiguration.Flamingos2LongSlit(disperser, filter, fpu).some
-      case ItcInstrumentConfig.GmosNorthImaging(f, _)                                      =>
-        // FIXME
-        BasicConfiguration.GmosNorthImaging(NonEmptyList.of(f)).some
-      case ItcInstrumentConfig.GmosSouthImaging(f, _)                                      =>
-        // FIXME
-        BasicConfiguration.GmosSouthImaging(NonEmptyList.of(f)).some
+      case ItcInstrumentConfig.GmosNorthImaging(_, _)                                      =>
+        val filters = configs.collect:
+          case InstrumentConfigAndItcResult(ItcInstrumentConfig.GmosNorthImaging(f, _), _) => f
+        NonEmptyList.fromList(filters).map(BasicConfiguration.GmosNorthImaging.apply)
+      case ItcInstrumentConfig.GmosSouthImaging(_, _)                                      =>
+        val filters = configs.collect:
+          case InstrumentConfigAndItcResult(ItcInstrumentConfig.GmosSouthImaging(f, _), _) => f
+        NonEmptyList.fromList(filters).map(BasicConfiguration.GmosSouthImaging.apply)
       case _                                                                               => none
     )
 

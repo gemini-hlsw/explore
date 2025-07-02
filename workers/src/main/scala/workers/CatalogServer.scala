@@ -48,14 +48,14 @@ object CatalogServer extends WorkerServer[IO, CatalogMessage.Request] with Catal
           cacheDb.traverse(stores.clean(_).toF[IO]).void
         case req @ CatalogMessage.GSRequest(_, _, obsMode) =>
           val candidatesArea = obsMode match {
-            case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit =>
+            case ObservingModeType.GmosNorthLongSlit | ObservingModeType.GmosSouthLongSlit |
+                ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging =>
               gmos.candidatesArea.candidatesArea
-            case ObservingModeType.Flamingos2LongSlit                                      =>
+            case ObservingModeType.Flamingos2LongSlit =>
+              // In practice lyot is always F16
               flamingos2.candidatesArea.candidatesArea(
                 Flamingos2LyotWheel.F16
-              ) // In practice this is always F16
-            case ObservingModeType.GmosNorthImaging | ObservingModeType.GmosSouthImaging =>
-              throw new NotImplementedError("Gmos Imaging not implemented")
+              )
           }
           readFromGaia(client, cacheDb, stores, req, candidatesArea, c => invocation.respond(c)) *>
             expireGuideStarCandidates(cacheDb, stores, Expiration)

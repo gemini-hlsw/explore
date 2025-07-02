@@ -3,6 +3,7 @@
 
 package explore.model
 
+import cats.data.NonEmptyList
 import cats.kernel.Order
 import cats.syntax.order.*
 import clue.data.syntax.*
@@ -20,7 +21,9 @@ import lucuma.core.enums.GmosSouthGrating
 import lucuma.core.enums.ObservingModeType
 import lucuma.core.util.Display
 import lucuma.schemas.ObservationDB.Types.Flamingos2LongSlitInput
+import lucuma.schemas.ObservationDB.Types.GmosNorthImagingInput
 import lucuma.schemas.ObservationDB.Types.GmosNorthLongSlitInput
+import lucuma.schemas.ObservationDB.Types.GmosSouthImagingInput
 import lucuma.schemas.ObservationDB.Types.GmosSouthLongSlitInput
 import lucuma.schemas.ObservationDB.Types.ObservingModeInput
 import lucuma.schemas.model.CentralWavelength
@@ -51,12 +54,12 @@ enum ObservingModeSummary:
     fpu:     Flamingos2Fpu
   ) extends ObservingModeSummary
   case GmosNorthImaging(
-    filter:      Option[GmosNorthFilter],
+    filters:     NonEmptyList[GmosNorthFilter],
     ampReadMode: GmosAmpReadMode,
     roi:         GmosRoi
   ) extends ObservingModeSummary
   case GmosSouthImaging(
-    filter:      Option[GmosSouthFilter],
+    filters:     NonEmptyList[GmosSouthFilter],
     ampReadMode: GmosAmpReadMode,
     roi:         GmosRoi
   ) extends ObservingModeSummary
@@ -99,12 +102,22 @@ enum ObservingModeSummary:
           fpu = fpu.assign
         ).assign
       )
-    case GmosNorthImaging(_, _, _)                                                    =>
-      // TODO: Add GmosNorthImagingInput support when schema is updated
-      ObservingModeInput()
-    case GmosSouthImaging(_, _, _)                                                    =>
-      // TODO: Add GmosSouthImagingInput support when schema is updated
-      ObservingModeInput()
+    case GmosNorthImaging(filters, ampReadMode, roi)                                  =>
+      ObservingModeInput(
+        gmosNorthImaging = GmosNorthImagingInput(
+          filters = filters.toList.assign,
+          explicitAmpReadMode = ampReadMode.assign,
+          explicitRoi = roi.assign
+        ).assign
+      )
+    case GmosSouthImaging(filters, ampReadMode, roi)                                  =>
+      ObservingModeInput(
+        gmosSouthImaging = GmosSouthImagingInput(
+          filters = filters.toList.assign,
+          explicitAmpReadMode = ampReadMode.assign,
+          explicitRoi = roi.assign
+        ).assign
+      )
 
 object ObservingModeSummary:
   def fromObservingMode(observingMode: ObservingMode): ObservingModeSummary =
@@ -130,9 +143,9 @@ object ObservingModeSummary:
       case f: ObservingMode.Flamingos2LongSlit =>
         Flamingos2LongSlit(f.disperser, f.filter, f.fpu)
       case n: ObservingMode.GmosNorthImaging   =>
-        GmosNorthImaging(Some(n.filters.head), n.ampReadMode, n.roi)
+        GmosNorthImaging(n.filters, n.ampReadMode, n.roi)
       case s: ObservingMode.GmosSouthImaging   =>
-        GmosSouthImaging(Some(s.filters.head), s.ampReadMode, s.roi)
+        GmosSouthImaging(s.filters, s.ampReadMode, s.roi)
 
   given Display[ObservingModeSummary] = Display.byShortName:
     case GmosNorthLongSlit(grating, filter, fpu, centralWavelength, ampReadMode, roi) =>
@@ -145,11 +158,11 @@ object ObservingModeSummary:
       s"GMOS-S Longslit ${grating.shortName} @ $cwvStr $filterStr  ${fpu.shortName} ${ampReadMode.shortName} ${roi.shortName}"
     case Flamingos2LongSlit(grating, filter, fpu)                                     =>
       s"Flamingos2 Longslit ${grating.shortName} ${filter.shortName} ${fpu.shortName}"
-    case GmosNorthImaging(filter, ampReadMode, roi)                                   =>
-      val filterStr = filter.fold("None")(_.shortName)
+    case GmosNorthImaging(filters, ampReadMode, roi)                                  =>
+      val filterStr = filters.map(_.shortName).toList.mkString(", ")
       s"GMOS-N Imaging $filterStr ${ampReadMode.shortName} ${roi.shortName}"
-    case GmosSouthImaging(filter, ampReadMode, roi)                                   =>
-      val filterStr = filter.fold("None")(_.shortName)
+    case GmosSouthImaging(filters, ampReadMode, roi)                                  =>
+      val filterStr = filters.map(_.shortName).toList.mkString(", ")
       s"GMOS-S Imaging $filterStr ${ampReadMode.shortName} ${roi.shortName}"
 
   object GmosNorthLongSlit:

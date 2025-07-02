@@ -59,7 +59,6 @@ import lucuma.react.primereact.SelectItem
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
-import lucuma.ui.components.UnderConstruction
 import lucuma.ui.syntax.all.given
 import monocle.Iso
 import queries.schemas.itc.syntax.*
@@ -455,11 +454,11 @@ object ConfigurationTile:
                   ),
                   // Gmos North Imaging
                   (optGmosNorthImagingAligner, imagingView.asView).mapN((_, _) =>
-                    UnderConstruction()
+                    RollbackOnlyConfigButtons(revertConfig)
                   ),
                   // Gmos South Imaging
                   (optGmosSouthImagingAligner, imagingView.asView).mapN((_, _) =>
-                    UnderConstruction()
+                    RollbackOnlyConfigButtons(revertConfig)
                   ),
                   // Flamingos2 Long Slit
                   (optFlamingos2Aligner, spectroscopyView.asView).mapN((f2Aligner, specView) =>

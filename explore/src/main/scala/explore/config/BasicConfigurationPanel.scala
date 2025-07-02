@@ -181,5 +181,5 @@ private object BasicConfigurationPanel:
               severity = Button.Severity.Primary,
               onClick = props.createConfig.switching(creating.async, Creating(_)).runAsync
             ).compact.small.when(canAccept)
-          ).unless(props.readonly || scienceModeType.get === ScienceMode.Imaging)
+          ).unless(props.readonly)
         )

@@ -5,6 +5,7 @@ package explore.config
 
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
 import explore.Icons
 import explore.components.ui.ExploreStyles
 import japgolly.scalajs.react.*
@@ -22,7 +23,8 @@ final case class AdvancedConfigButtons(
   revertCustomizations: Callback,
   sequenceChanged:      Callback,
   readonly:             Boolean,
-  showAdvancedButton:   Boolean = true // The "Advanced Customization" button
+  showAdvancedButton:   Boolean = true,
+  showCustomizeButton:  Boolean = true // The "Advanced Customization" button
 ) extends ReactFnProps(AdvancedConfigButtons)
 
 object AdvancedConfigButtons
@@ -52,7 +54,7 @@ object AdvancedConfigButtons
             severity = Button.Severity.Secondary,
             onClick = props.editState.set(ConfigEditState.SimpleEdit)
           ).compact.small
-            .when(props.editState.get === ConfigEditState.View),
+            .when(props.editState.get === ConfigEditState.View && props.showCustomizeButton),
           Button(
             label = "Advanced Customization",
             icon = Icons.ExclamationTriangle.withClass(ExploreStyles.WarningIcon),
@@ -60,5 +62,25 @@ object AdvancedConfigButtons
             onClick = props.editState.set(ConfigEditState.AdvancedEdit)
           ).compact.small
             .when(props.editState.get === ConfigEditState.SimpleEdit && props.showAdvancedButton)
+        )
+    )
+
+// Use this only for testing for new modes
+// gives you an escape hatch to revert the config
+case class RollbackOnlyConfigButtons(revertConfig: Callback)
+    extends ReactFnProps(RollbackOnlyConfigButtons)
+
+object RollbackOnlyConfigButtons
+    extends ReactFnComponent[RollbackOnlyConfigButtons](props =>
+      useStateView(ConfigEditState.View).map: editState =>
+        AdvancedConfigButtons(
+          editState = editState,
+          isCustomized = false,
+          revertConfig = props.revertConfig,
+          revertCustomizations = Callback.empty,
+          sequenceChanged = Callback.empty,
+          readonly = false,
+          showAdvancedButton = false,
+          showCustomizeButton = false
         )
     )
