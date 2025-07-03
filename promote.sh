@@ -24,7 +24,10 @@ heroku pipelines:promote -a lucuma-sso-${SOURCE_ENV} -t lucuma-sso-${TARGET_ENV}
 
 # Promote ITC
 echo "Promote ITC to $TARGET_ENV"
-heroku pipelines:promote -a itc-${SOURCE_ENV} -t itc-${TARGET_ENV}
+docker pull registry.heroku.com/itc-${SOURCE_ENV}/web:latest
+docker tag registry.heroku.com/itc-${SOURCE_ENV}/web:latest registry.heroku.com/itc-${TARGET_ENV}/web:latest
+docker push registry.heroku.com/itc-${TARGET_ENV}/web:latest
+heroku container:release web --app itc-${TARGET_ENV}
 
 # Promote ODB
 echo "Promote ODB to $TARGET_ENV"
