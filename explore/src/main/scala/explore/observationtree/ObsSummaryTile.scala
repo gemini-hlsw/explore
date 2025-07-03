@@ -13,6 +13,7 @@ import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.Constants
 import explore.model.Group
 import explore.model.GroupList
 import explore.model.ObsSummaryTabTileIds
@@ -23,7 +24,6 @@ import explore.model.enums.TableId
 import explore.model.reusability.given
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
-import japgolly.scalajs.react.vdom.TagOf
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.model.Target
@@ -56,6 +56,7 @@ object ObsSummaryTile extends ObsSummaryColumns:
     groups:          View[GroupList],
     allTargets:      TargetList,
     showScienceBand: Boolean,
+    readonly:        Boolean,
     backButton:      VdomNode
   ): Tile[TileState] =
     Tile(
@@ -75,6 +76,7 @@ object ObsSummaryTile extends ObsSummaryColumns:
           groups,
           allTargets,
           showScienceBand,
+          readonly,
           s.zoom(TileState.columnVisibility),
           cb => s.zoom(TileState.toggleAllRowsSelected).set(cb.some)
         ),
@@ -93,6 +95,7 @@ object ObsSummaryTile extends ObsSummaryColumns:
     groups:                   View[GroupList],
     allTargets:               TargetList,
     showScienceBand:          Boolean,
+    readonly:                 Boolean,
     columnVisibility:         View[ColumnVisibility],
     setToggleAllRowsSelected: (Boolean => Callback) => Callback
   ) extends ReactFnProps(Body.component)
@@ -215,18 +218,26 @@ object ObsSummaryTile extends ObsSummaryColumns:
             ^.onClick ==> table
               .getMultiRowSelectedHandler(RowId(row.original.value.obs.id.toString))
           ),
-        emptyMessage = <.span(LucumaStyles.HVCenter)(
-          Button(
-            severity = Button.Severity.Success,
-            icon = Icons.New,
-            disabled = adding.get.value,
-            loading = adding.get.value,
-            label = "Add an observation",
-            clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
-            onClick =
-              insertObs(props.programId, none, props.observations, adding, ctx).runAsyncAndForget
-          ).tiny.compact
-        )
+        emptyMessage =
+          if (props.readonly)
+            <.div(Constants.NoObservations)
+          else
+            <.span(LucumaStyles.HVCenter)(
+              Button(
+                severity = Button.Severity.Success,
+                icon = Icons.New,
+                disabled = adding.get.value,
+                loading = adding.get.value,
+                label = "Add an observation",
+                clazz = LucumaPrimeStyles.Massive |+| ExploreStyles.ObservationsSummaryAdd,
+                onClick = insertObs(props.programId,
+                                    none,
+                                    props.observations,
+                                    adding,
+                                    ctx
+                ).runAsyncAndForget
+              ).tiny.compact
+            )
       )
   end Body
 
