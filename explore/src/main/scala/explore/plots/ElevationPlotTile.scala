@@ -133,6 +133,11 @@ object ElevationPlotTile:
         // If visualization time changes, switch to it.
         _       <- useEffectWithDeps(props.obsTime):
                      _.map(ot => options.mod(_.withDateAndSemesterOf(ot))).orEmpty
+        // If we select more than one observation, we cannot show a semester plot.
+        _       <- useEffectWithDeps(props.plotData.value.size): selectedTargets =>
+                     if selectedTargets > 1 && options.get.range === PlotRange.Semester then
+                       options.mod(ObjectPlotOptions.range.replace(PlotRange.Night))
+                     else Callback.empty
       yield
         import ctx.given
 
@@ -261,10 +266,9 @@ object ElevationPlotTile:
             SelectButtonEnumView(
               "elevation-plot-range".refined,
               rangeView,
-              buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
-            ).when: // Only show range selector if there is a single target
-              props.plotData.value.size === 1
-            ,
+              buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact,
+              filterPred = value => value =!= PlotRange.Semester || props.plotData.value.size === 1
+            ),
             SelectButtonMultipleEnumView(
               "elevation-plot-visible-series".refined,
               visiblePlotsView,
