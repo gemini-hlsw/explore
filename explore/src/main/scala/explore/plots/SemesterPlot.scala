@@ -67,7 +67,9 @@ object SemesterPlot:
             .request:
               RequestSemesterSidereal(semester, site, coords, PlotDayRate)
             .map(updateStream =>
-              fs2.Stream(chart.showLoading("Computing...")) ++
+              // Empty the series data
+              fs2.Stream.eval(IO(series.setData(js.Array(), redraw = true))) >>
+                fs2.Stream(chart.showLoading("Computing...")) ++
                 fs2.Stream(xAxis.removePlotLine("progress")) ++ // Clear previous progress line
                 updateStream
                   .groupWithin(100, 1500.millis)
