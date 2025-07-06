@@ -188,12 +188,6 @@ object SchedulingWindowsTile:
                   .asView
               )
 
-          // TODO Should we move this to lucuma-ui?
-          val HMPartialRegEx                  = "\\d*(:\\d{0,2})?".r
-          val hmChangeAuditor: ChangeAuditor  = ChangeAuditor.accept.allow(HMPartialRegEx.matches)
-          val HMSPartialRegEx                 = "\\d*(:\\d{0,2}(:\\d{0,2})?)?".r
-          val hmsChangeAuditor: ChangeAuditor = ChangeAuditor.accept.allow(HMSPartialRegEx.matches)
-
           <.div(ExploreStyles.TimingWindowsBody)(
             <.div.withRef(resize.ref)(ExploreStyles.TimingWindowsTable)(
               PrimeTable(

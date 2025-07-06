@@ -26,6 +26,7 @@ import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.style.Css
 import lucuma.ui.components.TimeSpanView
+import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
 import lucuma.ui.utils.versionDateTimeFormatter
@@ -81,6 +82,12 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
 // See https://github.com/Hacker0x01/react-datepicker/issues/1787
 private def fromDatePickerJsDate(jsDate: js.Date): Instant =
   Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
+
+// TODO Should we move this to lucuma-ui?
+val HMPartialRegEx                  = "\\d*(:\\d{0,2})?".r
+val hmChangeAuditor: ChangeAuditor  = ChangeAuditor.accept.allow(HMPartialRegEx.matches)
+val HMSPartialRegEx                 = "\\d*(:\\d{0,2}(:\\d{0,2})?)?".r
+val hmsChangeAuditor: ChangeAuditor = ChangeAuditor.accept.allow(HMSPartialRegEx.matches)
 
 object IsExpanded extends NewBoolean
 type IsExpanded = IsExpanded.Type

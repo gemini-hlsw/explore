@@ -7,13 +7,16 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import explore.model.formats.*
 import lucuma.core.arb.*
+import lucuma.core.arb.ArbTime.given
 import lucuma.core.optics.laws.discipline.ValidWedgeTests
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.arb.ArbTimeSpan.given
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
+import org.typelevel.cats.time.given
 
 import java.time.Duration
+import java.time.LocalTime
 
 class FormatsSuite extends munit.DisciplineSuite:
   override def scalaCheckInitialSeed = "tprrQ0295RsiQ-5mvSW9ajurDGsf3haEulf38PNqa0K="
@@ -158,3 +161,13 @@ class FormatsSuite extends munit.DisciplineSuite:
   )
   assertEquals(durationS.reverseGet(TimeSpan.fromSeconds(60).get), "60")
   assertEquals(durationS.reverseGet(TimeSpan.fromSeconds(70).get), "70")
+
+  assertEquals(parsers.timeHM.parseAll("0:48").toOption, LocalTime.of(0, 48).some)
+  assertEquals(parsers.timeHM.parseAll("21:48").toOption, LocalTime.of(21, 48).some)
+  assertEquals(parsers.timeHM.parseAll("0:0").toOption, LocalTime.of(0, 0).some)
+  assertEquals(parsers.timeHM.parseAll("0").toOption, LocalTime.of(0, 0).some)
+  assertEquals(parsers.timeHM.parseAll("23").toOption, LocalTime.of(23, 0).some)
+  checkAll(
+    "time24h",
+    ValidWedgeTests(time24h).validWedgeLaws
+  )

@@ -6,8 +6,10 @@ package explore.config
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import crystal.react.View
+import crystal.react.hooks.*
 import explore.Icons
 import explore.components.HelpIcon
+import explore.components.Time24HInputView
 import explore.components.ui.ExploreStyles
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
@@ -27,8 +29,11 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import monocle.Lens
 
 import java.time.Instant
+import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.concurrent.TimeUnit
 
 import scalajs.js
@@ -45,16 +50,37 @@ case class ObsTimeEditor(
   val setupTime: Option[TimeSpan]   = calcDigest.fullSetupTime.value
   val timesAreLoading: Boolean      = calcDigest.isStale
   val isReadonly: Boolean           = forMultipleObs || timesAreLoading
+  val obsTimeOrNow                  = obsTimeView.get.getOrElse(Instant.now)
 
 object ObsTimeEditor
     extends ReactFnComponent[ObsTimeEditor](props =>
       for {
         ref             <- useRef[Option[ReactDatePicker[Any, Any]]](none)
+        // we need a local time view to make it easier to set it to now if unset upstream
+        tView           <- useStateView[Option[LocalTime]](instantToLocalTime.get(props.obsTimeOrNow).some)
         defaultDuration <- useMemo(props.pendingTime)(_.getOrElse(TimeSpan.fromHours(1).get))
       } yield
         val nowTooltip         =
           s"Set time to the current time${props.pendingTime.fold("")(_ => " and duration to remaining time")}"
         val staleTooltipString = props.calcDigest.staleTooltipString
+
+        // if obs time change we want to set the editor time time too
+        // this happens when editing the time on the bar or when calling now
+        val obsTimeView =
+          props.obsTimeView.withOnMod(i =>
+            i.map(i => tView.set(instantToLocalTime.get(i).some)).orEmpty
+          )
+
+        // if time changes on the time editor also change it on obsTimeView
+        val timeView = tView.withOnMod(t =>
+          props.obsTimeView.mod {
+            case in @ Some(i) =>
+              t match
+                case Some(t) => i.atZone(ZoneOffset.UTC).`with`(t).toInstant.some
+                case _       => in
+            case None         => none
+          }
+        )
 
         <.div(ExploreStyles.ObsInstantTileTitle)(
           React.Fragment(
@@ -63,18 +89,25 @@ object ObsTimeEditor
               <.span("Time/Duration"),
               HelpIcon("configuration/obstime.md".refined)
             ),
-            Datepicker(onChange =
-              (newValue, _) =>
+            Datepicker(
+              onChange = (newValue, _) =>
                 newValue.fromDatePickerToInstantOpt.foldMap: i =>
-                  props.obsTimeView.set(i.some)
+                  obsTimeView.set(i.some)
             )
               .readOnly(props.isReadonly)
               .calendarClassName(ExploreStyles.DatePickerWithNowButton.htmlClass)
               .showTimeInput(true)
-              .selected(props.obsTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
+              .selected(props.obsTimeOrNow.toDatePickerJsDate)
+              .customTimeInput(
+                Time24HInputView("obs-time-input".refined,
+                                 timeView,
+                                 units = "UTC",
+                                 groupClass = ExploreStyles.TargetTileTimeEditor
+                )
+              )
               .dateFormat("yyyy-MM-dd HH:mm")(
                 Button(
-                  onClick = props.pendingTime.fold(props.obsTimeView.set(Instant.now.some))(pt =>
+                  onClick = props.pendingTime.fold(obsTimeView.set(Instant.now.some))(pt =>
                     props.obsTimeAndDurationView.set(Instant.now.some, pt.some)
                   ) >>
                     ref.value.map(r => Callback(r.setOpen(false))).orEmpty,
@@ -149,3 +182,14 @@ object ObsTimeEditor
           )
         )
     )
+
+val instantToLocalTime: Lens[Instant, LocalTime] =
+  Lens[Instant, LocalTime](i => i.atZone(ZoneOffset.UTC).toLocalTime())(lt =>
+    i =>
+      i.atZone(ZoneOffset.UTC)
+        .withHour(lt.getHour)
+        .withMinute(lt.getMinute)
+        .withSecond(lt.getSecond)
+        .withNano(lt.getNano)
+        .toInstant
+  )
