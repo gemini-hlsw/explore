@@ -283,7 +283,7 @@ object ExploreLayout:
                   )(
                     <.div(
                       helpView.get
-                        .map(h => HelpBody(helpCtx, h))
+                        .map(h => HelpBody(helpCtx, h, userVault.get))
                         .when(helpView.get.isDefined)
                     )
                   ),
