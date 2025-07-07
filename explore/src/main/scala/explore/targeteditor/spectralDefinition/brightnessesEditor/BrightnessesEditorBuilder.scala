@@ -129,6 +129,9 @@ private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[
         )
       )
 
+  // according to sc-6071
+  val excludedBands = Set(Band.Ap, Band.Gaia, Band.GaiaBP, Band.GaiaRP)
+
   protected[targeteditor] val component =
     ScalaFnComponent[Props]: props =>
       for
@@ -174,7 +177,7 @@ private abstract class BrightnessesEditorBuilder[T, Props <: BrightnessesEditor[
                       EnumDropdownView(
                         id = "NEW_BAND".refined,
                         value = bandView,
-                        exclude = state.get.usedBands,
+                        exclude = state.get.usedBands ++ excludedBands,
                         clazz = ExploreStyles.FlatFormField, // TODO: Look at this CSS
                         disabled = props.disabled
                       ),
