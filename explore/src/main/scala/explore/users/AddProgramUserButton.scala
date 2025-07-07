@@ -44,6 +44,7 @@ object AddProgramUserButton
 
         val toolTip = props.role match
           case ProgramUserRole.External => "Share data with a new user"
+          case ProgramUserRole.CoiRO    => "Add Co-Investigator"
           case _                        => s"Add ${props.role.longName}"
 
         Button(
