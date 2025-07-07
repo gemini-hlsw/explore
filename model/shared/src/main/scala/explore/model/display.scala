@@ -187,6 +187,9 @@ trait DisplayImplicits:
 
   private def formatWavelength(units: WavelengthUnits, q: Wavelength) =
     units match
+      case WavelengthUnits.Angstroms   =>
+        val v = q.toAngstroms.value.value.setScale(0, BigDecimal.RoundingMode.DOWN)
+        "%.0f".format(v)
       case WavelengthUnits.Nanometers  =>
         val v = q.toNanometers.value.value.setScale(1, BigDecimal.RoundingMode.DOWN)
         "%.1f".format(v)
@@ -206,6 +209,9 @@ trait DisplayImplicits:
   def wavelengthDeltaDisplay(units: WavelengthUnits): Display[WavelengthDelta] =
     Display.byShortName: delta =>
       units match
+        case WavelengthUnits.Angstroms   =>
+          val v = delta.toAngstroms.value.value.setScale(0, BigDecimal.RoundingMode.DOWN)
+          "%.0f".format(v)
         case WavelengthUnits.Nanometers  =>
           val v = delta.toNanometers.value.value.setScale(1, BigDecimal.RoundingMode.DOWN)
           "%.1f".format(v)

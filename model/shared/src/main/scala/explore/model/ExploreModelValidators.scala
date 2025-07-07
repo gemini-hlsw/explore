@@ -120,6 +120,15 @@ object ExploreModelValidators:
           .toErrorsValidWedge
       )
 
+  val wavelengthAngstromValidWedge: InputValidWedge[Wavelength] =
+    InputValidWedge
+      .truncatedBigDecimal(0.refined)
+      .andThen(
+        ValidWedge
+          .fromFormat(Wavelength.decimalAngstroms, _ => "Invalid Wavelength".refined[NonEmpty])
+          .toErrorsValidWedge
+      )
+
   private val decimalArcsecondsPrism: Prism[BigDecimal, Angle] =
     Prism[BigDecimal, Angle](Angle.signedDecimalArcseconds.reverseGet(_).some)(
       Angle.signedDecimalArcseconds.get
@@ -141,6 +150,13 @@ object ExploreModelValidators:
 
   val wavelengthNanoDeltaValidWedge: InputValidWedge[WavelengthDelta] =
     wavelengthNanoValidWedge.andThen(
+      Iso[Wavelength, WavelengthDelta](w => WavelengthDelta(w.pm.value))(wd =>
+        Wavelength(wd.pm.value)
+      )
+    )
+
+  val wavelengthAngstromDeltaValidWedge: InputValidWedge[WavelengthDelta] =
+    wavelengthAngstromValidWedge.andThen(
       Iso[Wavelength, WavelengthDelta](w => WavelengthDelta(w.pm.value))(wd =>
         Wavelength(wd.pm.value)
       )
