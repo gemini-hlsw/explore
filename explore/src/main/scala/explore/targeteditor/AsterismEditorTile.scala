@@ -88,11 +88,11 @@ object AsterismEditorTile:
 
     val obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])] =
       View(
-        (obsTimeView.get, obsDurationView.get),
+        (obsTime.get, obsDuration.get),
         (mod, cb) =>
-          val oldValue = (obsTimeView.get, obsDurationView.get)
+          val oldValue = (obsTime.get, obsDuration.get)
           val newValue = mod(oldValue)
-          obsTimeView.set(newValue._1) >> obsDurationView.set(newValue._2) >> cb(oldValue, newValue)
+          obsTime.set(newValue._1) >> obsDuration.set(newValue._2) >> cb(oldValue, newValue)
       ).withOnMod: tuple =>
         odbApi
           .updateVisualizationTimeAndDuration(obsIds.toList, tuple._1, tuple._2)
