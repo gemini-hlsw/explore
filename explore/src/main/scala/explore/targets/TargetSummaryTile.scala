@@ -345,9 +345,11 @@ object TargetSummaryTile:
               else
                 HelpIcon("target/main/target-import.md".refined),
               <.label(
-                PrimeStyles.Component |+| PrimeStyles.Button |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
+                PrimeStyles.Component |+| PrimeStyles.Button |+|
+                  PrimeStyles.ButtonSmall |+| LucumaPrimeStyles.Compact |+| ExploreStyles.FileUpload,
                 ^.htmlFor := "target-import",
-                Icons.FileArrowUp
+                Icons.FileArrowUp.withClass(PrimeStyles.ButtonIcon |+| PrimeStyles.ButtonIconLeft),
+                "Import"
               ),
               <.input(
                 ^.tpe     := "file",
@@ -358,17 +360,17 @@ object TargetSummaryTile:
               ),
               TargetImportPopup(props.programId, props.filesToImport),
               props.toggleAllRowsSelected.map: toggleAllRowsSelected =>
-                <.span(
+                React.Fragment(
                   Button(
                     size = Button.Size.Small,
                     icon = Icons.CheckDouble,
-                    label = "All",
+                    label = "Select All",
                     onClick = toggleAllRowsSelected(true)
                   ).compact,
                   Button(
                     size = Button.Size.Small,
                     icon = Icons.SquareXMark,
-                    label = "None",
+                    label = "Select None",
                     onClick = props.focusTargetId(none) >> toggleAllRowsSelected(false)
                   ).compact
                 )

@@ -266,13 +266,13 @@ object ObsSummaryTile extends ObsSummaryColumns:
               Button(
                 size = Button.Size.Small,
                 icon = Icons.CheckDouble,
-                label = "All",
+                label = "Select All",
                 onClick = toggleAllRowsSelected(true)
               ).compact,
               Button(
                 size = Button.Size.Small,
                 icon = Icons.SquareXMark,
-                label = "None",
+                label = "Select None",
                 onClick = toggleAllRowsSelected(false)
               ).compact
             ),
