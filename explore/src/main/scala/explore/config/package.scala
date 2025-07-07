@@ -32,17 +32,20 @@ trait ConfigurationFormats:
     .decimal(2.refined)
     .optional
 
-  lazy val angleArcsecsFormat = ExploreModelValidators.decimalArcsecondsValidWedge.optional
-  lazy val wvMicroInput       = ExploreModelValidators.wavelengthMicroValidWedge.optional
-  lazy val wvNanoInput        = ExploreModelValidators.wavelengthNanoValidWedge.optional
-  lazy val wvDeltaMicroInput  = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
-  lazy val wvDeltaNanoInput   = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
+  lazy val angleArcsecsFormat   = ExploreModelValidators.decimalArcsecondsValidWedge.optional
+  lazy val wvMicroInput         = ExploreModelValidators.wavelengthMicroValidWedge.optional
+  lazy val wvNanoInput          = ExploreModelValidators.wavelengthNanoValidWedge.optional
+  lazy val wvAngstromInput      = ExploreModelValidators.wavelengthAngstromValidWedge.optional
+  lazy val wvDeltaMicroInput    = ExploreModelValidators.wavelengthMicroDeltaValidWedge.optional
+  lazy val wvDeltaNanoInput     = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
+  lazy val wvDeltaAngstromInput = ExploreModelValidators.wavelengthAngstromDeltaValidWedge.optional
 
   extension (u: WavelengthUnits)
     def toAuditor: ChangeAuditor =
       u match
         case WavelengthUnits.Micrometers => ChangeAuditor.posBigDecimal(3.refined)
         case WavelengthUnits.Nanometers  => ChangeAuditor.posBigDecimal(1.refined)
+        case WavelengthUnits.Angstroms   => ChangeAuditor.posInt
 
     def toSNAuditor: ChangeAuditor = toAuditor
 
@@ -50,16 +53,19 @@ trait ConfigurationFormats:
       u match
         case WavelengthUnits.Micrometers => wvMicroInput
         case WavelengthUnits.Nanometers  => wvNanoInput
+        case WavelengthUnits.Angstroms   => wvAngstromInput
 
     def toInputFormat: InputValidFormat[Wavelength] =
       u match
         case WavelengthUnits.Micrometers => ExploreModelValidators.wavelengthMicroValidWedge
         case WavelengthUnits.Nanometers  => ExploreModelValidators.wavelengthNanoValidWedge
+        case WavelengthUnits.Angstroms   => ExploreModelValidators.wavelengthAngstromValidWedge
 
     def toDeltaInputWedge: InputValidWedge[Option[WavelengthDelta]] =
       u match
         case WavelengthUnits.Micrometers => wvDeltaMicroInput
         case WavelengthUnits.Nanometers  => wvDeltaNanoInput
+        case WavelengthUnits.Angstroms   => wvDeltaAngstromInput
 
 object ConfigurationFormats extends ConfigurationFormats
 

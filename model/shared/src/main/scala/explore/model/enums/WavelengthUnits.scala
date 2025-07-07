@@ -8,4 +8,5 @@ import lucuma.core.util.Enumerated
 enum WavelengthUnits(val tag: String, val symbol: String) derives Enumerated {
   case Micrometers extends WavelengthUnits("micrometers", "μm")
   case Nanometers  extends WavelengthUnits("nanometers", "nm")
+  case Angstroms   extends WavelengthUnits("angstroms", "Å")
 }
