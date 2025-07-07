@@ -11,6 +11,7 @@ import crystal.syntax.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Help
+import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -20,13 +21,15 @@ import lucuma.react.markdown.RehypePlugin
 import lucuma.react.markdown.RemarkPlugin
 import lucuma.react.primereact.Button
 import lucuma.ui.primereact.*
+import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import org.http4s.*
 import org.http4s.client.Client
 
 import scala.util.Try
 
-case class HelpBody(base: HelpContext, helpId: Help.Id) extends ReactFnProps(HelpBody.component):
+case class HelpBody(base: HelpContext, helpId: Help.Id, userVault: Option[UserVault])
+    extends ReactFnProps(HelpBody.component):
   private val path: Uri.Path = Uri.Path.unsafeFromString(helpId.value)
   private val rootUrl: Uri   = base.rawUrl / base.user / base.project
   private val baseUrl: Uri   =
@@ -75,14 +78,16 @@ object HelpBody:
         <.div(ExploreStyles.HelpTitle)(
           <.h4("Help"),
           <.div(
-            <.a(
-              Button(
-                icon = Icons.Edit,
-                severity = Button.Severity.Secondary,
-                onClick = helpView.set(None)
-              ).mini.compact,
-              ^.href   := editUrl.toString(),
-              ^.target := "_blank"
+            TagMod.when(props.userVault.isStaff)(
+              <.a(
+                Button(
+                  icon = Icons.Edit,
+                  severity = Button.Severity.Secondary,
+                  onClick = helpView.set(None)
+                ).mini.compact,
+                ^.href   := editUrl.toString(),
+                ^.target := "_blank"
+              )
             ),
             Button(
               icon = Icons.Close,
@@ -107,8 +112,13 @@ object HelpBody:
               <.div(ExploreStyles.HelpMarkdownBody, "Loading...")
             case Pot.Error(o) if o.getMessage.contains("404") =>
               <.div(ExploreStyles.HelpMarkdownBody)(
-                "Not found, maybe you want to create it ",
-                <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
+                "Not found",
+                TagMod.when(props.userVault.isStaff)(
+                  React.Fragment(
+                    ", maybe you want to create it ",
+                    <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)
+                  )
+                )
               )
             case Pot.Error(_)                                 =>
               <.div(
