@@ -685,6 +685,7 @@ thead tr th.sticky-header {
   .p-button.pl-compact {
     padding: 0.3929em;
     margin-right: 0.25em;
+    line-height: normal; // to match that of actual buttons
   }
 
   .p-button.p-button-sm {
