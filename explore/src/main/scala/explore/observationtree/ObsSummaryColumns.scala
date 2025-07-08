@@ -217,7 +217,7 @@ trait ObsSummaryColumns:
           _.value.flatten.map(groupLink)
         .sortableBy(_.flatMap(_.flatMap(_.name))),
       // TODO: ValidationCheckColumnId
-      obsColumn(StateColumnId, _.obs.workflow.state)
+      obsColumn(StateColumnId, _.obs.workflow.value.state)
         .withCell(_.value.map(_.toString).orEmpty)
         .sortable,
       obsColumn(ScienceBandColumnId, _.obs.scienceBand)
