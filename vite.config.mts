@@ -224,7 +224,39 @@ export default defineConfig(async ({ mode }) => {
     },
     plugins: [
       env(),
-      mkcert({ hosts: ['localhost', 'local.lucuma.xyz'] }),
+      {
+        name: 'reload-on-environments-change',
+        configureServer(server) {
+          const { ws, watcher } = server;
+
+          const sourceFiles = [
+            path.resolve(publicDirProd, 'environments.conf.json'),
+            path.resolve(publicDirProd, 'local.conf.json'),
+          ];
+
+          watcher.add(sourceFiles);
+
+          watcher.on('change', async (file) => {
+            if (file.endsWith('environments.conf.json') || file.endsWith('local.conf.json')) {
+              // Copy the updated file to dev directory
+              const localConf = path.resolve(publicDirProd, 'local.conf.json');
+              const devConf = path.resolve(publicDirProd, 'environments.conf.json');
+
+              try {
+                await fs.copyFile(
+                  (await pathExists(localConf)) ? localConf : devConf,
+                  path.resolve(publicDirDev, 'environments.conf.json'),
+                );
+                console.log('Configuration updated, triggering reload...');
+                ws.send({ type: 'full-reload' });
+              } catch (error) {
+                console.error('Failed to update configuration:', error);
+              }
+            }
+          });
+        },
+      },
+      mkcert({ hosts: ['localhost', 'local.lucuma.xyz', 'local.gemini.edu'] }),
       fontImport,
       VitePWA({
         injectRegister: 'inline',
