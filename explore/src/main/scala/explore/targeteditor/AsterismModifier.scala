@@ -79,7 +79,7 @@ trait AsterismModifier:
       TargetSource.FromProgram[IO](programId) :: TargetSource.forAllCatalogs[IO],
       selectExistingLabel = "Link",
       selectExistingIcon = Icons.Link,
-      selectNewLabel = label,
+      selectNewLabel = "Add",
       selectNewIcon = Icons.New,
       trigger = Button(
         severity = Button.Severity.Success,

@@ -11,9 +11,11 @@ import lucuma.core.enums.CatalogName
 import lucuma.react.common.*
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
+import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.primereact.*
 import lucuma.ui.table.*
+import lucuma.ui.table.ColumnSize.*
 
 case class TargetSelectionTable(
   source:              TargetSource[?],
@@ -63,7 +65,7 @@ object TargetSelectionTable:
             ).tiny.compact
           ,
           enableSorting = false
-        )
+        ).withColumnSize(FixedSize(70.toPx))
       ) ++ (
         props.source match
           case TargetSource.FromCatalog(CatalogName.Simbad) =>
