@@ -358,10 +358,14 @@ $brightness: var(--aladin-image-brightness);
   .finder-charts-attachments {
     right: 0;
     top: exploreCommon.$tile-title-height;
-    width: min(40%, 300px);
-    height: max(30%, 150px);
+    width: min(45%, 400px);
+    height: max(30%, 200px);
     display: flex;
     flex-direction: column;
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      width: min(60%, 450px);
+    }
 
     span:first-child {
       justify-content: space-between;
@@ -371,9 +375,12 @@ $brightness: var(--aladin-image-brightness);
       display: none;
     }
 
-    .finder-charts-table {
-      width: max-content;
+    .finder-charts-table-filename {
+      width: 100%;
+      text-align: right;
+    }
 
+    .finder-charts-table {
       .p-datatable-tbody > tr {
         opacity: 0.7;
       }

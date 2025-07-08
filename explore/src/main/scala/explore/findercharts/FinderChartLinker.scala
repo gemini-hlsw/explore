@@ -86,9 +86,10 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
                         } yield ()).finallyRun(action.set(Action.None))
                       }
                     )
-              .withEnableSorting(false),
+              .withEnableSorting(false)
+              .withMaxSize(40.toPx),
             column(FileNameColumnId, Attachment.fileName.get)
-              .withCell(_.value.value)
+              .withCell(r => <.div(ExploreStyles.FinderChartsFileName, r.value.value))
               .sortableBy(_.value.toUpperCase)
           )
       // Rows
@@ -126,7 +127,6 @@ object FinderChartLinker extends ObsAttachmentUtils with FinderChartsAttachmentU
             striped = true,
             compact = Compact.Very,
             emptyMessage = "No charts",
-            innerContainerMod = ^.width := "100%",
             headerMod = ExploreStyles.FinderChartsTableHeader,
             tableMod =
               ExploreStyles.FinderChartsTable |+| ExploreStyles.ExploreSelectableTable |+| ExploreStyles.ExploreTable |+| ExploreStyles.FinderChartsTableDisabled
