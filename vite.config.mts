@@ -256,7 +256,7 @@ export default defineConfig(async ({ mode }) => {
           });
         },
       },
-      mkcert({ hosts: ['localhost', 'local.lucuma.xyz', 'local.gemeni.edu'] }),
+      mkcert({ hosts: ['localhost', 'local.lucuma.xyz', 'local.gemini.edu'] }),
       fontImport,
       VitePWA({
         injectRegister: 'inline',
