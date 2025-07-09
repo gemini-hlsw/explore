@@ -19,7 +19,6 @@ import explore.model.ConstraintTabTileIds
 import explore.model.Focused
 import explore.model.ObsIdSet
 import explore.model.Observation
-import explore.model.display.given
 import explore.model.enums.AppTab
 import explore.model.enums.TableId
 import explore.model.syntax.all.*

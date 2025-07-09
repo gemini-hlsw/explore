@@ -27,7 +27,6 @@ import lucuma.itc.GraphType
 import lucuma.schemas.model.BasicConfiguration
 
 import java.text.DecimalFormat
-import scala.annotation.targetName
 
 trait DisplayImplicits:
   given Display[AttachmentType] =
@@ -62,16 +61,6 @@ trait DisplayImplicits:
   given Display[ScienceMode] = Display.byShortName:
     case ScienceMode.Imaging      => "Imaging"
     case ScienceMode.Spectroscopy => "Spectroscopy"
-
-  @targetName("given_Display_ImageQuality_Preset")
-  given Display[ImageQuality.Preset] = Display.byShortName(_.toImageQuality.label)
-
-  @targetName("given_Display_CloudExtinction_Preset")
-  given Display[CloudExtinction.Preset] = Display.byShortName(_.toCloudExtinction.label)
-
-  given Display[WaterVapor] = Display.byShortName(_.label)
-
-  given Display[SkyBackground] = Display.byShortName(_.label)
 
   given Display[WavelengthUnits] = Display.byShortName(_.symbol)
 

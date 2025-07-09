@@ -28,6 +28,7 @@ import lucuma.core.syntax.display.*
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.primereact.Tooltip
+import lucuma.react.primereact.tooltip.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.schemas.model.TargetWithId
@@ -267,11 +268,15 @@ trait ObsSummaryColumns:
               ^.href := constraintUrl(id),
               ^.onClick ==> (_.preventDefaultCB *> goToConstraint(id)),
               constraintsSummary
-            )
+            ).withTooltip(content = constraintsSummary, position = Tooltip.Position.Top)
         .sortableBy(_.map(_._2)),
       // TODO: FindingChartColumnId
       obsColumn(ConfigurationColumnId, _.obs.basicConfiguration.foldMap(_.shortName))
-        .withCell(_.value.orEmpty)
+        .withCell(cell =>
+          val tt: Option[VdomNode] = cell.value.map(identity)
+          <.span(cell.value.orEmpty)
+            .withOptionalTooltip(content = tt, position = Tooltip.Position.Top)
+        )
         .sortable,
       obsColumn(
         DurationColumnId,

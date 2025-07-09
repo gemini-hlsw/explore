@@ -9,7 +9,6 @@ import cats.syntax.all.*
 import explore.model.AppContext
 import explore.model.Observation
 import explore.model.TargetList
-import explore.model.display.given
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
