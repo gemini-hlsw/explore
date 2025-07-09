@@ -22,7 +22,7 @@ import scalajs.js
 
 case class Time24HInputView(
   id:          String Refined NonEmpty,
-  value:       View[Option[LocalTime]],
+  value:       View[LocalTime],
   label:       js.UndefOr[TagMod] = js.undefined,
   units:       js.UndefOr[String] = js.undefined,
   groupClass:  js.UndefOr[Css] = js.undefined,
@@ -42,8 +42,8 @@ object Time24HInputView:
         units = props.units,
         groupClass = props.groupClass,
         inputClass = props.inputClass,
-        validFormat = time24h.optional,
-        changeAuditor = hmChangeAuditor,
+        validFormat = time24h,
+        changeAuditor = hmChangeAuditor.optional,
         label = props.label,
         placeholder = props.placeholder.getOrElse("HH:mm"),
         disabled = props.disabled

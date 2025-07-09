@@ -165,7 +165,6 @@ object ExploreStyles:
   val TargetTileBody: Css            = Css("target-tile-body")
   val TargetTileEditor: Css          = Css("target-tile-editor")
   val TargetTileObsDuration: Css     = Css("target-tile-obs-duration")
-  val TargetTileTimeEditor: Css      = Css("target-tile-obs-time-editor")
   val TargetObsDefaultDuration: Css  = Css("target-tile-obs-default-duration")
   val TargetTileObsUTC: Css          = Css("target-tile-obs-utc")
   val AddTargetButton: Css           = Css("add-target-button")
@@ -338,6 +337,9 @@ object ExploreStyles:
   val HelpBody: Css         = Css("explore-help-body")
   val HelpMarkdownBody: Css = Css("markdown-body")
 
+  val DatePicker: Css           = Css("explore-datepicker")
+  val DatePickerTimeEditor: Css = Css("explore-datepicker-time-editor")
+
   val TargetImportForm: Css        = Css("explore-target-import-form")
   val TargetImportDescription: Css = Css("explore-target-import-description")
   val TargetImportErrors: Css      = Css("explore-target-import-errors")
@@ -349,7 +351,6 @@ object ExploreStyles:
   val PAConfigurationAngle: Css         = Css("explore-pa-configuration-angle")
   val AveragePA: Css                    = Css("explore-average-pa")
   val ObsInstantTileTitle: Css          = Css("explore-obs-instant-tile-title")
-  val DatePickerWithNowButton: Css      = Css("explore-datepicker-with-now-button")
   val ConfigurationGrid: Css            = Css("explore-configuration-grid")
   val BasicConfigurationGrid: Css       = Css("explore-basic-configuration-grid")
   val BasicConfigurationForm: Css       = Css("explore-basic-configuration-form")

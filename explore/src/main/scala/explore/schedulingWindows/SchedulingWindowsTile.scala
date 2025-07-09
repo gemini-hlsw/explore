@@ -11,6 +11,7 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
+import explore.components.DatePicker24HTime
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
@@ -33,7 +34,6 @@ import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.core.validation.InputValidSplitEpi
 import lucuma.react.common.ReactFnProps
-import lucuma.react.datepicker.Datepicker
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.*
 import lucuma.react.resizeDetector.hooks.*
@@ -48,6 +48,7 @@ import lucuma.ui.syntax.render.*
 import lucuma.ui.table.*
 import lucuma.ui.utils.Render
 import monocle.Iso
+import monocle.Lens
 import monocle.function.Index
 import monocle.function.Index.*
 
@@ -57,6 +58,12 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 object SchedulingWindowsTile:
+
+  // Helper lens for converting between Timestamp and Instant
+  private val timestampToInstant: Lens[Timestamp, Instant] =
+    Lens[Timestamp, Instant](_.toInstant)(instant =>
+      _ => Timestamp.unsafeFromInstantTruncated(instant)
+    )
   def apply(
     timingWindows: View[List[TimingWindow]],
     readOnly:      Boolean,
@@ -244,25 +251,13 @@ object SchedulingWindowsTile:
                   ),
                   <.div(ExploreStyles.TimingWindowFromEditor)(
                     <.span(" from"),
-                    Datepicker(onChange =
-                      (newValue, _) =>
-                        newValue.fromDatePickerToZDTOpt.foldMap { zdt =>
-                          selectedStart.set(
-                            Timestamp.unsafeFromInstantTruncated(
-                              zdt.withSecond(0).withNano(0).toInstant
-                            )
-                          )
-                        }
-                    )
-                      .showTimeInput(true)
-                      .selected(selectedStart.get.toInstant.toDatePickerJsDate)
-                      .dateFormat("yyyy-MM-dd HH:mm")
-                      .maxDate(
-                        selectedEnd.get
-                          .flatMap(TimingWindowEnd.at.getOption)
-                          .map(_.instant.toInstant.toDatePickerJsDate)
-                          .orNull
-                      ),
+                    DatePicker24HTime(
+                      selectedStart.zoom(timestampToInstant),
+                      props.readOnly,
+                      maxDate = selectedEnd.get
+                        .flatMap(TimingWindowEnd.at.getOption)
+                        .map(_.instant.toInstant)
+                    ),
                     <.span(" UTC "),
                     <.span(Icons.ErrorIcon)
                       .withTooltip("Check start date is before the end")
@@ -304,20 +299,11 @@ object SchedulingWindowsTile:
                     <.label("Through ", ^.htmlFor := "through-option"),
                     selectedEndAt.mapValue(endAt =>
                       React.Fragment(
-                        Datepicker(onChange =
-                          (newValue, _) =>
-                            newValue.fromDatePickerToZDTOpt.foldMap(zdt =>
-                              endAt.set(
-                                Timestamp.unsafeFromInstantTruncated(
-                                  zdt.withSecond(0).withNano(0).toInstant
-                                )
-                              )
-                            )
-                        )
-                          .showTimeInput(true)
-                          .selected(endAt.get.toInstant.toDatePickerJsDate)
-                          .dateFormat("yyyy-MM-dd HH:mm")
-                          .minDate(selectedStart.get.toInstant.toDatePickerJsDate),
+                        DatePicker24HTime(
+                          endAt.zoom(timestampToInstant),
+                          props.readOnly,
+                          minDate = selectedStart.get.toInstant.some
+                        ),
                         <.span(" UTC "),
                         if (tw.get.isValid) EmptyVdom
                         else
