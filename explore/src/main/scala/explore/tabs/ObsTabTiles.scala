@@ -21,8 +21,8 @@ import explore.config.ConfigurationTile
 import explore.config.sequence.SequenceTile
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.FinderChartsTile
-import explore.itc.ItcGraphQuerier
-import explore.itc.ItcTile
+import explore.itc.ItcEmptyTile
+import explore.itc.ItcSpectroscopyTile
 import explore.model.*
 import explore.model.GuideStarSelection.*
 import explore.model.display.given
@@ -35,6 +35,7 @@ import explore.model.layout.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.modes.ConfigSelection
+import explore.modes.ItcInstrumentConfig
 import explore.modes.ScienceModes
 import explore.observationtree.obsEditAttachments
 import explore.plots.ElevationPlotTile
@@ -231,19 +232,6 @@ object ObsTabTiles:
                 _.target.sourceProfile.customSedId.flatMap(attachments.get).map(_.updatedAt)
               ).toList.flattenOption
             )
-        itcGraphResults     <- useEffectResultWithDeps(
-                                 (props.observation.get,
-                                  selectedConfig.get.headOption,
-                                  props.obsTargets,
-                                  customSedTimestamps
-                                 )
-                               ): (obs, config, targets, customSedTimestamps) =>
-                                 import ctx.given
-                                 ItcGraphQuerier(obs,
-                                                 config,
-                                                 targets,
-                                                 customSedTimestamps
-                                 ).requestGraphs
         sequenceChanged     <- useStateView(().ready) // Signal that the sequence has changed
         // if the timestamp for a custom sed attachment changes, it means either a new custom sed
         // has been assigned, OR a new version of the custom sed has been uploaded. This is to
@@ -305,6 +293,10 @@ object ObsTabTiles:
 
           val basicConfiguration: Option[BasicConfiguration] =
             props.observation.get.observingMode.map(_.toBasicConfiguration)
+
+          val itcOdbConfiguration: Option[List[ItcInstrumentConfig]] =
+            Option.when(props.observation.get.observingMode.isDefined):
+              props.observation.get.toInstrumentConfig(props.obsTargets)
 
           val obsTimeView: View[Option[Instant]] =
             props.observation.model.zoom(Observation.observationTime)
@@ -401,12 +393,43 @@ object ObsTabTiles:
               sequenceChanged
             )
 
+          val selectedItcConfig: Option[List[ItcInstrumentConfig]] =
+            Option.unless(props.observation.get.observingMode.isDefined):
+              selectedConfig.get.configs.map(_.instrumentConfig)
+
+          val itcConfigs: Option[List[ItcInstrumentConfig]] =
+            itcOdbConfiguration.orElse(selectedItcConfig)
+
+          val odbOrSelectedConfig: Option[BasicConfiguration] =
+            basicConfiguration.orElse(selectedConfig.get.toBasicConfiguration())
+
           val itcTile =
-            ItcTile(
-              props.vault.userId,
-              props.obsId,
-              itcGraphResults.value,
-              globalPreferences
+            odbOrSelectedConfig match
+              case Some(_: BasicConfiguration.GmosNorthImaging) |
+                  Some(_: BasicConfiguration.GmosSouthImaging) =>
+                None
+              // ItcImagingTile(
+              //   props.vault.userId,
+              //   props.obsId,
+              //   itcGraphResults.value,
+              // ).some
+              case Some(_: BasicConfiguration.GmosNorthLongSlit) |
+                  Some(_: BasicConfiguration.GmosSouthLongSlit) |
+                  Some(_: BasicConfiguration.Flamingos2LongSlit) =>
+                ItcSpectroscopyTile(
+                  props.vault.userId,
+                  props.observation.get,
+                  itcConfigs.flatMap(_.headOption),
+                  props.obsTargets,
+                  customSedTimestamps,
+                  props.globalPreferences
+                ).some
+              case None => ItcEmptyTile.tile.some
+
+          val schedulingWindows: View[List[TimingWindow]] =
+            TimingWindowsQueries.viewWithRemoteMod(
+              ObsIdSet.one(props.obsId),
+              props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
             )
 
           val obsConf: ObsConfiguration =
@@ -582,7 +605,7 @@ object ObsTabTiles:
               constraintsTile.some,
               schedulingWindowsTile.some,
               configurationTile.some,
-              itcTile.some
+              itcTile
             ).flattenOption
 
           val removedIds = ExploreGridLayouts.observations.removedTiles(props.calibrationRole)

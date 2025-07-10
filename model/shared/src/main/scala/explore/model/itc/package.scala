@@ -104,7 +104,7 @@ case class ItcExposureTime(
   count: PosInt
 ) derives Eq
 
-case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsResult) {
+case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsResult) derives Eq {
   export timeAndGraphs.*
 
   private lazy val time: IntegrationTime = timeAndGraphs.integrationTime.times.focus
@@ -123,4 +123,5 @@ case class ItcAsterismGraphResults(
   asterismGraphs:  Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]],
   brightestTarget: Option[ItcTarget],
   signalToNoiseAt: Wavelength
-)
+) derives Eq:
+  val targets: List[ItcTarget] = asterismGraphs.keySet.toList.sortBy(_.name.value)
