@@ -772,7 +772,7 @@ thead tr th.sticky-header {
   }
 }
 
-.explore-datepicker-with-now-button {
+.explore-datepicker {
   /* stylelint-disable-next-line selector-class-pattern */
   .react-datepicker__input-time-container {
     text-align: center;
@@ -793,6 +793,13 @@ thead tr th.sticky-header {
       margin-top: 5px;
       margin-bottom: 5px;
       font-size: 0.944rem;
+    }
+  }
+
+  /* stylelint-disable-next-line selector-class-pattern */
+  .react-datepicker__input-time-container .explore-datepicker-time-editor {
+    input {
+      width: 7ch;
     }
   }
 }

@@ -6,6 +6,7 @@ package explore.model
 import cats.syntax.all.*
 import coulomb.*
 import eu.timepit.refined.collection.NonEmpty
+import explore.model.Constants
 import explore.optics.all.*
 import lucuma.core.math.*
 import lucuma.core.math.HourAngle.HMS
@@ -18,6 +19,7 @@ import lucuma.core.validation.*
 import lucuma.refined.*
 
 import java.text.NumberFormat
+import java.time.LocalTime
 import java.util.Locale
 import scala.math.*
 
@@ -157,6 +159,18 @@ trait formats:
           }
           .toEitherErrors,
       ts => f"${ts.toSeconds}%.0f"
+    )
+
+  val time24h: InputValidWedge[LocalTime] =
+    InputValidWedge(
+      s =>
+        parsers.timeHM
+          .parseAll(s)
+          .leftMap { _ =>
+            "time on HH:mm parsing errors".refined[NonEmpty]
+          }
+          .toEitherErrors,
+      time => time.format(Constants.GppTimeFormatter)
     )
 
 object formats extends formats

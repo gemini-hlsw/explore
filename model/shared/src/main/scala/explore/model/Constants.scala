@@ -25,10 +25,12 @@ trait Constants:
   val SimbadResultLimit        = 50
   val MaxConcurrentItcRequests = 4
 
-  val GppDateFormatter: DateTimeFormatter                  = DateTimeFormatter.ofPattern("yyyy-MMM-dd")
-  val GppTimeFormatter: DateTimeFormatter                  = DateTimeFormatter.ofPattern("HH:mm")
+  val DateFormat                                           = "yyyy-MMM-dd"
+  val TimeFormat                                           = "HH:mm"
+  val GppDateFormatter: DateTimeFormatter                  = DateTimeFormatter.ofPattern(DateFormat)
+  val GppTimeFormatter: DateTimeFormatter                  = DateTimeFormatter.ofPattern(TimeFormat)
   val GppTimeTZFormatter: DateTimeFormatter                =
-    DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneOffset.UTC)
+    DateTimeFormatter.ofPattern(TimeFormat).withZone(ZoneOffset.UTC)
   val GppTimeTZFormatterWithZone: DateTimeFormatter        =
     DateTimeFormatter.ofPattern("HH:mm 'UTC'").withZone(ZoneOffset.UTC)
   val IsoUTCFormatter: DateTimeFormatter                   =

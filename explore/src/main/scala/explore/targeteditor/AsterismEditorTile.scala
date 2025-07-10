@@ -79,23 +79,35 @@ object AsterismEditorTile:
   )(using odbApi: OdbObservationApi[IO])(using Logger[IO]): Tile[TileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
-    val obsTimeView: View[Option[Instant]] =
-      obsTime.withOnMod(t => odbApi.updateVisualizationTime(obsIds.toList, t).runAsync)
+    val obsTimeView: View[Instant] =
+      View(
+        obsTime.get.getOrElse(Instant.now),
+        (f, cb) =>
+          val oldValue = obsTime.get
+          val newValue = f(oldValue.getOrElse(Instant.now)).some
+          Callback.log(s"set time from: $oldValue to: $newValue") >>
+            obsTime.set(newValue) >> cb(oldValue.getOrElse(Instant.now),
+                                        newValue.getOrElse(Instant.now)
+            )
+      ).withOnMod(ct =>
+        Callback
+          .log(s"to the db $ct") *> odbApi.updateVisualizationTime(obsIds.toList, ct.some).runAsync
+      )
 
     val obsDurationView: View[Option[TimeSpan]] =
       obsDuration.withOnMod: t =>
         odbApi.updateVisualizationDuration(obsIds.toList, t).runAsync
 
-    val obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])] =
+    val obsTimeAndDurationView: View[(Instant, Option[TimeSpan])] =
       View(
-        (obsTime.get, obsDuration.get),
+        (obsTime.get.getOrElse(Instant.now), obsDuration.get),
         (mod, cb) =>
-          val oldValue = (obsTime.get, obsDuration.get)
+          val oldValue = (obsTime.get.getOrElse(Instant.now), obsDuration.get)
           val newValue = mod(oldValue)
-          obsTime.set(newValue._1) >> obsDuration.set(newValue._2) >> cb(oldValue, newValue)
+          obsTime.set(newValue._1.some) >> obsDuration.set(newValue._2) >> cb(oldValue, newValue)
       ).withOnMod: tuple =>
         odbApi
-          .updateVisualizationTimeAndDuration(obsIds.toList, tuple._1, tuple._2)
+          .updateVisualizationTimeAndDuration(obsIds.toList, tuple._1.some, tuple._2)
           .runAsync
 
     Tile(
@@ -289,9 +301,9 @@ object AsterismEditorTile:
     obsAndTargets:          UndoSetter[ObservationsAndTargets],
     onAsterismUpdate:       OnAsterismUpdateParams => Callback,
     readonly:               Boolean,
-    obsTimeView:            View[Option[Instant]],
+    obsTimeView:            View[Instant],
     obsDurationView:        View[Option[TimeSpan]],
-    obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
+    obsTimeAndDurationView: View[(Instant, Option[TimeSpan])],
     digest:                 CalculatedValue[Option[ExecutionDigest]],
     columnVisibility:       View[ColumnVisibility],
     obsEditInfo:            Option[ObsIdSetEditInfo],

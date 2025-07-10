@@ -7,6 +7,7 @@ import cats.data.NonEmptyList
 import cats.syntax.all.*
 import crystal.react.View
 import explore.Icons
+import explore.components.DatePicker24HTime
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.syntax.all.*
@@ -19,10 +20,8 @@ import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
-import lucuma.react.datepicker.*
 import lucuma.react.primereact.Button
 import lucuma.refined.*
-import lucuma.typed.reactDatepicker.mod.ReactDatePicker
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
@@ -35,9 +34,9 @@ import scalajs.js
 import scalajs.js.JSConverters.*
 
 case class ObsTimeEditor(
-  obsTimeView:            View[Option[Instant]],
+  obsTimeView:            View[Instant],
   obsDurationView:        View[Option[TimeSpan]],
-  obsTimeAndDurationView: View[(Option[Instant], Option[TimeSpan])],
+  obsTimeAndDurationView: View[(Instant, Option[TimeSpan])],
   calcDigest:             CalculatedValue[Option[ExecutionDigest]],
   forMultipleObs:         Boolean
 ) extends ReactFnProps(ObsTimeEditor):
@@ -49,7 +48,6 @@ case class ObsTimeEditor(
 object ObsTimeEditor
     extends ReactFnComponent[ObsTimeEditor](props =>
       for {
-        ref             <- useRef[Option[ReactDatePicker[Any, Any]]](none)
         defaultDuration <- useMemo(props.pendingTime)(_.getOrElse(TimeSpan.fromHours(1).get))
       } yield
         val nowTooltip         =
@@ -63,25 +61,17 @@ object ObsTimeEditor
               <.span("Time/Duration"),
               HelpIcon("configuration/obstime.md".refined)
             ),
-            Datepicker(onChange =
-              (newValue, _) =>
-                newValue.fromDatePickerToInstantOpt.foldMap: i =>
-                  props.obsTimeView.set(i.some)
-            )
-              .readOnly(props.isReadonly)
-              .calendarClassName(ExploreStyles.DatePickerWithNowButton.htmlClass)
-              .showTimeInput(true)
-              .selected(props.obsTimeView.get.getOrElse(Instant.now).toDatePickerJsDate)
-              .dateFormat("yyyy-MM-dd HH:mm")(
-                Button(
-                  onClick = props.pendingTime.fold(props.obsTimeView.set(Instant.now.some))(pt =>
-                    props.obsTimeAndDurationView.set(Instant.now.some, pt.some)
-                  ) >>
-                    ref.value.map(r => Callback(r.setOpen(false))).orEmpty,
-                  tooltip = nowTooltip
-                )("Now")
-              )
-              .withRef(r => ref.set(r.some).runNow()),
+            DatePicker24HTime(
+              props.obsTimeView,
+              props.isReadonly,
+              DatePicker24HTime
+                .OnNow(props.pendingTime.fold(props.obsTimeView.set(Instant.now))(pt =>
+                         props.obsTimeAndDurationView.set(Instant.now, pt.some)
+                       ),
+                       nowTooltip
+                )
+                .some
+            ),
             <.label(ExploreStyles.TargetTileObsUTC, "UTC"),
             if (props.forMultipleObs) EmptyVdom
             else
