@@ -19,6 +19,7 @@ import explore.model.AsterismGroupList
 import explore.model.Focused
 import explore.model.LocalClipboard
 import explore.model.ObsIdSet
+import explore.model.ObsIdSetEditInfo
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.ProgramSummaries
@@ -45,6 +46,7 @@ import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.ConfirmDialog
 import lucuma.react.primereact.DialogPosition
+import lucuma.react.primereact.Message
 import lucuma.react.primereact.PrimeStyles
 import lucuma.ui.primereact.*
 import lucuma.ui.syntax.all.given
@@ -168,34 +170,42 @@ object AsterismGroupObsList:
   ): (DropResult, ResponderProvided) => Callback = { (result, _) =>
     import ctx.given
 
-    val oData: Option[(ObsIdSet, SortedSet[Target.Id], ObsIdSet, ObsIdSet)] =
-      for
-        destination <- result.destination.toOption
-        destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
-        draggedIds  <- getDraggedIds(result.draggableId, props)
-        destAstIds  <- props.programSummaries.get.asterismGroups.get(destIds)
-        srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
-      yield (destIds, destAstIds, draggedIds, srcAg.obsIds)
-
     def setObsSet(obsIds: ObsIdSet): Callback =
       // if focused is empty, we're looking at the target summary table and don't want to
       // switch to editing because of drag and drop
       if (props.focused.isEmpty) Callback.empty
       else ctx.pushPage((AppTab.Targets, props.programId, Focused(obsIds.some)).some)
 
-    oData.foldMap: (destIds, destAstIds, draggedIds, srcIds) =>
+    (for
+      destination <- result.destination.toOption
+      destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
+      draggedIds  <- getDraggedIds(result.draggableId, props)
+      destAstIds  <- props.programSummaries.get.asterismGroups.get(destIds)
+      srcAg       <- props.programSummaries.get.asterismGroups.findContainingObsIds(draggedIds)
+    yield
+      val obsEditInfo = ObsIdSetEditInfo.fromObservationList(draggedIds, props.observations.get)
+
       if (destIds.intersects(draggedIds)) Callback.empty
+      else if (obsEditInfo.executed.nonEmpty)
+        ToastCtx[IO]
+          .showToast(
+            "Cannot modify asterism for executed observations.",
+            Message.Severity.Error,
+            true
+          )
+          .runAsync
       else
         AsterismGroupObsListActions
           .dropObservations(
             draggedIds,
-            srcIds,
+            srcAg.obsIds,
             destIds,
             props.expandedIds,
             setObsSet,
             props.programSummaries.get.targets
           )
           .set(props.undoCtx.zoom(ProgramSummaries.observations))(destAstIds)
+    ).orEmpty
   }
 
   private def insertSiderealTarget(
@@ -334,7 +344,18 @@ object AsterismGroupObsList:
           props.getDraggedStyle(provided.draggableStyle, snapshot)
         )(
           getDraggedIds(rubric.draggableId, props)
-            .flatMap(renderObsClone)
+            .flatMap: draggedIds =>
+              val obsEditInfo =
+                ObsIdSetEditInfo.fromObservationList(draggedIds, props.observations.get)
+              if (obsEditInfo.executed.nonEmpty)
+                val m: TagMod =
+                  Message(
+                    text = "Contains executed observations",
+                    severity = Message.Severity.Error,
+                    icon = Icons.ErrorIcon
+                  )
+                m.some
+              else renderObsClone(draggedIds)
             .getOrElse(<.span("ERROR"))
         )
 
