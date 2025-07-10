@@ -4,8 +4,8 @@
 package explore.schedulingWindows
 
 import cats.Endo
-import cats.Order.given
 import cats.MonadThrow
+import cats.Order.given
 import cats.syntax.all.*
 import crystal.react.*
 import eu.timepit.refined.cats.*
@@ -17,11 +17,11 @@ import explore.components.DatePicker24HTime
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
-import explore.model.Observation
-import explore.model.ObservationList
 import explore.model.ObsIdSet
 import explore.model.ObsIdSetEditInfo
 import explore.model.ObsTabTileIds
+import explore.model.Observation
+import explore.model.ObservationList
 import explore.model.enums.TileSizeState
 import explore.model.formats.*
 import explore.model.reusability.given

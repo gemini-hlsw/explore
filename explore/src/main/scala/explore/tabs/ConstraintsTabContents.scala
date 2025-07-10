@@ -14,9 +14,9 @@ import explore.actions.ObservationPasteIntoConstraintSetAction
 import explore.components.FocusedStatus
 import explore.components.Tile
 import explore.components.TileController
+import explore.components.ui.ExploreStyles
 import explore.constraints.ConstraintsPanel
 import explore.constraints.ConstraintsSummaryTile
-import explore.components.ui.ExploreStyles
 import explore.model.*
 import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
