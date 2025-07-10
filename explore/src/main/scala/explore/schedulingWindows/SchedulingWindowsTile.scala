@@ -80,7 +80,7 @@ object SchedulingWindowsTile:
     readOnly:     Boolean,
     fullSize:     Boolean
   ) =
-    // We will only execute the incomplete observations, but we noed something to pass
+    // We will only edit the incomplete observations, but we noed something to pass
     // to the timing windows panel. However, if all are complete, it will be readonly
     val idsToEdit = obsEditInfo.unCompleted.getOrElse(obsEditInfo.editing)
 
