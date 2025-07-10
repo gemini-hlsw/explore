@@ -62,8 +62,7 @@ object ExploreGridLayouts:
   private lazy val TileMinWidth: NonNegInt = 8.refined
 
   object constraints:
-    private lazy val ConstraintsHeight: NonNegInt   = 4.refined
-    private lazy val TimingWindowsHeight: NonNegInt = 14.refined
+    private lazy val ConstraintsHeight: NonNegInt = 4.refined
 
     private lazy val layoutMedium: Layout = Layout(
       List(
@@ -73,13 +72,6 @@ object ExploreGridLayouts:
           y = 0,
           w = DefaultWidth.value,
           h = ConstraintsHeight.value
-        ),
-        LayoutItem(
-          i = ObsTabTileIds.TimingWindowsId.id.value,
-          x = 0,
-          y = ConstraintsHeight.value,
-          w = DefaultWidth.value,
-          h = TimingWindowsHeight.value
         )
       )
     )

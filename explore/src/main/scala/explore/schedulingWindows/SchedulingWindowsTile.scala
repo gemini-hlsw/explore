@@ -4,6 +4,7 @@
 package explore.schedulingWindows
 
 import cats.Endo
+import cats.MonadThrow
 import cats.Order.given
 import cats.syntax.all.*
 import crystal.react.*
@@ -11,18 +12,26 @@ import eu.timepit.refined.cats.*
 import eu.timepit.refined.numeric.Positive
 import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
+import explore.common.TimingWindowsQueries
 import explore.components.DatePicker24HTime
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.model.Constants.BadTimingWindow
+import explore.model.ObsIdSet
+import explore.model.ObsIdSetEditInfo
 import explore.model.ObsTabTileIds
+import explore.model.Observation
+import explore.model.ObservationList
 import explore.model.enums.TileSizeState
 import explore.model.formats.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.render.given
+import explore.services.OdbObservationApi
+import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.util.Effect.Dispatch
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.model.TimingWindow
@@ -51,6 +60,7 @@ import monocle.Iso
 import monocle.Lens
 import monocle.function.Index
 import monocle.function.Index.*
+import org.typelevel.log4cats.Logger
 
 import java.time.Duration
 import java.time.Instant
@@ -58,20 +68,77 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 object SchedulingWindowsTile:
-
   // Helper lens for converting between Timestamp and Instant
   private val timestampToInstant: Lens[Timestamp, Instant] =
     Lens[Timestamp, Instant](_.toInstant)(instant =>
       _ => Timestamp.unsafeFromInstantTruncated(instant)
     )
-  def apply(
+
+  def forObsIdSet[F[_]: OdbObservationApi: MonadThrow: Dispatch: Logger: ToastCtx](
+    obsEditInfo:  ObsIdSetEditInfo,
+    observations: UndoSetter[ObservationList],
+    readOnly:     Boolean,
+    fullSize:     Boolean
+  ) =
+    // We will only edit the incomplete observations, but we noed something to pass
+    // to the timing windows panel. However, if all are complete, it will be readonly
+    val idsToEdit = obsEditInfo.unCompleted.getOrElse(obsEditInfo.editing)
+
+    val obsTraversal = Iso
+      .id[ObservationList]
+      .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+
+    val twTraversal = obsTraversal.andThen(Observation.timingWindows)
+
+    val timingWindows: View[List[TimingWindow]] =
+      TimingWindowsQueries.viewWithRemoteMod(
+        idsToEdit,
+        observations
+          .undoableView[List[TimingWindow]](
+            twTraversal.getAll.andThen(_.head),
+            twTraversal.modify
+          )
+      )
+    internalApply(obsEditInfo, timingWindows, readOnly, fullSize)
+
+  def forObservation[F[_]: OdbObservationApi: MonadThrow: Dispatch: Logger: ToastCtx](
+    observation: UndoSetter[Observation],
+    readOnly:    Boolean,
+    fullSize:    Boolean
+  ) =
+    val obsEditInfo                             = ObsIdSetEditInfo.of(observation.get)
+    val timingWindows: View[List[TimingWindow]] =
+      TimingWindowsQueries.viewWithRemoteMod(
+        ObsIdSet.one(observation.get.id),
+        observation.undoableView[List[TimingWindow]](Observation.timingWindows)
+      )
+    internalApply(obsEditInfo, timingWindows, readOnly, fullSize)
+
+  private def internalApply(
+    obsEditInfo:   ObsIdSetEditInfo,
     timingWindows: View[List[TimingWindow]],
     readOnly:      Boolean,
     fullSize:      Boolean
   ) =
+
     val base  = "Scheduling Windows"
     val title =
       if (timingWindows.get.isEmpty) base else s"$base (${timingWindows.get.length})"
+
+    val msg: Option[String] =
+      if (readOnly)
+        none
+      else if (obsEditInfo.allAreCompleted)
+        if (obsEditInfo.editing.length > 1)
+          "All of the current observations are completed. Scheduling windows are readonly.".some
+        else "The current observation has been completed. Scheduling windows are readonly.".some
+      else if (obsEditInfo.completed.isDefined)
+        "Some of the current observations are completed. Only uncompleted observations will be modified.".some
+      else
+        none
+
+    val finalReadOnly = readOnly || obsEditInfo.allAreCompleted
+
     Tile(
       ObsTabTileIds.TimingWindowsId.id,
       title,
@@ -79,8 +146,12 @@ object SchedulingWindowsTile:
       canMaximize = !fullSize,
       canMinimize = !fullSize
     )(
-      tileState => Body(timingWindows, readOnly, tileState.set),
-      (tileState, tileSize) => Title(timingWindows, readOnly, tileState.get, tileSize)
+      tileState =>
+        React.Fragment(
+          msg.map(msg => <.div(msg, ExploreStyles.SharedEditWarning)),
+          Body(timingWindows, finalReadOnly, tileState.set)
+        ),
+      (tileState, tileSize) => Title(timingWindows, finalReadOnly, tileState.get, tileSize)
     )
 
   object TileState extends NewType[RowSelection => Callback]:

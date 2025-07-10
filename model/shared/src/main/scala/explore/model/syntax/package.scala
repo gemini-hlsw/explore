@@ -94,6 +94,12 @@ object all:
     def executedOf(obsIds: ObsIdSet): Option[ObsIdSet]                                       =
       val executed = obsIds.idSet.filter(id => observations.get(id).fold(false)(_.isExecuted))
       ObsIdSet.fromSortedSet(executed)
+    def ongoingOf(obsIds: ObsIdSet): Option[ObsIdSet]                                        =
+      val ongoing = obsIds.idSet.filter(id => observations.get(id).fold(false)(_.isOngoing))
+      ObsIdSet.fromSortedSet(ongoing)
+    def completedOf(obsIds: ObsIdSet): Option[ObsIdSet]                                      =
+      val completed = obsIds.idSet.filter(id => observations.get(id).fold(false)(_.isCompleted))
+      ObsIdSet.fromSortedSet(completed)
     def addTargetToObservations(targetId: Target.Id, obsIds: ObsIdSet): ObservationList      =
       obsIds.idSet.foldLeft(observations): (map, obsId) =>
         map.updatedWith(obsId)(_.map(Observation.scienceTargetIds.modify(_ + targetId)))

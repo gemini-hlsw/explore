@@ -237,9 +237,7 @@ case class Observation(
     s"${constraints.imageQuality.toImageQuality.label} ${constraints.cloudExtinction.toCloudExtinction.label}" +
       s" ${constraints.skyBackground.label} ${constraints.waterVapor.label}"
 
-  private val ExecutedStates =
-    Set(ObservationWorkflowState.Ongoing, ObservationWorkflowState.Completed)
-  lazy val disabledStates    =
+  lazy val disabledStates =
     Enumerated[
       ObservationWorkflowState
     ].all.toSet -- workflow.value.validTransitions.toSet - workflow.value.state
@@ -247,9 +245,12 @@ case class Observation(
   val isInactive = workflow.value.state === ObservationWorkflowState.Inactive
 
   inline def isCalibration: Boolean = calibrationRole.isDefined
-  inline def isExecuted: Boolean    =
-    ExecutedStates.contains(workflow.value.state) ||
-      workflow.value.validTransitions.exists(ExecutedStates.contains)
+  lazy val isOngoing                =
+    workflow.value.state === ObservationWorkflowState.Ongoing ||
+      (workflow.value.state === ObservationWorkflowState.Inactive &&
+        workflow.value.validTransitions.contains(ObservationWorkflowState.Ongoing))
+  lazy val isCompleted              = workflow.value.state === ObservationWorkflowState.Completed
+  lazy val isExecuted: Boolean      = isOngoing || isCompleted
 
   inline def newConfigurationRequestApplies(config: Configuration): Boolean =
     (hasNotRequestedCode || hasDeniedValidationCode) &&

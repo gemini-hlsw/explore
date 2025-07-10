@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import crystal.react.reuse.*
 import explore.*
 import explore.actions.ObservationPasteIntoSchedulingGroupAction
-import explore.common.TimingWindowsQueries
 import explore.components.FocusedStatus
 import explore.components.TileController
 import explore.model.*
@@ -39,8 +38,6 @@ import lucuma.react.resizeDetector.hooks.*
 import lucuma.ui.LucumaStyles
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import monocle.Iso
-import monocle.Traversal
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.LinkingInfo
@@ -142,81 +139,72 @@ object SchedulingTabContents extends TwoPanels:
               case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
               case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
               case _                            => Callback.empty
+      .useMemoBy((props, _, _, _, _, _) => (props.focusedObsSet, props.observations)):
+        (_, _, _, _, _, _) =>
+          (focused, obsList) => focused.map(ObsIdSetEditInfo.fromObservationList(_, obsList))
       .useResizeDetector() // Measure its size
-      .render: (props, ctx, shadowClipboardObs, copyCallback, pasteCallback, state, resize) =>
-        import ctx.given
+      .render:
+        (props, ctx, shadowClipboardObs, copyCallback, pasteCallback, state, obsEditInfo, resize) =>
+          import ctx.given
 
-        def findSchedulingGroup(
-          obsIds: ObsIdSet,
-          cgl:    SchedulingGroupList
-        ): Option[SchedulingGroup] =
-          cgl.find(_._1.intersect(obsIds).nonEmpty).map(SchedulingGroup.fromTuple)
+          def findSchedulingGroup(
+            obsIds: ObsIdSet,
+            cgl:    SchedulingGroupList
+          ): Option[SchedulingGroup] =
+            cgl.find(_._1.intersect(obsIds).nonEmpty).map(SchedulingGroup.fromTuple)
 
-        val observations: UndoSetter[ObservationList] =
-          props.programSummaries.zoom(ProgramSummaries.observations)
+          val observations: UndoSetter[ObservationList] =
+            props.programSummaries.zoom(ProgramSummaries.observations)
 
-        val rightSide = (_: UseResizeDetectorReturn) =>
-          props.focusedObsSet
-            .flatMap: ids =>
-              findSchedulingGroup(ids, props.programSummaries.get.schedulingGroups)
-                .map(cg => (ids, cg))
-            .fold[VdomNode] {
-              <.div(LucumaStyles.HVCenter)(
-                <.div("Select a scheduling group from the list.")
-              )
-            } { case (idsToEdit, schedulingGroup) =>
-              val obsTraversal: Traversal[ObservationList, Observation] =
-                Iso
-                  .id[ObservationList]
-                  .filterIndex((id: Observation.Id) => idsToEdit.contains(id))
+          val rightSide = (_: UseResizeDetectorReturn) =>
+            obsEditInfo.value
+              .flatMap: editInfo =>
+                findSchedulingGroup(editInfo.editing, props.programSummaries.get.schedulingGroups)
+                  .map(cg => (editInfo, cg))
+              .fold[VdomNode] {
+                <.div(LucumaStyles.HVCenter)(
+                  <.div("Select a scheduling group from the list.")
+                )
+              } { case (obsEditInfo, schedulingGroup) =>
+                val schedulingWindowsTile =
+                  SchedulingWindowsTile.forObsIdSet(obsEditInfo, observations, props.readonly, true)
 
-              val twTraversal: Traversal[ObservationList, List[TimingWindow]] =
-                obsTraversal.andThen(Observation.timingWindows)
+                TileController(
+                  props.userId,
+                  resize.width.getOrElse(1),
+                  ExploreGridLayouts.sectionLayout(GridLayoutSection.SchedulingLayout),
+                  props.userPreferences.schedulingTabLayout,
+                  List(schedulingWindowsTile),
+                  GridLayoutSection.SchedulingLayout,
+                  None
+                )
+              }
 
-              val timingWindows: View[List[TimingWindow]] =
-                TimingWindowsQueries
-                  .viewWithRemoteMod(
-                    idsToEdit,
-                    observations
-                      .undoableView[List[TimingWindow]](
-                        twTraversal.getAll.andThen(_.head),
-                        twTraversal.modify
-                      )
-                  )
+          val schedulingTree =
+            SchedulingGroupObsList(
+              props.programId,
+              observations,
+              props.programSummaries,
+              props.programSummaries.get.schedulingGroups,
+              props.focusedObsSet,
+              state.set(SelectedPanel.Summary),
+              props.expandedIds,
+              copyCallback,
+              pasteCallback,
+              shadowClipboardObs.value,
+              props.programSummaries.get.allocatedScienceBands,
+              props.readonly
+            )
 
-              val schedulingWindowsTile =
-                SchedulingWindowsTile(timingWindows, props.readonly, true)
-
-              TileController(
-                props.userId,
-                resize.width.getOrElse(1),
-                ExploreGridLayouts.sectionLayout(GridLayoutSection.SchedulingLayout),
-                props.userPreferences.schedulingTabLayout,
-                List(schedulingWindowsTile),
-                GridLayoutSection.SchedulingLayout,
-                None
-              )
-            }
-
-        val schedulingTree =
-          SchedulingGroupObsList(
-            props.programId,
-            observations,
-            props.programSummaries,
-            props.programSummaries.get.schedulingGroups,
-            props.focusedObsSet,
-            state.set(SelectedPanel.Summary),
-            props.expandedIds,
-            copyCallback,
-            pasteCallback,
-            shadowClipboardObs.value,
-            props.programSummaries.get.allocatedScienceBands,
-            props.readonly
+          React.Fragment(
+            if (LinkingInfo.developmentMode)
+              FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
+            else EmptyVdom,
+            makeOneOrTwoPanels(
+              state,
+              schedulingTree,
+              rightSide,
+              RightSideCardinality.Single,
+              resize
+            )
           )
-
-        React.Fragment(
-          if (LinkingInfo.developmentMode)
-            FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
-          else EmptyVdom,
-          makeOneOrTwoPanels(state, schedulingTree, rightSide, RightSideCardinality.Single, resize)
-        )
