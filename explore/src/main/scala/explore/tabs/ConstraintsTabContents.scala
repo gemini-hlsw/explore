@@ -72,8 +72,10 @@ object ConstraintsTabContents extends TwoPanels:
             case LocalClipboard.CopiedObservations(idSet) =>
               shadowClipboardObs.setStateAsync(idSet.some)
             case _                                        => IO.unit
-      .useCallbackWithDepsBy((props, _, _) => props.focusedObsSet): // COPY Action Callback
-        (_, ctx, shadowClipboardObs) =>
+      .useMemoBy((props, _, _) => (props.focusedObsSet, props.observations)): (_, _, _) =>
+        (focused, obsList) => focused.map(ObsIdSetEditInfo.fromObservationList(_, obsList))
+      .useCallbackWithDepsBy((props, _, _, _) => props.focusedObsSet): // COPY Action Callback
+        (_, ctx, shadowClipboardObs, _) =>
           focusedObsSet =>
             import ctx.given
 
@@ -85,9 +87,9 @@ object ConstraintsTabContents extends TwoPanels:
                   .withToast(s"Copied observation(s) ${obsIdSet.idSet.toList.mkString(", ")}")
               .orUnit
               .runAsync
-      .useCallbackWithDepsBy((props, _, _, _) => // PASTE Action Callback
+      .useCallbackWithDepsBy((props, _, _, _, _) => // PASTE Action Callback
         (props.observations, props.focusedObsSet, props.readonly)
-      ): (props, ctx, _, _) =>
+      ): (props, ctx, _, _, _) =>
         (observations, selObsSet, readonly) =>
           import ctx.given
 
@@ -120,9 +122,9 @@ object ConstraintsTabContents extends TwoPanels:
               case _                                                 => IO.unit
             .runAsync
             .unless_(readonly)
-      .useGlobalHotkeysWithDepsBy((_, _, _, copyCallback, pasteCallback) =>
+      .useGlobalHotkeysWithDepsBy((_, _, _, _, copyCallback, pasteCallback) =>
         (copyCallback, pasteCallback)
-      ): (props, ctx, _, _, _) =>
+      ): (props, ctx, _, _, _, _) =>
         (copyCallback, pasteCallback) =>
           def callbacks: ShortcutCallbacks =
             case CopyAlt1 | CopyAlt2   => copyCallback
@@ -135,19 +137,17 @@ object ConstraintsTabContents extends TwoPanels:
 
           UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
       .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, _, _, _, state) => (props.focusedObsSet, state.reuseByValue)):
-        (_, _, _, _, _, _) =>
-          (focusedObsSet, selected) =>
-            (focusedObsSet, selected.get) match
-              case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
-              case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-              case _                            => Callback.empty
-      .useMemoBy((props, _, _, _, _, _) => (props.focusedObsSet, props.observations)):
-        (_, _, _, _, _, _) =>
-          (focused, obsList) => focused.map(ObsIdSetEditInfo.fromObservationList(_, obsList))
+      .useEffectWithDepsBy((props, _, _, _, _, _, state) =>
+        (props.focusedObsSet, state.reuseByValue)
+      ): (_, _, _, _, _, _, _) =>
+        (focusedObsSet, selected) =>
+          (focusedObsSet, selected.get) match
+            case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
+            case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+            case _                            => Callback.empty
       .useResizeDetector() // Measure its size
       .render:
-        (props, ctx, shadowClipboardObs, copyCallback, pasteCallback, state, obsEditInfo, resize) =>
+        (props, ctx, shadowClipboardObs, obsEditInfo, copyCallback, pasteCallback, state, resize) =>
 
           def findConstraintGroup(
             obsIds: ObsIdSet,

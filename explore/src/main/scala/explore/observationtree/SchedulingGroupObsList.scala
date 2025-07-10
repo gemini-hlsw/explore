@@ -6,7 +6,7 @@ package explore.observationtree
 import cats.Order.given
 import cats.effect.IO
 import cats.syntax.all.given
-import crystal.react.View
+import crystal.react.*
 import explore.Icons
 import explore.common.TimingWindowsQueries
 import explore.components.ActionButtons
@@ -15,6 +15,7 @@ import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.Focused
 import explore.model.ObsIdSet
+import explore.model.ObsIdSetEditInfo
 import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.SchedulingGroupList
@@ -37,6 +38,7 @@ import lucuma.react.beautifuldnd.*
 import lucuma.react.common.*
 import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.floatingui.syntax.*
+import lucuma.react.primereact.Message
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.render.*
@@ -135,7 +137,7 @@ object SchedulingGroupObsList:
     }
 
   private def onDragEnd(
-    undoCtx:          UndoSetter[ObservationList],
+    observations:     UndoSetter[ObservationList],
     expandedIds:      View[SortedSet[ObsIdSet]],
     focusedObsSet:    Option[ObsIdSet],
     schedulingGroups: SchedulingGroupList
@@ -143,38 +145,45 @@ object SchedulingGroupObsList:
     OdbObservationApi[IO],
     Logger[IO],
     ToastCtx[IO]
-  ): (DropResult, ResponderProvided) => Callback = (result, _) => {
-    val oData = for {
+  ): (DropResult, ResponderProvided) => Callback = (result, _) =>
+    (for
       destination <- result.destination.toOption
       destIds     <- ObsIdSet.fromString.getOption(destination.droppableId)
       draggedIds  <- getDraggedIds(result.draggableId, focusedObsSet)
       if !destIds.intersects(draggedIds)
       newTw       <- schedulingGroups.get(destIds)
-      srcIds      <- schedulingGroups.findContainingObsIds(draggedIds)
-    } yield (newTw, destIds, draggedIds, srcIds.obsIds)
+      grp         <- schedulingGroups.findContainingObsIds(draggedIds)
+    yield
+      val obsEditInfo = ObsIdSetEditInfo.fromObservationList(draggedIds, observations.get)
 
-    val traversal = Iso
-      .id[ObservationList]
-      .filterIndex: (id: Observation.Id) =>
-        oData.exists((_, _, draggedIds, _) => draggedIds.contains(id))
-      .andThen(Observation.timingWindows)
-
-    val twUndoCtx =
-      undoCtx.zoom(traversal.getAll.andThen(_.head), traversal.modify)
-
-    oData.foldMap { case (newTw, destIds, draggedIds, srcIds) =>
-      expandedIds.mod(ids =>
-        val base = ids - draggedIds - destIds + (destIds ++ draggedIds)
-        (srcIds -- draggedIds).fold(base)(base + _)
-      ) >>
-        TimingWindowsQueries
-          .viewWithRemoteMod[IO](
-            draggedIds,
-            twUndoCtx.undoableView(Iso.id.asLens)
+      if (obsEditInfo.completed.nonEmpty)
+        ToastCtx[IO]
+          .showToast(
+            "Cannot modify scheduling windows for completed observations.",
+            Message.Severity.Error,
+            true
           )
-          .set(newTw)
-    }
-  }
+          .runAsync
+      else
+        val traversal = Iso
+          .id[ObservationList]
+          .filterIndex(draggedIds.contains)
+          .andThen(Observation.timingWindows)
+
+        val twUndoCtx =
+          observations.zoom(traversal.getAll.andThen(_.head), traversal.modify)
+
+        expandedIds.mod(ids =>
+          val base = ids - draggedIds - destIds + (destIds ++ draggedIds)
+          (grp.obsIds -- draggedIds).fold(base)(base + _)
+        ) >>
+          TimingWindowsQueries
+            .viewWithRemoteMod[IO](
+              draggedIds,
+              twUndoCtx.undoableView(Iso.id.asLens)
+            )
+            .set(newTw)
+    ).orEmpty
 
   private val component = ScalaFnComponent
     .withHooks[Props]
@@ -220,7 +229,17 @@ object SchedulingGroupObsList:
         )(
           getDraggedIds(rubric.draggableId, props.focusedObsSet)
             .flatMap(obsIds =>
-              if (obsIds.size === 1)
+              val obsEditInfo = ObsIdSetEditInfo.fromObservationList(obsIds, props.observations.get)
+
+              if (obsEditInfo.completed.nonEmpty)
+                val m: TagMod =
+                  Message(
+                    text = "Contains completed observations",
+                    severity = Message.Severity.Error,
+                    icon = Icons.ErrorIcon
+                  )
+                m.some
+              else if (obsIds.size === 1)
                 props.observations.get
                   .get(obsIds.head)
                   .map(obs => props.renderObsBadge(obs, ObsBadge.Layout.ConstraintsTab))
