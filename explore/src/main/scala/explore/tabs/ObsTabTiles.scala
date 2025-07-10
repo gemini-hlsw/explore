@@ -14,7 +14,6 @@ import crystal.react.hooks.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
-import explore.common.TimingWindowsQueries
 import explore.components.Tile
 import explore.components.TileController
 import explore.components.ui.ExploreStyles
@@ -63,7 +62,6 @@ import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
-import lucuma.core.model.TimingWindow
 import lucuma.core.syntax.all.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
@@ -406,12 +404,6 @@ object ObsTabTiles:
               props.globalPreferences
             )
 
-          val schedulingWindows: View[List[TimingWindow]] =
-            TimingWindowsQueries.viewWithRemoteMod(
-              ObsIdSet.one(props.obsId),
-              props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
-            )
-
           val obsConf: ObsConfiguration =
             ObsConfiguration(
               basicConfiguration,
@@ -449,7 +441,7 @@ object ObsTabTiles:
                 props.observation.get.observingMode.map(_.siteFor),
                 obsTimeView.get,
                 obsDuration.map(_.toDuration),
-                schedulingWindows.get,
+                props.observation.get.timingWindows,
                 props.globalPreferences.get,
                 Constants.NoTargetSelected
               )
@@ -541,7 +533,11 @@ object ObsTabTiles:
             )
 
           val schedulingWindowsTile =
-            SchedulingWindowsTile(schedulingWindows, props.readonly, false)
+            SchedulingWindowsTile.forObservation(
+              props.observation,
+              props.readonly,
+              false
+            )
 
           val configurationTile: Tile[?] =
             ConfigurationTile(

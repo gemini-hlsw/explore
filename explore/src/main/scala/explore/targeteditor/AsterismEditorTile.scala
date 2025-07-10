@@ -15,6 +15,7 @@ import explore.config.ObsTimeEditor
 import explore.model.AladinFullScreen
 import explore.model.AppContext
 import explore.model.Asterism
+import explore.model.AsterismIds
 import explore.model.AttachmentList
 import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
@@ -207,9 +208,12 @@ object AsterismEditorTile:
           ObsIdSetEditInfo.fromObservationList
         .useLayoutEffectWithDepsBy((_, obsEditInfo) => obsEditInfo): (props, _) =>
           obsEditInfo => props.obsEditInfo.set(obsEditInfo.value.some)
-        .useLayoutEffectWithDepsBy((props, obsEditInfo) =>
-          (obsEditInfo.asterismIds, props.focusedTargetId)
-        ): (props, _) =>
+        .useMemoBy((props, _) => (props.obsIds, props.obsAndTargets.get._1)): (_, _) =>
+          // all of the selected observations must have the same asterism
+          (ids, obses) => obses.get(ids.head).fold(AsterismIds.empty)(_.scienceTargetIds)
+        .useLayoutEffectWithDepsBy((props, _, asterismIds) =>
+          (asterismIds.value, props.focusedTargetId)
+        ): (props, _, _) =>
           (asterismIds, focusedTargetId) =>
             // If the selected targetId is None, or not in the asterism, select the first target (if any).
             // Need to replace history here.
@@ -218,7 +222,7 @@ object AsterismEditorTile:
               case _    => Callback.empty
         // full screen aladin
         .useStateView(AladinFullScreen.Normal)
-        .render: (props, obsEditInfo, fullScreen) =>
+        .render: (props, obsEditInfo, asterismIds, fullScreen) =>
           val selectedTargetView: View[Option[Target.Id]] =
             View(
               props.focusedTargetId,
@@ -247,7 +251,7 @@ object AsterismEditorTile:
                   props.userId.some,
                   props.programId,
                   unexecutedObs,
-                  obsEditInfo.asterismIds,
+                  asterismIds,
                   props.obsAndTargets,
                   selectedTargetView,
                   props.onAsterismUpdate,
@@ -258,41 +262,40 @@ object AsterismEditorTile:
                 ),
             // it's possible for us to get here without an asterism but with a focused target id. This will get
             // corrected, but we need to not render the target editor before it is corrected.
-            (Asterism.fromIdsAndTargets(obsEditInfo.asterismIds, props.allTargets.get),
-             props.focusedTargetId
-            ).mapN: (asterism, focusedTargetId) =>
-              val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =
-                props.allTargets
-                  .zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
+            (Asterism.fromIdsAndTargets(asterismIds, props.allTargets.get), props.focusedTargetId)
+              .mapN: (asterism, focusedTargetId) =>
+                val selectedTargetOpt: Option[UndoSetter[Target.Sidereal]] =
+                  props.allTargets
+                    .zoom(Iso.id[TargetList].index(focusedTargetId).andThen(Target.sidereal))
 
-              val obsInfo = props.obsInfo(focusedTargetId)
+                val obsInfo = props.obsInfo(focusedTargetId)
 
-              selectedTargetOpt
-                .map: siderealTarget =>
-                  <.div(
-                    ExploreStyles.TargetTileEditor,
-                    SiderealTargetEditor(
-                      props.programId,
-                      props.userId,
-                      siderealTarget,
-                      props.obsAndTargets,
-                      asterism.focusOn(focusedTargetId),
-                      props.obsTime,
-                      props.obsConf.some,
-                      props.searching,
-                      onClone = props.onCloneTarget,
-                      obsInfo = obsInfo,
-                      fullScreen = fullScreen,
-                      globalPreferences = props.globalPreferences,
-                      guideStarSelection = props.guideStarSelection,
-                      attachments = props.attachments,
-                      authToken = props.authToken,
-                      readonly = props.readonly,
-                      invalidateSequence = props.sequenceChanged
+                selectedTargetOpt
+                  .map: siderealTarget =>
+                    <.div(
+                      ExploreStyles.TargetTileEditor,
+                      SiderealTargetEditor(
+                        props.programId,
+                        props.userId,
+                        siderealTarget,
+                        props.obsAndTargets,
+                        asterism.focusOn(focusedTargetId),
+                        props.obsTime,
+                        props.obsConf.some,
+                        props.searching,
+                        onClone = props.onCloneTarget,
+                        obsInfo = obsInfo,
+                        fullScreen = fullScreen,
+                        globalPreferences = props.globalPreferences,
+                        guideStarSelection = props.guideStarSelection,
+                        attachments = props.attachments,
+                        authToken = props.authToken,
+                        readonly = props.readonly,
+                        invalidateSequence = props.sequenceChanged
+                      )
                     )
-                  )
-                .getOrElse[VdomElement]:
-                  <.div("Non-sidereal targets not supported")
+                  .getOrElse[VdomElement]:
+                    <.div("Non-sidereal targets not supported")
           )
 
   private case class Title(
