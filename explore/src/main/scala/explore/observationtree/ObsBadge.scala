@@ -50,7 +50,7 @@ case class ObsBadge(
   readonly:              Boolean = false
 ) extends ReactFnProps(ObsBadge.component):
   val executionTime: CalculatedValue[Option[TimeSpan]] = obs.execution.digest.programTimeEstimate
-  val isDisabled: Boolean                              = readonly || obs.isCalibration
+  val isDisabled: Boolean                              = readonly || obs.isCalibration || obs.isExecuted
   val nonEmptyAllocatedBands                           = NonEmptySet.fromSet(allocatedScienceBands)
   val scienceBandIsInvalid                             = obs.scienceBand.exists(b => !allocatedScienceBands.contains(b))
   val showScienceBand: Boolean                         =

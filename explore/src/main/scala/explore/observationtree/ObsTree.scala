@@ -24,6 +24,7 @@ import explore.model.Observation
 import explore.model.ObservationList
 import explore.model.enums.AppTab
 import explore.model.enums.GroupWarning
+import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import explore.tabs.DeckShown
 import explore.undo.UndoSetter
@@ -97,9 +98,25 @@ case class ObsTree(
   private val focusedGroupInfo: Option[(Option[Group.Id], NonNegShort)] =
     focusedObsOrGroup.flatMap(groupInfo)
 
-  private val copyDisabled: Boolean   = selectedObsIdSet.isEmpty
-  private val pasteDisabled: Boolean  = clipboardObsContents.isEmpty
-  private val deleteDisabled: Boolean = selectedObsIdSet.isEmpty && focusedGroup.isEmpty
+  private def groupIsEmpty(groupId: Group.Id): Boolean =
+    groupsChildren.get(groupId.some).forall(_.isEmpty)
+
+  private val copyDisabled: Boolean                                     = selectedObsIdSet.isEmpty
+  private val pasteDisabled: Boolean                                    = clipboardObsContents.isEmpty
+  private val (deleteDisabled: Boolean, deletedTooltip: Option[String]) =
+    selectedObsIdSet
+      .map(obsIds =>
+        if (observations.get.executedOf(obsIds).nonEmpty)
+          (true, "- Cannot delete executed observations.".some)
+        else (false, none)
+      )
+      .orElse(
+        focusedGroup.map(groupId =>
+          if (groupIsEmpty(groupId)) (false, none)
+          else (true, "- Cannot delete non-empty groups.".some)
+        )
+      )
+      .getOrElse((true, none))
 
   private def observationsText(observations: ObsIdSet): String =
     observations.idSet.size match
@@ -342,9 +359,6 @@ object ObsTree:
                 )
               )
             case Right(group) =>
-              val isEmpty: Boolean =
-                props.groupsChildren.get(group.id.some).forall(_.isEmpty)
-
               GroupBadge(
                 group,
                 props.groupWarnings.get(group.id),
@@ -360,7 +374,7 @@ object ObsTree:
                   ).some
                 ),
                 deleteCB = deleteGroup(group.id),
-                isEmpty = isEmpty,
+                isEmpty = props.groupIsEmpty(group.id),
                 readonly = props.readonly || group.system
               )
 
@@ -430,7 +444,7 @@ object ObsTree:
                           .orElse(props.focusedGroup.map(deleteGroup))
                           .orEmpty,
                         disabled = props.deleteDisabled,
-                        tooltipExtra = props.deleteText
+                        tooltipExtra = props.deletedTooltip.orElse(props.deleteText)
                       )
                     )
                   )

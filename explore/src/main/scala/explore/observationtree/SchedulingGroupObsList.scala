@@ -5,6 +5,7 @@ package explore.observationtree
 
 import cats.Order.given
 import cats.effect.IO
+import cats.syntax.all.*
 import cats.syntax.all.given
 import crystal.react.*
 import explore.Icons
@@ -64,11 +65,14 @@ case class SchedulingGroupObsList(
   readonly:              Boolean
 ) extends ReactFnProps[SchedulingGroupObsList](SchedulingGroupObsList.component)
     with ViewCommon:
-  private val copyDisabled: Boolean  = focusedObsSet.isEmpty
-  private val pasteDisabled: Boolean = clipboardObsContents.isEmpty
-  private val deleteDisabled: Boolean =
-    // For now, we only allow deleting when just one obs is selected
-    !focusedObsSet.exists(_.size === 1)
+  private val copyDisabled: Boolean                                    = focusedObsSet.isEmpty
+  private val pasteDisabled: Boolean                                   = clipboardObsContents.isEmpty
+  private val (deleteDisabled: Boolean, deleteTooltip: Option[String]) =
+    focusedObsSet.fold((true, none))(obsIds =>
+      if (observations.get.executedOf(obsIds).nonEmpty)
+        (true, "- Cannot delete executed observations.".some)
+      else (false, none)
+    )
 
   private def observationsText(observations: ObsIdSet): String =
     observations.idSet.size match
@@ -258,15 +262,15 @@ object SchedulingGroupObsList:
       def setObs(obsId: Observation.Id): Callback =
         setObsSet(ObsIdSet.one(obsId).some)
 
-      val deleteObs: Observation.Id => Callback = obsId =>
+      val deleteObs: ObsIdSet => Callback = obsIds =>
         props.schedulingGroups.keys
-          .find(_.contains(obsId))
-          .foldMap: obsIds =>
+          .find(k => obsIds.subsetOf(k))
+          .foldMap: groupObsIds =>
             props.undoableDeleteObs(
-              obsId,
+              obsIds,
               props.observations, {
                 // After deletion expanded group
-                val newObsIds = obsIds - obsId
+                val newObsIds = groupObsIds -- obsIds
                 val expansion =
                   newObsIds.fold(Callback.empty)(a => props.expandedIds.mod(_ + a))
                 expansion *> setObsSet(newObsIds)
@@ -325,7 +329,7 @@ object SchedulingGroupObsList:
               forceHighlight = isObsSelected(obs.id),
               linkToObsTab = false,
               onSelect = setObs,
-              onDelete = deleteObs(obs.id),
+              onDelete = deleteObs(ObsIdSet.one(obs.id)),
               onCtrlClick = id => handleCtrlClick(id, obsIds),
               ctx = ctx
             )(obs, idx)
@@ -375,9 +379,9 @@ object SchedulingGroupObsList:
                 tooltipExtra = props.pasteText
               ),
               ActionButtons.ButtonProps(
-                props.focusedObsSet.foldMap(obsIdSet => deleteObs(obsIdSet.head)),
+                props.focusedObsSet.foldMap(deleteObs),
                 disabled = props.deleteDisabled,
-                tooltipExtra = props.selectedText
+                tooltipExtra = props.deleteTooltip.orElse(props.selectedText)
               )
             )
           )
