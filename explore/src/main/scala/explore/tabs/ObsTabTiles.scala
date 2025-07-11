@@ -99,6 +99,7 @@ case class ObsTabTiles(
   globalPreferences: View[GlobalPreferences],
   readonly:          Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
+  val obsIsReadonly         = readonly || observation.get.isExecuted
   val obsId: Observation.Id = observation.get.id
 
   val allConstraintSets: Set[ConstraintSet] = programSummaries.constraintGroups.map(_._2).toSet
@@ -375,7 +376,7 @@ object ObsTabTiles:
               props.vault.map(_.token),
               props.attachments,
               pa,
-              props.readonly,
+              props.readonly || props.observation.get.isCompleted,
               hidden = hideTiles
             )
 
@@ -496,7 +497,7 @@ object ObsTabTiles:
               guideStarSelection,
               props.attachments,
               props.vault.map(_.token),
-              props.readonly,
+              props.obsIsReadonly,
               // Any target changes invalidate the sequence
               sequenceChanged.set(pending)
             )
@@ -506,7 +507,7 @@ object ObsTabTiles:
               props.obsId,
               props.observation.model.zoom(Observation.constraints),
               props.allConstraintSets,
-              props.readonly
+              props.obsIsReadonly
             )
 
           // The ExploreStyles.ConstraintsTile css adds a z-index to the constraints tile react-grid wrapper
@@ -527,7 +528,7 @@ object ObsTabTiles:
                   conditionsLikelihood,
                   props.centralWavelength,
                   props.observation.zoom(Observation.constraints),
-                  props.readonly
+                  props.obsIsReadonly
                 ),
               (_, _) => constraintsSelector
             )
@@ -535,7 +536,7 @@ object ObsTabTiles:
           val schedulingWindowsTile =
             SchedulingWindowsTile.forObservation(
               props.observation,
-              props.readonly,
+              props.obsIsReadonly,
               false
             )
 
@@ -560,7 +561,8 @@ object ObsTabTiles:
                 case Ready(x) => pending
                 case x        => x
               ,
-              props.readonly,
+              props.readonly, // execution status is taken care of in the configuration tile
+              ObsIdSetEditInfo.of(props.observation.get),
               props.globalPreferences.get.wavelengthUnits,
               props.vault.isStaff
             )

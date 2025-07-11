@@ -24,6 +24,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.AsterismIds
 import explore.model.ObsConfiguration
+import explore.model.ObsIdSetEditInfo
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.ObservingModeGroupList
@@ -81,6 +82,7 @@ object ConfigurationTile:
     observingModeGroups:      ObservingModeGroupList,
     sequenceChanged:          Callback,
     readonly:                 Boolean,
+    obsIdSetEditInfo:         ObsIdSetEditInfo,          // for the Position Angle Editor
     units:                    WavelengthUnits,
     isStaff:                  Boolean
   ) =
@@ -105,6 +107,7 @@ object ConfigurationTile:
           customSedTimestamps,
           sequenceChanged,
           readonly,
+          obsIdSetEditInfo,
           units,
           isStaff
         ),
@@ -114,7 +117,7 @@ object ConfigurationTile:
               observingModeGroups,
               selectedConfig,
               revertedInstrumentConfig,
-              readonly
+              readonly || obsIdSetEditInfo.hasExecuted
         )
     )
 
@@ -207,6 +210,7 @@ object ConfigurationTile:
     customSedTimestamps:      List[Timestamp],
     sequenceChanged:          Callback,
     readonly:                 Boolean,
+    obsIdSetEditInfo:         ObsIdSetEditInfo, // for the Position Angle Editor
     units:                    WavelengthUnits,
     isStaff:                  Boolean
   ) extends ReactFnProps(Body.component):
@@ -214,6 +218,7 @@ object ConfigurationTile:
       pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode)
     val posAngle: UndoSetter[PosAngleConstraint] =
       pacAndMode.zoom(PosAngleConstraintAndObsMode.posAngleConstraint)
+    val obsIsReadonly                            = readonly || obsIdSetEditInfo.hasExecuted
 
   private object Body:
     private type Props = Body
@@ -386,7 +391,9 @@ object ConfigurationTile:
                     props.obsConf.selectedPA,
                     props.obsConf.averagePA,
                     agsState,
-                    props.readonly
+                    props.readonly, // readonly status is more complicated here...
+                    props.obsIdSetEditInfo,
+                    props.isStaff
                   )
                 ),
               if (optModeView.get.isEmpty)
@@ -412,7 +419,7 @@ object ConfigurationTile:
                         .orEmpty,
                       props.modes,
                       props.customSedTimestamps,
-                      props.readonly,
+                      props.obsIsReadonly,
                       props.units
                     )
                   )
@@ -431,7 +438,7 @@ object ConfigurationTile:
                         revertConfig,
                         props.modes.spectroscopy,
                         props.sequenceChanged,
-                        props.readonly,
+                        props.obsIsReadonly,
                         props.units
                       )
                   ),
@@ -448,7 +455,7 @@ object ConfigurationTile:
                         revertConfig,
                         props.modes.spectroscopy,
                         props.sequenceChanged,
-                        props.readonly,
+                        props.obsIsReadonly,
                         props.units
                       )
                   ),
@@ -472,7 +479,7 @@ object ConfigurationTile:
                       revertConfig,
                       props.modes.spectroscopy,
                       props.sequenceChanged,
-                      props.readonly,
+                      props.obsIsReadonly,
                       props.units,
                       props.isStaff
                     )

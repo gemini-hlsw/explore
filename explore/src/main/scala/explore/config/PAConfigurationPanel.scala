@@ -8,6 +8,7 @@ import crystal.react.*
 import explore.components.HelpIcon
 import explore.components.ui.ExploreStyles
 import explore.model.AveragePABasis
+import explore.model.ObsIdSetEditInfo
 import explore.model.Observation
 import explore.model.enums.AgsState
 import explore.model.enums.PosAngleOptions
@@ -18,6 +19,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
+import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Tooltip
 import lucuma.refined.*
@@ -31,13 +33,15 @@ import lucuma.ui.syntax.all.given
 import monocle.Lens
 
 case class PAConfigurationPanel(
-  programId:    Program.Id,
-  obsId:        Observation.Id,
-  posAngleView: View[PosAngleConstraint],
-  selectedPA:   Option[Angle],
-  averagePA:    Option[AveragePABasis],
-  agsState:     View[AgsState],
-  readonly:     Boolean
+  programId:        Program.Id,
+  obsId:            Observation.Id,
+  posAngleView:     View[PosAngleConstraint],
+  selectedPA:       Option[Angle],
+  averagePA:        Option[AveragePABasis],
+  agsState:         View[AgsState],
+  readonly:         Boolean,
+  obsIdSetEditInfo: ObsIdSetEditInfo,
+  isStaff:          Boolean
 ) extends ReactFnProps(PAConfigurationPanel.component)
 
 object PAConfigurationPanel:
@@ -100,6 +104,24 @@ object PAConfigurationPanel:
             .map(a => <.label(f"Flipped to ${a.toDoubleDegrees}%.0f °"))
         case _                                                                     => None
 
+      // The readonly rules are fairly complex. If it has been executed at all, non staff
+      // cannot change the PA. If it is ongoing, staff can change the PA between average parallactic
+      // and parallactic override. After completion, no one can change the PA.
+      val allowedExecutedOptions =
+        Set(PosAngleOptions.AverageParallactic, PosAngleOptions.ParallacticOverride)
+      val isAllowedOption        = allowedExecutedOptions.contains(posAngleOptionsView.get)
+
+      val finalReadOnly =
+        props.readonly || !props.agsState.get.canRecalculate ||
+          props.obsIdSetEditInfo.hasCompleted ||
+          (!props.isStaff && props.obsIdSetEditInfo.hasExecuted) ||
+          (props.obsIdSetEditInfo.hasExecuted && !isAllowedOption)
+
+      val disabledOptions: Set[PosAngleOptions] =
+        if (props.isStaff && props.obsIdSetEditInfo.hasOngoingButNotCompleted && isAllowedOption)
+          Enumerated[PosAngleOptions].all.toSet -- allowedExecutedOptions
+        else Set.empty
+
       def posAngleEditor(pa: View[Angle]) =
         <.div(
           FormInputTextView(
@@ -107,7 +129,7 @@ object PAConfigurationPanel:
             groupClass = ExploreStyles.PAConfigurationAngle,
             value = pa,
             units = "° E of N",
-            disabled = !props.agsState.get.canRecalculate || props.readonly,
+            disabled = finalReadOnly,
             validFormat = MathValidators.truncatedAngleDegrees,
             changeAuditor = ChangeAuditor.bigDecimal(3.refined, 2.refined)
           )(^.autoComplete.off)
@@ -122,7 +144,8 @@ object PAConfigurationPanel:
           label =
             React.Fragment("Position Angle", HelpIcon("configuration/positionangle.md".refined)),
           value = posAngleOptionsView,
-          disabled = !props.agsState.get.canRecalculate || props.readonly
+          disabled = finalReadOnly,
+          disabledItems = disabledOptions
         ),
         fixedView.mapValue(posAngleEditor),
         allowedFlipView.mapValue(posAngleEditor),
