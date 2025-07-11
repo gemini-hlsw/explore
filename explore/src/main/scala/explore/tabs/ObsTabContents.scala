@@ -286,7 +286,7 @@ object ObsTabContents extends TwoPanels:
                   props.observations.zoom(indexValue.getOption.andThen(_.get), indexValue.modify)
                 val obs           = obsUndoSetter.get
                 val obsIsReadonly =
-                  props.readonly || addingObservation.get.value || obs.isCalibration || obs.isExecuted
+                  props.readonly || addingObservation.get.value || obs.isCalibration
                 ObsTabTiles(
                   props.vault,
                   props.programId,

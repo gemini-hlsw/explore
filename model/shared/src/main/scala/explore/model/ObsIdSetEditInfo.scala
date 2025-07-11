@@ -28,6 +28,7 @@ case class ObsIdSetEditInfo(
       o.idSet.toSortedSet ++ completed.fold(SortedSet.empty[Observation.Id])(_.idSet.toSortedSet)
     )
   )
+  val hasExecuted: Boolean         = executed.isDefined
   val unExecuted: Option[ObsIdSet] = executed.fold(editing.some)(editing.remove)
   val allAreExecuted: Boolean      = unExecuted.isEmpty
 
