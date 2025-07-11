@@ -95,7 +95,7 @@ trait ViewCommon {
     ExploreStyles.DraggingOver.when(isDragging)
 
   def undoableDeleteObs(
-    obsId:        Observation.Id,
+    obsIds:       ObsIdSet,
     observations: UndoSetter[ObservationList],
     afterDelete:  Callback
   )(using
@@ -103,7 +103,7 @@ trait ViewCommon {
     ToastCtx[IO]
   ): Callback =
     ObsActions
-      .obsExistence(List(obsId), postMessage = ToastCtx[IO].showToast(_))
-      .mod(observations)(_ => List(none))
+      .obsExistence(obsIds.toList, postMessage = ToastCtx[IO].showToast(_))
+      .set(observations)(obsIds.toList.map(_ => none))
       .flatMap(_ => afterDelete)
 }

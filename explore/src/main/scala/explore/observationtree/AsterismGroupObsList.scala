@@ -85,6 +85,20 @@ case class AsterismGroupObsList(
     .flatMap(idSet => asterismGroups.find { case (key, _) => idSet.subsetOf(key) })
     .map(AsterismGroup.fromTuple)
 
+  private def targetsHaveExecutedObs(targetIds: TargetIdSet): Boolean =
+    targetIds.exists(targetId =>
+      programSummaries.get.targetObservations
+        .get(targetId)
+        .exists(obsIds =>
+          ObsIdSet
+            .fromSortedSet(obsIds)
+            .exists(hasExecutedObs)
+        )
+    )
+
+  private def hasExecutedObs(obsIds: ObsIdSet): Boolean =
+    observations.get.executedOf(obsIds).nonEmpty
+
   private def targetsText(targets: SortedSet[Target.Id]): String =
     targets.size match
       case 1    => s"target ${targets.head}"
@@ -111,6 +125,22 @@ case class AsterismGroupObsList(
     readonly ||
       clipboardContent.isEmpty ||
       clipboardContent.isTargets && selectedIdsOpt.forall(_.isLeft)
+
+  private val (deleteDisabled, deleteTooltip): (Boolean, Option[String]) =
+    selectedIdsOpt
+      .map(
+        _.fold(
+          targetIds =>
+            if (targetsHaveExecutedObs(targetIds))
+              (true, " - Cannot delete targets with executed observations.".some)
+            else (false, none),
+          obsIds =>
+            if (hasExecutedObs(obsIds))
+              (true, " - Cannot delete executed observations.".some)
+            else (false, none)
+        )
+      )
+      .getOrElse((true, none))
 
   private val pasteIntoText: Option[String] =
     selectedIdsOpt.flatMap:
@@ -380,12 +410,12 @@ object AsterismGroupObsList:
         if (names.isEmpty) "<No Targets>"
         else names.mkString("; ")
 
-      def deleteObs(asterismGroup: AsterismGroup): Observation.Id => Callback = obsId =>
+      def deleteObs(asterismGroup: AsterismGroup): ObsIdSet => Callback = obsIds =>
         props.undoableDeleteObs(
-          obsId,
+          obsIds,
           props.observations, {
             // After deletion change focus and keep expanded target
-            val newObsIds = asterismGroup.obsIds - obsId
+            val newObsIds = asterismGroup.obsIds -- obsIds
             val newFocus  =
               newObsIds.fold(Focused.None)(props.focused.withObsSet)
             val expansion =
@@ -422,7 +452,7 @@ object AsterismGroupObsList:
           .map:
             _.fold(
               targetIdSet => deleteTargets(targetIdSet.toList),
-              obsIdSet => props.selectedAsterismGroup.map(deleteObs(_)(obsIdSet.head)).orEmpty
+              obsIdSet => props.selectedAsterismGroup.map(deleteObs(_)(obsIdSet)).orEmpty
             )
           .orEmpty
 
@@ -474,7 +504,7 @@ object AsterismGroupObsList:
                     .withSingleObs(obsId)
                     .validateOrSetTarget(obs.scienceTargetIds)
                 ),
-              onDelete = deleteObs(asterismGroup)(obs.id),
+              onDelete = deleteObs(asterismGroup)(ObsIdSet.one(obs.id)),
               onCtrlClick = _ => handleCtrlClick(obs.id, obsIds),
               ctx = ctx
             )(obs, idx)
@@ -571,8 +601,8 @@ object AsterismGroupObsList:
               ),
               ActionButtons.ButtonProps(
                 deleteCallback,
-                disabled = props.selectedDisabled,
-                tooltipExtra = props.selectedText
+                disabled = props.deleteDisabled,
+                tooltipExtra = props.deleteTooltip.orElse(props.selectedText)
               )
             )
           ).unless(props.readonly),
