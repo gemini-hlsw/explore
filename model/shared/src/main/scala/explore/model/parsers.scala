@@ -21,10 +21,10 @@ trait parsers:
   val colonOrSpace: Parser[Unit] = MiscParsers.colon | sp
 
   val timeHM: Parser[LocalTime] =
-    (digits ~ MiscParsers.colon.void.? ~ AngleParsers.minutes.?)
+    (AngleParsers.hours ~ MiscParsers.colon.void.? ~ AngleParsers.minutes.?)
       .mapFilter { case ((h, _), m) =>
         MiscParsers
-          .catchNFE[(String, Option[Int]), LocalTime] { case (h, m) =>
+          .catchNFE[(Int, Option[Int]), LocalTime] { case (h, m) =>
             LocalTime.of(h.toInt, m.getOrElse(0))
           }(h, m)
       }
