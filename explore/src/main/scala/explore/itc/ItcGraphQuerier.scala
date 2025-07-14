@@ -31,7 +31,7 @@ import workers.WorkerClient
 
 case class ItcGraphQuerier(
   observation:         Observation,
-  selectedConfig:      Option[ItcInstrumentConfig], // selected row in spectroscopy modes table
+  configs:             List[ItcInstrumentConfig], // configs for imaging or single config for spectroscopy
   allTargets:          TargetList,
   customSedTimestamps: List[Timestamp]
 ) derives Eq:
@@ -48,9 +48,9 @@ case class ItcGraphQuerier(
       .headOption
 
   // If the observation has an assigned configuration, we use that one.
-  // Otherwise, we use the one selected in the table.
-  private val instrumentConfig: Option[ItcInstrumentConfig] =
-    remoteConfig.orElse(selectedConfig)
+  // Otherwise, we use the first one from the provided configs (for spectroscopy compatibility).
+  private val finalConfig: Option[ItcInstrumentConfig] =
+    remoteConfig.orElse(configs.headOption)
 
   private val exposureTimeMode: Option[ExposureTimeMode] =
     observation.scienceRequirements.exposureTimeMode
@@ -64,7 +64,7 @@ case class ItcGraphQuerier(
       exp <- exposureTimeMode.toRightNec(
                ItcQueryProblem.MissingExposureTimeMode.toTargetProblem
              )
-      i   <- instrumentConfig.toRightNec(
+      i   <- finalConfig.toRightNec(
                ItcQueryProblem.GenericError(Constants.MissingMode).toTargetProblem
              )
     } yield ItcGraphQuerier.QueryProps(exp, constraints, t, i, customSedTimestamps)
@@ -89,35 +89,6 @@ case class ItcGraphQuerier(
             ItcQueryProblem.GenericError("No response from ITC server").toTargetProblem.leftNec
           )(
             _.leftMap(_.map(_.toTargetProblem))
-          )
-        )
-
-    (for {
-      qp <- EitherT(queryProps.pure[IO])
-      r  <- EitherT(action(qp))
-    } yield r).value
-
-  // Returns results for each target and the brightest target
-  def requestResults(using
-    WorkerClient[IO, ItcMessage.Request]
-  ): IO[EitherNec[ItcTargetProblem, List[ItcResult]]] =
-    def action(
-      qp: ItcGraphQuerier.QueryProps
-    ): IO[EitherNec[ItcTargetProblem, List[ItcResult]]] =
-      ItcClient[IO]
-        .requestSingle:
-          ItcMessage.Query(qp.exposureTimeMode,
-                           qp.constraints,
-                           qp.targets,
-                           qp.customSedTimestamps,
-                           List(qp.instrumentConfig)
-          )
-        .map((a: Option[Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]) =>
-          ???
-          a.fold(
-            ItcQueryProblem.GenericError("No response from ITC server").toTargetProblem.leftNec
-          )(
-            _.values.toList.sequence // .map(_.leftMap(_.map(_.toTargetProblem)))
           )
         )
 

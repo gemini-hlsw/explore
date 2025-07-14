@@ -7,60 +7,72 @@ import cats.Eq
 import cats.data.EitherNec
 import cats.derived.*
 import cats.syntax.all.*
+import crystal.*
 import crystal.react.*
+import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
+import explore.config.ModesTableCommon
 import explore.model.ObsTabTileIds
 import explore.model.Observation
+import explore.model.Progress
+import explore.model.TargetList
 import explore.model.itc.*
 import explore.model.reusability.given
+import explore.modes.ConfigSelection
+import explore.modes.ItcInstrumentConfig
+import explore.modes.ModeRow
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
+import lucuma.core.util.TimeSpan
+import lucuma.core.util.Timestamp
+import lucuma.itc.SignalToNoiseAt
+import lucuma.itc.SingleSN
+import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.SelectItem
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import explore.modes.ItcInstrumentConfig
+import queries.schemas.itc.syntax.*
 
-object ItcImagingTile:
-  case class TargetAndResults(
-    target: ItcTarget,
-    result: Either[ItcQueryProblem, ItcGraphResult]
-  ) derives Eq:
-    def asTargetProblem: EitherNec[ItcTargetProblem, ItcGraphResult] =
-      result.leftMap(p => ItcTargetProblem(target.name.some, p)).toEitherNec
+object ItcImagingTile extends ModesTableCommon:
+  case class ImagingFilterRow(
+    id:         Int,
+    instrument: ItcInstrumentConfig,
+    result:     Pot[EitherNec[ItcTargetProblem, ItcResult]]
+  ) extends ModeRow
+      with TableRowWithResult derives Eq:
 
-  given Reusability[TargetAndResults] = Reusability.byEq
+    val config  = instrument
+    def enabled = true
 
-  extension (tuple: (ItcTarget, Either[ItcQueryProblem, ItcGraphResult]))
-    def toTargetAndResults: TargetAndResults =
-      TargetAndResults(tuple._1, tuple._2)
+    private def withResult[A](f: (TimeSpan, PosInt, Option[SignalToNoiseAt]) => A): Option[A] =
+      result.toOption.collect { case Right(ItcResult.Result(e, t, _, s)) => f(e, t, s) }
 
-  extension (asterismGraphResults: EitherNec[ItcTargetProblem, ItcAsterismGraphResults])
-    def targets: List[ItcTarget]                                      =
-      asterismGraphResults.toOption.map(_.asterismGraphs.keys.toList).getOrElse(List.empty)
-    def findGraphResults(target: ItcTarget): Option[TargetAndResults] =
-      asterismGraphResults.toOption
-        .flatMap(_.asterismGraphs.get(target))
-        .map(TargetAndResults(target, _))
-    def brightestTarget: Option[TargetAndResults]                     =
-      asterismGraphResults.toOption.flatMap(_.brightestTarget).flatMap(findGraphResults)
-    def brightestOrFirst: Option[TargetAndResults]                    =
-      brightestTarget
-        .orElse(
-          asterismGraphResults.toOption
-            .flatMap(_.asterismGraphs.headOption)
-            .map(_.toTargetAndResults)
-        )
+    val singleSN: Option[SingleSN] =
+      withResult((_, _, s) => s.map(_.single)).flatten
+
+    override lazy val totalSN: Option[TotalSN] =
+      withResult((_, _, s) => s.map(_.total)).flatten
+
+    val exposureTime: Option[TimeSpan] =
+      withResult((e, _, _) => e)
+
+    val exposureCount: Option[PosInt] =
+      withResult((_, t, _) => t)
 
   def apply(
-    uid:     Option[User.Id],
-    oid:     Observation.Id,
-    configs: Option[List[ItcInstrumentConfig]]
+    uid:                 Option[User.Id],
+    selectedConfigs:     ConfigSelection,
+    observation:         Observation,
+    obsTargets:          TargetList,
+    customSedTimestamps: List[Timestamp]
   ) =
     Tile(
       ObsTabTileIds.ItcId.id,
@@ -72,126 +84,174 @@ object ItcImagingTile:
         uid.map(
           Body(
             _,
-            oid,
-            configs,
+            selectedConfigs,
+            observation,
+            obsTargets,
+            customSedTimestamps,
             s
           )
         ),
       (s, _) =>
         Title(
-          configs,
+          observation,
+          selectedConfigs,
+          obsTargets,
+          customSedTimestamps,
           s
         )
     )
 
-  private case class ConfigRow(config: ItcInstrumentConfig)
-
-  private val ColDef = ColumnDef[ConfigRow]
+  private val ColDef = ColumnDef[ImagingFilterRow].WithTableMeta[TableMeta]
 
   private val FilterColId     = ColumnId("filter")
   private val InstrumentColId = ColumnId("instrument")
-  private val SNColId         = ColumnId("sn")
+  private val TotalSNColId    = ColumnId("totalsn")
   private val ExpTimeColId    = ColumnId("exptime")
   private val ExposuresColId  = ColumnId("exposures")
 
-  private val filterColDef =
-    ColDef(
-      FilterColId,
-      _.config.filterStr,
-      "Filter"
-    ).withSize(120.toPx)
+  private val columnNames: Map[ColumnId, String] =
+    Map(
+      InstrumentColId -> "Instrument",
+      ExpTimeColId    -> "Time",
+      TotalSNColId    -> "S/N",
+      FilterColId     -> "Filter",
+      ExposuresColId  -> "Exposures"
+    )
 
-  private val instrumentColDef =
-    ColDef(
-      InstrumentColId,
-      _.config.instrument.shortName,
-      "Instrument"
-    ).withSize(120.toPx)
+  private def column[V](
+    id:       ColumnId,
+    accessor: ImagingFilterRow => V
+  ): ColumnDef.Single.WithTableMeta[ImagingFilterRow, V, TableMeta] =
+    ColDef(id, accessor, columnNames.getOrElse(id, id.value))
 
-  private val snColDef =
-    ColDef(
-      SNColId,
-      _ => "-",
-      "S/N"
-    ).withSize(80.toPx)
-
-  private val expTimeColDef =
-    ColDef(
-      ExpTimeColId,
-      _ => "-",
-      "Exp. Time"
-    ).withSize(100.toPx)
-
-  private val exposuresColDef =
-    ColDef(
-      ExposuresColId,
-      _ => "-",
-      "Exposures"
-    ).withSize(100.toPx)
-
-  private val columns
-    : Reusable[List[ColumnDef[ConfigRow, ?, Nothing, Nothing, Nothing, Nothing, Nothing]]] =
-    Reusable.always(
-      List(filterColDef, instrumentColDef, snColDef, expTimeColDef, exposuresColDef)
+  private lazy val columns =
+    List(
+      column(InstrumentColId, _.config.instrument.shortName)
+        .withCell(_.value: String)
+        .withSize(120.toPx),
+      column(FilterColId, _.config.filterStr)
+        .withCell(_.value: String)
+        .withSize(69.toPx)
+        .sortable,
+      column(ExposuresColId, _.result)
+        .withHeader(progressingCellHeader("Exposures"))
+        .withCell: cell =>
+          itcCell(cell.value, ItcColumns.Exposures)
+        .withSize(80.toPx),
+      column(ExpTimeColId, _.result)
+        .withHeader(progressingCellHeader("Time"))
+        .withCell: cell =>
+          itcCell(cell.value, ItcColumns.Time)
+        .withSize(85.toPx),
+      column(TotalSNColId, _.result)
+        .withHeader(progressingCellHeader("S/N"))
+        .withCell: cell =>
+          itcCell(cell.value, ItcColumns.SN)
+        .withSize(85.toPx)
     )
 
   private case class Body(
-    uid:       User.Id,
-    oid:       Observation.Id,
-    configs:   Option[List[ItcInstrumentConfig]],
-    tileState: View[ItcTileState]
+    uid:                 User.Id,
+    selectedConfigs:     ConfigSelection,
+    observation:         Observation,
+    obsTargets:          TargetList,
+    customSedTimestamps: List[Timestamp],
+    tileState:           View[ItcTileState]
   ) extends ReactFnProps(Body)
 
   private object Body
       extends ReactFnComponent[Body](props =>
         for {
-          rows  <- useMemo(props.configs.getOrElse(List.empty))(_.map(ConfigRow.apply))
+          rows  <- useMemo(props.selectedConfigs): selection =>
+                     selection.configs.zipWithIndex.map { (configAndResult, id) =>
+                       val config = configAndResult.instrumentConfig
+                       val result = Pot.fromOption(configAndResult.itcResult)
+                       ImagingFilterRow(id, config, result)
+                     }
+          cols  <- useMemo(()): _ =>
+                     columns
           table <- useReactTable(
                      TableOptions(
-                       columns,
+                       cols,
                        rows,
-                       getRowId = (row, _, _) => RowId(row.config.hashCode.toString),
-                       enableSorting = false,
-                       enableColumnResizing = false
+                       getRowId = (row, _, _) => RowId(row.id.toString),
+                       enableSorting = true,
+                       enableColumnResizing = true,
+                       meta = TableMeta(none[Progress])
                      )
                    )
         } yield <.div(
           ExploreStyles.ItcTileBody,
-          if (props.configs.exists(_.nonEmpty))
+          if (rows.nonEmpty)
             PrimeTable(table, compact = Compact.Very)
           else
-            <.p("No configurations available for ITC calculations")
+            <.p("No configurations selected")
         )
       )
 
   private case class Title(
-    configs:   Option[List[ItcInstrumentConfig]],
-    tileState: View[ItcTileState]
+    observation:         Observation,
+    selectedConfigs:     ConfigSelection,
+    obsTargets:          TargetList,
+    customSedTimestamps: List[Timestamp],
+    tileState:           View[ItcTileState]
   ) extends ReactFnProps(Title)
 
   private object Title
       extends ReactFnComponent[Title](props =>
-        // for {
-        //   options <-
-        //     useMemo(
-        //       props.itcGraphResults.foldMap(_.asterismGraphs.toList.map(_.toTargetAndResults))
-        //     )(
-        //       _.map(t => SelectItem(label = t.target.name.value, value = t))
-        //     )
-        // } yield
-        <.div(s"img title ${props.configs}")
-        // The only way this should be empty is if there are no targets in the results.
-        //   props.selectedTargetAndResults.get.map: gr =>
-        //     <.div(
-        //       ExploreStyles.ItcTileTitle,
-        //       <.label(s"Target:"),
-        //       Dropdown(
-        //         clazz = ExploreStyles.ItcTileTargetSelector,
-        //         value = gr,
-        //         onChange = o => props.selectedTargetAndResults.set(o.some),
-        //         options = options.value
-        //       ).when(options.value.length > 1),
-        //       <.span(props.selectedTargetAndResults.get.map(_.target.name.value).getOrElse("-"))
-        //         .when(options.value.length === 1)
-        //     )
+        for {
+          _ <- useEffectWithDeps(
+                 props.observation.scienceTargetIds
+                   .toItcTargets(props.obsTargets)
+                   .toOption
+                   .map(_.toList)
+               ): _ =>
+                 props.tileState
+                   .zoom(ItcTileState.selectedImagingTarget)
+                   .set(props.tileState.get.imagingBrightest)
+          _ <- // Auto-select brightest target when calculation results change
+            useEffectWithDeps(
+              props.tileState.get.imagingBrightest
+            ):
+              props.tileState.zoom(ItcTileState.selectedImagingTarget).set
+          _ <- // if the targets change, make sure the selected target is still available
+            useEffectWithDeps(
+              props.tileState.get.calculationTargets
+            ): targets =>
+              val selected = props.tileState.zoom(ItcTileState.selectedImagingTarget)
+              if (selected.get.exists(targets.contains))
+                Callback.empty
+              else
+                selected.set(props.tileState.get.imagingBrightest)
+        } yield {
+          val targets               = props.observation.scienceTargetIds.toItcTargets(props.obsTargets)
+          val selectedImagingTarget = props.tileState.get.selectedImagingTarget
+
+          println(targets)
+          println(props.tileState.get.imagingBrightest)
+
+          <.div(
+            ExploreStyles.ItcTileTitle,
+            targets.toOption match {
+              case Some(targetList) =>
+                <.div(
+                  <.label("Target:"),
+                  if (targetList.length > 1) {
+                    Dropdown(
+                      clazz = ExploreStyles.ItcTileTargetSelector,
+                      value = selectedImagingTarget.orNull,
+                      onChange = (target: ItcTarget) =>
+                        props.tileState.zoom(ItcTileState.selectedImagingTarget).set(target.some),
+                      options =
+                        targetList.toList.map(t => SelectItem(label = t.name.value, value = t))
+                    )
+                  } else {
+                    <.span(selectedImagingTarget.map(_.name.value).getOrElse("-"))
+                  }
+                )
+              case None             =>
+                EmptyVdom
+            }
+          )
+        }
       )

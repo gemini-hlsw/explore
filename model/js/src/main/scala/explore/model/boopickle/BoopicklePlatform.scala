@@ -12,7 +12,7 @@ import java.nio.ByteBuffer
 import scala.scalajs.js
 import scala.scalajs.js.typedarray.*
 
-trait BoopicklePlatform {
+trait BoopicklePlatform:
 
   def asBytes[A: Pickler](value: A): Array[Byte] = {
     // Save some space on small requests
@@ -48,6 +48,5 @@ trait BoopicklePlatform {
 
   def decodeFromTransferable[A: Pickler](m: dom.MessageEvent): Option[A] =
     decodeFromTransferableEither(m).toOption
-}
 
 object Boopickle extends BoopicklePlatform

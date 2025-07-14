@@ -48,7 +48,7 @@ object ItcSpectroscopyTile:
   def apply(
     uid:                 Option[User.Id],
     observation:         Observation,
-    selectedConfig:      Option[ItcInstrumentConfig],
+    selectedConfig:      Option[List[ItcInstrumentConfig]],
     obsTargets:          TargetList,
     customSedTimestamps: List[Timestamp],
     globalPreferences:   View[GlobalPreferences]
@@ -150,14 +150,13 @@ object ItcSpectroscopyTile:
             )
 
           val resultPot: Pot[EitherNec[ItcTargetProblem, (Wavelength, ItcGraphResult)]] =
-            props.tileState.get.asterismResults.map { asterismEither =>
-              asterismEither.flatMap(agr =>
+            props.tileState.get.asterismResults.map:
+              _.flatMap(agr =>
                 props.tileState.get.selectedTarget
                   .toRightNec(ItcQueryProblem.GenericError(Constants.NoTargets).toTargetProblem)
                   .flatMap(_.asTargetProblem)
                   .map(gr => (agr.signalToNoiseAt, gr))
               )
-            }
 
           resultPot.renderPot(
             valueRender = _.fold(
@@ -175,8 +174,7 @@ object ItcSpectroscopyTile:
 
   private case class Title(
     observation:         Observation,
-    // selected row in spectroscopy modes table
-    selectedConfig:      Option[ItcInstrumentConfig],
+    selectedConfig:      Option[List[ItcInstrumentConfig]],
     obsTargets:          TargetList,
     customSedTimestamps: List[Timestamp],
     tileState:           View[ItcTileState]
@@ -196,7 +194,11 @@ object ItcSpectroscopyTile:
                 .zoom(ItcTileState.asterismResults)
                 .set(Pot.pending)
                 .toAsync >>
-                ItcGraphQuerier(obs, config, targets, customSedTimestamps).requestGraphs
+                ItcGraphQuerier(obs,
+                                config.getOrElse(List.empty),
+                                targets,
+                                customSedTimestamps
+                ).requestGraphs
                   .flatMap { t =>
                     props.tileState
                       .zoom(ItcTileState.asterismResults)
@@ -205,18 +207,18 @@ object ItcSpectroscopyTile:
                   }
           _   <- // Reset the selected target if the brightest target changes
             useEffectWithDeps(
-              props.tileState.get.brightestOrFirst
+              props.tileState.get.graphsBrightestOrFirst
             ): itcBrightestOrFirst =>
               props.tileState.zoom(ItcTileState.selectedTarget).set(itcBrightestOrFirst)
           _   <- // if the targets change, make sure the selected target is still available
             useEffectWithDeps(
-              props.tileState.get.targets
+              props.tileState.get.graphsTargets
             ): targets =>
               val selected = props.tileState.zoom(ItcTileState.selectedTarget)
               if (selected.get.exists(targets.contains))
                 Callback.empty
               else
-                selected.set(props.tileState.get.brightestOrFirst)
+                selected.set(props.tileState.get.graphsBrightestOrFirst)
         } yield
           def singleSN: ItcGraphResult => VdomNode =
             (r: ItcGraphResult) => <.span(formatSN(r.singleSNRatio.value))

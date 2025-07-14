@@ -227,7 +227,8 @@ case class Observation(
           List(ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, o.some))
         case (_, f: ObservingMode.Flamingos2LongSlit)                                  =>
           List(ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu))
-        case _                                                                         => List.empty
+        case _                                                                         =>
+          List.empty
       .getOrElse(List.empty)
 
   lazy val constraintsSummary: String =

@@ -22,6 +22,7 @@ import explore.config.sequence.SequenceTile
 import explore.constraints.ConstraintsPanel
 import explore.findercharts.FinderChartsTile
 import explore.itc.ItcEmptyTile
+import explore.itc.ItcImagingTile
 import explore.itc.ItcSpectroscopyTile
 import explore.model.*
 import explore.model.GuideStarSelection.*
@@ -82,7 +83,6 @@ import lucuma.ui.syntax.all.given
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
-import explore.itc.ItcImagingTile
 
 case class ObsTabTiles(
   vault:            Option[UserVault],
@@ -295,9 +295,8 @@ object ObsTabTiles:
           val basicConfiguration: Option[BasicConfiguration] =
             props.observation.get.observingMode.map(_.toBasicConfiguration)
 
-          val itcOdbConfiguration: Option[List[ItcInstrumentConfig]] =
-            Option.when(props.observation.get.observingMode.isDefined):
-              props.observation.get.toInstrumentConfig(props.obsTargets)
+          val itcOdbConfiguration: List[ItcInstrumentConfig] =
+            props.observation.get.toInstrumentConfig(props.obsTargets)
 
           val obsTimeView: View[Option[Instant]] =
             props.observation.model.zoom(Observation.observationTime)
@@ -399,7 +398,7 @@ object ObsTabTiles:
               selectedConfig.get.configs.map(_.instrumentConfig)
 
           val itcConfigs: Option[List[ItcInstrumentConfig]] =
-            itcOdbConfiguration.orElse(selectedItcConfig)
+            if (itcOdbConfiguration.isEmpty) selectedItcConfig else itcOdbConfiguration.some
 
           val odbOrSelectedConfig: Option[BasicConfiguration] =
             basicConfiguration.orElse(selectedConfig.get.toBasicConfiguration())
@@ -410,8 +409,10 @@ object ObsTabTiles:
                   Some(_: BasicConfiguration.GmosSouthImaging) =>
                 ItcImagingTile(
                   props.vault.userId,
-                  props.obsId,
-                  itcConfigs
+                  selectedConfig.get,
+                  props.observation.get,
+                  props.obsTargets,
+                  customSedTimestamps
                 ).some
               case Some(_: BasicConfiguration.GmosNorthLongSlit) |
                   Some(_: BasicConfiguration.GmosSouthLongSlit) |
@@ -419,18 +420,12 @@ object ObsTabTiles:
                 ItcSpectroscopyTile(
                   props.vault.userId,
                   props.observation.get,
-                  itcConfigs.flatMap(_.headOption),
+                  itcConfigs,
                   props.obsTargets,
                   customSedTimestamps,
-                  props.globalPreferences
+                  globalPreferences
                 ).some
               case None => ItcEmptyTile.tile.some
-
-          val schedulingWindows: View[List[TimingWindow]] =
-            TimingWindowsQueries.viewWithRemoteMod(
-              ObsIdSet.one(props.obsId),
-              props.observation.undoableView[List[TimingWindow]](Observation.timingWindows)
-            )
 
           val obsConf: ObsConfiguration =
             ObsConfiguration(
@@ -581,7 +576,7 @@ object ObsTabTiles:
               props.targetCoords(obsTimeOrNow),
               obsConf,
               selectedConfig,
-              props.observation.get.toInstrumentConfig(props.obsTargets),
+              itcOdbConfiguration,
               props.modes,
               customSedTimestamps,
               props.obsTargets,

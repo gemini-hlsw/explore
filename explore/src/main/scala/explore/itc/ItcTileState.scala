@@ -20,15 +20,19 @@ case class TargetAndResults(
 
 // we need to share this across all the ITC tiles
 case class ItcTileState(
-  asterismResults: Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
-  selectedTarget:  Option[TargetAndResults]
+  asterismResults:       Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
+  calculationResults:    Pot[
+    EitherNec[ItcTargetProblem, Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]
+  ],
+  selectedTarget:        Option[TargetAndResults],
+  selectedImagingTarget: Option[ItcTarget] = None
 ):
   def graphResults: Option[ItcAsterismGraphResults] = asterismResults.toOption.flatMap(_.toOption)
 
   def asterismGraphs: Map[ItcTarget, Either[ItcQueryProblem, ItcGraphResult]] =
     graphResults.map(_.asterismGraphs).getOrElse(Map.empty)
 
-  def targets: List[ItcTarget] =
+  def graphsTargets: List[ItcTarget] =
     asterismGraphs.keys.toList
 
   def targetResults: List[TargetAndResults] =
@@ -41,19 +45,33 @@ case class ItcTileState(
       .get(target)
       .map(TargetAndResults(target, _))
 
-  def brightestTarget: Option[TargetAndResults] =
+  private def graphBrightestTarget: Option[TargetAndResults] =
     graphResults.flatMap(_.brightestTarget).flatMap(findGraphResults)
 
-  def brightestOrFirst: Option[TargetAndResults] =
-    brightestTarget
+  def graphsBrightestOrFirst: Option[TargetAndResults] =
+    graphBrightestTarget
       .orElse(
         asterismGraphs.headOption
           .map(_.toTargetAndResults)
       )
 
+  // TODO: Find the brightest target for imaging, I think it depends on the filter too
+  def imagingBrightest: Option[ItcTarget] =
+    // For now, just pick the first target
+    calculationTargets.headOption
+
+  def calculationTargets: List[ItcTarget] =
+    calculationResults.toOption
+      .flatMap(_.toOption.map(_.keys.flatMap(_.asterism.toList).toList.distinct))
+      .getOrElse(List.empty)
+
 object ItcTileState:
-  def Empty: ItcTileState = ItcTileState(Pot.pending, none)
+  def Empty: ItcTileState = ItcTileState(Pot.pending, Pot.pending, none, none)
 
   val asterismResults = Focus[ItcTileState](_.asterismResults)
 
   val selectedTarget = Focus[ItcTileState](_.selectedTarget)
+
+  val calculationResults = Focus[ItcTileState](_.calculationResults)
+
+  val selectedImagingTarget = Focus[ItcTileState](_.selectedImagingTarget)

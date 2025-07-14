@@ -37,6 +37,7 @@ import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
+import lucuma.itc.TotalSN
 import lucuma.react.circularprogressbar.CircularProgressbar
 import lucuma.react.common.Css
 import lucuma.react.floatingui.Placement
@@ -76,9 +77,9 @@ trait ModesTableCommon:
       result.toOption
         .collect { case Right(ItcResult.Result(e, t, _, _)) => e *| t.value }
 
-    lazy val totalSN: Option[SignalToNoise] =
+    lazy val totalSN: Option[TotalSN] =
       result.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
-        s.map(_.total.value)
+        s.map(_.total)
       }.flatten
 
   protected object ScrollTo extends NewBoolean:
@@ -155,8 +156,8 @@ trait ModesTableCommon:
           .map(items => items.head.index.toInt to items.last.index.toInt)
       ) >> atTop.set(virtualizer.scrollElement.scrollTop < 32)
 
-  protected enum TimeOrSNColumn:
-    case Time, SN
+  protected enum ItcColumns:
+    case Time, SN, Exposures
 
   protected def progressingCellHeader(txt: String)(
     header: HeaderContext[?, ?, TableMeta, ?, ?, ?, ?]
@@ -176,7 +177,7 @@ trait ModesTableCommon:
 
   protected def itcCell(
     c:   Pot[EitherNec[ItcTargetProblem, ItcResult]],
-    col: TimeOrSNColumn
+    col: ItcColumns
   ): VdomElement = {
     val content: TagMod = c.toOption match
       case Some(Left(errors))               =>
@@ -209,15 +210,19 @@ trait ModesTableCommon:
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
       case Some(Right(r: ItcResult.Result)) =>
         val content = col.match
-          case TimeOrSNColumn.Time =>
+          case ItcColumns.Exposures =>
+            r.exposures.toString
+          case ItcColumns.Time      =>
             formatDurationHours(r.duration)
-          case TimeOrSNColumn.SN   =>
+          case ItcColumns.SN        =>
             r.snAt.map(_.total.value).foldMap(formatSN)
 
         val tooltipText = col match
-          case TimeOrSNColumn.Time =>
+          case ItcColumns.Exposures =>
+            ""
+          case ItcColumns.Time      =>
             s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
-          case TimeOrSNColumn.SN   =>
+          case ItcColumns.SN        =>
             s"${r.snAt.map(_.single.value).foldMap(formatSN)} / exposure"
 
         <.span(content)
