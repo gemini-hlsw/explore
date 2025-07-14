@@ -7,14 +7,10 @@ import cats.Eq
 import cats.data.EitherNec
 import cats.derived.*
 import cats.syntax.all.*
-import crystal.*
 import crystal.react.*
-import crystal.react.hooks.*
-import eu.timepit.refined.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
-import explore.model.AppContext
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.itc.*
@@ -24,8 +20,11 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.User
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.SelectItem
+import lucuma.react.syntax.*
+import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
+import lucuma.ui.table.*
+import explore.modes.ItcInstrumentConfig
 
 object ItcImagingTile:
   case class TargetAndResults(
@@ -59,124 +58,128 @@ object ItcImagingTile:
         )
 
   def apply(
-    uid:             Option[User.Id],
-    oid:             Observation.Id,
-    itcGraphResults: Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]]
+    uid:     Option[User.Id],
+    oid:     Observation.Id,
+    configs: Option[List[ItcInstrumentConfig]]
   ) =
     Tile(
       ObsTabTileIds.ItcId.id,
       s"ITC",
-      none[TargetAndResults],
-      bodyClass = ExploreStyles.ItcTileBody
+      ItcTileState.Empty,
+      bodyClass = ExploreStyles.ItcImagingTileBody
     )(
       s =>
         uid.map(
           Body(
             _,
             oid,
-            itcGraphResults,
+            configs,
             s
           )
         ),
       (s, _) =>
         Title(
-          itcGraphResults.toOption.flatMap(_.toOption),
+          configs,
           s
         )
     )
 
+  private case class ConfigRow(config: ItcInstrumentConfig)
+
+  private val ColDef = ColumnDef[ConfigRow]
+
+  private val FilterColId     = ColumnId("filter")
+  private val InstrumentColId = ColumnId("instrument")
+  private val SNColId         = ColumnId("sn")
+  private val ExpTimeColId    = ColumnId("exptime")
+  private val ExposuresColId  = ColumnId("exposures")
+
+  private val filterColDef =
+    ColDef(
+      FilterColId,
+      _.config.filterStr,
+      "Filter"
+    ).withSize(120.toPx)
+
+  private val instrumentColDef =
+    ColDef(
+      InstrumentColId,
+      _.config.instrument.shortName,
+      "Instrument"
+    ).withSize(120.toPx)
+
+  private val snColDef =
+    ColDef(
+      SNColId,
+      _ => "-",
+      "S/N"
+    ).withSize(80.toPx)
+
+  private val expTimeColDef =
+    ColDef(
+      ExpTimeColId,
+      _ => "-",
+      "Exp. Time"
+    ).withSize(100.toPx)
+
+  private val exposuresColDef =
+    ColDef(
+      ExposuresColId,
+      _ => "-",
+      "Exposures"
+    ).withSize(100.toPx)
+
+  private val columns
+    : Reusable[List[ColumnDef[ConfigRow, ?, Nothing, Nothing, Nothing, Nothing, Nothing]]] =
+    Reusable.always(
+      List(filterColDef, instrumentColDef, snColDef, expTimeColDef, exposuresColDef)
+    )
+
   private case class Body(
-    uid:                      User.Id,
-    oid:                      Observation.Id,
-    itcGraphResults:          Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
-    selectedTargetAndResults: View[Option[TargetAndResults]]
+    uid:       User.Id,
+    oid:       Observation.Id,
+    configs:   Option[List[ItcInstrumentConfig]],
+    tileState: View[ItcTileState]
   ) extends ReactFnProps(Body)
 
   private object Body
       extends ReactFnComponent[Body](props =>
-        for
-          ctx <- useContext(AppContext.ctx)
-          _   <- // Reset the selected target if the brightest target changes
-            useEffectWhenDepsReadyOrChange(props.itcGraphResults.map(_.brightestOrFirst)):
-              itcBrightestOrFirst => props.selectedTargetAndResults.set(itcBrightestOrFirst)
-          _   <- // if the targets change, make sure the selected target is still available
-            useEffectWhenDepsReadyOrChange(props.itcGraphResults.map(_.targets)): targets =>
-              if (props.selectedTargetAndResults.get.exists(targets.contains))
-                Callback.empty
-              else
-                props.selectedTargetAndResults
-                  .set(props.itcGraphResults.toOption.flatMap(_.brightestOrFirst))
-        yield
-
-          // def body(signalToNoiseAt: Wavelength, graphResult: ItcGraphResult): VdomNode =
-          //
-          //   def bandValues(sp: SourceProfile)(band: Band): Option[BrightnessValues.ForBand] =
-          //     SourceProfile.integratedBrightnesses
-          //       .getOption(sp)
-          //       .flatMap(_.get(band))
-          //       .orElse:
-          //         SourceProfile.surfaceBrightnesses
-          //           .getOption(sp)
-          //           .flatMap(_.get(band))
-          //       .map: b =>
-          //         BrightnessValues.ForBand(band, b.value, b.units)
-          //
-          //   def emissionLineValues(
-          //     sp: SourceProfile
-          //   )(wavelength: Wavelength): Option[BrightnessValues.ForEmissionLine] =
-          //     SourceProfile.integratedWavelengthLines
-          //       .getOption(sp)
-          //       .flatMap(_.get(wavelength))
-          //       .orElse:
-          //         SourceProfile.surfaceWavelengthLines
-          //           .getOption(sp)
-          //           .flatMap(_.get(wavelength))
-          //       .map: e =>
-          //         BrightnessValues.ForEmissionLine(
-          //           wavelength,
-          //           e.lineWidth.value,
-          //           e.lineFlux.value,
-          //           e.lineFlux.units
-          //         )
-          //
-          //   val sourceProfile: SourceProfile                       = graphResult.target.input.sourceProfile
-          //   val selectedTargetBrightness: Option[BrightnessValues] =
-          //     graphResult.integrationTime.bandOrLine
-          //       .fold(bandValues(sourceProfile), emissionLineValues(sourceProfile))
-          //
-          //   <.div(
-          //     ExploreStyles.ItcPlotSection
-          //   )(
-          //   )
-          //
-          // val resultPot: Pot[EitherNec[ItcTargetProblem, (Wavelength, ItcGraphResult)]] =
-          //   props.itcGraphResults.map(
-          //     _.flatMap(agr =>
-          //       props.selectedTargetAndResults.get
-          //         .toRightNec(ItcQueryProblem.GenericError(Constants.NoTargets).toTargetProblem)
-          //         .flatMap(_.asTargetProblem)
-          //         .map(gr => (agr.signalToNoiseAt, gr))
-          //     )
-          //   )
-
-          <.div("img body")
+        for {
+          rows  <- useMemo(props.configs.getOrElse(List.empty))(_.map(ConfigRow.apply))
+          table <- useReactTable(
+                     TableOptions(
+                       columns,
+                       rows,
+                       getRowId = (row, _, _) => RowId(row.config.hashCode.toString),
+                       enableSorting = false,
+                       enableColumnResizing = false
+                     )
+                   )
+        } yield <.div(
+          ExploreStyles.ItcTileBody,
+          if (props.configs.exists(_.nonEmpty))
+            PrimeTable(table, compact = Compact.Very)
+          else
+            <.p("No configurations available for ITC calculations")
+        )
       )
 
   private case class Title(
-    itcGraphResults:          Option[ItcAsterismGraphResults],
-    selectedTargetAndResults: View[Option[TargetAndResults]]
+    configs:   Option[List[ItcInstrumentConfig]],
+    tileState: View[ItcTileState]
   ) extends ReactFnProps(Title)
 
   private object Title
       extends ReactFnComponent[Title](props =>
-        for {
-          options <-
-            useMemo(
-              props.itcGraphResults.foldMap(_.asterismGraphs.toList.map(_.toTargetAndResults))
-            )(
-              _.map(t => SelectItem(label = t.target.name.value, value = t))
-            )
-        } yield <.div("img title")
+        // for {
+        //   options <-
+        //     useMemo(
+        //       props.itcGraphResults.foldMap(_.asterismGraphs.toList.map(_.toTargetAndResults))
+        //     )(
+        //       _.map(t => SelectItem(label = t.target.name.value, value = t))
+        //     )
+        // } yield
+        <.div(s"img title ${props.configs}")
         // The only way this should be empty is if there are no targets in the results.
         //   props.selectedTargetAndResults.get.map: gr =>
         //     <.div(

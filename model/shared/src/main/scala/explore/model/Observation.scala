@@ -214,23 +214,20 @@ case class Observation(
 
   // Imaging modes can return multiple configs due to multiple filters.
   def toInstrumentConfig(targets: TargetList): List[ItcInstrumentConfig] =
+    import ObservingMode.*
     (toModeOverride(targets), observingMode)
       .mapN:
-        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              n: ObservingMode.GmosNorthLongSlit
-            ) =>
-          List(
-            ItcInstrumentConfig.GmosNorthSpectroscopy(n.grating, n.fpu, n.filter, overrides.some)
-          )
-        case (overrides @ InstrumentOverrides.GmosSpectroscopy(_, _, _),
-              s: ObservingMode.GmosSouthLongSlit
-            ) =>
-          List(
-            ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, overrides.some)
-          )
-        case (_, f: ObservingMode.Flamingos2LongSlit) =>
+        case (o @ InstrumentOverrides.GmosSpectroscopy(_, _, _), n: GmosNorthLongSlit) =>
+          List(ItcInstrumentConfig.GmosNorthSpectroscopy(n.grating, n.fpu, n.filter, o.some))
+        case (o @ InstrumentOverrides.GmosImaging(), n: GmosNorthImaging)              =>
+          n.filters.toList.map(ItcInstrumentConfig.GmosNorthImaging(_, o.some))
+        case (o @ InstrumentOverrides.GmosImaging(), n: GmosSouthImaging)              =>
+          n.filters.toList.map(ItcInstrumentConfig.GmosSouthImaging(_, o.some))
+        case (o @ InstrumentOverrides.GmosSpectroscopy(_, _, _), s: GmosSouthLongSlit) =>
+          List(ItcInstrumentConfig.GmosSouthSpectroscopy(s.grating, s.fpu, s.filter, o.some))
+        case (_, f: ObservingMode.Flamingos2LongSlit)                                  =>
           List(ItcInstrumentConfig.Flamingos2Spectroscopy(f.disperser, f.filter, f.fpu))
-        case _                                        => List.empty
+        case _                                                                         => List.empty
       .getOrElse(List.empty)
 
   lazy val constraintsSummary: String =

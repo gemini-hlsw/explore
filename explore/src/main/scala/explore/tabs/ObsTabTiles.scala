@@ -82,6 +82,7 @@ import lucuma.ui.syntax.all.given
 import java.time.Instant
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
+import explore.itc.ItcImagingTile
 
 case class ObsTabTiles(
   vault:            Option[UserVault],
@@ -407,12 +408,11 @@ object ObsTabTiles:
             odbOrSelectedConfig match
               case Some(_: BasicConfiguration.GmosNorthImaging) |
                   Some(_: BasicConfiguration.GmosSouthImaging) =>
-                None
-              // ItcImagingTile(
-              //   props.vault.userId,
-              //   props.obsId,
-              //   itcGraphResults.value,
-              // ).some
+                ItcImagingTile(
+                  props.vault.userId,
+                  props.obsId,
+                  itcConfigs
+                ).some
               case Some(_: BasicConfiguration.GmosNorthLongSlit) |
                   Some(_: BasicConfiguration.GmosSouthLongSlit) |
                   Some(_: BasicConfiguration.Flamingos2LongSlit) =>
