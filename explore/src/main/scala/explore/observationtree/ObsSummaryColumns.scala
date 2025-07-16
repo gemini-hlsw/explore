@@ -275,7 +275,7 @@ trait ObsSummaryColumns:
         .withCell(cell =>
           val tt: Option[VdomNode] = cell.value.map(identity)
           <.span(cell.value.orEmpty)
-            .withOptionalTooltip(content = tt, position = Tooltip.Position.Top)
+            .withOptionalTooltip(content = tt, position = Tooltip.Position.Top.some)
         )
         .sortable,
       obsColumn(
@@ -286,7 +286,7 @@ trait ObsSummaryColumns:
           cv.value.map: d =>
             val text = HoursMinutesAbbreviation.format(d)
             <.span(text, cv.staleClass)
-              .withOptionalTooltip(content = cv.staleTooltip, position = Tooltip.Position.Left)
+              .withOptionalTooltip(content = cv.staleTooltip, position = Tooltip.Position.Left.some)
       .sortableBy(_.sortableTimeSpan)
       // TODO: PriorityColumnId
       // TODO: ChargedTimeColumnId

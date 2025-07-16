@@ -1707,23 +1707,8 @@ svg.fa-check.explore-success-icon {
 // ------
 // Imaging Configuration
 // ------
-.explore-configuration-filter .p-multiselect-item > span {
+.explore-configuration-imaging-filters .p-tooltip-target-wrapper {
   width: 100%;
-
-  div {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    justify-items: end;
-
-    span:first-child {
-      justify-self: start;
-    }
-
-    span:not(:first-child) {
-      color: var(--site-input-placeholder-focus-color);
-      font-size: smaller;
-    }
-  }
 }
 
 // ------

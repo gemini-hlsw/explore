@@ -1,7 +1,7 @@
 object Versions {
   val boopickle              = "1.5.0"
   val cats                   = "2.13.0"
-  val catsEffect             = "3.6.2"
+  val catsEffect             = "3.6.1"
   val catsRetry              = "3.1.3"
   val catsTime               = "0.5.1"
   val circe                  = "0.14.14"
@@ -28,7 +28,7 @@ object Versions {
   val lucumaSchemas          = "0.144.0"
   val lucumaOdbSchema        = "0.25.4"
   val lucumaSSO              = "0.8.22"
-  val lucumaUI               = "0.146.2"
+  val lucumaUI               = "0.147.1"
   val monocle                = "3.3.0"
   val mouse                  = "1.3.2"
   val mUnit                  = "1.1.1"
