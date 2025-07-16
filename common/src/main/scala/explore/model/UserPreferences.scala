@@ -7,12 +7,18 @@ import cats.Eq
 import cats.derived.*
 import cats.implicits.*
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.LineOfSightMotion
 import explore.model.layout.LayoutsMap
+import lucuma.core.model.Target
 import monocle.Focus
+import monocle.Lens
+import monocle.function.At.*
+import monocle.function.At.given
 
 case class UserPreferences(
   private val gridLayouts: Map[GridLayoutSection, LayoutsMap],
-  globalPreferences:       GlobalPreferences
+  globalPreferences:       GlobalPreferences,
+  targetPreferences:       Map[Target.Id, LineOfSightMotion] = Map.empty
 ) derives Eq {
   private def tabLayout(l: GridLayoutSection) =
     gridLayouts.getOrElse(l, ExploreGridLayouts.sectionLayout(l))
@@ -55,7 +61,15 @@ case class UserPreferences(
 }
 
 object UserPreferences:
-  val Default = UserPreferences(ExploreGridLayouts.DefaultLayouts, GlobalPreferences.Default)
+  val Default =
+    UserPreferences(ExploreGridLayouts.DefaultLayouts, GlobalPreferences.Default, Map.empty)
 
   val gridLayouts       = Focus[UserPreferences](_.gridLayouts)
   val globalPreferences = Focus[UserPreferences](_.globalPreferences)
+  val targetPreferences = Focus[UserPreferences](_.targetPreferences)
+
+  def targetLineOfSightMotion(tid: Target.Id): Lens[UserPreferences, Option[LineOfSightMotion]] =
+    UserPreferences.targetPreferences
+      .andThen(
+        at[Map[Target.Id, LineOfSightMotion], Target.Id, Option[LineOfSightMotion]](tid)
+      )

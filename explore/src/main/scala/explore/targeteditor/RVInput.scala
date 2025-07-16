@@ -6,18 +6,23 @@ package explore.targeteditor
 import cats.syntax.all.*
 import crystal.react.View
 import crystal.react.hooks.*
-import eu.timepit.refined.auto.*
-import eu.timepit.refined.types.string.NonEmptyString
+import crystal.react.syntax.all.*
+import explore.common.UserPreferencesQueries
 import explore.components.ui.ExploreStyles
 import explore.itc.renderRequiredForITCIcon
+import explore.model.AppContext
+import explore.model.UserPreferences
 import explore.model.conversions.*
+import explore.model.enums.LineOfSightMotion
 import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
 import lucuma.core.math.RadialVelocity
+import lucuma.core.model.Target
+import lucuma.core.model.User
+import lucuma.core.syntax.all.*
 import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
@@ -27,82 +32,106 @@ import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
+import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 
 case class RVInput(
   rv:              View[Option[RadialVelocity]],
   disabled:        Boolean,
-  calibrationRole: Option[CalibrationRole]
+  calibrationRole: Option[CalibrationRole],
+  targetId:        Target.Id,
+  preferences:     View[UserPreferences],
+  userId:          User.Id
 ) extends ReactFnProps[RVInput](RVInput.component)
 
 object RVInput {
   protected type Props = RVInput
 
-  private enum RVView(val tag: NonEmptyString):
-    case RV extends RVView("RV".refined)
-    case Z  extends RVView("z".refined)
-    case CZ extends RVView("cz".refined)
-
-  private object RVView:
-    given Enumerated[RVView] = Enumerated.from(RVView.RV, RVView.Z, RVView.CZ).withTag(_.tag)
-    given Display[RVView]    = Display.byShortName(_.tag.value)
+  given Display[LineOfSightMotion] = Display.byShortName:
+    case LineOfSightMotion.RV => "RV"
+    case LineOfSightMotion.Z  => "z"
+    case LineOfSightMotion.CZ => "cz"
 
   private def addons(v: Option[RadialVelocity], role: Option[CalibrationRole]): List[TagMod] =
     if (v.isEmpty) List(role.renderRequiredForITCIcon) else List.empty
 
-  protected val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useStateView[RVView](RVView.RV)
-      .render { (props, rvView) =>
+  protected val component = ScalaFnComponent[Props]: props =>
+    for {
+      ctx    <- useContext(AppContext.ctx)
+      rvView <- useStateView(LineOfSightMotion.RV) // Start with default
+      _      <- useEffectWithDeps((props.targetId, props.userId)): (tid, _) =>
+                  // Check cache first, then database
+                  props.preferences
+                    .zoom(UserPreferences.targetLineOfSightMotion(tid))
+                    .get match
+                    case Some(los) =>
+                      rvView.set(los)
+                    case _         =>
+                      import ctx.given
 
-        val baseCss = ExploreStyles.Grow(1.refined) |+|
-          ExploreStyles.WarningInput.when_(props.rv.get.isEmpty)
+                      UserPreferencesQueries.TargetPreferences
+                        .queryLineOfSightMotion(props.userId, tid)
+                        .runAsyncAndThen: p =>
+                          val los = p.toOption.flatten.getOrElse(LineOfSightMotion.RV)
+                          rvView.set(los)
+    } yield
+      import ctx.given
 
-        val input = rvView.get match {
-          case RVView.Z  =>
-            FormInputTextView(
-              id = rvView.get.tag,
-              value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
-              validFormat =
-                InputValidSplitEpi.fromFormat(formatZ, "Must be a number".refined).optional,
-              changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined).optional,
-              groupClass = baseCss,
-              disabled = props.disabled,
-              postAddons = addons(props.rv.get, props.calibrationRole)
-            )
-          case RVView.CZ =>
-            FormInputTextView(
-              id = rvView.get.tag,
-              value = props.rv.zoom(rvToARVGet)(rvToARVMod),
-              validFormat =
-                InputValidSplitEpi.fromFormat(formatCZ, "Must be a number".refined).optional,
-              changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10.refined).optional,
-              groupClass = baseCss,
-              disabled = props.disabled,
-              units = "km/s",
-              postAddons = addons(props.rv.get, props.calibrationRole)
-            )
-          case RVView.RV =>
-            FormInputTextView(
-              id = rvView.get.tag,
-              value = props.rv,
-              validFormat =
-                InputValidSplitEpi.fromFormat(formatRV, "Must be a number".refined).optional,
-              changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3.refined).optional,
-              groupClass = baseCss,
-              disabled = props.disabled,
-              units = "km/s",
-              postAddons = addons(props.rv.get, props.calibrationRole)
-            )
-        }
-        React.Fragment(
-          FormLabel(htmlFor = "rv-view".refined)(rvView.get.tag.value),
-          <.div(
-            ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls |+| LucumaPrimeStyles.FormField,
-            EnumDropdownView(id = "rv-view".refined, value = rvView, disabled = props.disabled),
-            input
+      // Create a wrapped view that calls our save function when changed
+      val losView = rvView.withOnMod: v =>
+        props.preferences
+          .zoom(UserPreferences.targetLineOfSightMotion(props.targetId).some)
+          .set(v) *>
+          UserPreferencesQueries.TargetPreferences
+            .upsertLineOfSightMotion(props.userId, props.targetId, v)
+            .runAsyncAndForget
+
+      val baseCss = ExploreStyles.Grow(1.refined) |+|
+        ExploreStyles.WarningInput.when_(props.rv.get.isEmpty)
+
+      val input = rvView.get match {
+        case LineOfSightMotion.Z  =>
+          FormInputTextView(
+            id = "los-z".refined,
+            value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
+            validFormat =
+              InputValidSplitEpi.fromFormat(formatZ, "Must be a number".refined).optional,
+            changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined).optional,
+            groupClass = baseCss,
+            disabled = props.disabled,
+            postAddons = addons(props.rv.get, props.calibrationRole)
           )
-        )
+        case LineOfSightMotion.CZ =>
+          FormInputTextView(
+            id = "los-cz".refined,
+            value = props.rv.zoom(rvToARVGet)(rvToARVMod),
+            validFormat =
+              InputValidSplitEpi.fromFormat(formatCZ, "Must be a number".refined).optional,
+            changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10.refined).optional,
+            groupClass = baseCss,
+            disabled = props.disabled,
+            units = "km/s",
+            postAddons = addons(props.rv.get, props.calibrationRole)
+          )
+        case LineOfSightMotion.RV =>
+          FormInputTextView(
+            id = "los-rv".refined,
+            value = props.rv,
+            validFormat =
+              InputValidSplitEpi.fromFormat(formatRV, "Must be a number".refined).optional,
+            changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3.refined).optional,
+            groupClass = baseCss,
+            disabled = props.disabled,
+            units = "km/s",
+            postAddons = addons(props.rv.get, props.calibrationRole)
+          )
       }
+      React.Fragment(
+        FormLabel(htmlFor = "rv-view".refined)(rvView.get.shortName),
+        <.div(
+          ExploreStyles.FlexContainer |+| ExploreStyles.TargetRVControls |+| LucumaPrimeStyles.FormField,
+          EnumDropdownView(id = "rv-view".refined, value = losView, disabled = props.disabled),
+          input
+        )
+      )
 }

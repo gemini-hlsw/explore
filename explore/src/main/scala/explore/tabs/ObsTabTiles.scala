@@ -83,21 +83,20 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ObsTabTiles(
-  vault:             Option[UserVault],
-  programId:         Program.Id,
-  modes:             ScienceModes,
-  backButton:        VdomNode,
-  observation:       UndoSetter[Observation],
-  obsAndTargets:     UndoSetter[ObservationsAndTargets],
-  attachments:       View[AttachmentList],
-  programSummaries:  ProgramSummaries,
-  focusedTarget:     Option[Target.Id],
-  searching:         View[Set[Target.Id]],
-  selectedGSName:    View[Option[NonEmptyString]],
-  resize:            UseResizeDetectorReturn,
-  userPreferences:   UserPreferences,
-  globalPreferences: View[GlobalPreferences],
-  readonly:          Boolean
+  vault:            Option[UserVault],
+  programId:        Program.Id,
+  modes:            ScienceModes,
+  backButton:       VdomNode,
+  observation:      UndoSetter[Observation],
+  obsAndTargets:    UndoSetter[ObservationsAndTargets],
+  attachments:      View[AttachmentList],
+  programSummaries: ProgramSummaries,
+  focusedTarget:    Option[Target.Id],
+  searching:        View[Set[Target.Id]],
+  selectedGSName:   View[Option[NonEmptyString]],
+  resize:           UseResizeDetectorReturn,
+  userPreferences:  View[UserPreferences],
+  readonly:         Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
   val obsIsReadonly         = readonly || observation.get.isExecuted
   val obsId: Observation.Id = observation.get.id
@@ -286,15 +285,16 @@ object ObsTabTiles:
                                        Callback.empty
                                    }
                                  }
-        roleLayouts         <- useState(roleLayout(props.userPreferences, props.calibrationRole))
+        roleLayouts         <- useState(roleLayout(props.userPreferences.get, props.calibrationRole))
         _                   <- useEffectWithDeps(props.calibrationRole): role =>
-                                 roleLayouts.setState(roleLayout(props.userPreferences, role))
+                                 roleLayouts.setState(roleLayout(props.userPreferences.get, role))
       yield
         import ctx.given
 
         val (section, defaultLayout, layout) = roleLayouts.value
 
         obsTimeOrNowPot.value.renderPot: obsTimeOrNow =>
+          val globalPreferences = props.userPreferences.zoom(UserPreferences.globalPreferences)
 
           val asterismIds: View[AsterismIds] =
             props.observation.model.zoom(Observation.scienceTargetIds)
@@ -402,7 +402,7 @@ object ObsTabTiles:
               props.vault.userId,
               props.obsId,
               itcGraphResults.value,
-              props.globalPreferences
+              globalPreferences
             )
 
           val obsConf: ObsConfiguration =
@@ -443,7 +443,7 @@ object ObsTabTiles:
                 obsTimeView.get,
                 obsDuration.map(_.toDuration),
                 props.observation.get.timingWindows,
-                props.globalPreferences.get,
+                globalPreferences.get,
                 Constants.NoTargetSelected
               )
 
@@ -493,7 +493,7 @@ object ObsTabTiles:
               getObsInfo(props.obsId),
               props.searching,
               "Targets",
-              props.globalPreferences,
+              props.userPreferences,
               guideStarSelection,
               props.attachments,
               props.vault.map(_.token),
@@ -563,7 +563,7 @@ object ObsTabTiles:
               ,
               props.readonly, // execution status is taken care of in the configuration tile
               ObsIdSetEditInfo.of(props.observation.get),
-              props.globalPreferences.get.wavelengthUnits,
+              globalPreferences.get.wavelengthUnits,
               props.vault.isStaff
             )
 
@@ -598,7 +598,7 @@ object ObsTabTiles:
               props.vault.userId,
               props.resize.width.getOrElse(0),
               ExploreGridLayouts.sectionLayout(GridLayoutSection.ObservationsSequenceLayout),
-              props.userPreferences.sequenceTileLayout,
+              props.userPreferences.get.sequenceTileLayout,
               List(sequenceTile),
               GridLayoutSection.ObservationsSequenceLayout,
               backButton = none,

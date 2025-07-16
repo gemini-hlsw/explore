@@ -302,8 +302,7 @@ object ObsTabContents extends TwoPanels:
                   // We need this as a separate view so it doesn't get in the way of undo and can be easily updated by AGS
                   obsView.zoom(Observation.selectedGSName),
                   resize,
-                  props.userPreferences.get,
-                  props.globalPreferences,
+                  props.userPreferences,
                   obsIsReadonly
                 ).withKey(s"${obsId.show}")
               )

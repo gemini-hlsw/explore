@@ -7,6 +7,7 @@ import clue.annotation.GraphQLSchema
 import explore.model.Constants
 import io.circe.Decoder
 import io.circe.Encoder
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
 import lucuma.react.table.SortDirection
@@ -32,6 +33,7 @@ trait UserPreferencesDB:
 
   object Scalars:
     type UserId        = User.Id
+    type TargetId      = Target.Id
     type ResizableArea = String
     type Bigint        = Long
 
@@ -44,3 +46,4 @@ trait UserPreferencesDB:
     type ExplorePlotRangeEnum         = explore.model.enums.PlotRange
     type ExplorePlotTimeEnum          = explore.model.enums.TimeDisplay
     type LucumaWavelengthUnitsEnum    = explore.model.enums.WavelengthUnits
+    type LucumaLineOfSightMotionEnum  = explore.model.enums.LineOfSightMotion

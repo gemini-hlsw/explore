@@ -171,6 +171,31 @@ object UserPreferencesQueriesGQL {
   }
 
   @GraphQL
+  trait TargetPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      query targetPreferences($userId: String!, $targetId: String!) {
+        lucumaTargetByPk(userId: $userId, targetId: $targetId) {
+          userId
+          targetId
+          lineOfSightMotion
+        }
+      }
+    """
+  }
+
+  @GraphQL
+  trait TargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      mutation targetPreferencesUpsert($object: LucumaTargetInsertInput!, $updateColumns: [LucumaTargetUpdateColumn!]) {
+        insertLucumaTargetOne(object: $object, onConflict: {constraint: lucumaTarget_pkey, update_columns: $updateColumns}) {
+          userId
+          targetId
+          lineOfSightMotion
+        }
+      }"""
+  }
+
+  @GraphQL
   trait UserPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
       query userPreferences($userId: String!) {
@@ -226,6 +251,19 @@ object UserPreferencesQueriesGQL {
 
     object Data:
       type LucumaUserPreferencesByPk = GlobalPreferences
+  }
+
+  @GraphQL
+  trait TargetPreferencesUpdates extends GraphQLOperation[UserPreferencesDB] {
+    val document = """
+      subscription targetPreferences($userId: String!) {
+        lucumaTarget(where: {userId: {_eq: $userId}}) {
+          userId
+          targetId
+          lineOfSightMotion
+        }
+      }
+    """
   }
 
   @GraphQL
