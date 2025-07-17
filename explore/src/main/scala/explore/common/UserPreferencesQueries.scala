@@ -26,6 +26,7 @@ import explore.model.Observation
 import explore.model.Transformation
 import explore.model.enums.GridBreakpointName
 import explore.model.enums.GridLayoutSection
+import explore.model.enums.LineOfSightMotion
 import explore.model.enums.PlotRange
 import explore.model.enums.TableId
 import explore.model.enums.TimeDisplay
@@ -330,6 +331,36 @@ object UserPreferencesQueries:
         .map(_.insertExploreAsterismPreferencesOne.map(_.id))
         .attempt
         .map(_.getOrElse(None))
+
+  object TargetPreferences:
+    def queryLineOfSightMotion[F[_]: MonadThrow](
+      userId:   User.Id,
+      targetId: Target.Id
+    )(using FetchClient[F, UserPreferencesDB]): F[Option[LineOfSightMotion]] =
+      TargetPreferencesQuery[F]
+        .query(userId.show, targetId.show)
+        .raiseGraphQLErrors
+        .map(_.lucumaTargetByPk.map(_.lineOfSightMotion))
+        .handleError(_ => none)
+
+    def upsertLineOfSightMotion[F[_]: ApplicativeThrow](
+      userId:            User.Id,
+      targetId:          Target.Id,
+      lineOfSightMotion: LineOfSightMotion
+    )(using FetchClient[F, UserPreferencesDB]): F[Unit] =
+      TargetPreferencesUpsert[F]
+        .execute(
+          LucumaTargetInsertInput(
+            userId = userId.show.assign,
+            targetId = targetId.show.assign,
+            lineOfSightMotion = lineOfSightMotion.assign
+          ),
+          updateColumns = List(
+            LucumaTargetUpdateColumn.LineOfSightMotion
+          ).assign
+        )
+        .attempt
+        .void
 
   object FinderChartPreferences:
     // Gets the prefs for the itc plot

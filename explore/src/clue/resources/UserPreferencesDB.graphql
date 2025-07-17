@@ -1,4 +1,3 @@
-
 """whether this query should be cached (Hasura Cloud only)"""
 directive @cached(
   """measured in seconds"""
@@ -2016,6 +2015,143 @@ type LucumaGridLayoutPositionsVarianceFields {
 }
 
 """
+columns and relationships of "lucumaLineOfSightMotion"
+"""
+type LucumaLineOfSightMotion {
+  id: String!
+}
+
+"""
+aggregated selection of "lucumaLineOfSightMotion"
+"""
+type LucumaLineOfSightMotionAggregate {
+  aggregate: LucumaLineOfSightMotionAggregateFields
+  nodes: [LucumaLineOfSightMotion!]!
+}
+
+"""
+aggregate fields of "lucumaLineOfSightMotion"
+"""
+type LucumaLineOfSightMotionAggregateFields {
+  count(columns: [LucumaLineOfSightMotionSelectColumn!], distinct: Boolean): Int!
+  max: LucumaLineOfSightMotionMaxFields
+  min: LucumaLineOfSightMotionMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaLineOfSightMotion". All fields are combined with a logical 'AND'.
+"""
+input LucumaLineOfSightMotionBoolExp {
+  _and: [LucumaLineOfSightMotionBoolExp!]
+  _not: LucumaLineOfSightMotionBoolExp
+  _or: [LucumaLineOfSightMotionBoolExp!]
+  id: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaLineOfSightMotion"
+"""
+enum LucumaLineOfSightMotionConstraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  lucumaLineOfSight_pkey
+}
+
+enum LucumaLineOfSightMotionEnum {
+  CZ
+  RV
+  Z
+}
+
+"""
+Boolean expression to compare columns of type "LucumaLineOfSightMotionEnum". All fields are combined with logical 'AND'.
+"""
+input LucumaLineOfSightMotionEnumComparisonExp {
+  _eq: LucumaLineOfSightMotionEnum
+  _in: [LucumaLineOfSightMotionEnum!]
+  _isNull: Boolean
+  _neq: LucumaLineOfSightMotionEnum
+  _nin: [LucumaLineOfSightMotionEnum!]
+}
+
+"""
+input type for inserting data into table "lucumaLineOfSightMotion"
+"""
+input LucumaLineOfSightMotionInsertInput {
+  id: String
+}
+
+"""aggregate max on columns"""
+type LucumaLineOfSightMotionMaxFields {
+  id: String
+}
+
+"""aggregate min on columns"""
+type LucumaLineOfSightMotionMinFields {
+  id: String
+}
+
+"""
+response of any mutation on the table "lucumaLineOfSightMotion"
+"""
+type LucumaLineOfSightMotionMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaLineOfSightMotion!]!
+}
+
+"""
+on_conflict condition type for table "lucumaLineOfSightMotion"
+"""
+input LucumaLineOfSightMotionOnConflict {
+  constraint: LucumaLineOfSightMotionConstraint!
+  update_columns: [LucumaLineOfSightMotionUpdateColumn!]! = []
+  where: LucumaLineOfSightMotionBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaLineOfSightMotion"."""
+input LucumaLineOfSightMotionOrderBy {
+  id: OrderBy
+}
+
+"""primary key columns input for table: lucumaLineOfSightMotion"""
+input LucumaLineOfSightMotionPkColumnsInput {
+  id: String!
+}
+
+"""
+select columns of table "lucumaLineOfSightMotion"
+"""
+enum LucumaLineOfSightMotionSelectColumn {
+  """column name"""
+  id
+}
+
+"""
+input type for updating data in table "lucumaLineOfSightMotion"
+"""
+input LucumaLineOfSightMotionSetInput {
+  id: String
+}
+
+"""
+update columns of table "lucumaLineOfSightMotion"
+"""
+enum LucumaLineOfSightMotionUpdateColumn {
+  """column name"""
+  id
+}
+
+input LucumaLineOfSightMotionUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaLineOfSightMotionSetInput
+  where: LucumaLineOfSightMotionBoolExp!
+}
+
+"""
 columns and relationships of "lucumaObservation"
 """
 type LucumaObservation {
@@ -2731,6 +2867,151 @@ input LucumaTableIdsUpdates {
 }
 
 """
+columns and relationships of "lucumaTarget"
+"""
+type LucumaTarget {
+  lineOfSightMotion: LucumaLineOfSightMotionEnum!
+  targetId: String!
+  userId: String!
+}
+
+"""
+aggregated selection of "lucumaTarget"
+"""
+type LucumaTargetAggregate {
+  aggregate: LucumaTargetAggregateFields
+  nodes: [LucumaTarget!]!
+}
+
+"""
+aggregate fields of "lucumaTarget"
+"""
+type LucumaTargetAggregateFields {
+  count(columns: [LucumaTargetSelectColumn!], distinct: Boolean): Int!
+  max: LucumaTargetMaxFields
+  min: LucumaTargetMinFields
+}
+
+"""
+Boolean expression to filter rows from the table "lucumaTarget". All fields are combined with a logical 'AND'.
+"""
+input LucumaTargetBoolExp {
+  _and: [LucumaTargetBoolExp!]
+  _not: LucumaTargetBoolExp
+  _or: [LucumaTargetBoolExp!]
+  lineOfSightMotion: LucumaLineOfSightMotionEnumComparisonExp
+  targetId: StringComparisonExp
+  userId: StringComparisonExp
+}
+
+"""
+unique or primary key constraints on table "lucumaTarget"
+"""
+enum LucumaTargetConstraint {
+  """
+  unique or primary key constraint on columns "targetId", "userId"
+  """
+  lucumaTarget_pkey
+}
+
+"""
+input type for inserting data into table "lucumaTarget"
+"""
+input LucumaTargetInsertInput {
+  lineOfSightMotion: LucumaLineOfSightMotionEnum
+  targetId: String
+  userId: String
+}
+
+"""aggregate max on columns"""
+type LucumaTargetMaxFields {
+  targetId: String
+  userId: String
+}
+
+"""aggregate min on columns"""
+type LucumaTargetMinFields {
+  targetId: String
+  userId: String
+}
+
+"""
+response of any mutation on the table "lucumaTarget"
+"""
+type LucumaTargetMutationResponse {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [LucumaTarget!]!
+}
+
+"""
+on_conflict condition type for table "lucumaTarget"
+"""
+input LucumaTargetOnConflict {
+  constraint: LucumaTargetConstraint!
+  update_columns: [LucumaTargetUpdateColumn!]! = []
+  where: LucumaTargetBoolExp
+}
+
+"""Ordering options when selecting data from "lucumaTarget"."""
+input LucumaTargetOrderBy {
+  lineOfSightMotion: OrderBy
+  targetId: OrderBy
+  userId: OrderBy
+}
+
+"""primary key columns input for table: lucumaTarget"""
+input LucumaTargetPkColumnsInput {
+  targetId: String!
+  userId: String!
+}
+
+"""
+select columns of table "lucumaTarget"
+"""
+enum LucumaTargetSelectColumn {
+  """column name"""
+  lineOfSightMotion
+
+  """column name"""
+  targetId
+
+  """column name"""
+  userId
+}
+
+"""
+input type for updating data in table "lucumaTarget"
+"""
+input LucumaTargetSetInput {
+  lineOfSightMotion: LucumaLineOfSightMotionEnum
+  targetId: String
+  userId: String
+}
+
+"""
+update columns of table "lucumaTarget"
+"""
+enum LucumaTargetUpdateColumn {
+  """column name"""
+  lineOfSightMotion
+
+  """column name"""
+  targetId
+
+  """column name"""
+  userId
+}
+
+input LucumaTargetUpdates {
+  """sets the columns of the filtered rows to the given values"""
+  _set: LucumaTargetSetInput
+  where: LucumaTargetBoolExp!
+}
+
+"""
 columns and relationships of "lucumaUser"
 """
 type LucumaUser {
@@ -3233,6 +3514,7 @@ enum LucumaWavelengthUnitsConstraint {
 }
 
 enum LucumaWavelengthUnitsEnum {
+  ANGSTROMS
   MICROMETERS
   NANOMETERS
 }
@@ -3749,6 +4031,22 @@ input lucumaGridLayoutPositions_streamCursorValueInput {
 }
 
 """
+Streaming cursor of the table "lucumaLineOfSightMotion"
+"""
+input lucumaLineOfSightMotion_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaLineOfSightMotion_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucumaLineOfSightMotion_streamCursorValueInput {
+  id: String
+}
+
+"""
 Streaming cursor of the table "lucumaObservation"
 """
 input lucumaObservation_streamCursorInput {
@@ -3817,6 +4115,24 @@ input lucumaTableIds_streamCursorInput {
 """Initial value of the column from where the streaming should start"""
 input lucumaTableIds_streamCursorValueInput {
   id: String
+}
+
+"""
+Streaming cursor of the table "lucumaTarget"
+"""
+input lucumaTarget_streamCursorInput {
+  """Stream column input with initial value"""
+  initialValue: lucumaTarget_streamCursorValueInput!
+
+  """cursor ordering"""
+  ordering: CursorOrdering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input lucumaTarget_streamCursorValueInput {
+  lineOfSightMotion: LucumaLineOfSightMotionEnum
+  targetId: String
+  userId: String
 }
 
 """
@@ -4005,6 +4321,19 @@ type Mutation {
   deleteLucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
+  delete data from the table: "lucumaLineOfSightMotion"
+  """
+  deleteLucumaLineOfSightMotion(
+    """filter the rows which have to be deleted"""
+    where: LucumaLineOfSightMotionBoolExp!
+  ): LucumaLineOfSightMotionMutationResponse
+
+  """
+  delete single row from the table: "lucumaLineOfSightMotion"
+  """
+  deleteLucumaLineOfSightMotionByPk(id: String!): LucumaLineOfSightMotion
+
+  """
   delete data from the table: "lucumaObservation"
   """
   deleteLucumaObservation(
@@ -4055,6 +4384,19 @@ type Mutation {
   delete single row from the table: "lucumaTableIds"
   """
   deleteLucumaTableIdsByPk(id: String!): LucumaTableIds
+
+  """
+  delete data from the table: "lucumaTarget"
+  """
+  deleteLucumaTarget(
+    """filter the rows which have to be deleted"""
+    where: LucumaTargetBoolExp!
+  ): LucumaTargetMutationResponse
+
+  """
+  delete single row from the table: "lucumaTarget"
+  """
+  deleteLucumaTargetByPk(targetId: String!, userId: String!): LucumaTarget
 
   """
   delete data from the table: "lucumaUser"
@@ -4294,6 +4636,28 @@ type Mutation {
   ): LucumaGridLayoutPositions
 
   """
+  insert data into the table: "lucumaLineOfSightMotion"
+  """
+  insertLucumaLineOfSightMotion(
+    """the rows to be inserted"""
+    objects: [LucumaLineOfSightMotionInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaLineOfSightMotionOnConflict
+  ): LucumaLineOfSightMotionMutationResponse
+
+  """
+  insert a single row into the table: "lucumaLineOfSightMotion"
+  """
+  insertLucumaLineOfSightMotionOne(
+    """the row to be inserted"""
+    object: LucumaLineOfSightMotionInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaLineOfSightMotionOnConflict
+  ): LucumaLineOfSightMotion
+
+  """
   insert data into the table: "lucumaObservation"
   """
   insertLucumaObservation(
@@ -4380,6 +4744,28 @@ type Mutation {
     """upsert condition"""
     onConflict: LucumaTableIdsOnConflict
   ): LucumaTableIds
+
+  """
+  insert data into the table: "lucumaTarget"
+  """
+  insertLucumaTarget(
+    """the rows to be inserted"""
+    objects: [LucumaTargetInsertInput!]!
+
+    """upsert condition"""
+    onConflict: LucumaTargetOnConflict
+  ): LucumaTargetMutationResponse
+
+  """
+  insert a single row into the table: "lucumaTarget"
+  """
+  insertLucumaTargetOne(
+    """the row to be inserted"""
+    object: LucumaTargetInsertInput!
+
+    """upsert condition"""
+    onConflict: LucumaTargetOnConflict
+  ): LucumaTarget
 
   """
   insert data into the table: "lucumaUser"
@@ -4724,6 +5110,34 @@ type Mutation {
   ): [LucumaGridLayoutPositionsMutationResponse]
 
   """
+  update data of the table: "lucumaLineOfSightMotion"
+  """
+  updateLucumaLineOfSightMotion(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaLineOfSightMotionSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaLineOfSightMotionBoolExp!
+  ): LucumaLineOfSightMotionMutationResponse
+
+  """
+  update single row of the table: "lucumaLineOfSightMotion"
+  """
+  updateLucumaLineOfSightMotionByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaLineOfSightMotionSetInput
+    pk_columns: LucumaLineOfSightMotionPkColumnsInput!
+  ): LucumaLineOfSightMotion
+
+  """
+  update multiples rows of table: "lucumaLineOfSightMotion"
+  """
+  updateLucumaLineOfSightMotionMany(
+    """updates to execute, in order"""
+    updates: [LucumaLineOfSightMotionUpdates!]!
+  ): [LucumaLineOfSightMotionMutationResponse]
+
+  """
   update data of the table: "lucumaObservation"
   """
   updateLucumaObservation(
@@ -4840,6 +5254,34 @@ type Mutation {
     """updates to execute, in order"""
     updates: [LucumaTableIdsUpdates!]!
   ): [LucumaTableIdsMutationResponse]
+
+  """
+  update data of the table: "lucumaTarget"
+  """
+  updateLucumaTarget(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaTargetSetInput
+
+    """filter the rows which have to be updated"""
+    where: LucumaTargetBoolExp!
+  ): LucumaTargetMutationResponse
+
+  """
+  update single row of the table: "lucumaTarget"
+  """
+  updateLucumaTargetByPk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: LucumaTargetSetInput
+    pk_columns: LucumaTargetPkColumnsInput!
+  ): LucumaTarget
+
+  """
+  update multiples rows of table: "lucumaTarget"
+  """
+  updateLucumaTargetMany(
+    """updates to execute, in order"""
+    updates: [LucumaTargetUpdates!]!
+  ): [LucumaTargetMutationResponse]
 
   """
   update data of the table: "lucumaUser"
@@ -5327,6 +5769,51 @@ type Query {
   lucumaGridLayoutPositionsByPk(breakpointName: LucumaGridBreakpointNameEnum!, section: LucumaGridLayoutIdEnum!, tile: String!, userId: String!): LucumaGridLayoutPositions
 
   """
+  fetch data from the table: "lucumaLineOfSightMotion"
+  """
+  lucumaLineOfSightMotion(
+    """distinct select on columns"""
+    distinctOn: [LucumaLineOfSightMotionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaLineOfSightMotionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaLineOfSightMotionBoolExp
+  ): [LucumaLineOfSightMotion!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaLineOfSightMotion"
+  """
+  lucumaLineOfSightMotionAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaLineOfSightMotionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaLineOfSightMotionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaLineOfSightMotionBoolExp
+  ): LucumaLineOfSightMotionAggregate!
+
+  """
+  fetch data from the table: "lucumaLineOfSightMotion" using primary key columns
+  """
+  lucumaLineOfSightMotionByPk(id: String!): LucumaLineOfSightMotion
+
+  """
   fetch data from the table: "lucumaObservation"
   """
   lucumaObservation(
@@ -5503,6 +5990,49 @@ type Query {
 
   """fetch data from the table: "lucumaTableIds" using primary key columns"""
   lucumaTableIdsByPk(id: String!): LucumaTableIds
+
+  """
+  fetch data from the table: "lucumaTarget"
+  """
+  lucumaTarget(
+    """distinct select on columns"""
+    distinctOn: [LucumaTargetSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaTargetOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaTargetBoolExp
+  ): [LucumaTarget!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaTarget"
+  """
+  lucumaTargetAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaTargetSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaTargetOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaTargetBoolExp
+  ): LucumaTargetAggregate!
+
+  """fetch data from the table: "lucumaTarget" using primary key columns"""
+  lucumaTargetByPk(targetId: String!, userId: String!): LucumaTarget
 
   """
   fetch data from the table: "lucumaUser"
@@ -6165,6 +6695,65 @@ type Subscription {
   ): [LucumaGridLayoutPositions!]!
 
   """
+  fetch data from the table: "lucumaLineOfSightMotion"
+  """
+  lucumaLineOfSightMotion(
+    """distinct select on columns"""
+    distinctOn: [LucumaLineOfSightMotionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaLineOfSightMotionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaLineOfSightMotionBoolExp
+  ): [LucumaLineOfSightMotion!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaLineOfSightMotion"
+  """
+  lucumaLineOfSightMotionAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaLineOfSightMotionSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaLineOfSightMotionOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaLineOfSightMotionBoolExp
+  ): LucumaLineOfSightMotionAggregate!
+
+  """
+  fetch data from the table: "lucumaLineOfSightMotion" using primary key columns
+  """
+  lucumaLineOfSightMotionByPk(id: String!): LucumaLineOfSightMotion
+
+  """
+  fetch data from the table in a streaming manner : "lucumaLineOfSightMotion"
+  """
+  lucumaLineOfSightMotionStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaLineOfSightMotion_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaLineOfSightMotionBoolExp
+  ): [LucumaLineOfSightMotion!]!
+
+  """
   fetch data from the table: "lucumaObservation"
   """
   lucumaObservation(
@@ -6397,6 +6986,63 @@ type Subscription {
     """filter the rows returned"""
     where: LucumaTableIdsBoolExp
   ): [LucumaTableIds!]!
+
+  """
+  fetch data from the table: "lucumaTarget"
+  """
+  lucumaTarget(
+    """distinct select on columns"""
+    distinctOn: [LucumaTargetSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaTargetOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaTargetBoolExp
+  ): [LucumaTarget!]!
+
+  """
+  fetch aggregated fields from the table: "lucumaTarget"
+  """
+  lucumaTargetAggregate(
+    """distinct select on columns"""
+    distinctOn: [LucumaTargetSelectColumn!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    orderBy: [LucumaTargetOrderBy!]
+
+    """filter the rows returned"""
+    where: LucumaTargetBoolExp
+  ): LucumaTargetAggregate!
+
+  """fetch data from the table: "lucumaTarget" using primary key columns"""
+  lucumaTargetByPk(targetId: String!, userId: String!): LucumaTarget
+
+  """
+  fetch data from the table in a streaming manner : "lucumaTarget"
+  """
+  lucumaTargetStream(
+    """maximum number of rows returned in a single batch"""
+    batchSize: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [lucumaTarget_streamCursorInput]!
+
+    """filter the rows returned"""
+    where: LucumaTargetBoolExp
+  ): [LucumaTarget!]!
 
   """
   fetch data from the table: "lucumaUser"

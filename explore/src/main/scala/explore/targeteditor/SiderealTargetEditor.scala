@@ -19,17 +19,18 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.AttachmentList
 import explore.model.ExploreModelValidators
-import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
+import explore.model.UserPreferences
 import explore.model.reusability.given
 import explore.services.OdbAsterismApi
 import explore.services.OdbTargetApi
 import explore.syntax.ui.*
+import explore.targeteditor.RVInput
 import explore.undo.UndoSetter
 import explore.utils.*
 import japgolly.scalajs.react.*
@@ -70,7 +71,7 @@ case class SiderealTargetEditor(
   obsInfo:            TargetEditObsInfo,
   onClone:            OnCloneParameters => Callback,
   fullScreen:         View[AladinFullScreen],
-  globalPreferences:  View[GlobalPreferences],
+  userPreferences:    View[UserPreferences],
   guideStarSelection: View[GuideStarSelection],
   attachments:        View[AttachmentList],
   authToken:          Option[NonEmptyString],
@@ -303,7 +304,7 @@ object SiderealTargetEditor:
                 ot,
                 props.obsConf,
                 props.fullScreen,
-                props.globalPreferences,
+                props.userPreferences,
                 props.guideStarSelection
               )
             ),
@@ -376,7 +377,14 @@ object SiderealTargetEditor:
                 changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
                 units = "mas"
               ),
-              RVInput(radialVelocityView, disabled, props.obsConf.flatMap(_.calibrationRole))
+              RVInput(
+                radialVelocityView,
+                disabled,
+                props.obsConf.flatMap(_.calibrationRole),
+                props.asterism.focus.id,
+                props.userPreferences,
+                props.userId
+              )
             ),
             <.div(
               ExploreStyles.Grid,

@@ -66,7 +66,7 @@ case class AladinCell(
   obsTime:            Instant,
   obsConf:            Option[ObsConfiguration],
   fullScreen:         View[AladinFullScreen],
-  globalPreferences:  View[GlobalPreferences],
+  userPreferences:    View[UserPreferences],
   guideStarSelection: View[GuideStarSelection]
 ) extends ReactFnProps(AladinCell.component):
   val needsAGS: Boolean =
@@ -410,8 +410,10 @@ object AladinCell extends ModelOptics with AladinCommon:
       val fovView =
         options.zoom(Pot.readyPrism.andThen(fovLens))
 
+      val globalPreferences = props.userPreferences.zoom(UserPreferences.globalPreferences)
+
       val fullScreenView =
-        props.globalPreferences
+        globalPreferences
           .zoom(GlobalPreferences.fullScreen)
           .withOnMod: v =>
             props.fullScreen.set(v) *> userPrefsSetter(props.uid, fullScreen = v.some)
@@ -455,7 +457,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             props.asterism,
             props.obsTime,
             props.obsConf.flatMap(ConfigurationForVisualization.fromObsConfiguration),
-            props.globalPreferences.get,
+            globalPreferences.get,
             t,
             coordinatesSetter,
             fovSetter,
@@ -474,13 +476,13 @@ object AladinCell extends ModelOptics with AladinCommon:
             mouseCoords.value,
             agsState,
             guideStar,
-            props.globalPreferences.get.agsOverlay,
+            globalPreferences.get.agsOverlay,
             offsetOnCenter
           )
 
       val renderAgsOverlay: AsterismVisualOptions => VdomNode =
         (_: AsterismVisualOptions) =>
-          if (props.needsAGS && props.globalPreferences.get.agsOverlay)
+          if (props.needsAGS && globalPreferences.get.agsOverlay)
             props.obsConf
               .flatMap(_.agsState)
               .map: agsState =>
@@ -518,7 +520,7 @@ object AladinCell extends ModelOptics with AladinCommon:
             AladinPreferencesMenu(
               props.uid,
               props.asterism.ids,
-              props.globalPreferences,
+              globalPreferences,
               options,
               menuRef
             )

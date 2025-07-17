@@ -17,7 +17,6 @@ import explore.model.AppContext
 import explore.model.Asterism
 import explore.model.AsterismIds
 import explore.model.AttachmentList
-import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObsConfiguration
 import explore.model.ObsIdSet
@@ -27,6 +26,7 @@ import explore.model.OnAsterismUpdateParams
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.TargetList
+import explore.model.UserPreferences
 import explore.model.enums.TileSizeState
 import explore.model.reusability.given
 import explore.services.OdbObservationApi
@@ -70,7 +70,7 @@ object AsterismEditorTile:
     obsInfo:            Target.Id => TargetEditObsInfo,
     searching:          View[Set[Target.Id]],
     title:              String,
-    globalPreferences:  View[GlobalPreferences],
+    userPreferences:    View[UserPreferences],
     guideStarSelection: View[GuideStarSelection],
     attachments:        View[AttachmentList],
     authToken:          Option[NonEmptyString],
@@ -134,7 +134,7 @@ object AsterismEditorTile:
             onAsterismUpdate,
             obsInfo,
             searching,
-            globalPreferences,
+            userPreferences,
             guideStarSelection,
             attachments,
             authToken,
@@ -187,7 +187,7 @@ object AsterismEditorTile:
     onAsterismUpdate:   OnAsterismUpdateParams => Callback,
     obsInfo:            Target.Id => TargetEditObsInfo,
     searching:          View[Set[Target.Id]],
-    globalPreferences:  View[GlobalPreferences],
+    userPreferences:    View[UserPreferences],
     guideStarSelection: View[GuideStarSelection],
     attachments:        View[AttachmentList],
     authToken:          Option[NonEmptyString],
@@ -286,7 +286,7 @@ object AsterismEditorTile:
                         onClone = props.onCloneTarget,
                         obsInfo = obsInfo,
                         fullScreen = fullScreen,
-                        globalPreferences = props.globalPreferences,
+                        userPreferences = props.userPreferences,
                         guideStarSelection = props.guideStarSelection,
                         attachments = props.attachments,
                         authToken = props.authToken,

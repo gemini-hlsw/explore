@@ -11,12 +11,12 @@ import explore.components.ui.ExploreStyles
 import explore.model.AladinFullScreen
 import explore.model.Asterism
 import explore.model.AttachmentList
-import explore.model.GlobalPreferences
 import explore.model.GuideStarSelection
 import explore.model.ObservationsAndTargets
 import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.TargetTabTileIds
+import explore.model.UserPreferences
 import explore.targeteditor.SiderealTargetEditor
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
@@ -37,7 +37,7 @@ object SiderealTargetEditorTile:
     searching:          View[Set[Target.Id]],
     title:              String,
     fullScreen:         View[AladinFullScreen],
-    globalPreferences:  View[GlobalPreferences],
+    userPreferences:    View[UserPreferences],
     guideStarSelection: View[GuideStarSelection],
     attachments:        View[AttachmentList],
     authToken:          Option[NonEmptyString],
@@ -69,7 +69,7 @@ object SiderealTargetEditorTile:
               obsInfo = obsInfo,
               onClone = onClone,
               fullScreen = fullScreen,
-              globalPreferences = globalPreferences,
+              userPreferences = userPreferences,
               guideStarSelection = guideStarSelection,
               attachments = attachments,
               authToken = authToken,
