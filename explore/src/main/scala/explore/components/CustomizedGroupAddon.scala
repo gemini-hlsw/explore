@@ -13,12 +13,12 @@ import lucuma.react.fa.IconSize
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
 
-private[components] final case class CustomizedGroupAddon(
+final case class CustomizedGroupAddon(
   original: String,
   toRevert: Callback
 ) extends ReactFnProps(CustomizedGroupAddon)
 
-private[components] object CustomizedGroupAddon
+object CustomizedGroupAddon
     extends ReactFnComponent[CustomizedGroupAddon](props =>
       <.span(
         ^.cls := "fa-layers fa-fw",

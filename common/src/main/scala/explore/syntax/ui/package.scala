@@ -40,6 +40,7 @@ import org.scalajs.dom.Window
 import org.typelevel.log4cats.Logger
 
 import scala.scalajs.js
+import scala.scalajs.js.JSConverters.*
 
 extension (self: Window)
   // Keep this as def to take the value window.innerWidth at the current time
@@ -120,20 +121,20 @@ extension (tag:    TagOf[HTMLElement])
   def withTooltipWhen(
     condition: Boolean,
     content:   VdomNode,
-    position:  Tooltip.Position = Tooltip.Position.Right
+    position:  Option[Tooltip.Position] = None
   ): VdomNode =
-    if (condition) tag.withTooltip(content = content, position = position) else tag
+    if (condition) tag.withTooltip(content = content, position = position.orUndefined) else tag
   def withTooltipUnless(
     condition: Boolean,
     content:   VdomNode,
-    position:  Tooltip.Position = Tooltip.Position.Right
+    position:  Option[Tooltip.Position] = None
   ): VdomNode =
     withTooltipWhen(!condition, content, position)
   def withOptionalTooltip(
     content:  Option[VdomNode],
-    position: Tooltip.Position = Tooltip.Position.Right
+    position: Option[Tooltip.Position] = None
   ): VdomNode =
-    content.fold(tag)(t => tag.withTooltip(content = t, position = position))
+    content.fold(tag)(t => tag.withTooltip(content = t, position = position.orUndefined))
 
 extension [A](calc: CalculatedValue[A])
   def staleClass: TagMod                            = ExploreStyles.Stale.when(calc.isStale)

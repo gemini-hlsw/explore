@@ -460,12 +460,34 @@ object ConfigurationTile:
                       )
                   ),
                   // Gmos North Imaging
-                  (optGmosNorthImagingAligner, imagingView.asView).mapN((_, _) =>
-                    RollbackOnlyConfigButtons(revertConfig)
+                  (optGmosNorthImagingAligner, imagingView.asView).mapN((aligner, imagingView) =>
+                    GmosImagingConfigPanel.GmosNorthImaging(
+                      props.programId,
+                      props.obsId,
+                      props.obsConf.calibrationRole,
+                      aligner,
+                      exposureTimeModeView,
+                      imagingView,
+                      revertConfig,
+                      props.sequenceChanged,
+                      props.obsIsReadonly,
+                      props.units
+                    )
                   ),
                   // Gmos South Imaging
-                  (optGmosSouthImagingAligner, imagingView.asView).mapN((_, _) =>
-                    RollbackOnlyConfigButtons(revertConfig)
+                  (optGmosSouthImagingAligner, imagingView.asView).mapN((aligner, imagingView) =>
+                    GmosImagingConfigPanel.GmosSouthImaging(
+                      props.programId,
+                      props.obsId,
+                      props.obsConf.calibrationRole,
+                      aligner,
+                      exposureTimeModeView,
+                      imagingView,
+                      revertConfig,
+                      props.sequenceChanged,
+                      props.obsIsReadonly,
+                      props.units
+                    )
                   ),
                   // Flamingos2 Long Slit
                   (optFlamingos2Aligner, spectroscopyView.asView).mapN((f2Aligner, specView) =>

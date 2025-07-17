@@ -120,6 +120,8 @@ trait DisplayImplicits:
     case SpectralDefinition.BandNormalized(_, _)          => "No SED"
     case SpectralDefinition.EmissionLines(_, _)           => "Emission Lines"
 
+  given Display[GmosBinning] = Display.by(_.shortName, _.longName)
+
   given Display[GmosXBinning] = Display.by(_.shortName, _.longName)
 
   given Display[GmosYBinning] = Display.by(_.shortName, _.longName)
