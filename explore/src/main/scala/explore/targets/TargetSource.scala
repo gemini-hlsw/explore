@@ -14,7 +14,11 @@ import japgolly.scalajs.react.ReactCats.*
 import japgolly.scalajs.react.Reusability
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.enums.CatalogName
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RadialVelocity
 import lucuma.core.model.Program
+import lucuma.core.model.SiderealTracking
 import lucuma.core.util.Enumerated
 import org.typelevel.log4cats.Logger
 
@@ -41,12 +45,36 @@ object TargetSource:
 
     val existing: Boolean = false
 
+    // if rv/px/pm are not set, set them to 0
+    private def adjustTracking(t: TargetSearchResult) =
+      val p =
+        TargetSearchResult.siderealTracking
+          .andThen(SiderealTracking.parallax)
+          .modify:
+            case a @ Some(_) => a
+            case _           => Parallax.Zero.some
+      val m =
+        TargetSearchResult.siderealTracking
+          .andThen(SiderealTracking.properMotion)
+          .modify:
+            case a @ Some(_) => a
+            case _           => ProperMotion.Zero.some
+      val v =
+        TargetSearchResult.siderealTracking
+          .andThen(SiderealTracking.radialVelocity)
+          .modify:
+            case a @ Some(_) => a
+            case _           => RadialVelocity.Zero.some
+      (p >>> m >>> v)(t)
+
     override def searches(name: NonEmptyString): List[F[List[TargetSearchResult]]] =
       catalogName match {
         case CatalogName.Simbad =>
-          val escapedName: String                                  = name.value.replaceAll("\\*", "\\\\*")
-          val regularSearch: F[List[CatalogTargetResult]]          =
+          val escapedName: String = name.value.replaceAll("\\*", "\\\\*")
+
+          val regularSearch: F[List[CatalogTargetResult]] =
             SimbadSearch.search[F](name)
+
           // This a heuristic based on observed Simbad behavior.
           val wildcardSearches: List[F[List[CatalogTargetResult]]] = List(
             NonEmptyString.unsafeFrom(s"$escapedName*"),
@@ -59,11 +87,11 @@ object TargetSource:
               SimbadSearch.search[F](term, wildcard = true)
           )
 
-          (regularSearch +: wildcardSearches).map((search: F[List[CatalogTargetResult]]) =>
-            search.map(
-              _.map((r: CatalogTargetResult) => TargetSearchResult.fromCatalogTargetResult(r))
-            )
-          )
+          (regularSearch +: wildcardSearches).map:
+            _.map:
+              _.map: r =>
+                TargetSearchResult.fromCatalogTargetResult(r)
+              .map(adjustTracking)
         case _                  => List.empty
       }
 

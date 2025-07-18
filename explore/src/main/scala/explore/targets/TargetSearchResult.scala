@@ -10,8 +10,12 @@ import japgolly.scalajs.react.Reusability
 import lucuma.catalog.AngularSize
 import lucuma.catalog.CatalogTargetResult
 import lucuma.core.model.CatalogInfo
+import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
 import lucuma.schemas.model.TargetWithOptId
+import monocle.Focus
+import monocle.Lens
+import monocle.Optional
 
 case class TargetSearchResult(
   targetWithOptId: TargetWithOptId,
@@ -21,7 +25,7 @@ case class TargetSearchResult(
   lazy val target: Target           = targetWithOptId.target
 }
 
-object TargetSearchResult {
+object TargetSearchResult:
   def fromCatalogTargetResult(r: CatalogTargetResult): TargetSearchResult =
     TargetSearchResult(
       TargetWithOptId(none, r.target),
@@ -41,4 +45,12 @@ object TargetSearchResult {
 
   given Reusability[TargetSearchResult] =
     Reusability.byEq
-}
+
+  val targetWithOpId: Lens[TargetSearchResult, TargetWithOptId] =
+    Focus[TargetSearchResult](_.targetWithOptId)
+
+  val target: Lens[TargetSearchResult, Target] =
+    targetWithOpId.andThen(Focus[TargetWithOptId](_.target))
+
+  val siderealTracking: Optional[TargetSearchResult, SiderealTracking] =
+    target.andThen(Target.siderealTracking)
