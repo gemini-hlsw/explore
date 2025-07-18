@@ -11,6 +11,10 @@ import eu.timepit.refined.numeric.Interval
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.enums.Instrument
 import lucuma.core.math.Coordinates
+import lucuma.core.math.Epoch
+import lucuma.core.math.Parallax
+import lucuma.core.math.ProperMotion
+import lucuma.core.math.RadialVelocity
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
@@ -38,10 +42,19 @@ object Hours extends RefinedTypeOps[Hours, BigDecimal] {
 
 val NewTargetName: NonEmptyString = "<New Target>".refined
 
+private val NewTargetSiderealTracking =
+  SiderealTracking(
+    Coordinates.Zero,
+    Epoch.J2000, // As good as any
+    ProperMotion.Zero.some,
+    RadialVelocity.Zero.some,
+    Parallax.Zero.some
+  )
+
 val EmptySiderealTarget =
   Target.Sidereal(
     NewTargetName,
-    SiderealTracking.const(Coordinates.Zero),
+    NewTargetSiderealTracking,
     SourceProfile.Point(SpectralDefinition.BandNormalized(none, SortedMap.empty)),
     none
   )
@@ -70,14 +83,17 @@ type ObservationsAndTargets = (ObservationList, TargetList)
 object ObservationsAndTargets:
   val observations: Lens[ObservationsAndTargets, ObservationList] =
     Focus[ObservationsAndTargets](_._1)
-  val targets: Lens[ObservationsAndTargets, TargetList]           = Focus[ObservationsAndTargets](_._2)
+
+  val targets: Lens[ObservationsAndTargets, TargetList] =
+    Focus[ObservationsAndTargets](_._2)
 
 type PosAngleConstraintAndObsMode = (PosAngleConstraint, Option[ObservingMode])
 
 object PosAngleConstraintAndObsMode:
   val posAngleConstraint: Lens[PosAngleConstraintAndObsMode, PosAngleConstraint] =
     Focus[PosAngleConstraintAndObsMode](_._1)
-  val observingMode: Lens[PosAngleConstraintAndObsMode, Option[ObservingMode]]   =
+
+  val observingMode: Lens[PosAngleConstraintAndObsMode, Option[ObservingMode]] =
     Focus[PosAngleConstraintAndObsMode](_._2)
 
 val SupportedInstruments =
