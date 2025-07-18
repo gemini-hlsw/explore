@@ -3,7 +3,9 @@
 
 package explore.targeteditor
 
+import algebra.instances.all.given
 import cats.syntax.all.*
+import coulomb.policy.spire.standard.given
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.syntax.all.*
@@ -18,7 +20,9 @@ import explore.model.formats.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.CalibrationRole
+import lucuma.core.math.Constants
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Redshift
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.syntax.all.*
@@ -34,6 +38,8 @@ import lucuma.ui.primereact.LucumaPrimeStyles
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+
+import scala.language.implicitConversions
 
 case class RVInput(
   rv:              View[Option[RadialVelocity]],
@@ -55,10 +61,18 @@ object RVInput {
   private def addons(v: Option[RadialVelocity], role: Option[CalibrationRole]): List[TagMod] =
     if (v.isEmpty) List(role.renderRequiredForITCIcon) else List.empty
 
+  // Over 1% speed of light, use Z
+  val LOSLimit = Constants.SpeedOfLight.toValue[BigDecimal] * BigDecimal(0.01)
+
+  private def defaultLOS(p: Props): LineOfSightMotion =
+    p.rv.get match
+      case Some(rv) if rv.rv > LOSLimit => LineOfSightMotion.Z
+      case _                            => LineOfSightMotion.RV
+
   protected val component = ScalaFnComponent[Props]: props =>
     for {
       ctx    <- useContext(AppContext.ctx)
-      rvView <- useStateView(LineOfSightMotion.RV) // Start with default
+      rvView <- useStateView(defaultLOS(props)) // Start with default
       _      <- useEffectWithDeps((props.targetId, props.userId)): (tid, _) =>
                   // Check cache first, then database
                   props.preferences
@@ -72,7 +86,7 @@ object RVInput {
                       UserPreferencesQueries.TargetPreferences
                         .queryLineOfSightMotion(props.userId, tid)
                         .runAsyncAndThen: p =>
-                          val los = p.toOption.flatten.getOrElse(LineOfSightMotion.RV)
+                          val los = p.toOption.flatten.getOrElse(defaultLOS(props))
                           rvView.set(los)
     } yield
       import ctx.given
