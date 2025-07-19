@@ -357,7 +357,10 @@ object SiderealTargetEditor:
                 disabled = disabled,
                 validFormat = ExploreModelValidators.pmRAValidWedge.optional,
                 changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                units = "mas/y"
+                units = "mas/y",
+                groupClass = ExploreStyles.ZeroValue.when_(
+                  properMotionRAView.get.exists(_ === ProperMotion.Zero.ra)
+                )
               ),
               FormInputTextView(
                 id = "raDec".refined,
@@ -366,7 +369,10 @@ object SiderealTargetEditor:
                 disabled = disabled,
                 validFormat = ExploreModelValidators.pmDecValidWedge.optional,
                 changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                units = "mas/y"
+                units = "mas/y",
+                groupClass = ExploreStyles.ZeroValue.when_(
+                  properMotionDecView.get.exists(_ === ProperMotion.Zero.dec)
+                )
               ),
               FormInputTextView(
                 id = "parallax".refined,
@@ -375,7 +381,10 @@ object SiderealTargetEditor:
                 disabled = disabled,
                 validFormat = ExploreModelValidators.pxValidWedge.optional,
                 changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
-                units = "mas"
+                units = "mas",
+                groupClass = ExploreStyles.ZeroValue.when_(
+                  parallaxView.get.exists(_ === Parallax.Zero)
+                )
               ),
               RVInput(
                 radialVelocityView,
