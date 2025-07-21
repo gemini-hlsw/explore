@@ -536,5 +536,6 @@ object ExploreStyles:
 
   val FocusedInfo: Css = Css("explore-focused-info")
 
-  val Hidden: Css = Css("explore-hidden")
-  val Stale: Css  = Css("stale")
+  val Hidden: Css    = Css("explore-hidden")
+  val Stale: Css     = Css("stale")
+  val ZeroValue: Css = Css("explore-zero-value")

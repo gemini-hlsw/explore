@@ -101,7 +101,10 @@ object RVInput {
             .runAsyncAndForget
 
       val baseCss = ExploreStyles.Grow(1.refined) |+|
-        ExploreStyles.WarningInput.when_(props.rv.get.isEmpty)
+        ExploreStyles.WarningInput.when_(props.rv.get.isEmpty) |+|
+        ExploreStyles.ZeroValue.when_(
+          props.rv.get.exists(_ === RadialVelocity.Zero)
+        )
 
       val input = rvView.get match {
         case LineOfSightMotion.Z  =>
