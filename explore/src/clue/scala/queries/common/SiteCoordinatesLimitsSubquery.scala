@@ -7,26 +7,20 @@ import clue.GraphQLSubquery
 import clue.annotation.GraphQL
 import lucuma.core.model.SiteCoordinatesLimits
 import lucuma.schemas.ObservationDB
+import lucuma.schemas.odb.RASubquery
+import lucuma.schemas.odb.DecSubquery
 import lucuma.odb.json.limits.decoder.given
 
 @GraphQL
 object SiteCoordinatesLimitsSubquery
     extends GraphQLSubquery.Typed[ObservationDB, SiteCoordinatesLimits](
-      "ConfigurationRequest"
+      "CoordinatesLimits"
     ):
   override val subquery: String = s"""
     {
-      raStart {
-        microarcseconds
-      }
-      raEnd {
-        microarcseconds
-      }
-      decStart {
-        microarcseconds
-      }
-      decEnd {
-        microarcseconds
-      }
+      raStart $RASubquery
+      raEnd $RASubquery
+      decStart $DecSubquery
+      decEnd $DecSubquery
     }
   """
