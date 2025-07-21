@@ -85,6 +85,12 @@ object GmosImagingConfigPanel {
       Logger[IO]
     ): View[NonEmptyList[Filter]]
 
+    @inline protected def explicitMultipleFiltersMode(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[Option[MultipleFiltersMode]]
+
     @inline protected def explicitBinning(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
@@ -112,6 +118,7 @@ object GmosImagingConfigPanel {
     @inline protected val filtersLens: Lens[T, NonEmptyList[Filter]]
     @inline protected val initialFiltersLens: Lens[T, NonEmptyList[Filter]]
     @inline protected val filterTypeGetter: Filter => FilterType
+    @inline protected val defaultMultipleFiltersModeLens: Lens[T, MultipleFiltersMode]
     @inline protected val defaultBinningLens: Lens[T, GmosBinning]
     @inline protected val defaultReadModeGainLens: Lens[T, (GmosAmpReadMode, GmosAmpGain)]
     @inline protected val defaultRoiLens: Lens[T, GmosRoi]
@@ -140,10 +147,12 @@ object GmosImagingConfigPanel {
           val disableSimpleEdit   =
             disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
 
-          val defaultBinning       = defaultBinningLens.get(props.observingMode.get)
-          val defaultReadModeGain  = defaultReadModeGainLens.get(props.observingMode.get)
-          val defaultRoi           = defaultRoiLens.get(props.observingMode.get)
-          val resolvedReadModeGain = resolvedReadModeGainGetter(props.observingMode.get)
+          val defaultMultipleFiltersMode =
+            defaultMultipleFiltersModeLens.get(props.observingMode.get)
+          val defaultBinning             = defaultBinningLens.get(props.observingMode.get)
+          val defaultReadModeGain        = defaultReadModeGainLens.get(props.observingMode.get)
+          val defaultRoi                 = defaultRoiLens.get(props.observingMode.get)
+          val resolvedReadModeGain       = resolvedReadModeGainGetter(props.observingMode.get)
 
           val filtersView                                               = filters(props.observingMode)
           val filtersGrouper: NonEmptyList[(String, Filter => Boolean)] =
@@ -181,6 +190,15 @@ object GmosImagingConfigPanel {
                 selectedItemsLabel = s"${localFiltersView.get.size} selected".some,
                 tooltip = localFiltersView.get.map(Display[Filter].longName).mkString("\n").some,
                 tooltipOptions = TooltipOptions(showOnDisabled = true).some,
+                disabled = disableSimpleEdit
+              ),
+              CustomizableEnumSelectOptional(
+                id = "explicitMultipleFiltersMode".refined,
+                view = explicitMultipleFiltersMode(props.observingMode)
+                  .withDefault(defaultMultipleFiltersMode),
+                defaultValue = defaultMultipleFiltersMode.some,
+                label = "Multiple Filters".some,
+                helpId = Some("configuration/imaging/multiple-filters-mode.md".refined),
                 disabled = disableSimpleEdit
               )
             ),
@@ -278,6 +296,17 @@ object GmosImagingConfigPanel {
       )
       .view(_.toList.assign)
 
+    @inline override protected def explicitMultipleFiltersMode(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[Option[MultipleFiltersMode]] = aligner
+      .zoom(
+        ObservingMode.GmosNorthImaging.explicitMultipleFiltersMode,
+        GmosNorthImagingInput.explicitMultipleFiltersMode.modify
+      )
+      .view(_.orUnassign)
+
     @inline override protected def explicitBinning(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
@@ -340,6 +369,8 @@ object GmosImagingConfigPanel {
     @inline override protected val initialFiltersLens        =
       ObservingMode.GmosNorthImaging.initialFilters
     @inline override val filterTypeGetter                    = _.filterType
+    @inline protected val defaultMultipleFiltersModeLens     =
+      ObservingMode.GmosNorthImaging.defaultMultipleFiltersMode
     @inline protected val defaultBinningLens                 = ObservingMode.GmosNorthImaging.defaultBin
     @inline protected val defaultReadModeGainLens            =
       (ObservingMode.GmosNorthImaging.defaultAmpReadMode,
@@ -404,6 +435,17 @@ object GmosImagingConfigPanel {
         )
         .view(_.toList.assign)
 
+    @inline override protected def explicitMultipleFiltersMode(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[Option[MultipleFiltersMode]] = aligner
+      .zoom(
+        ObservingMode.GmosSouthImaging.explicitMultipleFiltersMode,
+        GmosSouthImagingInput.explicitMultipleFiltersMode.modify
+      )
+      .view(_.orUnassign)
+
     @inline override protected def explicitBinning(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
@@ -466,6 +508,8 @@ object GmosImagingConfigPanel {
     @inline override protected val initialFiltersLens        =
       ObservingMode.GmosSouthImaging.initialFilters
     @inline override protected val filterTypeGetter          = _.filterType
+    @inline protected val defaultMultipleFiltersModeLens     =
+      ObservingMode.GmosSouthImaging.defaultMultipleFiltersMode
     @inline protected val defaultBinningLens                 = ObservingMode.GmosSouthImaging.defaultBin
     @inline protected val defaultReadModeGainLens            =
       (ObservingMode.GmosSouthImaging.defaultAmpReadMode,
