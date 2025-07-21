@@ -12,7 +12,7 @@
       "expirationAnticipationSeconds": 10
     },
     "tracing": {
-      "key": "hcaik_01j94x9ckgc61kzsyjk2xjm4nkn23hn1f3baeqjnbr4n1hywhezrzqcxdj",
+      "key": "hcaik_01k0q44ydek334b262pbe7t74yt534vyvq3qge8fb3myt1dfpw8d9aqye1",
       "serviceName": "explore-local"
     }
   },
@@ -29,7 +29,7 @@
       "expirationAnticipationSeconds": 10
     },
     "tracing": {
-      "key": "hcaik_01j94x9ckgc61kzsyjk2xjm4nkn23hn1f3baeqjnbr4n1hywhezrzqcxdj",
+      "key": "hcaik_01k0q4c39fxfka1rdfk1yhgmkg4922b53z9abywz7pqam6tcsr825vba5g",
       "serviceName": "explore-staging"
     }
   },
