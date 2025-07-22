@@ -13,7 +13,6 @@ import clue.syntax.*
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.numeric.PosBigDecimal
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ExecutionOffsets
 import explore.model.Observation
 import explore.utils.*
 import lucuma.core.model.ConfigurationRequest
@@ -349,12 +348,6 @@ trait OdbObservationApiImpl[F[_]: Async](using StreamingClient[F, ObservationDB]
       .query(obsRef.assign)
       .processErrors
       .map(_.observation.map(r => (r.program.id, r.id)))
-
-  def sequenceOffsets(obsId: Observation.Id): F[Option[ExecutionOffsets]] =
-    SequenceOffsets[F]
-      .query(obsId)
-      .raiseGraphQLErrors
-      .map(_.observation.map(_.execution))
 
   def observationEditSubscription(
     obsId: Observation.Id

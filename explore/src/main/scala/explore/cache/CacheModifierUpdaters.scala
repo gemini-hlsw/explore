@@ -75,10 +75,10 @@ trait CacheModifierUpdaters {
   ): ProgramSummaries => ProgramSummaries =
     val digestLens   = Observation.execution.andThen(Execution.digest)
     val disjointLens = digestLens.disjointZip(Observation.workflow)
-    // `execution.calculatedDigest` and `workflow` will be made non-optional in the future.
+    // `Execution.digest` and `workflow` will be made non-optional in the future.
     // In practice, both should be defined.
     obscalcUpdate.value
-      .flatMap(value => (value.execution.calculatedDigest, value.calculatedWorkflow).tupled)
+      .flatMap(value => (value.execution.digest, value.calculatedWorkflow).tupled)
       .fold(identity[ProgramSummaries]) { case (digest, workflow) =>
         val obsId: Observation.Id = obscalcUpdate.observationId
         ProgramSummaries.observations

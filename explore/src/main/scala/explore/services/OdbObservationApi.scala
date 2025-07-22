@@ -8,7 +8,6 @@ import cats.syntax.option.*
 import clue.data.Input
 import eu.timepit.refined.types.numeric.NonNegShort
 import eu.timepit.refined.types.string.NonEmptyString
-import explore.model.ExecutionOffsets
 import explore.model.Observation
 import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.model.ConfigurationRequest
@@ -93,7 +92,6 @@ trait OdbObservationApi[F[_]]:
   def resolveObservationReference(
     obsRef: ObservationReference
   ): F[Option[(Program.Id, Observation.Id)]]
-  def sequenceOffsets(obsId:             Observation.Id): F[Option[ExecutionOffsets]]
   def observationEditSubscription(obsId: Observation.Id): Resource[F, fs2.Stream[F, Unit]]
   def programObservationsDeltaSubscription(
     programId: Program.Id

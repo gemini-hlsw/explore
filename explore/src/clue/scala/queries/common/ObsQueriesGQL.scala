@@ -23,29 +23,6 @@ object ObsQueriesGQL:
     """
 
   @GraphQL
-  trait SequenceOffsets extends GraphQLOperation[ObservationDB]:
-    val document = s"""
-      query($$obsId: ObservationId!) {
-        observation(observationId: $$obsId) {
-          execution {
-            digest {
-              acquisition {
-                offsets $OffsetSubquery
-              }
-              science {
-                offsets $OffsetSubquery
-              }
-            }
-          }
-        }
-      }
-    """
-
-    object Data:
-      object Observation:
-        type Execution = explore.model.ExecutionOffsets
-
-  @GraphQL
   trait ObservationEditSubscription extends GraphQLOperation[ObservationDB]:
     // We need to include the `value {id}` to avoid a bug in grackle.
     val document = """
@@ -143,7 +120,7 @@ object ObsQueriesGQL:
           value {
             groupId
             execution {
-              calculatedDigest $CalculatedDigestSubquery
+              digest $CalculatedDigestSubquery
             }
             calculatedWorkflow $CalculatedObservationWorkflowSubquery
           }
