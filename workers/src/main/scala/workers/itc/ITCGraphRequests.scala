@@ -16,6 +16,7 @@ import lucuma.core.model.ExposureTimeMode
 import lucuma.core.util.Timestamp
 import lucuma.itc.Error
 import lucuma.itc.client.ItcClient
+import lucuma.itc.client.ItcConstraintsInput
 import lucuma.itc.client.SignificantFiguresInput
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsInput
 import lucuma.itc.client.SpectroscopyIntegrationTimeAndGraphsParameters
@@ -80,7 +81,7 @@ object ITCGraphRequests:
               SpectroscopyIntegrationTimeAndGraphsInput(
                 SpectroscopyIntegrationTimeAndGraphsParameters(
                   exposureTimeMode = request.exposureTimeMode,
-                  constraints = request.constraints,
+                  constraints = ItcConstraintsInput.fromConstraintSet(request.constraints),
                   mode = mode,
                   significantFigures = significantFigures.some
                 ),
