@@ -162,6 +162,10 @@ trait DisplayImplicits:
 
   given Display[Flamingos2Decker] = Display.by(_.shortName, _.longName)
 
+  given Display[MultipleFiltersMode] = Display.byShortName:
+    case MultipleFiltersMode.Grouped     => "Grouped"
+    case MultipleFiltersMode.Interleaved => "Interleaved"
+
   given Display[SequenceType] = Display.byShortName:
     case SequenceType.Acquisition => "Acquisition"
     case SequenceType.Science     => "Science"
