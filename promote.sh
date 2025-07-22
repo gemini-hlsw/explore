@@ -46,7 +46,7 @@ case $TARGET_ENV in
     HASURA_ENDPOINT="https://prefs.gpp.gemini.edu"
     ;;
   "staging")
-    HASURA_ENDPOINT="https://gpp-prefs-staging.lucuma.xyz"
+    HASURA_ENDPOINT="https://prefs-test.gpp.gemini.edu"
     ;;
   *)
     echo "Unknown environment: $TARGET_ENV"
