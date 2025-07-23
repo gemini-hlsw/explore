@@ -22,6 +22,7 @@ import lucuma.itc.client.ClientCalculationResult
 import lucuma.itc.client.ImagingInput
 import lucuma.itc.client.ImagingParameters
 import lucuma.itc.client.ItcClient
+import lucuma.itc.client.ItcConstraintsInput
 import lucuma.itc.client.SpectroscopyInput
 import lucuma.itc.client.SpectroscopyParameters
 import org.typelevel.log4cats.Logger
@@ -87,7 +88,7 @@ object ITCRequests:
                     ImagingInput(
                       ImagingParameters(
                         exposureTimeMode = params.exposureTimeMode,
-                        constraints = params.constraints,
+                        constraints = ItcConstraintsInput.fromConstraintSet(params.constraints),
                         mode = mode
                       ),
                       params.asterism.map(_.gaiaFree.input)
@@ -100,7 +101,7 @@ object ITCRequests:
                     SpectroscopyInput(
                       SpectroscopyParameters(
                         exposureTimeMode = params.exposureTimeMode,
-                        constraints = params.constraints,
+                        constraints = ItcConstraintsInput.fromConstraintSet(params.constraints),
                         mode = mode
                       ),
                       params.asterism.map(_.gaiaFree.input)
