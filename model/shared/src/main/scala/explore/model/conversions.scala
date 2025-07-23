@@ -8,20 +8,21 @@ import lucuma.core.math.RadialVelocity
 import lucuma.core.math.Redshift
 
 trait conversions {
-  val rvToRedshiftGet: Option[RadialVelocity] => Option[Redshift] =
-    _.flatMap(_.toRedshift)
+  val rvToRedshiftGet: RadialVelocity => Redshift =
+    _.toRedshift.get
 
-  val rvToRedshiftMod
-    : (Option[Redshift] => Option[Redshift]) => Option[RadialVelocity] => Option[RadialVelocity] =
-    modZ => rv => modZ(rv.flatMap(_.toRedshift)).flatMap(_.toRadialVelocity)
+  val rvToRedshiftMod: (Redshift => Redshift) => RadialVelocity => RadialVelocity =
+    // toRedshift should return a Some since RadialVelocity should be in the rance of +/_ c,
+    // and Redshift.toRadialVelocity should always return a Some, too.
+    modZ => rv => modZ(rv.toRedshift.get).toRadialVelocity.get
 
-  val rvToARVGet: Option[RadialVelocity] => Option[ApparentRadialVelocity] =
-    rvToRedshiftGet.andThen(_.map(_.toApparentRadialVelocity))
+  val rvToARVGet: RadialVelocity => ApparentRadialVelocity =
+    rvToRedshiftGet.andThen(_.toApparentRadialVelocity)
 
   val rvToARVMod: (
-    Option[ApparentRadialVelocity] => Option[ApparentRadialVelocity]
-  ) => Option[RadialVelocity] => Option[RadialVelocity] =
-    modZ => rvToRedshiftMod(rsOpt => modZ(rsOpt.map(_.toApparentRadialVelocity)).map(_.toRedshift))
+    ApparentRadialVelocity => ApparentRadialVelocity
+  ) => RadialVelocity => RadialVelocity =
+    modZ => rvToRedshiftMod(rs => modZ(rs.toApparentRadialVelocity).toRedshift)
 
 }
 

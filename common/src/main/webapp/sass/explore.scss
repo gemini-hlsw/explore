@@ -3580,9 +3580,6 @@ a.explore-upgrade-link {
 // Lighter text color for zero values in astronomical fields
 .explore-zero-value {
   input {
-    --color-text-zero: var(--color-background-base-h), var(--color-background-base-s),
-      var(--color-text-base-l), 50%;
-
-    color: hsla(var(--color-text-zero));
+    color: var(--text-color-secondary);
   }
 }
