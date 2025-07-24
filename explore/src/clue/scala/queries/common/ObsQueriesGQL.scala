@@ -122,7 +122,7 @@ object ObsQueriesGQL:
             execution {
               digest $CalculatedDigestSubquery
             }
-            calculatedWorkflow $CalculatedObservationWorkflowSubquery
+            workflow $CalculatedObservationWorkflowSubquery
           }
         }
       }

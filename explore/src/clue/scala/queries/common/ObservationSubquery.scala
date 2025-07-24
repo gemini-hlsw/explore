@@ -66,7 +66,7 @@ object ObservationSubquery extends GraphQLSubquery.Typed[ObservationDB, Observat
           configurationRequests {
             id
           }
-          workflow: calculatedWorkflow $CalculatedObservationWorkflowSubquery
+          workflow $CalculatedObservationWorkflowSubquery
           groupId
           groupIndex
           reference {
