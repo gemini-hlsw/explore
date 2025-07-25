@@ -171,13 +171,16 @@ extension [F[_], A](view: ViewF[F, A])
   def zoom[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =
     view.zoom(getAdjust.get)(getAdjust.mod)
 
-extension [A: Eq](view: View[Option[A]])
+extension [A](view: View[Option[A]])
   // If the view contains `none`, `get` returns the defaultDisplay value. When setting,
   // if the new value is the defaultSet value, set it to none.
-  def withDefault(defaultSet: A, defaultDisplay: A): View[Option[A]] =
+  def withDefault(defaultSet: A, defaultDisplay: A)(using Eq[A]): View[Option[A]] =
     view.zoom(_.orElse(defaultDisplay.some))(f =>
       b => f(b).flatMap(newB => if (newB === defaultSet) none else newB.some)
     )
 
-  def withDefault(default: A): View[Option[A]] =
+  def withDefault(default: A)(using Eq[A]): View[Option[A]] =
     withDefault(default, default)
+
+  def removeOptionality(default: A): View[A] =
+    view.zoom(_.getOrElse(default))(f => b => f(b.getOrElse(default)).some)

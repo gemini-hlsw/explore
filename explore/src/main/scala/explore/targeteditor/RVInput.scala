@@ -11,7 +11,6 @@ import crystal.react.hooks.*
 import crystal.react.syntax.all.*
 import explore.common.UserPreferencesQueries
 import explore.components.ui.ExploreStyles
-import explore.itc.renderRequiredForITCIcon
 import explore.model.AppContext
 import explore.model.UserPreferences
 import explore.model.conversions.*
@@ -42,7 +41,7 @@ import lucuma.ui.syntax.all.given
 import scala.language.implicitConversions
 
 case class RVInput(
-  rv:              View[Option[RadialVelocity]],
+  rv:              View[RadialVelocity],
   disabled:        Boolean,
   calibrationRole: Option[CalibrationRole],
   targetId:        Target.Id,
@@ -58,16 +57,12 @@ object RVInput {
     case LineOfSightMotion.Z  => "z"
     case LineOfSightMotion.CZ => "cz"
 
-  private def addons(v: Option[RadialVelocity], role: Option[CalibrationRole]): List[TagMod] =
-    if (v.isEmpty) List(role.renderRequiredForITCIcon) else List.empty
-
   // Over 1% speed of light, use Z
   val LOSLimit = Constants.SpeedOfLight.toValue[BigDecimal] * BigDecimal(0.01)
 
   private def defaultLOS(p: Props): LineOfSightMotion =
-    p.rv.get match
-      case Some(rv) if rv.rv > LOSLimit => LineOfSightMotion.Z
-      case _                            => LineOfSightMotion.RV
+    if (p.rv.get.rv > LOSLimit) LineOfSightMotion.Z
+    else LineOfSightMotion.RV
 
   protected val component = ScalaFnComponent[Props]: props =>
     for {
@@ -101,9 +96,8 @@ object RVInput {
             .runAsyncAndForget
 
       val baseCss = ExploreStyles.Grow(1.refined) |+|
-        ExploreStyles.WarningInput.when_(props.rv.get.isEmpty) |+|
         ExploreStyles.ZeroValue.when_(
-          props.rv.get.exists(_ === RadialVelocity.Zero)
+          props.rv.get === RadialVelocity.Zero
         )
 
       val input = rvView.get match {
@@ -111,36 +105,30 @@ object RVInput {
           FormInputTextView(
             id = "los-z".refined,
             value = props.rv.zoom(rvToRedshiftGet)(rvToRedshiftMod),
-            validFormat =
-              InputValidSplitEpi.fromFormat(formatZ, "Must be a number".refined).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined).optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatZ, "Must be a number".refined),
+            changeAuditor = ChangeAuditor.fromFormat(formatZ).decimal(9.refined),
             groupClass = baseCss,
-            disabled = props.disabled,
-            postAddons = addons(props.rv.get, props.calibrationRole)
+            disabled = props.disabled
           )
         case LineOfSightMotion.CZ =>
           FormInputTextView(
             id = "los-cz".refined,
             value = props.rv.zoom(rvToARVGet)(rvToARVMod),
-            validFormat =
-              InputValidSplitEpi.fromFormat(formatCZ, "Must be a number".refined).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10.refined).optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatCZ, "Must be a number".refined),
+            changeAuditor = ChangeAuditor.fromFormat(formatCZ).decimal(10.refined),
             groupClass = baseCss,
             disabled = props.disabled,
-            units = "km/s",
-            postAddons = addons(props.rv.get, props.calibrationRole)
+            units = "km/s"
           )
         case LineOfSightMotion.RV =>
           FormInputTextView(
             id = "los-rv".refined,
             value = props.rv,
-            validFormat =
-              InputValidSplitEpi.fromFormat(formatRV, "Must be a number".refined).optional,
-            changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3.refined).optional,
+            validFormat = InputValidSplitEpi.fromFormat(formatRV, "Must be a number".refined),
+            changeAuditor = ChangeAuditor.fromFormat(formatRV).decimal(3.refined),
             groupClass = baseCss,
             disabled = props.disabled,
-            units = "km/s",
-            postAddons = addons(props.rv.get, props.calibrationRole)
+            units = "km/s"
           )
       }
       React.Fragment(

@@ -54,7 +54,6 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.utils.*
 import org.typelevel.log4cats.Logger
 
 import java.time.Instant
@@ -107,13 +106,6 @@ object SiderealTargetEditor:
         val msg = s"Error cloning target [$targetId]"
         Logger[IO].error(t)(msg) >>
           ToastCtx[IO].showToast(msg, Message.Severity.Error)
-
-  private def buildProperMotion(
-    ra:  Option[ProperMotion.RA],
-    dec: Option[ProperMotion.Dec]
-  ): Option[ProperMotion] =
-    attemptCombine(ra, dec)
-      .map(ProperMotion.apply.tupled)
 
   // An UndoSetter that doesn't really update any undo stacks
   private def noopUndoSetter[M](view: View[M]): UndoSetter[M] =
@@ -220,65 +212,38 @@ object SiderealTargetEditor:
             .zoom(Target.Sidereal.name, nameLens.modify)
             .view(_.assign)
 
-        val properMotionRAView: View[Option[ProperMotion.RA]] =
+        val properMotionView: View[ProperMotion] =
           siderealTargetAligner
             .zoom(
-              Target.Sidereal.properMotionRA.getOption,
-              (f: Endo[Option[ProperMotion.RA]]) =>
-                Target.Sidereal.properMotion.modify(pmOpt =>
-                  buildProperMotion(
-                    f(pmOpt.map(ProperMotion.ra.get)),
-                    pmOpt.map(ProperMotion.dec.get)
-                  )
-                ),
+              Target.Sidereal.properMotion,
               siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
             )
-            .view((pmRA: Option[ProperMotion.RA]) =>
-              buildProperMotion(
-                pmRA,
-                Target.Sidereal.properMotionDec.getOption(props.target.get)
-              )
-                .map(_.toInput)
-                .orUnassign
-            )
+            .view(_.map(_.toInput).orUnassign)
+            .removeOptionality(ProperMotion.Zero)
 
-        val properMotionDecView: View[Option[ProperMotion.Dec]] =
-          siderealTargetAligner
-            .zoom(
-              Target.Sidereal.properMotionDec.getOption,
-              (f: Endo[Option[ProperMotion.Dec]]) =>
-                Target.Sidereal.properMotion.modify(pmOpt =>
-                  buildProperMotion(
-                    pmOpt.map(ProperMotion.ra.get),
-                    f(pmOpt.map(ProperMotion.dec.get))
-                  )
-                ),
-              siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
-            )
-            .view((pmDec: Option[ProperMotion.Dec]) =>
-              buildProperMotion(
-                Target.Sidereal.properMotionRA.getOption(props.target.get),
-                pmDec
-              )
-                .map(_.toInput)
-                .orUnassign
-            )
+        val properMotionRAView: View[ProperMotion.RA] =
+          properMotionView.zoom(ProperMotion.ra)
 
-        val parallaxView: View[Option[Parallax]] =
+        val properMotionDecView: View[ProperMotion.Dec] =
+          properMotionView.zoom(ProperMotion.dec)
+
+        val parallaxView: View[Parallax] =
           siderealTargetAligner
             .zoom(
               Target.Sidereal.parallax,
               siderealToTargetEndo.compose(SiderealInput.parallax.modify)
             )
             .view(_.map(_.toInput).orUnassign)
+            .removeOptionality(Parallax.Zero)
 
-        val radialVelocityView: View[Option[RadialVelocity]] =
+        val radialVelocityView: View[RadialVelocity] =
           siderealTargetAligner
             .zoom(
               Target.Sidereal.radialVelocity,
               siderealToTargetEndo.compose(SiderealInput.radialVelocity.modify)
             )
             .view(_.map(_.toInput).orUnassign)
+            .removeOptionality(RadialVelocity.Zero)
 
         val sourceProfileAligner: Aligner[SourceProfile, SourceProfileInput] =
           siderealTargetAligner.zoom(
@@ -355,11 +320,11 @@ object SiderealTargetEditor:
                 value = properMotionRAView,
                 label = "µ RA",
                 disabled = disabled,
-                validFormat = ExploreModelValidators.pmRAValidWedge.optional,
-                changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
+                validFormat = ExploreModelValidators.pmRAValidWedge,
+                changeAuditor = ChangeAuditor.bigDecimal(3.refined),
                 units = "mas/y",
                 groupClass = ExploreStyles.ZeroValue.when_(
-                  properMotionRAView.get.exists(_ === ProperMotion.Zero.ra)
+                  properMotionRAView.get === ProperMotion.Zero.ra
                 )
               ),
               FormInputTextView(
@@ -367,11 +332,11 @@ object SiderealTargetEditor:
                 value = properMotionDecView,
                 label = "µ Dec",
                 disabled = disabled,
-                validFormat = ExploreModelValidators.pmDecValidWedge.optional,
-                changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
+                validFormat = ExploreModelValidators.pmDecValidWedge,
+                changeAuditor = ChangeAuditor.bigDecimal(3.refined),
                 units = "mas/y",
                 groupClass = ExploreStyles.ZeroValue.when_(
-                  properMotionDecView.get.exists(_ === ProperMotion.Zero.dec)
+                  properMotionDecView.get === ProperMotion.Zero.dec
                 )
               ),
               FormInputTextView(
@@ -379,11 +344,11 @@ object SiderealTargetEditor:
                 value = parallaxView,
                 label = "Parallax",
                 disabled = disabled,
-                validFormat = ExploreModelValidators.pxValidWedge.optional,
-                changeAuditor = ChangeAuditor.bigDecimal(3.refined).optional,
+                validFormat = ExploreModelValidators.pxValidWedge,
+                changeAuditor = ChangeAuditor.bigDecimal(3.refined),
                 units = "mas",
                 groupClass = ExploreStyles.ZeroValue.when_(
-                  parallaxView.get.exists(_ === Parallax.Zero)
+                  parallaxView.get === Parallax.Zero
                 )
               ),
               RVInput(
