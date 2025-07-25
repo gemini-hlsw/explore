@@ -78,7 +78,7 @@ trait CacheModifierUpdaters {
     // `Execution.digest` and `workflow` will be made non-optional in the future.
     // In practice, both should be defined.
     obscalcUpdate.value
-      .flatMap(value => (value.execution.digest, value.calculatedWorkflow).tupled)
+      .flatMap(value => (value.execution.digest, value.workflow).tupled)
       .fold(identity[ProgramSummaries]) { case (digest, workflow) =>
         val obsId: Observation.Id = obscalcUpdate.observationId
         ProgramSummaries.observations

@@ -37,11 +37,10 @@ object SequenceData:
     List(acq, sci).flattenOption.toMap
 
   def fromOdbResponse(data: SequenceQuery.Data): Option[SequenceData] =
-    data.observation.flatMap: obs =>
-      obs.execution.config.map: config =>
-        SequenceData(
-          config,
-          itcFromOdb(obs.itc)
-        )
+    (data.observation, data.executionConfig).mapN: (obs, config) =>
+      SequenceData(
+        config,
+        itcFromOdb(obs.itc)
+      )
 
   given Reusability[SequenceData] = Reusability.byEq
