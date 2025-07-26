@@ -42,8 +42,10 @@ import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
 import lucuma.react.primereact.hooks.all.*
+import lucuma.refined.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
+import lucuma.ui.components.SolarProgress
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
@@ -54,8 +56,6 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
-import lucuma.ui.components.SolarProgress
-import lucuma.refined.*
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, RootModelViews]
@@ -206,7 +206,7 @@ object ExploreLayout:
                   content = error.message,
                   clazz = ExploreStyles.GlobalErrorDialog
                 ),
-                SolarProgress("top-error-message".refined)
+                SolarProgress("top-error-message")
               )
             ),
           IfLogged[ExploreEvent](
@@ -334,7 +334,6 @@ object ExploreLayout:
                             )
                           ),
                         showProgsPopupPot.renderPot(
-                          "programs-cache".refined,
                           showProgsPopup =>
                             if (showProgsPopup)
                               ProgramsPopup(
@@ -375,7 +374,7 @@ object ExploreLayout:
                                     SubmittedProposalMessage(proposalReference, deadline)
                                 )
                               ),
-                          _ => <.div()
+                          errorRender = _ => <.div()
                         )
                       )
                   )

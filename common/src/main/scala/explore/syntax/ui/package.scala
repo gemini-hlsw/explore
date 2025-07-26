@@ -32,9 +32,7 @@ import lucuma.core.util.Enumerated
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
-import lucuma.refined.*
 import lucuma.ui.sso.UserVault
-import lucuma.ui.syntax.all.{renderPot as _, *}
 import lucuma.ui.syntax.pot.*
 import org.http4s.headers.Authorization
 import org.scalajs.dom.HTMLElement
@@ -116,7 +114,10 @@ extension [F[_]: MonadCancelThrow, A](f: F[A])
 
 extension [A](pot: Pot[A])
   def orSpinner(f: A => VdomNode): VdomNode =
-    pot.renderPot("orSpinner".refined, valueRender = f, pendingRender = _ => Icons.Spinner.withSpin(true))
+    pot.renderPot(id = "or-spinner",
+                  valueRender = f,
+                  pendingRender = _ => Icons.Spinner.withSpin(true)
+    )
 
 // TODO: Move to lucuma-react?
 extension (tag:    TagOf[HTMLElement])

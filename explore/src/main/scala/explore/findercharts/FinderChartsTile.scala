@@ -34,8 +34,6 @@ import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.syntax.pot.*
 import monocle.Focus
-import lucuma.refined.*
-
 
 import scala.collection.immutable.SortedSet
 
@@ -171,7 +169,7 @@ object FinderChartsTile:
             }
           )(
             <.div(
-              SolarProgress("finder-charts".refined, ExploreStyles.FinderChartsLoadProgress)
+              SolarProgress(css = ExploreStyles.FinderChartsLoadProgress)
                 .unless(action.get === Action.None)
             ),
             ControlOverlay(props.parallacticAngle, transform),
@@ -187,14 +185,13 @@ object FinderChartsTile:
             <.div(ExploreStyles.FinderChartsBody)(
               props.selected.get.map { attId =>
                 urlMap.get.find { case ((i, _), _) => i === attId }.map { url =>
-                  url._2.renderPot("finderChart".refined, url =>
+                  url._2.renderPot: url =>
                     <.img(
                       ExploreStyles.FinderChartsImage,
                       ExploreStyles.FinderChartsImageInverted.when(transform.get.inverted.value),
                       ^.transform := transforms.mkString(" "),
                       ^.src       := url
                     )
-                  )
                 }
               }
             )

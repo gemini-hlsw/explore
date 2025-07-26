@@ -30,10 +30,10 @@ import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
+import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.refined.*
 
 object SequenceTile extends SequenceTileHelper:
   def apply(
@@ -73,7 +73,6 @@ object SequenceTile extends SequenceTileHelper:
         yield props.sequenceChanged.get
           .flatMap(_ => liveSequence.data)
           .renderPot(
-            "sequence-tile".refined,
             (visitsOpt, sequenceDataOpt) =>
               // TODO Show visits even if sequence data is not available
               sequenceDataOpt

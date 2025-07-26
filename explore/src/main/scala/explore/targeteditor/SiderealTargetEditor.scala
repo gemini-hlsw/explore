@@ -296,7 +296,7 @@ object SiderealTargetEditor:
         React.Fragment(
           TargetCloneSelector(props.obsInfo, obsToCloneTo),
           <.div(ExploreStyles.TargetGrid)(
-            obsTime.value.renderPot("siderealTarget".refined, ot =>
+            obsTime.value.renderPot(ot =>
               AladinCell(
                 props.userId,
                 oid,

@@ -4,8 +4,8 @@
 package explore.itc
 
 import cats.data.NonEmptyChain
-import explore.components.ui.ExploreStyles
 import cats.syntax.all.*
+import explore.components.ui.ExploreStyles
 import explore.highcharts.*
 import explore.model.itc.*
 import explore.model.reusability.given
