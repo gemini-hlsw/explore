@@ -9,12 +9,15 @@ import explore.utils.ToastCtx
 import lucuma.schemas.ObservationDB
 import org.typelevel.log4cats.Logger
 
-case class OdbApiImpl[F[_]: Async](resetCache: String => F[Unit])(using
+case class OdbApiImpl[F[_]: Async](
+  resetCache:       String => F[Unit],
+  notifyFatalError: String => F[Unit]
+)(using
   StreamingClient[F, ObservationDB],
   Logger[F],
   ToastCtx[F]
 ) extends OdbApi[F]
-    with OdbApiHelper[F](resetCache)
+    with OdbApiHelper[F](resetCache, notifyFatalError)
     with OdbTargetApiImpl[F]
     with OdbAsterismApiImpl[F]
     with OdbProgramApiImpl[F]

@@ -30,7 +30,6 @@ import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
-import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given

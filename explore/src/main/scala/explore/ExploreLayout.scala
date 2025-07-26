@@ -42,7 +42,6 @@ import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
 import lucuma.react.primereact.hooks.all.*
-import lucuma.refined.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
 import lucuma.ui.components.state.IfLogged
@@ -169,15 +168,15 @@ object ExploreLayout:
         // Indicates whether the current program has errored.
         // We keep a separate state from the Pot in props.model.programSummaries so that we can keep
         // the value there when there's an error, and show the error only as a modal on top.
-        programError         <- useState(none[String])
+        programError         <- useState(none[ProgramError])
         // Reset the program cache when the program changes.
         _                    <- useEffectWithDeps(routingInfo.map(_.programId)): _ =>
                                   ctx.resetProgramCache(none)
         // Reset the program cache when there's an error signal.
         _                    <- useEffectStreamResourceOnMount:
                                   ctx.resetProgramCacheTopic.subscribeAwaitUnbounded.map:
-                                    _.unNone.evalMap: errorMsg =>
-                                      programError.setStateAsync(errorMsg.some)
+                                    _.evalMap: errorMsg =>
+                                      programError.setStateAsync(errorMsg)
       yield
         import ctx.given
 
@@ -204,7 +203,7 @@ object ExploreLayout:
                   showCloseIcon = false,
                   dismissable = false,
                   position = Sidebar.Position.Bottom,
-                  content = error,
+                  content = error.message,
                   clazz = ExploreStyles.GlobalErrorDialog
                 ),
                 SolarProgress("top-error-message".refined)
@@ -298,7 +297,10 @@ object ExploreLayout:
                     ProgramCacheController(
                       routingInfo.programId,
                       props.model.programSummaries.throttledView.mod,
-                      programError.setState(none).toAsync,
+                      programError.modState {
+                        case p @ Some(ProgramError(_, true)) => p // no reset for a fatal error
+                        case _                               => None
+                      }.toAsync,
                       ctx.resetProgramCacheTopic.subscribeUnbounded // On error, keep the current program cache.
                         .map(_.fold(ResetType.Wipe)(_ => ResetType.Keep))
                     ),
