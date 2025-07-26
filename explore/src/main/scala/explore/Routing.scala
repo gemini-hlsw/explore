@@ -24,6 +24,7 @@ import japgolly.scalajs.react.vdom.VdomElement
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Instrument
 import lucuma.core.model.Group
+import lucuma.refined.refined
 import lucuma.core.model.ObservationReference
 import lucuma.core.model.Program
 import lucuma.core.model.ProgramReference
@@ -50,7 +51,7 @@ object Routing:
       model.programSummaries.throttlerView.toPotView
         .map: (pss: View[ProgramSummaries]) =>
           render(UndoContext(model.rootModel.zoom(RootModel.undoStacks), pss))
-        .renderPot(identity)
+        .renderPot("routing".refined, identity)
     )
 
   private def userPreferences(model: View[RootModel]): UserPreferences =

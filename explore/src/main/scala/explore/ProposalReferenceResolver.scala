@@ -15,6 +15,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ProposalReference
 import lucuma.react.common.ReactFnComponent
+import lucuma.refined.refined
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message.Severity
 import lucuma.ui.syntax.pot.*
@@ -38,5 +39,5 @@ object ProposalReferenceResolver
                             s"Proposal reference ${props.proposalRef.label} does not exist",
                             Severity.Error
                           ) >> ctx.pushPage(none).to[IO]
-      yield result.value.renderPot(_ => EmptyVdom)
+      yield result.value.renderPot("proposalRefResolver".refined, _ => EmptyVdom)
     )

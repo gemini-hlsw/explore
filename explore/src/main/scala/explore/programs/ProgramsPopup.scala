@@ -168,19 +168,24 @@ object ProgramsPopup:
           )
       )(
         programInfoViewListOpt.toPot
-          .renderPot: pis =>
-            ProgramTable(
-              props.currentProgramId,
-              props.userId,
-              props.isStaff,
-              pis,
-              selectProgram = doSelectProgram,
-              props.onClose.isEmpty,
-              onHide.some,
-              newProgramId.get,
-              virtualizerRef
-            ),
+          .renderPot(
+            "programsPopup".refined,
+            pis =>
+              ProgramTable(
+                props.currentProgramId,
+                props.userId,
+                props.isStaff,
+                pis,
+                selectProgram = doSelectProgram,
+                props.onClose.isEmpty,
+                onHide.some,
+                newProgramId.get,
+                virtualizerRef
+              ),
+            _ => <.div("Loading programs..."),
+            _ => <.div("Error loading programs")
+          ),
         props.message.map(msg =>
           Message(text = msg, severity = Message.Severity.Warning, icon = Icons.ExclamationTriangle)
         )
-      )
+    )

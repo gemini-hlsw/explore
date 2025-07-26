@@ -51,6 +51,7 @@ import lucuma.ui.aladin.Fov
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import lucuma.refined.refined
 import monocle.Iso
 import monocle.Lens
 import org.typelevel.log4cats.Logger
@@ -510,9 +511,9 @@ object AladinCell extends ModelOptics with AladinCommon:
               Icons.ThinSliders
             )
           ),
-          options.renderPotView(renderAladin),
-          options.renderPotView(renderToolbar),
-          options.renderPotView(renderAgsOverlay)
+          options.renderPotView("aladinRenderer".refined, renderAladin),
+          options.renderPotView("aladinToolbar".refined, renderToolbar),
+          options.renderPotView("aladinAgsOverlay".refined, renderAgsOverlay)
         ),
         options
           .zoom(Pot.readyPrism[AsterismVisualOptions])

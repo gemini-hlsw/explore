@@ -15,6 +15,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.ObservationReference
 import lucuma.react.common.*
+import lucuma.refined.refined
 import lucuma.react.primereact.Message.Severity
 import lucuma.ui.syntax.pot.*
 
@@ -41,5 +42,5 @@ object ObsReferenceResolver
                             s"Observation reference ${props.obsRef.label} does not exist.",
                             Severity.Error
                           ) >> ctx.pushPage(none).to[IO]
-      yield result.value.renderPot(_ => EmptyVdom)
+      yield result.value.renderPot("obsRefResolver".refined, _ => EmptyVdom)
     )

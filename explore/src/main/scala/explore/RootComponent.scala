@@ -17,6 +17,7 @@ import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.*
 import lucuma.ui.syntax.all.*
+import lucuma.refined.*
 
 import scala.concurrent.duration.*
 import scala.scalajs.js
@@ -39,7 +40,9 @@ object RootComponent
           props.ctx.tracing.map: c =>
             Observability(HoneycombOptions(c.key, c.serviceName, attr.orUndefined)),
           HelpContext.Provider:
-            programSummariesPot.renderPot: programSummaries =>
-              props.router(RootModelViews(rootModel, programSummaries))
+            programSummariesPot.renderPot(
+              "root".refined,
+              programSummaries => props.router(RootModelViews(rootModel, programSummaries))
+            )
         )
     )

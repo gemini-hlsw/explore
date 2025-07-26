@@ -55,6 +55,8 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
+import lucuma.ui.components.SolarProgress
+import lucuma.refined.*
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, RootModelViews]
@@ -204,7 +206,8 @@ object ExploreLayout:
                   position = Sidebar.Position.Bottom,
                   content = error,
                   clazz = ExploreStyles.GlobalErrorDialog
-                )
+                ),
+                SolarProgress("top-error-message".refined)
               )
             ),
           IfLogged[ExploreEvent](
@@ -328,46 +331,50 @@ object ExploreLayout:
                               prefs
                             )
                           ),
-                        showProgsPopupPot.renderPot: showProgsPopup =>
-                          if (showProgsPopup)
-                            ProgramsPopup(
-                              currentProgramId = none,
-                              vault.get.user.id,
-                              vault.get.isStaff,
-                              props.model.programSummaries.throttlerView
-                                .zoom(Pot.readyPrism)
-                                .zoom(ProgramSummaries.programs),
-                              undoStacks = view.zoom(RootModel.undoStacks),
-                              message = msg
-                            ): VdomElement
-                          else
-                            React.Fragment(
-                              SideTabs(
-                                "side-tabs".refined,
-                                routingInfoView.zoom(RoutingInfo.appTab),
-                                tab =>
-                                  ctx.pageUrl(
-                                    (tab, routingInfo.programId, routingInfo.focused).some
-                                  ),
-                                _.separatorAfter,
-                                tab =>
-                                  programSummaries.toOption
-                                    .flatMap(_.optProgramDetails)
-                                    .forall: program =>
-                                      // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                                      (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                                        program.programType === ProgramType.Science &&
-                                        (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                        showProgsPopupPot.renderPot(
+                          "programs-cache".refined,
+                          showProgsPopup =>
+                            if (showProgsPopup)
+                              ProgramsPopup(
+                                currentProgramId = none,
+                                vault.get.user.id,
+                                vault.get.isStaff,
+                                props.model.programSummaries.throttlerView
+                                  .zoom(Pot.readyPrism)
+                                  .zoom(ProgramSummaries.programs),
+                                undoStacks = view.zoom(RootModel.undoStacks),
+                                message = msg
+                              ): VdomElement
+                            else
+                              React.Fragment(
+                                SideTabs(
+                                  "side-tabs".refined,
+                                  routingInfoView.zoom(RoutingInfo.appTab),
+                                  tab =>
+                                    ctx.pageUrl(
+                                      (tab, routingInfo.programId, routingInfo.focused).some
+                                    ),
+                                  _.separatorAfter,
+                                  tab =>
+                                    programSummaries.toOption
+                                      .flatMap(_.optProgramDetails)
+                                      .forall: program =>
+                                        // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                                        (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                                          program.programType === ProgramType.Science &&
+                                          (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
+                                ),
+                                <.div(
+                                  LayoutStyles.MainBody,
+                                  LayoutStyles.WithMessage.when(isSubmitted)
+                                )(
+                                  props.resolution.renderP(props.model),
+                                  TagMod.when(isSubmitted):
+                                    SubmittedProposalMessage(proposalReference, deadline)
+                                )
                               ),
-                              <.div(
-                                LayoutStyles.MainBody,
-                                LayoutStyles.WithMessage.when(isSubmitted)
-                              )(
-                                props.resolution.renderP(props.model),
-                                TagMod.when(isSubmitted):
-                                  SubmittedProposalMessage(proposalReference, deadline)
-                              )
-                            )
+                          _ => <.div()
+                        )
                       )
                   )
                 )

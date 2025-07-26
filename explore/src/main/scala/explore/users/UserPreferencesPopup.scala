@@ -230,7 +230,7 @@ object UserPreferencesContent:
             .runAsyncAndForget
         }
 
-        user.value.renderPot(
+        user.value.renderPot("userPreferences".refined,
           ssoUser => {
             val id   = ssoUser.user.id
             val name =
@@ -355,5 +355,5 @@ object UserPreferencesContent:
               )
             )
           },
-          pendingRender = <.div(ExploreStyles.EmptyUserPreferences, SolarProgress())
+          pendingRender = _ => <.div(ExploreStyles.EmptyUserPreferences, SolarProgress("userPreferencesSpinner".refined))
         )
