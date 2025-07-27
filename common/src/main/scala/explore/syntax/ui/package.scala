@@ -114,10 +114,7 @@ extension [F[_]: MonadCancelThrow, A](f: F[A])
 
 extension [A](pot: Pot[A])
   def orSpinner(f: A => VdomNode): VdomNode =
-    pot.renderPot(id = "or-spinner",
-                  valueRender = f,
-                  pendingRender = _ => Icons.Spinner.withSpin(true)
-    )
+    pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
 
 // TODO: Move to lucuma-react?
 extension (tag:    TagOf[HTMLElement])

@@ -56,6 +56,9 @@ import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 import org.scalajs.dom.document
 import queries.common.UserPreferencesQueriesGQL.*
+import mouse.boolean.*
+
+import org.scalajs.dom.window
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, RootModelViews]
@@ -175,8 +178,8 @@ object ExploreLayout:
         // Reset the program cache when there's an error signal.
         _                    <- useEffectStreamResourceOnMount:
                                   ctx.resetProgramCacheTopic.subscribeAwaitUnbounded.map:
-                                    _.evalMap: errorMsg =>
-                                      programError.setStateAsync(errorMsg)
+                                    _.unNone.evalMap: err =>
+                                      programError.setStateAsync(err.some)
       yield
         import ctx.given
 
@@ -203,10 +206,19 @@ object ExploreLayout:
                   showCloseIcon = false,
                   dismissable = false,
                   position = Sidebar.Position.Bottom,
-                  content = error.message,
+                  content = error.fatal.fold(
+                    <.div(<.span("Schema error, "),
+                          <.a(^.href := "#",
+                              "reload",
+                              ^.onClick --> Callback(window.location.reload())
+                          ),
+                          <.span(" to check for a new version")
+                    ),
+                    error.message
+                  ),
                   clazz = ExploreStyles.GlobalErrorDialog
                 ),
-                SolarProgress("top-error-message")
+                SolarProgress()
               )
             ),
           IfLogged[ExploreEvent](
@@ -374,7 +386,7 @@ object ExploreLayout:
                                     SubmittedProposalMessage(proposalReference, deadline)
                                 )
                               ),
-                          errorRender = _ => <.div()
+                          pendingRender = <.div() // Avoid a double solar system indicator
                         )
                       )
                   )

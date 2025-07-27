@@ -49,13 +49,10 @@ trait OdbApiHelper[F[_]: Sync: Logger](
 
     protected def resetCacheOnError: F[A] =
       fa.onError: e =>
-        if (shouldResetCache(e)) {
-          Logger[F].error(e)(s"Error in ODB API call, resetting cache") >>
-            resetCache(e.getMessage)
-        } else {
-          Logger[F].error(e)(s"Error in ODB API call - notifying UI without cache reset") >>
-            notifyError(e.getMessage)
-        }
+        val doReset = shouldResetCache(e)
+        Logger[F].error(e)(s"Error in ODB API call $doReset") >>
+          resetCache(e.getMessage).whenA(doReset) >>
+          notifyError(e.getMessage).unlessA(doReset)
 
   extension [D](fa: F[GraphQLResponse[D]])
     protected def processErrors: F[D] =

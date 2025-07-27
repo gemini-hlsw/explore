@@ -355,5 +355,5 @@ object UserPreferencesContent:
               )
             )
           },
-          pendingRender = _ => <.div(ExploreStyles.EmptyUserPreferences, SolarProgress())
+          pendingRender = <.div(ExploreStyles.EmptyUserPreferences, SolarProgress())
         )

@@ -45,7 +45,7 @@ object TimeAndCountModeInfo:
   def fromModel(etm: ExposureTimeMode): Option[TimeAndCountModeInfo] =
     etm match
       case ExposureTimeMode.TimeAndCountMode(t, c, a) =>
-        TimeAndCountModeInfo(t.some, PosInt.unsafeFrom(c.value).some, a.some).some
+        TimeAndCountModeInfo(t.some, c.some, a.some).some
       case _                                          => none
 
 case class SignalToNoiseModeInfo(value: Option[SignalToNoise], at: Option[Wavelength]) derives Eq:

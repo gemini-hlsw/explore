@@ -185,13 +185,14 @@ object FinderChartsTile:
             <.div(ExploreStyles.FinderChartsBody)(
               props.selected.get.map { attId =>
                 urlMap.get.find { case ((i, _), _) => i === attId }.map { url =>
-                  url._2.renderPot: url =>
+                  url._2.renderPot(url =>
                     <.img(
                       ExploreStyles.FinderChartsImage,
                       ExploreStyles.FinderChartsImageInverted.when(transform.get.inverted.value),
                       ^.transform := transforms.mkString(" "),
                       ^.src       := url
                     )
+                  )
                 }
               }
             )
