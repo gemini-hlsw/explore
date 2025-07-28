@@ -7,7 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
-import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.PosInt
 import lucuma.core.enums.ScienceMode
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.Wavelength
@@ -20,7 +20,7 @@ import monocle.Lens
 
 case class TimeAndCountModeInfo(
   time:  Option[TimeSpan],
-  count: Option[NonNegInt],
+  count: Option[PosInt],
   at:    Option[Wavelength]
 ) derives Eq:
   def withRequirementsWavelength(w: Wavelength): TimeAndCountModeInfo =
@@ -30,7 +30,7 @@ object TimeAndCountModeInfo:
   val time: Lens[TimeAndCountModeInfo, Option[TimeSpan]] =
     Focus[TimeAndCountModeInfo](_.time)
 
-  val count: Lens[TimeAndCountModeInfo, Option[NonNegInt]] =
+  val count: Lens[TimeAndCountModeInfo, Option[PosInt]] =
     Focus[TimeAndCountModeInfo](_.count)
 
   val at: Lens[TimeAndCountModeInfo, Option[Wavelength]] =
