@@ -70,7 +70,7 @@ object TimeAndCountEditor extends ConfigurationFormats:
           id = "exposure-count".refined,
           value = count,
           groupClass = ExploreStyles.WarningInput.when_(count.get.isEmpty),
-          validFormat = InputValidSplitEpi.nonNegInt.optional,
+          validFormat = InputValidSplitEpi.posInt.optional,
           postAddons =
             count.get.fold(List(props.calibrationRole.renderRequiredForITCIcon))(_ => Nil),
           changeAuditor = ChangeAuditor.int.optional,

@@ -4,7 +4,6 @@
 package explore.model.arb
 
 import eu.timepit.refined.types.numeric.PosInt
-import eu.timepit.refined.types.numeric.NonNegInt
 import eu.timepit.refined.scalacheck.numeric.given
 import explore.model.ScienceRequirements
 import explore.model.SignalToNoiseModeInfo
@@ -51,13 +50,13 @@ trait ArbScienceRequirements:
     Arbitrary(
       for
         time  <- arbitrary[Option[TimeSpan]]
-        count <- arbitrary[Option[NonNegInt]]
+        count <- arbitrary[Option[PosInt]]
         at    <- arbitrary[Option[Wavelength]]
       yield TimeAndCountModeInfo(time, count, at)
     )
 
   given Cogen[TimeAndCountModeInfo] =
-    Cogen[(Option[TimeSpan], Option[NonNegInt], Option[Wavelength])].contramap(tcmi =>
+    Cogen[(Option[TimeSpan], Option[PosInt], Option[Wavelength])].contramap(tcmi =>
       (tcmi.time, tcmi.count, tcmi.at)
     )
 

@@ -7,7 +7,7 @@ import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
-import eu.timepit.refined.types.numeric.NonNegInt
+import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
 import lucuma.core.math.Wavelength
 import lucuma.core.util.TimeSpan
@@ -62,7 +62,7 @@ object ItcResult {
   case object Pending extends ItcResult
   case class Result(
     exposureTime:   TimeSpan,
-    exposures:      NonNegInt,
+    exposures:      PosInt,
     brightestIndex: Option[Int],
     snAt:           Option[SignalToNoiseAt]
   ) extends ItcResult:
@@ -101,7 +101,7 @@ extension (a: SeriesResult)
 
 case class ItcExposureTime(
   time:  TimeSpan,
-  count: NonNegInt
+  count: PosInt
 ) derives Eq
 
 case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsResult) {
