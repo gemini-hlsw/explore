@@ -434,7 +434,8 @@ object ProposalDetailsBody:
             // Call for proposal selector
             FormDropdownOptional(
               id = "cfp".refined,
-              label = React.Fragment("Call For Proposal", HelpIcon("proposal/main/cfp.md".refined)),
+              label =
+                React.Fragment("Call For Proposals", HelpIcon("proposal/main/cfp.md".refined)),
               value = selectedCfp,
               options = cfpOptions,
               onChange = _.map { cfp =>
