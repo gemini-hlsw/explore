@@ -26,11 +26,13 @@ import lucuma.core.util.Enumerated
 import lucuma.core.validation.*
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.*
+import lucuma.react.primereact.PrimeStyles
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
 import lucuma.schemas.model.CentralWavelength
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.primereact.EnumDropdownView
+import lucuma.ui.primereact.FormEnumDropdownView
 import lucuma.ui.primereact.FormInputTextView
 import lucuma.ui.primereact.FormLabel
 import lucuma.ui.primereact.LucumaPrimeStyles
@@ -102,15 +104,28 @@ object ConstraintsPanel:
         undoViewSet(ConstraintSet.elevationRange, UpdateConstraintSet.elevationRange)
 
       def selectEnum[A: Enumerated: Display](
-        label:     NonEmptyString,
-        helpId:    Help.Id,
-        lens:      Lens[ConstraintSet, A],
-        remoteSet: A => ConstraintSetInput => ConstraintSetInput
+        label:      NonEmptyString,
+        helpId:     Help.Id,
+        lens:       Lens[ConstraintSet, A],
+        remoteSet:  A => ConstraintSetInput => ConstraintSetInput,
+        percentile: Option[String]
       ) = {
-        val id = NonEmptyString.unsafeFrom(label.value.toLowerCase().replaceAll(" ", "-"))
+        val id    = NonEmptyString.unsafeFrom(label.value.toLowerCase().replaceAll(" ", "-"))
+        val addon = percentile.map { pct =>
+          <.span(PrimeStyles.InputGroupAddon, ExploreStyles.ConstraintsLikelihood, pct)
+        }
         React.Fragment(
           FormLabel(htmlFor = id)(label, HelpIcon(helpId)),
-          EnumDropdownView(id = id, value = undoViewSet(lens, remoteSet), disabled = props.readonly)
+          <.div(
+            LucumaPrimeStyles.FormField,
+            PrimeStyles.InputGroup,
+            FormEnumDropdownView(
+              id = id,
+              value = undoViewSet(lens, remoteSet),
+              disabled = props.readonly
+            ),
+            addon.whenDefined
+          )
         )
       }
 
@@ -160,38 +175,29 @@ object ConstraintsPanel:
             "Image Quality".refined,
             "constraints/main/iq.md".refined,
             ConstraintSet.imageQuality,
-            UpdateConstraintSet.imageQuality
-          ),
-          <.div(
-            ExploreStyles.ConstraintsLikelihood,
-            props.obsIQLikelihood.map(formatPercentile).getOrElse("(-)")
+            UpdateConstraintSet.imageQuality,
+            props.obsIQLikelihood.map(formatPercentile)
           ),
           selectEnum(
             "Cloud Extinction".refined,
             "constraints/main/ce.md".refined,
             ConstraintSet.cloudExtinction,
-            UpdateConstraintSet.cloudExtinction
-          ),
-          <.div(ExploreStyles.ConstraintsLikelihood,
-                formatPercentile(props.constraintSet.cloudExtinction.toCloudExtinction.percentile)
+            UpdateConstraintSet.cloudExtinction,
+            Some(formatPercentile(props.constraintSet.cloudExtinction.toCloudExtinction.percentile))
           ),
           selectEnum(
             "Water Vapor".refined,
             "constraints/main/wv.md".refined,
             ConstraintSet.waterVapor,
-            UpdateConstraintSet.waterVapor
-          ),
-          <.div(ExploreStyles.ConstraintsLikelihood,
-                formatPercentile(props.constraintSet.waterVapor.percentile)
+            UpdateConstraintSet.waterVapor,
+            Some(formatPercentile(props.constraintSet.waterVapor.percentile))
           ),
           selectEnum(
             "Sky Background".refined,
             "constraints/main/sb.md".refined,
             ConstraintSet.skyBackground,
-            UpdateConstraintSet.skyBackground
-          ),
-          <.div(ExploreStyles.ConstraintsLikelihood,
-                formatPercentile(props.constraintSet.skyBackground.percentile)
+            UpdateConstraintSet.skyBackground,
+            Some(formatPercentile(props.constraintSet.skyBackground.percentile))
           ),
           FormLabel("ertype".refined)(
             "Elevation Range",
@@ -272,11 +278,11 @@ object ConstraintsPanel:
           ),
           <.label(
             LucumaPrimeStyles.FormFieldLabel |+| ExploreStyles.ConstraintsSetLikelihood,
-            "Likelihood of selected conditions",
-            <.span(
-              ExploreStyles.ConstraintsLikelihood,
-              props.obsConditionsLikelihood.map(formatPercentile).getOrElse("(-)")
-            )
+            "Likelihood of selected conditions"
+          ),
+          <.div(
+            ExploreStyles.ConstraintsFullLikelihood,
+            props.obsConditionsLikelihood.map(formatPercentile).getOrElse("-")
           )
         )
       )
