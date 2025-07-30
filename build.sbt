@@ -338,8 +338,7 @@ def setupVars(mode: String) = WorkflowStep.Run(
     raw"""sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-$mode.scss > vars.css""",
     "cat vars.css"
   ),
-  name = Some(s"Setup and expand vars $mode"),
-  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
+  name = Some(s"Setup and expand vars $mode")
 )
 
 def runLinters(mode: String) = WorkflowStep.Run(
@@ -347,8 +346,7 @@ def runLinters(mode: String) = WorkflowStep.Run(
     "npx prettier --check .",
     "npx stylelint --formatter github common/src/main/webapp/sass"
   ),
-  name = Some(s"Run linters in $mode mode"),
-  cond = if (mode == "dark") None else Some("github.event_name != 'pull_request'")
+  name = Some(s"Run linters in $mode mode")
 )
 
 ThisBuild / githubWorkflowGeneratedUploadSteps := Seq.empty

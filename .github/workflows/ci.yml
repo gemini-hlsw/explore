@@ -185,13 +185,11 @@ jobs:
           npx stylelint --formatter github common/src/main/webapp/sass
 
       - name: Setup and expand vars light
-        if: github.event_name != 'pull_request'
         run: |
           sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-light.scss > vars.css
           cat vars.css
 
       - name: Run linters in light mode
-        if: github.event_name != 'pull_request'
         run: |
           npx prettier --check .
           npx stylelint --formatter github common/src/main/webapp/sass
