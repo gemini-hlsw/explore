@@ -203,58 +203,57 @@ object SchedulingWindowsTile:
     private val DeleteColId: ColumnId = ColumnId("Delete")
 
     private val component =
-      ScalaFnComponent
-        .withHooks[Props]
-        .useResizeDetector()
-        .useMemoBy((_, _) => ()): (_, _) => // cols
-          _ =>
-            List(
-              ColDef(
-                WindowColId,
-                _._1,
-                size = 400.toPx
-              ).withCell: cell =>
-                <.span(
-                  cell.value.renderVdom,
-                  <.span(Icons.ErrorIcon).withTooltip(BadTimingWindow).unless(cell.value.isValid)
-                ),
-              ColDef(
-                DeleteColId,
-                _._2,
-                size = DeleteColWidth.toPx
-              ).withCell: cell =>
-                Button(
-                  text = true,
-                  onClickE = e =>
-                    e.stopPropagationCB >>
-                      cell.table.options.meta
-                        .map:
-                          _.updateWindows(sws => sws.take(cell.value) ++ sws.drop(cell.value + 1))
-                        .orEmpty
-                ).compact.small(Icons.Trash)
-            )
-        .useMemoBy((props, _, _) => props.windows.get): // rows
-          (_, _, _) => _.zipWithIndex.sorted
-        .useReactTableBy: (props, resize, cols, rows) =>
-          TableOptions(
-            cols,
-            rows,
-            enableRowSelection = true,
-            getRowId = (row, _, _) => RowId(row._2.toString),
-            state = PartialTableState(
-              columnSizing = ColumnSizing(
-                WindowColId -> resize.width.map(w => (w - DeleteColWidth).toPx).getOrElse(400.toPx)
-              ),
-              columnVisibility = ColumnVisibility(
-                DeleteColId -> Visibility.fromVisible(!props.readOnly)
-              )
-            ),
-            meta = TableMeta(props.windows.mod)
-          )
-        .useEffectOnMountBy: (p, _, _, _, table) =>
-          val cb = (a: RowSelection) => table.setRowSelection(a)
-          p.setTileState(TileState(cb))
-        .render: (props, resize, _, _, table) =>
+      ScalaFnComponent[Props]: props =>
+        for {
+          resize <- useResizeDetector
+          // cols
+          cols   <- useMemo(()): _ =>
+                      List(
+                        ColDef(WindowColId, _._1, size = 400.toPx).withCell: cell =>
+                          <.span(
+                            cell.value.renderVdom,
+                            <.span(Icons.ErrorIcon)
+                              .withTooltip(BadTimingWindow)
+                              .unless(cell.value.isValid)
+                          ),
+                        ColDef(DeleteColId, _._2, size = DeleteColWidth.toPx).withCell: cell =>
+                          Button(
+                            text = true,
+                            onClickE = e =>
+                              e.stopPropagationCB >>
+                                cell.table.options.meta
+                                  .map:
+                                    _.updateWindows(sws =>
+                                      sws.take(cell.value) ++ sws.drop(cell.value + 1)
+                                    )
+                                  .orEmpty
+                          ).compact.small(Icons.Trash)
+                      )
+          // rows
+          rows   <- useMemo(props.windows.get):
+                      _.zipWithIndex.sorted
+          table  <- useReactTable:
+                      TableOptions(
+                        cols,
+                        rows,
+                        enableRowSelection = true,
+                        getRowId = (row, _, _) => RowId(row._2.toString),
+                        state = PartialTableState(
+                          columnSizing = ColumnSizing(
+                            WindowColId -> resize.width
+                              .map(w => (w - DeleteColWidth).toPx)
+                              .getOrElse(400.toPx)
+                          ),
+                          columnVisibility = ColumnVisibility(
+                            DeleteColId -> Visibility.fromVisible(!props.readOnly)
+                          )
+                        ),
+                        meta = TableMeta(props.windows.mod)
+                      )
+          _      <- useEffectOnMount:
+                      val cb = (a: RowSelection) => table.setRowSelection(a)
+                      props.setTileState(TileState(cb))
+        } yield
           val pos = table.getSelectedRowModel().rows.headOption.map(_.original._2)
 
           val selectedTW: Option[View[TimingWindow]] =
@@ -289,7 +288,7 @@ object SchedulingWindowsTile:
                   <.div(ExploreStyles.ExploreTableEmpty, "No scheduling windows defined")
               )
             ),
-            selectedTW.map { tw =>
+            selectedTW.map: tw =>
               val selectedInclusion: View[TimingWindowInclusion]   = tw.zoom(TimingWindow.inclusion)
               val selectedStart: View[Timestamp]                   = tw.zoom(TimingWindow.start)
               val selectedEnd: View[Option[TimingWindowEnd]]       = tw.zoom(TimingWindow.end)
@@ -315,25 +314,23 @@ object SchedulingWindowsTile:
                 )
 
               <.div(ExploreStyles.TimingWindowEditor)(
-                <.span(ExploreStyles.TimingWindowEditorHeader)(
-                  <.span(ExploreStyles.TimingWindowInclusionEditor)(
-                    renderInclusionRadio(TimingWindowInclusion.Include, "include-option"),
-                    renderInclusionRadio(TimingWindowInclusion.Exclude, "exclude-option")
+                <.div(ExploreStyles.TimingWindowInclusionEditor)(
+                  renderInclusionRadio(TimingWindowInclusion.Include, "include-option"),
+                  renderInclusionRadio(TimingWindowInclusion.Exclude, "exclude-option")
+                ),
+                <.div(ExploreStyles.TimingWindowFromEditor)(
+                  <.span(" from"),
+                  DatePicker24HTime(
+                    selectedStart.zoom(timestampToInstant),
+                    props.readOnly,
+                    maxDate = selectedEnd.get
+                      .flatMap(TimingWindowEnd.at.getOption)
+                      .map(_.instant.toInstant)
                   ),
-                  <.div(ExploreStyles.TimingWindowFromEditor)(
-                    <.span(" from"),
-                    DatePicker24HTime(
-                      selectedStart.zoom(timestampToInstant),
-                      props.readOnly,
-                      maxDate = selectedEnd.get
-                        .flatMap(TimingWindowEnd.at.getOption)
-                        .map(_.instant.toInstant)
-                    ),
-                    <.span(" UTC "),
-                    <.span(Icons.ErrorIcon)
-                      .withTooltip("Check start date is before the end")
-                      .unless(tw.get.isValid)
-                  )
+                  <.span(" UTC "),
+                  <.span(Icons.ErrorIcon)
+                    .withTooltip("Check start date is before the end")
+                    .unless(tw.get.isValid)
                 ),
                 <.div(ExploreStyles.TimingWindowEditorBody)(
                   <.div(
@@ -490,7 +487,6 @@ object SchedulingWindowsTile:
                   }
                 )
               )
-            }
           )
 
   private case class Title(

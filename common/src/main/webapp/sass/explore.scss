@@ -2913,6 +2913,9 @@ $help-title-height: 40px;
     grid-area: editor;
     padding: 0.5em;
     font-size: smaller;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em 0;
 
     @include react-datepicker-input;
     @include react-datepicker-wrapper;
@@ -2929,27 +2932,27 @@ $help-title-height: 40px;
       margin-right: 0.3em;
     }
 
-    > * {
-      margin-bottom: 0.5em;
+    .timing-window-inclusion-editor {
+      display: inline-flex;
+      flex-direction: row;
+      gap: 0 0.5em;
+
+      @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+        flex-direction: column;
+        gap: 0.5em 0;
+      }
     }
 
     .timing-window-through-editor,
     .timing-window-from-editor {
       display: flex;
-    }
-
-    .timing-window-editor-header {
-      display: flex;
-      align-items: center;
-
-      .timing-window-inclusion-editor {
-        display: inline-flex;
-        flex-direction: column;
-      }
+      align-items: baseline;
     }
 
     .timing-window-editor-body {
-      margin-left: 2vw;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1em 0;
 
       .timing-window-repeat-editor {
         margin-left: 1.5em;
@@ -2978,6 +2981,11 @@ $help-title-height: 40px;
         margin-top: 0.5em;
         margin-left: 3em;
       }
+    }
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      flex-direction: row;
+      gap: 0 1em;
     }
   }
 
