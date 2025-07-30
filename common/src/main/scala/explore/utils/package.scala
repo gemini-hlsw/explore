@@ -29,7 +29,6 @@ import lucuma.ui.components.TimeSpanView
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.versionDateFormatter
-import lucuma.ui.utils.versionDateTimeFormatter
 import org.scalajs.dom
 
 import java.time.Instant
@@ -52,13 +51,8 @@ val gitHash = BuildInfo.gitHeadCommit
 def version(environment: ExecutionEnvironment): NonEmptyString = {
   val instant = Instant.ofEpochMilli(BuildInfo.buildDateTime)
   NonEmptyString.unsafeFrom(
-    (environment match
-      case ExecutionEnvironment.Development =>
-        versionDateTimeFormatter.format(instant)
-      case _                                =>
-        versionDateFormatter.format(instant) +
-          "-" + gitHash.map(_.take(7)).getOrElse("NONE")
-    )
+    versionDateFormatter.format(instant)
+      + "-" + gitHash.map(_.take(7)).getOrElse("NONE")
       + environment.suffix
         .map(suffix => s"-$suffix")
         .orEmpty

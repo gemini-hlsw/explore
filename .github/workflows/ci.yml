@@ -122,6 +122,78 @@ jobs:
 
       - run: scala-steward validate-repo-config .scala-steward.conf
 
+  lint:
+    name: Run linters
+    if: ((github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini') && github.actor != 'dependabot[bot]')
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        scala: [3.7.1]
+        java: [temurin@17]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout current branch (full)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Setup Java (temurin@17)
+        id: setup-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
+        run: sbt -v -J-Xmx6g +update
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Cache node_modules
+        id: cache-node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node_modules
+
+      - name: npm clean-install
+        if: steps.cache-node_modules.outputs.cache-hit != 'true'
+        run: npm clean-install --verbose
+
+      - name: Extract CSS files
+        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' lucumaCss
+
+      - name: Setup and expand vars dark
+        run: |
+          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-dark.scss > vars.css
+          cat vars.css
+
+      - name: Run linters in dark mode
+        run: |
+          npx prettier --check .
+          npx stylelint --formatter github common/src/main/webapp/sass
+
+      - name: Setup and expand vars light
+        run: |
+          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-light.scss > vars.css
+          cat vars.css
+
+      - name: Run linters in light mode
+        run: |
+          npx prettier --check .
+          npx stylelint --formatter github common/src/main/webapp/sass
+
   full:
     name: full
     if: ((github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini'))
@@ -194,77 +266,3 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           target: dev
           channelId: live
-
-  lint:
-    name: Run linters
-    if: ((github.ref == 'refs/heads/main' || github.event_name == 'pull_request') && startsWith(github.repository, 'gemini') && github.actor != 'dependabot[bot]')
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        scala: [3.7.1]
-        java: [temurin@17]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout current branch (full)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup sbt
-        uses: sbt/setup-sbt@v1
-
-      - name: Setup Java (temurin@17)
-        id: setup-java-temurin-17
-        if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: sbt
-
-      - name: sbt update
-        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
-        run: sbt -v -J-Xmx6g +update
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Cache node_modules
-        id: cache-node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node_modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node_modules
-
-      - name: npm clean-install
-        if: steps.cache-node_modules.outputs.cache-hit != 'true'
-        run: npm clean-install --verbose
-
-      - name: Extract CSS files
-        run: sbt -v -J-Xmx6g '++ ${{ matrix.scala }}' lucumaCss
-
-      - name: Setup and expand vars dark
-        run: |
-          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-dark.scss > vars.css
-          cat vars.css
-
-      - name: Run linters in dark mode
-        run: |
-          npx prettier --check .
-          npx stylelint --formatter github common/src/main/webapp/sass
-
-      - name: Setup and expand vars light
-        if: github.event_name != 'pull_request'
-        run: |
-          sed '/^[[:blank:]]*[\\.\\}\\@]/d;/^[[:blank:]]*\..*/d;/^[[:blank:]]*$/d;/\/\/.*/d' explore/target/lucuma-css/lucuma-ui-variables-light.scss > vars.css
-          cat vars.css
-
-      - name: Run linters in light mode
-        if: github.event_name != 'pull_request'
-        run: |
-          npx prettier --check .
-          npx stylelint --formatter github common/src/main/webapp/sass
