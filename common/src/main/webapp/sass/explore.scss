@@ -619,6 +619,14 @@ thead tr th.sticky-header {
   justify-content: center;
 }
 
+@container tile (max-width: #{exploreCommon.$tile-small-cutoff}) {
+  .explore-tile-title-constraint-selector {
+    span.p-dropdown-label {
+      width: 8em;
+    }
+  }
+}
+
 .explore-tile-title-config-selector {
   display: flex;
   justify-content: center;
@@ -1783,18 +1791,27 @@ svg.fa-check.explore-success-icon {
   align-items: baseline;
   gap: 0.3em 0.5em;
 
-  --column-wide-span: 5;
+  --column-wide-span: 2;
+  --addon-width: 6ch;
+
+  .p-inputgroup-addon.constraints-likelihood {
+    display: block;
+    width: var(--addon-width);
+    text-align: right;
+  }
+
+  .constraints-likelihood {
+    text-align: right;
+  }
 
   grid-template-columns:
     [label1] max-content
     [field1] minmax(20ch, 3fr)
-    [likelihood1] min-content
     [label2] max-content
-    [field2] minmax(20ch, 3fr)
-    [likelihood2] min-content;
+    [field2] minmax(20ch, 3fr);
 
   .elevation-range-picker {
-    width: 9em;
+    width: 10em;
   }
 
   .elevation-range-entry {
@@ -1811,12 +1828,22 @@ svg.fa-check.explore-success-icon {
     align-items: baseline;
     justify-self: stretch;
     grid-column: 2 / span var(--column-wide-span);
+
+    label {
+      margin-left: 3px;
+    }
   }
 
+  .constraints-full-likelihood,
   .constraints-likelihood {
-    font-size: smaller;
     align-self: center;
-    opacity: 0.5;
+    opacity: 0.9;
+    color: var(--text-color);
+  }
+
+  .constraints-full-likelihood {
+    place-self: baseline start;
+    margin-left: 2em;
   }
 
   .constraints-set-likelihood {
@@ -1824,19 +1851,20 @@ svg.fa-check.explore-success-icon {
     margin-top: 1em;
     gap: 0.3em;
     justify-items: baseline;
-    grid-column: 1 / span var(--column-wide-span);
+    grid-column: 1;
   }
 }
 
 // on small tiles, we want to stack the form fields
 @container tile (max-width: #{exploreCommon.$tile-small-cutoff}) {
   .constraints-grid {
-    --column-wide-span: 2;
+    --column-wide-span: 1;
 
-    grid-template-columns: max-content 1fr;
+    grid-template-columns: 1fr 1fr;
 
     .elevation-range-picker {
       grid-column: -1 / 1;
+      margin-right: var(--addon-width);
     }
 
     .constraints-elevation-range {
@@ -1847,6 +1875,10 @@ svg.fa-check.explore-success-icon {
 
       .field {
         width: 100%;
+      }
+
+      .p-dropdown {
+        justify-self: start;
       }
 
       label:last-child {

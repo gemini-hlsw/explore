@@ -69,7 +69,7 @@ trait formats:
     )
 
   def formatPercentile(v: IntCentiPercent): String =
-    s"(${v.toPercent.toInt}%)"
+    s"${v.toPercent.toInt}%"
 
   private def formatHMS(hms: HMS): String =
     f"${hms.hours}%02d:${hms.minutes}%02d:${hms.seconds}%02d.${hms.milliseconds}%03d"
