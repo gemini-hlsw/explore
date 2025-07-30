@@ -58,153 +58,152 @@ object SchedulingTabContents extends TwoPanels:
   private type Props = SchedulingTabContents
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useContext(AppContext.ctx)
-      .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
-      .useEffectOnMountBy: (_, ctx, shadowClipboardObs) => // initialize shadowClipboard
+    ScalaFnComponent[Props]: props =>
+      for {
+        ctx                <- useContext(AppContext.ctx)
+        // shadowClipboardObs (a copy as state only if it has observations)
+        shadowClipboardObs <- useState(none[ObsIdSet])
+        // initialize shadowClipboard
+        _                  <- useEffectOnMount:
+                                import ctx.given
+
+                                ExploreClipboard.get.flatMap:
+                                  _ match
+                                    case LocalClipboard.CopiedObservations(idSet) =>
+                                      shadowClipboardObs.setStateAsync(idSet.some)
+                                    case _                                        => IO.unit
+        // COPY Action Callback
+        copyCallback       <- useCallbackWithDeps(props.focusedObsSet): focusedObsSet =>
+                                import ctx.given
+
+                                focusedObsSet
+                                  .map: obsIdSet =>
+                                    (ExploreClipboard
+                                      .set(LocalClipboard.CopiedObservations(obsIdSet)) >>
+                                      shadowClipboardObs.setStateAsync(obsIdSet.some))
+                                      .withToast(
+                                        s"Copied observation(s) ${obsIdSet.idSet.toList.mkString(", ")}"
+                                      )
+                                  .orUnit
+                                  .runAsync
+        // PASTE Action Callback
+        pasteCallback      <-
+          useCallbackWithDeps((props.observations, props.focusedObsSet, props.readonly)):
+            (observations, selObsSet, readonly) =>
+              import ctx.given
+
+              ExploreClipboard.get
+                .flatMap:
+                  case LocalClipboard.CopiedObservations(copiedObsIdSet) =>
+                    val selectedGroups: Option[List[TimingWindow]] =
+                      selObsSet
+                        .flatMap: focusedObsIdSet =>
+                          observations // All focused obs have the same constraints, so we can use head
+                            .get(focusedObsIdSet.idSet.head)
+                            .map(_.timingWindows)
+
+                    val obsAndConstraints: List[(Observation.Id, List[TimingWindow])] =
+                      selectedGroups
+                        .map: cs =>
+                          copiedObsIdSet.idSet.toList.map: obsId =>
+                            (obsId, cs)
+                        .orEmpty
+
+                    IO.whenA(obsAndConstraints.nonEmpty):
+                      ObservationPasteIntoSchedulingGroupAction(
+                        obsAndConstraints,
+                        props.expandedIds.async.mod
+                      )(props.programSummaries).void
+                        .withToastDuring(
+                          s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group",
+                          s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group".some
+                        )
+                  case _                                                 => IO.unit
+                .runAsync
+                .unless_(readonly)
+        _                  <- useGlobalHotkeysWithDeps((copyCallback, pasteCallback)):
+                                (copyCallback, pasteCallback) =>
+                                  def callbacks: ShortcutCallbacks =
+                                    case CopyAlt1 | CopyAlt2   => copyCallback
+                                    case PasteAlt1 | PasteAlt2 => pasteCallback
+                                    case GoToSummary           =>
+                                      ctx.setPageVia(
+                                        (AppTab.Scheduling, props.programId, Focused.None).some,
+                                        SetRouteVia.HistoryPush
+                                      )
+
+                                  UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
+        state              <- useStateView[SelectedPanel](SelectedPanel.Uninitialized)
+        _                  <- useEffectWithDeps((props.focusedObsSet, state.reuseByValue)):
+                                (focusedObsSet, selected) =>
+                                  (focusedObsSet, selected.get) match
+                                    case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
+                                    case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
+                                    case _                            => Callback.empty
+        obsEditInfo        <- useMemo((props.focusedObsSet, props.observations)): (focused, obsList) =>
+                                focused.map(ObsIdSetEditInfo.fromObservationList(_, obsList))
+        resize             <- useResizeDetector // Measure its size
+      } yield
         import ctx.given
-        ExploreClipboard.get.flatMap:
-          _ match
-            case LocalClipboard.CopiedObservations(idSet) =>
-              shadowClipboardObs.setStateAsync(idSet.some)
-            case _                                        => IO.unit
-      .useCallbackWithDepsBy((props, _, _) => props.focusedObsSet): // COPY Action Callback
-        (_, ctx, shadowClipboardObs) =>
-          focusedObsSet =>
-            import ctx.given
 
-            focusedObsSet
-              .map: obsIdSet =>
-                (ExploreClipboard
-                  .set(LocalClipboard.CopiedObservations(obsIdSet)) >>
-                  shadowClipboardObs.setStateAsync(obsIdSet.some))
-                  .withToast(s"Copied observation(s) ${obsIdSet.idSet.toList.mkString(", ")}")
-              .orUnit
-              .runAsync
-      .useCallbackWithDepsBy((props, _, _, _) => // PASTE Action Callback
-        (props.observations, props.focusedObsSet, props.readonly)
-      ): (props, ctx, _, _) =>
-        (observations, selObsSet, readonly) =>
-          import ctx.given
+        def findSchedulingGroup(
+          obsIds: ObsIdSet,
+          cgl:    SchedulingGroupList
+        ): Option[SchedulingGroup] =
+          cgl.find(_._1.intersect(obsIds).nonEmpty).map(SchedulingGroup.fromTuple)
 
-          ExploreClipboard.get
-            .flatMap:
-              case LocalClipboard.CopiedObservations(copiedObsIdSet) =>
-                val selectedGroups: Option[List[TimingWindow]] =
-                  selObsSet
-                    .flatMap: focusedObsIdSet =>
-                      observations // All focused obs have the same constraints, so we can use head
-                        .get(focusedObsIdSet.idSet.head)
-                        .map(_.timingWindows)
+        val observations: UndoSetter[ObservationList] =
+          props.programSummaries.zoom(ProgramSummaries.observations)
 
-                val obsAndConstraints: List[(Observation.Id, List[TimingWindow])] =
-                  selectedGroups
-                    .map: cs =>
-                      copiedObsIdSet.idSet.toList.map: obsId =>
-                        (obsId, cs)
-                    .orEmpty
-
-                IO.whenA(obsAndConstraints.nonEmpty):
-                  ObservationPasteIntoSchedulingGroupAction(
-                    obsAndConstraints,
-                    props.expandedIds.async.mod
-                  )(props.programSummaries).void
-                    .withToastDuring(
-                      s"Pasting obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group",
-                      s"Pasted obs ${copiedObsIdSet.idSet.toList.mkString(", ")} into active scheduling group".some
-                    )
-              case _                                                 => IO.unit
-            .runAsync
-            .unless_(readonly)
-      .useGlobalHotkeysWithDepsBy((_, _, _, copyCallback, pasteCallback) =>
-        (copyCallback, pasteCallback)
-      ): (props, ctx, _, _, _) =>
-        (copyCallback, pasteCallback) =>
-          def callbacks: ShortcutCallbacks =
-            case CopyAlt1 | CopyAlt2   => copyCallback
-            case PasteAlt1 | PasteAlt2 => pasteCallback
-            case GoToSummary           =>
-              ctx.setPageVia(
-                (AppTab.Scheduling, props.programId, Focused.None).some,
-                SetRouteVia.HistoryPush
+        val rightSide = (_: UseResizeDetectorReturn) =>
+          obsEditInfo.value
+            .flatMap: editInfo =>
+              findSchedulingGroup(editInfo.editing, props.programSummaries.get.schedulingGroups)
+                .map(cg => (editInfo, cg))
+            .fold[VdomNode] {
+              <.div(LucumaStyles.HVCenter)(
+                <.div("Select a scheduling group from the list.")
               )
+            } { case (obsEditInfo, schedulingGroup) =>
+              val schedulingWindowsTile =
+                SchedulingWindowsTile.forObsIdSet(obsEditInfo, observations, props.readonly, true)
 
-          UseHotkeysProps((GoToSummary :: (CopyKeys ::: PasteKeys)).toHotKeys, callbacks)
-      .useStateView[SelectedPanel](SelectedPanel.Uninitialized)
-      .useEffectWithDepsBy((props, _, _, _, _, state) => (props.focusedObsSet, state.reuseByValue)):
-        (_, _, _, _, _, _) =>
-          (focusedObsSet, selected) =>
-            (focusedObsSet, selected.get) match
-              case (Some(_), _)                 => selected.set(SelectedPanel.Editor)
-              case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
-              case _                            => Callback.empty
-      .useMemoBy((props, _, _, _, _, _) => (props.focusedObsSet, props.observations)):
-        (_, _, _, _, _, _) =>
-          (focused, obsList) => focused.map(ObsIdSetEditInfo.fromObservationList(_, obsList))
-      .useResizeDetector() // Measure its size
-      .render:
-        (props, ctx, shadowClipboardObs, copyCallback, pasteCallback, state, obsEditInfo, resize) =>
-          import ctx.given
+              TileController(
+                props.userId,
+                resize.width.getOrElse(1),
+                ExploreGridLayouts.sectionLayout(GridLayoutSection.SchedulingLayout),
+                props.userPreferences.schedulingTabLayout,
+                List(schedulingWindowsTile),
+                GridLayoutSection.SchedulingLayout,
+                None
+              )
+            }
 
-          def findSchedulingGroup(
-            obsIds: ObsIdSet,
-            cgl:    SchedulingGroupList
-          ): Option[SchedulingGroup] =
-            cgl.find(_._1.intersect(obsIds).nonEmpty).map(SchedulingGroup.fromTuple)
-
-          val observations: UndoSetter[ObservationList] =
-            props.programSummaries.zoom(ProgramSummaries.observations)
-
-          val rightSide = (_: UseResizeDetectorReturn) =>
-            obsEditInfo.value
-              .flatMap: editInfo =>
-                findSchedulingGroup(editInfo.editing, props.programSummaries.get.schedulingGroups)
-                  .map(cg => (editInfo, cg))
-              .fold[VdomNode] {
-                <.div(LucumaStyles.HVCenter)(
-                  <.div("Select a scheduling group from the list.")
-                )
-              } { case (obsEditInfo, schedulingGroup) =>
-                val schedulingWindowsTile =
-                  SchedulingWindowsTile.forObsIdSet(obsEditInfo, observations, props.readonly, true)
-
-                TileController(
-                  props.userId,
-                  resize.width.getOrElse(1),
-                  ExploreGridLayouts.sectionLayout(GridLayoutSection.SchedulingLayout),
-                  props.userPreferences.schedulingTabLayout,
-                  List(schedulingWindowsTile),
-                  GridLayoutSection.SchedulingLayout,
-                  None
-                )
-              }
-
-          val schedulingTree =
-            SchedulingGroupObsList(
-              props.programId,
-              observations,
-              props.programSummaries,
-              props.programSummaries.get.schedulingGroups,
-              props.focusedObsSet,
-              state.set(SelectedPanel.Summary),
-              props.expandedIds,
-              copyCallback,
-              pasteCallback,
-              shadowClipboardObs.value,
-              props.programSummaries.get.allocatedScienceBands,
-              props.readonly
-            )
-
-          React.Fragment(
-            if (LinkingInfo.developmentMode)
-              FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
-            else EmptyVdom,
-            makeOneOrTwoPanels(
-              state,
-              schedulingTree,
-              rightSide,
-              RightSideCardinality.Single,
-              resize
-            )
+        val schedulingTree =
+          SchedulingGroupObsList(
+            props.programId,
+            observations,
+            props.programSummaries,
+            props.programSummaries.get.schedulingGroups,
+            props.focusedObsSet,
+            state.set(SelectedPanel.Summary),
+            props.expandedIds,
+            copyCallback,
+            pasteCallback,
+            shadowClipboardObs.value,
+            props.programSummaries.get.allocatedScienceBands,
+            props.readonly
           )
+
+        React.Fragment(
+          if (LinkingInfo.developmentMode)
+            FocusedStatus(AppTab.Scheduling, props.programId, Focused(props.focusedObsSet))
+          else EmptyVdom,
+          makeOneOrTwoPanels(
+            state,
+            schedulingTree,
+            rightSide,
+            RightSideCardinality.Single,
+            resize
+          )
+        )
