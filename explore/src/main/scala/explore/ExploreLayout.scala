@@ -45,7 +45,6 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
-import lucuma.ui.components.SolarProgress
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
@@ -54,7 +53,9 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import mouse.boolean.*
 import org.scalajs.dom.document
+import org.scalajs.dom.window
 import queries.common.UserPreferencesQueriesGQL.*
 
 case class ExploreLayout(
@@ -168,15 +169,15 @@ object ExploreLayout:
         // Indicates whether the current program has errored.
         // We keep a separate state from the Pot in props.model.programSummaries so that we can keep
         // the value there when there's an error, and show the error only as a modal on top.
-        programError         <- useState(none[String])
+        programError         <- useState(none[ProgramError])
         // Reset the program cache when the program changes.
         _                    <- useEffectWithDeps(routingInfo.map(_.programId)): _ =>
                                   ctx.resetProgramCache(none)
         // Reset the program cache when there's an error signal.
         _                    <- useEffectStreamResourceOnMount:
                                   ctx.resetProgramCacheTopic.subscribeAwaitUnbounded.map:
-                                    _.unNone.evalMap: errorMsg =>
-                                      programError.setStateAsync(errorMsg.some)
+                                    _.unNone.evalMap: err =>
+                                      programError.setStateAsync(err.some)
       yield
         import ctx.given
 
@@ -203,10 +204,18 @@ object ExploreLayout:
                   showCloseIcon = false,
                   dismissable = false,
                   position = Sidebar.Position.Bottom,
-                  content = error,
+                  content = error.fatal.fold(
+                    <.div(<.span("Schema error, "),
+                          <.a(^.href := "#",
+                              "reload",
+                              ^.onClick --> Callback(window.location.reload())
+                          ),
+                          <.span(" to check for a new version")
+                    ),
+                    error.message
+                  ),
                   clazz = ExploreStyles.GlobalErrorDialog
-                ),
-                SolarProgress()
+                )
               )
             ),
           IfLogged[ExploreEvent](
@@ -297,7 +306,10 @@ object ExploreLayout:
                     ProgramCacheController(
                       routingInfo.programId,
                       props.model.programSummaries.throttledView.mod,
-                      programError.setState(none).toAsync,
+                      programError.modState {
+                        case p @ Some(ProgramError(_, true)) => p // no reset for a fatal error
+                        case _                               => None
+                      }.toAsync,
                       ctx.resetProgramCacheTopic.subscribeUnbounded // On error, keep the current program cache.
                         .map(_.fold(ResetType.Wipe)(_ => ResetType.Keep))
                     ),
@@ -330,7 +342,7 @@ object ExploreLayout:
                               prefs
                             )
                           ),
-                        showProgsPopupPot.renderPot: showProgsPopup =>
+                        showProgsPopupPot.renderPot(showProgsPopup =>
                           if (showProgsPopup)
                             ProgramsPopup(
                               currentProgramId = none,
@@ -370,6 +382,7 @@ object ExploreLayout:
                                   SubmittedProposalMessage(proposalReference, deadline)
                               )
                             )
+                        )
                       )
                   )
                 )

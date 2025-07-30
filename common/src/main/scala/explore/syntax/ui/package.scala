@@ -33,7 +33,7 @@ import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
 import lucuma.ui.sso.UserVault
-import lucuma.ui.syntax.all.*
+import lucuma.ui.syntax.pot.*
 import org.http4s.headers.Authorization
 import org.scalajs.dom.HTMLElement
 import org.scalajs.dom.Window

@@ -169,7 +169,7 @@ object FinderChartsTile:
             }
           )(
             <.div(
-              SolarProgress(ExploreStyles.FinderChartsLoadProgress)
+              SolarProgress(css = ExploreStyles.FinderChartsLoadProgress)
                 .unless(action.get === Action.None)
             ),
             ControlOverlay(props.parallacticAngle, transform),

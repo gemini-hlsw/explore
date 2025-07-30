@@ -13,7 +13,10 @@ import clue.syntax.*
 import lucuma.odb.data.OdbError
 import org.typelevel.log4cats.Logger
 
-trait OdbApiHelper[F[_]: Sync: Logger](resetCache: String => F[Unit]):
+trait OdbApiHelper[F[_]: Sync: Logger](
+  resetCache:       String => F[Unit],
+  notifyFatalError: String => F[Unit]
+):
   private case class OdbAdaptedError[D](message: String, cause: ResponseException[D])
       extends RuntimeException(message, cause)
 
@@ -26,11 +29,19 @@ trait OdbApiHelper[F[_]: Sync: Logger](resetCache: String => F[Unit]):
       yield odbError
 
   private val adaptResponseException: PartialFunction[Throwable, Throwable] =
-    case e @ ResponseException(errors, data) =>
+    case e @ ResponseException(errors, _) =>
       errors
         .traverse(_.asOdbError)
         .map(odbErrors => OdbAdaptedError(odbErrors.map(_.message).toList.mkString("\n"), e))
         .getOrElse(e)
+
+  // we don't want to reset if there are unrecoverable errors like an incompatible schema
+  private def shouldResetCache(error: Throwable): Boolean = error match {
+    case ResponseException(errors, _) =>
+      // This detects one particular case, there may be more.
+      !errors.exists(_.message.startsWith("No field"))
+    case _                            => true
+  }
 
   extension [A](fa: F[A])
     private def adaptOdbErrors: F[A] =
@@ -38,8 +49,10 @@ trait OdbApiHelper[F[_]: Sync: Logger](resetCache: String => F[Unit]):
 
     protected def resetCacheOnError: F[A] =
       fa.onError: e =>
-        Logger[F].error(e)(s"Error in ODB API call, resetting cache") >>
-          resetCache(e.getMessage)
+        val doReset = shouldResetCache(e)
+        Logger[F].error(e)(s"Error in ODB API call $doReset") >>
+          resetCache(e.getMessage).whenA(doReset) >>
+          notifyFatalError(e.getMessage).unlessA(doReset)
 
   extension [D](fa: F[GraphQLResponse[D]])
     protected def processErrors: F[D] =

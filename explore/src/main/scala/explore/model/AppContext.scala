@@ -34,6 +34,8 @@ import queries.schemas.SSO
 import queries.schemas.UserPreferencesDB
 import workers.WorkerClient
 
+case class ProgramError(message: String, fatal: Boolean)
+
 case class AppContext[F[_]](
   version:                NonEmptyString,
   clients:                GraphQLClients[F],
@@ -46,7 +48,7 @@ case class AppContext[F[_]](
   environment:            ExecutionEnvironment,
   broadcastChannel:       BroadcastChannel[F, ExploreEvent],
   toastRef:               Deferred[F, ToastRef],
-  resetProgramCacheTopic: Topic[F, Option[String]] // Error message (if any)
+  resetProgramCacheTopic: Topic[F, Option[ProgramError]] // Error message (if any)
 )(using
   val F:                  Async[F],
   val logger:             Logger[F],
@@ -80,7 +82,12 @@ case class AppContext[F[_]](
     routingLink((AppTab.Observations, programId, Focused.singleObs(obsId)).some, finalContents)
 
   def resetProgramCache(errorMsg: Option[String]): F[Unit] =
-    resetProgramCacheTopic.publish1(errorMsg).void
+    resetProgramCacheTopic.publish1(errorMsg.map(ProgramError(_, false))).void
+
+  def notifyFatalError(errorMsg: String): F[Unit] =
+    resetProgramCacheTopic.publish1(
+      ProgramError(errorMsg, true).some
+    ) *> resetProgramCacheTopic.close.void
 
   given WebSocketJsClient[F, ObservationDB]     = clients.odb
   given WebSocketJsClient[F, UserPreferencesDB] = clients.preferencesDB
@@ -94,7 +101,10 @@ case class AppContext[F[_]](
   given toastCtx: ToastCtx[F] = new ToastCtx(toastRef)
 
   given odbApi: OdbApi[F] =
-    OdbApiImpl[F](errorMsg => resetProgramCache(errorMsg.some))
+    OdbApiImpl[F](
+      resetCache = errorMsg => resetProgramCache(errorMsg.some),
+      notifyFatalError = errorMsg => notifyFatalError(errorMsg)
+    )
 
 object AppContext:
   val ctx: Context[AppContext[IO]] = React.createContext("AppContext", null) // No default value
@@ -113,7 +123,7 @@ object AppContext:
       clients                <-
         GraphQLClients
           .build[F](config.odbURI, config.preferencesDBURI, config.sso.uri, reconnectionStrategy)
-      resetProgramCacheTopic <- Topic[F, Option[String]]
+      resetProgramCacheTopic <- Topic[F, Option[ProgramError]]
       version                 = utils.version(config.environment)
     } yield AppContext[F](
       version,
