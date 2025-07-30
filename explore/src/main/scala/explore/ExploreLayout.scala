@@ -54,11 +54,10 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import org.scalajs.dom.document
-import queries.common.UserPreferencesQueriesGQL.*
 import mouse.boolean.*
-
+import org.scalajs.dom.document
 import org.scalajs.dom.window
+import queries.common.UserPreferencesQueriesGQL.*
 
 case class ExploreLayout(
   resolution: ResolutionWithProps[Page, RootModelViews]
