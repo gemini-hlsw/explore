@@ -358,6 +358,23 @@ ThisBuild / githubWorkflowEnv += faNpmAuthToken
 
 ThisBuild / githubWorkflowAddedJobs +=
   WorkflowJob(
+    "lint",
+    "Run linters",
+    githubWorkflowJobSetup.value.toList :::
+      setupNodeNpmInstall :::
+      lucumaCssStep ::
+      setupVars("dark") ::
+      runLinters("dark") ::
+      setupVars("light") ::
+      runLinters("light") ::
+      Nil,
+    scalas = List(scalaVersion.value),
+    javas = githubWorkflowJavaVersions.value.toList.take(1),
+    cond = Some(allConds(anyConds(mainCond, prCond), geminiRepoCond, notDependabotCond))
+  )
+
+ThisBuild / githubWorkflowAddedJobs +=
+  WorkflowJob(
     "full",
     "full",
     githubWorkflowJobSetup.value.toList :::
@@ -374,21 +391,4 @@ ThisBuild / githubWorkflowAddedJobs +=
     scalas = Nil,
     javas = githubWorkflowJavaVersions.value.toList.take(1),
     cond = Some(allConds(anyConds(mainCond, prCond), geminiRepoCond))
-  )
-
-ThisBuild / githubWorkflowAddedJobs +=
-  WorkflowJob(
-    "lint",
-    "Run linters",
-    githubWorkflowJobSetup.value.toList :::
-      setupNodeNpmInstall :::
-      lucumaCssStep ::
-      setupVars("dark") ::
-      runLinters("dark") ::
-      setupVars("light") ::
-      runLinters("light") ::
-      Nil,
-    scalas = List(scalaVersion.value),
-    javas = githubWorkflowJavaVersions.value.toList.take(1),
-    cond = Some(allConds(anyConds(mainCond, prCond), geminiRepoCond, notDependabotCond))
   )

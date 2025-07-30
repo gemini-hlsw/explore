@@ -56,9 +56,9 @@ def version(environment: ExecutionEnvironment): NonEmptyString = {
       case ExecutionEnvironment.Development =>
         versionDateTimeFormatter.format(instant)
       case _                                =>
-        versionDateFormatter.format(instant) +
-          "-" + gitHash.map(_.take(7)).getOrElse("NONE")
+        versionDateFormatter.format(instant)
     )
+      + "-" + gitHash.map(_.take(7)).getOrElse("NONE")
       + environment.suffix
         .map(suffix => s"-$suffix")
         .orEmpty
