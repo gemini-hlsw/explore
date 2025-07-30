@@ -219,7 +219,7 @@ object TargetColumns:
               .sortable,
             siderealColumnOpt(
               ZColumnId,
-              Target.Sidereal.radialVelocity.get.andThen(rvToRedshiftGet)
+              Target.Sidereal.radialVelocity.get.andThen(_.map(rvToRedshiftGet))
             )
               .withCell(_.value.map(formatZ.reverseGet).orEmpty)
               .withSize(90.toPx)
@@ -250,7 +250,7 @@ object TargetColumns:
         )
 
       val ProgramColumns: List[colDef.Type] = List(
-        siderealColumnOpt(CZColumnId, Target.Sidereal.radialVelocity.get.andThen(rvToARVGet))
+        siderealColumnOpt(CZColumnId, Target.Sidereal.radialVelocity.get.andThen(_.map(rvToARVGet)))
           .withCell(_.value.map(formatCZ.reverseGet).orEmpty)
           .withSize(90.toPx)
           .sortable,
