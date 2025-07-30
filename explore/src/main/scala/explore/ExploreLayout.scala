@@ -45,7 +45,6 @@ import lucuma.react.primereact.hooks.all.*
 import lucuma.refined.*
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.ui.components.SideTabs
-import lucuma.ui.components.SolarProgress
 import lucuma.ui.components.state.IfLogged
 import lucuma.ui.enums.Theme
 import lucuma.ui.hooks.*
@@ -216,8 +215,7 @@ object ExploreLayout:
                     error.message
                   ),
                   clazz = ExploreStyles.GlobalErrorDialog
-                ),
-                SolarProgress()
+                )
               )
             ),
           IfLogged[ExploreEvent](
@@ -344,48 +342,46 @@ object ExploreLayout:
                               prefs
                             )
                           ),
-                        showProgsPopupPot.renderPot(
-                          showProgsPopup =>
-                            if (showProgsPopup)
-                              ProgramsPopup(
-                                currentProgramId = none,
-                                vault.get.user.id,
-                                vault.get.isStaff,
-                                props.model.programSummaries.throttlerView
-                                  .zoom(Pot.readyPrism)
-                                  .zoom(ProgramSummaries.programs),
-                                undoStacks = view.zoom(RootModel.undoStacks),
-                                message = msg
-                              ): VdomElement
-                            else
-                              React.Fragment(
-                                SideTabs(
-                                  "side-tabs".refined,
-                                  routingInfoView.zoom(RoutingInfo.appTab),
-                                  tab =>
-                                    ctx.pageUrl(
-                                      (tab, routingInfo.programId, routingInfo.focused).some
-                                    ),
-                                  _.separatorAfter,
-                                  tab =>
-                                    programSummaries.toOption
-                                      .flatMap(_.optProgramDetails)
-                                      .forall: program =>
-                                        // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
-                                        (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
-                                          program.programType === ProgramType.Science &&
-                                          (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
-                                ),
-                                <.div(
-                                  LayoutStyles.MainBody,
-                                  LayoutStyles.WithMessage.when(isSubmitted)
-                                )(
-                                  props.resolution.renderP(props.model),
-                                  TagMod.when(isSubmitted):
-                                    SubmittedProposalMessage(proposalReference, deadline)
-                                )
+                        showProgsPopupPot.renderPot(showProgsPopup =>
+                          if (showProgsPopup)
+                            ProgramsPopup(
+                              currentProgramId = none,
+                              vault.get.user.id,
+                              vault.get.isStaff,
+                              props.model.programSummaries.throttlerView
+                                .zoom(Pot.readyPrism)
+                                .zoom(ProgramSummaries.programs),
+                              undoStacks = view.zoom(RootModel.undoStacks),
+                              message = msg
+                            ): VdomElement
+                          else
+                            React.Fragment(
+                              SideTabs(
+                                "side-tabs".refined,
+                                routingInfoView.zoom(RoutingInfo.appTab),
+                                tab =>
+                                  ctx.pageUrl(
+                                    (tab, routingInfo.programId, routingInfo.focused).some
+                                  ),
+                                _.separatorAfter,
+                                tab =>
+                                  programSummaries.toOption
+                                    .flatMap(_.optProgramDetails)
+                                    .forall: program =>
+                                      // Only show Program and Proposal tabs for Science proposals, and Program only for Accepted ones
+                                      (tab =!= AppTab.Proposal && tab =!= AppTab.Program) ||
+                                        program.programType === ProgramType.Science &&
+                                        (tab === AppTab.Proposal || program.proposalStatus === ProposalStatus.Accepted)
                               ),
-                          pendingRender = <.div() // Avoid a double solar system indicator
+                              <.div(
+                                LayoutStyles.MainBody,
+                                LayoutStyles.WithMessage.when(isSubmitted)
+                              )(
+                                props.resolution.renderP(props.model),
+                                TagMod.when(isSubmitted):
+                                  SubmittedProposalMessage(proposalReference, deadline)
+                              )
+                            )
                         )
                       )
                   )

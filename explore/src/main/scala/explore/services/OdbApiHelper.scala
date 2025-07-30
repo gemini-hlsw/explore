@@ -14,8 +14,8 @@ import lucuma.odb.data.OdbError
 import org.typelevel.log4cats.Logger
 
 trait OdbApiHelper[F[_]: Sync: Logger](
-  resetCache:  String => F[Unit],
-  notifyError: String => F[Unit]
+  resetCache:       String => F[Unit],
+  notifyFatalError: String => F[Unit]
 ):
   private case class OdbAdaptedError[D](message: String, cause: ResponseException[D])
       extends RuntimeException(message, cause)
@@ -52,7 +52,7 @@ trait OdbApiHelper[F[_]: Sync: Logger](
         val doReset = shouldResetCache(e)
         Logger[F].error(e)(s"Error in ODB API call $doReset") >>
           resetCache(e.getMessage).whenA(doReset) >>
-          notifyError(e.getMessage).unlessA(doReset)
+          notifyFatalError(e.getMessage).unlessA(doReset)
 
   extension [D](fa: F[GraphQLResponse[D]])
     protected def processErrors: F[D] =
