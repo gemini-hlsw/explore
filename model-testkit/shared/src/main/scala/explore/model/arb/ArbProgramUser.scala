@@ -20,6 +20,8 @@ import lucuma.core.util.arb.ArbGid.given
 import org.scalacheck.*
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Cogen.*
+import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.scalacheck.string.*
 
 trait ArbProgramUser:
   given Arbitrary[ProgramUser] =
@@ -32,6 +34,7 @@ trait ArbProgramUser:
         educationalStatus <- arbitrary[Option[EducationalStatus]]
         thesis            <- arbitrary[Option[Boolean]]
         gender            <- arbitrary[Option[Gender]]
+        affiliation       <- arbitrary[Option[NonEmptyString]]
         fallbackProfile   <- arbitrary[UserProfile]
         invitations       <- arbitrary[List[UserInvitation]]
         hasDataAccess     <- arbitrary[Boolean]
@@ -42,6 +45,7 @@ trait ArbProgramUser:
                           educationalStatus,
                           thesis,
                           gender,
+                          affiliation,
                           fallbackProfile,
                           invitations,
                           hasDataAccess
@@ -58,6 +62,7 @@ trait ArbProgramUser:
         Option[EducationalStatus],
         Option[Boolean],
         Option[Gender],
+        Option[String],
         UserProfile,
         List[UserInvitation],
         Boolean
@@ -70,6 +75,7 @@ trait ArbProgramUser:
        u.educationalStatus,
        u.thesis,
        u.gender,
+       u.affiliation.map(_.value),
        u.fallbackProfile,
        u.invitations,
        u.hasDataAccess

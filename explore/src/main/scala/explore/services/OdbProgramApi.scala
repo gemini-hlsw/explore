@@ -41,6 +41,10 @@ trait OdbProgramApi[F[_]]:
   def updateUserThesis(programUserId:        ProgramUser.Id, th:         Option[Boolean]): F[Unit]
   def updateUserHasDataAccess(programUserId: ProgramUser.Id, hda:        Boolean): F[Unit]
   def updateUserGender(programUserId:        ProgramUser.Id, g:          Option[Gender]): F[Unit]
+  def updateUserAffiliation(
+    programUserId: ProgramUser.Id,
+    affiliation:   Option[NonEmptyString]
+  ): F[Unit]
   def changeProgramUserRole(programUserId:   ProgramUser.Id, role:       ProgramUserRole): F[Unit]
   def updateConfigurationRequestStatus(
     rids:          List[ConfigurationRequest.Id],

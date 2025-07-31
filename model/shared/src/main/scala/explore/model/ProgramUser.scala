@@ -6,8 +6,10 @@ package explore.model
 import cats.Eq
 import cats.derived.*
 import cats.syntax.all.*
+import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.Decoder
+import io.circe.refined.*
 import lucuma.core.data.EmailAddress
 import lucuma.core.enums.EducationalStatus
 import lucuma.core.enums.Gender
@@ -27,6 +29,7 @@ case class ProgramUser(
   educationalStatus: Option[EducationalStatus],
   thesis:            Option[Boolean],
   gender:            Option[Gender],
+  affiliation:       Option[NonEmptyString],
   fallbackProfile:   UserProfile,
   invitations:       List[UserInvitation],
   hasDataAccess:     Boolean
@@ -88,6 +91,9 @@ object ProgramUser:
   val gender: Lens[ProgramUser, Option[Gender]] =
     Focus[ProgramUser](_.gender)
 
+  val affiliation: Lens[ProgramUser, Option[NonEmptyString]] =
+    Focus[ProgramUser](_.affiliation)
+
   val fallbackProfile: Lens[ProgramUser, UserProfile] =
     Focus[ProgramUser](_.fallbackProfile)
 
@@ -122,7 +128,8 @@ object ProgramUser:
       es   <- c.downField("educationalStatus").as[Option[EducationalStatus]]
       th   <- c.downField("thesis").as[Option[Boolean]]
       g    <- c.downField("gender").as[Option[Gender]]
+      aff  <- c.downField("affiliation").as[Option[NonEmptyString]]
       fb   <- c.downField("fallbackProfile").as[UserProfile]
       in   <- c.downField("invitations").as[List[UserInvitation]]
       da   <- c.downField("hasDataAccess").as[Boolean]
-    } yield ProgramUser(id, u, pl, role, es, th, g, fb, in, da)
+    } yield ProgramUser(id, u, pl, role, es, th, g, aff, fb, in, da)

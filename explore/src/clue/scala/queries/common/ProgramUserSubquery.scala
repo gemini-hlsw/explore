@@ -24,6 +24,7 @@ object ProgramUserSubquery extends GraphQLSubquery.Typed[ObservationDB, ProgramU
       educationalStatus
       thesis
       gender
+      affiliation
       fallbackProfile $UserProfileSubquery
       invitations $UserInvitationSubquery
       hasDataAccess
