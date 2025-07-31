@@ -145,8 +145,10 @@ case class ObsTabTiles(
 
   def obsIQLikelihood(obsTime: Instant): Option[IntCentiPercent] =
     (centralWavelength, targetCoords(obsTime).map(_.value.dec), site).mapN((cw, dec, site) =>
-      constraintSet.get.imageQuality.toImageQuality
-        .percentile(cw.value, site.minimumAirMassFor(dec))
+      site
+        .minimumAirMassFor(dec)
+        .fold(IntCentiPercent.Min): airMass =>
+          constraintSet.get.imageQuality.toImageQuality.percentile(cw.value, airMass)
     )
 
   def obsConditionsLikelihood(obsTime: Instant): Option[IntCentiPercent] =

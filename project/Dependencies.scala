@@ -227,13 +227,13 @@ object Dependencies {
     deps(
       "edu.gemini" %%% "lucuma-schemas",
       "edu.gemini" %%% "lucuma-schemas-model"
-    )(lucumaSchemas)
+    )(lucumaUI)
   )
 
   val LucumaSchemasTestkit = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-schemas-testkit"
-    )(lucumaSchemas)
+    )(lucumaUI)
   )
 
   val LucumaSSO = Def.setting(
