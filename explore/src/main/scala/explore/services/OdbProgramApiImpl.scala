@@ -152,6 +152,9 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
   def updateUserGender(programUserId: ProgramUser.Id, g: Option[Gender]): F[Unit] =
     updateProgramUsers(programUserId, ProgramUserPropertiesInput(gender = g.orUnassign))
 
+  def updateUserAffiliation(uid: ProgramUser.Id, aff: Option[NonEmptyString]): F[Unit] =
+    updateProgramUsers(uid, ProgramUserPropertiesInput(affiliation = aff.orUnassign))
+
   def changeProgramUserRole(programUserId: ProgramUser.Id, role: ProgramUserRole): F[Unit] =
     ChangeProgramUserRoleMutation[F]
       .execute:

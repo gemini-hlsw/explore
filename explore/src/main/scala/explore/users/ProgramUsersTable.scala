@@ -85,6 +85,7 @@ case class ProgramUsersTable(
         Column.EducationalStatus,
         Column.Thesis,
         Column.Gender,
+        Column.Affiliation,
         Column.Role,
         Column.OrcidId,
         Column.Status,
@@ -165,6 +166,7 @@ object ProgramUsersTable:
     case EducationalStatus extends Column("education", "Education")
     case Thesis            extends Column("thesis", "Thesis")
     case Gender            extends Column("gender", "Gender")
+    case Affiliation       extends Column("affiliation", "Affiliation")
     case OrcidId           extends Column("orcid-id", "ORCID")
     case Role              extends Column("role", "Role")
     case DataAccess        extends Column("data-access", "Data Access")
@@ -458,6 +460,25 @@ object ProgramUsersTable:
               clazz = ExploreStyles.PartnerSelector,
               onChange = view.set
             )
+      ).sortableBy(_.get.toString),
+      ColDef(
+        Column.Affiliation.id,
+        _.zoom(ProgramUser.affiliation),
+        cell = c =>
+          val cell                          = c.row.original
+          val programUserId: ProgramUser.Id = cell.get.id
+
+          c.table.options.meta.map: meta =>
+            val view    = c.value
+              .withOnMod(aff => ctx.odbApi.updateUserAffiliation(programUserId, aff).runAsync)
+            val canEdit = meta.canEditUserFields(cell.get)
+
+            FormInputTextView(
+              id = NonEmptyString.unsafeFrom(s"$programUserId-affiliation"),
+              value = view,
+              disabled = !canEdit || meta.isActive.get.value,
+              validFormat = InputValidSplitEpi.nonEmptyString.optional
+            ): VdomNode
       ).sortableBy(_.get.toString),
       column(Column.OrcidId, _.get.user.flatMap(_.orcidId).foldMap(_.value)).sortable,
       ColDef(
