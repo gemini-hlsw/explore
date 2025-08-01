@@ -521,7 +521,7 @@ object ObsTabTiles:
           val constraintsTile      =
             Tile(
               ObsTabTileIds.ConstraintsId.id,
-              s"Constraints (${conditionsLikelihood.foldMap(formatPercentile)})"
+              s"Constraints ${conditionsLikelihood.foldMap(p => s"(${formatPercentile(p)})")}"
             )(
               _ =>
                 ConstraintsPanel(
