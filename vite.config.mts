@@ -11,7 +11,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import type { RuntimeCaching } from 'workbox-build';
 import env from 'vite-plugin-env-compatible';
 
-const scalaVersion = '3.7.1';
+const scalaVersion = '3.7.2';
 
 const fixCssRoot: PluginCreator<void> = () => {
   return {
