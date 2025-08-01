@@ -260,9 +260,12 @@ export default defineConfig(async ({ mode }) => {
       fontImport,
       VitePWA({
         injectRegister: 'inline',
+        selfDestroying: false,
         workbox: {
           globPatterns: ['**/*.{js,css,html,wasm}'],
+          globIgnores: ['**/uninstall.html'],
           maximumFileSizeToCacheInBytes: 30000000, // sjs produce large ffiles
+          navigateFallbackDenylist: [/\/uninstall\.html$/],
           // Cache aladin images
           runtimeCaching: [
             imageCache({

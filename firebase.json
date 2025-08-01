@@ -6,7 +6,7 @@
       "ignore": ["/*.conf.json"],
       "rewrites": [
         {
-          "source": "**",
+          "source": "!(/uninstall.html)",
           "destination": "/index.html"
         }
       ]
@@ -17,7 +17,7 @@
       "ignore": ["/*.conf.json"],
       "rewrites": [
         {
-          "source": "**",
+          "source": "!(/uninstall.html)",
           "destination": "/index.html"
         }
       ]
@@ -28,7 +28,7 @@
       "ignore": ["/*.conf.json"],
       "rewrites": [
         {
-          "source": "**",
+          "source": "!(/uninstall.html)",
           "destination": "/index.html"
         }
       ]

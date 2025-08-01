@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Worker Removal - Explore</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background-color: #1e1e1e;
+        color: #ffffff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 600px;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        padding: 40px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        color: #ffffff;
+        margin-bottom: 30px;
+        font-size: 28px;
+        text-align: center;
+      }
+
+      .status {
+        background-color: #3a3a3a;
+        padding: 20px;
+        margin-bottom: 30px;
+        border-radius: 4px;
+        min-height: 60px;
+      }
+
+      .status.checking {
+        border-left: 4px solid #007bff;
+      }
+
+      .status.found {
+        border-left: 4px solid #ffc107;
+      }
+
+      .status.not-found {
+        border-left: 4px solid #28a745;
+      }
+
+      .status.error {
+        border-left: 4px solid #dc3545;
+      }
+
+      .status.success {
+        border-left: 4px solid #28a745;
+      }
+
+      button {
+        background-color: #4a5568;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 4px;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      button:hover:not(:disabled) {
+        background-color: #2d3748;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      button:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      button:disabled {
+        background-color: #2d3748;
+        cursor: not-allowed;
+        opacity: 0.5;
+        transform: none;
+        box-shadow: none;
+      }
+
+      button.secondary {
+        background-color: #4a5568;
+      }
+
+      button.secondary:hover:not(:disabled) {
+        background-color: #2d3748;
+      }
+
+      button.primary {
+        background-color: #4299e1;
+      }
+
+      button.primary:hover:not(:disabled) {
+        background-color: #3182ce;
+      }
+
+      button:first-of-type {
+        background-color: #e53e3e;
+      }
+
+      button:first-of-type:hover:not(:disabled) {
+        background-color: #c53030;
+      }
+
+      .actions {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .log {
+        font-family: monospace;
+        font-size: 14px;
+        color: #cccccc;
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #1e1e1e;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .log-entry {
+        margin-bottom: 5px;
+      }
+
+      .log-entry.error {
+        color: #dc3545;
+      }
+
+      .log-entry.success {
+        color: #28a745;
+      }
+
+      .log-entry.info {
+        color: #17a2b8;
+      }
+
+      a {
+        color: #007bff;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .footer {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #3a3a3a;
+        text-align: center;
+        color: #999999;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Explore - Service Worker Removal</h1>
+
+      <div id="status" class="status checking">
+        <div id="statusText">Checking for service workers...</div>
+        <div id="log" class="log" style="display: none"></div>
+      </div>
+
+      <div class="actions">
+        <button id="removeBtn" onclick="removeServiceWorker()" disabled>
+          Remove Service Worker
+        </button>
+        <button id="checkBtn" class="secondary" onclick="checkServiceWorker()">Check Status</button>
+        <button id="returnBtn" class="primary" onclick="returnToApp()" style="display: none">
+          Return to Explore
+        </button>
+      </div>
+
+      <div class="footer">
+        <p>This page allows you to remove the service worker for Explore.</p>
+        <p>
+          If you continue to have issues, please
+          <a href="https://github.com/gemini-hlsw/explore/issues" target="_blank">report them</a>.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const statusTextEl = document.getElementById('statusText');
+      const removeBtn = document.getElementById('removeBtn');
+      const checkBtn = document.getElementById('checkBtn');
+      const returnBtn = document.getElementById('returnBtn');
+      const logEl = document.getElementById('log');
+
+      let logEntries = [];
+
+      function addLog(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString();
+        logEntries.push({ time: timestamp, message, type });
+        updateLogDisplay();
+      }
+
+      function updateLogDisplay() {
+        logEl.innerHTML = logEntries
+          .map(
+            (entry) =>
+              `<div class="log-entry ${entry.type}">[${entry.time}] ${entry.message}</div>`,
+          )
+          .join('');
+        logEl.scrollTop = logEl.scrollHeight;
+        if (logEntries.length > 0) {
+          logEl.style.display = 'block';
+        }
+      }
+
+      async function checkServiceWorker() {
+        removeBtn.disabled = true;
+        checkBtn.disabled = true;
+        statusEl.className = 'status checking';
+        statusTextEl.textContent = 'Checking for service workers...';
+        logEntries = [];
+        updateLogDisplay();
+
+        try {
+          if (!('serviceWorker' in navigator)) {
+            statusEl.className = 'status not-found';
+            statusTextEl.textContent = 'Service workers are not supported in this browser.';
+            addLog('Service workers not supported', 'error');
+            checkBtn.disabled = false;
+            return;
+          }
+
+          addLog('Checking for service worker registrations...', 'info');
+          const registrations = await navigator.serviceWorker.getRegistrations();
+
+          if (registrations.length === 0) {
+            statusEl.className = 'status not-found';
+            statusTextEl.textContent =
+              'No service workers found. The application is running without a service worker.';
+            addLog('No service workers found', 'success');
+            returnBtn.style.display = 'inline-block';
+          } else {
+            statusEl.className = 'status found';
+            statusTextEl.textContent = `Found ${registrations.length} service worker${registrations.length > 1 ? 's' : ''}.`;
+
+            registrations.forEach((reg, index) => {
+              const scope = reg.scope;
+              const state = reg.active
+                ? 'active'
+                : reg.waiting
+                  ? 'waiting'
+                  : reg.installing
+                    ? 'installing'
+                    : 'unknown';
+              addLog(`Service Worker ${index + 1}: ${scope} (${state})`, 'info');
+            });
+
+            removeBtn.disabled = false;
+          }
+        } catch (error) {
+          statusEl.className = 'status error';
+          statusTextEl.textContent = 'Error checking service workers.';
+          addLog(`Error: ${error.message}`, 'error');
+          console.error('Error checking service workers:', error);
+        }
+
+        checkBtn.disabled = false;
+      }
+
+      async function removeServiceWorker() {
+        removeBtn.disabled = true;
+        checkBtn.disabled = true;
+        statusEl.className = 'status checking';
+        statusTextEl.textContent = 'Removing service workers...';
+        logEntries = [];
+        updateLogDisplay();
+
+        try {
+          addLog('Starting service worker removal...', 'info');
+
+          // Get all registrations
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          addLog(`Found ${registrations.length} service worker(s) to remove`, 'info');
+
+          // Send self-destruct message to active service workers
+          if (navigator.serviceWorker.controller) {
+            addLog('Sending self-destruct message to active service worker...', 'info');
+            navigator.serviceWorker.controller.postMessage({ type: 'SELF_DESTRUCT' });
+          }
+
+          // Unregister all service workers
+          for (let i = 0; i < registrations.length; i++) {
+            const reg = registrations[i];
+            addLog(`Unregistering service worker ${i + 1} at ${reg.scope}...`, 'info');
+            try {
+              const success = await reg.unregister();
+              if (success) {
+                addLog(`Successfully unregistered service worker ${i + 1}`, 'success');
+              } else {
+                addLog(`Failed to unregister service worker ${i + 1}`, 'error');
+              }
+            } catch (error) {
+              addLog(`Error unregistering service worker ${i + 1}: ${error.message}`, 'error');
+            }
+          }
+
+          // Clear all caches
+          if ('caches' in window) {
+            addLog('Clearing all caches...', 'info');
+            const cacheNames = await caches.keys();
+            addLog(`Found ${cacheNames.length} cache(s) to clear`, 'info');
+
+            for (const cacheName of cacheNames) {
+              addLog(`Deleting cache: ${cacheName}`, 'info');
+              try {
+                await caches.delete(cacheName);
+                addLog(`Successfully deleted cache: ${cacheName}`, 'success');
+              } catch (error) {
+                addLog(`Error deleting cache ${cacheName}: ${error.message}`, 'error');
+              }
+            }
+          }
+
+          statusEl.className = 'status success';
+          statusTextEl.textContent = 'Service workers removed successfully!';
+          addLog('All service workers and caches have been removed', 'success');
+          addLog('You can now safely return to Explore', 'success');
+
+          returnBtn.style.display = 'inline-block';
+
+          // Re-check after a short delay
+          setTimeout(() => {
+            addLog('Verifying removal...', 'info');
+            checkServiceWorker();
+          }, 2000);
+        } catch (error) {
+          statusEl.className = 'status error';
+          statusTextEl.textContent = 'Error removing service workers.';
+          addLog(`Error: ${error.message}`, 'error');
+          console.error('Error removing service workers:', error);
+          removeBtn.disabled = false;
+        }
+
+        checkBtn.disabled = false;
+      }
+
+      function returnToApp() {
+        window.location.href = '/';
+      }
+
+      // Check on page load
+      window.addEventListener('load', () => {
+        checkServiceWorker();
+      });
+    </script>
+  </body>
+</html>
