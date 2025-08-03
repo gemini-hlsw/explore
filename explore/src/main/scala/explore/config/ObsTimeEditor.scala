@@ -26,6 +26,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
+import lucuma.ui.utils.*
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -79,9 +80,9 @@ object ObsTimeEditor
                 .mapValue((v: View[TimeSpan]) =>
                   val tooltipList               = List(
                     props.setupTime
-                      .map(st => s"Must be > the setup time of ${st.format}."),
+                      .map(st => s"Must be > the setup time of ${formatDurationHours(st)}."),
                     props.pendingTime
-                      .map(pt => s"The current remaining time is ${pt.format}.")
+                      .map(pt => s"The current remaining time is ${formatDurationHours(pt)}.")
                   ).flattenOption
                   val tooltip: Option[VdomNode] =
                     props.calcDigest.staleTooltip.orElse(
