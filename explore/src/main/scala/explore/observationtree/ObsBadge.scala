@@ -50,7 +50,8 @@ case class ObsBadge(
   readonly:              Boolean = false
 ) extends ReactFnProps(ObsBadge.component):
   val executionTime: CalculatedValue[Option[TimeSpan]] = obs.execution.digest.programTimeEstimate
-  val isDisabled: Boolean                              = readonly || obs.isCalibration || obs.isExecuted
+  val isDisabled: Boolean                              = readonly || obs.isCalibration
+  val isDisabledExecuted: Boolean                      = isDisabled || obs.isExecuted
   val nonEmptyAllocatedBands                           = NonEmptySet.fromSet(allocatedScienceBands)
   val scienceBandIsInvalid                             = obs.scienceBand.exists(b => !allocatedScienceBands.contains(b))
   val showScienceBand: Boolean                         =
@@ -96,7 +97,7 @@ object ObsBadge:
           icon = Icons.Trash,
           tooltip = "Delete",
           onClickE = e => e.preventDefaultCB *> e.stopPropagationCB *> props.deleteCB
-        ).small.unless(props.isDisabled)
+        ).small.unless(props.isDisabledExecuted)
 
       val duplicateButton =
         Button(
@@ -165,7 +166,7 @@ object ObsBadge:
               addButtonClass = ExploreStyles.ObsBadgeSubtitleAdd,
               leftButtonClass = ExploreStyles.ObsBadgeSubtitleEdit,
               rightButtonClass = ExploreStyles.ObsBadgeSubtitleDelete,
-              readonly = props.isDisabled
+              readonly = props.isDisabledExecuted
             )
           )
           .whenDefined
