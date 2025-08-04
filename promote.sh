@@ -39,10 +39,10 @@ check_pipeline_changes() {
 
   if [ "$source_slug" != "$target_slug" ]; then
     echo "  ✓ $service has changes (source: $source_release/$source_slug, target: $target_release/$target_slug)"
-    return 0  # Changes detected
+    return 0
   else
     echo "  ✗ $service has no changes (both at $target_release/$target_slug)"
-    return 1  # No changes
+    return 1
   fi
 }
 
@@ -133,7 +133,6 @@ check_firebase_changes() {
 
   echo "Checking for Firebase hosting changes between $source_site and $target_site..."
 
-  # Since all sites are in the same project (explore-gemini), we use the project consistently
   local project="explore-gemini"
 
   # Get channel information for both sites to compare version IDs
@@ -159,7 +158,6 @@ check_firebase_changes() {
 echo "##### Checking for changes between $SOURCE_ENV and $TARGET_ENV"
 echo
 
-# Check each service for changes
 if check_pipeline_changes "SSO" "lucuma-sso-${SOURCE_ENV}" "lucuma-sso-${TARGET_ENV}"; then
   PROMOTE_SSO=true
 fi
@@ -195,7 +193,6 @@ esac
 
 echo
 
-# Check if any promotions are needed
 if [ "$PROMOTE_SSO" = false ] && [ "$PROMOTE_ITC" = false ] && [ "$PROMOTE_ODB" = false ] && [ "$PROMOTE_HASURA" = false ] && [ "$PROMOTE_FIREBASE" = false ]; then
   echo "##### No changes detected - nothing to promote!"
   echo "All services (including Firebase hosting) are already up to date between $SOURCE_ENV and $TARGET_ENV"
