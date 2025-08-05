@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Usage: promote.sh <source_env> <target_env>
+# Usage: promote.sh <source_env> <target_env> [--dry-run]
 # Example: promote.sh dev staging
+# Example: promote.sh dev staging --dry-run
 
 set -e
 
@@ -10,9 +11,9 @@ TARGET_ENV=$2
 DRY_RUN=${3:-false}
 
 if [ -z "$SOURCE_ENV" ] || [ -z "$TARGET_ENV" ]; then
-  echo "Usage: promote.sh <source_env> <target_env> [dry-run]"
+  echo "Usage: promote.sh <source_env> <target_env> [--dry-run]"
   echo "Example: promote.sh dev staging"
-  echo "Example: promote.sh dev staging dry-run"
+  echo "Example: promote.sh dev staging --dry-run"
   exit 1
 fi
 
@@ -208,14 +209,10 @@ echo "##### Summary of changes detected:"
 [ "$PROMOTE_FIREBASE" = true ] && echo "  • Firebase hosting will be promoted"
 echo
 
-if [ "$DRY_RUN" = "dry-run" ]; then
+if [ "$DRY_RUN" = "--dry-run" ]; then
   echo "##### DRY RUN MODE - No actual promotions will be performed"
   exit 0
 fi
-
-echo "##### Capturing a db backup on $TARGET_ENV."
-heroku pg:backups:capture --app lucuma-postgres-odb-${TARGET_ENV}
-echo
 
 echo "##### Promoting services from $SOURCE_ENV to $TARGET_ENV"
 echo
@@ -247,6 +244,9 @@ fi
 # Promote ODB (conditional)
 if [ "$PROMOTE_ODB" = true ]; then
   echo "## Promote ODB to $TARGET_ENV"
+  echo "Capturing database backup before ODB promotion..."
+  heroku pg:backups:capture --app lucuma-postgres-odb-${TARGET_ENV}
+  echo
   heroku pipelines:promote -a lucuma-postgres-odb-${SOURCE_ENV} -t lucuma-postgres-odb-${TARGET_ENV}
   echo
 else
