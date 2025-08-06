@@ -332,6 +332,25 @@ lazy val firebaseDeployDev = firebaseDeploy(
   live = true
 )
 
+lazy val recordDeploymentMetadata = WorkflowStep.Run(
+  List(
+    "# Create a deployment record with commit SHA for tracking",
+    """echo "Recording deployment: ${{ github.sha }} to explore-gemini-dev"""",
+    """curl -X POST "https://api.github.com/repos/${{ github.repository }}/deployments" \\""",
+    """  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \\""",
+    """  -H "Accept: application/vnd.github.v3+json" \\""",
+    """  -d '{""",
+    """    "ref": "${{ github.sha }}",""",
+    """    "environment": "explore-dev",""",
+    """    "description": "Firebase hosting deployment to dev",""",
+    """    "auto_merge": false,""",
+    """    "required_contexts": []""",
+    """  }' || echo "Failed to create record" """
+  ),
+  name = Some("Record deployment gha"),
+  cond = Some(mainCond)
+)
+
 def setupVars(mode: String) = WorkflowStep.Run(
   List(
     // Removes all lines that don't define a variable, thus building a viable CSS file for linting
@@ -383,6 +402,7 @@ ThisBuild / githubWorkflowAddedJobs +=
       bundlemon ::
       // firebaseDeployReview ::
       firebaseDeployDev ::
+      recordDeploymentMetadata ::
       Nil,
     // Only 1 scalaVersion, so no need for matrix
     sbtStepPreamble = Nil,

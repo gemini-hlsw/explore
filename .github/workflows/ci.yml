@@ -266,3 +266,19 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           target: dev
           channelId: live
+
+      - name: Record deployment gha
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Create a deployment record with commit SHA for tracking
+          echo "Recording deployment: ${{ github.sha }} to explore-gemini-dev"
+          curl -X POST "https://api.github.com/repos/${{ github.repository }}/deployments" \\
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \\
+            -H "Accept: application/vnd.github.v3+json" \\
+            -d '{
+              "ref": "${{ github.sha }}",
+              "environment": "explore-dev",
+              "description": "Firebase hosting deployment to dev",
+              "auto_merge": false,
+              "required_contexts": []
+            }' || echo "Failed to create record" 
