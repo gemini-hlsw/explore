@@ -387,7 +387,9 @@ object ExploreStyles:
   val ITCHeaderCell: Css                = Css("explore-modes-table-itc-header-cell")
   val ITCCell: Css                      = Css("explore-modes-table-itc-cell")
   val OffsetsCount: Css                 = Css("explore-offsets-count")
+  val OffsetsEditorDialog: Css          = Css("explore-offsets-dialog")
   val OffsetEditorButton: Css           = Css("explore-offsets-button")
+  val OffsetRegenerate: Css             = Css("explore-offsets-regenerate")
 
   // Sequence Viewer
   val SequencesPanel         = Css("explore-sequences-panel")

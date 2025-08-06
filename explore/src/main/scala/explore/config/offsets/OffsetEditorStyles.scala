@@ -10,6 +10,7 @@ object OffsetEditorStyles:
   val Content: Css      = Css("offset-editor-content")
   val GridDisplay: Css  = Css("offset-grid-display")
   val GridControls: Css = Css("offset-grid-controls")
+  val FormRow: Css      = Css("offset-form-row")
 
   // OffsetGridDisplay styles
   val Container: Css    = Css("offset-grid-container")

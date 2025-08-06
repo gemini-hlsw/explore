@@ -6,18 +6,16 @@ package explore.config
 import cats.MonadError
 import cats.data.NonEmptyList
 import cats.effect.IO
-import crystal.react.*
-import crystal.react.hooks.*
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.cats.*
+import explore.Icons
 import explore.common.Aligner
 import explore.components.*
 import explore.components.ui.ExploreStyles
-import explore.Icons
+import explore.config.offsets.OffsetEditor
 import explore.model.AppContext
 import explore.model.Observation
 import explore.model.ScienceRequirements
@@ -29,13 +27,14 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.math.Offset
-import lucuma.core.geom.OffsetGenerator.random
-import lucuma.core.geom.OffsetGenerator.spiral
+import lucuma.core.math.syntax.int.*
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.TooltipOptions
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -43,17 +42,12 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.FormLabel
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
 import monocle.Lens
 import org.typelevel.log4cats.Logger
-import explore.config.offsets.OffsetEditor
-import lucuma.react.primereact.Button
-import lucuma.react.primereact.Dialog
-import lucuma.ui.primereact.FormLabel
-import lucuma.core.math.syntax.int.*
-import explore.model.reusability.given
 
 object GmosImagingConfigPanel {
   // These displays are allowing the display of the short name in the chips of the
@@ -150,31 +144,15 @@ object GmosImagingConfigPanel {
       ScalaFnComponent[Props]: props =>
         for {
           ctx              <- useContext(AppContext.ctx)
-          spatialOffsets    =
-            import ctx.given
-
-            explicitSpatialOffsets(props.observingMode).withDefault(
-              defaultSpatialOffsetsLens.get(props.observingMode.get)
-            )
           editState        <- useStateView(ConfigEditState.View)
           localFiltersView <- useStateView(List.empty[Filter])
           offsetDialogOpen <- useStateView(false)
-          localOffsets     <- useStateView(spatialOffsets.get)
+          localOffsets     <- useStateView {
+                                import ctx.given
+                                offsets(props.observingMode).get.some
+                              }
           _                <-
             useEffectWithDeps(filtersLens.get(props.observingMode.get).toList)(localFiltersView.set)
-          _                <-
-            useEffectWithDeps(props.exposureTimeMode.get): exposureMode =>
-              import ctx.given
-
-              exposureMode match
-                case Some(ExposureTimeMode.TimeAndCountMode(_, count, _)) =>
-                  IO.println("generate offsets") *> spiral[IO](count, OffsetRadius)
-                    .flatMap: offsets =>
-                      explicitSpatialOffsets(props.observingMode)
-                        .set(Some(offsets.toList))
-                        .void
-                        .to[IO]
-                    .whenA(count.value != spatialOffsets.get.foldMap(_.size)) // tricksy
         } yield
           import ctx.given
 
@@ -267,7 +245,7 @@ object GmosImagingConfigPanel {
                       .withMods(^.id := "spatial-offsets-button", ^.title := "Edit Offsets"),
                     <.span(
                       ExploreStyles.OffsetsCount,
-                      s"(${explicitSpatialOffsets(props.observingMode).get.foldMap(_.size)})"
+                      s"(${offsets(props.observingMode).get.size})"
                     )
                   )
                 ),
@@ -310,34 +288,36 @@ object GmosImagingConfigPanel {
             Dialog(
               visible = offsetDialogOpen.get,
               onHide = offsetDialogOpen.set(false),
-              header = "Spatial Offsets",
+              header = "Offsets",
               modal = true,
-              resizable = true,
+              resizable = false,
+              clazz = ExploreStyles.OffsetsEditorDialog,
               footer = <.div(
                 Button(
                   label = "Cancel",
                   severity = Button.Severity.Danger,
                   onClick = offsetDialogOpen.set(false)
-                ),
+                ).small.compact,
                 Button(
-                  label = "Apply",
+                  label = "Save",
                   severity = Button.Severity.Success,
-                  onClick = localOffsets.get.fold(Callback.empty)(offsets =>
+                  onClick = {
                     import ctx.given
-                    explicitSpatialOffsets(props.observingMode).set(Some(offsets)) >>
+                    offsets(props.observingMode).set(localOffsets.get.orEmpty) >>
                       offsetDialogOpen.set(false)
-                  )
-                )
+                  }
+                ).small.compact
               )
             )(
               OffsetEditor(
-                localOffsets.withDefault(Nil),
-                offsets => localOffsets.set(Some(offsets)),
+                localOffsets,
+                offsets => localOffsets.set(offsets.some),
                 props.exposureTimeMode.get match {
                   case Some(ExposureTimeMode.TimeAndCountMode(_, c, _)) => c
                   case Some(ExposureTimeMode.SignalToNoiseMode(_, _))   => 1.refined
                   case _                                                => 1.refined
-                }
+                },
+                OffsetRadius
               )
             )
           )

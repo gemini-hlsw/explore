@@ -3625,7 +3625,7 @@ a.explore-upgrade-link {
   }
 }
 
-.explore-offsets-count {
+span.explore-offsets-count {
   opacity: 0.4;
   margin-top: 0.1em;
 }
@@ -3634,3 +3634,161 @@ a.explore-upgrade-link {
   color: var(--highlight-text-color);
 }
 
+// Offset Editor Dialog Styles
+.explore-offsets-dialog {
+  min-width: 90%;
+
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+    min-width: 50%;
+  }
+
+  .p-dialog {
+    background: var(--tile-background);
+    border: 1px solid var(--gray-500);
+  }
+
+  .p-dialog-header {
+    background: var(--tile-background);
+    border-bottom: 1px solid var(--gray-500);
+    color: var(--text-color);
+  }
+
+  .p-dialog-header-icon {
+    color: var(--text-color);
+  }
+
+  .p-dialog-content {
+    background: var(--tile-background);
+    color: var(--text-color);
+  }
+
+  .p-dialog-footer {
+    background: var(--tile-background);
+    border-top: 1px solid var(--gray-500);
+  }
+}
+
+.offset-editor-content {
+  --offset-spacing-large: 20px;
+
+  display: flex;
+  flex-direction: column;
+  min-width: 90%;
+
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+    flex-direction: row;
+    gap: var(--offset-spacing-large);
+    min-width: 50%;
+  }
+
+  .offset-grid-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 300px;
+    padding: 0.2em;
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      flex: 3;
+      min-height: 500px;
+      padding: unset;
+    }
+  }
+
+  .offset-grid-controls {
+    display: grid;
+    align-content: start;
+    overflow-y: auto;
+    gap: 0.1em 0;
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      flex: 2;
+    }
+
+    h4 {
+      margin: 0;
+      justify-self: center;
+    }
+
+    label.explore-offsets-count,
+    .explore-offsets-regenerate {
+      justify-self: end;
+    }
+
+    @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+      padding: 1em;
+      gap: 0.8em;
+
+      h4 {
+        margin-bottom: 1em;
+      }
+    }
+  }
+
+  .offset-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em;
+    align-items: center;
+  }
+
+  .offset-grid-container {
+    --offset-border-radius: 4px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--tile-background);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--offset-border-radius);
+    padding: var(--offset-spacing-large);
+    width: 100%;
+    height: 100%;
+    min-height: 250px;
+  }
+
+  .offset-grid-svg {
+    display: block;
+  }
+
+  .offset-grid-background {
+    fill: var(--tile-background);
+  }
+
+  .offset-grid-lines {
+    line {
+      stroke: var(--gray-200);
+      stroke-width: 1;
+    }
+  }
+
+  .offset-grid-axes {
+    line {
+      stroke: var(--gray-100);
+      stroke-width: 2;
+    }
+  }
+
+  .offset-grid-labels {
+    text {
+      fill: var(--muted-color);
+      font-size: 12px;
+    }
+  }
+
+  .offset-grid-points {
+    circle {
+      fill: var(--explore-accent-color);
+      stroke: var(--explore-accent-color);
+      stroke-width: 1;
+    }
+  }
+
+  .offset-grid-crosshair {
+    line {
+      stroke: var(--negative-background-color);
+      stroke-width: 1.5;
+    }
+  }
+}
