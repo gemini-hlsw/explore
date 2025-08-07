@@ -336,9 +336,9 @@ lazy val recordDeploymentMetadata = WorkflowStep.Run(
   List(
     "# Create a deployment record with commit SHA for tracking",
     """echo "Recording deployment: ${{ github.sha }} to explore-gemini-dev"""",
-    """curl -X POST "https://api.github.com/repos/${{ github.repository }}/deployments" \\""",
-    """  -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \\""",
-    """  -H "Accept: application/vnd.github+json" \\""",
+    """curl -X POST "https://api.github.com/repos/${{ github.repository }}/deployments" """,
+    """  -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" """,
+    """  -H "Accept: application/vnd.github+json" """,
     """  -d '{""",
     """    "ref": "${{ github.sha }}",""",
     """    "environment": "development",""",
