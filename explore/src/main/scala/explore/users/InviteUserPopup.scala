@@ -63,16 +63,16 @@ object InviteUserPopup:
           ctx.odbApi
             .createUserInvitation(props.programUserId, email)
             .flatMap: result =>
-              // set the fallback email address of the user to this email if it is
+              // set the preferred email address of the user to this email if it is
               // different from the calculated email address of the user.
               val setEmail: IO[Unit] =
                 if (props.programUser.get.email.exists(_ === email.value.value)) IO.unit
                 else
                   props.programUser
-                    .zoom(ProgramUser.fallbackEmail)
+                    .zoom(ProgramUser.preferredEmail)
                     .set(email.some)
                     .to[IO] >>
-                    ctx.odbApi.updateUserFallbackEmail(props.programUserId, email.value.value.some)
+                    ctx.odbApi.updateUserPreferredEmail(props.programUserId, email.value.value.some)
 
               props.programUser
                 .zoom(ProgramUser.invitations)

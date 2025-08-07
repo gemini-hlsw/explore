@@ -57,6 +57,7 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 
 import scala.collection.immutable.SortedSet
+import scala.scalajs.js.JSConverters.*
 
 case class ProgramUsersTable(
   users: View[List[ProgramUser]],
@@ -326,24 +327,24 @@ object ProgramUsersTable:
             val programUserId: ProgramUser.Id = pu.id
             val canEdit                       = meta.canEditUserFields(pu)
 
-            // We'll allow editing the name if there is no REAL user
-            // AND the fallback display name is the same as the credit name.
             // In explore, we'll always set the credit name, but a user could have
-            // updated the fallback profile via the API, and we won't mess with that.
-            if canEdit && pu.user.isEmpty && pu.fallbackProfile.creditName === pu.fallbackProfile.displayName
+            // updated the preferred profile via the API and set given and family names.
+            // These would be the fallback before the user.profile.
+            if canEdit
             then
               val view: View[Option[NonEmptyString]] =
                 c.value
-                  .zoom(ProgramUser.fallbackCreditName)
+                  .zoom(ProgramUser.preferredCreditName)
                   .withOnMod: ones =>
-                    ctx.odbApi.updateUserFallbackName(programUserId, ones.map(_.value)).runAsync
+                    ctx.odbApi.updateUserPreferredName(programUserId, ones.map(_.value)).runAsync
 
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"${programUserId}-name"),
                 value = view,
                 disabled = meta.isActive.get.value,
-                validFormat = InputValidSplitEpi.nonEmptyString.optional
-              ): VdomNode
+                validFormat = InputValidSplitEpi.nonEmptyString.optional,
+                placeholder = pu.name
+              ).clearable: VdomNode
             else pu.name: VdomNode
       ).sortableBy(_.get.name),
       ColDef(
@@ -355,20 +356,19 @@ object ProgramUsersTable:
             val pu: ProgramUser               = c.value.get
             val programUserId: ProgramUser.Id = pu.id
             val canEdit                       = meta.canEditUserFields(pu)
-            // We'll allow editing the email if there is no REAL user
-            // or the real email address is empty
-            if canEdit && pu.user.flatMap(_.profile).flatMap(_.email).isEmpty then
+            if canEdit then
               val view = c.value
-                .zoom(ProgramUser.fallbackEmail)
+                .zoom(ProgramUser.preferredEmail)
                 .withOnMod: oe =>
-                  ctx.odbApi.updateUserFallbackEmail(programUserId, oe.map(_.value.value)).runAsync
+                  ctx.odbApi.updateUserPreferredEmail(programUserId, oe.map(_.value.value)).runAsync
 
               FormInputTextView(
                 id = NonEmptyString.unsafeFrom(s"${programUserId}-email"),
                 value = view,
                 disabled = meta.isActive.get.value,
-                validFormat = ExploreModelValidators.MailValidator.optional
-              ): VdomNode
+                validFormat = ExploreModelValidators.MailValidator.optional,
+                placeholder = pu.email.orUndefined
+              ).clearable: VdomNode
             else pu.email.getOrElse("-"): VdomNode
       ).sortableBy(_.get.email),
       ColDef(

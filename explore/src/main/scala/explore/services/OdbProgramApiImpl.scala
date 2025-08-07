@@ -127,14 +127,14 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
       .processErrors
       .void
 
-  def updateUserFallbackName(programUserId: ProgramUser.Id, creditName: Option[String]): F[Unit] =
-    val fallbackInput = UserProfileInput(creditName = creditName.orUnassign)
-    val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
+  def updateUserPreferredName(programUserId: ProgramUser.Id, creditName: Option[String]): F[Unit] =
+    val preferredInput = UserProfileInput(creditName = creditName.orUnassign)
+    val input          = ProgramUserPropertiesInput(preferredProfile = preferredInput.assign)
     updateProgramUsers(programUserId, input)
 
-  def updateUserFallbackEmail(programUserId: ProgramUser.Id, email: Option[String]): F[Unit] =
-    val fallbackInput = UserProfileInput(email = email.orUnassign)
-    val input         = ProgramUserPropertiesInput(fallbackProfile = fallbackInput.assign)
+  def updateUserPreferredEmail(programUserId: ProgramUser.Id, email: Option[String]): F[Unit] =
+    val preferredInput = UserProfileInput(email = email.orUnassign)
+    val input          = ProgramUserPropertiesInput(preferredProfile = preferredInput.assign)
     updateProgramUsers(programUserId, input)
 
   def updateProgramPartner(programUserId: ProgramUser.Id, pl: Option[PartnerLink]): F[Unit] =
