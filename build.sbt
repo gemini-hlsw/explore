@@ -345,7 +345,7 @@ lazy val recordDeploymentMetadata = WorkflowStep.Run(
     """    "description": "Firebase hosting deployment to dev",""",
     """    "auto_merge": false,""",
     """    "required_contexts": []""",
-    """  }' || echo "Failed to create record" """
+    """  }' """
   ),
   name = Some("Record deployment gha"),
   cond = Some(mainCond)
