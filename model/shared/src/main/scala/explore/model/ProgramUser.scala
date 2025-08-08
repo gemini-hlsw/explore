@@ -30,18 +30,18 @@ case class ProgramUser(
   thesis:            Option[Boolean],
   gender:            Option[Gender],
   affiliation:       Option[NonEmptyString],
-  fallbackProfile:   UserProfile,
+  preferredProfile:  UserProfile,
   invitations:       List[UserInvitation],
   hasDataAccess:     Boolean
 ) derives Eq:
   val name: String          =
-    user.fold(fallbackProfile.displayName.orEmpty)(_.name)
+    preferredProfile.displayName.orElse(user.map(_.name)).orEmpty
   val email: Option[String] =
-    user.flatMap(_.profile.flatMap(_.email)).orElse(fallbackProfile.email)
+    preferredProfile.email.orElse(user.flatMap(_.profile.flatMap(_.email)))
   // Try to get only a last name and fallback to display name. If there is a User, we'll
-  // assume it has one of the names we can use.
+  // assume it has one of the names we can use. This is used for the Program selection popup.
   lazy val lastName: String =
-    user.fold(fallbackProfile.familyName.orElse(fallbackProfile.displayName).orEmpty)(_.lastName)
+    user.fold(preferredProfile.familyName.orElse(preferredProfile.displayName).orEmpty)(_.lastName)
 
   // should only ever be one non-revoked invitation
   val activeInvitation: Option[UserInvitation] =
@@ -94,8 +94,8 @@ object ProgramUser:
   val affiliation: Lens[ProgramUser, Option[NonEmptyString]] =
     Focus[ProgramUser](_.affiliation)
 
-  val fallbackProfile: Lens[ProgramUser, UserProfile] =
-    Focus[ProgramUser](_.fallbackProfile)
+  val preferredProfile: Lens[ProgramUser, UserProfile] =
+    Focus[ProgramUser](_.preferredProfile)
 
   val invitations: Lens[ProgramUser, List[UserInvitation]] =
     Focus[ProgramUser](_.invitations)
@@ -113,11 +113,11 @@ object ProgramUser:
       _.email.flatMap(EmailAddress.from(_).toOption)
     )(oe => UserProfile.email.replace(oe.map(_.value.value)))
 
-  val fallbackCreditName: Lens[ProgramUser, Option[NonEmptyString]] =
-    fallbackProfile.andThen(profileCreditNameNES)
+  val preferredCreditName: Lens[ProgramUser, Option[NonEmptyString]] =
+    preferredProfile.andThen(profileCreditNameNES)
 
-  val fallbackEmail: Lens[ProgramUser, Option[EmailAddress]] =
-    fallbackProfile.andThen(profileEmailAddress)
+  val preferredEmail: Lens[ProgramUser, Option[EmailAddress]] =
+    preferredProfile.andThen(profileEmailAddress)
 
   given Decoder[ProgramUser] = c =>
     for {
@@ -129,7 +129,7 @@ object ProgramUser:
       th   <- c.downField("thesis").as[Option[Boolean]]
       g    <- c.downField("gender").as[Option[Gender]]
       aff  <- c.downField("affiliation").as[Option[NonEmptyString]]
-      fb   <- c.downField("fallbackProfile").as[UserProfile]
+      pref <- c.downField("preferredProfile").as[UserProfile]
       in   <- c.downField("invitations").as[List[UserInvitation]]
       da   <- c.downField("hasDataAccess").as[Boolean]
-    } yield ProgramUser(id, u, pl, role, es, th, g, aff, fb, in, da)
+    } yield ProgramUser(id, u, pl, role, es, th, g, aff, pref, in, da)

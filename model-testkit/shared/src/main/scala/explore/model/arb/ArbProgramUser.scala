@@ -35,7 +35,7 @@ trait ArbProgramUser:
         thesis            <- arbitrary[Option[Boolean]]
         gender            <- arbitrary[Option[Gender]]
         affiliation       <- arbitrary[Option[NonEmptyString]]
-        fallbackProfile   <- arbitrary[UserProfile]
+        preferredProfile  <- arbitrary[UserProfile]
         invitations       <- arbitrary[List[UserInvitation]]
         hasDataAccess     <- arbitrary[Boolean]
       } yield ProgramUser(id,
@@ -46,7 +46,7 @@ trait ArbProgramUser:
                           thesis,
                           gender,
                           affiliation,
-                          fallbackProfile,
+                          preferredProfile,
                           invitations,
                           hasDataAccess
       )
@@ -76,7 +76,7 @@ trait ArbProgramUser:
        u.thesis,
        u.gender,
        u.affiliation.map(_.value),
-       u.fallbackProfile,
+       u.preferredProfile,
        u.invitations,
        u.hasDataAccess
       )
