@@ -113,7 +113,7 @@ object ObservationValidationsTableBody {
               )
           )
           .withSize(50.toPx),
-        column(ObservationStateColumnId, _.forObs(_.obs.workflow.state)).withMaxSize(50.toPx),
+        column(ObservationStateColumnId, _.forObs(_.obs.workflow.value.state)).withMaxSize(50.toPx),
         column(ObservationTitleColumnId, _.forObs(_.obs.title)).withCell(_.value),
         ColDef(
           ValidationCodeColumnId,
