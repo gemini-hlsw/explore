@@ -85,6 +85,12 @@ object GmosImagingConfigPanel {
       Logger[IO]
     ): View[NonEmptyList[Filter]]
 
+    @inline protected def offsets(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[List[Offset]]
+
     @inline protected def explicitMultipleFiltersMode(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
@@ -109,20 +115,14 @@ object GmosImagingConfigPanel {
       Logger[IO]
     ): View[Option[GmosRoi]]
 
-    @inline protected def explicitSpatialOffsets(aligner: AA)(using
-      MonadError[IO, Throwable],
-      Effect.Dispatch[IO],
-      Logger[IO]
-    ): View[Option[List[Offset]]]
-
     @inline protected val filtersLens: Lens[T, NonEmptyList[Filter]]
+    @inline protected val offsetLens: Lens[T, List[Offset]]
     @inline protected val initialFiltersLens: Lens[T, NonEmptyList[Filter]]
     @inline protected val filterTypeGetter: Filter => FilterType
     @inline protected val defaultMultipleFiltersModeLens: Lens[T, MultipleFiltersMode]
     @inline protected val defaultBinningLens: Lens[T, GmosBinning]
     @inline protected val defaultReadModeGainLens: Lens[T, (GmosAmpReadMode, GmosAmpGain)]
     @inline protected val defaultRoiLens: Lens[T, GmosRoi]
-    @inline protected val defaultSpatialOffsetsLens: Lens[T, List[Offset]]
 
     @inline protected def resolvedReadModeGainGetter: T => (GmosAmpReadMode, GmosAmpGain)
 
@@ -296,6 +296,17 @@ object GmosImagingConfigPanel {
       )
       .view(_.toList.assign)
 
+    override protected def offsets(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[List[Offset]] = aligner
+      .zoom(
+        ObservingMode.GmosNorthImaging.offsets,
+        GmosNorthImagingInput.offsets.modify
+      )
+      .view(_.map(_.toInput).assign)
+
     @inline override protected def explicitMultipleFiltersMode(aligner: AA)(using
       MonadError[IO, Throwable],
       Effect.Dispatch[IO],
@@ -354,31 +365,19 @@ object GmosImagingConfigPanel {
       )
       .view(_.orUnassign)
 
-    @inline override protected def explicitSpatialOffsets(aligner: AA)(using
-      MonadError[IO, Throwable],
-      Effect.Dispatch[IO],
-      Logger[IO]
-    ): View[Option[List[Offset]]] = aligner
-      .zoom(
-        ObservingMode.GmosNorthImaging.explicitSpatialOffsets,
-        GmosNorthImagingInput.explicitSpatialOffsets.modify
-      )
-      .view(_.map(_.toList.map(_.toInput)).orUnassign)
-
-    @inline override protected val filtersLens               = ObservingMode.GmosNorthImaging.filters
-    @inline override protected val initialFiltersLens        =
+    @inline override protected val filtersLens           = ObservingMode.GmosNorthImaging.filters
+    @inline override protected val offsetLens            = ObservingMode.GmosNorthImaging.offsets
+    @inline override protected val initialFiltersLens    =
       ObservingMode.GmosNorthImaging.initialFilters
-    @inline override val filterTypeGetter                    = _.filterType
-    @inline protected val defaultMultipleFiltersModeLens     =
+    @inline override val filterTypeGetter                = _.filterType
+    @inline protected val defaultMultipleFiltersModeLens =
       ObservingMode.GmosNorthImaging.defaultMultipleFiltersMode
-    @inline protected val defaultBinningLens                 = ObservingMode.GmosNorthImaging.defaultBin
-    @inline protected val defaultReadModeGainLens            =
+    @inline protected val defaultBinningLens             = ObservingMode.GmosNorthImaging.defaultBin
+    @inline protected val defaultReadModeGainLens        =
       (ObservingMode.GmosNorthImaging.defaultAmpReadMode,
        ObservingMode.GmosNorthImaging.defaultAmpGain
       ).disjointZip
-    @inline protected val defaultRoiLens                     = ObservingMode.GmosNorthImaging.defaultRoi
-    @inline override protected val defaultSpatialOffsetsLens =
-      ObservingMode.GmosNorthImaging.defaultSpatialOffsets
+    @inline protected val defaultRoiLens                 = ObservingMode.GmosNorthImaging.defaultRoi
 
     @inline override protected def resolvedReadModeGainGetter = mode =>
       val readMode = ObservingMode.GmosNorthImaging.explicitAmpReadMode
@@ -434,6 +433,17 @@ object GmosImagingConfigPanel {
           GmosSouthImagingInput.filters.modify
         )
         .view(_.toList.assign)
+
+    @inline override protected def offsets(aligner: AA)(using
+      MonadError[IO, Throwable],
+      Effect.Dispatch[IO],
+      Logger[IO]
+    ): View[List[Offset]] = aligner
+      .zoom(
+        ObservingMode.GmosSouthImaging.offsets,
+        GmosSouthImagingInput.offsets.modify
+      )
+      .view(_.map(_.toInput).assign)
 
     @inline override protected def explicitMultipleFiltersMode(aligner: AA)(using
       MonadError[IO, Throwable],
@@ -493,31 +503,19 @@ object GmosImagingConfigPanel {
       )
       .view(_.orUnassign)
 
-    @inline override protected def explicitSpatialOffsets(aligner: AA)(using
-      MonadError[IO, Throwable],
-      Effect.Dispatch[IO],
-      Logger[IO]
-    ): View[Option[List[Offset]]] = aligner
-      .zoom(
-        ObservingMode.GmosSouthImaging.explicitSpatialOffsets,
-        GmosSouthImagingInput.explicitSpatialOffsets.modify
-      )
-      .view(_.map(_.toList.map(_.toInput)).orUnassign)
-
-    @inline override protected val filtersLens               = ObservingMode.GmosSouthImaging.filters
-    @inline override protected val initialFiltersLens        =
+    @inline override protected val filtersLens           = ObservingMode.GmosSouthImaging.filters
+    @inline override protected val offsetLens            = ObservingMode.GmosSouthImaging.offsets
+    @inline override protected val initialFiltersLens    =
       ObservingMode.GmosSouthImaging.initialFilters
-    @inline override protected val filterTypeGetter          = _.filterType
-    @inline protected val defaultMultipleFiltersModeLens     =
+    @inline override protected val filterTypeGetter      = _.filterType
+    @inline protected val defaultMultipleFiltersModeLens =
       ObservingMode.GmosSouthImaging.defaultMultipleFiltersMode
-    @inline protected val defaultBinningLens                 = ObservingMode.GmosSouthImaging.defaultBin
-    @inline protected val defaultReadModeGainLens            =
+    @inline protected val defaultBinningLens             = ObservingMode.GmosSouthImaging.defaultBin
+    @inline protected val defaultReadModeGainLens        =
       (ObservingMode.GmosSouthImaging.defaultAmpReadMode,
        ObservingMode.GmosSouthImaging.defaultAmpGain
       ).disjointZip
-    @inline protected val defaultRoiLens                     = ObservingMode.GmosSouthImaging.defaultRoi
-    @inline override protected val defaultSpatialOffsetsLens =
-      ObservingMode.GmosSouthImaging.defaultSpatialOffsets
+    @inline protected val defaultRoiLens                 = ObservingMode.GmosSouthImaging.defaultRoi
 
     @inline override protected def resolvedReadModeGainGetter = mode =>
       val readMode = ObservingMode.GmosSouthImaging.explicitAmpReadMode
