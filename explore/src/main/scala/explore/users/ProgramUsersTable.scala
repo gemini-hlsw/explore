@@ -47,7 +47,6 @@ import lucuma.react.primereact.TooltipOptions
 import lucuma.react.primereact.hooks.all.*
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.react.given
@@ -55,6 +54,7 @@ import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 import lucuma.ui.utils.*
+import monocle.Iso
 
 import scala.collection.immutable.SortedSet
 import scala.scalajs.js.JSConverters.*
@@ -153,6 +153,15 @@ object ProgramUsersTable:
       case Mode.SupportPrimary | Mode.SupportSecondary => false
       case Mode.DataSharing(_)                         => userIsPi
 
+  private val partnerLinkIso: Iso[PartnerLink, Option[PartnerLink]] =
+    Iso[PartnerLink, Option[PartnerLink]] {
+      case PartnerLink.HasUnspecifiedPartner => none[PartnerLink]
+      case p                                 => Some(p)
+    } {
+      case Some(pl) => pl
+      case None     => PartnerLink.HasUnspecifiedPartner
+    }
+
   private val ColDef = ColumnDef[View[ProgramUser]].WithTableMeta[TableMeta]
 
   private enum Column(
@@ -204,26 +213,25 @@ object ProgramUsersTable:
   }
 
   private def partnerSelector(
-    value:    Option[PartnerLink],
-    set:      Option[PartnerLink] => Callback,
+    id:       ProgramUser.Id,
+    value:    View[Option[PartnerLink]],
     readOnly: Boolean
   ): VdomNode =
     FormDropdownOptional(
-      id = "user-partner-selector".refined,
-      placeholder = "Select a partner",
+      id = NonEmptyString.unsafeFrom(s"$id-partner"),
+      value = value.get,
+      onChange = value.set,
       options = partnerLinkOptions.map { pl =>
         new SelectItem[PartnerLink](value = pl, label = pl.toString)
       },
       clazz = ExploreStyles.PartnerSelector |+| ExploreStyles.WarningInput.when_(
-        value.isEmpty && !readOnly
+        value.get.isEmpty && !readOnly
       ),
       showClear = true,
       disabled = readOnly,
       itemTemplate = pl => partnerItem(pl.value),
       valueTemplate = pl => partnerItem(pl.value),
-      emptyMessageTemplate = "No Selection",
-      value = value,
-      onChange = set
+      emptyMessageTemplate = "Select a partner"
     )
 
   private def deleteUserButton(
@@ -380,16 +388,12 @@ object ProgramUsersTable:
           c.table.options.meta.map: meta =>
             val cell: View[ProgramUser]              = c.row.original
             val programUserId: ProgramUser.Id        = cell.get.id
-            val usersView: View[Option[PartnerLink]] =
-              c.value.withOnMod: pl =>
-                ctx.odbApi.updateProgramPartner(programUserId, pl).runAsync
-            val pl: Option[PartnerLink]              =
-              cell.get.partnerLink.flatMap:
-                case PartnerLink.HasUnspecifiedPartner => None
-                case p                                 => Some(p)
+            val plView: View[PartnerLink]            = c.value.withOnMod: pl =>
+              ctx.odbApi.updateUserPartner(programUserId, pl).runAsync
+            val plOptView: View[Option[PartnerLink]] = plView.zoom(partnerLinkIso)
             val canEdit                              = meta.canEditUserFields(cell.get)
 
-            partnerSelector(pl, usersView.set, !canEdit || meta.isActive.get.value)
+            partnerSelector(programUserId, plOptView, !canEdit || meta.isActive.get.value)
       ).sortableBy(_.get.toString),
       ColDef(
         Column.EducationalStatus.id,

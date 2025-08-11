@@ -137,7 +137,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
     val input          = ProgramUserPropertiesInput(preferredProfile = preferredInput.assign)
     updateProgramUsers(programUserId, input)
 
-  def updateProgramPartner(programUserId: ProgramUser.Id, pl: Option[PartnerLink]): F[Unit] =
+  def updateUserPartner(programUserId: ProgramUser.Id, pl: PartnerLink): F[Unit] =
     updateProgramUsers(programUserId, ProgramUserPropertiesInput(partnerLink = pl.toInput.assign))
 
   def updateUserES(programUserId: ProgramUser.Id, es: Option[EducationalStatus]): F[Unit] =

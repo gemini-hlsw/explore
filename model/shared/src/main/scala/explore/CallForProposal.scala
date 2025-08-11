@@ -46,15 +46,21 @@ case class CallForProposal(
 ) derives Eq,
       Decoder:
 
-  def deadline(piPartner: Option[PartnerLink]): Option[Timestamp] =
-    piPartner.flatMap:
+  def deadline(piPartner: Option[PartnerLink]): Either[String, Timestamp] =
+    // piPartner is only None if there is no pi, which should never happen
+    piPartner.fold("No PI for this program.".asLeft):
       _.fold(
-        None,
-        nonPartnerDeadline,
+        "Select PI's partner to show CfP deadline.".asLeft,
+        nonPartnerDeadline.fold("Non-partner PI not allowed for this CfP.".asLeft)(
+          _.asRight
+        ),
         _ =>
           partners
             .find(p => piPartner.flatMap(_.partnerOption).exists(_ === p.partner))
-            .flatMap(_.submissionDeadline)
+            .fold("PI partner not valid for this CfP.".asLeft)(
+              _.submissionDeadline
+                .fold("PI partner deadline not set for this CfP.".asLeft)(_.asRight)
+            )
       )
 
 object CallForProposal:

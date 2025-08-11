@@ -35,7 +35,7 @@ import scala.concurrent.duration.*
 case class ProposalSubmissionBar(
   programId:         Program.Id,
   proposalStatus:    View[ProposalStatus],
-  deadline:          Option[Timestamp],
+  deadline:          Option[Either[String, Timestamp]],
   canSubmit:         Boolean,
   hasProposalErrors: Boolean
 ) extends ReactFnProps(ProposalSubmissionBar)
@@ -84,7 +84,7 @@ object ProposalSubmissionBar
           )
 
         nowPot.toOption.flatten.map: now =>
-          val isDueDeadline: Boolean = props.deadline.forall(_ < now)
+          val isDueDeadline: Boolean = props.deadline.flatMap(_.toOption).forall(_ < now)
 
           Toolbar(left =
             <.div(ExploreStyles.ProposalSubmissionBar)(
@@ -106,17 +106,22 @@ object ProposalSubmissionBar
                     // Temporarily enable submission even if there are errors for testing against PI validation
                     // isUpdatingStatus.get.value || isDueDeadline
                   ).compact.tiny,
-                  props.deadline.map: deadline =>
-                    val (deadlineStr, left): (String, Option[String]) =
-                      Proposal.deadlineAndTimeLeft(now, deadline)
-                    val text: String                                  =
-                      left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
-                    val severity: Message.Severity                    =
-                      left.fold(Message.Severity.Error)(_ => Message.Severity.Info)
+                  props.deadline.map: deadlineEither =>
+                    val (text, severity) = deadlineEither match
+                      case Right(deadline) =>
+                        val (deadlineStr, left): (String, Option[String]) =
+                          Proposal.deadlineAndTimeLeft(now, deadline)
+                        val text: String                                  =
+                          left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
+                        val severity: Message.Severity                    =
+                          left.fold(Message.Severity.Error)(_ => Message.Severity.Info)
+                        s"Deadline: $text" -> severity
+                      case Left(error)     =>
+                        error -> Message.Severity.Info
 
                     <.span(ExploreStyles.ProposalDeadline)(
                       Message(
-                        text = s"Deadline: $text",
+                        text = text,
                         severity = severity
                       )
                     )

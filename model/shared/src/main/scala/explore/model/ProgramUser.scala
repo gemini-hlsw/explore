@@ -24,7 +24,7 @@ import monocle.Lens
 case class ProgramUser(
   id:                ProgramUser.Id,
   user:              Option[User],
-  partnerLink:       Option[PartnerLink],
+  partnerLink:       PartnerLink,
   role:              ProgramUserRole,
   educationalStatus: Option[EducationalStatus],
   thesis:            Option[Boolean],
@@ -77,7 +77,7 @@ object ProgramUser:
 
   val user: Lens[ProgramUser, Option[User]] = Focus[ProgramUser](_.user)
 
-  val partnerLink: Lens[ProgramUser, Option[PartnerLink]] =
+  val partnerLink: Lens[ProgramUser, PartnerLink] =
     Focus[ProgramUser](_.partnerLink)
 
   val role: Lens[ProgramUser, ProgramUserRole] = Focus[ProgramUser](_.role)
@@ -123,7 +123,7 @@ object ProgramUser:
     for {
       id   <- c.downField("id").as[Id]
       u    <- c.downField("user").as[Option[User]]
-      pl   <- c.downField("partnerLink").as[Option[PartnerLink]]
+      pl   <- c.downField("partnerLink").as[PartnerLink]
       role <- c.downField("role").as[ProgramUserRole]
       es   <- c.downField("educationalStatus").as[Option[EducationalStatus]]
       th   <- c.downField("thesis").as[Option[Boolean]]

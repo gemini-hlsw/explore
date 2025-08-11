@@ -299,7 +299,7 @@ object ProgramSummaries:
 
   val piPartner: Optional[ProgramSummaries, PartnerLink] =
     ProgramSummaries.optProgramDetails.some
-      .andThen(ProgramDetails.piPartner.some)
+      .andThen(ProgramDetails.piPartner)
 
   def fromLists(
     optProgramDetails: Option[ProgramDetails],
