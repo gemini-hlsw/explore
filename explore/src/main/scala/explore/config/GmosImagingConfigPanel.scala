@@ -11,9 +11,11 @@ import clue.data.syntax.*
 import crystal.react.View
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
+import explore.Icons
 import explore.common.Aligner
 import explore.components.*
 import explore.components.ui.ExploreStyles
+import explore.config.offsets.OffsetEditor
 import explore.model.AppContext
 import explore.model.Observation
 import explore.model.ScienceRequirements
@@ -25,11 +27,14 @@ import japgolly.scalajs.react.util.Effect
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.*
 import lucuma.core.math.Offset
+import lucuma.core.math.syntax.int.*
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Button
+import lucuma.react.primereact.Dialog
 import lucuma.react.primereact.TooltipOptions
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
@@ -37,6 +42,7 @@ import lucuma.schemas.model.ObservingMode
 import lucuma.schemas.odb.input.*
 import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
+import lucuma.ui.primereact.FormLabel
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.given
@@ -132,15 +138,23 @@ object GmosImagingConfigPanel {
         { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
       )
 
+    private val OffsetRadius = 30.arcseconds
+
     val component =
       ScalaFnComponent[Props]: props =>
-        for
+        for {
           ctx              <- useContext(AppContext.ctx)
           editState        <- useStateView(ConfigEditState.View)
           localFiltersView <- useStateView(List.empty[Filter])
+          offsetDialogOpen <- useStateView(false)
+          localOffsets     <- useStateView {
+                                import ctx.given
+                                offsets(props.observingMode).get
+                              }
+          _                <- useEffectWithDeps(offsetLens.get(props.observingMode.get))(localOffsets.set)
           _                <-
             useEffectWithDeps(filtersLens.get(props.observingMode.get).toList)(localFiltersView.set)
-        yield
+        } yield
           import ctx.given
 
           val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
@@ -154,7 +168,8 @@ object GmosImagingConfigPanel {
           val defaultRoi                 = defaultRoiLens.get(props.observingMode.get)
           val resolvedReadModeGain       = resolvedReadModeGainGetter(props.observingMode.get)
 
-          val filtersView                                               = filters(props.observingMode)
+          val filtersView = filters(props.observingMode)
+
           val filtersGrouper: NonEmptyList[(String, Filter => Boolean)] =
             NonEmptyList.of(
               ("Broad Band", filterTypeGetter(_) === FilterType.BroadBand),
@@ -162,92 +177,149 @@ object GmosImagingConfigPanel {
               ("Combination", filterTypeGetter(_) === FilterType.Combination),
               ("Engineering", filterTypeGetter(_) === FilterType.Engineering)
             )
-          val initialFilters                                            = initialFiltersLens.get(props.observingMode.get)
 
-          <.div(
-            ExploreStyles.AdvancedConfigurationGrid
-          )(
+          val initialFilters = initialFiltersLens.get(props.observingMode.get)
+
+          React.Fragment(
             <.div(
-              LucumaPrimeStyles.FormColumnCompact,
-              ExploreStyles.AdvancedConfigurationCol1
+              ExploreStyles.AdvancedConfigurationGrid
             )(
-              CustomizableEnumGroupedMultiSelect(
-                id = "filters".refined,
-                label = "Filters".some,
-                helpId = Some("configuration/gmos/imaging-filters.md".refined),
-                view = localFiltersView.withOnMod(l =>
-                  NonEmptyList.fromList(l).fold(Callback.empty)(filtersView.set)
-                ),
-                defaultValue = initialFilters.toList,
-                defaultFormatter = Some(Display[Filter].longName),
-                groupFunctions = filtersGrouper,
-                error = Option
-                  .when(localFiltersView.get.isEmpty)(
-                    "At least one filter is required"
+              <.div(
+                LucumaPrimeStyles.FormColumnCompact,
+                ExploreStyles.AdvancedConfigurationCol1
+              )(
+                CustomizableEnumGroupedMultiSelect(
+                  id = "filters".refined,
+                  label = "Filters".some,
+                  helpId = Some("configuration/gmos/imaging-filters.md".refined),
+                  view = localFiltersView.withOnMod(l =>
+                    NonEmptyList.fromList(l).fold(Callback.empty)(filtersView.set)
                   ),
-                itemTemplate = Some(si => Display[Filter].longName(si.value)),
-                maxSelectedLabels = 3.some,
-                selectedItemsLabel = s"${localFiltersView.get.size} selected".some,
-                tooltip = localFiltersView.get.map(Display[Filter].longName).mkString("\n").some,
-                tooltipOptions = TooltipOptions(showOnDisabled = true).some,
-                disabled = disableSimpleEdit
+                  defaultValue = initialFilters.toList,
+                  defaultFormatter = Some(Display[Filter].longName),
+                  groupFunctions = filtersGrouper,
+                  error = Option
+                    .when(localFiltersView.get.isEmpty)(
+                      "At least one filter is required"
+                    ),
+                  itemTemplate = Some(si => Display[Filter].longName(si.value)),
+                  maxSelectedLabels = 3.some,
+                  selectedItemsLabel = s"${localFiltersView.get.size} selected".some,
+                  tooltip = localFiltersView.get.map(Display[Filter].longName).mkString("\n").some,
+                  tooltipOptions = TooltipOptions(showOnDisabled = true).some,
+                  disabled = disableSimpleEdit
+                ),
+                CustomizableEnumSelectOptional(
+                  id = "explicitMultipleFiltersMode".refined,
+                  view = explicitMultipleFiltersMode(props.observingMode)
+                    .withDefault(defaultMultipleFiltersMode),
+                  defaultValue = defaultMultipleFiltersMode.some,
+                  label = "Multiple Filters".some,
+                  helpId = Some("configuration/imaging/multiple-filters-mode.md".refined),
+                  disabled = disableSimpleEdit
+                )
               ),
-              CustomizableEnumSelectOptional(
-                id = "explicitMultipleFiltersMode".refined,
-                view = explicitMultipleFiltersMode(props.observingMode)
-                  .withDefault(defaultMultipleFiltersMode),
-                defaultValue = defaultMultipleFiltersMode.some,
-                label = "Multiple Filters".some,
-                helpId = Some("configuration/imaging/multiple-filters-mode.md".refined),
-                disabled = disableSimpleEdit
+              <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
+                ExposureTimeModeEditor(
+                  props.instrument.some,
+                  none,
+                  props.exposureTimeMode,
+                  ScienceMode.Imaging,
+                  props.readonly,
+                  props.units,
+                  props.calibrationRole
+                )
+              ),
+              <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
+                React.Fragment(
+                  FormLabel(htmlFor = "spatial-offsets-button".refined)("Spatial Offsets"),
+                  <.div(
+                    ExploreStyles.FlexContainer,
+                    Button(
+                      icon = Icons.Edit,
+                      text = true,
+                      severity = Button.Severity.Secondary,
+                      clazz = ExploreStyles.OffsetEditorButton,
+                      disabled = disableSimpleEdit,
+                      onClickE = _ => offsetDialogOpen.set(true)
+                    ).mini.compact
+                      .withMods(^.id := "spatial-offsets-button", ^.title := "Edit Offsets"),
+                    <.span(
+                      ExploreStyles.OffsetsCount,
+                      s"(${offsets(props.observingMode).get.size})"
+                    )
+                  )
+                ),
+                CustomizableEnumSelectOptional(
+                  id = "explicitBin".refined,
+                  view = explicitBinning(props.observingMode).withDefault(defaultBinning),
+                  defaultValue = defaultBinning.some,
+                  label = "Binning".some,
+                  helpId = Some("configuration/gmos/binning.md".refined),
+                  disabled = disableAdvancedEdit,
+                  dropdownMods = ^.aria.label := "Binning"
+                ),
+                CustomizableEnumSelectOptional(
+                  id = "explicitReadMode".refined,
+                  view = explicitReadModeGain(props.observingMode)
+                    .withDefault(defaultReadModeGain, resolvedReadModeGain),
+                  defaultValue = defaultReadModeGain.some,
+                  label = "Read Mode".some,
+                  helpId = Some("configuration/gmos/read-mode.md".refined),
+                  disabled = disableAdvancedEdit
+                ),
+                CustomizableEnumSelectOptional(
+                  id = "explicitRoi".refined,
+                  view = explicitRoi(props.observingMode).withDefault(defaultRoi),
+                  defaultValue = defaultRoi.some,
+                  label = "ROI".some,
+                  helpId = Some("configuration/gmos/roi.md".refined),
+                  disabled = disableAdvancedEdit
+                )
+              ),
+              AdvancedConfigButtons(
+                editState = editState,
+                isCustomized = isCustomized(props.observingMode),
+                revertConfig = props.revertConfig,
+                revertCustomizations = revertCustomizations(props.observingMode),
+                sequenceChanged = props.sequenceChanged,
+                readonly = props.readonly
               )
             ),
-            <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
-              ExposureTimeModeEditor(
-                props.instrument.some,
-                none,
-                props.exposureTimeMode,
-                ScienceMode.Imaging,
-                props.readonly,
-                props.units,
-                props.calibrationRole
+            Dialog(
+              visible = offsetDialogOpen.get,
+              onHide = offsetDialogOpen.set(false),
+              header = "Offsets",
+              modal = true,
+              resizable = false,
+              clazz = ExploreStyles.OffsetsEditorDialog,
+              footer = <.div(
+                Button(
+                  label = "Cancel",
+                  severity = Button.Severity.Danger,
+                  onClick = offsetDialogOpen.set(false)
+                ).small.compact,
+                Button(
+                  label = "Save",
+                  severity = Button.Severity.Success,
+                  onClick = {
+                    import ctx.given
+                    offsets(props.observingMode).set(localOffsets.get) >>
+                      offsetDialogOpen.set(false)
+                  }
+                ).small.compact
               )
-            ),
-            <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
-              CustomizableEnumSelectOptional(
-                id = "explicitBin".refined,
-                view = explicitBinning(props.observingMode).withDefault(defaultBinning),
-                defaultValue = defaultBinning.some,
-                label = "Binning".some,
-                helpId = Some("configuration/gmos/binning.md".refined),
-                disabled = disableAdvancedEdit,
-                dropdownMods = ^.aria.label := "Binning"
-              ),
-              CustomizableEnumSelectOptional(
-                id = "explicitReadMode".refined,
-                view = explicitReadModeGain(props.observingMode)
-                  .withDefault(defaultReadModeGain, resolvedReadModeGain),
-                defaultValue = defaultReadModeGain.some,
-                label = "Read Mode".some,
-                helpId = Some("configuration/gmos/read-mode.md".refined),
-                disabled = disableAdvancedEdit
-              ),
-              CustomizableEnumSelectOptional(
-                id = "explicitRoi".refined,
-                view = explicitRoi(props.observingMode).withDefault(defaultRoi),
-                defaultValue = defaultRoi.some,
-                label = "ROI".some,
-                helpId = Some("configuration/gmos/roi.md".refined),
-                disabled = disableAdvancedEdit
+            )(
+              OffsetEditor(
+                localOffsets,
+                offsets => localOffsets.set(offsets),
+                props.exposureTimeMode.get match {
+                  case Some(ExposureTimeMode.TimeAndCountMode(_, c, _)) => c
+                  case Some(ExposureTimeMode.SignalToNoiseMode(_, _))   => 1.refined // fixme
+                  case _                                                => 1.refined
+                },
+                OffsetRadius
               )
-            ),
-            AdvancedConfigButtons(
-              editState = editState,
-              isCustomized = isCustomized(props.observingMode),
-              revertConfig = props.revertConfig,
-              revertCustomizations = revertCustomizations(props.observingMode),
-              sequenceChanged = props.sequenceChanged,
-              readonly = props.readonly
             )
           )
   }
