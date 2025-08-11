@@ -149,8 +149,9 @@ object GmosImagingConfigPanel {
           offsetDialogOpen <- useStateView(false)
           localOffsets     <- useStateView {
                                 import ctx.given
-                                offsets(props.observingMode).get.some
+                                offsets(props.observingMode).get
                               }
+          _                <- useEffectWithDeps(offsetLens.get(props.observingMode.get))(localOffsets.set)
           _                <-
             useEffectWithDeps(filtersLens.get(props.observingMode.get).toList)(localFiltersView.set)
         } yield
@@ -303,7 +304,7 @@ object GmosImagingConfigPanel {
                   severity = Button.Severity.Success,
                   onClick = {
                     import ctx.given
-                    offsets(props.observingMode).set(localOffsets.get.orEmpty) >>
+                    offsets(props.observingMode).set(localOffsets.get) >>
                       offsetDialogOpen.set(false)
                   }
                 ).small.compact
@@ -311,7 +312,7 @@ object GmosImagingConfigPanel {
             )(
               OffsetEditor(
                 localOffsets,
-                offsets => localOffsets.set(offsets.some),
+                offsets => localOffsets.set(offsets),
                 props.exposureTimeMode.get match {
                   case Some(ExposureTimeMode.TimeAndCountMode(_, c, _)) => c
                   case Some(ExposureTimeMode.SignalToNoiseMode(_, _))   => 1.refined // fixme

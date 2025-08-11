@@ -30,7 +30,7 @@ import lucuma.ui.reusability.given
 import org.typelevel.log4cats.Logger
 
 case class OffsetEditor(
-  offsets:     View[Option[List[Offset]]],
+  offsets:     View[List[Offset]],
   onUpdate:    List[Offset] => Callback,
   pointCount:  PosInt,
   defaultSize: Angle
@@ -38,7 +38,7 @@ case class OffsetEditor(
     extends ReactFnProps[OffsetEditor](OffsetEditor.component):
   given Logger[IO] = L
 
-  def hasOffsets = offsets.get.exists(_.nonEmpty)
+  def hasOffsets = offsets.get.nonEmpty
 
 object OffsetEditor {
   type Props = OffsetEditor
@@ -84,7 +84,7 @@ object OffsetEditor {
       spiralParams   <- useStateView(SpiralParams(props.defaultSize))
       randomParams   <- useStateView(RandomParams(props.defaultSize))
       gridType       <- useStateView(GridType.Random)
-      previewOffsets <- useState(props.offsets.get.orElse(None))
+      previewOffsets <- useState(props.offsets.get.some)
       showNumbers    <- useStateView(false)
       isInitialMount <- useState(true)
       params          = gridType.get match {
