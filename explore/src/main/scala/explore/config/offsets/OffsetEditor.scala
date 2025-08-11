@@ -3,16 +3,11 @@
 
 package explore.config.offsets
 
-import cats.Eq
-import cats.data.Nested
-import cats.data.NonEmptyList
-import cats.derived.*
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.*
 import crystal.react.hooks.*
 import eu.timepit.refined.api.Refined
-import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.numeric.PosInt
 import explore.Icons
 import explore.components.ui.ExploreStyles
@@ -24,7 +19,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.geom.OffsetGenerator.*
 import lucuma.core.math.*
 import lucuma.core.util.Display
-import lucuma.core.util.Enumerated
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Checkbox
@@ -33,61 +27,7 @@ import lucuma.refined.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
-import monocle.Focus
-import monocle.Lens
 import org.typelevel.log4cats.Logger
-
-sealed trait GridParams derives Eq:
-  def gridType: GridType
-  def shift: Offset
-  def rotation: Angle
-
-case class RectangularParams(
-  rows:     PosInt,
-  cols:     PosInt,
-  stepP:    Angle,
-  stepQ:    Angle,
-  shift:    Offset = Offset.Zero,
-  rotation: Angle = Angle.Angle0
-) extends GridParams derives Eq:
-  def gridType: GridType = GridType.Rectangular
-
-object RectangularParams:
-  val rows: Lens[RectangularParams, PosInt]    = Focus[RectangularParams](_.rows)
-  val cols: Lens[RectangularParams, PosInt]    = Focus[RectangularParams](_.cols)
-  val stepP: Lens[RectangularParams, Angle]    = Focus[RectangularParams](_.stepP)
-  val stepQ: Lens[RectangularParams, Angle]    = Focus[RectangularParams](_.stepQ)
-  val shift: Lens[RectangularParams, Offset]   = Focus[RectangularParams](_.shift)
-  val rotation: Lens[RectangularParams, Angle] = Focus[RectangularParams](_.rotation)
-
-case class SpiralParams(
-  size:     Angle,
-  shift:    Offset = Offset.Zero,
-  rotation: Angle = Angle.Angle0
-) extends GridParams derives Eq:
-  def gridType: GridType = GridType.Spiral
-
-object SpiralParams:
-  val size: Lens[SpiralParams, Angle]     = Focus[SpiralParams](_.size)
-  val shift: Lens[SpiralParams, Offset]   = Focus[SpiralParams](_.shift)
-  val rotation: Lens[SpiralParams, Angle] = Focus[SpiralParams](_.rotation)
-
-case class RandomParams(
-  size:     Angle, // area radius
-  shift:    Offset = Offset.Zero,
-  rotation: Angle = Angle.Angle0
-) extends GridParams derives Eq:
-  def gridType: GridType = GridType.Random
-
-object RandomParams:
-  val size: Lens[RandomParams, Angle]     = Focus[RandomParams](_.size)
-  val shift: Lens[RandomParams, Offset]   = Focus[RandomParams](_.shift)
-  val rotation: Lens[RandomParams, Angle] = Focus[RandomParams](_.rotation)
-
-enum GridType(val tag: String) derives Enumerated:
-  case Rectangular extends GridType("rectangular")
-  case Spiral      extends GridType("spiral")
-  case Random      extends GridType("random")
 
 case class OffsetEditor(
   offsets:     View[Option[List[Offset]]],
@@ -121,24 +61,17 @@ object OffsetEditor {
       case r: RectangularParams =>
         val dim     = squareGridDimension(pointCount)
         val newGrid = grid(dim, dim, r.stepP, r.stepQ)
-        val rotated = if (r.rotation != Angle.Angle0) newGrid.map(_.rotate(r.rotation)) else newGrid
-        val shifted = rotated.map(_ + r.shift)
-        updatePreview(shifted.toList)
+        updatePreview(newGrid.toList)
 
       case s: SpiralParams =>
-        val fallbackGrid = Nested(spiral[IO](pointCount, s.size))
-        val rotated      =
-          if (s.rotation != Angle.Angle0) fallbackGrid.map(_.rotate(s.rotation))
-          else fallbackGrid
-        val shifted      = rotated.map(_ + s.shift)
-        shifted.value.flatMap(o => updatePreview(o.toList).to[IO]).runAsync
+        spiral[IO](pointCount, s.size)
+          .flatMap(offsets => updatePreview(offsets.toList).to[IO])
+          .runAsync
 
       case r: RandomParams =>
-        val fallbackGrid = Nested(random[IO](pointCount, r.size))
-        val rotated      =
-          if (r.rotation != Angle.Angle0) fallbackGrid.map(_.rotate(r.rotation)) else fallbackGrid
-        val shifted      = rotated.map(_ + r.shift)
-        shifted.value.flatMap(o => updatePreview(o.toList).to[IO]).runAsync
+        random[IO](pointCount, r.size)
+          .flatMap(offsets => updatePreview(offsets.toList).to[IO])
+          .runAsync
     }
 
   val component = ScalaFnComponent[Props]: props =>

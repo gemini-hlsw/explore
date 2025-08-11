@@ -138,7 +138,7 @@ object GmosImagingConfigPanel {
         { case (r, g) => s"${r.longName}, ${g.longName} Gain" }
       )
 
-    val OffsetRadius = 30.arcseconds
+    private val OffsetRadius = 30.arcseconds
 
     val component =
       ScalaFnComponent[Props]: props =>
@@ -314,7 +314,7 @@ object GmosImagingConfigPanel {
                 offsets => localOffsets.set(offsets.some),
                 props.exposureTimeMode.get match {
                   case Some(ExposureTimeMode.TimeAndCountMode(_, c, _)) => c
-                  case Some(ExposureTimeMode.SignalToNoiseMode(_, _))   => 1.refined
+                  case Some(ExposureTimeMode.SignalToNoiseMode(_, _))   => 1.refined // fixme
                   case _                                                => 1.refined
                 },
                 OffsetRadius

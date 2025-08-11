@@ -22,8 +22,7 @@ case class OffsetGridDisplay(
   showAxes:         Boolean = true,
   showOffsetPoints: Boolean = true,
   showNumbers:      Boolean = false,
-  showCrosshair:    Boolean = false,
-  showBorderLines:  Boolean = true,
+  borderLines:      Boolean = true,
   pointRadius:      PosInt = 3.refined,
   svgCss:           Css = OffsetEditorStyles.Svg,
   backgroundCss:    Css = OffsetEditorStyles.Background,
@@ -37,24 +36,26 @@ case class OffsetGridDisplay(
 object OffsetGridDisplay {
   type Props = OffsetGridDisplay
 
-  case class Gridlines(
-    pPositions: List[BigDecimal],
-    qPositions: List[BigDecimal]
-  )
+  case class Gridlines(pPositions: List[BigDecimal], qPositions: List[BigDecimal])
+  case class OffsetValues(p: BigDecimal, q: BigDecimal, originalOffset: Offset)
 
   private def calculateRanges(
-    pValues:         List[BigDecimal],
-    qValues:         List[BigDecimal],
-    showBorderLines: Boolean
+    pValues:     List[BigDecimal],
+    qValues:     List[BigDecimal],
+    borderLines: Boolean
   ): (Gridlines, BigDecimal) = {
-    val pRange       = (pValues.minOption, pValues.maxOption).mapN((min, max) => min.abs.max(max.abs))
-    val qRange       = (qValues.minOption, qValues.maxOption).mapN((min, max) => min.abs.max(max.abs))
+    val pRange       = pValues.minOption
+      .zip(pValues.maxOption)
+      .map((min, max) => min.abs.max(max.abs))
+    val qRange       = qValues.minOption
+      .zip(qValues.maxOption)
+      .map((min, max) => min.abs.max(max.abs))
     val dataMaxRange = (pRange, qRange).mapN(_.max(_)).getOrElse(BigDecimal(5.0))
 
     val (finalAxisExtent, interval) = calculateGridLines(dataMaxRange)
 
-    val pPositions = gridPositions(finalAxisExtent, interval, showBorderLines)
-    val qPositions = gridPositions(finalAxisExtent, interval, showBorderLines)
+    val pPositions = gridPositions(finalAxisExtent, interval, borderLines)
+    val qPositions = gridPositions(finalAxisExtent, interval, borderLines)
 
     (Gridlines(pPositions, qPositions), finalAxisExtent)
   }
@@ -73,7 +74,7 @@ object OffsetGridDisplay {
     candidates.findLast(_ <= maxInterval).getOrElse(candidates.head)
 
   private def calculateAxisExtent(dataMaxRange: BigDecimal): BigDecimal = {
-    val paddedRange = (dataMaxRange * 1.3).max(5.0) // 30% padding, minimum 5 arcseconds
+    val paddedRange = (dataMaxRange * 1.3).max(5.0) // 1.3 padding
 
     val magnitude  = math.pow(10, math.floor(math.log10(paddedRange.toDouble)))
     val normalized = paddedRange / magnitude
@@ -93,14 +94,12 @@ object OffsetGridDisplay {
     interval:      BigDecimal,
     includeBorder: Boolean
   ): List[BigDecimal] = {
-    // Generate symmetric grid from -extent to +extent at nice intervals
     val steps    = (axisExtent / interval).toInt
     val allLines = (-steps to steps).map(_ * interval).toList
 
     if (includeBorder) {
       allLines
     } else {
-      // Filter out the extreme border lines (first and last)
       allLines.filterNot(line => line >= axisExtent - interval * 0.1)
     }
   }
@@ -147,7 +146,7 @@ object OffsetGridDisplay {
         <.text(
           ^.key        := s"$id-v-label-$idx",
           ^.x          := x.toDouble,
-          ^.y          := padding + gridSize + 12, // Position at bottom
+          ^.y          := padding + gridSize + 12,
           ^.textAnchor := "middle",
           ^.fontSize   := fontSize,
           ^.fill       := "currentColor",
@@ -160,7 +159,7 @@ object OffsetGridDisplay {
       if (offsetValue.abs > 0.01)
         <.text(
           ^.key        := s"$id-h-label-$idx",
-          ^.x          := padding + gridSize + 5, // Position at right side
+          ^.x          := padding + gridSize + 5,
           ^.y          := y.toDouble + 3,
           ^.textAnchor := "start",
           ^.fontSize   := fontSize,
@@ -171,11 +170,8 @@ object OffsetGridDisplay {
 
     <.g(
       css,
-      // Vertical grid lines
       gridStrategy.pPositions.zipWithIndex.toTagMod(using verticalLine),
-      // Horizontal grid lines
       gridStrategy.qPositions.zipWithIndex.toTagMod(using horizontalLine),
-      // Grid line labels
       gridStrategy.pPositions.zipWithIndex.toTagMod(using verticalLineLabel),
       gridStrategy.qPositions.zipWithIndex.toTagMod(using horizontalLineLabel)
     )
@@ -226,7 +222,6 @@ object OffsetGridDisplay {
   ): VdomNode =
     <.g(
       css,
-      // P axis label (left side since positive P grows left, rotated)
       <.text(
         ^.key        := s"$id-p-label",
         ^.x          := padding - 11,
@@ -235,7 +230,6 @@ object OffsetGridDisplay {
         ^.transform  := s"rotate(-90, ${padding - 11}, ${padding + gridSize / 2})",
         "p (arcsec)"
       ),
-      // Q axis label
       <.text(
         ^.key        := s"$id-q-label",
         ^.x          := padding + gridSize / 2,
@@ -245,42 +239,23 @@ object OffsetGridDisplay {
       )
     )
 
-  private def centerCrosshair(centerX: Double, centerY: Double, id: String, css: Css): VdomNode =
-    <.g(
-      css,
-      <.line(
-        ^.key := s"$id-crosshair-h",
-        ^.x1  := centerX - 10,
-        ^.y1  := centerY,
-        ^.x2  := centerX + 10,
-        ^.y2  := centerY
-      ),
-      <.line(
-        ^.key := s"$id-crosshair-v",
-        ^.x1  := centerX,
-        ^.y1  := centerY - 10,
-        ^.x2  := centerX,
-        ^.y2  := centerY + 10
-      )
-    )
-
   private def offsetPoints(
-    offsets:     List[Offset],
-    maxOffset:   BigDecimal,
-    centerX:     Double,
-    centerY:     Double,
-    gridSize:    Int,
-    pointRadius: Int,
-    showNumbers: Boolean,
-    id:          String,
-    css:         Css,
-    fontSize:    String
+    offsetValues: List[OffsetValues],
+    maxOffset:    BigDecimal,
+    centerX:      Double,
+    centerY:      Double,
+    gridSize:     Int,
+    pointRadius:  Int,
+    showNumbers:  Boolean,
+    id:           String,
+    css:          Css,
+    fontSize:     String
   ): VdomNode =
-    def offsetPoint(offset: Offset, idx: Int) =
-      val p = Offset.P.signedDecimalArcseconds.get(offset.p).toDouble
-      val q = Offset.Q.signedDecimalArcseconds.get(offset.q).toDouble
-      val x = centerX - (p / maxOffset) * (gridSize / 2) // Flip P axis for Gemini
-      val y = centerY - (q / maxOffset) * (gridSize / 2) // Invert Y for SVG
+    def offsetPoint(offsetValue: OffsetValues, idx: Int) =
+      val p = offsetValue.p.toDouble
+      val q = offsetValue.q.toDouble
+      val x = centerX - (p / maxOffset) * (gridSize / 2)
+      val y = centerY - (q / maxOffset) * (gridSize / 2)
 
       React.Fragment(
         <.circle(
@@ -304,40 +279,40 @@ object OffsetGridDisplay {
 
     <.g(
       css,
-      offsets.toList.zipWithIndex.toTagMod(using offsetPoint)
+      offsetValues.zipWithIndex.toTagMod(using offsetPoint)
     )
 
   val component = ScalaFnComponent[Props]: props =>
-    val pValues = props.offsets
-      .map(o => Offset.P.signedDecimalArcseconds.get(o.p))
-      .toList
-      .distinct
-      .sorted
-    val qValues = props.offsets
-      .map(o => Offset.Q.signedDecimalArcseconds.get(o.q))
-      .toList
-      .distinct
-      .sorted
+    val offsetValues = props.offsets.map(offset =>
+      OffsetValues(
+        Offset.P.signedDecimalArcseconds.get(offset.p),
+        Offset.Q.signedDecimalArcseconds.get(offset.q),
+        offset
+      )
+    )
 
-    val (gridStrategy, axisExtent) = calculateRanges(pValues, qValues, props.showBorderLines)
+    val pValues = offsetValues.map(_.p).distinct
+    val qValues = offsetValues.map(_.q).distinct
 
+    val (gridStrategy, axisExtent) = calculateRanges(pValues, qValues, props.borderLines)
+
+    // just a heuristic
     val isSmall           = props.svgSize.value < 350
-    val dynamicPadding    =
-      if (isSmall) math.max(20, props.svgSize.value / 16) else props.padding.value - 5
     val showLabels        = props.showAxes && !isSmall
     val gridLabelFontSize = if (isSmall) s"${math.max(7, props.svgSize.value / 40)}px" else "10px"
 
-    val dynamicRadius = math.max(1, math.min(3, props.svgSize.value / 150)).toInt
+    val radius  = math.max(1, math.min(3, props.svgSize.value / 150)).toInt
+    val padding =
+      if (isSmall) math.max(20, props.svgSize.value / 16) else props.padding.value - 5
 
-    val gridSize = props.svgSize.value - 2 * dynamicPadding
-    val centerX  = dynamicPadding + gridSize / 2.0
-    val centerY  = dynamicPadding + gridSize / 2.0
+    val gridSize = props.svgSize.value - 2 * padding
+    val centerX  = padding + gridSize / 2.0
+    val centerY  = padding + gridSize / 2.0
 
     <.svg(
       props.svgCss,
       ^.width  := props.svgSize.value,
       ^.height := props.svgSize.value,
-      // Background
       <.rect(
         props.backgroundCss,
         ^.x      := 0,
@@ -348,28 +323,27 @@ object OffsetGridDisplay {
       gridLines(centerX,
                 centerY,
                 gridSize,
-                dynamicPadding.toInt,
+                padding.toInt,
                 gridStrategy,
                 axisExtent,
                 props.id,
                 props.gridCss,
                 gridLabelFontSize
       ).when(props.showGrid),
-      axes(centerX, centerY, gridSize, dynamicPadding.toInt, props.id, props.axesCss)
+      axes(centerX, centerY, gridSize, padding.toInt, props.id, props.axesCss)
         .when(props.showAxes),
-      axisLabels(gridSize, dynamicPadding.toInt, props.id, props.labelsCss)
+      axisLabels(gridSize, padding.toInt, props.id, props.labelsCss)
         .when(showLabels),
-      offsetPoints(props.offsets,
+      offsetPoints(offsetValues,
                    axisExtent,
                    centerX,
                    centerY,
                    gridSize,
-                   dynamicRadius,
+                   radius,
                    props.showNumbers,
                    props.id,
                    props.pointsCss,
                    gridLabelFontSize
-      ).when(props.showOffsetPoints),
-      centerCrosshair(centerX, centerY, props.id, props.crosshairCss).when(props.showCrosshair)
+      ).when(props.showOffsetPoints)
     )
 }
