@@ -54,8 +54,8 @@ object ProgramDetails:
   val reference: Lens[ProgramDetails, Option[ProgramReference]] = Focus[ProgramDetails](_.reference)
   val notes: Lens[ProgramDetails, List[ProgramNote]]            = Focus[ProgramDetails](_.notes)
   val pi: Lens[ProgramDetails, Option[ProgramUser]]             = Focus[ProgramDetails](_.pi)
-  val piPartner: Optional[ProgramDetails, Option[PartnerLink]]  =
-    pi.some.andThen(ProgramUser.partnerLink)
+  val piPartner: Optional[ProgramDetails, PartnerLink]          =
+    pi.some.andThen(ProgramUser.partnerLink.asOptional)
   val shouldNotify: Lens[ProgramDetails, Boolean]               = Focus[ProgramDetails](_.shouldNotify)
   val active: Lens[ProgramDetails, DateInterval]                = Focus[ProgramDetails](_.active)
   val programTimes: Lens[ProgramDetails, ProgramTimes]          = Focus[ProgramDetails](_.programTimes)

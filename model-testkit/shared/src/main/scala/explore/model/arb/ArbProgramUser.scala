@@ -29,7 +29,7 @@ trait ArbProgramUser:
       for {
         id                <- arbitrary[ProgramUser.Id]
         user              <- arbitrary[Option[User]]
-        partnerLink       <- arbitrary[Option[PartnerLink]]
+        partnerLink       <- arbitrary[PartnerLink]
         role              <- arbitrary[ProgramUserRole]
         educationalStatus <- arbitrary[Option[EducationalStatus]]
         thesis            <- arbitrary[Option[Boolean]]
@@ -57,7 +57,7 @@ trait ArbProgramUser:
       (
         ProgramUser.Id,
         Option[User],
-        Option[PartnerLink],
+        PartnerLink,
         ProgramUserRole,
         Option[EducationalStatus],
         Option[Boolean],

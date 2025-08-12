@@ -36,7 +36,7 @@ trait OdbProgramApi[F[_]]:
   def updateProgramUsers(programUserId:       ProgramUser.Id, set:        ProgramUserPropertiesInput): F[Unit]
   def updateUserPreferredName(programUserId:  ProgramUser.Id, creditName: Option[String]): F[Unit]
   def updateUserPreferredEmail(programUserId: ProgramUser.Id, email:      Option[String]): F[Unit]
-  def updateProgramPartner(programUserId:     ProgramUser.Id, pl:         Option[PartnerLink]): F[Unit]
+  def updateUserPartner(programUserId:        ProgramUser.Id, pl:         PartnerLink): F[Unit]
   def updateUserES(programUserId:             ProgramUser.Id, es:         Option[EducationalStatus]): F[Unit]
   def updateUserThesis(programUserId:         ProgramUser.Id, th:         Option[Boolean]): F[Unit]
   def updateUserHasDataAccess(programUserId:  ProgramUser.Id, hda:        Boolean): F[Unit]

@@ -127,9 +127,9 @@ object ProposalTabContents:
           .zoom(ProgramDetails.proposal.some)
           .map((proposal: UndoSetter[Proposal]) =>
             val piPartner =
-              props.programDetails.zoom(ProgramDetails.piPartner.some).get
+              props.programDetails.zoom(ProgramDetails.piPartner).get
 
-            val deadline: Option[Timestamp] =
+            val deadline: Option[Either[String, Timestamp]] =
               proposal.get.deadline(piPartner)
 
             <.div(ExploreStyles.ProposalTab)(

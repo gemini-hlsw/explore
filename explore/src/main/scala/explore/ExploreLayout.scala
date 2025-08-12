@@ -271,9 +271,10 @@ object ExploreLayout:
                       ProgramSummaries.proposal
                         .getOption(programSummaries)
                         .flatten
-                        .flatMap: p =>
+                        .flatMap: proposal =>
                           val piP = ProgramSummaries.piPartner.getOption(programSummaries)
-                          p.deadline(piP)
+                          // we only care about the deadline if it is set, not any error messages
+                          proposal.deadline(piP).flatMap(_.toOption)
 
                 val cacheKey: String =
                   userVault.get

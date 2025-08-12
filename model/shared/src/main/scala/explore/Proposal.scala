@@ -29,24 +29,22 @@ case class Proposal(
   proposalType: Option[ProposalType],
   reference:    Option[ProposalReference]
 ) derives Eq:
-  def deadline(piPartner: Option[PartnerLink]): Option[Timestamp] =
-    call.flatMap(_.deadline(piPartner))
+  def deadline(piPartner: Option[PartnerLink]): Option[Either[String, Timestamp]] =
+    call.map(_.deadline(piPartner))
 
   // in reality, should always have a PI
   extension (users: List[ProgramUser])
     private def pi: Option[ProgramUser]            =
       users.find(_.role === ProgramUserRole.Pi)
     private def hasPi(partner: Partner): Boolean   =
-      pi.exists(_.partnerLink.exists(_.partnerOption.exists(_ === partner)))
+      pi.exists(_.partnerLink.partnerOption.exists(_ === partner))
     private def hasUser(partner: Partner): Boolean =
-      users.exists(_.partnerLink.exists(_.partnerOption.exists(_ === partner)))
+      users.exists(_.partnerLink.partnerOption.exists(_ === partner))
 
   private def cfPError(users: List[ProgramUser]): Option[String] =
     call.fold("Call for Proposal is required.".some)(cfp =>
-      val piAffiliation = users.pi
-        .flatMap(_.partnerLink)
-        // if no partner link, it's unspecified
-        .fold(PartnerLink.HasUnspecifiedPartner)(identity)
+      // shouldn't have a proposal without having a PI.
+      val piAffiliation = users.pi.fold(PartnerLink.HasUnspecifiedPartner)(_.partnerLink)
       piAffiliation match
         case PartnerLink.HasPartner(partner)   =>
           Option.when(!cfp.partners.exists(_.partner === partner)) {
@@ -65,7 +63,7 @@ case class Proposal(
     proposalType.flatMap(pt => ProposalType.partnerSplits.getOption(pt))
 
   private def usersAndTimesErrors(users: List[ProgramUser]): List[String] =
-    val partnerError       = Option.unless(users.forall(_.partnerLink.exists(_.isSet))) {
+    val partnerError       = Option.unless(users.forall(_.partnerLink.isSet)) {
       "Partnership of every investigator must be specified."
     }
     val partnerSplitsError = partnerSplits.flatMap(splits =>
