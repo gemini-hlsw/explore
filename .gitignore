@@ -58,3 +58,6 @@ stats.html
 local.conf.json*
 
 *.worksheet.sc
+
+# SOPS secrets - private keys only
+explore-keys.txt

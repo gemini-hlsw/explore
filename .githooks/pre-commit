@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Check if explore-keys.txt is being staged for commit
+if git diff --cached --name-only | grep -q "^explore-keys\.txt$"; then
+    echo "   ERROR: explore-keys.txt cannot be committed!"
+    echo "   This file contains private SOPS keys and must never be in git."
+    echo ""
+    echo "   To unstage: git reset HEAD explore-keys.txt"
+    echo ""
+    exit 1
+fi
+
+exit 0

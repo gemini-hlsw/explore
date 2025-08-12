@@ -2,19 +2,21 @@
 
 [![Scala Steward badge](https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=)](https://scala-steward.org)
 
+## SOPS Setup for Nix Users
+
+If using nix for development, secrets are managed via SOPS:
+
+1. **Get team key**: Obtain `explore-keys.txt`.
+
+Secrets are automatically loaded via direnv integration.
+
 ## Launch on local development
 
-We are now using FontAwesome Pro which requires a license. To build the app locally request a TOKEN
-from the admins and you need to setup an env variable containing it like
+We are now using FontAwesome Pro which requires a license. To build the app locally request
+a key or use sops-nix
 
 ```bash
 export FONTAWESOME_NPM_AUTH_TOKEN=...
-```
-
-or
-
-```fish
-set -x FONTAWESOME_NPM_AUTH_TOKEN ...
 ```
 
 For auth to work you need your app to run on the `lucuma.xyz` domain, the simplest way
