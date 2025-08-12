@@ -44,7 +44,7 @@
     "sass-migrator": "^2.3.1",
     "stylelint": "^15.11.0",
     "stylelint-color-format": "^1.1.0",
-    "stylelint-config-standard-scss": "^11.1.0",
+    "stylelint-config-standard-scss": "^15.0.1",
     "unplugin-fonts": "^1.4.0",
     "vite": "4.5.5",
     "vite-plugin-env-compatible": "^2.0.1",
