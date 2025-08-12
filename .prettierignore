@@ -14,3 +14,4 @@ target
 heroku/static
 
 explore/src/clue/resources/*.graphql
+secrets.yaml
