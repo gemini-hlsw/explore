@@ -3649,7 +3649,6 @@ span.explore-offsets-count {
 
   .p-dialog-header {
     background: var(--tile-background);
-    border-bottom: 1px solid var(--gray-500);
     color: var(--text-color);
   }
 
@@ -3664,10 +3663,10 @@ span.explore-offsets-count {
 
   .p-dialog-footer {
     background: var(--tile-background);
-    border-top: 1px solid var(--gray-500);
   }
 }
 
+.offset-editor-content-read-only,
 .offset-editor-content {
   --offset-spacing-large: 20px;
 
@@ -3793,8 +3792,7 @@ span.explore-offsets-count {
   }
 
   .offset-grid-arrows {
-    --arrow-transparency: 0.9;
-    --arrow-color: rgba(255, 165, 0, var(--arrow-transparency));
+    --arrow-color: rgb(255 165 0 / 90%);
 
     line {
       stroke: var(--arrow-color);
@@ -3807,40 +3805,31 @@ span.explore-offsets-count {
   }
 }
 
+.offset-editor-content-read-only {
+  flex-direction: column;
+
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+    flex-direction: column;
+  }
+
+  h4 {
+    margin: 0;
+    justify-self: center;
+  }
+}
+
 .offset-small-checkbox {
+  display: flex;
+  align-content: baseline;
+
   .p-checkbox {
-    width: 16px;
-    height: 16px;
-
-    .p-checkbox-box {
-      width: 16px;
-      height: 16px;
-    }
-
     .p-checkbox-icon {
-      font-size: 10px;
+      font-size: smaller;
     }
   }
 
   label {
-    font-size: 13px;
-  }
-}
-
-// Mobile dialog header optimization
-@media (max-width: 768px) {
-  .p-dialog .p-dialog-header {
-    padding: 0.75rem 1rem;
-    min-height: auto;
-
-    .p-dialog-title {
-      font-size: 1.25rem;
-      line-height: 1.2;
-    }
-  }
-
-  // Hide divider on mobile to save space
-  .p-divider {
-    display: none;
+    margin-left: 0.5em;
+    font-size: smaller;
   }
 }

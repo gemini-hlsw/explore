@@ -34,7 +34,8 @@ case class OffsetEditor(
   offsets:     View[List[Offset]],
   onUpdate:    List[Offset] => Callback,
   pointCount:  PosInt,
-  defaultSize: Angle
+  defaultSize: Angle,
+  readOnly:    Boolean = false
 )(using L: Logger[IO])
     extends ReactFnProps[OffsetEditor](OffsetEditor.component):
   given Logger[IO] = L
@@ -110,132 +111,158 @@ object OffsetEditor {
       resize         <- useResizeDetector
     } yield
       val size = (resize.width, resize.height).mapN(_.min(_)).map(PosInt.from).flatMap(_.toOption)
-      <.div(
-        OffsetEditorStyles.Content,
+
+      val viewOptionsSection = ReactFragment(
         <.div(
-          OffsetEditorStyles.GridDisplay,
-          (previewOffsets.value, size).mapN((o, s) =>
-            OffsetGridDisplay(o, svgSize = s, showNumbers = showNumbers.get || o.size < 30, showArrows = showArrows.get)
-          )
-        ).withRef(resize.ref),
-        <.div(
-          OffsetEditorStyles.GridControls,
-          <.h4("Generator Parameters"),
+          OffsetEditorStyles.FormRow,
           <.div(
-            OffsetEditorStyles.FormRow,
-            <.label(^.htmlFor := "grid-type", "Type:"),
-            FormEnumDropdownView(
-              id = "grid-type".refined,
-              value = gridType,
-              placeholder = "Select grid type"
-            )
-          ),
-          gridType.get match {
-            case GridType.Rectangular =>
-              ReactFragment(
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label("Dimensions:"),
-                  <.div(
-                    s"${rectParams.get.rows.value} × ${rectParams.get.cols.value} (for ${props.pointCount.value} steps)"
-                  )
-                ),
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label(^.htmlFor := "rect-step-p", "p step (arcsec):"),
-                  FormInputTextView(
-                    id = "rect-step-p".refined,
-                    value = rectParams.zoom(RectangularParams.stepP),
-                    validFormat = decimalArcsecondsValidWedge,
-                    placeholder = "0.0"
-                  )
-                ),
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label(^.htmlFor := "rect-step-q", "q step (arcsec):"),
-                  FormInputTextView(
-                    id = "rect-step-q".refined,
-                    value = rectParams.zoom(RectangularParams.stepQ),
-                    validFormat = decimalArcsecondsValidWedge,
-                    placeholder = "0.0"
-                  )
-                )
-              )
-            case GridType.Spiral      =>
-              ReactFragment(
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label(^.htmlFor := "spiral-size", "Size (arcsec):"),
-                  FormInputTextView(
-                    id = "spiral-size".refined,
-                    value = spiralParams.zoom(SpiralParams.size),
-                    validFormat = decimalArcsecondsValidWedge,
-                    placeholder = "0.0"
-                  )
-                ),
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label(s"Count:"),
-                  <.label(ExploreStyles.OffsetsCount, props.pointCount.value)
-                )
-              )
-            case GridType.Random      =>
-              ReactFragment(
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label(^.htmlFor := "random-size", "Size (arcsec):"),
-                  FormInputTextView(
-                    id = "random-size".refined,
-                    value = randomParams.zoom(RandomParams.size),
-                    validFormat = decimalArcsecondsValidWedge,
-                    placeholder = "0.0"
-                  )
-                ),
-                <.div(
-                  OffsetEditorStyles.FormRow,
-                  <.label(s"Count:"),
-                  <.label(ExploreStyles.OffsetsCount, props.pointCount.value)
-                )
-              )
-          },
-          gridType.get match {
-            case GridType.Rectangular => EmptyVdom
-            case _                    =>
-              <.div(
-                OffsetEditorStyles.FormRow,
-                <.label("Refresh:"),
-                Button(
-                  text = false,
-                  icon = Icons.ArrowsRepeat,
-                  severity = Button.Severity.Success,
-                  clazz = ExploreStyles.OffsetRegenerate,
-                  onClick = generateCurrentGrid(params, props.pointCount, updateOffsets)
-                ).mini.compact
-              )
-          },
-          Divider(),
-          <.h4("View Options"),
-          <.div(
-            OffsetEditorStyles.FormRow,
-            <.div(
-              OffsetEditorStyles.SmallCheckbox,
-              Checkbox(
-                inputId = "show-numbers",
-                checked = showNumbers.get || previewOffsets.value.exists(_.size < 30),
-                onChange = checked => showNumbers.set(checked)
-              ),
-              <.label(^.htmlFor := "show-numbers", " Offset numbers")
+            OffsetEditorStyles.SmallCheckbox,
+            Checkbox(
+              inputId = "show-numbers",
+              checked = showNumbers.get || previewOffsets.value.exists(_.size < 30),
+              onChange = checked => showNumbers.set(checked)
             ),
-            <.div(
-              OffsetEditorStyles.SmallCheckbox,
-              Checkbox(
-                inputId = "show-arrows",
-                checked = showArrows.get,
-                onChange = checked => showArrows.set(checked)
-              ),
-              <.label(^.htmlFor := "show-arrows", " Show arrows")
-            )
+            <.label(^.htmlFor := "show-numbers", " Offset numbers")
+          ),
+          <.div(
+            OffsetEditorStyles.SmallCheckbox,
+            Checkbox(
+              inputId = "show-arrows",
+              checked = showArrows.get,
+              onChange = checked => showArrows.set(checked)
+            ),
+            <.label(^.htmlFor := "show-arrows", " Show progression")
           )
         )
       )
+
+      if (props.readOnly)
+        <.div(
+          OffsetEditorStyles.ContentReadOnly,
+          <.div(
+            OffsetEditorStyles.GridDisplay,
+            (previewOffsets.value, size).mapN((o, s) =>
+              OffsetGridDisplay(o,
+                                svgSize = s,
+                                showNumbers = showNumbers.get || o.size < 30,
+                                showArrows = showArrows.get
+              )
+            )
+          ).withRef(resize.ref),
+          viewOptionsSection
+        )
+      else
+        <.div(
+          OffsetEditorStyles.Content,
+          <.div(
+            OffsetEditorStyles.GridDisplay,
+            (previewOffsets.value, size).mapN((o, s) =>
+              OffsetGridDisplay(o,
+                                svgSize = s,
+                                showNumbers = showNumbers.get || o.size < 30,
+                                showArrows = showArrows.get
+              )
+            )
+          ).withRef(resize.ref),
+          <.div(
+            OffsetEditorStyles.GridControls,
+            ReactFragment(
+              <.h4("Generator Parameters"),
+              <.div(
+                OffsetEditorStyles.FormRow,
+                <.label(^.htmlFor := "grid-type", "Type:"),
+                FormEnumDropdownView(
+                  id = "grid-type".refined,
+                  value = gridType,
+                  placeholder = "Select grid type"
+                )
+              ),
+              gridType.get match {
+                case GridType.Rectangular =>
+                  ReactFragment(
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label("Dimensions:"),
+                      <.div(
+                        s"${rectParams.get.rows.value} × ${rectParams.get.cols.value} (for ${props.pointCount.value} steps)"
+                      )
+                    ),
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label(^.htmlFor := "rect-step-p", "p step (arcsec):"),
+                      FormInputTextView(
+                        id = "rect-step-p".refined,
+                        value = rectParams.zoom(RectangularParams.stepP),
+                        validFormat = decimalArcsecondsValidWedge,
+                        placeholder = "0.0"
+                      )
+                    ),
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label(^.htmlFor := "rect-step-q", "q step (arcsec):"),
+                      FormInputTextView(
+                        id = "rect-step-q".refined,
+                        value = rectParams.zoom(RectangularParams.stepQ),
+                        validFormat = decimalArcsecondsValidWedge,
+                        placeholder = "0.0"
+                      )
+                    )
+                  )
+                case GridType.Spiral      =>
+                  ReactFragment(
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label(^.htmlFor := "spiral-size", "Size (arcsec):"),
+                      FormInputTextView(
+                        id = "spiral-size".refined,
+                        value = spiralParams.zoom(SpiralParams.size),
+                        validFormat = decimalArcsecondsValidWedge,
+                        placeholder = "0.0"
+                      )
+                    ),
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label(s"Count:"),
+                      <.label(ExploreStyles.OffsetsCount, props.pointCount.value)
+                    )
+                  )
+                case GridType.Random      =>
+                  ReactFragment(
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label(^.htmlFor := "random-size", "Size (arcsec):"),
+                      FormInputTextView(
+                        id = "random-size".refined,
+                        value = randomParams.zoom(RandomParams.size),
+                        validFormat = decimalArcsecondsValidWedge,
+                        placeholder = "0.0"
+                      )
+                    ),
+                    <.div(
+                      OffsetEditorStyles.FormRow,
+                      <.label(s"Count:"),
+                      <.label(ExploreStyles.OffsetsCount, props.pointCount.value)
+                    )
+                  )
+              },
+              gridType.get match {
+                case GridType.Rectangular => EmptyVdom
+                case _                    =>
+                  <.div(
+                    OffsetEditorStyles.FormRow,
+                    <.label("Refresh:"),
+                    Button(
+                      text = false,
+                      icon = Icons.ArrowsRepeat,
+                      severity = Button.Severity.Success,
+                      clazz = ExploreStyles.OffsetRegenerate,
+                      onClick = generateCurrentGrid(params, props.pointCount, updateOffsets)
+                    ).mini.compact
+                  )
+              },
+              Divider(),
+              viewOptionsSection
+            )
+          )
+        )
 }

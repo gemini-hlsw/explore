@@ -72,7 +72,8 @@ object OffsetGridDisplay {
   ): BigDecimal =
     val maxInterval = axisExtent / minLinesPerSide
 
-    val candidates = List(1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 500.0)
+    val candidates =
+      List(1.0, 2.0, 5.0, 10.0, 20.0, 25.0, 50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 500.0)
     candidates.findLast(_ <= maxInterval).getOrElse(candidates.head)
 
   private def calculateAxisExtent(dataMaxRange: BigDecimal): BigDecimal = {
@@ -81,7 +82,7 @@ object OffsetGridDisplay {
     val magnitude  = math.pow(10, math.floor(math.log10(paddedRange.toDouble)))
     val normalized = paddedRange / magnitude
 
-    // Choose a reasonable factor with more granular options
+    // Choose a reasonable factor
     val factor =
       if (normalized <= 1) 1.0
       else if (normalized <= 1.5) 1.5
@@ -253,7 +254,6 @@ object OffsetGridDisplay {
     centerX:      Double,
     centerY:      Double,
     gridSize:     Int,
-    showArrows:   Boolean,
     id:           String,
     css:          Css
   ): VdomNode =
@@ -263,14 +263,15 @@ object OffsetGridDisplay {
       val x2 = centerX - (to.p.toDouble / maxOffset.toDouble) * (gridSize / 2)
       val y2 = centerY - (to.q.toDouble / maxOffset.toDouble) * (gridSize / 2)
 
-      val dx = x2 - x1
-      val dy = y2 - y1
+      val dx     = x2 - x1
+      val dy     = y2 - y1
       val length = math.sqrt(dx * dx + dy * dy)
 
       if (length > 0) {
-        val scaleFactor = if (offsetValues.length > 50) 0.7 else if (offsetValues.length > 20) 0.8 else 1.0
+        val scaleFactor     =
+          if (offsetValues.length > 50) 0.7 else if (offsetValues.length > 20) 0.8 else 1.0
         val arrowheadLength = 8.0 * scaleFactor
-        val arrowheadWidth = 4.0 * scaleFactor
+        val arrowheadWidth  = 4.0 * scaleFactor
 
         val unitX = dx / length
         val unitY = dy / length
@@ -287,28 +288,30 @@ object OffsetGridDisplay {
 
         React.Fragment(
           <.line(
-            ^.key := s"$id-arrow-line-$idx",
-            ^.x1 := x1.toDouble,
-            ^.y1 := y1.toDouble,
-            ^.x2 := arrowBaseX.toDouble,
-            ^.y2 := arrowBaseY.toDouble,
+            ^.key         := s"$id-arrow-line-$idx",
+            ^.x1          := x1.toDouble,
+            ^.y1          := y1.toDouble,
+            ^.x2          := arrowBaseX.toDouble,
+            ^.y2          := arrowBaseY.toDouble,
             ^.strokeWidth := "1"
           ),
           <.polygon(
-            ^.key := s"$id-arrow-head-$idx",
-            ^.points := s"$arrowTipX,$arrowTipY ${arrowBaseX + perpX},${arrowBaseY + perpY} ${arrowBaseX - perpX},${arrowBaseY - perpY}"
+            ^.key         := s"$id-arrow-head-$idx",
+            ^.points      := s"$arrowTipX,$arrowTipY ${arrowBaseX + perpX},${arrowBaseY + perpY} ${arrowBaseX - perpX},${arrowBaseY - perpY}"
           )
         )
       } else EmptyVdom
 
-    if (showArrows)
-      <.g(
-        css,
-        offsetValues.zip(offsetValues.drop(1)).zipWithIndex.toTagMod(using { case ((from, to), idx) =>
+    <.g(
+      css,
+      offsetValues
+        .zip(offsetValues.drop(1))
+        .zipWithIndex
+        .map { case ((from, to), idx) =>
           arrow(from, to, idx)
-        })
-      )
-    else EmptyVdom
+        }
+        .toTagMod
+    )
 
   private def offsetPoints(
     offsetValues: List[OffsetValues],
@@ -405,15 +408,8 @@ object OffsetGridDisplay {
         .when(props.showAxes),
       axisLabels(gridSize, padding.toInt, props.id, props.labelsCss)
         .when(showLabels),
-      offsetArrows(offsetValues,
-                   axisExtent,
-                   centerX,
-                   centerY,
-                   gridSize,
-                   props.showArrows,
-                   props.id,
-                   props.arrowsCss
-      ),
+      offsetArrows(offsetValues, axisExtent, centerX, centerY, gridSize, props.id, props.arrowsCss)
+        .when(props.showArrows),
       offsetPoints(offsetValues,
                    axisExtent,
                    centerX,
