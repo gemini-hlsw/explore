@@ -3649,7 +3649,6 @@ span.explore-offsets-count {
 
   .p-dialog-header {
     background: var(--tile-background);
-    border-bottom: 1px solid var(--gray-500);
     color: var(--text-color);
   }
 
@@ -3664,10 +3663,10 @@ span.explore-offsets-count {
 
   .p-dialog-footer {
     background: var(--tile-background);
-    border-top: 1px solid var(--gray-500);
   }
 }
 
+.offset-editor-content-read-only,
 .offset-editor-content {
   --offset-spacing-large: 20px;
 
@@ -3790,5 +3789,47 @@ span.explore-offsets-count {
       stroke: var(--negative-background-color);
       stroke-width: 1.5;
     }
+  }
+
+  .offset-grid-arrows {
+    --arrow-color: rgb(255 165 0 / 90%);
+
+    line {
+      stroke: var(--arrow-color);
+      stroke-width: 0.6;
+    }
+
+    polygon {
+      fill: var(--arrow-color);
+    }
+  }
+}
+
+.offset-editor-content-read-only {
+  flex-direction: column;
+
+  @media (min-width: lucumaUICommon.$mobile-responsive-cutoff) {
+    flex-direction: column;
+  }
+
+  h4 {
+    margin: 0;
+    justify-self: center;
+  }
+}
+
+.offset-small-checkbox {
+  display: flex;
+  align-content: baseline;
+
+  .p-checkbox {
+    .p-checkbox-icon {
+      font-size: smaller;
+    }
+  }
+
+  label {
+    margin-left: 0.5em;
+    font-size: smaller;
   }
 }

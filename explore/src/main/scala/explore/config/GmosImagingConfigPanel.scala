@@ -32,6 +32,7 @@ import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
+import lucuma.core.util.NewBoolean
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Dialog
@@ -55,6 +56,8 @@ object GmosImagingConfigPanel {
   // use the long name everywhere, remove these givens and the itemTemplate in the multi-select.
   given Display[GmosNorthFilter] = Display.by(_.shortName, _.longName)
   given Display[GmosSouthFilter] = Display.by(_.shortName, _.longName)
+
+  private object OffsetDialogOpen extends NewBoolean
 
   sealed trait GmosImagingConfigPanel[T <: ObservingMode, Input]:
     def programId: Program.Id
@@ -146,7 +149,7 @@ object GmosImagingConfigPanel {
           ctx              <- useContext(AppContext.ctx)
           editState        <- useStateView(ConfigEditState.View)
           localFiltersView <- useStateView(List.empty[Filter])
-          offsetDialogOpen <- useStateView(false)
+          offsetDialogOpen <- useStateView(OffsetDialogOpen(false))
           localOffsets     <- useStateView {
                                 import ctx.given
                                 offsets(props.observingMode).get
@@ -179,6 +182,12 @@ object GmosImagingConfigPanel {
             )
 
           val initialFilters = initialFiltersLens.get(props.observingMode.get)
+          val offsetReadOnly = props.readonly || editState.get === ConfigEditState.View
+          val offsetsCount   = offsets(props.observingMode).get.size
+          val offsetsText    =
+            if (offsetsCount == 0) "No offsets"
+            else if (offsetsCount == 1) "1 offset"
+            else s"$offsetsCount offsets"
 
           React.Fragment(
             <.div(
@@ -232,21 +241,24 @@ object GmosImagingConfigPanel {
               ),
               <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol3)(
                 React.Fragment(
-                  FormLabel(htmlFor = "spatial-offsets-button".refined)("Spatial Offsets"),
+                  FormLabel(htmlFor = "spatial-offsets-button".refined)("Offsets"),
                   <.div(
                     ExploreStyles.FlexContainer,
                     Button(
-                      icon = Icons.Edit,
+                      icon = if (disableSimpleEdit) Icons.Eye else Icons.Edit,
                       text = true,
-                      severity = Button.Severity.Secondary,
+                      severity =
+                        if (disableSimpleEdit) Button.Severity.Info else Button.Severity.Secondary,
                       clazz = ExploreStyles.OffsetEditorButton,
-                      disabled = disableSimpleEdit,
-                      onClickE = _ => offsetDialogOpen.set(true)
+                      onClickE = _ => offsetDialogOpen.set(OffsetDialogOpen(true))
                     ).mini.compact
-                      .withMods(^.id := "spatial-offsets-button", ^.title := "Edit Offsets"),
+                      .withMods(^.id          := "spatial-offsets-button",
+                                ^.title := (if (disableSimpleEdit) "View Offsets"
+                                            else "Edit Offsets")
+                      ),
                     <.span(
                       ExploreStyles.OffsetsCount,
-                      s"(${offsets(props.observingMode).get.size})"
+                      s"($offsetsText)"
                     )
                   )
                 ),
@@ -287,38 +299,49 @@ object GmosImagingConfigPanel {
               )
             ),
             Dialog(
-              visible = offsetDialogOpen.get,
-              onHide = offsetDialogOpen.set(false),
-              header = "Offsets",
+              visible = OffsetDialogOpen.value(offsetDialogOpen.get),
+              onHide = offsetDialogOpen.set(OffsetDialogOpen(false)),
+              header = if (offsetReadOnly) "View Offsets" else "Offsets",
               modal = true,
               resizable = false,
               clazz = ExploreStyles.OffsetsEditorDialog,
-              footer = <.div(
-                Button(
-                  label = "Cancel",
-                  severity = Button.Severity.Danger,
-                  onClick = offsetDialogOpen.set(false)
-                ).small.compact,
-                Button(
-                  label = "Save",
-                  severity = Button.Severity.Success,
-                  onClick = {
-                    import ctx.given
-                    offsets(props.observingMode).set(localOffsets.get) >>
-                      offsetDialogOpen.set(false)
-                  }
-                ).small.compact
-              )
+              footer =
+                if (offsetReadOnly)
+                  <.div(
+                    Button(
+                      label = "Close",
+                      severity = Button.Severity.Secondary,
+                      onClick = offsetDialogOpen.set(OffsetDialogOpen(false))
+                    ).small.compact
+                  )
+                else
+                  <.div(
+                    Button(
+                      label = "Cancel",
+                      severity = Button.Severity.Danger,
+                      onClick = offsetDialogOpen.set(OffsetDialogOpen(false))
+                    ).small.compact,
+                    Button(
+                      label = "Save",
+                      severity = Button.Severity.Success,
+                      onClick = {
+                        import ctx.given
+                        offsets(props.observingMode).set(localOffsets.get) >>
+                          offsetDialogOpen.set(OffsetDialogOpen(false))
+                      }
+                    ).small.compact
+                  )
             )(
               OffsetEditor(
-                localOffsets,
-                offsets => localOffsets.set(offsets),
+                if (offsetReadOnly) offsets(props.observingMode) else localOffsets,
+                offsets => localOffsets.set(offsets).unless_(offsetReadOnly),
                 props.exposureTimeMode.get match {
                   case Some(ExposureTimeMode.TimeAndCountMode(_, c, _)) => c
                   case Some(ExposureTimeMode.SignalToNoiseMode(_, _))   => 1.refined // fixme
                   case _                                                => 1.refined
                 },
-                OffsetRadius
+                OffsetRadius,
+                readOnly = offsetReadOnly
               )
             )
           )
